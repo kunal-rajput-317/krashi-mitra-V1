@@ -1,0 +1,32 @@
+fastapi
+uvicorn
+anthropic
+sqlalchemy 
+psycopg2
+-
+binary 
+alembic
+httpx
+aiofiles
+passlib[bcrypt] 
+python-jose[cryptography] 
+python-multipart 
+email-validator
+apscheduler 
+pytz
+
+
+
+uvicorn
+httpx
+pydantic
+python-multipart
+pdfplumber
+
+
+chromadb
+sentence-transformers   # multilingual-e5
+google-generativeai   # Gemini API
+ollama                    # Ollama fallback
+asyncpg                 # PostgreSQL async driver
+pgvector                  # vector similarity in Postgres

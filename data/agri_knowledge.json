@@ -1,0 +1,92 @@
+[
+  {
+    "id": "wheat_001",
+    "topic": "wheat_disease",
+    "title": "गेहूं में पीला रतुआ (Yellow Rust)",
+    "content": "गेहूं में पीला रतुआ रोग पत्तियों पर पीली धारियों के रूप में दिखता है। यह Puccinia striiformis फफूंद से होता है। ठंड और नमी में तेज फैलता है। उपचार: Propiconazole 25% EC (1ml/liter पानी) या Tebuconazole का छिड़काव करें। रोग दिखते ही तुरंत उपचार करें।",
+    "crop": "wheat",
+    "season": "rabi",
+    "tags": ["disease", "fungus", "rust", "गेहूं", "रतुआ"]
+  },
+  {
+    "id": "wheat_002",
+    "topic": "wheat_fertilizer",
+    "title": "गेहूं में खाद प्रबंधन",
+    "content": "गेहूं बुवाई पर: DAP 50 kg/एकड़ + MOP 20 kg/एकड़ डालें। पहली सिंचाई (20-25 दिन बाद) पर यूरिया 25 kg/एकड़। कल्ले निकलते समय यूरिया 30 kg/एकड़। बालियां निकलते समय यूरिया 20 kg/एकड़। कुल नाइट्रोजन 120 kg/हेक्टेयर देना जरूरी है।",
+    "crop": "wheat",
+    "season": "rabi",
+    "tags": ["fertilizer", "खाद", "urea", "DAP", "गेहूं"]
+  },
+  {
+    "id": "wheat_003",
+    "topic": "wheat_sowing",
+    "title": "गेहूं बुवाई का सही समय और तरीका",
+    "content": "उत्तर प्रदेश में गेहूं बुवाई का सबसे अच्छा समय 15 नवंबर से 15 दिसंबर है। देरी से बुवाई पर उपज घटती है। बीज दर: 40-45 kg/एकड़। कतार से कतार की दूरी 22-23 cm रखें। HD-2967, PBW-343, DBW-187 अच्छी किस्में हैं। बुवाई से पहले बीज उपचार Bavistin 2g/kg बीज से करें।",
+    "crop": "wheat",
+    "season": "rabi",
+    "tags": ["sowing", "बुवाई", "variety", "किस्म", "गेहूं"]
+  },
+  {
+    "id": "rice_001",
+    "topic": "rice_disease",
+    "title": "धान में ब्लास्ट रोग",
+    "content": "धान ब्लास्ट रोग पत्तियों पर हीरे के आकार के भूरे धब्बे बनाता है। Pyricularia oryzae फफूंद से होता है। उपचार: Tricyclazole 75% WP (0.6g/liter) या Isoprothiolane का छिड़काव 10-12 दिन के अंतर पर करें। नाइट्रोजन खाद कम करें।",
+    "crop": "rice",
+    "season": "kharif",
+    "tags": ["disease", "blast", "धान", "ब्लास्ट", "fungus"]
+  },
+  {
+    "id": "rice_002",
+    "topic": "rice_water",
+    "title": "धान में सिंचाई प्रबंधन",
+    "content": "धान में खेत में 5 cm पानी हमेशा रखें। फूल आने से पहले और बाद 15 दिन पानी की कमी न होने दें। AWD (Alternate Wetting Drying) तकनीक अपनाएं — 30% पानी बचता है। कटाई से 10-15 दिन पहले पानी बंद करें।",
+    "crop": "rice",
+    "season": "kharif",
+    "tags": ["water", "irrigation", "सिंचाई", "धान"]
+  },
+  {
+    "id": "mustard_001",
+    "topic": "mustard_pest",
+    "title": "सरसों में माहू (Aphid) कीट",
+    "content": "सरसों में माहू (Lipaphis erysimi) फूल आने पर पत्तियों और तनों पर झुंड बनाकर रस चूसता है। नुकसान: 30-40% उपज घट सकती है। उपचार: Dimethoate 30 EC (1ml/liter) या Imidacloprid 17.8 SL (0.5ml/liter) का छिड़काव करें। सुबह या शाम छिड़काव करें।",
+    "crop": "mustard",
+    "season": "rabi",
+    "tags": ["pest", "aphid", "माहू", "सरसों", "कीट"]
+  },
+  {
+    "id": "general_001",
+    "topic": "government_scheme",
+    "title": "PM-KISAN योजना",
+    "content": "PM-KISAN योजना में पात्र किसानों को सालाना ₹6000 तीन किस्तों में मिलते हैं। पात्रता: छोटे और सीमांत किसान जिनके पास 2 हेक्टेयर तक जमीन है। रजिस्ट्रेशन: pmkisan.gov.in पर या नजदीकी CSC केंद्र पर। दस्तावेज: आधार कार्ड, बैंक खाता, जमीन के कागज।",
+    "crop": "general",
+    "season": "all",
+    "tags": ["scheme", "government", "PM-KISAN", "योजना", "सरकारी"]
+  },
+  {
+    "id": "general_002",
+    "topic": "government_scheme",
+    "title": "फसल बीमा योजना (PMFBY)",
+    "content": "प्रधानमंत्री फसल बीमा योजना (PMFBY) में खरीफ फसलों पर 2% और रबी पर 1.5% प्रीमियम देना होता है। सूखा, बाढ़, ओलावृष्टि से नुकसान पर मुआवजा मिलता है। रजिस्ट्रेशन: बैंक या CSC केंद्र पर बुवाई के 10 दिन के अंदर।",
+    "crop": "general",
+    "season": "all",
+    "tags": ["scheme", "insurance", "बीमा", "PMFBY", "सरकारी"]
+  },
+  {
+    "id": "potato_001",
+    "topic": "potato_disease",
+    "title": "आलू में झुलसा रोग (Late Blight)",
+    "content": "आलू झुलसा रोग (Phytophthora infestans) पत्तियों पर भूरे-काले धब्बे बनाता है जो तेजी से फैलते हैं। ठंड और बारिश में खतरा अधिक। उपचार: Mancozeb 75% WP (2.5g/liter) या Metalaxyl + Mancozeb का 7-10 दिन के अंतर पर छिड़काव।",
+    "crop": "potato",
+    "season": "rabi",
+    "tags": ["disease", "blight", "झुलसा", "आलू", "fungus"]
+  },
+  {
+    "id": "general_003",
+    "topic": "seasonal_advice",
+    "title": "मई-जून में किसान क्या करें",
+    "content": "मई-जून में: गेहूं की कटाई के बाद खेत की गहरी जुताई करें। अगली फसल के लिए मिट्टी परीक्षण करवाएं। धान की नर्सरी 15 मई से डालना शुरू करें। गर्मी में सब्जियों की सिंचाई सुबह-शाम करें। खरीफ बीज की व्यवस्था अभी से करें।",
+    "crop": "general",
+    "season": "zaid",
+    "tags": ["seasonal", "summer", "मई", "जून", "खरीफ तैयारी"]
+  }
+]

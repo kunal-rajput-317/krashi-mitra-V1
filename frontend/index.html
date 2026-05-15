@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KrashiMitra — किसान का डिजिटल साथी</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ══════════════════════════════
+       CSS VARIABLES
+    ══════════════════════════════ */
+    :root {
+      --green-dark:   #1b5e20;
+      --green-mid:    #2e7d32;
+      --green-light:  #43a047;
+      --green-soft:   #e8f5e9;
+      --gold:         #f9a825;
+      --gold-soft:    #fff8e1;
+      --cream:        #fafaf7;
+      --white:        #ffffff;
+      --text-dark:    #1a1a1a;
+      --text-mid:     #4a4a4a;
+      --text-soft:    #757575;
+      --border:       #e0e0e0;
+      --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 20px rgba(0,0,0,0.12);
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    24px;
+    }
+
+    /* ══════════════════════════════
+       RESET & BASE
+    ══════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════
+       HEADER
+    ══════════════════════════════ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Logo group */
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 2px 8px rgba(46,125,50,0.3);
+      flex-shrink: 0;
+    }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--green-dark);
+      line-height: 1.1;
+      letter-spacing: -0.3px;
+    }
+    .logo-tagline {
+      font-size: 10px;
+      color: var(--text-soft);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      line-height: 2;
+    }
+
+    /* Header right */
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .header-nav {
+      display: flex;
+      gap: 4px;
+    }
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-mid);
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .nav-link:hover { background: var(--green-soft); color: var(--green-dark); }
+
+    .avatar-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-light), var(--gold));
+      border: 2px solid var(--green-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: box-shadow 0.2s;
+    }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
+
+    /* ══════════════════════════════
+       HERO SECTION
+    ══════════════════════════════ */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: #1b5e20;
+      padding: 0;
+      height: 380px;        /* fixed — portrait ratio stays identical everywhere */
+      display: flex;
+      align-items: stretch;
+    }
+    @media (max-width: 600px) {
+      .hero { height: 320px; }
+    }
+
+    /* Real farm photo background */
+    .hero-bg-photo {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80');
+      background-size: cover;
+      background-position: center 60%;
+      pointer-events: none;
+    }
+
+    /* Dark green gradient overlay so text stays readable */
+    .hero-bg-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        100deg,
+        rgba(15,50,15,0.88) 0%,
+        rgba(27,94,32,0.80) 50%,
+        rgba(27,94,32,0.30) 100%
+      );
+      pointer-events: none;
+    }
+
+    /* Sun glow top-right */
+    .hero-glow {
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(249,168,37,0.22) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── HERO PORTRAIT — pinned to right, bottom-anchored ── */
+    .hero-portrait {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      top: 0;
+      width: 45%;
+      max-width: 320px;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+    .hero-portrait img {
+      display: block;
+      bottom: 0px;
+      height: 100%;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+      object-position: top right;
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
+      mask-image: linear-gradient(to right, transparent 0%, black 25%);
+    }
+    /* hide on very small screens so it doesn't cover the search box */
+    @media (max-width: 420px) {
+      .hero-portrait {
+        width: 38%;
+        opacity: 0.75;
+      }
+    }
+    @media (max-width: 320px) {
+      .hero-portrait { display: none; }
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 12;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 28px 18px 32px;
+      gap: 0;
+    }
+
+    /* Hero badge */
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 500;
+      margin-bottom: 14px;
+      backdrop-filter: blur(4px);
+    }
+    .hero-badge-dot {
+      width: 7px; height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    /* Hero headline */
+    .hero-headline {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .hero-headline span {
+      color: var(--gold);
+    }
+    .hero-subline {
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 14px;
+      color: rgba(255,255,255,0.78);
+      margin-bottom: 26px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    /* ── SEARCH BOX ── */
+    .search-box {
+      width: 100%;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .search-input-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 6px 4px 18px;
+      gap: 8px;
+      min-height: 58px;
+    }
+
+    .search-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
+      font-size: 15px;
+      color: var(--text-dark);
+      background: transparent;
+      min-width: 0;
+    }
+    .search-input::placeholder {
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .search-btn {
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      border: none;
+      border-radius: 18px;
+      padding: 12px 20px;
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: box-shadow 0.2s, transform 0.15s;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      white-space: nowrap;
+    }
+    .search-btn:hover { box-shadow: 0 4px 16px rgba(46,125,50,0.4); transform: translateY(-1px); }
+    .search-btn:active { transform: translateY(0); }
+
+    /* Voice button */
+    .voice-btn {
+      width: 42px; height: 42px;
+      border: none;
+      border-radius: 12px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .voice-btn:hover { background: #c8e6c9; }
+
+    /* Search divider */
+    .search-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 16px;
+    }
+
+    /* Quick topics inside search box */
+    .search-quick {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .search-quick::-webkit-scrollbar { display: none; }
+
+    .sq-label {
+      font-size: 11px;
+      color: var(--text-soft);
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+    .sq-chip {
+      font-size: 12px;
+      color: var(--green-dark);
+      background: var(--green-soft);
+      border: 1px solid #c8e6c9;
+      border-radius: 20px;
+      padding: 5px 12px;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .sq-chip:hover { background: #c8e6c9; }
+
+    /* Hero image decoration — decorative farmer illustration */
+    .hero-deco {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      font-size: 90px;
+      opacity: 0.12;
+      pointer-events: none;
+      line-height: 1;
+      transform: scaleX(-1);
+    }
+
+    /* Stats row below search */
+    .hero-stats {
+      display: flex;
+      gap: 20px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .hero-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+    }
+    .hero-stat strong {
+      color: var(--gold);
+      font-size: 14px;
+    }
+
+    /* ══════════════════════════════
+       SECTION COMMON
+    ══════════════════════════════ */
+    .section {
+      padding: 28px 20px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-link {
+      font-size: 13px;
+      color: var(--green-mid);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* ══════════════════════════════
+       QUICK ACTION CARDS
+    ══════════════════════════════ */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .quick-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+      text-decoration: none;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .quick-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--green-mid));
+      border-radius: 3px 3px 0 0;
+    }
+    .quick-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--green-light);
+    }
+    .quick-card:active { transform: translateY(0); }
+
+    .qc-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+    .qc-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dark);
+      text-align: center;
+      line-height: 1.3;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+
+    /* ══════════════════════════════
+       TRENDING SEARCHES
+    ══════════════════════════════ */
+    .trending-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .trending-scroll::-webkit-scrollbar { display: none; }
+
+    .trend-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text-dark);
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      box-shadow: var(--shadow-sm);
+    }
+    .trend-chip:hover { background: var(--green-soft); border-color: var(--green-light); }
+    .trend-chip .trend-icon { font-size: 14px; }
+
+    /* ══════════════════════════════
+       WEATHER SNAPSHOT
+    ══════════════════════════════ */
+    .weather-card {
+      background: linear-gradient(135deg, #1565c0, #1976d2, #1e88e5);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(21,101,192,0.3);
+    }
+    .weather-card::before {
+      content: '☁️';
+      position: absolute;
+      right: -10px; top: -10px;
+      font-size: 80px;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .weather-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .weather-loc {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .weather-temp {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .weather-unit { font-size: 18px; font-weight: 400; opacity: 0.8; }
+    .weather-cond {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+    .weather-icon-big { font-size: 52px; }
+    .weather-pills {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .weather-pill {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .weather-update {
+      margin-top: 10px;
+      font-size: 10px;
+      opacity: 0.6;
+    }
+
+    /* ══════════════════════════════
+       MANDI SNAPSHOT
+    ══════════════════════════════ */
+    .mandi-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .mandi-header-strip {
+      background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mandi-header-strip span {
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .mandi-live-badge {
+      background: var(--gold);
+      color: #5d4037;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .mandi-rows { padding: 4px 0; }
+    .mandi-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 10px;
+    }
+    .mandi-row:last-child { border-bottom: none; }
+    .mandi-crop-icon { font-size: 22px; flex-shrink: 0; }
+    .mandi-crop-name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-dark);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .mandi-crop-unit {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 1px;
+    }
+    .mandi-price-col { text-align: right; flex-shrink: 0; }
+    .mandi-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .mandi-change {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 1px;
+    }
+    .mandi-change.up   { color: #2e7d32; }
+    .mandi-change.down { color: #c62828; }
+    .mandi-change.flat { color: var(--text-soft); }
+
+    .mandi-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+    .mandi-footer a { color: var(--green-mid); text-decoration: none; font-weight: 600; }
+
+    /* ══════════════════════════════
+       BOTTOM NAV (mobile)
+    ══════════════════════════════ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 200;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .bn-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 4px 6px;
+      cursor: pointer;
+      text-decoration: none;
+      gap: 3px;
+      transition: background 0.15s;
+      border-radius: 12px;
+      margin: 4px 2px 0;
+    }
+    .bn-item:hover { background: var(--green-soft); }
+    .bn-item.active .bn-icon { color: var(--green-mid); }
+    .bn-item.active .bn-label { color: var(--green-dark); font-weight: 600; }
+    .bn-icon { font-size: 20px; color: var(--text-soft); }
+    .bn-label { font-size: 10px; color: var(--text-soft); font-weight: 500; font-family: 'Noto Sans Devanagari', sans-serif; }
+
+    /* ══════════════════════════════
+       PAGE BOTTOM SPACING
+    ══════════════════════════════ */
+    .page-end { height: 76px; }
+
+    /* ══════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════ */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-inner > * {
+      animation: fadeUp 0.5s ease both;
+    }
+    .hero-inner > *:nth-child(1) { animation-delay: 0.05s; }
+    .hero-inner > *:nth-child(2) { animation-delay: 0.12s; }
+    .hero-inner > *:nth-child(3) { animation-delay: 0.18s; }
+    .hero-inner > *:nth-child(4) { animation-delay: 0.24s; }
+    .hero-inner > *:nth-child(5) { animation-delay: 0.30s; }
+
+    /* ══════════════════════════════
+       DESKTOP ADJUSTMENTS
+    ══════════════════════════════ */
+    @media (min-width: 600px) {
+      .hero-inner { padding: 48px 40px 40px; max-width: 680px; }
+      .hero-headline { font-size: 36px; }
+      .quick-grid { grid-template-columns: repeat(6, 1fr); }
+      .bottom-nav { display: none; }
+      .page-end { height: 40px; }
+      .section { padding: 32px 40px; }
+      .header { padding: 0 40px; }
+    }
+
+    @media (min-width: 900px) {
+      .hero { min-height: 420px; }
+      .hero-headline { font-size: 42px; }
+      .hero-subline { font-size: 16px; }
+      .search-input { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════
+     HEADER
+══════════════════════════ -->
+<header class="header">
+  <a class="header-logo" href="#">
+    <div class="logo-icon">🌾</div>
+    <div class="logo-text">
+      <span class="logo-title">कृषि मित्र</span>
+      <span class="logo-tagline"> किसान का डिजिटल साथी</span>
+    </div>
+  </a>
+
+  <div class="header-right">
+    <nav class="header-nav" style="display:none" id="desktop-nav">
+      <a class="nav-link" href="#">मुख्य</a>
+      <a class="nav-link" href="#">मौसम</a>
+      <a class="nav-link" href="#">मंडी</a>
+      <a class="nav-link" href="#">सहायता</a>
+    </nav>
+    <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════
+     HERO SEARCH SECTION
+══════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg-photo"></div>
+  <div class="hero-bg-overlay"></div>
+  <div class="hero-glow"></div>
+
+  <!-- Owner photo — flat, no frame, top-right of hero -->
+  <!-- EDIT: change src to your photo path e.g. "assets/my-photo.png" -->
+  <div class="hero-portrait" id="hero-portrait">
+    <img id="hero-photo" src="assets/my-photo.png" alt=""
+      onerror="document.getElementById('hero-portrait').style.display='none'">
+  </div>
+
+  <div class="hero-inner">
+
+    <!-- Badge -->
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      AI-powered कृषि सहायक
+    </div>
+
+    <!-- Headline -->
+    <h1 class="hero-headline">
+      आपकी खेती का<br><span>डिजिटल साथी</span>
+    </h1>
+
+    <!-- Subline -->
+    <p class="hero-subline">
+      फसल, रोग, मौसम, खाद — सब कुछ एक जगह पर
+    </p>
+
+    <!-- Search Box -->
+    <div class="search-box">
+      <div class="search-input-row">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="main-search"
+          class="search-input"
+          placeholder="आज आप क्या जानना चाहते हैं?"
+          autocomplete="off"
+          onkeydown="handleSearchKey(event)"
+        >
+        <button class="voice-btn" title="आवाज़ से खोजें" onclick="startVoice()">🎤</button>
+        <button class="search-btn" onclick="doSearch()">
+          खोजें →
+        </button>
+      </div>
+
+      <div class="search-divider"></div>
+
+      <div class="search-quick">
+        <span class="sq-label">Popular:</span>
+        <span class="sq-chip" onclick="setSearch('गेहूं में पीलापन')">गेहूं में पीलापन</span>
+        <span class="sq-chip" onclick="setSearch('धान की बुवाई')">धान की बुवाई</span>
+        <span class="sq-chip" onclick="setSearch('यूरिया खाद')">यूरिया खाद</span>
+        <span class="sq-chip" onclick="setSearch('आज का मौसम')">आज का मौसम</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="hero-stats">
+      <div class="hero-stat">🌾 <strong>50+</strong> फसलें</div>
+      <div class="hero-stat">📍 <strong>500+</strong> जिले</div>
+      <div class="hero-stat">🤖 <strong>AI</strong> सहायक</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     QUICK ACTIONS
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
+  <div class="section-header">
+    <h2 class="section-title"># त्वरित सेवाएं</h2>
+  </div>
+
+  <div class="quick-grid">
+    <a class="quick-card" href="chat.html?tab=disease" style="--card-accent:#c62828">
+      <span class="qc-icon">🌾</span>
+      <span class="qc-label">फसल रोग</span>
+    </a>
+    <a class="quick-card" href="chat.html?tab=weather" style="--card-accent:#1565c0">
+      <span class="qc-icon">🌦️</span>
+      <span class="qc-label">मौसम</span>
+    </a>
+    <a class="quick-card" href="chat.html?tab=mandi" style="--card-accent:#e65100">
+      <span class="qc-icon">💰</span>
+      <span class="qc-label">मंडी भाव</span>
+    </a>
+    <a class="quick-card" href="chat.html?tab=fertilizer" style="--card-accent:#2e7d32">
+      <span class="qc-icon">🧪</span>
+      <span class="qc-label">खाद सलाह</span>
+    </a>
+    <a class="quick-card" href="chat.html?tab=pest" style="--card-accent:#6a1b9a">
+      <span class="qc-icon">🐛</span>
+      <span class="qc-label">कीट नियंत्रण</span>
+    </a>
+    <a class="quick-card" href="chat.html?tab=info" style="--card-accent:#00695c">
+      <span class="qc-icon">📘</span>
+      <span class="qc-label">कृषि जानकारी</span>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     TRENDING SEARCHES
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
+  <div class="section-header">
+    <h2 class="section-title">🔥 Trending खोजें</h2>
+    <a class="section-link" href="#">सभी देखें</a>
+  </div>
+
+  <div class="trending-scroll">
+    <div class="trend-chip" onclick="setSearch('गन्ने में लाल सड़न')">
+      <span class="trend-icon">📈</span> गन्ने में लाल सड़न
+    </div>
+    <div class="trend-chip" onclick="setSearch('आज गेहूं का भाव')">
+      <span class="trend-icon">📈</span> आज गेहूं का भाव
+    </div>
+    <div class="trend-chip" onclick="setSearch('बारिश कब होगी')">
+      <span class="trend-icon">📈</span> बारिश कब होगी
+    </div>
+    <div class="trend-chip" onclick="setSearch('धान में झोंका रोग')">
+      <span class="trend-icon">📈</span> धान में झोंका रोग
+    </div>
+    <div class="trend-chip" onclick="setSearch('सरसों की खेती')">
+      <span class="trend-icon">📈</span> सरसों की खेती
+    </div>
+    <div class="trend-chip" onclick="setSearch('DAP खाद')">
+      <span class="trend-icon">📈</span> DAP खाद की मात्रा
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     WEATHER SNAPSHOT
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
+  <div class="section-header">
+    <h2 class="section-title">🌤️ आज का मौसम</h2>
+    <a class="section-link" href="chat.html?tab=weather">विस्तार →</a>
+  </div>
+
+  <div class="weather-card" id="weather-snap">
+    <div class="weather-row">
+      <div>
+        <div class="weather-loc">📍 <span id="w-district">मेरठ</span>, UP</div>
+        <div class="weather-temp" id="w-temp">—<span class="weather-unit">°C</span></div>
+        <div class="weather-cond" id="w-cond">लोड हो रहा है…</div>
+      </div>
+      <div class="weather-icon-big" id="w-icon">🌤️</div>
+    </div>
+    <div class="weather-pills">
+      <div class="weather-pill">💧 <span id="w-humidity">—</span>% नमी</div>
+      <div class="weather-pill">💨 <span id="w-wind">—</span> km/h हवा</div>
+      <div class="weather-pill" id="w-rain-pill" style="display:none">🌧️ <span id="w-rain">—</span>mm वर्षा</div>
+    </div>
+    <div class="weather-update" id="w-updated">अपडेट हो रहा है…</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     MANDI SNAPSHOT
+══════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <h2 class="section-title">💰 मंडी भाव</h2>
+    <a class="section-link" href="chat.html?tab=mandi">सभी भाव →</a>
+  </div>
+
+  <div class="mandi-card">
+    <div class="mandi-header-strip">
+      <span>📍 मेरठ मंडी — आज के भाव</span>
+      <span class="mandi-live-badge">LIVE</span>
+    </div>
+    <div class="mandi-rows">
+      <div class="mandi-row">
+        <span class="mandi-crop-icon">🌾</span>
+        <div>
+          <div class="mandi-crop-name">गेहूं</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
+        </div>
+        <div class="mandi-price-col">
+          <div class="mandi-price">₹2,200</div>
+          <div class="mandi-change up">▲ +₹30</div>
+        </div>
+      </div>
+      <div class="mandi-row">
+        <span class="mandi-crop-icon">🍚</span>
+        <div>
+          <div class="mandi-crop-name">धान</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
+        </div>
+        <div class="mandi-price-col">
+          <div class="mandi-price">₹1,950</div>
+          <div class="mandi-change down">▼ −₹15</div>
+        </div>
+      </div>
+      <div class="mandi-row">
+        <span class="mandi-crop-icon">🎋</span>
+        <div>
+          <div class="mandi-crop-name">गन्ना</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
+        </div>
+        <div class="mandi-price-col">
+          <div class="mandi-price">₹350</div>
+          <div class="mandi-change flat">— कोई बदलाव नहीं</div>
+        </div>
+      </div>
+      <div class="mandi-row">
+        <span class="mandi-crop-icon">🌻</span>
+        <div>
+          <div class="mandi-crop-name">सरसों</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
+        </div>
+        <div class="mandi-price-col">
+          <div class="mandi-price">₹5,400</div>
+          <div class="mandi-change up">▲ +₹100</div>
+        </div>
+      </div>
+    </div>
+    <div class="mandi-footer">
+      सभी भाव देखें → <a href="chat.html?tab=mandi">मंडी पेज खोलें</a>
+    </div>
+  </div>
+</section>
+
+<!-- Bottom spacing for mobile nav -->
+<div class="page-end"></div>
+
+<!-- ══════════════════════════
+     BOTTOM NAV (mobile)
+══════════════════════════ -->
+<nav class="bottom-nav">
+  <a class="bn-item active" href="#">
+    <span class="bn-icon">🏠</span>
+    <span class="bn-label">मुख्य</span>
+  </a>
+  <a class="bn-item" href="chat.html?tab=chat">
+    <span class="bn-icon">💬</span>
+    <span class="bn-label">Chat</span>
+  </a>
+  <a class="bn-item" href="chat.html?tab=weather">
+    <span class="bn-icon">🌤️</span>
+    <span class="bn-label">मौसम</span>
+  </a>
+  <a class="bn-item" href="chat.html?tab=mandi">
+    <span class="bn-icon">💰</span>
+    <span class="bn-label">मंडी</span>
+  </a>
+  <a class="bn-item" href="chat.html?tab=info">
+    <span class="bn-icon">📘</span>
+    <span class="bn-label">जानकारी</span>
+  </a>
+</nav>
+
+<!-- ══════════════════════════
+     SCRIPTS
+══════════════════════════ -->
+<script>
+  /* ── Load config from profile.json ── */
+  async function loadProfile() {
+    try {
+      const res     = await fetch('profile.json');
+      const profile = await res.json();
+      if (profile.photo) {
+        const hp = document.getElementById('hero-photo');
+        if (hp) hp.src = profile.photo;
+      }
+      if (profile.district) {
+        const badge = document.getElementById('w-district');
+        if (badge) badge.textContent = profile.district;
+      }
+    } catch { /* profile.json missing — photo src stays as set in HTML, portrait stays visible */ }
+  }
+  loadProfile();
+
+  /* ── Show desktop nav on wider screens ── */
+  function checkDesktopNav() {
+    const nav = document.getElementById('desktop-nav');
+    if (nav) nav.style.display = window.innerWidth >= 600 ? 'flex' : 'none';
+  }
+  checkDesktopNav();
+  window.addEventListener('resize', checkDesktopNav);
+
+  /* ── Search helpers ── */
+  function setSearch(query) {
+    document.getElementById('main-search').value = query;
+    doSearch();
+  }
+
+  function handleSearchKey(e) {
+    if (e.key === 'Enter') doSearch();
+  }
+
+  function doSearch() {
+    const q = document.getElementById('main-search').value.trim();
+    if (!q) return;
+    // Navigate to existing app with query
+    window.location.href = `chat.html?q=${encodeURIComponent(q)}&tab=search`;
+  }
+
+  /* ── Voice search (Web Speech API) ── */
+  function startVoice() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('आपके browser में voice search उपलब्ध नहीं है।');
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recog = new SpeechRecognition();
+    recog.lang = 'hi-IN';
+    recog.interimResults = false;
+    recog.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      document.getElementById('main-search').value = transcript;
+    };
+    recog.onerror = () => alert('आवाज़ नहीं पहचानी। दोबारा try करें।');
+    recog.start();
+  }
+
+  /* ── Weather snapshot fetch ── */
+  const WEATHER_DISTRICT = 'Meerut';
+
+  async function fetchWeather() {
+    try {
+      const res  = await fetch(`http://127.0.0.1:8000/weather?district=${WEATHER_DISTRICT}`);
+      const json = await res.json();
+      if (!json.success) return;
+      const d = json.data;
+
+      document.getElementById('w-district').textContent = d.district || WEATHER_DISTRICT;
+      document.getElementById('w-temp').innerHTML     = `${Math.round(d.temperature || 0)}<span class="weather-unit">°C</span>`;
+      document.getElementById('w-cond').textContent   = conditionHindi(d.weather_condition);
+      document.getElementById('w-icon').textContent   = conditionIcon(d.weather_condition);
+      document.getElementById('w-humidity').textContent = d.humidity ?? '—';
+      document.getElementById('w-wind').textContent     = d.wind_speed ?? '—';
+      document.getElementById('w-updated').textContent  = 'अभी अपडेट हुआ';
+
+      if (d.rainfall > 0) {
+        document.getElementById('w-rain').textContent = d.rainfall;
+        document.getElementById('w-rain-pill').style.display = 'flex';
+      }
+    } catch {
+      document.getElementById('w-cond').textContent  = 'Server से connect नहीं हो सका';
+      document.getElementById('w-updated').textContent = 'Backend चला रहे हैं?';
+    }
+  }
+
+  function conditionHindi(c) {
+    if (!c) return 'साफ मौसम';
+    c = c.toLowerCase();
+    if (c.includes('rain') || c.includes('drizzle')) return 'बारिश हो रही है';
+    if (c.includes('storm') || c.includes('thunder')) return 'आंधी-तूफान';
+    if (c.includes('cloud')) return 'बादल छाए हुए';
+    if (c.includes('haze') || c.includes('mist'))    return 'धुंध / कोहरा';
+    if (c.includes('clear')) return 'साफ धूप';
+    return c;
+  }
+
+  function conditionIcon(c) {
+    if (!c) return '🌤️';
+    c = c.toLowerCase();
+    if (c.includes('rain') || c.includes('drizzle')) return '🌧️';
+    if (c.includes('storm') || c.includes('thunder')) return '⛈️';
+    if (c.includes('cloud')) return '☁️';
+    if (c.includes('haze') || c.includes('mist'))    return '🌫️';
+    if (c.includes('clear')) return '☀️';
+    return '🌤️';
+  }
+
+  fetchWeather();
+
+  function avatarBtnClick() {
+    const token = localStorage.getItem("krishi_token");
+    if (token) {
+      window.location.href = "chat.html?tab=profile";
+    } else {
+      window.location.href = "chat.html?tab=login";
+    }
+  }
+</script>
+
+</body>
+</html>
