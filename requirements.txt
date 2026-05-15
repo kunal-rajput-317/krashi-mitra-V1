@@ -2,9 +2,7 @@ fastapi
 uvicorn
 anthropic
 sqlalchemy 
-psycopg2
--
-binary 
+psycopg2-binary
 alembic
 httpx
 aiofiles
@@ -14,16 +12,11 @@ python-multipart
 email-validator
 apscheduler 
 pytz
-
-
-
 uvicorn
 httpx
 pydantic
 python-multipart
 pdfplumber
-
-
 chromadb
 sentence-transformers   # multilingual-e5
 google-generativeai   # Gemini API
