@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KrashiMitra — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Dark tech theme (default) ── */
+  :root {
+    --bg:        #0f1410;
+    --surface:   #161d17;
+    --border:    #2a352b;
+    --green:     #4ade80;
+    --green-dim: #166534;
+    --amber:     #fbbf24;
+    --red:       #f87171;
+    --text:      #e2e8e2;
+    --muted:     #6b7a6c;
+    --mono:      'DM Mono', monospace;
+    --hindi:     'Noto Sans Devanagari', sans-serif;
+    --display:   'Syne', sans-serif;
+  }
+
+  /* ── Agriculture theme (खेत) ── */
+  :root.agri {
+    --bg:        #f5f0e8;
+    --surface:   #fffdf7;
+    --border:    #d4c9a8;
+    --green:     #3d7a3a;
+    --green-dim: #c8e6c5;
+    --amber:     #c97c1a;
+    --red:       #c0392b;
+    --text:      #2c1e0f;
+    --muted:     #7a6a50;
+  }
+  :root.agri body {
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(120,160,80,.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(180,140,60,.07) 0%, transparent 50%);
+  }
+  :root.agri .sidebar {
+    background: linear-gradient(180deg, #2d4a1e 0%, #1e3512 100%);
+    border-right-color: #3d6b28;
+  }
+  :root.agri .logo h1        { color: #a8d878; }
+  :root.agri .logo p         { color: #7aaa5a; }
+  :root.agri .logo-badge     { background: #f5c842; color: #1a2e0a; }
+  :root.agri .nav-item       { color: #8aba6a; }
+  :root.agri .nav-item:hover { color: #c8e8a8; background: rgba(168,216,120,.1); }
+  :root.agri .nav-item.active{ color: #c8e8a8; border-left-color: #a8d878; background: rgba(168,216,120,.15); }
+  :root.agri .sidebar-footer { color: #6a9a4a; border-top-color: #3d6b28; }
+  :root.agri .card           { box-shadow: 0 2px 8px rgba(60,90,30,.08); border-color: #d4c9a8; }
+  :root.agri .card-value.ok  { color: #2d6e2a; }
+  :root.agri .card-value.warn{ color: #c97c1a; }
+  :root.agri .card-value.err { color: #c0392b; }
+  :root.agri .btn-green      { background: #3d7a3a; color: #fff; }
+  :root.agri .btn-green:hover{ background: #2d5e2a; }
+  :root.agri .log-box        { background: #1e3512; color: #a8d878; border-color: #3d6b28; }
+  :root.agri .log-ok         { color: #a8d878; }
+  :root.agri .log-warn       { color: #f5c842; }
+  :root.agri .log-err        { color: #e57373; }
+  :root.agri .upload-zone    { background: #faf6ec; border-color: #c8b87a; }
+  :root.agri .upload-zone:hover,
+  :root.agri .upload-zone.drag { border-color: #3d7a3a; background: rgba(61,122,58,.04); }
+  :root.agri .table-wrap     { box-shadow: 0 2px 8px rgba(60,90,30,.06); }
+  :root.agri th              { background: #f0e8d0; color: #5a4a2a; }
+  :root.agri tr:hover td     { background: rgba(61,122,58,.04); }
+  :root.agri #toast.ok       { border-color: #3d7a3a; color: #2d6e2a; background: #f0faee; }
+  :root.agri #toast.err      { border-color: #c0392b; color: #c0392b; background: #fdf0ee; }
+  :root.agri .page-header    { border-bottom-color: #d4c9a8; }
+  :root.agri .page-header h2 { color: #2c1e0f; }
+
+  /* ── Theme toggle ── */
+  .theme-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; margin-top: 8px;
+    cursor: pointer; border: none; background: none;
+    width: 100%; font-family: var(--display);
+  }
+  .toggle-track {
+    width: 38px; height: 20px;
+    background: var(--border); border-radius: 10px;
+    position: relative; transition: background .3s; flex-shrink: 0;
+  }
+  .toggle-thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--muted); transition: all .3s;
+  }
+  .agri-on .toggle-track { background: #3d7a3a; }
+  .agri-on .toggle-thumb { left: 21px; background: #f5c842; }
+  .toggle-label {
+    font-size: 11px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  :root.agri .toggle-label { color: #8aba6a; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--display);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+  }
+
+  .logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .logo-badge {
+    display: inline-block;
+    background: var(--green);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .logo h1 { font-size: 18px; font-weight: 800; color: var(--green); }
+  .logo p  { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .nav-item:hover  { color: var(--text); background: rgba(74,222,128,.06); }
+  .nav-item.active { color: var(--green); border-left-color: var(--green); background: rgba(74,222,128,.08); }
+  .nav-item .icon  { font-size: 16px; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  /* ── Main ── */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    padding: 32px;
+    max-width: 1100px;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-header h2 { font-size: 24px; font-weight: 800; color: var(--text); }
+  .page-header p  { font-size: 13px; color: var(--muted); margin-top: 4px; font-family: var(--hindi); }
+
+  /* ── Status cards ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .card-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--mono); }
+  .card-value { font-size: 28px; font-weight: 800; margin: 6px 0 4px; }
+  .card-sub   { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .card-value.ok   { color: var(--green); }
+  .card-value.warn { color: var(--amber); }
+  .card-value.err  { color: var(--red);   }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    letter-spacing: .3px;
+    transition: all .15s;
+    font-family: var(--display);
+  }
+  .btn-green  { background: var(--green); color: #000; }
+  .btn-green:hover  { background: #6ee7a0; }
+  .btn-amber  { background: var(--amber); color: #000; }
+  .btn-amber:hover  { background: #fcd34d; }
+  .btn-red    { background: rgba(248,113,113,.15); color: var(--red); border: 1px solid var(--red); }
+  .btn-red:hover    { background: rgba(248,113,113,.25); }
+  .btn-ghost  { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover  { color: var(--text); border-color: var(--muted); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: 24px;
+    background: var(--surface);
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--green); background: rgba(74,222,128,.04); }
+  .upload-zone .icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-zone h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .upload-zone p  { font-size: 13px; color: var(--muted); font-family: var(--hindi); }
+  #file-input { display: none; }
+
+  /* ── Table ── */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: rgba(0,0,0,.2);
+    font-family: var(--mono);
+  }
+  td { padding: 12px 16px; font-size: 13px; border-top: 1px solid var(--border); }
+  tr:hover td { background: rgba(74,222,128,.03); }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+  .tag-green { background: var(--green-dim); color: var(--green); }
+  .tag-amber { background: rgba(251,191,36,.15); color: var(--amber); }
+  .tag-red   { background: rgba(248,113,113,.15); color: var(--red); }
+
+  /* ── Log ── */
+  .log-box {
+    background: #080d09;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #9ca;
+    max-height: 220px;
+    overflow-y: auto;
+    line-height: 1.7;
+  }
+  .log-ok   { color: var(--green); }
+  .log-warn { color: var(--amber); }
+  .log-err  { color: var(--red); }
+
+  /* ── Add Q&A panel ── */
+  .add-qa-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .add-qa-panel:focus-within { border-color: var(--green); }
+  .add-qa-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .3px;
+  }
+  .add-qa-toggle:hover { color: var(--green); }
+  .add-qa-toggle .toggle-icon {
+    font-size: 18px;
+    transition: transform .25s;
+    color: var(--green);
+  }
+  .add-qa-toggle.open .toggle-icon { transform: rotate(45deg); }
+  .add-qa-body {
+    display: none;
+    padding: 0 18px 18px;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .add-qa-body.open { display: flex; }
+  .add-qa-field { display: flex; flex-direction: column; gap: 6px; }
+  .add-qa-label {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .add-qa-input, .add-qa-textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--hindi);
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color .2s;
+    resize: vertical;
+  }
+  .add-qa-input:focus, .add-qa-textarea:focus { border-color: var(--green); }
+  .add-qa-textarea { min-height: 90px; line-height: 1.6; }
+  .add-qa-actions { display: flex; gap: 10px; align-items: center; }
+  .add-qa-charcount { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-left: auto; }
+
+  /* ── Cache questions ── */
+  .q-list { display: flex; flex-direction: column; gap: 10px; }
+  .q-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .q-text  { font-size: 14px; font-family: var(--hindi); }
+  .q-meta  { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 4px; }
+  .q-hits  { font-size: 20px; font-weight: 800; color: var(--green); }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-family: var(--hindi);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .3s;
+    z-index: 999;
+    max-width: 320px;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.ok   { border-color: var(--green); color: var(--green); }
+  #toast.err  { border-color: var(--red);   color: var(--red);   }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+  }
+
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .spacer { flex: 1; }
+
+  /* ── Mic button ── */
+  .mic-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+  .mic-btn:hover { border-color: var(--green); color: var(--green); }
+  .mic-btn.listening {
+    background: rgba(248,113,113,.15);
+    border-color: var(--red);
+    color: var(--red);
+    animation: pulse-mic .8s ease-in-out infinite;
+  }
+  @keyframes pulse-mic {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.12); }
+  }
+
+  /* ── AI thinking animation ── */
+  .ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 16px 4px;
+    width: fit-content;
+    max-width: 200px;
+  }
+  .ai-thinking-text {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .dots span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: dot-bounce .9s ease-in-out infinite;
+    display: block;
+  }
+  .dots span:nth-child(2) { animation-delay: .15s; background: var(--amber); }
+  .dots span:nth-child(3) { animation-delay: .30s; background: var(--green); opacity:.6; }
+  @keyframes dot-bounce {
+    0%, 80%, 100% { transform: translateY(0);   opacity: .4; }
+    40%            { transform: translateY(-6px); opacity: 1;  }
+  }
+
+  /* ── RAG pipeline steps animation ── */
+  .rag-pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all .3s ease;
+  }
+  .pipeline-step.active {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--text);
+  }
+  .pipeline-step.done { color: var(--green); }
+  .pipeline-step .step-icon { font-size: 14px; width: 20px; text-align: center; }
+  .step-spinner {
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Quick test log shimmer */
+  .log-shimmer {
+    background: linear-gradient(90deg,
+      var(--surface) 25%,
+      rgba(74,222,128,.08) 50%,
+      var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    height: 14px;
+    margin: 4px 0;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-badge">Admin</div>
+    <h1>🌾 KrashiMitra</h1>
+    <p>v0.1.0 · local</p>
+  </div>
+
+  <div class="nav-item active" onclick="showPage('status', this)">
+    <span class="icon">📊</span> Status
+  </div>
+  <div class="nav-item" onclick="showPage('uploads', this)">
+    <span class="icon">📄</span> PDFs
+  </div>
+  <div class="nav-item" onclick="showPage('cache', this)">
+    <span class="icon">⚡</span> Cache
+  </div>
+  <div class="nav-item" onclick="showPage('reindex', this)">
+    <span class="icon">🔄</span> Re-index
+  </div>
+  <div class="nav-item" onclick="showPage('chat', this)">
+    <span class="icon">🤖</span> AI Chat
+  </div>
+
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
+    <div class="toggle-track"><div class="toggle-thumb"></div></div>
+    <span class="toggle-label">🌾 खेत थीम</span>
+  </button>
+
+  <div class="sidebar-footer">
+    API: <span style="color:var(--green)">127.0.0.1:8000</span><br>
+    <span id="clock"></span>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- STATUS PAGE -->
+  <div class="page active" id="page-status">
+    <div class="page-header">
+      <div>
+        <h2>System Status</h2>
+        <p>सभी सेवाओं की स्थिति</p>
+      </div>
+      <button class="btn btn-ghost" onclick="loadStatus()">↻ Refresh</button>
+    </div>
+
+    <div class="cards" id="status-cards">
+      <div class="card">
+        <div class="card-label">Gemini API</div>
+        <div class="card-value warn" id="s-gemini">—</div>
+        <div class="card-sub" id="s-gemini-sub">checking...</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Ollama</div>
+        <div class="card-value warn" id="s-ollama">—</div>
+        <div class="card-sub" id="s-ollama-sub">checking...</div>
+      </div>
+      <div class="card">
+        <div class="card-label">ChromaDB Chunks</div>
+        <div class="card-value ok" id="s-chroma">—</div>
+        <div class="card-sub">indexed documents</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Cache Entries</div>
+        <div class="card-value ok" id="s-cache">—</div>
+        <div class="card-sub">saved Q&amp;A pairs</div>
+      </div>
+    </div>
+
+    <!-- RAG Inspector -->
+    <div class="section-title">RAG Inspector</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:28px;">
+      <div class="row" style="margin-bottom:12px;">
+        <input id="rag-q" type="text" placeholder="कोई भी सवाल लिखें — देखें RAG क्या retrieve करता है..." onkeydown="if(event.key==='Enter'){event.preventDefault();testRAG();}"
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--hindi);font-size:13px;outline:none;">
+        <select id="rag-crop" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
+          <option value="wheat_up">🌾 Wheat</option>
+          <option value="rice">🌾 Rice</option>
+          <option value="mustard">🌿 Mustard</option>
+          <option value="potato">🥔 Potato</option>
+          <option value="general">📚 General</option>
+        </select>
+        <button class="btn btn-amber" onclick="testRAG()">🔍 Inspect RAG</button>
+        <button class="mic-btn" id="mic-rag" onclick="startMic('rag-q', 'mic-rag')" title="बोलें">🎤</button>
+      </div>
+      <div id="rag-result" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📚 RAG Retrieved Chunks</div>
+            <div id="rag-chunks" style="font-size:12px;font-family:var(--hindi);line-height:1.7;color:var(--text);max-height:160px;overflow-y:auto;"></div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">🤖 AI Answer</div>
+            <div id="rag-answer" style="font-size:13px;font-family:var(--hindi);line-height:1.7;color:var(--text);max-height:160px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span id="rag-source-badge" style="font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:3px;background:var(--green-dim);color:var(--green);">SOURCE</span>
+          <span id="rag-chunks-count" style="font-size:11px;color:var(--muted);font-family:var(--mono);"></span>
+          <span id="rag-from-rag" style="font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:3px;"></span>
+        </div>
+      </div>
+      <div id="rag-loading" style="display:none;margin-top:12px;">
+        <div class="rag-pipeline" id="rag-pipeline">
+          <div class="pipeline-step" id="step-1"><span class="step-icon">🔍</span> ChromaDB में खोज रहे हैं...</div>
+          <div class="pipeline-step" id="step-2"><span class="step-icon">📚</span> Relevant chunks retrieve हो रहे हैं...</div>
+          <div class="pipeline-step" id="step-3"><span class="step-icon">🤖</span> AI answer generate कर रहा है...</div>
+          <div class="pipeline-step" id="step-4"><span class="step-icon">✅</span> उत्तर तैयार हो रहा है...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Quick Test</div>
+    <div class="row">
+      <input id="test-q" type="text" placeholder="गेहूं में पीले धब्बे क्यों होते हैं?" onkeydown="if(event.key==='Enter'){event.preventDefault();testAsk();}"
+        style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--hindi);font-size:13px;outline:none;">
+      <button class="btn btn-green" onclick="testAsk()">Ask →</button>
+      <button class="mic-btn" id="mic-test" onclick="startMic('test-q', 'mic-test')" title="बोलें">🎤</button>
+    </div>
+    <div class="log-box" id="test-log">// Test response will appear here...</div>
+  </div>
+
+  <!-- UPLOADS PAGE -->
+  <div class="page" id="page-uploads">
+    <div class="page-header">
+      <div>
+        <h2>Knowledge PDFs</h2>
+        <p>कृषि दस्तावेज़ अपलोड करें</p>
+      </div>
+    </div>
+
+    <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".pdf" onchange="uploadFile(this)">
+      <div class="icon">📄</div>
+      <h3>PDF Drop करें या Click करें</h3>
+      <p>कृषि गाइड, सरकारी योजनाएं, फसल मैनुअल — सभी PDF स्वीकार</p>
+    </div>
+
+    <div id="upload-progress" style="display:none;margin-bottom:16px;">
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+        <div id="progress-bar" style="height:100%;background:var(--green);width:0%;transition:width .3s;"></div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--mono);" id="progress-label">Uploading...</p>
+    </div>
+
+    <div class="section-title">Uploaded Files</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead>
+        <tbody id="files-tbody">
+          <tr><td colspan="4" style="color:var(--muted);font-family:var(--mono);">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CACHE PAGE -->
+  <div class="page" id="page-cache">
+    <div class="page-header">
+      <div>
+        <h2>Cache Manager</h2>
+        <p>सहेजे गए सवाल-जवाब</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="loadCache()">↻ Refresh</button>
+        <button class="btn btn-red" onclick="clearCache()">🗑 Clear All</button>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Total Cached</div>
+        <div class="card-value ok" id="c-total">—</div>
+        <div class="card-sub">Q&A pairs</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Total Hits</div>
+        <div class="card-value ok" id="c-hits">—</div>
+        <div class="card-sub">API calls saved</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Cache Size</div>
+        <div class="card-value ok" id="c-size">—</div>
+        <div class="card-sub">KB on disk</div>
+      </div>
+    </div>
+
+    <div class="section-title">Top Questions (by hits)</div>
+
+    <!-- ── Add Q&A entry ── -->
+    <div class="add-qa-panel" id="add-qa-panel">
+      <button class="add-qa-toggle" id="add-qa-toggle" onclick="toggleAddQA()" type="button">
+        <span>✏️ &nbsp;नया Q&amp;A Cache में जोड़ें</span>
+        <span class="toggle-icon">+</span>
+      </button>
+      <div class="add-qa-body" id="add-qa-body">
+        <div class="add-qa-field">
+          <label class="add-qa-label" for="qa-question">Question (सवाल)</label>
+          <input class="add-qa-input" id="qa-question"
+                 placeholder="जैसे: गेहूं में पानी कब दें?"
+                 oninput="updateQACount()" autocomplete="off">
+        </div>
+        <div class="add-qa-field">
+          <label class="add-qa-label" for="qa-answer">Answer (जवाब)</label>
+          <textarea class="add-qa-textarea" id="qa-answer"
+                    placeholder="जैसे: गेहूं में पहली सिंचाई बुवाई के 20-25 दिन बाद करें।"
+                    oninput="updateQACount()"></textarea>
+        </div>
+        <div class="add-qa-actions">
+          <button class="btn btn-green" onclick="addCacheEntry()" id="add-qa-btn" type="button" disabled>
+            💾 Cache में Save करें
+          </button>
+          <button class="btn btn-ghost" onclick="clearQAForm()" type="button">Clear</button>
+          <span class="add-qa-charcount" id="qa-charcount">Q: 0 &nbsp;|&nbsp; A: 0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="q-list" id="q-list">
+      <div style="color:var(--muted);font-family:var(--mono);font-size:13px;">Loading cache data...</div>
+    </div>
+  </div>
+
+  <!-- RE-INDEX PAGE -->
+  <div class="page" id="page-reindex">
+    <div class="page-header">
+      <div>
+        <h2>Re-index Knowledge</h2>
+        <p>ChromaDB को अपडेट करें</p>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:24px;">
+      <h3 style="font-size:15px;margin-bottom:8px;">🔄 Full Re-index</h3>
+      <p style="font-size:13px;color:var(--muted);font-family:var(--hindi);margin-bottom:16px;">
+        सभी seed data और uploaded PDFs को ChromaDB में फिर से index करता है।
+        नए PDF अपलोड के बाद यह चलाएं।
+      </p>
+      <button class="btn btn-amber" onclick="runReindex()" id="reindex-btn">
+        ⚡ Run Re-index
+      </button>
+    </div>
+
+    <div class="section-title">Index Log</div>
+    <div class="log-box" id="reindex-log">// Re-index output will appear here...</div>
+  </div>
+
+  <!-- CHAT PAGE -->
+  <div class="page" id="page-chat">
+    <div class="page-header">
+      <div>
+        <h2>🤖 AI Chat Test</h2>
+        <p>पूरी बातचीत करें — multi-turn chat with RAG + AI</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="chat-crop" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
+          <option value="wheat_up">🌾 Wheat UP</option>
+          <option value="rice">🌾 Rice</option>
+          <option value="mustard">🌿 Mustard</option>
+          <option value="potato">🥔 Potato</option>
+          <option value="general">📚 General</option>
+        </select>
+        <select id="chat-lang" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
+          <option value="hindi">हिंदी</option>
+          <option value="english">English</option>
+        </select>
+        <button class="btn btn-ghost" onclick="clearAdminChat()">🗑 Clear</button>
+      </div>
+    </div>
+
+    <!-- Chat messages -->
+    <div id="admin-chat-messages" style="
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:20px;
+      height:420px;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      margin-bottom:16px;
+      scroll-behavior:smooth;
+    ">
+      <div style="text-align:center;color:var(--muted);font-family:var(--hindi);font-size:13px;margin:auto;">
+        🌾 कोई भी कृषि सवाल पूछें...
+      </div>
+    </div>
+
+    <!-- Source indicator bar -->
+    <div id="admin-source-bar" style="display:none;margin-bottom:10px;padding:8px 14px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:12px;align-items:center;">
+      Last answer from: <span id="admin-last-source" style="color:var(--green);font-weight:700;">—</span>
+      &nbsp;|&nbsp; RAG chunks used: <span id="admin-rag-used" style="color:var(--amber);">—</span>
+    </div>
+
+    <!-- Input -->
+    <div style="display:flex;gap:10px;">
+      <input id="admin-chat-input" type="text"
+        placeholder="गेहूं में कौन सी खाद डालें? / What fertilizer for wheat?"
+        style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:var(--hindi);font-size:14px;outline:none;transition:border-color .2s;"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();sendAdminChat();}"
+        onfocus="this.style.borderColor='var(--green)'"
+        onblur="this.style.borderColor='var(--border)'">
+      <button class="mic-btn" id="mic-chat" onclick="startMic('admin-chat-input', 'mic-chat')" title="बोलें" style="width:46px;height:46px;font-size:18px;">🎤</button>
+      <button class="btn btn-green" id="admin-send-btn" onclick="sendAdminChat()" style="padding:12px 24px;font-size:14px;">
+        Send ↵
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+const AUTH = 'Basic ' + btoa('admin:krashi2025');
+
+// ── Clock ──────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN');
+}, 1000);
+
+// ── Navigation ─────────────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'status')  loadStatus();
+  if (name === 'uploads') loadFiles();
+  if (name === 'cache')   loadCache();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 3000);
+}
+
+// ── STATUS ─────────────────────────────────────────────────────────
+async function loadStatus() {
+  const btn = document.querySelector('#page-status .btn-ghost');
+  if (btn) {
+    btn.innerHTML = '<span style="display:inline-block;animation:spin .7s linear infinite;margin-right:4px;">↻</span> Loading';
+    btn.disabled = true;
+  }
+  try {
+    const r = await fetch(`${API}/admin/status`, {
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' }
+    });
+    const d = await r.json();
+
+    setCard('s-gemini', d.gemini_configured ? '✓' : '✗',
+            d.gemini_configured ? 'ok' : 'err',
+            d.gemini_configured ? 'Key configured' : 'Key not set');
+    setCard('s-ollama', d.ollama_running ? '✓' : '✗',
+            d.ollama_running ? 'ok' : 'warn',
+            d.ollama_running ? d.ollama_model : 'Not running');
+    document.getElementById('s-chroma').textContent = d.chroma_chunks;
+    document.getElementById('s-cache').textContent  = d.cache_entries;
+  } catch(e) {
+    toast('Backend से connect नहीं हो पाया। FastAPI चल रहा है?', 'err');
+  } finally {
+    const btn = document.querySelector('#page-status .btn-ghost');
+    if (btn) { btn.textContent = '↻ Refresh'; btn.disabled = false; }
+  }
+}
+
+function setCard(id, val, cls, sub) {
+  const el = document.getElementById(id);
+  el.textContent = val;
+  el.className = `card-value ${cls}`;
+  if (sub) document.getElementById(id + '-sub').textContent = sub;
+}
+
+// ── TEST ASK ───────────────────────────────────────────────────────
+async function testAsk() {
+  const q = document.getElementById('test-q').value.trim();
+  if (!q) return;
+  const log = document.getElementById('test-log');
+  log.innerHTML = `
+    <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+      <div class="step-spinner"></div>
+      <span class="log-warn">AI को सवाल भेजा जा रहा है...</span>
+    </div>
+    <div class="log-shimmer" style="width:80%;"></div>
+    <div class="log-shimmer" style="width:60%;"></div>
+    <div class="log-shimmer" style="width:70%;"></div>`;
+  try {
+    const r = await fetch(`${API}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        q,
+        crop:     'wheat_up',
+        language: 'hindi',
+        district: 'Meerut',
+        user_id:  null
+      })
+    });
+    if (!r.ok) {
+      const err = await r.text();
+      log.innerHTML = `<span class="log-err">Server error ${r.status}: ${escHtml(err)}</span>`;
+      return;
+    }
+    const d = await r.json();
+    const src = d.source || 'unknown';
+    log.innerHTML =
+      `<span class="log-ok">[${src.toUpperCase()}]</span>\n\n` +
+      escHtml(d.answer || d.message || JSON.stringify(d));
+  } catch(e) {
+    log.innerHTML = `<span class="log-err">Failed to fetch — is FastAPI running at ${API}?</span>`;
+  }
+}
+
+// ── FILES ──────────────────────────────────────────────────────────
+async function loadFiles() {
+  const tbody = document.getElementById('files-tbody');
+  try {
+    const r = await fetch(`${API}/admin/files`, { headers: { Authorization: AUTH } });
+    const d = await r.json();
+    if (!d.files.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);font-family:var(--mono);">No PDFs uploaded yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.files.map(f => `
+      <tr>
+        <td>📄 ${f.name}</td>
+        <td style="font-family:var(--mono);color:var(--muted)">${f.size_kb} KB</td>
+        <td style="font-family:var(--mono);color:var(--muted)">${f.uploaded_at}</td>
+        <td>
+          <button class="btn btn-red" style="padding:4px 10px;font-size:11px;" onclick="deleteFile('${f.name}')">Delete</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--red)">Error loading files</td></tr>`;
+  }
+}
+
+async function uploadFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const prog = document.getElementById('upload-progress');
+  const bar  = document.getElementById('progress-bar');
+  const lbl  = document.getElementById('progress-label');
+  prog.style.display = 'block';
+  bar.style.width = '30%';
+  lbl.textContent = `Uploading ${file.name}...`;
+
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    bar.style.width = '70%';
+    const r = await fetch(`${API}/admin/upload`, {
+      method: 'POST', headers: { Authorization: AUTH }, body: fd
+    });
+    const d = await r.json();
+    bar.style.width = '100%';
+    lbl.textContent = `✓ ${d.filename} — ${d.chunks_indexed} chunks indexed`;
+    toast(`✅ ${d.filename} uploaded & indexed`, 'ok');
+    setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0%'; }, 2000);
+    loadFiles();
+  } catch(e) {
+    lbl.textContent = 'Upload failed';
+    toast('Upload failed: ' + e.message, 'err');
+  }
+  input.value = '';
+}
+
+async function deleteFile(name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  try {
+    await fetch(`${API}/admin/files/${name}`, { method: 'DELETE', headers: { Authorization: AUTH } });
+    toast(`🗑 ${name} deleted`, 'ok');
+    loadFiles();
+  } catch(e) { toast('Delete failed', 'err'); }
+}
+
+// Drag & drop
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  const fi = document.getElementById('file-input');
+  fi.files = e.dataTransfer.files;
+  uploadFile(fi);
+});
+
+// ── CACHE ──────────────────────────────────────────────────────────
+async function loadCache() {
+  try {
+    const r = await fetch(`${API}/admin/cache/stats`, { headers: { Authorization: AUTH } });
+    const d = await r.json();
+    document.getElementById('c-total').textContent = d.total_entries ?? '—';
+    document.getElementById('c-hits').textContent  = d.total_hits   ?? '—';
+    document.getElementById('c-size').textContent  = (d.cache_file_kb ?? '—') + ' KB';
+
+    const list = document.getElementById('q-list');
+    const qs   = d.top_questions || [];
+    if (!qs.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:13px;">Cache is empty.</div>';
+      return;
+    }
+    list.innerHTML = qs.map((q, i) => `
+      <div class="q-item" id="qitem-${i}">
+        <div style="flex:1;min-width:0;">
+          <div class="q-text" id="qtext-${i}">${escHtml(q.question)}</div>
+          <div class="q-meta" style="margin-top:4px;">
+            <span style="color:var(--green);font-weight:700;">${q.source || 'unknown'}</span>
+            · ${q.saved_at?.split('T')[0] || ''}
+            · <span style="color:var(--amber);">${q.hits || 0} hits</span>
+          </div>
+          <div id="qanswer-${i}" style="font-size:12px;color:var(--muted);font-family:var(--hindi);margin-top:6px;display:none;padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
+            ${escHtml(q.answer || '—')}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;margin-left:12px;">
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="toggleAnswer(${i})">👁 Answer</button>
+          <button class="btn btn-amber" style="padding:4px 10px;font-size:11px;" onclick="editCacheEntry(${i}, ${JSON.stringify(q.question).replace(/'/g,"&#39;")}, ${JSON.stringify(q.answer||'').replace(/'/g,"&#39;")})">✏️ Edit</button>
+          <button class="btn btn-red" style="padding:4px 10px;font-size:11px;" onclick="deleteCacheEntry(${i}, ${JSON.stringify(q.question).replace(/'/g,"&#39;")})">🗑 Delete</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    toast('Cache data load failed', 'err');
+  }
+}
+
+// ── Toggle answer preview ─────────────────────────────────
+function toggleAnswer(i) {
+  const el = document.getElementById(`qanswer-${i}`);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── Delete single cache entry ──────────────────────────────
+async function deleteCacheEntry(i, question) {
+  if (!confirm(`Delete this entry?
+"${question}"`)) return;
+  try {
+    const r = await fetch(`${API}/admin/cache/delete`, {
+      method: 'DELETE',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    });
+    const d = await r.json();
+    if (d.deleted) {
+      document.getElementById(`qitem-${i}`).style.opacity = '0';
+      setTimeout(() => { document.getElementById(`qitem-${i}`).remove(); }, 300);
+      toast('✅ Entry deleted', 'ok');
+      loadCache();
+    } else {
+      toast('Entry not found', 'err');
+    }
+  } catch(e) { toast('Delete failed: ' + e.message, 'err'); }
+}
+
+// ── Edit single cache entry ────────────────────────────────
+async function editCacheEntry(i, question, currentAnswer) {
+  const newAnswer = prompt('Edit answer for:\n"' + question + '"\n\nCurrent answer:', currentAnswer);
+  if (!newAnswer || newAnswer === currentAnswer) return;
+  try {
+    const r = await fetch(`${API}/admin/cache/edit`, {
+      method: 'PUT',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, new_answer: newAnswer })
+    });
+    const d = await r.json();
+    if (d.updated) {
+      toast('✅ Answer updated', 'ok');
+      loadCache();
+    } else {
+      toast('Entry not found', 'err');
+    }
+  } catch(e) { toast('Edit failed: ' + e.message, 'err'); }
+}
+
+async function clearCache() {
+  if (!confirm('सभी cached entries delete होंगी। जारी रखें?')) return;
+  try {
+    const r = await fetch(`${API}/admin/cache/clear`, { method: 'DELETE', headers: { Authorization: AUTH } });
+    const d = await r.json();
+    toast(`✅ ${d.deleted_entries} entries cleared`, 'ok');
+    loadCache();
+  } catch(e) { toast('Clear failed', 'err'); }
+}
+
+// ── Add Q&A manually ──────────────────────────────────────
+function toggleAddQA() {
+  const toggle = document.getElementById('add-qa-toggle');
+  const body   = document.getElementById('add-qa-body');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+  if (!isOpen) document.getElementById('qa-question').focus();
+}
+
+function updateQACount() {
+  const q   = document.getElementById('qa-question').value.trim();
+  const a   = document.getElementById('qa-answer').value.trim();
+  const btn = document.getElementById('add-qa-btn');
+  document.getElementById('qa-charcount').textContent =
+    `Q: ${q.length} | A: ${a.length}`;
+  // Enable save only when both fields have real content (answer ≥ 20 chars matches cache_engine rule)
+  btn.disabled = !(q.length > 3 && a.length >= 20);
+}
+
+function clearQAForm() {
+  document.getElementById('qa-question').value = '';
+  document.getElementById('qa-answer').value   = '';
+  updateQACount();
+  document.getElementById('qa-question').focus();
+}
+
+async function addCacheEntry() {
+  const question = document.getElementById('qa-question').value.trim();
+  const answer   = document.getElementById('qa-answer').value.trim();
+  if (!question || answer.length < 20) return;
+
+  const btn = document.getElementById('add-qa-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+
+  try {
+    const r = await fetch(`${API}/admin/cache/add`, {
+      method:  'POST',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ question, answer, source: 'manual' })
+    });
+    const d = await r.json();
+    if (d.saved) {
+      toast('✅ Q&A cache में save हो गया!', 'ok');
+      clearQAForm();
+      loadCache();
+    } else if (d.duplicate) {
+      toast('⚠️ यह सवाल पहले से cache में है।', 'err');
+    } else {
+      toast('Entry save नहीं हुई: ' + (d.reason || 'unknown'), 'err');
+    }
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Cache में Save करें';
+    updateQACount();
+  }
+}
+
+// ── RE-INDEX ───────────────────────────────────────────────────────
+async function runReindex() {
+  const btn = document.getElementById('reindex-btn');
+  const log = document.getElementById('reindex-log');
+  btn.disabled = true;
+  btn.textContent = '⏳ Indexing...';
+  log.innerHTML = '<span class="log-warn">Starting re-index...</span>\n';
+  try {
+    const r = await fetch(`${API}/admin/reindex`, { method: 'POST', headers: { Authorization: AUTH } });
+    const d = await r.json();
+    log.innerHTML +=
+      `<span class="log-ok">✓ Done — ${d.total_chunks} total chunks in ChromaDB</span>`;
+    toast('✅ Re-index complete', 'ok');
+  } catch(e) {
+    log.innerHTML += `<span class="log-err">Error: ${e.message}</span>`;
+    toast('Re-index failed', 'err');
+  }
+  btn.disabled = false;
+  btn.textContent = '⚡ Run Re-index';
+}
+
+// ── Utils ──────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Theme toggle ──────────────────────────────────────────
+function toggleTheme() {
+  const isAgri = document.documentElement.classList.toggle('agri');
+  document.getElementById('theme-btn').classList.toggle('agri-on', isAgri);
+  localStorage.setItem('km_theme', isAgri ? 'agri' : 'dark');
+}
+
+// Restore saved theme on load
+(function() {
+  const saved = localStorage.getItem('km_theme');
+  if (saved === 'agri') {
+    document.documentElement.classList.add('agri');
+    document.getElementById('theme-btn').classList.add('agri-on');
+  }
+})();
+
+// ── ADMIN FULL CHAT ───────────────────────────────────────
+const adminChatHistory = [];
+
+function addAdminMsg(text, role, source) {
+  const box  = document.getElementById('admin-chat-messages');
+  const isMe = role === 'user';
+  const div  = document.createElement('div');
+  div.style.cssText = `
+    display:flex; flex-direction:column;
+    align-items:${isMe ? 'flex-end' : 'flex-start'};
+    gap:4px;
+  `;
+  const bubble = document.createElement('div');
+  bubble.style.cssText = `
+    max-width:75%;
+    padding:10px 14px;
+    border-radius:${isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px'};
+    background:${isMe ? 'var(--green)' : 'var(--bg)'};
+    color:${isMe ? '#000' : 'var(--text)'};
+    font-family:var(--hindi);
+    font-size:13px;
+    line-height:1.6;
+    border:1px solid ${isMe ? 'transparent' : 'var(--border)'};
+    white-space:pre-wrap;
+  `;
+  bubble.textContent = text;
+  div.appendChild(bubble);
+
+  if (source && !isMe) {
+    const src = document.createElement('div');
+    src.style.cssText = 'font-size:10px;font-family:var(--mono);color:var(--muted);padding:0 4px;';
+    const color = source === 'gemini' ? 'var(--green)' : source === 'ollama' ? 'var(--amber)' : 'var(--red)';
+    src.innerHTML = `<span style="color:${color};font-weight:700;">[${source.toUpperCase()}]</span>`;
+    div.appendChild(src);
+  }
+
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addAdminTyping() {
+  const box = document.getElementById('admin-chat-messages');
+  const div = document.createElement('div');
+  div.id = 'admin-typing';
+  div.innerHTML = `
+    <div class="ai-thinking">
+      <div class="dots">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="ai-thinking-text">AI सोच रहा है...</span>
+    </div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function removeAdminTyping() {
+  const t = document.getElementById('admin-typing');
+  if (t) t.remove();
+}
+
+// Typewriter effect for cache hits — answer types itself out instead of a frozen delay
+function typewriterAdminMsg(text, source, speed = 18) {
+  return new Promise(resolve => {
+    const box    = document.getElementById('admin-chat-messages');
+    const div    = document.createElement('div');
+    div.style.cssText = `
+      display:flex; flex-direction:column;
+      align-items:flex-start;
+      gap:4px;
+    `;
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `
+      max-width:75%;
+      padding:10px 14px;
+      border-radius:16px 16px 16px 4px;
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--hindi);
+      font-size:13px;
+      line-height:1.6;
+      border:1px solid var(--border);
+      white-space:pre-wrap;
+    `;
+    div.appendChild(bubble);
+
+    if (source) {
+      const src = document.createElement('div');
+      src.style.cssText = 'font-size:10px;font-family:var(--mono);color:var(--muted);padding:0 4px;';
+      const color = source === 'gemini' ? 'var(--green)' : source === 'ollama' ? 'var(--amber)' : 'var(--red)';
+      src.innerHTML = `<span style="color:${color};font-weight:700;">[${source.toUpperCase()}]</span>`;
+      div.appendChild(src);
+    }
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        bubble.textContent += text[i++];
+        box.scrollTop = box.scrollHeight;
+        setTimeout(type, speed);
+      } else {
+        resolve();
+      }
+    }
+    type();
+  });
+}
+
+async function sendAdminChat() {
+  const input = document.getElementById('admin-chat-input');
+  const q     = input.value.trim();
+  if (!q) return;
+
+  const crop = document.getElementById('chat-crop').value;
+  const lang = document.getElementById('chat-lang').value;
+  const btn  = document.getElementById('admin-send-btn');
+
+  // Clear initial placeholder if first message
+  const box = document.getElementById('admin-chat-messages');
+  if (box.children.length === 1 && box.children[0].style.textAlign === 'center') {
+    box.innerHTML = '';
+  }
+
+  addAdminMsg(q, 'user');
+  input.value = '';
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  addAdminTyping();
+
+  adminChatHistory.push({ role: 'user', content: q });
+
+  try {
+    const r = await fetch(`${API}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q, crop, language: lang, district: 'Meerut' })
+    });
+    const d = await r.json();
+
+    const answer = d.answer || d.message || 'कोई उत्तर नहीं मिला।';
+    const source = d.source || 'unknown';
+
+    removeAdminTyping();
+    if (source === 'cache') {
+      // Cache hits arrive instantly — typewriter makes the answer feel live
+      await typewriterAdminMsg(answer, source);
+    } else {
+      addAdminMsg(answer, 'bot', source);
+    }
+    adminChatHistory.push({ role: 'assistant', content: answer });
+
+    // Update source bar
+    const bar = document.getElementById('admin-source-bar');
+    bar.style.display = 'flex';
+    document.getElementById('admin-last-source').textContent = source.toUpperCase();
+    document.getElementById('admin-last-source').style.color =
+      source === 'gemini' ? 'var(--green)' :
+      source === 'ollama' ? 'var(--amber)' : 'var(--red)';
+    document.getElementById('admin-rag-used').textContent =
+      d.rag_chunks !== undefined ? d.rag_chunks : 'N/A';
+
+  } catch(e) {
+    removeAdminTyping();
+    addAdminMsg('❌ Server से connect नहीं हो पाया।', 'bot', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Send ↵';
+  input.focus();
+}
+
+function clearAdminChat() {
+  const box = document.getElementById('admin-chat-messages');
+  box.innerHTML = '<div style="text-align:center;color:var(--muted);font-family:var(--hindi);font-size:13px;margin:auto;">🌾 कोई भी कृषि सवाल पूछें...</div>';
+  document.getElementById('admin-source-bar').style.display = 'none';
+  adminChatHistory.length = 0;
+}
+
+// ── RAG INSPECTOR ─────────────────────────────────────────
+async function testRAG() {
+  const q    = document.getElementById('rag-q').value.trim();
+  const crop = document.getElementById('rag-crop').value;
+  if (!q) return;
+
+  document.getElementById('rag-result').style.display  = 'none';
+  document.getElementById('rag-loading').style.display = 'block';
+
+  // Animate pipeline steps
+  const steps = ['step-1','step-2','step-3','step-4'];
+  steps.forEach(s => {
+    document.getElementById(s).classList.remove('active','done');
+  });
+  let stepIdx = 0;
+  const stepTimer = setInterval(() => {
+    if (stepIdx > 0) document.getElementById(steps[stepIdx-1]).classList.add('done');
+    if (stepIdx < steps.length) {
+      document.getElementById(steps[stepIdx]).classList.add('active');
+      stepIdx++;
+    } else {
+      clearInterval(stepTimer);
+    }
+  }, 600);
+
+  try {
+    const r = await fetch(`${API}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q, crop, language: 'hindi', district: 'Meerut' })
+    });
+    const d = await r.json();
+
+    clearInterval(stepTimer);
+    steps.forEach(s => document.getElementById(s).classList.add('done'));
+    setTimeout(() => {
+      document.getElementById('rag-loading').style.display = 'none';
+      document.getElementById('rag-result').style.display  = 'block';
+    }, 400);
+
+    const source = d.source || 'unknown';
+    const fromRAG = source === 'rag' || (d.rag_chunks && d.rag_chunks > 0);
+
+    // Show answer
+    document.getElementById('rag-answer').textContent = d.answer || '—';
+
+    // Show chunks if available
+    const chunksEl = document.getElementById('rag-chunks');
+    if (d.rag_context) {
+      chunksEl.innerHTML = escHtml(d.rag_context).replace(/\n/g, '<br>');
+    } else {
+      chunksEl.innerHTML = '<span style="color:var(--muted)">RAG context not exposed in response.<br>Add rag_context to /ask response to see chunks here.</span>';
+    }
+
+    // Source badge
+    const badge = document.getElementById('rag-source-badge');
+    badge.textContent = source.toUpperCase();
+    badge.style.background = source === 'gemini' ? 'rgba(74,222,128,.15)' :
+                             source === 'ollama'  ? 'rgba(251,191,36,.15)' :
+                             source === 'rag'     ? 'rgba(99,179,237,.15)' : 'rgba(248,113,113,.15)';
+    badge.style.color = source === 'gemini' ? 'var(--green)' :
+                        source === 'ollama'  ? 'var(--amber)' :
+                        source === 'rag'     ? '#63b3ed' : 'var(--red)';
+
+    document.getElementById('rag-chunks-count').textContent =
+      d.rag_chunks ? `${d.rag_chunks} chunks retrieved` : '';
+
+    const ragBadge = document.getElementById('rag-from-rag');
+    ragBadge.textContent = fromRAG ? '✅ RAG data used' : '⚠️ RAG not used';
+    ragBadge.style.background = fromRAG ? 'rgba(74,222,128,.1)' : 'rgba(251,191,36,.1)';
+    ragBadge.style.color = fromRAG ? 'var(--green)' : 'var(--amber)';
+
+  } catch(e) {
+    document.getElementById('rag-loading').style.display = 'none';
+    document.getElementById('rag-chunks').textContent = 'Error: ' + e.message;
+    document.getElementById('rag-result').style.display = 'block';
+  }
+}
+
+// ── showPage update to handle chat ────────────────────────
+const _origShowPage = showPage;
+
+// ── MIC / SPEECH RECOGNITION ─────────────────────────────
+let _activeMic = null;
+
+function startMic(inputId, btnId) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    toast('आपका browser voice input support नहीं करता।', 'err');
+    return;
+  }
+
+  const btn = document.getElementById(btnId);
+
+  // If already listening on this button — stop
+  if (_activeMic && _activeMic._btnId === btnId) {
+    _activeMic.stop();
+    return;
+  }
+
+  // Stop any other active mic first
+  if (_activeMic) _activeMic.stop();
+
+  const rec = new SpeechRecognition();
+  rec._btnId       = btnId;
+  rec.lang         = 'hi-IN';          // Hindi primary
+  rec.interimResults = true;
+  rec.continuous   = false;
+  rec.maxAlternatives = 1;
+
+  rec.onstart = () => {
+    _activeMic = rec;
+    btn.classList.add('listening');
+    btn.textContent = '🔴';
+  };
+
+  rec.onresult = (e) => {
+    const transcript = Array.from(e.results)
+      .map(r => r[0].transcript).join('');
+    document.getElementById(inputId).value = transcript;
+  };
+
+  rec.onerror = (e) => {
+    if (e.error === 'no-speech') {
+      toast('कोई आवाज़ नहीं सुनी — फिर से कोशिश करें।', 'err');
+    } else if (e.error === 'not-allowed') {
+      toast('Microphone permission दें — browser settings में।', 'err');
+    } else {
+      toast('Mic error: ' + e.error, 'err');
+    }
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    _activeMic = null;
+  };
+
+  rec.onend = () => {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    _activeMic = null;
+    // Auto-send if chat input
+    if (inputId === 'admin-chat-input') {
+      const val = document.getElementById('admin-chat-input').value.trim();
+      if (val) sendAdminChat();
+    }
+  };
+
+  rec.start();
+}
+
+// Auto-load on start
+loadStatus();
+</script>
+</body>
+</html>

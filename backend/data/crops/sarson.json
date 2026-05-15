@@ -1,0 +1,36 @@
+{
+  "crop": "सरसों",
+  "crop_en": "sarson",
+  "crop_key": "sarson",
+  "keywords": ["सरसों", "sarson", "mustard", "sarso", "राई", "rai"],
+
+  "diseases": [
+    {
+      "name": "सफेद गेरुई (White Rust)",
+      "name_en": "safed gerui white rust",
+      "keywords": ["सफेद गेरुई", "white rust", "safed gerui", "सफेद धब्बे", "पत्ती सफेद"],
+      "symptoms": "पत्तियों की निचली सतह पर सफेद पाउडर जैसे उभार दिखते हैं। ऊपरी सतह पर पीले धब्बे। फलियाँ विकृत हो जाती हैं।",
+      "treatment": "Metalaxyl + Mancozeb (Ridomil Gold) — 2 ग्राम प्रति लीटर पानी। पहला छिड़काव रोग शुरू होते ही, दूसरा 15 दिन बाद।",
+      "prevention": "समय पर बुवाई (अक्टूबर 15 से पहले)। रोग-प्रतिरोधी किस्में: Varuna, Pusa Bold। पानी का जमाव न होने दें।"
+    }
+  ],
+
+  "fertilizers": [
+    {
+      "name": "सरसों के लिए खाद",
+      "name_en": "sarson mustard fertilizer",
+      "keywords": ["सरसों खाद", "mustard fertilizer", "सल्फर", "sulphur", "नाइट्रोजन"],
+      "description": "सरसों को सल्फर की विशेष ज़रूरत होती है — तेल की मात्रा बढ़ाने के लिए।",
+      "dosage": "N:P:K = 80:40:40 किलो प्रति हेक्टेयर। 40 किलो सल्फर (Gypsum से) अतिरिक्त। यूरिया: 174 किलो, DAP: 87 किलो, MOP: 67 किलो।",
+      "season": "रबी — अक्टूबर-नवंबर बुवाई"
+    }
+  ],
+
+  "sowing": {
+    "title": "सरसों बुवाई की जानकारी",
+    "title_en": "sarson mustard sowing information",
+    "keywords": ["बुवाई", "sowing", "सरसों बोना", "कब बोएं", "बीज दर", "variety"],
+    "season": "रबी — अक्टूबर 1-20 के बीच सर्वोत्तम",
+    "description": "बुवाई का सबसे अच्छा समय 1-15 अक्टूबर। देर से बुवाई पर उपज और तेल दोनों कम। बीज दर: 5-6 किलो प्रति हेक्टेयर। कतार दूरी: 45-50 सेमी। अनुशंसित किस्में: Pusa Bold, Varuna, RH 749, Laxmi। पहली सिंचाई: बुवाई के 30-35 दिन बाद (फूल आने से पहले)।"
+  }
+}

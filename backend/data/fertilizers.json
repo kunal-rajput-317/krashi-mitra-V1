@@ -1,0 +1,80 @@
+{
+  "urea": {
+    "name": "Urea",
+    "type": "Nitrogen",
+    "price_per_bag": 266,
+    "bag_size": "45 kg",
+    "use": "Boosts leaf and stem growth. Best applied in split doses.",
+    "suitable_for": ["Wheat", "Rice", "Sugarcane"],
+    "image": "images/fertilizers/Urea.jpg",
+    "nitrogen": "46%",
+    "when_to_apply": "At sowing and 30 days after sowing",
+    "dosage": "120 kg per hectare",
+    "precaution": "Do not apply before heavy rain. Avoid contact with seeds."
+  },
+  "dap": {
+    "name": "DAP (Di-Ammonium Phosphate)",
+    "type": "Phosphorus + Nitrogen",
+    "price_per_bag": 1350,
+    "bag_size": "50 kg",
+    "use": "Root development and early growth stage nutrition.",
+    "suitable_for": ["Wheat", "Rice", "Sugarcane"],
+    "image": "images/fertilizers/dap.jpg",
+    "nitrogen": "18%",
+    "when_to_apply": "At sowing time, mixed with soil",
+    "dosage": "60 kg per hectare",
+    "precaution": "Store in dry place. Do not mix with urea directly."
+  },
+  "mop": {
+    "name": "MOP (Muriate of Potash)",
+    "type": "Potassium",
+    "price_per_bag": 1700,
+    "bag_size": "50 kg",
+    "use": "Improves grain quality, disease resistance and water regulation.",
+    "suitable_for": ["Wheat", "Rice", "Sugarcane"],
+    "image": "images/fertilizers/mop.jpg",
+    "nitrogen": "0%",
+    "when_to_apply": "At land preparation stage",
+    "dosage": "40 kg per hectare",
+    "precaution": "Avoid use in saline soils. Keep away from moisture."
+  },
+  "ssp": {
+    "name": "SSP (Single Super Phosphate)",
+    "type": "Phosphorus + Sulphur",
+    "price_per_bag": 450,
+    "bag_size": "50 kg",
+    "use": "Soil conditioning, phosphorus and sulphur supply.",
+    "suitable_for": ["Wheat", "Sugarcane"],
+    "image": "images/fertilizers/ssp.jpg",
+    "nitrogen": "0%",
+    "when_to_apply": "Before sowing, mixed with soil",
+    "dosage": "150 kg per hectare",
+    "precaution": "Do not store near acidic materials. Keep dry."
+  },
+  "zinc_sulphate": {
+    "name": "Zinc Sulphate",
+    "type": "Micronutrient",
+    "price_per_bag": 1200,
+    "bag_size": "25 kg",
+    "use": "Corrects zinc deficiency which is common in UP soils.",
+    "suitable_for": ["Wheat", "Rice", "Sugarcane"],
+    "image": "images/fertilizers/zinc_sulphate.jpg",
+    "nitrogen": "0%",
+    "when_to_apply": "At sowing or as foliar spray",
+    "dosage": "25 kg per hectare",
+    "precaution": "Do not mix with phosphatic fertilizers directly."
+  },
+  "npk_12_32_16": {
+    "name": "NPK 12:32:16",
+    "type": "Complex Fertilizer",
+    "price_per_bag": 1600,
+    "bag_size": "50 kg",
+    "use": "Balanced nutrition covering all major growth stages.",
+    "suitable_for": ["Wheat", "Rice", "Sugarcane"],
+    "image": "images/fertilizers/npk.jpg",
+    "nitrogen": "12%",
+    "when_to_apply": "At sowing time as basal dose",
+    "dosage": "100 kg per hectare",
+    "precaution": "Store in cool dry place. Use within expiry date."
+  }
+}

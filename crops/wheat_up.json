@@ -1,0 +1,34 @@
+{
+  "sowing_time": {
+    "keywords": ["sow", "sowing", "plant", "planting", "when to grow", "start"],
+    "answer": "Wheat in UP is sown between October and December."
+  },
+  "harvest_time": {
+    "keywords": ["harvest", "harvesting", "reap", "cut", "ready"],
+    "answer": "Wheat in UP is harvested between March and April."
+  },
+  "water": {
+    "keywords": ["water", "irrigation", "irrigate"],
+    "answer": "Wheat needs 4-6 irrigations. First irrigation at 20-25 days after sowing."
+  },
+  "fertilizer": {
+    "keywords": ["fertilizer", "fertiliser", "nutrient", "urea", "npk"],
+    "answer": "Apply 120kg Nitrogen, 60kg Phosphorus, and 40kg Potassium per hectare."
+  },
+  "soil": {
+    "keywords": ["soil", "land", "ground", "ph"],
+    "answer": "Wheat grows best in loamy or clay-loam soil with pH 6.0 to 7.5."
+  },
+  "yield": {
+    "keywords": ["yield", "production", "output", "quintals"],
+    "answer": "Average wheat yield in UP is 35-45 quintals per hectare."
+  },
+  "disease": {
+    "keywords": ["disease", "pest", "rust", "smut", "fungus", "infection"],
+    "answer": "Common diseases are rust, smut, and powdery mildew."
+  },
+  "seed": {
+    "keywords": ["seed", "variety", "varieties", "breed"],
+    "answer": "Popular varieties in UP are HD-2967, PBW-343, and K-307."
+  }
+}

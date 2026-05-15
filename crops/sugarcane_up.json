@@ -1,0 +1,34 @@
+{
+  "sowing_time": {
+    "keywords": ["sow", "sowing", "plant", "planting", "when to grow", "start"],
+    "answer": "Sugarcane in UP is planted between February and April. Autumn planting can also be done in October."
+  },
+  "harvest_time": {
+    "keywords": ["harvest", "harvesting", "reap", "cut", "ready"],
+    "answer": "Sugarcane in UP is harvested between November and March, about 10-12 months after planting."
+  },
+  "water": {
+    "keywords": ["water", "irrigation", "irrigate"],
+    "answer": "Sugarcane needs 8-10 irrigations. Heavy irrigation required during April-June. Avoid waterlogging."
+  },
+  "fertilizer": {
+    "keywords": ["fertilizer", "fertiliser", "nutrient", "urea", "npk"],
+    "answer": "Apply 150kg Nitrogen, 60kg Phosphorus, and 60kg Potassium per hectare for sugarcane in UP."
+  },
+  "soil": {
+    "keywords": ["soil", "land", "ground", "ph"],
+    "answer": "Sugarcane grows best in deep loamy or clay-loam soil with pH 6.5 to 7.5."
+  },
+  "yield": {
+    "keywords": ["yield", "production", "output", "quintals"],
+    "answer": "Average sugarcane yield in UP is 600-700 quintals per hectare."
+  },
+  "disease": {
+    "keywords": ["disease", "pest", "fungus", "infection", "borer"],
+    "answer": "Common problems are red rot, wilt, smut, and top borer insect attack."
+  },
+  "seed": {
+    "keywords": ["seed", "variety", "varieties", "breed"],
+    "answer": "Popular varieties in UP are Co-0238, CoS-8436, CoS-767, and CoJ-64."
+  }
+}
