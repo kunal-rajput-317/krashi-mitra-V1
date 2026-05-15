@@ -1108,7 +1108,7 @@
 
   async function fetchWeather() {
     try {
-      const res  = await fetch(`http://127.0.0.1:8000/weather?district=${WEATHER_DISTRICT}`);
+      const res  = await fetch(`https://krashi-mitra-v1.onrender.com/weather?district=${WEATHER_DISTRICT}`);
       const json = await res.json();
       if (!json.success) return;
       const d = json.data;
