@@ -12,6 +12,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, Boolean, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -29,14 +30,22 @@ DB_NAME     = os.getenv("DB_NAME", "krashi_mitra_database")
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+# DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+
 
 print(f"🗄️  Connecting to: {DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
-engine       = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base         = declarative_base()
+DATABASE_URL = os.getenv("https://krashi-mitra-v1.onrender.com")
 
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set!")
+
+if "sslmode" not in DATABASE_URL:
+    DATABASE_URL += "?sslmode=require"
+
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 # ── WEATHER CACHE MODEL (NEW) ────────────────────────────────
 
