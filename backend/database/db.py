@@ -29,7 +29,7 @@ DB_NAME     = os.getenv("DB_NAME", "krashi_mitra_database")
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
 print(f"🗄️  Connecting to: {DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
