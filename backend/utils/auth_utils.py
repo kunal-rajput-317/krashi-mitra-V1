@@ -12,6 +12,7 @@ import os
 import re
 import random
 import smtplib
+import traceback
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
@@ -60,12 +61,10 @@ def validate_password_strength(password: str) -> Optional[str]:
     Rules: min 6 chars, at least 1 letter, at least 1 number.
     Returns None if valid, Hindi error string if invalid.
     """
+    if len(password) > 70:
+        return "पासवर्ड 70 characters से छोटा होना चाहिए।"
     if len(password) < 6:
         return "Password कम से कम 6 characters का होना चाहिए।"
-    # if not re.search(r"[A-Za-z]", password):
-    #     return "Password में कम से कम एक letter होना चाहिए।"
-    # if not re.search(r"[0-9]", password):
-    #     return "Password में कम से कम एक number होना चाहिए।"
     return None
 
 
@@ -115,14 +114,6 @@ def get_current_user(
         "user_id": int(payload["sub"]),
         "email":   payload["email"],
     }
-
-def hash_password(plain_password: str) -> str:
-    return pwd_context.hash(plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore'))
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    truncated = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
-    return pwd_context.verify(truncated, hashed_password)
-
 
 
 # ── OTP Utilities ────────────────────────────────────────────
