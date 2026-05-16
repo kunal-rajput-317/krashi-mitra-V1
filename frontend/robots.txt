@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemap location — Google इसे automatically पढ़ेगा
+Sitemap: https://krashimitra.in/sitemap.xml
