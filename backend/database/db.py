@@ -23,7 +23,7 @@ load_dotenv(env_path)
 # ── Database Connection ──────────────────────────────────────
 DB_USER     = os.getenv("DB_USER", "neondb_owner")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_HOST     = os.getenv("DB_HOST", "postgresql://neondb_owner:npg_6BEHp8TGhFxU@ep-gentle-flower-ap90gedq-pooler.c-7.us-east-1.aws.neon.tech/krashi_mitra_database?sslmode=require&channel_binding=require")
+DB_HOST     = os.getenv("DB_HOST", "ep-gentle-flower-ap90gedq")
 DB_PORT     = os.getenv("DB_PORT", "5432")
 DB_NAME     = os.getenv("DB_NAME", "krashi_mitra_database")
 
