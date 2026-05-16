@@ -23,7 +23,7 @@ load_dotenv(env_path)
 # ── Database Connection ──────────────────────────────────────
 DB_USER     = os.getenv("DB_USER", "neondb_owner")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_HOST     = os.getenv("DB_HOST", "ep-gentle-flower-ap90gedq")
+DB_HOST     = os.getenv("DB_HOST", "ep-gentle-flower-ap90gedq.c-7.us-east-1.aws.neon.tech")
 DB_PORT     = os.getenv("DB_PORT", "5432")
 DB_NAME     = os.getenv("DB_NAME", "krashi_mitra_database")
 
