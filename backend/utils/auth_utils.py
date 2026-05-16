@@ -62,10 +62,10 @@ def validate_password_strength(password: str) -> Optional[str]:
     """
     if len(password) < 6:
         return "Password कम से कम 6 characters का होना चाहिए।"
-    if not re.search(r"[A-Za-z]", password):
-        return "Password में कम से कम एक letter होना चाहिए।"
-    if not re.search(r"[0-9]", password):
-        return "Password में कम से कम एक number होना चाहिए।"
+    # if not re.search(r"[A-Za-z]", password):
+    #     return "Password में कम से कम एक letter होना चाहिए।"
+    # if not re.search(r"[0-9]", password):
+    #     return "Password में कम से कम एक number होना चाहिए।"
     return None
 
 
