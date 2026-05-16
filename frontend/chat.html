@@ -4866,7 +4866,7 @@ function switchShopTab(tab) {
 // Load states on shop tab open
 async function loadStates() {
   try {
-    const res   = await fetch("http://127.0.0.1:8000/shop/states");
+    const res   = await fetch("https://krashi-mitra-v1.onrender.com/shop/states");
     const data  = await res.json();
     const sel   = document.getElementById("mandi-state");
     sel.innerHTML = `<option value="">Select State</option>` +
@@ -4882,14 +4882,14 @@ async function onStateChange() {
   if (!state) return;
 
   // Load districts for this state
-  const dRes  = await fetch(`http://127.0.0.1:8000/shop/districts?state=${encodeURIComponent(state)}`);
+  const dRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/districts?state=${encodeURIComponent(state)}`);
   const dData = await dRes.json();
   const dSel  = document.getElementById("mandi-district-filter");
   dSel.innerHTML = `<option value="">Select District</option>` +
     dData.districts.map(d => `<option value="${d}">${d}</option>`).join("");
 
   // Load commodities for this state
-  const cRes  = await fetch(`http://127.0.0.1:8000/shop/commodities?state=${encodeURIComponent(state)}`);
+  const cRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/commodities?state=${encodeURIComponent(state)}`);
   const cData = await cRes.json();
   const cSel  = document.getElementById("mandi-commodity");
   cSel.innerHTML = `<option value="">Select Commodity</option>` +
@@ -4911,7 +4911,7 @@ async function fetchMandiPrices() {
   result.innerHTML = `<div class="shop-loading">🔄 Loading prices...</div>`;
 
   try {
-    const url  = `http://127.0.0.1:8000/shop/mandi?commodity=${encodeURIComponent(commodity)}&district=${encodeURIComponent(district)}&state=${encodeURIComponent(state)}`;
+    const url  = `https://krashi-mitra-v1.onrender.com/shop/mandi?commodity=${encodeURIComponent(commodity)}&district=${encodeURIComponent(district)}&state=${encodeURIComponent(state)}`;
     const res  = await fetch(url);
     const data = await res.json();
 
@@ -5010,7 +5010,7 @@ function toggleMandiView() {
 async function loadFertilizers() {
   const grid = document.getElementById("fertilizer-grid");
   try {
-    const res   = await fetch("http://127.0.0.1:8000/shop/fertilizers");
+    const res   = await fetch("https://krashi-mitra-v1.onrender.com/shop/fertilizers");
     const data  = await res.json();
     const items = Object.entries(data.fertilizers);
 
@@ -5165,7 +5165,7 @@ async function fetchWeather() {
 
   try {
     const res  = await fetch(
-      `http://127.0.0.1:8000/weather?district=${encodeURIComponent(district)}`
+      `https://krashi-mitra-v1.onrender.com/weather?district=${encodeURIComponent(district)}`
     );
     const json = await res.json();
 
@@ -5395,7 +5395,7 @@ async function fetchWeather() {
     addTyping();
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/ask", {
+      const res = await fetch("https://krashi-mitra-v1.onrender.com/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ q, crop, language: selectedLanguage, district: location })
@@ -5421,7 +5421,7 @@ async function fetchWeather() {
   async function resetChat() {
     if (!getToken()) { showLogin(); return; }
     const crop = document.getElementById("crop").value;
-    await fetch(`http://127.0.0.1:8000/reset?crop=${crop}`, { method: "POST" });
+    await fetch(`https://krashi-mitra-v1.onrender.com/reset?crop=${crop}`, { method: "POST" });
     document.getElementById("chat").innerHTML = "";
     addBubble("Conversation saved and reset. How can I help you today? 🌱", "bot");
   }
@@ -5614,7 +5614,7 @@ async function fetchWeather() {
   // ══════════════════════════════════════
   // AUTH — CONFIG
   // ══════════════════════════════════════
-  const API = "http://127.0.0.1:8000"; 
+  const API = "https://krashi-mitra-v1.onrender.comy"; 
 
   // Pending-verification email (stored across signup → OTP step)
   let pendingEmail = "";
@@ -6292,7 +6292,7 @@ async function doSearch() {
       lang:     selectedLanguage || "hindi",
       district: (typeof selectedDistrict !== "undefined" ? selectedDistrict : ""),
     });
-    const res  = await fetch(`http://127.0.0.1:8000/search?${params}`);
+    const res  = await fetch(`https://krashi-mitra-v1.onrender.com/search?${params}`);
     const data = await res.json();
     renderWeatherContext(data.weather_context || null);
     renderSearchResults(data.results || [], q);
