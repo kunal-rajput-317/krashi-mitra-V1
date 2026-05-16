@@ -116,6 +116,14 @@ def get_current_user(
         "email":   payload["email"],
     }
 
+def hash_password(plain_password: str) -> str:
+    return pwd_context.hash(plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore'))
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    truncated = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
+    return pwd_context.verify(truncated, hashed_password)
+
+
 
 # ── OTP Utilities ────────────────────────────────────────────
 
