@@ -1,13 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Krashi_mitra — किसान का साथी</title>
+
+  <!-- ✅ SEO: Title — Google इसे search result में दिखाता है -->
+  <title>यूरिया का भाव आज ₹266.50 | खाद की कीमतें 2025 | KrashiMitra</title>
+
+  <!-- ✅ SEO: Description — Google snippet में यही दिखता है -->
+  <meta name="description" content="आज यूरिया का भाव ₹266.50, DAP ₹1350 देखें — KrashiMitra पर। खाद की सरकारी कीमतें, मंडी भाव, मौसम और AI किसान सहायक — सब एक जगह।" />
+  <meta name="keywords" content="यूरिया का भाव, urea price today, खाद की कीमतें, DAP price 2025, khad ka rate, kisan app, krashimitra" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://krashimitra.in/" />
+
+  <!-- ✅ Open Graph — WhatsApp / Facebook पर share होने पर यही दिखेगा -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="यूरिया ₹266.50 · DAP ₹1350 — आज का खाद भाव | KrashiMitra" />
+  <meta property="og:description" content="किसान भाई — आज की खाद की कीमतें देखें। यूरिया ₹266.50, DAP ₹1350। KrashiMitra पर सीधे खाद टैब खुलेगा।" />
+  <meta property="og:url" content="https://krashimitra.in/" />
+  <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg" />
+  <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
+  <meta property="og:locale" content="hi_IN" />
+
+  <!-- ✅ Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="यूरिया ₹266.50 · DAP ₹1350 — KrashiMitra" />
+  <meta name="twitter:description" content="आज की खाद की कीमतें — यूरिया, DAP, MOP सब एक जगह।" />
+  <meta name="twitter:image" content="https://krashimitra.in/images/og-banner.jpg" />
+
+  <!-- ✅ Schema Markup — Google Rich Snippet (bold numbers in search result) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "KrashiMitra",
+    "url": "https://krashimitra.in",
+    "description": "किसान AI सहायक — खाद की कीमतें, मंडी भाव, मौसम",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://krashimitra.in/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "आज यूरिया का भाव क्या है?",
+        "acceptedAnswer": { "@type": "Answer", "text": "आज यूरिया का सरकारी भाव ₹266.50 प्रति 45 किलो बैग है।" }
+      },
+      {
+        "@type": "Question",
+        "name": "DAP खाद की कीमत 2025 में क्या है?",
+        "acceptedAnswer": { "@type": "Answer", "text": "DAP खाद की कीमत ₹1350 प्रति 50 किलो बैग है।" }
+      },
+      {
+        "@type": "Question",
+        "name": "खाद की जानकारी कहाँ मिलेगी?",
+        "acceptedAnswer": { "@type": "Answer", "text": "KrashiMitra.in पर सभी खाद की कीमतें, मंडी भाव और किसान जानकारी मिलती है।" }
+      }
+    ]
+  }
+  </script>
+
   <!-- Drawer overlay — tap to close sidebar -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-</head>
+  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
   
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -4805,7 +4866,7 @@ function switchShopTab(tab) {
 // Load states on shop tab open
 async function loadStates() {
   try {
-    const res   = await fetch("https://krashi-mitra-v1.onrender.com/shop/states");
+    const res   = await fetch("http://127.0.0.1:8000/shop/states");
     const data  = await res.json();
     const sel   = document.getElementById("mandi-state");
     sel.innerHTML = `<option value="">Select State</option>` +
@@ -4821,14 +4882,14 @@ async function onStateChange() {
   if (!state) return;
 
   // Load districts for this state
-  const dRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/districts?state=${encodeURIComponent(state)}`);
+  const dRes  = await fetch(`http://127.0.0.1:8000/shop/districts?state=${encodeURIComponent(state)}`);
   const dData = await dRes.json();
   const dSel  = document.getElementById("mandi-district-filter");
   dSel.innerHTML = `<option value="">Select District</option>` +
     dData.districts.map(d => `<option value="${d}">${d}</option>`).join("");
 
   // Load commodities for this state
-  const cRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/commodities?state=${encodeURIComponent(state)}`);
+  const cRes  = await fetch(`http://127.0.0.1:8000/shop/commodities?state=${encodeURIComponent(state)}`);
   const cData = await cRes.json();
   const cSel  = document.getElementById("mandi-commodity");
   cSel.innerHTML = `<option value="">Select Commodity</option>` +
@@ -4850,7 +4911,7 @@ async function fetchMandiPrices() {
   result.innerHTML = `<div class="shop-loading">🔄 Loading prices...</div>`;
 
   try {
-    const url  = `https://krashi-mitra-v1.onrender.com/shop/mandi?commodity=${encodeURIComponent(commodity)}&district=${encodeURIComponent(district)}&state=${encodeURIComponent(state)}`;
+    const url  = `http://127.0.0.1:8000/shop/mandi?commodity=${encodeURIComponent(commodity)}&district=${encodeURIComponent(district)}&state=${encodeURIComponent(state)}`;
     const res  = await fetch(url);
     const data = await res.json();
 
@@ -4949,7 +5010,7 @@ function toggleMandiView() {
 async function loadFertilizers() {
   const grid = document.getElementById("fertilizer-grid");
   try {
-    const res   = await fetch("https://krashi-mitra-v1.onrender.com/shop/fertilizers");
+    const res   = await fetch("http://127.0.0.1:8000/shop/fertilizers");
     const data  = await res.json();
     const items = Object.entries(data.fertilizers);
 
@@ -5104,7 +5165,7 @@ async function fetchWeather() {
 
   try {
     const res  = await fetch(
-      `https://krashi-mitra-v1.onrender.com/weather?district=${encodeURIComponent(district)}`
+      `http://127.0.0.1:8000/weather?district=${encodeURIComponent(district)}`
     );
     const json = await res.json();
 
@@ -5334,7 +5395,7 @@ async function fetchWeather() {
     addTyping();
 
     try {
-      const res = await fetch("https://krashi-mitra-v1.onrender.com/ask", {
+      const res = await fetch("http://127.0.0.1:8000/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ q, crop, language: selectedLanguage, district: location })
@@ -5360,7 +5421,7 @@ async function fetchWeather() {
   async function resetChat() {
     if (!getToken()) { showLogin(); return; }
     const crop = document.getElementById("crop").value;
-    await fetch(`https://krashi-mitra-v1.onrender.com/reset?crop=${crop}`, { method: "POST" });
+    await fetch(`http://127.0.0.1:8000/reset?crop=${crop}`, { method: "POST" });
     document.getElementById("chat").innerHTML = "";
     addBubble("Conversation saved and reset. How can I help you today? 🌱", "bot");
   }
@@ -5553,7 +5614,7 @@ async function fetchWeather() {
   // ══════════════════════════════════════
   // AUTH — CONFIG
   // ══════════════════════════════════════
-  const API = "https://krashi-mitra-v1.onrender.com"; 
+  const API = "http://127.0.0.1:8000"; 
 
   // Pending-verification email (stored across signup → OTP step)
   let pendingEmail = "";
@@ -6231,7 +6292,7 @@ async function doSearch() {
       lang:     selectedLanguage || "hindi",
       district: (typeof selectedDistrict !== "undefined" ? selectedDistrict : ""),
     });
-    const res  = await fetch(`https://krashi-mitra-v1.onrender.com/search?${params}`);
+    const res  = await fetch(`http://127.0.0.1:8000/search?${params}`);
     const data = await res.json();
     renderWeatherContext(data.weather_context || null);
     renderSearchResults(data.results || [], q);
