@@ -198,3 +198,5 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
     except Exception as e:
         print(f"⚠️  Unexpected email error to {to_email}: {e}")
         return False
+    
+    print("✅ auth_utils.py loaded successfully")

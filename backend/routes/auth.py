@@ -437,3 +437,5 @@ def get_all_users(db: Session = Depends(get_db)):
         {"id": u.id, "name": u.name, "district": u.district, "primary_crop": u.primary_crop}
         for u in users
     ]}
+
+print("✅ auth.py loaded successfully")
