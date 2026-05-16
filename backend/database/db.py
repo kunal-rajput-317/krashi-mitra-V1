@@ -21,31 +21,31 @@ BASE_DIR = os.getcwd()
 env_path = os.path.join(BASE_DIR, ".env")
 load_dotenv(env_path)
 
-# ── Database Connection ──────────────────────────────────────
-DB_USER     = os.getenv("DB_USER", "neondb_owner")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_HOST     = os.getenv("DB_HOST", "ep-gentle-flower-ap90gedq.c-7.us-east-1.aws.neon.tech")
+# # ── Database Connection -old
+# DB_USER     = os.getenv("DB_USER", "neondb_owner")
+# DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+# DB_HOST     = os.getenv("DB_HOST", "ep-gentle-flower-ap90gedq.c-7.us-east-1.aws.neon.tech")
+# DB_PORT     = os.getenv("DB_PORT", "5432")
+# DB_NAME     = os.getenv("DB_NAME", "krashi_mitra_database")
+
+# — Database Connection —new
+DB_USER     = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST     = os.getenv("DB_HOST")
 DB_PORT     = os.getenv("DB_PORT", "5432")
-DB_NAME     = os.getenv("DB_NAME", "krashi_mitra_database")
+DB_NAME     = os.getenv("DB_NAME")
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
 # DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
-
-print(f"🗄️  Connecting to: {DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
-
-DATABASE_URL = os.getenv("https://krashi-mitra-v1.onrender.com")
-
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL environment variable is not set!")
-
-if "sslmode" not in DATABASE_URL:
-    DATABASE_URL += "?sslmode=require"
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+print(f"Connecting to: {DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 # ── WEATHER CACHE MODEL (NEW) ────────────────────────────────
 
