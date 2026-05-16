@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Homepage / Main App -->
+  <url>
+    <loc>https://krashimitra.in/</loc>
+    <lastmod>2025-05-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- खाद की कीमतें — urea price today -->
+  <url>
+    <loc>https://krashimitra.in/khad-ki-keemate</loc>
+    <lastmod>2025-05-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- यूरिया भाव -->
+  <url>
+    <loc>https://krashimitra.in/urea-price-today</loc>
+    <lastmod>2025-05-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- DAP price -->
+  <url>
+    <loc>https://krashimitra.in/dap-price-today</loc>
+    <lastmod>2025-05-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>
