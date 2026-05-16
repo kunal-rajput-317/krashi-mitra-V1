@@ -17,7 +17,7 @@ httpx
 pydantic
 python-multipart
 pdfplumber
-chromadb
+chromadb==0.4.24
 sentence-transformers   # multilingual-e5
 google-generativeai   # Gemini API
 ollama                    # Ollama fallback
