@@ -46,18 +46,27 @@ app = FastAPI(
 )
 
 # ── CORS ─────────────────────────────────────────────────────────────
-# Allow your local frontend to call the API
 from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(
-    CORSMiddleware,
 
-    allow_origins=["https://krashi-mitra-v1.onrender.com"], 
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS",
+        ",".join([
+            "https://krashimitra.in",
+            "https://www.krashimitra.in",
+            "https://krashi-mitra-v1.onrender.com",
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+        ]),
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -121,7 +130,4 @@ async def health():
 from fastapi.staticfiles import StaticFiles
 
 # Add this AFTER all app.include_router() lines, at the bottom
-app.mount("/admin", StaticFiles(directory="admin", html=True), name="admin")
-
-from fastapi.staticfiles import StaticFiles
 app.mount("/admin", StaticFiles(directory="admin", html=True), name="admin")

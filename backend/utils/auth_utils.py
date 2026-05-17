@@ -18,16 +18,9 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Optional
 
-# ── passlib + bcrypt compatibility patch ─────────────────────
-# passlib is unmaintained and crashes reading bcrypt >= 4.0 version.
-# This patch suppresses the AttributeError on startup.
 import bcrypt as _bcrypt
-if not hasattr(_bcrypt, "__about__"):
-    import types
-    _bcrypt.__about__ = types.SimpleNamespace(__version__=_bcrypt.__version__)
 # ─────────────────────────────────────────────────────────────
 
-from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -38,19 +31,20 @@ load_dotenv()
 
 # ── Password Hashing ─────────────────────────────────────────
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def _truncate(password: str) -> str:
-    """Truncate to 72 bytes — bcrypt hard limit. Prevents crash."""
-    return password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+def _password_bytes(password: str) -> bytes:
+    """Encode and truncate to bcrypt's 72-byte limit."""
+    return password.encode("utf-8")[:72]
 
 def hash_password(plain_password: str) -> str:
-    """Hash a plain password using bcrypt (safe — truncated to 72 bytes)."""
-    return pwd_context.hash(_truncate(plain_password))
+    """Hash a plain password using bcrypt."""
+    return _bcrypt.hashpw(_password_bytes(plain_password), _bcrypt.gensalt()).decode("utf-8")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password — truncates before comparing to match hash."""
-    return pwd_context.verify(_truncate(plain_password), hashed_password)
+    """Verify password against a bcrypt hash."""
+    try:
+        return _bcrypt.checkpw(_password_bytes(plain_password), hashed_password.encode("utf-8"))
+    except ValueError:
+        return False
 
 
 # ── Password Strength Validation ─────────────────────────────

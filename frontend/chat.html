@@ -5758,13 +5758,14 @@ async function fetchWeather() {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ name: name, email: email, password: password })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (data.success) {
         // OTP sent — move to OTP screen
         showOtp(email);
       } else {
-        authErr("signup-error", data.message || "Signup failed। दोबारा try करें।");
+        console.error("Signup failed:", res.status, data);
+        authErr("signup-error", data.message || data.detail || "Signup failed। दोबारा try करें।");
       }
     } catch (err) {
       console.error("Signup error:", err);
