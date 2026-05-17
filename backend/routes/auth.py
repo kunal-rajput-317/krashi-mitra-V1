@@ -74,8 +74,11 @@ class ResetPasswordRequest(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     """Matches exactly what frontend saveProfile() sends."""
     full_name:          Optional[str] = None
+    phone_number:       Optional[str] = None
+    state:              Optional[str] = None
     village:            Optional[str] = None
     district:           Optional[str] = None
+    farm_size:          Optional[str] = None
     crops_grown:        Optional[str] = None
     preferred_language: Optional[str] = None
 
@@ -97,21 +100,84 @@ class UserProfileUpdate(BaseModel):
 
 # ── HELPERS ──────────────────────────────────────────────────
 
-def _profile_response(user: User) -> dict:
+def _profile_response(user: User, profile: Optional[UserProfile] = None) -> dict:
     """Build profile dict matching what frontend applyProfile() reads."""
+    full_name = profile.name if profile and profile.name else user.name
+    village = profile.village if profile else getattr(user, "village", None)
+    district = profile.district if profile else getattr(user, "district", None)
+    primary_crop = (
+        profile.primary_crop if profile and profile.primary_crop
+        else getattr(user, "primary_crop", None)
+    )
+    preferred_language = (
+        profile.language if profile and profile.language
+        else getattr(user, "preferred_language", "hindi")
+    )
+
     return {
         "id":                 user.id,
-        "full_name":          user.name,
-        "name":               user.name,
+        "profile_id":         profile.id if profile else None,
+        "full_name":          full_name,
+        "name":               full_name,
         "email":              user.email,
-        "village":            getattr(user, "village",      None),
-        "district":           getattr(user, "district",     None),
-        "primary_crop":       getattr(user, "primary_crop", None),
-        "crops_grown":        getattr(user, "primary_crop", None),
-        "preferred_language": getattr(user, "preferred_language", "hindi"),
+        "phone_number":       profile.phone_number if profile else None,
+        "state":              profile.state if profile else None,
+        "village":            village,
+        "district":           district,
+        "primary_crop":       primary_crop,
+        "crops_grown":        profile.crops_grown if profile and profile.crops_grown else primary_crop,
+        "farm_size":          profile.farm_size if profile else None,
+        "preferred_language": preferred_language,
         "is_verified":        user.is_verified,
         "created_at":         str(user.created_at),
+        "updated_at":         str(profile.updated_at) if profile and profile.updated_at else None,
     }
+
+
+def _get_or_create_farmer_profile(user: User, db: Session) -> UserProfile:
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+    if profile:
+        return profile
+
+    profile = UserProfile(
+        user_id=user.id,
+        name=user.name,
+        village=getattr(user, "village", None),
+        district=getattr(user, "district", None),
+        primary_crop=getattr(user, "primary_crop", None) or "Sugarcane",
+        language=getattr(user, "preferred_language", None) or "hindi",
+    )
+    db.add(profile)
+    db.flush()
+    return profile
+
+
+def _apply_profile_update(user: User, profile: UserProfile, body: ProfileUpdateRequest):
+    if body.full_name is not None:
+        user.name = body.full_name
+        profile.name = body.full_name
+    if body.preferred_language is not None:
+        user.preferred_language = body.preferred_language
+        profile.language = body.preferred_language
+    if body.phone_number is not None:
+        profile.phone_number = body.phone_number
+    if body.state is not None:
+        profile.state = body.state
+    if body.village is not None:
+        user.village = body.village
+        profile.village = body.village
+    if body.district is not None:
+        user.district = body.district
+        profile.district = body.district
+    if body.farm_size is not None:
+        profile.farm_size = body.farm_size
+    if body.crops_grown is not None:
+        user.primary_crop = body.crops_grown
+        profile.crops_grown = body.crops_grown
+        first_crop = body.crops_grown.split(",")[0].strip()
+        if first_crop:
+            profile.primary_crop = first_crop
+    profile.updated_at = datetime.utcnow()
 
 
 # ── AUTH ENDPOINTS ───────────────────────────────────────────
@@ -287,6 +353,77 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail="Reset password failed: " + str(e))
+
+
+# ── ACTIVE PROFILE ENDPOINTS ─────────────────────────────────
+# Registered before the older compatibility handlers below, so FastAPI
+# uses these for GET/PUT/POST /profile.
+
+@router.get("/me")
+@router.get("/profile")
+def get_active_profile(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        user = db.query(User).filter(User.id == current_user["user_id"]).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+        return {"success": True, "message": "", "data": _profile_response(user, profile)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Profile fetch failed: " + str(e))
+
+
+@router.put("/profile")
+def update_active_profile(
+    body: ProfileUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        user = db.query(User).filter(User.id == current_user["user_id"]).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        profile = _get_or_create_farmer_profile(user, db)
+        _apply_profile_update(user, profile, body)
+
+        db.commit()
+        db.refresh(user)
+        db.refresh(profile)
+        return {"success": True, "message": "Profile updated.", "data": _profile_response(user, profile)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Profile update failed: " + str(e))
+
+
+@router.post("/profile")
+def create_active_profile(
+    body: ProfileUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        user = db.query(User).filter(User.id == current_user["user_id"]).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        profile = _get_or_create_farmer_profile(user, db)
+        _apply_profile_update(user, profile, body)
+
+        db.commit()
+        db.refresh(user)
+        db.refresh(profile)
+        return {"success": True, "message": "Profile saved.", "data": _profile_response(user, profile)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Profile save failed: " + str(e))
 
 
 # ── PROFILE ENDPOINTS ─────────────────────────────────────────

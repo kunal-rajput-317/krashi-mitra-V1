@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <!-- ✅ SEO: Title — Google इसे search result में दिखाता है -->
-  <title>यूरिया का भाव आज ₹266.50 | खाद की कीमतें 2025 | KrashiMitra</title>
+  <title>🌾कृषि मित्र</title>
 
   <!-- ✅ SEO: Description — Google snippet में यही दिखता है -->
   <meta name="description" content="आज यूरिया का भाव ₹266.50, DAP ₹1350 देखें — KrashiMitra पर। खाद की सरकारी कीमतें, मंडी भाव, मौसम और AI किसान सहायक — सब एक जगह।" />
@@ -5400,7 +5400,7 @@ async function fetchWeather() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ q, crop, language: selectedLanguage, district: location })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       removeTyping();
       if (data.source === "cache") {
@@ -5789,7 +5789,7 @@ async function fetchWeather() {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: pendingEmail, otp })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (data.success) {
         authOk("otp-success", "✅ Email verify हो गया! अब login करें।");
@@ -6143,16 +6143,18 @@ function populateProfileDistricts(selectedDistrict) {
             preferred_language: selectedLanguage
           })
         });
-        const postData = await postRes.json();
+        const postData = await postRes.json().catch(() => ({}));
         if (postData.success && postData.data) {
           applyProfile(postData.data);
           closeProfile();
         } else {
-          alert(postData.message || "Profile save नहीं हो पाया।");
+          console.error("Profile save failed:", postRes.status, postData);
+          alert(postData.message || postData.detail || "Profile save नहीं हो पाया।");
         }
       }
     } catch (err) {
-      alert("⚠️ Server से connect नहीं हो पाया।");
+      console.error("Profile save error:", err);
+      alert(`⚠️ Profile save error: ${err.message || err}`);
     }
   }
 
