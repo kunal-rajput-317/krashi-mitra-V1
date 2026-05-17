@@ -13,6 +13,7 @@ import re
 import random
 import smtplib
 import traceback
+import httpx
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
@@ -145,6 +146,42 @@ SMTP_PASSWORD = (
 ).replace(" ", "")
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com").strip()
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "").strip()
+RESEND_FROM_EMAIL = (
+    os.getenv("RESEND_FROM_EMAIL")
+    or os.getenv("RESEND_FEOM_EMAIL")  # common typo; keep deploys forgiving
+    or os.getenv("FROM_EMAIL")
+    or SMTP_EMAIL
+).strip()
+
+def _send_with_resend(to_email: str, subject: str, body: str) -> bool:
+    """Send email through Resend HTTPS API, which works on Render free tier."""
+    if not RESEND_API_KEY or not RESEND_FROM_EMAIL:
+        return False
+
+    try:
+        response = httpx.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": RESEND_FROM_EMAIL,
+                "to": [to_email],
+                "subject": subject,
+                "text": body,
+            },
+            timeout=15,
+        )
+        if response.status_code < 400:
+            return True
+
+        print(f"⚠️  Resend email error {response.status_code}: {response.text[:500]}")
+        return False
+    except Exception as e:
+        print(f"⚠️  Resend network error to {to_email}: {e}")
+        return False
 
 def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bool:
     """
@@ -171,10 +208,13 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
             f"— KrashiMitra Team"
         )
 
+    if _send_with_resend(to_email, subject, body):
+        return True
+
     # Guard — if SMTP not configured, print OTP to terminal (dev mode)
     if not SMTP_EMAIL or not SMTP_PASSWORD:
         print(f"⚠️  SMTP not configured. DEV OTP for {to_email}: {otp}")
-        print(f"    Add SMTP_EMAIL and SMTP_PASSWORD to .env for real emails.")
+        print("    Add RESEND_API_KEY + RESEND_FROM_EMAIL, or SMTP_EMAIL + SMTP_PASSWORD.")
         return False
 
     try:
