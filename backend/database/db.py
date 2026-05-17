@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, Boolean, Float
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, Boolean, Float, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
@@ -21,9 +21,10 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Ensure SSL for Neon
-if "sslmode" not in DATABASE_URL:
-    DATABASE_URL += "?sslmode=require"
+# Ensure SSL for Neon/Postgres URLs only
+if DATABASE_URL.startswith("postgresql") and "sslmode" not in DATABASE_URL:
+    separator = "&" if "?" in DATABASE_URL else "?"
+    DATABASE_URL += f"{separator}sslmode=require"
 
 print(f"✅ DB connecting to: {DATABASE_URL[:50]}...")
 
@@ -203,9 +204,84 @@ class MandiPrice(Base):
 
 # ── DB Helpers ───────────────────────────────────────────────
 
+def _ensure_postgres_columns():
+    """Add columns that older Neon tables may be missing."""
+    if engine.dialect.name != "postgresql":
+        return
+
+    schema_patches = {
+        "users": [
+            ("hashed_password", "VARCHAR"),
+            ("is_verified", "BOOLEAN DEFAULT FALSE"),
+            ("otp", "VARCHAR"),
+            ("otp_expiry", "TIMESTAMP"),
+            ("preferred_language", "VARCHAR DEFAULT 'hindi'"),
+            ("village", "VARCHAR"),
+            ("district", "VARCHAR"),
+            ("primary_crop", "VARCHAR DEFAULT 'Sugarcane'"),
+            ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
+        "user_profiles": [
+            ("user_id", "INTEGER"),
+            ("phone_number", "VARCHAR"),
+            ("village", "VARCHAR"),
+            ("district", "VARCHAR"),
+            ("state", "VARCHAR"),
+            ("primary_crop", "VARCHAR DEFAULT 'Sugarcane'"),
+            ("crops_grown", "VARCHAR"),
+            ("farm_size", "VARCHAR"),
+            ("language", "VARCHAR DEFAULT 'hindi'"),
+            ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
+        "weather_cache": [
+            ("city", "VARCHAR"),
+            ("state", "VARCHAR DEFAULT 'Uttar Pradesh'"),
+            ("temperature", "FLOAT"),
+            ("feels_like", "FLOAT"),
+            ("humidity", "INTEGER"),
+            ("wind_speed", "FLOAT"),
+            ("rainfall", "FLOAT DEFAULT 0"),
+            ("weather_condition", "TEXT"),
+            ("icon_url", "VARCHAR"),
+            ("farming_tip", "TEXT"),
+            ("fetched_at", "TIMESTAMP"),
+            ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("is_stale", "BOOLEAN DEFAULT FALSE"),
+        ],
+        "chat_history": [
+            ("user_id", "INTEGER"),
+            ("crop", "VARCHAR"),
+            ("district", "VARCHAR"),
+            ("language", "VARCHAR DEFAULT 'english'"),
+            ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
+        "mandi_prices": [
+            ("commodity", "VARCHAR"),
+            ("district", "VARCHAR"),
+            ("market", "VARCHAR"),
+            ("variety", "VARCHAR"),
+            ("min_price", "VARCHAR"),
+            ("max_price", "VARCHAR"),
+            ("modal_price", "VARCHAR"),
+            ("arrival_date", "VARCHAR"),
+            ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
+    }
+
+    with engine.begin() as conn:
+        for table_name, columns in schema_patches.items():
+            for column_name, column_type in columns:
+                conn.execute(text(
+                    f'ALTER TABLE "{table_name}" '
+                    f'ADD COLUMN IF NOT EXISTS "{column_name}" {column_type}'
+                ))
+
+
 def init_db():
     try:
         Base.metadata.create_all(bind=engine)
+        _ensure_postgres_columns()
         print("✅ Database tables created successfully!")
     except Exception as e:
         print(f"⚠️  Database error: {e}")

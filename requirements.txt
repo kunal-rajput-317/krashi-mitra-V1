@@ -6,7 +6,7 @@ psycopg2-binary
 alembic
 httpx
 aiofiles
-passlib[bcrypt] 
+bcrypt>=4,<6
 python-jose[cryptography] 
 python-multipart 
 email-validator
