@@ -129,10 +129,22 @@ def is_otp_expired(otp_expiry: datetime) -> bool:
 
 # ── Email Sender ─────────────────────────────────────────────
 
-SMTP_EMAIL    = os.getenv("SMTP_EMAIL", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SMTP_HOST     = "smtp.gmail.com"
-SMTP_PORT     = 587
+SMTP_EMAIL = (
+    os.getenv("SMTP_EMAIL")
+    or os.getenv("EMAIL_USER")
+    or os.getenv("GMAIL_USER")
+    or ""
+).strip()
+SMTP_PASSWORD = (
+    os.getenv("SMTP_PASSWORD")
+    or os.getenv("SMTP_APP_PASSWORD")
+    or os.getenv("EMAIL_PASSWORD")
+    or os.getenv("GMAIL_APP_PASSWORD")
+    or os.getenv("SMTP_CODE")
+    or ""
+).replace(" ", "")
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com").strip()
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 
 def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bool:
     """
@@ -181,7 +193,10 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
         return True
 
     except smtplib.SMTPAuthenticationError:
-        print(f"⚠️  SMTP auth failed — check SMTP_EMAIL / SMTP_PASSWORD in .env")
+        print(
+            "⚠️  SMTP auth failed — check SMTP_EMAIL and Gmail app password. "
+            "Use a 16-character app password, not your normal Gmail password."
+        )
         return False
     except smtplib.SMTPException as e:
         print(f"⚠️  SMTP error to {to_email}: {e}")
