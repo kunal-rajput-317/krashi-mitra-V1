@@ -2,15 +2,13 @@
 <html lang="kn">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <!-- SEO Meta -->
   <title>ಟೊಮೆಟೊ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ | Tomato Farming Guide Karnataka – KrashiMitra.in</title>
-  <meta name="description" content="ಕರ್ನಾಟಕದಲ್ಲಿ ಟೊಮೆಟೊ ಬೆಳೆಯುವ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ. Complete tomato farming guide for Karnataka farmers in Kannada and English – soil, seeds, irrigation, pest control and more." />
-  <meta name="keywords" content="ಟೊಮೆಟೊ ಬೆಳೆ ಕರ್ನಾಟಕ, tomato farming Karnataka, ಟೊಮೆಟೊ ಕೃಷಿ, tomato cultivation guide, ಕೋಲಾರ ಟೊಮೆಟೊ" />
+  <meta name="description" content="ಕರ್ನಾಟಕದಲ್ಲಿ ಟೊಮೆಟೊ ಬೆಳೆಯುವ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ. Complete tomato farming guide for Karnataka farmers in Kannada and English." />
+  <meta name="keywords" content="ಟೊಮೆಟೊ ಬೆಳೆ ಕರ್ನಾಟಕ, tomato farming Karnataka, ಟೊಮೆಟೊ ಕೃಷಿ, tomato cultivation guide" />
   <meta name="author" content="KrashiMitra.in" />
-
-  <!-- URL Slug: tomato-farming-guide-karnataka -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Tiro+Kannada&family=Poppins:wght@400;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
@@ -23,7 +21,6 @@
       --green-pale:   #e8f5e9;
       --tomato:       #d32f2f;
       --tomato-light: #ffebee;
-      --tomato-warm:  #ff7043;
       --gold:         #f9a825;
       --cream:        #faf8f3;
       --text-dark:    #1b1b1b;
@@ -42,101 +39,186 @@
       line-height: 1.8;
     }
 
-    /* ── SITE HEADER ── */
+    /* ══════════════════════════════════════
+       SITE HEADER — matches krashimitra.in
+    ══════════════════════════════════════ */
     .site-header {
       background: var(--green-dark);
-      padding: 14px 24px;
+      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-    }
-    .site-header .logo {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 1.3rem;
-      color: #fff;
-      text-decoration: none;
-      letter-spacing: 0.5px;
-    }
-    .site-header .logo span { color: var(--gold); }
-    .site-header .tagline {
-      font-family: 'Tiro Kannada', serif;
-      font-size: 0.8rem;
-      color: #a5d6a7;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
 
-    /* ── LANGUAGE TOGGLE ── */
-    .lang-toggle {
+    /* Left: logo block */
+    .site-header .logo-block {
       display: flex;
-      gap: 8px;
-      padding: 16px 24px 0;
-      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
     }
-    .lang-btn {
+    .site-header .logo-text {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #fff;
+      letter-spacing: 0.3px;
+      line-height: 1.1;
+    }
+    .site-header .logo-text span { color: var(--gold); }
+    .site-header .tagline {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.65rem;
+      color: #a5d6a7;
+      font-weight: 400;
+      display: block;
+      margin-top: 1px;
+    }
+
+    /* Centre: nav links */
+    .site-header .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .site-header .nav-links a {
       font-family: 'Poppins', sans-serif;
       font-size: 0.78rem;
       font-weight: 600;
-      padding: 5px 14px;
-      border-radius: 20px;
-      border: 2px solid var(--green-mid);
-      cursor: pointer;
-      background: #fff;
-      color: var(--green-mid);
-      transition: all 0.2s;
+      color: #c8e6c9;
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.18s, color 0.18s;
+      white-space: nowrap;
     }
-    .lang-btn.active, .lang-btn:hover {
-      background: var(--green-mid);
+    .site-header .nav-links a:hover,
+    .site-header .nav-links a.active {
+      background: rgba(255,255,255,0.12);
       color: #fff;
     }
+    .site-header .nav-links a.home-link {
+      color: var(--gold);
+    }
+    .site-header .nav-links a.home-link:hover {
+      background: rgba(249,168,37,0.15);
+      color: var(--gold);
+    }
 
-    /* ── ARTICLE WRAPPER ── */
+    /* Right: lang toggle + user icon */
+    .site-header .right-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lang-pill {
+      display: flex;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .lang-pill button {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: #a5d6a7;
+      transition: all 0.18s;
+      line-height: 1;
+    }
+    .lang-pill button.active {
+      background: var(--gold);
+      color: var(--green-dark);
+      border-radius: 18px;
+    }
+    .user-icon {
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+
+    /* Mobile: hide nav text labels, keep home */
+    @media (max-width: 600px) {
+      .site-header .nav-links a:not(.home-link) { display: none; }
+      .site-header .logo-text { font-size: 1rem; }
+    }
+
+    /* ══════════════════════════════════════
+       BREADCRUMB
+    ══════════════════════════════════════ */
+    .breadcrumb {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      color: var(--text-light);
+      padding: 10px 20px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .breadcrumb a { color: var(--green-mid); text-decoration: none; }
+    .breadcrumb span { margin: 0 5px; }
+
+    /* ══════════════════════════════════════
+       ARTICLE WRAPPER
+    ══════════════════════════════════════ */
     .article-wrapper {
       max-width: 860px;
       margin: 0 auto;
       padding: 0 20px 60px;
     }
 
-    /* ── HERO ── */
+    /* ══════════════════════════════════════
+       HERO
+    ══════════════════════════════════════ */
     .hero {
       background: linear-gradient(135deg, var(--green-dark) 0%, #2e5f35 60%, var(--tomato) 100%);
-      border-radius: 0 0 24px 24px;
-      padding: 48px 32px 40px;
+      border-radius: 0 0 20px 20px;
+      padding: 40px 28px 36px;
       color: #fff;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
       position: relative;
       overflow: hidden;
     }
     .hero::before {
       content: '🍅';
       position: absolute;
-      right: 24px;
-      top: 20px;
-      font-size: 5rem;
-      opacity: 0.18;
+      right: 20px;
+      top: 16px;
+      font-size: 4.5rem;
+      opacity: 0.15;
+      pointer-events: none;
     }
     .hero .category-tag {
       display: inline-block;
       background: var(--gold);
       color: var(--green-dark);
       font-family: 'Poppins', sans-serif;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
       padding: 3px 12px;
       border-radius: 12px;
       letter-spacing: 1px;
       text-transform: uppercase;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .hero h1 {
       font-family: 'Tiro Kannada', serif;
-      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-size: clamp(1.35rem, 4vw, 2rem);
       line-height: 1.4;
       margin-bottom: 8px;
       color: #fff;
     }
     .hero h1 .en {
       font-family: 'Poppins', sans-serif;
-      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      font-size: clamp(0.9rem, 2.5vw, 1.15rem);
       font-weight: 600;
       color: #a5d6a7;
       display: block;
@@ -144,31 +226,31 @@
     }
     .hero .meta {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: #c8e6c9;
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
-    /* ── FEATURED IMAGE ── */
+    /* ══════════════════════════════════════
+       FEATURED IMAGE
+    ══════════════════════════════════════ */
     .featured-image {
       width: 100%;
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
-      margin-bottom: 32px;
-      box-shadow: 0 8px 32px var(--shadow);
+      margin-bottom: 28px;
+      box-shadow: 0 6px 24px var(--shadow);
       background: #dcedc8;
-      position: relative;
     }
     .featured-image img {
       width: 100%;
-      height: 340px;
+      height: 320px;
       object-fit: cover;
       display: block;
     }
-    /* Placeholder shown when no image is set */
     .featured-image .img-placeholder {
       width: 100%;
-      height: 340px;
+      height: 320px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -177,35 +259,37 @@
       color: var(--green-dark);
       font-family: 'Poppins', sans-serif;
     }
-    .featured-image .img-placeholder .icon { font-size: 3rem; margin-bottom: 10px; }
-    .featured-image .img-placeholder p { font-size: 0.85rem; font-weight: 600; opacity: 0.7; }
+    .featured-image .img-placeholder .icon { font-size: 2.8rem; margin-bottom: 8px; }
+    .featured-image .img-placeholder p { font-size: 0.82rem; font-weight: 600; opacity: 0.65; }
     .featured-image figcaption {
-      padding: 10px 16px;
+      padding: 9px 14px;
       font-family: 'Poppins', sans-serif;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: var(--text-light);
       background: #f1f8e9;
       text-align: center;
     }
 
-    /* ── INLINE IMAGE ── */
+    /* ══════════════════════════════════════
+       INLINE IMAGE
+    ══════════════════════════════════════ */
     .inline-image {
       width: 100%;
-      border-radius: 12px;
+      border-radius: 10px;
       overflow: hidden;
-      margin: 24px 0;
-      box-shadow: 0 4px 16px var(--shadow);
+      margin: 22px 0;
+      box-shadow: 0 3px 12px var(--shadow);
       background: #dcedc8;
     }
     .inline-image img {
       width: 100%;
-      height: 240px;
+      height: 220px;
       object-fit: cover;
       display: block;
     }
     .inline-image .img-placeholder {
       width: 100%;
-      height: 240px;
+      height: 220px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -214,75 +298,76 @@
       color: var(--green-dark);
       font-family: 'Poppins', sans-serif;
     }
-    .inline-image .img-placeholder .icon { font-size: 2.2rem; margin-bottom: 8px; }
-    .inline-image .img-placeholder p { font-size: 0.78rem; font-weight: 600; opacity: 0.6; }
+    .inline-image .img-placeholder .icon { font-size: 2rem; margin-bottom: 6px; }
+    .inline-image .img-placeholder p { font-size: 0.75rem; font-weight: 600; opacity: 0.6; }
     .inline-image figcaption {
-      padding: 8px 14px;
+      padding: 7px 12px;
       font-family: 'Poppins', sans-serif;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-light);
       background: #f9fbe7;
       text-align: center;
     }
 
-    /* ── QUICK FACTS BOX ── */
+    /* ══════════════════════════════════════
+       QUICK FACTS
+    ══════════════════════════════════════ */
     .quick-facts {
       background: var(--green-pale);
       border-left: 5px solid var(--green-mid);
       border-radius: 12px;
-      padding: 20px 24px;
-      margin-bottom: 32px;
+      padding: 18px 22px;
+      margin-bottom: 28px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 14px;
     }
-    .quick-facts .fact {
-      text-align: center;
-    }
-    .quick-facts .fact .icon { font-size: 1.6rem; }
+    .quick-facts .fact { text-align: center; }
+    .quick-facts .fact .icon { font-size: 1.5rem; }
     .quick-facts .fact .label {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.68rem;
+      font-size: 0.64rem;
       font-weight: 600;
       color: var(--text-light);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       margin-top: 4px;
     }
     .quick-facts .fact .value {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       font-weight: 700;
       color: var(--green-dark);
     }
 
-    /* ── SECTIONS ── */
-    section {
-      margin-bottom: 40px;
-    }
+    /* ══════════════════════════════════════
+       SECTIONS
+    ══════════════════════════════════════ */
+    section { margin-bottom: 38px; }
 
-    /* Bilingual section heading */
     .section-heading {
       border-left: 5px solid var(--tomato);
-      padding-left: 16px;
-      margin-bottom: 18px;
+      padding-left: 14px;
+      margin-bottom: 16px;
     }
     .section-heading h2 {
       font-family: 'Tiro Kannada', serif;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       color: var(--green-dark);
       line-height: 1.4;
     }
     .section-heading h2 .en {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--tomato);
       display: block;
       margin-top: 2px;
     }
 
-    /* Bilingual paragraph */
+    /* ══════════════════════════════════════
+       BILINGUAL TEXT
+    ══════════════════════════════════════ */
     .bilingual p.kn {
       font-family: 'Tiro Kannada', serif;
       font-size: 1rem;
@@ -292,37 +377,40 @@
     }
     .bilingual p.en {
       font-family: 'Merriweather', serif;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       color: var(--text-mid);
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       font-style: italic;
-      padding-left: 14px;
+      padding-left: 12px;
       border-left: 2px solid var(--border);
     }
 
-    /* ── STEP CARDS ── */
-    .step-cards {
-      display: grid;
-      gap: 16px;
-    }
+    /* Language visibility control */
+    body.lang-kn  .en-only  { display: none !important; }
+    body.lang-en  .kn-only  { display: none !important; }
+
+    /* ══════════════════════════════════════
+       STEP CARDS
+    ══════════════════════════════════════ */
+    .step-cards { display: grid; gap: 14px; }
     .step-card {
       background: #fff;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border);
-      padding: 18px 20px;
+      padding: 16px 18px;
       display: flex;
-      gap: 16px;
+      gap: 14px;
       align-items: flex-start;
-      box-shadow: 0 2px 8px var(--shadow);
+      box-shadow: 0 2px 7px var(--shadow);
     }
     .step-card .step-num {
       background: var(--green-dark);
       color: #fff;
       font-family: 'Poppins', sans-serif;
       font-weight: 700;
-      font-size: 0.85rem;
-      min-width: 34px;
-      height: 34px;
+      font-size: 0.82rem;
+      min-width: 32px;
+      height: 32px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -330,101 +418,101 @@
       flex-shrink: 0;
       margin-top: 2px;
     }
-    /* .step-card .step-content block removed to avoid empty ruleset */
     .step-card .step-content .kn {
       font-family: 'Tiro Kannada', serif;
       font-size: 1rem;
       font-weight: 700;
       color: var(--green-dark);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .step-card .step-content .en {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.8rem;
+      font-size: 0.77rem;
       color: var(--text-light);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
     .step-card .step-content .detail {
       font-family: 'Tiro Kannada', serif;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--text-mid);
       line-height: 1.7;
     }
     .step-card .step-content .detail-en {
       font-family: 'Merriweather', serif;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: #888;
       font-style: italic;
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
-    /* ── INFO GRID ── */
+    /* ══════════════════════════════════════
+       INFO GRID
+    ══════════════════════════════════════ */
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
     }
     .info-card {
       background: #fff;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border);
-      padding: 16px;
-      box-shadow: 0 2px 8px var(--shadow);
+      padding: 14px;
+      box-shadow: 0 2px 7px var(--shadow);
     }
-    .info-card .icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .info-card .icon { font-size: 1.4rem; margin-bottom: 7px; }
     .info-card .kn {
       font-family: 'Tiro Kannada', serif;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 700;
       color: var(--green-dark);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .info-card .en {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--text-light);
-      margin-bottom: 8px;
+      margin-bottom: 7px;
       font-weight: 600;
     }
     .info-card .detail {
       font-family: 'Tiro Kannada', serif;
-      font-size: 0.85rem;
+      font-size: 0.83rem;
       color: var(--text-mid);
       line-height: 1.6;
     }
     .info-card .detail-en {
       font-family: 'Merriweather', serif;
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       color: #999;
       font-style: italic;
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
-    /* ── TABLE ── */
+    /* ══════════════════════════════════════
+       TABLE
+    ══════════════════════════════════════ */
     .article-table {
       width: 100%;
       border-collapse: collapse;
       font-family: 'Poppins', sans-serif;
-      font-size: 0.82rem;
-      border-radius: 12px;
+      font-size: 0.8rem;
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 2px 12px var(--shadow);
-      margin-top: 8px;
+      box-shadow: 0 2px 10px var(--shadow);
+      margin-top: 6px;
     }
-    .article-table thead tr {
-      background: var(--green-dark);
-      color: #fff;
-    }
+    .article-table thead tr { background: var(--green-dark); color: #fff; }
     .article-table thead th {
-      padding: 12px 16px;
+      padding: 11px 14px;
       text-align: left;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.77rem;
     }
     .article-table tbody tr:nth-child(even) { background: var(--green-pale); }
     .article-table tbody tr:nth-child(odd)  { background: #fff; }
     .article-table tbody td {
-      padding: 11px 16px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--border);
       color: var(--text-mid);
       vertical-align: top;
@@ -435,98 +523,103 @@
       color: var(--green-dark);
     }
 
-    /* ── WARNING / TIP BOX ── */
+    /* ══════════════════════════════════════
+       TIP BOXES
+    ══════════════════════════════════════ */
     .tip-box {
-      border-radius: 12px;
-      padding: 18px 20px;
-      margin: 20px 0;
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 18px 0;
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: flex-start;
     }
     .tip-box.warning { background: var(--tomato-light); border-left: 5px solid var(--tomato); }
-    .tip-box.tip     { background: #fff8e1;            border-left: 5px solid var(--gold);   }
-    .tip-box.info    { background: var(--green-pale);  border-left: 5px solid var(--green-mid); }
-    .tip-box .tip-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
-    /* content styling handled by nested classes */
+    .tip-box.tip     { background: #fff8e1;             border-left: 5px solid var(--gold); }
+    .tip-box.info    { background: var(--green-pale);   border-left: 5px solid var(--green-mid); }
+    .tip-box .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
     .tip-box .tip-content .kn {
       font-family: 'Tiro Kannada', serif;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 700;
       color: var(--text-dark);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .tip-box .tip-content .en {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-mid);
     }
 
-    /* ── FAQ ── */
+    /* ══════════════════════════════════════
+       FAQ
+    ══════════════════════════════════════ */
     .faq-item {
       background: #fff;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border);
-      padding: 18px 20px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 6px var(--shadow);
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px var(--shadow);
     }
     .faq-item .q {
       font-family: 'Tiro Kannada', serif;
       font-size: 1rem;
       font-weight: 700;
       color: var(--green-dark);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .faq-item .q-en {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       color: var(--tomato);
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .faq-item .a {
       font-family: 'Tiro Kannada', serif;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       color: var(--text-mid);
       line-height: 1.7;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
     .faq-item .a-en {
       font-family: 'Merriweather', serif;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: #999;
       font-style: italic;
     }
 
-    /* ── CTA ── */
+    /* ══════════════════════════════════════
+       CTA BLOCK
+    ══════════════════════════════════════ */
     .cta-block {
       background: linear-gradient(135deg, var(--green-dark), #1b5e20);
-      border-radius: 16px;
-      padding: 36px 28px;
+      border-radius: 14px;
+      padding: 32px 24px;
       text-align: center;
       color: #fff;
-      margin-top: 40px;
+      margin-top: 36px;
     }
-    .cta-block .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+    .cta-block .emoji { font-size: 2.2rem; margin-bottom: 10px; }
     .cta-block h3 {
       font-family: 'Tiro Kannada', serif;
-      font-size: 1.4rem;
-      margin-bottom: 6px;
+      font-size: 1.3rem;
+      margin-bottom: 5px;
       color: #fff;
     }
     .cta-block h3 .en {
       font-family: 'Poppins', sans-serif;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: #a5d6a7;
       display: block;
     }
     .cta-block p {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: #c8e6c9;
-      margin: 12px 0 20px;
+      margin: 10px 0 18px;
     }
     .cta-block a {
       display: inline-block;
@@ -534,8 +627,8 @@
       color: var(--green-dark);
       font-family: 'Poppins', sans-serif;
       font-weight: 700;
-      font-size: 0.9rem;
-      padding: 12px 28px;
+      font-size: 0.88rem;
+      padding: 11px 26px;
       border-radius: 30px;
       text-decoration: none;
       transition: opacity 0.2s;
@@ -546,21 +639,57 @@
     em     { color: var(--tomato); font-style: normal; font-weight: 600; }
 
     @media (max-width: 600px) {
-      .hero { padding: 32px 20px 28px; }
+      .hero { padding: 28px 16px 24px; }
       .quick-facts { grid-template-columns: repeat(2, 1fr); }
-      .article-table { font-size: 0.74rem; }
+      .article-table { font-size: 0.72rem; }
       .article-table thead th,
-      .article-table tbody td { padding: 9px 10px; }
+      .article-table tbody td { padding: 8px 9px; }
+      .site-header { padding: 0 14px; }
     }
   </style>
 </head>
-<body>
+<body class="lang-kn">
 
-<!-- SITE HEADER -->
+<!-- ══════════════════════════════════════
+     SITE HEADER — matches krashimitra.in
+══════════════════════════════════════ -->
 <header class="site-header">
-  <a href="https://krashimitra.in" class="logo">Krashi<span>Mitra</span>.in</a>
-  <span class="tagline">ರೈತರ ವಿಶ್ವಾಸಾರ್ಹ ಕೃಷಿ ಸಂಗಾತಿ</span>
+
+  <!-- Logo -->
+  <a href="https://krashimitra.in" class="logo-block">
+    <div>
+      <div class="logo-text">🌾 कृषि<span>मित्र</span></div>
+      <span class="tagline">किसान का डिजिटल साथी</span>
+    </div>
+  </a>
+
+  <!-- Nav -->
+  <nav class="nav-links">
+    <a href="https://krashimitra.in" class="home-link">🏠 मुख्य</a>
+    <a href="https://krashimitra.in/chat?tab=weather">मौसम</a>
+    <a href="https://krashimitra.in/chat?tab=mandi">मंडी</a>
+    <a href="https://krashimitra.in/chat?tab=info">सहायता</a>
+  </nav>
+
+  <!-- Right: lang toggle + user icon -->
+  <div class="right-group">
+    <div class="lang-pill">
+      <button class="active" id="btn-kn" onclick="setLang('kn')">ಕನ್ನಡ</button>
+      <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <span class="user-icon">👤</span>
+  </div>
+
 </header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="https://krashimitra.in">मुख्य</a>
+  <span>›</span>
+  <a href="https://krashimitra.in/chat?tab=info">ಕೃಷಿ ಮಾಹಿತಿ</a>
+  <span>›</span>
+  ಟೊಮೆಟೊ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ
+</div>
 
 <div class="article-wrapper">
 
@@ -575,24 +704,14 @@
   </div>
 
   <!-- FEATURED IMAGE -->
-  <!-- ================================================
-       IMAGE 1 — HERO / FEATURED IMAGE
-       HOW TO CHANGE: Replace src="YOUR_IMAGE_URL_HERE"
-       Recommended: 1200×630px landscape photo
-       Example: src="/static/images/tomato-karnataka.jpg"
-  ================================================ -->
   <figure class="featured-image">
     <div class="img-placeholder">
       <div class="icon">🍅</div>
       <p>Featured Image — ಟೊಮೆಟೊ ತೋಟ ಫೋಟೋ ಇಲ್ಲಿ ಹಾಕಿ</p>
-      <p style="font-size:0.7rem;opacity:0.5;margin-top:4px;">Replace src in IMAGE 1 comment · 1200×630px</p>
+      <p style="font-size:0.68rem;opacity:0.5;margin-top:3px;">Replace src in IMAGE 1 comment · 1200×630px</p>
     </div>
     <!-- UNCOMMENT AND REPLACE URL TO USE YOUR IMAGE:
-    <img
-      src="YOUR_IMAGE_URL_HERE"
-      alt="ಕರ್ನಾಟಕದಲ್ಲಿ ಟೊಮೆಟೊ ತೋಟ - Tomato farm in Karnataka"
-      width="1200" height="630" loading="eager"
-    />
+    <img src="YOUR_IMAGE_URL_HERE" alt="ಕರ್ನಾಟಕದಲ್ಲಿ ಟೊಮೆಟೊ ತೋಟ - Tomato farm in Karnataka" width="1200" height="630" loading="eager" />
     -->
     <figcaption>ಕರ್ನಾಟಕದ ಟೊಮೆಟೊ ತೋಟ — ಕೋಲಾರ, ಚಿಕ್ಕಬಳ್ಳಾಪುರ ಮತ್ತು ಬೆಳಗಾವಿ ಪ್ರದೇಶಗಳಲ್ಲಿ ಅತ್ಯಂತ ಜನಪ್ರಿಯ ಬೆಳೆ</figcaption>
   </figure>
@@ -652,11 +771,6 @@
         <h2>ಕರ್ನಾಟಕಕ್ಕೆ ಸೂಕ್ತ ತಳಿಗಳು <span class="en">Suitable Varieties for Karnataka</span></h2>
       </div>
 
-      <!-- ================================================
-           IMAGE 2 — TOMATO VARIETIES
-           HOW TO CHANGE: Replace src="YOUR_IMAGE_URL_HERE"
-           Recommended: 800×400px
-      ================================================ -->
       <figure class="inline-image">
         <div class="img-placeholder">
           <div class="icon">🌿</div>
@@ -678,46 +792,16 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Arka Rakshak</td>
-            <td>Hybrid</td>
-            <td>65–70 ದಿನ</td>
-            <td>ರೋಗ ನಿರೋಧಕ, ಹೆಚ್ಚಿನ ಇಳುವರಿ / Disease resistant, high yield</td>
-          </tr>
-          <tr>
-            <td>Arka Samrat</td>
-            <td>Hybrid</td>
-            <td>70–75 ದಿನ</td>
-            <td>ದೀರ್ಘ ಶೆಲ್ಫ್ ಜೀವನ / Long shelf life, good for transport</td>
-          </tr>
-          <tr>
-            <td>US-440</td>
-            <td>Hybrid</td>
-            <td>60–65 ದಿನ</td>
-            <td>ಬೇಗ ಕಟಾವು, ಮಾರುಕಟ್ಟೆ ಬೇಡಿಕೆ ಹೆಚ್ಚು / Early harvest, high demand</td>
-          </tr>
-          <tr>
-            <td>Pusa Ruby</td>
-            <td>Open Pollinated</td>
-            <td>70–75 ದಿನ</td>
-            <td>ಸಣ್ಣ ರೈತರಿಗೆ ಸೂಕ್ತ, ಕಡಿಮೆ ಖರ್ಚು / Suitable for small farmers</td>
-          </tr>
-          <tr>
-            <td>Vaibhav</td>
-            <td>Hybrid</td>
-            <td>65–70 ದಿನ</td>
-            <td>ಉಷ್ಣ ಸಹಿಷ್ಣು, ಕರ್ನಾಟಕ ಹವಾಮಾನಕ್ಕೆ ಸೂಕ್ತ / Heat tolerant</td>
-          </tr>
-          <tr>
-            <td>Rashmi</td>
-            <td>Hybrid</td>
-            <td>68–72 ದಿನ</td>
-            <td>ಒಳ್ಳೆ ಬಣ್ಣ, ಮಾರಾಟ ಸುಲಭ / Good color, easy to sell</td>
-          </tr>
+          <tr><td>Arka Rakshak</td><td>Hybrid</td><td>65–70 ದಿನ</td><td>ರೋಗ ನಿರೋಧಕ, ಹೆಚ್ಚಿನ ಇಳುವರಿ / Disease resistant, high yield</td></tr>
+          <tr><td>Arka Samrat</td><td>Hybrid</td><td>70–75 ದಿನ</td><td>ದೀರ್ಘ ಶೆಲ್ಫ್ ಜೀವನ / Long shelf life, good for transport</td></tr>
+          <tr><td>US-440</td><td>Hybrid</td><td>60–65 ದಿನ</td><td>ಬೇಗ ಕಟಾವು, ಮಾರುಕಟ್ಟೆ ಬೇಡಿಕೆ ಹೆಚ್ಚು / Early harvest, high demand</td></tr>
+          <tr><td>Pusa Ruby</td><td>Open Pollinated</td><td>70–75 ದಿನ</td><td>ಸಣ್ಣ ರೈತರಿಗೆ ಸೂಕ್ತ, ಕಡಿಮೆ ಖರ್ಚು / Suitable for small farmers</td></tr>
+          <tr><td>Vaibhav</td><td>Hybrid</td><td>65–70 ದಿನ</td><td>ಉಷ್ಣ ಸಹಿಷ್ಣು, ಕರ್ನಾಟಕ ಹವಾಮಾನಕ್ಕೆ ಸೂಕ್ತ / Heat tolerant</td></tr>
+          <tr><td>Rashmi</td><td>Hybrid</td><td>68–72 ದಿನ</td><td>ಒಳ್ಳೆ ಬಣ್ಣ, ಮಾರಾಟ ಸುಲಭ / Good color, easy to sell</td></tr>
         </tbody>
       </table>
 
-      <div class="tip-box tip" style="margin-top:16px;">
+      <div class="tip-box tip" style="margin-top:14px;">
         <span class="tip-icon">💡</span>
         <div class="tip-content">
           <div class="kn">ಕೋಲಾರ ಮತ್ತು ಚಿಕ್ಕಬಳ್ಳಾಪುರ ರೈತರು <strong>Arka Rakshak</strong> ಮತ್ತು <strong>US-440</strong> ತಳಿ ಆಯ್ಕೆ ಮಾಡಿದರೆ ಉತ್ತಮ ಫಲಿತಾಂಶ ಸಿಗುತ್ತದೆ.</div>
@@ -763,82 +847,60 @@
       </div>
     </section>
 
-    <!-- STEP BY STEP CULTIVATION -->
+    <!-- STEP BY STEP -->
     <section>
       <div class="section-heading">
         <h2>ಹಂತ ಹಂತವಾಗಿ ಬೆಳೆ ವಿಧಾನ <span class="en">Step-by-Step Cultivation</span></h2>
       </div>
-
       <div class="step-cards">
-
         <div class="step-card">
           <div class="step-num">1</div>
           <div class="step-content">
             <div class="kn">ನರ್ಸರಿ ತಯಾರಿ</div>
             <div class="en">Nursery Preparation</div>
-            <div class="detail">
-              ಮರಳು, ಮಣ್ಣು ಮತ್ತು ಕಾಂಪೋಸ್ಟ್ ಸಮಾನ ಪ್ರಮಾಣದಲ್ಲಿ ಮಿಶ್ರ ಮಾಡಿ ಟ್ರೇಯಲ್ಲಿ ತುಂಬಿ. <strong>ಬೀಜ ಉಪಚಾರ</strong> ಮಾಡಿ — ಥೈರಂ 3 ಗ್ರಾಂ ಪ್ರತಿ ಕಿ.ಗ್ರಾ ಬೀಜಕ್ಕೆ ಸೇರಿಸಿ. 25–30 ದಿನಗಳಲ್ಲಿ ಸಸಿ ತಯಾರಾಗುತ್ತದೆ.
-            </div>
+            <div class="detail">ಮರಳು, ಮಣ್ಣು ಮತ್ತು ಕಾಂಪೋಸ್ಟ್ ಸಮಾನ ಪ್ರಮಾಣದಲ್ಲಿ ಮಿಶ್ರ ಮಾಡಿ ಟ್ರೇಯಲ್ಲಿ ತುಂಬಿ. <strong>ಬೀಜ ಉಪಚಾರ</strong> ಮಾಡಿ — ಥೈರಂ 3 ಗ್ರಾಂ ಪ್ರತಿ ಕಿ.ಗ್ರಾ ಬೀಜಕ್ಕೆ ಸೇರಿಸಿ. 25–30 ದಿನಗಳಲ್ಲಿ ಸಸಿ ತಯಾರಾಗುತ್ತದೆ.</div>
             <div class="detail-en">Mix sand, soil, and compost equally in trays. Treat seeds with Thiram 3g/kg. Seedlings ready in 25–30 days.</div>
           </div>
         </div>
-
         <div class="step-card">
           <div class="step-num">2</div>
           <div class="step-content">
             <div class="kn">ಮಣ್ಣು ತಯಾರಿ ಮತ್ತು ನಾಟಿ</div>
             <div class="en">Land Preparation & Transplanting</div>
-            <div class="detail">
-              ಆಳವಾದ ಉಳುಮೆ ಮಾಡಿ. ಎಕರೆಗೆ <strong>10 ಟನ್ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ</strong> ಸೇರಿಸಿ. ಸಾಲು ಸಾಲಿಗೆ 60 ಸೆ.ಮಿ., ಗಿಡ ಗಿಡಕ್ಕೆ 45 ಸೆ.ಮಿ. ಅಂತರ ಕಾಯ್ದುಕೊಳ್ಳಿ.
-            </div>
+            <div class="detail">ಆಳವಾದ ಉಳುಮೆ ಮಾಡಿ. ಎಕರೆಗೆ <strong>10 ಟನ್ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ</strong> ಸೇರಿಸಿ. ಸಾಲು ಸಾಲಿಗೆ 60 ಸೆ.ಮಿ., ಗಿಡ ಗಿಡಕ್ಕೆ 45 ಸೆ.ಮಿ. ಅಂತರ ಕಾಯ್ದುಕೊಳ್ಳಿ.</div>
             <div class="detail-en">Deep plough and add 10 tons FYM/acre. Maintain 60cm row × 45cm plant spacing.</div>
           </div>
         </div>
-
         <div class="step-card">
           <div class="step-num">3</div>
           <div class="step-content">
             <div class="kn">ಗೊಬ್ಬರ ನಿರ್ವಹಣೆ</div>
             <div class="en">Fertilizer Management</div>
-            <div class="detail">
-              ಎಕರೆಗೆ: <strong>ಸಾರಜನಕ 50 ಕಿ.ಗ್ರಾ, ರಂಜಕ 25 ಕಿ.ಗ್ರಾ, ಪೊಟ್ಯಾಶ್ 25 ಕಿ.ಗ್ರಾ.</strong> ನಾಟಿ ಸಮಯದಲ್ಲಿ ಅರ್ಧ ಸಾರಜನಕ ಮತ್ತು ಪೂರ್ಣ ರಂಜಕ-ಪೊಟ್ಯಾಶ್ ಕೊಡಿ. ಉಳಿದ ಅರ್ಧ ನಾಟಿ ಮಾಡಿ 30 ದಿನಕ್ಕೆ ಕೊಡಿ.
-            </div>
-            <div class="detail-en">Per acre: N-50kg, P-25kg, K-25kg. Half N + full P & K at transplanting. Remaining N at 30 days after transplanting.</div>
+            <div class="detail">ಎಕರೆಗೆ: <strong>ಸಾರಜನಕ 50 ಕಿ.ಗ್ರಾ, ರಂಜಕ 25 ಕಿ.ಗ್ರಾ, ಪೊಟ್ಯಾಶ್ 25 ಕಿ.ಗ್ರಾ.</strong> ನಾಟಿ ಸಮಯದಲ್ಲಿ ಅರ್ಧ ಸಾರಜನಕ ಮತ್ತು ಪೂರ್ಣ ರಂಜಕ-ಪೊಟ್ಯಾಶ್ ಕೊಡಿ.</div>
+            <div class="detail-en">Per acre: N-50kg, P-25kg, K-25kg. Half N + full P & K at transplanting. Remaining N at 30 days.</div>
           </div>
         </div>
-
         <div class="step-card">
           <div class="step-num">4</div>
           <div class="step-content">
             <div class="kn">ನೀರಾವರಿ</div>
             <div class="en">Irrigation</div>
-            <div class="detail">
-              ನಾಟಿ ನಂತರ ತಕ್ಷಣ ನೀರು ಕೊಡಿ. <em>ಹನಿ ನೀರಾವರಿ</em> ಅತ್ಯಂತ ಉತ್ತಮ — ನೀರು ಉಳಿತಾಯ ಮತ್ತು ರೋಗ ಕಡಿಮೆ. ಬೇಸಿಗೆಯಲ್ಲಿ 4–5 ದಿನಕ್ಕೊಮ್ಮೆ, ಮಳೆಗಾಲದಲ್ಲಿ ಅವಶ್ಯಕತೆ ಮೇಲೆ ನೀರು ಕೊಡಿ.
-            </div>
+            <div class="detail">ನಾಟಿ ನಂತರ ತಕ್ಷಣ ನೀರು ಕೊಡಿ. <em>ಹನಿ ನೀರಾವರಿ</em> ಅತ್ಯಂತ ಉತ್ತಮ — ನೀರು ಉಳಿತಾಯ ಮತ್ತು ರೋಗ ಕಡಿಮೆ. ಬೇಸಿಗೆಯಲ್ಲಿ 4–5 ದಿನಕ್ಕೊಮ್ಮೆ.</div>
             <div class="detail-en">Water immediately after transplanting. Drip irrigation is best. Every 4–5 days in summer, as needed in monsoon.</div>
           </div>
         </div>
-
         <div class="step-card">
           <div class="step-num">5</div>
           <div class="step-content">
             <div class="kn">ಆಧಾರ / ಸ್ಟೇಕಿಂಗ್</div>
             <div class="en">Staking / Support</div>
-            <div class="detail">
-              ನಾಟಿ ಮಾಡಿ 15–20 ದಿನಕ್ಕೆ <strong>ಬಿದಿರು ಕೋಲು ಅಥವಾ ದಾರ</strong> ಕಟ್ಟಿ ಆಧಾರ ನೀಡಿ. ಇದರಿಂದ ಗಿಡ ನೇರವಾಗಿ ಬೆಳೆಯುತ್ತದೆ ಮತ್ತು ಕಾಯಿ ಮಣ್ಣು ತಾಗುವುದಿಲ್ಲ.
-            </div>
+            <div class="detail">ನಾಟಿ ಮಾಡಿ 15–20 ದಿನಕ್ಕೆ <strong>ಬಿದಿರು ಕೋಲು ಅಥವಾ ದಾರ</strong> ಕಟ್ಟಿ ಆಧಾರ ನೀಡಿ. ಇದರಿಂದ ಗಿಡ ನೇರವಾಗಿ ಬೆಳೆಯುತ್ತದೆ ಮತ್ತು ಕಾಯಿ ಮಣ್ಣು ತಾಗುವುದಿಲ್ಲ.</div>
             <div class="detail-en">Stake plants with bamboo poles or strings at 15–20 days. Prevents lodging and keeps fruits off the ground.</div>
           </div>
         </div>
-
       </div>
 
-      <!-- ================================================
-           IMAGE 3 — STAKING / FIELD PHOTO
-           HOW TO CHANGE: Replace src="YOUR_IMAGE_URL_HERE"
-           Recommended: 800×400px
-      ================================================ -->
-      <figure class="inline-image" style="margin-top:24px;">
+      <figure class="inline-image" style="margin-top:22px;">
         <div class="img-placeholder">
           <div class="icon">🪴</div>
           <p>Field Photo — ಟೊಮೆಟೊ ಗಿಡ ಫೋಟೋ ಇಲ್ಲಿ ಹಾಕಿ · 800×400px</p>
@@ -905,7 +967,7 @@
         </tbody>
       </table>
 
-      <div class="tip-box warning" style="margin-top:16px;">
+      <div class="tip-box warning" style="margin-top:14px;">
         <span class="tip-icon">⚠️</span>
         <div class="tip-content">
           <div class="kn">ಯಾವುದೇ ಕೀಟನಾಶಕ ಬಳಸುವ ಮೊದಲು ನಿಮ್ಮ ನಜೀರ <strong>KVK</strong> ಅಥವಾ ಕೃಷಿ ಅಧಿಕಾರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.</div>
@@ -913,12 +975,7 @@
         </div>
       </div>
 
-      <!-- ================================================
-           IMAGE 4 — PEST / DISEASE PHOTO
-           HOW TO CHANGE: Replace src="YOUR_IMAGE_URL_HERE"
-           Recommended: 800×400px
-      ================================================ -->
-      <figure class="inline-image" style="margin-top:20px;">
+      <figure class="inline-image" style="margin-top:18px;">
         <div class="img-placeholder">
           <div class="icon">🔍</div>
           <p>Pest Photo — ಕೀಟ ರೋಗ ಫೋಟೋ ಇಲ್ಲಿ ಹಾಕಿ · 800×400px</p>
@@ -940,7 +997,6 @@
           ನಾಟಿ ಮಾಡಿ <strong>60–75 ದಿನಗಳಲ್ಲಿ</strong> ಟೊಮೆಟೊ ಕಟಾವಿಗೆ ಬರುತ್ತದೆ. ದೂರದ ಮಾರುಕಟ್ಟೆಗೆ ಕಳಿಸುವಾಗ ಕಾಯಿ <em>ಅರ್ಧ ಮಾಗಿದ ಸ್ಥಿತಿ</em>ಯಲ್ಲಿ ಕಿತ್ತು ಕಳಿಸಿ. ಸ್ಥಳೀಯ ಮಾರಾಟಕ್ಕೆ ಪೂರ್ಣ ಮಾಗಿದ ಕಾಯಿ ಕೊಡಬಹುದು.
         </p>
         <p class="en">Tomatoes are ready for harvest in 60–75 days after transplanting. For distant markets, harvest at the mature-green or breaker stage. For local sale, harvest fully ripe.</p>
-
         <p class="kn">
           <strong>ಕರ್ನಾಟಕದ ಮುಖ್ಯ ಮಾರಾಟ ಕೇಂದ್ರಗಳು:</strong> ಕೋಲಾರ APMC, ಬೆಂಗಳೂರು ಕೃಷ್ಣರಾಜ ಮಾರುಕಟ್ಟೆ, ಹುಬ್ಬಳ್ಳಿ APMC, ಮೈಸೂರು ಮಾರುಕಟ್ಟೆ.
         </p>
@@ -969,29 +1025,14 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>ಒಟ್ಟು ಖರ್ಚು / Total Cost</td>
-            <td>₹40,000 – ₹55,000</td>
-          </tr>
-          <tr>
-            <td>ಸರಾಸರಿ ಇಳುವರಿ / Average Yield</td>
-            <td>25–35 ಟನ್/ಎಕರೆ</td>
-          </tr>
-          <tr>
-            <td>ಸರಾಸರಿ ಮಾರಾಟ ಬೆಲೆ / Avg Market Price</td>
-            <td>₹8 – ₹20/ಕಿ.ಗ್ರಾ</td>
-          </tr>
-          <tr>
-            <td>ಒಟ್ಟು ಆದಾಯ / Gross Income</td>
-            <td>₹2,00,000 – ₹7,00,000</td>
-          </tr>
-          <tr>
-            <td>ನಿವ್ವಳ ಲಾಭ / Net Profit</td>
-            <td><strong>₹1,50,000 – ₹6,00,000</strong></td>
-          </tr>
+          <tr><td>ಒಟ್ಟು ಖರ್ಚು / Total Cost</td><td>₹40,000 – ₹55,000</td></tr>
+          <tr><td>ಸರಾಸರಿ ಇಳುವರಿ / Average Yield</td><td>25–35 ಟನ್/ಎಕರೆ</td></tr>
+          <tr><td>ಸರಾಸರಿ ಮಾರಾಟ ಬೆಲೆ / Avg Market Price</td><td>₹8 – ₹20/ಕಿ.ಗ್ರಾ</td></tr>
+          <tr><td>ಒಟ್ಟು ಆದಾಯ / Gross Income</td><td>₹2,00,000 – ₹7,00,000</td></tr>
+          <tr><td>ನಿವ್ವಳ ಲಾಭ / Net Profit</td><td><strong>₹1,50,000 – ₹6,00,000</strong></td></tr>
         </tbody>
       </table>
-      <div class="tip-box tip" style="margin-top:14px;">
+      <div class="tip-box tip" style="margin-top:12px;">
         <span class="tip-icon">💰</span>
         <div class="tip-content">
           <div class="kn">ಬೆಲೆ ಕಡಿಮೆ ಇದ್ದಾಗ ಮಾರಾಟ ಮಾಡಬೇಡಿ. <strong>ಶೀತಲ ಗೃಹ</strong> ಬಳಸಿ ಅಥವಾ ಸ್ಥಳೀಯ ಪ್ರೊಸೆಸಿಂಗ್ ಘಟಕಕ್ಕೆ ನೀಡಿ.</div>
@@ -1000,11 +1041,6 @@
       </div>
     </section>
 
-    <!-- ================================================
-         IMAGE 5 — HARVEST / MARKET PHOTO
-         HOW TO CHANGE: Replace src="YOUR_IMAGE_URL_HERE"
-         Recommended: 800×400px
-    ================================================ -->
     <figure class="inline-image">
       <div class="img-placeholder">
         <div class="icon">🏪</div>
@@ -1065,35 +1101,30 @@
         <div class="a">ಖರೀಫ್ ಋತುವಿಗೆ ಜೂನ್–ಜುಲೈ ಮತ್ತು ರಬಿ ಋತುವಿಗೆ ಅಕ್ಟೋಬರ್–ನವೆಂಬರ್ ತಿಂಗಳು ನರ್ಸರಿ ತಯಾರಿಗೆ ಉತ್ತಮ.</div>
         <div class="a-en">June–July for Kharif and October–November for Rabi season nursery preparation is ideal.</div>
       </div>
-
       <div class="faq-item">
         <div class="q">ಎಕರೆಗೆ ಎಷ್ಟು ಬೀಜ ಬೇಕು?</div>
         <div class="q-en">How much seed is needed per acre?</div>
         <div class="a">ಒಂದು ಎಕರೆ ನಾಟಿಗೆ ಸುಮಾರು <strong>150–200 ಗ್ರಾಂ</strong> ಹೈಬ್ರಿಡ್ ಬೀಜ ಸಾಕು.</div>
         <div class="a-en">Approximately 150–200 grams of hybrid seed is sufficient for one acre transplanting.</div>
       </div>
-
       <div class="faq-item">
         <div class="q">ಟೊಮೆಟೊ ಕಾಯಿ ಕಪ್ಪಾಗುತ್ತಿದ್ದರೆ ಏನು ಮಾಡಬೇಕು?</div>
         <div class="q-en">What to do if tomato fruits are turning black?</div>
         <div class="a">ಇದು <em>Blossom End Rot</em> ಆಗಿರಬಹುದು — ಕ್ಯಾಲ್ಸಿಯಂ ಕೊರತೆಯ ಸಂಕೇತ. <strong>ಕ್ಯಾಲ್ಸಿಯಂ ನೈಟ್ರೇಟ್ 2 ಗ್ರಾ/ಲೀ</strong> ದ್ರಾವಣ ಸಿಂಪಡಿಸಿ ಮತ್ತು ನಿಯಮಿತ ನೀರಾವರಿ ಮಾಡಿ.</div>
         <div class="a-en">This is likely Blossom End Rot due to calcium deficiency. Spray Calcium Nitrate 2g/litre and ensure regular irrigation.</div>
       </div>
-
       <div class="faq-item">
         <div class="q">ಟೊಮೆಟೊ ಹಣ್ಣನ್ನು ಎಷ್ಟು ದಿನ ಸಂಗ್ರಹಿಸಬಹುದು?</div>
         <div class="q-en">How long can tomatoes be stored?</div>
         <div class="a">ಸಾಮಾನ್ಯ ತಾಪಮಾನದಲ್ಲಿ 3–5 ದಿನ. <strong>ಶೀತಲ ಗೃಹ</strong>ದಲ್ಲಿ (12–15°C) 2–3 ವಾರ ಸಂಗ್ರಹಿಸಬಹುದು.</div>
         <div class="a-en">3–5 days at room temperature. 2–3 weeks in cold storage at 12–15°C.</div>
       </div>
-
       <div class="faq-item">
         <div class="q">ಕರ್ನಾಟಕದ ಅತ್ಯುತ್ತಮ ಟೊಮೆಟೊ ಮಾರಾಟ ಕೇಂದ್ರ ಯಾವುದು?</div>
         <div class="q-en">What is the best tomato market in Karnataka?</div>
         <div class="a"><strong>ಕೋಲಾರ APMC</strong> ಕರ್ನಾಟಕದ ಅತಿ ದೊಡ್ಡ ಟೊಮೆಟೊ ಮಾರಾಟ ಕೇಂದ್ರ. ಇಲ್ಲಿ ದೇಶದ ವಿವಿಧ ಭಾಗಗಳ ವ್ಯಾಪಾರಿಗಳು ಖರೀದಿಸಲು ಬರುತ್ತಾರೆ.</div>
         <div class="a-en">Kolar APMC is Karnataka's largest tomato market, attracting traders from across India.</div>
       </div>
-
     </section>
 
     <!-- CTA -->
@@ -1113,6 +1144,24 @@
   </article>
 </div>
 
+<script>
+  function setLang(lang) {
+    document.body.className = 'lang-' + lang;
+    document.getElementById('btn-kn').classList.toggle('active', lang === 'kn');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+    // For full English mode, show English headings more prominently
+    document.querySelectorAll('.section-heading h2 .en').forEach(el => {
+      el.style.fontSize = lang === 'en' ? '1.15rem' : '';
+      el.style.color    = lang === 'en' ? 'var(--green-dark)' : '';
+    });
+    // Hero subtitle
+    document.querySelectorAll('.hero h1 .en').forEach(el => {
+      el.style.fontSize = lang === 'en' ? '1.4rem' : '';
+      el.style.color    = lang === 'en' ? '#fff' : '';
+    });
+  }
+</script>
+
 </body>
 </html>
-```
