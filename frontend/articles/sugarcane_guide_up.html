@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <title>गन्ना की खेती — सम्पूर्ण मार्गदर्शिका | Uttar Pradesh – KrashiMitra.in</title>
+  <meta name="description" content="उत्तर प्रदेश के किसानों के लिए गन्ना खेती की सम्पूर्ण जानकारी — बीज, बुवाई, खाद, सिंचाई, रोग नियंत्रण और चीनी मिल भुगतान।" />
+  <meta name="keywords" content="गन्ना खेती UP, sugarcane farming Uttar Pradesh, गन्ना बुवाई, गन्ना रोग, गन्ना SAP भाव, KrashiMitra" />
+  <meta name="author" content="KrashiMitra.in" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Poppins:wght@400;600;700&family=Noto+Serif+Devanagari:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --green-dark:   #1a4d2e;
+      --green-mid:    #2e7d32;
+      --green-light:  #4caf50;
+      --green-pale:   #e8f5e9;
+      --cane:         #6d4c41;
+      --cane-light:   #efebe9;
+      --cane-gold:    #f57f17;
+      --cane-amber:   #fff8e1;
+      --gold:         #f9a825;
+      --cream:        #faf8f3;
+      --text-dark:    #1b1b1b;
+      --text-mid:     #3d3d3d;
+      --text-light:   #666;
+      --border:       #dcedc8;
+      --shadow:       rgba(30, 77, 46, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Tiro Devanagari Hindi', 'Noto Serif Devanagari', Georgia, serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      line-height: 1.85;
+    }
+
+    /* ══ SITE HEADER ══ */
+    .site-header {
+      background: var(--green-dark);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .logo-block { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-text { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.15rem; color: #fff; letter-spacing: 0.3px; line-height: 1.1; }
+    .logo-text span { color: var(--gold); }
+    .tagline-sub { font-family: 'Poppins', sans-serif; font-size: 0.65rem; color: #a5d6a7; font-weight: 400; display: block; margin-top: 1px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 600; color: #c8e6c9; text-decoration: none; padding: 6px 10px; border-radius: 6px; transition: background 0.18s, color 0.18s; white-space: nowrap; }
+    .nav-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .nav-links a.home-link { color: var(--gold); }
+    .nav-links a.home-link:hover { background: rgba(249,168,37,0.15); }
+    .user-icon { font-size: 1.1rem; cursor: pointer; opacity: 0.85; }
+    @media (max-width: 600px) { .nav-links a:not(.home-link) { display: none; } .logo-text { font-size: 1rem; } }
+
+    /* ══ BREADCRUMB ══ */
+    .breadcrumb { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--text-light); padding: 10px 20px; max-width: 900px; margin: 0 auto; }
+    .breadcrumb a { color: var(--green-mid); text-decoration: none; }
+    .breadcrumb span { margin: 0 5px; }
+
+    /* ══ WRAPPER ══ */
+    .article-wrapper { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+    /* ══ HERO ══ */
+    .hero {
+      background: linear-gradient(135deg, #2e1503 0%, #3e2723 30%, var(--green-dark) 70%, #1b5e20 100%);
+      border-radius: 0 0 20px 20px;
+      padding: 42px 28px 38px;
+      color: #fff;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before { content: '🎋'; position: absolute; right: 22px; top: 10px; font-size: 6rem; opacity: 0.12; pointer-events: none; }
+    .hero .category-tag { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-size: 0.7rem; font-weight: 700; padding: 3px 12px; border-radius: 12px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    .hero h1 { font-family: 'Noto Serif Devanagari', serif; font-size: clamp(1.5rem, 4.5vw, 2.1rem); font-weight: 700; line-height: 1.4; color: #fff; margin-bottom: 10px; }
+    .hero h1 .sub { font-size: clamp(0.85rem, 2.2vw, 1rem); font-weight: 400; color: #a5d6a7; display: block; margin-top: 7px; font-family: 'Poppins', sans-serif; }
+    .hero .meta { font-family: 'Poppins', sans-serif; font-size: 0.74rem; color: #c8e6c9; margin-top: 12px; }
+
+    /* ══ FEATURED IMAGE ══ */
+    .featured-image { width: 100%; border-radius: 14px; overflow: hidden; margin-bottom: 28px; box-shadow: 0 6px 24px var(--shadow); }
+    .featured-image img { width: 100%; height: 320px; object-fit: cover; display: block; }
+    .img-placeholder { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; }
+    .img-placeholder.tall { height: 320px; background: linear-gradient(135deg, #d7ccc8, #a1887f); color: #3e2723; }
+    .img-placeholder.mid  { height: 220px; background: linear-gradient(135deg, #efebe9, #d7ccc8); color: #4e342e; }
+    .img-placeholder .icon { font-size: 2.8rem; margin-bottom: 8px; }
+    .img-placeholder p { font-size: 0.8rem; font-weight: 600; opacity: 0.6; }
+    .img-placeholder p.hint { font-size: 0.68rem; opacity: 0.45; margin-top: 3px; }
+    figcaption { padding: 8px 14px; font-family: 'Poppins', sans-serif; font-size: 0.73rem; color: var(--text-light); background: #fdf6f0; text-align: center; }
+
+    /* ══ INLINE IMAGE ══ */
+    .inline-image { width: 100%; border-radius: 10px; overflow: hidden; margin: 22px 0; box-shadow: 0 3px 12px var(--shadow); }
+
+    /* ══ QUICK FACTS ══ */
+    .quick-facts { background: var(--cane-amber); border-left: 5px solid var(--cane-gold); border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
+    .fact { text-align: center; }
+    .fact .icon { font-size: 1.5rem; }
+    .fact .label { font-family: 'Poppins', sans-serif; font-size: 0.64rem; font-weight: 600; color: var(--cane); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
+    .fact .value { font-family: 'Poppins', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--green-dark); }
+
+    /* ══ SECTIONS ══ */
+    section { margin-bottom: 40px; }
+    .section-heading { border-left: 5px solid var(--cane-gold); padding-left: 14px; margin-bottom: 16px; }
+    .section-heading h2 { font-family: 'Noto Serif Devanagari', serif; font-size: 1.3rem; font-weight: 700; color: var(--green-dark); line-height: 1.4; }
+
+    /* ══ BODY TEXT ══ */
+    .body-text p { font-family: 'Tiro Devanagari Hindi', serif; font-size: 1rem; color: var(--text-dark); margin-bottom: 14px; line-height: 1.9; }
+
+    /* ══ STEP CARDS ══ */
+    .step-cards { display: grid; gap: 14px; }
+    .step-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 7px var(--shadow); }
+    .step-num { background: var(--green-dark); color: #fff; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.82rem; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 3px; }
+    .step-content .step-title { font-family: 'Noto Serif Devanagari', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 5px; }
+    .step-content .step-detail { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.92rem; color: var(--text-mid); line-height: 1.75; }
+
+    /* ══ INFO GRID ══ */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .info-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 14px; box-shadow: 0 2px 7px var(--shadow); }
+    .info-card .icon { font-size: 1.4rem; margin-bottom: 7px; }
+    .info-card .card-title { font-family: 'Noto Serif Devanagari', serif; font-size: 0.95rem; font-weight: 700; color: var(--green-dark); margin-bottom: 6px; }
+    .info-card .card-detail { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.86rem; color: var(--text-mid); line-height: 1.65; }
+
+    /* ══ TABLE ══ */
+    .article-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); margin-top: 6px; }
+    .article-table thead tr { background: var(--green-dark); color: #fff; }
+    .article-table thead th { padding: 11px 14px; text-align: left; font-weight: 600; font-size: 0.77rem; font-family: 'Noto Serif Devanagari', serif; }
+    .article-table tbody tr:nth-child(even) { background: var(--green-pale); }
+    .article-table tbody tr:nth-child(odd)  { background: #fff; }
+    .article-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-mid); vertical-align: top; font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.88rem; line-height: 1.6; }
+    .article-table tbody td:first-child { font-family: 'Noto Serif Devanagari', serif; font-weight: 700; color: var(--green-dark); }
+    .article-table tfoot td { padding: 10px 14px; background: #e8f5e9; font-family: 'Noto Serif Devanagari', serif; font-size: 0.82rem; color: var(--green-dark); }
+
+    /* ══ TIP BOXES ══ */
+    .tip-box { border-radius: 10px; padding: 16px 18px; margin: 18px 0; display: flex; gap: 12px; align-items: flex-start; }
+    .tip-box.tip     { background: var(--cane-amber);     border-left: 5px solid var(--gold); }
+    .tip-box.info    { background: var(--green-pale);      border-left: 5px solid var(--green-mid); }
+    .tip-box.warning { background: #fff3e0;                border-left: 5px solid #e65100; }
+    .tip-box.danger  { background: #ffebee;                border-left: 5px solid #b71c1c; }
+    .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+    .tip-content { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.93rem; color: var(--text-dark); line-height: 1.75; }
+    .tip-content strong { font-family: 'Noto Serif Devanagari', serif; color: var(--green-dark); }
+
+    /* ══ MONTH TIMELINE ══ */
+    .timeline { display: grid; gap: 0; }
+    .timeline-item { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px dashed var(--border); }
+    .timeline-item:last-child { border-bottom: none; }
+    .tl-month { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.78rem; color: #fff; background: var(--green-dark); border-radius: 8px; padding: 4px 10px; flex-shrink: 0; min-width: 72px; text-align: center; margin-top: 2px; }
+    .tl-month.harvest { background: var(--cane-gold); color: #fff; }
+    .tl-month.offseason { background: #9e9e9e; }
+    .tl-task { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.9rem; color: var(--text-dark); line-height: 1.7; }
+    .tl-task strong { font-family: 'Noto Serif Devanagari', serif; color: var(--green-dark); }
+
+    /* ══ DO / DON'T ══ */
+    .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px; }
+    .do-box, .dont-box { border-radius: 10px; padding: 16px; }
+    .do-box   { background: var(--green-pale); border: 2px solid var(--green-mid); }
+    .dont-box { background: #ffebee;           border: 2px solid #c62828; }
+    .do-box .box-title   { font-family: 'Noto Serif Devanagari', serif; font-size: 0.95rem; font-weight: 700; color: var(--green-dark); margin-bottom: 10px; }
+    .dont-box .box-title { font-family: 'Noto Serif Devanagari', serif; font-size: 0.95rem; font-weight: 700; color: #b71c1c;        margin-bottom: 10px; }
+    .do-box ul, .dont-box ul { list-style: none; padding: 0; }
+    .do-box ul li, .dont-box ul li { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.88rem; color: var(--text-dark); line-height: 1.7; margin-bottom: 7px; padding-left: 22px; position: relative; }
+    .do-box ul li::before   { content: '✅'; position: absolute; left: 0; font-size: 0.75rem; top: 3px; }
+    .dont-box ul li::before { content: '❌'; position: absolute; left: 0; font-size: 0.75rem; top: 3px; }
+    @media (max-width: 560px) { .do-dont { grid-template-columns: 1fr; } }
+
+    /* ══ SAP HIGHLIGHT ══ */
+    .sap-banner {
+      background: linear-gradient(135deg, var(--cane-gold), #ff8f00);
+      border-radius: 12px;
+      padding: 20px 22px;
+      color: #fff;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .sap-banner .icon { font-size: 2rem; flex-shrink: 0; }
+    .sap-banner .text { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.95rem; line-height: 1.75; }
+    .sap-banner .text strong { font-family: 'Noto Serif Devanagari', serif; font-size: 1rem; }
+
+    /* ══ FAQ ══ */
+    .faq-item { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 10px; box-shadow: 0 2px 5px var(--shadow); }
+    .faq-item .q { font-family: 'Noto Serif Devanagari', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 8px; }
+    .faq-item .a { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.92rem; color: var(--text-mid); line-height: 1.75; }
+
+    /* ══ CTA ══ */
+    .cta-block { background: linear-gradient(135deg, var(--green-dark), #1b5e20); border-radius: 14px; padding: 32px 24px; text-align: center; color: #fff; margin-top: 36px; }
+    .cta-block .emoji { font-size: 2.2rem; margin-bottom: 10px; }
+    .cta-block h3 { font-family: 'Noto Serif Devanagari', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; color: #fff; line-height: 1.5; }
+    .cta-block p { font-family: 'Tiro Devanagari Hindi', serif; font-size: 0.88rem; color: #c8e6c9; margin: 10px 0 18px; line-height: 1.7; }
+    .cta-block a { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem; padding: 11px 26px; border-radius: 30px; text-decoration: none; transition: opacity 0.2s; }
+    .cta-block a:hover { opacity: 0.88; }
+
+    strong { color: var(--green-dark); }
+    em { color: var(--cane); font-style: normal; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .hero { padding: 28px 16px 24px; }
+      .quick-facts { grid-template-columns: repeat(2, 1fr); }
+      .article-table { font-size: 0.72rem; }
+      .article-table thead th, .article-table tbody td { padding: 8px 9px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SITE HEADER -->
+<header class="site-header">
+  <a href="index.html" class="logo-block">
+    <div>
+      <div class="logo-text">🌾 कृषि<span>मित्र</span></div>
+      <span class="tagline-sub">किसान का डिजिटल साथी</span>
+    </div>
+  </a>
+  <nav class="nav-links">
+    <a href="index.html" class="home-link">🏠 मुख्य</a>
+    <a href="index.html#weather">मौसम</a>
+    <a href="index.html#mandi">मंडी</a>
+    <a href="index.html#articles">लेख</a>
+    <a href="#">सहायता</a>
+  </nav>
+  <span class="user-icon">👤</span>
+</header>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="index.html">मुख्य</a>
+  <span>›</span>
+  <a href="index.html#articles">लेख & मार्गदर्शिकाएँ</a>
+  <span>›</span>
+  गन्ना की खेती — उत्तर प्रदेश
+</div>
+
+<div class="article-wrapper">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="category-tag">🎋 फसल मार्गदर्शिका · Crop Guide</span>
+    <h1>
+      उत्तर प्रदेश में गन्ना की खेती — सम्पूर्ण मार्गदर्शिका
+      <span class="sub">बुवाई से लेकर चीनी मिल भुगतान तक — UP के हर गन्ना किसान के लिए</span>
+    </h1>
+    <p class="meta">KrashiMitra.in &nbsp;|&nbsp; हिंदी &nbsp;|&nbsp; उत्तर प्रदेश के किसानों के लिए</p>
+  </div>
+
+  <!-- FEATURED IMAGE -->
+  <figure class="featured-image">
+    <div class="img-placeholder tall">
+      <div class="icon">🎋</div>
+      <p>Featured Image — गन्ने के खेत की फोटो यहाँ लगाएं</p>
+      <p class="hint">Replace src · 1200×630px recommended</p>
+    </div>
+    <!-- UNCOMMENT TO USE:
+    <img src="YOUR_IMAGE_URL_HERE" alt="उत्तर प्रदेश गन्ना खेती Sugarcane farm Uttar Pradesh" width="1200" height="630" loading="eager" />
+    -->
+    <figcaption>उत्तर प्रदेश के गन्ने के खेत — मुजफ्फरनगर, मेरठ, सहारनपुर और लखीमपुर खीरी UP के सबसे बड़े गन्ना उत्पादक जिले हैं</figcaption>
+  </figure>
+
+  <!-- QUICK FACTS -->
+  <div class="quick-facts">
+    <div class="fact"><div class="icon">🌡️</div><div class="label">तापमान</div><div class="value">21°C – 35°C</div></div>
+    <div class="fact"><div class="icon">📅</div><div class="label">बुवाई</div><div class="value">फरवरी–मार्च</div></div>
+    <div class="fact"><div class="icon">🌱</div><div class="label">बीज (पेड़ी/सेट)</div><div class="value">25–30 क्विंटल/एकड़</div></div>
+    <div class="fact"><div class="icon">🎋</div><div class="label">उपज</div><div class="value">300–400 क्विंटल/एकड़</div></div>
+    <div class="fact"><div class="icon">💧</div><div class="label">सिंचाई</div><div class="value">8–10 बार</div></div>
+    <div class="fact"><div class="icon">⏳</div><div class="label">फसल अवधि</div><div class="value">10–12 महीने</div></div>
+  </div>
+
+  <article>
+
+    <!-- INTRODUCTION -->
+    <section>
+      <div class="section-heading"><h2>परिचय</h2></div>
+      <div class="body-text">
+        <p>उत्तर प्रदेश भारत का सबसे बड़ा गन्ना उत्पादक राज्य है और देश की <strong>कुल चीनी उत्पादन में लगभग 40% हिस्सेदारी</strong> UP की है। <strong>मुजफ्फरनगर, मेरठ, सहारनपुर, बरेली, लखीमपुर खीरी और गोंडा</strong> जिले गन्ना बेल्ट के प्रमुख केंद्र हैं।</p>
+        <p>गन्ना एक दीर्घकालिक फसल है जिसमें <em>एक बार बुवाई के बाद पेड़ी फसल</em> भी ली जा सकती है। सही किस्म, समय पर बुवाई, उचित खाद और रोग नियंत्रण से <strong>एकड़ में 350–400 क्विंटल</strong> तक उपज संभव है।</p>
+      </div>
+    </section>
+
+    <!-- VARIETIES -->
+    <section>
+      <div class="section-heading"><h2>UP के लिए अनुशंसित किस्में</h2></div>
+      <table class="article-table">
+        <thead>
+          <tr>
+            <th>किस्म</th>
+            <th>प्रकार</th>
+            <th>पकने का समय</th>
+            <th>विशेषता</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Co-0238 (करण 4)</td><td>अगेती</td><td>10–11 महीने</td><td>सबसे लोकप्रिय, अधिक शर्करा, रोग प्रतिरोधी</td></tr>
+          <tr><td>CoSe-98231</td><td>मध्यम</td><td>12 महीने</td><td>पश्चिमी UP के लिए उत्तम, भारी उपज</td></tr>
+          <tr><td>CoJ-64</td><td>अगेती</td><td>10 महीने</td><td>जलभराव सहनशील, पूर्वांचल के लिए</td></tr>
+          <tr><td>UP-05125</td><td>मध्यम</td><td>11–12 महीने</td><td>लाल सड़न रोग प्रतिरोधी</td></tr>
+          <tr><td>CoS-8436</td><td>पछेती</td><td>12–14 महीने</td><td>पेड़ी फसल के लिए उत्कृष्ट</td></tr>
+          <tr><td>Co-0118</td><td>मध्यम</td><td>11–12 महीने</td><td>सूखा सहनशील, तराई क्षेत्र के लिए</td></tr>
+        </tbody>
+      </table>
+      <div class="tip-box tip" style="margin-top:14px;">
+        <span class="tip-icon">💡</span>
+        <div class="tip-content"><strong>Co-0238 (करण 4)</strong> UP में सबसे अधिक उगाई जाने वाली किस्म है। अधिक शर्करा और रोग प्रतिरोधकता के कारण चीनी मिलें भी इसे पसंद करती हैं।</div>
+      </div>
+    </section>
+
+    <!-- SOIL & CLIMATE -->
+    <section>
+      <div class="section-heading"><h2>मिट्टी और जलवायु</h2></div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="icon">🌍</div>
+          <div class="card-title">मिट्टी का प्रकार</div>
+          <div class="card-detail">दोमट और बलुई दोमट मिट्टी सर्वोत्तम। pH 6.5–7.5 होनी चाहिए। जल निकास की अच्छी व्यवस्था जरूरी।</div>
+        </div>
+        <div class="info-card">
+          <div class="icon">🌡️</div>
+          <div class="card-title">तापमान</div>
+          <div class="card-detail">अंकुरण के लिए 25–32°C। बढ़त के समय 27–35°C। पकाव के समय 20–25°C उपयुक्त।</div>
+        </div>
+        <div class="info-card">
+ 
