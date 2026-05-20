@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <title>ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ | Paddy Farming Guide Karnataka – KrashiMitra.in</title>
+  <meta name="description" content="ಕರ್ನಾಟಕದಲ್ಲಿ ಭತ್ತದ ಬೆಳೆ ಬೆಳೆಯುವ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ. Complete paddy/rice farming guide for Karnataka farmers in Kannada and English." />
+  <meta name="keywords" content="ಭತ್ತದ ಬೆಳೆ ಕರ್ನಾಟಕ, paddy farming Karnataka, ಭತ್ತ ಕೃಷಿ, rice cultivation guide, ಕರ್ನಾಟಕ ರೈತ" />
+  <meta name="author" content="KrashiMitra.in" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Kannada&family=Noto+Serif+Kannada:wght@400;600;700&family=Poppins:wght@400;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --green-dark:   #1a4d2e;
+      --green-mid:    #2e7d32;
+      --green-light:  #4caf50;
+      --green-pale:   #e8f5e9;
+      --paddy:        #558b2f;
+      --paddy-light:  #f1f8e9;
+      --paddy-gold:   #f9a825;
+      --water-blue:   #0277bd;
+      --water-light:  #e1f5fe;
+      --gold:         #f9a825;
+      --cream:        #faf8f3;
+      --text-dark:    #1b1b1b;
+      --text-mid:     #3d3d3d;
+      --text-light:   #666;
+      --border:       #dcedc8;
+      --shadow:       rgba(30, 77, 46, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Tiro Kannada', 'Noto Serif Kannada', Georgia, serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      line-height: 1.85;
+    }
+
+    /* ══ SITE HEADER ══ */
+    .site-header {
+      background: var(--green-dark);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .logo-block { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-text { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.15rem; color: #fff; letter-spacing: 0.3px; line-height: 1.1; }
+    .logo-text span { color: var(--gold); }
+    .tagline-sub { font-family: 'Poppins', sans-serif; font-size: 0.65rem; color: #a5d6a7; font-weight: 400; display: block; margin-top: 1px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 600; color: #c8e6c9; text-decoration: none; padding: 6px 10px; border-radius: 6px; transition: background 0.18s, color 0.18s; white-space: nowrap; }
+    .nav-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .nav-links a.home-link { color: var(--gold); }
+    .nav-links a.home-link:hover { background: rgba(249,168,37,0.15); }
+
+    /* Lang toggle */
+    .lang-pill { display: flex; background: rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+    .lang-pill button { font-family: 'Poppins', sans-serif; font-size: 0.72rem; font-weight: 600; padding: 4px 10px; border: none; cursor: pointer; background: transparent; color: #a5d6a7; transition: all 0.18s; line-height: 1; }
+    .lang-pill button.active { background: var(--gold); color: var(--green-dark); border-radius: 18px; }
+    .right-group { display: flex; align-items: center; gap: 8px; }
+    .user-icon { font-size: 1.1rem; cursor: pointer; opacity: 0.85; }
+
+    @media (max-width: 600px) { .nav-links a:not(.home-link) { display: none; } .logo-text { font-size: 1rem; } }
+
+    /* ══ BREADCRUMB ══ */
+    .breadcrumb { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--text-light); padding: 10px 20px; max-width: 900px; margin: 0 auto; }
+    .breadcrumb a { color: var(--green-mid); text-decoration: none; }
+    .breadcrumb span { margin: 0 5px; }
+
+    /* ══ WRAPPER ══ */
+    .article-wrapper { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+    /* ══ HERO ══ */
+    .hero {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #33691e 100%);
+      border-radius: 0 0 20px 20px;
+      padding: 42px 28px 38px;
+      color: #fff;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before { content: '🌾'; position: absolute; right: 22px; top: 10px; font-size: 6rem; opacity: 0.12; pointer-events: none; }
+    .category-tag { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-size: 0.7rem; font-weight: 700; padding: 3px 12px; border-radius: 12px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    .hero h1 { font-family: 'Noto Serif Kannada', serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 700; line-height: 1.4; color: #fff; margin-bottom: 8px; }
+    .hero h1 .en { font-family: 'Poppins', sans-serif; font-size: clamp(0.88rem, 2.2vw, 1.05rem); font-weight: 500; color: #a5d6a7; display: block; margin-top: 6px; }
+    .hero .meta { font-family: 'Poppins', sans-serif; font-size: 0.74rem; color: #c8e6c9; margin-top: 12px; }
+
+    /* ══ FEATURED IMAGE ══ */
+    .featured-image { width: 100%; border-radius: 14px; overflow: hidden; margin-bottom: 28px; box-shadow: 0 6px 24px var(--shadow); }
+    .img-placeholder { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; }
+    .img-placeholder.tall { height: 320px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7); color: var(--green-dark); }
+    .img-placeholder.mid  { height: 220px; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); color: var(--green-dark); }
+    .img-placeholder .icon { font-size: 3rem; margin-bottom: 8px; }
+    .img-placeholder p { font-size: 0.8rem; font-weight: 600; opacity: 0.6; }
+    .img-placeholder p.hint { font-size: 0.68rem; opacity: 0.45; margin-top: 3px; }
+    figcaption { padding: 8px 14px; font-family: 'Poppins', sans-serif; font-size: 0.73rem; color: var(--text-light); background: #f1f8e9; text-align: center; }
+
+    .inline-image { width: 100%; border-radius: 10px; overflow: hidden; margin: 22px 0; box-shadow: 0 3px 12px var(--shadow); }
+
+    /* ══ QUICK FACTS ══ */
+    .quick-facts { background: var(--paddy-light); border-left: 5px solid var(--paddy); border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
+    .fact { text-align: center; }
+    .fact .icon { font-size: 1.5rem; }
+    .fact .label { font-family: 'Poppins', sans-serif; font-size: 0.63rem; font-weight: 600; color: var(--paddy); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
+    .fact .value { font-family: 'Poppins', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--green-dark); }
+
+    /* ══ SECTIONS ══ */
+    section { margin-bottom: 40px; }
+    .section-heading { border-left: 5px solid var(--paddy); padding-left: 14px; margin-bottom: 16px; }
+    .section-heading h2 { font-family: 'Noto Serif Kannada', serif; font-size: 1.25rem; font-weight: 700; color: var(--green-dark); line-height: 1.4; }
+    .section-heading h2 .en { font-family: 'Poppins', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--paddy); display: block; margin-top: 2px; }
+
+    /* ══ BILINGUAL TEXT ══ */
+    .bilingual p.kn { font-family: 'Tiro Kannada', serif; font-size: 1rem; color: var(--text-dark); margin-bottom: 5px; line-height: 1.9; }
+    .bilingual p.en { font-family: 'Merriweather', serif; font-size: 0.85rem; color: var(--text-mid); margin-bottom: 16px; font-style: italic; padding-left: 12px; border-left: 2px solid var(--border); }
+
+    /* Lang visibility */
+    body.lang-kn .en-only { display: none !important; }
+    body.lang-en .kn-only { display: none !important; }
+
+    /* ══ STEP CARDS ══ */
+    .step-cards { display: grid; gap: 14px; }
+    .step-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 7px var(--shadow); }
+    .step-num { background: var(--green-dark); color: #fff; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.82rem; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 3px; }
+    .step-content .step-title-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
+    .step-content .step-title-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--paddy); font-weight: 600; margin-bottom: 6px; }
+    .step-content .step-detail-kn { font-family: 'Tiro Kannada', serif; font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
+    .step-content .step-detail-en { font-family: 'Merriweather', serif; font-size: 0.76rem; color: #888; font-style: italic; }
+
+    /* ══ INFO GRID ══ */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .info-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 14px; box-shadow: 0 2px 7px var(--shadow); }
+    .info-card .icon { font-size: 1.4rem; margin-bottom: 7px; }
+    .info-card .kn { font-family: 'Noto Serif Kannada', serif; font-size: 0.92rem; font-weight: 700; color: var(--green-dark); margin-bottom: 3px; }
+    .info-card .en { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); margin-bottom: 6px; font-weight: 600; }
+    .info-card .detail { font-family: 'Tiro Kannada', serif; font-size: 0.84rem; color: var(--text-mid); line-height: 1.65; }
+    .info-card .detail-en { font-family: 'Merriweather', serif; font-size: 0.72rem; color: #999; font-style: italic; margin-top: 3px; }
+
+    /* ══ TABLE ══ */
+    .article-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); margin-top: 6px; }
+    .article-table thead tr { background: var(--green-dark); color: #fff; }
+    .article-table thead th { padding: 11px 14px; text-align: left; font-weight: 600; font-size: 0.77rem; font-family: 'Poppins', sans-serif; }
+    .article-table tbody tr:nth-child(even) { background: var(--paddy-light); }
+    .article-table tbody tr:nth-child(odd)  { background: #fff; }
+    .article-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-mid); vertical-align: top; font-size: 0.86rem; line-height: 1.6; }
+    .article-table tbody td:first-child { font-family: 'Noto Serif Kannada', serif; font-weight: 700; color: var(--green-dark); }
+    .article-table tbody td .en-sub { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); display: block; margin-top: 2px; }
+    .article-table tfoot td { padding: 10px 14px; background: #e8f5e9; font-family: 'Poppins', sans-serif; font-size: 0.8rem; color: var(--green-dark); }
+
+    /* ══ TIP BOXES ══ */
+    .tip-box { border-radius: 10px; padding: 16px 18px; margin: 18px 0; display: flex; gap: 12px; align-items: flex-start; }
+    .tip-box.tip     { background: #fff8e1;          border-left: 5px solid var(--gold); }
+    .tip-box.info    { background: var(--paddy-light); border-left: 5px solid var(--paddy); }
+    .tip-box.warning { background: #fff3e0;            border-left: 5px solid #e65100; }
+    .tip-box.danger  { background: #ffebee;            border-left: 5px solid #b71c1c; }
+    .tip-box.water   { background: var(--water-light);  border-left: 5px solid var(--water-blue); }
+    .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+    .tip-content .kn { font-family: 'Tiro Kannada', serif; font-size: 0.93rem; color: var(--text-dark); line-height: 1.75; margin-bottom: 4px; }
+    .tip-content .en { font-family: 'Merriweather', serif; font-size: 0.78rem; color: var(--text-mid); font-style: italic; }
+    .tip-content strong { font-family: 'Noto Serif Kannada', serif; color: var(--green-dark); }
+
+    /* ══ SEASON CARDS ══ */
+    .season-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .season-card { background: #fff; border-radius: 12px; border: 2px solid var(--border); padding: 16px; box-shadow: 0 2px 7px var(--shadow); }
+    .season-card.kharif { border-color: #1976d2; }
+    .season-card.rabi   { border-color: var(--gold); }
+    .season-card.summer { border-color: #e53935; }
+    .season-card .season-label { font-family: 'Poppins', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .season-card.kharif .season-label { color: #1976d2; }
+    .season-card.rabi   .season-label { color: #f9a825; }
+    .season-card.summer .season-label { color: #e53935; }
+    .season-card .season-kn { font-family: 'Noto Serif Kannada', serif; font-size: 0.95rem; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
+    .season-card .season-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--text-light); margin-bottom: 8px; }
+    .season-card .season-detail { font-family: 'Tiro Kannada', serif; font-size: 0.84rem; color: var(--text-mid); line-height: 1.65; }
+
+    /* ══ FAQ ══ */
+    .faq-item { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 10px; box-shadow: 0 2px 5px var(--shadow); }
+    .faq-item .q-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
+    .faq-item .q-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--paddy); font-weight: 600; margin-bottom: 8px; }
+    .faq-item .a-kn { font-family: 'Tiro Kannada', serif; font-size: 0.92rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
+    .faq-item .a-en { font-family: 'Merriweather', serif; font-size: 0.76rem; color: #999; font-style: italic; }
+
+    /* ══ CTA ══ */
+    .cta-block { background: linear-gradient(135deg, var(--green-dark), #1b5e20); border-radius: 14px; padding: 32px 24px; text-align: center; color: #fff; margin-top: 36px; }
+    .cta-block .emoji { font-size: 2.2rem; margin-bottom: 10px; }
+    .cta-block h3 { font-family: 'Noto Serif Kannada', serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: #fff; line-height: 1.5; }
+    .cta-block h3 .en { font-family: 'Poppins', sans-serif; font-size: 0.9rem; font-weight: 500; color: #a5d6a7; display: block; margin-top: 4px; }
+    .cta-block p { font-family: 'Tiro Kannada', serif; font-size: 0.88rem; color: #c8e6c9; margin: 10px 0 18px; line-height: 1.7; }
+    .cta-block a { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem; padding: 11px 26px; border-radius: 30px; text-decoration: none; transition: opacity 0.2s; }
+    .cta-block a:hover { opacity: 0.88; }
+
+    strong { color: var(--green-dark); }
+    em { color: var(--paddy); font-style: normal; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .hero { padding: 28px 16px 24px; }
+      .quick-facts { grid-template-columns: repeat(2, 1fr); }
+      .article-table { font-size: 0.72rem; }
+      .article-table thead th, .article-table tbody td { padding: 8px 9px; }
+      .season-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="lang-kn">
+
+<!-- SITE HEADER -->
+<header class="site-header">
+  <a href="index.html" class="logo-block">
+    <div>
+      <div class="logo-text">🌾 कृषि<span>मित्र</span></div>
+      <span class="tagline-sub">किसान का डिजिटल साथी</span>
+    </div>
+  </a>
+  <nav class="nav-links">
+    <a href="index.html" class="home-link">🏠 मुख्य</a>
+    <a href="index.html#weather">मौसम</a>
+    <a href="index.html#mandi">मंडी</a>
+    <a href="index.html#articles">लेख</a>
+    <a href="#">सहायता</a>
+  </nav>
+  <div class="right-group">
+    <div class="lang-pill">
+      <button class="active" id="btn-kn" onclick="setLang('kn')">ಕನ್ನಡ</button>
+      <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <span class="user-icon">👤</span>
+  </div>
+</header>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="index.html">मुख्य</a>
+  <span>›</span>
+  <a href="index.html#articles">ಕೃಷಿ ಮಾಹಿತಿ</a>
+  <span>›</span>
+  ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ — Karnataka
+</div>
+
+<div class="article-wrapper">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="category-tag">🌾 ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ · Crop Guide</span>
+    <h1>
+      ಕರ್ನಾಟಕದಲ್ಲಿ ಭತ್ತದ ಬೆಳೆ — ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ
+      <span class="en">Complete Paddy Farming Guide for Karnataka Farmers</span>
+    </h1>
+    <p class="meta">KrashiMitra.in &nbsp;|&nbsp; ಕನ್ನಡ + English &nbsp;|&nbsp; ಕರ್ನಾಟಕ ರೈತರಿಗಾಗಿ</p>
+  </div>
+
+  <!-- FEATURED IMAGE -->
+  <figure class="featured-image">
+    <div class="img-placeholder tall">
+      <div class="icon">🌾</div>
+      <p>Featured Image — ಭತ್ತದ ಗದ್ದೆ ಫೋಟೋ ಇಲ್ಲಿ ಹಾಕಿ</p>
+      <p class="hint">Replace src · 1200×630px recommended</p>
+    </div>
+    <!-- UNCOMMENT TO USE:
+    <img src="YOUR_IMAGE_URL_HERE" alt="ಕರ್ನಾಟಕ ಭತ್ತದ ಗದ್ದೆ Karnataka paddy field" width="1200" height="630" loading="eager" />
+    -->
+    <figcaption>ಕರ್ನಾಟಕದ ಭತ್ತದ ಗದ್ದೆ — ಉಡುಪಿ, ದಕ್ಷಿಣ ಕನ್ನಡ, ಶಿವಮೊಗ್ಗ ಮತ್ತು ಉತ್ತರ ಕರ್ನಾಟಕ ಪ್ರಮುಖ ಭತ್ತ ಬೆಳೆಯುವ ಪ್ರದೇಶಗಳು</figcaption>
+  </figure>
+
+  <!-- QUICK FACTS -->
+  <div class="quick-facts">
+    <div class="fact"><div class="icon">🌡️</div><div class="label">Temperature</div><div class="value">22°C – 32°C</div></div>
+    <div class="fact"><div class="icon">💧</div><div class="label">ನೀರಾವರಿ / Water</div><div class="value">1200–2000 mm</div></div>
+    <div class="fact"><div class="icon">🌱</div><div class="label">ನರ್ಸರಿ / Nursery</div><div class="value">20–30 ದಿನ</div></div>
+    <div class="fact"><div class="icon">🌾</div><div class="label">ಇಳುವರಿ / Yield</div><div class="value">20–30 ಕ್ವಿ/ಎಕರೆ</div></div>
+    <div class="fact"><div class="icon">📅</div><div class="label">ಮುಖ್ಯ ಋತು</div><div class="value">ಖರೀಫ್ (ಕನ್ನಡ)</div></div>
+    <div class="fact"><div class="icon">⏳</div><div class="label">ಅವಧಿ / Duration</div><div class="value">90–130 ದಿನ</div></div>
+  </div>
+
+  <article>
+
+    <!-- INTRO -->
+    <section>
+      <div class="section-heading">
+        <h2>ಪರಿಚಯ <span class="en">Introduction</span></h2>
+      </div>
+      <div class="bilingual">
+        <p class="kn">ಭತ್ತ ಕರ್ನಾಟಕದ ಅತ್ಯಂತ ಮಹತ್ವದ ಆಹಾರ ಬೆಳೆ. <strong>ಉಡುಪಿ, ದಕ್ಷಿಣ ಕನ್ನಡ, ಶಿವಮೊಗ್ಗ, ಹಾಸನ, ಬೆಳಗಾವಿ ಮತ್ತು ರಾಯಚೂರು</strong> ಜಿಲ್ಲೆಗಳಲ್ಲಿ ಭತ್ತ ವ್ಯಾಪಕವಾಗಿ ಬೆಳೆಯಲಾಗುತ್ತದೆ. ಕರ್ನಾಟಕದಲ್ಲಿ ವರ್ಷಕ್ಕೆ 3 ಋತುಗಳಲ್ಲಿ ಭತ್ತ ಬೆಳೆಯಬಹುದು.</p>
+        <p class="en">Paddy is Karnataka's most important food crop. Districts like Udupi, Dakshina Kannada, Shivamogga, Hassan, Belagavi, and Raichur are major production zones. Karnataka allows 3 cropping seasons in a year.</p>
+        <p class="kn"><strong>ಸರಿಯಾದ ತಳಿ ಆಯ್ಕೆ, ಸಸಿ ಮಡಿ ತಯಾರಿ, ಸಮರ್ಪಕ ನೀರು ನಿರ್ವಹಣೆ ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣ</strong> ಮಾಡಿದರೆ ಎಕರೆಗೆ 25–30 ಕ್ವಿಂಟಾಲ್ ವರೆಗೆ ಇಳುವರಿ ಪಡೆಯಬಹುದು.</p>
+        <p class="en">With proper variety selection, nursery management, water management, and disease control, yields of 25–30 quintals per acre are achievable.</p>
+      </div>
+    </section>
+
+    <!-- SEASONS -->
+    <section>
+      <div class="section-heading">
+        <h2>ಭತ್ತ ಬೆಳೆಯುವ ಋತುಗಳು <span class="en">Paddy Cropping Seasons</span></h2>
+      </div>
+      <div class="season-grid">
+        <div class="season-card kharif">
+          <div class="season-label">🌧️ ಖರೀಫ್ — ಮುಖ್ಯ ಋತು</div>
+          <div class="season-kn">ಮಳೆಗಾಲದ ಭತ್ತ</div>
+          <div class="season-en">Kharif / Rainy Season (Main)</div>
+          <div class="season-detail">ಮಡಿ: ಮೇ–ಜೂನ್ | ನಾಟಿ: ಜೂನ್–ಜುಲೈ | ಕಟಾವು: ಅಕ್ಟೋಬರ್–ನವೆಂಬರ್<br/><span style="font-family:'Poppins',sans-serif;font-size:0.7
