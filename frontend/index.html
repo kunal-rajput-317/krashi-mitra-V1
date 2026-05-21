@@ -676,130 +676,6 @@
     .mandi-footer a { color: var(--green-mid); text-decoration: none; font-weight: 600; }
 
     /* ══════════════════════════════
-       ARTICLES SECTION
-    ══════════════════════════════ */
-    .articles-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-
-    .article-card {
-      background: var(--white);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      text-decoration: none;
-      color: var(--text-dark);
-      display: flex;
-      flex-direction: column;
-      transition: box-shadow 0.2s, transform 0.15s;
-      cursor: pointer;
-    }
-    .article-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .article-card:active { transform: translateY(0); }
-
-    .article-card-thumb {
-      height: 90px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      position: relative;
-      flex-shrink: 0;
-    }
-    .art-cat-badge {
-      position: absolute;
-      top: 8px; left: 8px;
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-    }
-
-    .art-crop    { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
-    .art-input   { background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
-    .art-scheme  { background: linear-gradient(135deg, #fff8e1, #ffe082); }
-    .art-market  { background: linear-gradient(135deg, #fce4ec, #f8bbd0); }
-    .art-weather { background: linear-gradient(135deg, #e0f7fa, #b2ebf2); }
-    .art-disease { background: linear-gradient(135deg, #fbe9e7, #ffccbc); }
-
-    .badge-crop    { background: #2e7d32; color: #fff; }
-    .badge-input   { background: #1565c0; color: #fff; }
-    .badge-scheme  { background: #f9a825; color: #4e342e; }
-    .badge-market  { background: #c62828; color: #fff; }
-    .badge-weather { background: #00838f; color: #fff; }
-    .badge-disease { background: #bf360c; color: #fff; }
-
-    .article-card-body {
-      padding: 10px 12px 12px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .article-card-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-dark);
-      line-height: 1.35;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-    }
-    .article-card-meta {
-      font-size: 10px;
-      color: var(--text-soft);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: auto;
-      flex-wrap: wrap;
-    }
-    .article-card-meta .dot {
-      width: 3px; height: 3px;
-      background: var(--text-soft);
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    /* Featured card — full width, horizontal layout */
-    .article-card-featured {
-      grid-column: 1 / -1;
-      flex-direction: row;
-      height: 110px;
-    }
-    .article-card-featured .article-card-thumb {
-      width: 110px;
-      height: 110px;
-      flex-shrink: 0;
-      border-radius: 0;
-      font-size: 48px;
-    }
-    .article-card-featured .article-card-title { font-size: 14px; }
-
-    .all-articles-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-      margin-top: 14px;
-      padding: 12px;
-      background: var(--white);
-      border: 1.5px solid var(--green-mid);
-      border-radius: var(--radius-md);
-      color: var(--green-dark);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-      transition: background 0.2s;
-    }
-    .all-articles-btn:hover { background: var(--green-soft); }
-
-    /* ══════════════════════════════
        BOTTOM NAV (mobile)
     ══════════════════════════════ */
     .bottom-nav {
@@ -875,6 +751,101 @@
       .hero-subline { font-size: 16px; }
       .search-input { font-size: 17px; }
     }
+
+    /* ══════════════════════════════
+       ARTICLES SECTION
+    ══════════════════════════════ */
+    .articles-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .article-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .article-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--article-accent, var(--green-mid));
+      border-radius: 4px 0 0 4px;
+    }
+    .article-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--green-light);
+    }
+    .article-card:active { transform: translateY(0); }
+
+    .article-thumb {
+      width: 62px;
+      height: 62px;
+      border-radius: 10px;
+      background: var(--green-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      flex-shrink: 0;
+    }
+
+    .article-body { flex: 1; min-width: 0; }
+    .article-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--article-accent, var(--green-mid));
+      background: var(--green-soft);
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-bottom: 5px;
+    }
+    .article-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.35;
+      margin-bottom: 4px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .article-meta {
+      font-size: 11px;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .article-arrow {
+      font-size: 16px;
+      color: var(--text-soft);
+      flex-shrink: 0;
+      align-self: center;
+      opacity: 0.5;
+    }
+
+    @media (min-width: 600px) {
+      .articles-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -896,7 +867,7 @@
       <a class="nav-link" href="#">मुख्य</a>
       <a class="nav-link" href="#">मौसम</a>
       <a class="nav-link" href="#">मंडी</a>
-      <a class="nav-link" href="#articles">लेख</a>
+      <a class="nav-link" href="articles/index.html">लेख</a>
       <a class="nav-link" href="#">सहायता</a>
     </nav>
     <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
@@ -1008,6 +979,10 @@
       <span class="qc-icon">📘</span>
       <span class="qc-label">कृषि जानकारी</span>
     </a>
+    <a class="quick-card" href="articles/index.html" style="--card-accent:#f57f17">
+      <span class="qc-icon">📰</span>
+      <span class="qc-label">लेख & टिप्स</span>
+    </a>
   </div>
 </section>
 
@@ -1039,6 +1014,60 @@
     <div class="trend-chip" onclick="setSearch('DAP खाद')">
       <span class="trend-icon">📈</span> DAP खाद की मात्रा
     </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     ARTICLES & TIPS SECTION
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
+  <div class="section-header">
+    <h2 class="section-title">📰 लेख & कृषि टिप्स</h2>
+    <a class="section-link" href="articles/index.html">सभी लेख →</a>
+  </div>
+
+  <div class="articles-grid">
+
+    <a class="article-card" href="articles/gehun-pila.html" style="--article-accent:#f57f17">
+      <div class="article-thumb" style="background:#fff8e1">🌾</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#fff8e1;color:#f57f17">गेहूं</span>
+        <div class="article-title">गेहूं में पीलापन: कारण और उपाय</div>
+        <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 आज</div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="articles/dhan-buvai.html" style="--article-accent:#00695c">
+      <div class="article-thumb" style="background:#e0f2f1">🍚</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e0f2f1;color:#00695c">धान</span>
+        <div class="article-title">धान की सही बुवाई का समय और तरीका</div>
+        <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 कल</div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="articles/urea-guide.html" style="--article-accent:#1565c0">
+      <div class="article-thumb" style="background:#e3f2fd">🧪</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e3f2fd;color:#1565c0">खाद</span>
+        <div class="article-title">यूरिया और DAP: कब और कितना दें?</div>
+        <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 2 दिन पहले</div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="articles/keet-niyantran.html" style="--article-accent:#6a1b9a">
+      <div class="article-thumb" style="background:#f3e5f5">🐛</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#f3e5f5;color:#6a1b9a">कीट</span>
+        <div class="article-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 3 दिन पहले</div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
   </div>
 </section>
 
@@ -1135,122 +1164,6 @@
   </div>
 </section>
 
-<!-- ══════════════════════════
-     ARTICLES & GUIDES
-══════════════════════════ -->
-<section class="section" id="articles" style="padding-bottom: 0;">
-  <div class="section-header">
-    <h2 class="section-title">📰 लेख &amp; गाइड</h2>
-    <a class="section-link" href="articles/urea_guide_up.html">सभी लेख →</a>
-  </div>
-
-  <div class="articles-grid">
-
-    <!-- Featured — full width -->
-    <a href="articles/urea_guide_up.html" class="article-card article-card-featured">
-      <div class="article-card-thumb art-input">
-        🧪
-        <span class="art-cat-badge badge-input">खाद</span>
-      </div>
-      <div class="article-card-body">
-        <div class="article-card-title">यूरिया का सही उपयोग — कब, कितना और कैसे डालें?</div>
-        <div class="article-card-meta">
-          <span>UP किसान</span>
-          <span class="dot"></span>
-          <span>5 मिनट</span>
-          <span class="dot"></span>
-          <span>🔥 चर्चित</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 2 -->
-    <a href="articles/potato_guide_up.html" class="article-card">
-      <div class="article-card-thumb art-crop">
-        🥔
-        <span class="art-cat-badge badge-crop">फसल</span>
-      </div>
-      <div class="article-card-body">
-        <div class="article-card-title">आलू की खेती — UP सम्पूर्ण गाइड</div>
-        <div class="article-card-meta">
-          <span>UP किसान</span>
-          <span class="dot"></span>
-          <span>8 मिनट</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 3 -->
-    <a href="articles/tomato_guide.html" class="article-card">
-      <div class="article-card-thumb art-crop">
-        🍅
-        <span class="art-cat-badge badge-crop">फसल</span>
-      </div>
-      <div class="article-card-body">
-        <div class="article-card-title">टमाटर की खेती — Karnataka गाइड</div>
-        <div class="article-card-meta">
-          <span>Karnataka</span>
-          <span class="dot"></span>
-          <span>6 मिनट</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 4 -->
-    <a href="articles/sugarcane_guide_up.html" class="article-card">
-      <div class="article-card-thumb art-crop">
-        🎋
-        <span class="art-cat-badge badge-crop">फसल</span>
-      </div>
-      <div class="article-card-body">
-        <div class="article-card-title">गन्ने की खेती — UP गाइड</div>
-        <div class="article-card-meta">
-          <span>UP किसान</span>
-          <span class="dot"></span>
-          <span>7 मिनट</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 5 -->
-    <a href="articles/ganna_rog_02.html" class="article-card">
-      <div class="article-card-thumb art-disease">
-        🌿
-        <span class="art-cat-badge badge-disease">रोग</span>
-      </div>
-      <div class="article-card-body">
-        <div class="article-card-title">गन्ने में लाल सड़न रोग — पहचान व उपाय</div>
-        <div class="article-card-meta">
-          <span>UP किसान</span>
-          <span class="dot"></span>
-          <span>5 मिनट</span>
-        </div>
-      </div>
-    </a>
-
-    <!-- Card 6 -->
-    <a href="articles/chilli_guide_karnataka.html" class="article-card">
-      <div class="article-card-thumb art-market">
-        🌶️
-        <span class="art-cat-badge badge-market">फसल</span>
-      </div>
-      <div class="article-card-body">
-        <div class="article-card-title">मिर्च की खेती — Karnataka गाइड</div>
-        <div class="article-card-meta">
-          <span>Karnataka</span>
-          <span class="dot"></span>
-          <span>6 मिनट</span>
-        </div>
-      </div>
-    </a>
-
-  </div>
-
-  <a href="articles/urea_guide_up.html" class="all-articles-btn">
-    📚 सभी लेख देखें →
-  </a>
-</section>
-
 <!-- Bottom spacing for mobile nav -->
 <div class="page-end"></div>
 
@@ -1274,7 +1187,7 @@
     <span class="bn-icon">💰</span>
     <span class="bn-label">मंडी</span>
   </a>
-  <a class="bn-item" href="#articles">
+  <a class="bn-item" href="articles/index.html">
     <span class="bn-icon">📰</span>
     <span class="bn-label">लेख</span>
   </a>
