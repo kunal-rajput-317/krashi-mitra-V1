@@ -29,8 +29,13 @@
       --radius-lg:    24px;
     }
 
+    /* ══════════════════════════════
+       RESET & BASE
+    ══════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     html { scroll-behavior: smooth; }
+
     body {
       font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
       background: var(--cream);
@@ -55,6 +60,8 @@
       align-items: center;
       justify-content: space-between;
     }
+
+    /* Logo group */
     .header-logo {
       display: flex;
       align-items: center;
@@ -62,7 +69,8 @@
       text-decoration: none;
     }
     .logo-icon {
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       background: linear-gradient(135deg, var(--green-mid), var(--green-light));
       border-radius: 10px;
       display: flex;
@@ -86,8 +94,14 @@
       font-family: 'Noto Sans Devanagari', sans-serif;
       line-height: 2;
     }
+
+    /* Header right */
     .header-right { display: flex; align-items: center; gap: 12px; }
-    .header-nav { display: flex; gap: 4px; }
+
+    .header-nav {
+      display: flex;
+      gap: 4px;
+    }
     .nav-link {
       font-size: 13px;
       font-weight: 500;
@@ -99,9 +113,10 @@
       white-space: nowrap;
     }
     .nav-link:hover { background: var(--green-soft); color: var(--green-dark); }
-    .nav-link.active { background: var(--green-soft); color: var(--green-dark); font-weight: 600; }
+
     .avatar-btn {
-      width: 38px; height: 38px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--green-light), var(--gold));
       border: 2px solid var(--green-soft);
@@ -116,19 +131,22 @@
     .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
 
     /* ══════════════════════════════
-       HERO
+       HERO SECTION
     ══════════════════════════════ */
     .hero {
       position: relative;
       overflow: hidden;
       background: #1b5e20;
       padding: 0;
-      height: 380px;
+      height: 380px;        /* fixed — portrait ratio stays identical everywhere */
       display: flex;
       align-items: stretch;
     }
-    @media (max-width: 600px) { .hero { height: 320px; } }
+    @media (max-width: 600px) {
+      .hero { height: 320px; }
+    }
 
+    /* Real farm photo background */
     .hero-bg-photo {
       position: absolute;
       inset: 0;
@@ -137,23 +155,39 @@
       background-position: center 60%;
       pointer-events: none;
     }
+
+    /* Dark green gradient overlay so text stays readable */
     .hero-bg-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(100deg, rgba(15,50,15,0.88) 0%, rgba(27,94,32,0.80) 50%, rgba(27,94,32,0.30) 100%);
+      background: linear-gradient(
+        100deg,
+        rgba(15,50,15,0.88) 0%,
+        rgba(27,94,32,0.80) 50%,
+        rgba(27,94,32,0.30) 100%
+      );
       pointer-events: none;
     }
+
+    /* Sun glow top-right */
     .hero-glow {
       position: absolute;
-      top: -60px; right: -60px;
-      width: 280px; height: 280px;
+      top: -60px;
+      right: -60px;
+      width: 280px;
+      height: 280px;
       background: radial-gradient(circle, rgba(249,168,37,0.22) 0%, transparent 70%);
       pointer-events: none;
     }
+
+    /* ── HERO PORTRAIT — pinned to right, bottom-anchored ── */
     .hero-portrait {
       position: absolute;
-      bottom: 0; right: 0; top: 0;
-      width: 45%; max-width: 320px;
+      bottom: 0;
+      right: 0;
+      top: 0;
+      width: 45%;
+      max-width: 320px;
       z-index: 10;
       pointer-events: none;
       display: flex;
@@ -171,8 +205,16 @@
       -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
       mask-image: linear-gradient(to right, transparent 0%, black 25%);
     }
-    @media (max-width: 420px) { .hero-portrait { width: 38%; opacity: 0.75; } }
-    @media (max-width: 320px) { .hero-portrait { display: none; } }
+    /* hide on very small screens so it doesn't cover the search box */
+    @media (max-width: 420px) {
+      .hero-portrait {
+        width: 38%;
+        opacity: 0.75;
+      }
+    }
+    @media (max-width: 320px) {
+      .hero-portrait { display: none; }
+    }
 
     .hero-inner {
       position: relative;
@@ -185,6 +227,8 @@
       padding: 28px 18px 32px;
       gap: 0;
     }
+
+    /* Hero badge */
     .hero-badge {
       display: inline-flex;
       align-items: center;
@@ -205,6 +249,8 @@
       border-radius: 50%;
       animation: pulse-dot 2s ease-in-out infinite;
     }
+
+    /* Hero headline */
     .hero-headline {
       font-size: 28px;
       font-weight: 800;
@@ -213,7 +259,9 @@
       letter-spacing: -0.5px;
       margin-bottom: 6px;
     }
-    .hero-headline span { color: var(--gold); }
+    .hero-headline span {
+      color: var(--gold);
+    }
     .hero-subline {
       font-family: 'Noto Sans Devanagari', sans-serif;
       font-size: 14px;
@@ -222,6 +270,8 @@
       font-weight: 400;
       line-height: 1.5;
     }
+
+    /* ── SEARCH BOX ── */
     .search-box {
       width: 100%;
       background: var(--white);
@@ -231,6 +281,7 @@
       display: flex;
       flex-direction: column;
     }
+
     .search-input-row {
       display: flex;
       align-items: center;
@@ -238,7 +289,13 @@
       gap: 8px;
       min-height: 58px;
     }
-    .search-icon { font-size: 20px; flex-shrink: 0; opacity: 0.6; }
+
+    .search-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
     .search-input {
       flex: 1;
       border: none;
@@ -249,7 +306,11 @@
       background: transparent;
       min-width: 0;
     }
-    .search-input::placeholder { color: #aaa; font-size: 14px; }
+    .search-input::placeholder {
+      color: #aaa;
+      font-size: 14px;
+    }
+
     .search-btn {
       flex-shrink: 0;
       background: linear-gradient(135deg, var(--green-mid), var(--green-light));
@@ -269,6 +330,8 @@
     }
     .search-btn:hover { box-shadow: 0 4px 16px rgba(46,125,50,0.4); transform: translateY(-1px); }
     .search-btn:active { transform: translateY(0); }
+
+    /* Voice button */
     .voice-btn {
       width: 42px; height: 42px;
       border: none;
@@ -284,7 +347,15 @@
       transition: background 0.2s;
     }
     .voice-btn:hover { background: #c8e6c9; }
-    .search-divider { height: 1px; background: var(--border); margin: 0 16px; }
+
+    /* Search divider */
+    .search-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 16px;
+    }
+
+    /* Quick topics inside search box */
     .search-quick {
       display: flex;
       align-items: center;
@@ -294,6 +365,7 @@
       scrollbar-width: none;
     }
     .search-quick::-webkit-scrollbar { display: none; }
+
     .sq-label {
       font-size: 11px;
       color: var(--text-soft);
@@ -315,6 +387,20 @@
       font-family: 'Noto Sans Devanagari', sans-serif;
     }
     .sq-chip:hover { background: #c8e6c9; }
+
+    /* Hero image decoration — decorative farmer illustration */
+    .hero-deco {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      font-size: 90px;
+      opacity: 0.12;
+      pointer-events: none;
+      line-height: 1;
+      transform: scaleX(-1);
+    }
+
+    /* Stats row below search */
     .hero-stats {
       display: flex;
       gap: 20px;
@@ -328,12 +414,17 @@
       color: rgba(255,255,255,0.85);
       font-size: 12px;
     }
-    .hero-stat strong { color: var(--gold); font-size: 14px; }
+    .hero-stat strong {
+      color: var(--gold);
+      font-size: 14px;
+    }
 
     /* ══════════════════════════════
        SECTION COMMON
     ══════════════════════════════ */
-    .section { padding: 28px 20px; }
+    .section {
+      padding: 28px 20px;
+    }
     .section-header {
       display: flex;
       align-items: center;
@@ -363,6 +454,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
+
     .quick-card {
       background: var(--white);
       border-radius: var(--radius-md);
@@ -393,7 +485,11 @@
       border-color: var(--green-light);
     }
     .quick-card:active { transform: translateY(0); }
-    .qc-icon { font-size: 28px; line-height: 1; }
+
+    .qc-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
     .qc-label {
       font-size: 12px;
       font-weight: 600;
@@ -414,6 +510,7 @@
       padding-bottom: 4px;
     }
     .trending-scroll::-webkit-scrollbar { display: none; }
+
     .trend-chip {
       display: flex;
       align-items: center;
@@ -454,13 +551,37 @@
       opacity: 0.12;
       pointer-events: none;
     }
-    .weather-row { display: flex; align-items: center; justify-content: space-between; }
-    .weather-loc { font-size: 13px; opacity: 0.85; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
-    .weather-temp { font-size: 40px; font-weight: 800; line-height: 1; }
+    .weather-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .weather-loc {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .weather-temp {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1;
+    }
     .weather-unit { font-size: 18px; font-weight: 400; opacity: 0.8; }
-    .weather-cond { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+    .weather-cond {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
     .weather-icon-big { font-size: 52px; }
-    .weather-pills { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .weather-pills {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
     .weather-pill {
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.25);
@@ -472,7 +593,11 @@
       align-items: center;
       gap: 5px;
     }
-    .weather-update { margin-top: 10px; font-size: 10px; opacity: 0.6; }
+    .weather-update {
+      margin-top: 10px;
+      font-size: 10px;
+      opacity: 0.6;
+    }
 
     /* ══════════════════════════════
        MANDI SNAPSHOT
@@ -491,7 +616,11 @@
       align-items: center;
       justify-content: space-between;
     }
-    .mandi-header-strip span { color: var(--white); font-size: 13px; font-weight: 600; }
+    .mandi-header-strip span {
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+    }
     .mandi-live-badge {
       background: var(--gold);
       color: #5d4037;
@@ -517,13 +646,26 @@
       color: var(--text-dark);
       font-family: 'Noto Sans Devanagari', sans-serif;
     }
-    .mandi-crop-unit { font-size: 11px; color: var(--text-soft); margin-top: 1px; }
+    .mandi-crop-unit {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 1px;
+    }
     .mandi-price-col { text-align: right; flex-shrink: 0; }
-    .mandi-price { font-size: 16px; font-weight: 700; color: var(--green-dark); }
-    .mandi-change { font-size: 11px; font-weight: 600; margin-top: 1px; }
+    .mandi-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .mandi-change {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 1px;
+    }
     .mandi-change.up   { color: #2e7d32; }
     .mandi-change.down { color: #c62828; }
     .mandi-change.flat { color: var(--text-soft); }
+
     .mandi-footer {
       padding: 10px 16px;
       border-top: 1px solid var(--border);
@@ -534,7 +676,7 @@
     .mandi-footer a { color: var(--green-mid); text-decoration: none; font-weight: 600; }
 
     /* ══════════════════════════════
-       ✨ ARTICLES SECTION
+       ARTICLES SECTION
     ══════════════════════════════ */
     .articles-grid {
       display: grid;
@@ -555,46 +697,41 @@
       transition: box-shadow 0.2s, transform 0.15s;
       cursor: pointer;
     }
-    .article-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
+    .article-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
     .article-card:active { transform: translateY(0); }
 
-    /* Coloured top strip per category */
     .article-card-thumb {
       height: 90px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 44px;
+      font-size: 40px;
       position: relative;
       flex-shrink: 0;
     }
-    .article-card-thumb .art-cat-badge {
+    .art-cat-badge {
       position: absolute;
-      top: 8px;
-      left: 8px;
+      top: 8px; left: 8px;
       font-size: 9px;
       font-weight: 700;
       padding: 2px 8px;
       border-radius: 10px;
       font-family: 'Noto Sans Devanagari', sans-serif;
-      letter-spacing: 0.3px;
     }
 
-    /* Category colours */
     .art-crop    { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
     .art-input   { background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
     .art-scheme  { background: linear-gradient(135deg, #fff8e1, #ffe082); }
     .art-market  { background: linear-gradient(135deg, #fce4ec, #f8bbd0); }
     .art-weather { background: linear-gradient(135deg, #e0f7fa, #b2ebf2); }
+    .art-disease { background: linear-gradient(135deg, #fbe9e7, #ffccbc); }
 
     .badge-crop    { background: #2e7d32; color: #fff; }
     .badge-input   { background: #1565c0; color: #fff; }
     .badge-scheme  { background: #f9a825; color: #4e342e; }
     .badge-market  { background: #c62828; color: #fff; }
     .badge-weather { background: #00838f; color: #fff; }
+    .badge-disease { background: #bf360c; color: #fff; }
 
     .article-card-body {
       padding: 10px 12px 12px;
@@ -604,7 +741,7 @@
       gap: 5px;
     }
     .article-card-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-dark);
       line-height: 1.35;
@@ -615,16 +752,18 @@
       color: var(--text-soft);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       margin-top: auto;
+      flex-wrap: wrap;
     }
     .article-card-meta .dot {
       width: 3px; height: 3px;
       background: var(--text-soft);
       border-radius: 50%;
+      flex-shrink: 0;
     }
 
-    /* Featured article — full width */
+    /* Featured card — full width, horizontal layout */
     .article-card-featured {
       grid-column: 1 / -1;
       flex-direction: row;
@@ -635,13 +774,10 @@
       height: 110px;
       flex-shrink: 0;
       border-radius: 0;
-      font-size: 52px;
+      font-size: 48px;
     }
-    .article-card-featured .article-card-title {
-      font-size: 14px;
-    }
+    .article-card-featured .article-card-title { font-size: 14px; }
 
-    /* "सभी लेख" button */
     .all-articles-btn {
       display: flex;
       align-items: center;
@@ -695,6 +831,9 @@
     .bn-icon { font-size: 20px; color: var(--text-soft); }
     .bn-label { font-size: 10px; color: var(--text-soft); font-weight: 500; font-family: 'Noto Sans Devanagari', sans-serif; }
 
+    /* ══════════════════════════════
+       PAGE BOTTOM SPACING
+    ══════════════════════════════ */
     .page-end { height: 76px; }
 
     /* ══════════════════════════════
@@ -708,7 +847,9 @@
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .hero-inner > * { animation: fadeUp 0.5s ease both; }
+    .hero-inner > * {
+      animation: fadeUp 0.5s ease both;
+    }
     .hero-inner > *:nth-child(1) { animation-delay: 0.05s; }
     .hero-inner > *:nth-child(2) { animation-delay: 0.12s; }
     .hero-inner > *:nth-child(3) { animation-delay: 0.18s; }
@@ -727,6 +868,7 @@
       .section { padding: 32px 40px; }
       .header { padding: 0 40px; }
     }
+
     @media (min-width: 900px) {
       .hero { min-height: 420px; }
       .hero-headline { font-size: 42px; }
@@ -737,227 +879,269 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════
+<!-- ══════════════════════════
      HEADER
-═══════════════════════════════ -->
+══════════════════════════ -->
 <header class="header">
-  <a href="/" class="header-logo">
+  <a class="header-logo" href="#">
     <div class="logo-icon">🌾</div>
     <div class="logo-text">
-      <span class="logo-title">KrashiMitra</span>
-      <span class="logo-tagline">किसान का डिजिटल साथी</span>
+      <span class="logo-title">कृषि मित्र</span>
+      <span class="logo-tagline"> किसान का डिजिटल साथी</span>
     </div>
   </a>
+
   <div class="header-right">
-    <nav class="header-nav">
-      <a href="index.html" class="nav-link active">मुख्य</a>
-      <a href="#weather-section" class="nav-link">मौसम</a>
-      <a href="#mandi-section" class="nav-link">मंडी</a>
-      <a href="#articles" class="nav-link">लेख</a>
-      <a href="chat.html" class="nav-link">सहायता</a>
+    <nav class="header-nav" style="display:none" id="desktop-nav">
+      <a class="nav-link" href="#">मुख्य</a>
+      <a class="nav-link" href="#">मौसम</a>
+      <a class="nav-link" href="#">मंडी</a>
+      <a class="nav-link" href="#articles">लेख</a>
+      <a class="nav-link" href="#">सहायता</a>
     </nav>
-    <div class="avatar-btn">👤</div>
+    <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
   </div>
 </header>
 
-<!-- ═══════════════════════════════
-     HERO
-═══════════════════════════════ -->
+<!-- ══════════════════════════
+     HERO SEARCH SECTION
+══════════════════════════ -->
 <section class="hero">
   <div class="hero-bg-photo"></div>
   <div class="hero-bg-overlay"></div>
   <div class="hero-glow"></div>
 
+  <!-- Owner photo — flat, no frame, top-right of hero -->
+  <!-- EDIT: change src to your photo path e.g. "assets/my-photo.png" -->
+  <div class="hero-portrait" id="hero-portrait">
+    <img id="hero-photo" src="assets/my-photo.png" alt=""
+      onerror="document.getElementById('hero-portrait').style.display='none'">
+  </div>
+
   <div class="hero-inner">
+
+    <!-- Badge -->
     <div class="hero-badge">
-      <span class="hero-badge-dot"></span>
-      आज का मौसम: लखनऊ — 32°C, आंशिक बादल
+      <div class="hero-badge-dot"></div>
+      AI-powered कृषि सहायक
     </div>
 
+    <!-- Headline -->
     <h1 class="hero-headline">
-      खेती की हर जानकारी<br>
-      <span>आपकी भाषा में</span>
+      आपकी खेती का<br><span>डिजिटल साथी</span>
     </h1>
-    <p class="hero-subline">मंडी भाव · मौसम · फसल सलाह · सरकारी योजनाएँ</p>
 
+    <!-- Subline -->
+    <p class="hero-subline">
+      फसल, रोग, मौसम, खाद — सब कुछ एक जगह पर
+    </p>
+
+    <!-- Search Box -->
     <div class="search-box">
       <div class="search-input-row">
         <span class="search-icon">🔍</span>
-        <input class="search-input" type="text" placeholder="फसल, मंडी भाव या सवाल पूछें…" />
-        <button class="voice-btn">🎙️</button>
-        <button class="search-btn">पूछें →</button>
+        <input
+          type="text"
+          id="main-search"
+          class="search-input"
+          placeholder="आज आप क्या जानना चाहते हैं?"
+          autocomplete="off"
+          onkeydown="handleSearchKey(event)"
+        >
+        <button class="voice-btn" title="आवाज़ से खोजें" onclick="startVoice()">🎤</button>
+        <button class="search-btn" onclick="doSearch()">
+          खोजें →
+        </button>
       </div>
+
       <div class="search-divider"></div>
+
       <div class="search-quick">
-        <span class="sq-label">चर्चित:</span>
-        <span class="sq-chip">🌾 गेहूँ भाव</span>
-        <span class="sq-chip">🥔 आलू मंडी</span>
-        <span class="sq-chip">🌧️ कल का मौसम</span>
-        <span class="sq-chip">💊 यूरिया</span>
-        <span class="sq-chip">🍅 टमाटर</span>
+        <span class="sq-label">Popular:</span>
+        <span class="sq-chip" onclick="setSearch('गेहूं में पीलापन')">गेहूं में पीलापन</span>
+        <span class="sq-chip" onclick="setSearch('धान की बुवाई')">धान की बुवाई</span>
+        <span class="sq-chip" onclick="setSearch('यूरिया खाद')">यूरिया खाद</span>
+        <span class="sq-chip" onclick="setSearch('आज का मौसम')">आज का मौसम</span>
       </div>
     </div>
 
+    <!-- Stats -->
     <div class="hero-stats">
-      <div class="hero-stat"><strong>2.4 लाख+</strong> किसान</div>
-      <div class="hero-stat"><strong>18</strong> राज्य</div>
-      <div class="hero-stat"><strong>मुफ्त</strong> सेवा</div>
+      <div class="hero-stat">🌾 <strong>50+</strong> फसलें</div>
+      <div class="hero-stat">📍 <strong>500+</strong> जिले</div>
+      <div class="hero-stat">🤖 <strong>AI</strong> सहायक</div>
     </div>
+
   </div>
 </section>
 
-<!-- ═══════════════════════════════
+<!-- ══════════════════════════
      QUICK ACTIONS
-═══════════════════════════════ -->
-<section class="section">
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
   <div class="section-header">
-    <span class="section-title">⚡ त्वरित सेवाएँ</span>
+    <h2 class="section-title"># त्वरित सेवाएं</h2>
   </div>
+
   <div class="quick-grid">
-    <a href="#weather-section" class="quick-card" style="--card-accent:#1976d2;">
-      <span class="qc-icon">🌤️</span>
+    <a class="quick-card" href="chat.html?tab=disease" style="--card-accent:#c62828">
+      <span class="qc-icon">🌾</span>
+      <span class="qc-label">फसल रोग</span>
+    </a>
+    <a class="quick-card" href="chat.html?tab=weather" style="--card-accent:#1565c0">
+      <span class="qc-icon">🌦️</span>
       <span class="qc-label">मौसम</span>
     </a>
-    <a href="#mandi-section" class="quick-card" style="--card-accent:#2e7d32;">
-      <span class="qc-icon">📊</span>
+    <a class="quick-card" href="chat.html?tab=mandi" style="--card-accent:#e65100">
+      <span class="qc-icon">💰</span>
       <span class="qc-label">मंडी भाव</span>
     </a>
-    <a href="#articles" class="quick-card" style="--card-accent:#f9a825;">
-      <span class="qc-icon">📰</span>
-      <span class="qc-label">लेख & गाइड</span>
+    <a class="quick-card" href="chat.html?tab=fertilizer" style="--card-accent:#2e7d32">
+      <span class="qc-icon">🧪</span>
+      <span class="qc-label">खाद सलाह</span>
     </a>
-    <a href="#articles" class="quick-card" style="--card-accent:#7b1fa2;">
-      <span class="qc-icon">🏛️</span>
-      <span class="qc-label">सरकारी योजनाएँ</span>
-    </a>
-    <a href="chat.html" class="quick-card" style="--card-accent:#c62828;">
+    <a class="quick-card" href="chat.html?tab=pest" style="--card-accent:#6a1b9a">
       <span class="qc-icon">🐛</span>
-      <span class="qc-label">रोग पहचान</span>
+      <span class="qc-label">कीट नियंत्रण</span>
     </a>
-    <a href="chat.html" class="quick-card" style="--card-accent:#00838f;">
-      <span class="qc-icon">💬</span>
-      <span class="qc-label">विशेषज्ञ चैट</span>
+    <a class="quick-card" href="chat.html?tab=info" style="--card-accent:#00695c">
+      <span class="qc-icon">📘</span>
+      <span class="qc-label">कृषि जानकारी</span>
     </a>
   </div>
 </section>
 
-<!-- ═══════════════════════════════
+<!-- ══════════════════════════
      TRENDING SEARCHES
-═══════════════════════════════ -->
-<section class="section" style="padding-top:0;">
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
   <div class="section-header">
-    <span class="section-title">🔥 चर्चित खोजें</span>
+    <h2 class="section-title">🔥 Trending खोजें</h2>
+    <a class="section-link" href="#">सभी देखें</a>
   </div>
+
   <div class="trending-scroll">
-    <div class="trend-chip"><span class="trend-icon">📈</span> आलू भाव आगरा</div>
-    <div class="trend-chip"><span class="trend-icon">🌾</span> गेहूँ MSP 2024-25</div>
-    <div class="trend-chip"><span class="trend-icon">💧</span> यूरिया कब डालें</div>
-    <div class="trend-chip"><span class="trend-icon">🍅</span> टमाटर रोग</div>
-    <div class="trend-chip"><span class="trend-icon">☔</span> अगले 7 दिन मौसम</div>
-    <div class="trend-chip"><span class="trend-icon">🌱</span> PM किसान स्टेटस</div>
-    <div class="trend-chip"><span class="trend-icon">🎋</span> गन्ना भुगतान UP</div>
+    <div class="trend-chip" onclick="setSearch('गन्ने में लाल सड़न')">
+      <span class="trend-icon">📈</span> गन्ने में लाल सड़न
+    </div>
+    <div class="trend-chip" onclick="setSearch('आज गेहूं का भाव')">
+      <span class="trend-icon">📈</span> आज गेहूं का भाव
+    </div>
+    <div class="trend-chip" onclick="setSearch('बारिश कब होगी')">
+      <span class="trend-icon">📈</span> बारिश कब होगी
+    </div>
+    <div class="trend-chip" onclick="setSearch('धान में झोंका रोग')">
+      <span class="trend-icon">📈</span> धान में झोंका रोग
+    </div>
+    <div class="trend-chip" onclick="setSearch('सरसों की खेती')">
+      <span class="trend-icon">📈</span> सरसों की खेती
+    </div>
+    <div class="trend-chip" onclick="setSearch('DAP खाद')">
+      <span class="trend-icon">📈</span> DAP खाद की मात्रा
+    </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════
-     WEATHER
-═══════════════════════════════ -->
-<section class="section" style="padding-top:0;" id="weather-section">
+<!-- ══════════════════════════
+     WEATHER SNAPSHOT
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
   <div class="section-header">
-    <span class="section-title">🌤️ आज का मौसम</span>
-    <a href="#weather-section" class="section-link">पूरा देखें →</a>
+    <h2 class="section-title">🌤️ आज का मौसम</h2>
+    <a class="section-link" href="chat.html?tab=weather">विस्तार →</a>
   </div>
-  <div class="weather-card">
+
+  <div class="weather-card" id="weather-snap">
     <div class="weather-row">
       <div>
-        <div class="weather-loc">📍 लखनऊ, उत्तर प्रदेश</div>
-        <div class="weather-temp">32<span class="weather-unit">°C</span></div>
-        <div class="weather-cond">आंशिक बादल · हल्की हवा</div>
+        <div class="weather-loc">📍 <span id="w-district">मेरठ</span>, UP</div>
+        <div class="weather-temp" id="w-temp">—<span class="weather-unit">°C</span></div>
+        <div class="weather-cond" id="w-cond">लोड हो रहा है…</div>
       </div>
-      <div class="weather-icon-big">⛅</div>
+      <div class="weather-icon-big" id="w-icon">🌤️</div>
     </div>
     <div class="weather-pills">
-      <div class="weather-pill">💧 नमी: 68%</div>
-      <div class="weather-pill">💨 हवा: 14 km/h</div>
-      <div class="weather-pill">🌧️ वर्षा: 0 mm</div>
-      <div class="weather-pill">👁️ दृश्यता: अच्छी</div>
+      <div class="weather-pill">💧 <span id="w-humidity">—</span>% नमी</div>
+      <div class="weather-pill">💨 <span id="w-wind">—</span> km/h हवा</div>
+      <div class="weather-pill" id="w-rain-pill" style="display:none">🌧️ <span id="w-rain">—</span>mm वर्षा</div>
     </div>
-    <div class="weather-update">अपडेट: आज सुबह 8:00 बजे</div>
+    <div class="weather-update" id="w-updated">अपडेट हो रहा है…</div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════
-     MANDI
-═══════════════════════════════ -->
-<section class="section" style="padding-top:0;" id="mandi-section">
+<!-- ══════════════════════════
+     MANDI SNAPSHOT
+══════════════════════════ -->
+<section class="section">
   <div class="section-header">
-    <span class="section-title">📊 मंडी भाव — आज</span>
-    <a href="#mandi-section" class="section-link">सभी फसलें →</a>
+    <h2 class="section-title">💰 मंडी भाव</h2>
+    <a class="section-link" href="chat.html?tab=mandi">सभी भाव →</a>
   </div>
+
   <div class="mandi-card">
     <div class="mandi-header-strip">
-      <span>📍 लखनऊ · आगरा मंडी</span>
+      <span>📍 मेरठ मंडी — आज के भाव</span>
       <span class="mandi-live-badge">LIVE</span>
     </div>
     <div class="mandi-rows">
       <div class="mandi-row">
         <span class="mandi-crop-icon">🌾</span>
-        <div class="mandi-crop-info">
-          <div class="mandi-crop-name">गेहूँ</div>
-          <div class="mandi-crop-unit">₹ / क्विंटल</div>
+        <div>
+          <div class="mandi-crop-name">गेहूं</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
         </div>
         <div class="mandi-price-col">
-          <div class="mandi-price">₹2,180</div>
-          <div class="mandi-change up">▲ +30</div>
+          <div class="mandi-price">₹2,200</div>
+          <div class="mandi-change up">▲ +₹30</div>
         </div>
       </div>
       <div class="mandi-row">
-        <span class="mandi-crop-icon">🥔</span>
-        <div class="mandi-crop-info">
-          <div class="mandi-crop-name">आलू</div>
-          <div class="mandi-crop-unit">₹ / क्विंटल</div>
+        <span class="mandi-crop-icon">🍚</span>
+        <div>
+          <div class="mandi-crop-name">धान</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
         </div>
         <div class="mandi-price-col">
-          <div class="mandi-price">₹820</div>
-          <div class="mandi-change down">▼ -15</div>
+          <div class="mandi-price">₹1,950</div>
+          <div class="mandi-change down">▼ −₹15</div>
         </div>
       </div>
       <div class="mandi-row">
-        <span class="mandi-crop-icon">🧅</span>
-        <div class="mandi-crop-info">
-          <div class="mandi-crop-name">प्याज</div>
-          <div class="mandi-crop-unit">₹ / क्विंटल</div>
+        <span class="mandi-crop-icon">🎋</span>
+        <div>
+          <div class="mandi-crop-name">गन्ना</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
         </div>
         <div class="mandi-price-col">
-          <div class="mandi-price">₹1,450</div>
-          <div class="mandi-change flat">— स्थिर</div>
+          <div class="mandi-price">₹350</div>
+          <div class="mandi-change flat">— कोई बदलाव नहीं</div>
         </div>
       </div>
       <div class="mandi-row">
-        <span class="mandi-crop-icon">🍅</span>
-        <div class="mandi-crop-info">
-          <div class="mandi-crop-name">टमाटर</div>
-          <div class="mandi-crop-unit">₹ / क्विंटल</div>
+        <span class="mandi-crop-icon">🌻</span>
+        <div>
+          <div class="mandi-crop-name">सरसों</div>
+          <div class="mandi-crop-unit">प्रति क्विंटल</div>
         </div>
         <div class="mandi-price-col">
-          <div class="mandi-price">₹1,200</div>
-          <div class="mandi-change up">▲ +80</div>
+          <div class="mandi-price">₹5,400</div>
+          <div class="mandi-change up">▲ +₹100</div>
         </div>
       </div>
     </div>
     <div class="mandi-footer">
-      अन्य फसलों के भाव देखें — <a href="#">मंडी भाव पेज →</a>
+      सभी भाव देखें → <a href="chat.html?tab=mandi">मंडी पेज खोलें</a>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════
-     ✨ ARTICLES SECTION
-═══════════════════════════════ -->
-<section class="section" style="padding-top:0;" id="articles">
+<!-- ══════════════════════════
+     ARTICLES & GUIDES
+══════════════════════════ -->
+<section class="section" id="articles" style="padding-bottom: 0;">
   <div class="section-header">
-    <span class="section-title">📰 लेख &amp; मार्गदर्शिकाएँ</span>
-    <a href="#" class="section-link">सभी लेख →</a>
+    <h2 class="section-title">📰 लेख &amp; गाइड</h2>
+    <a class="section-link" href="articles/urea_guide_up.html">सभी लेख →</a>
   </div>
 
   <div class="articles-grid">
@@ -973,7 +1157,7 @@
         <div class="article-card-meta">
           <span>UP किसान</span>
           <span class="dot"></span>
-          <span>5 मिनट पढ़ें</span>
+          <span>5 मिनट</span>
           <span class="dot"></span>
           <span>🔥 चर्चित</span>
         </div>
@@ -987,7 +1171,7 @@
         <span class="art-cat-badge badge-crop">फसल</span>
       </div>
       <div class="article-card-body">
-        <div class="article-card-title">आलू की खेती — UP के लिए सम्पूर्ण गाइड</div>
+        <div class="article-card-title">आलू की खेती — UP सम्पूर्ण गाइड</div>
         <div class="article-card-meta">
           <span>UP किसान</span>
           <span class="dot"></span>
@@ -1003,97 +1187,224 @@
         <span class="art-cat-badge badge-crop">फसल</span>
       </div>
       <div class="article-card-body">
-        <div class="article-card-title">ಟೊಮೆಟೊ ಬೆಳೆ — Karnataka Guide</div>
+        <div class="article-card-title">टमाटर की खेती — Karnataka गाइड</div>
         <div class="article-card-meta">
           <span>Karnataka</span>
           <span class="dot"></span>
-          <span>ಕನ್ನಡ+EN</span>
+          <span>6 मिनट</span>
         </div>
       </div>
     </a>
 
     <!-- Card 4 -->
     <a href="articles/sugarcane_guide_up.html" class="article-card">
-      <div class="article-card-thumb art-scheme">
-        🏛️
-        <span class="art-cat-badge badge-scheme">योजना</span>
+      <div class="article-card-thumb art-crop">
+        🎋
+        <span class="art-cat-badge badge-crop">फसल</span>
       </div>
       <div class="article-card-body">
-        <div class="article-card-title">PM किसान — किस्त कब आएगी?</div>
+        <div class="article-card-title">गन्ने की खेती — UP गाइड</div>
         <div class="article-card-meta">
-          <span>सभी राज्य</span>
+          <span>UP किसान</span>
           <span class="dot"></span>
-          <span>3 मिनट</span>
+          <span>7 मिनट</span>
         </div>
       </div>
     </a>
 
     <!-- Card 5 -->
     <a href="articles/ganna_rog_02.html" class="article-card">
-      <div class="article-card-thumb art-market">
-        📈
-        <span class="art-cat-badge badge-market">बाजार</span>
+      <div class="article-card-thumb art-disease">
+        🌿
+        <span class="art-cat-badge badge-disease">रोग</span>
       </div>
       <div class="article-card-body">
-        <div class="article-card-title">MSP 2024-25 — सभी फसलों की सूची</div>
+        <div class="article-card-title">गन्ने में लाल सड़न रोग — पहचान व उपाय</div>
         <div class="article-card-meta">
-          <span>सभी राज्य</span>
+          <span>UP किसान</span>
           <span class="dot"></span>
-          <span>4 मिनट</span>
+          <span>5 मिनट</span>
         </div>
       </div>
     </a>
 
     <!-- Card 6 -->
     <a href="articles/chilli_guide_karnataka.html" class="article-card">
-      <div class="article-card-thumb art-weather">
-        🌧️
-        <span class="art-cat-badge badge-weather">मौसम</span>
+      <div class="article-card-thumb art-market">
+        🌶️
+        <span class="art-cat-badge badge-market">फसल</span>
       </div>
       <div class="article-card-body">
-        <div class="article-card-title">मानसून 2025 — UP में कब और कितनी बारिश?</div>
+        <div class="article-card-title">मिर्च की खेती — Karnataka गाइड</div>
         <div class="article-card-meta">
-          <span>UP किसान</span>
+          <span>Karnataka</span>
           <span class="dot"></span>
-          <span>3 मिनट</span>
+          <span>6 मिनट</span>
         </div>
       </div>
     </a>
 
   </div>
 
-  <a href="#articles" class="all-articles-btn">
-    📚 सभी लेख देखें &nbsp;→
+  <a href="articles/urea_guide_up.html" class="all-articles-btn">
+    📚 सभी लेख देखें →
   </a>
 </section>
 
-<!-- ═══════════════════════════════
-     BOTTOM NAV
-═══════════════════════════════ -->
+<!-- Bottom spacing for mobile nav -->
+<div class="page-end"></div>
+
+<!-- ══════════════════════════
+     BOTTOM NAV (mobile)
+══════════════════════════ -->
 <nav class="bottom-nav">
-  <a href="index.html" class="bn-item active">
+  <a class="bn-item active" href="#">
     <span class="bn-icon">🏠</span>
     <span class="bn-label">मुख्य</span>
   </a>
-  <a href="chat.html" class="bn-item">
+  <a class="bn-item" href="chat.html?tab=chat">
     <span class="bn-icon">💬</span>
     <span class="bn-label">Chat</span>
   </a>
-  <a href="#weather-section" class="bn-item">
+  <a class="bn-item" href="chat.html?tab=weather">
     <span class="bn-icon">🌤️</span>
     <span class="bn-label">मौसम</span>
   </a>
-  <a href="#mandi-section" class="bn-item">
-    <span class="bn-icon">📊</span>
+  <a class="bn-item" href="chat.html?tab=mandi">
+    <span class="bn-icon">💰</span>
     <span class="bn-label">मंडी</span>
   </a>
-  <a href="#articles" class="bn-item">
+  <a class="bn-item" href="#articles">
     <span class="bn-icon">📰</span>
     <span class="bn-label">लेख</span>
   </a>
 </nav>
 
-<div class="page-end"></div>
+<!-- ══════════════════════════
+     SCRIPTS
+══════════════════════════ -->
+<script>
+  /* ── Load config from profile.json ── */
+  async function loadProfile() {
+    try {
+      const res     = await fetch('profile.json');
+      const profile = await res.json();
+      if (profile.photo) {
+        const hp = document.getElementById('hero-photo');
+        if (hp) hp.src = profile.photo;
+      }
+      if (profile.district) {
+        const badge = document.getElementById('w-district');
+        if (badge) badge.textContent = profile.district;
+      }
+    } catch { /* profile.json missing — photo src stays as set in HTML, portrait stays visible */ }
+  }
+  loadProfile();
+
+  /* ── Show desktop nav on wider screens ── */
+  function checkDesktopNav() {
+    const nav = document.getElementById('desktop-nav');
+    if (nav) nav.style.display = window.innerWidth >= 600 ? 'flex' : 'none';
+  }
+  checkDesktopNav();
+  window.addEventListener('resize', checkDesktopNav);
+
+  /* ── Search helpers ── */
+  function setSearch(query) {
+    document.getElementById('main-search').value = query;
+    doSearch();
+  }
+
+  function handleSearchKey(e) {
+    if (e.key === 'Enter') doSearch();
+  }
+
+  function doSearch() {
+    const q = document.getElementById('main-search').value.trim();
+    if (!q) return;
+    // Navigate to existing app with query
+    window.location.href = `chat.html?q=${encodeURIComponent(q)}&tab=search`;
+  }
+
+  /* ── Voice search (Web Speech API) ── */
+  function startVoice() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('आपके browser में voice search उपलब्ध नहीं है।');
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recog = new SpeechRecognition();
+    recog.lang = 'hi-IN';
+    recog.interimResults = false;
+    recog.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      document.getElementById('main-search').value = transcript;
+    };
+    recog.onerror = () => alert('आवाज़ नहीं पहचानी। दोबारा try करें।');
+    recog.start();
+  }
+
+  /* ── Weather snapshot fetch ── */
+  const WEATHER_DISTRICT = 'Meerut';
+
+  async function fetchWeather() {
+    try {
+      const res  = await fetch(`https://krashi-mitra-v1.onrender.com/weather?district=${WEATHER_DISTRICT}`);
+      const json = await res.json();
+      if (!json.success) return;
+      const d = json.data;
+
+      document.getElementById('w-district').textContent = d.district || WEATHER_DISTRICT;
+      document.getElementById('w-temp').innerHTML     = `${Math.round(d.temperature || 0)}<span class="weather-unit">°C</span>`;
+      document.getElementById('w-cond').textContent   = conditionHindi(d.weather_condition);
+      document.getElementById('w-icon').textContent   = conditionIcon(d.weather_condition);
+      document.getElementById('w-humidity').textContent = d.humidity ?? '—';
+      document.getElementById('w-wind').textContent     = d.wind_speed ?? '—';
+      document.getElementById('w-updated').textContent  = 'अभी अपडेट हुआ';
+
+      if (d.rainfall > 0) {
+        document.getElementById('w-rain').textContent = d.rainfall;
+        document.getElementById('w-rain-pill').style.display = 'flex';
+      }
+    } catch {
+      document.getElementById('w-cond').textContent  = 'Server से connect नहीं हो सका';
+      document.getElementById('w-updated').textContent = 'Backend चला रहे हैं?';
+    }
+  }
+
+  function conditionHindi(c) {
+    if (!c) return 'साफ मौसम';
+    c = c.toLowerCase();
+    if (c.includes('rain') || c.includes('drizzle')) return 'बारिश हो रही है';
+    if (c.includes('storm') || c.includes('thunder')) return 'आंधी-तूफान';
+    if (c.includes('cloud')) return 'बादल छाए हुए';
+    if (c.includes('haze') || c.includes('mist'))    return 'धुंध / कोहरा';
+    if (c.includes('clear')) return 'साफ धूप';
+    return c;
+  }
+
+  function conditionIcon(c) {
+    if (!c) return '🌤️';
+    c = c.toLowerCase();
+    if (c.includes('rain') || c.includes('drizzle')) return '🌧️';
+    if (c.includes('storm') || c.includes('thunder')) return '⛈️';
+    if (c.includes('cloud')) return '☁️';
+    if (c.includes('haze') || c.includes('mist'))    return '🌫️';
+    if (c.includes('clear')) return '☀️';
+    return '🌤️';
+  }
+
+  fetchWeather();
+
+  function avatarBtnClick() {
+    const token = localStorage.getItem("krishi_token");
+    if (token) {
+      window.location.href = "chat.html?tab=profile";
+    } else {
+      window.location.href = "chat.html?tab=login";
+    }
+  }
+</script>
 
 </body>
 </html>
