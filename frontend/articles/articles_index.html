@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>लेख & कृषि टिप्स — KrashiMitra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ══════════════════════════════
+       CSS VARIABLES (same as main site)
+    ══════════════════════════════ */
+    :root {
+      --green-dark:   #1b5e20;
+      --green-mid:    #2e7d32;
+      --green-light:  #43a047;
+      --green-soft:   #e8f5e9;
+      --gold:         #f9a825;
+      --gold-soft:    #fff8e1;
+      --cream:        #fafaf7;
+      --white:        #ffffff;
+      --text-dark:    #1a1a1a;
+      --text-mid:     #4a4a4a;
+      --text-soft:    #757575;
+      --border:       #e0e0e0;
+      --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 20px rgba(0,0,0,0.12);
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    24px;
+    }
+
+    /* ══════════════════════════════
+       RESET & BASE
+    ══════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════
+       HEADER
+    ══════════════════════════════ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--green-soft);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--green-dark);
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .back-btn:hover { background: #c8e6c9; }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 2px 8px rgba(46,125,50,0.3);
+      flex-shrink: 0;
+    }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-title { font-size: 16px; font-weight: 800; color: var(--green-dark); line-height: 1.1; }
+    .logo-sub   { font-size: 10px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', sans-serif; }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-nav { display: none; gap: 4px; }
+    .nav-link {
+      font-size: 13px; font-weight: 500; color: var(--text-mid);
+      text-decoration: none; padding: 6px 10px; border-radius: 8px;
+      transition: background 0.2s, color 0.2s; white-space: nowrap;
+    }
+    .nav-link:hover { background: var(--green-soft); color: var(--green-dark); }
+    .avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-light), var(--gold));
+      border: 2px solid var(--green-soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; cursor: pointer; flex-shrink: 0;
+      transition: box-shadow 0.2s;
+    }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
+
+    /* ══════════════════════════════
+       PAGE HERO BANNER
+    ══════════════════════════════ */
+    .page-hero {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 60%, #388e3c 100%);
+      padding: 28px 20px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-hero::before {
+      content: '📰';
+      position: absolute;
+      right: -10px; bottom: -16px;
+      font-size: 110px;
+      opacity: 0.10;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .page-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 500;
+      margin-bottom: 12px;
+      backdrop-filter: blur(4px);
+    }
+    .page-hero-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+    .page-hero-title span { color: var(--gold); }
+    .page-hero-sub {
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    /* Article count pills */
+    .page-hero-stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .hero-stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 500;
+      backdrop-filter: blur(4px);
+    }
+
+    /* ══════════════════════════════
+       CATEGORY FILTER CHIPS
+    ══════════════════════════════ */
+    .filter-bar {
+      padding: 16px 20px 4px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 60px;
+      z-index: 90;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--cream);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-mid);
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .filter-chip:hover { background: var(--green-soft); border-color: var(--green-light); color: var(--green-dark); }
+    .filter-chip.active {
+      background: var(--green-mid);
+      border-color: var(--green-mid);
+      color: var(--white);
+    }
+
+    /* ══════════════════════════════
+       FEATURED ARTICLE (top card)
+    ══════════════════════════════ */
+    .section { padding: 24px 20px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .section-count {
+      font-size: 11px;
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+
+    .featured-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+      transition: box-shadow 0.2s, transform 0.15s;
+      position: relative;
+    }
+    .featured-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.16); transform: translateY(-2px); }
+    .featured-card:active { transform: translateY(0); }
+
+    .featured-banner {
+      background: linear-gradient(135deg, #f57f17, #ffa726);
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .featured-banner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.18));
+    }
+    .featured-badge {
+      position: absolute;
+      top: 12px; left: 12px;
+      background: var(--gold);
+      color: #5d4037;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      z-index: 2;
+      letter-spacing: 0.3px;
+    }
+    .featured-body { padding: 18px 16px 16px; }
+    .featured-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #f57f17;
+      background: #fff8e1;
+      border-radius: 20px;
+      padding: 2px 9px;
+      margin-bottom: 8px;
+    }
+    .featured-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-dark);
+      line-height: 1.35;
+      margin-bottom: 8px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .featured-excerpt {
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.6;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      margin-bottom: 12px;
+    }
+    .featured-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .article-meta {
+      font-size: 11px;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .read-more-btn {
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+
+    /* ══════════════════════════════
+       ARTICLE LIST CARDS
+    ══════════════════════════════ */
+    .articles-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .article-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .article-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--accent, var(--green-mid));
+      border-radius: 4px 0 0 4px;
+    }
+    .article-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--green-light);
+    }
+    .article-card:active { transform: translateY(0); }
+
+    .article-thumb {
+      width: 64px; height: 64px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      flex-shrink: 0;
+    }
+    .article-body { flex: 1; min-width: 0; }
+    .article-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-bottom: 5px;
+    }
+    .article-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.35;
+      margin-bottom: 5px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .article-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .article-arrow {
+      font-size: 20px;
+      color: var(--text-soft);
+      flex-shrink: 0;
+      align-self: center;
+      opacity: 0.4;
+    }
+
+    /* New badge */
+    .new-badge {
+      display: inline-block;
+      background: #e53935;
+      color: var(--white);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.3px;
+    }
+
+    /* ══════════════════════════════
+       CATEGORY SECTION DIVIDERS
+    ══════════════════════════════ */
+    .cat-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0 14px;
+    }
+    .cat-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .cat-divider-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-soft);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════
+       SEARCH BAR
+    ══════════════════════════════ */
+    .search-wrap {
+      padding: 14px 20px 0;
+    }
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 14px;
+      height: 46px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s;
+    }
+    .search-row:focus-within { border-color: var(--green-light); }
+    .search-icon { font-size: 18px; opacity: 0.5; flex-shrink: 0; }
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
+      font-size: 14px;
+      color: var(--text-dark);
+      background: transparent;
+    }
+    .search-input::placeholder { color: #aaa; font-size: 13px; }
+
+    /* ══════════════════════════════
+       EMPTY STATE
+    ══════════════════════════════ */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      display: none;
+    }
+    .empty-icon { font-size: 52px; margin-bottom: 12px; }
+    .empty-title { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', sans-serif; }
+
+    /* ══════════════════════════════
+       BOTTOM NAV (mobile)
+    ══════════════════════════════ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 200;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .bn-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 4px 6px;
+      cursor: pointer;
+      text-decoration: none;
+      gap: 3px;
+      transition: background 0.15s;
+      border-radius: 12px;
+      margin: 4px 2px 0;
+    }
+    .bn-item:hover { background: var(--green-soft); }
+    .bn-item.active .bn-icon { color: var(--green-mid); }
+    .bn-item.active .bn-label { color: var(--green-dark); font-weight: 600; }
+    .bn-icon { font-size: 20px; color: var(--text-soft); }
+    .bn-label { font-size: 10px; color: var(--text-soft); font-weight: 500; font-family: 'Noto Sans Devanagari', sans-serif; }
+
+    /* ══════════════════════════════
+       PAGE BOTTOM SPACING
+    ══════════════════════════════ */
+    .page-end { height: 80px; }
+
+    /* ══════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .article-card, .featured-card {
+      animation: fadeUp 0.4s ease both;
+    }
+    .article-card:nth-child(1) { animation-delay: 0.05s; }
+    .article-card:nth-child(2) { animation-delay: 0.10s; }
+    .article-card:nth-child(3) { animation-delay: 0.15s; }
+    .article-card:nth-child(4) { animation-delay: 0.20s; }
+    .article-card:nth-child(5) { animation-delay: 0.25s; }
+    .article-card:nth-child(6) { animation-delay: 0.30s; }
+
+    /* ══════════════════════════════
+       DESKTOP
+    ══════════════════════════════ */
+    @media (min-width: 600px) {
+      .header { padding: 0 40px; }
+      .header-nav { display: flex; }
+      .bottom-nav { display: none; }
+      .page-end { height: 40px; }
+      .section { padding: 28px 40px; }
+      .search-wrap { padding: 18px 40px 0; }
+      .filter-bar { padding: 14px 40px 4px; }
+      .page-hero { padding: 36px 40px 40px; }
+      .page-hero-title { font-size: 32px; }
+      .articles-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+    }
+    @media (min-width: 900px) {
+      .articles-list { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════
+     HEADER
+══════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <a class="back-btn" href="../index.html" title="होम पर वापस">←</a>
+    <a class="header-logo" href="../index.html">
+      <div class="logo-icon">🌾</div>
+      <div class="logo-text">
+        <span class="logo-title">कृषि मित्र</span>
+        <span class="logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="header-right">
+    <nav class="header-nav" id="desktop-nav">
+      <a class="nav-link" href="../index.html">मुख्य</a>
+      <a class="nav-link" href="../chat.html?tab=weather">मौसम</a>
+      <a class="nav-link" href="../chat.html?tab=mandi">मंडी</a>
+      <a class="nav-link" href="index.html" style="color:var(--green-dark);font-weight:700">लेख</a>
+      <a class="nav-link" href="../chat.html?tab=chat">सहायता</a>
+    </nav>
+    <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════
+     PAGE HERO BANNER
+══════════════════════════ -->
+<div class="page-hero">
+  <div class="page-hero-badge">📰 ज्ञान केंद्र</div>
+  <h1 class="page-hero-title">लेख & <span>कृषि टिप्स</span></h1>
+  <p class="page-hero-sub">
+    विशेषज्ञों द्वारा लिखे गए लेख — फसल, खाद, मौसम और खेती की पूरी जानकारी
+  </p>
+  <div class="page-hero-stats">
+    <div class="hero-stat-pill">📄 24 लेख</div>
+    <div class="hero-stat-pill">🌾 8 श्रेणियां</div>
+    <div class="hero-stat-pill">✍️ विशेषज्ञ सलाह</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     SEARCH BAR
+══════════════════════════ -->
+<div class="search-wrap">
+  <div class="search-row">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      id="article-search"
+      class="search-input"
+      placeholder="लेख खोजें… जैसे: गेहूं, खाद, कीट"
+      autocomplete="off"
+      oninput="filterArticles(this.value)"
+    >
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     CATEGORY FILTER
+══════════════════════════ -->
+<div class="filter-bar" id="filter-bar">
+  <div class="filter-chip active" data-cat="all" onclick="setFilter(this,'all')">🌿 सभी</div>
+  <div class="filter-chip" data-cat="gehun" onclick="setFilter(this,'gehun')">🌾 गेहूं</div>
+  <div class="filter-chip" data-cat="dhan" onclick="setFilter(this,'dhan')">🍚 धान</div>
+  <div class="filter-chip" data-cat="khad" onclick="setFilter(this,'khad')">🧪 खाद</div>
+  <div class="filter-chip" data-cat="keet" onclick="setFilter(this,'keet')">🐛 कीट</div>
+  <div class="filter-chip" data-cat="mausam" onclick="setFilter(this,'mausam')">🌦️ मौसम</div>
+  <div class="filter-chip" data-cat="sarso" onclick="setFilter(this,'sarso')">🌻 सरसों</div>
+  <div class="filter-chip" data-cat="ganna" onclick="setFilter(this,'ganna')">🎋 गन्ना</div>
+</div>
+
+<!-- ══════════════════════════
+     FEATURED ARTICLE
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
+  <div class="section-header">
+    <h2 class="section-title">⭐ विशेष लेख</h2>
+  </div>
+
+  <a class="featured-card" href="gehun-pila.html" data-cat="gehun" data-title="गेहूं में पीलापन कारण उपाय">
+    <div class="featured-banner">
+      🌾
+      <span class="featured-badge">✨ Featured</span>
+    </div>
+    <div class="featured-body">
+      <span class="featured-tag">गेहूं</span>
+      <div class="featured-title">गेहूं में पीलापन: कारण, पहचान और उपाय</div>
+      <div class="featured-excerpt">
+        गेहूं की फसल में पत्तियों का पीला पड़ना एक आम समस्या है। सही समय पर पहचान और उचित उपाय से फसल को बचाया जा सकता है…
+      </div>
+      <div class="featured-footer">
+        <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 आज</div>
+        <span class="read-more-btn">पढ़ें →</span>
+      </div>
+    </div>
+  </a>
+</section>
+
+<!-- ══════════════════════════
+     ALL ARTICLES LIST
+══════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <h2 class="section-title">📚 सभी लेख</h2>
+    <span class="section-count" id="article-count">23 लेख</span>
+  </div>
+
+  <div class="articles-list" id="articles-list">
+
+    <!-- WHEAT -->
+    <a class="article-card" href="gehun-pila.html"
+       data-cat="gehun" data-title="गेहूं में पीलापन कारण उपाय"
+       style="--accent:#f57f17">
+      <div class="article-thumb" style="background:#fff8e1">🌾</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#fff8e1;color:#f57f17">गेहूं</span>
+        <div class="article-title">गेहूं में पीलापन: कारण और उपाय<span class="new-badge">NEW</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 आज</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="gehun-buvai.html"
+       data-cat="gehun" data-title="गेहूं की बुवाई सही समय तरीका"
+       style="--accent:#f57f17">
+      <div class="article-thumb" style="background:#fff8e1">🌱</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#fff8e1;color:#f57f17">गेहूं</span>
+        <div class="article-title">गेहूं की बुवाई: सही समय और तरीका</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 2 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- DHAN -->
+    <a class="article-card" href="dhan-buvai.html"
+       data-cat="dhan" data-title="धान की बुवाई सही समय तरीका"
+       style="--accent:#00695c">
+      <div class="article-thumb" style="background:#e0f2f1">🍚</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e0f2f1;color:#00695c">धान</span>
+        <div class="article-title">धान की सही बुवाई का समय और तरीका</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 कल</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="dhan-jhoka.html"
+       data-cat="dhan" data-title="धान में झोंका रोग ब्लास्ट"
+       style="--accent:#00695c">
+      <div class="article-thumb" style="background:#e0f2f1">🌀</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e0f2f1;color:#00695c">धान</span>
+        <div class="article-title">धान में झोंका रोग (Blast): पहचान और बचाव</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 3 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- KHAD -->
+    <a class="article-card" href="urea-guide.html"
+       data-cat="khad" data-title="यूरिया DAP खाद कब कितना"
+       style="--accent:#1565c0">
+      <div class="article-thumb" style="background:#e3f2fd">🧪</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e3f2fd;color:#1565c0">खाद</span>
+        <div class="article-title">यूरिया और DAP: कब और कितना दें?<span class="new-badge">NEW</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 2 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="jaivik-khad.html"
+       data-cat="khad" data-title="जैविक खाद घर पर बनाएं"
+       style="--accent:#1565c0">
+      <div class="article-thumb" style="background:#e3f2fd">♻️</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e3f2fd;color:#1565c0">खाद</span>
+        <div class="article-title">घर पर जैविक खाद कैसे बनाएं?</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 6 मिनट &nbsp;·&nbsp; 📅 4 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- KEET -->
+    <a class="article-card" href="keet-niyantran.html"
+       data-cat="keet" data-title="कीट नियंत्रण देसी उपाय"
+       style="--accent:#6a1b9a">
+      <div class="article-thumb" style="background:#f3e5f5">🐛</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#f3e5f5;color:#6a1b9a">कीट</span>
+        <div class="article-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 3 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="tiddi-bachav.html"
+       data-cat="keet" data-title="टिड्डी दल से फसल बचाव"
+       style="--accent:#6a1b9a">
+      <div class="article-thumb" style="background:#f3e5f5">🦗</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#f3e5f5;color:#6a1b9a">कीट</span>
+        <div class="article-title">टिड्डी दल से फसल को कैसे बचाएं?</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 5 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- MAUSAM -->
+    <a class="article-card" href="mausam-guide.html"
+       data-cat="mausam" data-title="मौसम के अनुसार खेती कैसे करें"
+       style="--accent:#1976d2">
+      <div class="article-thumb" style="background:#e3f2fd">🌦️</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e3f2fd;color:#1976d2">मौसम</span>
+        <div class="article-title">मौसम के अनुसार खेती की योजना कैसे बनाएं?</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 1 सप्ताह पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="sukha-prabandhan.html"
+       data-cat="mausam" data-title="सूखा प्रबंधन पानी की कमी खेती"
+       style="--accent:#1976d2">
+      <div class="article-thumb" style="background:#e3f2fd">☀️</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e3f2fd;color:#1976d2">मौसम</span>
+        <div class="article-title">सूखे में फसल बचाने के उपाय</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 1 सप्ताह पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- SARSO -->
+    <a class="article-card" href="sarso-kheti.html"
+       data-cat="sarso" data-title="सरसों की खेती उन्नत तरीका"
+       style="--accent:#f9a825">
+      <div class="article-thumb" style="background:#fff8e1">🌻</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#fff8e1;color:#f9a825">सरसों</span>
+        <div class="article-title">सरसों की उन्नत खेती: पूरी जानकारी</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 7 मिनट &nbsp;·&nbsp; 📅 10 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- GANNA -->
+    <a class="article-card" href="ganna-rog.html"
+       data-cat="ganna" data-title="गन्ने में लाल सड़न रोग"
+       style="--accent:#2e7d32">
+      <div class="article-thumb" style="background:#e8f5e9">🎋</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e8f5e9;color:#2e7d32">गन्ना</span>
+        <div class="article-title">गन्ने में लाल सड़न रोग: पहचान व उपचार</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 12 दिन पहले</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+  </div>
+
+  <!-- Empty state (shown when search returns no results) -->
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">🔍</div>
+    <div class="empty-title">कोई लेख नहीं मिला</div>
+    <div class="empty-sub">दूसरे शब्दों से खोजें या श्रेणी बदलें</div>
+  </div>
+
+</section>
+
+<!-- Bottom spacing -->
+<div class="page-end"></div>
+
+<!-- ══════════════════════════
+     BOTTOM NAV (mobile)
+══════════════════════════ -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="../index.html">
+    <span class="bn-icon">🏠</span>
+    <span class="bn-label">मुख्य</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=chat">
+    <span class="bn-icon">💬</span>
+    <span class="bn-label">Chat</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=weather">
+    <span class="bn-icon">🌤️</span>
+    <span class="bn-label">मौसम</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=mandi">
+    <span class="bn-icon">💰</span>
+    <span class="bn-label">मंडी</span>
+  </a>
+  <a class="bn-item active" href="index.html">
+    <span class="bn-icon">📰</span>
+    <span class="bn-label">लेख</span>
+  </a>
+</nav>
+
+<!-- ══════════════════════════
+     SCRIPTS
+══════════════════════════ -->
+<script>
+  /* ── Desktop nav show/hide ── */
+  function checkDesktopNav() {
+    const nav = document.getElementById('desktop-nav');
+    if (nav) nav.style.display = window.innerWidth >= 600 ? 'flex' : 'none';
+  }
+  checkDesktopNav();
+  window.addEventListener('resize', checkDesktopNav);
+
+  /* ── Avatar / profile ── */
+  function avatarBtnClick() {
+    const token = localStorage.getItem("krishi_token");
+    window.location.href = token ? "../chat.html?tab=profile" : "../chat.html?tab=login";
+  }
+
+  /* ── Active filter state ── */
+  let activeFilter = 'all';
+
+  function setFilter(el, cat) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    activeFilter = cat;
+    applyFilters();
+  }
+
+  /* ── Search ── */
+  function filterArticles(query) {
+    applyFilters(query.trim().toLowerCase());
+  }
+
+  /* ── Combined filter + search ── */
+  function applyFilters(query = '') {
+    const searchVal = query || document.getElementById('article-search').value.trim().toLowerCase();
+    const cards = document.querySelectorAll('#articles-list .article-card');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const cat   = card.dataset.cat || '';
+      const title = card.dataset.title || '';
+      const catMatch   = activeFilter === 'all' || cat === activeFilter;
+      const queryMatch = !searchVal || title.includes(searchVal);
+      const show = catMatch && queryMatch;
+      card.style.display = show ? 'flex' : 'none';
+      if (show) visible++;
+    });
+
+    // Also hide/show featured card based on category filter
+    const featured = document.querySelector('.featured-card');
+    if (featured) {
+      const fcat = featured.dataset.cat || '';
+      const ftitle = featured.dataset.title || '';
+      const catMatch   = activeFilter === 'all' || fcat === activeFilter;
+      const queryMatch = !searchVal || ftitle.includes(searchVal);
+      featured.closest('section').style.display = (catMatch && queryMatch) ? 'block' : 'none';
+      if (catMatch && queryMatch) visible++;
+    }
+
+    document.getElementById('article-count').textContent = visible + ' लेख';
+    document.getElementById('empty-state').style.display = visible === 0 ? 'block' : 'none';
+  }
+</script>
+
+</body>
+</html>
