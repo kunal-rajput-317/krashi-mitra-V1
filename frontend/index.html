@@ -538,11 +538,8 @@
     ══════════════════════════════ */
     .articles-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-    }
-    @media (min-width: 600px) {
-      .articles-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     .article-card {
@@ -966,7 +963,7 @@
   <div class="articles-grid">
 
     <!-- Featured — full width -->
-    <a href="urea_guide_up.html" class="article-card article-card-featured">
+    <a href="articles/urea_guide_up.html" class="article-card article-card-featured">
       <div class="article-card-thumb art-input">
         🧪
         <span class="art-cat-badge badge-input">खाद</span>
@@ -984,7 +981,7 @@
     </a>
 
     <!-- Card 2 -->
-    <a href="potato_guide_up.html" class="article-card">
+    <a href="articles/potato_guide_up.html" class="article-card">
       <div class="article-card-thumb art-crop">
         🥔
         <span class="art-cat-badge badge-crop">फसल</span>
@@ -1000,7 +997,7 @@
     </a>
 
     <!-- Card 3 -->
-    <a href="tomato_guide.html" class="article-card">
+    <a href="articles/tomato_guide.html" class="article-card">
       <div class="article-card-thumb art-crop">
         🍅
         <span class="art-cat-badge badge-crop">फसल</span>
