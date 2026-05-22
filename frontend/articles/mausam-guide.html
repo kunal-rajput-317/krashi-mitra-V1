@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>मौसम के अनुसार खेती की योजना — KrashiMitra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ══════════════════════════════
+       CSS VARIABLES
+    ══════════════════════════════ */
+    :root {
+      --green-dark:   #1b5e20;
+      --green-mid:    #2e7d32;
+      --green-light:  #43a047;
+      --green-soft:   #e8f5e9;
+      --gold:         #f9a825;
+      --gold-soft:    #fff8e1;
+      --cream:        #fafaf7;
+      --white:        #ffffff;
+      --text-dark:    #1a1a1a;
+      --text-mid:     #4a4a4a;
+      --text-soft:    #757575;
+      --border:       #e0e0e0;
+      --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 20px rgba(0,0,0,0.12);
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    24px;
+      --blue-dark:    #0d47a1;
+      --blue-mid:     #1565c0;
+      --blue-light:   #1976d2;
+      --blue-soft:    #e3f2fd;
+    }
+
+    /* ══════════════════════════════
+       RESET & BASE
+    ══════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════
+       HEADER
+    ══════════════════════════════ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--blue-soft);
+      border: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer;
+      text-decoration: none; color: var(--blue-mid);
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .back-btn:hover { background: #bbdefb; }
+    .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; box-shadow: 0 2px 8px rgba(46,125,50,0.3); flex-shrink: 0;
+    }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-title { font-size: 16px; font-weight: 800; color: var(--green-dark); line-height: 1.1; }
+    .logo-sub { font-size: 10px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', sans-serif; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-light), var(--gold));
+      border: 2px solid var(--green-soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; cursor: pointer; flex-shrink: 0; transition: box-shadow 0.2s;
+    }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
+
+    /* ══════════════════════════════
+       ARTICLE HERO BANNER
+    ══════════════════════════════ */
+    .article-hero {
+      background: linear-gradient(135deg, #0d47a1 0%, #1565c0 55%, #1976d2 100%);
+      padding: 28px 20px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .article-hero::before {
+      content: '🌦️';
+      position: absolute;
+      right: -10px; bottom: -20px;
+      font-size: 130px;
+      opacity: 0.10;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .article-hero::after {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .article-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.65);
+    }
+    .article-breadcrumb a { color: rgba(255,255,255,0.65); text-decoration: none; }
+    .article-breadcrumb a:hover { color: rgba(255,255,255,0.9); }
+    .article-breadcrumb span { opacity: 0.5; }
+
+    .article-tag-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.95);
+      font-weight: 600;
+      margin-bottom: 12px;
+      backdrop-filter: blur(4px);
+      letter-spacing: 0.3px;
+    }
+    .article-hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .article-hero-title span { color: var(--gold); }
+    .article-hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.75);
+    }
+    .meta-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ══════════════════════════════
+       PROGRESS BAR (reading progress)
+    ══════════════════════════════ */
+    .reading-progress {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue-mid), var(--gold));
+      width: 0%;
+      z-index: 99;
+      transition: width 0.1s linear;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ══════════════════════════════
+       TABLE OF CONTENTS
+    ══════════════════════════════ */
+    .toc-box {
+      background: var(--blue-soft);
+      border: 1.5px solid #bbdefb;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      margin: 24px 20px 0;
+    }
+    .toc-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--blue-mid);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .toc-list li a {
+      font-size: 13px;
+      color: var(--blue-mid);
+      text-decoration: none;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+    .toc-list li a:hover { color: var(--blue-dark); }
+    .toc-num {
+      width: 20px; height: 20px;
+      background: var(--blue-mid);
+      color: var(--white);
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       ARTICLE BODY
+    ══════════════════════════════ */
+    .article-body {
+      padding: 24px 20px;
+      max-width: 720px;
+    }
+
+    /* Section heading */
+    .a-section {
+      margin-bottom: 28px;
+    }
+    .a-heading {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--blue-soft);
+    }
+    .a-heading-icon {
+      width: 34px; height: 34px;
+      background: var(--blue-soft);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    /* Body text */
+    .a-para {
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--text-mid);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      margin-bottom: 12px;
+    }
+    .a-para strong { color: var(--text-dark); font-weight: 700; }
+
+    /* Highlight / intro box */
+    .a-intro-box {
+      background: linear-gradient(135deg, var(--blue-soft), #e8f5e9);
+      border-left: 4px solid var(--blue-mid);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: var(--text-mid);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      line-height: 1.7;
+    }
+    .a-intro-box strong { color: var(--blue-mid); }
+
+    /* Season cards row */
+    .season-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .season-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      padding: 14px 12px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .season-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .season-icon { font-size: 28px; margin-bottom: 6px; }
+    .season-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 3px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .season-months {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-bottom: 8px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .season-crops {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .crop-chip {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+
+    /* Tip cards */
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .tip-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .tip-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .tip-content { flex: 1; }
+    .tip-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 4px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .tip-desc {
+      font-size: 12px;
+      color: var(--text-soft);
+      line-height: 1.6;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+
+    /* Warning / alert box */
+    .a-alert {
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .a-alert.warning {
+      background: #fff8e1;
+      border: 1.5px solid #ffe082;
+    }
+    .a-alert.danger {
+      background: #ffebee;
+      border: 1.5px solid #ef9a9a;
+    }
+    .a-alert.success {
+      background: var(--green-soft);
+      border: 1.5px solid #a5d6a7;
+    }
+    .a-alert-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .a-alert-text {
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.65;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .a-alert-text strong { color: var(--text-dark); }
+
+    /* Month table */
+    .month-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--white);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .month-table th {
+      background: linear-gradient(90deg, var(--blue-mid), var(--blue-light));
+      color: var(--white);
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 700;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 12px;
+    }
+    .month-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      color: var(--text-mid);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .month-table tr:last-child td { border-bottom: none; }
+    .month-table tr:nth-child(even) td { background: #fafafa; }
+    .month-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Key takeaway box */
+    .a-takeaway {
+      background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+      border-radius: var(--radius-lg);
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .a-takeaway::before {
+      content: '✅';
+      position: absolute;
+      right: -8px; bottom: -12px;
+      font-size: 90px;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .a-takeaway-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .a-takeaway-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .a-takeaway-list li {
+      font-size: 13px;
+      color: rgba(255,255,255,0.9);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.5;
+    }
+    .a-takeaway-list li::before {
+      content: '→';
+      color: var(--gold);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Related articles */
+    .related-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .related-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      text-decoration: none;
+      transition: box-shadow 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .related-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--rc-accent, var(--green-mid));
+      border-radius: 4px 0 0 4px;
+    }
+    .related-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .related-thumb {
+      width: 46px; height: 46px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .related-text { flex: 1; }
+    .related-tag { font-size: 10px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .related-title { font-size: 13px; font-weight: 700; color: var(--text-dark); line-height: 1.3; font-family: 'Noto Sans Devanagari', sans-serif; }
+    .related-arrow { font-size: 18px; color: var(--text-soft); opacity: 0.4; flex-shrink: 0; }
+
+    /* Share / CTA strip */
+    .cta-strip {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .cta-text { font-size: 13px; color: var(--text-mid); font-family: 'Noto Sans Devanagari', sans-serif; }
+    .cta-text strong { color: var(--text-dark); }
+    .cta-btn {
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: 20px;
+      text-decoration: none;
+      white-space: nowrap;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      transition: box-shadow 0.2s;
+    }
+    .cta-btn:hover { box-shadow: 0 4px 14px rgba(46,125,50,0.35); }
+
+    /* ══════════════════════════════
+       BOTTOM NAV
+    ══════════════════════════════ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 200;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .bn-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 8px 4px 6px;
+      cursor: pointer; text-decoration: none; gap: 3px;
+      transition: background 0.15s; border-radius: 12px; margin: 4px 2px 0;
+    }
+    .bn-item:hover { background: var(--green-soft); }
+    .bn-item.active .bn-icon { color: var(--green-mid); }
+    .bn-item.active .bn-label { color: var(--green-dark); font-weight: 600; }
+    .bn-icon { font-size: 20px; color: var(--text-soft); }
+    .bn-label { font-size: 10px; color: var(--text-soft); font-weight: 500; font-family: 'Noto Sans Devanagari', sans-serif; }
+    .page-end { height: 80px; }
+
+    /* ══════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .a-section { animation: fadeUp 0.45s ease both; }
+    .a-section:nth-child(1) { animation-delay: 0.05s; }
+    .a-section:nth-child(2) { animation-delay: 0.10s; }
+    .a-section:nth-child(3) { animation-delay: 0.15s; }
+    .a-section:nth-child(4) { animation-delay: 0.20s; }
+    .a-section:nth-child(5) { animation-delay: 0.25s; }
+    .a-section:nth-child(6) { animation-delay: 0.30s; }
+
+    /* ══════════════════════════════
+       DESKTOP
+    ══════════════════════════════ */
+    @media (min-width: 600px) {
+      .header { padding: 0 40px; }
+      .bottom-nav { display: none; }
+      .page-end { height: 40px; }
+      .article-hero { padding: 36px 40px 44px; }
+      .article-hero-title { font-size: 30px; }
+      .article-body { padding: 28px 40px; }
+      .toc-box { margin: 24px 40px 0; }
+      .season-grid { grid-template-columns: repeat(4, 1fr); }
+      .related-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 900px) {
+      .article-body { max-width: 780px; }
+    }
+
+    /* ══════════════════════════════
+       ARTICLE IMAGE BLOCKS
+    ══════════════════════════════ */
+
+    /* Full-width image */
+    .a-img {
+      width: 100%;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 16px;
+      background: #f0f0f0;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+    }
+    .a-img img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      transition: transform 0.3s ease;
+    }
+    .a-img:hover img { transform: scale(1.02); }
+    .a-img-caption {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--text-soft);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Empty placeholder shown when no src given */
+    .a-img-placeholder {
+      width: 100%;
+      min-height: 180px;
+      border-radius: var(--radius-md);
+      border: 2px dashed var(--border);
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .a-img-placeholder:hover {
+      border-color: var(--green-light);
+      background: var(--green-soft);
+    }
+    .a-img-placeholder input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .a-img-placeholder-icon { font-size: 36px; opacity: 0.5; }
+    .a-img-placeholder-text {
+      font-size: 13px;
+      color: var(--text-soft);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .a-img-placeholder-text strong { color: var(--green-mid); }
+    .a-img-placeholder-badge {
+      font-size: 10px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      border: 1px solid #c8e6c9;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* Side-by-side two images */
+    .a-img-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .a-img-row .a-img,
+    .a-img-row .a-img-placeholder { margin-bottom: 0; }
+    .a-img-row .a-img img { height: 160px; object-fit: cover; }
+    .a-img-row .a-img-placeholder { min-height: 160px; }
+
+    /* Loaded image hides placeholder, shows img block */
+    .img-wrapper { position: relative; }
+    .img-wrapper .a-img { display: none; }
+    .img-wrapper.has-image .a-img { display: block; }
+    .img-wrapper.has-image .a-img-placeholder { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Reading progress bar -->
+<div class="reading-progress" id="reading-progress"></div>
+
+<!-- ══════════════════════════
+     HEADER
+══════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <a class="back-btn" href="index.html" title="लेख सूची पर वापस">←</a>
+    <a class="header-logo" href="../index.html">
+      <div class="logo-icon">🌾</div>
+      <div class="logo-text">
+        <span class="logo-title">कृषि मित्र</span>
+        <span class="logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+  <div class="header-right">
+    <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════
+     ARTICLE HERO
+══════════════════════════ -->
+<div class="article-hero">
+  <div class="article-breadcrumb">
+    <a href="../index.html">🏠 मुख्य</a>
+    <span>›</span>
+    <a href="index.html">लेख</a>
+    <span>›</span>
+    मौसम
+  </div>
+  <div class="article-tag-hero">🌦️ मौसम</div>
+  <h1 class="article-hero-title">मौसम के अनुसार खेती की<br><span>योजना कैसे बनाएं?</span></h1>
+  <div class="article-hero-meta">
+    <span class="meta-pill">⏱️ 5 मिनट पढ़ाई</span>
+    <span class="meta-pill">✍️ कृषि विशेषज्ञ</span>
+    <span class="meta-pill">📅 मई 2026</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════ -->
+<div class="toc-box">
+  <div class="toc-title">📋 इस लेख में क्या है</div>
+  <ul class="toc-list">
+    <li><a href="#intro"><span class="toc-num">1</span> मौसम और खेती का संबंध</a></li>
+    <li><a href="#seasons"><span class="toc-num">2</span> तीन मुख्य कृषि मौसम</a></li>
+    <li><a href="#planning"><span class="toc-num">3</span> मासिक खेती कैलेंडर</a></li>
+    <li><a href="#tips"><span class="toc-num">4</span> मौसम के अनुसार जरूरी टिप्स</a></li>
+    <li><a href="#alerts"><span class="toc-num">5</span> मौसम चेतावनी और बचाव</a></li>
+    <li><a href="#summary"><span class="toc-num">6</span> मुख्य बातें</a></li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════
+     ARTICLE BODY
+══════════════════════════ -->
+<div class="article-body">
+
+  <!-- SECTION 1: Introduction -->
+  <div class="a-section" id="intro">
+    <div class="a-heading">
+      <div class="a-heading-icon">🌿</div>
+      मौसम और खेती का गहरा संबंध
+    </div>
+
+    <div class="a-intro-box">
+      <strong>किसान भाइयों,</strong> खेती में सफलता का सबसे बड़ा रहस्य है — <strong>सही समय पर सही काम।</strong> और यह सही समय तय करता है मौसम। जो किसान मौसम को समझकर खेती की योजना बनाते हैं, उनकी फसल हमेशा अच्छी होती है।
+    </div>
+
+    <!-- Image: खेत का दृश्य -->
+    <div class="img-wrapper" id="img-intro">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-intro')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-intro','खेत और मौसम का दृश्य')">
+        <div class="a-img-placeholder-icon">🌾</div>
+        <div class="a-img-placeholder-text">यहाँ खेत की <strong>फोटो जोड़ें</strong><br>जैसे: हरे-भरे खेत, किसान काम करते हुए</div>
+        <span class="a-img-placeholder-badge">📷 फोटो अपलोड करें</span>
+      </div>
+      <div class="a-img">
+        <img id="img-intro-src" src="" alt="खेत और मौसम">
+        <div class="a-img-caption">📷 <span id="img-intro-cap">खेत का दृश्य</span></div>
+      </div>
+    </div>
+
+    <p class="a-para">
+      भारत में हर साल मौसम के तीन बड़े चक्र होते हैं — <strong>खरीफ (वर्षा ऋतु), रबी (सर्दी) और जायद (गर्मी)।</strong> हर मौसम में अलग-अलग फसलें उगाई जाती हैं और अलग-अलग देखभाल की जरूरत होती है।
+    </p>
+    <p class="a-para">
+      जो किसान मौसम की जानकारी के बिना खेती करते हैं, वे अक्सर गलत समय पर बुवाई करते हैं, जिससे फसल को नुकसान होता है और उपज कम होती है। इस लेख में हम आपको बताएंगे कि <strong>मौसम के हिसाब से खेती की पूरी योजना कैसे बनाएं।</strong>
+    </p>
+  </div>
+
+  <!-- SECTION 2: Three Seasons -->
+  <div class="a-section" id="seasons">
+    <div class="a-heading">
+      <div class="a-heading-icon">🗓️</div>
+      तीन मुख्य कृषि मौसम
+    </div>
+
+    <p class="a-para">उत्तर भारत में तीन मुख्य कृषि ऋतुएं होती हैं। हर ऋतु की अपनी खास फसलें और खेती के तरीके होते हैं:</p>
+
+    <div class="season-grid">
+
+      <div class="season-card">
+        <div class="season-icon">🌧️</div>
+        <div class="season-name">खरीफ</div>
+        <div class="season-months">जून – अक्टूबर</div>
+        <div class="season-crops">
+          <span class="crop-chip" style="background:#e0f2f1;color:#00695c">धान</span>
+          <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">मक्का</span>
+          <span class="crop-chip" style="background:#f3e5f5;color:#6a1b9a">अरहर</span>
+          <span class="crop-chip" style="background:#fff8e1;color:#f57f17">सोयाबीन</span>
+        </div>
+      </div>
+
+      <div class="season-card">
+        <div class="season-icon">❄️</div>
+        <div class="season-name">रबी</div>
+        <div class="season-months">अक्टूबर – मार्च</div>
+        <div class="season-crops">
+          <span class="crop-chip" style="background:#fff8e1;color:#f57f17">गेहूं</span>
+          <span class="crop-chip" style="background:#fce4ec;color:#c62828">सरसों</span>
+          <span class="crop-chip" style="background:#e8eaf6;color:#283593">चना</span>
+          <span class="crop-chip" style="background:#e0f2f1;color:#00695c">मटर</span>
+        </div>
+      </div>
+
+      <div class="season-card">
+        <div class="season-icon">☀️</div>
+        <div class="season-name">जायद</div>
+        <div class="season-months">मार्च – जून</div>
+        <div class="season-crops">
+          <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">खीरा</span>
+          <span class="crop-chip" style="background:#e3f2fd;color:#1565c0">तरबूज</span>
+          <span class="crop-chip" style="background:#fff8e1;color:#f57f17">लौकी</span>
+          <span class="crop-chip" style="background:#fce4ec;color:#c62828">करेला</span>
+        </div>
+      </div>
+
+      <div class="season-card">
+        <div class="season-icon">🌸</div>
+        <div class="season-name">बारहमासी</div>
+        <div class="season-months">पूरे साल</div>
+        <div class="season-crops">
+          <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">गन्ना</span>
+          <span class="crop-chip" style="background:#fff8e1;color:#f57f17">केला</span>
+          <span class="crop-chip" style="background:#f3e5f5;color:#6a1b9a">पपीता</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="a-alert warning">
+      <span class="a-alert-icon">⚠️</span>
+      <div class="a-alert-text">
+        <strong>ध्यान दें:</strong> उत्तर प्रदेश, बिहार और मध्य प्रदेश में खरीफ की बुवाई <strong>मानसून आने से 10-15 दिन पहले</strong> शुरू कर देनी चाहिए ताकि पहली बारिश का पूरा फायदा मिले।
+      </div>
+    </div>
+
+    <!-- Image: two side-by-side season photos -->
+    <div class="a-img-row">
+      <div class="img-wrapper" id="img-kharif">
+        <div class="a-img-placeholder" onclick="triggerUpload('img-kharif')">
+          <input type="file" accept="image/*" onchange="loadImage(event,'img-kharif','खरीफ फसल')">
+          <div class="a-img-placeholder-icon">🌧️</div>
+          <div class="a-img-placeholder-text"><strong>खरीफ</strong> फसल फोटो</div>
+          <span class="a-img-placeholder-badge">📷 अपलोड</span>
+        </div>
+        <div class="a-img">
+          <img id="img-kharif-src" src="" alt="खरीफ फसल">
+          <div class="a-img-caption">📷 <span id="img-kharif-cap">खरीफ फसल</span></div>
+        </div>
+      </div>
+      <div class="img-wrapper" id="img-rabi">
+        <div class="a-img-placeholder" onclick="triggerUpload('img-rabi')">
+          <input type="file" accept="image/*" onchange="loadImage(event,'img-rabi','रबी फसल')">
+          <div class="a-img-placeholder-icon">❄️</div>
+          <div class="a-img-placeholder-text"><strong>रबी</strong> फसल फोटो</div>
+          <span class="a-img-placeholder-badge">📷 अपलोड</span>
+        </div>
+        <div class="a-img">
+          <img id="img-rabi-src" src="" alt="रबी फसल">
+          <div class="a-img-caption">📷 <span id="img-rabi-cap">रबी फसल</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Monthly Calendar -->
+  <div class="a-section" id="planning">
+    <div class="a-heading">
+      <div class="a-heading-icon">📅</div>
+      मासिक खेती कैलेंडर
+    </div>
+
+    <p class="a-para">नीचे दिए गए कैलेंडर के अनुसार आप पूरे साल की खेती की योजना बना सकते हैं:</p>
+
+    <table class="month-table">
+      <thead>
+        <tr>
+          <th>महीना</th>
+          <th>मुख्य काम</th>
+          <th>सुझाई फसल</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="month-badge" style="background:#e8f5e9;color:#2e7d32">जून</span></td>
+          <td>खेत की जुताई, खाद डालें, बुवाई की तैयारी</td>
+          <td>धान की नर्सरी, मक्का</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#e3f2fd;color:#1565c0">जुलाई</span></td>
+          <td>धान की रोपाई, निराई-गुड़ाई, कीट निगरानी</td>
+          <td>धान, अरहर, मूंग</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#e3f2fd;color:#1565c0">अगस्त</span></td>
+          <td>खरपतवार नियंत्रण, यूरिया टॉप ड्रेसिंग</td>
+          <td>धान, सोयाबीन</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#fff8e1;color:#f57f17">सितंबर</span></td>
+          <td>रबी की तैयारी शुरू, गोबर खाद डालें</td>
+          <td>खरीफ की कटाई तैयारी</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#fff8e1;color:#f57f17">अक्टूबर</span></td>
+          <td>खरीफ कटाई, रबी बुवाई शुरू</td>
+          <td>गेहूं, सरसों, चना</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#e8eaf6;color:#283593">नवंबर</span></td>
+          <td>गेहूं की बुवाई, सिंचाई की व्यवस्था</td>
+          <td>गेहूं, सरसों, आलू</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#e8eaf6;color:#283593">दिसंबर</span></td>
+          <td>पहली सिंचाई, ठंड से बचाव</td>
+          <td>गेहूं देखभाल, सब्जियां</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#fce4ec;color:#c62828">जनवरी</span></td>
+          <td>दूसरी सिंचाई, खाद डालें</td>
+          <td>गेहूं, सरसों फूल आना</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#fce4ec;color:#c62828">फरवरी</span></td>
+          <td>कीट रोग निगरानी, जायद की तैयारी</td>
+          <td>गेहूं बालियां, सब्जियां</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#f3e5f5;color:#6a1b9a">मार्च</span></td>
+          <td>रबी कटाई की तैयारी, गर्मी सब्जियां बोएं</td>
+          <td>खीरा, तरबूज, लौकी</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#fbe9e7;color:#bf360c">अप्रैल</span></td>
+          <td>गेहूं कटाई, खेत साफ करें</td>
+          <td>जायद सब्जियां</td>
+        </tr>
+        <tr>
+          <td><span class="month-badge" style="background:#fbe9e7;color:#bf360c">मई</span></td>
+          <td>खेत की गहरी जुताई, अगले सीजन की तैयारी</td>
+          <td>खेत को आराम, खाद तैयारी</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Image: खेती कैलेंडर या किसान काम करते हुए -->
+    <div class="img-wrapper" id="img-calendar">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-calendar')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-calendar','खेती कैलेंडर')">
+        <div class="a-img-placeholder-icon">📅</div>
+        <div class="a-img-placeholder-text">खेती कैलेंडर या <strong>मौसमी खेत</strong> की फोटो जोड़ें<br>जैसे: गेहूं बुवाई, धान रोपाई</div>
+        <span class="a-img-placeholder-badge">📷 फोटो अपलोड करें</span>
+      </div>
+      <div class="a-img">
+        <img id="img-calendar-src" src="" alt="खेती कैलेंडर">
+        <div class="a-img-caption">📷 <span id="img-calendar-cap">मौसमी खेती</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Tips -->
+  <div class="a-section" id="tips">
+    <div class="a-heading">
+      <div class="a-heading-icon">💡</div>
+      मौसम के अनुसार जरूरी टिप्स
+    </div>
+
+    <div class="tips-list">
+
+      <div class="tip-card">
+        <div class="tip-icon" style="background:#e3f2fd">📱</div>
+        <div class="tip-content">
+          <div class="tip-title">रोज मौसम की खबर लें</div>
+          <div class="tip-desc">KrashiMitra के मौसम सेक्शन में अपने जिले का 7-दिन का पूर्वानुमान देखें। बारिश आने से पहले कीटनाशक न डालें।</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon" style="background:#e8f5e9">💧</div>
+        <div class="tip-content">
+          <div class="tip-title">सिंचाई का सही समय</div>
+          <div class="tip-desc">गर्मी में सुबह जल्दी या शाम को सिंचाई करें। दोपहर में सिंचाई करने से पानी वाष्पित हो जाता है और फसल को नुकसान होता है।</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon" style="background:#fff8e1">🌡️</div>
+        <div class="tip-content">
+          <div class="tip-title">ठंड और पाले से बचाव</div>
+          <div class="tip-desc">दिसंबर–जनवरी में जब तापमान 5°C से नीचे जाए, तो रात में हल्की सिंचाई करें। यह पाले से फसल को बचाती है।</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon" style="background:#fce4ec">🌪️</div>
+        <div class="tip-content">
+          <div class="tip-title">आंधी से पहले तैयारी</div>
+          <div class="tip-desc">अप्रैल–मई में आंधी आने से पहले खड़ी फसल को सहारा दें। गन्ने और मक्के को बांधने की व्यवस्था रखें।</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon" style="background:#e8f5e9">🌱</div>
+        <div class="tip-content">
+          <div class="tip-title">बुवाई का सही समय</div>
+          <div class="tip-desc">गेहूं की बुवाई 15 अक्टूबर से 15 नवंबर के बीच करें। इस समय तापमान और नमी बुवाई के लिए सबसे उपयुक्त होती है।</div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon" style="background:#f3e5f5">☁️</div>
+        <div class="tip-content">
+          <div class="tip-title">बादल छाए हों तो...</div>
+          <div class="tip-desc">लगातार बादल रहने पर फंगस रोग का खतरा बढ़ता है। ऐसे मौसम में धान और गेहूं में ब्लाइट रोग की निगरानी रखें।</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 5: Alerts -->
+  <div class="a-section" id="alerts">
+    <div class="a-heading">
+      <div class="a-heading-icon">🚨</div>
+      मौसम चेतावनी और बचाव
+    </div>
+
+    <!-- Image: बाढ़ या पाला प्रभावित खेत -->
+    <div class="img-wrapper" id="img-alerts">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-alerts')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-alerts','मौसम चेतावनी')">
+        <div class="a-img-placeholder-icon">🚨</div>
+        <div class="a-img-placeholder-text">मौसम से प्रभावित <strong>फसल की फोटो</strong> जोड़ें<br>जैसे: बाढ़, पाला, लू से नुकसान</div>
+        <span class="a-img-placeholder-badge">📷 फोटो अपलोड करें</span>
+      </div>
+      <div class="a-img">
+        <img id="img-alerts-src" src="" alt="मौसम चेतावनी">
+        <div class="a-img-caption">📷 <span id="img-alerts-cap">मौसम से प्रभावित फसल</span></div>
+      </div>
+    </div>
+
+    <p class="a-para">अलग-अलग मौसमी खतरों से फसल बचाने के उपाय:</p>
+
+    <div class="a-alert danger">
+      <span class="a-alert-icon">🌊</span>
+      <div class="a-alert-text">
+        <strong>अत्यधिक बारिश / बाढ़:</strong> खेत में पानी न रुके इसके लिए नालियां बनाएं। धान को छोड़कर बाकी फसलों में जलभराव से जड़ें सड़ सकती हैं। तुरंत पानी निकासी करें।
+      </div>
+    </div>
+
+    <div class="a-alert warning">
+      <span class="a-alert-icon">🌡️</span>
+      <div class="a-alert-text">
+        <strong>लू / गर्म हवाएं (मई–जून):</strong> सब्जियों पर सुबह पानी का छिड़काव करें। मल्चिंग (पुआल बिछाना) से जमीन की नमी बनाए रखें।
+      </div>
+    </div>
+
+    <div class="a-alert warning">
+      <span class="a-alert-icon">❄️</span>
+      <div class="a-alert-text">
+        <strong>पाला (दिसंबर–जनवरी):</strong> रात 10 बजे के बाद हल्की सिंचाई करें। धुआं करने की जरूरत नहीं — आधुनिक तरीके से सल्फर स्प्रे करें।
+      </div>
+    </div>
+
+    <div class="a-alert success">
+      <span class="a-alert-icon">✅</span>
+      <div class="a-alert-text">
+        <strong>सबसे अच्छी सलाह:</strong> KrashiMitra AI से अपने जिले का मौसम पूछें और उसी के अनुसार खेती का काम तय करें। <strong>"आज मेरठ में बारिश होगी क्या?"</strong> — बस इतना पूछें और पूरी जानकारी पाएं।
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: Key Takeaways -->
+  <div class="a-section" id="summary">
+    <div class="a-takeaway">
+      <div class="a-takeaway-title">✅ मुख्य बातें — याद रखें</div>
+      <ul class="a-takeaway-list">
+        <li>खरीफ (जून–अक्टूबर): धान, मक्का, अरहर — मानसून पर निर्भर</li>
+        <li>रबी (अक्टूबर–मार्च): गेहूं, सरसों, चना — सर्दी में उगाई जाती हैं</li>
+        <li>गेहूं की बुवाई 15 अक्टूबर – 15 नवंबर के बीच करें</li>
+        <li>गर्मी में सुबह-शाम, ठंड में दोपहर में सिंचाई करें</li>
+        <li>पाले से बचाव के लिए रात में हल्की सिंचाई सबसे आसान उपाय है</li>
+        <li>बादल और नमी में फंगस रोग का खतरा — नजर रखें</li>
+        <li>रोज मौसम की जानकारी लें और उसी अनुसार काम करें</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CTA Strip -->
+  <div class="cta-strip">
+    <div class="cta-text"><strong>अपने जिले का मौसम जानें</strong><br>KrashiMitra AI से पूछें</div>
+    <a class="cta-btn" href="../chat.html?tab=weather">मौसम देखें →</a>
+  </div>
+
+  <!-- Related Articles -->
+  <div class="a-section">
+    <div class="a-heading">
+      <div class="a-heading-icon">📚</div>
+      और पढ़ें
+    </div>
+    <div class="related-grid">
+
+      <a class="related-card" href="sukha-prabandhan.html" style="--rc-accent:#1976d2">
+        <div class="related-thumb" style="background:#e3f2fd">☀️</div>
+        <div class="related-text">
+          <div class="related-tag">मौसम</div>
+          <div class="related-title">सूखे में फसल बचाने के उपाय</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+      <a class="related-card" href="gehun-pila.html" style="--rc-accent:#f57f17">
+        <div class="related-thumb" style="background:#fff8e1">🌾</div>
+        <div class="related-text">
+          <div class="related-tag">गेहूं</div>
+          <div class="related-title">गेहूं में पीलापन: कारण और उपाय</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+      <a class="related-card" href="urea-guide.html" style="--rc-accent:#1565c0">
+        <div class="related-thumb" style="background:#e3f2fd">🧪</div>
+        <div class="related-text">
+          <div class="related-tag">खाद</div>
+          <div class="related-title">यूरिया और DAP: कब और कितना दें?</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+      <a class="related-card" href="keet-niyantran.html" style="--rc-accent:#6a1b9a">
+        <div class="related-thumb" style="background:#f3e5f5">🐛</div>
+        <div class="related-text">
+          <div class="related-tag">कीट</div>
+          <div class="related-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+    </div>
+  </div>
+
+</div><!-- end article-body -->
+
+<div class="page-end"></div>
+
+<!-- ══════════════════════════
+     BOTTOM NAV
+══════════════════════════ -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="../index.html">
+    <span class="bn-icon">🏠</span>
+    <span class="bn-label">मुख्य</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=chat">
+    <span class="bn-icon">💬</span>
+    <span class="bn-label">Chat</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=weather">
+    <span class="bn-icon">🌤️</span>
+    <span class="bn-label">मौसम</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=mandi">
+    <span class="bn-icon">💰</span>
+    <span class="bn-label">मंडी</span>
+  </a>
+  <a class="bn-item active" href="index.html">
+    <span class="bn-icon">📰</span>
+    <span class="bn-label">लेख</span>
+  </a>
+</nav>
+
+<script>
+  /* Reading progress bar */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrollTop = doc.scrollTop || document.body.scrollTop;
+    const scrollHeight = doc.scrollHeight - doc.clientHeight;
+    const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    document.getElementById('reading-progress').style.width = progress + '%';
+  });
+
+  /* Avatar */
+  function avatarBtnClick() {
+    const token = localStorage.getItem("krishi_token");
+    window.location.href = token ? "../chat.html?tab=profile" : "../chat.html?tab=login";
+  }
+
+  /* ── Image upload handlers ── */
+
+  // Trigger hidden file input
+  function triggerUpload(wrapperId) {
+    const input = document.querySelector('#' + wrapperId + ' input[type="file"]');
+    if (input) input.click();
+  }
+
+  // Load selected image into the wrapper
+  function loadImage(event, wrapperId, defaultCaption) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const wrapper  = document.getElementById(wrapperId);
+      const imgEl    = document.getElementById(wrapperId + '-src');
+      const capEl    = document.getElementById(wrapperId + '-cap');
+
+      if (imgEl) {
+        imgEl.src = e.target.result;
+        // Use file name (without extension) as caption, or fallback
+        const name = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        if (capEl) capEl.textContent = name || defaultCaption;
+        wrapper.classList.add('has-image');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Allow drag-and-drop onto any placeholder
+  document.querySelectorAll('.a-img-placeholder').forEach(placeholder => {
+    placeholder.addEventListener('dragover', e => {
+      e.preventDefault();
+      placeholder.style.borderColor = 'var(--green-light)';
+      placeholder.style.background  = 'var(--green-soft)';
+    });
+    placeholder.addEventListener('dragleave', () => {
+      placeholder.style.borderColor = '';
+      placeholder.style.background  = '';
+    });
+    placeholder.addEventListener('drop', e => {
+      e.preventDefault();
+      placeholder.style.borderColor = '';
+      placeholder.style.background  = '';
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      const wrapperId = placeholder.closest('.img-wrapper').id;
+      const fakeEvent = { target: { files: [file] } };
+      loadImage(fakeEvent, wrapperId, 'फोटो');
+    });
+  });
+</script>
+
+</body>
+</html>

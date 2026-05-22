@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Karnataka Monsoon Farming Plan — KrashiMitra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green-dark:   #1b5e20;
+      --green-mid:    #2e7d32;
+      --green-light:  #43a047;
+      --green-soft:   #e8f5e9;
+      --gold:         #f9a825;
+      --gold-soft:    #fff8e1;
+      --cream:        #fafaf7;
+      --white:        #ffffff;
+      --text-dark:    #1a1a1a;
+      --text-mid:     #4a4a4a;
+      --text-soft:    #757575;
+      --border:       #e0e0e0;
+      --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 20px rgba(0,0,0,0.12);
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    24px;
+      --teal-dark:    #004d40;
+      --teal-mid:     #00695c;
+      --teal-light:   #00897b;
+      --teal-soft:    #e0f2f1;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', 'Noto Sans Kannada', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm); padding: 0 20px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--teal-soft); border: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; text-decoration: none;
+      color: var(--teal-mid); transition: background 0.2s; flex-shrink: 0;
+    }
+    .back-btn:hover { background: #b2dfdb; }
+    .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; box-shadow: 0 2px 8px rgba(46,125,50,0.3); flex-shrink: 0;
+    }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-title { font-size: 16px; font-weight: 800; color: var(--green-dark); line-height: 1.1; }
+    .logo-sub { font-size: 10px; color: var(--text-soft); font-family: 'Noto Sans Kannada', sans-serif; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-light), var(--gold));
+      border: 2px solid var(--green-soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; cursor: pointer; flex-shrink: 0; transition: box-shadow 0.2s;
+    }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(0,105,92,0.2); }
+
+    /* ── READING PROGRESS ── */
+    .reading-progress {
+      position: fixed; top: 60px; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--teal-mid), var(--gold));
+      width: 0%; z-index: 99; transition: width 0.1s linear;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── ARTICLE HERO ── */
+    .article-hero {
+      background: linear-gradient(135deg, #004d40 0%, #00695c 55%, #00897b 100%);
+      padding: 28px 20px 36px;
+      position: relative; overflow: hidden;
+    }
+    .article-hero::before {
+      content: '☔'; position: absolute;
+      right: -10px; bottom: -20px;
+      font-size: 130px; opacity: 0.10; pointer-events: none; line-height: 1;
+    }
+    .article-hero::after {
+      content: ''; position: absolute;
+      top: -60px; left: -60px; width: 220px; height: 220px;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Karnataka flag stripe */
+    .hero-flag-stripe {
+      display: flex; gap: 4px; margin-bottom: 14px;
+    }
+    .flag-block {
+      height: 4px; border-radius: 2px; flex: 1;
+    }
+
+    .article-breadcrumb {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+      font-size: 11px; color: rgba(255,255,255,0.65);
+    }
+    .article-breadcrumb a { color: rgba(255,255,255,0.65); text-decoration: none; }
+    .article-breadcrumb a:hover { color: rgba(255,255,255,0.9); }
+    .article-breadcrumb span { opacity: 0.5; }
+
+    .article-tag-hero {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px; padding: 4px 12px; font-size: 11px;
+      color: rgba(255,255,255,0.95); font-weight: 600; margin-bottom: 12px;
+      backdrop-filter: blur(4px); letter-spacing: 0.3px;
+    }
+    .article-hero-title {
+      font-size: 24px; font-weight: 800; color: var(--white);
+      line-height: 1.25; margin-bottom: 8px; letter-spacing: -0.3px;
+    }
+    .article-hero-title span { color: var(--gold); }
+    .article-hero-sub {
+      font-family: 'Noto Sans Kannada', sans-serif;
+      font-size: 13px; color: rgba(255,255,255,0.75);
+      margin-bottom: 16px; line-height: 1.6;
+    }
+    .article-hero-meta {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      font-size: 12px; color: rgba(255,255,255,0.75);
+    }
+    .meta-pill { display: flex; align-items: center; gap: 5px; }
+
+    /* District badges */
+    .district-strip {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px;
+    }
+    .dist-badge {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 3px 10px; font-size: 10px;
+      color: rgba(255,255,255,0.9); font-weight: 500;
+      backdrop-filter: blur(4px);
+    }
+
+    /* ── TABLE OF CONTENTS ── */
+    .toc-box {
+      background: var(--teal-soft); border: 1.5px solid #80cbc4;
+      border-radius: var(--radius-md); padding: 16px 18px;
+      margin: 24px 20px 0;
+    }
+    .toc-title {
+      font-size: 13px; font-weight: 700; color: var(--teal-mid);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .toc-list li a {
+      font-size: 13px; color: var(--teal-mid); text-decoration: none;
+      display: flex; align-items: center; gap: 8px; transition: color 0.2s;
+    }
+    .toc-list li a:hover { color: var(--teal-dark); }
+    .toc-num {
+      width: 20px; height: 20px; background: var(--teal-mid);
+      color: var(--white); border-radius: 50%; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* ── ARTICLE BODY ── */
+    .article-body { padding: 24px 20px; max-width: 720px; }
+    .a-section { margin-bottom: 28px; }
+    .a-heading {
+      font-size: 18px; font-weight: 800; color: var(--text-dark);
+      margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+      padding-bottom: 8px; border-bottom: 2px solid var(--teal-soft);
+    }
+    .a-heading-icon {
+      width: 34px; height: 34px; background: var(--teal-soft);
+      border-radius: 9px; display: flex; align-items: center;
+      justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .a-para {
+      font-size: 14px; line-height: 1.85; color: var(--text-mid);
+      margin-bottom: 12px;
+    }
+    .a-para strong { color: var(--text-dark); font-weight: 700; }
+    .a-intro-box {
+      background: linear-gradient(135deg, var(--teal-soft), #e8f5e9);
+      border-left: 4px solid var(--teal-mid);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 14px 16px; margin-bottom: 20px;
+      font-size: 14px; color: var(--text-mid); line-height: 1.7;
+    }
+    .a-intro-box strong { color: var(--teal-mid); }
+
+    /* ── REGION CARDS ── */
+    .region-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+    }
+    .region-card {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1.5px solid var(--border); padding: 14px 12px;
+      box-shadow: var(--shadow-sm); transition: box-shadow 0.2s, transform 0.15s;
+      position: relative; overflow: hidden;
+    }
+    .region-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--rc-top, var(--teal-mid));
+    }
+    .region-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .region-icon { font-size: 26px; margin-bottom: 6px; }
+    .region-name {
+      font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px;
+    }
+    .region-rainfall {
+      font-size: 11px; color: var(--teal-mid); font-weight: 600; margin-bottom: 6px;
+    }
+    .region-crops { font-size: 11px; color: var(--text-soft); line-height: 1.5; }
+    .region-districts { font-size: 10px; color: var(--text-soft); margin-top: 4px; font-style: italic; }
+
+    /* ── MONTH TIMELINE ── */
+    .timeline { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; }
+    .timeline-item {
+      display: flex; gap: 0; position: relative;
+    }
+    .timeline-left {
+      display: flex; flex-direction: column; align-items: center;
+      width: 56px; flex-shrink: 0;
+    }
+    .tl-month {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--tm-color, var(--teal-mid));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--white);
+      text-align: center; line-height: 1.2; z-index: 1; flex-shrink: 0;
+    }
+    .tl-line {
+      width: 2px; flex: 1; background: var(--border); min-height: 16px;
+    }
+    .timeline-item:last-child .tl-line { display: none; }
+    .timeline-body {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1px solid var(--border); padding: 12px 14px;
+      box-shadow: var(--shadow-sm); margin-bottom: 10px; flex: 1;
+      margin-left: 10px;
+    }
+    .tl-title {
+      font-size: 13px; font-weight: 700; color: var(--text-dark);
+      margin-bottom: 4px;
+    }
+    .tl-content { font-size: 12px; color: var(--text-soft); line-height: 1.6; }
+    .tl-crops {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+    }
+    .crop-chip {
+      font-size: 10px; padding: 2px 8px; border-radius: 12px;
+      font-weight: 600;
+    }
+
+    /* ── INFO CARDS (tips) ── */
+    .tips-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+    }
+    .tip-card {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1px solid var(--border); padding: 14px 12px;
+      box-shadow: var(--shadow-sm); transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .tip-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .tip-icon-lg { font-size: 28px; margin-bottom: 8px; }
+    .tip-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+    .tip-desc { font-size: 11px; color: var(--text-soft); line-height: 1.6; }
+
+    /* ── DISTRICT TABLE ── */
+    .dist-table {
+      width: 100%; border-collapse: collapse; background: var(--white);
+      border-radius: var(--radius-md); overflow: hidden;
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      margin-bottom: 16px; font-size: 12px;
+    }
+    .dist-table th {
+      background: linear-gradient(90deg, var(--teal-mid), var(--teal-light));
+      color: var(--white); padding: 10px 12px; text-align: left;
+      font-weight: 700; font-size: 11px;
+    }
+    .dist-table td {
+      padding: 10px 12px; border-bottom: 1px solid #f0f0f0;
+      color: var(--text-mid); vertical-align: top; line-height: 1.5;
+    }
+    .dist-table tr:last-child td { border-bottom: none; }
+    .dist-table tr:nth-child(even) td { background: #fafafa; }
+    .rain-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 10px; font-weight: 700; white-space: nowrap;
+    }
+
+    /* ── ALERTS ── */
+    .a-alert {
+      border-radius: var(--radius-md); padding: 14px 16px;
+      margin-bottom: 16px; display: flex; gap: 12px; align-items: flex-start;
+    }
+    .a-alert.warning  { background: #fff8e1; border: 1.5px solid #ffe082; }
+    .a-alert.danger   { background: #ffebee; border: 1.5px solid #ef9a9a; }
+    .a-alert.success  { background: var(--green-soft); border: 1.5px solid #a5d6a7; }
+    .a-alert.info     { background: var(--teal-soft); border: 1.5px solid #80cbc4; }
+    .a-alert-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .a-alert-text { font-size: 13px; color: var(--text-mid); line-height: 1.65; }
+    .a-alert-text strong { color: var(--text-dark); }
+
+    /* ── TAKEAWAY ── */
+    .a-takeaway {
+      background: linear-gradient(135deg, var(--teal-dark), var(--teal-mid));
+      border-radius: var(--radius-lg); padding: 20px 18px;
+      margin-bottom: 20px; position: relative; overflow: hidden;
+    }
+    .a-takeaway::before {
+      content: '☔'; position: absolute; right: -8px; bottom: -12px;
+      font-size: 90px; opacity: 0.08; pointer-events: none;
+    }
+    .a-takeaway-title {
+      font-size: 14px; font-weight: 800; color: var(--gold);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 7px;
+    }
+    .a-takeaway-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .a-takeaway-list li {
+      font-size: 13px; color: rgba(255,255,255,0.9);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .a-takeaway-list li::before { content: '→'; color: var(--gold); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── CTA ── */
+    .cta-strip {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .cta-text { font-size: 13px; color: var(--text-mid); }
+    .cta-text strong { color: var(--text-dark); }
+    .cta-btn {
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      color: var(--white); font-size: 13px; font-weight: 600;
+      padding: 9px 18px; border-radius: 20px; text-decoration: none;
+      white-space: nowrap; transition: box-shadow 0.2s;
+    }
+    .cta-btn:hover { box-shadow: 0 4px 14px rgba(46,125,50,0.35); }
+
+    /* ── RELATED ── */
+    .related-grid { display: flex; flex-direction: column; gap: 10px; }
+    .related-card {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      text-decoration: none; transition: box-shadow 0.2s, transform 0.15s;
+      position: relative; overflow: hidden;
+    }
+    .related-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--rc-accent, var(--teal-mid)); border-radius: 4px 0 0 4px;
+    }
+    .related-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .related-thumb {
+      width: 46px; height: 46px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .related-text { flex: 1; }
+    .related-tag { font-size: 10px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .related-title { font-size: 13px; font-weight: 700; color: var(--text-dark); line-height: 1.3; }
+    .related-arrow { font-size: 18px; color: var(--text-soft); opacity: 0.4; flex-shrink: 0; }
+
+    /* ── IMAGE BLOCKS ── */
+    .a-img {
+      width: 100%; border-radius: var(--radius-md); overflow: hidden;
+      margin-bottom: 16px; background: #f0f0f0; position: relative; box-shadow: var(--shadow-sm);
+    }
+    .a-img img {
+      width: 100%; height: auto; display: block; object-fit: cover;
+      border-radius: var(--radius-md); transition: transform 0.3s ease;
+    }
+    .a-img:hover img { transform: scale(1.02); }
+    .a-img-caption {
+      padding: 8px 12px; font-size: 11px; color: var(--text-soft);
+      background: var(--white); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .a-img-placeholder {
+      width: 100%; min-height: 180px; border-radius: var(--radius-md);
+      border: 2px dashed var(--border); background: var(--white);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; margin-bottom: 16px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .a-img-placeholder:hover { border-color: var(--teal-light); background: var(--teal-soft); }
+    .a-img-placeholder input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .a-img-placeholder-icon { font-size: 36px; opacity: 0.5; }
+    .a-img-placeholder-text {
+      font-size: 13px; color: var(--text-soft); text-align: center; line-height: 1.5;
+    }
+    .a-img-placeholder-text strong { color: var(--teal-mid); }
+    .a-img-placeholder-badge {
+      font-size: 10px; background: var(--teal-soft); color: var(--teal-dark);
+      border: 1px solid #80cbc4; padding: 2px 10px; border-radius: 20px; font-weight: 600;
+    }
+    .a-img-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .a-img-row .a-img, .a-img-row .a-img-placeholder { margin-bottom: 0; }
+    .a-img-row .a-img img { height: 160px; object-fit: cover; }
+    .a-img-row .a-img-placeholder { min-height: 160px; }
+    .img-wrapper .a-img { display: none; }
+    .img-wrapper.has-image .a-img { display: block; }
+    .img-wrapper.has-image .a-img-placeholder { display: none; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--white); border-top: 1px solid var(--border);
+      display: flex; z-index: 200; box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .bn-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 8px 4px 6px;
+      cursor: pointer; text-decoration: none; gap: 3px;
+      transition: background 0.15s; border-radius: 12px; margin: 4px 2px 0;
+    }
+    .bn-item:hover { background: var(--green-soft); }
+    .bn-item.active .bn-icon { color: var(--green-mid); }
+    .bn-item.active .bn-label { color: var(--green-dark); font-weight: 600; }
+    .bn-icon { font-size: 20px; color: var(--text-soft); }
+    .bn-label { font-size: 10px; color: var(--text-soft); font-weight: 500; }
+    .page-end { height: 80px; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .a-section { animation: fadeUp 0.45s ease both; }
+    .a-section:nth-child(1) { animation-delay: 0.05s; }
+    .a-section:nth-child(2) { animation-delay: 0.10s; }
+    .a-section:nth-child(3) { animation-delay: 0.15s; }
+    .a-section:nth-child(4) { animation-delay: 0.20s; }
+    .a-section:nth-child(5) { animation-delay: 0.25s; }
+    .a-section:nth-child(6) { animation-delay: 0.30s; }
+
+    /* ── DESKTOP ── */
+    @media (min-width: 600px) {
+      .header { padding: 0 40px; }
+      .bottom-nav { display: none; }
+      .page-end { height: 40px; }
+      .article-hero { padding: 36px 40px 44px; }
+      .article-hero-title { font-size: 30px; }
+      .article-body { padding: 28px 40px; }
+      .toc-box { margin: 24px 40px 0; }
+      .region-grid { grid-template-columns: repeat(4, 1fr); }
+      .tips-grid { grid-template-columns: repeat(3, 1fr); }
+      .related-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 900px) { .article-body { max-width: 780px; } }
+  </style>
+</head>
+<body>
+
+<div class="reading-progress" id="reading-progress"></div>
+
+<!-- ══════════════════════════
+     HEADER
+══════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <a class="back-btn" href="index.html">←</a>
+    <a class="header-logo" href="../index.html">
+      <div class="logo-icon">🌾</div>
+      <div class="logo-text">
+        <span class="logo-title">KrashiMitra</span>
+        <span class="logo-sub">ರೈತನ ಡಿಜಿಟಲ್ ಸ್ನೇಹಿತ</span>
+      </div>
+    </a>
+  </div>
+  <div class="header-right">
+    <div class="avatar-btn" onclick="avatarBtnClick()">👤</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════
+     ARTICLE HERO
+══════════════════════════ -->
+<div class="article-hero">
+  <!-- Karnataka colour stripe: yellow | red | green -->
+  <div class="hero-flag-stripe">
+    <div class="flag-block" style="background:#f9a825"></div>
+    <div class="flag-block" style="background:#c62828"></div>
+    <div class="flag-block" style="background:#2e7d32"></div>
+  </div>
+
+  <div class="article-breadcrumb">
+    <a href="../index.html">🏠 Home</a>
+    <span>›</span>
+    <a href="index.html">Articles</a>
+    <span>›</span>
+    Karnataka
+  </div>
+
+  <div class="article-tag-hero">☔ Karnataka · Monsoon</div>
+  <h1 class="article-hero-title">Southwest Monsoon<br><span>Farming Plan — Karnataka</span></h1>
+  <p class="article-hero-sub">ನೈಋತ್ಯ ಮಾರುತ ಆಧಾರಿತ ಕೃಷಿ ಯೋಜನೆ — ಜಿಲ್ಲೆವಾರು ಮಾರ್ಗದರ್ಶಿ</p>
+
+  <div class="article-hero-meta">
+    <span class="meta-pill">⏱️ 7 min read</span>
+    <span class="meta-pill">✍️ Agri Expert</span>
+    <span class="meta-pill">📅 May 2026</span>
+  </div>
+
+  <div class="district-strip">
+    <span class="dist-badge">Bengaluru Rural</span>
+    <span class="dist-badge">Mysuru</span>
+    <span class="dist-badge">Tumakuru</span>
+    <span class="dist-badge">Shivamogga</span>
+    <span class="dist-badge">Belagavi</span>
+    <span class="dist-badge">Dharwad</span>
+    <span class="dist-badge">Hassan</span>
+    <span class="dist-badge">Mandya</span>
+    <span class="dist-badge">+ 22 more</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════ -->
+<div class="toc-box">
+  <div class="toc-title">📋 In This Article</div>
+  <ul class="toc-list">
+    <li><a href="#intro"><span class="toc-num">1</span> Karnataka's Monsoon — The Big Picture</a></li>
+    <li><a href="#regions"><span class="toc-num">2</span> 4 Agro-Climatic Zones</a></li>
+    <li><a href="#calendar"><span class="toc-num">3</span> Month-by-Month Action Plan (June–Oct)</a></li>
+    <li><a href="#crops"><span class="toc-num">4</span> Best Crops by District</a></li>
+    <li><a href="#tips"><span class="toc-num">5</span> Monsoon Farming Tips</a></li>
+    <li><a href="#summary"><span class="toc-num">6</span> Key Takeaways</a></li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════
+     ARTICLE BODY
+══════════════════════════ -->
+<div class="article-body">
+
+  <!-- SECTION 1: Intro -->
+  <div class="a-section" id="intro">
+    <div class="a-heading">
+      <div class="a-heading-icon">🌧️</div>
+      Karnataka's Monsoon — The Big Picture
+    </div>
+
+    <div class="a-intro-box">
+      <strong>Dear Farmer,</strong> Karnataka receives the <strong>Southwest Monsoon from June to September</strong>, bringing 60–80% of the state's annual rainfall. Planning your kharif crops around this window is the single biggest decision of the farming year — get it right and your harvest doubles.
+    </div>
+
+    <p class="a-para">
+      Karnataka is unique because it has <strong>four very different agro-climatic zones</strong> — from the heavy-rain Western Ghats coast to the dry Deccan Plateau. The same crop sown at the same time can thrive in Shivamogga and fail in Kalaburagi. This guide gives you <strong>district-specific advice</strong> so you plan for your land, not someone else's.
+    </p>
+
+    <!-- Image: Karnataka monsoon fields -->
+    <div class="img-wrapper" id="img-intro">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-intro')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-intro','Karnataka monsoon fields')">
+        <div class="a-img-placeholder-icon">☔</div>
+        <div class="a-img-placeholder-text">Add a photo of <strong>Karnataka farmland in monsoon</strong><br>e.g. Ragi fields, paddy transplanting, Western Ghats</div>
+        <span class="a-img-placeholder-badge">📷 Upload Photo</span>
+      </div>
+      <div class="a-img">
+        <img id="img-intro-src" src="" alt="Karnataka monsoon fields">
+        <div class="a-img-caption">📷 <span id="img-intro-cap">Karnataka monsoon farmland</span></div>
+      </div>
+    </div>
+
+    <p class="a-para">
+      The monsoon arrives in Karnataka in <strong>two waves</strong>: the coast and Malnad get heavy rain from early June, while the plains of North Karnataka receive the bulk of their rain only from late June or early July. <strong>Timing your sowing to the first good soaking rain</strong> — not the calendar date — is the golden rule.
+    </p>
+
+    <div class="a-alert info">
+      <span class="a-alert-icon">🌡️</span>
+      <div class="a-alert-text">
+        <strong>Normal Onset:</strong> Southwest Monsoon reaches Karnataka's coast (Mangaluru) around <strong>June 1st</strong>, Bengaluru around <strong>June 10th</strong>, and North Karnataka (Kalaburagi, Vijayapura) by <strong>June 20–25th</strong>. Sow only after receiving at least 25mm of rain in 2–3 days.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Regions -->
+  <div class="a-section" id="regions">
+    <div class="a-heading">
+      <div class="a-heading-icon">🗺️</div>
+      4 Agro-Climatic Zones of Karnataka
+    </div>
+
+    <p class="a-para">Know your zone — each has its own rainfall pattern, soil type, and ideal crops:</p>
+
+    <div class="region-grid">
+
+      <div class="region-card" style="--rc-top:#1565c0">
+        <div class="region-icon">🌊</div>
+        <div class="region-name">Coastal Zone</div>
+        <div class="region-rainfall">☔ 2500–3500 mm/yr</div>
+        <div class="region-crops">Paddy, Coconut, Arecanut, Banana, Pepper</div>
+        <div class="region-districts">Dakshina Kannada, Udupi, Uttara Kannada (coast)</div>
+      </div>
+
+      <div class="region-card" style="--rc-top:#2e7d32">
+        <div class="region-icon">⛰️</div>
+        <div class="region-name">Malnad / Hilly</div>
+        <div class="region-rainfall">☔ 1500–2500 mm/yr</div>
+        <div class="region-crops">Paddy, Coffee, Cardamom, Ragi, Maize</div>
+        <div class="region-districts">Shivamogga, Chikkamagaluru, Hassan, Kodagu</div>
+      </div>
+
+      <div class="region-card" style="--rc-top:#f57f17">
+        <div class="region-icon">🌾</div>
+        <div class="region-name">Southern Dry Zone</div>
+        <div class="region-rainfall">☔ 700–900 mm/yr</div>
+        <div class="region-crops">Ragi, Groundnut, Sunflower, Maize, Mulberry</div>
+        <div class="region-districts">Bengaluru Rural, Tumakuru, Mysuru, Mandya, Ramanagara</div>
+      </div>
+
+      <div class="region-card" style="--rc-top:#c62828">
+        <div class="region-icon">🏜️</div>
+        <div class="region-name">Northern Dry Zone</div>
+        <div class="region-rainfall">☔ 500–750 mm/yr</div>
+        <div class="region-crops">Jowar, Cotton, Tur (Pigeon Pea), Sunflower, Chickpea</div>
+        <div class="region-districts">Kalaburagi, Vijayapura, Bidar, Yadgir, Raichur, Koppal</div>
+      </div>
+
+    </div>
+
+    <!-- Image pair -->
+    <div class="a-img-row">
+      <div class="img-wrapper" id="img-coastal">
+        <div class="a-img-placeholder" onclick="triggerUpload('img-coastal')">
+          <input type="file" accept="image/*" onchange="loadImage(event,'img-coastal','Coastal Karnataka')">
+          <div class="a-img-placeholder-icon">🌊</div>
+          <div class="a-img-placeholder-text"><strong>Coastal / Malnad</strong> photo</div>
+          <span class="a-img-placeholder-badge">📷 Upload</span>
+        </div>
+        <div class="a-img">
+          <img id="img-coastal-src" src="" alt="Coastal Karnataka">
+          <div class="a-img-caption">📷 <span id="img-coastal-cap">Coastal Karnataka</span></div>
+        </div>
+      </div>
+      <div class="img-wrapper" id="img-north">
+        <div class="a-img-placeholder" onclick="triggerUpload('img-north')">
+          <input type="file" accept="image/*" onchange="loadImage(event,'img-north','North Karnataka fields')">
+          <div class="a-img-placeholder-icon">🏜️</div>
+          <div class="a-img-placeholder-text"><strong>North Karnataka</strong> dry zone photo</div>
+          <span class="a-img-placeholder-badge">📷 Upload</span>
+        </div>
+        <div class="a-img">
+          <img id="img-north-src" src="" alt="North Karnataka">
+          <div class="a-img-caption">📷 <span id="img-north-cap">North Karnataka dry zone</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="a-alert warning">
+      <span class="a-alert-icon">⚠️</span>
+      <div class="a-alert-text">
+        <strong>Common Mistake:</strong> Farmers in the Southern Dry Zone often sow paddy expecting good rains — but this zone rarely gets enough water for paddy without irrigation. <strong>Ragi and groundnut are far more reliable choices</strong> for rainfed farming here.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Calendar -->
+  <div class="a-section" id="calendar">
+    <div class="a-heading">
+      <div class="a-heading-icon">📅</div>
+      Month-by-Month Action Plan (June – October)
+    </div>
+
+    <p class="a-para">Follow this timeline to stay ahead of the monsoon at every stage:</p>
+
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <div class="tl-month" style="--tm-color:#1565c0">MAY<br>Last<br>2 wks</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="timeline-body">
+          <div class="tl-title">🛠️ Pre-Monsoon Preparation</div>
+          <div class="tl-content">Deep plough fields (at least 20 cm). Apply FYM / compost (5–8 tonnes/acre). Repair bunds and drainage channels. Procure certified seeds early — shortage hits every June.</div>
+          <div class="tl-crops">
+            <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">Soil prep</span>
+            <span class="crop-chip" style="background:#fff8e1;color:#f57f17">Seed procurement</span>
+            <span class="crop-chip" style="background:#e3f2fd;color:#1565c0">Bund repair</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <div class="tl-month" style="--tm-color:#00695c">JUNE<br>1–15</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="timeline-body">
+          <div class="tl-title">🌱 Coastal & Malnad: Sowing Begins</div>
+          <div class="tl-content">Paddy nursery preparation (coastal). Coffee nurseries need shading. Transplant arecanut seedlings. Sow maize and ragi in Shivamogga/Hassan after 25mm+ rain.</div>
+          <div class="tl-crops">
+            <span class="crop-chip" style="background:#e0f2f1;color:#00695c">Paddy nursery</span>
+            <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">Maize</span>
+            <span class="crop-chip" style="background:#fff8e1;color:#f57f17">Ragi</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <div class="tl-month" style="--tm-color:#2e7d32">JUNE<br>15–30</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="timeline-body">
+          <div class="tl-title">🌾 Dry Zone: Main Sowing Window</div>
+          <div class="tl-content">Bengaluru Rural, Tumakuru, Mysuru: sow ragi, groundnut, sunflower. Belagavi / Dharwad: sow soybean, maize, cotton. Use seed treatment (Thiram 3g/kg) to prevent damping off.</div>
+          <div class="tl-crops">
+            <span class="crop-chip" style="background:#fff8e1;color:#f57f17">Ragi</span>
+            <span class="crop-chip" style="background:#fce4ec;color:#c62828">Groundnut</span>
+            <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">Soybean</span>
+            <span class="crop-chip" style="background:#f3e5f5;color:#6a1b9a">Cotton</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <div class="tl-month" style="--tm-color:#f57f17">JULY<br>1–15</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="timeline-body">
+          <div class="tl-title">🚿 Paddy Transplanting & Fertiliser</div>
+          <div class="tl-content">Coastal / Malnad: transplant paddy (21–25 day old seedlings, 2–3 per hill). Apply basal DAP + MOP at transplanting. North Karnataka: last chance to sow jowar and tur.</div>
+          <div class="tl-crops">
+            <span class="crop-chip" style="background:#e0f2f1;color:#00695c">Paddy transplant</span>
+            <span class="crop-chip" style="background:#e3f2fd;color:#1565c0">Jowar</span>
+            <span class="crop-chip" style="background:#f3e5f5;color:#6a1b9a">Tur / Arhar</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <div class="tl-month" style="--tm-color:#e65100">AUG</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="timeline-body">
+          <div class="tl-title">🌿 Weeding, Top Dressing & Pest Watch</div>
+          <div class="tl-content">First weeding for all crops (20–25 days after sowing). Top dress urea for ragi and maize. Scout for stem borer in paddy and maize. Apply neem-based spray as first line of defence.</div>
+          <div class="tl-crops">
+            <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">Weeding</span>
+            <span class="crop-chip" style="background:#e3f2fd;color:#1565c0">Top dress urea</span>
+            <span class="crop-chip" style="background:#ffebee;color:#c62828">Pest scouting</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <div class="tl-month" style="--tm-color:#6a1b9a">SEPT</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="timeline-body">
+          <div class="tl-title">🌸 Flowering Stage — Critical Care</div>
+          <div class="tl-content">Avoid water stress during flowering in ragi, maize, groundnut — a 7-day dry spell now reduces yield by 30–40%. If rain fails, provide one life-saving irrigation. Scout for blight and blast in paddy.</div>
+          <div class="tl-crops">
+            <span class="crop-chip" style="background:#fff8e1;color:#f57f17">Life-saving irrigation</span>
+            <span class="crop-chip" style="background:#ffebee;color:#c62828">Disease watch</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-left">
+          <div class="tl-month" style="--tm-color:#004d40">OCT</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="timeline-body">
+          <div class="tl-title">🌾 Harvest & Rabi Preparation</div>
+          <div class="tl-content">Ragi & groundnut harvest begins. Dry paddy stalks properly before threshing. Retain crop residue to build soil organic matter. Start rabi bed preparation — sunflower, chickpea, wheat in irrigated areas.</div>
+          <div class="tl-crops">
+            <span class="crop-chip" style="background:#fff8e1;color:#f57f17">Harvest</span>
+            <span class="crop-chip" style="background:#e8f5e9;color:#2e7d32">Rabi prep</span>
+            <span class="crop-chip" style="background:#e3f2fd;color:#1565c0">Chickpea</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Image: Karnataka sowing -->
+    <div class="img-wrapper" id="img-calendar">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-calendar')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-calendar','Karnataka sowing season')">
+        <div class="a-img-placeholder-icon">🌱</div>
+        <div class="a-img-placeholder-text">Add a photo of <strong>sowing or transplanting</strong> in Karnataka<br>e.g. paddy nursery, ragi sowing, farmers in field</div>
+        <span class="a-img-placeholder-badge">📷 Upload Photo</span>
+      </div>
+      <div class="a-img">
+        <img id="img-calendar-src" src="" alt="Karnataka sowing">
+        <div class="a-img-caption">📷 <span id="img-calendar-cap">Kharif sowing season</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Crops by District -->
+  <div class="a-section" id="crops">
+    <div class="a-heading">
+      <div class="a-heading-icon">🌾</div>
+      Best Crops by District
+    </div>
+
+    <p class="a-para">Match your district to the right kharif crop for the best yield with least risk:</p>
+
+    <table class="dist-table">
+      <thead>
+        <tr>
+          <th>District / Region</th>
+          <th>Main Crops</th>
+          <th>Rainfall</th>
+          <th>Key Tip</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Dakshina Kannada / Udupi</strong></td>
+          <td>Paddy, Coconut, Arecanut, Pepper</td>
+          <td><span class="rain-badge" style="background:#e3f2fd;color:#1565c0">3000mm+</span></td>
+          <td>Drain excess water quickly; bund height matters.</td>
+        </tr>
+        <tr>
+          <td><strong>Shivamogga / Hassan / Chikkamagaluru</strong></td>
+          <td>Paddy, Maize, Ragi, Coffee</td>
+          <td><span class="rain-badge" style="background:#e8f5e9;color:#2e7d32">1500–2000mm</span></td>
+          <td>Sow maize by June 20 for best yield.</td>
+        </tr>
+        <tr>
+          <td><strong>Bengaluru Rural / Tumakuru / Ramanagara</strong></td>
+          <td>Ragi, Groundnut, Sunflower, Mulberry</td>
+          <td><span class="rain-badge" style="background:#fff8e1;color:#f57f17">700–900mm</span></td>
+          <td>Ragi is the safest choice — drought tolerant.</td>
+        </tr>
+        <tr>
+          <td><strong>Mysuru / Mandya / Chamarajanagar</strong></td>
+          <td>Sugarcane, Paddy (irrigated), Ragi, Maize</td>
+          <td><span class="rain-badge" style="background:#fff8e1;color:#f57f17">750–900mm</span></td>
+          <td>Sugarcane relies on Cauvery irrigation — plan water sharing.</td>
+        </tr>
+        <tr>
+          <td><strong>Belagavi / Dharwad / Gadag</strong></td>
+          <td>Soybean, Maize, Cotton, Sunflower</td>
+          <td><span class="rain-badge" style="background:#e8f5e9;color:#2e7d32">600–800mm</span></td>
+          <td>Soybean responds very well here — use improved varieties.</td>
+        </tr>
+        <tr>
+          <td><strong>Kalaburagi / Vijayapura / Yadgir / Raichur</strong></td>
+          <td>Tur, Jowar, Cotton, Chickpea (rabi)</td>
+          <td><span class="rain-badge" style="background:#ffebee;color:#c62828">500–650mm</span></td>
+          <td>Tur (pigeon pea) is most reliable — 160-day variety for this zone.</td>
+        </tr>
+        <tr>
+          <td><strong>Bidar / Ballari / Koppal</strong></td>
+          <td>Tur, Sunflower, Cotton, Jowar</td>
+          <td><span class="rain-badge" style="background:#ffebee;color:#c62828">550–700mm</span></td>
+          <td>Intercrop tur + jowar to hedge against dry spells.</td>
+        </tr>
+        <tr>
+          <td><strong>Kodagu (Coorg)</strong></td>
+          <td>Coffee, Paddy, Cardamom, Black Pepper</td>
+          <td><span class="rain-badge" style="background:#e3f2fd;color:#1565c0">2000–2500mm</span></td>
+          <td>Coffee berry borer peaks in Aug–Sep — monitor closely.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="a-alert success">
+      <span class="a-alert-icon">✅</span>
+      <div class="a-alert-text">
+        <strong>Pro Tip — Ragi for Dry Zones:</strong> Ragi (finger millet) is Karnataka's most drought-resilient crop. Varieties like <strong>GPU-28 and MR-6</strong> yield 12–15 quintals/acre with just 500mm of well-distributed rain. Always the safest bet when forecast is uncertain.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Tips -->
+  <div class="a-section" id="tips">
+    <div class="a-heading">
+      <div class="a-heading-icon">💡</div>
+      Monsoon Farming Tips — Karnataka Specific
+    </div>
+
+    <div class="tips-grid">
+
+      <div class="tip-card">
+        <div class="tip-icon-lg">💧</div>
+        <div class="tip-title">Rainwater Harvesting</div>
+        <div class="tip-desc">Build farm ponds before monsoon to capture runoff. Even a 10x10 metre pond at 2m depth stores enough for one life-saving irrigation over 1 acre.</div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon-lg">🌱</div>
+        <div class="tip-title">Seed Treatment</div>
+        <div class="tip-desc">Treat all seeds with Trichoderma (4g/kg) + Rhizobium (for legumes). This alone prevents 60% of early seedling loss from soil-borne diseases.</div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon-lg">🏔️</div>
+        <div class="tip-title">Contour Bunding</div>
+        <div class="tip-desc">In hilly areas (Malnad, Kodagu), contour bunds reduce soil erosion by up to 70% during heavy July–August rains. Repair before June 1st every year.</div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon-lg">📱</div>
+        <div class="tip-title">Check Forecast Daily</div>
+        <div class="tip-desc">Karnataka IMD issues district-level forecasts. Use KrashiMitra's weather tab — never spray pesticides 24hr before predicted heavy rain.</div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon-lg">🐄</div>
+        <div class="tip-title">Green Manure Crops</div>
+        <div class="tip-desc">Sow Dhaincha or Sunhemp in June as green manure. Incorporate into soil before flowering (45–50 days). Adds 60–80 kg N/acre naturally.</div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon-lg">🌿</div>
+        <div class="tip-title">Intercropping</div>
+        <div class="tip-desc">Intercrop ragi + tur or maize + soybean (4:1 rows). Reduces risk, adds nitrogen, and often earns more than mono-cropping in dry zones.</div>
+      </div>
+
+    </div>
+
+    <!-- Image: Karnataka tips -->
+    <div class="img-wrapper" id="img-tips">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-tips')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-tips','Karnataka farming tips')">
+        <div class="a-img-placeholder-icon">🌿</div>
+        <div class="a-img-placeholder-text">Add a photo of <strong>farm pond, bunding, or intercropping</strong><br>Karnataka-specific farming practice</div>
+        <span class="a-img-placeholder-badge">📷 Upload Photo</span>
+      </div>
+      <div class="a-img">
+        <img id="img-tips-src" src="" alt="Karnataka farming tips">
+        <div class="a-img-caption">📷 <span id="img-tips-cap">Karnataka monsoon farming practice</span></div>
+      </div>
+    </div>
+
+    <div class="a-alert danger">
+      <span class="a-alert-icon">🚫</span>
+      <div class="a-alert-text">
+        <strong>Avoid This:</strong> Do not sow paddy in the Southern Dry Zone (Tumakuru, Bengaluru Rural, Kolar) without assured irrigation. A failed paddy crop in a drought year can wipe out the entire season's investment. <strong>Ragi or groundnut carry far less risk.</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: Key Takeaways -->
+  <div class="a-section" id="summary">
+    <div class="a-takeaway">
+      <div class="a-takeaway-title">✅ Key Takeaways — Remember These</div>
+      <ul class="a-takeaway-list">
+        <li>Sow only after 25mm+ rain in 2–3 consecutive days — not by calendar date</li>
+        <li>Monsoon reaches coast (June 1) → Bengaluru (June 10) → North Karnataka (June 20–25)</li>
+        <li>Ragi (GPU-28 / MR-6) is the safest rainfed crop for dry zones — 500mm is enough</li>
+        <li>Coastal / Malnad farmers: paddy nursery ready by June 1, transplant by July 10</li>
+        <li>North Karnataka: tur + jowar intercropping hedges against erratic rain</li>
+        <li>Build farm pond and repair bunds before monsoon — not after first rain</li>
+        <li>September flowering stage is critical — one dry week costs 30–40% yield</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CTA Strip -->
+  <div class="cta-strip">
+    <div class="cta-text"><strong>Get your district's monsoon forecast</strong><br>Ask KrashiMitra AI in Kannada or English</div>
+    <a class="cta-btn" href="../chat.html?tab=weather">Check Weather →</a>
+  </div>
+
+  <!-- Related Articles -->
+  <div class="a-section">
+    <div class="a-heading">
+      <div class="a-heading-icon">📚</div>
+      Read More
+    </div>
+    <div class="related-grid">
+
+      <a class="related-card" href="mausam-guide.html" style="--rc-accent:#1976d2">
+        <div class="related-thumb" style="background:#e3f2fd">🌦️</div>
+        <div class="related-text">
+          <div class="related-tag">मौसम</div>
+          <div class="related-title">मौसम के अनुसार खेती की योजना</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+      <a class="related-card" href="keet-niyantran.html" style="--rc-accent:#6a1b9a">
+        <div class="related-thumb" style="background:#f3e5f5">🐛</div>
+        <div class="related-text">
+          <div class="related-tag">कीट</div>
+          <div class="related-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+      <a class="related-card" href="urea-guide.html" style="--rc-accent:#1565c0">
+        <div class="related-thumb" style="background:#e3f2fd">🧪</div>
+        <div class="related-text">
+          <div class="related-tag">खाद</div>
+          <div class="related-title">यूरिया और DAP: कब और कितना दें?</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+      <a class="related-card" href="sukha-prabandhan.html" style="--rc-accent:#00695c">
+        <div class="related-thumb" style="background:#e0f2f1">☀️</div>
+        <div class="related-text">
+          <div class="related-tag">मौसम</div>
+          <div class="related-title">सूखे में फसल बचाने के उपाय</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+
+    </div>
+  </div>
+
+</div><!-- end article-body -->
+<div class="page-end"></div>
+
+<!-- ══════════════════════════
+     BOTTOM NAV
+══════════════════════════ -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="../index.html">
+    <span class="bn-icon">🏠</span>
+    <span class="bn-label">Home</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=chat">
+    <span class="bn-icon">💬</span>
+    <span class="bn-label">Chat</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=weather">
+    <span class="bn-icon">🌤️</span>
+    <span class="bn-label">Weather</span>
+  </a>
+  <a class="bn-item" href="../chat.html?tab=mandi">
+    <span class="bn-icon">💰</span>
+    <span class="bn-label">Mandi</span>
+  </a>
+  <a class="bn-item active" href="index.html">
+    <span class="bn-icon">📰</span>
+    <span class="bn-label">Articles</span>
+  </a>
+</nav>
+
+<script>
+  /* Reading progress */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('reading-progress').style.width = Math.min(pct, 100) + '%';
+  });
+
+  /* Avatar */
+  function avatarBtnClick() {
+    const token = localStorage.getItem("krishi_token");
+    window.location.href = token ? "../chat.html?tab=profile" : "../chat.html?tab=login";
+  }
+
+  /* Image upload */
+  function triggerUpload(wrapperId) {
+    const input = document.querySelector('#' + wrapperId + ' input[type="file"]');
+    if (input) input.click();
+  }
+
+  function loadImage(event, wrapperId, defaultCaption) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrapper = document.getElementById(wrapperId);
+      const imgEl   = document.getElementById(wrapperId + '-src');
+      const capEl   = document.getElementById(wrapperId + '-cap');
+      if (imgEl) {
+        imgEl.src = e.target.result;
+        const name = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        if (capEl) capEl.textContent = name || defaultCaption;
+        wrapper.classList.add('has-image');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* Drag & drop */
+  document.querySelectorAll('.a-img-placeholder').forEach(ph => {
+    ph.addEventListener('dragover', e => {
+      e.preventDefault();
+      ph.style.borderColor = 'var(--teal-light)';
+      ph.style.background  = 'var(--teal-soft)';
+    });
+    ph.addEventListener('dragleave', () => {
+      ph.style.borderColor = '';
+      ph.style.background  = '';
+    });
+    ph.addEventListener('drop', e => {
+      e.preventDefault();
+      ph.style.borderColor = '';
+      ph.style.background  = '';
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      const id = ph.closest('.img-wrapper').id;
+      loadImage({ target: { files: [file] } }, id, 'Photo');
+    });
+  });
+</script>
+</body>
+</html>
