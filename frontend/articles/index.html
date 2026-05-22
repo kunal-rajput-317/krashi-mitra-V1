@@ -3,591 +3,399 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>लेख & कृषि टिप्स — KrashiMitra</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title data-i18n="page_title">लेख & कृषि टिप्स — KrashiMitra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Noto+Sans+Kannada:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* ══════════════════════════════
-       CSS VARIABLES (same as main site)
-    ══════════════════════════════ */
     :root {
-      --green-dark:   #1b5e20;
-      --green-mid:    #2e7d32;
-      --green-light:  #43a047;
-      --green-soft:   #e8f5e9;
-      --gold:         #f9a825;
-      --gold-soft:    #fff8e1;
+      --green-dark:   #14532d;
+      --green-mid:    #166534;
+      --green-main:   #16a34a;
+      --green-light:  #4ade80;
+      --green-soft:   #dcfce7;
+      --green-xsoft:  #f0fdf4;
+      --gold:         #f59e0b;
+      --gold-soft:    #fef3c7;
+      --gold-dark:    #92400e;
       --cream:        #fafaf7;
       --white:        #ffffff;
-      --text-dark:    #1a1a1a;
-      --text-mid:     #4a4a4a;
-      --text-soft:    #757575;
-      --border:       #e0e0e0;
+      --text-dark:    #111827;
+      --text-mid:     #374151;
+      --text-soft:    #6b7280;
+      --text-xsoft:   #9ca3af;
+      --border:       #e5e7eb;
+      --border-soft:  #f3f4f6;
+      --shadow-xs:    0 1px 3px rgba(0,0,0,0.07);
       --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
-      --shadow-md:    0 4px 20px rgba(0,0,0,0.12);
-      --radius-sm:    10px;
-      --radius-md:    16px;
+      --shadow-md:    0 4px 20px rgba(0,0,0,0.10);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,0.14);
+      --radius-xs:    8px;
+      --radius-sm:    12px;
+      --radius-md:    18px;
       --radius-lg:    24px;
+      --radius-xl:    32px;
     }
-
-    /* ══════════════════════════════
-       RESET & BASE
-    ══════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+      font-family: 'Sora', 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif;
       background: var(--cream);
       color: var(--text-dark);
       min-height: 100vh;
       overflow-x: hidden;
     }
+    body[lang="kn"] { font-family: 'Noto Sans Kannada', sans-serif; }
 
-    /* ══════════════════════════════
-       HEADER
-    ══════════════════════════════ */
+    /* ── HEADER ── */
     .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--white);
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      padding: 0 20px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      box-shadow: 0 1px 0 var(--border), var(--shadow-xs);
+      padding: 0 18px; height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
     .back-btn {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      background: var(--green-soft);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      cursor: pointer;
-      text-decoration: none;
-      color: var(--green-dark);
-      transition: background 0.2s;
-      flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 9px;
+      background: var(--green-xsoft); border: 1px solid var(--green-soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer; text-decoration: none;
+      color: var(--green-mid); transition: all 0.2s; flex-shrink: 0;
     }
-    .back-btn:hover { background: #c8e6c9; }
-
-    .header-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
+    .back-btn:hover { background: var(--green-soft); }
+    .header-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
     .logo-icon {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
-      border-radius: 9px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      box-shadow: 0 2px 8px rgba(46,125,50,0.3);
-      flex-shrink: 0;
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-main));
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; box-shadow: 0 2px 8px rgba(22,163,74,0.28); flex-shrink: 0;
     }
     .logo-text { display: flex; flex-direction: column; }
-    .logo-title { font-size: 16px; font-weight: 800; color: var(--green-dark); line-height: 1.1; }
-    .logo-sub   { font-size: 10px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', sans-serif; }
-
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .header-nav { display: none; gap: 4px; }
+    .logo-title { font-size: 15px; font-weight: 800; color: var(--green-dark); line-height: 1.1; letter-spacing: -0.3px; }
+    .logo-sub   { font-size: 9.5px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .header-nav { display: none; gap: 2px; }
     .nav-link {
-      font-size: 13px; font-weight: 500; color: var(--text-mid);
-      text-decoration: none; padding: 6px 10px; border-radius: 8px;
+      font-size: 12.5px; font-weight: 500; color: var(--text-mid);
+      text-decoration: none; padding: 5px 10px; border-radius: 8px;
       transition: background 0.2s, color 0.2s; white-space: nowrap;
     }
-    .nav-link:hover { background: var(--green-soft); color: var(--green-dark); }
+    .nav-link:hover { background: var(--green-xsoft); color: var(--green-mid); }
+    .nav-link.active { color: var(--green-dark); font-weight: 700; background: var(--green-soft); }
     .avatar-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--green-light), var(--gold));
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-main), var(--gold));
       border: 2px solid var(--green-soft);
       display: flex; align-items: center; justify-content: center;
-      font-size: 17px; cursor: pointer; flex-shrink: 0;
-      transition: box-shadow 0.2s;
+      font-size: 16px; cursor: pointer; flex-shrink: 0; transition: box-shadow 0.2s;
     }
-    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(22,163,74,0.2); }
 
-    /* ══════════════════════════════
-       PAGE HERO BANNER
-    ══════════════════════════════ */
+    /* ── LANGUAGE TOGGLE ── */
+    .lang-toggle {
+      display: flex; align-items: center;
+      background: var(--border-soft);
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      padding: 3px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .lang-btn {
+      padding: 5px 10px;
+      border-radius: 18px;
+      border: none; background: transparent;
+      font-size: 11.5px; font-weight: 600;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      font-family: 'Sora', 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif;
+      line-height: 1.4;
+      letter-spacing: 0.1px;
+    }
+    .lang-btn:hover { color: var(--green-mid); background: rgba(22,163,74,0.10); }
+    .lang-btn.active {
+      background: var(--white);
+      color: var(--green-dark);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.13);
+      font-weight: 700;
+    }
+
+    /* ── HERO ── */
     .page-hero {
-      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 60%, #388e3c 100%);
-      padding: 28px 20px 32px;
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(160deg, var(--green-dark) 0%, #15803d 55%, #16a34a 100%);
+      padding: 26px 18px 30px; position: relative; overflow: hidden;
     }
     .page-hero::before {
-      content: '📰';
-      position: absolute;
-      right: -10px; bottom: -16px;
-      font-size: 110px;
-      opacity: 0.10;
-      pointer-events: none;
-      line-height: 1;
+      content: '';position:absolute;inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events:none;opacity:0.4;
     }
-    .page-hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 11px;
-      color: rgba(255,255,255,0.9);
-      font-weight: 500;
-      margin-bottom: 12px;
-      backdrop-filter: blur(4px);
+    .page-hero::after {
+      content:'🌾';position:absolute;right:-12px;bottom:-18px;
+      font-size:120px;opacity:0.09;pointer-events:none;line-height:1;transform:rotate(-10deg);
+    }
+    .hero-eyebrow {
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);
+      border-radius:20px;padding:4px 12px;font-size:10.5px;
+      color:rgba(255,255,255,0.88);font-weight:600;margin-bottom:10px;
+      letter-spacing:0.3px;backdrop-filter:blur(6px);
     }
     .page-hero-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--white);
-      line-height: 1.2;
-      margin-bottom: 6px;
-      letter-spacing: -0.3px;
+      font-size:25px;font-weight:800;color:var(--white);
+      line-height:1.18;margin-bottom:7px;letter-spacing:-0.4px;
     }
-    .page-hero-title span { color: var(--gold); }
+    .page-hero-title .highlight { color: var(--gold); }
     .page-hero-sub {
-      font-family: 'Noto Sans Devanagari', sans-serif;
-      font-size: 13px;
-      color: rgba(255,255,255,0.75);
-      line-height: 1.6;
-      margin-bottom: 18px;
+      font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;
+      font-size:12.5px;color:rgba(255,255,255,0.72);
+      line-height:1.65;margin-bottom:18px;
+    }
+    .hero-pills { display:flex;gap:8px;flex-wrap:wrap; }
+    .hero-pill {
+      display:flex;align-items:center;gap:5px;
+      background:rgba(255,255,255,0.11);border:1px solid rgba(255,255,255,0.18);
+      border-radius:20px;padding:4px 11px;
+      font-size:11px;color:rgba(255,255,255,0.88);font-weight:500;
+      backdrop-filter:blur(4px);
     }
 
-    /* Article count pills */
-    .page-hero-stats {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+    /* ── SEARCH ── */
+    .search-wrap { padding:14px 18px 0; background:var(--white); }
+    .search-row {
+      display:flex;align-items:center;gap:10px;
+      background:var(--cream);border:1.5px solid var(--border);
+      border-radius:var(--radius-sm);padding:0 14px;height:46px;
+      transition:border-color 0.2s,box-shadow 0.2s;
     }
-    .hero-stat-pill {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.9);
-      font-weight: 500;
-      backdrop-filter: blur(4px);
+    .search-row:focus-within {
+      border-color:var(--green-main);
+      box-shadow:0 0 0 3px rgba(22,163,74,0.1);background:var(--white);
+    }
+    .search-icon { font-size:16px;flex-shrink:0;opacity:0.55; }
+    .search-input {
+      flex:1;border:none;background:transparent;
+      font-size:13.5px;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;
+      color:var(--text-dark);outline:none;
+    }
+    .search-input::placeholder { color:var(--text-xsoft); }
+    .search-clear { font-size:16px;cursor:pointer;opacity:0.4;display:none;padding:4px;transition:opacity 0.2s; }
+    .search-clear:hover { opacity:0.7; }
+    .mic-btn {
+      width:30px;height:30px;border-radius:50%;border:none;background:transparent;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;flex-shrink:0;padding:0;
+      transition:background 0.2s,transform 0.15s;position:relative;
+    }
+    .mic-btn:hover { background:rgba(22,163,74,0.10); }
+    .mic-btn svg { width:16px;height:16px;fill:var(--text-soft);transition:fill 0.2s; }
+    .mic-btn.listening svg { fill:var(--green-main); }
+    .mic-btn.listening::after {
+      content:"";position:absolute;inset:-4px;border-radius:50%;
+      border:2px solid var(--green-main);
+      animation:mic-pulse 1s ease-in-out infinite;
+    }
+    @keyframes mic-pulse {
+      0%,100%{transform:scale(1);opacity:0.8}
+      50%{transform:scale(1.35);opacity:0.2}
     }
 
-    /* ══════════════════════════════
-       CATEGORY FILTER CHIPS
-    ══════════════════════════════ */
+    /* ── FILTER CHIPS ── */
     .filter-bar {
-      padding: 16px 20px 4px;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 60px;
-      z-index: 90;
+      padding:12px 18px;display:flex;gap:7px;
+      overflow-x:auto;scrollbar-width:none;
+      background:var(--white);border-bottom:1px solid var(--border);
+      position:sticky;top:58px;z-index:90;
     }
-    .filter-bar::-webkit-scrollbar { display: none; }
-
+    .filter-bar::-webkit-scrollbar { display:none; }
     .filter-chip {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 7px 14px;
-      border-radius: 20px;
-      border: 1.5px solid var(--border);
-      background: var(--cream);
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-mid);
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.2s, border-color 0.2s, color 0.2s;
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      display:flex;align-items:center;gap:5px;padding:6px 13px;
+      border-radius:20px;border:1.5px solid var(--border);background:var(--white);
+      font-size:12px;font-weight:600;color:var(--text-mid);
+      white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all 0.18s;
+      font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;
     }
-    .filter-chip:hover { background: var(--green-soft); border-color: var(--green-light); color: var(--green-dark); }
-    .filter-chip.active {
-      background: var(--green-mid);
-      border-color: var(--green-mid);
-      color: var(--white);
-    }
+    .filter-chip:hover { background:var(--green-xsoft);border-color:var(--green-light);color:var(--green-mid);transform:translateY(-1px); }
+    .filter-chip.active { background:var(--green-mid);border-color:var(--green-mid);color:var(--white);box-shadow:0 2px 8px rgba(22,99,52,0.28); }
 
-    /* ══════════════════════════════
-       FEATURED ARTICLE (top card)
-    ══════════════════════════════ */
-    .section { padding: 24px 20px; }
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .section-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-dark);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .section-count {
-      font-size: 11px;
-      color: var(--text-soft);
-      font-weight: 500;
-    }
+    /* ── SECTIONS ── */
+    .section { padding:22px 18px; }
+    .section-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+    .section-title { font-size:15px;font-weight:700;color:var(--text-dark);display:flex;align-items:center;gap:7px;letter-spacing:-0.2px; }
+    .section-count { font-size:11px;color:var(--text-soft);font-weight:500;background:var(--border-soft);padding:3px 9px;border-radius:20px; }
 
+    /* ── FEATURED ── */
     .featured-card {
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-md);
-      overflow: hidden;
-      text-decoration: none;
-      display: block;
-      transition: box-shadow 0.2s, transform 0.15s;
-      position: relative;
+      background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);
+      box-shadow:var(--shadow-md);overflow:hidden;text-decoration:none;display:block;
+      transition:box-shadow 0.2s,transform 0.18s;position:relative;
     }
-    .featured-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.16); transform: translateY(-2px); }
-    .featured-card:active { transform: translateY(0); }
-
+    .featured-card:hover { box-shadow:var(--shadow-lg);transform:translateY(-2px); }
+    .featured-card:active { transform:translateY(0); }
     .featured-banner {
-      background: linear-gradient(135deg, #f57f17, #ffa726);
-      height: 130px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 64px;
-      position: relative;
-      overflow: hidden;
+      background:linear-gradient(135deg,#92400e 0%,#d97706 50%,#f59e0b 100%);
+      height:128px;display:flex;align-items:center;justify-content:center;
+      font-size:60px;position:relative;overflow:hidden;
     }
-    .featured-banner::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.18));
-    }
+    .featured-banner::before { content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(255,255,255,0.08) 0%,transparent 70%); }
+    .featured-banner::after  { content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.15)); }
     .featured-badge {
-      position: absolute;
-      top: 12px; left: 12px;
-      background: var(--gold);
-      color: #5d4037;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 20px;
-      z-index: 2;
-      letter-spacing: 0.3px;
+      position:absolute;top:10px;left:12px;background:var(--white);color:var(--gold-dark);
+      font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:20px;z-index:2;
+      letter-spacing:0.5px;text-transform:uppercase;box-shadow:var(--shadow-sm);
     }
-    .featured-body { padding: 18px 16px 16px; }
+    .featured-body { padding:16px 16px 14px; }
     .featured-tag {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      color: #f57f17;
-      background: #fff8e1;
-      border-radius: 20px;
-      padding: 2px 9px;
-      margin-bottom: 8px;
+      display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:0.5px;
+      text-transform:uppercase;color:#92400e;background:var(--gold-soft);
+      border-radius:20px;padding:2px 9px;margin-bottom:7px;
     }
     .featured-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text-dark);
-      line-height: 1.35;
-      margin-bottom: 8px;
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size:16.5px;font-weight:800;color:var(--text-dark);line-height:1.32;
+      margin-bottom:7px;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;
     }
     .featured-excerpt {
-      font-size: 13px;
-      color: var(--text-mid);
-      line-height: 1.6;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-      margin-bottom: 12px;
+      font-size:12.5px;color:var(--text-soft);line-height:1.65;
+      font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;margin-bottom:13px;
     }
-    .featured-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .article-meta {
-      font-size: 11px;
-      color: var(--text-soft);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .featured-footer { display:flex;align-items:center;justify-content:space-between; }
+    .meta-row { display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-xsoft);font-weight:500; }
+    .meta-dot { width:3px;height:3px;border-radius:50%;background:var(--text-xsoft); }
     .read-more-btn {
-      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
-      color: var(--white);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 20px;
-      white-space: nowrap;
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      background:linear-gradient(135deg,var(--green-mid),var(--green-main));
+      color:var(--white);font-size:11.5px;font-weight:700;padding:7px 15px;
+      border-radius:20px;white-space:nowrap;
+      font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;
+      box-shadow:0 2px 8px rgba(22,99,52,0.25);transition:box-shadow 0.2s,transform 0.15s;
     }
+    .read-more-btn:hover { box-shadow:0 4px 12px rgba(22,99,52,0.35);transform:scale(1.02); }
 
-    /* ══════════════════════════════
-       ARTICLE LIST CARDS
-    ══════════════════════════════ */
-    .articles-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    /* ── TRENDING ── */
+    .trending-strip { padding:0 18px 20px; }
+    .trending-label {
+      font-size:11px;font-weight:700;color:var(--text-soft);letter-spacing:0.7px;
+      text-transform:uppercase;display:flex;align-items:center;gap:6px;margin-bottom:10px;
     }
+    .trending-label::after { content:'';flex:1;height:1px;background:var(--border); }
+    .trending-scroll { display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px; }
+    .trending-scroll::-webkit-scrollbar { display:none; }
+    .trending-chip {
+      display:flex;align-items:center;gap:7px;background:var(--white);
+      border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;
+      flex-shrink:0;text-decoration:none;cursor:pointer;transition:all 0.18s;
+      min-width:140px;box-shadow:var(--shadow-xs);
+    }
+    .trending-chip:hover { border-color:var(--green-light);background:var(--green-xsoft);transform:translateY(-1px);box-shadow:var(--shadow-sm); }
+    .trending-emoji { font-size:20px; }
+    .trending-info { display:flex;flex-direction:column; }
+    .trending-title { font-size:11.5px;font-weight:700;color:var(--text-dark);font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;line-height:1.3; }
+    .trending-sub { font-size:10px;color:var(--text-xsoft);margin-top:1px; }
+    .trending-hot { font-size:9px;font-weight:700;color:#dc2626;background:#fee2e2;border-radius:6px;padding:1px 5px; }
 
+    /* ── ARTICLE CARDS ── */
+    .articles-list { display:flex;flex-direction:column;gap:10px; }
     .article-card {
-      background: var(--white);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 14px 16px;
-      text-decoration: none;
-      cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
-      position: relative;
-      overflow: hidden;
+      background:var(--white);border-radius:var(--radius-md);border:1px solid var(--border);
+      box-shadow:var(--shadow-xs);display:flex;align-items:flex-start;gap:13px;
+      padding:13px 14px 13px 18px;text-decoration:none;cursor:pointer;
+      transition:all 0.18s;position:relative;overflow:hidden;
     }
     .article-card::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 4px;
-      background: var(--accent, var(--green-mid));
-      border-radius: 4px 0 0 4px;
+      content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+      background:var(--accent,var(--green-main));border-radius:4px 0 0 4px;transition:width 0.18s;
     }
-    .article-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-      border-color: var(--green-light);
-    }
-    .article-card:active { transform: translateY(0); }
+    .article-card:hover { box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--green-light); }
+    .article-card:hover::before { width:5px; }
+    .article-card:active { transform:translateY(0); }
+    .article-thumb { width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0; }
+    .article-body { flex:1;min-width:0; }
+    .article-tag { display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;border-radius:20px;padding:2px 8px;margin-bottom:5px; }
+    .article-title { font-size:13.5px;font-weight:700;color:var(--text-dark);line-height:1.38;margin-bottom:6px;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif; }
+    .article-footer { display:flex;align-items:center;justify-content:space-between; }
+    .article-meta { font-size:10.5px;color:var(--text-xsoft);display:flex;align-items:center;gap:6px; }
+    .article-views { font-size:10px;color:var(--text-xsoft);display:flex;align-items:center;gap:3px; }
+    .article-arrow { font-size:18px;color:var(--text-xsoft);flex-shrink:0;align-self:center;opacity:0.45;transition:opacity 0.18s,transform 0.18s; }
+    .article-card:hover .article-arrow { opacity:0.8;transform:translateX(2px); }
+    .new-badge { display:inline-block;background:#dc2626;color:var(--white);font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:5px;vertical-align:middle; }
+    .hot-badge { display:inline-block;background:#f59e0b;color:#451a03;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:5px;vertical-align:middle; }
 
-    .article-thumb {
-      width: 64px; height: 64px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      flex-shrink: 0;
-    }
-    .article-body { flex: 1; min-width: 0; }
-    .article-tag {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      border-radius: 20px;
-      padding: 2px 8px;
-      margin-bottom: 5px;
-    }
-    .article-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-dark);
-      line-height: 1.35;
-      margin-bottom: 5px;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-    }
-    .article-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .article-arrow {
-      font-size: 20px;
-      color: var(--text-soft);
-      flex-shrink: 0;
-      align-self: center;
-      opacity: 0.4;
-    }
+    /* ── EMPTY STATE ── */
+    .empty-state { display:none;text-align:center;padding:48px 24px;color:var(--text-soft); }
+    .empty-icon { font-size:52px;margin-bottom:14px;opacity:0.7; }
+    .empty-title { font-size:16px;font-weight:700;margin-bottom:6px;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif; }
+    .empty-sub { font-size:13px;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif;color:var(--text-xsoft); }
 
-    /* New badge */
-    .new-badge {
-      display: inline-block;
-      background: #e53935;
-      color: var(--white);
-      font-size: 9px;
-      font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 10px;
-      margin-left: 6px;
-      vertical-align: middle;
-      letter-spacing: 0.3px;
-    }
-
-    /* ══════════════════════════════
-       CATEGORY SECTION DIVIDERS
-    ══════════════════════════════ */
-    .cat-divider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 8px 0 14px;
-    }
-    .cat-divider-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-    .cat-divider-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-soft);
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    /* ══════════════════════════════
-       SEARCH BAR
-    ══════════════════════════════ */
-    .search-wrap {
-      padding: 14px 20px 0;
-    }
-    .search-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0 14px;
-      height: 46px;
-      box-shadow: var(--shadow-sm);
-      transition: border-color 0.2s;
-    }
-    .search-row:focus-within { border-color: var(--green-light); }
-    .search-icon { font-size: 18px; opacity: 0.5; flex-shrink: 0; }
-    .search-input {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
-      font-size: 14px;
-      color: var(--text-dark);
-      background: transparent;
-    }
-    .search-input::placeholder { color: #aaa; font-size: 13px; }
-
-    /* ══════════════════════════════
-       EMPTY STATE
-    ══════════════════════════════ */
-    .empty-state {
-      text-align: center;
-      padding: 48px 20px;
-      display: none;
-    }
-    .empty-icon { font-size: 52px; margin-bottom: 12px; }
-    .empty-title { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
-    .empty-sub { font-size: 13px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', sans-serif; }
-
-    /* ══════════════════════════════
-       BOTTOM NAV (mobile)
-    ══════════════════════════════ */
+    /* ── BOTTOM NAV ── */
     .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: var(--white);
-      border-top: 1px solid var(--border);
-      display: flex;
-      z-index: 200;
-      box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
-      padding-bottom: env(safe-area-inset-bottom, 0);
+      position:fixed;bottom:0;left:0;right:0;
+      background:rgba(255,255,255,0.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border-top:1px solid var(--border);display:flex;z-index:200;
+      box-shadow:0 -4px 20px rgba(0,0,0,0.07);
+      padding-bottom:env(safe-area-inset-bottom,0);
     }
-    .bn-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 8px 4px 6px;
-      cursor: pointer;
-      text-decoration: none;
-      gap: 3px;
-      transition: background 0.15s;
-      border-radius: 12px;
-      margin: 4px 2px 0;
-    }
-    .bn-item:hover { background: var(--green-soft); }
-    .bn-item.active .bn-icon { color: var(--green-mid); }
-    .bn-item.active .bn-label { color: var(--green-dark); font-weight: 600; }
-    .bn-icon { font-size: 20px; color: var(--text-soft); }
-    .bn-label { font-size: 10px; color: var(--text-soft); font-weight: 500; font-family: 'Noto Sans Devanagari', sans-serif; }
+    .bn-item { flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 4px 5px;cursor:pointer;text-decoration:none;gap:3px;transition:background 0.15s;border-radius:12px;margin:3px 2px 0; }
+    .bn-item:hover { background:var(--green-xsoft); }
+    .bn-item.active .bn-icon-wrap { color:var(--green-mid);background:var(--green-soft);border-radius:10px; }
+    .bn-item.active .bn-label { color:var(--green-dark);font-weight:700; }
+    .bn-icon-wrap { width:30px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background 0.15s; }
+    .bn-icon { font-size:18px;color:var(--text-soft); }
+    .bn-label { font-size:9.5px;color:var(--text-soft);font-weight:500;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif; }
+    .bn-item.active .bn-icon { color:var(--green-mid); }
 
-    /* ══════════════════════════════
-       PAGE BOTTOM SPACING
-    ══════════════════════════════ */
-    .page-end { height: 80px; }
+    .page-end { height:86px; }
 
-    /* ══════════════════════════════
-       ANIMATIONS
-    ══════════════════════════════ */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .article-card, .featured-card {
-      animation: fadeUp 0.4s ease both;
-    }
-    .article-card:nth-child(1) { animation-delay: 0.05s; }
-    .article-card:nth-child(2) { animation-delay: 0.10s; }
-    .article-card:nth-child(3) { animation-delay: 0.15s; }
-    .article-card:nth-child(4) { animation-delay: 0.20s; }
-    .article-card:nth-child(5) { animation-delay: 0.25s; }
-    .article-card:nth-child(6) { animation-delay: 0.30s; }
+    /* ── ANIMATIONS ── */
+    @keyframes fadeSlideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .featured-card { animation:fadeSlideUp 0.4s ease both; }
+    .article-card  { animation:fadeSlideUp 0.38s ease both; }
+    .article-card:nth-child(1){animation-delay:0.04s}
+    .article-card:nth-child(2){animation-delay:0.08s}
+    .article-card:nth-child(3){animation-delay:0.12s}
+    .article-card:nth-child(4){animation-delay:0.16s}
+    .article-card:nth-child(5){animation-delay:0.20s}
+    .article-card:nth-child(6){animation-delay:0.24s}
+    .article-card:nth-child(7){animation-delay:0.28s}
+    .article-card:nth-child(8){animation-delay:0.32s}
+    .trending-chip{animation:fadeSlideUp 0.38s ease both}
+    .trending-chip:nth-child(1){animation-delay:0.05s}
+    .trending-chip:nth-child(2){animation-delay:0.10s}
+    .trending-chip:nth-child(3){animation-delay:0.15s}
+    .trending-chip:nth-child(4){animation-delay:0.20s}
 
-    /* ══════════════════════════════
-       DESKTOP
-    ══════════════════════════════ */
-    @media (min-width: 600px) {
-      .header { padding: 0 40px; }
-      .header-nav { display: flex; }
-      .bottom-nav { display: none; }
-      .page-end { height: 40px; }
-      .section { padding: 28px 40px; }
-      .search-wrap { padding: 18px 40px 0; }
-      .filter-bar { padding: 14px 40px 4px; }
-      .page-hero { padding: 36px 40px 40px; }
-      .page-hero-title { font-size: 32px; }
-      .articles-list {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-      }
+    /* ── DESKTOP ── */
+    @media(min-width:600px){
+      .header{padding:0 36px}
+      .header-nav{display:flex}
+      .bottom-nav{display:none}
+      .page-end{height:40px}
+      .section{padding:26px 36px}
+      .search-wrap{padding:16px 36px 0}
+      .filter-bar{padding:12px 36px}
+      .page-hero{padding:34px 36px 38px}
+      .page-hero-title{font-size:30px}
+      .trending-strip{padding:0 36px 22px}
+      .articles-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
     }
-    @media (min-width: 900px) {
-      .articles-list { grid-template-columns: repeat(3, 1fr); }
+    @media(min-width:900px){
+      .articles-list{grid-template-columns:repeat(3,1fr)}
+      .header{padding:0 60px}
+      .section{padding:28px 60px}
+      .search-wrap{padding:18px 60px 0}
+      .filter-bar{padding:12px 60px}
+      .page-hero{padding:40px 60px 44px}
+      .trending-strip{padding:0 60px 24px}
     }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════
-     HEADER
-══════════════════════════ -->
+<!-- HEADER -->
 <header class="header">
   <div class="header-left">
-    <a class="back-btn" href="../index.html" title="होम पर वापस">←</a>
+    <a class="back-btn" href="../index.html">←</a>
     <a class="header-logo" href="../index.html">
       <div class="logo-icon">🌾</div>
       <div class="logo-text">
@@ -596,274 +404,324 @@
       </div>
     </a>
   </div>
-
   <div class="header-right">
     <nav class="header-nav" id="desktop-nav">
-      <a class="nav-link" href="../index.html">मुख्य</a>
-      <a class="nav-link" href="../chat.html?tab=weather">मौसम</a>
-      <a class="nav-link" href="../chat.html?tab=mandi">मंडी</a>
-      <a class="nav-link" href="index.html" style="color:var(--green-dark);font-weight:700">लेख</a>
-      <a class="nav-link" href="../chat.html?tab=chat">सहायता</a>
+      <a class="nav-link" href="../index.html"           data-i18n="nav_home">मुख्य</a>
+      <a class="nav-link" href="../chat.html?tab=weather" data-i18n="nav_weather">मौसम</a>
+      
+      <a class="nav-link active" href="index.html"       data-i18n="nav_articles">लेख</a>
+      
     </nav>
-    <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
+
+    <!-- Language Toggle -->
+    <div class="lang-toggle" role="group" aria-label="Select language">
+      <button class="lang-btn active" data-lang="hi" onclick="setLang('hi')" title="हिंदी">हिं</button>
+      <button class="lang-btn"        data-lang="en" onclick="setLang('en')" title="English">EN</button>
+      <button class="lang-btn"        data-lang="kn" onclick="setLang('kn')" title="ಕನ್ನಡ">ಕನ್ನ</button>
+    </div>
+
+    <div class="avatar-btn" onclick="avatarBtnClick()">👤</div>
   </div>
 </header>
 
-<!-- ══════════════════════════
-     PAGE HERO BANNER
-══════════════════════════ -->
+<!-- HERO -->
 <div class="page-hero">
-  <div class="page-hero-badge">📰 ज्ञान केंद्र</div>
-  <h1 class="page-hero-title">लेख & <span>कृषि टिप्स</span></h1>
-  <p class="page-hero-sub">
-    विशेषज्ञों द्वारा लिखे गए लेख — फसल, खाद, मौसम और खेती की पूरी जानकारी
-  </p>
-  <div class="page-hero-stats">
-    <div class="hero-stat-pill">📄 24 लेख</div>
-    <div class="hero-stat-pill">🌾 8 श्रेणियां</div>
-    <div class="hero-stat-pill">✍️ विशेषज्ञ सलाह</div>
+  <div class="hero-eyebrow" data-i18n="hero_eyebrow">📰 ज्ञान केंद्र</div>
+  <h1 class="page-hero-title" data-i18n="hero_title">लेख &amp; <span class="highlight">कृषि टिप्स</span></h1>
+  <p class="page-hero-sub" data-i18n="hero_sub">विशेषज्ञों द्वारा लिखे गए लेख — फसल, खाद, मौसम और खेती की पूरी जानकारी</p>
+  <div class="hero-pills">
+    <div class="hero-pill">📄 <span id="total-count">…</span> <span data-i18n="pill_articles">लेख</span></div>
+    <div class="hero-pill">🌾 8 <span data-i18n="pill_categories">श्रेणियां</span></div>
+    <div class="hero-pill">✍️ <span data-i18n="pill_expert">विशेषज्ञ सलाह</span></div>
   </div>
 </div>
 
-<!-- ══════════════════════════
-     SEARCH BAR
-══════════════════════════ -->
-<div class="search-wrap">
+<!-- SEARCH -->
+<div class="search-wrap" style="background:var(--white)">
   <div class="search-row">
     <span class="search-icon">🔍</span>
-    <input
-      type="text"
-      id="article-search"
-      class="search-input"
+    <input type="text" id="article-search" class="search-input"
+      data-i18n-placeholder="search_placeholder"
       placeholder="लेख खोजें… जैसे: गेहूं, खाद, कीट"
-      autocomplete="off"
-      oninput="filterArticles(this.value)"
-    >
+      autocomplete="off" oninput="handleSearch(this.value)">
+    <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
+    <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Voice search">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6.5 10.5A6.5 6.5 0 0 1 5.5 11.5H4a8 8 0 0 0 7.25 7.94V22h1.5v-2.56A8 8 0 0 0 20 11.5h-1.5z"/>
+      </svg>
+    </button>
   </div>
 </div>
 
-<!-- ══════════════════════════
-     CATEGORY FILTER
-══════════════════════════ -->
+<!-- CATEGORY FILTER -->
 <div class="filter-bar" id="filter-bar">
-  <div class="filter-chip active" data-cat="all" onclick="setFilter(this,'all')">🌿 सभी</div>
-  <div class="filter-chip" data-cat="gehun" onclick="setFilter(this,'gehun')">🌾 गेहूं</div>
-  <div class="filter-chip" data-cat="dhan" onclick="setFilter(this,'dhan')">🍚 धान</div>
-  <div class="filter-chip" data-cat="khad" onclick="setFilter(this,'khad')">🧪 खाद</div>
-  <div class="filter-chip" data-cat="keet" onclick="setFilter(this,'keet')">🐛 कीट</div>
-  <div class="filter-chip" data-cat="mausam" onclick="setFilter(this,'mausam')">🌦️ मौसम</div>
-  <div class="filter-chip" data-cat="sarso" onclick="setFilter(this,'sarso')">🌻 सरसों</div>
-  <div class="filter-chip" data-cat="ganna" onclick="setFilter(this,'ganna')">🎋 गन्ना</div>
+  <div class="filter-chip active" onclick="setFilter(this,'all')"     data-i18n="cat_all">🌿 सभी</div>
+  <div class="filter-chip"        onclick="setFilter(this,'gehun')"   data-i18n="cat_gehun">🌾 गेहूं</div>
+  <div class="filter-chip"        onclick="setFilter(this,'dhan')"    data-i18n="cat_dhan">🍚 धान</div>
+  <div class="filter-chip"        onclick="setFilter(this,'khad')"    data-i18n="cat_khad">🧪 खाद</div>
+  <div class="filter-chip"        onclick="setFilter(this,'keet')"    data-i18n="cat_keet">🐛 कीट</div>
+  <div class="filter-chip"        onclick="setFilter(this,'mausam')"  data-i18n="cat_mausam">🌦️ मौसम</div>
+  <div class="filter-chip"        onclick="setFilter(this,'sarso')"   data-i18n="cat_sarso">🌻 सरसों</div>
+  <div class="filter-chip"        onclick="setFilter(this,'ganna')"   data-i18n="cat_ganna">🎋 गन्ना</div>
 </div>
 
-<!-- ══════════════════════════
-     FEATURED ARTICLE
-══════════════════════════ -->
-<section class="section" style="padding-bottom: 0;">
+<!-- FEATURED -->
+<section class="section" style="padding-bottom:0" id="featured-section">
   <div class="section-header">
-    <h2 class="section-title">⭐ विशेष लेख</h2>
+    <h2 class="section-title" data-i18n="featured_heading">⭐ विशेष लेख</h2>
   </div>
-
   <a class="featured-card" href="gehun-pila.html" data-cat="gehun" data-title="गेहूं में पीलापन कारण उपाय">
     <div class="featured-banner">
       🌾
-      <span class="featured-badge">✨ Featured</span>
+      <span class="featured-badge" data-i18n="featured_badge">✨ FEATURED</span>
     </div>
     <div class="featured-body">
-      <span class="featured-tag">गेहूं</span>
-      <div class="featured-title">गेहूं में पीलापन: कारण, पहचान और उपाय</div>
-      <div class="featured-excerpt">
+      <span class="featured-tag" data-i18n="cat_gehun_plain">गेहूं</span>
+      <div class="featured-title" data-i18n="feat_title">गेहूं में पीलापन: कारण, पहचान और उपाय</div>
+      <div class="featured-excerpt" data-i18n="feat_excerpt">
         गेहूं की फसल में पत्तियों का पीला पड़ना एक आम समस्या है। सही समय पर पहचान और उचित उपाय से फसल को बचाया जा सकता है…
       </div>
       <div class="featured-footer">
-        <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 आज</div>
-        <span class="read-more-btn">पढ़ें →</span>
+        <div class="meta-row">
+          <span data-i18n="feat_time">⏱️ 3 मिनट</span>
+          <span class="meta-dot"></span>
+          <span data-i18n="feat_date">📅 आज</span>
+        </div>
+        <span class="read-more-btn" data-i18n="read_more">पढ़ें →</span>
       </div>
     </div>
   </a>
 </section>
 
-<!-- ══════════════════════════
-     ALL ARTICLES LIST
-══════════════════════════ -->
+<!-- TRENDING -->
+<div class="trending-strip" id="trending-section" style="padding-top:20px;">
+  <div class="trending-label" data-i18n="trending_label">🔥 ट्रेंडिंग अभी</div>
+  <div class="trending-scroll">
+    <a class="trending-chip" href="urea-guide-up.html">
+      <span class="trending-emoji">🧪</span>
+      <div class="trending-info">
+        <span class="trending-title" data-i18n="tr1_title">यूरिया कब दें?</span>
+        <span class="trending-sub"><span class="trending-hot">HOT</span> · <span data-i18n="tr1_time">4 मिनट</span></span>
+      </div>
+    </a>
+    <a class="trending-chip" href="dhan-jhoka.html">
+      <span class="trending-emoji">🌀</span>
+      <div class="trending-info">
+        <span class="trending-title" data-i18n="tr2_title">धान झोंका रोग</span>
+        <span class="trending-sub">2.1k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr2_time">4 मिनट</span></span>
+      </div>
+    </a>
+    <a class="trending-chip" href="keet-niyantran.html">
+      <span class="trending-emoji">🐛</span>
+      <div class="trending-info">
+        <span class="trending-title" data-i18n="tr3_title">कीट देसी उपाय</span>
+        <span class="trending-sub">1.8k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr3_time">4 मिनट</span></span>
+      </div>
+    </a>
+    <a class="trending-chip" href="drip-sinchai.html">
+      <span class="trending-emoji">💧</span>
+      <div class="trending-info">
+        <span class="trending-title" data-i18n="tr4_title">ड्रिप सिंचाई</span>
+        <span class="trending-sub">1.4k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr4_time">5 मिनट</span></span>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- ALL ARTICLES -->
 <section class="section">
   <div class="section-header">
-    <h2 class="section-title">📚 सभी लेख</h2>
-    <span class="section-count" id="article-count">23 लेख</span>
+    <h2 class="section-title" data-i18n="all_articles_heading">📚 सभी लेख</h2>
+    <span class="section-count" id="article-count">…</span>
   </div>
 
   <div class="articles-list" id="articles-list">
 
-    <!-- WHEAT -->
-    <a class="article-card" href="gehun-pila.html"
-       data-cat="gehun" data-title="गेहूं में पीलापन कारण उपाय"
-       style="--accent:#f57f17">
-      <div class="article-thumb" style="background:#fff8e1">🌾</div>
+    <!-- गेहूं -->
+    <a class="article-card" href="gehun-pila.html" data-cat="gehun" data-title="गेहूं में पीलापन कारण उपाय" style="--accent:#d97706">
+      <div class="article-thumb" style="background:#fef3c7">🌾</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#fff8e1;color:#f57f17">गेहूं</span>
-        <div class="article-title">गेहूं में पीलापन: कारण और उपाय<span class="new-badge">NEW</span></div>
+        <span class="article-tag" style="background:#fef3c7;color:#92400e" data-i18n="cat_gehun_plain">गेहूं</span>
+        <div class="article-title" data-i18n="a1_title">गेहूं में पीलापन: कारण और उपाय<span class="new-badge">NEW</span></div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 आज</div>
+          <div class="article-meta">⏱️ <span data-i18n="a1_time">3 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a1_date">आज</span></div>
+          <div class="article-views">👁 1.2k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="gehun-buvai.html"
-       data-cat="gehun" data-title="गेहूं की बुवाई सही समय तरीका"
-       style="--accent:#f57f17">
-      <div class="article-thumb" style="background:#fff8e1">🌱</div>
+    <a class="article-card" href="gehun-buvai.html" data-cat="gehun" data-title="गेहूं की बुवाई सही समय तरीका" style="--accent:#d97706">
+      <div class="article-thumb" style="background:#fef3c7">🌱</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#fff8e1;color:#f57f17">गेहूं</span>
-        <div class="article-title">गेहूं की बुवाई: सही समय और तरीका</div>
+        <span class="article-tag" style="background:#fef3c7;color:#92400e" data-i18n="cat_gehun_plain">गेहूं</span>
+        <div class="article-title" data-i18n="a2_title">गेहूं की बुवाई: सही समय और तरीका</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 2 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a2_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a2_date">2 दिन पहले</span></div>
+          <div class="article-views">👁 980</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <!-- DHAN -->
-    <a class="article-card" href="dhan-buvai.html"
-       data-cat="dhan" data-title="धान की बुवाई सही समय तरीका"
-       style="--accent:#00695c">
-      <div class="article-thumb" style="background:#e0f2f1">🍚</div>
+    <!-- धान -->
+    <a class="article-card" href="dhan-buvai.html" data-cat="dhan" data-title="धान की बुवाई सही समय तरीका" style="--accent:#0f766e">
+      <div class="article-thumb" style="background:#ccfbf1">🍚</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e0f2f1;color:#00695c">धान</span>
-        <div class="article-title">धान की सही बुवाई का समय और तरीका</div>
+        <span class="article-tag" style="background:#ccfbf1;color:#0f766e" data-i18n="cat_dhan_plain">धान</span>
+        <div class="article-title" data-i18n="a3_title">धान की सही बुवाई का समय और तरीका</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 कल</div>
+          <div class="article-meta">⏱️ <span data-i18n="a3_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a3_date">कल</span></div>
+          <div class="article-views">👁 754</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="dhan-jhoka.html"
-       data-cat="dhan" data-title="धान में झोंका रोग ब्लास्ट"
-       style="--accent:#00695c">
-      <div class="article-thumb" style="background:#e0f2f1">🌀</div>
+    <a class="article-card" href="dhan-jhoka.html" data-cat="dhan" data-title="धान में झोंका रोग ब्लास्ट" style="--accent:#0f766e">
+      <div class="article-thumb" style="background:#ccfbf1">🌀</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e0f2f1;color:#00695c">धान</span>
-        <div class="article-title">धान में झोंका रोग (Blast): पहचान और बचाव</div>
+        <span class="article-tag" style="background:#ccfbf1;color:#0f766e" data-i18n="cat_dhan_plain">धान</span>
+        <div class="article-title" data-i18n="a4_title">धान में झोंका रोग (Blast): पहचान और बचाव<span class="hot-badge">HOT</span></div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 3 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a4_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a4_date">3 दिन पहले</span></div>
+          <div class="article-views">👁 2.1k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <!-- KHAD -->
-    <a class="article-card" href="urea-guide-up.html"
-       data-cat="khad" data-title="यूरिया DAP खाद कब कितना"
-       style="--accent:#1565c0">
-      <div class="article-thumb" style="background:#e3f2fd">🧪</div>
+    <!-- सिंचाई -->
+    <a class="article-card" href="drip-sinchai.html" data-cat="sinchai" data-title="ड्रिप सिंचाई तकनीक फायदे" style="--accent:#0369a1">
+      <div class="article-thumb" style="background:#e0f2fe">💧</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e3f2fd;color:#1565c0">खाद</span>
-        <div class="article-title">यूरिया और DAP: कब और कितना दें?<span class="new-badge">NEW</span></div>
+        <span class="article-tag" style="background:#e0f2fe;color:#0369a1" data-i18n="cat_sinchai_plain">सिंचाई</span>
+        <div class="article-title" data-i18n="a5_title">ड्रिप सिंचाई: कम पानी में ज़्यादा पैदावार</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 2 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a5_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a5_date">1 दिन पहले</span></div>
+          <div class="article-views">👁 1.4k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="jaivik-khad.html"
-       data-cat="khad" data-title="जैविक खाद घर पर बनाएं"
-       style="--accent:#1565c0">
-      <div class="article-thumb" style="background:#e3f2fd">♻️</div>
+    <a class="article-card" href="sprinkler-guide.html" data-cat="sinchai" data-title="स्प्रिंकलर सिंचाई सब्सिडी" style="--accent:#0369a1">
+      <div class="article-thumb" style="background:#e0f2fe">🚿</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e3f2fd;color:#1565c0">खाद</span>
-        <div class="article-title">घर पर जैविक खाद कैसे बनाएं?</div>
+        <span class="article-tag" style="background:#e0f2fe;color:#0369a1" data-i18n="cat_sinchai_plain">सिंचाई</span>
+        <div class="article-title" data-i18n="a6_title">स्प्रिंकलर सिंचाई और सरकारी सब्सिडी</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 6 मिनट &nbsp;·&nbsp; 📅 4 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a6_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a6_date">2 दिन पहले</span></div>
+          <div class="article-views">👁 620</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <!-- KEET -->
-    <a class="article-card" href="keet-niyantran.html"
-       data-cat="keet" data-title="कीट नियंत्रण देसी उपाय"
-       style="--accent:#6a1b9a">
-      <div class="article-thumb" style="background:#f3e5f5">🐛</div>
+    <!-- खाद -->
+    <a class="article-card" href="urea-guide-up.html" data-cat="khad" data-title="यूरिया DAP खाद कब कितना" style="--accent:#1d4ed8">
+      <div class="article-thumb" style="background:#dbeafe">🧪</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#f3e5f5;color:#6a1b9a">कीट</span>
-        <div class="article-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
+        <div class="article-title" data-i18n="a7_title">यूरिया और DAP: कब और कितना दें?<span class="new-badge">NEW</span></div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 3 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a7_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a7_date">2 दिन पहले</span></div>
+          <div class="article-views">👁 1.9k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="tiddi-bachav.html"
-       data-cat="keet" data-title="टिड्डी दल से फसल बचाव"
-       style="--accent:#6a1b9a">
-      <div class="article-thumb" style="background:#f3e5f5">🦗</div>
+    <a class="article-card" href="jaivik-khad.html" data-cat="khad" data-title="जैविक खाद घर पर बनाएं" style="--accent:#1d4ed8">
+      <div class="article-thumb" style="background:#dbeafe">♻️</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#f3e5f5;color:#6a1b9a">कीट</span>
-        <div class="article-title">टिड्डी दल से फसल को कैसे बचाएं?</div>
+        <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
+        <div class="article-title" data-i18n="a8_title">घर पर जैविक खाद कैसे बनाएं?</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 5 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a8_time">6 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a8_date">4 दिन पहले</span></div>
+          <div class="article-views">👁 845</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <!-- MAUSAM -->
-    <a class="article-card" href="mausam-guide.html"
-       data-cat="mausam" data-title="मौसम के अनुसार खेती कैसे करें"
-       style="--accent:#1976d2">
-      <div class="article-thumb" style="background:#e3f2fd">🌦️</div>
+    <!-- कीट -->
+    <a class="article-card" href="keet-niyantran.html" data-cat="keet" data-title="कीट नियंत्रण देसी उपाय" style="--accent:#7e22ce">
+      <div class="article-thumb" style="background:#f3e8ff">🐛</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e3f2fd;color:#1976d2">मौसम</span>
-        <div class="article-title">मौसम के अनुसार खेती की योजना कैसे बनाएं?</div>
+        <span class="article-tag" style="background:#f3e8ff;color:#7e22ce" data-i18n="cat_keet_plain">कीट</span>
+        <div class="article-title" data-i18n="a9_title">फसल में कीट नियंत्रण के देसी उपाय</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 1 सप्ताह पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a9_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a9_date">3 दिन पहले</span></div>
+          <div class="article-views">👁 1.8k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="sukha-prabandhan.html"
-       data-cat="mausam" data-title="सूखा प्रबंधन पानी की कमी खेती"
-       style="--accent:#1976d2">
-      <div class="article-thumb" style="background:#e3f2fd">☀️</div>
+    <a class="article-card" href="tiddi-bachav.html" data-cat="keet" data-title="टिड्डी दल से फसल बचाव" style="--accent:#7e22ce">
+      <div class="article-thumb" style="background:#f3e8ff">🦗</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e3f2fd;color:#1976d2">मौसम</span>
-        <div class="article-title">सूखे में फसल बचाने के उपाय</div>
+        <span class="article-tag" style="background:#f3e8ff;color:#7e22ce" data-i18n="cat_keet_plain">कीट</span>
+        <div class="article-title" data-i18n="a10_title">टिड्डी दल से फसल को कैसे बचाएं?</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 1 सप्ताह पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a10_time">3 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a10_date">5 दिन पहले</span></div>
+          <div class="article-views">👁 670</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <!-- SARSO -->
-    <a class="article-card" href="sarso-kheti.html"
-       data-cat="sarso" data-title="सरसों की खेती उन्नत तरीका"
-       style="--accent:#f9a825">
-      <div class="article-thumb" style="background:#fff8e1">🌻</div>
+    <!-- मौसम -->
+    <a class="article-card" href="mausam-guide.html" data-cat="mausam" data-title="मौसम के अनुसार खेती कैसे करें" style="--accent:#0284c7">
+      <div class="article-thumb" style="background:#e0f2fe">🌦️</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#fff8e1;color:#f9a825">सरसों</span>
-        <div class="article-title">सरसों की उन्नत खेती: पूरी जानकारी</div>
+        <span class="article-tag" style="background:#e0f2fe;color:#0284c7" data-i18n="cat_mausam_plain">मौसम</span>
+        <div class="article-title" data-i18n="a11_title">मौसम के अनुसार खेती की योजना कैसे बनाएं?</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 7 मिनट &nbsp;·&nbsp; 📅 10 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a11_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a11_date">1 सप्ताह पहले</span></div>
+          <div class="article-views">👁 1.1k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <!-- GANNA -->
-    <a class="article-card" href="ganna-rog.html"
-       data-cat="ganna" data-title="गन्ने में लाल सड़न रोग"
-       style="--accent:#2e7d32">
-      <div class="article-thumb" style="background:#e8f5e9">🎋</div>
+    <a class="article-card" href="sukha-prabandhan.html" data-cat="mausam" data-title="सूखा प्रबंधन पानी की कमी खेती" style="--accent:#0284c7">
+      <div class="article-thumb" style="background:#e0f2fe">☀️</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e8f5e9;color:#2e7d32">गन्ना</span>
-        <div class="article-title">गन्ने में लाल सड़न रोग: पहचान व उपचार</div>
+        <span class="article-tag" style="background:#e0f2fe;color:#0284c7" data-i18n="cat_mausam_plain">मौसम</span>
+        <div class="article-title" data-i18n="a12_title">सूखे में फसल बचाने के उपाय</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 12 दिन पहले</div>
+          <div class="article-meta">⏱️ <span data-i18n="a12_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a12_date">1 सप्ताह पहले</span></div>
+          <div class="article-views">👁 890</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- सरसों -->
+    <a class="article-card" href="sarso-kheti.html" data-cat="sarso" data-title="सरसों की खेती उन्नत तरीका" style="--accent:#ca8a04">
+      <div class="article-thumb" style="background:#fef9c3">🌻</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#fef9c3;color:#ca8a04" data-i18n="cat_sarso_plain">सरसों</span>
+        <div class="article-title" data-i18n="a13_title">सरसों की उन्नत खेती: पूरी जानकारी</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a13_time">7 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a13_date">10 दिन पहले</span></div>
+          <div class="article-views">👁 730</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- गन्ना -->
+    <a class="article-card" href="ganna-rog.html" data-cat="ganna" data-title="गन्ने में लाल सड़न रोग" style="--accent:#16a34a">
+      <div class="article-thumb" style="background:#dcfce7">🎋</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
+        <div class="article-title" data-i18n="a14_title">गन्ने में लाल सड़न रोग: पहचान व उपचार</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a14_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a14_date">12 दिन पहले</span></div>
+          <div class="article-views">👁 560</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
@@ -871,108 +729,509 @@
 
   </div>
 
-  <!-- Empty state (shown when search returns no results) -->
+  <!-- Empty state -->
   <div class="empty-state" id="empty-state">
     <div class="empty-icon">🔍</div>
-    <div class="empty-title">कोई लेख नहीं मिला</div>
-    <div class="empty-sub">दूसरे शब्दों से खोजें या श्रेणी बदलें</div>
+    <div class="empty-title" data-i18n="empty_title">कोई लेख नहीं मिला</div>
+    <div class="empty-sub"   data-i18n="empty_sub">दूसरे शब्दों से खोजें या श्रेणी बदलें</div>
   </div>
-
 </section>
 
-<!-- Bottom spacing -->
 <div class="page-end"></div>
 
-<!-- ══════════════════════════
-     BOTTOM NAV (mobile)
-══════════════════════════ -->
+<!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <a class="bn-item" href="../index.html">
-    <span class="bn-icon">🏠</span>
-    <span class="bn-label">मुख्य</span>
+    <div class="bn-icon-wrap"><span class="bn-icon">🏠</span></div>
+    <span class="bn-label" data-i18n="nav_home">मुख्य</span>
   </a>
   <a class="bn-item" href="../chat.html?tab=chat">
-    <span class="bn-icon">💬</span>
-    <span class="bn-label">Chat</span>
+    <div class="bn-icon-wrap"><span class="bn-icon">💬</span></div>
+    <span class="bn-label" data-i18n="nav_chat">Chat</span>
   </a>
   <a class="bn-item" href="../chat.html?tab=weather">
-    <span class="bn-icon">🌤️</span>
-    <span class="bn-label">मौसम</span>
+    <div class="bn-icon-wrap"><span class="bn-icon">🌤️</span></div>
+    <span class="bn-label" data-i18n="nav_weather">मौसम</span>
   </a>
   <a class="bn-item" href="../chat.html?tab=mandi">
-    <span class="bn-icon">💰</span>
-    <span class="bn-label">मंडी</span>
+    <div class="bn-icon-wrap"><span class="bn-icon">💰</span></div>
+    <span class="bn-label" data-i18n="nav_mandi">मंडी</span>
   </a>
   <a class="bn-item active" href="index.html">
-    <span class="bn-icon">📰</span>
-    <span class="bn-label">लेख</span>
+    <div class="bn-icon-wrap"><span class="bn-icon">📰</span></div>
+    <span class="bn-label" data-i18n="nav_articles">लेख</span>
   </a>
 </nav>
 
-<!-- ══════════════════════════
-     SCRIPTS
-══════════════════════════ -->
 <script>
-  /* ── Desktop nav show/hide ── */
-  function checkDesktopNav() {
-    const nav = document.getElementById('desktop-nav');
-    if (nav) nav.style.display = window.innerWidth >= 600 ? 'flex' : 'none';
+/* ═══════════════════════════════════════════
+   TRANSLATION STRINGS
+═══════════════════════════════════════════ */
+const TRANSLATIONS = {
+  hi: {
+    page_title:           "लेख & कृषि टिप्स — KrashiMitra",
+    logo_title:           "कृषि मित्र",
+    logo_sub:             "किसान का डिजिटल साथी",
+    nav_home:             "मुख्य",
+    nav_weather:          "मौसम",
+    nav_mandi:            "मंडी",
+    nav_articles:         "लेख",
+    nav_help:             "सहायता",
+    nav_chat:             "Chat",
+    hero_eyebrow:         "📰 ज्ञान केंद्र",
+    hero_title:           'लेख &amp; <span class="highlight">कृषि टिप्स</span>',
+    hero_sub:             "विशेषज्ञों द्वारा लिखे गए लेख — फसल, खाद, मौसम और खेती की पूरी जानकारी",
+    pill_articles:        "लेख",
+    pill_categories:      "श्रेणियां",
+    pill_expert:          "विशेषज्ञ सलाह",
+    search_placeholder:   "लेख खोजें… जैसे: गेहूं, खाद, कीट",
+    cat_all:              "🌿 सभी",
+    cat_gehun:            "🌾 गेहूं",
+    cat_dhan:             "🍚 धान",
+    cat_khad:             "🧪 खाद",
+    cat_keet:             "🐛 कीट",
+    cat_mausam:           "🌦️ मौसम",
+    cat_sarso:            "🌻 सरसों",
+    cat_ganna:            "🎋 गन्ना",
+    featured_heading:     "⭐ विशेष लेख",
+    featured_badge:       "✨ FEATURED",
+    cat_gehun_plain:      "गेहूं",
+    cat_dhan_plain:       "धान",
+    cat_khad_plain:       "खाद",
+    cat_keet_plain:       "कीट",
+    cat_mausam_plain:     "मौसम",
+    cat_sarso_plain:      "सरसों",
+    cat_ganna_plain:      "गन्ना",
+    cat_sinchai_plain:    "सिंचाई",
+    feat_title:           "गेहूं में पीलापन: कारण, पहचान और उपाय",
+    feat_excerpt:         "गेहूं की फसल में पत्तियों का पीला पड़ना एक आम समस्या है। सही समय पर पहचान और उचित उपाय से फसल को बचाया जा सकता है…",
+    feat_time:            "⏱️ 3 मिनट",
+    feat_date:            "📅 आज",
+    read_more:            "पढ़ें →",
+    trending_label:       "🔥 ट्रेंडिंग अभी",
+    tr1_title:            "यूरिया कब दें?",
+    tr1_time:             "4 मिनट",
+    tr2_title:            "धान झोंका रोग",
+    tr2_time:             "4 मिनट",
+    tr3_title:            "कीट देसी उपाय",
+    tr3_time:             "4 मिनट",
+    tr4_title:            "ड्रिप सिंचाई",
+    tr4_time:             "5 मिनट",
+    reads:                "पढ़े",
+    all_articles_heading: "📚 सभी लेख",
+    articles_count_suffix:"लेख",
+    a1_title:  "गेहूं में पीलापन: कारण और उपाय",
+    a1_time:   "3 मिनट", a1_date: "आज",
+    a2_title:  "गेहूं की बुवाई: सही समय और तरीका",
+    a2_time:   "5 मिनट", a2_date: "2 दिन पहले",
+    a3_title:  "धान की सही बुवाई का समय और तरीका",
+    a3_time:   "5 मिनट", a3_date: "कल",
+    a4_title:  "धान में झोंका रोग (Blast): पहचान और बचाव",
+    a4_time:   "4 मिनट", a4_date: "3 दिन पहले",
+    a5_title:  "ड्रिप सिंचाई: कम पानी में ज़्यादा पैदावार",
+    a5_time:   "5 मिनट", a5_date: "1 दिन पहले",
+    a6_title:  "स्प्रिंकलर सिंचाई और सरकारी सब्सिडी",
+    a6_time:   "4 मिनट", a6_date: "2 दिन पहले",
+    a7_title:  "यूरिया और DAP: कब और कितना दें?",
+    a7_time:   "4 मिनट", a7_date: "2 दिन पहले",
+    a8_title:  "घर पर जैविक खाद कैसे बनाएं?",
+    a8_time:   "6 मिनट", a8_date: "4 दिन पहले",
+    a9_title:  "फसल में कीट नियंत्रण के देसी उपाय",
+    a9_time:   "4 मिनट", a9_date: "3 दिन पहले",
+    a10_title: "टिड्डी दल से फसल को कैसे बचाएं?",
+    a10_time:  "3 मिनट", a10_date: "5 दिन पहले",
+    a11_title: "मौसम के अनुसार खेती की योजना कैसे बनाएं?",
+    a11_time:  "5 मिनट", a11_date: "1 सप्ताह पहले",
+    a12_title: "सूखे में फसल बचाने के उपाय",
+    a12_time:  "4 मिनट", a12_date: "1 सप्ताह पहले",
+    a13_title: "सरसों की उन्नत खेती: पूरी जानकारी",
+    a13_time:  "7 मिनट", a13_date: "10 दिन पहले",
+    a14_title: "गन्ने में लाल सड़न रोग: पहचान व उपचार",
+    a14_time:  "4 मिनट", a14_date: "12 दिन पहले",
+    empty_title: "कोई लेख नहीं मिला",
+    empty_sub:   "दूसरे शब्दों से खोजें या श्रेणी बदलें",
+  },
+
+  en: {
+    page_title:           "Articles & Farming Tips — KrashiMitra",
+    logo_title:           "KrashiMitra",
+    logo_sub:             "Farmer's Digital Companion",
+    nav_home:             "Home",
+    nav_weather:          "Weather",
+    nav_mandi:            "Market",
+    nav_articles:         "Articles",
+    nav_help:             "Help",
+    nav_chat:             "Chat",
+    hero_eyebrow:         "📰 Knowledge Centre",
+    hero_title:           'Articles &amp; <span class="highlight">Farming Tips</span>',
+    hero_sub:             "Expert-written articles on crops, fertilisers, weather and complete farming guidance",
+    pill_articles:        "Articles",
+    pill_categories:      "Categories",
+    pill_expert:          "Expert Advice",
+    search_placeholder:   "Search articles… e.g. wheat, fertiliser, pest",
+    cat_all:              "🌿 All",
+    cat_gehun:            "🌾 Wheat",
+    cat_dhan:             "🍚 Paddy",
+    cat_khad:             "🧪 Fertiliser",
+    cat_keet:             "🐛 Pests",
+    cat_mausam:           "🌦️ Weather",
+    cat_sarso:            "🌻 Mustard",
+    cat_ganna:            "🎋 Sugarcane",
+    featured_heading:     "⭐ Featured Article",
+    featured_badge:       "✨ FEATURED",
+    cat_gehun_plain:      "Wheat",
+    cat_dhan_plain:       "Paddy",
+    cat_khad_plain:       "Fertiliser",
+    cat_keet_plain:       "Pest",
+    cat_mausam_plain:     "Weather",
+    cat_sarso_plain:      "Mustard",
+    cat_ganna_plain:      "Sugarcane",
+    cat_sinchai_plain:    "Irrigation",
+    feat_title:           "Yellowing in Wheat: Causes, Identification & Remedies",
+    feat_excerpt:         "Yellowing of leaves in wheat crops is a common problem. Early identification and timely treatment can save your crop…",
+    feat_time:            "⏱️ 3 min",
+    feat_date:            "📅 Today",
+    read_more:            "Read →",
+    trending_label:       "🔥 Trending Now",
+    tr1_title:            "When to Apply Urea?",
+    tr1_time:             "4 min",
+    tr2_title:            "Paddy Blast Disease",
+    tr2_time:             "4 min",
+    tr3_title:            "Natural Pest Control",
+    tr3_time:             "4 min",
+    tr4_title:            "Drip Irrigation",
+    tr4_time:             "5 min",
+    reads:                "reads",
+    all_articles_heading: "📚 All Articles",
+    articles_count_suffix:"articles",
+    a1_title:  "Yellowing in Wheat: Causes & Remedies",
+    a1_time:   "3 min", a1_date: "Today",
+    a2_title:  "Wheat Sowing: Right Time & Method",
+    a2_time:   "5 min", a2_date: "2 days ago",
+    a3_title:  "Paddy Sowing: Right Time & Method",
+    a3_time:   "5 min", a3_date: "Yesterday",
+    a4_title:  "Paddy Blast Disease: Identification & Prevention",
+    a4_time:   "4 min", a4_date: "3 days ago",
+    a5_title:  "Drip Irrigation: More Yield with Less Water",
+    a5_time:   "5 min", a5_date: "1 day ago",
+    a6_title:  "Sprinkler Irrigation & Government Subsidy",
+    a6_time:   "4 min", a6_date: "2 days ago",
+    a7_title:  "Urea & DAP: When and How Much to Apply?",
+    a7_time:   "4 min", a7_date: "2 days ago",
+    a8_title:  "How to Make Organic Compost at Home?",
+    a8_time:   "6 min", a8_date: "4 days ago",
+    a9_title:  "Natural Pest Control Methods for Crops",
+    a9_time:   "4 min", a9_date: "3 days ago",
+    a10_title: "How to Protect Crops from Locust Attack?",
+    a10_time:  "3 min", a10_date: "5 days ago",
+    a11_title: "How to Plan Farming According to Weather?",
+    a11_time:  "5 min", a11_date: "1 week ago",
+    a12_title: "How to Save Crops During Drought?",
+    a12_time:  "4 min", a12_date: "1 week ago",
+    a13_title: "Advanced Mustard Farming: Complete Guide",
+    a13_time:  "7 min", a13_date: "10 days ago",
+    a14_title: "Red Rot Disease in Sugarcane: Identification & Treatment",
+    a14_time:  "4 min", a14_date: "12 days ago",
+    empty_title: "No articles found",
+    empty_sub:   "Try different keywords or change the category",
+  },
+
+  kn: {
+    page_title:           "ಲೇಖನಗಳು & ಕೃಷಿ ಸಲಹೆ — KrashiMitra",
+    logo_title:           "ಕೃಷಿ ಮಿತ್ರ",
+    logo_sub:             "ರೈತನ ಡಿಜಿಟಲ್ ಸಂಗಾತಿ",
+    nav_home:             "ಮನೆ",
+    nav_weather:          "ಹವಾಮಾನ",
+    nav_mandi:            "ಮಾರುಕಟ್ಟೆ",
+    nav_articles:         "ಲೇಖನ",
+    nav_help:             "ಸಹಾಯ",
+    nav_chat:             "ಚಾಟ್",
+    hero_eyebrow:         "📰 ಜ್ಞಾನ ಕೇಂದ್ರ",
+    hero_title:           'ಲೇಖನಗಳು &amp; <span class="highlight">ಕೃಷಿ ಸಲಹೆ</span>',
+    hero_sub:             "ತಜ್ಞರು ಬರೆದ ಲೇಖನಗಳು — ಬೆಳೆ, ಗೊಬ್ಬರ, ಹವಾಮಾನ ಮತ್ತು ಕೃಷಿಯ ಸಂಪೂರ್ಣ ಮಾಹಿತಿ",
+    pill_articles:        "ಲೇಖನಗಳು",
+    pill_categories:      "ವಿಭಾಗಗಳು",
+    pill_expert:          "ತಜ್ಞರ ಸಲಹೆ",
+    search_placeholder:   "ಲೇಖನ ಹುಡುಕಿ… ಉದಾ: ಗೋಧಿ, ಗೊಬ್ಬರ, ಕೀಟ",
+    cat_all:              "🌿 ಎಲ್ಲ",
+    cat_gehun:            "🌾 ಗೋಧಿ",
+    cat_dhan:             "🍚 ಭತ್ತ",
+    cat_khad:             "🧪 ಗೊಬ್ಬರ",
+    cat_keet:             "🐛 ಕೀಟ",
+    cat_mausam:           "🌦️ ಹವಾಮಾನ",
+    cat_sarso:            "🌻 ಸಾಸಿವೆ",
+    cat_ganna:            "🎋 ಕಬ್ಬು",
+    featured_heading:     "⭐ ವಿಶೇಷ ಲೇಖನ",
+    featured_badge:       "✨ FEATURED",
+    cat_gehun_plain:      "ಗೋಧಿ",
+    cat_dhan_plain:       "ಭತ್ತ",
+    cat_khad_plain:       "ಗೊಬ್ಬರ",
+    cat_keet_plain:       "ಕೀಟ",
+    cat_mausam_plain:     "ಹವಾಮಾನ",
+    cat_sarso_plain:      "ಸಾಸಿವೆ",
+    cat_ganna_plain:      "ಕಬ್ಬು",
+    cat_sinchai_plain:    "ನೀರಾವರಿ",
+    feat_title:           "ಗೋಧಿಯಲ್ಲಿ ಹಳದಿ: ಕಾರಣ, ಗುರುತಿಸುವಿಕೆ & ಪರಿಹಾರ",
+    feat_excerpt:         "ಗೋಧಿ ಬೆಳೆಯ ಎಲೆಗಳು ಹಳದಿಯಾಗುವುದು ಸಾಮಾನ್ಯ ಸಮಸ್ಯೆ. ಸರಿಯಾದ ಸಮಯದಲ್ಲಿ ಗುರುತಿಸಿ ಸೂಕ್ತ ಕ್ರಮ ತೆಗೆದುಕೊಂಡರೆ ಬೆಳೆ ಉಳಿಸಬಹುದು…",
+    feat_time:            "⏱️ 3 ನಿಮಿಷ",
+    feat_date:            "📅 ಇಂದು",
+    read_more:            "ಓದಿ →",
+    trending_label:       "🔥 ಟ್ರೆಂಡಿಂಗ್ ಈಗ",
+    tr1_title:            "ಯೂರಿಯಾ ಯಾವಾಗ ಹಾಕಬೇಕು?",
+    tr1_time:             "4 ನಿಮಿಷ",
+    tr2_title:            "ಭತ್ತದ ಬ್ಲಾಸ್ಟ್ ರೋಗ",
+    tr2_time:             "4 ನಿಮಿಷ",
+    tr3_title:            "ಕೀಟ ನಿಯಂತ್ರಣ ದೇಸಿ ಉಪಾಯ",
+    tr3_time:             "4 ನಿಮಿಷ",
+    tr4_title:            "ಹನಿ ನೀರಾವರಿ",
+    tr4_time:             "5 ನಿಮಿಷ",
+    reads:                "ಓದಿದ್ದಾರೆ",
+    all_articles_heading: "📚 ಎಲ್ಲ ಲೇಖನಗಳು",
+    articles_count_suffix:"ಲೇಖನಗಳು",
+    a1_title:  "ಗೋಧಿಯಲ್ಲಿ ಹಳದಿ: ಕಾರಣ & ಪರಿಹಾರ",
+    a1_time:   "3 ನಿಮಿಷ", a1_date: "ಇಂದು",
+    a2_title:  "ಗೋಧಿ ಬಿತ್ತನೆ: ಸರಿಯಾದ ಸಮಯ & ವಿಧಾನ",
+    a2_time:   "5 ನಿಮಿಷ", a2_date: "2 ದಿನ ಹಿಂದೆ",
+    a3_title:  "ಭತ್ತ ಬಿತ್ತನೆ: ಸರಿಯಾದ ಸಮಯ & ವಿಧಾನ",
+    a3_time:   "5 ನಿಮಿಷ", a3_date: "ನಿನ್ನೆ",
+    a4_title:  "ಭತ್ತದ ಬ್ಲಾಸ್ಟ್ ರೋಗ: ಗುರುತಿಸುವಿಕೆ & ತಡೆಗಟ್ಟುವಿಕೆ",
+    a4_time:   "4 ನಿಮಿಷ", a4_date: "3 ದಿನ ಹಿಂದೆ",
+    a5_title:  "ಹನಿ ನೀರಾವರಿ: ಕಡಿಮೆ ನೀರಿನಲ್ಲಿ ಹೆಚ್ಚು ಇಳುವರಿ",
+    a5_time:   "5 ನಿಮಿಷ", a5_date: "1 ದಿನ ಹಿಂದೆ",
+    a6_title:  "ತುಂತುರು ನೀರಾವರಿ & ಸರ್ಕಾರಿ ಸಹಾಯಧನ",
+    a6_time:   "4 ನಿಮಿಷ", a6_date: "2 ದಿನ ಹಿಂದೆ",
+    a7_title:  "ಯೂರಿಯಾ & DAP: ಯಾವಾಗ, ಎಷ್ಟು ಹಾಕಬೇಕು?",
+    a7_time:   "4 ನಿಮಿಷ", a7_date: "2 ದಿನ ಹಿಂದೆ",
+    a8_title:  "ಮನೆಯಲ್ಲಿ ಸಾವಯವ ಗೊಬ್ಬರ ತಯಾರಿಸುವ ವಿಧಾನ",
+    a8_time:   "6 ನಿಮಿಷ", a8_date: "4 ದಿನ ಹಿಂದೆ",
+    a9_title:  "ಬೆಳೆಗೆ ಕೀಟ ನಿಯಂತ್ರಣ ದೇಸಿ ಉಪಾಯಗಳು",
+    a9_time:   "4 ನಿಮಿಷ", a9_date: "3 ದಿನ ಹಿಂದೆ",
+    a10_title: "ಮಿಡತೆ ದಾಳಿಯಿಂದ ಬೆಳೆ ರಕ್ಷಿಸುವುದು ಹೇಗೆ?",
+    a10_time:  "3 ನಿಮಿಷ", a10_date: "5 ದಿನ ಹಿಂದೆ",
+    a11_title: "ಹವಾಮಾನಕ್ಕೆ ತಕ್ಕಂತೆ ಕೃಷಿ ಯೋಜನೆ ಹೇಗೆ?",
+    a11_time:  "5 ನಿಮಿಷ", a11_date: "1 ವಾರ ಹಿಂದೆ",
+    a12_title: "ಬರದಲ್ಲಿ ಬೆಳೆ ಉಳಿಸುವ ಉಪಾಯಗಳು",
+    a12_time:  "4 ನಿಮಿಷ", a12_date: "1 ವಾರ ಹಿಂದೆ",
+    a13_title: "ಸಾಸಿವೆ ಕೃಷಿ: ಸಂಪೂರ್ಣ ಮಾಹಿತಿ",
+    a13_time:  "7 ನಿಮಿಷ", a13_date: "10 ದಿನ ಹಿಂದೆ",
+    a14_title: "ಕಬ್ಬಿನಲ್ಲಿ ಕೆಂಪು ಕೊಳೆ ರೋಗ: ಗುರುತಿಸುವಿಕೆ & ಚಿಕಿತ್ಸೆ",
+    a14_time:  "4 ನಿಮಿಷ", a14_date: "12 ದಿನ ಹಿಂದೆ",
+    empty_title: "ಯಾವುದೇ ಲೇಖನ ಸಿಗಲಿಲ್ಲ",
+    empty_sub:   "ಬೇರೆ ಪದಗಳಿಂದ ಹುಡುಕಿ ಅಥವಾ ವಿಭಾಗ ಬದಲಿಸಿ",
   }
-  checkDesktopNav();
-  window.addEventListener('resize', checkDesktopNav);
+};
 
-  /* ── Avatar / profile ── */
-  function avatarBtnClick() {
-    const token = localStorage.getItem("krishi_token");
-    window.location.href = token ? "../chat.html?tab=profile" : "../chat.html?tab=login";
-  }
+/* ═══════════════════════════════════════════
+   ACTIVE LANGUAGE  —  Hindi is always default
+═══════════════════════════════════════════ */
+let currentLang = localStorage.getItem('km_lang') || 'hi';
 
-  /* ── Active filter state ── */
-  let activeFilter = 'all';
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('km_lang', lang);
 
-  function setFilter(el, cat) {
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    activeFilter = cat;
-    applyFilters();
-  }
+  // html / body lang attributes
+  document.documentElement.lang = lang;
+  document.body.setAttribute('lang', lang);
 
-  /* ── Search ── */
-  function filterArticles(query) {
-    applyFilters(query.trim().toLowerCase());
-  }
+  // Highlight the correct toggle button
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
 
-  /* ── Combined filter + search ── */
-  function applyFilters(query = '') {
-    const searchVal = query || document.getElementById('article-search').value.trim().toLowerCase();
-    const cards = document.querySelectorAll('#articles-list .article-card');
-    let visible = 0;
+  applyTranslations(lang);
+}
 
-    cards.forEach(card => {
-      const cat   = card.dataset.cat || '';
-      const title = card.dataset.title || '';
-      const catMatch   = activeFilter === 'all' || cat === activeFilter;
-      const queryMatch = !searchVal || title.includes(searchVal);
-      const show = catMatch && queryMatch;
-      card.style.display = show ? 'flex' : 'none';
-      if (show) visible++;
-    });
+function applyTranslations(lang) {
+  const t = TRANSLATIONS[lang];
+  if (!t) return;
 
-    // Also hide/show featured card based on category filter
-    const featured = document.querySelector('.featured-card');
-    if (featured) {
-      const fcat = featured.dataset.cat || '';
-      const ftitle = featured.dataset.title || '';
-      const catMatch   = activeFilter === 'all' || fcat === activeFilter;
-      const queryMatch = !searchVal || ftitle.includes(searchVal);
-      featured.closest('section').style.display = (catMatch && queryMatch) ? 'block' : 'none';
-      if (catMatch && queryMatch) visible++;
+  // <title>
+  document.title = t.page_title;
+
+  // All [data-i18n] elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (!t[key]) return;
+
+    if (el.classList.contains('article-title')) {
+      // Preserve NEW / HOT badges inside article titles
+      const badge = el.querySelector('.new-badge, .hot-badge');
+      el.innerHTML = t[key] + (badge ? ' ' + badge.outerHTML : '');
+    } else if (el.classList.contains('page-hero-title')) {
+      // Hero title contains a <span class="highlight"> — set innerHTML directly
+      el.innerHTML = t[key];
+    } else {
+      el.innerHTML = t[key];
     }
+  });
 
-    document.getElementById('article-count').textContent = visible + ' लेख';
-    document.getElementById('empty-state').style.display = visible === 0 ? 'block' : 'none';
+  // Placeholder text on search input
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (t[key]) el.placeholder = t[key];
+  });
+
+  // Article count pill
+  const countEl = document.getElementById('article-count');
+  if (countEl) {
+    const n = countEl.dataset.count || document.querySelectorAll('#articles-list .article-card').length;
+    countEl.textContent = n + ' ' + (t.articles_count_suffix || t.pill_articles);
   }
-</script>
 
-</body>
-</html>
+  // Hero total count (only set if not yet populated)
+  const totalEl = document.getElementById('total-count');
+  if (totalEl && totalEl.textContent === '…') {
+    totalEl.textContent = document.querySelectorAll('#articles-list .article-card').length;
+  }
+
+  // Re-run search so filter results use translated titles
+  applyFilters(document.getElementById('article-search')?.value?.trim()?.toLowerCase() || '');
+}
+
+/* ═══════════════════════════════════════════
+   INIT ON LOAD
+═══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+  // Count articles and populate hero + pill
+  const total = document.querySelectorAll('#articles-list .article-card').length;
+  document.getElementById('total-count').textContent = total;
+  const sc = document.getElementById('article-count');
+  if (sc) { sc.dataset.count = total; }
+
+  // Apply saved (or default Hindi) language — this sets everything
+  setLang(currentLang);
+});
+
+/* ═══════════════════════════════════════════
+   DESKTOP NAV
+═══════════════════════════════════════════ */
+function checkDesktopNav() {
+  const nav = document.getElementById('desktop-nav');
+  if (nav) nav.style.display = window.innerWidth >= 600 ? 'flex' : 'none';
+}
+checkDesktopNav();
+window.addEventListener('resize', checkDesktopNav);
+
+/* ═══════════════════════════════════════════
+   AVATAR
+═══════════════════════════════════════════ */
+function avatarBtnClick() {
+  const token = localStorage.getItem("krishi_token");
+  window.location.href = token ? "../chat.html?tab=profile" : "../chat.html?tab=login";
+}
+
+/* ═══════════════════════════════════════════
+   FILTER
+═══════════════════════════════════════════ */
+let activeFilter = 'all';
+
+function setFilter(el, cat) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = cat;
+  const trending = document.getElementById('trending-section');
+  if (trending) trending.style.display = (cat === 'all') ? 'block' : 'none';
+  applyFilters();
+}
+
+/* ═══════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════ */
+function handleSearch(val) {
+  const clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.style.display = val.length > 0 ? 'block' : 'none';
+  applyFilters(val.trim().toLowerCase());
+}
+
+function clearSearch() {
+  const inp = document.getElementById('article-search');
+  if (inp) inp.value = '';
+  const clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  applyFilters('');
+}
+
+/* ═══════════════════════════════════════════
+   COMBINED FILTER + SEARCH
+═══════════════════════════════════════════ */
+function applyFilters(query = '') {
+  const searchVal = (query !== undefined ? query : (document.getElementById('article-search')?.value || '')).trim().toLowerCase();
+  const cards = document.querySelectorAll('#articles-list .article-card');
+  let visible = 0;
+
+  cards.forEach(card => {
+    const cat = card.dataset.cat;
+
+    // Use translated title for current language so search works in EN/KN too
+    const titleEl = card.querySelector('[data-i18n]');
+    const i18nKey = titleEl ? titleEl.dataset.i18n : null;
+    const translatedTitle = (i18nKey && TRANSLATIONS[currentLang]?.[i18nKey])
+      ? TRANSLATIONS[currentLang][i18nKey].toLowerCase()
+      : (card.dataset.title || '').toLowerCase();
+
+    const matchesCat    = (activeFilter === 'all' || cat === activeFilter);
+    const matchesSearch = (searchVal === '' || translatedTitle.includes(searchVal));
+    const isVisible     = matchesCat && matchesSearch;
+    card.style.display  = isVisible ? 'flex' : 'none';
+    if (isVisible) visible++;
+  });
+  document.getElementById('empty-state').style.display = (visible === 0) ? 'block' : 'none';
+}
+
+/* ═══════════════════════════════════════════
+   MIC / VOICE SEARCH
+═══════════════════════════════════════════ */
+let recognition = null;
+let isListening = false;
+
+const langMap = { hi: 'hi-IN', en: 'en-IN', kn: 'kn-IN' };
+
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('आपका ब्राउज़र voice search support नहीं करता। Chrome use करें।');
+    return;
+  }
+  if (isListening) { stopMic(); return; }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = langMap[currentLang] || 'hi-IN';
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  const btn = document.getElementById('mic-btn');
+  const inp = document.getElementById('article-search');
+
+  recognition.onstart = () => {
+    isListening = true;
+    btn.classList.add('listening');
+    inp.placeholder = currentLang === 'en' ? 'Listening…' : currentLang === 'kn' ? 'ಆಲಿಸುತ್ತಿದೆ…' : 'सुन रहा है…';
+  };
+
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    inp.value = transcript;
+    handleSearch(transcript);
+    const clearBtn = document.getElementById('search-clear');
+    if (clearBtn) clearBtn.style.display = transcript.length > 0 ? 'block' : 'none';
+  };
+
+  recognition.onerror = () => stopMic();
+  recognition.onend   = () => stopMic();
+
+  recognition.start();
+}
+
+function stopMic() {
+  isListening = false;
+  const btn = document.getElementById('mic-btn');
+  const inp = document.getElementById('article-search');
+  if (btn) btn.classList.remove('listening');
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  // restore placeholder
+  const t = TRANSLATIONS[currentLang];
+  if (inp && t) inp.placeholder = t.search_placeholder || '';
+}
+
+</script>
