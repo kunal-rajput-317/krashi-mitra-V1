@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>घर पर जैविक खाद कैसे बनाएं — KrashiMitra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green-dark:   #1b5e20;
+      --green-mid:    #2e7d32;
+      --green-light:  #43a047;
+      --green-soft:   #e8f5e9;
+      --gold:         #f9a825;
+      --gold-soft:    #fff8e1;
+      --cream:        #fafaf7;
+      --white:        #ffffff;
+      --text-dark:    #1a1a1a;
+      --text-mid:     #4a4a4a;
+      --text-soft:    #757575;
+      --border:       #e0e0e0;
+      --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 20px rgba(0,0,0,0.12);
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    24px;
+      --brown-dark:   #3e2723;
+      --brown-mid:    #5d4037;
+      --brown-light:  #795548;
+      --brown-soft:   #efebe9;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream); color: var(--text-dark);
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm); padding: 0 20px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--brown-soft); border: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; text-decoration: none;
+      color: var(--brown-mid); transition: background 0.2s; flex-shrink: 0;
+    }
+    .back-btn:hover { background: #d7ccc8; }
+    .header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; box-shadow: 0 2px 8px rgba(46,125,50,0.3); flex-shrink: 0;
+    }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-title { font-size: 16px; font-weight: 800; color: var(--green-dark); line-height: 1.1; }
+    .logo-sub { font-size: 10px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', sans-serif; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-light), var(--gold));
+      border: 2px solid var(--green-soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; cursor: pointer; flex-shrink: 0; transition: box-shadow 0.2s;
+    }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(93,64,55,0.2); }
+
+    /* ── READING PROGRESS ── */
+    .reading-progress {
+      position: fixed; top: 60px; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--brown-mid), var(--green-mid));
+      width: 0%; z-index: 99; transition: width 0.1s linear;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── ARTICLE HERO ── */
+    .article-hero {
+      background: linear-gradient(135deg, #3e2723 0%, #5d4037 50%, #6d4c41 100%);
+      padding: 28px 20px 36px; position: relative; overflow: hidden;
+    }
+    .article-hero::before {
+      content: '♻️'; position: absolute; right: -10px; bottom: -20px;
+      font-size: 130px; opacity: 0.10; pointer-events: none; line-height: 1;
+    }
+    .article-hero::after {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .article-breadcrumb {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 14px;
+      font-size: 11px; color: rgba(255,255,255,0.65);
+    }
+    .article-breadcrumb a { color: rgba(255,255,255,0.65); text-decoration: none; }
+    .article-breadcrumb a:hover { color: rgba(255,255,255,0.9); }
+    .article-breadcrumb span { opacity: 0.5; }
+    .article-tag-hero {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px; padding: 4px 12px; font-size: 11px;
+      color: rgba(255,255,255,0.95); font-weight: 600; margin-bottom: 12px;
+      backdrop-filter: blur(4px); letter-spacing: 0.3px;
+    }
+    .article-hero-title {
+      font-size: 24px; font-weight: 800; color: var(--white);
+      line-height: 1.25; margin-bottom: 12px; letter-spacing: -0.3px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .article-hero-title span { color: var(--gold); }
+    .article-hero-meta {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      font-size: 12px; color: rgba(255,255,255,0.75);
+    }
+    .meta-pill { display: flex; align-items: center; gap: 5px; }
+
+    /* ── TOC ── */
+    .toc-box {
+      background: var(--brown-soft); border: 1.5px solid #d7ccc8;
+      border-radius: var(--radius-md); padding: 16px 18px; margin: 24px 20px 0;
+    }
+    .toc-title {
+      font-size: 13px; font-weight: 700; color: var(--brown-mid);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .toc-list li a {
+      font-size: 13px; color: var(--brown-mid); text-decoration: none;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      display: flex; align-items: center; gap: 8px; transition: color 0.2s;
+    }
+    .toc-list li a:hover { color: var(--brown-dark); }
+    .toc-num {
+      width: 20px; height: 20px; background: var(--brown-mid);
+      color: var(--white); border-radius: 50%; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* ── BODY ── */
+    .article-body { padding: 24px 20px; max-width: 720px; }
+    .a-section { margin-bottom: 28px; }
+    .a-heading {
+      font-size: 18px; font-weight: 800; color: var(--text-dark);
+      margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      padding-bottom: 8px; border-bottom: 2px solid var(--brown-soft);
+    }
+    .a-heading-icon {
+      width: 34px; height: 34px; background: var(--brown-soft);
+      border-radius: 9px; display: flex; align-items: center;
+      justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .a-para {
+      font-size: 14px; line-height: 1.85; color: var(--text-mid);
+      font-family: 'Noto Sans Devanagari', sans-serif; margin-bottom: 12px;
+    }
+    .a-para strong { color: var(--text-dark); font-weight: 700; }
+    .a-intro-box {
+      background: linear-gradient(135deg, var(--brown-soft), var(--green-soft));
+      border-left: 4px solid var(--brown-mid);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 14px 16px; margin-bottom: 20px;
+      font-size: 14px; color: var(--text-mid);
+      font-family: 'Noto Sans Devanagari', sans-serif; line-height: 1.7;
+    }
+    .a-intro-box strong { color: var(--brown-mid); }
+
+    /* ── KHAD TYPE CARDS ── */
+    .khad-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+    }
+    .khad-card {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1.5px solid var(--border); padding: 14px 12px;
+      box-shadow: var(--shadow-sm); transition: box-shadow 0.2s, transform 0.15s;
+      position: relative; overflow: hidden;
+    }
+    .khad-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--kc-top, var(--green-mid));
+    }
+    .khad-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .khad-icon { font-size: 28px; margin-bottom: 6px; }
+    .khad-name {
+      font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .khad-time {
+      font-size: 11px; color: var(--brown-mid); font-weight: 600; margin-bottom: 5px;
+    }
+    .khad-benefit { font-size: 11px; color: var(--text-soft); line-height: 1.5;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+
+    /* ── STEP-BY-STEP PROCESS ── */
+    .steps-list { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; }
+    .step-item { display: flex; gap: 0; position: relative; }
+    .step-left {
+      display: flex; flex-direction: column; align-items: center;
+      width: 52px; flex-shrink: 0;
+    }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--sn-color, var(--green-mid));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: var(--white); z-index: 1; flex-shrink: 0;
+    }
+    .step-line {
+      width: 2px; flex: 1; background: var(--border); min-height: 16px;
+    }
+    .step-item:last-child .step-line { display: none; }
+    .step-body {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1px solid var(--border); padding: 12px 14px;
+      box-shadow: var(--shadow-sm); margin-bottom: 10px; flex: 1; margin-left: 10px;
+    }
+    .step-title {
+      font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 5px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .step-desc {
+      font-size: 13px; color: var(--text-mid); line-height: 1.65;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .step-desc strong { color: var(--text-dark); }
+    .step-tip {
+      margin-top: 8px; background: var(--green-soft); border-radius: 8px;
+      padding: 7px 10px; font-size: 11px; color: var(--green-dark);
+      font-family: 'Noto Sans Devanagari', sans-serif; line-height: 1.5;
+    }
+
+    /* ── INGREDIENTS LIST ── */
+    .ingredients-box {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1.5px solid var(--border); box-shadow: var(--shadow-sm);
+      overflow: hidden; margin-bottom: 16px;
+    }
+    .ing-header {
+      background: linear-gradient(90deg, var(--brown-mid), var(--brown-light));
+      padding: 12px 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .ing-header-title { font-size: 14px; font-weight: 700; color: var(--white); }
+    .ing-body { padding: 4px 0; }
+    .ing-row {
+      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .ing-row:last-child { border-bottom: none; }
+    .ing-icon { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
+    .ing-text { flex: 1; }
+    .ing-name {
+      font-size: 13px; font-weight: 600; color: var(--text-dark);
+      font-family: 'Noto Sans Devanagari', sans-serif; margin-bottom: 1px;
+    }
+    .ing-note { font-size: 11px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', sans-serif; }
+    .ing-tick { font-size: 18px; color: var(--green-mid); flex-shrink: 0; }
+
+    /* ── COMPARISON TABLE ── */
+    .comp-table {
+      width: 100%; border-collapse: collapse; background: var(--white);
+      border-radius: var(--radius-md); overflow: hidden;
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      margin-bottom: 16px; font-size: 13px;
+    }
+    .comp-table th {
+      background: linear-gradient(90deg, var(--brown-mid), var(--brown-light));
+      color: var(--white); padding: 10px 12px; text-align: left;
+      font-weight: 700; font-family: 'Noto Sans Devanagari', sans-serif; font-size: 12px;
+    }
+    .comp-table td {
+      padding: 10px 12px; border-bottom: 1px solid #f0f0f0;
+      color: var(--text-mid); font-family: 'Noto Sans Devanagari', sans-serif;
+      vertical-align: top; line-height: 1.5;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table tr:nth-child(even) td { background: #fafafa; }
+    .tick { color: #2e7d32; font-weight: 700; }
+    .cross { color: #c62828; font-weight: 700; }
+
+    /* ── ALERTS ── */
+    .a-alert {
+      border-radius: var(--radius-md); padding: 14px 16px;
+      margin-bottom: 16px; display: flex; gap: 12px; align-items: flex-start;
+    }
+    .a-alert.warning  { background: #fff8e1; border: 1.5px solid #ffe082; }
+    .a-alert.danger   { background: #ffebee; border: 1.5px solid #ef9a9a; }
+    .a-alert.success  { background: var(--green-soft); border: 1.5px solid #a5d6a7; }
+    .a-alert.info     { background: var(--brown-soft); border: 1.5px solid #d7ccc8; }
+    .a-alert-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .a-alert-text {
+      font-size: 13px; color: var(--text-mid); line-height: 1.65;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .a-alert-text strong { color: var(--text-dark); }
+
+    /* ── TAKEAWAY ── */
+    .a-takeaway {
+      background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+      border-radius: var(--radius-lg); padding: 20px 18px;
+      margin-bottom: 20px; position: relative; overflow: hidden;
+    }
+    .a-takeaway::before {
+      content: '♻️'; position: absolute; right: -8px; bottom: -12px;
+      font-size: 90px; opacity: 0.08; pointer-events: none;
+    }
+    .a-takeaway-title {
+      font-size: 14px; font-weight: 800; color: var(--gold);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 7px;
+    }
+    .a-takeaway-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .a-takeaway-list li {
+      font-size: 13px; color: rgba(255,255,255,0.9);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .a-takeaway-list li::before { content: '→'; color: var(--gold); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── CTA ── */
+    .cta-strip {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .cta-text { font-size: 13px; color: var(--text-mid); font-family: 'Noto Sans Devanagari', sans-serif; }
+    .cta-text strong { color: var(--text-dark); }
+    .cta-btn {
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      color: var(--white); font-size: 13px; font-weight: 600;
+      padding: 9px 18px; border-radius: 20px; text-decoration: none;
+      white-space: nowrap; font-family: 'Noto Sans Devanagari', sans-serif;
+      transition: box-shadow 0.2s;
+    }
+    .cta-btn:hover { box-shadow: 0 4px 14px rgba(46,125,50,0.35); }
+
+    /* ── RELATED ── */
+    .related-grid { display: flex; flex-direction: column; gap: 10px; }
+    .related-card {
+      background: var(--white); border-radius: var(--radius-md);
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      text-decoration: none; transition: box-shadow 0.2s, transform 0.15s;
+      position: relative; overflow: hidden;
+    }
+    .related-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--rc-accent, var(--green-mid)); border-radius: 4px 0 0 4px;
+    }
+    .related-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .related-thumb {
+      width: 46px; height: 46px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .related-text { flex: 1; }
+    .related-tag { font-size: 10px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .related-title { font-size: 13px; font-weight: 700; color: var(--text-dark); line-height: 1.3; font-family: 'Noto Sans Devanagari', sans-serif; }
+    .related-arrow { font-size: 18px; color: var(--text-soft); opacity: 0.4; flex-shrink: 0; }
+
+    /* ── IMAGE BLOCKS ── */
+    .a-img {
+      width: 100%; border-radius: var(--radius-md); overflow: hidden;
+      margin-bottom: 16px; background: #f0f0f0; position: relative; box-shadow: var(--shadow-sm);
+    }
+    .a-img img {
+      width: 100%; height: auto; display: block; object-fit: cover;
+      border-radius: var(--radius-md); transition: transform 0.3s ease;
+    }
+    .a-img:hover img { transform: scale(1.02); }
+    .a-img-caption {
+      padding: 8px 12px; font-size: 11px; color: var(--text-soft);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      background: var(--white); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .a-img-placeholder {
+      width: 100%; min-height: 180px; border-radius: var(--radius-md);
+      border: 2px dashed var(--border); background: var(--white);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; margin-bottom: 16px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .a-img-placeholder:hover { border-color: var(--brown-light); background: var(--brown-soft); }
+    .a-img-placeholder input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .a-img-placeholder-icon { font-size: 36px; opacity: 0.5; }
+    .a-img-placeholder-text {
+      font-size: 13px; color: var(--text-soft);
+      font-family: 'Noto Sans Devanagari', sans-serif; text-align: center; line-height: 1.5;
+    }
+    .a-img-placeholder-text strong { color: var(--brown-mid); }
+    .a-img-placeholder-badge {
+      font-size: 10px; background: var(--brown-soft); color: var(--brown-dark);
+      border: 1px solid #d7ccc8; padding: 2px 10px; border-radius: 20px; font-weight: 600;
+    }
+    .a-img-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .a-img-row .a-img, .a-img-row .a-img-placeholder { margin-bottom: 0; }
+    .a-img-row .a-img img { height: 160px; object-fit: cover; }
+    .a-img-row .a-img-placeholder { min-height: 160px; }
+    .img-wrapper .a-img { display: none; }
+    .img-wrapper.has-image .a-img { display: block; }
+    .img-wrapper.has-image .a-img-placeholder { display: none; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--white); border-top: 1px solid var(--border);
+      display: flex; z-index: 200; box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .bn-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 8px 4px 6px;
+      cursor: pointer; text-decoration: none; gap: 3px;
+      transition: background 0.15s; border-radius: 12px; margin: 4px 2px 0;
+    }
+    .bn-item:hover { background: var(--green-soft); }
+    .bn-item.active .bn-icon { color: var(--green-mid); }
+    .bn-item.active .bn-label { color: var(--green-dark); font-weight: 600; }
+    .bn-icon { font-size: 20px; color: var(--text-soft); }
+    .bn-label { font-size: 10px; color: var(--text-soft); font-weight: 500; font-family: 'Noto Sans Devanagari', sans-serif; }
+    .page-end { height: 80px; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .a-section { animation: fadeUp 0.45s ease both; }
+    .a-section:nth-child(1) { animation-delay: 0.05s; }
+    .a-section:nth-child(2) { animation-delay: 0.10s; }
+    .a-section:nth-child(3) { animation-delay: 0.15s; }
+    .a-section:nth-child(4) { animation-delay: 0.20s; }
+    .a-section:nth-child(5) { animation-delay: 0.25s; }
+    .a-section:nth-child(6) { animation-delay: 0.30s; }
+
+    /* ── DESKTOP ── */
+    @media (min-width: 600px) {
+      .header { padding: 0 40px; }
+      .bottom-nav { display: none; }
+      .page-end { height: 40px; }
+      .article-hero { padding: 36px 40px 44px; }
+      .article-hero-title { font-size: 30px; }
+      .article-body { padding: 28px 40px; }
+      .toc-box { margin: 24px 40px 0; }
+      .khad-grid { grid-template-columns: repeat(4, 1fr); }
+      .related-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 900px) { .article-body { max-width: 780px; } }
+  </style>
+</head>
+<body>
+
+<div class="reading-progress" id="reading-progress"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <a class="back-btn" href="index.html">←</a>
+    <a class="header-logo" href="../index.html">
+      <div class="logo-icon">🌾</div>
+      <div class="logo-text">
+        <span class="logo-title">कृषि मित्र</span>
+        <span class="logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+  <div class="header-right">
+    <div class="avatar-btn" onclick="avatarBtnClick()">👤</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="article-hero">
+  <div class="article-breadcrumb">
+    <a href="../index.html">🏠 मुख्य</a>
+    <span>›</span>
+    <a href="index.html">लेख</a>
+    <span>›</span>
+    जैविक खाद
+  </div>
+  <div class="article-tag-hero">♻️ जैविक खाद</div>
+  <h1 class="article-hero-title">घर पर <span>जैविक खाद</span> कैसे बनाएं?<br>पूरी विधि — Step by Step</h1>
+  <div class="article-hero-meta">
+    <span class="meta-pill">⏱️ 6 मिनट पढ़ाई</span>
+    <span class="meta-pill">✍️ कृषि विशेषज्ञ</span>
+    <span class="meta-pill">📅 मई 2026</span>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc-box">
+  <div class="toc-title">📋 इस लेख में क्या है</div>
+  <ul class="toc-list">
+    <li><a href="#intro"><span class="toc-num">1</span> जैविक खाद क्यों जरूरी है?</a></li>
+    <li><a href="#types"><span class="toc-num">2</span> चार मुख्य जैविक खाद</a></li>
+    <li><a href="#compost"><span class="toc-num">3</span> कम्पोस्ट खाद — पूरी विधि</a></li>
+    <li><a href="#vermi"><span class="toc-num">4</span> वर्मी कम्पोस्ट — केंचुआ खाद</a></li>
+    <li><a href="#jeevamrit"><span class="toc-num">5</span> जीवामृत — तरल जैविक खाद</a></li>
+    <li><a href="#compare"><span class="toc-num">6</span> जैविक vs रासायनिक खाद</a></li>
+    <li><a href="#summary"><span class="toc-num">7</span> मुख्य बातें</a></li>
+  </ul>
+</div>
+
+<!-- ARTICLE BODY -->
+<div class="article-body">
+
+  <!-- S1: WHY -->
+  <div class="a-section" id="intro">
+    <div class="a-heading">
+      <div class="a-heading-icon">🌱</div>
+      जैविक खाद क्यों जरूरी है?
+    </div>
+    <div class="a-intro-box">
+      <strong>किसान भाइयों,</strong> पिछले 30–40 सालों में रासायनिक खाद के अत्यधिक इस्तेमाल से हमारी <strong>मिट्टी मर रही है</strong> — उसकी उर्वरता घट रही है, पानी सोखने की क्षमता कम हो रही है। जैविक खाद न सिर्फ मिट्टी को ठीक करती है बल्कि <strong>खर्च भी आधा कर देती है।</strong>
+    </div>
+    <p class="a-para">
+      जैविक खाद बनाना बहुत आसान है — आपके खेत और घर पर मौजूद चीजों से। <strong>गोबर, सूखी पत्तियां, रसोई का कचरा</strong> — ये सब मिलकर बेहतरीन खाद बन सकते हैं। एक बार तरीका सीख लें तो हर साल हजारों रुपये की बचत होगी।
+    </p>
+
+    <!-- Image -->
+    <div class="img-wrapper" id="img-intro">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-intro')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-intro','जैविक खाद और उपजाऊ मिट्टी')">
+        <div class="a-img-placeholder-icon">🌱</div>
+        <div class="a-img-placeholder-text">जैविक खाद या <strong>उपजाऊ मिट्टी</strong> की फोटो जोड़ें<br>जैसे: कम्पोस्ट गड्ढा, केंचुआ खाद, हरी-भरी फसल</div>
+        <span class="a-img-placeholder-badge">📷 फोटो अपलोड करें</span>
+      </div>
+      <div class="a-img">
+        <img id="img-intro-src" src="" alt="जैविक खाद">
+        <div class="a-img-caption">📷 <span id="img-intro-cap">जैविक खाद और उपजाऊ मिट्टी</span></div>
+      </div>
+    </div>
+
+    <div class="a-alert success">
+      <span class="a-alert-icon">💰</span>
+      <div class="a-alert-text">
+        <strong>बचत का हिसाब:</strong> एक एकड़ के लिए रासायनिक खाद पर ₹3,000–5,000 खर्च होते हैं। घर पर बनी जैविक खाद की लागत सिर्फ ₹200–400 (मेहनत + छोटे सामान)। <strong>साल में ₹2,500 से ज्यादा बचत।</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- S2: TYPES -->
+  <div class="a-section" id="types">
+    <div class="a-heading">
+      <div class="a-heading-icon">♻️</div>
+      चार मुख्य जैविक खाद
+    </div>
+    <p class="a-para">घर और खेत पर आसानी से बनाई जा सकने वाली जैविक खाद:</p>
+
+    <div class="khad-grid">
+      <div class="khad-card" style="--kc-top:#5d4037">
+        <div class="khad-icon">🪣</div>
+        <div class="khad-name">कम्पोस्ट खाद</div>
+        <div class="khad-time">⏱️ 60–90 दिन</div>
+        <div class="khad-benefit">सूखी पत्तियां + गोबर + रसोई कचरे से। सभी फसलों के लिए उत्तम।</div>
+      </div>
+      <div class="khad-card" style="--kc-top:#2e7d32">
+        <div class="khad-icon">🪱</div>
+        <div class="khad-name">वर्मी कम्पोस्ट</div>
+        <div class="khad-time">⏱️ 45–60 दिन</div>
+        <div class="khad-benefit">केंचुओं द्वारा बनाई गई सबसे पोषण भरी खाद। सब्जियों के लिए बेस्ट।</div>
+      </div>
+      <div class="khad-card" style="--kc-top:#1565c0">
+        <div class="khad-icon">💧</div>
+        <div class="khad-name">जीवामृत</div>
+        <div class="khad-time">⏱️ 7 दिन</div>
+        <div class="khad-benefit">तरल जैविक खाद — गोमूत्र, गोबर, गुड़ से। मिट्टी में जीवाणु बढ़ाता है।</div>
+      </div>
+      <div class="khad-card" style="--kc-top:#f57f17">
+        <div class="khad-icon">🌿</div>
+        <div class="khad-name">हरी खाद</div>
+        <div class="khad-time">⏱️ 45–50 दिन</div>
+        <div class="khad-benefit">ढैंचा/सनई उगाकर मिट्टी में मिलाएं। 60–80 kg नाइट्रोजन/एकड़ मिलती है।</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3: COMPOST -->
+  <div class="a-section" id="compost">
+    <div class="a-heading">
+      <div class="a-heading-icon">🪣</div>
+      कम्पोस्ट खाद — पूरी विधि
+    </div>
+    <p class="a-para">यह सबसे आसान और किफायती जैविक खाद है। हर किसान घर पर बना सकता है:</p>
+
+    <!-- Ingredients -->
+    <div class="ingredients-box">
+      <div class="ing-header">
+        <span style="font-size:20px">📦</span>
+        <span class="ing-header-title">जरूरी सामान (1 टन खाद के लिए)</span>
+      </div>
+      <div class="ing-body">
+        <div class="ing-row">
+          <div class="ing-icon">🐄</div>
+          <div class="ing-text">
+            <div class="ing-name">गोबर</div>
+            <div class="ing-note">200–250 kg — ताजा गाय/भैंस का गोबर</div>
+          </div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">🍂</div>
+          <div class="ing-text">
+            <div class="ing-name">सूखी पत्तियां / फसल अवशेष</div>
+            <div class="ing-note">500–600 kg — भूसा, डंठल, सूखी घास</div>
+          </div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">🥬</div>
+          <div class="ing-text">
+            <div class="ing-name">रसोई का कचरा</div>
+            <div class="ing-note">सब्जी छिलके, चाय पत्ती, फलों के छिलके</div>
+          </div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">💧</div>
+          <div class="ing-text">
+            <div class="ing-name">पानी</div>
+            <div class="ing-note">नमी बनाए रखने के लिए — हाथ से दबाने पर थोड़ा रिसे</div>
+          </div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">🌱</div>
+          <div class="ing-text">
+            <div class="ing-name">पुरानी मिट्टी / जीवाणु starter (वैकल्पिक)</div>
+            <div class="ing-note">10–15 kg — प्रक्रिया तेज करता है</div>
+          </div>
+          <div class="ing-tick">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#5d4037">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">🕳️ गड्ढा खोदें</div>
+          <div class="step-desc">जमीन में <strong>10 × 5 × 3 फुट</strong> का गड्ढा खोदें। या जमीन के ऊपर ईंटों/लकड़ी से घेरकर भी बना सकते हैं। <strong>छाया वाली जगह चुनें</strong> — सीधी धूप से नमी उड़ जाती है।</div>
+          <div class="step-tip">💡 टिप: गड्ढे का मुंह ऊपर से थोड़ा ढका रखें ताकि बारिश में पानी न भरे।</div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#795548">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">📚 परतें बिछाएं</div>
+          <div class="step-desc"><strong>3–4 इंच सूखी पत्तियां/भूसा</strong> (तली में) → <strong>2 इंच गोबर</strong> → <strong>रसोई कचरा</strong> → फिर पत्तियां। इस क्रम को दोहराते हुए गड्ढा भरें। हर परत पर हल्का पानी छिड़कें।</div>
+          <div class="step-tip">💡 टिप: सूखे और गीले का अनुपात 3:1 रखें — यही सही कम्पोस्ट का रहस्य है।</div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#2e7d32">3</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">🔄 हर 15 दिन में पलटें</div>
+          <div class="step-desc">15 दिन बाद <strong>कुदाल से पूरा ढेर पलट दें</strong> — नीचे का ऊपर, ऊपर का नीचे। इससे हवा मिलती है और जीवाणु तेजी से काम करते हैं। पलटते समय अगर सूखा लगे तो पानी छिड़कें।</div>
+          <div class="step-tip">💡 टिप: पलटने के बाद हल्की भाप और मिट्टी जैसी खुशबू आए — यह अच्छी खाद की निशानी है।</div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#1565c0">4</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">✅ तैयार होने की पहचान</div>
+          <div class="step-desc">60–90 दिन बाद खाद <strong>गहरे भूरे-काले रंग</strong> की, मिट्टी जैसी खुशबू वाली, और भुरभुरी हो जाएगी। कोई मूल सामग्री (पत्ती, डंठल) नहीं दिखनी चाहिए। अब यह उपयोग के लिए तैयार है।</div>
+          <div class="step-tip">💡 टिप: उपयोग से पहले बारीक छान लें — मोटे टुकड़े वापस गड्ढे में डालें।</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image pair -->
+    <div class="a-img-row">
+      <div class="img-wrapper" id="img-compost1">
+        <div class="a-img-placeholder" onclick="triggerUpload('img-compost1')">
+          <input type="file" accept="image/*" onchange="loadImage(event,'img-compost1','कम्पोस्ट गड्ढा')">
+          <div class="a-img-placeholder-icon">🕳️</div>
+          <div class="a-img-placeholder-text"><strong>कम्पोस्ट गड्ढा</strong> फोटो</div>
+          <span class="a-img-placeholder-badge">📷 अपलोड</span>
+        </div>
+        <div class="a-img">
+          <img id="img-compost1-src" src="" alt="कम्पोस्ट गड्ढा">
+          <div class="a-img-caption">📷 <span id="img-compost1-cap">कम्पोस्ट गड्ढा</span></div>
+        </div>
+      </div>
+      <div class="img-wrapper" id="img-compost2">
+        <div class="a-img-placeholder" onclick="triggerUpload('img-compost2')">
+          <input type="file" accept="image/*" onchange="loadImage(event,'img-compost2','तैयार कम्पोस्ट खाद')">
+          <div class="a-img-placeholder-icon">🪣</div>
+          <div class="a-img-placeholder-text"><strong>तैयार खाद</strong> फोटो</div>
+          <span class="a-img-placeholder-badge">📷 अपलोड</span>
+        </div>
+        <div class="a-img">
+          <img id="img-compost2-src" src="" alt="तैयार कम्पोस्ट">
+          <div class="a-img-caption">📷 <span id="img-compost2-cap">तैयार कम्पोस्ट खाद</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="a-alert warning">
+      <span class="a-alert-icon">⚠️</span>
+      <div class="a-alert-text">
+        <strong>ये चीजें कभी न डालें:</strong> मांस, मछली, डेयरी उत्पाद, तेल वाला खाना, बीमार पौधे, और प्लास्टिक। इनसे बदबू आती है और खाद खराब हो जाती है।
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: VERMI -->
+  <div class="a-section" id="vermi">
+    <div class="a-heading">
+      <div class="a-heading-icon">🪱</div>
+      वर्मी कम्पोस्ट — केंचुआ खाद
+    </div>
+    <p class="a-para">वर्मी कम्पोस्ट साधारण कम्पोस्ट से <strong>5–7 गुना ज्यादा पोषक</strong> होती है। सब्जियों और फलों के लिए यह सबसे बेहतर जैविक खाद है:</p>
+
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#5d4037">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">🛖 बेड तैयार करें</div>
+          <div class="step-desc">छाया में <strong>8 × 3 × 2 फुट</strong> का पक्का बेड बनाएं या सीमेंट के टैंक का उपयोग करें। नीचे 2 इंच बालू, फिर 4 इंच <strong>आधा सड़ा गोबर</strong> बिछाएं।</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#2e7d32">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">🪱 केंचुए डालें</div>
+          <div class="step-desc"><strong>Eisenia fetida (लाल केंचुए)</strong> — प्रति वर्ग मीटर 500–1000 केंचुए डालें। ये कृषि विभाग, KVK या नर्सरी से मिलते हैं। <strong>देसी केंचुए काम नहीं करते</strong> — विशेष प्रजाति चाहिए।</div>
+          <div class="step-tip">💡 टिप: केंचुए रात को काम करते हैं — ऊपर जूट बैग ढक दें ताकि अंधेरा रहे।</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#1565c0">3</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">🥬 खाना डालते रहें</div>
+          <div class="step-desc">हर 2–3 दिन में <strong>रसोई का कचरा, सब्जी छिलके, गोबर</strong> डालते रहें। नमी बनाए रखें (50–60%)। <strong>बहुत ज्यादा एक साथ न डालें</strong> — केंचुए दब जाएंगे।</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-left">
+          <div class="step-num" style="--sn-color:#f57f17">4</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-title">✅ 45–60 दिन में तैयार</div>
+          <div class="step-desc">ऊपरी परत <strong>काली, दानेदार और बिना गंध</strong> के हो जाए तो खाद तैयार है। केंचुओं को अलग करने के लिए ऊपर ताजा खाना डालें — वे ऊपर आ जाएंगे। नीचे की खाद निकाल लें।</div>
+          <div class="step-tip">💡 उपयोग: 200–250 kg/एकड़ — बुवाई से 15 दिन पहले मिट्टी में मिलाएं।</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: JEEVAMRIT -->
+  <div class="a-section" id="jeevamrit">
+    <div class="a-heading">
+      <div class="a-heading-icon">💧</div>
+      जीवामृत — सबसे तेज तरल जैविक खाद
+    </div>
+    <p class="a-para">जीवामृत <strong>सिर्फ 7 दिन</strong> में तैयार हो जाती है और मिट्टी में करोड़ों लाभकारी जीवाणु पहुंचाती है। यह पद्धनाभस्वामी कृषि विज्ञान की प्राचीन विधि है:</p>
+
+    <div class="ingredients-box">
+      <div class="ing-header">
+        <span style="font-size:20px">🧪</span>
+        <span class="ing-header-title">सामग्री — 200 लीटर पानी के लिए</span>
+      </div>
+      <div class="ing-body">
+        <div class="ing-row">
+          <div class="ing-icon">🐄</div>
+          <div class="ing-text"><div class="ing-name">देसी गाय का गोबर</div><div class="ing-note">10 kg — ताजा, उसी दिन का</div></div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">💛</div>
+          <div class="ing-text"><div class="ing-name">देसी गाय का गोमूत्र</div><div class="ing-note">10 लीटर — ताजा</div></div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">🍯</div>
+          <div class="ing-text"><div class="ing-name">पुराना गुड़</div><div class="ing-note">1 kg — जीवाणुओं का भोजन</div></div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">🫘</div>
+          <div class="ing-text"><div class="ing-name">बेसन / दाल का आटा</div><div class="ing-note">1 kg — प्रोटीन स्रोत</div></div>
+          <div class="ing-tick">✓</div>
+        </div>
+        <div class="ing-row">
+          <div class="ing-icon">🌱</div>
+          <div class="ing-text"><div class="ing-name">खेत की पुरानी मिट्टी</div><div class="ing-note">1 मुट्ठी — स्थानीय जीवाणु</div></div>
+          <div class="ing-tick">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="a-para">सब 200 लीटर पानी में मिलाएं, <strong>दिन में दो बार घड़ी की सुई की दिशा में हिलाएं</strong>, 7 दिन छाया में रखें। तैयार होने पर झाग और खट्टी खुशबू आएगी।</p>
+
+    <div class="a-alert info">
+      <span class="a-alert-icon">💧</span>
+      <div class="a-alert-text">
+        <strong>उपयोग:</strong> 200 लीटर जीवामृत को <strong>1 एकड़ में सिंचाई के साथ</strong> दें — महीने में एक बार। या 1:10 पतला करके पत्तियों पर छिड़काव करें। 3 महीने में मिट्टी की बनावट बदलने लगेगी।
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div class="img-wrapper" id="img-jeevamrit">
+      <div class="a-img-placeholder" onclick="triggerUpload('img-jeevamrit')">
+        <input type="file" accept="image/*" onchange="loadImage(event,'img-jeevamrit','जीवामृत बनाना')">
+        <div class="a-img-placeholder-icon">💧</div>
+        <div class="a-img-placeholder-text">जीवामृत <strong>बनाने या खेत में डालने</strong> की फोटो जोड़ें</div>
+        <span class="a-img-placeholder-badge">📷 फोटो अपलोड करें</span>
+      </div>
+      <div class="a-img">
+        <img id="img-jeevamrit-src" src="" alt="जीवामृत">
+        <div class="a-img-caption">📷 <span id="img-jeevamrit-cap">जीवामृत तैयारी</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6: COMPARE -->
+  <div class="a-section" id="compare">
+    <div class="a-heading">
+      <div class="a-heading-icon">⚖️</div>
+      जैविक vs रासायनिक खाद
+    </div>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>पहलू</th>
+          <th>♻️ जैविक खाद</th>
+          <th>🧪 रासायनिक खाद</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>कीमत</strong></td>
+          <td><span class="tick">✔</span> लगभग मुफ्त</td>
+          <td><span class="cross">✖</span> ₹3,000–5,000/एकड़</td>
+        </tr>
+        <tr>
+          <td><strong>असर की गति</strong></td>
+          <td>धीरे, लेकिन लंबे समय तक</td>
+          <td><span class="tick">✔</span> जल्दी</td>
+        </tr>
+        <tr>
+          <td><strong>मिट्टी पर असर</strong></td>
+          <td><span class="tick">✔</span> मिट्टी सुधरती है</td>
+          <td><span class="cross">✖</span> मिट्टी कमजोर होती है</td>
+        </tr>
+        <tr>
+          <td><strong>पानी धारण क्षमता</strong></td>
+          <td><span class="tick">✔</span> बढ़ती है</td>
+          <td><span class="cross">✖</span> घटती है</td>
+        </tr>
+        <tr>
+          <td><strong>फसल की गुणवत्ता</strong></td>
+          <td><span class="tick">✔</span> बेहतर स्वाद, ज्यादा दाम</td>
+          <td>सामान्य</td>
+        </tr>
+        <tr>
+          <td><strong>पर्यावरण</strong></td>
+          <td><span class="tick">✔</span> कोई नुकसान नहीं</td>
+          <td><span class="cross">✖</span> जल-मिट्टी प्रदूषण</td>
+        </tr>
+        <tr>
+          <td><strong>भारी प्रकोप में</strong></td>
+          <td>अकेले पर्याप्त नहीं</td>
+          <td><span class="tick">✔</span> तुरंत पोषण</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="a-alert success">
+      <span class="a-alert-icon">🌿</span>
+      <div class="a-alert-text">
+        <strong>सबसे अच्छा तरीका:</strong> <strong>70% जैविक + 30% रासायनिक</strong> — धीरे-धीरे रासायनिक खाद की मात्रा घटाते जाएं। 3–4 साल में पूरी तरह जैविक खेती संभव है और उपज में कोई कमी नहीं आती।
+      </div>
+    </div>
+  </div>
+
+  <!-- S7: TAKEAWAY -->
+  <div class="a-section" id="summary">
+    <div class="a-takeaway">
+      <div class="a-takeaway-title">✅ मुख्य बातें — याद रखें</div>
+      <ul class="a-takeaway-list">
+        <li>कम्पोस्ट = सूखा/गीला 3:1 अनुपात, हर 15 दिन पलटें, 60–90 दिन में तैयार</li>
+        <li>वर्मी कम्पोस्ट 5–7 गुना ज्यादा पोषक — लाल केंचुए (Eisenia fetida) चाहिए</li>
+        <li>जीवामृत सिर्फ 7 दिन में — महीने में एक बार सिंचाई के साथ दें</li>
+        <li>मांस, मछली, तेल कभी कम्पोस्ट में न डालें</li>
+        <li>एक एकड़ में ₹2,500+ सालाना बचत — पहले साल से ही</li>
+        <li>धीरे-धीरे रासायनिक खाद घटाएं — 3–4 साल में पूरी जैविक खेती</li>
+        <li>जैविक फसल का बाजार भाव 20–30% ज्यादा मिलता है</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-strip">
+    <div class="cta-text"><strong>खाद के बारे में कोई सवाल?</strong><br>KrashiMitra AI से पूछें — हिंदी में</div>
+    <a class="cta-btn" href="../chat.html?tab=chat">AI से पूछें →</a>
+  </div>
+
+  <!-- Related -->
+  <div class="a-section">
+    <div class="a-heading">
+      <div class="a-heading-icon">📚</div>
+      और पढ़ें
+    </div>
+    <div class="related-grid">
+      <a class="related-card" href="urea-guide.html" style="--rc-accent:#1565c0">
+        <div class="related-thumb" style="background:#e3f2fd">🧪</div>
+        <div class="related-text">
+          <div class="related-tag">खाद</div>
+          <div class="related-title">यूरिया और DAP: कब और कितना दें?</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+      <a class="related-card" href="keet-niyantran.html" style="--rc-accent:#6a1b9a">
+        <div class="related-thumb" style="background:#f3e5f5">🐛</div>
+        <div class="related-text">
+          <div class="related-tag">कीट</div>
+          <div class="related-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+      <a class="related-card" href="mausam-guide.html" style="--rc-accent:#1976d2">
+        <div class="related-thumb" style="background:#e3f2fd">🌦️</div>
+        <div class="related-text">
+          <div class="related-tag">मौसम</div>
+          <div class="related-title">मौसम के अनुसार खेती की योजना</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+      <a class="related-card" href="gehun-pila.html" style="--rc-accent:#f57f17">
+        <div class="related-thumb" style="background:#fff8e1">🌾</div>
+        <div class="related-text">
+          <div class="related-tag">गेहूं</div>
+          <div class="related-title">गेहूं में पीलापन: कारण और उपाय</div>
+        </div>
+        <span class="related-arrow">›</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+<div class="page-end"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="../index.html"><span class="bn-icon">🏠</span><span class="bn-label">मुख्य</span></a>
+  <a class="bn-item" href="../chat.html?tab=chat"><span class="bn-icon">💬</span><span class="bn-label">Chat</span></a>
+  <a class="bn-item" href="../chat.html?tab=weather"><span class="bn-icon">🌤️</span><span class="bn-label">मौसम</span></a>
+  <a class="bn-item" href="../chat.html?tab=mandi"><span class="bn-icon">💰</span><span class="bn-label">मंडी</span></a>
+  <a class="bn-item active" href="index.html"><span class="bn-icon">📰</span><span class="bn-label">लेख</span></a>
+</nav>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('reading-progress').style.width = Math.min(pct,100) + '%';
+  });
+  function avatarBtnClick() {
+    const t = localStorage.getItem("krishi_token");
+    window.location.href = t ? "../chat.html?tab=profile" : "../chat.html?tab=login";
+  }
+  function triggerUpload(id) {
+    const inp = document.querySelector('#' + id + ' input[type="file"]');
+    if (inp) inp.click();
+  }
+  function loadImage(event, wrapperId, defaultCaption) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrapper = document.getElementById(wrapperId);
+      const imgEl   = document.getElementById(wrapperId + '-src');
+      const capEl   = document.getElementById(wrapperId + '-cap');
+      if (imgEl) {
+        imgEl.src = e.target.result;
+        const name = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        if (capEl) capEl.textContent = name || defaultCaption;
+        wrapper.classList.add('has-image');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+  document.querySelectorAll('.a-img-placeholder').forEach(ph => {
+    ph.addEventListener('dragover', e => { e.preventDefault(); ph.style.borderColor='var(--brown-light)'; ph.style.background='var(--brown-soft)'; });
+    ph.addEventListener('dragleave', () => { ph.style.borderColor=''; ph.style.background=''; });
+    ph.addEventListener('drop', e => {
+      e.preventDefault(); ph.style.borderColor=''; ph.style.background='';
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      loadImage({ target: { files: [file] } }, ph.closest('.img-wrapper').id, 'फोटो');
+    });
+  });
+</script>
+</body>
+</html>
