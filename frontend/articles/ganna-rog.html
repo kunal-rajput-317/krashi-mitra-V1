@@ -645,88 +645,82 @@
     }
     .relevant-articles .section-title a:hover { color: var(--green-dark); }
 
+    /* ── Related article chips (file-2 style) ── */
     .articles-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-    @media (max-width: 540px) {
-      .articles-grid { grid-template-columns: 1fr; }
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .article-card {
       background: #fff;
       border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px var(--shadow);
-      border: 1px solid #eef5ec;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .article-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 22px var(--shadow-strong);
-    }
-    .article-card .card-thumb {
-      height: 110px;
+      border: 1px solid #e4ede4;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
+      gap: 12px;
+      padding: 12px 14px;
+      text-decoration: none;
+      transition: box-shadow 0.2s, transform 0.15s;
       position: relative;
       overflow: hidden;
     }
-    .card-thumb-wheat  { background: linear-gradient(135deg, #e8f5e9, #f9fbe7); }
-    .card-thumb-pest   { background: linear-gradient(135deg, #fff8e1, #ffe0b2); }
-    .card-thumb-paddy  { background: linear-gradient(135deg, #e3f2fd, #e8f5e9); }
-    .card-thumb-urea   { background: linear-gradient(135deg, #f3e5f5, #e8eaf6); }
-    .card-thumb-smut   { background: linear-gradient(135deg, #fce4ec, #ffecb3); }
-    .card-thumb-mandi  { background: linear-gradient(135deg, #e8f5e9, #fff9c4); }
-
-    .article-card .card-body {
-      padding: 12px 14px 14px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+    .article-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--rc-accent, var(--green-mid));
+      border-radius: 4px 0 0 4px;
     }
+    .article-card:hover {
+      box-shadow: 0 5px 20px var(--shadow-strong);
+      transform: translateY(-2px);
+    }
+
+    .card-thumb {
+      width: 46px; height: 46px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .card-thumb-wheat  { background: #f9fbe7; }
+    .card-thumb-pest   { background: #fff8e1; }
+    .card-thumb-paddy  { background: #e3f2fd; }
+    .card-thumb-urea   { background: #f3e5f5; }
+    .card-thumb-smut   { background: #fce4ec; }
+    .card-thumb-mandi  { background: #e8f5e9; }
+
+    .card-body { flex: 1; min-width: 0; }
+
     .card-tag {
       font-family: 'Poppins', sans-serif;
-      font-size: 0.63rem;
-      font-weight: 600;
+      font-size: 0.6rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--green-mid);
-      margin-bottom: 5px;
+      letter-spacing: 0.4px;
+      color: var(--text-light);
+      margin-bottom: 3px;
     }
     .card-title {
       font-family: 'Noto Serif Devanagari', serif;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: var(--text-dark);
-      line-height: 1.45;
-      margin-bottom: 8px;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: auto;
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.65rem;
-      color: var(--text-light);
-    }
-    .card-footer .read-time {
-      background: var(--green-pale);
-      color: var(--green-mid);
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
+    .card-footer { display: none; }
+
     .card-arrow {
-      color: var(--green-mid);
-      font-size: 0.8rem;
+      font-size: 1.1rem;
+      color: var(--text-light);
+      opacity: 0.45;
+      flex-shrink: 0;
     }
 
     /* ═══════════════════════════════════════
@@ -1323,77 +1317,61 @@
     </div>
 
     <div class="articles-grid">
-      <a class="article-card" href="https://krashimitra.in/articles/gehun-pila.html">
+
+      <a class="article-card" href="https://krashimitra.in/articles/gehun-pila.html" style="--rc-accent:#f57f17">
         <div class="card-thumb card-thumb-wheat">🌾</div>
         <div class="card-body">
-          <div class="card-tag">🌾 गेहूं · फसल रोग</div>
+          <div class="card-tag">गेहूं · फसल रोग</div>
           <div class="card-title">गेहूं में पीलापन: कारण और उपाय</div>
-          <div class="card-footer">
-            <span class="read-time">⏱️ 3 मिनट</span>
-            <span class="card-arrow">→</span>
-          </div>
         </div>
+        <span class="card-arrow">›</span>
       </a>
 
-      <a class="article-card" href="https://krashimitra.in/articles/dhan-buvai.html">
+      <a class="article-card" href="https://krashimitra.in/articles/dhan-buvai.html" style="--rc-accent:#1976d2">
         <div class="card-thumb card-thumb-paddy">🍚</div>
         <div class="card-body">
-          <div class="card-tag">🍚 धान · बुआई गाइड</div>
+          <div class="card-tag">धान · बुआई गाइड</div>
           <div class="card-title">धान की सही बुवाई का समय और तरीका</div>
-          <div class="card-footer">
-            <span class="read-time">⏱️ 5 मिनट</span>
-            <span class="card-arrow">→</span>
-          </div>
         </div>
+        <span class="card-arrow">›</span>
       </a>
 
-      <a class="article-card" href="https://krashimitra.in/articles/urea-guide.html">
+      <a class="article-card" href="https://krashimitra.in/articles/urea-guide.html" style="--rc-accent:#6a1b9a">
         <div class="card-thumb card-thumb-urea">🧪</div>
         <div class="card-body">
-          <div class="card-tag">🧪 खाद · यूरिया</div>
+          <div class="card-tag">खाद · यूरिया</div>
           <div class="card-title">यूरिया और DAP: कब और कितना दें?</div>
-          <div class="card-footer">
-            <span class="read-time">⏱️ 4 मिनट</span>
-            <span class="card-arrow">→</span>
-          </div>
         </div>
+        <span class="card-arrow">›</span>
       </a>
 
-      <a class="article-card" href="https://krashimitra.in/articles/keet-niyantran">
+      <a class="article-card" href="https://krashimitra.in/articles/keet-niyantran" style="--rc-accent:#e65100">
         <div class="card-thumb card-thumb-pest">🐛</div>
         <div class="card-body">
-          <div class="card-tag">🐛 कीट · नियंत्रण</div>
+          <div class="card-tag">कीट · नियंत्रण</div>
           <div class="card-title">फसल में कीट नियंत्रण के देसी उपाय</div>
-          <div class="card-footer">
-            <span class="read-time">⏱️ 4 मिनट</span>
-            <span class="card-arrow">→</span>
-          </div>
         </div>
+        <span class="card-arrow">›</span>
       </a>
 
-      <a class="article-card" href="https://krashimitra.in/articles/ganna-smut.html">
+      <a class="article-card" href="https://krashimitra.in/articles/ganna-smut.html" style="--rc-accent:#c62828">
         <div class="card-thumb card-thumb-smut">🎋</div>
         <div class="card-body">
-          <div class="card-tag">🎋 गन्ना · काला कंडुआ</div>
+          <div class="card-tag">गन्ना · काला कंडुआ</div>
           <div class="card-title">गन्ने में काला कंडुआ रोग — पहचान और रोकथाम</div>
-          <div class="card-footer">
-            <span class="read-time">⏱️ 5 मिनट</span>
-            <span class="card-arrow">→</span>
-          </div>
         </div>
+        <span class="card-arrow">›</span>
       </a>
 
-      <a class="article-card" href="https://krashimitra.in/chat?tab=mandi">
+      <a class="article-card" href="https://krashimitra.in/chat?tab=mandi" style="--rc-accent:#2e7d32">
         <div class="card-thumb card-thumb-mandi">💰</div>
         <div class="card-body">
-          <div class="card-tag">💰 मंडी · आज के भाव</div>
+          <div class="card-tag">मंडी · आज के भाव</div>
           <div class="card-title">गन्ने का आज का मंडी भाव — LIVE अपडेट</div>
-          <div class="card-footer">
-            <span class="read-time">⏱️ LIVE</span>
-            <span class="card-arrow">→</span>
-          </div>
         </div>
+        <span class="card-arrow">›</span>
       </a>
+
     </div>
   </div>
 
