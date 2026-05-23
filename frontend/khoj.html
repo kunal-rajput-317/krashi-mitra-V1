@@ -62,10 +62,25 @@
     }
 
     /* ══════════════════════════════════════
+       FIXED HEADER WRAPPER
+       (announcement sits on top, topbar below)
+       — scrolls announcement away on scroll-down,
+         brings it back on scroll-up
+    ══════════════════════════════════════ */
+    .header-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ══════════════════════════════════════
        TOP ANNOUNCEMENT BAR
     ══════════════════════════════════════ */
     .top-announcement {
-      background: var(--yellow);
+      background: var(--amber-light);
       color: var(--green-dark);
       text-align: center;
       font-family: 'DM Sans', sans-serif;
@@ -73,7 +88,6 @@
       font-weight: 600;
       padding: 6px 16px;
       letter-spacing: 0.2px;
-      /* scrolls with page */
     }
     .top-announcement a {
       color: var(--green-mid);
@@ -92,10 +106,11 @@
       padding: 0 28px;
       height: 60px;
       flex-shrink: 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
       box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+    /* Spacer: height is set by JS = announcement height + topbar height */
+    .topbar-spacer {
+      flex-shrink: 0;
     }
     .topbar-left {
       display: flex;
@@ -330,14 +345,13 @@
       background: var(--green-dark);
       padding: 14px 28px 0;
       position: sticky;
-      top: 0; /* sticks right below topbar (topbar is sticky too) */
+      top: 60px; /* fixed topbar height */
       z-index: 90;
       box-shadow: 0 4px 20px rgba(0,0,0,0.22);
     }
-    /* When topbar is visible, sticky-bar sticks at top:0 of the scroll container.
-       JS will push it down by topbar height via --topbar-h custom prop */
+    /* override — keep consistent */
     .search-sticky-bar {
-      top: var(--topbar-h, 60px);
+      top: 60px;
     }
 
     /* Search bar */
@@ -601,6 +615,7 @@
       .topbar-avatar-btn { display: none; }
       .top-announcement { font-size: 11.5px; padding: 6px 12px; }
       .topbar { padding: 0 12px; height: 54px; }
+      /* topbar-spacer height set by JS */
       .topbar-logo-name { font-size: 15px; }
       .topbar-logo-sub { display: none; }
       .lang-dropdown { right: 0; left: auto; }
@@ -616,7 +631,7 @@
       .hero-badge        { font-size: 11px; padding: 4px 11px; }
 
       /* Sticky bar — full width, tighter padding */
-      .search-sticky-bar  { padding: 12px 13px 0; top: 54px; }
+      .search-sticky-bar  { padding: 12px 13px 0; top: var(--topbar-h, 54px); }
       .search-bar-wrap    { min-height: 46px; }
       .search-bar-wrap input { font-size: 14px; padding: 12px 0; }
       .search-crop-chips  { padding: 8px 0 10px; gap: 5px; }
@@ -686,6 +701,9 @@
 </head>
 <body>
 
+<!-- ══ FIXED HEADER WRAPPER (announcement + topbar) ══ -->
+<div class="header-wrapper" id="header-wrapper">
+
 <!-- ══ TOP ANNOUNCEMENT BAR ══ -->
 <div class="top-announcement">
   🌾 किसान कॉल सेंटर: +91 9870951001 — निःशुल्क कृषि सलाह
@@ -736,6 +754,11 @@
     <div class="topbar-avatar-btn">👤</div>
   </div>
 </div>
+
+</div><!-- /.header-wrapper -->
+
+<!-- Spacer: height = header-wrapper total height (set by JS) -->
+<div class="topbar-spacer" id="topbar-spacer"></div>
 
 <!-- ══ BREADCRUMB ══ -->
 <div class="breadcrumb">
@@ -1255,19 +1278,61 @@
   // ══════════════════════════════════════
   // INIT
   // ══════════════════════════════════════
-  (function init() {
-    setLang(currentLang);
+  // ══════════════════════════════════════
+  // SCROLL-AWARE HEADER
+  // announcement hides on scroll-down, returns on scroll-up
+  // topbar always stays visible
+  // ══════════════════════════════════════
+  (function initScrollHeader() {
+    const wrapper   = document.getElementById('header-wrapper');
+    const spacer    = document.getElementById('topbar-spacer');
+    const stickyBar = document.querySelector('.search-sticky-bar');
 
-    // Set CSS custom property for topbar height so sticky bar knows where to stick
-    function updateTopbarHeight() {
-      const topbar = document.querySelector('.topbar');
-      if (topbar) {
-        const h = topbar.getBoundingClientRect().height;
-        document.documentElement.style.setProperty('--topbar-h', h + 'px');
+    let lastScrollY   = window.scrollY;
+    let announcementH = 0;
+    let ticking       = false;
+
+    function measureHeader() {
+      const ann = document.querySelector('.top-announcement');
+      const tb  = document.querySelector('.topbar');
+      if (!ann || !tb || !wrapper || !spacer) return;
+
+      announcementH = ann.getBoundingClientRect().height;
+      const totalH  = wrapper.getBoundingClientRect().height;
+
+      // Spacer = full header height so content doesn't jump behind it
+      spacer.style.height = totalH + 'px';
+
+      // Sticky search bar sits right below the topbar (not the announcement)
+      const topbarH = tb.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--topbar-h', topbarH + 'px');
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          if (currentY > lastScrollY && currentY > announcementH) {
+            // Scrolling DOWN — slide header up by announcement height
+            wrapper.style.transform = 'translateY(-' + announcementH + 'px)';
+          } else {
+            // Scrolling UP (or near top) — bring full header back
+            wrapper.style.transform = 'translateY(0)';
+          }
+          lastScrollY = currentY;
+          ticking = false;
+        });
+        ticking = true;
       }
     }
-    updateTopbarHeight();
-    window.addEventListener('resize', updateTopbarHeight);
+
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+
+  (function init() {
+    setLang(currentLang);
   })();
 </script>
 
