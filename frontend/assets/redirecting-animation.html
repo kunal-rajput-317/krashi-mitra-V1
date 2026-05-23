@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌾कृषि मित्र |KrashiMitra — किसान का डिजिटल साथी | ರೈತನ ಡಿಜಿಟಲ್ ಸಂಗಾತಿ</title>
+  <link rel="icon" type="image/png" href="/frontend/images/favicon.png">
+  <meta name="description" content="KrashiMitra — AI Krishi Sahayak for farmers. Mandi bhav, weather, fertilizer advice, crop disease detection.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://krashimitra.in/">
+  <link rel="alternate" hreflang="hi"        href="https://krashimitra.in/hi/">
+  <link rel="alternate" hreflang="kn"        href="https://krashimitra.in/kn/">
+  <link rel="alternate" hreflang="en"        href="https://krashimitra.in/">
+  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/">
+  <link rel="icon" type="image/png" href="/frontend/images/favicon.png">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #1a5c1f;
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    canvas#scene {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      animation: fadeUp 0.7s ease both;
+      margin-top: 60px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-name {
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    }
+
+    .logo-sub {
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .msg {
+      color: rgba(255,255,255,0.85);
+      font-size: 15px;
+      min-height: 22px;
+    }
+
+    .progress-track {
+      width: 200px;
+      height: 4px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #a5d6a7;
+      border-radius: 99px;
+      animation: progress 2.8s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    @keyframes progress {
+      0%  { width: 0%; }
+      60% { width: 75%; }
+      85% { width: 92%; }
+      100%{ width: 100%; }
+    }
+
+    .spinner { display: flex; gap: 8px; }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #a5d6a7;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2){ animation-delay:.2s; }
+    .dot:nth-child(3){ animation-delay:.4s; }
+    @keyframes bounce {
+      0%,80%,100%{ transform:scale(0.6); opacity:0.5; }
+      40%{ transform:scale(1.2); opacity:1; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="scene"></canvas>
+
+  <div class="card">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <span class="logo-name">🌾कृषि मित्र</span>
+      <span class="logo-sub">KrashiMitra</span>
+    </div>
+    <div class="spinner">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="msg" id="msg">Loading KrashiMitra…</div>
+    <div class="progress-track"><div class="progress-fill"></div></div>
+  </div>
+
+  <noscript>
+    <p style="color:white;position:relative;z-index:3;">
+      Choose your language:<br><br>
+      <a href="/hi/" style="color:#a5d6a7">हिंदी</a> &nbsp;|&nbsp;
+      <a href="/kn/" style="color:#a5d6a7">ಕನ್ನಡ</a>
+    </p>
+  </noscript>
+
+  <script>
+  (function(){
+
+    /* ── language detect & redirect ── */
+    var lang = (navigator.language || navigator.userLanguage || 'hi').toLowerCase();
+    var msgEl = document.getElementById('msg');
+    var dest, txt;
+    if(lang==='kn'||lang.startsWith('kn-')){
+      txt='ನಿಮ್ಮ ಪುಟ ತೆರೆಯುತ್ತಿದೆ…'; dest='https://krashimitra.in/kn/';
+    } else if(lang==='hi'||lang.startsWith('hi-')){
+      txt='आपका पेज खुल रहा है…'; dest='https://krashimitra.in/hi/';
+    } else {
+      txt='Redirecting…'; dest='https://krashimitra.in/hi/';
+    }
+    msgEl.textContent = txt;
+    setTimeout(function(){ window.location.replace(dest); }, 3000);
+
+    /* ── canvas scene ── */
+    var cv = document.getElementById('scene');
+    var ctx = cv.getContext('2d');
+    var W, H;
+
+    function resize(){
+      W = cv.width  = window.innerWidth;
+      H = cv.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var t = 0; // frame counter
+
+    /* ── CLOUDS ── */
+    var clouds = [
+      { x: -200, y: 60,  w: 180, speed: 0.35, alpha: 0.82 },
+      { x:  100, y: 95,  w: 130, speed: 0.22, alpha: 0.70 },
+      { x:  360, y: 45,  w: 220, speed: 0.28, alpha: 0.90 },
+      { x:  620, y: 110, w: 150, speed: 0.18, alpha: 0.65 },
+      { x:  820, y: 70,  w: 160, speed: 0.32, alpha: 0.75 },
+    ];
+
+    function drawCloud(x, y, w, alpha){
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#e8f5e9';
+      var h = w * 0.38;
+      /* body */
+      ctx.beginPath();
+      ctx.ellipse(x + w*0.5, y + h*0.6, w*0.45, h*0.5, 0, 0, Math.PI*2);
+      ctx.fill();
+      /* left bump */
+      ctx.beginPath();
+      ctx.ellipse(x + w*0.22, y + h*0.7, w*0.26, h*0.42, 0, 0, Math.PI*2);
+      ctx.fill();
+      /* right bump */
+      ctx.beginPath();
+      ctx.ellipse(x + w*0.75, y + h*0.72, w*0.22, h*0.38, 0, 0, Math.PI*2);
+      ctx.fill();
+      /* top puff */
+      ctx.beginPath();
+      ctx.ellipse(x + w*0.48, y + h*0.28, w*0.28, h*0.36, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    /* ── BIRDS ── */
+    /* Each bird: { x, y, speed, scale, delay (frames before it enters) } */
+    var birds = [];
+    function spawnBird(){
+      birds.push({
+        x:     -60,
+        y:     40 + Math.random() * (H * 0.3),
+        speed: 1.4 + Math.random() * 1.6,
+        scale: 0.6 + Math.random() * 0.7,
+        wing:  0,
+        wspeed: 0.14 + Math.random() * 0.08
+      });
+    }
+    /* spawn a few immediately, staggered */
+    for(var b=0;b<5;b++){
+      birds.push({
+        x:     -60 - b * 180,
+        y:     50 + Math.random() * (H * 0.28),
+        speed: 1.4 + Math.random() * 1.4,
+        scale: 0.6 + Math.random() * 0.7,
+        wing:  b * 0.8,
+        wspeed:0.13 + Math.random() * 0.07
+      });
+    }
+
+    function drawBird(x, y, scale, wing){
+      /* wing is angle oscillation 0..PI */
+      var wAngle = Math.sin(wing) * 0.55; /* flap range */
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = 1.6;
+      ctx.lineCap = 'round';
+
+      /* left wing — curves up then down */
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(-14, -18 * wAngle - 2, -26, -8 * wAngle + 2);
+      ctx.stroke();
+
+      /* right wing */
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(14, -18 * wAngle - 2, 26, -8 * wAngle + 2);
+      ctx.stroke();
+
+      /* tiny body dot */
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.arc(0, 0, 2, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    /* ── WHEAT PLANT (drawn with canvas paths) ── */
+    /* Centered at bottom-center area. Grains shoot up then fall. */
+
+    var WHEAT_X, WHEAT_Y;
+    var STEM_H = 160;
+
+    /* grains array: each { x, y, vx, vy, alpha, life } */
+    var grains = [];
+    var grainTimer = 0;
+    var GRAIN_INTERVAL = 55; /* frames between grain throws */
+
+    function spawnGrains(){
+      /* throw 2–3 grains from near the wheat head */
+      var count = 2 + Math.floor(Math.random()*2);
+      for(var i=0;i<count;i++){
+        grains.push({
+          x:  WHEAT_X + (Math.random()-0.5)*14,
+          y:  WHEAT_Y - STEM_H - 10,
+          vx: (Math.random()-0.4) * 2.2,
+          vy: -3.5 - Math.random()*2.5,
+          alpha: 1,
+          life: 0
+        });
+      }
+    }
+
+    function drawWheat(wx, wy){
+      ctx.save();
+
+      /* ── stem ── */
+      ctx.strokeStyle = '#8bc34a';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+
+      var sway = Math.sin(t * 0.025) * 6; /* gentle sway */
+
+      ctx.beginPath();
+      ctx.moveTo(wx, wy);
+      /* gentle S-curve stem */
+      ctx.bezierCurveTo(
+        wx + sway*0.3, wy - STEM_H*0.4,
+        wx + sway,     wy - STEM_H*0.75,
+        wx + sway*1.2, wy - STEM_H
+      );
+      ctx.stroke();
+
+      /* ── leaves (2 side leaves) ── */
+      ctx.fillStyle = '#7cb342';
+      ctx.strokeStyle = '#7cb342';
+      ctx.lineWidth = 2;
+
+      /* left leaf */
+      ctx.beginPath();
+      ctx.moveTo(wx + sway*0.3, wy - STEM_H*0.4);
+      ctx.quadraticCurveTo(wx - 34, wy - STEM_H*0.55, wx - 20, wy - STEM_H*0.68);
+      ctx.quadraticCurveTo(wx - 10, wy - STEM_H*0.48, wx + sway*0.3, wy - STEM_H*0.4);
+      ctx.fill();
+
+      /* right leaf */
+      ctx.beginPath();
+      ctx.moveTo(wx + sway*0.7, wy - STEM_H*0.62);
+      ctx.quadraticCurveTo(wx + 38, wy - STEM_H*0.74, wx + 22, wy - STEM_H*0.86);
+      ctx.quadraticCurveTo(wx + 10, wy - STEM_H*0.70, wx + sway*0.7, wy - STEM_H*0.62);
+      ctx.fill();
+
+      /* ── wheat head (spikelet cluster) ── */
+      var hx = wx + sway*1.2;
+      var hy = wy - STEM_H;
+
+      ctx.fillStyle = '#f9a825';
+      ctx.strokeStyle = '#f57f17';
+      ctx.lineWidth = 1;
+
+      /* central axis of head */
+      ctx.strokeStyle = '#8bc34a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy);
+      ctx.lineTo(hx, hy - 44);
+      ctx.stroke();
+
+      /* draw spikelets along the axis */
+      var spikeletCount = 7;
+      for(var s=0;s<spikeletCount;s++){
+        var sy2 = hy - s*6.5;
+        var side = (s%2===0) ? 1 : -1;
+        var spread = 7 + s*0.5;
+
+        ctx.fillStyle = s < 2 ? '#f9a825' : '#ffd54f';
+        ctx.strokeStyle = '#f57f17';
+        ctx.lineWidth = 0.8;
+
+        /* grain oval */
+        ctx.beginPath();
+        ctx.ellipse(hx + side*spread, sy2, 5, 9, side*0.35, 0, Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+
+        /* awn (whisker) */
+        ctx.strokeStyle = '#bcaa1f';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(hx + side*spread, sy2 - 9);
+        ctx.lineTo(hx + side*(spread+2), sy2 - 22);
+        ctx.stroke();
+
+        /* opposite smaller */
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(hx - side*spread*0.5, sy2 - 3, 4, 7, -side*0.3, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      /* tip grain */
+      ctx.fillStyle = '#ffe082';
+      ctx.beginPath();
+      ctx.ellipse(hx, hy - 44, 4, 8, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawGrains(){
+      for(var i=0;i<grains.length;i++){
+        var g = grains[i];
+        ctx.save();
+        ctx.globalAlpha = g.alpha;
+        ctx.fillStyle = '#ffc107';
+        ctx.beginPath();
+        ctx.ellipse(g.x, g.y, 4, 6, Math.atan2(g.vy, g.vx), 0, Math.PI*2);
+        ctx.fill();
+        /* tiny sparkle lines */
+        ctx.strokeStyle = '#ff8f00';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(g.x, g.y - 7);
+        ctx.lineTo(g.x, g.y - 12);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function updateGrains(){
+      for(var i=grains.length-1;i>=0;i--){
+        var g = grains[i];
+        g.vy += 0.18; /* gravity */
+        g.x  += g.vx;
+        g.y  += g.vy;
+        g.life++;
+        /* fade out as it nears/hits ground or after 90 frames */
+        if(g.y > WHEAT_Y - 5 || g.life > 90){
+          g.alpha -= 0.04;
+          if(g.alpha <= 0) grains.splice(i,1);
+        }
+      }
+    }
+
+    /* ── GROUND STRIP ── */
+    function drawGround(){
+      ctx.save();
+      ctx.fillStyle = '#388e3c';
+      ctx.beginPath();
+      ctx.roundRect(WHEAT_X - 90, WHEAT_Y, 180, 18, [0,0,9,9]);
+      ctx.fill();
+      /* soil line */
+      ctx.fillStyle = '#5d4037';
+      ctx.beginPath();
+      ctx.roundRect(WHEAT_X - 80, WHEAT_Y + 14, 160, 8, [0,0,6,6]);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    /* ── BACKGROUND sky gradient (via fillRect) ── */
+    function drawSky(){
+      /* top dark green → mid green */
+      ctx.fillStyle = '#1a5c1f';
+      ctx.fillRect(0, 0, W, H);
+
+      /* soft horizon glow */
+      var grad = ctx.createLinearGradient(0, H*0.55, 0, H);
+      grad.addColorStop(0, 'rgba(56,142,60,0.0)');
+      grad.addColorStop(1, 'rgba(27,94,32,0.9)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, H*0.55, W, H*0.45);
+    }
+
+    /* ── MAIN LOOP ── */
+    function frame(){
+      requestAnimationFrame(frame);
+      t++;
+
+      WHEAT_X = W / 2;
+      WHEAT_Y = H * 0.82;
+
+      ctx.clearRect(0, 0, W, H);
+      drawSky();
+
+      /* clouds */
+      for(var c=0;c<clouds.length;c++){
+        clouds[c].x += clouds[c].speed;
+        if(clouds[c].x > W + 240) clouds[c].x = -240;
+        drawCloud(clouds[c].x, clouds[c].y, clouds[c].w, clouds[c].alpha);
+      }
+
+      /* birds */
+      for(var bi=0;bi<birds.length;bi++){
+        var bd = birds[bi];
+        bd.x += bd.speed;
+        bd.wing += bd.wspeed;
+        if(bd.x > W + 80){
+          bd.x = -80;
+          bd.y = 40 + Math.random()*(H*0.28);
+          bd.speed = 1.4 + Math.random()*1.4;
+        }
+        drawBird(bd.x, bd.y, bd.scale, bd.wing);
+      }
+
+      /* wheat & grains */
+      drawGround();
+      drawWheat(WHEAT_X, WHEAT_Y);
+
+      grainTimer++;
+      if(grainTimer >= GRAIN_INTERVAL){
+        grainTimer = 0;
+        spawnGrains();
+      }
+      updateGrains();
+      drawGrains();
+    }
+
+    frame();
+
+  })();
+  </script>
+
+</body>
+</html>
