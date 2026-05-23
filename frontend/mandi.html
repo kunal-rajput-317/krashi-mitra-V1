@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>🏪 मंडी भाव | KrashiMitra</title>
+  <meta name="description" content="उत्तर प्रदेश की लाइव मंडी कीमतें, खाद की सरकारी दरें — KrashiMitra पर देखें।" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://krashimitra.in/mandi.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="मंडी भाव — KrashiMitra" />
+  <meta property="og:description" content="लाइव मंडी कीमतें और खाद की सरकारी दरें — KrashiMitra पर।" />
+  <meta property="og:url" content="https://krashimitra.in/mandi.html" />
+  <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════
+       CSS VARIABLES & RESET
+    ══════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&display=swap');
+
+    :root {
+      --green-dark:    #1a3c2e;
+      --green-mid:     #2d6a4f;
+      --green-light:   #52b788;
+      --green-pale:    #d8f3dc;
+      --amber:         #e9a825;
+      --amber-light:   #fef3c7;
+      --soil:          #7c4f2f;
+      --cream:         #faf7f2;
+      --white:         #ffffff;
+      --text-dark:     #1a2e1e;
+      --text-mid:      #4a6355;
+      --text-light:    #8aab96;
+      --border:        #ddeee4;
+      --shadow:        0 4px 24px rgba(26,60,46,0.10);
+      --shadow-lg:     0 8px 40px rgba(26,60,46,0.16);
+      --radius:        14px;
+      --radius-sm:     8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════
+       ANNOUNCEMENT BAR
+    ══════════════════════════════════════ */
+    .pre-topbar {
+      background: var(--amber);
+      color: #1a2e1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .pre-topbar-sub { display: none; }
+    .home-btn { display: none; }
+    .pre-topbar-helpline { opacity: 0.85; white-space: nowrap; }
+    .pre-topbar-cta {
+      background: #1a2e1e;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════
+       TOPBAR
+    ══════════════════════════════════════ */
+    .topbar {
+      background: var(--green-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .topbar-logo-icon { font-size: 26px; line-height: 1; }
+    .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .topbar-logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px; font-weight: 700;
+      color: #fff; letter-spacing: 0.3px;
+    }
+    .topbar-logo-name span { color: var(--amber); }
+    .topbar-logo-sub { font-size: 9.5px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; }
+
+    .topbar-nav { display: flex; align-items: center; gap: 2px; }
+    .tnav-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: rgba(255,255,255,0.80);
+      padding: 7px 14px; border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .tnav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+    .tnav-btn.active {
+      background: rgba(255,255,255,0.14); color: #fff;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25) inset;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    /* ── Language Dropdown Picker ── */
+    .lang-picker { position: relative; }
+    .lang-picker-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 20px; padding: 5px 12px 5px 14px;
+      color: #fff; font-size: 12px; font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer; transition: background 0.15s;
+      white-space: nowrap; user-select: none;
+    }
+    .lang-picker-btn:hover { background: rgba(255,255,255,0.18); }
+    .lang-picker-btn .lang-chevron {
+      font-size: 9px; opacity: 0.7;
+      transition: transform 0.2s; display: inline-block;
+    }
+    .lang-picker.open .lang-chevron { transform: rotate(180deg); }
+    .lang-dropdown {
+      display: none; position: absolute;
+      top: calc(100% + 6px); right: 0;
+      background: #1e4535; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      min-width: 130px; z-index: 200;
+    }
+    .lang-picker.open .lang-dropdown { display: block; }
+    .lang-option {
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 16px; color: rgba(255,255,255,0.80);
+      font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer; transition: background 0.15s;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .lang-option:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .lang-option.active { color: var(--amber); background: rgba(233,168,37,0.10); }
+    .lang-option .lang-opt-code { font-size: 11px; opacity: 0.55; font-weight: 600; min-width: 22px; }
+
+    .topbar-search-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20);
+      color: rgba(255,255,255,0.80); font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+    }
+    .topbar-search-btn:hover { background: rgba(255,255,255,0.18); }
+    .topbar-avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25);
+      color: #fff; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════ */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 32px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ══════════════════════════════════════
+       SHOP TABS (Mandi / Fertilizer toggle)
+    ══════════════════════════════════════ */
+    .shop-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .shop-tab-btn {
+      padding: 9px 20px;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-mid);
+      cursor: pointer;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      transition: all 0.2s;
+    }
+    .shop-tab-btn.active {
+      background: var(--green-mid);
+      color: white;
+      border-color: var(--green-mid);
+    }
+
+    /* ══════════════════════════════════════
+       SHOP FILTERS
+    ══════════════════════════════════════ */
+    .shop-filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .shop-filters select {
+      padding: 8px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: white;
+      color: var(--text-dark);
+      outline: none;
+      cursor: pointer;
+      min-height: 40px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
+    }
+    .shop-filters select:focus { border-color: var(--green-light); }
+
+    .mandi-view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-mid);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      box-shadow: var(--shadow);
+    }
+    .mandi-view-toggle:hover { border-color: var(--green-light); color: var(--green-mid); }
+
+    /* ══════════════════════════════════════
+       SECTION TITLE
+    ══════════════════════════════════════ */
+    .shop-section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--text-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ══════════════════════════════════════
+       MANDI TABLE (Desktop)
+    ══════════════════════════════════════ */
+    .mandi-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+      border: 1.5px solid var(--border);
+    }
+    .mandi-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: white;
+      min-width: 600px;
+    }
+    .mandi-table thead tr {
+      background: var(--green-dark);
+      color: white;
+    }
+    .mandi-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .mandi-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .mandi-table tbody tr:last-child { border-bottom: none; }
+    .mandi-table tbody tr:hover { background: var(--green-pale); }
+    .mandi-table td {
+      padding: 11px 16px;
+      color: var(--text-dark);
+      vertical-align: middle;
+    }
+    .price-modal {
+      font-weight: 700;
+      color: var(--green-mid);
+      font-size: 15px;
+    }
+    .price-range { color: var(--text-mid); font-size: 12px; }
+
+    /* Desktop card mode toggle */
+    .desktop-card-mode .mandi-table-wrap { display: none; }
+    .desktop-card-mode .mandi-cards-mobile { display: flex !important; }
+
+    /* ══════════════════════════════════════
+       MANDI MOBILE CARDS
+    ══════════════════════════════════════ */
+    .mandi-cards-mobile { display: none; flex-direction: column; gap: 12px; }
+
+    .mandi-card-mobile {
+      background: white;
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .mandi-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .mandi-card-market { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+    .mandi-card-district { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .mandi-card-price {
+      font-size: 22px; font-weight: 700;
+      color: var(--green-mid); text-align: right;
+    }
+    .mandi-card-price span {
+      font-size: 11px; color: var(--text-light);
+      display: block; font-weight: 400;
+    }
+    .mandi-card-bottom {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      padding-top: 10px; border-top: 1px solid var(--border);
+    }
+    .mandi-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      background: var(--green-pale);
+      border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      color: var(--green-mid);
+      border: 1px solid var(--border);
+    }
+    .mandi-tag.variety {
+      background: var(--amber-light);
+      color: var(--soil);
+      border-color: rgba(233,168,37,0.3);
+    }
+
+    /* ══════════════════════════════════════
+       FERTILIZER GRID
+    ══════════════════════════════════════ */
+    .fertilizer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .fertilizer-card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      min-height: 100px;
+    }
+    .fertilizer-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .fert-card-img {
+      width: 88px; min-width: 88px;
+      background: var(--green-pale);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px;
+      flex-shrink: 0;
+    }
+    .fert-card-img img { width: 60px; height: 60px; object-fit: contain; }
+    .fert-card-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; }
+    .fert-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .fert-name { font-weight: 700; font-size: 14px; color: var(--text-dark); line-height: 1.3; }
+    .fert-type {
+      font-size: 11px; color: var(--green-mid); font-weight: 600;
+      background: var(--green-pale); padding: 2px 8px;
+      border-radius: 10px; white-space: nowrap; margin-left: 6px; flex-shrink: 0;
+    }
+    .fert-price { font-size: 20px; font-weight: 700; color: var(--green-dark); margin: 4px 0; }
+    .fert-price span { font-size: 12px; font-weight: 500; color: var(--text-light); }
+    .fert-use { font-size: 11px; color: var(--text-mid); line-height: 1.5; flex: 1; }
+    .fert-card-cta {
+      font-size: 11px; color: var(--green-mid); font-weight: 600;
+      margin-top: 8px; text-align: right; opacity: 0.8;
+    }
+
+    /* ══════════════════════════════════════
+       FERTILIZER MODAL POPUP
+    ══════════════════════════════════════ */
+    .fert-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); backdrop-filter: blur(3px);
+      z-index: 2000; align-items: center; justify-content: center; padding: 24px;
+    }
+    .fert-modal-overlay.open { display: flex; }
+    .fert-modal {
+      background: #f9f5e8; border-radius: 22px;
+      width: 100%; max-width: 780px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.1);
+      animation: cardSlideIn 0.3s cubic-bezier(0.34,1.4,0.64,1);
+      display: flex; flex-direction: column;
+      border: 1px solid #e2dbc8; position: relative;
+    }
+    .fert-modal-inner-scroll {
+      overflow-y: auto; max-height: 90vh;
+      border-radius: 22px; display: flex; flex-direction: column;
+    }
+    @keyframes cardSlideIn {
+      from { transform: scale(0.88) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .fert-card-inner { display: flex; align-items: stretch; min-height: 420px; }
+    .fert-left-panel {
+      width: 260px; min-width: 260px; flex-shrink: 0;
+      display: flex; flex-direction: column; border-right: 1px solid #e0d9c6;
+    }
+    .fert-image-wrap { flex: 1; overflow: hidden; border-radius: 20px 0 0 0; }
+    .fert-modal-img {
+      width: 100%; height: 100%; min-height: 280px;
+      object-fit: cover; display: block;
+    }
+    .fert-modal-img-placeholder {
+      width: 100%; min-height: 280px;
+      background: linear-gradient(135deg, #4e9e6e, #2d6a4f);
+      display: flex; align-items: center; justify-content: center; font-size: 80px;
+    }
+    .fert-left-info {
+      padding: 14px 16px 16px; background: #f9f5e8;
+      border-top: 1px solid #e0d9c6; border-radius: 0 0 0 20px;
+    }
+    .fert-left-name { font-size: 15px; font-weight: 700; color: #1a2e1e; line-height: 1.3; }
+    .fert-left-sub { font-size: 12px; color: #6a8070; margin-top: 4px; font-weight: 500; }
+    .fert-right-panel {
+      flex: 1; padding: 22px 24px 20px;
+      display: flex; flex-direction: column; position: relative;
+    }
+    .fert-name-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 8px; gap: 12px;
+    }
+    .fert-title-group { display: flex; align-items: center; gap: 8px; }
+    .fert-leaf-icon { font-size: 22px; }
+    .fert-main-name {
+      font-size: 28px; font-weight: 800; color: #1a2e1e;
+      font-family: 'DM Sans', sans-serif; line-height: 1;
+    }
+    .fert-type-ribbon {
+      background: #4a7c59; color: white;
+      font-size: 13px; font-weight: 700;
+      padding: 7px 18px 7px 14px;
+      border-radius: 6px 16px 16px 6px;
+      position: absolute; top: 22px; right: 0;
+      letter-spacing: 0.3px;
+      box-shadow: -2px 2px 8px rgba(0,0,0,0.15);
+      min-width: 90px; text-align: center;
+    }
+    .fert-price-row {
+      display: flex; align-items: baseline; gap: 6px;
+      margin-bottom: 16px; margin-top: 4px;
+    }
+    .fert-rupee { font-size: 22px; font-weight: 700; color: #1a2e1e; }
+    .fert-amount { font-size: 30px; font-weight: 800; color: #1a2e1e; line-height: 1; }
+    .fert-per-bag { font-size: 15px; color: #4a6355; font-weight: 500; }
+    .fert-hr { border: none; border-top: 1.5px solid #ddd8c6; margin-bottom: 14px; }
+    .fert-detail-row { display: flex; gap: 10px; margin-bottom: 11px; align-items: flex-start; }
+    .fert-detail-icon { font-size: 18px; width: 22px; flex-shrink: 0; margin-top: 1px; text-align: center; }
+    .fert-detail-content { flex: 1; line-height: 1.5; }
+    .fert-detail-label { font-size: 13.5px; font-weight: 700; color: #1a2e1e; }
+    .fert-detail-value { font-size: 13.5px; color: #3a3a3a; font-weight: 400; }
+    .fert-divider { display: none; }
+    .fert-precaution {
+      display: flex; gap: 10px; margin-bottom: 11px;
+      align-items: flex-start; background: transparent; border: none;
+    }
+    .fert-precaution-icon { font-size: 18px; width: 22px; flex-shrink: 0; margin-top: 1px; text-align: center; }
+    .fert-precaution-content { flex: 1; line-height: 1.5; }
+    .fert-precaution-label { font-size: 13.5px; font-weight: 700; color: #b45309; }
+    .fert-precaution-value { font-size: 13.5px; color: #92400e; font-weight: 400; }
+    .fert-modal-crops {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+    }
+    .fert-modal-crop-tag {
+      font-size: 12px; background: var(--green-pale); color: var(--green-mid);
+      padding: 4px 10px; border-radius: 20px; font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .fert-close-x {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(0,0,0,0.08); border: none;
+      border-radius: 50%; width: 32px; height: 32px;
+      font-size: 14px; cursor: pointer; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .fert-close-x:hover { background: rgba(0,0,0,0.18); }
+
+    /* ══════════════════════════════════════
+       EMPTY / LOADING STATES
+    ══════════════════════════════════════ */
+    .shop-empty {
+      text-align: center; padding: 48px 20px;
+    }
+    .shop-empty .emoji { font-size: 48px; margin-bottom: 12px; }
+    .shop-empty div { font-size: 14px; color: var(--text-mid); line-height: 1.7; }
+    .shop-loading {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 32px 20px;
+      font-size: 14px; color: var(--text-mid);
+    }
+
+    /* Shimmer */
+    .mandi-shimmer {
+      background: linear-gradient(90deg, #e8f0eb 25%, #d4e6da 50%, #e8f0eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: var(--radius);
+      height: 56px; margin-bottom: 8px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ══════════════════════════════════════
+       FOOTER META
+    ══════════════════════════════════════ */
+    .wx-footer-meta {
+      text-align: center; font-size: 11px;
+      color: var(--text-light); padding: 4px 0 2px; letter-spacing: 0.3px;
+    }
+
+    /* ══════════════════════════════════════
+       BOTTOM NAVIGATION (Mobile Only)
+    ══════════════════════════════════════ */
+    .bottom-nav { display: none; }
+
+    /* ══════════════════════════════════════
+       COPYRIGHT FOOTER
+    ══════════════════════════════════════ */
+    .site-footer {
+      background: var(--green-dark); color: rgba(255,255,255,0.65);
+      text-align: center; padding: 16px 24px;
+      font-size: 12px; letter-spacing: 0.3px; flex-shrink: 0;
+    }
+    .site-footer a { color: var(--green-light); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .site-footer-links {
+      display: flex; justify-content: center;
+      gap: 16px; margin-bottom: 8px; flex-wrap: wrap;
+    }
+
+    /* ══════════════════════════════════════
+       MOBILE — max-width 1024px
+    ══════════════════════════════════════ */
+    @media screen and (max-width: 1024px) {
+      .topbar-nav { display: none; }
+      .topbar-search-btn { display: none; }
+      .topbar-avatar-btn { display: none; }
+      .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
+      .topbar { padding: 0 12px; height: 54px; }
+      .topbar-logo-name { font-size: 15px; }
+      .topbar-logo-sub { display: none; }
+      .lang-dropdown { right: 0; left: auto; }
+
+      .main-content { padding: 14px 12px 90px; }
+
+      .shop-tabs { gap: 8px; }
+      .shop-tab-btn { font-size: 13px; padding: 10px 14px; flex: 1; min-height: 44px; border-radius: 22px; }
+      .shop-filters { gap: 8px; flex-wrap: wrap; }
+      .shop-filters select { flex: 1; min-width: calc(50% - 4px); font-size: 14px; padding: 10px 12px; min-height: 44px; border-radius: 10px; }
+      .mandi-view-toggle { display: none; }
+      .mandi-table-wrap { display: none; }
+      .mandi-cards-mobile { display: flex; }
+
+      /* Fertilizer grid single column */
+      .fertilizer-grid { grid-template-columns: 1fr; gap: 10px; }
+      .fertilizer-card { min-height: 84px; border-radius: 14px; }
+      .fert-card-img { width: 78px; min-width: 78px; font-size: 32px; }
+      .fert-card-body { padding: 10px 11px; }
+      .fert-name { font-size: 14px; }
+      .fert-price { font-size: 17px; }
+      .fert-use { font-size: 11px; }
+
+      /* Fertilizer modal mobile */
+      .fert-modal-overlay { padding: 10px; align-items: flex-end; }
+      .fert-modal { width: 100%; max-width: 100%; border-radius: 20px 20px 14px 14px; max-height: 90vh; overflow-y: auto; }
+      .fert-card-inner { flex-direction: column; min-height: unset; }
+      .fert-left-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #e0d9c6; flex-direction: row; }
+      .fert-image-wrap { width: 100px; min-width: 100px; flex-shrink: 0; border-radius: 20px 0 0 0; }
+      .fert-modal-img, .fert-modal-img-placeholder { min-height: 100px; }
+      .fert-left-info { flex: 1; }
+      .fert-right-panel { padding: 16px 18px; }
+      .fert-main-name { font-size: 20px; }
+      .fert-amount { font-size: 22px; }
+      .fert-type-ribbon { font-size: 11px; padding: 5px 12px 5px 10px; }
+
+      /* Bottom Nav */
+      .bottom-nav {
+        display: block; position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--green-dark);
+        box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom, 6px);
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      .bottom-nav-items {
+        display: flex; align-items: center;
+        height: 60px; padding: 0 4px; gap: 2px;
+      }
+      .bottom-nav-item {
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+        padding: 6px 2px; text-decoration: none; gap: 3px;
+      }
+      .bnav-icon { font-size: 20px; line-height: 1; color: rgba(255,255,255,0.55); transition: color 0.18s; }
+      .bnav-label {
+        font-size: 10px; font-weight: 600;
+        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+        color: rgba(255,255,255,0.55); white-space: nowrap; transition: color 0.18s;
+      }
+      .bottom-nav-item.active .bnav-icon,
+      .bottom-nav-item.active .bnav-label { color: var(--amber); }
+
+      .site-footer { display: none; }
+    }
+
+    @supports (padding: max(0px)) {
+      @media (max-width: 1024px) {
+        .bottom-nav { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ ANNOUNCEMENT BAR ══ -->
+<div class="pre-topbar">
+  <span class="pre-topbar-helpline">🌾 किसान helpline: +91 9870951001 — निःशुल्क कृषि सलाह</span>
+  <a href="chat.html" class="pre-topbar-cta">AI से पूछें →</a>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
+      <span class="topbar-logo-icon">🌾</span>
+      <div class="topbar-logo-text">
+        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
+        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+
+  <nav class="topbar-nav">
+    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
+    <a class="tnav-btn" href="weather.html">🌤️ मौसम</a>
+    <a class="tnav-btn active" href="mandi.html">🏪 मंडी</a>
+    <a class="tnav-btn" href="articles.html">📰 लेख</a>
+    <a class="tnav-btn" href="chat.html">💬 सहायता</a>
+    <a class="tnav-btn" href="shop.html">🛒 दुकान</a>
+  </nav>
+
+  <div class="topbar-right">
+    <div class="lang-picker" id="lang-picker">
+      <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
+        <span id="lang-picker-label">हिं</span>
+        <span class="lang-chevron">▾</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown">
+        <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
+          <span class="lang-opt-code">हिं</span> हिंदी
+        </button>
+        <button class="lang-option" id="opt-en" onclick="pickLang('en')">
+          <span class="lang-opt-code">EN</span> English
+        </button>
+        <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
+          <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
+        </button>
+      </div>
+    </div>
+    <button class="topbar-search-btn" title="Search">🔍</button>
+    <div class="topbar-avatar-btn">👤</div>
+  </div>
+</div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content">
+
+  <!-- Tab switcher: Mandi / Fertilizer -->
+  <div class="shop-tabs">
+    <button class="shop-tab-btn active" id="shop-btn-mandi"
+            onclick="switchShopTab('mandi')" data-t="tab_mandi">📊 मंडी भाव</button>
+    <button class="shop-tab-btn" id="shop-btn-fertilizer"
+            onclick="switchShopTab('fertilizer')" data-t="tab_fertilizer">🧪 खाद की कीमतें</button>
+  </div>
+
+  <!-- ── MANDI RATES ── -->
+  <div id="shop-mandi">
+    <div class="shop-section-title" data-t="mandi_title">📊 Live Mandi Rates</div>
+
+    <div class="shop-filters">
+      <select id="mandi-state" onchange="onStateChange()">
+        <option value="" data-t-opt="select_state">Select State</option>
+      </select>
+      <select id="mandi-district-filter" onchange="fetchMandiPrices()">
+        <option value="" data-t-opt="select_district">Select District</option>
+      </select>
+      <select id="mandi-commodity" onchange="fetchMandiPrices()">
+        <option value="" data-t-opt="select_commodity">Select Commodity</option>
+      </select>
+      <button class="mandi-view-toggle" id="mandi-view-toggle" onclick="toggleMandiView()" title="Switch view">
+        <span id="mandi-view-icon">⊞</span>
+        <span id="mandi-view-label" data-t="card_view">Card View</span>
+      </button>
+    </div>
+
+    <div id="mandi-result">
+      <div class="shop-empty">
+        <div class="emoji">📊</div>
+        <div data-t="select_state_hint">State चुनें — मंडी भाव लोड होगा</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FERTILIZER PRICES ── -->
+  <div id="shop-fertilizer" style="display:none">
+    <div class="shop-section-title" data-t="fert_title">🧪 Fertilizer Prices — Government MRP</div>
+    <div id="fertilizer-grid" class="fertilizer-grid">
+      <!-- shimmer placeholders -->
+      <div class="mandi-shimmer"></div>
+      <div class="mandi-shimmer"></div>
+      <div class="mandi-shimmer"></div>
+    </div>
+  </div>
+
+  <div class="wx-footer-meta" data-t="footer_meta">
+    मंडी भाव · सरकारी दरें · कृषि मित्र · krashimitra.in
+  </div>
+
+</div><!-- /.main-content -->
+
+<!-- ══ FERTILIZER MODAL POPUP ══ -->
+<div class="fert-modal-overlay" id="fert-modal">
+  <div class="fert-modal">
+    <button class="fert-close-x" onclick="closeFertModal()">&#10005;</button>
+    <div class="fert-modal-inner-scroll">
+      <div class="fert-card-inner">
+        <!-- LEFT: Image + subtitle -->
+        <div class="fert-left-panel">
+          <div class="fert-image-wrap" id="fert-popup-img-wrap">
+            <div class="fert-modal-img-placeholder" id="fert-popup-img">🌱</div>
+          </div>
+          <div class="fert-left-info">
+            <div class="fert-left-name">Fertilizer (<span id="fert-left-name-span"></span>)</div>
+            <div class="fert-left-sub">Recommended Use:</div>
+          </div>
+        </div>
+        <!-- RIGHT: All details -->
+        <div class="fert-right-panel">
+          <div class="fert-type-ribbon" id="fert-popup-type">Nitrogen</div>
+          <div class="fert-name-row">
+            <div class="fert-title-group">
+              <span class="fert-leaf-icon">🌿</span>
+              <span class="fert-main-name" id="fert-popup-name">Urea</span>
+            </div>
+          </div>
+          <div class="fert-price-row">
+            <span class="fert-rupee">₹</span>
+            <span class="fert-amount" id="fert-popup-price">266</span>
+            <span class="fert-per-bag" id="fert-popup-bag">/ 45 kg bag.</span>
+          </div>
+          <hr class="fert-hr">
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">ℹ️</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">Details: </span>
+              <span class="fert-detail-value" id="fert-popup-details"></span>
+            </div>
+          </div>
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">👨‍🌾</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">Use: </span>
+              <span class="fert-detail-value" id="fert-popup-use"></span>
+            </div>
+          </div>
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">📅</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">When to Apply: </span>
+              <span class="fert-detail-value" id="fert-popup-when"></span>
+            </div>
+          </div>
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">🔑</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">Dosage: </span>
+              <span class="fert-detail-value" id="fert-popup-dosage"></span>
+            </div>
+          </div>
+          <div class="fert-precaution">
+            <span class="fert-precaution-icon">⚠️</span>
+            <div class="fert-precaution-content">
+              <span class="fert-precaution-label">Precaution: </span>
+              <span class="fert-precaution-value" id="fert-popup-precaution"></span>
+            </div>
+          </div>
+          <div class="fert-modal-crops" id="fert-popup-crops"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOTTOM NAV (Mobile) ══ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-items">
+    <a class="bottom-nav-item" href="index.html">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">मुख्य</span>
+    </a>
+    <a class="bottom-nav-item" href="chat.html">
+      <span class="bnav-icon">💬</span>
+      <span class="bnav-label" data-t="nav_chat">Chat</span>
+    </a>
+    <a class="bottom-nav-item" href="weather.html">
+      <span class="bnav-icon">🌤️</span>
+      <span class="bnav-label" data-t="nav_weather">मौसम</span>
+    </a>
+    <a class="bottom-nav-item active" href="mandi.html">
+      <span class="bnav-icon">🏪</span>
+      <span class="bnav-label" data-t="nav_mandi">मंडी</span>
+    </a>
+    <a class="bottom-nav-item" href="shop.html">
+      <span class="bnav-icon">🛒</span>
+      <span class="bnav-label" data-t="nav_shop">दुकान</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ══ COPYRIGHT FOOTER ══ -->
+<footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="index.html">Home</a>
+    <a href="chat.html">AI Advisor</a>
+    <a href="weather.html">Weather</a>
+    <a href="mandi.html">Mandi</a>
+    <a href="shop.html">Shop</a>
+  </div>
+  <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; All rights reserved.</div>
+</footer>
+
+<script>
+  // ══════════════════════════════════════
+  // TRANSLATIONS — Hindi / English / Kannada
+  // ══════════════════════════════════════
+  const TRANSLATIONS = {
+    hi: {
+      nav_chat:         "AI से पूछें",
+      nav_weather:      "मौसम",
+      nav_mandi:        "मंडी",
+      nav_shop:         "दुकान",
+      tab_mandi:        "📊 मंडी भाव",
+      tab_fertilizer:   "🧪 खाद की कीमतें",
+      mandi_title:      "📊 Live Mandi Rates",
+      fert_title:       "🧪 खाद की कीमतें — सरकारी MRP",
+      select_state:     "State चुनें",
+      select_district:  "District चुनें",
+      select_commodity: "Commodity चुनें",
+      card_view:        "Card View",
+      table_view:       "Table View",
+      select_state_hint:"State चुनें — मंडी भाव लोड होगा",
+      loading:          "🔄 लोड हो रहा है...",
+      no_data:          "कोई डेटा नहीं मिला",
+      no_data_sub:      "अलग combination try करें",
+      error_server:     "⚠️ Server से connect नहीं हुआ।",
+      footer_meta:      "मंडी भाव · सरकारी दरें · कृषि मित्र · krashimitra.in",
+    },
+    en: {
+      nav_chat:         "AI Advisor",
+      nav_weather:      "Weather",
+      nav_mandi:        "Mandi",
+      nav_shop:         "Shop",
+      tab_mandi:        "📊 Mandi Rates",
+      tab_fertilizer:   "🧪 Fertilizer Prices",
+      mandi_title:      "📊 Live Mandi Rates",
+      fert_title:       "🧪 Fertilizer Prices — Government MRP",
+      select_state:     "Select State",
+      select_district:  "Select District",
+      select_commodity: "Select Commodity",
+      card_view:        "Card View",
+      table_view:       "Table View",
+      select_state_hint:"Select a state to load mandi rates",
+      loading:          "🔄 Loading prices...",
+      no_data:          "No price data found",
+      no_data_sub:      "Try a different combination",
+      error_server:     "⚠️ Could not reach server.",
+      footer_meta:      "Mandi Rates · Govt. Prices · KrashiMitra · krashimitra.in",
+    },
+    kn: {
+      nav_chat:         "AI ಕೇಳಿ",
+      nav_weather:      "ಹವಾಮಾನ",
+      nav_mandi:        "ಮಂಡಿ",
+      nav_shop:         "ಅಂಗಡಿ",
+      tab_mandi:        "📊 ಮಂಡಿ ಬೆಲೆ",
+      tab_fertilizer:   "🧪 ಗೊಬ್ಬರ ಬೆಲೆ",
+      mandi_title:      "📊 ನೇರ ಮಂಡಿ ಬೆಲೆ",
+      fert_title:       "🧪 ಗೊಬ್ಬರ ಬೆಲೆ — ಸರ್ಕಾರಿ MRP",
+      select_state:     "ರಾಜ್ಯ ಆಯ್ಕೆ ಮಾಡಿ",
+      select_district:  "ಜಿಲ್ಲೆ ಆಯ್ಕೆ ಮಾಡಿ",
+      select_commodity: "ಸರಕು ಆಯ್ಕೆ ಮಾಡಿ",
+      card_view:        "ಕಾರ್ಡ್ ವೀಕ್ಷಣೆ",
+      table_view:       "ಟೇಬಲ್ ವೀಕ್ಷಣೆ",
+      select_state_hint:"ಮಂಡಿ ಬೆಲೆ ಲೋಡ್ ಮಾಡಲು ರಾಜ್ಯ ಆಯ್ಕೆ ಮಾಡಿ",
+      loading:          "🔄 ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+      no_data:          "ಯಾವುದೇ ಡೇಟಾ ಕಂಡುಬಂದಿಲ್ಲ",
+      no_data_sub:      "ಬೇರೆ combination ಪ್ರಯತ್ನಿಸಿ",
+      error_server:     "⚠️ ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಲಿಲ್ಲ.",
+      footer_meta:      "ಮಂಡಿ ಬೆಲೆ · ಸರ್ಕಾರಿ ದರ · ಕೃಷಿ ಮಿತ್ರ",
+    }
+  };
+
+  const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
+  let currentLang = localStorage.getItem('km_lang') || 'hi';
+
+  function toggleLangPicker(e) {
+    e.stopPropagation();
+    document.getElementById('lang-picker').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    document.getElementById('lang-picker').classList.remove('open');
+  });
+  function pickLang(lang) {
+    document.getElementById('lang-picker').classList.remove('open');
+    setLang(lang);
+  }
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('km_lang', lang);
+    const lbl = document.getElementById('lang-picker-label');
+    if (lbl) lbl.textContent = LANG_LABELS[lang] || lang.toUpperCase();
+    ['hi','en','kn'].forEach(l => {
+      const opt = document.getElementById(`opt-${l}`);
+      if (opt) opt.classList.toggle('active', l === lang);
+    });
+    const tr = TRANSLATIONS[lang] || TRANSLATIONS.hi;
+    document.querySelectorAll('[data-t]').forEach(el => {
+      const key = el.getAttribute('data-t');
+      if (tr[key]) el.textContent = tr[key];
+    });
+    // update select placeholders
+    ['mandi-state','mandi-district-filter','mandi-commodity'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel && sel.options[0]) {
+        const keyMap = { 'mandi-state': 'select_state', 'mandi-district-filter': 'select_district', 'mandi-commodity': 'select_commodity' };
+        sel.options[0].text = tr[keyMap[id]] || sel.options[0].text;
+      }
+    });
+  }
+  function t(key) {
+    return (TRANSLATIONS[currentLang] || TRANSLATIONS.hi)[key] || key;
+  }
+
+  // ══════════════════════════════════════
+  // SHOP TAB SWITCH
+  // ══════════════════════════════════════
+  let shopTabActive = 'mandi';
+
+  function switchShopTab(tab) {
+    shopTabActive = tab;
+    document.getElementById('shop-mandi').style.display      = tab === 'mandi'      ? 'block' : 'none';
+    document.getElementById('shop-fertilizer').style.display = tab === 'fertilizer' ? 'block' : 'none';
+    document.getElementById('shop-btn-mandi').classList.toggle('active',      tab === 'mandi');
+    document.getElementById('shop-btn-fertilizer').classList.toggle('active', tab === 'fertilizer');
+    if (tab === 'fertilizer') loadFertilizers();
+  }
+
+  // ══════════════════════════════════════
+  // MANDI — Load states on init
+  // ══════════════════════════════════════
+  async function loadStates() {
+    try {
+      const res  = await fetch('https://krashi-mitra-v1.onrender.com/shop/states');
+      const data = await res.json();
+      const sel  = document.getElementById('mandi-state');
+      sel.innerHTML = `<option value="">${t('select_state')}</option>` +
+        data.states.map(s => `<option value="${s}">${s}</option>`).join('');
+    } catch (e) {
+      console.log('Could not load states', e);
+    }
+  }
+
+  // When state changes — load districts + commodities, then fetch prices
+  async function onStateChange() {
+    const state = document.getElementById('mandi-state').value;
+    if (!state) return;
+
+    try {
+      const dRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/districts?state=${encodeURIComponent(state)}`);
+      const dData = await dRes.json();
+      const dSel  = document.getElementById('mandi-district-filter');
+      dSel.innerHTML = `<option value="">${t('select_district')}</option>` +
+        dData.districts.map(d => `<option value="${d}">${d}</option>`).join('');
+
+      const cRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/commodities?state=${encodeURIComponent(state)}`);
+      const cData = await cRes.json();
+      const cSel  = document.getElementById('mandi-commodity');
+      cSel.innerHTML = `<option value="">${t('select_commodity')}</option>` +
+        cData.commodities.map(c => `<option value="${c}">${c}</option>`).join('');
+    } catch (e) {
+      console.log('Could not load districts/commodities', e);
+    }
+
+    fetchMandiPrices();
+  }
+
+  // ══════════════════════════════════════
+  // FETCH MANDI PRICES
+  // ══════════════════════════════════════
+  async function fetchMandiPrices() {
+    const state     = document.getElementById('mandi-state').value;
+    const commodity = document.getElementById('mandi-commodity').value;
+    const district  = document.getElementById('mandi-district-filter').value;
+    const result    = document.getElementById('mandi-result');
+
+    if (!state) return;
+
+    result.innerHTML = `<div class="shop-loading">${t('loading')}</div>`;
+
+    try {
+      const url  = `https://krashi-mitra-v1.onrender.com/shop/mandi?commodity=${encodeURIComponent(commodity)}&district=${encodeURIComponent(district)}&state=${encodeURIComponent(state)}`;
+      const res  = await fetch(url);
+      const data = await res.json();
+
+      if (!data.prices || data.prices.length === 0) {
+        result.innerHTML = `
+          <div class="shop-empty">
+            <div class="emoji">📭</div>
+            <div>${t('no_data')}</div>
+            <div style="font-size:12px;margin-top:6px;color:#aaa">${t('no_data_sub')}</div>
+          </div>`;
+        return;
+      }
+
+      result.innerHTML = `
+        <!-- Desktop: table -->
+        <div class="mandi-table-wrap">
+          <table class="mandi-table">
+            <thead>
+              <tr>
+                <th>Market</th><th>District</th><th>Commodity</th>
+                <th>Variety</th><th>Modal Price</th><th>Min / Max</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.prices.map(p => `
+                <tr>
+                  <td>${p.market}</td>
+                  <td>${p.district}</td>
+                  <td>${p.commodity}</td>
+                  <td>${p.variety}</td>
+                  <td class="price-modal">₹${p.modal_price}/q</td>
+                  <td class="price-range">₹${p.min_price} – ₹${p.max_price}</td>
+                  <td>${p.date}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile cards -->
+        <div class="mandi-cards-mobile">
+          ${data.prices.map(p => `
+            <div class="mandi-card-mobile">
+              <div class="mandi-card-top">
+                <div>
+                  <div class="mandi-card-market">🏪 ${p.market}</div>
+                  <div class="mandi-card-district">📍 ${p.district}</div>
+                </div>
+                <div class="mandi-card-price">
+                  ₹${p.modal_price}<span>per quintal</span>
+                </div>
+              </div>
+              <div class="mandi-card-bottom">
+                <span class="mandi-tag">🌾 ${p.commodity}</span>
+                <span class="mandi-tag variety">🏷️ ${p.variety}</span>
+                <span class="mandi-tag">📉 ₹${p.min_price} – ₹${p.max_price}</span>
+                <span class="mandi-tag">📅 ${p.date}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+
+        <div style="font-size:11px;color:#aaa;margin-top:10px;text-align:right;">
+          Prices in ₹/quintal
+        </div>`;
+
+    } catch (err) {
+      result.innerHTML = `<div class="shop-loading">${t('error_server')}</div>`;
+    }
+  }
+
+  // Toggle desktop view between table and card
+  let mandiViewMode = 'table';
+  function toggleMandiView() {
+    const result = document.getElementById('mandi-result');
+    const icon   = document.getElementById('mandi-view-icon');
+    const label  = document.getElementById('mandi-view-label');
+    if (mandiViewMode === 'table') {
+      mandiViewMode = 'card';
+      result.classList.add('desktop-card-mode');
+      icon.textContent  = '☰';
+      label.textContent = t('table_view');
+    } else {
+      mandiViewMode = 'table';
+      result.classList.remove('desktop-card-mode');
+      icon.textContent  = '⊞';
+      label.textContent = t('card_view');
+    }
+  }
+
+  // ══════════════════════════════════════
+  // FERTILIZER CARDS
+  // ══════════════════════════════════════
+  async function loadFertilizers() {
+    const grid = document.getElementById('fertilizer-grid');
+    // Show shimmer
+    grid.innerHTML = '<div class="mandi-shimmer"></div><div class="mandi-shimmer"></div><div class="mandi-shimmer"></div>';
+    try {
+      const res   = await fetch('https://krashi-mitra-v1.onrender.com/shop/fertilizers');
+      const data  = await res.json();
+      const items = Object.entries(data.fertilizers);
+
+      grid.innerHTML = items.map(([key, f]) => {
+        const typeIcon = f.type && f.type.toLowerCase().includes('nitrogen') ? '🌿'
+          : f.type && f.type.toLowerCase().includes('phosphorus') ? '🌱'
+          : f.type && f.type.toLowerCase().includes('potassium') ? '🍂'
+          : f.type && f.type.toLowerCase().includes('micro') ? '✨'
+          : '🌾';
+        const imgHtml = f.image
+          ? `<img src="${f.image}" alt="${f.name}" onerror="this.parentElement.innerHTML='${typeIcon}'">`
+          : typeIcon;
+        return `
+          <div class="fertilizer-card" onclick="openFertModal('${key}')">
+            <div class="fert-card-img">${imgHtml}</div>
+            <div class="fert-card-body">
+              <div class="fert-header">
+                <div class="fert-name">${f.name}</div>
+                <div class="fert-type">${f.type}</div>
+              </div>
+              <div class="fert-price">₹${f.price_per_bag}<span> / ${f.bag_size} bag</span></div>
+              <div class="fert-use">💡 ${f.use.substring(0, 52)}…</div>
+              <div class="fert-card-cta">Tap to view more… →</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      window.fertData = Object.fromEntries(items);
+
+    } catch (err) {
+      grid.innerHTML = `<div class="shop-loading">${t('error_server')}</div>`;
+    }
+  }
+
+  // ══════════════════════════════════════
+  // FERTILIZER MODAL
+  // ══════════════════════════════════════
+  function openFertModal(key) {
+    const f = window.fertData[key];
+    if (!f) return;
+
+    document.getElementById('fert-popup-name').innerText      = f.name;
+    document.getElementById('fert-left-name-span').innerText  = f.name;
+    document.getElementById('fert-popup-type').innerText      = f.type;
+    document.getElementById('fert-popup-price').innerText     = f.price_per_bag;
+    document.getElementById('fert-popup-bag').innerText       = `/ ${f.bag_size} bag.`;
+
+    const nitrogen = f.nitrogen && f.nitrogen !== '0%' ? ` Contains ${f.nitrogen} Nitrogen.` : '';
+    document.getElementById('fert-popup-details').innerText   = `${f.name} is a ${f.type} fertilizer.${nitrogen} ${f.use}`;
+    document.getElementById('fert-popup-use').innerText       = f.use;
+    document.getElementById('fert-popup-when').innerText      = f.when_to_apply;
+    document.getElementById('fert-popup-dosage').innerText    = f.dosage;
+    document.getElementById('fert-popup-precaution').innerText = f.precaution;
+
+    document.getElementById('fert-popup-crops').innerHTML =
+      f.suitable_for.map(c => `<span class="fert-modal-crop-tag">✅ ${c}</span>`).join('');
+
+    const wrap = document.getElementById('fert-popup-img-wrap');
+    if (f.image) {
+      wrap.innerHTML = `<img class="fert-modal-img" id="fert-popup-img"
+        src="${f.image}"
+        onerror="this.outerHTML='<div class=fert-modal-img-placeholder id=fert-popup-img>🌱</div>'"
+        alt="${f.name}">`;
+    } else {
+      wrap.innerHTML = `<div class="fert-modal-img-placeholder" id="fert-popup-img">🌱</div>`;
+    }
+
+    document.getElementById('fert-modal').classList.add('open');
+  }
+
+  function closeFertModal() {
+    document.getElementById('fert-modal').classList.remove('open');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('fert-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeFertModal();
+  });
+
+  // ══ INIT ══
+  document.addEventListener('DOMContentLoaded', () => {
+    setLang(currentLang);
+    loadStates();
+  });
+</script>
+</body>
+</html>
