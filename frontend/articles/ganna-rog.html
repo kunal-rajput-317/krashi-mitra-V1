@@ -6,12 +6,14 @@
 
   <!-- SEO -->
   <title>गन्ने में लाल सड़न रोग — कारण, लक्षण और उपाय | KrashiMitra.in</title>
+  <link rel="icon" type="image/png" href="/frontend/images/favicon.png">
   <meta name="description" content="गन्ने में लाल सड़न रोग (Red Rot Disease) की पहचान, कारण, लक्षण और बचाव के असरदार उपाय। उत्तर प्रदेश के किसानों के लिए सम्पूर्ण हिंदी जानकारी — KrashiMitra.in" />
   <meta name="keywords" content="गन्ने में लाल सड़न रोग, sugarcane red rot disease, गन्ना रोग, गन्ना रोग नियंत्रण, गन्ने की बीमारी, Colletotrichum falcatum, गन्ना किसान UP" />
   <meta name="author" content="KrashiMitra.in" />
   <meta property="og:title" content="गन्ने में लाल सड़न रोग — KrashiMitra.in" />
   <meta property="og:description" content="लाल सड़न रोग की पहचान, कारण और बचाव — हर किसान के लिए जरूरी जानकारी।" />
   <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://krashimitra.in/articles/ganna-rog.html" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -38,9 +40,7 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
-
     body {
       font-family: 'Noto Serif Devanagari', 'Devanagari', Georgia, serif;
       background: var(--cream);
@@ -50,147 +50,286 @@
     }
 
     /* ═══════════════════════════════════════
+       TOP ANNOUNCEMENT BAR
+    ═══════════════════════════════════════ */
+    .top-announcement {
+      background: var(--gold);
+      color: var(--green-dark);
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      letter-spacing: 0.2px;
+    }
+    .top-announcement a {
+      color: var(--green-dark);
+      text-decoration: underline;
+      margin-left: 6px;
+    }
+
+    /* ═══════════════════════════════════════
        SITE HEADER — matches krashimitra.in
     ═══════════════════════════════════════ */
     .site-header {
       background: var(--green-dark);
       padding: 0 20px;
-      height: 56px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.30);
     }
     .site-header .logo {
       font-family: 'Poppins', sans-serif;
       font-weight: 700;
-      font-size: 1.15rem;
+      font-size: 1.18rem;
       color: #fff;
       text-decoration: none;
       display: flex;
       flex-direction: column;
       line-height: 1.2;
     }
-    .site-header .logo .brand { display: flex; align-items: center; gap: 6px; }
+    .site-header .logo .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .site-header .logo .brand .mitra { color: var(--gold); }
     .site-header .logo .tagline {
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       color: #a5d6a7;
       font-weight: 400;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
+
     .site-header nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .site-header nav a {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #c8e6c9;
+      text-decoration: none;
+      padding: 7px 11px;
+      border-radius: 7px;
+      transition: all 0.18s;
       display: flex;
       align-items: center;
       gap: 4px;
     }
-    .site-header nav a {
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 500;
+    .site-header nav a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .site-header nav a.active { background: rgba(249,168,37,0.18); color: var(--gold); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-search-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
       color: #c8e6c9;
-      text-decoration: none;
-      padding: 6px 10px;
-      border-radius: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
       transition: all 0.18s;
     }
-    .site-header nav a:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    .site-header .user-icon {
-      width: 32px; height: 32px;
+    .header-search-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+    .user-icon {
+      width: 34px; height: 34px;
       border-radius: 50%;
       background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.25);
       display: flex; align-items: center; justify-content: center;
       font-size: 1rem;
       cursor: pointer;
-      margin-left: 8px;
+      transition: background 0.18s;
     }
-    @media (max-width: 480px) {
+    .user-icon:hover { background: rgba(255,255,255,0.25); }
+
+    @media (max-width: 640px) {
       .site-header nav { display: none; }
       .site-header .logo .tagline { display: none; }
+      .header-search-btn span { display: none; }
+      .header-search-btn { padding: 6px 10px; }
     }
 
     /* ═══════════════════════════════════════
        BREADCRUMB
     ═══════════════════════════════════════ */
     .breadcrumb {
-      background: var(--green-dark);
-      padding: 0 20px 10px;
+      background: #163d25;
+      padding: 8px 20px;
       font-family: 'Poppins', sans-serif;
       font-size: 0.72rem;
       color: #81c784;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2px;
     }
-    .breadcrumb a { color: #81c784; text-decoration: none; }
+    .breadcrumb a { color: #81c784; text-decoration: none; transition: color 0.15s; }
     .breadcrumb a:hover { color: var(--gold); }
-    .breadcrumb span { margin: 0 5px; opacity: 0.5; }
+    .breadcrumb .sep { margin: 0 4px; opacity: 0.5; }
+    .breadcrumb .current { color: #fff; font-weight: 500; }
 
     /* ═══════════════════════════════════════
-       HERO
+       HERO — REDESIGNED
     ═══════════════════════════════════════ */
     .hero {
-      background: linear-gradient(150deg, var(--green-dark) 0%, #1b3a1f 45%, #5c1a1a 100%);
-      padding: 36px 20px 32px;
+      background: linear-gradient(155deg, #1a3d22 0%, #1b2e1c 38%, #4a1515 100%);
+      padding: 0;
       color: #fff;
       position: relative;
       overflow: hidden;
     }
+
+    /* subtle cane pattern overlay */
     .hero::before {
-      content: '🎋';
+      content: '';
       position: absolute;
-      right: -8px;
-      top: 8px;
-      font-size: 7rem;
-      opacity: 0.08;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(
+          60deg,
+          transparent,
+          transparent 60px,
+          rgba(255,255,255,0.015) 60px,
+          rgba(255,255,255,0.015) 61px
+        );
       pointer-events: none;
     }
-    .hero .category-tag {
+
+    .hero-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 36px 20px 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .badge {
       display: inline-flex;
       align-items: center;
       gap: 5px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+    }
+    .badge-disease {
       background: var(--red-disease);
       color: #fff;
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 3px 12px;
-      border-radius: 20px;
-      letter-spacing: 0.5px;
-      margin-bottom: 14px;
     }
+    .badge-season {
+      background: rgba(249,168,37,0.18);
+      color: var(--gold);
+      border: 1px solid rgba(249,168,37,0.4);
+    }
+    .badge-location {
+      background: rgba(255,255,255,0.1);
+      color: #a5d6a7;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
     .hero h1 {
       font-family: 'Noto Serif Devanagari', serif;
-      font-size: clamp(1.35rem, 4.5vw, 2rem);
+      font-size: clamp(1.45rem, 5vw, 2.1rem);
       font-weight: 700;
-      line-height: 1.45;
-      margin-bottom: 10px;
+      line-height: 1.4;
+      margin-bottom: 12px;
       color: #fff;
     }
     .hero h1 .en-title {
       display: block;
       font-family: 'Poppins', sans-serif;
-      font-size: clamp(0.8rem, 2.5vw, 1rem);
-      font-weight: 500;
+      font-size: clamp(0.78rem, 2.2vw, 0.95rem);
+      font-weight: 400;
       color: #ef9a9a;
-      margin-top: 4px;
+      margin-top: 6px;
+      letter-spacing: 0.2px;
     }
-    .hero .meta {
+
+    .hero-excerpt {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bec5;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      max-width: 620px;
+    }
+
+    .hero-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 16px;
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
       font-family: 'Poppins', sans-serif;
       font-size: 0.72rem;
-      color: #b0bec5;
+      color: #78909c;
     }
-    .hero .meta span { display: flex; align-items: center; gap: 4px; }
+    .hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hero-meta .read-time {
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .hero-share {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+    .share-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #a5d6a7;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.68rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.18s;
+    }
+    .share-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+    @media (max-width: 480px) {
+      .hero-share { display: none; }
+    }
 
     /* ═══════════════════════════════════════
        ARTICLE LAYOUT
     ═══════════════════════════════════════ */
     .article-wrapper {
-      max-width: 820px;
+      max-width: 860px;
       margin: 0 auto;
       padding: 0 16px 80px;
     }
@@ -265,9 +404,7 @@
     /* ═══════════════════════════════════════
        SECTION HEADINGS
     ═══════════════════════════════════════ */
-    .article-section {
-      margin: 28px 0 0;
-    }
+    .article-section { margin: 28px 0 0; }
     .section-heading {
       display: flex;
       align-items: center;
@@ -276,10 +413,7 @@
       padding-bottom: 8px;
       border-bottom: 2px solid var(--border);
     }
-    .section-heading .s-icon {
-      font-size: 1.3rem;
-      flex-shrink: 0;
-    }
+    .section-heading .s-icon { font-size: 1.3rem; flex-shrink: 0; }
     .section-heading h2 {
       font-family: 'Noto Serif Devanagari', serif;
       font-size: clamp(1.05rem, 3vw, 1.3rem);
@@ -300,19 +434,10 @@
     ═══════════════════════════════════════ */
     p { margin-bottom: 12px; color: var(--text-mid); }
     p:last-child { margin-bottom: 0; }
-
-    ul, ol {
-      padding-left: 20px;
-      margin-bottom: 14px;
-    }
-    ul li, ol li {
-      margin-bottom: 7px;
-      color: var(--text-mid);
-      line-height: 1.75;
-    }
+    ul, ol { padding-left: 20px; margin-bottom: 14px; }
+    ul li, ol li { margin-bottom: 7px; color: var(--text-mid); line-height: 1.75; }
     ul li::marker { color: var(--green-light); }
     ol li::marker { color: var(--green-mid); font-weight: 700; font-family: 'Poppins', sans-serif; }
-
     strong { color: var(--text-dark); }
     em { color: var(--green-mid); font-style: normal; font-weight: 600; }
 
@@ -327,18 +452,9 @@
       margin: 16px 0;
       border-left: 4px solid;
     }
-    .tip-box.warning {
-      background: var(--red-light);
-      border-color: var(--red-disease);
-    }
-    .tip-box.tip {
-      background: var(--gold-light);
-      border-color: var(--gold);
-    }
-    .tip-box.info {
-      background: var(--green-pale);
-      border-color: var(--green-light);
-    }
+    .tip-box.warning { background: var(--red-light); border-color: var(--red-disease); }
+    .tip-box.tip { background: var(--gold-light); border-color: var(--gold); }
+    .tip-box.info { background: var(--green-pale); border-color: var(--green-light); }
     .tip-box .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
     .tip-box .tip-content {
       font-family: 'Poppins', sans-serif;
@@ -361,23 +477,11 @@
       overflow: hidden;
       box-shadow: 0 2px 12px var(--shadow);
     }
-    .article-table thead tr {
-      background: var(--green-dark);
-      color: #fff;
-    }
-    .article-table th {
-      padding: 11px 14px;
-      text-align: left;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-    }
+    .article-table thead tr { background: var(--green-dark); color: #fff; }
+    .article-table th { padding: 11px 14px; text-align: left; font-weight: 600; letter-spacing: 0.3px; }
     .article-table tbody tr:nth-child(odd) { background: #fff; }
     .article-table tbody tr:nth-child(even) { background: var(--green-pale); }
-    .article-table td {
-      padding: 10px 14px;
-      border-bottom: 1px solid #e8f5e9;
-      color: var(--text-mid);
-    }
+    .article-table td { padding: 10px 14px; border-bottom: 1px solid #e8f5e9; color: var(--text-mid); }
     .article-table td:first-child { font-weight: 500; color: var(--text-dark); }
     .article-table .healthy { color: #2e7d32; font-weight: 600; }
     .article-table .diseased { color: var(--red-disease); font-weight: 600; }
@@ -494,6 +598,138 @@
     .cta-block a:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
 
     /* ═══════════════════════════════════════
+       DIVIDER
+    ═══════════════════════════════════════ */
+    .section-divider {
+      border: none;
+      border-top: 1px dashed var(--border);
+      margin: 24px 0;
+    }
+
+    
+    /* ═══════════════════════════════════════
+       RELEVANT ARTICLES — REDESIGNED
+    ═══════════════════════════════════════ */
+    .relevant-articles {
+      margin: 36px 0 0;
+    }
+    .relevant-articles .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+    }
+    .relevant-articles .section-title .title-icon {
+      background: var(--green-dark);
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+    }
+    .relevant-articles .section-title a {
+      margin-left: auto;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--green-mid);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .relevant-articles .section-title a:hover { color: var(--green-dark); }
+
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 540px) {
+      .articles-grid { grid-template-columns: 1fr; }
+    }
+
+    .article-card {
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px var(--shadow);
+      border: 1px solid #eef5ec;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .article-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 22px var(--shadow-strong);
+    }
+    .article-card .card-thumb {
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-thumb-wheat  { background: linear-gradient(135deg, #e8f5e9, #f9fbe7); }
+    .card-thumb-pest   { background: linear-gradient(135deg, #fff8e1, #ffe0b2); }
+    .card-thumb-paddy  { background: linear-gradient(135deg, #e3f2fd, #e8f5e9); }
+    .card-thumb-urea   { background: linear-gradient(135deg, #f3e5f5, #e8eaf6); }
+    .card-thumb-smut   { background: linear-gradient(135deg, #fce4ec, #ffecb3); }
+    .card-thumb-mandi  { background: linear-gradient(135deg, #e8f5e9, #fff9c4); }
+
+    .article-card .card-body {
+      padding: 12px 14px 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-tag {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.63rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--green-mid);
+      margin-bottom: 5px;
+    }
+    .card-title {
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.65rem;
+      color: var(--text-light);
+    }
+    .card-footer .read-time {
+      background: var(--green-pale);
+      color: var(--green-mid);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .card-arrow {
+      color: var(--green-mid);
+      font-size: 0.8rem;
+    }
+
+    /* ═══════════════════════════════════════
        MOBILE BOTTOM NAV — matches site
     ═══════════════════════════════════════ */
     .mobile-nav {
@@ -529,83 +765,229 @@
     }
 
     /* ═══════════════════════════════════════
-       DIVIDER
+       FOOTER — COPYRIGHT
     ═══════════════════════════════════════ */
-    .section-divider {
+    .site-footer {
+      background: #0f2d18;
+      color: #a5d6a7;
+      font-family: 'Poppins', sans-serif;
+      margin-top: 0;
+    }
+    .footer-main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 44px 20px 32px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 36px;
+    }
+    @media (max-width: 640px) {
+      .footer-main { grid-template-columns: 1fr; gap: 28px; padding: 32px 16px 24px; }
+    }
+
+    .footer-brand .logo-big {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .footer-brand .logo-big .mitra { color: var(--gold); }
+    .footer-brand p {
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #78909c;
+      margin-bottom: 16px;
+    }
+    .footer-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .footer-badge {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #a5d6a7;
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .footer-col h4 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #fff;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .footer-col ul {
+      list-style: none;
+      padding: 0; margin: 0;
+    }
+    .footer-col ul li {
+      margin-bottom: 9px;
+    }
+    .footer-col ul li a {
+      color: #78909c;
+      text-decoration: none;
+      font-size: 0.78rem;
+      transition: color 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .footer-col ul li a:hover { color: var(--gold); }
+
+    .footer-divider {
       border: none;
-      border-top: 1px dashed var(--border);
-      margin: 24px 0;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      margin: 0;
+    }
+
+    .footer-bottom {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .footer-copyright {
+      font-size: 0.72rem;
+      color: #546e7a;
+    }
+    .footer-copyright a { color: var(--gold); text-decoration: none; }
+    .footer-copyright a:hover { text-decoration: underline; }
+    .footer-legal-links {
+      display: flex;
+      gap: 16px;
+    }
+    .footer-legal-links a {
+      font-size: 0.7rem;
+      color: #546e7a;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-legal-links a:hover { color: #a5d6a7; }
+    .footer-made {
+      font-size: 0.68rem;
+      color: #37474f;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .footer-made .heart { color: var(--red-disease); }
+
+    @media (max-width: 500px) {
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+      .footer-legal-links { flex-wrap: wrap; gap: 10px; }
     }
   </style>
 </head>
 <body>
 
 <!-- ════════════════════════════════════════
-     SITE HEADER — krashimitra.in topbar
+     TOP ANNOUNCEMENT BAR
+════════════════════════════════════════ -->
+<div class="top-announcement">
+  🌾 किसान कॉल सेंटर:+91 9870951001 — निःशुल्क कृषि सलाह
+  <a href="https://krashimitra.in/chat?tab=chat">AI से पूछें →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     SITE HEADER — REDESIGNED
 ════════════════════════════════════════ -->
 <header class="site-header">
   <a href="https://krashimitra.in" class="logo">
     <div class="brand">🌾 कृषि <span class="mitra">मित्र</span></div>
     <div class="tagline">किसान का डिजिटल साथी</div>
   </a>
+
   <nav>
-    <a href="https://krashimitra.in">मुख्य</a>
-    <a href="https://krashimitra.in/chat?tab=weather">मौसम</a>
-    <a href="https://krashimitra.in/chat?tab=mandi">मंडी</a>
-    <a href="https://krashimitra.in/chat?tab=info">सहायता</a>
+    <a href="https://krashimitra.in">🏠 मुख्य</a>
+    <a href="https://krashimitra.in/chat?tab=weather">🌤️ मौसम</a>
+    <a href="https://krashimitra.in/chat?tab=mandi">💰 मंडी</a>
+    <a href="https://krashimitra.in/articles/" class="active">📰 लेख</a>
+    <a href="https://krashimitra.in/chat?tab=chat">💬 सहायता</a>
   </nav>
-  <div class="user-icon">👤</div>
+
+  <div class="header-right">
+    <button class="header-search-btn" onclick="document.querySelector('.ai-input').focus(); document.querySelector('.ask-ai-section').scrollIntoView({behavior:'smooth'})">
+      🔍 <span>खोजें</span>
+    </button>
+    <div class="user-icon">👤</div>
+  </div>
 </header>
 
 <!-- Breadcrumb -->
 <div class="breadcrumb">
   <a href="https://krashimitra.in">🏠 मुख्य</a>
-  <span>›</span>
+  <span class="sep">›</span>
+  <a href="https://krashimitra.in/articles/">📰 लेख</a>
+  <span class="sep">›</span>
   <a href="#">फसल रोग</a>
-  <span>›</span>
-  गन्ने में लाल सड़न रोग
+  <span class="sep">›</span>
+  <span class="current">गन्ने में लाल सड़न रोग</span>
 </div>
 
 <!-- ════════════════════════════════════════
-     HERO
+     HERO — REDESIGNED
 ════════════════════════════════════════ -->
 <div class="hero">
-  <div class="article-wrapper" style="padding-bottom:0; padding-top:0;">
-    <div class="category-tag">🦠 फसल रोग · Crop Disease</div>
+  <div class="hero-inner">
+    <div class="hero-badges">
+      <span class="badge badge-disease">🦠 फसल रोग</span>
+      <span class="badge badge-season">🗓️ खरीफ सीजन</span>
+      <span class="badge badge-location">📍 उत्तर प्रदेश</span>
+    </div>
+
     <h1>
       गन्ने में लाल सड़न रोग
-      <span class="en-title">Red Rot Disease in Sugarcane — Causes, Symptoms & Treatment</span>
+      <span class="en-title">Red Rot Disease in Sugarcane — Causes, Symptoms &amp; Treatment</span>
     </h1>
-    <div class="meta">
-      <span>📍 उत्तर प्रदेश</span>
-      <span>🗓️ खरीफ सीजन</span>
-      <span>⏱️ 7 मिनट पढ़ें</span>
+
+    <p class="hero-excerpt">
+      गन्ने का "कैंसर" कहलाने वाला यह रोग हर साल किसानों की 30–50% फसल बर्बाद कर देता है। सही पहचान और समय पर उपचार से इसे रोका जा सकता है।
+    </p>
+
+    <div class="hero-meta">
       <span>✍️ KrashiMitra.in</span>
+      <span class="read-time">⏱️ 7 मिनट पढ़ें</span>
+      <span>📅 खरीफ 2025</span>
+      <div class="hero-share">
+        <button class="share-btn" onclick="if(navigator.share){navigator.share({title:'गन्ने में लाल सड़न रोग',url:window.location.href})}else{navigator.clipboard.writeText(window.location.href);alert('लिंक कॉपी हो गया!')}">
+          📤 शेयर
+        </button>
+        <button class="share-btn" onclick="window.print()">🖨️ प्रिंट</button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- ════════════════════════════════════════
-     FEATURED IMAGE
+     ARTICLE CONTENT
 ════════════════════════════════════════ -->
 <div class="article-wrapper">
-  <!-- =============================================
-       IMAGE 1 — FEATURED / HERO IMAGE
-       HOW TO CHANGE: Replace the <div class="img-placeholder">
-       block with: <img src="YOUR_URL" alt="..." width="1200" height="630" loading="eager" />
-       Recommended size: 1200×500px
-  ============================================= -->
+
+  <!-- FEATURED IMAGE -->
   <figure class="featured-image">
-    <div class="img-placeholder">
-      <div class="icon">🎋</div>
-      <p>Featured Image — 1200×500px यहाँ लगाएं</p>
-    </div>
+    <img src="/frontend/images/diseases/गन्ने में लाल सड़न रोग — संक्रमित गन्ने का अंदरूनी दृश्य.png" alt="गन्ने में लाल सड़न रोग" width="1200" height="500" loading="eager" />
+    
     <figcaption>गन्ने में लाल सड़न रोग — संक्रमित गन्ने का अंदरूनी दृश्य</figcaption>
   </figure>
 
-  <!-- ════════════════════════════════════════
-       QUICK FACTS
-  ════════════════════════════════════════ -->
+  <!-- QUICK FACTS -->
   <div class="quick-facts">
     <div class="fact-card danger">
       <div class="f-icon">📉</div>
@@ -624,9 +1006,7 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════
-       INTRODUCTION
-  ════════════════════════════════════════ -->
+  <!-- INTRODUCTION -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">📖</span>
@@ -642,9 +1022,7 @@
 
   <hr class="section-divider" />
 
-  <!-- ════════════════════════════════════════
-       WHAT IS RED ROT
-  ════════════════════════════════════════ -->
+  <!-- WHAT IS RED ROT -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🦠</span>
@@ -656,23 +1034,14 @@
     <p>
       इस रोग में गन्ने का अंदरूनी भाग लाल रंग का हो जाता है और उसमें से शराब जैसी तेज गंध आने लगती है। बाहर से गन्ना ठीक दिखता है लेकिन अंदर से पूरी तरह सड़ा हुआ होता है।
     </p>
-
-    <!-- IMAGE 2 — DISEASE CLOSEUP -->
     <figure class="inline-image">
-      <div class="img-placeholder">
-        <div class="icon">🔬</div>
-        <p>Disease Closeup — 800×450px यहाँ लगाएं</p>
-      </div>
-      <!-- TO ADD IMAGE: remove above div and uncomment below
-      <img src="YOUR_CLOSEUP_IMAGE_URL" alt="लाल सड़न रोग से प्रभावित गन्ने का तना" width="800" height="450" loading="lazy" />
-      -->
+    <img src="/frontend/images/diseases/लाल सड़न रोग — गन्ने के तने का अंदरूनी लाल रंग.png" alt="गन्ने में लाल सड़न रोग" width="800" height="500" loading="eager" />
+      
       <figcaption>लाल सड़न रोग — गन्ने के तने का अंदरूनी लाल रंग</figcaption>
     </figure>
   </section>
 
-  <!-- ════════════════════════════════════════
-       CAUSES
-  ════════════════════════════════════════ -->
+  <!-- CAUSES -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">⚗️</span>
@@ -691,51 +1060,36 @@
 
   <hr class="section-divider" />
 
-  <!-- ════════════════════════════════════════
-       SYMPTOMS
-  ════════════════════════════════════════ -->
+  <!-- SYMPTOMS -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🔍</span>
       <h2>पहचान और लक्षण — कैसे जानें कि रोग लग गया है?</h2>
     </div>
-
     <h3 class="sub-heading">🍃 पत्तियों पर लक्षण</h3>
     <ul>
       <li>पत्तियाँ पीली पड़ने लगती हैं, खासकर बीच की पत्तियाँ पहले सूखती हैं।</li>
       <li>पत्तियों का सिरा सूखकर नीचे की तरफ झुकने लगता है।</li>
       <li>पौधा कमजोर और बेजान दिखने लगता है।</li>
     </ul>
-
     <h3 class="sub-heading">🌿 तने पर लक्षण</h3>
     <ul>
       <li>गन्ने को बीच से काटने पर अंदर <strong>लाल और सफेद धारियाँ</strong> दिखती हैं।</li>
       <li>अंदर से <em>खट्टी या शराब जैसी गंध</em> आती है।</li>
       <li>गन्ने का गूदा खोखला और काला पड़ने लगता है।</li>
     </ul>
-
     <h3 class="sub-heading">🌱 जड़ों पर लक्षण</h3>
     <ul>
       <li>जड़ें काली और सड़ी हुई दिखती हैं।</li>
       <li>पौधा जमीन से आसानी से उखड़ जाता है।</li>
     </ul>
-
-    <!-- IMAGE 3 — SYMPTOMS -->
     <figure class="inline-image">
-      <div class="img-placeholder">
-        <div class="icon">🍂</div>
-        <p>Symptoms Image — 800×450px यहाँ लगाएं</p>
-      </div>
-      <!-- TO ADD IMAGE: remove above div and uncomment below
-      <img src="YOUR_SYMPTOMS_IMAGE_URL" alt="गन्ने की पत्तियों पर लाल सड़न रोग के लक्षण" width="800" height="450" loading="lazy" />
-      -->
+    <img src="/frontend/images/diseases/लाल सड़न रोग के लक्षण — पीली पड़ती पत्तियाँ और सूखता पौधा.png" alt="गन्ने में लाल सड़न रोग" width="1200" height="500" loading="eager" />
       <figcaption>लाल सड़न रोग के लक्षण — पीली पड़ती पत्तियाँ और सूखता पौधा</figcaption>
     </figure>
   </section>
 
-  <!-- ════════════════════════════════════════
-       HOW IT SPREADS
-  ════════════════════════════════════════ -->
+  <!-- HOW IT SPREADS -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">💨</span>
@@ -752,87 +1106,41 @@
 
   <hr class="section-divider" />
 
-  <!-- ════════════════════════════════════════
-       LOSSES TABLE
-  ════════════════════════════════════════ -->
+  <!-- LOSSES TABLE -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">📊</span>
       <h2>नुकसान — कितना खतरनाक है यह रोग?</h2>
     </div>
-
     <div class="tip-box warning">
       <span class="tip-icon">⚠️</span>
       <div class="tip-content">
         <strong>गंभीर संक्रमण में पूरी फसल नष्ट हो सकती है।</strong> उपज में 30% से 50% तक की कमी, चीनी की मात्रा घटना, मिल का अस्वीकार करना — सभी एक साथ हो सकते हैं।
       </div>
     </div>
-
-    <!-- IMAGE 4 — COMPARISON -->
     <figure class="inline-image">
-      <div class="img-placeholder">
-        <div class="icon">⚖️</div>
-        <p>Comparison Image (स्वस्थ vs रोगग्रस्त) — 1000×450px</p>
-      </div>
-      <!-- TO ADD IMAGE: remove above div and uncomment below
-      <img src="YOUR_COMPARISON_IMAGE_URL" alt="स्वस्थ गन्ना और रोगग्रस्त गन्ना की तुलना" width="1000" height="450" loading="lazy" />
-      -->
-      <figcaption>बाईं तरफ स्वस्थ गन्ना — दाईं तरफ लाल सड़न से प्रभावित गन्ना</figcaption>
+    <img src="/frontend/images/diseases/बाईं तरफ स्वस्थ गन्ना — दाईं तरफ लाल सड़न से प्रभावित गन्ना.png" alt="गन्ने में लाल सड़न रोग" width="1000" height="500" loading="eager" />
+     <figcaption>बाईं तरफ स्वस्थ गन्ना — दाईं तरफ लाल सड़न से प्रभावित गन्ना</figcaption>
     </figure>
-
     <table class="article-table">
       <thead>
-        <tr>
-          <th>पहचान बिंदु</th>
-          <th>✅ स्वस्थ गन्ना</th>
-          <th>❌ रोगग्रस्त गन्ना</th>
-        </tr>
+        <tr><th>पहचान बिंदु</th><th>✅ स्वस्थ गन्ना</th><th>❌ रोगग्रस्त गन्ना</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td>पत्तियों का रंग</td>
-          <td class="healthy">गहरा हरा, चमकदार</td>
-          <td class="diseased">पीला, सूखा, झुका हुआ</td>
-        </tr>
-        <tr>
-          <td>तने का रंग (अंदर)</td>
-          <td class="healthy">सफेद और रसदार</td>
-          <td class="diseased">लाल-भूरा, धारियों वाला</td>
-        </tr>
-        <tr>
-          <td>गंध</td>
-          <td class="healthy">मीठी, प्राकृतिक</td>
-          <td class="diseased">खट्टी, शराब जैसी</td>
-        </tr>
-        <tr>
-          <td>रस की मात्रा</td>
-          <td class="healthy">भरपूर और मीठा</td>
-          <td class="diseased">कम और खट्टा</td>
-        </tr>
-        <tr>
-          <td>जड़ों की स्थिति</td>
-          <td class="healthy">मजबूत, सफेद</td>
-          <td class="diseased">काली, सड़ी हुई</td>
-        </tr>
-        <tr>
-          <td>चीनी की मात्रा</td>
-          <td class="healthy">सामान्य (12–15%)</td>
-          <td class="diseased">बहुत कम (5% से नीचे)</td>
-        </tr>
-        <tr>
-          <td>उपज</td>
-          <td class="healthy">अच्छी, बाजार योग्य</td>
-          <td class="diseased">कम, मिल अस्वीकार करती है</td>
-        </tr>
+        <tr><td>पत्तियों का रंग</td><td class="healthy">गहरा हरा, चमकदार</td><td class="diseased">पीला, सूखा, झुका हुआ</td></tr>
+        <tr><td>तने का रंग (अंदर)</td><td class="healthy">सफेद और रसदार</td><td class="diseased">लाल-भूरा, धारियों वाला</td></tr>
+        <tr><td>गंध</td><td class="healthy">मीठी, प्राकृतिक</td><td class="diseased">खट्टी, शराब जैसी</td></tr>
+        <tr><td>रस की मात्रा</td><td class="healthy">भरपूर और मीठा</td><td class="diseased">कम और खट्टा</td></tr>
+        <tr><td>जड़ों की स्थिति</td><td class="healthy">मजबूत, सफेद</td><td class="diseased">काली, सड़ी हुई</td></tr>
+        <tr><td>चीनी की मात्रा</td><td class="healthy">सामान्य (12–15%)</td><td class="diseased">बहुत कम (5% से नीचे)</td></tr>
+        <tr><td>उपज</td><td class="healthy">अच्छी, बाजार योग्य</td><td class="diseased">कम, मिल अस्वीकार करती है</td></tr>
       </tbody>
     </table>
   </section>
 
   <hr class="section-divider" />
 
-  <!-- ════════════════════════════════════════
-       PREVENTION
-  ════════════════════════════════════════ -->
+  <!-- PREVENTION -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🛡️</span>
@@ -848,9 +1156,7 @@
     </ul>
   </section>
 
-  <!-- ════════════════════════════════════════
-       BIOLOGICAL CONTROL
-  ════════════════════════════════════════ -->
+  <!-- BIOLOGICAL CONTROL -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🌿</span>
@@ -868,9 +1174,7 @@
     </ul>
   </section>
 
-  <!-- ════════════════════════════════════════
-       CHEMICAL CONTROL
-  ════════════════════════════════════════ -->
+  <!-- CHEMICAL CONTROL -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🧪</span>
@@ -895,27 +1199,17 @@
 
   <hr class="section-divider" />
 
-  <!-- ════════════════════════════════════════
-       SEED TREATMENT
-  ════════════════════════════════════════ -->
+  <!-- SEED TREATMENT -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🌱</span>
       <h2>बीज उपचार</h2>
     </div>
-
-    <!-- IMAGE 5 — SEED TREATMENT -->
     <figure class="inline-image">
-      <div class="img-placeholder">
-        <div class="icon">💧</div>
-        <p>Seed Treatment Image — 800×400px यहाँ लगाएं</p>
-      </div>
-      <!-- TO ADD IMAGE: remove above div and uncomment below
-      <img src="YOUR_SEED_TREATMENT_IMAGE_URL" alt="गन्ने के बीज का गर्म पानी से उपचार" width="800" height="400" loading="lazy" />
-      -->
-      <figcaption>बुआई से पहले गन्ने के बीज का उपचार — सबसे जरूरी कदम</figcaption>
+    <img src="/frontend/images/diseases/बुआई से पहले गन्ने के बीज का उपचार — सबसे जरूरी कदम.png" alt="गन्ने में लाल सड़न रोग" width="800" height="400" loading="eager" />
+     
+     <figcaption>बुआई से पहले गन्ने के बीज का उपचार — सबसे जरूरी कदम</figcaption>
     </figure>
-
     <ul>
       <li><strong>गर्म पानी उपचार:</strong> 52°C पानी में 30 मिनट डुबोएं।</li>
       <li><strong>कार्बेंडाजिम घोल:</strong> 1 ग्राम प्रति लीटर में 10-15 मिनट।</li>
@@ -923,9 +1217,7 @@
     </ul>
   </section>
 
-  <!-- ════════════════════════════════════════
-       FIELD MANAGEMENT
-  ════════════════════════════════════════ -->
+  <!-- FIELD MANAGEMENT -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🚜</span>
@@ -940,9 +1232,7 @@
     </ul>
   </section>
 
-  <!-- ════════════════════════════════════════
-       EXPERT ADVICE
-  ════════════════════════════════════════ -->
+  <!-- EXPERT ADVICE -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">👨‍🌾</span>
@@ -956,7 +1246,7 @@
           <li>पहले लक्षण दिखते ही <strong>तुरंत उपचार शुरू करें।</strong></li>
           <li>हर 3 साल में <strong>गन्ने की किस्म बदलें।</strong></li>
           <li>नजदीकी <strong>KVK</strong> से मुफ्त सलाह और मिट्टी जाँच करवाएं।</li>
-          <li>किसान कॉल सेंटर: <strong>1800-180-1551</strong> — निःशुल्क।</li>
+          <li>किसान कॉल सेंटर: <strong>+91 9870951001</strong> — निःशुल्क।</li>
         </ul>
       </div>
     </div>
@@ -964,9 +1254,7 @@
 
   <hr class="section-divider" />
 
-  <!-- ════════════════════════════════════════
-       CONCLUSION
-  ════════════════════════════════════════ -->
+  <!-- CONCLUSION -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">✅</span>
@@ -978,15 +1266,12 @@
     <p><strong>एक सतर्क किसान ही सफल किसान होता है।</strong></p>
   </section>
 
-  <!-- ════════════════════════════════════════
-       FAQ
-  ════════════════════════════════════════ -->
+  <!-- FAQ -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">❓</span>
       <h2>अक्सर पूछे जाने वाले सवाल</h2>
     </div>
-
     <div class="faq-item">
       <div class="faq-q"><span class="num">1</span>गन्ने में लाल सड़न रोग की पहचान कैसे करें?</div>
       <div class="faq-a">गन्ने को काटने पर <strong>लाल-सफेद धारियाँ</strong> और खट्टी गंध आए तो यह रोग है।</div>
@@ -1017,20 +1302,105 @@
     </div>
   </section>
 
-  <!-- ════════════════════════════════════════
-       CTA
-  ════════════════════════════════════════ -->
+  
+
+  <!-- CTA -->
   <div class="cta-block">
     <div class="cta-icon">🌾</div>
     <h3>KrashiMitra.in — आपका विश्वसनीय कृषि साथी</h3>
-    <p>मंडी भाव, सरकारी योजनाएं, बीज-खाद की जानकारी और फसल रोग उपचार — सब कुछ हिंदी, कन्नड़ और अंग्रेजी में।</p>
+    <p>मंडी भाव, सरकारी योजनाएं, बीज-खाद की जानकारी और फसल रोग उपचार — सब कुछ हिंदी में।</p>
     <a href="https://krashimitra.in">KrashiMitra.in पर जाएं →</a>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       RELEVANT ARTICLES — REDESIGNED
+  ════════════════════════════════════════ -->
+  <div class="relevant-articles">
+    <div class="section-title">
+      <span class="title-icon">📰</span>
+      संबंधित लेख
+      <a href="https://krashimitra.in/articles/">सभी लेख देखें →</a>
+    </div>
+
+    <div class="articles-grid">
+      <a class="article-card" href="https://krashimitra.in/articles/gehun-pila.html">
+        <div class="card-thumb card-thumb-wheat">🌾</div>
+        <div class="card-body">
+          <div class="card-tag">🌾 गेहूं · फसल रोग</div>
+          <div class="card-title">गेहूं में पीलापन: कारण और उपाय</div>
+          <div class="card-footer">
+            <span class="read-time">⏱️ 3 मिनट</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/dhan-buvai.html">
+        <div class="card-thumb card-thumb-paddy">🍚</div>
+        <div class="card-body">
+          <div class="card-tag">🍚 धान · बुआई गाइड</div>
+          <div class="card-title">धान की सही बुवाई का समय और तरीका</div>
+          <div class="card-footer">
+            <span class="read-time">⏱️ 5 मिनट</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/urea-guide.html">
+        <div class="card-thumb card-thumb-urea">🧪</div>
+        <div class="card-body">
+          <div class="card-tag">🧪 खाद · यूरिया</div>
+          <div class="card-title">यूरिया और DAP: कब और कितना दें?</div>
+          <div class="card-footer">
+            <span class="read-time">⏱️ 4 मिनट</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/keet-niyantran">
+        <div class="card-thumb card-thumb-pest">🐛</div>
+        <div class="card-body">
+          <div class="card-tag">🐛 कीट · नियंत्रण</div>
+          <div class="card-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+          <div class="card-footer">
+            <span class="read-time">⏱️ 4 मिनट</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/ganna-smut.html">
+        <div class="card-thumb card-thumb-smut">🎋</div>
+        <div class="card-body">
+          <div class="card-tag">🎋 गन्ना · काला कंडुआ</div>
+          <div class="card-title">गन्ने में काला कंडुआ रोग — पहचान और रोकथाम</div>
+          <div class="card-footer">
+            <span class="read-time">⏱️ 5 मिनट</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/chat?tab=mandi">
+        <div class="card-thumb card-thumb-mandi">💰</div>
+        <div class="card-body">
+          <div class="card-tag">💰 मंडी · आज के भाव</div>
+          <div class="card-title">गन्ने का आज का मंडी भाव — LIVE अपडेट</div>
+          <div class="card-footer">
+            <span class="read-time">⏱️ LIVE</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </div>
+      </a>
+    </div>
   </div>
 
 </div><!-- /article-wrapper -->
 
 <!-- ════════════════════════════════════════
-     MOBILE BOTTOM NAV — matches site
+     MOBILE BOTTOM NAV
 ════════════════════════════════════════ -->
 <nav class="mobile-nav">
   <ul>
@@ -1038,9 +1408,82 @@
     <li><a href="https://krashimitra.in/chat?tab=chat"><span class="nav-icon">💬</span>Chat</a></li>
     <li><a href="https://krashimitra.in/chat?tab=weather"><span class="nav-icon">🌤️</span>मौसम</a></li>
     <li><a href="https://krashimitra.in/chat?tab=mandi"><span class="nav-icon">💰</span>मंडी</a></li>
-    <li><a href="https://krashimitra.in/chat?tab=info" class="active"><span class="nav-icon">📘</span>जानकारी</a></li>
+    <li><a href="https://krashimitra.in/articles/" class="active"><span class="nav-icon">📘</span>लेख</a></li>
   </ul>
 </nav>
+
+<!-- ════════════════════════════════════════
+     FOOTER — FULL COPYRIGHT
+════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-main">
+
+    <!-- Brand Column -->
+    <div class="footer-brand">
+      <div class="logo-big">🌾 कृषि <span class="mitra">मित्र</span></div>
+      <p>
+        KrashiMitra.in भारत के किसानों के लिए एक AI-संचालित डिजिटल कृषि सहायक है। फसल रोग, मंडी भाव, मौसम और सरकारी योजनाओं की जानकारी — सब कुछ हिंदी में, मुफ्त।
+      </p>
+      <div class="footer-badges">
+        <span class="footer-badge">🌾 50+ फसलें</span>
+        <span class="footer-badge">📍 500+ जिले</span>
+        <span class="footer-badge">🤖 AI सहायक</span>
+        <span class="footer-badge">🇮🇳 भारत निर्मित</span>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="footer-col">
+      <h4>त्वरित लिंक</h4>
+      <ul>
+        <li><a href="https://krashimitra.in">🏠 मुख्य पृष्ठ</a></li>
+        <li><a href="https://krashimitra.in/articles/">📰 सभी लेख</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=disease">🌾 फसल रोग</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=mandi">💰 मंडी भाव</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=weather">🌤️ मौसम</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=fertilizer">🧪 खाद सलाह</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=chat">💬 AI सहायक</a></li>
+      </ul>
+    </div>
+
+    <!-- Support -->
+    <div class="footer-col">
+      <h4>जानकारी</h4>
+      <ul>
+        <li><a href="https://krashimitra.in/about">ℹ️ हमारे बारे में</a></li>
+        <li><a href="https://krashimitra.in/contact">📞 संपर्क करें</a></li>
+        <li><a href="https://krashimitra.in/privacy">🔒 गोपनीयता नीति</a></li>
+        <li><a href="https://krashimitra.in/terms">📜 उपयोग शर्तें</a></li>
+        <li><a href="https://krashimitra.in/disclaimer">⚠️ अस्वीकरण</a></li>
+        <li><a href="https://krashimitra.in/sitemap.xml">🗺️ साइटमैप</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <hr class="footer-divider" />
+
+  <div class="footer-bottom">
+    <div class="footer-copyright">
+      &copy; 2026 <a href="https://krashimitra.in">KrashiMitra.in</a> — सर्वाधिकार सुरक्षित।
+      इस वेबसाइट की सामग्री बिना अनुमति के पुनः प्रकाशित करना वर्जित है।
+    </div>
+
+    <div class="footer-legal-links">
+      <a href="https://krashimitra.in/privacy">गोपनीयता</a>
+      <a href="https://krashimitra.in/terms">शर्तें</a>
+      <a href="https://krashimitra.in/disclaimer">अस्वीकरण</a>
+      <a href="https://krashimitra.in/sitemap.xml">साइटमैप</a>
+    </div>
+
+    <div class="footer-made">
+      <span class="heart">♥</span> भारतीय किसानों के लिए बनाया गया |
+    </div>
+  </div>
+</footer>
+
+
+</script>
 
 </body>
 </html>
