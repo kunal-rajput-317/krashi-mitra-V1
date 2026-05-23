@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>🗺️ UP जिला मानचित्र | KrashiMitra</title>
+  <meta name="description" content="KrashiMitra पर उत्तर प्रदेश का इंटरेक्टिव जिला मानचित्र — जिलों पर hover करें, ज़ूम करें और जानकारी पाएं।" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://krashimitra.in/map.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="UP जिला मानचित्र — KrashiMitra" />
+  <meta property="og:description" content="उत्तर प्रदेश के सभी जिले — इंटरेक्टिव मानचित्र पर देखें।" />
+  <meta property="og:url" content="https://krashimitra.in/map.html" />
+  <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet.js for map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&display=swap');
+
+    /* ══════════════════════════════════════
+       CSS VARIABLES & RESET
+    ══════════════════════════════════════ */
+    :root {
+      --green-dark:    #1a3c2e;
+      --green-mid:     #2d6a4f;
+      --green-light:   #52b788;
+      --green-pale:    #d8f3dc;
+      --amber:         #e9a825;
+      --amber-light:   #fef3c7;
+      --soil:          #7c4f2f;
+      --cream:         #faf7f2;
+      --white:         #ffffff;
+      --text-dark:     #1a2e1e;
+      --text-mid:      #4a6355;
+      --text-light:    #8aab96;
+      --border:        #ddeee4;
+      --shadow:        0 4px 24px rgba(26,60,46,0.10);
+      --shadow-lg:     0 8px 40px rgba(26,60,46,0.16);
+      --radius:        14px;
+      --radius-sm:     8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* ══════════════════════════════════════
+       FIXED HEADER WRAPPER
+    ══════════════════════════════════════ */
+    .header-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ══════════════════════════════════════
+       TOP ANNOUNCEMENT BAR
+    ══════════════════════════════════════ */
+    .top-announcement {
+      background: var(--amber-light);
+      color: var(--green-dark);
+      text-align: center;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      letter-spacing: 0.2px;
+    }
+    .top-announcement a {
+      color: var(--green-mid);
+      text-decoration: underline;
+      margin-left: 6px;
+    }
+
+    /* ══════════════════════════════════════
+       TOPBAR
+    ══════════════════════════════════════ */
+    .topbar {
+      background: var(--green-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+    .topbar-spacer { flex-shrink: 0; }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .topbar-logo-icon { font-size: 26px; line-height: 1; }
+    .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .topbar-logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+    .topbar-logo-name span { color: var(--amber); }
+    .topbar-logo-sub {
+      font-size: 9.5px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.5px;
+    }
+
+    /* Desktop center nav */
+    .topbar-nav { display: flex; align-items: center; gap: 2px; }
+    .tnav-btn {
+      padding: 6px 13px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.70);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.18s, color 0.18s;
+      white-space: nowrap;
+    }
+    .tnav-btn:hover   { background: rgba(255,255,255,0.10); color: #fff; }
+    .tnav-btn.active  { background: rgba(255,255,255,0.15); color: #fff;
+                        box-shadow: 0 0 0 1.5px var(--green-mid) inset; }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    /* Language picker */
+    .lang-picker { position: relative; }
+    .lang-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 11px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.20);
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.18s;
+    }
+    .lang-picker-btn:hover { background: rgba(255,255,255,0.18); }
+    .lang-picker-btn .lang-chevron {
+      font-size: 9px; opacity: 0.7;
+      transition: transform 0.2s;
+    }
+    .lang-picker.open .lang-chevron { transform: rotate(180deg); }
+    .lang-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--green-dark);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      overflow: hidden;
+      min-width: 130px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+      z-index: 200;
+    }
+    .lang-picker.open .lang-dropdown { display: block; }
+    .lang-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 14px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.70);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, color 0.15s;
+    }
+    .lang-option:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .lang-option.active { color: var(--amber); background: rgba(233,168,37,0.10); }
+    .lang-option .lang-opt-code { font-size: 11px; opacity: 0.55; font-weight: 600; min-width: 22px; }
+
+    /* Avatar btn */
+    .topbar-avatar-btn {
+      background: rgba(255,255,255,0.10);
+      border: 1.5px solid rgba(255,255,255,0.20);
+      border-radius: 50%;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .topbar-avatar-btn:hover { background: rgba(255,255,255,0.20); }
+
+    /* ══════════════════════════════════════
+       BREADCRUMB
+    ══════════════════════════════════════ */
+    .breadcrumb {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 9px 28px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-light);
+      flex-shrink: 0;
+    }
+    .breadcrumb a {
+      color: var(--green-mid);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .breadcrumb a:hover { color: var(--green-dark); text-decoration: underline; }
+    .breadcrumb-sep { opacity: 0.5; }
+    .breadcrumb-current { color: var(--text-dark); font-weight: 600; }
+
+    /* ══════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════ */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════════════════════════
+       MAP HERO — scrolls away
+    ══════════════════════════════════════ */
+    .map-hero-intro {
+      background: linear-gradient(150deg, var(--green-dark) 0%, #2d6a4f 60%, #3a7d5e 100%);
+      padding: 36px 40px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .map-hero-intro::before {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(82,183,136,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .map-hero-intro::after {
+      content: '🗺️';
+      position: absolute;
+      right: 36px; bottom: 16px;
+      font-size: 80px;
+      opacity: 0.07;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .map-hero-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--green-light);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.85;
+    }
+    .map-hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 34px;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+    .map-hero-sub {
+      font-size: 14px;
+      color: rgba(255,255,255,0.60);
+      line-height: 1.6;
+      max-width: 480px;
+    }
+    .hero-badges {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .hero-badge {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.80);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════
+       MAP CONTAINER
+    ══════════════════════════════════════ */
+    .map-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #map {
+      flex: 1;
+      width: 100%;
+      min-height: 420px;
+    }
+
+    .map-footer {
+      padding: 10px 24px;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════
+       COPYRIGHT FOOTER
+    ══════════════════════════════════════ */
+    .site-footer {
+      background: var(--green-dark);
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      padding: 16px 24px;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+    .site-footer a { color: var(--green-light); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .site-footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ══════════════════════════════════════
+       BOTTOM NAVIGATION (Mobile Only)
+    ══════════════════════════════════════ */
+    .bottom-nav { display: none; }
+
+    /* ══════════════════════════════════════
+       MOBILE — max-width 1024px
+    ══════════════════════════════════════ */
+    @media screen and (max-width: 1024px) {
+      .topbar-nav { display: none; }
+      .topbar-avatar-btn { display: none; }
+      .top-announcement { font-size: 11.5px; padding: 6px 12px; }
+      .topbar { padding: 0 12px; height: 54px; }
+      .topbar-logo-name { font-size: 15px; }
+      .topbar-logo-sub { display: none; }
+      .lang-dropdown { right: 0; left: auto; }
+
+      .breadcrumb { padding: 8px 14px; font-size: 11px; }
+
+      /* Hero intro — compact on mobile */
+      .map-hero-intro { padding: 22px 16px 20px; }
+      .map-hero-intro::after { font-size: 56px; right: 16px; bottom: 10px; }
+      .map-hero-title { font-size: 22px; }
+      .map-hero-sub   { font-size: 12.5px; }
+      .hero-badges    { margin-top: 14px; gap: 7px; }
+      .hero-badge     { font-size: 11px; padding: 4px 11px; }
+
+      /* Map */
+      #map { min-height: 300px; }
+      .map-footer { padding: 10px 16px; font-size: 12px; }
+
+      /* ── Bottom Nav ── */
+      .bottom-nav {
+        display: block;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--green-dark);
+        box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom, 6px);
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      .bottom-nav-items {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        padding: 0 4px;
+        gap: 2px;
+      }
+      .bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        padding: 6px 2px;
+        text-decoration: none;
+        gap: 3px;
+      }
+      .bnav-icon { font-size: 20px; line-height: 1; color: rgba(255,255,255,0.55); transition: color 0.18s; }
+      .bnav-label {
+        font-size: 10px; font-weight: 600;
+        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+        color: rgba(255,255,255,0.55); white-space: nowrap; transition: color 0.18s;
+      }
+      .bottom-nav-item.active .bnav-icon,
+      .bottom-nav-item.active .bnav-label { color: var(--amber); }
+
+      body { padding-bottom: 70px; }
+      .site-footer { display: none; }
+    }
+
+    @supports (padding: max(0px)) {
+      @media (max-width: 1024px) {
+        .bottom-nav { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ FIXED HEADER WRAPPER (announcement + topbar) ══ -->
+<div class="header-wrapper" id="header-wrapper">
+
+<!-- ══ TOP ANNOUNCEMENT BAR ══ -->
+<div class="top-announcement">
+  🌾 किसान कॉल सेंटर: +91 9870951001 — निःशुल्क कृषि सलाह
+  <a href="chat.html">AI से पूछें →</a>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
+      <span class="topbar-logo-icon">🌾</span>
+      <div class="topbar-logo-text">
+        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
+        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Desktop center nav -->
+  <nav class="topbar-nav">
+    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
+    <a class="tnav-btn" href="weather.html">🌤️ <span data-t="nav_weather">मौसम</span></a>
+    <a class="tnav-btn" href="mandi.html">🏪 <span data-t="nav_mandi">मंडी</span></a>
+    <a class="tnav-btn" href="shop.html">🛒 <span data-t="nav_shop">दुकान</span></a>
+    <a class="tnav-btn" href="chat.html">💬 <span data-t="nav_chat">AI सहायता</span></a>
+    <a class="tnav-btn" href="khoj.html">🔍 <span data-t="nav_khoj">खोज</span></a>
+    <a class="tnav-btn active" href="map.html">🗺️ <span data-t="nav_map">नक्शा</span></a>
+  </nav>
+
+  <div class="topbar-right">
+    <!-- Language picker -->
+    <div class="lang-picker" id="lang-picker">
+      <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
+        <span id="lang-picker-label">हिं</span>
+        <span class="lang-chevron">▾</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown">
+        <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
+          <span class="lang-opt-code">हिं</span> हिंदी
+        </button>
+        <button class="lang-option" id="opt-en" onclick="pickLang('en')">
+          <span class="lang-opt-code">EN</span> English
+        </button>
+        <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
+          <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
+        </button>
+      </div>
+    </div>
+    <div class="topbar-avatar-btn">👤</div>
+  </div>
+</div>
+
+</div><!-- /.header-wrapper -->
+
+<!-- Spacer: height = header-wrapper total height (set by JS) -->
+<div class="topbar-spacer" id="topbar-spacer"></div>
+
+<!-- ══ BREADCRUMB ══ -->
+<div class="breadcrumb">
+  <a href="index.html">🏠 मुख्य</a>
+  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-current">🗺️ <span data-t="nav_map">UP जिला नक्शा</span></span>
+</div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content" id="main-content">
+
+  <!-- ── Hero Intro (scrolls away) ── -->
+  <div class="map-hero-intro" id="hero-intro">
+    <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
+    <div class="map-hero-title" data-t="map_title">UP जिला नक्शा</div>
+    <div class="map-hero-sub" data-t="map_sub">उत्तर प्रदेश के सभी जिले — hover करें, ज़ूम करें और जानकारी पाएं</div>
+    <div class="hero-badges">
+      <span class="hero-badge">🗺️ 75 जिले</span>
+      <span class="hero-badge">🔍 Zoom करें</span>
+      <span class="hero-badge">📍 Hover करें</span>
+      <span class="hero-badge">🌾 OpenStreetMap</span>
+    </div>
+  </div>
+
+  <!-- ── Map Area ── -->
+  <div class="map-wrapper">
+    <div id="map"></div>
+    <div class="map-footer">
+      🗺️ Uttar Pradesh — Hover over districts to see names. Zoom in to explore regions.
+    </div>
+  </div>
+
+</div><!-- /.main-content -->
+
+
+<!-- ══ BOTTOM NAV (Mobile) ══ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-items">
+    <a class="bottom-nav-item" href="index.html">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">मुख्य</span>
+    </a>
+    <a class="bottom-nav-item" href="chat.html">
+      <span class="bnav-icon">💬</span>
+      <span class="bnav-label" data-t="nav_chat">AI से पूछें</span>
+    </a>
+    <a class="bottom-nav-item" href="weather.html">
+      <span class="bnav-icon">🌤️</span>
+      <span class="bnav-label" data-t="nav_weather">मौसम</span>
+    </a>
+    <a class="bottom-nav-item" href="mandi.html">
+      <span class="bnav-icon">🏪</span>
+      <span class="bnav-label" data-t="nav_mandi">मंडी</span>
+    </a>
+    <a class="bottom-nav-item active" href="map.html">
+      <span class="bnav-icon">🗺️</span>
+      <span class="bnav-label" data-t="nav_map">नक्शा</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ══ COPYRIGHT FOOTER ══ -->
+<footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="index.html">Home</a>
+    <a href="chat.html">AI Advisor</a>
+    <a href="weather.html">Weather</a>
+    <a href="mandi.html">Mandi</a>
+    <a href="shop.html">Shop</a>
+    <a href="khoj.html">Khoj</a>
+    <a href="map.html">Map</a>
+  </div>
+  <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; All rights reserved.</div>
+</footer>
+
+<script>
+  // ══════════════════════════════════════
+  // TRANSLATIONS — Hindi / English / Kannada
+  // ══════════════════════════════════════
+  const TRANSLATIONS = {
+    hi: {
+      nav_chat:    "AI से पूछें",
+      nav_weather: "मौसम",
+      nav_mandi:   "मंडी",
+      nav_shop:    "दुकान",
+      nav_khoj:    "खोज",
+      nav_map:     "नक्शा",
+      map_label:   "🗺️ KRASHIMITRA MAP",
+      map_title:   "UP जिला नक्शा",
+      map_sub:     "उत्तर प्रदेश के सभी जिले — hover करें, ज़ूम करें और जानकारी पाएं",
+    },
+    en: {
+      nav_chat:    "AI Advisor",
+      nav_weather: "Weather",
+      nav_mandi:   "Mandi",
+      nav_shop:    "Shop",
+      nav_khoj:    "Search",
+      nav_map:     "Map",
+      map_label:   "🗺️ KRASHIMITRA MAP",
+      map_title:   "UP District Map",
+      map_sub:     "All districts of Uttar Pradesh — hover, zoom and explore",
+    },
+    kn: {
+      nav_chat:    "AI ಕೇಳಿ",
+      nav_weather: "ಹವಾಮಾನ",
+      nav_mandi:   "ಮಂಡಿ",
+      nav_shop:    "ಅಂಗಡಿ",
+      nav_khoj:    "ಹುಡುಕಿ",
+      nav_map:     "ನಕ್ಷೆ",
+      map_label:   "🗺️ KRASHIMITRA ನಕ್ಷೆ",
+      map_title:   "UP ಜಿಲ್ಲಾ ನಕ್ಷೆ",
+      map_sub:     "ಉತ್ತರ ಪ್ರದೇಶದ ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳು — hover ಮಾಡಿ, zoom ಮಾಡಿ",
+    }
+  };
+
+  const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
+  let currentLang = localStorage.getItem('km_lang') || 'hi';
+
+  function toggleLangPicker(e) {
+    e.stopPropagation();
+    document.getElementById('lang-picker').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    const lp = document.getElementById('lang-picker');
+    if (lp) lp.classList.remove('open');
+  });
+  function pickLang(lang) {
+    document.getElementById('lang-picker').classList.remove('open');
+    setLang(lang);
+  }
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('km_lang', lang);
+    const lbl = document.getElementById('lang-picker-label');
+    if (lbl) lbl.textContent = LANG_LABELS[lang] || lang.toUpperCase();
+    ['hi','en','kn'].forEach(l => {
+      const opt = document.getElementById(`opt-${l}`);
+      if (opt) opt.classList.toggle('active', l === lang);
+    });
+    const tr = TRANSLATIONS[lang] || TRANSLATIONS.hi;
+    document.querySelectorAll('[data-t]').forEach(el => {
+      const key = el.getAttribute('data-t');
+      if (tr[key]) el.textContent = tr[key];
+    });
+  }
+
+  // ══════════════════════════════════════
+  // MAP
+  // ══════════════════════════════════════
+  let mapInitialized = false;
+
+  function initMap() {
+    mapInitialized = true;
+    const map = L.map("map").setView([26.8, 80.9], 7);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+      maxZoom: 14
+    }).addTo(map);
+
+    fetch("https://raw.githubusercontent.com/datameet/maps/master/Districts/uttar-pradesh.geojson")
+      .then(r => r.json())
+      .then(geojson => {
+        L.geoJSON(geojson, {
+          style: { color: "#2d6a4f", weight: 1.5, fillColor: "#52b788", fillOpacity: 0.3 },
+          onEachFeature: (feature, layer) => {
+            const name = feature.properties.NAME_2 || feature.properties.district || "District";
+            layer.bindTooltip(name, { sticky: true });
+            layer.on("mouseover", () => layer.setStyle({ fillColor: "#e9a825", fillOpacity: 0.6 }));
+            layer.on("mouseout",  () => layer.setStyle({ fillColor: "#52b788", fillOpacity: 0.3 }));
+          }
+        }).addTo(map);
+      });
+  }
+
+  // ══════════════════════════════════════
+  // SCROLL-AWARE HEADER
+  // ══════════════════════════════════════
+  (function initScrollHeader() {
+    const wrapper = document.getElementById('header-wrapper');
+    const spacer  = document.getElementById('topbar-spacer');
+
+    let lastScrollY   = window.scrollY;
+    let announcementH = 0;
+    let ticking       = false;
+
+    function measureHeader() {
+      const ann = document.querySelector('.top-announcement');
+      const tb  = document.querySelector('.topbar');
+      if (!ann || !tb || !wrapper || !spacer) return;
+
+      announcementH = ann.getBoundingClientRect().height;
+      const totalH  = wrapper.getBoundingClientRect().height;
+
+      spacer.style.height = totalH + 'px';
+
+      const topbarH = tb.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--topbar-h', topbarH + 'px');
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          if (currentY > lastScrollY && currentY > announcementH) {
+            wrapper.style.transform = 'translateY(-' + announcementH + 'px)';
+          } else {
+            wrapper.style.transform = 'translateY(0)';
+          }
+          lastScrollY = currentY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+
+  // ══════════════════════════════════════
+  // INIT
+  // ══════════════════════════════════════
+  (function init() {
+    setLang(currentLang);
+    initMap();
+  })();
+</script>
+
+</body>
+</html>

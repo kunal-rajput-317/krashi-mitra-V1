@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>🛒 दुकान | KrashiMitra</title>
+  <meta name="description" content="उत्तर प्रदेश के किसानों के लिए बीज, खाद, कीटनाशक और कृषि उपकरण — KrashiMitra Shop।" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://krashimitra.in/shop.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="दुकान — KrashiMitra" />
+  <meta property="og:description" content="किसानों के लिए बीज, खाद, कीटनाशक और कृषि उपकरण।" />
+  <meta property="og:url" content="https://krashimitra.in/shop.html" />
+  <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════
+       CSS VARIABLES & RESET
+    ══════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&display=swap');
+
+    :root {
+      --green-dark:    #1a3c2e;
+      --green-mid:     #2d6a4f;
+      --green-light:   #52b788;
+      --green-pale:    #d8f3dc;
+      --amber:         #e9a825;
+      --amber-light:   #fef3c7;
+      --soil:          #7c4f2f;
+      --cream:         #faf7f2;
+      --white:         #ffffff;
+      --text-dark:     #1a2e1e;
+      --text-mid:      #4a6355;
+      --text-light:    #8aab96;
+      --border:        #ddeee4;
+      --shadow:        0 4px 24px rgba(26,60,46,0.10);
+      --shadow-lg:     0 8px 40px rgba(26,60,46,0.16);
+      --radius:        14px;
+      --radius-sm:     8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════
+       ANNOUNCEMENT BAR (amber ticker)
+    ══════════════════════════════════════ */
+    .pre-topbar {
+      background: var(--amber);
+      color: #1a2e1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .pre-topbar-sub { display: none; }
+    .home-btn { display: none; }
+    .pre-topbar-helpline { opacity: 0.85; white-space: nowrap; }
+    .pre-topbar-cta {
+      background: #1a2e1e;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════
+       TOPBAR
+    ══════════════════════════════════════ */
+    .topbar {
+      background: var(--green-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .topbar-logo-icon { font-size: 26px; line-height: 1; }
+    .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .topbar-logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+    .topbar-logo-name span { color: var(--amber); }
+    .topbar-logo-sub {
+      font-size: 9.5px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.5px;
+    }
+
+    .topbar-nav { display: flex; align-items: center; gap: 2px; }
+    .tnav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: rgba(255,255,255,0.80);
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tnav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+    .tnav-btn.active {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25) inset;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    /* ── Language Dropdown Picker ── */
+    .lang-picker { position: relative; }
+    .lang-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 20px;
+      padding: 5px 12px 5px 14px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .lang-picker-btn:hover { background: rgba(255,255,255,0.18); }
+    .lang-picker-btn .lang-chevron {
+      font-size: 9px; opacity: 0.7;
+      transition: transform 0.2s; display: inline-block;
+    }
+    .lang-picker.open .lang-chevron { transform: rotate(180deg); }
+    .lang-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #1e4535;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      min-width: 130px;
+      z-index: 200;
+    }
+    .lang-picker.open .lang-dropdown { display: block; }
+    .lang-option {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 16px;
+      color: rgba(255,255,255,0.80);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .lang-option:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .lang-option.active { color: var(--amber); background: rgba(233,168,37,0.10); }
+    .lang-option .lang-opt-code { font-size: 11px; opacity: 0.55; font-weight: 600; min-width: 22px; }
+
+    /* Search + avatar */
+    .topbar-search-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.20);
+      color: rgba(255,255,255,0.80);
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+    }
+    .topbar-search-btn:hover { background: rgba(255,255,255,0.18); }
+    .topbar-avatar-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      color: #fff; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* Cart badge on topbar */
+    .topbar-cart-btn {
+      position: relative;
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.20);
+      color: rgba(255,255,255,0.80);
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+    }
+    .topbar-cart-btn:hover { background: rgba(255,255,255,0.18); }
+    .cart-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      background: var(--amber);
+      color: #1a2e1e;
+      font-size: 9px;
+      font-weight: 800;
+      border-radius: 50%;
+      width: 16px; height: 16px;
+      display: flex; align-items: center; justify-content: center;
+      display: none;
+    }
+    .cart-badge.show { display: flex; }
+
+    /* ══════════════════════════════════════
+       MAIN CONTENT AREA
+    ══════════════════════════════════════ */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 32px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ══════════════════════════════════════
+       SHOP HERO BANNER
+    ══════════════════════════════════════ */
+    .shop-hero {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 60%, #3d8b6e 100%);
+      border-radius: 20px;
+      padding: 24px 24px 20px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      color: white;
+      box-shadow: var(--shadow-lg);
+    }
+    .shop-hero::after {
+      content: "🌾";
+      position: absolute;
+      right: 20px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 72px;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .shop-hero-orb {
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .shop-hero-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-bottom: 6px;
+    }
+    .shop-hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .shop-hero-sub {
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      font-size: 13px;
+      opacity: 0.75;
+      line-height: 1.6;
+    }
+    .shop-hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .shop-hero-badge {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.20);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.90);
+      backdrop-filter: blur(8px);
+    }
+
+    /* ══════════════════════════════════════
+       FILTER / CATEGORY ROW
+    ══════════════════════════════════════ */
+    .shop-filter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .shop-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all 0.18s;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+    }
+    .shop-filter-btn:hover {
+      border-color: var(--green-light);
+      color: var(--green-mid);
+    }
+    .shop-filter-btn.active {
+      background: var(--green-dark);
+      border-color: var(--green-dark);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(26,60,46,0.25);
+    }
+
+    /* Search bar */
+    .shop-search-wrap {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    .shop-search-wrap input {
+      width: 100%;
+      padding: 10px 16px 10px 38px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      font-size: 14px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: var(--text-dark);
+      outline: none;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
+    }
+    .shop-search-wrap input:focus { border-color: var(--green-mid); }
+    .shop-search-icon {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    /* ══════════════════════════════════════
+       PRODUCT GRID
+    ══════════════════════════════════════ */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    /* ── Product Card ── */
+    .product-card {
+      background: var(--white);
+      border-radius: 18px;
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+    .product-card.hidden { display: none; }
+
+    /* Card image area */
+    .product-img {
+      background: var(--green-pale);
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .product-badge {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: var(--amber);
+      color: #1a2e1e;
+      font-size: 9px;
+      font-weight: 800;
+      border-radius: 20px;
+      padding: 2px 8px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .product-badge.organic {
+      background: var(--green-light);
+      color: #fff;
+    }
+    .product-badge.new-badge {
+      background: #e53935;
+      color: #fff;
+    }
+
+    /* Card body */
+    .product-body {
+      padding: 14px 14px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-cat {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--green-light);
+      margin-bottom: 4px;
+    }
+    .product-name {
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.35;
+      margin-bottom: 4px;
+    }
+    .product-desc {
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--text-mid);
+      line-height: 1.5;
+      flex: 1;
+      margin-bottom: 10px;
+    }
+    .product-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .product-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .product-price-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      color: var(--text-light);
+      font-weight: 400;
+    }
+    .product-mrp {
+      font-size: 11px;
+      color: var(--text-light);
+      text-decoration: line-through;
+    }
+    .product-discount {
+      font-size: 11px;
+      color: #e53935;
+      font-weight: 700;
+    }
+    .product-rating {
+      font-size: 11px;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    /* Add to cart btn */
+    .btn-add-cart {
+      width: 100%;
+      background: var(--green-dark);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.18s, transform 0.1s;
+    }
+    .btn-add-cart:hover { background: var(--green-mid); }
+    .btn-add-cart:active { transform: scale(0.97); }
+    .btn-add-cart.in-cart {
+      background: var(--green-pale);
+      color: var(--green-dark);
+      border: 1.5px solid var(--green-light);
+    }
+
+    /* ══════════════════════════════════════
+       CART DRAWER
+    ══════════════════════════════════════ */
+    .cart-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 900;
+      backdrop-filter: blur(3px);
+    }
+    .cart-overlay.open { display: block; }
+
+    .cart-drawer {
+      position: fixed;
+      top: 0; right: -400px;
+      width: 360px;
+      max-width: 100vw;
+      height: 100%;
+      background: var(--white);
+      z-index: 950;
+      box-shadow: -8px 0 40px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .cart-drawer.open { right: 0; }
+
+    .cart-drawer-header {
+      background: var(--green-dark);
+      color: #fff;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .cart-drawer-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .cart-drawer-close {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 18px;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    .cart-items-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .cart-empty {
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .cart-empty-icon { font-size: 52px; margin-bottom: 12px; }
+    .cart-empty-text {
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.6;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item-emoji {
+      font-size: 36px;
+      width: 52px; height: 52px;
+      background: var(--green-pale);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; }
+    .cart-item-name {
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 2px;
+    }
+    .cart-item-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green-mid);
+    }
+    .cart-qty-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .qty-btn {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--text-dark);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .qty-btn:hover { background: var(--green-pale); }
+    .qty-val {
+      font-size: 14px;
+      font-weight: 700;
+      min-width: 20px;
+      text-align: center;
+    }
+    .cart-item-del {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      opacity: 0.4;
+      padding: 4px;
+      transition: opacity 0.15s;
+    }
+    .cart-item-del:hover { opacity: 0.8; }
+
+    .cart-footer {
+      padding: 16px 20px;
+      border-top: 1.5px solid var(--border);
+      flex-shrink: 0;
+      background: var(--cream);
+    }
+    .cart-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .cart-total-label {
+      font-size: 13px;
+      color: var(--text-mid);
+      font-weight: 600;
+    }
+    .cart-total-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .cart-savings {
+      font-size: 11px;
+      color: #2e7d32;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .btn-checkout {
+      width: 100%;
+      background: var(--green-dark);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 0;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.18s;
+      margin-bottom: 8px;
+    }
+    .btn-checkout:hover { background: var(--green-mid); }
+    .btn-clear-cart {
+      width: 100%;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-clear-cart:hover { border-color: #e53935; color: #e53935; }
+
+    /* ══════════════════════════════════════
+       CHECKOUT SUCCESS TOAST
+    ══════════════════════════════════════ */
+    .toast {
+      position: fixed;
+      bottom: 80px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green-dark);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ══════════════════════════════════════
+       SHIMMER
+    ══════════════════════════════════════ */
+    .shop-shimmer {
+      background: linear-gradient(90deg, #e8f0eb 25%, #d4e6da 50%, #e8f0eb 75%);
+      background-size: 200% 100%;
+      animation: wx-shimmer 1.4s infinite;
+      border-radius: 18px;
+      height: 280px;
+    }
+    @keyframes wx-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ══════════════════════════════════════
+       SECTION HEADING
+    ══════════════════════════════════════ */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      margin-top: 4px;
+    }
+    .section-heading-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .section-heading-count {
+      font-size: 12px;
+      color: var(--text-light);
+      font-weight: 500;
+      background: var(--green-pale);
+      border-radius: 20px;
+      padding: 3px 10px;
+      border: 1px solid var(--border);
+    }
+
+    /* ══════════════════════════════════════
+       BOTTOM NAVIGATION (Mobile Only)
+    ══════════════════════════════════════ */
+    .bottom-nav { display: none; }
+
+    /* ══════════════════════════════════════
+       COPYRIGHT FOOTER
+    ══════════════════════════════════════ */
+    .site-footer {
+      background: var(--green-dark);
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      padding: 16px 24px;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+    .site-footer a { color: var(--green-light); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .site-footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ══════════════════════════════════════
+       MOBILE — max-width 1024px
+    ══════════════════════════════════════ */
+    @media screen and (max-width: 1024px) {
+      .topbar-nav { display: none; }
+      .topbar-search-btn { display: none; }
+      .topbar-avatar-btn { display: none; }
+      .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
+      .topbar { padding: 0 12px; height: 54px; }
+      .topbar-logo-name { font-size: 15px; }
+      .topbar-logo-sub { display: none; }
+      .lang-dropdown { right: 0; left: auto; }
+
+      .main-content { padding: 14px 12px 90px; }
+
+      .shop-hero { padding: 18px 16px 16px; }
+      .shop-hero-title { font-size: 20px; }
+      .shop-hero::after { font-size: 52px; }
+
+      .shop-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .product-img { height: 110px; font-size: 44px; }
+      .product-name { font-size: 13px; }
+      .product-price { font-size: 17px; }
+
+      .cart-drawer { width: 100%; max-width: 100%; }
+
+      /* ── Bottom Nav ── */
+      .bottom-nav {
+        display: block;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--green-dark);
+        box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom, 6px);
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      .bottom-nav-items {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        padding: 0 4px;
+        gap: 2px;
+      }
+      .bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        padding: 6px 2px;
+        text-decoration: none;
+        gap: 3px;
+      }
+      .bnav-icon { font-size: 20px; line-height: 1; color: rgba(255,255,255,0.55); transition: color 0.18s; }
+      .bnav-label {
+        font-size: 10px; font-weight: 600;
+        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+        color: rgba(255,255,255,0.55); white-space: nowrap; transition: color 0.18s;
+      }
+      .bottom-nav-item.active .bnav-icon,
+      .bottom-nav-item.active .bnav-label { color: var(--amber); }
+
+      .site-footer { display: none; }
+      .toast { bottom: 76px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ ANNOUNCEMENT BAR ══ -->
+<div class="pre-topbar">
+  <span class="pre-topbar-helpline">🌾 किसान helpline: +91 9870951001 — निःशुल्क कृषि सलाह</span>
+  <a href="chat.html" class="pre-topbar-cta">AI से पूछें →</a>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
+      <span class="topbar-logo-icon">🌾</span>
+      <div class="topbar-logo-text">
+        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
+        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Desktop center nav -->
+  <nav class="topbar-nav">
+    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
+    <a class="tnav-btn" href="weather.html">🌤️ <span data-t="nav_weather">मौसम</span></a>
+    <a class="tnav-btn" href="mandi.html">🏪 <span data-t="nav_mandi">मंडी</span></a>
+    <a class="tnav-btn" href="articles.html">📰 लेख</a>
+    <a class="tnav-btn" href="chat.html">💬 सहायता</a>
+    <a class="tnav-btn active" href="shop.html">🛒 <span data-t="nav_shop">दुकान</span></a>
+  </nav>
+
+  <div class="topbar-right">
+    <!-- Cart button -->
+    <button class="topbar-cart-btn" onclick="openCart()" title="Cart">
+      🛒
+      <span class="cart-badge" id="cart-badge">0</span>
+    </button>
+
+    <!-- Unified language picker -->
+    <div class="lang-picker" id="lang-picker">
+      <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
+        <span id="lang-picker-label">हिं</span>
+        <span class="lang-chevron">▾</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown">
+        <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
+          <span class="lang-opt-code">हिं</span> हिंदी
+        </button>
+        <button class="lang-option" id="opt-en" onclick="pickLang('en')">
+          <span class="lang-opt-code">EN</span> English
+        </button>
+        <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
+          <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
+        </button>
+      </div>
+    </div>
+    <button class="topbar-search-btn" title="Search">🔍</button>
+    <div class="topbar-avatar-btn">👤</div>
+  </div>
+</div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content">
+
+  <!-- Shop Hero Banner -->
+  <div class="shop-hero">
+    <div class="shop-hero-orb"></div>
+    <div class="shop-hero-label" data-t="shop_hero_label">🛒 KRASHIMITRA SHOP</div>
+    <div class="shop-hero-title" data-t="shop_hero_title">किसान की दुकान</div>
+    <div class="shop-hero-sub" data-t="shop_hero_sub">बीज, खाद, कीटनाशक और कृषि उपकरण — सब एक जगह</div>
+    <div class="shop-hero-badges">
+      <span class="shop-hero-badge" data-t="badge_free_delivery">🚚 निःशुल्क डिलीवरी ₹500+</span>
+      <span class="shop-hero-badge" data-t="badge_genuine">✅ प्रमाणित उत्पाद</span>
+      <span class="shop-hero-badge" data-t="badge_cod">💰 Cash on Delivery</span>
+    </div>
+  </div>
+
+  <!-- Filter Row -->
+  <div class="shop-filter-row">
+    <div class="shop-search-wrap">
+      <span class="shop-search-icon">🔍</span>
+      <input type="text" id="shop-search" placeholder="उत्पाद खोजें..." oninput="filterProducts()" data-t-placeholder="search_placeholder" />
+    </div>
+    <button class="shop-filter-btn active" data-cat="all" onclick="setCategory('all', this)" data-t="cat_all">सभी</button>
+    <button class="shop-filter-btn" data-cat="seeds" onclick="setCategory('seeds', this)" data-t="cat_seeds">🌱 बीज</button>
+    <button class="shop-filter-btn" data-cat="fertilizer" onclick="setCategory('fertilizer', this)" data-t="cat_fertilizer">🧪 खाद</button>
+    <button class="shop-filter-btn" data-cat="pesticide" onclick="setCategory('pesticide', this)" data-t="cat_pesticide">🌿 कीटनाशक</button>
+    <button class="shop-filter-btn" data-cat="tools" onclick="setCategory('tools', this)" data-t="cat_tools">🔧 उपकरण</button>
+  </div>
+
+  <!-- Section heading -->
+  <div class="section-heading">
+    <div class="section-heading-text" id="section-heading-text" data-t="all_products">सभी उत्पाद</div>
+    <div class="section-heading-count" id="product-count">-- उत्पाद</div>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="shop-grid" id="shop-grid">
+    <!-- Shimmer placeholders shown before JS renders -->
+    <div class="shop-shimmer"></div>
+    <div class="shop-shimmer"></div>
+    <div class="shop-shimmer"></div>
+    <div class="shop-shimmer"></div>
+  </div>
+
+  <div class="wx-footer-meta" style="text-align:center; margin-top:4px;" data-t="shop_footer_meta">
+    कृषि मित्र दुकान · प्रमाणित व विश्वसनीय उत्पाद · किसान का साथी
+  </div>
+
+</div><!-- /.main-content -->
+
+<!-- ══ CART OVERLAY + DRAWER ══ -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header">
+    <div class="cart-drawer-title" data-t="cart_title">🛒 आपकी टोकरी</div>
+    <button class="cart-drawer-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items-wrap" id="cart-items-wrap">
+    <!-- populated by JS -->
+  </div>
+  <div class="cart-footer" id="cart-footer" style="display:none;">
+    <div class="cart-total-row">
+      <span class="cart-total-label" data-t="cart_total">कुल राशि</span>
+      <span class="cart-total-val" id="cart-total-val">₹0</span>
+    </div>
+    <div class="cart-savings" id="cart-savings-text"></div>
+    <button class="btn-checkout" onclick="checkout()" data-t="btn_checkout">✅ ऑर्डर करें →</button>
+    <button class="btn-clear-cart" onclick="clearCart()" data-t="btn_clear">🗑️ टोकरी खाली करें</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ══ BOTTOM NAV (Mobile) ══ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-items">
+    <a class="bottom-nav-item" href="index.html">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">मुख्य</span>
+    </a>
+    <a class="bottom-nav-item" href="chat.html">
+      <span class="bnav-icon">💬</span>
+      <span class="bnav-label" data-t="nav_chat">Chat</span>
+    </a>
+    <a class="bottom-nav-item" href="weather.html">
+      <span class="bnav-icon">🌤️</span>
+      <span class="bnav-label" data-t="nav_weather">मौसम</span>
+    </a>
+    <a class="bottom-nav-item" href="mandi.html">
+      <span class="bnav-icon">🏪</span>
+      <span class="bnav-label" data-t="nav_mandi">मंडी</span>
+    </a>
+    <a class="bottom-nav-item active" href="shop.html">
+      <span class="bnav-icon">🛒</span>
+      <span class="bnav-label" data-t="nav_shop">दुकान</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ══ COPYRIGHT FOOTER ══ -->
+<footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="index.html">Home</a>
+    <a href="chat.html">AI Advisor</a>
+    <a href="weather.html">Weather</a>
+    <a href="mandi.html">Mandi</a>
+    <a href="shop.html">Shop</a>
+  </div>
+  <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; All rights reserved.</div>
+</footer>
+
+<script>
+  // ══════════════════════════════════════
+  // TRANSLATIONS — Hindi / English / Kannada
+  // ══════════════════════════════════════
+  const TRANSLATIONS = {
+    hi: {
+      nav_chat:         "AI से पूछें",
+      nav_weather:      "मौसम",
+      nav_mandi:        "मंडी",
+      nav_shop:         "दुकान",
+      shop_hero_label:  "🛒 KRASHIMITRA SHOP",
+      shop_hero_title:  "किसान की दुकान",
+      shop_hero_sub:    "बीज, खाद, कीटनाशक और कृषि उपकरण — सब एक जगह",
+      badge_free_delivery: "🚚 निःशुल्क डिलीवरी ₹500+",
+      badge_genuine:    "✅ प्रमाणित उत्पाद",
+      badge_cod:        "💰 Cash on Delivery",
+      cat_all:          "सभी",
+      cat_seeds:        "🌱 बीज",
+      cat_fertilizer:   "🧪 खाद",
+      cat_pesticide:    "🌿 कीटनाशक",
+      cat_tools:        "🔧 उपकरण",
+      all_products:     "सभी उत्पाद",
+      search_placeholder: "उत्पाद खोजें...",
+      add_cart:         "🛒 टोकरी में डालें",
+      in_cart:          "✅ टोकरी में है",
+      cart_title:       "🛒 आपकी टोकरी",
+      cart_total:       "कुल राशि",
+      btn_checkout:     "✅ ऑर्डर करें →",
+      btn_clear:        "🗑️ टोकरी खाली करें",
+      cart_empty_text:  "टोकरी खाली है।\nउत्पाद चुनकर जोड़ें।",
+      toast_added:      "टोकरी में जोड़ा गया!",
+      toast_removed:    "टोकरी से हटाया गया",
+      toast_cleared:    "टोकरी खाली की गई",
+      toast_checkout:   "✅ ऑर्डर सफलतापूर्वक दिया गया! जल्द डिलीवरी होगी।",
+      savings_text:     "आपकी बचत:",
+      products_count:   "उत्पाद",
+      shop_footer_meta: "कृषि मित्र दुकान · प्रमाणित व विश्वसनीय उत्पाद · किसान का साथी",
+    },
+    en: {
+      nav_chat:         "AI Advisor",
+      nav_weather:      "Weather",
+      nav_mandi:        "Mandi",
+      nav_shop:         "Shop",
+      shop_hero_label:  "🛒 KRASHIMITRA SHOP",
+      shop_hero_title:  "Farmer's Store",
+      shop_hero_sub:    "Seeds, Fertilizers, Pesticides & Tools — all in one place",
+      badge_free_delivery: "🚚 Free Delivery on ₹500+",
+      badge_genuine:    "✅ Certified Products",
+      badge_cod:        "💰 Cash on Delivery",
+      cat_all:          "All",
+      cat_seeds:        "🌱 Seeds",
+      cat_fertilizer:   "🧪 Fertilizer",
+      cat_pesticide:    "🌿 Pesticide",
+      cat_tools:        "🔧 Tools",
+      all_products:     "All Products",
+      search_placeholder: "Search products...",
+      add_cart:         "🛒 Add to Cart",
+      in_cart:          "✅ In Cart",
+      cart_title:       "🛒 Your Cart",
+      cart_total:       "Total",
+      btn_checkout:     "✅ Place Order →",
+      btn_clear:        "🗑️ Clear Cart",
+      cart_empty_text:  "Your cart is empty.\nBrowse and add products.",
+      toast_added:      "Added to cart!",
+      toast_removed:    "Removed from cart",
+      toast_cleared:    "Cart cleared",
+      toast_checkout:   "✅ Order placed successfully! Delivery coming soon.",
+      savings_text:     "Your savings:",
+      products_count:   "products",
+      shop_footer_meta: "KrashiMitra Shop · Certified & Trusted Products · Farmer's Companion",
+    },
+    kn: {
+      nav_chat:         "AI ಕೇಳಿ",
+      nav_weather:      "ಹವಾಮಾನ",
+      nav_mandi:        "ಮಂಡಿ",
+      nav_shop:         "ಅಂಗಡಿ",
+      shop_hero_label:  "🛒 KRASHIMITRA SHOP",
+      shop_hero_title:  "ರೈತರ ಅಂಗಡಿ",
+      shop_hero_sub:    "ಬೀಜ, ಗೊಬ್ಬರ, ಕೀಟನಾಶಕ ಮತ್ತು ಕೃಷಿ ಉಪಕರಣ — ಒಂದೇ ಸ್ಥಳದಲ್ಲಿ",
+      badge_free_delivery: "🚚 ₹500+ ಉಚಿತ ಡೆಲಿವರಿ",
+      badge_genuine:    "✅ ಪ್ರಮಾಣಿತ ಉತ್ಪನ್ನಗಳು",
+      badge_cod:        "💰 Cash on Delivery",
+      cat_all:          "ಎಲ್ಲಾ",
+      cat_seeds:        "🌱 ಬೀಜ",
+      cat_fertilizer:   "🧪 ಗೊಬ್ಬರ",
+      cat_pesticide:    "🌿 ಕೀಟನಾಶಕ",
+      cat_tools:        "🔧 ಉಪಕರಣ",
+      all_products:     "ಎಲ್ಲಾ ಉತ್ಪನ್ನಗಳು",
+      search_placeholder: "ಉತ್ಪನ್ನ ಹುಡುಕಿ...",
+      add_cart:         "🛒 ಬುಟ್ಟಿಗೆ ಸೇರಿಸಿ",
+      in_cart:          "✅ ಬುಟ್ಟಿಯಲ್ಲಿದೆ",
+      cart_title:       "🛒 ನಿಮ್ಮ ಬುಟ್ಟಿ",
+      cart_total:       "ಒಟ್ಟು ಮೊತ್ತ",
+      btn_checkout:     "✅ ಆರ್ಡರ್ ಮಾಡಿ →",
+      btn_clear:        "🗑️ ಬುಟ್ಟಿ ಖಾಲಿ ಮಾಡಿ",
+      cart_empty_text:  "ಬುಟ್ಟಿ ಖಾಲಿಯಾಗಿದೆ.\nಉತ್ಪನ್ನಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಿ.",
+      toast_added:      "ಬುಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗಿದೆ!",
+      toast_removed:    "ಬುಟ್ಟಿಯಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ",
+      toast_cleared:    "ಬುಟ್ಟಿ ಖಾಲಿ ಮಾಡಲಾಗಿದೆ",
+      toast_checkout:   "✅ ಆರ್ಡರ್ ಯಶಸ್ವಿಯಾಗಿ ನೀಡಲಾಗಿದೆ!",
+      savings_text:     "ನಿಮ್ಮ ಉಳಿತಾಯ:",
+      products_count:   "ಉತ್ಪನ್ನಗಳು",
+      shop_footer_meta: "ಕೃಷಿ ಮಿತ್ರ ಅಂಗಡಿ · ಪ್ರಮಾಣಿತ ಉತ್ಪನ್ನಗಳು · ರೈತರ ಸಂಗಾತಿ",
+    }
+  };
+
+  const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
+  let currentLang = localStorage.getItem('km_lang') || 'hi';
+
+  function toggleLangPicker(e) {
+    e.stopPropagation();
+    document.getElementById('lang-picker').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    document.getElementById('lang-picker').classList.remove('open');
+  });
+  function pickLang(lang) {
+    document.getElementById('lang-picker').classList.remove('open');
+    setLang(lang);
+  }
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('km_lang', lang);
+    const lbl = document.getElementById('lang-picker-label');
+    if (lbl) lbl.textContent = LANG_LABELS[lang] || lang.toUpperCase();
+    ['hi','en','kn'].forEach(l => {
+      const opt = document.getElementById(`opt-${l}`);
+      if (opt) opt.classList.toggle('active', l === lang);
+    });
+    const tr = TRANSLATIONS[lang] || TRANSLATIONS.hi;
+    document.querySelectorAll('[data-t]').forEach(el => {
+      const key = el.getAttribute('data-t');
+      if (tr[key]) el.textContent = tr[key];
+    });
+    // update search placeholder
+    const si = document.getElementById('shop-search');
+    if (si) si.placeholder = tr.search_placeholder || '';
+    // re-render product cards (button labels, etc.)
+    renderProducts();
+    renderCart();
+  }
+  function t(key) {
+    return (TRANSLATIONS[currentLang] || TRANSLATIONS.hi)[key] || key;
+  }
+
+  // ══════════════════════════════════════
+  // PRODUCT CATALOGUE
+  // ══════════════════════════════════════
+  const PRODUCTS = [
+    // ── Seeds ──
+    { id: 1,  cat: 'seeds',      emoji: '🌾', badge: 'bestseller', badgeClass: '',
+      name_hi: 'गेहूं बीज HD-2967', name_en: 'Wheat Seeds HD-2967', name_kn: 'ಗೋಧಿ ಬೀಜ HD-2967',
+      desc_hi: 'उच्च उपज देने वाली गेहूं की किस्म, रस्ट रोग प्रतिरोधी।',
+      desc_en: 'High-yielding wheat variety, rust disease resistant.',
+      desc_kn: 'ಹೆಚ್ಚು ಇಳುವರಿ ನೀಡುವ ಗೋಧಿ ತಳಿ, ತುಕ್ಕು ರೋಗ ನಿರೋಧಕ.',
+      price: 280, mrp: 350, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.7' },
+    { id: 2,  cat: 'seeds',      emoji: '🌽', badge: 'organic', badgeClass: 'organic',
+      name_hi: 'मक्का हाइब्रिड बीज', name_en: 'Hybrid Maize Seeds', name_kn: 'ಹೈಬ್ರಿಡ್ ಮೆಕ್ಕೆ ಬೀಜ',
+      desc_hi: 'तेज विकास, 90-100 दिन में कटाई। जल सहनशील।',
+      desc_en: 'Fast growing, harvest in 90-100 days. Drought tolerant.',
+      desc_kn: '90-100 ದಿನದಲ್ಲಿ ಕೊಯ್ಲು. ಬರ ಸಹಿಷ್ಣು.',
+      price: 420, mrp: 500, unit_hi: '2 kg पैक', unit_en: '2 kg pack', unit_kn: '2 kg ಪ್ಯಾಕ್', rating: '⭐ 4.5' },
+    { id: 3,  cat: 'seeds',      emoji: '🧅', badge: 'new', badgeClass: 'new-badge',
+      name_hi: 'प्याज बीज अग्रीफाउंड', name_en: 'Onion Seeds Agrifound', name_kn: 'ಈರುಳ್ಳಿ ಬೀಜ ಅಗ್ರಿಫೌಂಡ್',
+      desc_hi: 'लाल प्याज, उच्च भंडारण क्षमता। खरीफ व रबी दोनों के लिए।',
+      desc_en: 'Red onion, high storage capacity. Suitable for Kharif & Rabi.',
+      desc_kn: 'ಕೆಂಪು ಈರುಳ್ಳಿ, ಹೆಚ್ಚಿನ ಶೇಖರಣಾ ಸಾಮರ್ಥ್ಯ.',
+      price: 180, mrp: 220, unit_hi: '500g पैक', unit_en: '500g pack', unit_kn: '500g ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
+    { id: 4,  cat: 'seeds',      emoji: '🫘', badge: '', badgeClass: '',
+      name_hi: 'सोयाबीन बीज JS-335', name_en: 'Soybean Seeds JS-335', name_kn: 'ಸೋಯಾಬೀನ್ ಬೀಜ JS-335',
+      desc_hi: '100-105 दिन में परिपक्व। उच्च प्रोटीन सामग्री।',
+      desc_en: 'Matures in 100-105 days. High protein content.',
+      desc_kn: '100-105 ದಿನದಲ್ಲಿ ಪಕ್ವ. ಹೆಚ್ಚಿನ ಪ್ರೊಟೀನ್.',
+      price: 320, mrp: 380, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.3' },
+
+    // ── Fertilizers ──
+    { id: 5,  cat: 'fertilizer', emoji: '🧪', badge: 'bestseller', badgeClass: '',
+      name_hi: 'DAP खाद (डाइ-अमोनियम फॉस्फेट)', name_en: 'DAP Fertilizer', name_kn: 'DAP ಗೊಬ್ಬರ',
+      desc_hi: 'फसल की जड़ों को मजबूत करता है। नाइट्रोजन व फॉस्फोरस से भरपूर।',
+      desc_en: 'Strengthens crop roots. Rich in Nitrogen & Phosphorus.',
+      desc_kn: 'ಬೆಳೆ ಬೇರುಗಳನ್ನು ಮಜಬೂತಾಗಿಸುತ್ತದೆ. N & P ಭರಿತ.',
+      price: 1350, mrp: 1450, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.8' },
+    { id: 6,  cat: 'fertilizer', emoji: '🌿', badge: 'organic', badgeClass: 'organic',
+      name_hi: 'वर्मीकम्पोस्ट (जैविक खाद)', name_en: 'Vermicompost Organic', name_kn: 'ವರ್ಮಿಕಂಪೋಸ್ಟ್ ಜೈವಿಕ ಗೊಬ್ಬರ',
+      desc_hi: '100% जैविक, मिट्टी की उर्वरता बढ़ाए। सभी फसलों के लिए।',
+      desc_en: '100% organic, improves soil fertility. For all crops.',
+      desc_kn: '100% ಜೈವಿಕ, ಮಣ್ಣಿನ ಫಲವತ್ತತೆ ಹೆಚ್ಚಿಸುತ್ತದೆ.',
+      price: 450, mrp: 550, unit_hi: '25 kg बैग', unit_en: '25 kg bag', unit_kn: '25 kg ಚೀಲ', rating: '⭐ 4.6' },
+    { id: 7,  cat: 'fertilizer', emoji: '💧', badge: '', badgeClass: '',
+      name_hi: 'यूरिया खाद 46% N', name_en: 'Urea Fertilizer 46% N', name_kn: 'ಯೂರಿಯಾ ಗೊಬ್ಬರ 46% N',
+      desc_hi: 'नाइट्रोजन से भरपूर, हरी पत्तियों के लिए उत्तम। तेज असर।',
+      desc_en: 'Nitrogen-rich, excellent for green leaf growth. Fast effect.',
+      desc_kn: 'ನೈಟ್ರೋಜನ್ ಭರಿತ, ಹಸಿರು ಎಲೆ ಬೆಳವಣಿಗೆಗೆ ಉತ್ತಮ.',
+      price: 280, mrp: 300, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5' },
+    { id: 8,  cat: 'fertilizer', emoji: '🔬', badge: 'new', badgeClass: 'new-badge',
+      name_hi: 'सूक्ष्म पोषक तत्व मिश्रण', name_en: 'Micronutrient Mix', name_kn: 'ಮೈಕ್ರೋನ್ಯೂಟ್ರಿಯೆಂಟ್ ಮಿಶ್ರಣ',
+      desc_hi: 'जिंक, आयरन, बोरान युक्त। कमी के लक्षण दूर करे।',
+      desc_en: 'Zinc, Iron, Boron enriched. Cures deficiency symptoms.',
+      desc_kn: 'ಜಿಂಕ್, ಕಬ್ಬಿಣ, ಬೋರಾನ್ ಭರಿತ. ಕೊರತೆ ನಿವಾರಿಸುತ್ತದೆ.',
+      price: 380, mrp: 460, unit_hi: '10 kg पैक', unit_en: '10 kg pack', unit_kn: '10 kg ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
+
+    // ── Pesticides ──
+    { id: 9,  cat: 'pesticide',  emoji: '🐛', badge: 'bestseller', badgeClass: '',
+      name_hi: 'क्लोरपाइरीफोस 20% EC', name_en: 'Chlorpyrifos 20% EC', name_kn: 'ಕ್ಲೋರ್ಪೈರಿಫಾಸ್ 20% EC',
+      desc_hi: 'कीट व दीमक नियंत्रण। व्यापक प्रभाव वाला कीटनाशक।',
+      desc_en: 'Controls insects & termites. Broad-spectrum insecticide.',
+      desc_kn: 'ಕೀಟ ಮತ್ತು ಗೆದ್ದಲು ನಿಯಂತ್ರಣ. ಬ್ರಾಡ್-ಸ್ಪೆಕ್ಟ್ರಮ್.',
+      price: 320, mrp: 400, unit_hi: '500 ml बोतल', unit_en: '500 ml bottle', unit_kn: '500 ml ಬಾಟಲ್', rating: '⭐ 4.5' },
+    { id: 10, cat: 'pesticide',  emoji: '🍄', badge: 'organic', badgeClass: 'organic',
+      name_hi: 'नीम का तेल (जैव कीटनाशक)', name_en: 'Neem Oil Bio-Pesticide', name_kn: 'ಬೇವಿನ ಎಣ್ಣೆ ಜೈವಿಕ ಕೀಟನಾಶಕ',
+      desc_hi: '100% जैविक, मकड़ी, माहू और सफेद मक्खी को नष्ट करे।',
+      desc_en: '100% organic. Controls mites, aphids & whiteflies.',
+      desc_kn: '100% ಜೈವಿಕ. ಮಿಟೆ, ಗಿಡಹೇನು ನಿಯಂತ್ರಿಸುತ್ತದೆ.',
+      price: 240, mrp: 300, unit_hi: '1 litre', unit_en: '1 litre', unit_kn: '1 ಲೀಟರ್', rating: '⭐ 4.6' },
+    { id: 11, cat: 'pesticide',  emoji: '🌾', badge: '', badgeClass: '',
+      name_hi: 'कार्बेन्डाजिम 50% WP (फफूंदनाशी)', name_en: 'Carbendazim 50% WP Fungicide', name_kn: 'ಕಾರ್ಬೆಂಡಾಜಿಮ್ 50% WP ಶಿಲೀಂಧ್ರನಾಶಕ',
+      desc_hi: 'ब्लास्ट, रस्ट, और ब्लाइट रोग नियंत्रण। बीज उपचार भी।',
+      desc_en: 'Controls blast, rust & blight. Seed treatment too.',
+      desc_kn: 'ಬ್ಲಾಸ್ಟ್, ರಸ್ಟ್, ಬ್ಲೈಟ್ ರೋಗ ನಿಯಂತ್ರಣ.',
+      price: 180, mrp: 230, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
+    { id: 12, cat: 'pesticide',  emoji: '🌱', badge: 'new', badgeClass: 'new-badge',
+      name_hi: 'ट्राइकोडर्मा विरिडी (जैव फफूंदनाशी)', name_en: 'Trichoderma Viride Bio-Fungicide', name_kn: 'ಟ್ರೈಕೋಡರ್ಮಾ ವಿರಿಡಿ ಜೈವಿಕ',
+      desc_hi: 'मिट्टी में हानिकारक फफूंद का जैविक नियंत्रण।',
+      desc_en: 'Biological control of soil-borne fungi. Safe for crops.',
+      desc_kn: 'ಮಣ್ಣಿನ ಹಾನಿಕರ ಶಿಲೀಂಧ್ರದ ಜೈವಿಕ ನಿಯಂತ್ರಣ.',
+      price: 160, mrp: 200, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.3' },
+
+    // ── Tools ──
+    { id: 13, cat: 'tools',      emoji: '🔧', badge: 'bestseller', badgeClass: '',
+      name_hi: 'हाथ खुरपी (HRC स्टील)', name_en: 'Hand Khurpi HRC Steel', name_kn: 'ಕೈ ಕೊಡಲಿ HRC ಉಕ್ಕು',
+      desc_hi: 'मजबूत HRC स्टील ब्लेड, लकड़ी का हैंडल। निराई व गुड़ाई के लिए।',
+      desc_en: 'Strong HRC steel blade, wooden handle. For weeding.',
+      desc_kn: 'ಬಲಿಷ್ಠ HRC ಉಕ್ಕಿನ ಬ್ಲೇಡ್. ಕಳೆ ತೆಗೆಯಲು.',
+      price: 120, mrp: 160, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.6' },
+    { id: 14, cat: 'tools',      emoji: '💦', badge: '', badgeClass: '',
+      name_hi: 'नैपसैक स्प्रेयर 16L', name_en: 'Knapsack Sprayer 16L', name_kn: 'ನ್ಯಾಪ್ಸ್ಯಾಕ್ ಸ್ಪ್ರೇಯರ್ 16L',
+      desc_hi: 'मजबूत पीवीसी टैंक, एडजस्टेबल नोजल। कीटनाशक छिड़काव के लिए।',
+      desc_en: 'Durable PVC tank, adjustable nozzle. For pesticide spray.',
+      desc_kn: 'ಗಟ್ಟಿಯಾದ PVC ಟ್ಯಾಂಕ್, ಸ್ಪ್ರೇಗೆ.',
+      price: 850, mrp: 1100, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.4' },
+    { id: 15, cat: 'tools',      emoji: '🪚', badge: 'new', badgeClass: 'new-badge',
+      name_hi: 'ड्रिप इरिगेशन किट (1 एकड़)', name_en: 'Drip Irrigation Kit (1 Acre)', name_kn: 'ಡ್ರಿಪ್ ಸಿಂಚಾಯಿ ಕಿಟ್ (1 ಎಕರೆ)',
+      desc_hi: '60% पानी की बचत। सब्जी व बाग के लिए उपयुक्त। स्थापित करना आसान।',
+      desc_en: '60% water saving. For vegetables & orchards. Easy install.',
+      desc_kn: '60% ನೀರು ಉಳಿತಾಯ. ತರಕಾರಿ ಮತ್ತು ತೋಟಕ್ಕೆ.',
+      price: 2800, mrp: 3500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.7' },
+    { id: 16, cat: 'tools',      emoji: '🌡️', badge: '', badgeClass: '',
+      name_hi: 'मृदा परीक्षण किट', name_en: 'Soil Testing Kit', name_kn: 'ಮಣ್ಣು ಪರೀಕ್ಷಾ ಕಿಟ್',
+      desc_hi: 'pH, N, P, K और 8 अन्य पोषक तत्वों की जांच। 50 टेस्ट।',
+      desc_en: 'Tests pH, N, P, K and 8 nutrients. 50 tests included.',
+      desc_kn: 'pH, N, P, K ಮತ್ತು 8 ಪೋಷಕಾಂಶ ಪರೀಕ್ಷೆ. 50 ಟೆಸ್ಟ್.',
+      price: 650, mrp: 800, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.5' },
+  ];
+
+  // ══════════════════════════════════════
+  // STATE
+  // ══════════════════════════════════════
+  let activeCategory = 'all';
+  let cart = JSON.parse(localStorage.getItem('km_cart') || '{}');
+  // cart = { productId: quantity, ... }
+
+  function saveCart() {
+    localStorage.setItem('km_cart', JSON.stringify(cart));
+  }
+
+  function cartCount() {
+    return Object.values(cart).reduce((a, b) => a + b, 0);
+  }
+
+  function cartTotal() {
+    return PRODUCTS.reduce((sum, p) => {
+      return sum + (cart[p.id] || 0) * p.price;
+    }, 0);
+  }
+
+  function cartSavings() {
+    return PRODUCTS.reduce((sum, p) => {
+      return sum + (cart[p.id] || 0) * (p.mrp - p.price);
+    }, 0);
+  }
+
+  function updateCartBadge() {
+    const cnt = cartCount();
+    const badge = document.getElementById('cart-badge');
+    if (!badge) return;
+    badge.textContent = cnt;
+    badge.classList.toggle('show', cnt > 0);
+  }
+
+  // ══════════════════════════════════════
+  // RENDER PRODUCTS
+  // ══════════════════════════════════════
+  function getProductName(p) {
+    return p[`name_${currentLang}`] || p.name_hi;
+  }
+  function getProductDesc(p) {
+    return p[`desc_${currentLang}`] || p.desc_hi;
+  }
+  function getProductUnit(p) {
+    return p[`unit_${currentLang}`] || p.unit_hi;
+  }
+
+  function renderProducts() {
+    const grid = document.getElementById('shop-grid');
+    if (!grid) return;
+
+    const searchVal = (document.getElementById('shop-search')?.value || '').toLowerCase();
+
+    let visible = PRODUCTS.filter(p => {
+      const matchCat = activeCategory === 'all' || p.cat === activeCategory;
+      const matchSearch = !searchVal ||
+        getProductName(p).toLowerCase().includes(searchVal) ||
+        getProductDesc(p).toLowerCase().includes(searchVal);
+      return matchCat && matchSearch;
+    });
+
+    // Update count
+    const countEl = document.getElementById('product-count');
+    if (countEl) countEl.textContent = `${visible.length} ${t('products_count')}`;
+
+    grid.innerHTML = visible.map(p => {
+      const inCart = cart[p.id] > 0;
+      const discount = Math.round((1 - p.price / p.mrp) * 100);
+      const badgeHTML = p.badge
+        ? `<div class="product-badge ${p.badgeClass}">${
+            p.badgeClass === 'organic' ? '🌿 Organic' :
+            p.badgeClass === 'new-badge' ? '🆕 New' :
+            '🔥 Best'
+          }</div>`
+        : '';
+
+      return `
+        <div class="product-card" data-id="${p.id}" data-cat="${p.cat}">
+          <div class="product-img">
+            ${badgeHTML}
+            ${p.emoji}
+          </div>
+          <div class="product-body">
+            <div class="product-cat">${categoryLabel(p.cat)}</div>
+            <div class="product-name">${getProductName(p)}</div>
+            <div class="product-desc">${getProductDesc(p)}</div>
+            <div class="product-meta">
+              <div>
+                <div class="product-price">₹${p.price} <span class="product-price-sub">/${getProductUnit(p)}</span></div>
+                <div>
+                  <span class="product-mrp">₹${p.mrp}</span>
+                  &nbsp;<span class="product-discount">-${discount}%</span>
+                </div>
+              </div>
+              <div class="product-rating">${p.rating}</div>
+            </div>
+            <button class="btn-add-cart ${inCart ? 'in-cart' : ''}"
+              onclick="toggleCart(${p.id}, this)">
+              ${inCart ? t('in_cart') : t('add_cart')}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function categoryLabel(cat) {
+    const map = {
+      seeds:      { hi: 'बीज', en: 'Seeds', kn: 'ಬೀಜ' },
+      fertilizer: { hi: 'खाद', en: 'Fertilizer', kn: 'ಗೊಬ್ಬರ' },
+      pesticide:  { hi: 'कीटनाशक', en: 'Pesticide', kn: 'ಕೀಟನಾಶಕ' },
+      tools:      { hi: 'उपकरण', en: 'Tools', kn: 'ಉಪಕರಣ' },
+    };
+    return map[cat]?.[currentLang] || map[cat]?.hi || cat;
+  }
+
+  function setCategory(cat, btn) {
+    activeCategory = cat;
+    document.querySelectorAll('.shop-filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    // Update section heading
+    const headings = {
+      all:        { hi: 'सभी उत्पाद', en: 'All Products', kn: 'ಎಲ್ಲಾ ಉತ್ಪನ್ನಗಳು' },
+      seeds:      { hi: '🌱 बीज', en: '🌱 Seeds', kn: '🌱 ಬೀಜ' },
+      fertilizer: { hi: '🧪 खाद', en: '🧪 Fertilizer', kn: '🧪 ಗೊಬ್ಬರ' },
+      pesticide:  { hi: '🌿 कीटनाशक', en: '🌿 Pesticide', kn: '🌿 ಕೀಟನಾಶಕ' },
+      tools:      { hi: '🔧 उपकरण', en: '🔧 Tools', kn: '🔧 ಉಪಕರಣ' },
+    };
+    const headEl = document.getElementById('section-heading-text');
+    if (headEl) headEl.textContent = headings[cat]?.[currentLang] || headings[cat]?.hi || '';
+
+    renderProducts();
+  }
+
+  function filterProducts() {
+    renderProducts();
+  }
+
+  // ══════════════════════════════════════
+  // CART LOGIC
+  // ══════════════════════════════════════
+  function toggleCart(id, btn) {
+    if (cart[id] > 0) {
+      delete cart[id];
+      showToast(t('toast_removed'));
+    } else {
+      cart[id] = 1;
+      showToast(t('toast_added'));
+    }
+    saveCart();
+    updateCartBadge();
+    // Update just this button without re-rendering entire grid
+    if (btn) {
+      const inCart = cart[id] > 0;
+      btn.textContent = inCart ? t('in_cart') : t('add_cart');
+      btn.classList.toggle('in-cart', inCart);
+    }
+  }
+
+  function openCart() {
+    document.getElementById('cart-overlay').classList.add('open');
+    document.getElementById('cart-drawer').classList.add('open');
+    renderCart();
+  }
+
+  function closeCart() {
+    document.getElementById('cart-overlay').classList.remove('open');
+    document.getElementById('cart-drawer').classList.remove('open');
+  }
+
+  function renderCart() {
+    const wrap = document.getElementById('cart-items-wrap');
+    const footer = document.getElementById('cart-footer');
+    if (!wrap) return;
+
+    const cartItems = PRODUCTS.filter(p => cart[p.id] > 0);
+
+    if (cartItems.length === 0) {
+      wrap.innerHTML = `
+        <div class="cart-empty">
+          <div class="cart-empty-icon">🛒</div>
+          <div class="cart-empty-text">${t('cart_empty_text').replace('\n','<br>')}</div>
+        </div>`;
+      if (footer) footer.style.display = 'none';
+      return;
+    }
+
+    if (footer) footer.style.display = 'block';
+
+    wrap.innerHTML = cartItems.map(p => `
+      <div class="cart-item">
+        <div class="cart-item-emoji">${p.emoji}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${getProductName(p)}</div>
+          <div class="cart-item-price">₹${p.price} × ${cart[p.id]} = ₹${p.price * cart[p.id]}</div>
+          <div class="cart-qty-row">
+            <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
+            <span class="qty-val">${cart[p.id]}</span>
+            <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
+          </div>
+        </div>
+        <button class="cart-item-del" onclick="removeFromCart(${p.id})" title="Remove">🗑️</button>
+      </div>
+    `).join('');
+
+    // Footer totals
+    const totalEl = document.getElementById('cart-total-val');
+    if (totalEl) totalEl.textContent = `₹${cartTotal().toLocaleString('en-IN')}`;
+
+    const savingsEl = document.getElementById('cart-savings-text');
+    const savings = cartSavings();
+    if (savingsEl) {
+      savingsEl.textContent = savings > 0 ? `${t('savings_text')} ₹${savings.toLocaleString('en-IN')}` : '';
+    }
+  }
+
+  function changeQty(id, delta) {
+    cart[id] = (cart[id] || 0) + delta;
+    if (cart[id] <= 0) delete cart[id];
+    saveCart();
+    updateCartBadge();
+    renderCart();
+    renderProducts(); // refresh button states
+  }
+
+  function removeFromCart(id) {
+    delete cart[id];
+    saveCart();
+    updateCartBadge();
+    renderCart();
+    renderProducts();
+    showToast(t('toast_removed'));
+  }
+
+  function clearCart() {
+    cart = {};
+    saveCart();
+    updateCartBadge();
+    renderCart();
+    renderProducts();
+    showToast(t('toast_cleared'));
+  }
+
+  function checkout() {
+    cart = {};
+    saveCart();
+    updateCartBadge();
+    closeCart();
+    renderProducts();
+    showToast(t('toast_checkout'), 3500);
+  }
+
+  // ══════════════════════════════════════
+  // TOAST
+  // ══════════════════════════════════════
+  let _toastTimer = null;
+  function showToast(msg, dur = 2200) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+  }
+
+  // ══════════════════════════════════════
+  // INIT
+  // ══════════════════════════════════════
+  document.addEventListener('DOMContentLoaded', () => {
+    setLang(currentLang);
+    renderProducts();
+    updateCartBadge();
+  });
+</script>
+</body>
+</html>

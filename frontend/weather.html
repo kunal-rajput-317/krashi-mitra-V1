@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>🌤️ मौसम | KrashiMitra</title>
+  <meta name="description" content="उत्तर प्रदेश के जिलों का लाइव मौसम और कृषि सलाह — KrashiMitra पर देखें।" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://krashimitra.in/weather.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="मौसम — KrashiMitra" />
+  <meta property="og:description" content="उत्तर प्रदेश के जिलों का लाइव मौसम और कृषि सलाह।" />
+  <meta property="og:url" content="https://krashimitra.in/weather.html" />
+  <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════
+       CSS VARIABLES & RESET
+    ══════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&display=swap');
+
+    :root {
+      --green-dark:    #1a3c2e;
+      --green-mid:     #2d6a4f;
+      --green-light:   #52b788;
+      --green-pale:    #d8f3dc;
+      --amber:         #e9a825;
+      --amber-light:   #fef3c7;
+      --soil:          #7c4f2f;
+      --cream:         #faf7f2;
+      --white:         #ffffff;
+      --text-dark:     #1a2e1e;
+      --text-mid:      #4a6355;
+      --text-light:    #8aab96;
+      --border:        #ddeee4;
+      --shadow:        0 4px 24px rgba(26,60,46,0.10);
+      --shadow-lg:     0 8px 40px rgba(26,60,46,0.16);
+      --radius:        14px;
+      --radius-sm:     8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════
+       ANNOUNCEMENT BAR (amber ticker)
+    ══════════════════════════════════════ */
+    .pre-topbar {
+      background: var(--amber);
+      color: #1a2e1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .pre-topbar-sub { display: none; } /* unused */
+    .home-btn { display: none; }       /* unused */
+    .pre-topbar-helpline { opacity: 0.85; white-space: nowrap; }
+    .pre-topbar-cta {
+      background: #1a2e1e;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════
+       TOPBAR — matches KrashiMitra design
+    ══════════════════════════════════════ */
+    .topbar {
+      background: var(--green-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .topbar-logo-icon {
+      font-size: 26px;
+      line-height: 1;
+    }
+    .topbar-logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+    .topbar-logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+    .topbar-logo-name span { color: var(--amber); }
+    .topbar-logo-sub {
+      font-size: 9.5px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.5px;
+    }
+
+    /* Desktop nav links — center */
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .tnav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: rgba(255,255,255,0.80);
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tnav-btn:hover {
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+    }
+    .tnav-btn.active {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25) inset;
+    }
+
+    /* Right controls */
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── Language Dropdown Picker ── */
+    .lang-picker {
+      position: relative;
+    }
+    .lang-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 20px;
+      padding: 5px 12px 5px 14px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .lang-picker-btn:hover { background: rgba(255,255,255,0.18); }
+    .lang-picker-btn .lang-chevron {
+      font-size: 9px;
+      opacity: 0.7;
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+    .lang-picker.open .lang-chevron { transform: rotate(180deg); }
+
+    .lang-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #1e4535;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      min-width: 130px;
+      z-index: 200;
+    }
+    .lang-picker.open .lang-dropdown { display: block; }
+
+    .lang-option {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 16px;
+      color: rgba(255,255,255,0.80);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .lang-option:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .lang-option.active {
+      color: var(--amber);
+      background: rgba(233,168,37,0.10);
+    }
+    .lang-option .lang-opt-code {
+      font-size: 11px;
+      opacity: 0.55;
+      font-weight: 600;
+      min-width: 22px;
+    }
+
+    /* Search icon button */
+    .topbar-search-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.20);
+      color: rgba(255,255,255,0.80);
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .topbar-search-btn:hover { background: rgba(255,255,255,0.18); }
+
+    /* Avatar / profile btn */
+    .topbar-avatar-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      color: #fff;
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════
+       MAIN CONTENT AREA
+    ══════════════════════════════════════ */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 32px;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ══════════════════════════════════════
+       DISTRICT SELECTOR ROW
+    ══════════════════════════════════════ */
+    .wx-selector-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    #weather-district {
+      flex: 1;
+      min-width: 200px;
+      font-size: 15px;
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--text-dark);
+      min-height: 46px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      appearance: auto;
+      box-shadow: var(--shadow);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #weather-district:focus { border-color: var(--green-mid); }
+
+    .wx-age-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green-pale);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 12px;
+      color: var(--text-mid);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    /* ══════════════════════════════════════
+       WEATHER TAB — Industry Grade Design
+    ══════════════════════════════════════ */
+
+    /* ── Outer wrapper ── */
+    .wx-shell {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      min-height: 300px;
+    }
+    /* ── Dynamic ambient background ── */
+    .wx-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, #0f2027 0%, #203a43 45%, #2c5364 100%);
+      z-index: 0;
+      transition: background 1.2s ease;
+    }
+    .wx-bg.sunny   { background: linear-gradient(160deg, #e8a020 0%, #f7941d 40%, #ff6f00 100%); }
+    .wx-bg.clear   { background: linear-gradient(160deg, #1565c0 0%, #1976d2 50%, #42a5f5 100%); }
+    .wx-bg.cloudy  { background: linear-gradient(160deg, #37474f 0%, #546e7a 50%, #78909c 100%); }
+    .wx-bg.rain    { background: linear-gradient(160deg, #1a237e 0%, #283593 45%, #3949ab 100%); }
+    .wx-bg.haze    { background: linear-gradient(160deg, #4e342e 0%, #6d4c41 45%, #8d6e63 100%); }
+    .wx-bg.fog     { background: linear-gradient(160deg, #455a64 0%, #607d8b 50%, #90a4ae 100%); }
+    .wx-bg.storm   { background: linear-gradient(160deg, #1a1a2e 0%, #16213e 45%, #0f3460 100%); }
+    .wx-bg.cold    { background: linear-gradient(160deg, #0d47a1 0%, #1565c0 45%, #b3e5fc 100%); }
+    .wx-bg.hot     { background: linear-gradient(160deg, #b71c1c 0%, #e53935 45%, #ff8a65 100%); }
+
+    /* Decorative orbs */
+    .wx-orb {
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 65%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .wx-orb2 {
+      position: absolute;
+      bottom: -80px; left: -40px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 65%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ── Inner content layer ── */
+    .wx-content {
+      position: relative;
+      z-index: 2;
+      padding: 28px 24px 24px;
+      color: white;
+    }
+
+    /* ── Location row ── */
+    .wx-location-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .wx-location {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.75;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .wx-updated {
+      font-size: 11px;
+      opacity: 0.5;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Hero row: big temp + icon ── */
+    .wx-hero {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin: 4px 0 6px;
+    }
+    .wx-temp-big {
+      font-family: 'Playfair Display', serif;
+      font-size: 88px;
+      font-weight: 700;
+      line-height: 0.9;
+      letter-spacing: -4px;
+    }
+    .wx-temp-big sup {
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: 0;
+      opacity: 0.7;
+      vertical-align: super;
+    }
+    .wx-feels {
+      font-size: 13px;
+      opacity: 0.6;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+    .wx-icon-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .wx-icon-wrap img {
+      width: 88px; height: 88px;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+      animation: wx-float 4s ease-in-out infinite;
+    }
+    .wx-icon-wrap .wx-icon-emoji {
+      font-size: 72px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.3));
+      animation: wx-float 4s ease-in-out infinite;
+    }
+    @keyframes wx-float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-7px); }
+    }
+    .wx-condition-text {
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0.9;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    /* ── Divider ── */
+    .wx-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.12);
+      margin: 16px 0;
+    }
+
+    /* ── Stats row — glassmorphism pills ── */
+    .wx-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .wx-stat {
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 12px 8px;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .wx-stat:hover { background: rgba(255,255,255,0.16); }
+    .wx-stat-icon { font-size: 20px; margin-bottom: 4px; display: block; }
+    .wx-stat-val  { font-size: 17px; font-weight: 700; line-height: 1; display: block; }
+    .wx-stat-lbl  { font-size: 9px; opacity: 0.55; text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; display: block; }
+
+    /* ── Rainfall badge ── */
+    .wx-rain-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(100,160,255,0.25);
+      border: 1px solid rgba(100,160,255,0.4);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #a8d8ff;
+      margin-top: 12px;
+    }
+
+    /* ── Stale warning ── */
+    .wx-stale-bar {
+      background: rgba(245,158,11,0.18);
+      border: 1px solid rgba(245,158,11,0.35);
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 12px;
+      color: #fde68a;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    /* ── Farming Advisory Card ── */
+    .wx-advisory {
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .wx-advisory-sunny  { background: linear-gradient(135deg, #fff8e1, #ffe082); border: 1.5px solid #ffc107; }
+    .wx-advisory-rain   { background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: 1.5px solid #64b5f6; }
+    .wx-advisory-cold   { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border: 1.5px solid #81c784; }
+    .wx-advisory-hot    { background: linear-gradient(135deg, #fbe9e7, #ffccbc); border: 1.5px solid #ff7043; }
+    .wx-advisory-wind   { background: linear-gradient(135deg, #f3e5f5, #e1bee7); border: 1.5px solid #ba68c8; }
+    .wx-advisory-humid  { background: linear-gradient(135deg, #e0f7fa, #b2ebf2); border: 1.5px solid #4dd0e1; }
+    .wx-advisory-good   { background: linear-gradient(135deg, #f1f8e9, #dcedc8); border: 1.5px solid #aed581; }
+    .wx-advisory::after {
+      content: attr(data-emoji);
+      position: absolute;
+      right: 16px; bottom: 10px;
+      font-size: 48px;
+      opacity: 0.12;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .wx-advisory-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.4);
+      margin-bottom: 6px;
+    }
+    .wx-advisory-text {
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a2e1e;
+      line-height: 1.65;
+    }
+
+    /* ── Footer meta ── */
+    .wx-footer-meta {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-light);
+      padding: 4px 0 2px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Loading shimmer ── */
+    .wx-shimmer {
+      background: linear-gradient(90deg, #e8f0eb 25%, #d4e6da 50%, #e8f0eb 75%);
+      background-size: 200% 100%;
+      animation: wx-shimmer 1.4s infinite;
+      border-radius: 20px;
+      height: 260px;
+      margin-bottom: 14px;
+    }
+    @keyframes wx-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ══════════════════════════════════════
+       BOTTOM NAVIGATION (Mobile Only)
+    ══════════════════════════════════════ */
+    .bottom-nav { display: none; }
+
+    /* ══════════════════════════════════════
+       COPYRIGHT FOOTER
+    ══════════════════════════════════════ */
+    .site-footer {
+      background: var(--green-dark);
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      padding: 16px 24px;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+    .site-footer a {
+      color: var(--green-light);
+      text-decoration: none;
+    }
+    .site-footer a:hover { text-decoration: underline; }
+    .site-footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ══════════════════════════════════════
+       MOBILE — max-width 1024px
+    ══════════════════════════════════════ */
+    @media screen and (max-width: 1024px) {
+      /* Hide desktop nav on mobile */
+      .topbar-nav { display: none; }
+      .topbar-search-btn { display: none; }
+      .topbar-avatar-btn { display: none; }
+      .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
+
+      .topbar {
+        padding: 0 12px;
+        height: 54px;
+      }
+      .topbar-logo-name { font-size: 15px; }
+      .topbar-logo-sub { display: none; }
+
+      /* Lang picker on mobile — dropdown opens downward same way */
+      .lang-dropdown {
+        right: 0;
+        left: auto;
+      }
+
+      .main-content {
+        padding: 14px 12px 90px;
+      }
+
+      .wx-temp-big { font-size: 72px; letter-spacing: -3px; }
+      .wx-icon-wrap img, .wx-icon-wrap .wx-icon-emoji { width: 68px; height: 68px; font-size: 60px; }
+      .wx-content { padding: 22px 18px 18px; }
+      .wx-advisory-text { font-size: 14px; }
+      .wx-stats { grid-template-columns: repeat(3, 1fr); }
+
+      /* ── Bottom Nav ── */
+      .bottom-nav {
+        display: block;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--green-dark);
+        box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom, 6px);
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      .bottom-nav-items {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        padding: 0 4px;
+        gap: 2px;
+      }
+      .bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        padding: 6px 2px;
+        text-decoration: none;
+        gap: 3px;
+      }
+      .bnav-icon {
+        font-size: 20px;
+        line-height: 1;
+        color: rgba(255,255,255,0.55);
+        transition: color 0.18s;
+      }
+      .bnav-label {
+        font-size: 10px;
+        font-weight: 600;
+        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+        color: rgba(255,255,255,0.55);
+        white-space: nowrap;
+        transition: color 0.18s;
+      }
+      .bottom-nav-item.active .bnav-icon,
+      .bottom-nav-item.active .bnav-label {
+        color: var(--amber);
+      }
+
+      /* Hide site footer on mobile */
+      .site-footer { display: none; }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ══ ANNOUNCEMENT BAR ══ -->
+<div class="pre-topbar">
+  <span class="pre-topbar-helpline">🌾 किसान helpline: +91 9870951001 — निःशुल्क कृषि सलाह</span>
+  <a href="chat.html" class="pre-topbar-cta">AI से पूछें →</a>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
+      <span class="topbar-logo-icon">🌾</span>
+      <div class="topbar-logo-text">
+        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
+        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Desktop center nav -->
+  <nav class="topbar-nav">
+    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
+    <a class="tnav-btn active" href="weather.html">🌤️ <span data-t="nav_weather">मौसम</span></a>
+    <a class="tnav-btn" href="mandi.html">🏪 <span data-t="nav_mandi">मंडी</span></a>
+    <a class="tnav-btn" href="articles.html">📰 लेख</a>
+    <a class="tnav-btn" href="chat.html">💬 सहायता</a>
+  </nav>
+
+  <div class="topbar-right">
+    <!-- Unified language picker — works on both desktop & mobile -->
+    <div class="lang-picker" id="lang-picker">
+      <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
+        <span id="lang-picker-label">हिं</span>
+        <span class="lang-chevron">▾</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown">
+        <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
+          <span class="lang-opt-code">हिं</span> हिंदी
+        </button>
+        <button class="lang-option" id="opt-en" onclick="pickLang('en')">
+          <span class="lang-opt-code">EN</span> English
+        </button>
+        <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
+          <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
+        </button>
+      </div>
+    </div>
+    <button class="topbar-search-btn" title="Search">🔍</button>
+    <div class="topbar-avatar-btn">👤</div>
+  </div>
+</div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content">
+
+  <!-- District selector + age pill -->
+  <div class="wx-selector-row">
+    <select id="weather-district" onchange="fetchWeather()">
+      <optgroup label="── Agra Division ──">
+        <option value="Agra">Agra</option><option value="Firozabad">Firozabad</option>
+        <option value="Mainpuri">Mainpuri</option><option value="Mathura">Mathura</option>
+      </optgroup>
+      <optgroup label="── Aligarh Division ──">
+        <option value="Aligarh">Aligarh</option><option value="Etah">Etah</option>
+        <option value="Hathras">Hathras</option><option value="Kasganj">Kasganj</option>
+      </optgroup>
+      <optgroup label="── Prayagraj Division ──">
+        <option value="Prayagraj">Prayagraj</option><option value="Fatehpur">Fatehpur</option>
+        <option value="Kaushambi">Kaushambi</option><option value="Pratapgarh">Pratapgarh</option>
+      </optgroup>
+      <optgroup label="── Ayodhya Division ──">
+        <option value="Ayodhya">Ayodhya</option><option value="Ambedkar Nagar">Ambedkar Nagar</option>
+        <option value="Amethi">Amethi</option><option value="Barabanki">Barabanki</option>
+        <option value="Sultanpur">Sultanpur</option>
+      </optgroup>
+      <optgroup label="── Azamgarh Division ──">
+        <option value="Azamgarh">Azamgarh</option><option value="Ballia">Ballia</option>
+        <option value="Mau">Mau</option>
+      </optgroup>
+      <optgroup label="── Bareilly Division ──">
+        <option value="Bareilly">Bareilly</option><option value="Badaun">Badaun</option>
+        <option value="Pilibhit">Pilibhit</option><option value="Shahjahanpur">Shahjahanpur</option>
+      </optgroup>
+      <optgroup label="── Basti Division ──">
+        <option value="Basti">Basti</option><option value="Sant Kabir Nagar">Sant Kabir Nagar</option>
+        <option value="Siddharthnagar">Siddharthnagar</option>
+      </optgroup>
+      <optgroup label="── Chitrakoot Division ──">
+        <option value="Banda">Banda</option><option value="Chitrakoot">Chitrakoot</option>
+        <option value="Hamirpur">Hamirpur</option><option value="Mahoba">Mahoba</option>
+      </optgroup>
+      <optgroup label="── Devipatan Division ──">
+        <option value="Bahraich">Bahraich</option><option value="Balrampur">Balrampur</option>
+        <option value="Gonda">Gonda</option><option value="Shravasti">Shravasti</option>
+      </optgroup>
+      <optgroup label="── Gorakhpur Division ──">
+        <option value="Gorakhpur">Gorakhpur</option><option value="Deoria">Deoria</option>
+        <option value="Kushinagar">Kushinagar</option><option value="Maharajganj">Maharajganj</option>
+      </optgroup>
+      <optgroup label="── Jhansi Division ──">
+        <option value="Jhansi">Jhansi</option><option value="Jalaun">Jalaun</option>
+        <option value="Lalitpur">Lalitpur</option>
+      </optgroup>
+      <optgroup label="── Kanpur Division ──">
+        <option value="Kanpur Nagar">Kanpur Nagar</option><option value="Kanpur Dehat">Kanpur Dehat</option>
+        <option value="Etawah">Etawah</option><option value="Farrukhabad">Farrukhabad</option>
+        <option value="Auraiya">Auraiya</option><option value="Kannauj">Kannauj</option>
+      </optgroup>
+      <optgroup label="── Lucknow Division ──">
+        <option value="Lucknow" selected>Lucknow</option><option value="Hardoi">Hardoi</option>
+        <option value="Lakhimpur Kheri">Lakhimpur Kheri</option><option value="Raebareli">Raebareli</option>
+        <option value="Sitapur">Sitapur</option><option value="Unnao">Unnao</option>
+      </optgroup>
+      <optgroup label="── Meerut Division ──">
+        <option value="Meerut">Meerut</option><option value="Baghpat">Baghpat</option>
+        <option value="Bulandshahr">Bulandshahr</option><option value="Ghaziabad">Ghaziabad</option>
+        <option value="Gautam Buddha Nagar">Gautam Buddha Nagar</option><option value="Hapur">Hapur</option>
+      </optgroup>
+      <optgroup label="── Mirzapur Division ──">
+        <option value="Mirzapur">Mirzapur</option><option value="Bhadohi">Bhadohi</option>
+        <option value="Sonbhadra">Sonbhadra</option>
+      </optgroup>
+      <optgroup label="── Moradabad Division ──">
+        <option value="Moradabad">Moradabad</option><option value="Amroha">Amroha</option>
+        <option value="Bijnor">Bijnor</option><option value="Rampur">Rampur</option>
+        <option value="Sambhal">Sambhal</option>
+      </optgroup>
+      <optgroup label="── Saharanpur Division ──">
+        <option value="Saharanpur">Saharanpur</option><option value="Muzaffarnagar">Muzaffarnagar</option>
+        <option value="Shamli">Shamli</option>
+      </optgroup>
+      <optgroup label="── Varanasi Division ──">
+        <option value="Varanasi">Varanasi</option><option value="Chandauli">Chandauli</option>
+        <option value="Jaunpur">Jaunpur</option><option value="Ghazipur">Ghazipur</option>
+      </optgroup>
+    </select>
+    <div class="wx-age-pill" id="wx-age-pill">🕐 --</div>
+  </div>
+
+  <!-- Weather result area -->
+  <div id="weather-result">
+    <div class="wx-shimmer"></div>
+    <div class="wx-shimmer" style="height:100px; margin-bottom:14px; opacity:0.5;"></div>
+  </div>
+
+</div><!-- /.main-content -->
+
+<!-- ══ BOTTOM NAV (Mobile) ══ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-items">
+    <a class="bottom-nav-item" href="index.html">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">मुख्य</span>
+    </a>
+    <a class="bottom-nav-item" href="chat.html">
+      <span class="bnav-icon">💬</span>
+      <span class="bnav-label" data-t="nav_chat">Chat</span>
+    </a>
+    <a class="bottom-nav-item active" href="weather.html">
+      <span class="bnav-icon">🌤️</span>
+      <span class="bnav-label" data-t="nav_weather">मौसम</span>
+    </a>
+    <a class="bottom-nav-item" href="mandi.html">
+      <span class="bnav-icon">🏪</span>
+      <span class="bnav-label" data-t="nav_mandi">मंडी</span>
+    </a>
+    <a class="bottom-nav-item" href="articles.html">
+      <span class="bnav-icon">📰</span>
+      <span class="bnav-label">लेख</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ══ COPYRIGHT FOOTER ══ -->
+<footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="index.html">Home</a>
+    <a href="chat.html">AI Advisor</a>
+    <a href="weather.html">Weather</a>
+    <a href="mandi.html">Mandi</a>
+    <a href="shop.html">Shop</a>
+  </div>
+  <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; All rights reserved.</div>
+</footer>
+
+<script>
+  // ══════════════════════════════════════
+  // TRANSLATIONS — Hindi / English / Kannada
+  // ══════════════════════════════════════
+  const TRANSLATIONS = {
+    hi: {
+      title:       "मौसम — Weather",
+      nav_chat:    "AI से पूछे",
+      nav_weather: "मौसम",
+      nav_mandi:   "मंडी",
+      nav_shop:    "खाद",
+      loading:     "लोड हो रहा है...",
+      advisory_label: "🌾 कृषि सलाह — Farming Advisory",
+      feels:       "महसूस",
+      humidity:    "आर्द्रता",
+      wind_unit:   "km/h हवा",
+      feels_lbl:   "महसूस",
+      rainfall:    "वर्षा",
+      stale_msg:   "डेटा पुराना हो सकता है — अगला अपडेट जल्द होगा।",
+      footer_meta: "मौसम हर 8 घंटे में अपडेट होता है · कृषि मित्र",
+      error_server:"सर्वर से connect नहीं हो पाया।",
+      error_sub:   "FastAPI server चालू करें।",
+      unavailable: "⚠️ अनुपलब्ध",
+    },
+    en: {
+      title:       "Weather Forecast",
+      nav_chat:    "AI Advisor",
+      nav_weather: "Weather",
+      nav_mandi:   "Mandi",
+      nav_shop:    "Shop",
+      loading:     "Loading...",
+      advisory_label: "🌾 Farming Advisory",
+      feels:       "Feels like",
+      humidity:    "Humidity",
+      wind_unit:   "km/h Wind",
+      feels_lbl:   "Feels",
+      rainfall:    "Rainfall",
+      stale_msg:   "Data may be old — next update coming soon.",
+      footer_meta: "Weather updates every 8 hours · KrashiMitra",
+      error_server:"Could not connect to server.",
+      error_sub:   "Please ensure the server is running.",
+      unavailable: "⚠️ Unavailable",
+    },
+    kn: {
+      title:       "ಹವಾಮಾನ — Weather",
+      nav_chat:    "AI ಕೇಳಿ",
+      nav_weather: "ಹವಾಮಾನ",
+      nav_mandi:   "ಮಂಡಿ",
+      nav_shop:    "ಗೊಬ್ಬರ",
+      loading:     "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+      advisory_label: "🌾 ಕೃಷಿ ಸಲಹೆ — Farming Advisory",
+      feels:       "ಅನಿಸಿಕೆ",
+      humidity:    "ತೇವಾಂಶ",
+      wind_unit:   "km/h ಗಾಳಿ",
+      feels_lbl:   "ಅನಿಸಿಕೆ",
+      rainfall:    "ಮಳೆ",
+      stale_msg:   "ಡೇಟಾ ಹಳೆಯದಾಗಿರಬಹುದು — ಮುಂದಿನ ಅಪ್‌ಡೇಟ್ ಶೀಘ್ರದಲ್ಲೇ.",
+      footer_meta: "ಹವಾಮಾನ ಪ್ರತಿ 8 ಗಂಟೆಗೆ ಅಪ್‌ಡೇಟ್ ಆಗುತ್ತದೆ · ಕೃಷಿ ಮಿತ್ರ",
+      error_server:"ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಲಿಲ್ಲ.",
+      error_sub:   "ದಯವಿಟ್ಟು ಸರ್ವರ್ ಚಾಲು ಮಾಡಿ.",
+      unavailable: "⚠️ ಲಭ್ಯವಿಲ್ಲ",
+    }
+  };
+
+  const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
+
+  let currentLang = localStorage.getItem('km_lang') || 'hi';
+
+  function toggleLangPicker(e) {
+    e.stopPropagation();
+    document.getElementById('lang-picker').classList.toggle('open');
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    document.getElementById('lang-picker').classList.remove('open');
+  });
+
+  function pickLang(lang) {
+    document.getElementById('lang-picker').classList.remove('open');
+    setLang(lang);
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('km_lang', lang);
+
+    // Update picker button label
+    const lbl = document.getElementById('lang-picker-label');
+    if (lbl) lbl.textContent = LANG_LABELS[lang] || lang.toUpperCase();
+
+    // Update dropdown active state
+    ['hi','en','kn'].forEach(l => {
+      const opt = document.getElementById(`opt-${l}`);
+      if (opt) opt.classList.toggle('active', l === lang);
+    });
+
+    // Apply translations to [data-t] elements
+    const t = TRANSLATIONS[lang] || TRANSLATIONS.hi;
+    document.querySelectorAll('[data-t]').forEach(el => {
+      const key = el.getAttribute('data-t');
+      if (t[key]) el.textContent = t[key];
+    });
+
+    // Re-render weather with new lang if data available
+    if (window._lastWeatherData) renderWeather(window._lastWeatherData);
+  }
+
+  function t(key) {
+    return (TRANSLATIONS[currentLang] || TRANSLATIONS.hi)[key] || key;
+  }
+
+  // ══════════════════════════════════════
+  // WEATHER LOGIC (copied from chat.html)
+  // ══════════════════════════════════════
+  function _wxBgClass(condition, temp) {
+    const c = (condition || "").toLowerCase();
+    if (c.includes("thunder") || c.includes("storm"))  return "storm";
+    if (c.includes("rain") || c.includes("drizzle"))   return "rain";
+    if (c.includes("snow"))                             return "cold";
+    if (c.includes("fog") || c.includes("mist"))       return "fog";
+    if (c.includes("haze") || c.includes("smoke") || c.includes("dust")) return "haze";
+    if (c.includes("cloud") || c.includes("overcast")) return "cloudy";
+    if (temp > 38)                                      return "hot";
+    if (temp < 10)                                      return "cold";
+    if (c.includes("clear") || c.includes("sunny"))    return "sunny";
+    return "clear";
+  }
+
+  function _wxIconEmoji(condition) {
+    const c = (condition || "").toLowerCase();
+    if (c.includes("thunder"))  return "⛈️";
+    if (c.includes("storm"))    return "🌩️";
+    if (c.includes("drizzle"))  return "🌦️";
+    if (c.includes("rain"))     return "🌧️";
+    if (c.includes("snow"))     return "❄️";
+    if (c.includes("fog"))      return "🌫️";
+    if (c.includes("mist"))     return "🌫️";
+    if (c.includes("haze"))     return "🌫️";
+    if (c.includes("dust"))     return "💨";
+    if (c.includes("cloud"))    return "☁️";
+    if (c.includes("overcast")) return "🌥️";
+    if (c.includes("clear"))    return "☀️";
+    if (c.includes("sunny"))    return "🌞";
+    return "🌤️";
+  }
+
+  function _wxAdvisoryClass(tip) {
+    const tl = (tip || "").toLowerCase();
+    if (tl.includes("बारिश") || tl.includes("वर्षा") || tl.includes("rain"))    return ["wx-advisory-rain",  "🌧️"];
+    if (tl.includes("गर्म")  || tl.includes("गर्मी")  || tl.includes("hot"))     return ["wx-advisory-hot",   "🌡️"];
+    if (tl.includes("ठंड")   || tl.includes("पाल")    || tl.includes("cold"))    return ["wx-advisory-cold",  "❄️"];
+    if (tl.includes("हवा")   || tl.includes("तूफान")  || tl.includes("wind"))    return ["wx-advisory-wind",  "💨"];
+    if (tl.includes("नमी")   || tl.includes("आर्द्र") || tl.includes("humid"))   return ["wx-advisory-humid", "💧"];
+    return ["wx-advisory-good", "✅"];
+  }
+
+  function renderWeather(json) {
+    const result  = document.getElementById("weather-result");
+    const agePill = document.getElementById("wx-age-pill");
+
+    if (!json.success) {
+      result.innerHTML = `
+        <div style="text-align:center; padding:48px 20px;">
+          <div style="font-size:52px; margin-bottom:14px;">🌐</div>
+          <div style="font-family:'Noto Sans Devanagari',sans-serif;font-size:15px;color:var(--text-mid);line-height:1.7;">
+            ${json.message || t('error_server')}
+          </div>
+        </div>`;
+      if (agePill) agePill.textContent = t('unavailable');
+      return;
+    }
+
+    const d = json.data;
+
+    // Age pill
+    if (agePill) {
+      if (d.data_age_minutes != null) {
+        const h = Math.floor(d.data_age_minutes / 60);
+        const m = d.data_age_minutes % 60;
+        agePill.innerHTML = h > 0 ? `🕐 ${h}h ${m}m` : `🕐 ${m} min`;
+      } else {
+        agePill.textContent = "🕐 Now";
+      }
+    }
+
+    const bgClass   = _wxBgClass(d.weather_condition, d.temperature);
+    const emoji     = _wxIconEmoji(d.weather_condition);
+    const tempInt   = Math.round(d.temperature);
+    const feelsInt  = Math.round(d.feels_like);
+    const windKmh   = (d.wind_speed * 3.6).toFixed(1);
+    const [advClass, advEmoji] = _wxAdvisoryClass(d.farming_tip);
+
+    const staleHTML = (d.is_stale || json.message)
+      ? `<div class="wx-stale-bar">⚠️ <span>${json.message || t('stale_msg')}</span></div>`
+      : "";
+
+    const rainHTML = (d.rainfall && d.rainfall > 0)
+      ? `<div class="wx-rain-badge">🌧️ ${t('rainfall')} &nbsp;${d.rainfall.toFixed(1)} mm/h</div>`
+      : "";
+
+    const iconHTML = d.icon_url
+      ? `<img src="${d.icon_url}" alt="${d.weather_condition}" onerror="this.outerHTML='<span class=wx-icon-emoji>${emoji}</span>'">`
+      : `<span class="wx-icon-emoji">${emoji}</span>`;
+
+    result.innerHTML = `
+      ${staleHTML}
+      <div class="wx-shell">
+        <div class="wx-bg ${bgClass}"></div>
+        <div class="wx-orb"></div>
+        <div class="wx-orb2"></div>
+        <div class="wx-content">
+          <div class="wx-location-row">
+            <div class="wx-location">📍 ${d.district} · उत्तर प्रदेश</div>
+            <div class="wx-updated">${d.fetched_at || ""}</div>
+          </div>
+          <div class="wx-hero">
+            <div class="wx-temp-block">
+              <div class="wx-temp-big">${tempInt}<sup>°C</sup></div>
+              <div class="wx-feels">${t('feels')}: ${feelsInt}°C</div>
+              ${rainHTML}
+            </div>
+            <div class="wx-icon-wrap">
+              ${iconHTML}
+              <div class="wx-condition-text">${d.weather_condition}</div>
+            </div>
+          </div>
+          <div class="wx-divider"></div>
+          <div class="wx-stats">
+            <div class="wx-stat">
+              <span class="wx-stat-icon">💧</span>
+              <span class="wx-stat-val">${d.humidity}%</span>
+              <span class="wx-stat-lbl">${t('humidity')}</span>
+            </div>
+            <div class="wx-stat">
+              <span class="wx-stat-icon">💨</span>
+              <span class="wx-stat-val">${windKmh}</span>
+              <span class="wx-stat-lbl">${t('wind_unit')}</span>
+            </div>
+            <div class="wx-stat">
+              <span class="wx-stat-icon">🌡️</span>
+              <span class="wx-stat-val">${feelsInt}°</span>
+              <span class="wx-stat-lbl">${t('feels_lbl')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wx-advisory ${advClass}" data-emoji="${advEmoji}">
+        <div class="wx-advisory-label">${t('advisory_label')}</div>
+        <div class="wx-advisory-text">${d.farming_tip}</div>
+      </div>
+
+      <div class="wx-footer-meta">${t('footer_meta')}</div>
+    `;
+  }
+
+  async function fetchWeather() {
+    const district = document.getElementById("weather-district").value;
+    const result   = document.getElementById("weather-result");
+    const agePill  = document.getElementById("wx-age-pill");
+
+    result.innerHTML = `
+      <div class="wx-shimmer"></div>
+      <div class="wx-shimmer" style="height:100px; margin-bottom:14px; opacity:0.5;"></div>`;
+    if (agePill) agePill.textContent = `🕐 ${t('loading')}`;
+
+    try {
+      const res  = await fetch(
+        `https://krashi-mitra-v1.onrender.com/weather?district=${encodeURIComponent(district)}`
+      );
+      const json = await res.json();
+      window._lastWeatherData = json;
+      renderWeather(json);
+    } catch (err) {
+      document.getElementById("weather-result").innerHTML = `
+        <div style="text-align:center; padding:48px 20px;">
+          <div style="font-size:52px; margin-bottom:14px;">📡</div>
+          <div style="font-family:'Noto Sans Devanagari',sans-serif;font-size:15px;color:var(--text-mid);line-height:1.7;">
+            ${t('error_server')}<br>
+            <span style="font-size:12px;color:var(--text-light);">${t('error_sub')}</span>
+          </div>
+        </div>`;
+      console.error("fetchWeather:", err);
+    }
+  }
+
+  // ══ INIT ══
+  document.addEventListener('DOMContentLoaded', () => {
+    setLang(currentLang);
+    fetchWeather();
+  });
+</script>
+</body>
+</html>
