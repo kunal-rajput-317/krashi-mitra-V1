@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Help Centre — 🌾कृषि मित्र Helpline</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --sage:    #4A6741;
+      --sage-lt: #6B8F61;
+      --sage-dk: #304529;
+      --wheat:   #C8A96E;
+      --wheat-lt:#EDD9A3;
+      --cream:   #FAF6EE;
+      --parchment:#F0E8D5;
+      --soil:    #5C3D2E;
+      --sky:     #D4E8C2;
+      --mist:    #EAF2E3;
+      --text:    #2C3A22;
+      --text-lt: #5A6B4F;
+      --white:   #FFFFFF;
+      --border:  #D8E4CC;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── SUBTLE GRAIN ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999; opacity: 0.5;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--sage-dk);
+      padding: 0 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo {
+      font-family: 'Lora', serif;
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--wheat-lt);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+      letter-spacing: 0.01em;
+    }
+    .logo-leaf { font-size: 1.1rem; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--wheat-lt); }
+    .nav-call {
+      background: var(--wheat);
+      color: var(--sage-dk) !important;
+      padding: 8px 18px; border-radius: 20px;
+      font-weight: 600 !important;
+      font-size: 0.82rem !important;
+    }
+    .nav-call:hover { background: var(--wheat-lt) !important; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(160deg, var(--sage-dk) 0%, var(--sage) 55%, var(--sage-lt) 100%);
+      padding: 80px 52px 0;
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px;
+      align-items: end;
+    }
+    /* Decorative field lines */
+    .hero::before {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 120px;
+      background: var(--cream);
+      clip-path: ellipse(58% 100% at 50% 100%);
+    }
+    .hero-text { padding-bottom: 80px; position: relative; z-index: 1; }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(200,169,110,0.2);
+      border: 1px solid rgba(200,169,110,0.35);
+      color: var(--wheat-lt);
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 14px; border-radius: 20px;
+      margin-bottom: 22px;
+      animation: rise 0.7s ease both;
+    }
+    .hero h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 700; line-height: 1.2;
+      color: var(--white);
+      margin-bottom: 18px;
+      animation: rise 0.7s 0.1s ease both;
+    }
+    .hero h1 em { font-style: italic; color: var(--wheat-lt); }
+    .hero p {
+      font-size: 1rem; font-weight: 300;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7; max-width: 480px;
+      animation: rise 0.7s 0.2s ease both;
+    }
+    .hero-search {
+      margin-top: 34px;
+      display: flex; gap: 0;
+      max-width: 440px;
+      animation: rise 0.7s 0.3s ease both;
+    }
+    .hero-search input {
+      flex: 1;
+      padding: 13px 18px;
+      border: none; border-radius: 10px 0 0 10px;
+      background: rgba(255,255,255,0.12);
+      color: var(--white);
+      font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+      outline: none;
+      backdrop-filter: blur(6px);
+    }
+    .hero-search input::placeholder { color: rgba(255,255,255,0.4); }
+    .hero-search button {
+      padding: 13px 22px;
+      background: var(--wheat);
+      color: var(--sage-dk);
+      border: none; border-radius: 0 10px 10px 0;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .hero-search button:hover { background: var(--wheat-lt); }
+
+    /* Illustrated SVG crop */
+    .hero-art {
+      position: relative; z-index: 1;
+      padding-bottom: 20px;
+      animation: rise 0.9s 0.2s ease both;
+      display: flex; align-items: flex-end;
+    }
+
+    /* ── STAT STRIP ── */
+    .stats {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: center; gap: 0;
+    }
+    .stat {
+      padding: 24px 48px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      flex: 1; max-width: 220px;
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Lora', serif;
+      font-size: 1.9rem; font-weight: 700;
+      color: var(--sage);
+      line-height: 1;
+    }
+    .stat-label {
+      margin-top: 4px;
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--text-lt);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+
+    /* ── SECTIONS ── */
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 52px; }
+    .section { padding: 68px 0; }
+    .section-head { margin-bottom: 40px; }
+    .section-tag {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--sage);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-family: 'Lora', serif;
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
+      font-weight: 700; color: var(--text);
+      line-height: 1.25; letter-spacing: -0.3px;
+    }
+    .section-sub {
+      margin-top: 10px;
+      font-size: 0.93rem; font-weight: 300;
+      color: var(--text-lt); line-height: 1.65;
+    }
+
+    /* ── TOPIC CARDS ── */
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .topic-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 26px 22px;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      display: block;
+    }
+    .topic-card:hover {
+      border-color: var(--sage-lt);
+      box-shadow: 0 6px 24px rgba(74,103,65,0.1);
+      transform: translateY(-2px);
+    }
+    .topic-emoji { font-size: 1.7rem; margin-bottom: 14px; display: block; }
+    .topic-card h3 {
+      font-family: 'Lora', serif;
+      font-size: 0.95rem; font-weight: 600;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .topic-card p {
+      font-size: 0.8rem; font-weight: 300;
+      color: var(--text-lt); line-height: 1.5;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    /* ── FAQ ── */
+    .faq-wrap {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 52px;
+    }
+    /* .faq-sidebar {} */
+    .faq-sidebar-title {
+      font-family: 'Lora', serif;
+      font-size: 0.88rem; font-weight: 700;
+      color: var(--text-lt);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 14px;
+    }
+    .faq-tabs { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .faq-tab {
+      padding: 11px 16px;
+      border-radius: 8px;
+      font-size: 0.87rem; font-weight: 500;
+      color: var(--text-lt);
+      cursor: pointer; border: none;
+      background: transparent; text-align: left;
+      font-family: 'Nunito', sans-serif;
+      transition: background 0.15s, color 0.15s;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .faq-tab:hover { background: var(--mist); color: var(--text); }
+    .faq-tab.active {
+      background: var(--mist);
+      color: var(--sage-dk);
+      font-weight: 700;
+    }
+    .faq-tab .tab-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .faq-tab.active .tab-dot { background: var(--sage); }
+
+    .faq-list { display: flex; flex-direction: column; gap: 8px; }
+    .faq-item {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item.open { border-color: var(--sage-lt); }
+    .faq-q {
+      width: 100%; padding: 18px 22px;
+      background: none; border: none;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.93rem; font-weight: 600;
+      color: var(--text); text-align: left; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      transition: color 0.15s;
+    }
+    .faq-q:hover { color: var(--sage-dk); }
+    .faq-icon {
+      flex-shrink: 0; width: 22px; height: 22px;
+      border-radius: 50%; border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; color: var(--text-lt);
+      transition: transform 0.25s, background 0.2s, border-color 0.2s;
+    }
+    .faq-item.open .faq-icon {
+      transform: rotate(180deg);
+      background: var(--mist); border-color: var(--sage-lt);
+      color: var(--sage);
+    }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.25s;
+      padding: 0 22px;
+      font-size: 0.87rem; font-weight: 400;
+      color: var(--text-lt); line-height: 1.75;
+    }
+    .faq-item.open .faq-a { max-height: 280px; padding: 0 22px 18px; }
+
+    /* ── CONTACT ── */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 18px;
+    }
+    .contact-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 30px 26px;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .contact-card:hover {
+      box-shadow: 0 8px 28px rgba(74,103,65,0.1);
+      transform: translateY(-2px);
+    }
+    .contact-card.green {
+      background: var(--sage-dk);
+      border-color: transparent;
+      color: var(--white);
+    }
+    .contact-card.green .ccard-desc,
+    .contact-card.green .ccard-avail { color: rgba(255,255,255,0.6); }
+    .ccard-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--mist);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 18px;
+    }
+    .contact-card.green .ccard-icon { background: rgba(255,255,255,0.12); }
+    .contact-card h3 {
+      font-family: 'Lora', serif;
+      font-size: 1rem; font-weight: 700; margin-bottom: 6px;
+    }
+    .ccard-desc {
+      font-size: 0.82rem; font-weight: 300;
+      color: var(--text-lt); line-height: 1.55; margin-bottom: 18px;
+    }
+    .ccard-avail {
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--text-lt); margin-bottom: 14px;
+    }
+    .ccard-btn {
+      display: inline-block;
+      padding: 10px 18px; border-radius: 8px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.83rem; font-weight: 700;
+      text-decoration: none;
+      background: var(--mist); color: var(--sage-dk);
+      transition: background 0.2s;
+    }
+    .ccard-btn:hover { background: var(--sky); }
+    .contact-card.green .ccard-btn {
+      background: var(--wheat);
+      color: var(--sage-dk);
+    }
+    .contact-card.green .ccard-btn:hover { background: var(--wheat-lt); }
+
+    /* ── SEASONAL NOTICE ── */
+    .notice-bar {
+      background: var(--parchment);
+      border: 1.5px solid var(--wheat-lt);
+      border-radius: 12px;
+      padding: 18px 24px;
+      display: flex; align-items: flex-start; gap: 14px;
+      margin-bottom: 20px;
+    }
+    .notice-bar .notice-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .notice-bar p {
+      font-size: 0.87rem; font-weight: 400;
+      color: var(--soil); line-height: 1.55;
+    }
+    .notice-bar strong { font-weight: 700; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--sage-dk);
+      padding: 40px 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 18px;
+    }
+    footer p {
+      font-size: 0.8rem; color: rgba(255,255,255,0.35);
+    }
+    .footer-links { display: flex; gap: 24px; list-style: none; }
+    .footer-links a {
+      font-size: 0.8rem; color: rgba(255,255,255,0.35);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--wheat-lt); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width: 860px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 60px 20px 0; }
+      .hero-art { display: none; }
+      .hero::before { display: none; }
+      .hero-text { padding-bottom: 50px; }
+      .wrap { padding: 0 20px; }
+      .faq-wrap { grid-template-columns: 1fr; gap: 24px; }
+      .faq-tabs { flex-direction: row; flex-wrap: wrap; }
+      .stats { flex-wrap: wrap; }
+      .stat { max-width: none; border-right: none; border-bottom: 1px solid var(--border); flex: 1 1 40%; }
+      footer { padding: 28px 20px; flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo"><span class="logo-leaf">🌾</span>कृषि मित्र</a>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">Crop Advisory</a></li>
+    <li><a href="#">Market Prices</a></li>
+    <li><a href="#">Resources</a></li>
+    <li><a href="#contact" class="nav-call">🌾कृषि मित्र 📞Helpline</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-text">
+    <div class="hero-tag">🌾कृषि मित्र Helpline &amp; Support</div>
+    <h1>We're here for<br/><em>every harvest,</em><br/>every question.</h1>
+    <p>KrashMitra's agricultural helpline connects farmers with crop experts, soil scientists, and government scheme advisors — in your language, at your convenience.</p>
+    <div class="hero-search">
+      <input type="text" id="searchInput" placeholder="Search — e.g. 'pest control', 'PM Kisan'…"/>
+      <button onclick="doSearch()">Search</button>
+    </div>
+  </div>
+
+  <!-- Simple SVG illustration -->
+  <div class="hero-art">
+    <svg viewBox="0 0 340 280" width="340" height="280" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- sun -->
+      <circle cx="270" cy="60" r="36" fill="rgba(200,169,110,0.25)"/>
+      <circle cx="270" cy="60" r="22" fill="rgba(200,169,110,0.45)"/>
+      <!-- ground -->
+      <ellipse cx="170" cy="258" rx="150" ry="18" fill="rgba(0,0,0,0.12)"/>
+      <!-- main stalk -->
+      <rect x="166" y="120" width="8" height="138" rx="4" fill="#6B8F61"/>
+      <!-- leaves -->
+      <path d="M170 180 Q130 155 110 130 Q145 148 170 165Z" fill="#4A6741"/>
+      <path d="M170 200 Q210 175 230 148 Q195 170 170 190Z" fill="#6B8F61"/>
+      <path d="M170 155 Q140 130 125 105 Q155 128 170 148Z" fill="#4A6741" opacity="0.8"/>
+      <!-- wheat head -->
+      <ellipse cx="170" cy="108" rx="12" ry="20" fill="#C8A96E"/>
+      <ellipse cx="158" cy="116" rx="8" ry="14" fill="#C8A96E" opacity="0.8"/>
+      <ellipse cx="182" cy="116" rx="8" ry="14" fill="#C8A96E" opacity="0.8"/>
+      <ellipse cx="162" cy="98" rx="6" ry="11" fill="#EDD9A3" opacity="0.7"/>
+      <ellipse cx="178" cy="98" rx="6" ry="11" fill="#EDD9A3" opacity="0.7"/>
+      <!-- small plant left -->
+      <rect x="80" y="200" width="5" height="58" rx="2.5" fill="#6B8F61" opacity="0.7"/>
+      <path d="M82 230 Q60 215 50 200 Q72 218 82 225Z" fill="#4A6741" opacity="0.6"/>
+      <ellipse cx="82" cy="193" rx="8" ry="13" fill="#C8A96E" opacity="0.6"/>
+      <!-- small plant right -->
+      <rect x="252" y="210" width="5" height="48" rx="2.5" fill="#6B8F61" opacity="0.7"/>
+      <path d="M254 238 Q276 223 286 210 Q264 228 254 235Z" fill="#4A6741" opacity="0.6"/>
+      <ellipse cx="254" cy="203" rx="8" ry="12" fill="#C8A96E" opacity="0.6"/>
+      <!-- birds -->
+      <path d="M60 80 Q66 74 72 80" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M88 64 Q94 58 100 64" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-num">loading...</div><div class="stat-label">Farmers Helped</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-label">Languages</div></div>
+  <div class="stat"><div class="stat-num">24×7</div><div class="stat-label">Helpline</div></div>
+  <div class="stat"><div class="stat-num">22+</div><div class="stat-label">Tabs</div></div>
+</div>
+
+<!-- TOPICS -->
+<div class="wrap">
+  <section class="section" id="topics">
+    <div class="section-head">
+      <div class="section-tag">Browse Topics</div>
+      <h2 class="section-title">What can we help you with?</h2>
+      <p class="section-sub">Choose a topic to find guides, expert advice, and government scheme information.</p>
+    </div>
+    <div class="topic-grid">
+      <a href="#faq" class="topic-card"><span class="topic-emoji">🌿</span><h3>Crop Health & Pests</h3><p>Identify diseases, pest outbreaks, and get treatment advice quickly.</p></a>
+      <a href="#faq" class="topic-card"><span class="topic-emoji">💧</span><h3>Irrigation & Water</h3><p>Drip irrigation, water management, and drought preparedness tips.</p></a>
+      <a href="#faq" class="topic-card"><span class="topic-emoji">🌱</span><h3>Soil & Fertilisers</h3><p>Soil testing, organic fertiliser use, and nutrient management.</p></a>
+      <a href="#faq" class="topic-card"><span class="topic-emoji">📜</span><h3>Government Schemes</h3><p>PM-Kisan, KCC, crop insurance — eligibility and application help.</p></a>
+      <a href="#faq" class="topic-card"><span class="topic-emoji">🌦️</span><h3>Weather Advisory</h3><p>Seasonal forecasts, frost warnings, and sowing time guidance.</p></a>
+      <a href="#faq" class="topic-card"><span class="topic-emoji">📈</span><h3>Market & MSP</h3><p>Current mandi prices, MSP rates, and where to sell your produce.</p></a>
+    </div>
+  </section>
+</div>
+
+<div class="divider"></div>
+
+<!-- FAQ -->
+<div class="wrap">
+  <section class="section" id="faq">
+    <div class="section-head">
+      <div class="section-tag">Common Questions</div>
+      <h2 class="section-title">Frequently asked questions</h2>
+      <p class="section-sub">Answers from our agronomy team and field experts.</p>
+    </div>
+
+    <div class="notice-bar">
+      <span class="notice-icon">☀️</span>
+      <p><strong>Kharif Season Advisory:</strong> Our experts are currently receiving high call volumes for soybean and paddy queries. Average wait time is 4 minutes. You can also send a WhatsApp message to get a callback.</p>
+    </div>
+
+    <div class="faq-wrap">
+      <div>
+        <div class="faq-sidebar-title">Categories</div>
+        <ul class="faq-tabs" id="faqTabs">
+          <li><button class="faq-tab active" data-cat="crops"><span class="tab-dot"></span>Crops & Pests</button></li>
+          <li><button class="faq-tab" data-cat="soil"><span class="tab-dot"></span>Soil & Nutrients</button></li>
+          <li><button class="faq-tab" data-cat="schemes"><span class="tab-dot"></span>Govt Schemes</button></li>
+          <li><button class="faq-tab" data-cat="market"><span class="tab-dot"></span>Market Prices</button></li>
+          <li><button class="faq-tab" data-cat="account"><span class="tab-dot"></span>My Account</button></li>
+        </ul>
+      </div>
+      <div class="faq-list" id="faqList"></div>
+    </div>
+  </section>
+</div>
+
+<div class="divider"></div>
+
+<!-- CONTACT -->
+<div class="wrap">
+  <section class="section" id="contact">
+    <div class="section-head">
+      <div class="section-tag">Contact Us</div>
+      <h2 class="section-title">Speak with an expert</h2>
+      <p class="section-sub">Our agronomists and support staff are always a call or message away.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card green">
+        <div class="ccard-icon">📞</div>
+        <h3>🌾कृषि मित्र Helpline</h3>
+        <p class="ccard-desc">Talk directly with a crop specialist or advisory officer in your regional language.</p>
+        <div class="ccard-avail">Available 24 × 7 &nbsp;·&nbsp;  Call now for help!</div>
+        <a href="tel:+91 9870951001" class="ccard-btn">Call +91 9870951001</a>
+      </div>
+      <div class="contact-card">
+        <div class="ccard-icon">💬</div>
+        <h3>WhatsApp Helpdesk</h3>
+        <p class="ccard-desc">Send photos of your crop, describe the problem, and get advice within the hour.</p>
+        <div class="ccard-avail">Mon – Sat &nbsp;·&nbsp; 6 AM – 10 PM IST</div>
+        <a href="https://wa.me/919870951001?text=Hello%20KrashiMitra" class="ccard-btn">Chat on WhatsApp : 9870951001→</a>
+      </div>
+      <div class="contact-card">
+        <div class="ccard-icon">✉️</div>
+        <h3>Email Support</h3>
+        <p class="ccard-desc">For detailed queries, scheme applications, or feedback. We are here to serve the nation.</p>
+        <div class="ccard-avail">krashimitra038@gmail.com</div>
+        <a href="mailto:krashimitra038@gmail.com" class="ccard-btn">Send Email →</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 KrashMitra. All rights reserved.</p>
+  <ul class="footer-links">
+    <li><a href="#">Privacy Policy</a></li>
+    <li><a href="#">Terms of Use</a></li>
+    <li><a href="#">Sitemap</a></li>
+    <li><a href="#">About Us</a></li>
+  </ul>
+</footer>
+
+<script>
+const faqs = {
+  crops: [
+    { q: "How do I identify a pest attack on my wheat crop?", a: "Look for yellowing leaves, holes in leaves, or powdery residue. Common wheat pests include aphids, stem borers, and brown rust. Take a clear photo and send it on our WhatsApp helpline for a same-day diagnosis from our plant pathologist." },
+    { q: "What should I spray for fungal disease on paddy?", a: "For blast disease, Tricyclazole 75% WP (6g per 10 litres of water) is recommended. For brown spot, Mancozeb 75% WP is effective. Always spray in the early morning or evening, avoid spraying before rain, and wear protective gear." },
+    { q: "When is the best time to sow mustard in Uttar Pradesh?", a: "The ideal sowing window for mustard in UP is between October 1st and October 20th. Delayed sowing beyond November reduces yields significantly. Ensure soil has adequate moisture at sowing time — a light irrigation 2–3 days before sowing helps." },
+    { q: "My tomato leaves are curling — what's wrong?", a: "Leaf curl in tomatoes is usually caused by the Tomato Leaf Curl Virus, spread by whiteflies. Remove infected plants immediately to prevent spread. Use yellow sticky traps and spray Imidacloprid 17.8% SL at 0.3 ml per litre of water on remaining healthy plants." },
+  ],
+  soil: [
+    { q: "How do I get a soil health card?", a: "Visit your nearest Krishi Vigyan Kendra (KVK) or Common Service Centre (CSC) with a soil sample (250g from 6-inch depth). Testing is free under the Soil Health Card Scheme. Results arrive within 3–4 weeks and include crop-specific fertiliser recommendations." },
+    { q: "What is the right NPK ratio for sugarcane?", a: "For sugarcane, the recommended dose is 150 kg Nitrogen, 75 kg Phosphorus, and 75 kg Potassium per hectare. Split nitrogen into three doses — at planting, at 30 days, and at 90 days — for best results." },
+    { q: "Can I use vermicompost instead of chemical fertilisers?", a: "Yes. Vermicompost improves soil structure and supplies micro-nutrients chemical fertilisers lack. Apply 5–6 tonnes per hectare before the last ploughing. For best results, combine it with 50% of the recommended chemical fertiliser dose." },
+  ],
+  schemes: [
+    { q: "How do I register for PM-Kisan?", a: "Visit pmkisan.gov.in or your nearest CSC. You'll need your Aadhaar number, bank account details linked to Aadhaar, and land records (Khasra/Khatauni number). Eligible farmers receive ₹6,000 per year in three equal instalments." },
+    { q: "What is the Kisan Credit Card and how do I apply?", a: "The Kisan Credit Card (KCC) offers short-term crop loans at 4% interest (with timely repayment benefit). Apply at any nationalized bank branch with your land documents, identity proof, and passport-size photographs. Processing takes 2–3 weeks." },
+    { q: "How do I claim Pradhan Mantri Fasal Bima Yojana (PMFBY)?", a: "Report crop loss to your bank or insurance company within 72 hours of the calamity via the Crop Insurance App or helpline 14447. Submit the claim form with land records and photographs. Compensation is assessed by a government surveyor within 10 days." },
+    { q: "Are there any subsidies for drip irrigation?", a: "Yes. Under the Pradhan Mantri Krishi Sinchayee Yojana (PMKSY), farmers can get 45–55% subsidy on drip and sprinkler systems (higher for small/marginal farmers). Apply through your District Agriculture Office or state agriculture portal." },
+  ],
+  market: [
+    { q: "Where can I check today's mandi prices?", a: "Visit agmarknet.gov.in or download the eNAM app for real-time mandi prices across India. You can also call our helpline and our team will give you today's prices for your crop and nearest mandi." },
+    { q: "What is the MSP for wheat this year?", a: "For Rabi 2023-24, the Minimum Support Price (MSP) for wheat is ₹2,275 per quintal as announced by the Cabinet Committee on Economic Affairs. Check our website's MSP page or call the helpline for the complete list of all crops." },
+    { q: "Can I sell directly to buyers without going to the mandi?", a: "Yes. Under the Agricultural Produce Market Committee (APMC) reforms, you can sell directly to FPOs, private aggregators, and processors. Register on the eNAM platform to access buyers across India online." },
+  ],
+  account: [
+    { q: "How do I create a KrashMitra account?", a: "Visit krashimitra.in or download the app, tap 'Register', enter your mobile number, verify with OTP, and fill in your farm details (land size, main crops, district). Registration is free and takes under 3 minutes." },
+    { q: "I forgot my login — how do I recover it?", a: "On the login screen, tap 'Forgot Password', enter your registered mobile number, and verify with an OTP. You can then set a new password. If you no longer have access to that number, call our helpline and our team will help verify your identity." },
+    { q: "How do I update my land or crop details?", a: "Log in to KrashMitra, go to My Profile → Farm Details, and tap Edit. You can add new fields, update crop seasons, and upload revised land documents. Updated information helps our system give you more accurate advisories." },
+  ],
+};
+
+let activecat = 'crops';
+
+function renderFAQ(cat, filter) {
+  const list = document.getElementById('faqList');
+  list.innerHTML = '';
+  let items = faqs[cat] || [];
+  if (filter) {
+    items = Object.values(faqs).flat().filter(i =>
+      i.q.toLowerCase().includes(filter) || i.a.toLowerCase().includes(filter)
+    );
+  }
+  if (!items.length) {
+    list.innerHTML = '<p style="color:var(--text-lt);font-size:0.87rem;padding:12px 0">No results found. Try different keywords or call our helpline.</p>';
+    return;
+  }
+  items.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'faq-item';
+    el.innerHTML = `<button class="faq-q"><span>${item.q}</span><span class="faq-icon">▾</span></button><div class="faq-a">${item.a}</div>`;
+    el.querySelector('.faq-q').addEventListener('click', () => el.classList.toggle('open'));
+    list.appendChild(el);
+  });
+}
+
+document.getElementById('faqTabs').addEventListener('click', e => {
+  const btn = e.target.closest('.faq-tab');
+  if (!btn) return;
+  document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  activecat = btn.dataset.cat;
+  renderFAQ(activecat);
+});
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!q) { renderFAQ(activecat); return; }
+  renderFAQ(null, q);
+  document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
+}
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+renderFAQ('crops');
+</script>
+</body>
+</html>
