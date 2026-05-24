@@ -234,79 +234,9 @@
       font-weight: 800;
       border-radius: 50%;
       width: 16px; height: 16px;
-      display: none;
-      align-items: center; justify-content: center;
+      display: none; align-items: center; justify-content: center;
     }
     .cart-badge.show { display: flex; }
-
-    /* Buy from shop button on fert cards */
-    .fert-buy-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: var(--green-dark); color: #fff;
-      border: none; border-radius: 8px;
-      padding: 7px 14px; font-size: 12px; font-weight: 700;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      cursor: pointer; text-decoration: none; margin-top: 8px;
-      transition: background 0.18s, transform 0.1s;
-      width: 100%;
-      justify-content: center;
-    }
-    .fert-buy-btn:hover { background: var(--green-mid); transform: translateY(-1px); }
-    .fert-buy-btn:active { transform: scale(0.97); }
-
-    /* Buy button inside modal */
-    .fert-modal-buy-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--green-dark); color: #fff;
-      border: none; border-radius: 12px;
-      padding: 13px 24px; font-size: 15px; font-weight: 700;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer; text-decoration: none;
-      transition: background 0.18s, transform 0.1s;
-      margin-top: 14px; width: 100%; justify-content: center;
-      box-shadow: 0 4px 14px rgba(26,60,46,0.25);
-    }
-    .fert-modal-buy-btn:hover { background: var(--green-mid); transform: translateY(-1px); }
-    .fert-modal-buy-btn:active { transform: scale(0.97); }
-
-    /* Mandi price cross-link banner */
-    .cross-link-banner {
-      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 16px;
-      margin-bottom: 18px;
-      display: flex; align-items: center; gap: 12px;
-      box-shadow: var(--shadow);
-    }
-    .cross-link-banner-icon { font-size: 28px; flex-shrink: 0; }
-    .cross-link-banner-text { flex: 1; }
-    .cross-link-banner-text strong { font-size: 13px; color: var(--text-dark); display: block; margin-bottom: 2px; }
-    .cross-link-banner-text span { font-size: 12px; color: var(--text-mid); }
-    .cross-link-banner-btn {
-      background: var(--amber); color: #1a2e1e;
-      border: none; border-radius: 20px; padding: 7px 14px;
-      font-size: 12px; font-weight: 700; cursor: pointer;
-      text-decoration: none; white-space: nowrap; flex-shrink: 0;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      transition: background 0.15s;
-    }
-    .cross-link-banner-btn:hover { background: #d4931e; }
-
-    /* Toast for mandi page */
-    .toast {
-      position: fixed; bottom: 80px; left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--green-dark); color: #fff;
-      padding: 12px 24px; border-radius: 20px;
-      font-size: 14px; font-weight: 600;
-      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      z-index: 9999; opacity: 0;
-      transition: opacity 0.3s, transform 0.3s;
-      pointer-events: none; white-space: nowrap;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* ══════════════════════════════════════
        MAIN CONTENT
@@ -546,6 +476,141 @@
       margin-top: 8px; text-align: right; opacity: 0.8;
     }
 
+    /* Buy btn on fertilizer card */
+    .fert-card-buy-btn {
+      margin-top: 8px;
+      width: 100%;
+      background: var(--green-dark);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: background 0.18s, transform 0.1s;
+    }
+    .fert-card-buy-btn:hover { background: var(--green-mid); }
+    .fert-card-buy-btn:active { transform: scale(0.97); }
+    .fert-card-buy-btn.in-cart {
+      background: var(--green-pale); color: var(--green-dark);
+      border: 1.5px solid var(--green-light);
+    }
+
+    /* Buy btn inside fert modal */
+    .fert-modal-buy-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-dark); color: #fff;
+      border: none; border-radius: 12px;
+      padding: 13px 24px; font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.18s, transform 0.1s;
+      margin-top: 14px; width: 100%; justify-content: center;
+      box-shadow: 0 4px 14px rgba(26,60,46,0.25);
+    }
+    .fert-modal-buy-btn:hover { background: var(--green-mid); transform: translateY(-1px); }
+    .fert-modal-buy-btn:active { transform: scale(0.97); }
+    .fert-modal-buy-btn.in-cart {
+      background: var(--green-pale); color: var(--green-dark);
+      border: 1.5px solid var(--green-light); box-shadow: none;
+    }
+
+    /* ══════════════════════════════════════
+       CART DRAWER
+    ══════════════════════════════════════ */
+    .cart-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 900;
+      backdrop-filter: blur(3px);
+    }
+    .cart-overlay.open { display: block; }
+    .cart-drawer {
+      position: fixed; top: 0; right: -400px;
+      width: 360px; max-width: 100vw; height: 100%;
+      background: var(--white); z-index: 950;
+      box-shadow: -8px 0 40px rgba(0,0,0,0.25);
+      display: flex; flex-direction: column;
+      transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .cart-drawer.open { right: 0; }
+    .cart-drawer-header {
+      background: var(--green-dark); color: #fff;
+      padding: 18px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .cart-drawer-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; }
+    .cart-drawer-close {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; color: #fff; font-size: 18px;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .cart-items-wrap { flex: 1; overflow-y: auto; padding: 16px; }
+    .cart-empty { text-align: center; padding: 48px 20px; }
+    .cart-empty-icon { font-size: 52px; margin-bottom: 12px; }
+    .cart-empty-text { font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif; font-size: 14px; color: var(--text-mid); line-height: 1.6; }
+    .cart-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item-emoji {
+      font-size: 36px; width: 52px; height: 52px;
+      background: var(--green-pale); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+    .cart-item-price { font-size: 13px; font-weight: 700; color: var(--green-mid); }
+    .cart-qty-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .qty-btn {
+      width: 26px; height: 26px; border-radius: 6px;
+      border: 1.5px solid var(--border); background: var(--white);
+      color: var(--text-dark); font-size: 14px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+    }
+    .qty-btn:hover { background: var(--green-pale); }
+    .qty-val { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+    .cart-item-del { background: none; border: none; font-size: 16px; cursor: pointer; opacity: 0.4; padding: 4px; transition: opacity 0.15s; }
+    .cart-item-del:hover { opacity: 0.8; }
+    .cart-footer { padding: 16px 20px; border-top: 1.5px solid var(--border); flex-shrink: 0; background: var(--cream); }
+    .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .cart-total-label { font-size: 13px; color: var(--text-mid); font-weight: 600; }
+    .cart-total-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--green-dark); }
+    .cart-savings { font-size: 11px; color: #2e7d32; font-weight: 600; margin-bottom: 12px; }
+    .btn-checkout {
+      width: 100%; background: var(--green-dark); color: #fff;
+      border: none; border-radius: 12px; padding: 14px 0;
+      font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.18s; margin-bottom: 8px;
+    }
+    .btn-checkout:hover { background: var(--green-mid); }
+    .btn-clear-cart {
+      width: 100%; background: none; border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 10px 0; font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: var(--text-mid); cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-clear-cart:hover { border-color: #e53935; color: #e53935; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 80px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green-dark); color: #fff;
+      padding: 12px 24px; border-radius: 20px;
+      font-size: 14px; font-weight: 600;
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      z-index: 9999; opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     /* ══════════════════════════════════════
        FERTILIZER MODAL POPUP
     ══════════════════════════════════════ */
@@ -756,6 +821,9 @@
       .fert-amount { font-size: 22px; }
       .fert-type-ribbon { font-size: 11px; padding: 5px 12px 5px 10px; }
 
+      .cart-drawer { width: 100%; max-width: 100%; }
+      .toast { bottom: 76px; }
+
       /* Bottom Nav */
       .bottom-nav {
         display: block; position: fixed;
@@ -825,11 +893,11 @@
   </nav>
 
   <div class="topbar-right">
-    <!-- Cart link — shows live count from localStorage -->
-    <a class="topbar-cart-btn" href="shop.html" title="दुकान / Cart" id="topbar-cart-link">
+    <!-- Cart button -->
+    <button class="topbar-cart-btn" onclick="openCart()" title="Cart">
       🛒
-      <span class="cart-badge" id="cart-badge"></span>
-    </a>
+      <span class="cart-badge" id="cart-badge">0</span>
+    </button>
 
     <div class="lang-picker" id="lang-picker">
       <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
@@ -895,17 +963,6 @@
   <!-- ── FERTILIZER PRICES ── -->
   <div id="shop-fertilizer" style="display:none">
     <div class="shop-section-title" data-t="fert_title">🧪 Fertilizer Prices — Government MRP</div>
-
-    <!-- Cross-link: Buy from E-Dukan -->
-    <div class="cross-link-banner" id="fert-shop-banner">
-      <span class="cross-link-banner-icon">🛒</span>
-      <div class="cross-link-banner-text">
-        <strong data-t="banner_shop_title">ई-दुकान से खाद खरीदें</strong>
-        <span data-t="banner_shop_sub">सरकारी MRP पर प्रमाणित खाद — घर पर डिलीवरी</span>
-      </div>
-      <a class="cross-link-banner-btn" href="shop.html?cat=fertilizer" data-t="banner_shop_cta">दुकान खोलें →</a>
-    </div>
-
     <div id="fertilizer-grid" class="fertilizer-grid">
       <!-- shimmer placeholders -->
       <div class="mandi-shimmer"></div>
@@ -988,13 +1045,32 @@
           </div>
           <div class="fert-modal-crops" id="fert-popup-crops"></div>
 
-          <!-- Buy from Shop CTA -->
-          <a class="fert-modal-buy-btn" id="fert-modal-buy-link" href="shop.html?cat=fertilizer">
-            🛒 <span data-t="modal_buy_btn">दुकान से खरीदें — Shop.html</span>
-          </a>
+          <!-- Add to Cart CTA inside modal -->
+          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="mandiModalCartToggle()">
+            🛒 <span id="fert-modal-cart-label">टोकरी में डालें</span>
+          </button>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══ CART OVERLAY + DRAWER ══ -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header">
+    <div class="cart-drawer-title">🛒 आपकी टोकरी</div>
+    <button class="cart-drawer-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items-wrap" id="cart-items-wrap"></div>
+  <div class="cart-footer" id="cart-footer" style="display:none;">
+    <div class="cart-total-row">
+      <span class="cart-total-label">कुल राशि</span>
+      <span class="cart-total-val" id="cart-total-val">₹0</span>
+    </div>
+    <div class="cart-savings" id="cart-savings-text"></div>
+    <button class="btn-checkout" onclick="mandiCheckout()">✅ ऑर्डर करें →</button>
+    <button class="btn-clear-cart" onclick="mandiClearCart()">🗑️ टोकरी खाली करें</button>
   </div>
 </div>
 
@@ -1064,11 +1140,6 @@
       no_data_sub:      "अलग combination try करें",
       error_server:     "⚠️ Server से connect नहीं हुआ।",
       footer_meta:      "मंडी भाव · सरकारी दरें · कृषि मित्र · krashimitra.in",
-      buy_btn:          "🛒 दुकान से खरीदें",
-      modal_buy_btn:    "दुकान से खरीदें",
-      banner_shop_title:"ई-दुकान से खाद खरीदें",
-      banner_shop_sub:  "सरकारी MRP पर प्रमाणित खाद — घर पर डिलीवरी",
-      banner_shop_cta:  "दुकान खोलें →",
     },
     en: {
       nav_chat:         "AI Advisor",
@@ -1090,11 +1161,6 @@
       no_data_sub:      "Try a different combination",
       error_server:     "⚠️ Could not reach server.",
       footer_meta:      "Mandi Rates · Govt. Prices · KrashiMitra · krashimitra.in",
-      buy_btn:          "🛒 Buy from Shop",
-      modal_buy_btn:    "Buy from E-Dukan",
-      banner_shop_title:"Buy Fertilizer from E-Dukan",
-      banner_shop_sub:  "Certified fertilizers at Govt. MRP — Home Delivery",
-      banner_shop_cta:  "Open Shop →",
     },
     kn: {
       nav_chat:         "AI ಕೇಳಿ",
@@ -1116,11 +1182,6 @@
       no_data_sub:      "ಬೇರೆ combination ಪ್ರಯತ್ನಿಸಿ",
       error_server:     "⚠️ ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಲಿಲ್ಲ.",
       footer_meta:      "ಮಂಡಿ ಬೆಲೆ · ಸರ್ಕಾರಿ ದರ · ಕೃಷಿ ಮಿತ್ರ",
-      buy_btn:          "🛒 ಅಂಗಡಿಯಿಂದ ಖರೀದಿಸಿ",
-      modal_buy_btn:    "ಇ-ದುಕಾನ್‌ನಿಂದ ಖರೀದಿಸಿ",
-      banner_shop_title:"ಇ-ದುಕಾನ್‌ನಿಂದ ಗೊಬ್ಬರ ಖರೀದಿಸಿ",
-      banner_shop_sub:  "ಸರ್ಕಾರಿ MRP ನಲ್ಲಿ ಪ್ರಮಾಣಿತ ಗೊಬ್ಬರ — ಮನೆ ಡೆಲಿವರಿ",
-      banner_shop_cta:  "ಅಂಗಡಿ ತೆರೆಯಿರಿ →",
     }
   };
 
@@ -1353,12 +1414,23 @@
               <div class="fert-price">₹${f.price_per_bag}<span> / ${f.bag_size} bag</span></div>
               <div class="fert-use">💡 ${f.use.substring(0, 52)}…</div>
               <div class="fert-card-cta">Tap to view more… →</div>
-              <a class="fert-buy-btn" href="shop.html?cat=fertilizer" onclick="event.stopPropagation()" data-t="buy_btn">🛒 दुकान से खरीदें</a>
+              <button class="fert-card-buy-btn ${window.mandiCart && window.mandiCart['fert_'+key] ? 'in-cart' : ''}"
+                id="fert-card-btn-${key}"
+                onclick="event.stopPropagation(); mandiCartToggle('fert_${key}', '${f.name}', ${f.price_per_bag}, '${f.bag_size}', this)">
+                ${window.mandiCart && window.mandiCart['fert_'+key] ? '✅ टोकरी में है' : '🛒 खरीदें'}
+              </button>
             </div>
           </div>`;
       }).join('');
 
       window.fertData = Object.fromEntries(items);
+
+      // Populate cart meta for price/name lookup
+      items.forEach(([key, f]) => {
+        const cartKey = 'fert_' + key;
+        window.mandiCartMeta[cartKey] = { name: f.name, price: parseFloat(f.price_per_bag) || 0, unit: f.bag_size, emoji: '🧪' };
+      });
+      updateCartBadge();
 
     } catch (err) {
       grid.innerHTML = `<div class="shop-loading">${t('error_server')}</div>`;
@@ -1371,6 +1443,8 @@
   function openFertModal(key) {
     const f = window.fertData[key];
     if (!f) return;
+
+    window._mandiCurrentFertKey = key;
 
     document.getElementById('fert-popup-name').innerText      = f.name;
     document.getElementById('fert-left-name-span').innerText  = f.name;
@@ -1398,6 +1472,9 @@
       wrap.innerHTML = `<div class="fert-modal-img-placeholder" id="fert-popup-img">🌱</div>`;
     }
 
+    // Update modal cart button state
+    _updateMandiModalCartBtn(key);
+
     document.getElementById('fert-modal').classList.add('open');
   }
 
@@ -1410,48 +1487,199 @@
     if (e.target === this) closeFertModal();
   });
 
-  // ══ INIT ══
-  document.addEventListener('DOMContentLoaded', () => {
-    setLang(currentLang);
-    loadStates();
-    syncCartBadge();
-
-    // Handle ?tab= URL param — e.g. from shop.html "Mandi Rates" cross-link
-    const urlParams = new URLSearchParams(window.location.search);
-    const tabParam  = urlParams.get('tab');
-    if (tabParam === 'fertilizer') {
-      switchShopTab('fertilizer');
-    }
-  });
-
   // ══════════════════════════════════════
-  // CART BADGE SYNC (reads from shop's localStorage)
+  // MANDI CART — shared with shop.html via localStorage 'km_cart'
+  // Keys for mandi fertilizers use 'fert_<key>' prefix to avoid id collision
   // ══════════════════════════════════════
-  function syncCartBadge() {
-    try {
-      const raw = localStorage.getItem('km_cart');
-      const cart = raw ? JSON.parse(raw) : {};
-      const count = Object.values(cart).reduce((s, v) => s + (v || 0), 0);
-      const badge = document.getElementById('cart-badge');
-      if (badge) {
-        badge.textContent = count > 9 ? '9+' : count;
-        badge.classList.toggle('show', count > 0);
-      }
-    } catch(e) {}
+  window.mandiCart = JSON.parse(localStorage.getItem('km_mandi_cart') || '{}');
+
+  // Fertilizer price/name lookup (populated after loadFertilizers)
+  window.mandiCartMeta = {};
+
+  function _saveMandCart() {
+    localStorage.setItem('km_mandi_cart', JSON.stringify(window.mandiCart));
   }
 
-  // ══════════════════════════════════════
-  // TOAST
-  // ══════════════════════════════════════
-  let _toastTimer = null;
-  function showToast(msg, dur = 2200) {
+  function _mandiCartCount() {
+    return Object.values(window.mandiCart).reduce((a, b) => a + b, 0);
+  }
+
+  function _mandiCartTotal() {
+    return Object.entries(window.mandiCart).reduce((sum, [k, qty]) => {
+      const meta = window.mandiCartMeta[k];
+      return sum + (meta ? meta.price * qty : 0);
+    }, 0);
+  }
+
+  function updateCartBadge() {
+    const cnt = _mandiCartCount();
+    const badge = document.getElementById('cart-badge');
+    if (!badge) return;
+    badge.textContent = cnt;
+    badge.classList.toggle('show', cnt > 0);
+  }
+
+  function mandiCartToggle(cartKey, name, price, unit, btn) {
+    window.mandiCartMeta[cartKey] = { name, price, unit, emoji: '🧪' };
+    if (window.mandiCart[cartKey] > 0) {
+      delete window.mandiCart[cartKey];
+      showMandiToast('टोकरी से हटाया गया');
+    } else {
+      window.mandiCart[cartKey] = 1;
+      showMandiToast('टोकरी में जोड़ा गया! 🛒');
+    }
+    _saveMandCart();
+    updateCartBadge();
+    // Update card button
+    if (btn) {
+      const inCart = window.mandiCart[cartKey] > 0;
+      btn.textContent = inCart ? '✅ टोकरी में है' : '🛒 खरीदें';
+      btn.classList.toggle('in-cart', inCart);
+    }
+    // Update modal btn if open for same key
+    if (window._mandiCurrentFertKey && 'fert_' + window._mandiCurrentFertKey === cartKey) {
+      _updateMandiModalCartBtn(window._mandiCurrentFertKey);
+    }
+  }
+
+  function _updateMandiModalCartBtn(key) {
+    const cartKey = 'fert_' + key;
+    const inCart = window.mandiCart[cartKey] > 0;
+    const btn = document.getElementById('fert-modal-cart-btn');
+    const lbl = document.getElementById('fert-modal-cart-label');
+    if (!btn || !lbl) return;
+    lbl.textContent = inCart ? 'टोकरी में है' : 'टोकरी में डालें';
+    btn.classList.toggle('in-cart', inCart);
+  }
+
+  function mandiModalCartToggle() {
+    const key = window._mandiCurrentFertKey;
+    if (!key) return;
+    const f = window.fertData && window.fertData[key];
+    const cartKey = 'fert_' + key;
+    const price = f ? parseFloat(f.price_per_bag) : 0;
+    const unit  = f ? f.bag_size : '';
+    window.mandiCartMeta[cartKey] = { name: f ? f.name : key, price, unit, emoji: '🧪' };
+
+    if (window.mandiCart[cartKey] > 0) {
+      delete window.mandiCart[cartKey];
+      showMandiToast('टोकरी से हटाया गया');
+    } else {
+      window.mandiCart[cartKey] = 1;
+      showMandiToast('टोकरी में जोड़ा गया! 🛒');
+    }
+    _saveMandCart();
+    updateCartBadge();
+    _updateMandiModalCartBtn(key);
+    // Sync card button if visible
+    const cardBtn = document.getElementById('fert-card-btn-' + key);
+    if (cardBtn) {
+      const inCart = window.mandiCart[cartKey] > 0;
+      cardBtn.textContent = inCart ? '✅ टोकरी में है' : '🛒 खरीदें';
+      cardBtn.classList.toggle('in-cart', inCart);
+    }
+  }
+
+  function openCart() {
+    document.getElementById('cart-overlay').classList.add('open');
+    document.getElementById('cart-drawer').classList.add('open');
+    renderMandiCart();
+  }
+
+  function closeCart() {
+    document.getElementById('cart-overlay').classList.remove('open');
+    document.getElementById('cart-drawer').classList.remove('open');
+  }
+
+  function renderMandiCart() {
+    const wrap   = document.getElementById('cart-items-wrap');
+    const footer = document.getElementById('cart-footer');
+    if (!wrap) return;
+
+    const cartEntries = Object.entries(window.mandiCart).filter(([, q]) => q > 0);
+    if (cartEntries.length === 0) {
+      wrap.innerHTML = `
+        <div class="cart-empty">
+          <div class="cart-empty-icon">🛒</div>
+          <div class="cart-empty-text">टोकरी खाली है।<br>खाद चुनकर जोड़ें।</div>
+        </div>`;
+      if (footer) footer.style.display = 'none';
+      return;
+    }
+    if (footer) footer.style.display = 'block';
+
+    wrap.innerHTML = cartEntries.map(([k, qty]) => {
+      const meta = window.mandiCartMeta[k] || { name: k, price: 0, unit: '', emoji: '🧪' };
+      return `
+        <div class="cart-item">
+          <div class="cart-item-emoji">${meta.emoji || '🧪'}</div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${meta.name}</div>
+            <div class="cart-item-price">₹${meta.price} × ${qty} = ₹${meta.price * qty}</div>
+            <div class="cart-qty-row">
+              <button class="qty-btn" onclick="mandiChangeQty('${k}', -1)">−</button>
+              <span class="qty-val">${qty}</span>
+              <button class="qty-btn" onclick="mandiChangeQty('${k}', 1)">+</button>
+            </div>
+          </div>
+          <button class="cart-item-del" onclick="mandiRemoveFromCart('${k}')" title="Remove">🗑️</button>
+        </div>`;
+    }).join('');
+
+    const totalEl = document.getElementById('cart-total-val');
+    if (totalEl) totalEl.textContent = `₹${_mandiCartTotal().toLocaleString('en-IN')}`;
+    const savingsEl = document.getElementById('cart-savings-text');
+    if (savingsEl) savingsEl.textContent = '';
+  }
+
+  function mandiChangeQty(k, delta) {
+    window.mandiCart[k] = (window.mandiCart[k] || 0) + delta;
+    if (window.mandiCart[k] <= 0) delete window.mandiCart[k];
+    _saveMandCart();
+    updateCartBadge();
+    renderMandiCart();
+  }
+
+  function mandiRemoveFromCart(k) {
+    delete window.mandiCart[k];
+    _saveMandCart();
+    updateCartBadge();
+    renderMandiCart();
+    showMandiToast('टोकरी से हटाया गया');
+  }
+
+  function mandiClearCart() {
+    window.mandiCart = {};
+    _saveMandCart();
+    updateCartBadge();
+    renderMandiCart();
+    showMandiToast('टोकरी खाली की गई');
+  }
+
+  function mandiCheckout() {
+    window.mandiCart = {};
+    _saveMandCart();
+    updateCartBadge();
+    closeCart();
+    showMandiToast('✅ ऑर्डर सफलतापूर्वक दिया गया! जल्द डिलीवरी होगी।', 3500);
+  }
+
+  let _mandiToastTimer = null;
+  function showMandiToast(msg, dur = 2200) {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = msg;
     el.classList.add('show');
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+    clearTimeout(_mandiToastTimer);
+    _mandiToastTimer = setTimeout(() => el.classList.remove('show'), dur);
   }
+
+  // ══ INIT ══
+  document.addEventListener('DOMContentLoaded', () => {
+    setLang(currentLang);
+    loadStates();
+    updateCartBadge();
+  });
 </script>
 </body>
 </html>
