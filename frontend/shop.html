@@ -431,16 +431,16 @@
     }
 
     /* ══════════════════════════════════════
-       PRODUCT GRID
+       PRODUCT GRID — unified card layout
     ══════════════════════════════════════ */
     .shop-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
 
-    /* ── Product Card ── */
+    /* ── Unified Product Card (matches ref image) ── */
     .product-card {
       background: var(--white);
       border-radius: 18px;
@@ -458,17 +458,58 @@
     }
     .product-card.hidden { display: none; }
 
-    /* Card image area */
+    /* ── Image zone (top of card) ── */
     .product-img {
       background: var(--green-pale);
-      height: 130px;
+      height: 150px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 56px;
       position: relative;
       flex-shrink: 0;
+      overflow: hidden;
     }
+    /* Real product image */
+    .product-img img.product-real-img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      padding: 16px;
+    }
+    /* Emoji fallback */
+    .product-img-emoji {
+      font-size: 60px;
+      line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%;
+    }
+    /* Placeholder shown when no img URL is set */
+    .product-img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+      background: linear-gradient(145deg, var(--green-pale) 0%, #c8ecd4 100%);
+      border-bottom: 1.5px dashed var(--green-light);
+    }
+    .product-img-placeholder-emoji { font-size: 54px; line-height: 1; }
+    .product-img-placeholder-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--green-mid); opacity: 0.6;
+    }
+    /* Category / type pill — top-right corner */
+    .product-type-pill {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: rgba(255,255,255,0.92);
+      color: var(--green-mid);
+      font-size: 10px; font-weight: 700;
+      border-radius: 20px;
+      padding: 3px 10px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(4px);
+      white-space: nowrap;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    /* Badge — top-left */
     .product-badge {
       position: absolute;
       top: 10px; left: 10px;
@@ -477,65 +518,43 @@
       font-size: 9px;
       font-weight: 800;
       border-radius: 20px;
-      padding: 2px 8px;
-      letter-spacing: 0.5px;
+      padding: 3px 9px;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.12);
     }
-    .product-badge.organic {
-      background: var(--green-light);
-      color: #fff;
-    }
-    .product-badge.new-badge {
-      background: #e53935;
-      color: #fff;
-    }
+    .product-badge.organic  { background: var(--green-light); color: #fff; }
+    .product-badge.new-badge { background: #e53935; color: #fff; }
 
-    /* Card body */
+    /* ── Card body ── */
     .product-body {
       padding: 14px 14px 12px;
       flex: 1;
       display: flex;
       flex-direction: column;
     }
-    .product-cat {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--green-light);
-      margin-bottom: 4px;
-    }
     .product-name {
       font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-dark);
       line-height: 1.35;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
-    .product-desc {
-      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      font-size: 12px;
-      color: var(--text-mid);
-      line-height: 1.5;
-      flex: 1;
-      margin-bottom: 10px;
-    }
-    .product-meta {
+    .product-price-line {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
+      align-items: baseline;
+      gap: 5px;
+      margin-bottom: 8px;
     }
     .product-price {
-      font-family: 'Playfair Display', serif;
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       color: var(--green-dark);
+      line-height: 1;
     }
     .product-price-sub {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-light);
       font-weight: 400;
     }
@@ -543,16 +562,48 @@
       font-size: 11px;
       color: var(--text-light);
       text-decoration: line-through;
+      margin-left: 2px;
     }
     .product-discount {
       font-size: 11px;
       color: #e53935;
       font-weight: 700;
     }
+    .product-desc {
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--text-mid);
+      line-height: 1.55;
+      flex: 1;
+      margin-bottom: 10px;
+    }
+    /* "Tap to view more →" style CTA row at bottom */
+    .product-cta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 2px;
+      gap: 8px;
+    }
+    .product-cta-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green-mid);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0;
+      display: flex; align-items: center; gap: 3px;
+    }
+    .product-cta-link:hover { color: var(--green-dark); text-decoration: underline; }
     .product-rating {
       font-size: 11px;
       color: var(--amber);
       font-weight: 600;
+      white-space: nowrap;
     }
 
     /* Add to cart btn */
@@ -572,6 +623,7 @@
       justify-content: center;
       gap: 6px;
       transition: background 0.18s, transform 0.1s;
+      margin-top: 8px;
     }
     .btn-add-cart:hover { background: var(--green-mid); }
     .btn-add-cart:active { transform: scale(0.97); }
@@ -579,6 +631,264 @@
       background: var(--green-pale);
       color: var(--green-dark);
       border: 1.5px solid var(--green-light);
+    }
+
+    /* ══════════════════════════════════════
+       FERTILIZER HORIZONTAL CARD GRID
+       (mandi.html style — 3-col desktop, 2-col mobile)
+    ══════════════════════════════════════ */
+    .fert-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    /* Horizontal card matching ref image */
+    .fert-h-card {
+      background: #f0faf2;
+      border-radius: 16px;
+      border: 1.5px solid #cce8d4;
+      box-shadow: 0 2px 12px rgba(26,60,46,0.07);
+      display: flex;
+      flex-direction: row;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      min-height: 130px;
+      overflow: hidden;
+    }
+    .fert-h-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(26,60,46,0.14);
+      border-color: var(--green-light);
+    }
+    .fert-h-card:active { transform: scale(0.98); }
+
+    /* Left image col */
+    .fert-h-img {
+      width: 84px; min-width: 84px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      flex-shrink: 0;
+      padding: 12px 6px;
+      background: transparent;
+    }
+    .fert-h-img img {
+      width: 64px; height: 74px;
+      object-fit: contain; display: block;
+    }
+
+    /* Right body col */
+    .fert-h-body {
+      padding: 12px 12px 10px 4px;
+      flex: 1; display: flex; flex-direction: column; min-width: 0;
+    }
+
+    /* Name + type badge row */
+    .fert-h-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; gap: 6px; margin-bottom: 3px;
+    }
+    .fert-h-name {
+      font-weight: 700; font-size: 13.5px;
+      color: var(--text-dark); line-height: 1.3;
+      flex: 1; min-width: 0;
+    }
+    .fert-h-type {
+      font-size: 10px; color: var(--green-mid); font-weight: 700;
+      background: #d4f0de; padding: 3px 8px;
+      border-radius: 20px; white-space: nowrap;
+      flex-shrink: 0; border: 1px solid #b6dfc3; line-height: 1.4;
+    }
+
+    /* Price */
+    .fert-h-price {
+      font-size: 19px; font-weight: 800;
+      color: var(--green-dark); margin: 4px 0 5px; line-height: 1;
+    }
+    .fert-h-price span {
+      font-size: 11.5px; font-weight: 500; color: var(--text-light);
+    }
+
+    /* Use hint */
+    .fert-h-use {
+      font-size: 11px; color: var(--text-mid);
+      line-height: 1.45; flex: 1;
+      overflow: hidden;
+    }
+
+    /* CTA */
+    .fert-h-cta {
+      font-size: 11px; color: var(--green-mid); font-weight: 700;
+      margin-top: 7px; text-align: right; opacity: 0.85;
+    }
+
+    /* ══════════════════════════════════════
+       FERTILIZER MODAL (from mandi)
+    ══════════════════════════════════════ */
+    .fert-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.50); backdrop-filter: blur(4px);
+      z-index: 2000; align-items: center; justify-content: center; padding: 24px;
+    }
+    .fert-modal-overlay.open { display: flex; }
+    .fert-modal {
+      background: #f9f5e8; border-radius: 22px;
+      width: 100%; max-width: 780px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.1);
+      animation: fert-slide-in 0.3s cubic-bezier(0.34,1.4,0.64,1);
+      display: flex; flex-direction: column;
+      border: 1px solid #e2dbc8; position: relative;
+    }
+    .fert-modal-inner-scroll {
+      overflow-y: auto; max-height: 90vh;
+      border-radius: 22px; display: flex; flex-direction: column;
+    }
+    @keyframes fert-slide-in {
+      from { transform: scale(0.88) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .fert-card-inner { display: flex; align-items: stretch; min-height: 420px; }
+    .fert-left-panel {
+      width: 260px; min-width: 260px; flex-shrink: 0;
+      display: flex; flex-direction: column; border-right: 1px solid #e0d9c6;
+    }
+    .fert-image-wrap { flex: 1; overflow: hidden; border-radius: 20px 0 0 0; }
+    .fert-modal-img {
+      width: 100%; height: 100%; min-height: 280px;
+      object-fit: cover; display: block;
+    }
+    .fert-modal-img-placeholder {
+      width: 100%; min-height: 280px;
+      background: linear-gradient(135deg, #4e9e6e, #2d6a4f);
+      display: flex; align-items: center; justify-content: center; font-size: 80px;
+    }
+    .fert-left-info {
+      padding: 14px 16px 16px; background: #f9f5e8;
+      border-top: 1px solid #e0d9c6; border-radius: 0 0 0 20px;
+    }
+    .fert-left-name { font-size: 15px; font-weight: 700; color: #1a2e1e; line-height: 1.3; }
+    .fert-left-sub { font-size: 12px; color: #6a8070; margin-top: 4px; font-weight: 500; }
+    .fert-right-panel {
+      flex: 1; padding: 22px 24px 20px;
+      display: flex; flex-direction: column; position: relative;
+    }
+    .fert-name-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 8px; gap: 12px;
+    }
+    .fert-title-group { display: flex; align-items: center; gap: 8px; }
+    .fert-leaf-icon { font-size: 22px; }
+    .fert-main-name {
+      font-size: 28px; font-weight: 800; color: #1a2e1e;
+      font-family: 'DM Sans', sans-serif; line-height: 1;
+    }
+    .fert-type-ribbon {
+      background: #4a7c59; color: white;
+      font-size: 13px; font-weight: 700;
+      padding: 7px 18px 7px 14px;
+      border-radius: 6px 16px 16px 6px;
+      position: absolute; top: 22px; right: 0;
+      letter-spacing: 0.3px;
+      box-shadow: -2px 2px 8px rgba(0,0,0,0.15);
+      min-width: 90px; text-align: center;
+    }
+    .fert-price-row {
+      display: flex; align-items: baseline; gap: 6px;
+      margin-bottom: 16px; margin-top: 4px;
+    }
+    .fert-rupee { font-size: 22px; font-weight: 700; color: #1a2e1e; }
+    .fert-amount { font-size: 30px; font-weight: 800; color: #1a2e1e; line-height: 1; }
+    .fert-per-bag { font-size: 15px; color: #4a6355; font-weight: 500; }
+    .fert-hr { border: none; border-top: 1.5px solid #ddd8c6; margin-bottom: 14px; }
+    .fert-detail-row { display: flex; gap: 10px; margin-bottom: 11px; align-items: flex-start; }
+    .fert-detail-icon { font-size: 18px; width: 22px; flex-shrink: 0; margin-top: 1px; text-align: center; }
+    .fert-detail-content { flex: 1; line-height: 1.5; }
+    .fert-detail-label { font-size: 13.5px; font-weight: 700; color: #1a2e1e; }
+    .fert-detail-value { font-size: 13.5px; color: #3a3a3a; font-weight: 400; }
+    .fert-precaution {
+      display: flex; gap: 10px; margin-bottom: 11px; align-items: flex-start;
+      background: transparent; border: none;
+    }
+    .fert-precaution-icon { font-size: 18px; width: 22px; flex-shrink: 0; margin-top: 1px; text-align: center; }
+    .fert-precaution-content { flex: 1; line-height: 1.5; }
+    .fert-precaution-label { font-size: 13.5px; font-weight: 700; color: #b45309; }
+    .fert-precaution-value { font-size: 13.5px; color: #92400e; font-weight: 400; }
+    .fert-modal-crops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .fert-modal-crop-tag {
+      font-size: 12px; background: var(--green-pale); color: var(--green-mid);
+      padding: 4px 10px; border-radius: 20px; font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .fert-close-x {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(0,0,0,0.08); border: none;
+      border-radius: 50%; width: 32px; height: 32px;
+      font-size: 14px; cursor: pointer; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .fert-close-x:hover { background: rgba(0,0,0,0.18); }
+
+    /* Buy btn inside fert modal */
+    .fert-modal-buy-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-dark); color: #fff;
+      border: none; border-radius: 12px;
+      padding: 13px 24px; font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.18s, transform 0.1s;
+      margin-top: 14px; width: 100%; justify-content: center;
+      box-shadow: 0 4px 14px rgba(26,60,46,0.25);
+    }
+    .fert-modal-buy-btn:hover { background: var(--green-mid); transform: translateY(-1px); }
+    .fert-modal-buy-btn:active { transform: scale(0.97); }
+    .fert-modal-buy-btn.in-cart {
+      background: var(--green-pale); color: var(--green-dark);
+      border: 1.5px solid var(--green-light); box-shadow: none;
+    }
+
+    /* Mobile modal overrides */
+    @media screen and (max-width: 700px) {
+      .fert-modal-overlay { padding: 10px; align-items: flex-end; }
+      .fert-modal { width: 100%; max-width: 100%; border-radius: 20px 20px 14px 14px; max-height: 90vh; overflow-y: auto; }
+      .fert-card-inner { flex-direction: column; min-height: unset; }
+      .fert-left-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #e0d9c6; flex-direction: row; }
+      .fert-image-wrap { width: 100px; min-width: 100px; flex-shrink: 0; border-radius: 20px 0 0 0; }
+      .fert-modal-img, .fert-modal-img-placeholder { min-height: 100px; }
+      .fert-left-info { flex: 1; }
+      .fert-right-panel { padding: 16px 18px; }
+      .fert-main-name { font-size: 20px; }
+      .fert-amount { font-size: 22px; }
+      .fert-type-ribbon { font-size: 11px; padding: 5px 12px 5px 10px; }
+    }
+
+    /* Mobile: 2-column grid for product cards */
+    @media screen and (max-width: 600px) {
+      .shop-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .product-img { height: 120px; }
+      .product-img-emoji { font-size: 44px; }
+      .product-price { font-size: 18px; }
+      .product-body { padding: 10px 10px 10px; }
+      .product-name { font-size: 13px; }
+      .product-type-pill { font-size: 9px; padding: 2px 7px; }
+
+      /* Fert horizontal cards — 1-col full-width on mobile (like mandi.html) */
+      .fert-grid { grid-template-columns: 1fr; gap: 10px; }
+      .fert-h-card { min-height: 100px; border-radius: 14px; background: #fff; }
+      .fert-h-img { width: 80px; min-width: 80px; font-size: 36px; padding: 10px 8px; }
+      .fert-h-img img { width: 58px; height: 68px; }
+      .fert-h-body { padding: 11px 12px 10px 4px; }
+      .fert-h-name { font-size: 13.5px; }
+      .fert-h-type { font-size: 10px; padding: 3px 8px; }
+      .fert-h-price { font-size: 17px; margin: 4px 0 4px; }
+      .fert-h-price span { font-size: 11px; }
+      .fert-h-use { font-size: 11px; }
+      .fert-h-cta { font-size: 11px; margin-top: 6px; }
     }
 
     /* ══════════════════════════════════════
@@ -1042,7 +1352,10 @@
     <div class="section-heading-count" id="product-count">-- उत्पाद</div>
   </div>
 
-  <!-- Product Grid -->
+  <!-- Fertilizer horizontal card grid (mandi-style) -->
+  <div class="fert-grid" id="fert-grid" style="display:none"></div>
+
+  <!-- Regular Product Grid -->
   <div class="shop-grid" id="shop-grid">
     <!-- Shimmer placeholders shown before JS renders -->
     <div class="shop-shimmer"></div>
@@ -1056,6 +1369,84 @@
   </div>
 
 </div><!-- /.main-content -->
+
+<!-- ══ FERTILIZER DETAIL MODAL ══ -->
+<div class="fert-modal-overlay" id="fert-modal">
+  <div class="fert-modal">
+    <button class="fert-close-x" onclick="closeFertModal()">&#10005;</button>
+    <div class="fert-modal-inner-scroll">
+      <div class="fert-card-inner">
+        <!-- LEFT: Image + name -->
+        <div class="fert-left-panel">
+          <div class="fert-image-wrap" id="fert-popup-img-wrap">
+            <div class="fert-modal-img-placeholder" id="fert-popup-img">🌱</div>
+          </div>
+          <div class="fert-left-info">
+            <div class="fert-left-name">Fertilizer (<span id="fert-left-name-span"></span>)</div>
+            <div class="fert-left-sub">Recommended Use:</div>
+          </div>
+        </div>
+        <!-- RIGHT: All details -->
+        <div class="fert-right-panel">
+          <div class="fert-type-ribbon" id="fert-popup-type">Nitrogen</div>
+          <div class="fert-name-row">
+            <div class="fert-title-group">
+              <span class="fert-leaf-icon">🌿</span>
+              <span class="fert-main-name" id="fert-popup-name">Urea</span>
+            </div>
+          </div>
+          <div class="fert-price-row">
+            <span class="fert-rupee">₹</span>
+            <span class="fert-amount" id="fert-popup-price">266</span>
+            <span class="fert-per-bag" id="fert-popup-bag">/ 45 kg bag.</span>
+          </div>
+          <hr class="fert-hr">
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">ℹ️</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">Details: </span>
+              <span class="fert-detail-value" id="fert-popup-details"></span>
+            </div>
+          </div>
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">👨‍🌾</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">Use: </span>
+              <span class="fert-detail-value" id="fert-popup-use"></span>
+            </div>
+          </div>
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">📅</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">When to Apply: </span>
+              <span class="fert-detail-value" id="fert-popup-when"></span>
+            </div>
+          </div>
+          <div class="fert-detail-row">
+            <span class="fert-detail-icon">🔑</span>
+            <div class="fert-detail-content">
+              <span class="fert-detail-label">Dosage: </span>
+              <span class="fert-detail-value" id="fert-popup-dosage"></span>
+            </div>
+          </div>
+          <div class="fert-precaution">
+            <span class="fert-precaution-icon">⚠️</span>
+            <div class="fert-precaution-content">
+              <span class="fert-precaution-label">Precaution: </span>
+              <span class="fert-precaution-value" id="fert-popup-precaution"></span>
+            </div>
+          </div>
+          <div class="fert-modal-crops" id="fert-popup-crops"></div>
+
+          <!-- Add to Cart CTA inside modal -->
+          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="fertModalAddCart()">
+            🛒 <span id="fert-modal-cart-label">टोकरी में डालें</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ CART OVERLAY + DRAWER ══ -->
 <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
@@ -1269,25 +1660,25 @@
   // ══════════════════════════════════════
   const PRODUCTS = [
     // ── Seeds ──
-    { id: 1,  cat: 'seeds',      emoji: '🌾', badge: 'bestseller', badgeClass: '',
+    { id: 1,  cat: 'seeds',      emoji: '🌾', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/seeds/',
       name_hi: 'गेहूं बीज HD-2967', name_en: 'Wheat Seeds HD-2967', name_kn: 'ಗೋಧಿ ಬೀಜ HD-2967',
       desc_hi: 'उच्च उपज देने वाली गेहूं की किस्म, रस्ट रोग प्रतिरोधी।',
       desc_en: 'High-yielding wheat variety, rust disease resistant.',
       desc_kn: 'ಹೆಚ್ಚು ಇಳುವರಿ ನೀಡುವ ಗೋಧಿ ತಳಿ, ತುಕ್ಕು ರೋಗ ನಿರೋಧಕ.',
       price: 280, mrp: 350, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.7' },
-    { id: 2,  cat: 'seeds',      emoji: '🌽', badge: 'organic', badgeClass: 'organic',
+    { id: 2,  cat: 'seeds',      emoji: '🌽', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/seeds/',
       name_hi: 'मक्का हाइब्रिड बीज', name_en: 'Hybrid Maize Seeds', name_kn: 'ಹೈಬ್ರಿಡ್ ಮೆಕ್ಕೆ ಬೀಜ',
       desc_hi: 'तेज विकास, 90-100 दिन में कटाई। जल सहनशील।',
       desc_en: 'Fast growing, harvest in 90-100 days. Drought tolerant.',
       desc_kn: '90-100 ದಿನದಲ್ಲಿ ಕೊಯ್ಲು. ಬರ ಸಹಿಷ್ಣು.',
       price: 420, mrp: 500, unit_hi: '2 kg पैक', unit_en: '2 kg pack', unit_kn: '2 kg ಪ್ಯಾಕ್', rating: '⭐ 4.5' },
-    { id: 3,  cat: 'seeds',      emoji: '🧅', badge: 'new', badgeClass: 'new-badge',
+    { id: 3,  cat: 'seeds',      emoji: '🧅', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/seeds/',
       name_hi: 'प्याज बीज अग्रीफाउंड', name_en: 'Onion Seeds Agrifound', name_kn: 'ಈರುಳ್ಳಿ ಬೀಜ ಅಗ್ರಿಫೌಂಡ್',
       desc_hi: 'लाल प्याज, उच्च भंडारण क्षमता। खरीफ व रबी दोनों के लिए।',
       desc_en: 'Red onion, high storage capacity. Suitable for Kharif & Rabi.',
       desc_kn: 'ಕೆಂಪು ಈರುಳ್ಳಿ, ಹೆಚ್ಚಿನ ಶೇಖರಣಾ ಸಾಮರ್ಥ್ಯ.',
       price: 180, mrp: 220, unit_hi: '500g पैक', unit_en: '500g pack', unit_kn: '500g ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
-    { id: 4,  cat: 'seeds',      emoji: '🫘', badge: '', badgeClass: '',
+    { id: 4,  cat: 'seeds',      emoji: '🫘', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/seeds/',
       name_hi: 'सोयाबीन बीज JS-335', name_en: 'Soybean Seeds JS-335', name_kn: 'ಸೋಯಾಬೀನ್ ಬೀಜ JS-335',
       desc_hi: '100-105 दिन में परिपक्व। उच्च प्रोटीन सामग्री।',
       desc_en: 'Matures in 100-105 days. High protein content.',
@@ -1295,25 +1686,25 @@
       price: 320, mrp: 380, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.3' },
 
     // ── Fertilizers ──
-    { id: 5,  cat: 'fertilizer', emoji: '🧪', badge: 'bestseller', badgeClass: '',
+    { id: 5,  cat: 'fertilizer', emoji: '🧪', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/',
       name_hi: 'DAP खाद (डाइ-अमोनियम फॉस्फेट)', name_en: 'DAP Fertilizer', name_kn: 'DAP ಗೊಬ್ಬರ',
       desc_hi: 'फसल की जड़ों को मजबूत करता है। नाइट्रोजन व फॉस्फोरस से भरपूर।',
       desc_en: 'Strengthens crop roots. Rich in Nitrogen & Phosphorus.',
       desc_kn: 'ಬೆಳೆ ಬೇರುಗಳನ್ನು ಮಜಬೂತಾಗಿಸುತ್ತದೆ. N & P ಭರಿತ.',
       price: 1350, mrp: 1450, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.8' },
-    { id: 6,  cat: 'fertilizer', emoji: '🌿', badge: 'organic', badgeClass: 'organic',
+    { id: 6,  cat: 'fertilizer', emoji: '🌿', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/fertilizers/',
       name_hi: 'वर्मीकम्पोस्ट (जैविक खाद)', name_en: 'Vermicompost Organic', name_kn: 'ವರ್ಮಿಕಂಪೋಸ್ಟ್ ಜೈವಿಕ ಗೊಬ್ಬರ',
       desc_hi: '100% जैविक, मिट्टी की उर्वरता बढ़ाए। सभी फसलों के लिए।',
       desc_en: '100% organic, improves soil fertility. For all crops.',
       desc_kn: '100% ಜೈವಿಕ, ಮಣ್ಣಿನ ಫಲವತ್ತತೆ ಹೆಚ್ಚಿಸುತ್ತದೆ.',
       price: 450, mrp: 550, unit_hi: '25 kg बैग', unit_en: '25 kg bag', unit_kn: '25 kg ಚೀಲ', rating: '⭐ 4.6' },
-    { id: 7,  cat: 'fertilizer', emoji: '💧', badge: '', badgeClass: '',
+    { id: 7,  cat: 'fertilizer', emoji: '💧', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/urea.jpg',
       name_hi: 'यूरिया खाद 46% N', name_en: 'Urea Fertilizer 46% N', name_kn: 'ಯೂರಿಯಾ ಗೊಬ್ಬರ 46% N',
       desc_hi: 'नाइट्रोजन से भरपूर, हरी पत्तियों के लिए उत्तम। तेज असर।',
       desc_en: 'Nitrogen-rich, excellent for green leaf growth. Fast effect.',
       desc_kn: 'ನೈಟ್ರೋಜನ್ ಭರಿತ, ಹಸಿರು ಎಲೆ ಬೆಳವಣಿಗೆಗೆ ಉತ್ತಮ.',
       price: 280, mrp: 300, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5' },
-    { id: 8,  cat: 'fertilizer', emoji: '🔬', badge: 'new', badgeClass: 'new-badge',
+    { id: 8,  cat: 'fertilizer', emoji: '🔬', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/fertilizers/',
       name_hi: 'सूक्ष्म पोषक तत्व मिश्रण', name_en: 'Micronutrient Mix', name_kn: 'ಮೈಕ್ರೋನ್ಯೂಟ್ರಿಯೆಂಟ್ ಮಿಶ್ರಣ',
       desc_hi: 'जिंक, आयरन, बोरान युक्त। कमी के लक्षण दूर करे।',
       desc_en: 'Zinc, Iron, Boron enriched. Cures deficiency symptoms.',
@@ -1321,25 +1712,25 @@
       price: 380, mrp: 460, unit_hi: '10 kg पैक', unit_en: '10 kg pack', unit_kn: '10 kg ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
 
     // ── Pesticides ──
-    { id: 9,  cat: 'pesticide',  emoji: '🐛', badge: 'bestseller', badgeClass: '',
+    { id: 9,  cat: 'pesticide',  emoji: '🐛', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'क्लोरपाइरीफोस 20% EC', name_en: 'Chlorpyrifos 20% EC', name_kn: 'ಕ್ಲೋರ್ಪೈರಿಫಾಸ್ 20% EC',
       desc_hi: 'कीट व दीमक नियंत्रण। व्यापक प्रभाव वाला कीटनाशक।',
       desc_en: 'Controls insects & termites. Broad-spectrum insecticide.',
       desc_kn: 'ಕೀಟ ಮತ್ತು ಗೆದ್ದಲು ನಿಯಂತ್ರಣ. ಬ್ರಾಡ್-ಸ್ಪೆಕ್ಟ್ರಮ್.',
       price: 320, mrp: 400, unit_hi: '500 ml बोतल', unit_en: '500 ml bottle', unit_kn: '500 ml ಬಾಟಲ್', rating: '⭐ 4.5' },
-    { id: 10, cat: 'pesticide',  emoji: '🍄', badge: 'organic', badgeClass: 'organic',
+    { id: 10, cat: 'pesticide',  emoji: '🍄', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'नीम का तेल (जैव कीटनाशक)', name_en: 'Neem Oil Bio-Pesticide', name_kn: 'ಬೇವಿನ ಎಣ್ಣೆ ಜೈವಿಕ ಕೀಟನಾಶಕ',
       desc_hi: '100% जैविक, मकड़ी, माहू और सफेद मक्खी को नष्ट करे।',
       desc_en: '100% organic. Controls mites, aphids & whiteflies.',
       desc_kn: '100% ಜೈವಿಕ. ಮಿಟೆ, ಗಿಡಹೇನು ನಿಯಂತ್ರಿಸುತ್ತದೆ.',
       price: 240, mrp: 300, unit_hi: '1 litre', unit_en: '1 litre', unit_kn: '1 ಲೀಟರ್', rating: '⭐ 4.6' },
-    { id: 11, cat: 'pesticide',  emoji: '🌾', badge: '', badgeClass: '',
+    { id: 11, cat: 'pesticide',  emoji: '🌾', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'कार्बेन्डाजिम 50% WP (फफूंदनाशी)', name_en: 'Carbendazim 50% WP Fungicide', name_kn: 'ಕಾರ್ಬೆಂಡಾಜಿಮ್ 50% WP ಶಿಲೀಂಧ್ರನಾಶಕ',
       desc_hi: 'ब्लास्ट, रस्ट, और ब्लाइट रोग नियंत्रण। बीज उपचार भी।',
       desc_en: 'Controls blast, rust & blight. Seed treatment too.',
       desc_kn: 'ಬ್ಲಾಸ್ಟ್, ರಸ್ಟ್, ಬ್ಲೈಟ್ ರೋಗ ನಿಯಂತ್ರಣ.',
       price: 180, mrp: 230, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
-    { id: 12, cat: 'pesticide',  emoji: '🌱', badge: 'new', badgeClass: 'new-badge',
+    { id: 12, cat: 'pesticide',  emoji: '🌱', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'ट्राइकोडर्मा विरिडी (जैव फफूंदनाशी)', name_en: 'Trichoderma Viride Bio-Fungicide', name_kn: 'ಟ್ರೈಕೋಡರ್ಮಾ ವಿರಿಡಿ ಜೈವಿಕ',
       desc_hi: 'मिट्टी में हानिकारक फफूंद का जैविक नियंत्रण।',
       desc_en: 'Biological control of soil-borne fungi. Safe for crops.',
@@ -1347,25 +1738,25 @@
       price: 160, mrp: 200, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.3' },
 
     // ── Tools ──
-    { id: 13, cat: 'tools',      emoji: '🔧', badge: 'bestseller', badgeClass: '',
+    { id: 13, cat: 'tools',      emoji: '🔧', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'हाथ खुरपी (HRC स्टील)', name_en: 'Hand Khurpi HRC Steel', name_kn: 'ಕೈ ಕೊಡಲಿ HRC ಉಕ್ಕು',
       desc_hi: 'मजबूत HRC स्टील ब्लेड, लकड़ी का हैंडल। निराई व गुड़ाई के लिए।',
       desc_en: 'Strong HRC steel blade, wooden handle. For weeding.',
       desc_kn: 'ಬಲಿಷ್ಠ HRC ಉಕ್ಕಿನ ಬ್ಲೇಡ್. ಕಳೆ ತೆಗೆಯಲು.',
       price: 120, mrp: 160, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.6' },
-    { id: 14, cat: 'tools',      emoji: '💦', badge: '', badgeClass: '',
+    { id: 14, cat: 'tools',      emoji: '💦', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'नैपसैक स्प्रेयर 16L', name_en: 'Knapsack Sprayer 16L', name_kn: 'ನ್ಯಾಪ್ಸ್ಯಾಕ್ ಸ್ಪ್ರೇಯರ್ 16L',
       desc_hi: 'मजबूत पीवीसी टैंक, एडजस्टेबल नोजल। कीटनाशक छिड़काव के लिए।',
       desc_en: 'Durable PVC tank, adjustable nozzle. For pesticide spray.',
       desc_kn: 'ಗಟ್ಟಿಯಾದ PVC ಟ್ಯಾಂಕ್, ಸ್ಪ್ರೇಗೆ.',
       price: 850, mrp: 1100, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.4' },
-    { id: 15, cat: 'tools',      emoji: '🪚', badge: 'new', badgeClass: 'new-badge',
+    { id: 15, cat: 'tools',      emoji: '🪚', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'ड्रिप इरिगेशन किट (1 एकड़)', name_en: 'Drip Irrigation Kit (1 Acre)', name_kn: 'ಡ್ರಿಪ್ ಸಿಂಚಾಯಿ ಕಿಟ್ (1 ಎಕರೆ)',
       desc_hi: '60% पानी की बचत। सब्जी व बाग के लिए उपयुक्त। स्थापित करना आसान।',
       desc_en: '60% water saving. For vegetables & orchards. Easy install.',
       desc_kn: '60% ನೀರು ಉಳಿತಾಯ. ತರಕಾರಿ ಮತ್ತು ತೋಟಕ್ಕೆ.',
       price: 2800, mrp: 3500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.7' },
-    { id: 16, cat: 'tools',      emoji: '🌡️', badge: '', badgeClass: '',
+    { id: 16, cat: 'tools',      emoji: '🌡️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/',
       name_hi: 'मृदा परीक्षण किट', name_en: 'Soil Testing Kit', name_kn: 'ಮಣ್ಣು ಪರೀಕ್ಷಾ ಕಿಟ್',
       desc_hi: 'pH, N, P, K और 8 अन्य पोषक तत्वों की जांच। 50 टेस्ट।',
       desc_en: 'Tests pH, N, P, K and 8 nutrients. 50 tests included.',
@@ -1422,7 +1813,8 @@
   }
 
   function renderProducts() {
-    const grid = document.getElementById('shop-grid');
+    const grid     = document.getElementById('shop-grid');
+    const fertGrid = document.getElementById('fert-grid');
     if (!grid) return;
 
     const searchVal = (document.getElementById('shop-search')?.value || '').toLowerCase();
@@ -1439,45 +1831,80 @@
     const countEl = document.getElementById('product-count');
     if (countEl) countEl.textContent = `${visible.length} ${t('products_count')}`;
 
-    grid.innerHTML = visible.map(p => {
-      const inCart = cart[p.id] > 0;
-      const discount = Math.round((1 - p.price / p.mrp) * 100);
-      const badgeHTML = p.badge
-        ? `<div class="product-badge ${p.badgeClass}">${
-            p.badgeClass === 'organic' ? '🌿 Organic' :
-            p.badgeClass === 'new-badge' ? '🆕 New' :
-            '🔥 Best'
-          }</div>`
-        : '';
+    // ── ALL PRODUCTS → horizontal fert-h-card layout ──
+    grid.style.display = 'none'; // old vertical grid never used
 
-      return `
-        <div class="product-card" data-id="${p.id}" data-cat="${p.cat}">
-          <div class="product-img">
-            ${badgeHTML}
-            ${p.emoji}
-          </div>
-          <div class="product-body">
-            <div class="product-cat">${categoryLabel(p.cat)}</div>
-            <div class="product-name">${getProductName(p)}</div>
-            <div class="product-desc">${getProductDesc(p)}</div>
-            <div class="product-meta">
-              <div>
-                <div class="product-price">₹${p.price} <span class="product-price-sub">/${getProductUnit(p)}</span></div>
-                <div>
-                  <span class="product-mrp">₹${p.mrp}</span>
-                  &nbsp;<span class="product-discount">-${discount}%</span>
-                </div>
+    if (fertGrid) {
+      fertGrid.style.display = visible.length ? 'grid' : 'none';
+      fertGrid.innerHTML = visible.map(p => {
+        const inCart = cart[p.id] > 0;
+        const discount = Math.round((1 - p.price / p.mrp) * 100);
+
+        // Type label per category
+        let typeLabel;
+        if (p.cat === 'fertilizer') {
+          typeLabel =
+            p.name_en.includes('Urea')                                   ? 'Nitrogen'
+            : p.name_en.includes('DAP')                                  ? 'Phosphorus + N'
+            : p.name_en.includes('MOP') || p.name_en.includes('Potash') ? 'Potassium'
+            : p.name_en.includes('Micro')                                ? 'Micronutrient'
+            : p.name_en.includes('Vermi') || p.name_en.includes('Organic') ? 'Organic'
+            : 'Fertilizer';
+        } else if (p.cat === 'seeds') {
+          typeLabel = p.name_en.includes('Hybrid') ? 'Hybrid' : 'Seeds';
+        } else if (p.cat === 'pesticide') {
+          typeLabel = p.name_en.toLowerCase().includes('bio') || p.name_en.toLowerCase().includes('neem')
+            ? 'Bio / Organic'
+            : p.name_en.toLowerCase().includes('fungic') ? 'Fungicide'
+            : 'Pesticide';
+        } else if (p.cat === 'tools') {
+          typeLabel = p.name_en.toLowerCase().includes('kit') ? 'Kit'
+            : p.name_en.toLowerCase().includes('spray') ? 'Sprayer'
+            : 'Tool';
+        } else {
+          typeLabel = p.cat;
+        }
+
+        // Badge indicator in type pill when badge exists
+        const badgePrefix = p.badgeClass === 'organic' ? '🌿 '
+          : p.badgeClass === 'new-badge' ? '🆕 '
+          : p.badge === 'bestseller' ? '🔥 '
+          : '';
+
+        // Image: real img URL if available, else emoji fallback
+        const imgHTML = p.img && !p.img.endsWith('/')
+          ? `<img src="${p.img}" alt="${getProductName(p)}"
+               onerror="this.outerHTML='<span style=\\'font-size:38px\\'>${p.emoji}</span>'">`
+          : `<span style="font-size:38px">${p.emoji}</span>`;
+
+        return `
+          <div class="fert-h-card" id="pimgwrap-${p.id}" onclick="onCardClick(${p.id}, event)">
+            <div class="fert-h-img">${imgHTML}</div>
+            <div class="fert-h-body">
+              <div class="fert-h-header">
+                <div class="fert-h-name">${getProductName(p)}</div>
+                <div class="fert-h-type">${badgePrefix}${typeLabel}</div>
               </div>
-              <div class="product-rating">${p.rating}</div>
+              <div class="fert-h-price">₹${p.price}<span> / ${getProductUnit(p)}</span>
+                <span style="font-size:10px;color:#e53935;font-weight:700;margin-left:4px">-${discount}%</span>
+              </div>
+              <div class="fert-h-use">💡 ${getProductDesc(p)}</div>
+              <div class="fert-h-cta" style="display:flex;align-items:center;justify-content:space-between;margin-top:7px">
+                <span style="font-size:10px;color:var(--green-mid);font-weight:700;opacity:0.85">विवरण देखें →</span>
+                <button class="fert-h-cart-btn ${inCart ? 'in-cart' : ''}"
+                  onclick="toggleCart(${p.id}, this); event.stopPropagation()"
+                  style="font-size:11px;font-weight:700;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;background:${inCart ? 'var(--green-pale)' : 'var(--green-dark)'};color:${inCart ? 'var(--green-dark)' : '#fff'};font-family:inherit;transition:background 0.18s">
+                  ${inCart ? '✅ In Cart' : '🛒 Add'}
+                </button>
+              </div>
             </div>
-            <button class="btn-add-cart ${inCart ? 'in-cart' : ''}"
-              onclick="toggleCart(${p.id}, this)">
-              ${inCart ? t('in_cart') : t('add_cart')}
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
+          </div>`;
+      }).join('');
+    }
+
+    // After rendering, pull real fertilizer images from API cache
+    if (_fertCache) _applyFertImages(_fertCache);
+    else fetchFertData().then(data => { if (data) _applyFertImages(data); });
   }
 
   function categoryLabel(cat) {
@@ -1628,6 +2055,188 @@
   }
 
   // ══════════════════════════════════════
+  // FERTILIZER MODAL (API-powered, same as mandi.html)
+  // ══════════════════════════════════════
+  let _fertCache = null;   // cache API response
+  let _currentFertId = null; // shop product id open in modal
+
+  // Map shop product IDs → fertilizer API keys (matched by name keywords)
+  const FERT_KEY_MAP = {
+    5:  'DAP',   // DAP Fertilizer
+    6:  null,    // Vermicompost — no API key, fallback to local
+    7:  'Urea',  // Urea
+    8:  null,    // Micronutrient — fallback to local
+  };
+
+  async function fetchFertData() {
+    if (_fertCache) return _fertCache;
+    try {
+      const res  = await fetch('https://krashi-mitra-v1.onrender.com/shop/fertilizers');
+      const data = await res.json();
+      _fertCache = Object.fromEntries(Object.entries(data.fertilizers));
+      return _fertCache;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Inject real fertilizer images from API into already-rendered cards
+  function _applyFertImages(fertData) {
+    const fertProducts = PRODUCTS.filter(p => p.cat === 'fertilizer');
+    fertProducts.forEach(p => {
+      const apiKey = FERT_KEY_MAP[p.id];
+      if (!apiKey) return;
+      const key = Object.keys(fertData).find(k => k.toLowerCase().includes(apiKey.toLowerCase()));
+      if (!key || !fertData[key].image) return;
+      const wrap = document.getElementById(`pimgwrap-${p.id}`);
+      if (!wrap) return;
+      // Handle both horizontal fert-h-card and legacy vertical product-img wrappers
+      const imgWrap = wrap.classList.contains('fert-h-card')
+        ? wrap.querySelector('.fert-h-img')
+        : wrap;
+      if (!imgWrap) return;
+      const existing = imgWrap.querySelector('span, img');
+      if (!existing) return;
+      const img = document.createElement('img');
+      // Use fert-h-img sizing for horizontal cards, product-real-img for vertical
+      img.className = wrap.classList.contains('fert-h-card') ? '' : 'product-real-img';
+      if (wrap.classList.contains('fert-h-card')) {
+        img.style.cssText = 'width:64px;height:74px;object-fit:contain;display:block';
+      }
+      img.src = fertData[key].image;
+      img.alt = getProductName(p);
+      img.onerror = () => { img.replaceWith(existing.cloneNode(true)); };
+      existing.replaceWith(img);
+    });
+  }
+
+  function onCardClick(productId, e) {
+    openShopFertModal(productId, e);
+  }
+
+  async function openShopFertModal(productId, e) {
+    if (e) e.stopPropagation();
+    _currentFertId = productId;
+    const p = PRODUCTS.find(x => x.id === productId);
+    if (!p) return;
+
+    // Open modal immediately with local data while API loads
+    _fillFertModalLocal(p);
+    document.getElementById('fert-modal').classList.add('open');
+    _updateFertModalCartBtn(productId);
+
+    // Try to enrich with API data — only for fertilizers
+    const apiKey = FERT_KEY_MAP[productId];
+    if (apiKey && p.cat === 'fertilizer') {
+      const data = await fetchFertData();
+      if (data) {
+        // Find matching key (case-insensitive)
+        const key = Object.keys(data).find(k => k.toLowerCase().includes(apiKey.toLowerCase()));
+        if (key) {
+          _fillFertModalAPI(data[key], p);
+          return;
+        }
+      }
+    }
+  }
+
+  function _fillFertModalLocal(p) {
+    const name = getProductName(p);
+    const catTypeMap = {
+      seeds:      { hi: 'बीज', en: 'Seeds', kn: 'ಬೀಜ' },
+      fertilizer: { hi: 'खाद', en: 'Fertilizer', kn: 'ಗೊಬ್ಬರ' },
+      pesticide:  { hi: 'कीटनाशक', en: 'Pesticide', kn: 'ಕೀಟನಾಶಕ' },
+      tools:      { hi: 'उपकरण', en: 'Tools', kn: 'ಉಪಕರಣ' },
+    };
+    let typeStr = '';
+    if (p.cat === 'fertilizer') {
+      typeStr = p.name_en.includes('Organic') || p.name_en.includes('Vermi') ? 'Organic'
+        : p.name_en.includes('Urea') ? 'Nitrogen'
+        : p.name_en.includes('DAP') ? 'Phosphorus'
+        : p.name_en.includes('Micro') ? 'Micronutrient' : 'Fertilizer';
+    } else {
+      typeStr = catTypeMap[p.cat]?.en || p.cat;
+    }
+    document.getElementById('fert-popup-name').textContent      = name;
+    document.getElementById('fert-left-name-span').textContent  = name;
+    document.getElementById('fert-popup-type').textContent      = typeStr;
+    document.getElementById('fert-popup-price').textContent     = p.price;
+    document.getElementById('fert-popup-bag').textContent       = `/ ${getProductUnit(p)}`;
+    document.getElementById('fert-popup-details').textContent   = getProductDesc(p);
+    document.getElementById('fert-popup-use').textContent       = getProductDesc(p);
+    document.getElementById('fert-popup-when').textContent      = '—';
+    document.getElementById('fert-popup-dosage').textContent    = '—';
+    document.getElementById('fert-popup-precaution').textContent = '—';
+    document.getElementById('fert-popup-crops').innerHTML       = '';
+
+    // Placeholder image
+    const wrap = document.getElementById('fert-popup-img-wrap');
+    wrap.innerHTML = `<div class="fert-modal-img-placeholder" id="fert-popup-img">${p.emoji}</div>`;
+  }
+
+  function _fillFertModalAPI(f, p) {
+    const name = f.name || getProductName(p);
+    document.getElementById('fert-popup-name').textContent      = name;
+    document.getElementById('fert-left-name-span').textContent  = name;
+    document.getElementById('fert-popup-type').textContent      = f.type || '';
+    document.getElementById('fert-popup-price').textContent     = f.price_per_bag || p.price;
+    document.getElementById('fert-popup-bag').textContent       = `/ ${f.bag_size || getProductUnit(p)}`;
+
+    const nitrogen = f.nitrogen && f.nitrogen !== '0%' ? ` Contains ${f.nitrogen} Nitrogen.` : '';
+    document.getElementById('fert-popup-details').textContent   = `${name} is a ${f.type} fertilizer.${nitrogen} ${f.use}`;
+    document.getElementById('fert-popup-use').textContent       = f.use || '';
+    document.getElementById('fert-popup-when').textContent      = f.when_to_apply || '—';
+    document.getElementById('fert-popup-dosage').textContent    = f.dosage || '—';
+    document.getElementById('fert-popup-precaution').textContent = f.precaution || '—';
+
+    document.getElementById('fert-popup-crops').innerHTML =
+      (f.suitable_for || []).map(c => `<span class="fert-modal-crop-tag">✅ ${c}</span>`).join('');
+
+    const wrap = document.getElementById('fert-popup-img-wrap');
+    if (f.image) {
+      wrap.innerHTML = `<img class="fert-modal-img" id="fert-popup-img"
+        src="${f.image}"
+        onerror="this.outerHTML='<div class=fert-modal-img-placeholder id=fert-popup-img>🌱</div>'"
+        alt="${name}">`;
+    } else {
+      wrap.innerHTML = `<div class="fert-modal-img-placeholder" id="fert-popup-img">${p.emoji}</div>`;
+    }
+  }
+
+  function _updateFertModalCartBtn(productId) {
+    const inCart = cart[productId] > 0;
+    const btn    = document.getElementById('fert-modal-cart-btn');
+    const lbl    = document.getElementById('fert-modal-cart-label');
+    if (!btn || !lbl) return;
+    lbl.textContent = inCart ? t('in_cart') : t('add_cart');
+    btn.classList.toggle('in-cart', inCart);
+  }
+
+  function fertModalAddCart() {
+    if (!_currentFertId) return;
+    if (cart[_currentFertId] > 0) {
+      delete cart[_currentFertId];
+      showToast(t('toast_removed'));
+    } else {
+      cart[_currentFertId] = 1;
+      showToast(t('toast_added'));
+    }
+    saveCart();
+    updateCartBadge();
+    renderProducts();
+    _updateFertModalCartBtn(_currentFertId);
+  }
+
+  function closeFertModal() {
+    document.getElementById('fert-modal').classList.remove('open');
+    _currentFertId = null;
+  }
+
+  document.getElementById('fert-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeFertModal();
+  });
+
+  // ══════════════════════════════════════
   // TOAST
   // ══════════════════════════════════════
   let _toastTimer = null;
@@ -1645,8 +2254,23 @@
   // ══════════════════════════════════════
   document.addEventListener('DOMContentLoaded', () => {
     setLang(currentLang);
+
+    // Handle ?cat= URL param — e.g. from mandi.html "Buy" links
+    const urlParams = new URLSearchParams(window.location.search);
+    const catParam  = urlParams.get('cat');
+    if (catParam) {
+      const btn = document.querySelector(`.shop-filter-btn[data-cat="${catParam}"]`);
+      if (btn) {
+        setCategory(catParam, btn);
+        setTimeout(() => showToast('🏪 मंडी से आए — ' + (catParam === 'fertilizer' ? 'खाद दिखाई जा रही है' : catParam)), 400);
+      }
+    }
+
     renderProducts();
     updateCartBadge();
+
+    // Pre-warm fertilizer API in background when fertilizer category active
+    if (catParam === 'fertilizer') fetchFertData();
   });
 </script>
 </body>
