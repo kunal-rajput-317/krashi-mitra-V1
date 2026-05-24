@@ -1,132 +1,178 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Core Pages -->
+  <!-- ═══════════════════════════════
+       CORE PAGES
+  ═══════════════════════════════ -->
   <url>
     <loc>https://krashimitra.in/</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+
   <url>
-    <loc>https://krashimitra.in/articles/</loc>
+    <loc>https://krashimitra.in/about</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://krashimitra.in/contact</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://krashimitra.in/privacy</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://krashimitra.in/terms</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://krashimitra.in/disclaimer</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- ═══════════════════════════════
+       CHAT / APP TABS
+  ═══════════════════════════════ -->
+  <url>
+    <loc>https://krashimitra.in/chat</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Chat / Tool Pages -->
   <url>
     <loc>https://krashimitra.in/chat?tab=chat</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
-  <url>
-    <loc>https://krashimitra.in/chat?tab=disease</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
+
   <url>
     <loc>https://krashimitra.in/chat?tab=weather</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+
   <url>
     <loc>https://krashimitra.in/chat?tab=mandi</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <url>
+    <loc>https://krashimitra.in/chat?tab=disease</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <url>
     <loc>https://krashimitra.in/chat?tab=fertilizer</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/chat?tab=pest</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/chat?tab=info</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Articles — Wheat (गेहूं) -->
+  <!-- ═══════════════════════════════
+       ARTICLES INDEX
+  ═══════════════════════════════ -->
   <url>
-    <loc>https://krashimitra.in/articles/gehun-pila.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/articles/gehun-buvai.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://krashimitra.in/articles/</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
 
-  <!-- Articles — Rice (धान) -->
-  <url>
-    <loc>https://krashimitra.in/articles/dhan-buvai.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/articles/dhan-jhoka.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Articles — Fertilizer (खाद) -->
-  <url>
-    <loc>https://krashimitra.in/articles/urea_guide_up</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/articles/urea-guide.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/articles/jaivik-khad.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Articles — Pest Control (कीट) -->
-  <url>
-    <loc>https://krashimitra.in/articles/keet-niyantran</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/articles/tiddi-bachav.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Articles — Weather (मौसम) -->
-  <url>
-    <loc>https://krashimitra.in/articles/mausam-guide</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/articles/sukha-prabandhan.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Articles — Mustard (सरसों) -->
-  <url>
-    <loc>https://krashimitra.in/articles/sarso-kheti.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Articles — Sugarcane (गन्ना) -->
+  <!-- ═══════════════════════════════
+       ARTICLES — GANNA (SUGARCANE)
+  ═══════════════════════════════ -->
   <url>
     <loc>https://krashimitra.in/articles/ganna-rog.html</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://krashimitra.in/articles/ganna-smut.html</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+
+  <!-- ═══════════════════════════════
+       ARTICLES — GEHUN (WHEAT)
+  ═══════════════════════════════ -->
+  <url>
+    <loc>https://krashimitra.in/articles/gehun-pila.html</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ═══════════════════════════════
+       ARTICLES — DHAN (PADDY / RICE)
+  ═══════════════════════════════ -->
+  <url>
+    <loc>https://krashimitra.in/articles/dhan-buvai.html</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ═══════════════════════════════
+       ARTICLES — FERTILIZER / KHAD
+  ═══════════════════════════════ -->
+  <url>
+    <loc>https://krashimitra.in/articles/urea-guide.html</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ═══════════════════════════════
+       ARTICLES — PEST CONTROL
+  ═══════════════════════════════ -->
+  <url>
+    <loc>https://krashimitra.in/articles/keet-niyantran</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ═══════════════════════════════
+       ARTICLES — WEATHER / MAUSAM
+  ═══════════════════════════════ -->
+  <url>
+    <loc>https://krashimitra.in/articles/mausam-guide.html</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://krashimitra.in/articles/sukha-prabandhan.html</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 </urlset>
