@@ -211,6 +211,103 @@
       cursor: pointer; flex-shrink: 0;
     }
 
+    /* Cart badge on topbar */
+    .topbar-cart-btn {
+      position: relative;
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.20);
+      color: rgba(255,255,255,0.80);
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+      text-decoration: none;
+    }
+    .topbar-cart-btn:hover { background: rgba(255,255,255,0.18); }
+    .cart-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      background: var(--amber);
+      color: #1a2e1e;
+      font-size: 9px;
+      font-weight: 800;
+      border-radius: 50%;
+      width: 16px; height: 16px;
+      display: none;
+      align-items: center; justify-content: center;
+    }
+    .cart-badge.show { display: flex; }
+
+    /* Buy from shop button on fert cards */
+    .fert-buy-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--green-dark); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 7px 14px; font-size: 12px; font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer; text-decoration: none; margin-top: 8px;
+      transition: background 0.18s, transform 0.1s;
+      width: 100%;
+      justify-content: center;
+    }
+    .fert-buy-btn:hover { background: var(--green-mid); transform: translateY(-1px); }
+    .fert-buy-btn:active { transform: scale(0.97); }
+
+    /* Buy button inside modal */
+    .fert-modal-buy-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-dark); color: #fff;
+      border: none; border-radius: 12px;
+      padding: 13px 24px; font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.18s, transform 0.1s;
+      margin-top: 14px; width: 100%; justify-content: center;
+      box-shadow: 0 4px 14px rgba(26,60,46,0.25);
+    }
+    .fert-modal-buy-btn:hover { background: var(--green-mid); transform: translateY(-1px); }
+    .fert-modal-buy-btn:active { transform: scale(0.97); }
+
+    /* Mandi price cross-link banner */
+    .cross-link-banner {
+      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: var(--shadow);
+    }
+    .cross-link-banner-icon { font-size: 28px; flex-shrink: 0; }
+    .cross-link-banner-text { flex: 1; }
+    .cross-link-banner-text strong { font-size: 13px; color: var(--text-dark); display: block; margin-bottom: 2px; }
+    .cross-link-banner-text span { font-size: 12px; color: var(--text-mid); }
+    .cross-link-banner-btn {
+      background: var(--amber); color: #1a2e1e;
+      border: none; border-radius: 20px; padding: 7px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      text-decoration: none; white-space: nowrap; flex-shrink: 0;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      transition: background 0.15s;
+    }
+    .cross-link-banner-btn:hover { background: #d4931e; }
+
+    /* Toast for mandi page */
+    .toast {
+      position: fixed; bottom: 80px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green-dark); color: #fff;
+      padding: 12px 24px; border-radius: 20px;
+      font-size: 14px; font-weight: 600;
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      z-index: 9999; opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     /* ══════════════════════════════════════
        MAIN CONTENT
     ══════════════════════════════════════ */
@@ -728,6 +825,12 @@
   </nav>
 
   <div class="topbar-right">
+    <!-- Cart link — shows live count from localStorage -->
+    <a class="topbar-cart-btn" href="shop.html" title="दुकान / Cart" id="topbar-cart-link">
+      🛒
+      <span class="cart-badge" id="cart-badge"></span>
+    </a>
+
     <div class="lang-picker" id="lang-picker">
       <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
         <span id="lang-picker-label">हिं</span>
@@ -792,6 +895,17 @@
   <!-- ── FERTILIZER PRICES ── -->
   <div id="shop-fertilizer" style="display:none">
     <div class="shop-section-title" data-t="fert_title">🧪 Fertilizer Prices — Government MRP</div>
+
+    <!-- Cross-link: Buy from E-Dukan -->
+    <div class="cross-link-banner" id="fert-shop-banner">
+      <span class="cross-link-banner-icon">🛒</span>
+      <div class="cross-link-banner-text">
+        <strong data-t="banner_shop_title">ई-दुकान से खाद खरीदें</strong>
+        <span data-t="banner_shop_sub">सरकारी MRP पर प्रमाणित खाद — घर पर डिलीवरी</span>
+      </div>
+      <a class="cross-link-banner-btn" href="shop.html?cat=fertilizer" data-t="banner_shop_cta">दुकान खोलें →</a>
+    </div>
+
     <div id="fertilizer-grid" class="fertilizer-grid">
       <!-- shimmer placeholders -->
       <div class="mandi-shimmer"></div>
@@ -873,11 +987,19 @@
             </div>
           </div>
           <div class="fert-modal-crops" id="fert-popup-crops"></div>
+
+          <!-- Buy from Shop CTA -->
+          <a class="fert-modal-buy-btn" id="fert-modal-buy-link" href="shop.html?cat=fertilizer">
+            🛒 <span data-t="modal_buy_btn">दुकान से खरीदें — Shop.html</span>
+          </a>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <!-- ══ BOTTOM NAV (Mobile) ══ -->
 <nav class="bottom-nav">
@@ -942,6 +1064,11 @@
       no_data_sub:      "अलग combination try करें",
       error_server:     "⚠️ Server से connect नहीं हुआ।",
       footer_meta:      "मंडी भाव · सरकारी दरें · कृषि मित्र · krashimitra.in",
+      buy_btn:          "🛒 दुकान से खरीदें",
+      modal_buy_btn:    "दुकान से खरीदें",
+      banner_shop_title:"ई-दुकान से खाद खरीदें",
+      banner_shop_sub:  "सरकारी MRP पर प्रमाणित खाद — घर पर डिलीवरी",
+      banner_shop_cta:  "दुकान खोलें →",
     },
     en: {
       nav_chat:         "AI Advisor",
@@ -963,6 +1090,11 @@
       no_data_sub:      "Try a different combination",
       error_server:     "⚠️ Could not reach server.",
       footer_meta:      "Mandi Rates · Govt. Prices · KrashiMitra · krashimitra.in",
+      buy_btn:          "🛒 Buy from Shop",
+      modal_buy_btn:    "Buy from E-Dukan",
+      banner_shop_title:"Buy Fertilizer from E-Dukan",
+      banner_shop_sub:  "Certified fertilizers at Govt. MRP — Home Delivery",
+      banner_shop_cta:  "Open Shop →",
     },
     kn: {
       nav_chat:         "AI ಕೇಳಿ",
@@ -984,6 +1116,11 @@
       no_data_sub:      "ಬೇರೆ combination ಪ್ರಯತ್ನಿಸಿ",
       error_server:     "⚠️ ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಲಿಲ್ಲ.",
       footer_meta:      "ಮಂಡಿ ಬೆಲೆ · ಸರ್ಕಾರಿ ದರ · ಕೃಷಿ ಮಿತ್ರ",
+      buy_btn:          "🛒 ಅಂಗಡಿಯಿಂದ ಖರೀದಿಸಿ",
+      modal_buy_btn:    "ಇ-ದುಕಾನ್‌ನಿಂದ ಖರೀದಿಸಿ",
+      banner_shop_title:"ಇ-ದುಕಾನ್‌ನಿಂದ ಗೊಬ್ಬರ ಖರೀದಿಸಿ",
+      banner_shop_sub:  "ಸರ್ಕಾರಿ MRP ನಲ್ಲಿ ಪ್ರಮಾಣಿತ ಗೊಬ್ಬರ — ಮನೆ ಡೆಲಿವರಿ",
+      banner_shop_cta:  "ಅಂಗಡಿ ತೆರೆಯಿರಿ →",
     }
   };
 
@@ -1216,6 +1353,7 @@
               <div class="fert-price">₹${f.price_per_bag}<span> / ${f.bag_size} bag</span></div>
               <div class="fert-use">💡 ${f.use.substring(0, 52)}…</div>
               <div class="fert-card-cta">Tap to view more… →</div>
+              <a class="fert-buy-btn" href="shop.html?cat=fertilizer" onclick="event.stopPropagation()" data-t="buy_btn">🛒 दुकान से खरीदें</a>
             </div>
           </div>`;
       }).join('');
@@ -1276,7 +1414,44 @@
   document.addEventListener('DOMContentLoaded', () => {
     setLang(currentLang);
     loadStates();
+    syncCartBadge();
+
+    // Handle ?tab= URL param — e.g. from shop.html "Mandi Rates" cross-link
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam  = urlParams.get('tab');
+    if (tabParam === 'fertilizer') {
+      switchShopTab('fertilizer');
+    }
   });
+
+  // ══════════════════════════════════════
+  // CART BADGE SYNC (reads from shop's localStorage)
+  // ══════════════════════════════════════
+  function syncCartBadge() {
+    try {
+      const raw = localStorage.getItem('km_cart');
+      const cart = raw ? JSON.parse(raw) : {};
+      const count = Object.values(cart).reduce((s, v) => s + (v || 0), 0);
+      const badge = document.getElementById('cart-badge');
+      if (badge) {
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.classList.toggle('show', count > 0);
+      }
+    } catch(e) {}
+  }
+
+  // ══════════════════════════════════════
+  // TOAST
+  // ══════════════════════════════════════
+  let _toastTimer = null;
+  function showToast(msg, dur = 2200) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+  }
 </script>
 </body>
 </html>
