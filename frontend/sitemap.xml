@@ -78,6 +78,13 @@
   </url>
 
   <url>
+    <loc>https://krashimitra.in/help.html</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://krashimitra.in/chat?tab=chat</loc>
     <lastmod>2026-05-24</lastmod>
     <changefreq>daily</changefreq>
