@@ -32,6 +32,10 @@ DEBUG    = os.getenv("DEBUG", "true").lower() == "true"
 
 from backend.database.db import MandiPrice, get_db, init_db
 
+from backend.database.db import engine, Base
+from backend.routes import cart  # ensure model is imported
+
+
 # ── Routers ──────────────────────────────────────────────────
 from backend.routes.weather    import router as weather_router
 from backend.routes.mandi      import router as mandi_router
@@ -79,6 +83,9 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+def create_tables():
+    Base.metadata.create_all(bind=engine)
 
 # @app.post("/ask")
 # async def ask(data: dict):

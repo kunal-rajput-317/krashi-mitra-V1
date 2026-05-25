@@ -73,7 +73,7 @@ def get_cart(
     session_id:   Optional[str] = Query(None),
     db:           Session       = Depends(get_db),
     # Optional JWT — we handle auth manually so guests don't get 401
-    authorization: Optional[str] = None,
+    authorization: Optional[str] = (None),
 ):
     user = _get_token_optional(authorization)
 
