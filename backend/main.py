@@ -104,9 +104,8 @@ app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
-app.include_router(chat.router)
-app.include_router(weather.router)
-app.include_router(mandi.router)
+# NOTE: chat.router, weather.router, mandi.router removed here —
+# they are already registered above as cart_router/weather_router/mandi_router
 
 from backend.routes import admin as admin_route
 app.include_router(admin_route.router)
