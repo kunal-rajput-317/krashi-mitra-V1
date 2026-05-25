@@ -2412,6 +2412,16 @@
 
   // ── NeonDB Cart Sync ────────────────────────────────────────
   const API_BASE = 'https://krashi-mitra-v1.onrender.com';
+  let _backendAlive = null; // null=unknown, true=ok, false=down
+
+  async function _checkBackend() {
+    if (_backendAlive !== null) return _backendAlive;
+    try {
+      const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+      _backendAlive = r.ok;
+    } catch { _backendAlive = false; }
+    return _backendAlive;
+  }
 
   function getToken()     { return localStorage.getItem('krishi_token'); }
   function getSessionId() {
@@ -2425,6 +2435,7 @@
 
   // Load cart from NeonDB on page open
   async function loadCartFromDB() {
+    if (!await _checkBackend()) return; // backend down — use localStorage
     try {
       const token = getToken();
       const headers = {};
@@ -2449,6 +2460,7 @@
 
   // Sync a single item change to NeonDB (fire & forget)
   async function syncItemToDB(productId, quantity) {
+    if (!await _checkBackend()) return; // backend down — localStorage already saved
     try {
       const token = getToken();
       const headers = { 'Content-Type': 'application/json' };
@@ -2465,6 +2477,7 @@
 
   // Clear cart on NeonDB
   async function clearCartOnDB() {
+    if (!await _checkBackend()) return;
     try {
       const token = getToken();
       const headers = {};
@@ -2481,7 +2494,10 @@
   // Merge guest cart into user cart right after login
   async function mergeGuestCartAfterLogin() {
     const sid = localStorage.getItem('km_session_id');
-    if (!sid || !getToken()) return;
+    const justLoggedIn = localStorage.getItem('km_just_logged_in');  // ← only run once after login
+    if (!sid || !getToken() || !justLoggedIn) return;
+    localStorage.removeItem('km_just_logged_in');  // ← clear immediately so it doesn't re-run
+    if (!await _checkBackend()) return;
     try {
       const res  = await fetch(`${API_BASE}/cart/merge`, {
         method:  'POST',
@@ -2501,7 +2517,7 @@
         renderProducts();
         localStorage.removeItem('km_session_id');
       }
-    } catch (e) { /* silent */ }
+    } catch (e) { console.error('[Cart Merge Error]', e); }
   }
   // ───────────────────────────────────────────────────────────
 

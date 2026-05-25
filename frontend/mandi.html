@@ -1491,24 +1491,28 @@
   // MANDI CART — shared with shop.html via localStorage 'km_cart'
   // Keys for mandi fertilizers use 'fert_<key>' prefix to avoid id collision
   // ══════════════════════════════════════
-  window.mandiCart = JSON.parse(localStorage.getItem('km_mandi_cart') || '{}');
+  window.mandiCart = JSON.parse(localStorage.getItem('km_cart') || '{}');
 
   // Fertilizer price/name lookup (populated after loadFertilizers)
   window.mandiCartMeta = {};
 
   function _saveMandCart() {
-    localStorage.setItem('km_mandi_cart', JSON.stringify(window.mandiCart));
+    localStorage.setItem('km_cart', JSON.stringify(window.mandiCart));
   }
 
   function _mandiCartCount() {
-    return Object.values(window.mandiCart).reduce((a, b) => a + b, 0);
+    return Object.entries(window.mandiCart)
+      .filter(([k]) => k.startsWith('fert_'))
+      .reduce((a, [, b]) => a + b, 0);
   }
 
   function _mandiCartTotal() {
-    return Object.entries(window.mandiCart).reduce((sum, [k, qty]) => {
-      const meta = window.mandiCartMeta[k];
-      return sum + (meta ? meta.price * qty : 0);
-    }, 0);
+    return Object.entries(window.mandiCart)
+      .filter(([k]) => k.startsWith('fert_'))
+      .reduce((sum, [k, qty]) => {
+        const meta = window.mandiCartMeta[k];
+        return sum + (meta ? meta.price * qty : 0);
+      }, 0);
   }
 
   function updateCartBadge() {
@@ -1596,7 +1600,7 @@
     const footer = document.getElementById('cart-footer');
     if (!wrap) return;
 
-    const cartEntries = Object.entries(window.mandiCart).filter(([, q]) => q > 0);
+    const cartEntries = Object.entries(window.mandiCart).filter(([k, q]) => k.startsWith('fert_') && q > 0);
     if (cartEntries.length === 0) {
       wrap.innerHTML = `
         <div class="cart-empty">
@@ -1676,6 +1680,7 @@
 
   // ══ INIT ══
   document.addEventListener('DOMContentLoaded', () => {
+    window.mandiCart = JSON.parse(localStorage.getItem('km_cart') || '{}');
     setLang(currentLang);
     loadStates();
     updateCartBadge();

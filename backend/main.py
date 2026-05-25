@@ -84,8 +84,11 @@ app.add_middleware(
 
 
 @app.on_event("startup")
-def create_tables():
-    Base.metadata.create_all(bind=engine)
+async def startup():
+    Base.metadata.create_all(bind=engine)   # ← create tables (cart, etc.)
+    init_db()
+    print("✅ Krishi Mitra database initialized.")
+    await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
 
 # @app.post("/ask")
 # async def ask(data: dict):
@@ -101,19 +104,11 @@ app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
-app.include_router(chat.router)
-app.include_router(weather.router)
-app.include_router(mandi.router)
+# NOTE: chat.router, weather.router, mandi.router removed here —
+# they are already registered above as cart_router/weather_router/mandi_router
 
 from backend.routes import admin as admin_route
 app.include_router(admin_route.router)
-
-# Initialize database tables on startup
-@app.on_event("startup")
-async def startup():
-    init_db()
-    print("✅ Krishi Mitra database initialized.")
-    await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
 
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
