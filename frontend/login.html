@@ -452,13 +452,13 @@
         authOk("login-success", "✅ Login हो गया! Redirecting...");
         setTimeout(() => {
           // Redirect back to main app (adjust path as needed)
-          window.location.href = "old_chat.html";
+          window.location.href = "profile.html";
         }, 800);
       } else {
         authErr("login-error", data.message || "Login failed। Email या password जाँचें।");
       }
     } catch (err) {
-      authErr("login-error", "⚠️ Server से connect नहीं हो पाया। क्या FastAPI चल रहा है?");
+      authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
       setBtnLoading("login-btn", false, "Login करें →");
     }
@@ -573,7 +573,7 @@
   // ══════════════════════════════════════
   window.addEventListener("load", () => {
     if (getToken()) {
-      window.location.href = "old_chat.html";
+      window.location.href = "profile.html";
     }
     // Focus email on load
     const emailInp = document.getElementById("login-email");
