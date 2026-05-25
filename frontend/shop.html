@@ -16,10 +16,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <title>ई-दुकान | KrashiMitra</title>
+  <title>🌾कृषि दुकान – खाद, बीज, कीटनाशक खरीदें | KrashiMitra</title>
   <link rel="icon" type="image/png" href="https://krashimitra.in/images/favicon.png">
 
-  <meta name="description" content="उत्तर प्रदेश के किसानों के लिए बीज, खाद, कीटनाशक और कृषि उपकरण — KrashiMitra Shop।" />
+  
+  <meta name="description" content="KrashiMitra Shop पर किसानों के लिए बीज, खाद, यूरिया, DAP, कीटनाशक, fungicide, pesticide, कृषि उपकरण और farming products की जानकारी व खरीदारी। खेती से जुड़ी सही सलाह, crop solutions, fertilizer guide और कृषि सामग्री एक ही जगह।" />
+
+<meta name="keywords" content="
+कृषि दुकान,
+किसान दुकान,
+बीज खरीदें,
+खाद खरीदें,
+यूरिया,
+DAP खाद,
+कीटनाशक,
+fungicide,
+pesticide,
+fertilizer,
+farming products,
+agriculture shop,
+online krishi store,
+गन्ना खेती,
+गेहूं खेती,
+धान खेती,
+crop protection,
+best fertilizer,
+urea price,
+DAP price,
+कृषि उत्पाद,
+कृषि उपकरण,
+farming tools,
+krishi mitra,
+krashimitra,
+online seed store,
+भारत कृषि दुकान,
+UP किसान,
+खेती की दवा,
+insecticide,
+bio fertilizer,
+organic fertilizer,
+agriculture products india
+" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://krashimitra.in/shop.html" />
 
@@ -849,6 +886,52 @@
       border: 1.5px solid var(--green-light); box-shadow: none;
     }
 
+    /* ══════════════════════════════════════
+       AFFILIATE BUTTONS — card + modal
+    ══════════════════════════════════════ */
+    .affil-row {
+      display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap;
+    }
+    .affil-btn {
+      flex: 1; min-width: 0;
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      border: none; border-radius: 8px;
+      padding: 5px 8px; font-size: 11px; font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer; text-decoration: none;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap; line-height: 1.3;
+    }
+    .affil-btn:active { transform: scale(0.96); }
+    .affil-btn-amazon {
+      background: #0a0335c3; color: #ffffff;
+    }
+    .affil-btn-amazon:hover { opacity: 0.88; }
+    .affil-btn-flipkart {
+      background: #f1fd12; color: #030000;
+    }
+    .affil-btn-flipkart:hover { opacity: 0.88; }
+
+    /* Larger versions inside modal */
+    .affil-modal-row {
+      display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;
+    }
+    .affil-modal-btn {
+      flex: 1; min-width: 120px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: none; border-radius: 12px;
+      padding: 12px 18px; font-size: 14px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; text-decoration: none;
+      transition: opacity 0.15s, transform 0.1s;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+    }
+    .affil-modal-btn:active { transform: scale(0.97); }
+    .affil-modal-btn-amazon { background: #FF9900; color: #111; }
+    .affil-modal-btn-amazon:hover { opacity: 0.88; }
+    .affil-modal-btn-flipkart { background: #2874F0; color: #fff; }
+    .affil-modal-btn-flipkart:hover { opacity: 0.88; }
+
     /* Mobile modal overrides */
     @media screen and (max-width: 700px) {
       .fert-modal-overlay { padding: 10px; align-items: flex-end; }
@@ -1442,6 +1525,17 @@
           <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="fertModalAddCart()">
             🛒 <span id="fert-modal-cart-label">टोकरी में डालें</span>
           </button>
+          <!-- Affiliate buy buttons inside modal -->
+          <div class="affil-modal-row" id="fert-modal-affil-row">
+            <a class="affil-modal-btn affil-modal-btn-amazon" id="fert-modal-amazon-btn"
+               href="#" target="_blank" rel="noopener sponsored">
+              🛒 Buy on Amazon
+            </a>
+            <a class="affil-modal-btn affil-modal-btn-flipkart" id="fert-modal-flipkart-btn"
+               href="#" target="_blank" rel="noopener sponsored">
+              🛍️ Buy on Flipkart
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -1665,25 +1759,33 @@
       desc_hi: 'उच्च उपज देने वाली गेहूं की किस्म, रस्ट रोग प्रतिरोधी।',
       desc_en: 'High-yielding wheat variety, rust disease resistant.',
       desc_kn: 'ಹೆಚ್ಚು ಇಳುವರಿ ನೀಡುವ ಗೋಧಿ ತಳಿ, ತುಕ್ಕು ರೋಗ ನಿರೋಧಕ.',
-      price: 280, mrp: 350, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.7' },
-    { id: 2,  cat: 'seeds',      emoji: '🌽', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/seeds/makka-hybrid-crop-cp-333.png',
+      price: 280, mrp: 350, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.7',
+      affil_amazon: 'https://www.amazon.in/s?k=Wheat+Seeds+HD-2967&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Wheat+Seeds+HD-2967&affid=YOURAFFID' },
+    { id: 2,  cat: 'seeds',      emoji: '🌽', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/seeds/onion-seed-nasik-red.png',
       name_hi: 'मक्का हाइब्रिड बीज', name_en: 'Hybrid Maize Seeds', name_kn: 'ಹೈಬ್ರಿಡ್ ಮೆಕ್ಕೆ ಬೀಜ',
       desc_hi: 'तेज विकास, 90-100 दिन में कटाई। जल सहनशील।',
       desc_en: 'Fast growing, harvest in 90-100 days. Drought tolerant.',
       desc_kn: '90-100 ದಿನದಲ್ಲಿ ಕೊಯ್ಲು. ಬರ ಸಹಿಷ್ಣು.',
-      price: 420, mrp: 500, unit_hi: '2 kg पैक', unit_en: '2 kg pack', unit_kn: '2 kg ಪ್ಯಾಕ್', rating: '⭐ 4.5' },
-    { id: 3,  cat: 'seeds',      emoji: '🧅', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/seeds/onion-seed-nasik-red.png',
+      price: 420, mrp: 500, unit_hi: '2 kg पैक', unit_en: '2 kg pack', unit_kn: '2 kg ಪ್ಯಾಕ್', rating: '⭐ 4.5',
+      affil_amazon: 'https://www.amazon.in/s?k=Hybrid+Maize+Seeds&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Hybrid+Maize+Seeds&affid=YOURAFFID' },
+    { id: 3,  cat: 'seeds',      emoji: '🧅', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/seeds/makka-hybrid-crop-cp-333.png/',
       name_hi: 'प्याज बीज अग्रीफाउंड', name_en: 'Onion Seeds Agrifound', name_kn: 'ಈರುಳ್ಳಿ ಬೀಜ ಅಗ್ರಿಫೌಂಡ್',
       desc_hi: 'लाल प्याज, उच्च भंडारण क्षमता। खरीफ व रबी दोनों के लिए।',
       desc_en: 'Red onion, high storage capacity. Suitable for Kharif & Rabi.',
       desc_kn: 'ಕೆಂಪು ಈರುಳ್ಳಿ, ಹೆಚ್ಚಿನ ಶೇಖರಣಾ ಸಾಮರ್ಥ್ಯ.',
-      price: 180, mrp: 220, unit_hi: '500g पैक', unit_en: '500g pack', unit_kn: '500g ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
+      price: 180, mrp: 220, unit_hi: '500g पैक', unit_en: '500g pack', unit_kn: '500g ಪ್ಯಾಕ್', rating: '⭐ 4.4',
+      affil_amazon: 'https://www.amazon.in/s?k=Onion+Seeds+Agrifound&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Onion+Seeds+Agrifound&affid=YOURAFFID' },
     { id: 4,  cat: 'seeds',      emoji: '🫘', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/seeds/soyabean-js-335.png',
       name_hi: 'सोयाबीन बीज JS-335', name_en: 'Soybean Seeds JS-335', name_kn: 'ಸೋಯಾಬೀನ್ ಬೀಜ JS-335',
       desc_hi: '100-105 दिन में परिपक्व। उच्च प्रोटीन सामग्री।',
       desc_en: 'Matures in 100-105 days. High protein content.',
       desc_kn: '100-105 ದಿನದಲ್ಲಿ ಪಕ್ವ. ಹೆಚ್ಚಿನ ಪ್ರೊಟೀನ್.',
-      price: 320, mrp: 380, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.3' },
+      price: 320, mrp: 380, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.3',
+      affil_amazon: 'https://www.amazon.in/s?k=Soybean+Seeds+JS-335&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Soybean+Seeds+JS-335&affid=YOURAFFID' },
 
     // ── Fertilizers ──
     { id: 5,  cat: 'fertilizer', emoji: '🧪', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/DAP.jpg',
@@ -1691,25 +1793,33 @@
       desc_hi: 'फसल की जड़ों को मजबूत करता है। नाइट्रोजन व फॉस्फोरस से भरपूर।',
       desc_en: 'Strengthens crop roots. Rich in Nitrogen & Phosphorus.',
       desc_kn: 'ಬೆಳೆ ಬೇರುಗಳನ್ನು ಮಜಬೂತಾಗಿಸುತ್ತದೆ. N & P ಭರಿತ.',
-      price: 1350, mrp: 1450, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.8' },
+      price: 1350, mrp: 1450, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.8',
+      affil_amazon: 'https://www.amazon.in/s?k=DAP+Fertilizer+50kg&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=DAP+Fertilizer&affid=YOURAFFID' },
     { id: 6,  cat: 'fertilizer', emoji: '🌿', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
       name_hi: 'वर्मीकम्पोस्ट (जैविक खाद)', name_en: 'Vermicompost Organic', name_kn: 'ವರ್ಮಿಕಂಪೋಸ್ಟ್ ಜೈವಿಕ ಗೊಬ್ಬರ',
       desc_hi: '100% जैविक, मिट्टी की उर्वरता बढ़ाए। सभी फसलों के लिए।',
       desc_en: '100% organic, improves soil fertility. For all crops.',
       desc_kn: '100% ಜೈವಿಕ, ಮಣ್ಣಿನ ಫಲವತ್ತತೆ ಹೆಚ್ಚಿಸುತ್ತದೆ.',
-      price: 450, mrp: 550, unit_hi: '25 kg बैग', unit_en: '25 kg bag', unit_kn: '25 kg ಚೀಲ', rating: '⭐ 4.6' },
+      price: 450, mrp: 550, unit_hi: '25 kg बैग', unit_en: '25 kg bag', unit_kn: '25 kg ಚೀಲ', rating: '⭐ 4.6',
+      affil_amazon: 'https://www.amazon.in/s?k=Vermicompost+Organic+Fertilizer&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Vermicompost+Organic+Fertilizer&affid=YOURAFFID' },
     { id: 7,  cat: 'fertilizer', emoji: '💧', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/urea.jpg',
       name_hi: 'यूरिया खाद 46% N', name_en: 'Urea Fertilizer 46% N', name_kn: 'ಯೂರಿಯಾ ಗೊಬ್ಬರ 46% N',
       desc_hi: 'नाइट्रोजन से भरपूर, हरी पत्तियों के लिए उत्तम। तेज असर।',
       desc_en: 'Nitrogen-rich, excellent for green leaf growth. Fast effect.',
       desc_kn: 'ನೈಟ್ರೋಜನ್ ಭರಿತ, ಹಸಿರು ಎಲೆ ಬೆಳವಣಿಗೆಗೆ ಉತ್ತಮ.',
-      price: 280, mrp: 300, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5' },
+      price: 280, mrp: 300, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5',
+      affil_amazon: 'https://www.amazon.in/s?k=Urea+Fertilizer+46+percent&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Urea+Fertilizer+46&affid=YOURAFFID' },
     { id: 8,  cat: 'fertilizer', emoji: '🔬', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/fertilizers/micronutrient-mix.png',
       name_hi: 'सूक्ष्म पोषक तत्व मिश्रण', name_en: 'Micronutrient Mix', name_kn: 'ಮೈಕ್ರೋನ್ಯೂಟ್ರಿಯೆಂಟ್ ಮಿಶ್ರಣ',
       desc_hi: 'जिंक, आयरन, बोरान युक्त। कमी के लक्षण दूर करे।',
       desc_en: 'Zinc, Iron, Boron enriched. Cures deficiency symptoms.',
       desc_kn: 'ಜಿಂಕ್, ಕಬ್ಬಿಣ, ಬೋರಾನ್ ಭರಿತ. ಕೊರತೆ ನಿವಾರಿಸುತ್ತದೆ.',
-      price: 380, mrp: 460, unit_hi: '10 kg पैक', unit_en: '10 kg pack', unit_kn: '10 kg ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
+      price: 380, mrp: 460, unit_hi: '10 kg पैक', unit_en: '10 kg pack', unit_kn: '10 kg ಪ್ಯಾಕ್', rating: '⭐ 4.4',
+      affil_amazon: 'https://www.amazon.in/s?k=Micronutrient+Mix+Fertilizer&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Micronutrient+Mix+Fertilizer&affid=YOURAFFID' },
 
     // ── Pesticides ──
     { id: 9,  cat: 'pesticide',  emoji: '🐛', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/chlorocil.png',
@@ -1717,25 +1827,33 @@
       desc_hi: 'कीट व दीमक नियंत्रण। व्यापक प्रभाव वाला कीटनाशक।',
       desc_en: 'Controls insects & termites. Broad-spectrum insecticide.',
       desc_kn: 'ಕೀಟ ಮತ್ತು ಗೆದ್ದಲು ನಿಯಂತ್ರಣ. ಬ್ರಾಡ್-ಸ್ಪೆಕ್ಟ್ರಮ್.',
-      price: 320, mrp: 400, unit_hi: '500 ml बोतल', unit_en: '500 ml bottle', unit_kn: '500 ml ಬಾಟಲ್', rating: '⭐ 4.5' },
+      price: 320, mrp: 400, unit_hi: '500 ml बोतल', unit_en: '500 ml bottle', unit_kn: '500 ml ಬಾಟಲ್', rating: '⭐ 4.5',
+      affil_amazon: 'https://www.amazon.in/s?k=Chlorpyrifos+20+EC+pesticide&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Chlorpyrifos+20+EC&affid=YOURAFFID' },
     { id: 10, cat: 'pesticide',  emoji: '🍄', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/Pesticides/neem-oil.png',
       name_hi: 'नीम का तेल (जैव कीटनाशक)', name_en: 'Neem Oil Bio-Pesticide', name_kn: 'ಬೇವಿನ ಎಣ್ಣೆ ಜೈವಿಕ ಕೀಟನಾಶಕ',
       desc_hi: '100% जैविक, मकड़ी, माहू और सफेद मक्खी को नष्ट करे।',
       desc_en: '100% organic. Controls mites, aphids & whiteflies.',
       desc_kn: '100% ಜೈವಿಕ. ಮಿಟೆ, ಗಿಡಹೇನು ನಿಯಂತ್ರಿಸುತ್ತದೆ.',
-      price: 240, mrp: 300, unit_hi: '1 litre', unit_en: '1 litre', unit_kn: '1 ಲೀಟರ್', rating: '⭐ 4.6' },
+      price: 240, mrp: 300, unit_hi: '1 litre', unit_en: '1 litre', unit_kn: '1 ಲೀಟರ್', rating: '⭐ 4.6',
+      affil_amazon: 'https://www.amazon.in/s?k=Neem+Oil+Bio+Pesticide+1litre&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Neem+Oil+Bio+Pesticide&affid=YOURAFFID' },
     { id: 11, cat: 'pesticide',  emoji: '🌾', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/carbendazim.png',
       name_hi: 'कार्बेन्डाजिम 50% WP (फफूंदनाशी)', name_en: 'Carbendazim 50% WP Fungicide', name_kn: 'ಕಾರ್ಬೆಂಡಾಜಿಮ್ 50% WP ಶಿಲೀಂಧ್ರನಾಶಕ',
       desc_hi: 'ब्लास्ट, रस्ट, और ब्लाइट रोग नियंत्रण। बीज उपचार भी।',
       desc_en: 'Controls blast, rust & blight. Seed treatment too.',
       desc_kn: 'ಬ್ಲಾಸ್ಟ್, ರಸ್ಟ್, ಬ್ಲೈಟ್ ರೋಗ ನಿಯಂತ್ರಣ.',
-      price: 180, mrp: 230, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.4' },
+      price: 180, mrp: 230, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.4',
+      affil_amazon: 'https://www.amazon.in/s?k=Carbendazim+50+WP+Fungicide&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Carbendazim+50+WP+Fungicide&affid=YOURAFFID' },
     { id: 12, cat: 'pesticide',  emoji: '🌱', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/Pesticides/trichoderma-viride.png',
       name_hi: 'ट्राइकोडर्मा विरिडी (जैव फफूंदनाशी)', name_en: 'Trichoderma Viride Bio-Fungicide', name_kn: 'ಟ್ರೈಕೋಡರ್ಮಾ ವಿರಿಡಿ ಜೈವಿಕ',
       desc_hi: 'मिट्टी में हानिकारक फफूंद का जैविक नियंत्रण।',
       desc_en: 'Biological control of soil-borne fungi. Safe for crops.',
       desc_kn: 'ಮಣ್ಣಿನ ಹಾನಿಕರ ಶಿಲೀಂಧ್ರದ ಜೈವಿಕ ನಿಯಂತ್ರಣ.',
-      price: 160, mrp: 200, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.3' },
+      price: 160, mrp: 200, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.3',
+      affil_amazon: 'https://www.amazon.in/s?k=Trichoderma+Viride+Bio+Fungicide&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Trichoderma+Viride+Bio+Fungicide&affid=YOURAFFID' },
 
     // ── Tools ──
     { id: 13, cat: 'tools',      emoji: '🔧', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/tools/khurpa.png',
@@ -1743,25 +1861,33 @@
       desc_hi: 'मजबूत HRC स्टील ब्लेड, लकड़ी का हैंडल। निराई व गुड़ाई के लिए।',
       desc_en: 'Strong HRC steel blade, wooden handle. For weeding.',
       desc_kn: 'ಬಲಿಷ್ಠ HRC ಉಕ್ಕಿನ ಬ್ಲೇಡ್. ಕಳೆ ತೆಗೆಯಲು.',
-      price: 120, mrp: 160, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.6' },
+      price: 120, mrp: 160, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.6',
+      affil_amazon: 'https://www.amazon.in/s?k=Hand+Khurpi+HRC+Steel+weeding&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Hand+Khurpi+HRC+Steel&affid=YOURAFFID' },
     { id: 14, cat: 'tools',      emoji: '💦', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/neptune-16.png',
       name_hi: 'नैपसैक स्प्रेयर 16L', name_en: 'Knapsack Sprayer 16L', name_kn: 'ನ್ಯಾಪ್ಸ್ಯಾಕ್ ಸ್ಪ್ರೇಯರ್ 16L',
       desc_hi: 'मजबूत पीवीसी टैंक, एडजस्टेबल नोजल। कीटनाशक छिड़काव के लिए।',
       desc_en: 'Durable PVC tank, adjustable nozzle. For pesticide spray.',
       desc_kn: 'ಗಟ್ಟಿಯಾದ PVC ಟ್ಯಾಂಕ್, ಸ್ಪ್ರೇಗೆ.',
-      price: 850, mrp: 1100, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.4' },
+      price: 850, mrp: 1100, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.4',
+      affil_amazon: 'https://www.amazon.in/s?k=Knapsack+Sprayer+16+litre&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Knapsack+Sprayer+16L&affid=YOURAFFID' },
     { id: 15, cat: 'tools',      emoji: '🪚', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'ड्रिप इरिगेशन किट (1 एकड़)', name_en: 'Drip Irrigation Kit (1 Acre)', name_kn: 'ಡ್ರಿಪ್ ಸಿಂಚಾಯಿ ಕಿಟ್ (1 ಎಕರೆ)',
       desc_hi: '60% पानी की बचत। सब्जी व बाग के लिए उपयुक्त। स्थापित करना आसान।',
       desc_en: '60% water saving. For vegetables & orchards. Easy install.',
       desc_kn: '60% ನೀರು ಉಳಿತಾಯ. ತರಕಾರಿ ಮತ್ತು ತೋಟಕ್ಕೆ.',
-      price: 2800, mrp: 3500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.7' },
+      price: 2800, mrp: 3500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.7',
+      affil_amazon: 'https://www.amazon.in/s?k=Drip+Irrigation+Kit+1+acre&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Drip+Irrigation+Kit+1+acre&affid=YOURAFFID' },
     { id: 16, cat: 'tools',      emoji: '🌡️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/mrada-parikshan-kit.png',
       name_hi: 'मृदा परीक्षण किट', name_en: 'Soil Testing Kit', name_kn: 'ಮಣ್ಣು ಪರೀಕ್ಷಾ ಕಿಟ್',
       desc_hi: 'pH, N, P, K और 8 अन्य पोषक तत्वों की जांच। 50 टेस्ट।',
       desc_en: 'Tests pH, N, P, K and 8 nutrients. 50 tests included.',
       desc_kn: 'pH, N, P, K ಮತ್ತು 8 ಪೋಷಕಾಂಶ ಪರೀಕ್ಷೆ. 50 ಟೆಸ್ಟ್.',
-      price: 650, mrp: 800, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.5' },
+      price: 650, mrp: 800, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.5',
+      affil_amazon: 'https://www.amazon.in/s?k=Soil+Testing+Kit+agriculture&tag=YOURTAG-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Soil+Testing+Kit+agriculture&affid=YOURAFFID' },
   ];
 
   // ══════════════════════════════════════
@@ -1770,6 +1896,101 @@
   let activeCategory = 'all';
   let cart = JSON.parse(localStorage.getItem('km_cart') || '{}');
   // cart = { productId: quantity, ... }
+
+  // ── NeonDB Cart Sync ────────────────────────────────────────
+  const API_BASE = 'https://krashi-mitra-v1.onrender.com';
+
+  function getToken()     { return localStorage.getItem('krishi_token'); }
+  function getSessionId() {
+    let sid = localStorage.getItem('km_session_id');
+    if (!sid) {
+      sid = crypto.randomUUID();
+      localStorage.setItem('km_session_id', sid);
+    }
+    return sid;
+  }
+
+  // Load cart from NeonDB on page open
+  async function loadCartFromDB() {
+    try {
+      const token = getToken();
+      const headers = {};
+      let url = `${API_BASE}/cart`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        url += `?session_id=${getSessionId()}`;
+      }
+      const res  = await fetch(url, { headers });
+      const data = await res.json();
+      if (data.success && data.cart) {
+        const dbCart = {};
+        for (const [k, v] of Object.entries(data.cart)) dbCart[parseInt(k)] = v;
+        cart = dbCart;
+        saveCart();
+        updateCartBadge();
+        renderProducts();
+      }
+    } catch (e) { /* silently fall back to localStorage */ }
+  }
+
+  // Sync a single item change to NeonDB (fire & forget)
+  async function syncItemToDB(productId, quantity) {
+    try {
+      const token = getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const body = { product_id: productId, quantity };
+      if (!token) body.session_id = getSessionId();
+      await fetch(`${API_BASE}/cart/update`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify(body),
+      });
+    } catch (e) { /* silent — localStorage already saved */ }
+  }
+
+  // Clear cart on NeonDB
+  async function clearCartOnDB() {
+    try {
+      const token = getToken();
+      const headers = {};
+      let url = `${API_BASE}/cart/clear`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        url += `?session_id=${getSessionId()}`;
+      }
+      await fetch(url, { method: 'DELETE', headers });
+    } catch (e) { /* silent */ }
+  }
+
+  // Merge guest cart into user cart right after login
+  async function mergeGuestCartAfterLogin() {
+    const sid = localStorage.getItem('km_session_id');
+    if (!sid || !getToken()) return;
+    try {
+      const res  = await fetch(`${API_BASE}/cart/merge`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ session_id: sid }),
+      });
+      const data = await res.json();
+      if (data.success && data.cart) {
+        const dbCart = {};
+        for (const [k, v] of Object.entries(data.cart)) dbCart[parseInt(k)] = v;
+        cart = dbCart;
+        saveCart();
+        updateCartBadge();
+        renderProducts();
+        localStorage.removeItem('km_session_id');
+      }
+    } catch (e) { /* silent */ }
+  }
+  // ───────────────────────────────────────────────────────────
 
   function saveCart() {
     localStorage.setItem('km_cart', JSON.stringify(cart));
@@ -1897,6 +2118,14 @@
                   ${inCart ? '✅ In Cart' : '🛒 Add'}
                 </button>
               </div>
+              <div class="affil-row" onclick="event.stopPropagation()">
+                <a class="affil-btn affil-btn-amazon" href="${p.affil_amazon}" target="_blank" rel="noopener sponsored">
+                  🛒 Amazon
+                </a>
+                <a class="affil-btn affil-btn-flipkart" href="${p.affil_flipkart}" target="_blank" rel="noopener sponsored">
+                  🛍️ Flipkart
+                </a>
+              </div>
             </div>
           </div>`;
       }).join('');
@@ -1953,6 +2182,7 @@
     }
     saveCart();
     updateCartBadge();
+    syncItemToDB(id, cart[id] || 0); // ← NeonDB sync
     // Update just this button without re-rendering entire grid
     if (btn) {
       const inCart = cart[id] > 0;
@@ -2023,6 +2253,7 @@
     if (cart[id] <= 0) delete cart[id];
     saveCart();
     updateCartBadge();
+    syncItemToDB(id, cart[id] || 0); // ← NeonDB sync
     renderCart();
     renderProducts(); // refresh button states
   }
@@ -2031,6 +2262,7 @@
     delete cart[id];
     saveCart();
     updateCartBadge();
+    syncItemToDB(id, 0); // ← NeonDB sync (quantity 0 = delete)
     renderCart();
     renderProducts();
     showToast(t('toast_removed'));
@@ -2040,15 +2272,24 @@
     cart = {};
     saveCart();
     updateCartBadge();
+    clearCartOnDB(); // ← NeonDB sync
     renderCart();
     renderProducts();
     showToast(t('toast_cleared'));
   }
 
   function checkout() {
+    // If not logged in, prompt login before ordering
+    if (!getToken()) {
+      closeCart();
+      showToast('🔐 ऑर्डर करने के लिए पहले Login करें!', 3500);
+      setTimeout(() => { window.location.href = 'login.html'; }, 1800);
+      return;
+    }
     cart = {};
     saveCart();
     updateCartBadge();
+    clearCartOnDB(); // ← NeonDB sync
     closeCart();
     renderProducts();
     showToast(t('toast_checkout'), 3500);
@@ -2125,6 +2366,12 @@
     document.getElementById('fert-modal').classList.add('open');
     _updateFertModalCartBtn(productId);
 
+    // Set affiliate links in modal
+    const amazonBtn   = document.getElementById('fert-modal-amazon-btn');
+    const flipkartBtn = document.getElementById('fert-modal-flipkart-btn');
+    if (amazonBtn)   amazonBtn.href   = p.affil_amazon   || '#';
+    if (flipkartBtn) flipkartBtn.href = p.affil_flipkart || '#';
+
     // Try to enrich with API data — only for fertilizers
     const apiKey = FERT_KEY_MAP[productId];
     if (apiKey && p.cat === 'fertilizer') {
@@ -2169,9 +2416,15 @@
     document.getElementById('fert-popup-precaution').textContent = '—';
     document.getElementById('fert-popup-crops').innerHTML       = '';
 
-    // Placeholder image
+    // Show real product image if available, else emoji fallback
     const wrap = document.getElementById('fert-popup-img-wrap');
-    wrap.innerHTML = `<div class="fert-modal-img-placeholder" id="fert-popup-img">${p.emoji}</div>`;
+    if (p.img && !p.img.endsWith('/')) {
+      wrap.innerHTML = `<img class="fert-modal-img" id="fert-popup-img"
+        src="${p.img}" alt="${name}"
+        onerror="this.outerHTML='<div class=fert-modal-img-placeholder id=fert-popup-img>${p.emoji}</div>'">`;
+    } else {
+      wrap.innerHTML = `<div class="fert-modal-img-placeholder" id="fert-popup-img">${p.emoji}</div>`;
+    }
   }
 
   function _fillFertModalAPI(f, p) {
@@ -2193,10 +2446,11 @@
       (f.suitable_for || []).map(c => `<span class="fert-modal-crop-tag">✅ ${c}</span>`).join('');
 
     const wrap = document.getElementById('fert-popup-img-wrap');
-    if (f.image) {
+    const imgSrc = f.image || (p.img && !p.img.endsWith('/') ? p.img : null);
+    if (imgSrc) {
       wrap.innerHTML = `<img class="fert-modal-img" id="fert-popup-img"
-        src="${f.image}"
-        onerror="this.outerHTML='<div class=fert-modal-img-placeholder id=fert-popup-img>🌱</div>'"
+        src="${imgSrc}"
+        onerror="this.outerHTML='<div class=fert-modal-img-placeholder id=fert-popup-img>${p.emoji}</div>'"
         alt="${name}">`;
     } else {
       wrap.innerHTML = `<div class="fert-modal-img-placeholder" id="fert-popup-img">${p.emoji}</div>`;
@@ -2271,6 +2525,9 @@
 
     // Pre-warm fertilizer API in background when fertilizer category active
     if (catParam === 'fertilizer') fetchFertData();
+
+    // ── NeonDB: merge guest cart if just logged in, then load from DB ──
+    mergeGuestCartAfterLogin().then(() => loadCartFromDB());
   });
 </script>
 </body>

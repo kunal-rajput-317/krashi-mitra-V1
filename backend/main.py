@@ -36,6 +36,7 @@ from backend.routes.chatbot    import router as chatbot_router
 from backend.routes.auth       import router as auth_router
 from backend.routes.profile    import router as profile_router
 from backend.routes.search     import router as search_router   # NEW
+from backend.routes.cart       import router as cart_router     # CART
 
 from backend.services.weather_scheduler import start_scheduler  # WEATHER CACHE
 
@@ -88,6 +89,7 @@ app.include_router(chatbot_router)
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
+app.include_router(cart_router)     # CART
 app.include_router(chat.router)
 app.include_router(weather.router)
 app.include_router(mandi.router)
