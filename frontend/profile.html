@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>किसान प्रोफाइल | KrashiMitra</title>
+  <link rel="icon" type="image/png" href="https://krashimitra.in/images/favicon.png">
+  <link rel="canonical" href="https://krashimitra.in/profile.html">
+  <meta name="description" content="KrashiMitra किसान प्रोफाइल - अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें ताकि सलाह आपके खेत के हिसाब से मिले।">
+  <meta name="robots" content="noindex, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="किसान प्रोफाइल - KrashiMitra">
+  <meta property="og:description" content="अपनी खेती की जानकारी सेव करें और KrashiMitra से बेहतर कृषि सलाह पाएं।">
+  <meta property="og:url" content="https://krashimitra.in/profile.html">
+  <meta property="og:site_name" content="KrashiMitra">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
+    :root {
+      --green-dark: #1a3c2e;
+      --green-mid: #2d6a4f;
+      --green-light: #52b788;
+      --green-pale: #d8f3dc;
+      --amber: #e9a825;
+      --amber-light: #fef3c7;
+      --soil: #7c4f2f;
+      --cream: #faf7f2;
+      --white: #ffffff;
+      --text-dark: #1a2e1e;
+      --text-mid: #4a6355;
+      --text-light: #7d9988;
+      --border: #ddeee4;
+      --danger: #b42318;
+      --danger-bg: #fff1f0;
+      --shadow: 0 4px 24px rgba(26,60,46,0.10);
+      --shadow-lg: 0 8px 40px rgba(26,60,46,0.16);
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; }
+
+    .pre-topbar {
+      background: var(--amber);
+      color: #1a2e1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .pre-topbar-helpline { opacity: 0.88; white-space: nowrap; }
+
+    .pre-topbar-cta {
+      background: #1a2e1e;
+      color: #fff;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .topbar {
+      background: var(--green-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+
+    .topbar-left a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .topbar-logo-icon { font-size: 26px; line-height: 1; }
+
+    .topbar-logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .topbar-logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+
+    .topbar-logo-name span { color: var(--amber); }
+
+    .topbar-logo-sub {
+      font-size: 9.5px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.5px;
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .tnav-btn {
+      color: rgba(255,255,255,0.80);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .tnav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+
+    .tnav-btn.active {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25) inset;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .topbar-action {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-radius: 8px;
+      height: 34px;
+      padding: 0 12px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-action:hover { background: rgba(255,255,255,0.16); }
+
+    .main-content {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 26px 0 34px;
+      flex: 1;
+    }
+
+    .profile-hero {
+      background:
+        linear-gradient(135deg, rgba(26,60,46,0.96), rgba(45,106,79,0.92)),
+        url('https://krashimitra.in/images/og-banner.jpg') center/cover;
+      color: #fff;
+      border-radius: var(--radius);
+      min-height: 220px;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 24px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .profile-hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -60px -90px auto;
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      background: rgba(233,168,37,0.18);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1;
+      margin-bottom: 10px;
+      max-width: 700px;
+    }
+
+    .hero-sub {
+      color: rgba(255,255,255,0.78);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 640px;
+    }
+
+    .profile-avatar {
+      width: 118px;
+      height: 118px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.9);
+      background: var(--amber-light);
+      display: grid;
+      place-items: center;
+      font-size: 52px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.22);
+      position: relative;
+      z-index: 1;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 0.86fr 1.14fr;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .panel-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .panel-sub {
+      color: var(--text-light);
+      font-size: 12px;
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      background: var(--green-pale);
+      color: var(--green-dark);
+    }
+
+    .status-pill.empty {
+      background: var(--amber-light);
+      color: #76500b;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fffdf8;
+    }
+
+    .summary-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: var(--green-pale);
+      color: var(--green-dark);
+      font-size: 18px;
+    }
+
+    .summary-label {
+      color: var(--text-light);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .summary-value {
+      color: var(--text-dark);
+      font-size: 15px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 18px 18px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: var(--green-pale);
+      color: var(--green-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .profile-form {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      color: var(--text-mid);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 46px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--text-dark);
+      padding: 11px 12px;
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--green-light);
+      box-shadow: 0 0 0 4px rgba(82,183,136,0.14);
+    }
+
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: var(--radius-sm);
+      min-height: 46px;
+      padding: 0 16px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--green-mid);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(45,106,79,0.18);
+    }
+
+    .btn-primary:hover { background: var(--green-dark); }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--green-dark);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--green-light); }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1.5px solid #ffd6d1;
+    }
+
+    .message {
+      margin: 18px 18px 0;
+      padding: 11px 13px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .message.show { display: block; }
+    .message.ok { background: var(--green-pale); color: var(--green-dark); border: 1px solid var(--green-light); }
+    .message.err { background: var(--danger-bg); color: var(--danger); border: 1px solid #ffb4aa; }
+
+    .signed-out {
+      display: none;
+      padding: 18px;
+    }
+
+    .signed-out.show { display: block; }
+
+    .signed-out-box {
+      background: #fffdf8;
+      border: 1px dashed #dfc16e;
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      line-height: 1.6;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 0 18px 18px;
+    }
+
+    .quick-actions .btn { width: 100%; }
+
+    .site-footer {
+      border-top: 1px solid var(--border);
+      background: #fffdf8;
+      color: var(--text-light);
+      text-align: center;
+      padding: 20px 16px;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .site-footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 8px;
+      font-weight: 800;
+      color: var(--green-mid);
+    }
+
+    .site-footer a { text-decoration: none; }
+
+    .bottom-nav { display: none; }
+
+    @media (max-width: 980px) {
+      .topbar { padding: 0 16px; }
+      .topbar-nav { display: none; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .profile-hero { grid-template-columns: 1fr; }
+      .profile-avatar { width: 92px; height: 92px; font-size: 42px; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding-bottom: 70px; }
+      .pre-topbar { padding: 6px 10px; font-size: 11.5px; }
+      .pre-topbar-helpline {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pre-topbar-cta { display: none; }
+      .topbar { height: 56px; }
+      .topbar-logo-name { font-size: 15px; }
+      .topbar-logo-sub { font-size: 8.5px; }
+      .topbar-action { height: 32px; padding: 0 9px; font-size: 11px; }
+      .main-content { width: min(100% - 20px, 1180px); padding: 14px 0 22px; }
+      .profile-hero { min-height: 190px; padding: 20px; border-radius: 12px; }
+      .hero-title { font-size: 30px; }
+      .hero-sub { font-size: 13px; }
+      .panel-head { align-items: flex-start; flex-direction: column; }
+      .profile-form { grid-template-columns: 1fr; padding: 14px; }
+      .summary-list { padding: 14px; }
+      .chips, .quick-actions { padding-left: 14px; padding-right: 14px; }
+      .quick-actions { grid-template-columns: 1fr; }
+      .form-actions { justify-content: stretch; }
+      .form-actions .btn { width: 100%; }
+      .bottom-nav {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--green-dark);
+        border-top: 1px solid rgba(255,255,255,0.10);
+        z-index: 110;
+        padding: 6px 4px max(6px, env(safe-area-inset-bottom));
+        box-shadow: 0 -4px 18px rgba(0,0,0,0.18);
+      }
+      .bottom-nav-items {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      .bottom-nav-item {
+        min-width: 0;
+        color: rgba(255,255,255,0.70);
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        min-height: 50px;
+      }
+      .bnav-icon { font-size: 19px; line-height: 1; }
+      .bnav-label {
+        font-size: 10px;
+        font-weight: 800;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .bottom-nav-item.active .bnav-icon,
+      .bottom-nav-item.active .bnav-label { color: var(--amber); }
+    }
+  </style>
+</head>
+<body>
+  <div class="pre-topbar">
+    <span class="pre-topbar-helpline">🌾 किसान helpline: +91 9870951001 - निःशुल्क कृषि सलाह</span>
+    <a href="chat.html" class="pre-topbar-cta">AI से पूछें</a>
+  </div>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="index.html" aria-label="KrashiMitra home">
+        <span class="topbar-logo-icon">🌾</span>
+        <span class="topbar-logo-text">
+          <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
+          <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
+        </span>
+      </a>
+    </div>
+
+    <nav class="topbar-nav" aria-label="Primary navigation">
+      <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
+      <a class="tnav-btn" href="weather.html">🌤️ मौसम</a>
+      <a class="tnav-btn" href="mandi.html">🏪 मंडी</a>
+      <a class="tnav-btn" href="shop.html">🛒 दुकान</a>
+      <a class="tnav-btn" href="chat.html">💬 सहायता</a>
+      <a class="tnav-btn active" href="profile.html">👤 प्रोफाइल</a>
+    </nav>
+
+    <div class="topbar-right">
+      <a class="topbar-action" href="login.html" id="login-link">Login</a>
+      <button class="topbar-action" type="button" id="logout-top" onclick="logout()" style="display:none;">Logout</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <section class="profile-hero">
+      <div>
+        <div class="eyebrow">👤 Farmer Profile</div>
+        <h1 class="hero-title" id="hero-name">किसान प्रोफाइल</h1>
+        <p class="hero-sub" id="hero-sub">अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें ताकि KrashiMitra की सलाह आपके खेत के हिसाब से मिले।</p>
+      </div>
+      <div class="profile-avatar" id="profile-avatar" aria-hidden="true">👨‍🌾</div>
+    </section>
+
+    <section class="dashboard-grid">
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">आपकी खेती</h2>
+            <p class="panel-sub">सेव की गई जानकारी का छोटा सारांश</p>
+          </div>
+          <span class="status-pill empty" id="profile-status">Loading</span>
+        </div>
+
+        <div class="signed-out" id="signed-out">
+          <div class="signed-out-box">
+            प्रोफाइल देखने या सेव करने के लिए पहले login करें। Login के बाद यह पेज अपने आप आपकी जानकारी लोड करेगा।
+            <div style="margin-top:14px;">
+              <a class="btn btn-primary" href="login.html">Login करें</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="summary-content">
+          <div class="summary-list">
+            <div class="summary-row">
+              <div class="summary-icon">📍</div>
+              <div>
+                <div class="summary-label">स्थान</div>
+                <div class="summary-value" id="summary-location">-</div>
+              </div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-icon">🌱</div>
+              <div>
+                <div class="summary-label">मुख्य फसल</div>
+                <div class="summary-value" id="summary-crop">-</div>
+              </div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-icon">🧭</div>
+              <div>
+                <div class="summary-label">खेत का आकार</div>
+                <div class="summary-value" id="summary-farm">-</div>
+              </div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-icon">🗣️</div>
+              <div>
+                <div class="summary-label">भाषा</div>
+                <div class="summary-value" id="summary-language">Hindi</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chips" id="crop-chips">
+            <span class="chip">फसल जोड़ें</span>
+          </div>
+
+          <div class="quick-actions">
+            <a class="btn btn-secondary" href="chat.html">💬 AI सलाह</a>
+            <a class="btn btn-secondary" href="weather.html">🌤️ मौसम</a>
+            <a class="btn btn-secondary" href="mandi.html">🏪 मंडी भाव</a>
+            <a class="btn btn-secondary" href="shop.html">🛒 दुकान</a>
+          </div>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">प्रोफाइल जानकारी</h2>
+            <p class="panel-sub">नाम और खेत की जानकारी अपडेट करें</p>
+          </div>
+          <span class="status-pill" id="save-mode">Ready</span>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <form class="profile-form" id="profile-form">
+          <div class="field">
+            <label for="full_name">पूरा नाम</label>
+            <input id="full_name" name="full_name" type="text" placeholder="जैसे: राम कुमार" autocomplete="name" required>
+          </div>
+
+          <div class="field">
+            <label for="phone_number">मोबाइल नंबर</label>
+            <input id="phone_number" name="phone_number" type="tel" placeholder="10 digit mobile" autocomplete="tel">
+          </div>
+
+          <div class="field">
+            <label for="state">राज्य</label>
+            <input id="state" name="state" type="text" placeholder="Uttar Pradesh" value="Uttar Pradesh">
+          </div>
+
+          <div class="field">
+            <label for="district">जिला</label>
+            <input id="district" name="district" type="text" placeholder="जैसे: Bijnor">
+          </div>
+
+          <div class="field">
+            <label for="village">गांव</label>
+            <input id="village" name="village" type="text" placeholder="अपने गांव का नाम">
+          </div>
+
+          <div class="field">
+            <label for="farm_size">खेत का आकार</label>
+            <input id="farm_size" name="farm_size" type="text" placeholder="जैसे: 2.5 acres">
+          </div>
+
+          <div class="field">
+            <label for="preferred_language">भाषा</label>
+            <select id="preferred_language" name="preferred_language">
+              <option value="hindi">Hindi</option>
+              <option value="english">English</option>
+              <option value="kannada">Kannada</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="primary_crop">मुख्य फसल</label>
+            <input id="primary_crop" name="primary_crop" type="text" placeholder="जैसे: Sugarcane">
+          </div>
+
+          <div class="field full">
+            <label for="crops_grown">फसलें</label>
+            <textarea id="crops_grown" name="crops_grown" placeholder="फसलें comma से लिखें: sugarcane, wheat, rice"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-secondary" type="button" onclick="loadProfile()">Reset</button>
+            <button class="btn btn-danger" type="button" onclick="logout()" id="logout-form" style="display:none;">Logout</button>
+            <button class="btn btn-primary" type="submit" id="save-btn">सेव करें</button>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Mobile navigation">
+    <div class="bottom-nav-items">
+      <a class="bottom-nav-item" href="index.html"><span class="bnav-icon">🏠</span><span class="bnav-label">मुख्य</span></a>
+      <a class="bottom-nav-item" href="chat.html"><span class="bnav-icon">💬</span><span class="bnav-label">Chat</span></a>
+      <a class="bottom-nav-item" href="weather.html"><span class="bnav-icon">🌤️</span><span class="bnav-label">मौसम</span></a>
+      <a class="bottom-nav-item" href="mandi.html"><span class="bnav-icon">🏪</span><span class="bnav-label">मंडी</span></a>
+      <a class="bottom-nav-item active" href="profile.html"><span class="bnav-icon">👤</span><span class="bnav-label">प्रोफाइल</span></a>
+    </div>
+  </nav>
+
+  <footer class="site-footer">
+    <div class="site-footer-links">
+      <a href="index.html">Home</a>
+      <a href="chat.html">AI Advisor</a>
+      <a href="weather.html">Weather</a>
+      <a href="mandi.html">Mandi</a>
+      <a href="shop.html">Shop</a>
+    </div>
+    <div>© 2026 <strong>KrashiMitra</strong> - krashimitra.in | किसान का डिजिटल साथी | All rights reserved.</div>
+  </footer>
+
+  <script>
+    const API_BASE = "https://krashi-mitra-v1.onrender.com";
+    let hasProfile = false;
+    let lastProfile = null;
+
+    const fields = [
+      "full_name",
+      "phone_number",
+      "state",
+      "district",
+      "village",
+      "preferred_language",
+      "farm_size",
+      "crops_grown",
+      "primary_crop"
+    ];
+
+    function getToken() {
+      return localStorage.getItem("krishi_token");
+    }
+
+    function setSignedInUI(isSignedIn) {
+      document.getElementById("login-link").style.display = isSignedIn ? "none" : "inline-flex";
+      document.getElementById("logout-top").style.display = isSignedIn ? "inline-flex" : "none";
+      document.getElementById("logout-form").style.display = isSignedIn ? "inline-flex" : "none";
+      document.getElementById("signed-out").classList.toggle("show", !isSignedIn);
+      document.getElementById("summary-content").style.display = isSignedIn ? "block" : "none";
+      document.getElementById("profile-form").style.display = isSignedIn ? "grid" : "none";
+    }
+
+    function showMessage(text, type) {
+      const el = document.getElementById("message");
+      el.textContent = text;
+      el.className = `message show ${type}`;
+    }
+
+    function clearMessage() {
+      const el = document.getElementById("message");
+      el.textContent = "";
+      el.className = "message";
+    }
+
+    function setLoading(isLoading) {
+      const btn = document.getElementById("save-btn");
+      btn.disabled = isLoading;
+      btn.textContent = isLoading ? "सेव हो रहा है..." : "सेव करें";
+      document.getElementById("save-mode").textContent = isLoading ? "Saving" : (hasProfile ? "Update" : "Create");
+    }
+
+    function emptyToDash(value) {
+      return value && String(value).trim() ? value : "-";
+    }
+
+    function normalizeCrops(value) {
+      return String(value || "")
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    function fillForm(profile) {
+      fields.forEach(name => {
+        const el = document.getElementById(name);
+        if (!el) return;
+        el.value = profile[name] || "";
+      });
+
+      if (!document.getElementById("state").value) {
+        document.getElementById("state").value = "Uttar Pradesh";
+      }
+    }
+
+    function updateSummary(profile) {
+      const name = profile.full_name || "किसान प्रोफाइल";
+      const crops = normalizeCrops(profile.crops_grown || profile.primary_crop);
+      const primaryCrop = profile.primary_crop || crops[0] || "-";
+      const location = [profile.village, profile.district, profile.state].filter(Boolean).join(", ");
+
+      document.getElementById("hero-name").textContent = name;
+      document.getElementById("hero-sub").textContent = primaryCrop !== "-"
+        ? `${emptyToDash(profile.district)} में ${primaryCrop} के लिए आपकी खेती प्रोफाइल तैयार है।`
+        : "अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें ताकि सलाह आपके खेत के हिसाब से मिले।";
+      document.getElementById("summary-location").textContent = emptyToDash(location);
+      document.getElementById("summary-crop").textContent = emptyToDash(primaryCrop);
+      document.getElementById("summary-farm").textContent = emptyToDash(profile.farm_size);
+      document.getElementById("summary-language").textContent = emptyToDash(profile.preferred_language || "hindi");
+      document.getElementById("profile-status").textContent = hasProfile ? "Saved" : "New";
+      document.getElementById("profile-status").classList.toggle("empty", !hasProfile);
+
+      const chips = crops.length ? crops : ["फसल जोड़ें"];
+      document.getElementById("crop-chips").innerHTML = chips
+        .map(crop => `<span class="chip">${escapeHtml(crop)}</span>`)
+        .join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getPayload() {
+      const payload = {};
+      fields.forEach(name => {
+        if (name === "primary_crop") return;
+        const el = document.getElementById(name);
+        payload[name] = el ? el.value.trim() : "";
+      });
+
+      const primaryCrop = document.getElementById("primary_crop").value.trim();
+      const crops = normalizeCrops(payload.crops_grown);
+      if (primaryCrop && !crops.some(c => c.toLowerCase() === primaryCrop.toLowerCase())) {
+        crops.unshift(primaryCrop);
+      }
+      payload.crops_grown = crops.join(", ");
+      return payload;
+    }
+
+    async function loadProfile() {
+      clearMessage();
+      const token = getToken();
+
+      if (!token) {
+        hasProfile = false;
+        setSignedInUI(false);
+        document.getElementById("profile-status").textContent = "Login needed";
+        document.getElementById("save-mode").textContent = "Locked";
+        return;
+      }
+
+      setSignedInUI(true);
+      document.getElementById("profile-status").textContent = "Loading";
+
+      try {
+        const res = await fetch(`${API_BASE}/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (data.success && data.data) {
+          hasProfile = true;
+          lastProfile = data.data;
+          fillForm(data.data);
+          updateSummary(data.data);
+        } else {
+          hasProfile = false;
+          lastProfile = null;
+          fillForm({ state: "Uttar Pradesh", preferred_language: "hindi" });
+          updateSummary({});
+          showMessage(data.message || "अभी प्रोफाइल नहीं बनी है। जानकारी भरकर सेव करें।", "ok");
+        }
+      } catch (err) {
+        hasProfile = false;
+        showMessage("Server से connect नहीं हो पाया। थोड़ी देर बाद दोबारा कोशिश करें।", "err");
+        document.getElementById("profile-status").textContent = "Offline";
+      } finally {
+        document.getElementById("save-mode").textContent = hasProfile ? "Update" : "Create";
+      }
+    }
+
+    async function saveProfile(event) {
+      event.preventDefault();
+      clearMessage();
+
+      const token = getToken();
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const payload = getPayload();
+      if (!payload.full_name) {
+        showMessage("कृपया अपना पूरा नाम भरें।", "err");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE}/profile`, {
+          method: hasProfile ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (data.success && data.data) {
+          hasProfile = true;
+          lastProfile = data.data;
+          fillForm(data.data);
+          updateSummary(data.data);
+          showMessage(data.message || "प्रोफाइल सेव हो गई।", "ok");
+        } else {
+          showMessage(data.message || "प्रोफाइल सेव नहीं हो पाई।", "err");
+        }
+      } catch (err) {
+        showMessage("Server से connect नहीं हो पाया।", "err");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("krishi_token");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("profile-form").addEventListener("submit", saveProfile);
+    window.addEventListener("load", loadProfile);
+  </script>
+</body>
+</html>
