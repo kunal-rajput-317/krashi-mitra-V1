@@ -2139,6 +2139,14 @@
     }
   };
 
+  async function mergeGuestCartAfterLogin() {
+  const sid = localStorage.getItem('km_session_id');
+  const justLoggedIn = localStorage.getItem('km_just_logged_in');
+  if (!sid || !getToken() || !justLoggedIn) return;
+  localStorage.removeItem('km_just_logged_in'); // clear immediately
+  // ...rest of merge logic
+}
+
   const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
   let currentLang = localStorage.getItem('km_lang') || 'hi';
 
@@ -3045,6 +3053,12 @@
     // ── NeonDB: merge guest cart if just logged in, then load from DB ──
     mergeGuestCartAfterLogin().then(() => loadCartFromDB());
   });
+
+
+  // Runs on every DOMContentLoaded — even when user didn't just log in
+mergeGuestCartAfterLogin().then(() => loadCartFromDB());
+
+
 </script>
 </body>
 </html>
