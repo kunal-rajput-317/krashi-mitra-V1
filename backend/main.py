@@ -13,18 +13,22 @@
 #   ✅ search     → routes/search.py     + services/search_service.py  ← NEW
 # ============================================================
 
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
+load_dotenv()
+
 from backend.routes import chat, weather, mandi
-import os
+
+BASE_DIR = Path(__file__).resolve().parents[1]
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = int(os.getenv("APP_PORT", "8000"))
 DEBUG    = os.getenv("DEBUG", "true").lower() == "true"
-
-from dotenv import load_dotenv
-load_dotenv()
 
 from backend.database.db import MandiPrice, get_db, init_db
 
@@ -129,7 +133,5 @@ async def root():
 async def health():
     return {"status": "ok"}
 
-from fastapi.staticfiles import StaticFiles
-
 # Add this AFTER all app.include_router() lines, at the bottom
-app.mount("/admin", StaticFiles(directory="admin", html=True), name="admin")
+app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")
