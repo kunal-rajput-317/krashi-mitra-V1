@@ -8,10 +8,10 @@
 # DELETE /cart/clear        → clear entire cart
 # ============================================================
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String, DateTime, text
+from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 from typing import Optional
 
@@ -26,13 +26,17 @@ router = APIRouter(prefix="/cart", tags=["cart"])
 class CartItem(Base):
     __tablename__ = "carts"
 
+    id         = Column(Integer,  primary_key=True, autoincrement=True)  # surrogate PK
     user_id    = Column(Integer,  nullable=True)   # NULL for guests
     session_id = Column(String,   nullable=True)   # NULL for logged-in users
-    product_id = Column(Integer,  primary_key=True)
+    product_id = Column(Integer,  nullable=False)
     quantity   = Column(Integer,  nullable=False, default=1)
     updated_at = Column(DateTime, default=datetime.utcnow)
 
-    __table_args__ = {"extend_existing": True}
+    __table_args__ = (
+        # Ensures same product can't appear twice for same user or same guest session
+        {"extend_existing": True},
+    )
 
 
 # ── Pydantic Models ──────────────────────────────────────────
@@ -55,7 +59,13 @@ def _get_token_optional(authorization: str = None):
         from backend.utils.auth_utils import decode_access_token
         if authorization and authorization.startswith("Bearer "):
             token = authorization.split(" ")[1]
-            return decode_access_token(token)
+            payload = decode_access_token(token)
+            if not payload:
+                return None
+            return {
+                "user_id": int(payload.get("user_id") or payload.get("sub")),
+                "email": payload.get("email"),
+            }
     except Exception:
         pass
     return None
@@ -72,8 +82,7 @@ def _cart_response(rows) -> dict:
 def get_cart(
     session_id:   Optional[str] = Query(None),
     db:           Session       = Depends(get_db),
-    # Optional JWT — we handle auth manually so guests don't get 401
-    authorization: Optional[str] = (None),
+    authorization: Optional[str] = Header(None),   # ← reads actual HTTP header
 ):
     user = _get_token_optional(authorization)
 
@@ -101,7 +110,7 @@ def get_cart(
 def update_cart(
     body:         CartUpdateRequest,
     db:           Session = Depends(get_db),
-    authorization: Optional[str] = None,
+    authorization: Optional[str] = Header(None),   # ← reads actual HTTP header
 ):
     user = _get_token_optional(authorization)
 
@@ -214,7 +223,7 @@ def merge_cart(
 def clear_cart(
     session_id:    Optional[str] = Query(None),
     db:            Session       = Depends(get_db),
-    authorization: Optional[str] = None,
+    authorization: Optional[str] = Header(None),   # ← reads actual HTTP header
 ):
     user = _get_token_optional(authorization)
 

@@ -2481,7 +2481,9 @@
   // Merge guest cart into user cart right after login
   async function mergeGuestCartAfterLogin() {
     const sid = localStorage.getItem('km_session_id');
-    if (!sid || !getToken()) return;
+    const justLoggedIn = localStorage.getItem('km_just_logged_in');  // ← only run once after login
+    if (!sid || !getToken() || !justLoggedIn) return;
+    localStorage.removeItem('km_just_logged_in');  // ← clear immediately so it doesn't re-run
     try {
       const res  = await fetch(`${API_BASE}/cart/merge`, {
         method:  'POST',
@@ -2501,7 +2503,7 @@
         renderProducts();
         localStorage.removeItem('km_session_id');
       }
-    } catch (e) { /* silent */ }
+    } catch (e) { console.error('[Cart Merge Error]', e); }
   }
   // ───────────────────────────────────────────────────────────
 
