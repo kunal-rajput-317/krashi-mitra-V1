@@ -2,150 +2,538 @@
 <html lang="kn">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ | Chilli Farming Guide Karnataka – KrashiMitra.in</title>
   <meta name="description" content="ಕರ್ನಾಟಕದಲ್ಲಿ ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಬೆಳೆಯುವ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ. Complete chilli farming guide for Karnataka farmers in Kannada and English." />
   <meta name="keywords" content="ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಕರ್ನಾಟಕ, chilli farming Karnataka, ಮೆಣಸಿನಕಾಯಿ ಕೃಷಿ, chilli cultivation Byadagi" />
   <meta name="author" content="KrashiMitra.in" />
+  <meta property="og:title" content="ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ — KrashiMitra.in" />
+  <meta property="og:type" content="article" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Tiro+Kannada&family=Noto+Serif+Kannada:wght@400;600;700&family=Poppins:wght@400;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Kannada:wght@400;600;700&family=Tiro+Kannada&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --green-dark:   #1a4d2e;
-      --green-mid:    #2e7d32;
-      --green-light:  #4caf50;
-      --green-pale:   #e8f5e9;
-      --chilli:       #c62828;
-      --chilli-light: #ffebee;
-      --chilli-warm:  #e53935;
-      --gold:         #f9a825;
-      --cream:        #faf8f3;
-      --text-dark:    #1b1b1b;
-      --text-mid:     #3d3d3d;
-      --text-light:   #666;
-      --border:       #dcedc8;
-      --shadow:       rgba(30, 77, 46, 0.12);
+      --green-dark:    #1a4d2e;
+      --green-mid:     #2e7d32;
+      --green-light:   #4caf50;
+      --green-pale:    #e8f5e9;
+      --gold:          #f9a825;
+      --gold-light:    #fff8e1;
+      --chilli:        #c62828;
+      --chilli-light:  #ffebee;
+      --chilli-warm:   #e53935;
+      --cream:         #faf8f3;
+      --white:         #ffffff;
+      --text-dark:     #1b1b1b;
+      --text-mid:      #3d3d3d;
+      --text-light:    #666;
+      --border:        #dcedc8;
+      --shadow:        rgba(30, 77, 46, 0.12);
+      --shadow-strong: rgba(30, 77, 46, 0.22);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
     body {
       font-family: 'Tiro Kannada', 'Noto Serif Kannada', Georgia, serif;
       background: var(--cream);
       color: var(--text-dark);
       line-height: 1.85;
+      font-size: 16px;
+      overflow-x: hidden;
     }
 
-    /* ══ SITE HEADER ══ */
-    .site-header { background: var(--green-dark); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
-    .logo-block { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .logo-text { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.15rem; color: #fff; letter-spacing: 0.3px; line-height: 1.1; }
-    .logo-text span { color: var(--gold); }
-    .tagline-sub { font-family: 'Poppins', sans-serif; font-size: 0.65rem; color: #a5d6a7; font-weight: 400; display: block; margin-top: 1px; }
-    .nav-links { display: flex; align-items: center; gap: 4px; }
-    .nav-links a { font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 600; color: #c8e6c9; text-decoration: none; padding: 6px 10px; border-radius: 6px; transition: background 0.18s, color 0.18s; white-space: nowrap; }
-    .nav-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    .nav-links a.home-link { color: var(--gold); }
-    .nav-links a.home-link:hover { background: rgba(249,168,37,0.15); }
-    .lang-pill { display: flex; background: rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
-    .lang-pill button { font-family: 'Poppins', sans-serif; font-size: 0.72rem; font-weight: 600; padding: 4px 10px; border: none; cursor: pointer; background: transparent; color: #a5d6a7; transition: all 0.18s; line-height: 1; }
+    /* ═══════════════════════════
+       TOP ANNOUNCEMENT BAR
+    ═══════════════════════════ */
+    .top-announcement {
+      background: var(--gold);
+      color: var(--green-dark);
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      letter-spacing: 0.2px;
+    }
+    .top-announcement a {
+      color: var(--green-dark);
+      text-decoration: underline;
+      margin-left: 6px;
+    }
+
+    /* ═══════════════════════════
+       SITE HEADER
+    ═══════════════════════════ */
+    .site-header {
+      background: var(--green-dark);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.30);
+    }
+    .site-header .logo {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.18rem;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .site-header .logo .brand { display: flex; align-items: center; gap: 6px; }
+    .site-header .logo .brand .mitra { color: var(--gold); }
+    .site-header .logo .tagline {
+      font-size: 0.6rem;
+      color: #a5d6a7;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .site-header nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .site-header nav a {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #c8e6c9;
+      text-decoration: none;
+      padding: 7px 11px;
+      border-radius: 7px;
+      transition: all 0.18s;
+    }
+    .site-header nav a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .site-header nav a.active { background: rgba(249,168,37,0.18); color: var(--gold); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .lang-pill {
+      display: flex;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .lang-pill button {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: #a5d6a7;
+      transition: all 0.18s;
+      line-height: 1;
+    }
     .lang-pill button.active { background: var(--gold); color: var(--green-dark); border-radius: 18px; }
-    .right-group { display: flex; align-items: center; gap: 8px; }
-    .user-icon { font-size: 1.1rem; cursor: pointer; opacity: 0.85; }
-    @media (max-width: 600px) { .nav-links a:not(.home-link) { display: none; } .logo-text { font-size: 1rem; } }
+    .user-icon {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .user-icon:hover { background: rgba(255,255,255,0.25); }
+    @media (max-width: 640px) {
+      .site-header nav { display: none; }
+      .site-header .logo .tagline { display: none; }
+    }
 
-    /* ══ BREADCRUMB ══ */
-    .breadcrumb { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--text-light); padding: 10px 20px; max-width: 900px; margin: 0 auto; }
-    .breadcrumb a { color: var(--green-mid); text-decoration: none; }
-    .breadcrumb span { margin: 0 5px; }
+    /* ═══════════════════════════
+       BREADCRUMB
+    ═══════════════════════════ */
+    .breadcrumb {
+      background: #163d25;
+      padding: 8px 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      color: #81c784;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+    .breadcrumb a { color: #81c784; text-decoration: none; transition: color 0.15s; }
+    .breadcrumb a:hover { color: var(--gold); }
+    .breadcrumb .sep { margin: 0 4px; opacity: 0.5; }
+    .breadcrumb .current { color: #fff; font-weight: 500; }
 
-    /* ══ WRAPPER ══ */
-    .article-wrapper { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+    /* ═══════════════════════════
+       HERO
+    ═══════════════════════════ */
+    .hero {
+      background: linear-gradient(155deg, #7f0000 0%, #c62828 35%, #1a3d22 100%);
+      padding: 0;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        60deg,
+        transparent,
+        transparent 60px,
+        rgba(255,255,255,0.015) 60px,
+        rgba(255,255,255,0.015) 61px
+      );
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '🌶️';
+      position: absolute;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 7rem;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 36px 20px 32px;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+    @media (max-width: 640px) {
+      .hero-inner {
+        padding: 28px 16px 24px;
+      }
+    }
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+    }
+    .badge-crop   { background: var(--chilli); color: #fff; }
+    .badge-season { background: rgba(249,168,37,0.18); color: var(--gold); border: 1px solid rgba(249,168,37,0.4); }
+    .badge-region { background: rgba(255,255,255,0.1); color: #a5d6a7; border: 1px solid rgba(255,255,255,0.15); }
+    .hero h1 {
+      font-family: 'Noto Serif Kannada', serif;
+      font-size: clamp(1.35rem, 5vw, 2rem);
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .hero h1 .en-title {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(0.78rem, 2.2vw, 0.95rem);
+      font-weight: 400;
+      color: #ef9a9a;
+      margin-top: 6px;
+      letter-spacing: 0.2px;
+    }
+    .hero-excerpt {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bec5;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      max-width: 620px;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      color: #78909c;
+    }
+    .hero-meta span { display: flex; align-items: center; gap: 5px; }
+    .hero-meta .read-time { color: var(--gold); font-weight: 600; }
+    .hero-share { margin-left: auto; display: flex; gap: 8px; }
+    .share-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #a5d6a7;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.68rem;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      transition: background 0.18s;
+    }
+    .share-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    @media (max-width: 480px) { .hero-share { display: none; } }
 
-    /* ══ HERO ══ */
-    .hero { background: linear-gradient(135deg, #7f0000 0%, #c62828 40%, var(--green-dark) 100%); border-radius: 0 0 20px 20px; padding: 42px 28px 38px; color: #fff; margin-bottom: 28px; position: relative; overflow: hidden; }
-    .hero::before { content: '🌶️'; position: absolute; right: 22px; top: 10px; font-size: 6rem; opacity: 0.12; pointer-events: none; }
-    .category-tag { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-size: 0.7rem; font-weight: 700; padding: 3px 12px; border-radius: 12px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
-    .hero h1 { font-family: 'Noto Serif Kannada', serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 700; line-height: 1.4; color: #fff; margin-bottom: 8px; }
-    .hero h1 .en { font-family: 'Poppins', sans-serif; font-size: clamp(0.88rem, 2.2vw, 1.05rem); font-weight: 500; color: #ffcdd2; display: block; margin-top: 6px; }
-    .hero .meta { font-family: 'Poppins', sans-serif; font-size: 0.74rem; color: #ffcdd2; margin-top: 12px; }
+    /* ═══════════════════════════
+       ARTICLE LAYOUT
+    ═══════════════════════════ */
+    .article-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 16px 100px;
+    }
+    @media (max-width: 640px) {
+      .article-wrapper { padding: 0 12px 100px; }
+    }
 
-    /* ══ IMAGES ══ */
-    .featured-image { width: 100%; border-radius: 14px; overflow: hidden; margin-bottom: 28px; box-shadow: 0 6px 24px var(--shadow); }
-    .inline-image { width: 100%; border-radius: 10px; overflow: hidden; margin: 22px 0; box-shadow: 0 3px 12px var(--shadow); }
-    .img-placeholder { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; }
-    .img-placeholder.tall { height: 320px; background: linear-gradient(135deg, #ffcdd2, #ef9a9a); color: #7f0000; }
-    .img-placeholder.mid  { height: 220px; background: linear-gradient(135deg, #ffebee, #ffcdd2); color: #7f0000; }
-    .img-placeholder .icon { font-size: 3rem; margin-bottom: 8px; }
-    .img-placeholder p { font-size: 0.8rem; font-weight: 600; opacity: 0.6; }
-    .img-placeholder p.hint { font-size: 0.68rem; opacity: 0.45; margin-top: 3px; }
-    figcaption { padding: 8px 14px; font-family: 'Poppins', sans-serif; font-size: 0.73rem; color: var(--text-light); background: #fff5f5; text-align: center; }
+    /* ═══════════════════════════
+       FEATURED IMAGE
+    ═══════════════════════════ */
+    .featured-image {
+      width: calc(100% + 32px);
+      margin-left: -16px;
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 24px var(--shadow-strong);
+      background: #ffcdd2;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 640px) {
+      .featured-image {
+        width: calc(100% + 24px);
+        margin-left: -12px;
+        border-radius: 0 0 12px 12px;
+      }
+    }
+    .featured-image .img-placeholder {
+      width: 100%; height: 280px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #7f0000, #c62828 50%, #2e5f35);
+      color: #fff; font-family: 'Poppins', sans-serif; gap: 8px;
+    }
+    .featured-image .img-placeholder .icon { font-size: 3.5rem; }
+    .featured-image .img-placeholder p { font-size: 0.8rem; opacity: 0.7; }
+    .featured-image figcaption {
+      padding: 9px 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      color: var(--text-light);
+      background: #fff5f5;
+      text-align: center;
+    }
 
-    /* ══ QUICK FACTS ══ */
-    .quick-facts { background: var(--chilli-light); border-left: 5px solid var(--chilli); border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
-    .fact { text-align: center; }
-    .fact .icon { font-size: 1.5rem; }
-    .fact .label { font-family: 'Poppins', sans-serif; font-size: 0.63rem; font-weight: 600; color: var(--chilli); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
-    .fact .value { font-family: 'Poppins', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--green-dark); }
+    /* ═══════════════════════════
+       QUICK FACTS
+    ═══════════════════════════ */
+    .quick-facts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .fact-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px var(--shadow);
+      border-top: 3px solid var(--chilli);
+    }
+    .fact-card.green { border-top-color: var(--green-light); }
+    .fact-card.gold  { border-top-color: var(--gold); }
+    .fact-card .f-icon { font-size: 1.6rem; margin-bottom: 4px; }
+    .fact-card .f-val {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--chilli);
+      line-height: 1.2;
+    }
+    .fact-card.green .f-val { color: var(--green-dark); }
+    .fact-card.gold  .f-val { color: #e65100; }
+    .fact-card .f-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.65rem;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+    @media (max-width: 480px) {
+      .quick-facts { grid-template-columns: repeat(2, 1fr); }
+    }
 
-    /* ══ SECTIONS ══ */
-    section { margin-bottom: 40px; }
-    .section-heading { border-left: 5px solid var(--chilli); padding-left: 14px; margin-bottom: 16px; }
-    .section-heading h2 { font-family: 'Noto Serif Kannada', serif; font-size: 1.25rem; font-weight: 700; color: var(--green-dark); line-height: 1.4; }
-    .section-heading h2 .en { font-family: 'Poppins', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--chilli); display: block; margin-top: 2px; }
+    /* ═══════════════════════════
+       SECTION HEADINGS
+    ═══════════════════════════ */
+    .article-section { margin: 28px 0 0; }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-heading .s-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .section-heading h2 {
+      font-family: 'Noto Serif Kannada', serif;
+      font-size: clamp(1.05rem, 3vw, 1.3rem);
+      font-weight: 700;
+      color: var(--green-dark);
+      line-height: 1.4;
+    }
+    .section-heading h2 .en {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      color: var(--chilli);
+      font-weight: 600;
+      margin-top: 2px;
+    }
 
-    /* ══ BILINGUAL TEXT ══ */
+    /* ═══════════════════════════
+       BODY TEXT
+    ═══════════════════════════ */
+    p { margin-bottom: 12px; color: var(--text-mid); }
+    p:last-child { margin-bottom: 0; }
+    ul, ol { padding-left: 20px; margin-bottom: 14px; }
+    ul li, ol li { margin-bottom: 7px; color: var(--text-mid); line-height: 1.75; }
+    ul li::marker { color: var(--chilli); }
+    ol li::marker { color: var(--green-mid); font-weight: 700; font-family: 'Poppins', sans-serif; }
+    strong { color: var(--text-dark); }
+    em { color: var(--chilli); font-style: normal; font-weight: 600; }
+
+    /* Bilingual text */
     .bilingual p.kn { font-family: 'Tiro Kannada', serif; font-size: 1rem; color: var(--text-dark); margin-bottom: 5px; line-height: 1.9; }
-    .bilingual p.en { font-family: 'Merriweather', serif; font-size: 0.85rem; color: var(--text-mid); margin-bottom: 16px; font-style: italic; padding-left: 12px; border-left: 2px solid var(--border); }
+    .bilingual p.en { font-family: 'Poppins', sans-serif; font-size: 0.82rem; color: var(--text-mid); margin-bottom: 16px; font-style: italic; padding-left: 12px; border-left: 2px solid var(--border); }
 
     /* Lang visibility */
     body.lang-kn .en-only { display: none !important; }
     body.lang-en .kn-only { display: none !important; }
 
-    /* ══ STEP CARDS ══ */
-    .step-cards { display: grid; gap: 14px; }
-    .step-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 7px var(--shadow); }
-    .step-num { background: var(--chilli); color: #fff; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.82rem; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 3px; }
-    .step-content .step-title-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
-    .step-content .step-title-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--chilli); font-weight: 600; margin-bottom: 6px; }
-    .step-content .step-detail-kn { font-family: 'Tiro Kannada', serif; font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
-    .step-content .step-detail-en { font-family: 'Merriweather', serif; font-size: 0.76rem; color: #888; font-style: italic; }
+    /* ═══════════════════════════
+       TIP BOXES
+    ═══════════════════════════ */
+    .tip-box {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin: 16px 0;
+      border-left: 4px solid;
+    }
+    .tip-box.warning { background: var(--chilli-light); border-color: var(--chilli); }
+    .tip-box.tip     { background: var(--gold-light);   border-color: var(--gold); }
+    .tip-box.info    { background: var(--green-pale);   border-color: var(--green-light); }
+    .tip-box.danger  { background: var(--chilli-light); border-color: var(--chilli-warm); }
+    .tip-box .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .tip-box .tip-content { font-family: 'Poppins', sans-serif; font-size: 0.83rem; line-height: 1.65; color: var(--text-mid); }
+    .tip-box .tip-content .kn { font-family: 'Tiro Kannada', serif; font-size: 0.93rem; color: var(--text-dark); margin-bottom: 4px; }
+    .tip-box .tip-content .en { font-family: 'Poppins', sans-serif; font-size: 0.78rem; color: var(--text-mid); font-style: italic; }
+    .tip-box .tip-content strong { color: var(--text-dark); }
 
-    /* ══ INFO GRID ══ */
-    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-    .info-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 14px; box-shadow: 0 2px 7px var(--shadow); }
+    /* ═══════════════════════════
+       TABLES
+    ═══════════════════════════ */
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 14px 0;
+      border-radius: 10px;
+    }
+    .article-table {
+      width: 100%;
+      min-width: 460px;
+      border-collapse: collapse;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .article-table thead tr { background: var(--green-dark); color: #fff; }
+    .article-table th { padding: 11px 14px; text-align: left; font-weight: 600; letter-spacing: 0.3px; }
+    .article-table tbody tr:nth-child(odd)  { background: #fff; }
+    .article-table tbody tr:nth-child(even) { background: var(--chilli-light); }
+    .article-table td { padding: 10px 14px; border-bottom: 1px solid #f5e0e0; color: var(--text-mid); font-size: 0.82rem; vertical-align: top; line-height: 1.6; }
+    .article-table td:first-child { font-family: 'Noto Serif Kannada', serif; font-weight: 700; color: var(--green-dark); }
+    .article-table td .en-sub { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); display: block; margin-top: 2px; }
+    .article-table tfoot td { padding: 10px 14px; background: var(--green-pale); font-family: 'Poppins', sans-serif; font-size: 0.78rem; color: var(--green-dark); }
+
+    /* ═══════════════════════════
+       INFO GRID CARDS
+    ═══════════════════════════ */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .info-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      box-shadow: 0 2px 7px var(--shadow);
+    }
     .info-card .icon { font-size: 1.4rem; margin-bottom: 7px; }
     .info-card .kn { font-family: 'Noto Serif Kannada', serif; font-size: 0.92rem; font-weight: 700; color: var(--green-dark); margin-bottom: 3px; }
     .info-card .en { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); margin-bottom: 6px; font-weight: 600; }
     .info-card .detail { font-family: 'Tiro Kannada', serif; font-size: 0.84rem; color: var(--text-mid); line-height: 1.65; }
-    .info-card .detail-en { font-family: 'Merriweather', serif; font-size: 0.72rem; color: #999; font-style: italic; margin-top: 3px; }
+    .info-card .detail-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: #999; font-style: italic; margin-top: 3px; }
 
-    /* ══ TABLE ══ */
-    .article-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); margin-top: 6px; }
-    .article-table thead tr { background: var(--green-dark); color: #fff; }
-    .article-table thead th { padding: 11px 14px; text-align: left; font-weight: 600; font-size: 0.77rem; font-family: 'Poppins', sans-serif; }
-    .article-table tbody tr:nth-child(even) { background: var(--chilli-light); }
-    .article-table tbody tr:nth-child(odd)  { background: #fff; }
-    .article-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-mid); vertical-align: top; font-size: 0.86rem; line-height: 1.6; }
-    .article-table tbody td:first-child { font-family: 'Noto Serif Kannada', serif; font-weight: 700; color: var(--green-dark); }
-    .article-table tbody td .en-sub { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); display: block; margin-top: 2px; }
-    .article-table tfoot td { padding: 10px 14px; background: #e8f5e9; font-family: 'Poppins', sans-serif; font-size: 0.8rem; color: var(--green-dark); }
+    /* ═══════════════════════════
+       STEP CARDS
+    ═══════════════════════════ */
+    .step-cards { display: grid; gap: 12px; margin: 14px 0; }
+    .step-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      box-shadow: 0 2px 7px var(--shadow);
+    }
+    .step-num {
+      background: var(--chilli);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      min-width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .step-content .step-title-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
+    .step-content .step-title-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--chilli); font-weight: 600; margin-bottom: 6px; }
+    .step-content .step-detail-kn { font-family: 'Tiro Kannada', serif; font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
+    .step-content .step-detail-en { font-family: 'Poppins', sans-serif; font-size: 0.76rem; color: #888; font-style: italic; }
 
-    /* ══ TIP BOXES ══ */
-    .tip-box { border-radius: 10px; padding: 16px 18px; margin: 18px 0; display: flex; gap: 12px; align-items: flex-start; }
-    .tip-box.tip     { background: #fff8e1;           border-left: 5px solid var(--gold); }
-    .tip-box.info    { background: var(--green-pale);  border-left: 5px solid var(--green-mid); }
-    .tip-box.warning { background: #fff3e0;             border-left: 5px solid #e65100; }
-    .tip-box.danger  { background: var(--chilli-light); border-left: 5px solid var(--chilli); }
-    .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
-    .tip-content .kn { font-family: 'Tiro Kannada', serif; font-size: 0.93rem; color: var(--text-dark); line-height: 1.75; margin-bottom: 4px; }
-    .tip-content .en { font-family: 'Merriweather', serif; font-size: 0.78rem; color: var(--text-mid); font-style: italic; }
-    .tip-content strong { font-family: 'Noto Serif Kannada', serif; color: var(--green-dark); }
-
-    /* ══ DO/DON'T ══ */
-    .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    /* ═══════════════════════════
+       DO / DON'T
+    ═══════════════════════════ */
+    .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
     .do-box, .dont-box { border-radius: 10px; padding: 16px; }
     .do-box   { background: var(--green-pale); border: 2px solid var(--green-mid); }
     .dont-box { background: var(--chilli-light); border: 2px solid var(--chilli); }
@@ -157,519 +545,915 @@
     .dont-box ul li::before { content: '❌'; position: absolute; left: 0; font-size: 0.75rem; top: 3px; }
     @media (max-width: 560px) { .do-dont { grid-template-columns: 1fr; } }
 
-    /* ══ FAQ ══ */
-    .faq-item { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 10px; box-shadow: 0 2px 5px var(--shadow); }
-    .faq-item .q-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
-    .faq-item .q-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--chilli); font-weight: 600; margin-bottom: 8px; }
-    .faq-item .a-kn { font-family: 'Tiro Kannada', serif; font-size: 0.92rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
-    .faq-item .a-en { font-family: 'Merriweather', serif; font-size: 0.76rem; color: #999; font-style: italic; }
+    /* ═══════════════════════════
+       INLINE IMAGE
+    ═══════════════════════════ */
+    .inline-image {
+      width: 100%; border-radius: 12px;
+      overflow: hidden; margin: 20px 0;
+      box-shadow: 0 4px 16px var(--shadow);
+      background: var(--chilli-light);
+    }
+    .inline-image .img-placeholder {
+      height: 220px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #ffebee, #ffcdd2);
+      color: #7f0000; font-family: 'Poppins', sans-serif; gap: 6px;
+    }
+    .inline-image .img-placeholder .icon { font-size: 2.5rem; }
+    .inline-image .img-placeholder p { font-size: 0.75rem; opacity: 0.7; }
+    .inline-image figcaption {
+      padding: 8px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.73rem;
+      color: var(--text-light);
+      background: #fff5f5;
+      text-align: center;
+    }
 
-    /* ══ CTA ══ */
-    .cta-block { background: linear-gradient(135deg, var(--green-dark), #1b5e20); border-radius: 14px; padding: 32px 24px; text-align: center; color: #fff; margin-top: 36px; }
-    .cta-block .emoji { font-size: 2.2rem; margin-bottom: 10px; }
-    .cta-block h3 { font-family: 'Noto Serif Kannada', serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: #fff; line-height: 1.5; }
-    .cta-block h3 .en { font-family: 'Poppins', sans-serif; font-size: 0.9rem; font-weight: 500; color: #a5d6a7; display: block; margin-top: 4px; }
-    .cta-block p { font-family: 'Tiro Kannada', serif; font-size: 0.88rem; color: #c8e6c9; margin: 10px 0 18px; line-height: 1.7; }
-    .cta-block a { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem; padding: 11px 26px; border-radius: 30px; text-decoration: none; transition: opacity 0.2s; }
-    .cta-block a:hover { opacity: 0.88; }
+    /* ═══════════════════════════
+       FAQ
+    ═══════════════════════════ */
+    .faq-item {
+      background: #fff;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px var(--shadow);
+      border-left: 4px solid var(--chilli);
+    }
+    .faq-q {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--green-dark);
+      padding: 12px 14px 0;
+      display: flex;
+      gap: 8px;
+    }
+    .faq-q .num {
+      background: var(--chilli);
+      color: #fff;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700;
+    }
+    .faq-q-kn { font-family: 'Noto Serif Kannada', serif; }
+    .faq-q-en { display: block; font-family: 'Poppins', sans-serif; font-size: 0.68rem; color: var(--chilli); font-weight: 600; margin-top: 2px; padding-left: 28px; }
+    .faq-a {
+      font-family: 'Tiro Kannada', serif;
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      padding: 6px 14px 12px 42px;
+      line-height: 1.65;
+    }
+    .faq-a-en { font-family: 'Poppins', sans-serif; font-size: 0.76rem; color: #888; font-style: italic; margin-top: 4px; }
 
-    strong { color: var(--green-dark); }
-    em { color: var(--chilli); font-style: normal; font-weight: 600; }
+    /* ═══════════════════════════
+       CTA BLOCK
+    ═══════════════════════════ */
+    .cta-block {
+      background: linear-gradient(135deg, var(--green-dark), #1b5e20);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-top: 36px;
+      color: #fff;
+    }
+    .cta-block .cta-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .cta-block h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;
+    }
+    .cta-block p {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem; color: #a5d6a7; margin-bottom: 18px;
+    }
+    .cta-block a {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--green-dark);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem; font-weight: 700;
+      padding: 10px 28px;
+      border-radius: 25px;
+      text-decoration: none;
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .cta-block a:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
 
+    /* ═══════════════════════════
+       RELEVANT ARTICLES
+    ═══════════════════════════ */
+    .relevant-articles { margin: 36px 0 0; }
+    .relevant-articles .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--green-dark); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+    }
+    .relevant-articles .section-title .title-icon {
+      background: var(--green-dark); color: #fff;
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+    }
+    .relevant-articles .section-title a {
+      margin-left: auto; font-size: 0.75rem; font-weight: 500;
+      color: var(--green-mid); text-decoration: none;
+    }
+    .relevant-articles .section-title a:hover { color: var(--green-dark); }
+    .articles-grid { display: flex; flex-direction: column; gap: 10px; }
+    .article-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e4ede4;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      display: flex; align-items: center;
+      gap: 12px; padding: 12px 14px;
+      text-decoration: none;
+      transition: box-shadow 0.2s, transform 0.15s;
+      position: relative; overflow: hidden;
+    }
+    .article-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--rc-accent, var(--chilli));
+      border-radius: 4px 0 0 4px;
+    }
+    .article-card:hover { box-shadow: 0 5px 20px var(--shadow-strong); transform: translateY(-2px); }
+    .card-thumb {
+      width: 46px; height: 46px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .card-body { flex: 1; min-width: 0; }
+    .card-tag {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--rc-accent, var(--chilli));
+      margin-bottom: 3px;
+    }
+    .card-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem; font-weight: 600;
+      color: var(--text-dark); line-height: 1.35;
+    }
+    .card-arrow {
+      font-size: 1.3rem; color: #ccc;
+      flex-shrink: 0; transition: color 0.15s;
+    }
+    .article-card:hover .card-arrow { color: var(--rc-accent, var(--chilli)); }
+
+    /* ═══════════════════════════
+       SECTION DIVIDER
+    ═══════════════════════════ */
+    .section-divider { border: none; border-top: 1px dashed var(--border); margin: 24px 0; }
+
+    /* ═══════════════════════════
+       MOBILE BOTTOM NAV
+    ═══════════════════════════ */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--green-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      z-index: 200;
+      padding: 6px 0 env(safe-area-inset-bottom, 0);
+    }
+    .mobile-nav ul { list-style: none; display: flex; justify-content: space-around; }
+    .mobile-nav ul li a {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 2px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6rem; font-weight: 500;
+      color: #a5d6a7; text-decoration: none;
+      padding: 4px 8px; border-radius: 8px;
+      transition: color 0.15s;
+    }
+    .mobile-nav ul li a .nav-icon { font-size: 1.2rem; }
+    .mobile-nav ul li a.active,
+    .mobile-nav ul li a:hover { color: var(--gold); }
+    @media (max-width: 640px) { .mobile-nav { display: block; } }
+
+    /* ═══════════════════════════
+       FOOTER
+    ═══════════════════════════ */
+    .site-footer {
+      background: var(--green-dark);
+      color: #c8e6c9;
+      padding: 40px 20px 24px;
+      font-family: 'Poppins', sans-serif;
+    }
+    .footer-main {
+      max-width: 860px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 32px;
+      padding-bottom: 28px;
+    }
+    .footer-brand .logo-big {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .footer-brand .logo-big .mitra { color: var(--gold); }
+    .footer-brand p { font-size: 0.78rem; color: #81c784; line-height: 1.7; margin-bottom: 14px; }
+    .footer-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .footer-badge {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #a5d6a7;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .footer-col h4 { font-size: 0.82rem; font-weight: 700; color: #fff; margin-bottom: 14px; letter-spacing: 0.3px; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 7px; }
+    .footer-col ul li a { font-size: 0.76rem; color: #81c784; text-decoration: none; transition: color 0.15s; display: flex; align-items: center; gap: 4px; }
+    .footer-col ul li a:hover { color: var(--gold); }
+    .footer-divider { border: none; border-top: 1px solid rgba(255,255,255,0.1); max-width: 860px; margin: 0 auto 20px; }
+    .footer-bottom {
+      max-width: 860px; margin: 0 auto;
+      display: flex; flex-wrap: wrap;
+      align-items: center; gap: 16px;
+    }
+    .footer-copyright { font-size: 0.72rem; color: #546e7a; flex: 1; min-width: 200px; }
+    .footer-copyright a { color: #81c784; text-decoration: none; }
+    .footer-legal-links { display: flex; gap: 12px; }
+    .footer-legal-links a { font-size: 0.7rem; color: #546e7a; text-decoration: none; }
+    .footer-legal-links a:hover { color: #81c784; }
+    .footer-made { font-size: 0.7rem; color: #546e7a; }
+    .footer-made .heart { color: var(--chilli); }
     @media (max-width: 600px) {
-      .hero { padding: 28px 16px 24px; }
-      .quick-facts { grid-template-columns: repeat(2, 1fr); }
-      .article-table { font-size: 0.72rem; }
-      .article-table thead th, .article-table tbody td { padding: 8px 9px; }
+      .footer-main { grid-template-columns: 1fr; gap: 20px; }
     }
   </style>
 </head>
 <body class="lang-kn">
 
+<!-- TOP BAR -->
+<div class="top-announcement">
+  🌶️ ಹೊಸ: ಬ್ಯಾಡಗಿ APMC ಮೆಣಸಿನ ಇಂದಿನ ಬೆಲೆ ಲೈವ್ ಅಪ್ಡೇಟ್ — <a href="https://krashimitra.in/chat?tab=mandi">ಇಲ್ಲಿ ನೋಡಿ →</a>
+</div>
+
 <!-- SITE HEADER -->
 <header class="site-header">
-  <a href="index.html" class="logo-block">
-    <div>
-      <div class="logo-text">🌾 कृषि<span>मित्र</span></div>
-      <span class="tagline-sub">किसान का डिजिटल साथी</span>
-    </div>
+  <a href="https://krashimitra.in" class="logo">
+    <div class="brand">🌾 ಕೃಷಿ<span class="mitra">ಮಿತ್ರ</span></div>
+    <span class="tagline">ಕಿಸಾನ್ ಕಾ ಡಿಜಿಟಲ್ ಸಾಥಿ</span>
   </a>
-  <nav class="nav-links">
-    <a href="index.html" class="home-link">🏠 मुख्य</a>
-    <a href="index.html#weather">मौसम</a>
-    <a href="index.html#mandi">मंडी</a>
-    <a href="index.html#articles">लेख</a>
-    <a href="#">सहायता</a>
+  <nav>
+    <a href="https://krashimitra.in">🏠 ಮುಖ್ಯ</a>
+    <a href="https://krashimitra.in/weather.html">ಹವಾಮಾನ</a>
+    <a href="https://krashimitra.in/mandi.html">ಮಂಡಿ</a>
+    <a href="https://krashimitra.in/articles/" class="active">ಲೇಖನ</a>
   </nav>
-  <div class="right-group">
+  <div class="header-right">
     <div class="lang-pill">
       <button class="active" id="btn-kn" onclick="setLang('kn')">ಕನ್ನಡ</button>
       <button id="btn-en" onclick="setLang('en')">EN</button>
     </div>
-    <span class="user-icon">👤</span>
+    <div class="user-icon">👤</div>
   </div>
 </header>
 
 <!-- BREADCRUMB -->
 <div class="breadcrumb">
-  <a href="index.html">मुख्य</a>
-  <span>›</span>
-  <a href="index.html#articles">ಕೃಷಿ ಮಾಹಿತಿ</a>
-  <span>›</span>
-  ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ — Karnataka
+  <a href="https://krashimitra.in">ಮುಖ್ಯ</a>
+  <span class="sep">›</span>
+  <a href="https://krashimitra.in/articles/">ಕೃಷಿ ಮಾಹಿತಿ</a>
+  <span class="sep">›</span>
+  <span class="current">ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ — Karnataka</span>
 </div>
 
-<div class="article-wrapper">
-
-  <!-- HERO -->
-  <div class="hero">
-    <span class="category-tag">🌶️ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ · Crop Guide</span>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badges">
+      <span class="badge badge-crop">🌶️ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ</span>
+      <span class="badge badge-season">📅 ಖರೀಫ್ &amp; ರಬಿ</span>
+      <span class="badge badge-region">📍 ಕರ್ನಾಟಕ</span>
+    </div>
     <h1>
       ಕರ್ನಾಟಕದಲ್ಲಿ ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ — ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ
-      <span class="en">Complete Chilli Farming Guide for Karnataka Farmers</span>
+      <span class="en-title">Complete Chilli Farming Guide for Karnataka Farmers</span>
     </h1>
-    <p class="meta">KrashiMitra.in &nbsp;|&nbsp; ಕನ್ನಡ + English &nbsp;|&nbsp; ಕರ್ನಾಟಕ ರೈತರಿಗಾಗಿ</p>
-  </div>
-
-  <!-- FEATURED IMAGE -->
-  <figure class="featured-image">
-    <div class="img-placeholder tall">
-      <div class="icon">🌶️</div>
-      <p>Featured Image — ಮೆಣಸಿನಕಾಯಿ ತೋಟ ಫೋಟೋ ಇಲ್ಲಿ ಹಾಕಿ</p>
-      <p class="hint">Replace src · 1200×630px recommended</p>
+    <p class="hero-excerpt">ಬ್ಯಾಡಗಿ, ಹಾವೇರಿ, ಧಾರವಾಡ ಮತ್ತು ರಾಯಚೂರು ಜಿಲ್ಲೆಯ ರೈತರಿಗಾಗಿ — ತಳಿ ಆಯ್ಕೆ, ನರ್ಸರಿ, ನೀರು ನಿರ್ವಹಣೆ, ರೋಗ ನಿಯಂತ್ರಣ ಮತ್ತು ಆದಾಯ ಅಂದಾಜು ಎಲ್ಲವೂ ಒಂದೆಡೆ.</p>
+    <div class="hero-meta">
+      <span>📰 KrashiMitra.in</span>
+      <span class="read-time">⏱ 8 ನಿಮಿಷ ಓದು</span>
+      <span>📍 ಕನ್ನಡ + English</span>
+      <div class="hero-share">
+        <button class="share-btn" onclick="navigator.share && navigator.share({title:'ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ',url:window.location.href})">📤 ಹಂಚಿ</button>
+      </div>
     </div>
-    <figcaption>ಕರ್ನಾಟಕದ ಮೆಣಸಿನ ತೋಟ — ಬ್ಯಾಡಗಿ, ಧಾರವಾಡ, ಹಾವೇರಿ ಮತ್ತು ರಾಯಚೂರು Karnataka ನ ಪ್ರಮುಖ ಮೆಣಸಿನ ಉತ್ಪಾದನಾ ಜಿಲ್ಲೆಗಳು</figcaption>
+  </div>
+</div>
+
+<!-- FEATURED IMAGE -->
+<div class="article-wrapper">
+  <div>
+    <h3>#</h3>
+  </div>
+  <figure class="featured-image">
+    
+    <img src="https://krashimitra.in/images/plants/black-chilli-karnataka.png" alt="img" width="800" height="400" loading="eager" />
+  
+
+    <figcaption>ಕರ್ನಾಟಕದ ಮೆಣಸಿನ ತೋಟ — ಬ್ಯಾಡಗಿ, ಧಾರವಾಡ, ಹಾವೇರಿ ಮತ್ತು ರಾಯಚೂರು ಪ್ರಮುಖ ಉತ್ಪಾದನಾ ಜಿಲ್ಲೆಗಳು</figcaption>
   </figure>
 
   <!-- QUICK FACTS -->
   <div class="quick-facts">
-    <div class="fact"><div class="icon">🌡️</div><div class="label">Temperature</div><div class="value">20°C – 30°C</div></div>
-    <div class="fact"><div class="icon">📅</div><div class="label">ಋತು / Season</div><div class="value">ಖರೀಫ್ & ರಬಿ</div></div>
-    <div class="fact"><div class="icon">🌱</div><div class="label">ನರ್ಸರಿ</div><div class="value">25–30 ದಿನ</div></div>
-    <div class="fact"><div class="icon">🌶️</div><div class="label">ಇಳುವರಿ</div><div class="value">8–15 ಕ್ವಿ/ಎಕರೆ</div></div>
-    <div class="fact"><div class="icon">💧</div><div class="label">ನೀರಾವರಿ</div><div class="value">ಹನಿ / ತುಂತುರು</div></div>
-    <div class="fact"><div class="icon">⏳</div><div class="label">ಅವಧಿ</div><div class="value">150–180 ದಿನ</div></div>
+    <div class="fact-card green">
+      <div class="f-icon">🌡️</div>
+      <div class="f-val">20°C – 30°C</div>
+      <div class="f-label">ತಾಪಮಾನ / Temperature</div>
+    </div>
+    <div class="fact-card">
+      <div class="f-icon">📅</div>
+      <div class="f-val">ಖರೀಫ್ &amp; ರಬಿ</div>
+      <div class="f-label">ಋತು / Season</div>
+    </div>
+    <div class="fact-card green">
+      <div class="f-icon">🌱</div>
+      <div class="f-val">25–30 ದಿನ</div>
+      <div class="f-label">ನರ್ಸರಿ ಅವಧಿ</div>
+    </div>
+    <div class="fact-card">
+      <div class="f-icon">🌶️</div>
+      <div class="f-val">8–15 ಕ್ವಿ/ಎಕರೆ</div>
+      <div class="f-label">ಒಣ ಮೆಣಸು ಇಳುವರಿ</div>
+    </div>
+    <div class="fact-card gold">
+      <div class="f-icon">💧</div>
+      <div class="f-val">ಹನಿ / ತುಂತುರು</div>
+      <div class="f-label">ನೀರಾವರಿ ವಿಧ</div>
+    </div>
+    <div class="fact-card green">
+      <div class="f-icon">⏳</div>
+      <div class="f-val">150–180 ದಿನ</div>
+      <div class="f-label">ಬೆಳೆ ಅವಧಿ</div>
+    </div>
   </div>
 
-  <article>
+  <!-- INTRO -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">📖</span>
+      <h2>ಪರಿಚಯ <span class="en">Introduction</span></h2>
+    </div>
+    <div class="bilingual">
+      <p class="kn">ಮೆಣಸಿನಕಾಯಿ ಕರ್ನಾಟಕದ ಅತ್ಯಂತ ಮಹತ್ವದ ಮಸಾಲೆ ಬೆಳೆ. <strong>ಬ್ಯಾಡಗಿ ಮೆಣಸು</strong> ವಿಶ್ವ ಪ್ರಸಿದ್ಧ — ಅದರ ಗಾಢ ಬಣ್ಣ ಮತ್ತು ಕಡಿಮೆ ಖಾರಕ್ಕಾಗಿ ಅಂತರರಾಷ್ಟ್ರೀಯ ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಹೆಚ್ಚಿನ ಬೇಡಿಕೆ ಇದೆ. <strong>ಬ್ಯಾಡಗಿ, ಹಾವೇರಿ, ಧಾರವಾಡ, ರಾಯಚೂರು ಮತ್ತು ಗದಗ</strong> ಜಿಲ್ಲೆಗಳಲ್ಲಿ ವ್ಯಾಪಕ ಬೆಳೆ.</p>
+      <p class="en">Chilli is Karnataka's most important spice crop. The famous <strong>Byadagi chilli</strong> is world-renowned for its deep red colour and low pungency, commanding premium prices in international markets. Major growing districts include Byadagi, Haveri, Dharwad, Raichur, and Gadag.</p>
+      <p class="kn">ಸರಿಯಾದ <strong>ತಳಿ ಆಯ್ಕೆ, ನರ್ಸರಿ ತಯಾರಿ, ನೀರು ನಿರ್ವಹಣೆ ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣ</strong> ಮಾಡಿದರೆ ಎಕರೆಗೆ ₹80,000–₹1,50,000 ಲಾಭ ಪಡೆಯಬಹುದು.</p>
+      <p class="en">With the right variety, nursery preparation, water management, and disease control, farmers can earn ₹80,000–₹1,50,000 profit per acre.</p>
+    </div>
+  </section>
 
-    <!-- INTRO -->
-    <section>
-      <div class="section-heading">
-        <h2>ಪರಿಚಯ <span class="en">Introduction</span></h2>
+  <hr class="section-divider" />
+
+  <!-- VARIETIES -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">🌱</span>
+      <h2>ಕರ್ನಾಟಕಕ್ಕೆ ಸೂಕ್ತ ತಳಿಗಳು <span class="en">Recommended Varieties</span></h2>
+    </div>
+    <div class="table-scroll"><table class="article-table">
+      <thead>
+        <tr>
+          <th>ತಳಿ / Variety</th>
+          <th>ವಿಧ / Type</th>
+          <th>ಪಕ್ವತೆ / Days</th>
+          <th>ವಿಶೇಷತೆ / Feature</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Byadagi Kaddi<span class="en-sub">Karnataka Special</span></td>
+          <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
+          <td>160–170 ದಿನ</td>
+          <td>ಗಾಢ ಕೆಂಪು, ಕಡಿಮೆ ಖಾರ — ರಫ್ತು ಮಾರುಕಟ್ಟೆಗೆ ಅತ್ಯುತ್ತಮ</td>
+        </tr>
+        <tr>
+          <td>Byadagi Dabbi<span class="en-sub">Karnataka Special</span></td>
+          <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
+          <td>155–165 ದಿನ</td>
+          <td>ದಪ್ಪ ಕಾಯಿ, ಅಧಿಕ ಬಣ್ಣ — ಮಸಾಲೆ ಉದ್ಯಮಕ್ಕೆ ಬೇಡಿಕೆ</td>
+        </tr>
+        <tr>
+          <td>Arka Lohit<span class="en-sub">IIHR Hybrid</span></td>
+          <td>ಹೈಬ್ರಿಡ್</td>
+          <td>150–160 ದಿನ</td>
+          <td>ಹೆಚ್ಚಿನ ಇಳುವರಿ, ರೋಗ ನಿರೋಧಕ, ತಾಜಾ ಮಾರಾಟಕ್ಕೆ ಸೂಕ್ತ</td>
+        </tr>
+        <tr>
+          <td>LCA-334<span class="en-sub">High Yielding</span></td>
+          <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
+          <td>145–155 ದಿನ</td>
+          <td>ಹೆಚ್ಚಿನ ಖಾರ, ಸ್ಥಳೀಯ ಮಾರುಕಟ್ಟೆ ಬೇಡಿಕೆ</td>
+        </tr>
+        <tr>
+          <td>K-1 (Karnool-1)<span class="en-sub">Medium Pungent</span></td>
+          <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
+          <td>150–160 ದಿನ</td>
+          <td>ಬರ ಸಹಿಷ್ಣು, ಉತ್ತರ ಕರ್ನಾಟಕಕ್ಕೆ ಸೂಕ್ತ</td>
+        </tr>
+        <tr>
+          <td>Pusa Jwala<span class="en-sub">High Pungent</span></td>
+          <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
+          <td>140–150 ದಿನ</td>
+          <td>ಅಧಿಕ ಖಾರ, ಹಸಿ ಮೆಣಸಿಗೆ ಜನಪ್ರಿಯ</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="4">💡 ಬ್ಯಾಡಗಿ ಜಿಲ್ಲೆ ರೈತರು Byadagi Kaddi ಅಥವಾ Dabbi ತಳಿ ಆಯ್ಕೆ ಮಾಡಿದರೆ ರಫ್ತು ಬೆಲೆ ಉತ್ತಮ ಸಿಗುತ್ತದೆ. / Byadagi district farmers get premium export prices with Kaddi or Dabbi varieties.</td></tr>
+      </tfoot>
+    </table></div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- SOIL & CLIMATE -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">🌍</span>
+      <h2>ಮಣ್ಣು ಮತ್ತು ಹವಾಮಾನ <span class="en">Soil &amp; Climate</span></h2>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="icon">🌍</div>
+        <div class="kn">ಮಣ್ಣಿನ ವಿಧ</div>
+        <div class="en">Soil Type</div>
+        <div class="detail">ಮರಳು ಮಿಶ್ರಿತ ಗೋಡು ಮಣ್ಣು ಉತ್ತಮ. pH 6.0–7.5. ಜಲಭರ ಇಲ್ಲದ ಮಣ್ಣು ಆಯ್ಕೆ ಮಾಡಿ.</div>
+        <div class="detail-en">Well-drained sandy loam is ideal. pH 6.0–7.5. Avoid waterlogged soils.</div>
       </div>
-      <div class="bilingual">
-        <p class="kn">ಮೆಣಸಿನಕಾಯಿ ಕರ್ನಾಟಕದ ಅತ್ಯಂತ ಮಹತ್ವದ ಮಸಾಲೆ ಬೆಳೆ. <strong>ಬ್ಯಾಡಗಿ ಮೆಣಸು</strong> ವಿಶ್ವ ಪ್ರಸಿದ್ಧ — ಅದರ ಗಾಢ ಬಣ್ಣ ಮತ್ತು ಕಡಿಮೆ ಖಾರಕ್ಕಾಗಿ ಅಂತರರಾಷ್ಟ್ರೀಯ ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಹೆಚ್ಚಿನ ಬೇಡಿಕೆ ಇದೆ. <strong>ಬ್ಯಾಡಗಿ, ಹಾವೇರಿ, ಧಾರವಾಡ, ರಾಯಚೂರು ಮತ್ತು ಗದಗ</strong> ಜಿಲ್ಲೆಗಳಲ್ಲಿ ವ್ಯಾಪಕ ಬೆಳೆ.</p>
-        <p class="en">Chilli is Karnataka's most important spice crop. The famous <strong>Byadagi chilli</strong> is world-renowned for its deep red colour and low pungency, commanding premium prices in international markets. Major growing districts include Byadagi, Haveri, Dharwad, Raichur, and Gadag.</p>
-        <p class="kn">ಸರಿಯಾದ <strong>ತಳಿ ಆಯ್ಕೆ, ನರ್ಸರಿ ತಯಾರಿ, ನೀರು ನಿರ್ವಹಣೆ ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣ</strong> ಮಾಡಿದರೆ ಎಕರೆಗೆ ₹80,000–₹1,50,000 ಲಾಭ ಪಡೆಯಬಹುದು.</p>
-        <p class="en">With the right variety, nursery preparation, water management, and disease control, farmers can earn ₹80,000–₹1,50,000 profit per acre.</p>
+      <div class="info-card">
+        <div class="icon">🌡️</div>
+        <div class="kn">ತಾಪಮಾನ</div>
+        <div class="en">Temperature</div>
+        <div class="detail">ಬೆಳೆ ಬೆಳವಣಿಗೆಗೆ 20–30°C ಸೂಕ್ತ. 15°C ಕಡಿಮೆ ಮತ್ತು 35°C ಹೆಚ್ಚು ಇದ್ದರೆ ಹೂ ಉದುರುತ್ತದೆ.</div>
+        <div class="detail-en">20–30°C is ideal. Below 15°C or above 35°C causes flower drop.</div>
       </div>
-    </section>
-
-    <!-- VARIETIES -->
-    <section>
-      <div class="section-heading">
-        <h2>ಕರ್ನಾಟಕಕ್ಕೆ ಸೂಕ್ತ ತಳಿಗಳು <span class="en">Recommended Varieties</span></h2>
+      <div class="info-card">
+        <div class="icon">📅</div>
+        <div class="kn">ಬೆಳೆ ಕಾಲ</div>
+        <div class="en">Cropping Season</div>
+        <div class="detail">ಖರೀಫ್: ಜೂನ್–ಜುಲೈ ನಾಟಿ | ರಬಿ: ಸೆಪ್ಟೆಂಬರ್–ಅಕ್ಟೋಬರ್ ನಾಟಿ. ರಬಿ ಬೆಳೆ ಗುಣಮಟ್ಟ ಉತ್ತಮ.</div>
+        <div class="detail-en">Kharif: Jun–Jul transplant | Rabi: Sep–Oct. Rabi crop has better quality.</div>
       </div>
-      <table class="article-table">
-        <thead>
-          <tr>
-            <th>ತಳಿ / Variety</th>
-            <th>ವಿಧ / Type</th>
-            <th>ಪಕ್ವತೆ / Days</th>
-            <th>ವಿಶೇಷತೆ / Feature</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Byadagi Kaddi<span class="en-sub">Karnataka Special</span></td>
-            <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
-            <td>160–170 ದಿನ</td>
-            <td>ಗಾಢ ಕೆಂಪು, ಕಡಿಮೆ ಖಾರ — ರಫ್ತು ಮಾರುಕಟ್ಟೆಗೆ ಅತ್ಯುತ್ತಮ</td>
-          </tr>
-          <tr>
-            <td>Byadagi Dabbi<span class="en-sub">Karnataka Special</span></td>
-            <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
-            <td>155–165 ದಿನ</td>
-            <td>ದಪ್ಪ ಕಾಯಿ, ಅಧಿಕ ಬಣ್ಣ — ಮಸಾಲೆ ಉದ್ಯಮಕ್ಕೆ ಬೇಡಿಕೆ</td>
-          </tr>
-          <tr>
-            <td>Arka Lohit<span class="en-sub">IIHR Hybrid</span></td>
-            <td>ಹೈಬ್ರಿಡ್</td>
-            <td>150–160 ದಿನ</td>
-            <td>ಹೆಚ್ಚಿನ ಇಳುವರಿ, ರೋಗ ನಿರೋಧಕ, ತಾಜಾ ಮಾರಾಟಕ್ಕೆ ಸೂಕ್ತ</td>
-          </tr>
-          <tr>
-            <td>LCA-334<span class="en-sub">High Yielding</span></td>
-            <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
-            <td>145–155 ದಿನ</td>
-            <td>ಹೆಚ್ಚಿನ ಖಾರ, ಸ್ಥಳೀಯ ಮಾರುಕಟ್ಟೆ ಬೇಡಿಕೆ ಹೆಚ್ಚು</td>
-          </tr>
-          <tr>
-            <td>K-1 (Karnool-1)<span class="en-sub">Medium Pungent</span></td>
-            <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
-            <td>150–160 ದಿನ</td>
-            <td>ಮಧ್ಯಮ ಖಾರ, ಬರ ಸಹಿಷ್ಣು, ಉತ್ತರ ಕರ್ನಾಟಕಕ್ಕೆ ಸೂಕ್ತ</td>
-          </tr>
-          <tr>
-            <td>Pusa Jwala<span class="en-sub">High Pungent</span></td>
-            <td>ಓಪನ್ ಪಾಲಿನೇಟೆಡ್</td>
-            <td>140–150 ದಿನ</td>
-            <td>ಅಧಿಕ ಖಾರ, ಹಸಿ ಮೆಣಸಿನ ಮಾರಾಟಕ್ಕೆ ಜನಪ್ರಿಯ</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr><td colspan="4">💡 ಬ್ಯಾಡಗಿ ಜಿಲ್ಲೆ ರೈತರು Byadagi Kaddi ಅಥವಾ Dabbi ತಳಿ ಆಯ್ಕೆ ಮಾಡಿದರೆ ರಫ್ತು ಬೆಲೆ ಉತ್ತಮ ಸಿಗುತ್ತದೆ. / Byadagi district farmers get export-quality prices with Kaddi or Dabbi varieties.</td></tr>
-        </tfoot>
-      </table>
-    </section>
-
-    <!-- SOIL & CLIMATE -->
-    <section>
-      <div class="section-heading">
-        <h2>ಮಣ್ಣು ಮತ್ತು ಹವಾಮಾನ <span class="en">Soil & Climate</span></h2>
+      <div class="info-card">
+        <div class="icon">💧</div>
+        <div class="kn">ನೀರಾವರಿ</div>
+        <div class="en">Irrigation</div>
+        <div class="detail">ಹನಿ ನೀರಾವರಿ ಅತ್ಯುತ್ತಮ. 7–10 ದಿನಕ್ಕೊಮ್ಮೆ ಬೇಸಿಗೆಯಲ್ಲಿ. ಹೂ ಮತ್ತು ಕಾಯಿ ಸಮಯದಲ್ಲಿ ನಿಯಮಿತ ನೀರು ಜರೂರಿ.</div>
+        <div class="detail-en">Drip irrigation is best. Every 7–10 days in summer. Critical during flowering.</div>
       </div>
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="icon">🌍</div>
-          <div class="kn">ಮಣ್ಣಿನ ವಿಧ</div>
-          <div class="en">Soil Type</div>
-          <div class="detail">ಮರಳು ಮಿಶ್ರಿತ ಗೋಡು ಮಣ್ಣು ಉತ್ತಮ. pH 6.0–7.5 ಇರಬೇಕು. ಜಲಭರ ಇಲ್ಲದ ಮಣ್ಣು ಆಯ್ಕೆ ಮಾಡಿ.</div>
-          <div class="detail-en">Well-drained sandy loam is ideal. pH 6.0–7.5. Avoid waterlogged soils.</div>
-        </div>
-        <div class="info-card">
-          <div class="icon">🌡️</div>
-          <div class="kn">ತಾಪಮಾನ</div>
-          <div class="en">Temperature</div>
-          <div class="detail">ಬೆಳೆ ಬೆಳವಣಿಗೆಗೆ 20–30°C ಸೂಕ್ತ. 15°C ಕಡಿಮೆ ಮತ್ತು 35°C ಹೆಚ್ಚು ಇದ್ದರೆ ಹೂ ಉದುರುತ್ತದೆ.</div>
-          <div class="detail-en">20–30°C is ideal. Below 15°C or above 35°C causes flower drop.</div>
-        </div>
-        <div class="info-card">
-          <div class="icon">📅</div>
-          <div class="kn">ಬೆಳೆ ಕಾಲ</div>
-          <div class="en">Cropping Season</div>
-          <div class="detail">ಖರೀಫ್: ಜೂನ್–ಜುಲೈ ನಾಟಿ | ರಬಿ: ಸೆಪ್ಟೆಂಬರ್–ಅಕ್ಟೋಬರ್ ನಾಟಿ. ರಬಿ ಬೆಳೆ ಗುಣಮಟ್ಟ ಉತ್ತಮ.</div>
-          <div class="detail-en">Kharif: transplant Jun–Jul | Rabi: Sep–Oct. Rabi crop has better quality and colour.</div>
-        </div>
-        <div class="info-card">
-          <div class="icon">💧</div>
-          <div class="kn">ನೀರಾವರಿ</div>
-          <div class="en">Irrigation</div>
-          <div class="detail">ಹನಿ ನೀರಾವರಿ ಅತ್ಯುತ್ತಮ. 7–10 ದಿನಕ್ಕೊಮ್ಮೆ ಬೇಸಿಗೆಯಲ್ಲಿ. ಹೂ ಮತ್ತು ಕಾಯಿ ಸಮಯದಲ್ಲಿ ನಿಯಮಿತ ನೀರು ಜರೂರಿ.</div>
-          <div class="detail-en">Drip irrigation is best. Every 7–10 days in summer. Regular water during flowering and fruiting is critical.</div>
-        </div>
-      </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- STEP BY STEP -->
-    <section>
-      <div class="section-heading">
-        <h2>ಹಂತ ಹಂತವಾಗಿ ಬೆಳೆ ವಿಧಾನ <span class="en">Step-by-Step Cultivation</span></h2>
-      </div>
-      <div class="step-cards">
+  <hr class="section-divider" />
 
-        <div class="step-card">
-          <div class="step-num">1</div>
-          <div class="step-content">
-            <div class="step-title-kn">ನರ್ಸರಿ ತಯಾರಿ</div>
-            <div class="step-title-en">Nursery Preparation</div>
-            <div class="step-detail-kn">ಮಣ್ಣು, ಮರಳು ಮತ್ತು ಕಾಂಪೋಸ್ಟ್ ಸಮಾನ ಪ್ರಮಾಣದಲ್ಲಿ ತಯಾರಿಸಿ. ಬೀಜ ಉಪಚಾರ: <strong>Thiram 3 ಗ್ರಾಂ + Carbendazim 1 ಗ್ರಾಂ/ಕಿ.ಗ್ರಾ ಬೀಜ</strong>. ಪ್ರತಿ ಎಕರೆಗೆ <strong>200–250 ಗ್ರಾಂ ಬೀಜ</strong> ಸಾಕು. 25–30 ದಿನದಲ್ಲಿ ನಾಟಿಗೆ ಸಿದ್ಧ.</div>
-            <div class="step-detail-en">Mix soil, sand, compost equally. Treat seeds with Thiram 3g + Carbendazim 1g per kg. 200–250g seed/acre. Ready to transplant in 25–30 days.</div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-num">2</div>
-          <div class="step-content">
-            <div class="step-title-kn">ಮಣ್ಣು ತಯಾರಿ ಮತ್ತು ನಾಟಿ</div>
-            <div class="step-title-en">Land Preparation & Transplanting</div>
-            <div class="step-detail-kn">ಎಕರೆಗೆ <strong>8–10 ಟನ್ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ</strong> ಸೇರಿಸಿ ಆಳ ಉಳುಮೆ ಮಾಡಿ. ಸಾಲು ಸಾಲಿಗೆ <strong>60 ಸೆ.ಮಿ, ಗಿಡ ಗಿಡಕ್ಕೆ 45 ಸೆ.ಮಿ</strong> ಅಂತರ. ಸಂಜೆ ಅಥವಾ ಮೋಡಕ್ಕಿನ ದಿನ ನಾಟಿ ಮಾಡಿ — ಒಣಗದಂತೆ ತಕ್ಷಣ ನೀರು ಕೊಡಿ.</div>
-            <div class="step-detail-en">Add 8–10 tons FYM/acre and deep plough. Maintain 60cm row × 45cm plant spacing. Transplant in the evening or on cloudy days. Water immediately.</div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-num">3</div>
-          <div class="step-content">
-            <div class="step-title-kn">ಗೊಬ್ಬರ ನಿರ್ವಹಣೆ</div>
-            <div class="step-title-en">Fertilizer Management</div>
-            <div class="step-detail-kn">ಎಕರೆಗೆ: <strong>ಸಾರಜನಕ 50 ಕಿ.ಗ್ರಾ, ರಂಜಕ 25 ಕಿ.ಗ್ರಾ, ಪೊಟ್ಯಾಶ್ 25 ಕಿ.ಗ್ರಾ.</strong> ನಾಟಿ ಸಮಯದಲ್ಲಿ ಅರ್ಧ ಸಾರಜನಕ + ಪೂರ್ಣ ರಂಜಕ ಮತ್ತು ಪೊಟ್ಯಾಶ್. ಉಳಿದ ಸಾರಜನಕ 30 ದಿನ ಮತ್ತು 60 ದಿನಕ್ಕೆ ಕೊಡಿ. <strong>ಬೋರಾನ್ 0.3 ಗ್ರಾಂ/ಲೀ</strong> ಹೂ ಉಳಿಸಲು ಸಿಂಪಡಿಸಿ.</div>
-            <div class="step-detail-en">Per acre: N-50kg, P-25kg, K-25kg. Half N + full P & K at transplanting. Remaining N at 30 and 60 days. Spray Boron 0.3g/L to prevent flower drop.</div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-num">4</div>
-          <div class="step-content">
-            <div class="step-title-kn">ಹನಿ ನೀರಾವರಿ ಮತ್ತು ಮಲ್ಚಿಂಗ್</div>
-            <div class="step-title-en">Drip Irrigation & Mulching</div>
-            <div class="step-detail-kn">ಹನಿ ನೀರಾವರಿ ಅಳವಡಿಸಿ — <strong>60–70% ನೀರು ಉಳಿತಾಯ</strong> ಮತ್ತು ಕಾಳು ರೋಗ ಕಡಿಮೆ. ಪ್ಲಾಸ್ಟಿಕ್ <strong>ಮಲ್ಚ್ (silver/black)</strong> ಹಾಕಿದರೆ ಕಳೆ ಕಡಿಮೆ, ನೀರು ಉಳಿತಾಯ ಮತ್ತು ಹಣ್ಣು ಗುಣಮಟ್ಟ ಉತ್ತಮ.</div>
-            <div class="step-detail-en">Install drip irrigation — saves 60–70% water and reduces soil-borne diseases. Silver/black plastic mulch reduces weeds, conserves moisture and improves fruit quality.</div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-num">5</div>
-          <div class="step-content">
-            <div class="step-title-kn">ಕಳೆ ಮತ್ತು ಬೆಳವಣಿಗೆ ನಿರ್ವಹಣೆ</div>
-            <div class="step-title-en">Weed & Growth Management</div>
-            <div class="step-detail-kn">ನಾಟಿ ನಂತರ 20 ಮತ್ತು 40 ದಿನಕ್ಕೆ ಕೈ ಕಳೆ ತೆಗೆಯಿರಿ. ಬೇಸಿಗೆ ಬಿಸಿಲಿನಲ್ಲಿ <strong>Paclobutrazol (ಬೆಳವಣಿಗೆ ನಿಯಂತ್ರಕ)</strong> ಸಿಂಪಡಿಸಿ ಗಿಡ ಗುಡ್ಡೆ ಮಾಡಬಹುದು. ಇದರಿಂದ ಕಾಯಿ ಉಳಿಯುತ್ತದೆ.</div>
-            <div class="step-detail-en">Hand weed at 20 and 40 days after transplanting. Paclobutrazol spray can control excessive vegetative growth and improve fruit retention in hot conditions.</div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-num">6</div>
-          <div class="step-content">
-            <div class="step-title-kn">ಕಟಾವು — ಹಸಿ ಮತ್ತು ಒಣ ಮೆಣಸು</div>
-            <div class="step-title-en">Harvesting — Green & Dry Chilli</div>
-            <div class="step-detail-kn"><strong>ಹಸಿ ಮೆಣಸು:</strong> ನಾಟಿ ನಂತರ 70–80 ದಿನಕ್ಕೆ ಕಟಾವು ಮಾಡಿ. <strong>ಒಣ ಮೆಣಸು:</strong> ಕಾಯಿ ಸಂಪೂರ್ಣ ಕೆಂಪಾದ ನಂತರ ಕಿತ್ತು 10–15 ದಿನ ಒಣಗಿಸಿ. ತೇವಾಂಶ <em>10% ಗಿಂತ ಕಡಿಮೆ</em> ಇರಲಿ.</div>
-            <div class="step-detail-en">Green chilli: harvest 70–80 days after transplanting. Dry chilli: pick fully ripe red fruits and sun-dry for 10–15 days. Moisture should be below 10%.</div>
-          </div>
-        </div>
-
-      </div>
-
-      <figure class="inline-image">
-        <div class="img-placeholder mid">
-          <div class="icon">🌿</div>
-          <p>ಮೆಣಸಿನ ಗಿಡ / ತೋಟ ಫೋಟೋ — 800×400px</p>
-        </div>
-        <figcaption>ಮೆಣಸಿನ ತೋಟದಲ್ಲಿ ಹನಿ ನೀರಾವರಿ ಮತ್ತು ಮಲ್ಚ್ — ಇಳುವರಿ ಮತ್ತು ಗುಣಮಟ್ಟ ಎರಡೂ ಉತ್ತಮ</figcaption>
-      </figure>
-    </section>
-
-    <!-- PEST & DISEASE -->
-    <section>
-      <div class="section-heading">
-        <h2>ಕೀಟ ಮತ್ತು ರೋಗ ನಿರ್ವಹಣೆ <span class="en">Pest & Disease Management</span></h2>
-      </div>
-      <table class="article-table">
-        <thead>
-          <tr>
-            <th>ಕೀಟ/ರೋಗ</th>
-            <th>Pest/Disease</th>
-            <th>ಲಕ್ಷಣ / Symptom</th>
-            <th>ಉಪಾಯ / Solution</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>ಮಿಡತೆ (ಥ್ರಿಪ್ಸ್)</td>
-            <td>Thrips</td>
-            <td>ಎಲೆ ಮುದುಡುತ್ತದೆ, ಮೇಲ್ಭಾಗಕ್ಕೆ ಸುರುಳಿ ಸುತ್ತುತ್ತದೆ</td>
-            <td>Spinosad 45 SC — 0.3 ಮಿ.ಲಿ/ಲೀ | Fipronil 5 SC — 1.5 ಮಿ.ಲಿ/ಲೀ</td>
-          </tr>
-          <tr>
-            <td>ಬಿಳಿ ನೊಣ</td>
-            <td>Whitefly</td>
-            <td>ಎಲೆ ಹಳದಿ, ವೈರಸ್ ಹರಡುತ್ತದೆ</td>
-            <td>Imidacloprid 0.5 ಮಿ.ಲಿ/ಲೀ | ಹಳದಿ ಅಂಟು ಬಲೆ ಬಳಸಿ</td>
-          </tr>
-          <tr>
-            <td>ಮಿಟೆ / ಜೇಡ ಹುಳ</td>
-            <td>Mites</td>
-            <td>ಎಲೆ ಕೆಳಭಾಗ ಬೂದು, ಎಲೆ ಒಣಗುತ್ತದೆ</td>
-            <td>Abamectin 1.9 EC — 0.5 ಮಿ.ಲಿ/ಲೀ | Dicofol 18.5 EC</td>
-          </tr>
-          <tr>
-            <td>ಕಾಂಡ ಕೊಳೆ ರೋಗ</td>
-            <td>Phytophthora Blight</td>
-            <td>ಕಾಂಡ ನೀರಿನಂತೆ ಕೊಳೆಯುತ್ತದೆ, ಗಿಡ ಒಣಗುತ್ತದೆ</td>
-            <td>Metalaxyl + Mancozeb 2.5 ಗ್ರಾಂ/ಲೀ | ಜಲಭರ ತಪ್ಪಿಸಿ</td>
-          </tr>
-          <tr>
-            <td>ಅಂಥ್ರಾಕ್ನೋಸ್</td>
-            <td>Anthracnose</td>
-            <td>ಕಾಯಿ ಮೇಲೆ ಕಂದು ಚುಕ್ಕೆ, ಕೊಳೆ ಹರಡುತ್ತದೆ</td>
-            <td>Carbendazim 1 ಗ್ರಾಂ/ಲೀ | Propineb 70 WP — 2 ಗ್ರಾಂ/ಲೀ</td>
-          </tr>
-          <tr>
-            <td>ಎಲೆ ಮೇಲ್ಭಾಗ ವೈರಸ್</td>
-            <td>Leaf Curl Virus</td>
-            <td>ಎಲೆ ಮೇಲ್ಭಾಗಕ್ಕೆ ಸುರುಳಿ, ಗಿಡ ಬೌನ</td>
-            <td>ಬಿಳಿ ನೊಣ ನಿಯಂತ್ರಿಸಿ | ರೋಗ ನಿರೋಧಕ ತಳಿ ಆಯ್ಕೆ ಮಾಡಿ</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="tip-box danger" style="margin-top:14px;">
-        <span class="tip-icon">🔴</span>
-        <div class="tip-content">
-          <div class="kn"><strong>ಮಿಡತೆ (Thrips)</strong> ಮೆಣಸಿನ ಬೆಳೆಗೆ ಅತ್ಯಂತ ಅಪಾಯಕಾರಿ ಕೀಟ — ಅದು ನೇರ ಹಾನಿ ಮಾತ್ರವಲ್ಲ, <strong>Leaf Curl Virus ಹರಡುತ್ತದೆ.</strong> ನರ್ಸರಿ ಹಂತದಿಂದಲೇ ನಿಯಂತ್ರಿಸಿ.</div>
-          <div class="en">Thrips are the most dangerous pest — they not only cause direct damage but also spread the deadly Leaf Curl Virus. Control them from the nursery stage itself.</div>
+  <!-- STEP BY STEP -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">📋</span>
+      <h2>ಹಂತ ಹಂತವಾಗಿ ಬೆಳೆ ವಿಧಾನ <span class="en">Step-by-Step Cultivation</span></h2>
+    </div>
+    <div class="step-cards">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title-kn">ನರ್ಸರಿ ತಯಾರಿ</div>
+          <div class="step-title-en">Nursery Preparation</div>
+          <div class="step-detail-kn">ಮಣ್ಣು, ಮರಳು ಮತ್ತು ಕಾಂಪೋಸ್ಟ್ ಸಮಾನ ಪ್ರಮಾಣದಲ್ಲಿ ತಯಾರಿಸಿ. ಬೀಜ ಉಪಚಾರ: <strong>Thiram 3 ಗ್ರಾಂ + Carbendazim 1 ಗ್ರಾಂ/ಕಿ.ಗ್ರಾ ಬೀಜ</strong>. ಪ್ರತಿ ಎಕರೆಗೆ <strong>200–250 ಗ್ರಾಂ ಬೀಜ</strong> ಸಾಕು.</div>
+          <div class="step-detail-en">Mix soil, sand, compost equally. Treat seeds with Thiram 3g + Carbendazim 1g per kg. 200–250g seed per acre. Ready in 25–30 days.</div>
         </div>
       </div>
-
-      <figure class="inline-image">
-        <div class="img-placeholder mid">
-          <div class="icon">🔍</div>
-          <p>ಕೀಟ / ರೋಗ ಫೋಟೋ — 800×400px</p>
-        </div>
-        <figcaption>ಮೆಣಸಿನ ಎಲೆಯ ಮೇಲೆ Thrips ಹಾನಿ — ಎಲೆ ಸುರುಳಿ ಸುತ್ತುವುದು ಮೊದಲ ಲಕ್ಷಣ</figcaption>
-      </figure>
-    </section>
-
-    <!-- DO DON'T -->
-    <section>
-      <div class="section-heading">
-        <h2>ಏನು ಮಾಡಬೇಕು — ಏನು ಮಾಡಬಾರದು <span class="en">Do's & Don'ts</span></h2>
-      </div>
-      <div class="do-dont">
-        <div class="do-box">
-          <div class="box-title">✅ ಸರಿಯಾದ ತಳಿ</div>
-          <ul>
-            <li>ಬೀಜ ಉಪಚಾರ ಮಾಡಿ ನಾಟಿ ಮಾಡಿ</li>
-            <li>ಹನಿ ನೀರಾವರಿ ಮತ್ತು ಮಲ್ಚ್ ಬಳಸಿ</li>
-            <li>ಹಳದಿ ಅಂಟು ಬಲೆ ಹಾಕಿ</li>
-            <li>ಗೊಬ್ಬರ ಮೂರು ಬಾರಿ ಕೊಡಿ</li>
-            <li>ಸಂಜೆ ಹೊತ್ತು ಔಷಧ ಸಿಂಪಡಿಸಿ</li>
-            <li>ಒಣ ಮೆಣಸು ಸರಿಯಾಗಿ ಒಣಗಿಸಿ</li>
-            <li>ರೋಗ ಕಂಡ ತಕ್ಷಣ ಚಿಕಿತ್ಸೆ ಮಾಡಿ</li>
-          </ul>
-        </div>
-        <div class="dont-box">
-          <div class="box-title">❌ ತಪ್ಪಿಸಬೇಕಾದ್ದು</div>
-          <ul>
-            <li>ಜಲಭರ ಆಗದಂತೆ ನೋಡಿಕೊಳ್ಳಿ</li>
-            <li>ತಡ ಮಾಡಿ ಕಟಾವು ಮಾಡಬೇಡಿ</li>
-            <li>ಎಳೆ ಸಸಿ ಬಿಸಿಲಿನಲ್ಲಿ ನಾಟಿ ಮಾಡಬೇಡಿ</li>
-            <li>ಒಂದೇ ಔಷಧ ಪದೇ ಪದೇ ಬಳಸಬೇಡಿ</li>
-            <li>ಅಧಿಕ ಸಾರಜನಕ ಕೊಡಬೇಡಿ</li>
-            <li>ತೇವ ಮೆಣಸು ಸಂಗ್ರಹ ಮಾಡಬೇಡಿ</li>
-            <li>ರೋಗ ತಗಲಿದ ಗಿಡ ತೋಟದಲ್ಲೇ ಬಿಡಬೇಡಿ</li>
-          </ul>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title-kn">ಮಣ್ಣು ತಯಾರಿ ಮತ್ತು ನಾಟಿ</div>
+          <div class="step-title-en">Land Preparation &amp; Transplanting</div>
+          <div class="step-detail-kn">ಎಕರೆಗೆ <strong>8–10 ಟನ್ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ</strong> ಸೇರಿಸಿ ಆಳ ಉಳುಮೆ ಮಾಡಿ. ಸಾಲು ಸಾಲಿಗೆ <strong>60 ಸೆ.ಮಿ, ಗಿಡ ಗಿಡಕ್ಕೆ 45 ಸೆ.ಮಿ</strong> ಅಂತರ. ಸಂಜೆ ಅಥವಾ ಮೋಡಕ್ಕಿನ ದಿನ ನಾಟಿ ಮಾಡಿ.</div>
+          <div class="step-detail-en">Add 8–10 tons FYM/acre and deep plough. Space: 60cm rows × 45cm plants. Transplant in the evening or on cloudy days.</div>
         </div>
       </div>
-    </section>
-
-    <!-- INCOME -->
-    <section>
-      <div class="section-heading">
-        <h2>ಆದಾಯ ಅಂದಾಜು (ಪ್ರತಿ ಎಕರೆ) <span class="en">Income Estimate Per Acre</span></h2>
-      </div>
-      <table class="article-table">
-        <thead>
-          <tr><th>ವಿವರ / Details</th><th>ಹಸಿ ಮೆಣಸು</th><th>ಒಣ ಮೆಣಸು</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>ಒಟ್ಟು ಖರ್ಚು / Total Cost</td><td>₹30,000–₹40,000</td><td>₹45,000–₹60,000</td></tr>
-          <tr><td>ಸರಾಸರಿ ಇಳುವರಿ</td><td>40–60 ಕ್ವಿ/ಎಕರೆ</td><td>8–12 ಕ್ವಿ/ಎಕರೆ</td></tr>
-          <tr><td>ಸರಾಸರಿ ಬೆಲೆ</td><td>₹1,500–₹3,000/ಕ್ವಿ</td><td>₹12,000–₹25,000/ಕ್ವಿ</td></tr>
-          <tr><td>ಒಟ್ಟು ಆದಾಯ</td><td>₹60,000–₹1,80,000</td><td>₹96,000–₹3,00,000</td></tr>
-          <tr><td><strong>ಶುದ್ಧ ಲಾಭ</strong></td><td><strong>₹20,000–₹1,40,000</strong></td><td><strong>₹36,000–₹2,40,000</strong></td></tr>
-        </tbody>
-        <tfoot>
-          <tr><td colspan="3">🌶️ ಬ್ಯಾಡಗಿ Kaddi ಅಥವಾ Dabbi ತಳಿ ಒಣ ಮೆಣಸಿಗೆ ₹20,000–₹30,000/ಕ್ವಿ ರಫ್ತು ಬೆಲೆ ಸಿಗಬಹುದು. / Byadagi Kaddi/Dabbi dry chilli can fetch ₹20,000–₹30,000/qtl in export markets.</td></tr>
-        </tfoot>
-      </table>
-      <div class="tip-box tip" style="margin-top:12px;">
-        <span class="tip-icon">💡</span>
-        <div class="tip-content">
-          <div class="kn"><strong>ಒಣ ಮೆಣಸು ಹಸಿ ಮೆಣಸಿಗಿಂತ 5–8 ಪಟ್ಟು ಹೆಚ್ಚು ಬೆಲೆ ಸಿಗುತ್ತದೆ.</strong> ದೀರ್ಘಕಾಲ ಕಾಯಬಹುದಾದ ರೈತರು ಒಣ ಮೆಣಸು ಮಾರಾಟ ಮಾಡಿ ಹೆಚ್ಚು ಲಾಭ ಮಾಡಬಹುದು.</div>
-          <div class="en">Dry chilli fetches 5–8x more than green chilli. Farmers who can wait should sell dry chilli for significantly higher profits.</div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title-kn">ಗೊಬ್ಬರ ನಿರ್ವಹಣೆ</div>
+          <div class="step-title-en">Fertilizer Management</div>
+          <div class="step-detail-kn">ಎಕರೆಗೆ: <strong>ಸಾರಜನಕ 50 ಕಿ.ಗ್ರಾ, ರಂಜಕ 25 ಕಿ.ಗ್ರಾ, ಪೊಟ್ಯಾಶ್ 25 ಕಿ.ಗ್ರಾ.</strong> ನಾಟಿ ಸಮಯದಲ್ಲಿ ಅರ್ಧ ಸಾರಜನಕ + ಪೂರ್ಣ ರಂಜಕ ಮತ್ತು ಪೊಟ್ಯಾಶ್. <strong>ಬೋರಾನ್ 0.3 ಗ್ರಾಂ/ಲೀ</strong> ಹೂ ಉಳಿಸಲು ಸಿಂಪಡಿಸಿ.</div>
+          <div class="step-detail-en">Per acre: N-50kg, P-25kg, K-25kg. Half N + full P &amp; K at planting. Spray Boron 0.3g/L to prevent flower drop.</div>
         </div>
       </div>
-    </section>
-
-    <!-- GOVT SCHEMES -->
-    <section>
-      <div class="section-heading">
-        <h2>ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು <span class="en">Government Schemes</span></h2>
-      </div>
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="icon">💧</div>
-          <div class="kn">ಹನಿ ನೀರಾವರಿ ಸಹಾಯಧನ</div>
-          <div class="en">Drip Irrigation Subsidy</div>
-          <div class="detail">ಸಣ್ಣ ರೈತರಿಗೆ 90% ಸಹಾಯಧನ. PMKSY ಯೋಜನೆ ಅಡಿಯಲ್ಲಿ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ.</div>
-          <div class="detail-en">Up to 90% subsidy for small farmers under PMKSY scheme.</div>
-        </div>
-        <div class="info-card">
-          <div class="icon">🌶️</div>
-          <div class="kn">ಮೆಣಸು ಸಂಸ್ಕರಣಾ ಅನುದಾನ</div>
-          <div class="en">Spice Processing Subsidy</div>
-          <div class="detail">ರಾಷ್ಟ್ರೀಯ ತೋಟಗಾರಿಕೆ ಮಿಷನ್ ಅಡಿ ಮೆಣಸು ಒಣಗಿಸುವ ಮತ್ತು ಸಂಸ್ಕರಣಾ ಘಟಕಕ್ಕೆ 50% ಸಹಾಯಧನ.</div>
-          <div class="detail-en">50% subsidy on chilli drying and processing unit under NHM scheme.</div>
-        </div>
-        <div class="info-card">
-          <div class="icon">📋</div>
-          <div class="kn">ಬೆಳೆ ವಿಮೆ (PMFBY)</div>
-          <div class="en">Crop Insurance</div>
-          <div class="detail">ಪ್ರಕೃತಿ ವಿಕೋಪದಿಂದ ಮೆಣಸು ಹಾನಿಗೆ ಪರಿಹಾರ. ರಬಿ ಪ್ರೀಮಿಯಂ ಕೇವಲ 1.5%.</div>
-          <div class="detail-en">Compensation for chilli crop loss. Rabi premium only 1.5%.</div>
-        </div>
-        <div class="info-card">
-          <div class="icon">🏷️</div>
-          <div class="kn">ಬ್ಯಾಡಗಿ GI ಟ್ಯಾಗ್</div>
-          <div class="en">Byadagi GI Tag</div>
-          <div class="detail">ಬ್ಯಾಡಗಿ ಮೆಣಸಿಗೆ ಭೌಗೋಳಿಕ ಸೂಚಿ (GI) ಟ್ಯಾಗ್ ಇದೆ — ರಫ್ತು ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಪ್ರೀಮಿಯಂ ಬೆಲೆ ಸಿಗುತ್ತದೆ.</div>
-          <div class="detail-en">Byadagi chilli has a GI tag — commands premium price in export markets worldwide.</div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title-kn">ಹನಿ ನೀರಾವರಿ ಮತ್ತು ಮಲ್ಚಿಂಗ್</div>
+          <div class="step-title-en">Drip Irrigation &amp; Mulching</div>
+          <div class="step-detail-kn">ಹನಿ ನೀರಾವರಿ ಅಳವಡಿಸಿ — <strong>60–70% ನೀರು ಉಳಿತಾಯ.</strong> ಪ್ಲಾಸ್ಟಿಕ್ ಮಲ್ಚ್ (silver/black) ಹಾಕಿದರೆ ಕಳೆ ಕಡಿಮೆ, ನೀರು ಉಳಿತಾಯ ಮತ್ತು ಹಣ್ಣು ಗುಣಮಟ್ಟ ಉತ್ತಮ.</div>
+          <div class="step-detail-en">Install drip — saves 60–70% water. Silver/black plastic mulch reduces weeds, conserves moisture and improves fruit quality.</div>
         </div>
       </div>
-    </section>
-
-    <!-- FAQ -->
-    <section>
-      <div class="section-heading">
-        <h2>ಪದೇ ಪದೇ ಕೇಳುವ ಪ್ರಶ್ನೆಗಳು <span class="en">Frequently Asked Questions</span></h2>
+      <div class="step-card">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title-kn">ಕಳೆ ಮತ್ತು ಬೆಳವಣಿಗೆ ನಿರ್ವಹಣೆ</div>
+          <div class="step-title-en">Weed &amp; Growth Management</div>
+          <div class="step-detail-kn">ನಾಟಿ ನಂತರ 20 ಮತ್ತು 40 ದಿನಕ್ಕೆ ಕೈ ಕಳೆ ತೆಗೆಯಿರಿ. ಬೇಸಿಗೆ ಬಿಸಿಲಿನಲ್ಲಿ <strong>Paclobutrazol</strong> ಸಿಂಪಡಿಸಿ ಗಿಡ ಗುಡ್ಡೆ ಮಾಡಬಹುದು.</div>
+          <div class="step-detail-en">Hand weed at 20 and 40 days after transplanting. Paclobutrazol spray controls excessive growth and improves fruit retention.</div>
+        </div>
       </div>
-
-      <div class="faq-item">
-        <div class="q-kn">ಬ್ಯಾಡಗಿ ಮೆಣಸು ಏಕೆ ವಿಶೇಷ?</div>
-        <div class="q-en">Why is Byadagi chilli special?</div>
-        <div class="a-kn">ಬ್ಯಾಡಗಿ ಮೆಣಸು ಗಾಢ ಕೆಂಪು ಬಣ್ಣ ಮತ್ತು <strong>ಕಡಿಮೆ ಖಾರ</strong> (low capsaicin) ಗಾಗಿ ಪ್ರಸಿದ್ಧ. ಇದರ <strong>Colour Value (ASTA)</strong> ಅತ್ಯಧಿಕ — ಆದ್ದರಿಂದ ಆಹಾರ ಉದ್ಯಮ ಮತ್ತು ರಫ್ತು ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಬೆಲೆ ಹೆಚ್ಚು.</div>
-        <div class="a-en">Byadagi chilli is famous for its deep red colour and low pungency (low capsaicin). Its high ASTA colour value makes it extremely valuable in food processing and export markets.</div>
+      <div class="step-card">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title-kn">ಕಟಾವು — ಹಸಿ ಮತ್ತು ಒಣ ಮೆಣಸು</div>
+          <div class="step-title-en">Harvesting — Green &amp; Dry Chilli</div>
+          <div class="step-detail-kn"><strong>ಹಸಿ ಮೆಣಸು:</strong> ನಾಟಿ ನಂತರ 70–80 ದಿನಕ್ಕೆ ಕಟಾವು ಮಾಡಿ. <strong>ಒಣ ಮೆಣಸು:</strong> ಕಾಯಿ ಸಂಪೂರ್ಣ ಕೆಂಪಾದ ನಂತರ ಕಿತ್ತು 10–15 ದಿನ ಒಣಗಿಸಿ. ತೇವಾಂಶ <em>10% ಗಿಂತ ಕಡಿಮೆ</em> ಇರಲಿ.</div>
+          <div class="step-detail-en">Green: harvest 70–80 days after transplanting. Dry: pick fully ripe red fruits and sun-dry 10–15 days. Moisture below 10%.</div>
+        </div>
       </div>
-      <div class="faq-item">
-        <div class="q-kn">ಮೆಣಸಿನ ಹೂ ಉದುರುತ್ತಿದ್ದರೆ ಏನು ಮಾಡಬೇಕು?</div>
-        <div class="q-en">What to do when chilli flowers are dropping?</div>
-        <div class="a-kn">ಅಧಿಕ ಉಷ್ಣತೆ, ನೀರಿನ ಒತ್ತಡ ಅಥವಾ ಬೋರಾನ್ ಕೊರತೆ ಕಾರಣವಾಗಿರಬಹುದು. <strong>ಬೋರಾನ್ 0.3 ಗ್ರಾಂ/ಲೀ + Planofix 1 ಮಿ.ಲಿ/ಲೀ</strong> ಮಿಶ್ರಣ ಸಿಂಪಡಿಸಿ. ಸಂಜೆ ಹೊತ್ತು ಲಘು ಸಿಂಚನ ಮಾಡಿ.</div>
-        <div class="a-en">Could be heat stress, water stress, or boron deficiency. Spray Boron 0.3g/L + Planofix 1ml/L. Give light irrigation in the evening to reduce heat stress.</div>
-      </div>
-      <div class="faq-item">
-        <div class="q-kn">ಹಸಿ ಮೆಣಸು ಯಾವಾಗ ಕಟಾವು ಮಾಡಬೇಕು?</div>
-        <div class="q-en">When to harvest green chilli?</div>
-        <div class="a-kn">ಕಾಯಿ <strong>ಗರಿಷ್ಠ ಗಾತ್ರ ತಲುಪಿ ಗಟ್ಟಿ ಮತ್ತು ಹಸಿರು</strong> ಇದ್ದಾಗ ಕಟಾವು ಮಾಡಿ — ಸಾಮಾನ್ಯವಾಗಿ ನಾಟಿ ನಂತರ 70–80 ದಿನ. 7–10 ದಿನಕ್ಕೊಮ್ಮೆ ಕಟಾವು ಮಾಡಿ ಗಿಡದ ಮೇಲಿನ ಭಾರ ಕಡಿಮೆ ಮಾಡಿ.</div>
-        <div class="a-en">Harvest when fruits reach maximum size, are firm and green — typically 70–80 days after transplanting. Harvest every 7–10 days to reduce plant stress and promote new fruiting.</div>
-      </div>
-      <div class="faq-item">
-        <div class="q-kn">ಕರ್ನಾಟಕದಲ್ಲಿ ಮೆಣಸಿನ ಮುಖ್ಯ ಮಾರುಕಟ್ಟೆ ಎಲ್ಲಿದೆ?</div>
-        <div class="q-en">Where is the main chilli market in Karnataka?</div>
-        <div class="a-kn"><strong>ಬ್ಯಾಡಗಿ APMC</strong> ಏಷ್ಯಾದ ಅತ್ಯಂತ ದೊಡ್ಡ ಒಣ ಮೆಣಸು ಮಾರಾಟ ಕೇಂದ್ರ. ಇಲ್ಲಿ ದೇಶ-ವಿದೇಶದ ವ್ಯಾಪಾರಿಗಳು ಖರೀದಿಸಲು ಬರುತ್ತಾರೆ. ಹುಬ್ಬಳ್ಳಿ APMC ಕೂಡ ಮುಖ್ಯ ಮಾರುಕಟ್ಟೆ.</div>
-        <div class="a-en">Byadagi APMC is one of Asia's largest dry chilli markets, attracting traders from across India and abroad. Hubli APMC is also a major market.</div>
-      </div>
-      <div class="faq-item">
-        <div class="q-kn">ಒಣ ಮೆಣಸು ಸಂಗ್ರಹ ಎಷ್ಟು ದಿನ ಮಾಡಬಹುದು?</div>
-        <div class="q-en">How long can dry chilli be stored?</div>
-        <div class="a-kn">ತೇವಾಂಶ 10% ಗಿಂತ ಕಡಿಮೆ ಇದ್ದರೆ <strong>ತಂಪು, ಒಣ ಮತ್ತು ಗಾಳಿ ಇಲ್ಲದ ಕೋಣೆಯಲ್ಲಿ 6–12 ತಿಂಗಳು</strong> ಸಂಗ್ರಹಿಸಬಹುದು. ಶೀತಲ ಗೃಹದಲ್ಲಿ 18 ತಿಂಗಳವರೆಗೆ ಇಡಬಹುದು.</div>
-        <div class="a-en">If moisture is below 10%, dry chilli can be stored 6–12 months in a cool, dry, airtight room. In cold storage, up to 18 months.</div>
-      </div>
-    </section>
-
-    <!-- CTA -->
-    <div class="cta-block">
-      <div class="emoji">🌶️</div>
-      <h3>
-        ಪ್ರತಿದಿನ ಬ್ಯಾಡಗಿ APMC ಮೆಣಸಿನ ಬೆಲೆ ಮತ್ತು ಕೃಷಿ ಸಲಹೆಗೆ KrashiMitra.in ಭೇಟಿ ಮಾಡಿ
-        <span class="en">Visit KrashiMitra.in for Daily Byadagi APMC Prices & Farming Advice</span>
-      </h3>
-      <p>ಕರ್ನಾಟಕದ ಎಲ್ಲ ಮಾರುಕಟ್ಟೆ ಬೆಲೆ, ಸರ್ಕಾರಿ ಯೋಜನೆ, ಬೆಳೆ ರೋಗ ಮಾಹಿತಿ — ಉಚಿತ.</p>
-      <a href="index.html">KrashiMitra.in ಗೆ ಹೋಗಿ →</a>
     </div>
 
-  </article>
-</div>
+    <figure class="inline-image">
+      
+    <img src="https://krashimitra.in/images/plants/chilli-drip-irrigation.png" alt="img" width="800" height="400" loading="eager" />
+    
+
+      <figcaption>ಮೆಣಸಿನ ತೋಟದಲ್ಲಿ ಹನಿ ನೀರಾವರಿ ಮತ್ತು ಮಲ್ಚ್ — ಇಳುವರಿ ಮತ್ತು ಗುಣಮಟ್ಟ ಎರಡೂ ಉತ್ತಮ</figcaption>
+    </figure>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- PEST & DISEASE -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">🔍</span>
+      <h2>ಕೀಟ ಮತ್ತು ರೋಗ ನಿರ್ವಹಣೆ <span class="en">Pest &amp; Disease Management</span></h2>
+    </div>
+    <div class="table-scroll"><table class="article-table">
+      <thead>
+        <tr>
+          <th>ಕೀಟ/ರೋಗ</th>
+          <th>Pest/Disease</th>
+          <th>ಲಕ್ಷಣ / Symptom</th>
+          <th>ಉಪಾಯ / Solution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ಮಿಡತೆ (ಥ್ರಿಪ್ಸ್)</td>
+          <td>Thrips</td>
+          <td>ಎಲೆ ಮುದುಡುತ್ತದೆ, ಮೇಲ್ಭಾಗಕ್ಕೆ ಸುರುಳಿ ಸುತ್ತುತ್ತದೆ</td>
+          <td>Spinosad 45 SC — 0.3 ಮಿ.ಲಿ/ಲೀ | Fipronil 5 SC — 1.5 ಮಿ.ಲಿ/ಲೀ</td>
+        </tr>
+        <tr>
+          <td>ಬಿಳಿ ನೊಣ</td>
+          <td>Whitefly</td>
+          <td>ಎಲೆ ಹಳದಿ, ವೈರಸ್ ಹರಡುತ್ತದೆ</td>
+          <td>Imidacloprid 0.5 ಮಿ.ಲಿ/ಲೀ | ಹಳದಿ ಅಂಟು ಬಲೆ ಬಳಸಿ</td>
+        </tr>
+        <tr>
+          <td>ಮಿಟೆ / ಜೇಡ ಹುಳ</td>
+          <td>Mites</td>
+          <td>ಎಲೆ ಕೆಳಭಾಗ ಬೂದು, ಎಲೆ ಒಣಗುತ್ತದೆ</td>
+          <td>Abamectin 1.9 EC — 0.5 ಮಿ.ಲಿ/ಲೀ | Dicofol 18.5 EC</td>
+        </tr>
+        <tr>
+          <td>ಕಾಂಡ ಕೊಳೆ ರೋಗ</td>
+          <td>Phytophthora Blight</td>
+          <td>ಕಾಂಡ ನೀರಿನಂತೆ ಕೊಳೆಯುತ್ತದೆ</td>
+          <td>Metalaxyl + Mancozeb 2.5 ಗ್ರಾಂ/ಲೀ | ಜಲಭರ ತಪ್ಪಿಸಿ</td>
+        </tr>
+        <tr>
+          <td>ಅಂಥ್ರಾಕ್ನೋಸ್</td>
+          <td>Anthracnose</td>
+          <td>ಕಾಯಿ ಮೇಲೆ ಕಂದು ಚುಕ್ಕೆ, ಕೊಳೆ ಹರಡುತ್ತದೆ</td>
+          <td>Carbendazim 1 ಗ್ರಾಂ/ಲೀ | Propineb 70 WP — 2 ಗ್ರಾಂ/ಲೀ</td>
+        </tr>
+        <tr>
+          <td>ಎಲೆ ಮೇಲ್ಭಾಗ ವೈರಸ್</td>
+          <td>Leaf Curl Virus</td>
+          <td>ಎಲೆ ಮೇಲ್ಭಾಗಕ್ಕೆ ಸುರುಳಿ, ಗಿಡ ಬೌನ</td>
+          <td>ಬಿಳಿ ನೊಣ ನಿಯಂತ್ರಿಸಿ | ರೋಗ ನಿರೋಧಕ ತಳಿ ಆಯ್ಕೆ ಮಾಡಿ</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <div class="tip-box danger">
+      <span class="tip-icon">🔴</span>
+      <div class="tip-content">
+        <div class="kn"><strong>ಮಿಡತೆ (Thrips)</strong> ಮೆಣಸಿನ ಬೆಳೆಗೆ ಅತ್ಯಂತ ಅಪಾಯಕಾರಿ ಕೀಟ — ನೇರ ಹಾನಿ ಮಾತ್ರವಲ್ಲ, <strong>Leaf Curl Virus ಹರಡುತ್ತದೆ.</strong> ನರ್ಸರಿ ಹಂತದಿಂದಲೇ ನಿಯಂತ್ರಿಸಿ.</div>
+        <div class="en">Thrips are the most dangerous pest — they spread the deadly Leaf Curl Virus. Control from the nursery stage itself.</div>
+      </div>
+    </div>
+    <figure class="inline-image">
+      
+    <img src="https://krashimitra.in/images/plants/chilli-rog-weak-leaf.png" alt="img" width="800" height="400" loading="eager" />
+
+      <figcaption>ಮೆಣಸಿನ ಎಲೆಯ ಮೇಲೆ Thrips ಹಾನಿ — ಎಲೆ ಸುರುಳಿ ಸುತ್ತುವುದು ಮೊದಲ ಲಕ್ಷಣ</figcaption>
+    </figure>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- DO / DON'T -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">✅</span>
+      <h2>ಏನು ಮಾಡಬೇಕು — ಏನು ಮಾಡಬಾರದು <span class="en">Do's &amp; Don'ts</span></h2>
+    </div>
+    <div class="do-dont">
+      <div class="do-box">
+        <div class="box-title">✅ ಮಾಡಬೇಕಾದ್ದು</div>
+        <ul>
+          <li>ಬೀಜ ಉಪಚಾರ ಮಾಡಿ ನಾಟಿ ಮಾಡಿ</li>
+          <li>ಹನಿ ನೀರಾವರಿ ಮತ್ತು ಮಲ್ಚ್ ಬಳಸಿ</li>
+          <li>ಹಳದಿ ಅಂಟು ಬಲೆ ಹಾಕಿ</li>
+          <li>ಗೊಬ್ಬರ ಮೂರು ಬಾರಿ ಕೊಡಿ</li>
+          <li>ಸಂಜೆ ಹೊತ್ತು ಔಷಧ ಸಿಂಪಡಿಸಿ</li>
+          <li>ಒಣ ಮೆಣಸು ಸರಿಯಾಗಿ ಒಣಗಿಸಿ</li>
+          <li>ರೋಗ ಕಂಡ ತಕ್ಷಣ ಚಿಕಿತ್ಸೆ ಮಾಡಿ</li>
+        </ul>
+      </div>
+      <div class="dont-box">
+        <div class="box-title">❌ ತಪ್ಪಿಸಬೇಕಾದ್ದು</div>
+        <ul>
+          <li>ಜಲಭರ ಆಗದಂತೆ ನೋಡಿಕೊಳ್ಳಿ</li>
+          <li>ತಡ ಮಾಡಿ ಕಟಾವು ಮಾಡಬೇಡಿ</li>
+          <li>ಎಳೆ ಸಸಿ ಬಿಸಿಲಿನಲ್ಲಿ ನಾಟಿ ಮಾಡಬೇಡಿ</li>
+          <li>ಒಂದೇ ಔಷಧ ಪದೇ ಪದೇ ಬಳಸಬೇಡಿ</li>
+          <li>ಅಧಿಕ ಸಾರಜನಕ ಕೊಡಬೇಡಿ</li>
+          <li>ತೇವ ಮೆಣಸು ಸಂಗ್ರಹ ಮಾಡಬೇಡಿ</li>
+          <li>ರೋಗ ತಗಲಿದ ಗಿಡ ತೋಟದಲ್ಲೇ ಬಿಡಬೇಡಿ</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- INCOME -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">💰</span>
+      <h2>ಆದಾಯ ಅಂದಾಜು (ಪ್ರತಿ ಎಕರೆ) <span class="en">Income Estimate Per Acre</span></h2>
+    </div>
+    <div class="table-scroll"><table class="article-table">
+      <thead>
+        <tr><th>ವಿವರ / Details</th><th>ಹಸಿ ಮೆಣಸು</th><th>ಒಣ ಮೆಣಸು</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ಒಟ್ಟು ಖರ್ಚು</td><td>₹30,000–₹40,000</td><td>₹45,000–₹60,000</td></tr>
+        <tr><td>ಸರಾಸರಿ ಇಳುವರಿ</td><td>40–60 ಕ್ವಿ/ಎಕರೆ</td><td>8–12 ಕ್ವಿ/ಎಕರೆ</td></tr>
+        <tr><td>ಸರಾಸರಿ ಬೆಲೆ</td><td>₹1,500–₹3,000/ಕ್ವಿ</td><td>₹12,000–₹25,000/ಕ್ವಿ</td></tr>
+        <tr><td>ಒಟ್ಟು ಆದಾಯ</td><td>₹60,000–₹1,80,000</td><td>₹96,000–₹3,00,000</td></tr>
+        <tr><td><strong>ಶುದ್ಧ ಲಾಭ</strong></td><td><strong>₹20,000–₹1,40,000</strong></td><td><strong>₹36,000–₹2,40,000</strong></td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="3">🌶️ ಬ್ಯಾಡಗಿ Kaddi/Dabbi ತಳಿ ಒಣ ಮೆಣಸಿಗೆ ₹20,000–₹30,000/ಕ್ವಿ ರಫ್ತು ಬೆಲೆ ಸಿಗಬಹುದು. / Byadagi Kaddi/Dabbi dry chilli can fetch ₹20,000–₹30,000/qtl in export markets.</td></tr>
+      </tfoot>
+    </table></div>
+    <div class="tip-box tip" style="margin-top:12px;">
+      <span class="tip-icon">💡</span>
+      <div class="tip-content">
+        <div class="kn"><strong>ಒಣ ಮೆಣಸು ಹಸಿ ಮೆಣಸಿಗಿಂತ 5–8 ಪಟ್ಟು ಹೆಚ್ಚು ಬೆಲೆ ಸಿಗುತ್ತದೆ.</strong> ದೀರ್ಘಕಾಲ ಕಾಯಬಹುದಾದ ರೈತರು ಒಣ ಮೆಣಸು ಮಾರಾಟ ಮಾಡಿ ಹೆಚ್ಚು ಲಾಭ ಮಾಡಬಹುದು.</div>
+        <div class="en">Dry chilli fetches 5–8x more than green chilli. Farmers who can wait should sell dry chilli for significantly higher profits.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- GOVT SCHEMES -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">🏛️</span>
+      <h2>ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು <span class="en">Government Schemes</span></h2>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="icon">💧</div>
+        <div class="kn">ಹನಿ ನೀರಾವರಿ ಸಹಾಯಧನ</div>
+        <div class="en">Drip Irrigation Subsidy</div>
+        <div class="detail">ಸಣ್ಣ ರೈತರಿಗೆ 90% ಸಹಾಯಧನ. PMKSY ಯೋಜನೆ ಅಡಿಯಲ್ಲಿ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ.</div>
+        <div class="detail-en">Up to 90% subsidy for small farmers under PMKSY scheme.</div>
+      </div>
+      <div class="info-card">
+        <div class="icon">🌶️</div>
+        <div class="kn">ಮೆಣಸು ಸಂಸ್ಕರಣಾ ಅನುದಾನ</div>
+        <div class="en">Spice Processing Subsidy</div>
+        <div class="detail">ರಾಷ್ಟ್ರೀಯ ತೋಟಗಾರಿಕೆ ಮಿಷನ್ ಅಡಿ ಮೆಣಸು ಒಣಗಿಸುವ ಘಟಕಕ್ಕೆ 50% ಸಹಾಯಧನ.</div>
+        <div class="detail-en">50% subsidy on chilli drying unit under NHM scheme.</div>
+      </div>
+      <div class="info-card">
+        <div class="icon">📋</div>
+        <div class="kn">ಬೆಳೆ ವಿಮೆ (PMFBY)</div>
+        <div class="en">Crop Insurance</div>
+        <div class="detail">ಪ್ರಕೃತಿ ವಿಕೋಪದಿಂದ ಮೆಣಸು ಹಾನಿಗೆ ಪರಿಹಾರ. ರಬಿ ಪ್ರೀಮಿಯಂ ಕೇವಲ 1.5%.</div>
+        <div class="detail-en">Compensation for chilli crop loss. Rabi premium only 1.5%.</div>
+      </div>
+      <div class="info-card">
+        <div class="icon">🏷️</div>
+        <div class="kn">ಬ್ಯಾಡಗಿ GI ಟ್ಯಾಗ್</div>
+        <div class="en">Byadagi GI Tag</div>
+        <div class="detail">ಬ್ಯಾಡಗಿ ಮೆಣಸಿಗೆ GI ಟ್ಯಾಗ್ ಇದೆ — ರಫ್ತು ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಪ್ರೀಮಿಯಂ ಬೆಲೆ ಸಿಗುತ್ತದೆ.</div>
+        <div class="detail-en">Byadagi chilli has a GI tag — commands premium price in export markets worldwide.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- FAQ -->
+  <section class="article-section">
+    <div class="section-heading">
+      <span class="s-icon">❓</span>
+      <h2>ಪದೇ ಪದೇ ಕೇಳುವ ಪ್ರಶ್ನೆಗಳು <span class="en">Frequently Asked Questions</span></h2>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">1</span><span class="faq-q-kn">ಬ್ಯಾಡಗಿ ಮೆಣಸು ಏಕೆ ವಿಶೇಷ?</span></div>
+      <div class="faq-q-en">Why is Byadagi chilli special?</div>
+      <div class="faq-a">ಬ್ಯಾಡಗಿ ಮೆಣಸು ಗಾಢ ಕೆಂಪು ಬಣ್ಣ ಮತ್ತು <strong>ಕಡಿಮೆ ಖಾರ</strong> (low capsaicin) ಗಾಗಿ ಪ್ರಸಿದ್ಧ. ಇದರ <strong>Colour Value (ASTA)</strong> ಅತ್ಯಧಿಕ — ಆಹಾರ ಉದ್ಯಮ ಮತ್ತು ರಫ್ತು ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಬೆಲೆ ಹೆಚ್ಚು.
+        <div class="faq-a-en">Byadagi chilli is famous for its deep red colour and low pungency. Its high ASTA colour value makes it extremely valuable in food processing and export markets.</div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">2</span><span class="faq-q-kn">ಮೆಣಸಿನ ಹೂ ಉದುರುತ್ತಿದ್ದರೆ ಏನು ಮಾಡಬೇಕು?</span></div>
+      <div class="faq-q-en">What to do when chilli flowers are dropping?</div>
+      <div class="faq-a">ಅಧಿಕ ಉಷ್ಣತೆ, ನೀರಿನ ಒತ್ತಡ ಅಥವಾ ಬೋರಾನ್ ಕೊರತೆ ಕಾರಣ. <strong>ಬೋರಾನ್ 0.3 ಗ್ರಾಂ/ಲೀ + Planofix 1 ಮಿ.ಲಿ/ಲೀ</strong> ಸಿಂಪಡಿಸಿ.
+        <div class="faq-a-en">Heat stress, water stress, or boron deficiency. Spray Boron 0.3g/L + Planofix 1ml/L. Light irrigation in the evening.</div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">3</span><span class="faq-q-kn">ಹಸಿ ಮೆಣಸು ಯಾವಾಗ ಕಟಾವು ಮಾಡಬೇಕು?</span></div>
+      <div class="faq-q-en">When to harvest green chilli?</div>
+      <div class="faq-a">ಕಾಯಿ <strong>ಗರಿಷ್ಠ ಗಾತ್ರ ತಲುಪಿ ಗಟ್ಟಿ ಮತ್ತು ಹಸಿರು</strong> ಇದ್ದಾಗ — ನಾಟಿ ನಂತರ 70–80 ದಿನ. 7–10 ದಿನಕ್ಕೊಮ್ಮೆ ಕಟಾವು ಮಾಡಿ.
+        <div class="faq-a-en">When fruits reach maximum size and are firm and green — typically 70–80 days after transplanting. Harvest every 7–10 days.</div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">4</span><span class="faq-q-kn">ಕರ್ನಾಟಕದಲ್ಲಿ ಮೆಣಸಿನ ಮುಖ್ಯ ಮಾರುಕಟ್ಟೆ ಎಲ್ಲಿದೆ?</span></div>
+      <div class="faq-q-en">Where is the main chilli market in Karnataka?</div>
+      <div class="faq-a"><strong>ಬ್ಯಾಡಗಿ APMC</strong> ಏಷ್ಯಾದ ಅತ್ಯಂತ ದೊಡ್ಡ ಒಣ ಮೆಣಸು ಮಾರಾಟ ಕೇಂದ್ರ. ಹುಬ್ಬಳ್ಳಿ APMC ಕೂಡ ಮುಖ್ಯ ಮಾರುಕಟ್ಟೆ.
+        <div class="faq-a-en">Byadagi APMC is one of Asia's largest dry chilli markets. Hubli APMC is also a major market.</div>
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">5</span><span class="faq-q-kn">ಒಣ ಮೆಣಸು ಸಂಗ್ರಹ ಎಷ್ಟು ದಿನ ಮಾಡಬಹುದು?</span></div>
+      <div class="faq-q-en">How long can dry chilli be stored?</div>
+      <div class="faq-a">ತೇವಾಂಶ 10% ಗಿಂತ ಕಡಿಮೆ ಇದ್ದರೆ <strong>ತಂಪು, ಒಣ ಮತ್ತು ಗಾಳಿ ಇಲ್ಲದ ಕೋಣೆಯಲ್ಲಿ 6–12 ತಿಂಗಳು</strong> ಸಂಗ್ರಹಿಸಬಹುದು. ಶೀತಲ ಗೃಹದಲ್ಲಿ 18 ತಿಂಗಳು.
+        <div class="faq-a-en">If moisture is below 10%, store in a cool, dry, airtight room for 6–12 months. In cold storage, up to 18 months.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <div class="cta-icon">🌶️</div>
+    <h3>KrashiMitra.in — ಕರ್ನಾಟಕ ರೈತರ ಡಿಜಿಟಲ್ ಸಾಥಿ</h3>
+    <p>ಬ್ಯಾಡಗಿ APMC ಮೆಣಸಿನ ದಿನದ ಬೆಲೆ, ಸರ್ಕಾರಿ ಯೋಜನೆ, ಬೆಳೆ ರೋಗ ಮಾಹಿತಿ — ಉಚಿತ, ಕನ್ನಡದಲ್ಲಿ.</p>
+    <a href="https://krashimitra.in">KrashiMitra.in ಗೆ ಹೋಗಿ →</a>
+  </div>
+
+  <!-- RELEVANT ARTICLES -->
+  <div class="relevant-articles">
+    <div class="section-title">
+      <span class="title-icon">📰</span>
+      ಸಂಬಂಧಿತ ಲೇಖನಗಳು
+      <a href="https://krashimitra.in/articles/">ಎಲ್ಲಾ ಲೇಖನ ನೋಡಿ →</a>
+    </div>
+    <div class="articles-grid">
+      <a class="article-card" href="https://krashimitra.in/articles/tomato-guide.html" style="--rc-accent:#e53935">
+        <div class="card-thumb" style="background:#ffebee">🍅</div>
+        <div class="card-body">
+          <div class="card-tag">ತಕ್ಕಾಳಿ · ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ</div>
+          <div class="card-title">ಕರ್ನಾಟಕದಲ್ಲಿ ತಕ್ಕಾಳಿ ಬೆಳೆ — ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+      <a class="article-card" href="https://krashimitra.in/articles/onion-guide.html" style="--rc-accent:#7b1fa2">
+        <div class="card-thumb" style="background:#f3e5f5">🧅</div>
+        <div class="card-body">
+          <div class="card-tag">ಈರುಳ್ಳಿ · ಬೆಳೆ ಮಾರ್ಗದರ್ಷಿ</div>
+          <div class="card-title">ಈರುಳ್ಳಿ ಬೆಳೆ — ಇಳುವರಿ ಹೆಚ್ಚಿಸಲು ಟಿಪ್ಸ್</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+      <a class="article-card" href="https://krashimitra.in/articles/drip-guide.html" style="--rc-accent:#0277bd">
+        <div class="card-thumb" style="background:#e3f2fd">💧</div>
+        <div class="card-body">
+          <div class="card-tag">ನೀರಾವರಿ · ತಂತ್ರಜ್ಞಾನ</div>
+          <div class="card-title">ಹನಿ ನೀರಾವರಿ — ಸ್ಥಾಪನೆ ಮತ್ತು ಸಬ್ಸಿಡಿ ಮಾಹಿತಿ</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+      <a class="article-card" href="https://krashimitra.in/articles/turmeric-guide.html" style="--rc-accent:#f57f17">
+        <div class="card-thumb" style="background:#fffde7">🟡</div>
+        <div class="card-body">
+          <div class="card-tag">ಅರಿಶಿನ · ಮಸಾಲೆ ಬೆಳೆ</div>
+          <div class="card-title">ಅರಿಶಿನ ಬೆಳೆ — ಸಂಪೂರ್ಣ ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+      <a class="article-card" href="https://krashimitra.in/mandi.html" style="--rc-accent:#2e7d32">
+        <div class="card-thumb" style="background:#e8f5e9">💰</div>
+        <div class="card-body">
+          <div class="card-tag">ಮಂಡಿ · ಇಂದಿನ ಬೆಲೆ</div>
+          <div class="card-title">ಬ್ಯಾಡಗಿ APMC ಮೆಣಸಿನ ಇಂದಿನ ಬೆಲೆ — LIVE</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+      <a class="article-card" href="https://krashimitra.in/khoj.html" style="--rc-accent:#c62828">
+        <div class="card-thumb" style="background:#ffebee">🔍</div>
+        <div class="card-body">
+          <div class="card-tag">AI ಸಹಾಯ · ರೋಗ ಗುರುತು</div>
+          <div class="card-title">ಬೆಳೆ ರೋಗ ಗುರುತಿಸಿ AI ಸಹಾಯದಿಂದ</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+    </div>
+  </div>
+
+</div><!-- /article-wrapper -->
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+  <ul>
+    <li><a href="https://krashimitra.in"><span class="nav-icon">🏠</span>ಮುಖ್ಯ</a></li>
+    <li><a href="https://krashimitra.in/chat.html"><span class="nav-icon">💬</span>Chat</a></li>
+    <li><a href="https://krashimitra.in/weather.html"><span class="nav-icon">🌤️</span>ಹವಾಮಾನ</a></li>
+    <li><a href="https://krashimitra.in/mandi.html"><span class="nav-icon">💰</span>ಮಂಡಿ</a></li>
+    <li><a href="https://krashimitra.in/articles/" class="active"><span class="nav-icon">📘</span>ಲೇಖನ</a></li>
+  </ul>
+</nav>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-main">
+    <div class="footer-brand">
+      <div class="logo-big">🌾 ಕೃಷಿ<span class="mitra">ಮಿತ್ರ</span></div>
+      <p>KrashiMitra.in ಭಾರತದ ರೈತರಿಗಾಗಿ AI-ಚಾಲಿತ ಡಿಜಿಟಲ್ ಕೃಷಿ ಸಹಾಯಕ. ಬೆಳೆ ರೋಗ, ಮಂಡಿ ಬೆಲೆ, ಹವಾಮಾನ ಮತ್ತು ಸರ್ಕಾರಿ ಯೋಜನೆ — ಕನ್ನಡದಲ್ಲಿ, ಉಚಿತ.</p>
+      <div class="footer-badges">
+        <span class="footer-badge">🌶️ 50+ ಬೆಳೆಗಳು</span>
+        <span class="footer-badge">📍 500+ ಜಿಲ್ಲೆಗಳು</span>
+        <span class="footer-badge">🤖 AI ಸಹಾಯ</span>
+        <span class="footer-badge">🇮🇳 ಭಾರತ ನಿರ್ಮಿತ</span>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>ತ್ವರಿತ ಲಿಂಕ್</h4>
+      <ul>
+        <li><a href="https://krashimitra.in">🏠 ಮುಖ್ಯ ಪುಟ</a></li>
+        <li><a href="https://krashimitra.in/articles/">📰 ಎಲ್ಲ ಲೇಖನ</a></li>
+        <li><a href="https://krashimitra.in/khoj.html">🌾 ಬೆಳೆ ರೋಗ</a></li>
+        <li><a href="https://krashimitra.in/mandi.html">💰 ಮಂಡಿ ಬೆಲೆ</a></li>
+        <li><a href="https://krashimitra.in/weather.html">🌤️ ಹವಾಮಾನ</a></li>
+        <li><a href="https://krashimitra.in/mandi.html">🧪 ಗೊಬ್ಬರ ಸಲಹೆ</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=chat">💬 AI ಸಹಾಯ</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>ಮಾಹಿತಿ</h4>
+      <ul>
+        <li><a href="https://krashimitra.in/help.html">ℹ️ ನಮ್ಮ ಬಗ್ಗೆ</a></li>
+        <li><a href="https://krashimitra.in/help.html/#contact">📞 ಸಂಪರ್ಕಿಸಿ</a></li>
+       
+      </ul>
+    </div>
+  </div>
+  <hr class="footer-divider" />
+  <div class="footer-bottom">
+    <div class="footer-copyright">
+      &copy; 2026 <a href="https://krashimitra.in">KrashiMitra.in</a> — ಎಲ್ಲ ಹಕ್ಕುಗಳು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ. ಅನುಮತಿ ಇಲ್ಲದೆ ಮರು ಪ್ರಕಟಿಸುವುದು ನಿಷೇಧ.
+    </div>
+    
+    <div class="footer-made">
+      <span class="heart">♥</span> ಕರ್ನಾಟಕ ರೈತರಿಗಾಗಿ ನಿರ್ಮಿಸಲಾಗಿದೆ
+    </div>
+  </div>
+</footer>
 
 <script>
   function setLang(lang) {
     document.body.className = 'lang-' + lang;
     document.getElementById('btn-kn').classList.toggle('active', lang === 'kn');
     document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-    document.querySelectorAll('.section-heading h2 .en').forEach(el => {
-      el.style.fontSize = lang === 'en' ? '1.1rem' : '';
-      el.style.color    = lang === 'en' ? 'var(--green-dark)' : '';
-    });
   }
 </script>
 </body>
