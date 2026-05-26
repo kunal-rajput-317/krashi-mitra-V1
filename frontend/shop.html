@@ -718,32 +718,152 @@
       cursor: pointer; flex-shrink: 0;
     }
 
-    /* Cart badge on topbar */
-    .topbar-cart-btn {
-      position: relative;
-      width: 36px; height: 36px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.20);
-      color: rgba(255,255,255,0.80);
-      font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+    /* ── Topbar WhatsApp Button ── */
+    .topbar-wa-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #25D366;
+      border: none;
+      border-radius: 20px;
+      padding: 7px 14px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
-    .topbar-cart-btn:hover { background: rgba(255,255,255,0.18); }
-    .cart-badge {
-      position: absolute;
-      top: -4px; right: -4px;
-      background: var(--amber);
-      color: #1a2e1e;
-      font-size: 9px;
-      font-weight: 800;
-      border-radius: 50%;
-      width: 16px; height: 16px;
-      display: flex; align-items: center; justify-content: center;
+    .topbar-wa-btn:hover { background: #128C7E; }
+    .topbar-wa-label { font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; }
+
+    /* ══════════════════════════════════════
+       WHATSAPP ORDER MODAL
+    ══════════════════════════════════════ */
+    .wa-modal-overlay {
       display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.52);
+      backdrop-filter: blur(4px);
+      z-index: 3000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-    .cart-badge.show { display: flex; }
+    .wa-modal-overlay.open { display: flex; }
+    .wa-modal-box {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 22px 20px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+      position: relative;
+      animation: wa-pop 0.28s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    @keyframes wa-pop {
+      from { transform: scale(0.88) translateY(16px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .wa-modal-close {
+      position: absolute;
+      top: 14px; right: 14px;
+      background: rgba(0,0,0,0.07);
+      border: none; border-radius: 50%;
+      width: 30px; height: 30px;
+      font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .wa-modal-close:hover { background: rgba(0,0,0,0.15); }
+    .wa-modal-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .wa-modal-icon { font-size: 32px; flex-shrink: 0; }
+    .wa-modal-title {
+      font-family: 'Noto Sans Devanagari','DM Sans',sans-serif;
+      font-size: 16px; font-weight: 800; color: var(--text-dark);
+      line-height: 1.3;
+    }
+    .wa-modal-subtitle {
+      font-size: 11px; color: var(--text-mid); font-weight: 500; margin-top: 2px;
+    }
+    .wa-modal-product-info {
+      background: var(--green-pale);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px; color: var(--text-dark); font-weight: 600;
+      margin-bottom: 14px;
+      font-family: 'Noto Sans Devanagari','DM Sans',sans-serif;
+    }
+    .wa-modal-form { margin-bottom: 14px; }
+    .wa-modal-label {
+      display: block;
+      font-size: 13px; font-weight: 700; color: var(--text-dark);
+      margin-bottom: 6px;
+      font-family: 'Noto Sans Devanagari','DM Sans',sans-serif;
+    }
+    .wa-modal-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 16px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-dark);
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 12px;
+    }
+    .wa-modal-input:focus { border-color: #25D366; }
+    .wa-modal-qty-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .wa-modal-qty-row .wa-modal-label { margin-bottom: 0; }
+    .wa-qty-controls { display: flex; align-items: center; gap: 10px; }
+    .wa-qty-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--white);
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; color: var(--text-dark);
+    }
+    .wa-qty-btn:hover { background: var(--green-pale); }
+    .wa-qty-val {
+      font-size: 18px; font-weight: 800; min-width: 24px;
+      text-align: center; color: var(--text-dark);
+    }
+    .wa-modal-total {
+      font-size: 17px; font-weight: 800; color: var(--green-dark);
+      font-family: 'Playfair Display', serif;
+      margin-top: 8px;
+    }
+    .wa-confirm-btn {
+      width: 100%;
+      background: #25D366;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 0;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'DM Sans','Noto Sans Devanagari',sans-serif;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.1s;
+      margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .wa-confirm-btn:hover { background: #128C7E; }
+    .wa-confirm-btn:active { transform: scale(0.97); }
+    .wa-modal-note {
+      font-size: 11px; color: var(--text-light); text-align: center;
+      font-family: 'DM Sans',sans-serif; line-height: 1.5;
+    }
 
     /* ══════════════════════════════════════
        MAIN CONTENT AREA
@@ -1399,204 +1519,7 @@
       .fert-h-cta { font-size: 11px; margin-top: 6px; }
     }
 
-    /* ══════════════════════════════════════
-       CART DRAWER
-    ══════════════════════════════════════ */
-    .cart-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 900;
-      backdrop-filter: blur(3px);
-    }
-    .cart-overlay.open { display: block; }
 
-    .cart-drawer {
-      position: fixed;
-      top: 0; right: -400px;
-      width: 360px;
-      max-width: 100vw;
-      height: 100%;
-      background: var(--white);
-      z-index: 950;
-      box-shadow: -8px 0 40px rgba(0,0,0,0.25);
-      display: flex;
-      flex-direction: column;
-      transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
-    }
-    .cart-drawer.open { right: 0; }
-
-    .cart-drawer-header {
-      background: var(--green-dark);
-      color: #fff;
-      padding: 18px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .cart-drawer-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .cart-drawer-close {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      color: #fff;
-      font-size: 18px;
-      width: 34px; height: 34px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-    }
-
-    .cart-items-wrap {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-    }
-
-    .cart-empty {
-      text-align: center;
-      padding: 48px 20px;
-    }
-    .cart-empty-icon { font-size: 52px; margin-bottom: 12px; }
-    .cart-empty-text {
-      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      font-size: 14px;
-      color: var(--text-mid);
-      line-height: 1.6;
-    }
-
-    .cart-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .cart-item:last-child { border-bottom: none; }
-    .cart-item-emoji {
-      font-size: 36px;
-      width: 52px; height: 52px;
-      background: var(--green-pale);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .cart-item-info { flex: 1; }
-    .cart-item-name {
-      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin-bottom: 2px;
-    }
-    .cart-item-price {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--green-mid);
-    }
-    .cart-qty-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-    }
-    .qty-btn {
-      width: 26px; height: 26px;
-      border-radius: 6px;
-      border: 1.5px solid var(--border);
-      background: var(--white);
-      color: var(--text-dark);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .qty-btn:hover { background: var(--green-pale); }
-    .qty-val {
-      font-size: 14px;
-      font-weight: 700;
-      min-width: 20px;
-      text-align: center;
-    }
-    .cart-item-del {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      opacity: 0.4;
-      padding: 4px;
-      transition: opacity 0.15s;
-    }
-    .cart-item-del:hover { opacity: 0.8; }
-
-    .cart-footer {
-      padding: 16px 20px;
-      border-top: 1.5px solid var(--border);
-      flex-shrink: 0;
-      background: var(--cream);
-    }
-    .cart-total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .cart-total-label {
-      font-size: 13px;
-      color: var(--text-mid);
-      font-weight: 600;
-    }
-    .cart-total-val {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--green-dark);
-    }
-    .cart-savings {
-      font-size: 11px;
-      color: #2e7d32;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    .btn-checkout {
-      width: 100%;
-      background: var(--green-dark);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 14px 0;
-      font-size: 15px;
-      font-weight: 700;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.18s;
-      margin-bottom: 8px;
-    }
-    .btn-checkout:hover { background: var(--green-mid); }
-    .btn-clear-cart {
-      width: 100%;
-      background: none;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 0;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      color: var(--text-mid);
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .btn-clear-cart:hover { border-color: #e53935; color: #e53935; }
 
     /* ══════════════════════════════════════
        CHECKOUT SUCCESS TOAST
@@ -1699,6 +1622,8 @@
       .topbar-nav { display: none; }
       .topbar-search-btn { display: none; }
       .topbar-avatar-btn { display: none; }
+      .topbar-wa-label { display: none; }
+      .topbar-wa-btn { padding: 7px 10px; border-radius: 50%; }
       .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
       .topbar { padding: 0 12px; height: 54px; }
       .topbar-logo-name { font-size: 15px; }
@@ -1796,11 +1721,10 @@
   </nav>
 
   <div class="topbar-right">
-    <!-- Cart button -->
-    <button class="topbar-cart-btn" onclick="openCart()" title="Cart">
-      🛒
-      <span class="cart-badge" id="cart-badge">0</span>
-    </button>
+    <!-- WhatsApp Order Button -->
+    <a href="https://wa.me/919870951001" target="_blank" class="topbar-wa-btn" title="WhatsApp पर ऑर्डर करें">
+      <span>💬</span><span class="topbar-wa-label">ऑर्डर करें</span>
+    </a>
 
     <!-- Unified language picker -->
     <div class="lang-picker" id="lang-picker">
@@ -1947,9 +1871,9 @@
           </div>
           <div class="fert-modal-crops" id="fert-popup-crops"></div>
 
-          <!-- Add to Cart CTA inside modal -->
-          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="fertModalAddCart()">
-            🛒 <span id="fert-modal-cart-label">टोकरी में डालें</span>
+          <!-- WhatsApp Order CTA inside modal -->
+          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="openWAOrderFromModal()" style="background:#25D366">
+            💬 <span id="fert-modal-cart-label">WhatsApp पर ऑर्डर करें</span>
           </button>
           <!-- Affiliate buy buttons inside modal -->
           <div class="affil-modal-row" id="fert-modal-affil-row">
@@ -1968,24 +1892,38 @@
   </div>
 </div>
 
-<!-- ══ CART OVERLAY + DRAWER ══ -->
-<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
-<div class="cart-drawer" id="cart-drawer">
-  <div class="cart-drawer-header">
-    <div class="cart-drawer-title" data-t="cart_title">🛒 आपकी टोकरी</div>
-    <button class="cart-drawer-close" onclick="closeCart()">✕</button>
-  </div>
-  <div class="cart-items-wrap" id="cart-items-wrap">
-    <!-- populated by JS -->
-  </div>
-  <div class="cart-footer" id="cart-footer" style="display:none;">
-    <div class="cart-total-row">
-      <span class="cart-total-label" data-t="cart_total">कुल राशि</span>
-      <span class="cart-total-val" id="cart-total-val">₹0</span>
+<!-- ══ WHATSAPP ORDER MODAL ══ -->
+<div class="wa-modal-overlay" id="wa-modal" onclick="closeWAModal(event)">
+  <div class="wa-modal-box">
+    <button class="wa-modal-close" onclick="closeWAModal()">✕</button>
+    <div class="wa-modal-header">
+      <span class="wa-modal-icon">💬</span>
+      <div>
+        <div class="wa-modal-title" id="wa-modal-product-name">उत्पाद का नाम</div>
+        <div class="wa-modal-subtitle">WhatsApp पर ऑर्डर करें — तुरंत जवाब मिलेगा</div>
+      </div>
     </div>
-    <div class="cart-savings" id="cart-savings-text"></div>
-    <button class="btn-checkout" onclick="checkout()" data-t="btn_checkout">✅ ऑर्डर करें →</button>
-    <button class="btn-clear-cart" onclick="clearCart()" data-t="btn_clear">🗑️ टोकरी खाली करें</button>
+    <div class="wa-modal-product-info" id="wa-modal-product-info"></div>
+    <div class="wa-modal-form">
+      <label class="wa-modal-label">📱 आपका मोबाइल नंबर</label>
+      <input type="tel" id="wa-phone-input" class="wa-modal-input"
+        placeholder="जैसे: 9876543210" maxlength="10"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        onkeydown="if(event.key==='Enter')confirmWAOrder()" />
+      <div class="wa-modal-qty-row">
+        <label class="wa-modal-label">📦 मात्रा</label>
+        <div class="wa-qty-controls">
+          <button class="wa-qty-btn" onclick="changeWAQty(-1)">−</button>
+          <span class="wa-qty-val" id="wa-qty-display">1</span>
+          <button class="wa-qty-btn" onclick="changeWAQty(1)">+</button>
+        </div>
+      </div>
+      <div class="wa-modal-total" id="wa-modal-total">कुल: ₹0</div>
+    </div>
+    <button class="wa-confirm-btn" onclick="confirmWAOrder()">
+      💬 WhatsApp पर ऑर्डर करें
+    </button>
+    <div class="wa-modal-note">आपका ऑर्डर सीधे हमारे WhatsApp पर जाएगा। हम 15 मिनट में जवाब देंगे।</div>
   </div>
 </div>
 
@@ -2399,158 +2337,8 @@
   // STATE
   // ══════════════════════════════════════
   let activeCategory = 'all';
-  let cart = JSON.parse(localStorage.getItem('km_cart') || '{}');
-  // cart = { productId: quantity, ... }
 
-  // ── NeonDB Cart Sync ────────────────────────────────────────
-  const API_BASE = 'https://krashi-mitra-v1.onrender.com';
-  let _backendAlive = null; // null=unknown, true=ok, false=down
-
-  async function _checkBackend() {
-    if (_backendAlive === true) return true;
-    // Render free tier cold-starts can take up to 50s — try twice with longer timeout
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        // Use no-cors so CORS headers don't block the ping — opaque response still
-        // means the server is alive and reachable; a throw means it's down/offline
-        await fetch(`${API_BASE}/health`, {
-          mode:   'no-cors',
-          signal: AbortSignal.timeout(15000)
-        });
-        // If fetch resolves (even opaque), server is up
-        _backendAlive = true; return true;
-      } catch { /* timeout or network error — try again */ }
-    }
-    _backendAlive = false;
-    console.warn('[KM] Backend offline — cart syncing to localStorage only.');
-    return false;
-  }
-
-  function getToken()     { return localStorage.getItem('krishi_token'); }
-  function getSessionId() {
-    let sid = localStorage.getItem('km_session_id');
-    if (!sid) {
-      sid = crypto.randomUUID();
-      localStorage.setItem('km_session_id', sid);
-    }
-    return sid;
-  }
-
-  // Load cart from NeonDB on page open
-  async function loadCartFromDB() {
-    if (!await _checkBackend()) return; // backend down — use localStorage
-    try {
-      const token = getToken();
-      const headers = {};
-      let url = `${API_BASE}/cart`;
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      } else {
-        url += `?session_id=${getSessionId()}`;
-      }
-      const res  = await fetch(url, { headers });
-      const data = await res.json();
-      if (data.success && data.cart) {
-        const dbCart = {};
-        for (const [k, v] of Object.entries(data.cart)) dbCart[parseInt(k)] = v;
-        cart = dbCart;
-        saveCart();
-        updateCartBadge();
-        renderProducts();
-      }
-    } catch (e) { /* silently fall back to localStorage */ }
-  }
-
-  // Sync a single item change to NeonDB (fire & forget)
-  async function syncItemToDB(productId, quantity) {
-    if (!await _checkBackend()) return; // backend down — localStorage already saved
-    try {
-      const token = getToken();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      const body = { product_id: productId, quantity };
-      if (!token) body.session_id = getSessionId();
-      await fetch(`${API_BASE}/cart/update`, {
-        method:  'POST',
-        headers,
-        body:    JSON.stringify(body),
-      });
-    } catch (e) { /* silent — localStorage already saved */ }
-  }
-
-  // Clear cart on NeonDB
-  async function clearCartOnDB() {
-    if (!await _checkBackend()) return;
-    try {
-      const token = getToken();
-      const headers = {};
-      let url = `${API_BASE}/cart/clear`;
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      } else {
-        url += `?session_id=${getSessionId()}`;
-      }
-      await fetch(url, { method: 'DELETE', headers });
-    } catch (e) { /* silent */ }
-  }
-
-  // Merge guest cart into user cart right after login
-  async function mergeGuestCartAfterLogin() {
-    const sid = localStorage.getItem('km_session_id');
-    const justLoggedIn = localStorage.getItem('km_just_logged_in');  // ← only run once after login
-    if (!sid || !getToken() || !justLoggedIn) return;
-    localStorage.removeItem('km_just_logged_in');  // ← clear immediately so it doesn't re-run
-    if (!await _checkBackend()) return;
-    try {
-      const res  = await fetch(`${API_BASE}/cart/merge`, {
-        method:  'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify({ session_id: sid }),
-      });
-      const data = await res.json();
-      if (data.success && data.cart) {
-        const dbCart = {};
-        for (const [k, v] of Object.entries(data.cart)) dbCart[parseInt(k)] = v;
-        cart = dbCart;
-        saveCart();
-        updateCartBadge();
-        renderProducts();
-        localStorage.removeItem('km_session_id');
-      }
-    } catch (e) { console.error('[Cart Merge Error]', e); }
-  }
-  // ───────────────────────────────────────────────────────────
-
-  function saveCart() {
-    localStorage.setItem('km_cart', JSON.stringify(cart));
-  }
-
-  function cartCount() {
-    return Object.values(cart).reduce((a, b) => a + b, 0);
-  }
-
-  function cartTotal() {
-    return PRODUCTS.reduce((sum, p) => {
-      return sum + (cart[p.id] || 0) * p.price;
-    }, 0);
-  }
-
-  function cartSavings() {
-    return PRODUCTS.reduce((sum, p) => {
-      return sum + (cart[p.id] || 0) * (p.mrp - p.price);
-    }, 0);
-  }
-
-  function updateCartBadge() {
-    const cnt = cartCount();
-    const badge = document.getElementById('cart-badge');
-    if (!badge) return;
-    badge.textContent = cnt;
-    badge.classList.toggle('show', cnt > 0);
-  }
+  function getToken() { return localStorage.getItem('krishi_token'); }
 
   // ══════════════════════════════════════
   // RENDER PRODUCTS
@@ -2590,7 +2378,6 @@
     if (fertGrid) {
       fertGrid.style.display = visible.length ? 'grid' : 'none';
       fertGrid.innerHTML = visible.map(p => {
-        const inCart = cart[p.id] > 0;
         const discount = Math.round((1 - p.price / p.mrp) * 100);
 
         // Type label per category
@@ -2648,10 +2435,10 @@
               <div class="fert-h-use">💡 ${getProductDesc(p)}</div>
               <div class="fert-h-cta" style="display:flex;align-items:center;justify-content:space-between;margin-top:7px">
                 <span style="font-size:10px;color:var(--green-mid);font-weight:700;opacity:0.85">विवरण देखें →</span>
-                <button class="fert-h-cart-btn ${inCart ? 'in-cart' : ''}"
-                  onclick="toggleCart(${p.id}, this); event.stopPropagation()"
-                  style="font-size:11px;font-weight:700;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;background:${inCart ? 'var(--green-pale)' : 'var(--green-dark)'};color:${inCart ? 'var(--green-dark)' : '#fff'};font-family:inherit;transition:background 0.18s">
-                  ${inCart ? '✅ In Cart' : '🛒 Add'}
+                <button class="fert-h-cart-btn"
+                  onclick="openWAOrder(${p.id}); event.stopPropagation()"
+                  style="font-size:11px;font-weight:700;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;background:#25D366;color:#fff;font-family:inherit;transition:background 0.18s">
+                  💬 ऑर्डर
                 </button>
               </div>
               <div class="affil-row" onclick="event.stopPropagation()">
@@ -2707,130 +2494,96 @@
   }
 
   // ══════════════════════════════════════
-  // CART LOGIC
+  // WHATSAPP ORDER SYSTEM
   // ══════════════════════════════════════
-  function toggleCart(id, btn) {
-    if (cart[id] > 0) {
-      delete cart[id];
-      showToast(t('toast_removed'));
-    } else {
-      cart[id] = 1;
-      showToast(t('toast_added'));
+  const WA_NUMBER = '919870951001'; // KrashiMitra WhatsApp
+  let _waProductId = null;
+  let _waQty = 1;
+
+  function getSessionId() {
+    let sid = localStorage.getItem('km_session_id');
+    if (!sid) {
+      sid = 'km_' + Math.random().toString(36).substr(2,8);
+      localStorage.setItem('km_session_id', sid);
     }
-    saveCart();
-    updateCartBadge();
-    syncItemToDB(id, cart[id] || 0); // ← NeonDB sync
-    // Update just this button without re-rendering entire grid
-    if (btn) {
-      const inCart = cart[id] > 0;
-      btn.textContent = inCart ? t('in_cart') : t('add_cart');
-      btn.classList.toggle('in-cart', inCart);
-    }
+    return sid;
   }
 
-  function openCart() {
-    document.getElementById('cart-overlay').classList.add('open');
-    document.getElementById('cart-drawer').classList.add('open');
-    renderCart();
+  function openWAOrder(productId) {
+    _waProductId = productId;
+    _waQty = 1;
+    const p = PRODUCTS.find(x => x.id === productId);
+    if (!p) return;
+
+    document.getElementById('wa-modal-product-name').textContent = getProductName(p);
+    document.getElementById('wa-modal-product-info').textContent =
+      `${p.emoji}  ₹${p.price} / ${getProductUnit(p)}  ·  ${getProductDesc(p)}`;
+    document.getElementById('wa-phone-input').value = '';
+    document.getElementById('wa-qty-display').textContent = 1;
+    document.getElementById('wa-modal-total').textContent = `कुल: ₹${p.price}`;
+    document.getElementById('wa-modal').classList.add('open');
+    setTimeout(() => document.getElementById('wa-phone-input').focus(), 200);
   }
 
-  function closeCart() {
-    document.getElementById('cart-overlay').classList.remove('open');
-    document.getElementById('cart-drawer').classList.remove('open');
+  function openWAOrderFromModal() {
+    if (!_currentFertId) return;
+    closeFertModal();
+    openWAOrder(_currentFertId);
   }
 
-  function renderCart() {
-    const wrap = document.getElementById('cart-items-wrap');
-    const footer = document.getElementById('cart-footer');
-    if (!wrap) return;
+  function closeWAModal(e) {
+    if (e && e.target !== document.getElementById('wa-modal')) return;
+    document.getElementById('wa-modal').classList.remove('open');
+  }
 
-    const cartItems = PRODUCTS.filter(p => cart[p.id] > 0);
+  function changeWAQty(delta) {
+    _waQty = Math.max(1, (_waQty || 1) + delta);
+    document.getElementById('wa-qty-display').textContent = _waQty;
+    const p = PRODUCTS.find(x => x.id === _waProductId);
+    if (p) document.getElementById('wa-modal-total').textContent = `कुल: ₹${(p.price * _waQty).toLocaleString('en-IN')}`;
+  }
 
-    if (cartItems.length === 0) {
-      wrap.innerHTML = `
-        <div class="cart-empty">
-          <div class="cart-empty-icon">🛒</div>
-          <div class="cart-empty-text">${t('cart_empty_text').replace('\n','<br>')}</div>
-        </div>`;
-      if (footer) footer.style.display = 'none';
+  function confirmWAOrder() {
+    const phone = document.getElementById('wa-phone-input').value.trim();
+    if (!phone || phone.length < 10) {
+      document.getElementById('wa-phone-input').style.borderColor = '#e53935';
+      document.getElementById('wa-phone-input').focus();
+      setTimeout(() => document.getElementById('wa-phone-input').style.borderColor = '', 1200);
       return;
     }
 
-    if (footer) footer.style.display = 'block';
+    const p = PRODUCTS.find(x => x.id === _waProductId);
+    if (!p) return;
 
-    wrap.innerHTML = cartItems.map(p => `
-      <div class="cart-item">
-        <div class="cart-item-emoji">${p.emoji}</div>
-        <div class="cart-item-info">
-          <div class="cart-item-name">${getProductName(p)}</div>
-          <div class="cart-item-price">₹${p.price} × ${cart[p.id]} = ₹${p.price * cart[p.id]}</div>
-          <div class="cart-qty-row">
-            <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
-            <span class="qty-val">${cart[p.id]}</span>
-            <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
-          </div>
-        </div>
-        <button class="cart-item-del" onclick="removeFromCart(${p.id})" title="Remove">🗑️</button>
-      </div>
-    `).join('');
+    const orderId = 'ORD-' + Date.now();
+    const total = p.price * _waQty;
+    const name = getProductName(p);
+    const unit = getProductUnit(p);
+    const sessionId = getSessionId();
 
-    // Footer totals
-    const totalEl = document.getElementById('cart-total-val');
-    if (totalEl) totalEl.textContent = `₹${cartTotal().toLocaleString('en-IN')}`;
+    const msg =
+`🌾 KrashiMitra Order
+━━━━━━━━━━━━━━━━
+👤 Guest ID: ${sessionId}
 
-    const savingsEl = document.getElementById('cart-savings-text');
-    const savings = cartSavings();
-    if (savingsEl) {
-      savingsEl.textContent = savings > 0 ? `${t('savings_text')} ₹${savings.toLocaleString('en-IN')}` : '';
-    }
+📦 Items:
+  • ${name} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${unit})
+
+📱 Phone: ${phone}
+💰 कुल: ₹${total.toLocaleString('en-IN')}
+🆔 Order ID: ${orderId}
+━━━━━━━━━━━━━━━━`;
+
+    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+    document.getElementById('wa-modal').classList.remove('open');
+    showToast('💬 WhatsApp खुल रहा है...', 2000);
+    setTimeout(() => window.open(waUrl, '_blank'), 400);
   }
 
-  function changeQty(id, delta) {
-    cart[id] = (cart[id] || 0) + delta;
-    if (cart[id] <= 0) delete cart[id];
-    saveCart();
-    updateCartBadge();
-    syncItemToDB(id, cart[id] || 0); // ← NeonDB sync
-    renderCart();
-    renderProducts(); // refresh button states
-  }
-
-  function removeFromCart(id) {
-    delete cart[id];
-    saveCart();
-    updateCartBadge();
-    syncItemToDB(id, 0); // ← NeonDB sync (quantity 0 = delete)
-    renderCart();
-    renderProducts();
-    showToast(t('toast_removed'));
-  }
-
-  function clearCart() {
-    cart = {};
-    saveCart();
-    updateCartBadge();
-    clearCartOnDB(); // ← NeonDB sync
-    renderCart();
-    renderProducts();
-    showToast(t('toast_cleared'));
-  }
-
-  function checkout() {
-    // If not logged in, prompt login before ordering
-    if (!getToken()) {
-      closeCart();
-      showToast('🔐 ऑर्डर करने के लिए पहले Login करें!', 3500);
-      setTimeout(() => { window.location.href = 'login.html'; }, 1800);
-      return;
-    }
-    cart = {};
-    saveCart();
-    updateCartBadge();
-    clearCartOnDB(); // ← NeonDB sync
-    closeCart();
-    renderProducts();
-    showToast(t('toast_checkout'), 3500);
-  }
+  // Stub functions kept so nothing else breaks
+  function saveCart() {}
+  function updateCartBadge() {}
+  function renderCart() {}
 
   // ══════════════════════════════════════
   // FERTILIZER MODAL (API-powered, same as mandi.html)
@@ -3001,27 +2754,15 @@
   }
 
   function _updateFertModalCartBtn(productId) {
-    const inCart = cart[productId] > 0;
-    const btn    = document.getElementById('fert-modal-cart-btn');
-    const lbl    = document.getElementById('fert-modal-cart-label');
+    const btn = document.getElementById('fert-modal-cart-btn');
+    const lbl = document.getElementById('fert-modal-cart-label');
     if (!btn || !lbl) return;
-    lbl.textContent = inCart ? t('in_cart') : t('add_cart');
-    btn.classList.toggle('in-cart', inCart);
+    lbl.textContent = 'WhatsApp पर ऑर्डर करें';
+    btn.style.background = '#25D366';
   }
 
   function fertModalAddCart() {
-    if (!_currentFertId) return;
-    if (cart[_currentFertId] > 0) {
-      delete cart[_currentFertId];
-      showToast(t('toast_removed'));
-    } else {
-      cart[_currentFertId] = 1;
-      showToast(t('toast_added'));
-    }
-    saveCart();
-    updateCartBadge();
-    renderProducts();
-    _updateFertModalCartBtn(_currentFertId);
+    openWAOrderFromModal();
   }
 
   function closeFertModal() {
@@ -3064,13 +2805,9 @@
     }
 
     renderProducts();
-    updateCartBadge();
 
     // Pre-warm fertilizer API in background when fertilizer category active
     if (catParam === 'fertilizer') fetchFertData();
-
-    // ── NeonDB: merge guest cart if just logged in, then load from DB ──
-    mergeGuestCartAfterLogin().then(() => loadCartFromDB());
   });
 
 

@@ -13,26 +13,20 @@
 #   ✅ search     → routes/search.py     + services/search_service.py  ← NEW
 # ============================================================
 
-import os
-from pathlib import Path
-
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-load_dotenv()
-
-from backend.routes import cart  # ensure CartItem model registered before create_all
-
-BASE_DIR = Path(__file__).resolve().parents[1]
+from backend.routes import chat, weather, mandi
+import os
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = int(os.getenv("APP_PORT", "8000"))
 DEBUG    = os.getenv("DEBUG", "true").lower() == "true"
 
-from backend.database.db import MandiPrice, get_db, init_db
+from dotenv import load_dotenv
+load_dotenv()
 
-from backend.database.db import engine, Base
+from backend.database.db import MandiPrice, get_db, init_db
 
 # ── Routers ──────────────────────────────────────────────────
 from backend.routes.weather    import router as weather_router
@@ -42,7 +36,6 @@ from backend.routes.chatbot    import router as chatbot_router
 from backend.routes.auth       import router as auth_router
 from backend.routes.profile    import router as profile_router
 from backend.routes.search     import router as search_router   # NEW
-from backend.routes.cart       import router as cart_router     # CART
 
 from backend.services.weather_scheduler import start_scheduler  # WEATHER CACHE
 
@@ -81,12 +74,6 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup():
-    Base.metadata.create_all(bind=engine)   # ← create tables (cart, etc.)
-    init_db()
-    print("✅ Krishi Mitra database initialized.")
-    await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
 
 # @app.post("/ask")
 # async def ask(data: dict):
@@ -101,12 +88,19 @@ app.include_router(chatbot_router)
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
-app.include_router(cart_router)     # CART
-# NOTE: duplicate chat.router, weather.router, mandi.router calls removed —
-# they are already registered above as chatbot_router/weather_router/mandi_router
+app.include_router(chat.router)
+app.include_router(weather.router)
+app.include_router(mandi.router)
 
 from backend.routes import admin as admin_route
 app.include_router(admin_route.router)
+
+# Initialize database tables on startup
+@app.on_event("startup")
+async def startup():
+    init_db()
+    print("✅ Krishi Mitra database initialized.")
+    await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
 
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
@@ -133,5 +127,7 @@ async def root():
 async def health():
     return {"status": "ok"}
 
+from fastapi.staticfiles import StaticFiles
+
 # Add this AFTER all app.include_router() lines, at the bottom
-app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")
+app.mount("/admin", StaticFiles(directory="admin", html=True), name="admin")

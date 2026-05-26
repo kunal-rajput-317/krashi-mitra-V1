@@ -267,14 +267,6 @@ def _ensure_postgres_columns():
             ("arrival_date", "VARCHAR"),
             ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
-        "carts": [
-            ("id", "INTEGER"),
-            ("user_id", "INTEGER"),
-            ("product_id", "INTEGER"),
-            ("quantity", "INTEGER DEFAULT 1"),
-            ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
-            ("session_id", "VARCHAR"),
-        ],
     }
 
     with engine.begin() as conn:
@@ -284,50 +276,6 @@ def _ensure_postgres_columns():
                     f'ALTER TABLE "{table_name}" '
                     f'ADD COLUMN IF NOT EXISTS "{column_name}" {column_type}'
                 ))
-
-        conn.execute(text("""
-            CREATE SEQUENCE IF NOT EXISTS carts_id_seq OWNED BY carts.id;
-            ALTER TABLE carts ALTER COLUMN id SET DEFAULT nextval('carts_id_seq');
-            UPDATE carts SET id = nextval('carts_id_seq') WHERE id IS NULL;
-            ALTER TABLE carts ALTER COLUMN id SET NOT NULL;
-        """))
-        conn.execute(text("""
-            DO $$
-            DECLARE
-                pk_name text;
-                pk_cols text[];
-            BEGIN
-                SELECT c.conname, array_agg(a.attname ORDER BY u.ordinality)
-                INTO pk_name, pk_cols
-                FROM pg_constraint c
-                JOIN unnest(c.conkey) WITH ORDINALITY AS u(attnum, ordinality) ON true
-                JOIN pg_attribute a
-                  ON a.attrelid = c.conrelid
-                 AND a.attnum = u.attnum
-                WHERE c.conrelid = 'carts'::regclass
-                  AND c.contype = 'p'
-                GROUP BY c.conname;
-
-                IF pk_name IS NOT NULL AND pk_cols <> ARRAY['id'] THEN
-                    EXECUTE format('ALTER TABLE carts DROP CONSTRAINT %I', pk_name);
-                    pk_name := NULL;
-                END IF;
-
-                IF pk_name IS NULL THEN
-                    ALTER TABLE carts ADD CONSTRAINT carts_pkey PRIMARY KEY (id);
-                END IF;
-            END $$;
-        """))
-        conn.execute(text("""
-            CREATE UNIQUE INDEX IF NOT EXISTS carts_user_product_uidx
-            ON carts(user_id, product_id)
-            WHERE user_id IS NOT NULL;
-        """))
-        conn.execute(text("""
-            CREATE UNIQUE INDEX IF NOT EXISTS carts_session_product_uidx
-            ON carts(session_id, product_id)
-            WHERE session_id IS NOT NULL AND user_id IS NULL;
-        """))
 
 
 def init_db():
