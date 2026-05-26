@@ -1542,7 +1542,9 @@
       </div>
     </div>
     <button class="topbar-search-btn" title="Search">🔍</button>
-    <div class="topbar-avatar-btn">👤</div>
+    <!-- <div class="topbar-avatar-btn">👤</div> -->
+    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
+
   </div>
 </div>
 
@@ -2296,7 +2298,7 @@
   const WA_NUMBER = '919870951001'; // KrashiMitra WhatsApp
 
   // ── Google Apps Script Web App URL (replace with your deployed URL) ──
-  const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzzhVnddpzwXOzXTtyRlh2dP__zvrzqHgXsHdwvlrV012b4qeiGaRonfayvI3k3pyxDVw/exec';
 
   let _waProductId = null;
   let _waQty = 1;
@@ -2336,7 +2338,7 @@
 
   // POST order to Google Sheets via Apps Script
   function logOrderToSheets(orderData) {
-    if (!GAS_URL || GAS_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') return;
+    if (!GAS_URL || GAS_URL === 'https://script.google.com/macros/s/AKfycbzzhVnddpzwXOzXTtyRlh2dP__zvrzqHgXsHdwvlrV012b4qeiGaRonfayvI3k3pyxDVw/exec') return;
     fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight block
