@@ -2411,11 +2411,11 @@
     // Render free tier cold-starts can take up to 50s — try twice with longer timeout
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        // Check /cart endpoint directly — if it returns anything other than 404 backend is up
-        const r = await fetch(`${API_BASE}/cart?session_id=__ping__`, {
+        // Use /health endpoint for ping — always returns 200 {"status":"ok"} when backend is up
+        const r = await fetch(`${API_BASE}/health`, {
           signal: AbortSignal.timeout(15000)
         });
-        if (r.status !== 404) { _backendAlive = true; return true; }
+        if (r.ok) { _backendAlive = true; return true; }
       } catch { /* timeout or network error — try again */ }
     }
     _backendAlive = false;
