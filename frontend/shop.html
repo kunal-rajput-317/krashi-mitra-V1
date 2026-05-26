@@ -2301,7 +2301,7 @@
   const WA_NUMBER = '919870951001'; // KrashiMitra WhatsApp
 
   // ── Google Apps Script Web App URL (replace with your deployed URL) ──
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycby6vnC2Wv18EHN2PCD2QaVBiGjcy0SoCJ-jtVipPcCV2RrlOp_bRwdPVXlOzruJ_rop4A/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwT43qm8xTzCo9u0NBzH5G2x4IWsIeg1AtKsgfqdEB6NTI9IRfpogYDzTCFtSS5PjaZ-A/exec';
 
   let _waProductId = null;
   let _waQty = 1;
@@ -2339,35 +2339,21 @@
     return { id: getSessionId(), isGuest: true };
   }
 
-  // POST order to Google Sheets via hidden form + iframe (bypasses CORS entirely)
+  // POST order to Google Sheets via fetch (no-cors + URL-encoded form data)
+  // Google Apps Script processes doPost() BEFORE its redirect, so data is received.
   function logOrderToSheets(orderData) {
     if (!GAS_URL) return;
-    try {
-      // Create a temporary hidden form
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = GAS_URL;
-      form.target = 'gas-submit-frame';   // submit into hidden iframe
-      form.style.display = 'none';
+    const params = new URLSearchParams();
+    Object.entries(orderData).forEach(([k, v]) => params.append(k, String(v)));
 
-      // Add each field as a hidden input
-      Object.entries(orderData).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.type  = 'hidden';
-        input.name  = key;
-        input.value = String(value);
-        form.appendChild(input);
-      });
-
-      document.body.appendChild(form);
-      form.submit();
-
-      // Clean up the form after submission
-      setTimeout(() => form.remove(), 2000);
-      console.log('Order submitted to Sheets via form ✓');
-    } catch (err) {
-      console.error('Sheets form submit failed:', err);
-    }
+    fetch(GAS_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    params.toString()
+    })
+    .then(() => console.log('Order sent to Sheets ✓'))
+    .catch(err => console.error('Sheets error:', err));
   }
 
   function openWAOrder(productId) {
