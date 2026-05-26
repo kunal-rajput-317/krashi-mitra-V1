@@ -17,7 +17,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <title>AI सहायता | KrashiMitra</title>
-  <link rel="icon" type="image/png" href="https://krashimitra.in/images/favicon.png">
+  <link rel="icon" href="https://krashimitra.in/images/favicon.png" type="image/png">
+  <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
 
   <meta name="description" content="KrashiMitra AI सहायता — खेती की समस्या हिंदी में पूछें और तुरंत जवाब पाएं।" />
   <meta name="robots" content="index, follow" />
@@ -637,7 +638,7 @@
     ══════════════════════════════════════ */
     @media screen and (max-width: 1024px) {
       .topbar-nav { display: none; }
-      .topbar-avatar-btn { display: none; }
+      .topbar-avatar-btn { display: flex; }
       .top-announcement { font-size: 11.5px; padding: 6px 12px; }
       .topbar { padding: 0 12px; height: 54px; }
       .topbar-logo-name { font-size: 15px; }
@@ -759,7 +760,9 @@
         </button>
       </div>
     </div>
-    <div class="topbar-avatar-btn" onclick="openLoginModal()" title="Login / Profile">👤</div>
+    <!-- <div class="topbar-avatar-btn" onclick="openLoginModal()" title="Login / Profile">👨‍🌾</div> -->
+    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
+
   </div>
 </div>
 
@@ -1161,7 +1164,7 @@ Always end with an encouraging note or offer to help further.`;
 
     const avatar = document.createElement('div');
     avatar.className = 'msg-avatar';
-    avatar.textContent = role === 'bot' ? '🌾' : '👤';
+    avatar.textContent = role === 'bot' ? '🌾' : '👨‍🌾';
 
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';

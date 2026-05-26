@@ -14,10 +14,11 @@
 
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,">
 
   <title>🌤️ मौसम | KrashiMitra</title>
-  <link rel="icon" type="image/png" href="https://krashimitra.in/images/favicon.png">
+ <link rel="icon" href="https://krashimitra.in/images/favicon.png" type="image/png">
+  <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
 
   <meta name="description" content="उत्तर प्रदेश के जिलों का लाइव मौसम और कृषि सलाह — KrashiMitra पर देखें।" />
   <meta name="robots" content="index, follow" />
@@ -647,7 +648,7 @@
       /* Hide desktop nav on mobile */
       .topbar-nav { display: none; }
       .topbar-search-btn { display: none; }
-      .topbar-avatar-btn { display: none; }
+      .topbar-avatar-btn { display: flex; }
       .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
 
       .topbar {
@@ -777,7 +778,9 @@
       </div>
     </div>
     <button class="topbar-search-btn" title="Search">🔍</button>
-    <div class="topbar-avatar-btn">👤</div>
+    <!-- <div class="topbar-avatar-btn">👨‍🌾</div> -->
+    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
+
   </div>
 </div>
 
