@@ -11,7 +11,7 @@
 #   ✅ auth       → routes/auth.py
 #   ✅ profile    → routes/profile.py
 #   ✅ search     → routes/search.py     + services/search_service.py  ← NEW
-# ============================================================
+# =============================================================
 
 import os
 from pathlib import Path
