@@ -43,6 +43,7 @@ from backend.routes.auth       import router as auth_router
 from backend.routes.profile    import router as profile_router
 from backend.routes.search     import router as search_router   # NEW
 from backend.routes.cart       import router as cart_router     # CART
+from backend.routes.order      import router as order_router    # ORDER
 
 from backend.services.weather_scheduler import start_scheduler  # WEATHER CACHE
 
@@ -102,6 +103,7 @@ app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
+app.include_router(order_router)    # ORDER
 # NOTE: duplicate chat.router, weather.router, mandi.router calls removed —
 # they are already registered above as chatbot_router/weather_router/mandi_router
 

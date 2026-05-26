@@ -202,6 +202,28 @@ class MandiPrice(Base):
     fetched_at   = Column(DateTime, default=datetime.utcnow)
 
 
+class Order(Base):
+    __tablename__ = "orders"
+    __table_args__ = {"extend_existing": True}
+
+    id            = Column(Integer,  primary_key=True, autoincrement=True)
+    tracking_code = Column(String,   nullable=False, unique=True, index=True)
+    user_id       = Column(Integer,  nullable=True, index=True)   # links to users.id (NULL for guests)
+    user_email    = Column(String,   nullable=True)                # stored for easy lookup
+    user_name     = Column(String,   nullable=True)                # stored for easy lookup
+    session_id    = Column(String,   nullable=True, index=True)   # guest identifier
+    is_guest      = Column(Boolean,  default=True)
+    product_name  = Column(String,   nullable=False)
+    product_id    = Column(Integer,  nullable=True)
+    quantity      = Column(Integer,  default=1)
+    unit_price    = Column(Float,    nullable=False)
+    total         = Column(Float,    nullable=False)
+    phone         = Column(String,   nullable=False)
+    source        = Column(String,   default="shop")   # "shop" or "mandi"
+    status        = Column(String,   default="Pending")  # Pending / Confirmed / Delivered
+    created_at    = Column(DateTime, default=datetime.utcnow)
+
+
 # ── DB Helpers ───────────────────────────────────────────────
 
 def _ensure_postgres_columns():
