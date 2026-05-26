@@ -223,6 +223,68 @@
     .topbar-wa-btn:hover { background: #128C7E; }
     .topbar-wa-label { font-family: 'DM Sans','Noto Sans Devanagari',sans-serif; }
 
+    /* ── Topbar Orders Button ── */
+    .topbar-orders-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      border: none; border-radius: 20px; padding: 7px 14px;
+      color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
+      text-decoration: none; transition: background 0.15s, transform 0.12s;
+      flex-shrink: 0; white-space: nowrap;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+    }
+    .topbar-orders-btn:hover { background: linear-gradient(135deg, #f57c00, #e65100); transform: scale(1.03); }
+
+    /* ── Orders Modal ── */
+    .orders-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      z-index: 3100; align-items: center; justify-content: center; padding: 16px;
+    }
+    .orders-modal-overlay.open { display: flex; }
+    .orders-modal-box {
+      background: #fff; border-radius: 20px; width: 100%; max-width: 520px;
+      max-height: 85vh; overflow-y: auto; padding: 24px 20px 18px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28); position: relative;
+    }
+    .orders-modal-title {
+      font-size: 18px; font-weight: 800; color: #1b5e20;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .orders-modal-close {
+      position: absolute; top: 14px; right: 14px; background: #f5f5f5;
+      border: none; border-radius: 50%; width: 32px; height: 32px;
+      font-size: 16px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #555; transition: background 0.15s;
+    }
+    .orders-modal-close:hover { background: #e0e0e0; }
+    .order-card {
+      background: #f9fdf6; border: 1px solid #e8f5e9; border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 12px; transition: box-shadow 0.15s;
+    }
+    .order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .order-tracking {
+      font-size: 13px; font-weight: 800; color: #1b5e20;
+      font-family: 'DM Sans', monospace;
+      background: #e8f5e9; padding: 3px 10px; border-radius: 8px;
+    }
+    .order-status {
+      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .order-status.pending  { background: #fff3e0; color: #e65100; }
+    .order-status.verified { background: #e8f5e9; color: #2e7d32; }
+    .order-status.purchased { background: #e3f2fd; color: #1565c0; }
+    .order-status.delivered { background: #f3e5f5; color: #7b1fa2; }
+    .order-product { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .order-meta { font-size: 12px; color: #777; display: flex; flex-wrap: wrap; gap: 10px; }
+    .order-meta span { white-space: nowrap; }
+    .orders-empty { text-align: center; padding: 32px 16px; color: #aaa; }
+    .orders-empty .emoji { font-size: 42px; margin-bottom: 10px; }
+    .orders-loading { text-align: center; padding: 24px; color: #999; font-size: 13px; }
+
     /* ══════════════════════════════════════
        MAIN CONTENT
     ══════════════════════════════════════ */
@@ -921,6 +983,11 @@
       <span>💬</span><span class="topbar-wa-label">ऑर्डर करें</span>
     </a>
 
+    <!-- Orders History Button -->
+    <button class="topbar-orders-btn" onclick="openOrdersModal()" title="मेरे ऑर्डर">
+      📋 <span>ऑर्डर</span>
+    </button>
+
     <div class="lang-picker" id="lang-picker">
       <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
         <span id="lang-picker-label">हिं</span>
@@ -1116,6 +1183,17 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- ══ ORDERS HISTORY MODAL ══ -->
+<div class="orders-modal-overlay" id="orders-modal" onclick="if(event.target===this)closeOrdersModal()">
+  <div class="orders-modal-box">
+    <button class="orders-modal-close" onclick="closeOrdersModal()">✕</button>
+    <div class="orders-modal-title">📋 मेरे ऑर्डर</div>
+    <div id="orders-list">
+      <div class="orders-loading">🔄 लोड हो रहा है...</div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ BOTTOM NAV (Mobile) ══ -->
 <nav class="bottom-nav">
@@ -1544,11 +1622,7 @@
   // ══════════════════════════════════════
   // WHATSAPP ORDER SYSTEM
   // ══════════════════════════════════════
-  const WA_NUMBER = '919870951001';
-
-  // ── Google Apps Script Web App URL (same as shop.html) ──
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzUSp8BSsQp-wHwuLwVUFkHruk7-GE445CkIFC8qMOeJJ8MvX0sfxigC24x-6SEl-hwpg/exec';
-
+  const WA_NUMBER = '919870951001';\r\n
   let _waFertKey  = null;
   let _waFertName = '';
   let _waFertPrice = 0;
@@ -1583,15 +1657,98 @@
     return { id: getSessionId(), isGuest: true };
   }
 
-  // Log order to Google Sheets via image beacon GET (zero CORS issues)
-  function logOrderToSheets(orderData) {
-    if (!GAS_URL) return;
-    const params = new URLSearchParams();
-    Object.entries(orderData).forEach(([k, v]) => params.append(k, String(v)));
-    const img = new Image();
-    img.onload  = () => console.log('Order logged to Sheets ✓');
-    img.onerror = () => console.log('Order sent to Sheets (beacon fired)');
-    img.src = GAS_URL + '?' + params.toString();
+  // ── Backend API URL ──
+  const API_BASE = 'https://krashi-mitra-v1.onrender.com';
+
+  // Log order to NeonDB via backend API
+  function logOrderToBackend(orderData, callback) {
+    const token = localStorage.getItem('krishi_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    fetch(`${API_BASE}/order/log`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(orderData)
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        console.log('Order saved ✓ Tracking:', data.tracking_code);
+        if (callback) callback(data.tracking_code);
+      } else {
+        console.error('Order save failed:', data);
+        if (callback) callback(null);
+      }
+    })
+    .catch(err => {
+      console.error('Order API error:', err);
+      if (callback) callback(null);
+    });
+  }
+
+  // Fetch order history from backend
+  function fetchOrderHistory(callback) {
+    const token = localStorage.getItem('krishi_token');
+    const sid = getSessionId();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const url = token ? `${API_BASE}/order/history` : `${API_BASE}/order/history?session_id=${sid}`;
+
+    fetch(url, { headers })
+    .then(r => r.json())
+    .then(data => callback(data.orders || []))
+    .catch(() => callback([]));
+  }
+
+  // Orders Modal
+  function openOrdersModal() {
+    document.getElementById('orders-modal').classList.add('open');
+    document.getElementById('orders-list').innerHTML =
+      '<div class="orders-loading">🔄 लोड हो रहा है...</div>';
+
+    fetchOrderHistory(orders => {
+      const container = document.getElementById('orders-list');
+      if (!orders.length) {
+        container.innerHTML = `
+          <div class="orders-empty">
+            <div class="emoji">📭</div>
+            <div>अभी तक कोई ऑर्डर नहीं</div>
+            <div style="font-size:12px;margin-top:6px">ऑर्डर करें — यहाँ दिखेगा!</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = orders.map(o => {
+        const statusClass = o.status.toLowerCase();
+        const statusLabel = o.status === 'Pending' ? '⏳ Pending'
+          : o.status === 'Verified' ? '✅ Verified'
+          : o.status === 'Purchased' ? '💳 Purchased'
+          : o.status === 'Delivered' ? '📦 Delivered' : o.status;
+        const date = new Date(o.created_at).toLocaleDateString('hi-IN', {
+          day: 'numeric', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+        return `
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-tracking">${o.tracking_code}</span>
+              <span class="order-status ${statusClass}">${statusLabel}</span>
+            </div>
+            <div class="order-product">${o.product_name}</div>
+            <div class="order-meta">
+              <span>📦 ${o.quantity} × ₹${o.unit_price}</span>
+              <span>💰 ₹${o.total.toLocaleString('en-IN')}</span>
+              <span>📱 ${o.phone}</span>
+              <span>📅 ${date}</span>
+            </div>
+          </div>`;
+      }).join('');
+    });
+  }
+
+  function closeOrdersModal() {
+    document.getElementById('orders-modal').classList.remove('open');
   }
 
   function openWAOrderFert(key, name, price, unit) {
@@ -1646,16 +1803,19 @@
     const userLabel = isGuest ? `👤 Guest ID: ${userId}` : `👤 User ID: ${userId}`;
     const itemsLine = `${_waFertName} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${_waFertUnit} bag)`;
 
-    // ── Log order to Google Sheets ──
-    logOrderToSheets({
-      timestamp:  new Date().toISOString(),
-      order_id:   orderId,
-      user_id:    userId,
-      is_guest:   isGuest,
-      items:      itemsLine,
-      total:      total,
-      phone:      phone,
-      status:     'Pending'
+    // ── Save order to NeonDB via backend ──
+    logOrderToBackend({
+      product_name: _waFertName,
+      quantity:     _waQty,
+      unit_price:   _waFertPrice,
+      total:        total,
+      phone:        phone,
+      source:       'mandi',
+      session_id:   isGuest ? userId : undefined
+    }, (trackingCode) => {
+      if (trackingCode) {
+        showMandiToast(`✅ ऑर्डर सेव! Tracking: ${trackingCode}`, 4000);
+      }
     });
 
     const msg =
@@ -1668,7 +1828,6 @@ ${userLabel}
 
 📱 Phone: ${phone}
 💰 कुल: ₹${total.toLocaleString('en-IN')}
-🆔 Order ID: ${orderId}
 ━━━━━━━━━━━━━━━━`;
 
     const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
