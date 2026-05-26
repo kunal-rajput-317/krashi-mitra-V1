@@ -23,7 +23,7 @@ import uvicorn
 
 load_dotenv()
 
-from backend.routes import chat, weather, mandi
+from backend.routes import cart  # ensure CartItem model registered before create_all
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
@@ -33,8 +33,6 @@ DEBUG    = os.getenv("DEBUG", "true").lower() == "true"
 from backend.database.db import MandiPrice, get_db, init_db
 
 from backend.database.db import engine, Base
-from backend.routes import cart  # ensure model is imported
-
 
 # ── Routers ──────────────────────────────────────────────────
 from backend.routes.weather    import router as weather_router
@@ -104,8 +102,8 @@ app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
-# NOTE: chat.router, weather.router, mandi.router removed here —
-# they are already registered above as cart_router/weather_router/mandi_router
+# NOTE: duplicate chat.router, weather.router, mandi.router calls removed —
+# they are already registered above as chatbot_router/weather_router/mandi_router
 
 from backend.routes import admin as admin_route
 app.include_router(admin_route.router)

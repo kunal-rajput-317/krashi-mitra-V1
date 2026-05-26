@@ -2139,14 +2139,6 @@
     }
   };
 
-  async function mergeGuestCartAfterLogin() {
-  const sid = localStorage.getItem('km_session_id');
-  const justLoggedIn = localStorage.getItem('km_just_logged_in');
-  if (!sid || !getToken() || !justLoggedIn) return;
-  localStorage.removeItem('km_just_logged_in'); // clear immediately
-  // ...rest of merge logic
-}
-
   const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
   let currentLang = localStorage.getItem('km_lang') || 'hi';
 
@@ -2415,12 +2407,17 @@
   let _backendAlive = null; // null=unknown, true=ok, false=down
 
   async function _checkBackend() {
-    if (_backendAlive !== null) return _backendAlive;
-    try {
-      const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
-      _backendAlive = r.ok;
-    } catch { _backendAlive = false; }
-    return _backendAlive;
+    if (_backendAlive === true) return true;
+    // Render free tier cold-starts can take up to 50s — try twice with longer timeout
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(15000) });
+        if (r.ok) { _backendAlive = true; return true; }
+      } catch { /* timeout or network error — try again */ }
+    }
+    _backendAlive = false;
+    console.warn('[KM] Backend offline — cart syncing to localStorage only.');
+    return false;
   }
 
   function getToken()     { return localStorage.getItem('krishi_token'); }
