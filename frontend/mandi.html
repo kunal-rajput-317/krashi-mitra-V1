@@ -212,32 +212,16 @@
       cursor: pointer; flex-shrink: 0;
     }
 
-    /* Cart badge on topbar */
-    .topbar-cart-btn {
-      position: relative;
-      width: 36px; height: 36px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.20);
-      color: rgba(255,255,255,0.80);
-      font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
-      text-decoration: none;
+    /* ── Topbar WhatsApp Button ── */
+    .topbar-wa-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #25D366; border: none; border-radius: 20px;
+      padding: 7px 14px; color: #fff; font-size: 12px; font-weight: 700;
+      cursor: pointer; text-decoration: none; transition: background 0.15s;
+      flex-shrink: 0; white-space: nowrap;
     }
-    .topbar-cart-btn:hover { background: rgba(255,255,255,0.18); }
-    .cart-badge {
-      position: absolute;
-      top: -4px; right: -4px;
-      background: var(--amber);
-      color: #1a2e1e;
-      font-size: 9px;
-      font-weight: 800;
-      border-radius: 50%;
-      width: 16px; height: 16px;
-      display: none; align-items: center; justify-content: center;
-    }
-    .cart-badge.show { display: flex; }
+    .topbar-wa-btn:hover { background: #128C7E; }
+    .topbar-wa-label { font-family: 'DM Sans','Noto Sans Devanagari',sans-serif; }
 
     /* ══════════════════════════════════════
        MAIN CONTENT
@@ -481,7 +465,7 @@
     .fert-card-buy-btn {
       margin-top: 8px;
       width: 100%;
-      background: var(--green-dark);
+      background: #25D366;
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -493,12 +477,8 @@
       display: flex; align-items: center; justify-content: center; gap: 5px;
       transition: background 0.18s, transform 0.1s;
     }
-    .fert-card-buy-btn:hover { background: var(--green-mid); }
+    .fert-card-buy-btn:hover { background: #128C7E; }
     .fert-card-buy-btn:active { transform: scale(0.97); }
-    .fert-card-buy-btn.in-cart {
-      background: var(--green-pale); color: var(--green-dark);
-      border: 1.5px solid var(--green-light);
-    }
 
     /* Buy btn inside fert modal */
     .fert-modal-buy-btn {
@@ -519,83 +499,84 @@
       border: 1.5px solid var(--green-light); box-shadow: none;
     }
 
+
     /* ══════════════════════════════════════
-       CART DRAWER
+       WHATSAPP ORDER MODAL
     ══════════════════════════════════════ */
-    .cart-overlay {
+    .wa-modal-overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.45); z-index: 900;
-      backdrop-filter: blur(3px);
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      z-index: 3000; align-items: center; justify-content: center; padding: 20px;
     }
-    .cart-overlay.open { display: block; }
-    .cart-drawer {
-      position: fixed; top: 0; right: -400px;
-      width: 360px; max-width: 100vw; height: 100%;
-      background: var(--white); z-index: 950;
-      box-shadow: -8px 0 40px rgba(0,0,0,0.25);
-      display: flex; flex-direction: column;
-      transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+    .wa-modal-overlay.open { display: flex; }
+    .wa-modal-box {
+      background: #fff; border-radius: 20px;
+      width: 100%; max-width: 420px; padding: 24px 22px 20px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28); position: relative;
+      animation: wa-pop 0.28s cubic-bezier(0.34,1.4,0.64,1);
     }
-    .cart-drawer.open { right: 0; }
-    .cart-drawer-header {
-      background: var(--green-dark); color: #fff;
-      padding: 18px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
+    @keyframes wa-pop {
+      from { transform: scale(0.88) translateY(16px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
     }
-    .cart-drawer-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; }
-    .cart-drawer-close {
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px; color: #fff; font-size: 18px;
-      width: 34px; height: 34px;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    .wa-modal-close {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(0,0,0,0.07); border: none; border-radius: 50%;
+      width: 30px; height: 30px; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: background 0.15s;
     }
-    .cart-items-wrap { flex: 1; overflow-y: auto; padding: 16px; }
-    .cart-empty { text-align: center; padding: 48px 20px; }
-    .cart-empty-icon { font-size: 52px; margin-bottom: 12px; }
-    .cart-empty-text { font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif; font-size: 14px; color: var(--text-mid); line-height: 1.6; }
-    .cart-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .cart-item:last-child { border-bottom: none; }
-    .cart-item-emoji {
-      font-size: 36px; width: 52px; height: 52px;
-      background: var(--green-pale); border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    .wa-modal-close:hover { background: rgba(0,0,0,0.15); }
+    .wa-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .wa-modal-icon { font-size: 32px; flex-shrink: 0; }
+    .wa-modal-title {
+      font-family: 'Noto Sans Devanagari','DM Sans',sans-serif;
+      font-size: 16px; font-weight: 800; color: var(--text-dark); line-height: 1.3;
     }
-    .cart-item-info { flex: 1; }
-    .cart-item-name { font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
-    .cart-item-price { font-size: 13px; font-weight: 700; color: var(--green-mid); }
-    .cart-qty-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-    .qty-btn {
-      width: 26px; height: 26px; border-radius: 6px;
+    .wa-modal-subtitle { font-size: 11px; color: var(--text-mid); font-weight: 500; margin-top: 2px; }
+    .wa-modal-product-info {
+      background: var(--green-pale); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 13px; color: var(--text-dark); font-weight: 600; margin-bottom: 14px;
+      font-family: 'Noto Sans Devanagari','DM Sans',sans-serif;
+    }
+    .wa-modal-form { margin-bottom: 14px; }
+    .wa-modal-label {
+      display: block; font-size: 13px; font-weight: 700; color: var(--text-dark);
+      margin-bottom: 6px; font-family: 'Noto Sans Devanagari','DM Sans',sans-serif;
+    }
+    .wa-modal-input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 11px 14px; font-size: 16px; font-weight: 600;
+      font-family: 'DM Sans',sans-serif; color: var(--text-dark);
+      outline: none; transition: border-color 0.2s; margin-bottom: 12px;
+    }
+    .wa-modal-input:focus { border-color: #25D366; }
+    .wa-modal-qty-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .wa-modal-qty-row .wa-modal-label { margin-bottom: 0; }
+    .wa-qty-controls { display: flex; align-items: center; gap: 10px; }
+    .wa-qty-btn {
+      width: 32px; height: 32px; border-radius: 8px;
       border: 1.5px solid var(--border); background: var(--white);
-      color: var(--text-dark); font-size: 14px; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; color: var(--text-dark);
     }
-    .qty-btn:hover { background: var(--green-pale); }
-    .qty-val { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
-    .cart-item-del { background: none; border: none; font-size: 16px; cursor: pointer; opacity: 0.4; padding: 4px; transition: opacity 0.15s; }
-    .cart-item-del:hover { opacity: 0.8; }
-    .cart-footer { padding: 16px 20px; border-top: 1.5px solid var(--border); flex-shrink: 0; background: var(--cream); }
-    .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .cart-total-label { font-size: 13px; color: var(--text-mid); font-weight: 600; }
-    .cart-total-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--green-dark); }
-    .cart-savings { font-size: 11px; color: #2e7d32; font-weight: 600; margin-bottom: 12px; }
-    .btn-checkout {
-      width: 100%; background: var(--green-dark); color: #fff;
-      border: none; border-radius: 12px; padding: 14px 0;
-      font-size: 15px; font-weight: 700;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: background 0.18s; margin-bottom: 8px;
+    .wa-qty-btn:hover { background: var(--green-pale); }
+    .wa-qty-val { font-size: 18px; font-weight: 800; min-width: 24px; text-align: center; color: var(--text-dark); }
+    .wa-modal-total {
+      font-size: 17px; font-weight: 800; color: var(--green-dark);
+      font-family: 'Playfair Display',serif; margin-top: 8px;
     }
-    .btn-checkout:hover { background: var(--green-mid); }
-    .btn-clear-cart {
-      width: 100%; background: none; border: 1.5px solid var(--border);
-      border-radius: 12px; padding: 10px 0; font-size: 13px; font-weight: 600;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      color: var(--text-mid); cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    .wa-confirm-btn {
+      width: 100%; background: #25D366; color: #fff; border: none;
+      border-radius: 12px; padding: 14px 0; font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans','Noto Sans Devanagari',sans-serif;
+      cursor: pointer; transition: background 0.18s, transform 0.1s;
+      margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .btn-clear-cart:hover { border-color: #e53935; color: #e53935; }
+    .wa-confirm-btn:hover { background: #128C7E; }
+    .wa-confirm-btn:active { transform: scale(0.97); }
+    .wa-modal-note { font-size: 11px; color: var(--text-light); text-align: center; font-family: 'DM Sans',sans-serif; line-height: 1.5; }
 
     /* Toast */
     .toast {
@@ -783,6 +764,8 @@
     @media screen and (max-width: 1024px) {
       .topbar-nav { display: none; }
       .topbar-search-btn { display: none; }
+      .topbar-wa-label { display: none; }
+      .topbar-wa-btn { padding: 7px 10px; border-radius: 50%; }
       .topbar-avatar-btn { display: none; }
       .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
       .topbar { padding: 0 12px; height: 54px; }
@@ -894,11 +877,10 @@
   </nav>
 
   <div class="topbar-right">
-    <!-- Cart button -->
-    <button class="topbar-cart-btn" onclick="openCart()" title="Cart">
-      🛒
-      <span class="cart-badge" id="cart-badge">0</span>
-    </button>
+    <!-- WhatsApp Order Button -->
+    <a href="https://wa.me/919870951001" target="_blank" class="topbar-wa-btn" title="WhatsApp पर ऑर्डर करें">
+      <span>💬</span><span class="topbar-wa-label">ऑर्डर करें</span>
+    </a>
 
     <div class="lang-picker" id="lang-picker">
       <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
@@ -1048,9 +1030,9 @@
           </div>
           <div class="fert-modal-crops" id="fert-popup-crops"></div>
 
-          <!-- Add to Cart CTA inside modal -->
-          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="mandiModalCartToggle()">
-            🛒 <span id="fert-modal-cart-label">टोकरी में डालें</span>
+          <!-- WhatsApp Order CTA inside modal -->
+          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="mandiModalWAOrder()" style="background:#25D366">
+            💬 <span id="fert-modal-cart-label">WhatsApp पर ऑर्डर करें</span>
           </button>
         </div>
       </div>
@@ -1058,22 +1040,38 @@
   </div>
 </div>
 
-<!-- ══ CART OVERLAY + DRAWER ══ -->
-<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
-<div class="cart-drawer" id="cart-drawer">
-  <div class="cart-drawer-header">
-    <div class="cart-drawer-title">🛒 आपकी टोकरी</div>
-    <button class="cart-drawer-close" onclick="closeCart()">✕</button>
-  </div>
-  <div class="cart-items-wrap" id="cart-items-wrap"></div>
-  <div class="cart-footer" id="cart-footer" style="display:none;">
-    <div class="cart-total-row">
-      <span class="cart-total-label">कुल राशि</span>
-      <span class="cart-total-val" id="cart-total-val">₹0</span>
+<!-- ══ WHATSAPP ORDER MODAL ══ -->
+<div class="wa-modal-overlay" id="wa-modal" onclick="closeWAModal(event)">
+  <div class="wa-modal-box">
+    <button class="wa-modal-close" onclick="closeWAModal()">✕</button>
+    <div class="wa-modal-header">
+      <span class="wa-modal-icon">💬</span>
+      <div>
+        <div class="wa-modal-title" id="wa-modal-product-name">उत्पाद का नाम</div>
+        <div class="wa-modal-subtitle">WhatsApp पर ऑर्डर करें — तुरंत जवाब मिलेगा</div>
+      </div>
     </div>
-    <div class="cart-savings" id="cart-savings-text"></div>
-    <button class="btn-checkout" onclick="mandiCheckout()">✅ ऑर्डर करें →</button>
-    <button class="btn-clear-cart" onclick="mandiClearCart()">🗑️ टोकरी खाली करें</button>
+    <div class="wa-modal-product-info" id="wa-modal-product-info"></div>
+    <div class="wa-modal-form">
+      <label class="wa-modal-label">📱 आपका मोबाइल नंबर</label>
+      <input type="tel" id="wa-phone-input" class="wa-modal-input"
+        placeholder="जैसे: 9876543210" maxlength="10"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        onkeydown="if(event.key==='Enter')confirmWAOrder()" />
+      <div class="wa-modal-qty-row">
+        <label class="wa-modal-label">📦 मात्रा</label>
+        <div class="wa-qty-controls">
+          <button class="wa-qty-btn" onclick="changeWAQty(-1)">−</button>
+          <span class="wa-qty-val" id="wa-qty-display">1</span>
+          <button class="wa-qty-btn" onclick="changeWAQty(1)">+</button>
+        </div>
+      </div>
+      <div class="wa-modal-total" id="wa-modal-total">कुल: ₹0</div>
+    </div>
+    <button class="wa-confirm-btn" onclick="confirmWAOrder()">
+      💬 WhatsApp पर ऑर्डर करें
+    </button>
+    <div class="wa-modal-note">आपका ऑर्डर सीधे हमारे WhatsApp पर जाएगा। हम 15 मिनट में जवाब देंगे।</div>
   </div>
 </div>
 
@@ -1417,23 +1415,16 @@
               <div class="fert-price">₹${f.price_per_bag}<span> / ${f.bag_size} bag</span></div>
               <div class="fert-use">💡 ${f.use.substring(0, 52)}…</div>
               <div class="fert-card-cta">Tap to view more… →</div>
-              <button class="fert-card-buy-btn ${window.mandiCart && window.mandiCart['fert_'+key] ? 'in-cart' : ''}"
+              <button class="fert-card-buy-btn"
                 id="fert-card-btn-${key}"
-                onclick="event.stopPropagation(); mandiCartToggle('fert_${key}', '${f.name}', ${f.price_per_bag}, '${f.bag_size}', this)">
-                ${window.mandiCart && window.mandiCart['fert_'+key] ? '✅ टोकरी में है' : '🛒 खरीदें'}
+                onclick="event.stopPropagation(); openWAOrderFert('${key}', '${f.name}', ${f.price_per_bag}, '${f.bag_size}')">
+                💬 ऑर्डर करें
               </button>
             </div>
           </div>`;
       }).join('');
 
       window.fertData = Object.fromEntries(items);
-
-      // Populate cart meta for price/name lookup
-      items.forEach(([key, f]) => {
-        const cartKey = 'fert_' + key;
-        window.mandiCartMeta[cartKey] = { name: f.name, price: parseFloat(f.price_per_bag) || 0, unit: f.bag_size, emoji: '🧪' };
-      });
-      updateCartBadge();
 
     } catch (err) {
       grid.innerHTML = `<div class="shop-loading">${t('error_server')}</div>`;
@@ -1491,185 +1482,95 @@
   });
 
   // ══════════════════════════════════════
-  // MANDI CART — shared with shop.html via localStorage 'km_cart'
-  // Keys for mandi fertilizers use 'fert_<key>' prefix to avoid id collision
+  // WHATSAPP ORDER SYSTEM
   // ══════════════════════════════════════
-  window.mandiCart = JSON.parse(localStorage.getItem('km_cart') || '{}');
+  const WA_NUMBER = '919870951001';
+  let _waFertKey  = null;
+  let _waFertName = '';
+  let _waFertPrice = 0;
+  let _waFertUnit  = '';
+  let _waQty = 1;
 
-  // Fertilizer price/name lookup (populated after loadFertilizers)
-  window.mandiCartMeta = {};
-
-  function _saveMandCart() {
-    localStorage.setItem('km_cart', JSON.stringify(window.mandiCart));
-  }
-
-  function _mandiCartCount() {
-    return Object.entries(window.mandiCart)
-      .filter(([k]) => k.startsWith('fert_'))
-      .reduce((a, [, b]) => a + b, 0);
-  }
-
-  function _mandiCartTotal() {
-    return Object.entries(window.mandiCart)
-      .filter(([k]) => k.startsWith('fert_'))
-      .reduce((sum, [k, qty]) => {
-        const meta = window.mandiCartMeta[k];
-        return sum + (meta ? meta.price * qty : 0);
-      }, 0);
-  }
-
-  function updateCartBadge() {
-    const cnt = _mandiCartCount();
-    const badge = document.getElementById('cart-badge');
-    if (!badge) return;
-    badge.textContent = cnt;
-    badge.classList.toggle('show', cnt > 0);
-  }
-
-  function mandiCartToggle(cartKey, name, price, unit, btn) {
-    window.mandiCartMeta[cartKey] = { name, price, unit, emoji: '🧪' };
-    if (window.mandiCart[cartKey] > 0) {
-      delete window.mandiCart[cartKey];
-      showMandiToast('टोकरी से हटाया गया');
-    } else {
-      window.mandiCart[cartKey] = 1;
-      showMandiToast('टोकरी में जोड़ा गया! 🛒');
+  function getSessionId() {
+    let sid = localStorage.getItem('km_session_id');
+    if (!sid) {
+      sid = 'km_' + Math.random().toString(36).substr(2,8);
+      localStorage.setItem('km_session_id', sid);
     }
-    _saveMandCart();
-    updateCartBadge();
-    // Update card button
-    if (btn) {
-      const inCart = window.mandiCart[cartKey] > 0;
-      btn.textContent = inCart ? '✅ टोकरी में है' : '🛒 खरीदें';
-      btn.classList.toggle('in-cart', inCart);
-    }
-    // Update modal btn if open for same key
-    if (window._mandiCurrentFertKey && 'fert_' + window._mandiCurrentFertKey === cartKey) {
-      _updateMandiModalCartBtn(window._mandiCurrentFertKey);
-    }
+    return sid;
   }
 
-  function _updateMandiModalCartBtn(key) {
-    const cartKey = 'fert_' + key;
-    const inCart = window.mandiCart[cartKey] > 0;
-    const btn = document.getElementById('fert-modal-cart-btn');
-    const lbl = document.getElementById('fert-modal-cart-label');
-    if (!btn || !lbl) return;
-    lbl.textContent = inCart ? 'टोकरी में है' : 'टोकरी में डालें';
-    btn.classList.toggle('in-cart', inCart);
+  function openWAOrderFert(key, name, price, unit) {
+    _waFertKey   = key;
+    _waFertName  = name;
+    _waFertPrice = parseFloat(price) || 0;
+    _waFertUnit  = unit;
+    _waQty = 1;
+
+    document.getElementById('wa-modal-product-name').textContent = name;
+    document.getElementById('wa-modal-product-info').textContent =
+      `🧪  ₹${price} / ${unit} bag`;
+    document.getElementById('wa-phone-input').value = '';
+    document.getElementById('wa-qty-display').textContent = 1;
+    document.getElementById('wa-modal-total').textContent = `कुल: ₹${_waFertPrice.toLocaleString('en-IN')}`;
+    document.getElementById('wa-modal').classList.add('open');
+    setTimeout(() => document.getElementById('wa-phone-input').focus(), 200);
   }
 
-  function mandiModalCartToggle() {
+  function mandiModalWAOrder() {
     const key = window._mandiCurrentFertKey;
     if (!key) return;
     const f = window.fertData && window.fertData[key];
-    const cartKey = 'fert_' + key;
-    const price = f ? parseFloat(f.price_per_bag) : 0;
-    const unit  = f ? f.bag_size : '';
-    window.mandiCartMeta[cartKey] = { name: f ? f.name : key, price, unit, emoji: '🧪' };
-
-    if (window.mandiCart[cartKey] > 0) {
-      delete window.mandiCart[cartKey];
-      showMandiToast('टोकरी से हटाया गया');
-    } else {
-      window.mandiCart[cartKey] = 1;
-      showMandiToast('टोकरी में जोड़ा गया! 🛒');
-    }
-    _saveMandCart();
-    updateCartBadge();
-    _updateMandiModalCartBtn(key);
-    // Sync card button if visible
-    const cardBtn = document.getElementById('fert-card-btn-' + key);
-    if (cardBtn) {
-      const inCart = window.mandiCart[cartKey] > 0;
-      cardBtn.textContent = inCart ? '✅ टोकरी में है' : '🛒 खरीदें';
-      cardBtn.classList.toggle('in-cart', inCart);
-    }
+    closeFertModal();
+    openWAOrderFert(key, f ? f.name : key, f ? f.price_per_bag : 0, f ? f.bag_size : '');
   }
 
-  function openCart() {
-    document.getElementById('cart-overlay').classList.add('open');
-    document.getElementById('cart-drawer').classList.add('open');
-    renderMandiCart();
+  function closeWAModal(e) {
+    if (e && e.target !== document.getElementById('wa-modal')) return;
+    document.getElementById('wa-modal').classList.remove('open');
   }
 
-  function closeCart() {
-    document.getElementById('cart-overlay').classList.remove('open');
-    document.getElementById('cart-drawer').classList.remove('open');
+  function changeWAQty(delta) {
+    _waQty = Math.max(1, _waQty + delta);
+    document.getElementById('wa-qty-display').textContent = _waQty;
+    document.getElementById('wa-modal-total').textContent =
+      `कुल: ₹${(_waFertPrice * _waQty).toLocaleString('en-IN')}`;
   }
 
-  function renderMandiCart() {
-    const wrap   = document.getElementById('cart-items-wrap');
-    const footer = document.getElementById('cart-footer');
-    if (!wrap) return;
-
-    const cartEntries = Object.entries(window.mandiCart).filter(([k, q]) => k.startsWith('fert_') && q > 0);
-    if (cartEntries.length === 0) {
-      wrap.innerHTML = `
-        <div class="cart-empty">
-          <div class="cart-empty-icon">🛒</div>
-          <div class="cart-empty-text">टोकरी खाली है।<br>खाद चुनकर जोड़ें।</div>
-        </div>`;
-      if (footer) footer.style.display = 'none';
+  function confirmWAOrder() {
+    const phone = document.getElementById('wa-phone-input').value.trim();
+    if (!phone || phone.length < 10) {
+      document.getElementById('wa-phone-input').style.borderColor = '#e53935';
+      document.getElementById('wa-phone-input').focus();
+      setTimeout(() => document.getElementById('wa-phone-input').style.borderColor = '', 1200);
       return;
     }
-    if (footer) footer.style.display = 'block';
 
-    wrap.innerHTML = cartEntries.map(([k, qty]) => {
-      const meta = window.mandiCartMeta[k] || { name: k, price: 0, unit: '', emoji: '🧪' };
-      return `
-        <div class="cart-item">
-          <div class="cart-item-emoji">${meta.emoji || '🧪'}</div>
-          <div class="cart-item-info">
-            <div class="cart-item-name">${meta.name}</div>
-            <div class="cart-item-price">₹${meta.price} × ${qty} = ₹${meta.price * qty}</div>
-            <div class="cart-qty-row">
-              <button class="qty-btn" onclick="mandiChangeQty('${k}', -1)">−</button>
-              <span class="qty-val">${qty}</span>
-              <button class="qty-btn" onclick="mandiChangeQty('${k}', 1)">+</button>
-            </div>
-          </div>
-          <button class="cart-item-del" onclick="mandiRemoveFromCart('${k}')" title="Remove">🗑️</button>
-        </div>`;
-    }).join('');
+    const orderId  = 'ORD-' + Date.now();
+    const total    = _waFertPrice * _waQty;
+    const sessionId = getSessionId();
 
-    const totalEl = document.getElementById('cart-total-val');
-    if (totalEl) totalEl.textContent = `₹${_mandiCartTotal().toLocaleString('en-IN')}`;
-    const savingsEl = document.getElementById('cart-savings-text');
-    if (savingsEl) savingsEl.textContent = '';
+    const msg =
+`🌾 KrashiMitra Order
+━━━━━━━━━━━━━━━━
+👤 Guest ID: ${sessionId}
+
+📦 Items:
+  • ${_waFertName} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${_waFertUnit} bag)
+
+📱 Phone: ${phone}
+💰 कुल: ₹${total.toLocaleString('en-IN')}
+🆔 Order ID: ${orderId}
+━━━━━━━━━━━━━━━━`;
+
+    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+    document.getElementById('wa-modal').classList.remove('open');
+    showMandiToast('💬 WhatsApp खुल रहा है...', 2000);
+    setTimeout(() => window.open(waUrl, '_blank'), 400);
   }
 
-  function mandiChangeQty(k, delta) {
-    window.mandiCart[k] = (window.mandiCart[k] || 0) + delta;
-    if (window.mandiCart[k] <= 0) delete window.mandiCart[k];
-    _saveMandCart();
-    updateCartBadge();
-    renderMandiCart();
-  }
-
-  function mandiRemoveFromCart(k) {
-    delete window.mandiCart[k];
-    _saveMandCart();
-    updateCartBadge();
-    renderMandiCart();
-    showMandiToast('टोकरी से हटाया गया');
-  }
-
-  function mandiClearCart() {
-    window.mandiCart = {};
-    _saveMandCart();
-    updateCartBadge();
-    renderMandiCart();
-    showMandiToast('टोकरी खाली की गई');
-  }
-
-  function mandiCheckout() {
-    window.mandiCart = {};
-    _saveMandCart();
-    updateCartBadge();
-    closeCart();
-    showMandiToast('✅ ऑर्डर सफलतापूर्वक दिया गया! जल्द डिलीवरी होगी।', 3500);
-  }
+  // Stub — keeps any leftover references safe
+  function updateCartBadge() {}
 
   let _mandiToastTimer = null;
   function showMandiToast(msg, dur = 2200) {
@@ -1683,10 +1584,8 @@
 
   // ══ INIT ══
   document.addEventListener('DOMContentLoaded', () => {
-    window.mandiCart = JSON.parse(localStorage.getItem('km_cart') || '{}');
     setLang(currentLang);
     loadStates();
-    updateCartBadge();
   });
 </script>
 </body>
