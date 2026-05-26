@@ -1545,6 +1545,10 @@
   // WHATSAPP ORDER SYSTEM
   // ══════════════════════════════════════
   const WA_NUMBER = '919870951001';
+
+  // ── Google Apps Script Web App URL (same as shop.html) ──
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwT43qm8xTzCo9u0NBzH5G2x4IWsIeg1AtKsgfqdEB6NTI9IRfpogYDzTCFtSS5PjaZ-A/exec';
+
   let _waFertKey  = null;
   let _waFertName = '';
   let _waFertPrice = 0;
@@ -1558,6 +1562,40 @@
       localStorage.setItem('km_session_id', sid);
     }
     return sid;
+  }
+
+  // Decode JWT payload (base64url → JSON)
+  function decodeJwtPayload(token) {
+    try {
+      const payload = token.split('.')[1];
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64));
+    } catch (e) { return null; }
+  }
+
+  // Returns { id, isGuest }
+  function getUserId() {
+    const token = localStorage.getItem('krishi_token');
+    if (token) {
+      const payload = decodeJwtPayload(token);
+      if (payload && payload.user_id) return { id: String(payload.user_id), isGuest: false };
+    }
+    return { id: getSessionId(), isGuest: true };
+  }
+
+  // POST order to Google Sheets via fetch (no-cors + URL-encoded)
+  function logOrderToSheets(orderData) {
+    if (!GAS_URL) return;
+    const params = new URLSearchParams();
+    Object.entries(orderData).forEach(([k, v]) => params.append(k, String(v)));
+    fetch(GAS_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    params.toString()
+    })
+    .then(() => console.log('Order sent to Sheets ✓'))
+    .catch(err => console.error('Sheets error:', err));
   }
 
   function openWAOrderFert(key, name, price, unit) {
@@ -1608,15 +1646,29 @@
 
     const orderId  = 'ORD-' + Date.now();
     const total    = _waFertPrice * _waQty;
-    const sessionId = getSessionId();
+    const { id: userId, isGuest } = getUserId();
+    const userLabel = isGuest ? `👤 Guest ID: ${userId}` : `👤 User ID: ${userId}`;
+    const itemsLine = `${_waFertName} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${_waFertUnit} bag)`;
+
+    // ── Log order to Google Sheets ──
+    logOrderToSheets({
+      timestamp:  new Date().toISOString(),
+      order_id:   orderId,
+      user_id:    userId,
+      is_guest:   isGuest,
+      items:      itemsLine,
+      total:      total,
+      phone:      phone,
+      status:     'Pending'
+    });
 
     const msg =
 `🌾 KrashiMitra Order
 ━━━━━━━━━━━━━━━━
-👤 Guest ID: ${sessionId}
+${userLabel}
 
 📦 Items:
-  • ${_waFertName} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${_waFertUnit} bag)
+  • ${itemsLine}
 
 📱 Phone: ${phone}
 💰 कुल: ₹${total.toLocaleString('en-IN')}
@@ -1626,7 +1678,8 @@
     const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
     document.getElementById('wa-modal').classList.remove('open');
     showMandiToast('💬 WhatsApp खुल रहा है...', 2000);
-    setTimeout(() => window.open(waUrl, '_blank'), 400);
+    // Open synchronously to avoid Chrome popup blocker
+    window.open(waUrl, '_blank');
   }
 
   // Stub — keeps any leftover references safe

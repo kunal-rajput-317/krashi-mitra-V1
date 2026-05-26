@@ -2438,7 +2438,8 @@ ${userLabel}
     const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
     document.getElementById('wa-modal').classList.remove('open');
     showToast('💬 WhatsApp खुल रहा है...', 2000);
-    setTimeout(() => window.open(waUrl, '_blank'), 400);
+    // Open synchronously to avoid Chrome popup blocker on repeat orders
+    window.open(waUrl, '_blank');
   }
 
   // Stub functions kept so nothing else breaks
