@@ -572,33 +572,102 @@
       justify-content: center; color: #555; transition: background 0.15s;
     }
     .orders-modal-close:hover { background: #e0e0e0; }
+    /* ── Enhanced Order Cards ── */
     .order-card {
-      background: #f9fdf6; border: 1px solid #e8f5e9; border-radius: 14px;
-      padding: 14px 16px; margin-bottom: 12px; transition: box-shadow 0.15s;
+      background: #fff;
+      border: 1.5px solid #e8f5e9;
+      border-radius: 16px;
+      padding: 14px 14px 14px 14px;
+      margin-bottom: 14px;
+      transition: box-shadow 0.18s, border-color 0.18s;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
     }
-    .order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .order-card:hover { box-shadow: 0 6px 24px rgba(27,94,32,0.10); border-color: #a5d6a7; }
+
+    /* Product image column */
+    .order-img-col {
+      flex-shrink: 0;
+      width: 72px; height: 72px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f1f8e9;
+      display: flex; align-items: center; justify-content: center;
+      border: 1.5px solid #e8f5e9;
+    }
+    .order-img-col img {
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 10px;
+    }
+    .order-img-emoji {
+      font-size: 34px; line-height: 1;
+    }
+
+    /* Right info column */
+    .order-info-col {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 6px;
+    }
     .order-card-header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 8px;
+      gap: 6px;
     }
     .order-tracking {
-      font-size: 13px; font-weight: 800; color: #1b5e20;
+      font-size: 12px; font-weight: 800; color: #1b5e20;
       font-family: 'DM Sans', monospace;
-      background: #e8f5e9; padding: 3px 10px; border-radius: 8px;
+      background: #e8f5e9; padding: 3px 9px; border-radius: 7px;
+      letter-spacing: 0.5px;
     }
     .order-status {
-      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap;
+      flex-shrink: 0;
     }
-    .order-status.pending  { background: #fff3e0; color: #e65100; }
-    .order-status.verified { background: #e8f5e9; color: #2e7d32; }
+    .order-status.pending   { background: #fff3e0; color: #e65100; }
+    .order-status.verified  { background: #e8f5e9; color: #2e7d32; }
     .order-status.purchased { background: #e3f2fd; color: #1565c0; }
     .order-status.delivered { background: #f3e5f5; color: #7b1fa2; }
-    .order-product { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 4px; }
-    .order-meta {
-      font-size: 12px; color: #777; display: flex; flex-wrap: wrap; gap: 10px;
+    .order-status.deleivered{ background: #f3e5f5; color: #7b1fa2; }
+    .order-status.cancelled { background: #fce4ec; color: #c62828; }
+    .order-status.dispatched{ background: #e0f7fa; color: #00695c; }
+
+    .order-product {
+      font-size: 14px; font-weight: 700; color: #1a2e1e;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .order-meta span { white-space: nowrap; }
+
+    /* Detail row: qty, price, total */
+    .order-price-row {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .order-price-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #f9fdf6; border: 1px solid #e0f0e3;
+      border-radius: 8px; padding: 3px 9px;
+      font-size: 12px; font-weight: 600; color: #2d6a4f;
+    }
+    .order-total-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+      border-radius: 8px; padding: 3px 9px;
+      font-size: 12px; font-weight: 800; color: #1b5e20;
+    }
+
+    /* Meta row: phone, date */
+    .order-meta {
+      font-size: 11.5px; color: #888;
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .order-meta span { white-space: nowrap; display: flex; align-items: center; gap: 3px; }
+
+    /* Source badge */
+    .order-source-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px;
+      background: #fff8e1; color: #f57f17; border: 1px solid #ffe082;
+      text-transform: uppercase;
+    }
+
     .orders-empty {
       text-align: center; padding: 32px 16px; color: #aaa;
     }
@@ -2481,27 +2550,56 @@
       }
 
       container.innerHTML = orders.map(o => {
-        const statusClass = o.status.toLowerCase();
-        const statusLabel = o.status === 'Pending' ? '⏳ Pending'
-          : o.status === 'Verified' ? '✅ Verified'
-          : o.status === 'Purchased' ? '💳 Purchased'
-          : o.status === 'Delivered' ? '📦 Delivered' : o.status;
+        const statusRaw   = (o.status || 'Pending');
+        const statusClass = statusRaw.toLowerCase().replace(/\s+/g, '');
+        const statusLabel = statusRaw === 'Pending'    ? '⏳ Pending'
+          : statusRaw === 'Verified'   ? '✅ Verified'
+          : statusRaw === 'Purchased'  ? '💳 Purchased'
+          : statusRaw === 'Delivered'  ? '📦 Delivered'
+          : statusRaw === 'Deleivered' ? '📦 Delivered'
+          : statusRaw === 'Dispatched' ? '🚚 Dispatched'
+          : statusRaw === 'Cancelled'  ? '❌ Cancelled'
+          : statusRaw;
+
         const date = new Date(o.created_at).toLocaleDateString('hi-IN', {
           day: 'numeric', month: 'short', year: 'numeric',
           hour: '2-digit', minute: '2-digit'
         });
+
+        // Find matching product for image
+        const matchedProduct = (typeof PRODUCTS !== 'undefined')
+          ? PRODUCTS.find(p => p.id === o.product_id
+              || (p.name_hi && p.name_hi === o.product_name)
+              || (p.name_en && o.product_name && o.product_name.toLowerCase().includes(p.name_en.toLowerCase().split(' ')[0])))
+          : null;
+        const productImg   = matchedProduct?.img || '';
+        const productEmoji = matchedProduct?.emoji || '🛒';
+
+        const imgHtml = productImg
+          ? `<img src="${productImg}" alt="${o.product_name}" onerror="this.outerHTML='<span class=order-img-emoji>${productEmoji}</span>'">`
+          : `<span class="order-img-emoji">${productEmoji}</span>`;
+
+        const sourceBadge = o.source && o.source !== 'shop'
+          ? `<span class="order-source-badge">${o.source}</span>` : '';
+
         return `
           <div class="order-card">
-            <div class="order-card-header">
-              <span class="order-tracking">${o.tracking_code}</span>
-              <span class="order-status ${statusClass}">${statusLabel}</span>
-            </div>
-            <div class="order-product">${o.product_name}</div>
-            <div class="order-meta">
-              <span>📦 ${o.quantity} × ₹${o.unit_price}</span>
-              <span>💰 ₹${o.total.toLocaleString('en-IN')}</span>
-              <span>📱 ${o.phone}</span>
-              <span>📅 ${date}</span>
+            <div class="order-img-col">${imgHtml}</div>
+            <div class="order-info-col">
+              <div class="order-card-header">
+                <span class="order-tracking">${o.tracking_code}</span>
+                <span class="order-status ${statusClass}">${statusLabel}</span>
+              </div>
+              <div class="order-product">${o.product_name}</div>
+              <div class="order-price-row">
+                <span class="order-price-chip">📦 ${o.quantity} × ₹${o.unit_price}</span>
+                <span class="order-total-chip">💰 ₹${Number(o.total).toLocaleString('en-IN')}</span>
+                ${sourceBadge}
+              </div>
+              <div class="order-meta">
+                <span>📱 ${o.phone || '—'}</span>
+                <span>📅 ${date}</span>
+              </div>
             </div>
           </div>`;
       }).join('');
@@ -2529,9 +2627,10 @@
   }
 
   function openWAOrderFromModal() {
-    if (!_currentFertId) return;
+    const pid = _currentFertId;  // save before close clears it
+    if (!pid) return;
     closeFertModal();
-    openWAOrder(_currentFertId);
+    openWAOrder(pid);
   }
 
   function closeWAModal(e) {
@@ -2562,9 +2661,34 @@
     const name = getProductName(p);
     const unit = getProductUnit(p);
     const { id: userId, isGuest } = getUserId();
-    const userLabel = isGuest ? `👤 Guest ID: ${userId}` : `👤 User ID: ${userId}`;
+    const userLabel = isGuest ? `👤 Guest: ${userId}` : `👤 User ID: ${userId}`;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('hi-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
-    // ── Save order to NeonDB via backend ──
+    // Close modal & open WA immediately (avoid popup blocker)
+    document.getElementById('wa-modal').classList.remove('open');
+
+    const buildMsg = (trackingCode) => {
+      const tkLine = trackingCode ? `🆔 Tracking: ${trackingCode}` : '';
+      return `🌾 *KrashiMitra Order*
+━━━━━━━━━━━━━━━━
+${tkLine ? tkLine + '\n' : ''}${userLabel}
+
+📦 *Product:* ${name}
+   Product ID: #${p.id}
+   Category: ${categoryLabel(p.cat)}
+
+🔢 Qty: ${_waQty} × ₹${p.price.toLocaleString('en-IN')} (${unit})
+💰 *Total: ₹${total.toLocaleString('en-IN')}*
+
+📱 Phone: ${phone}
+📅 Date: ${dateStr}
+━━━━━━━━━━━━━━━━
+🛒 Source: KrashiMitra Shop
+💬 कृपया इस ऑर्डर की पुष्टि करें`;
+    };
+
+    // Save to NeonDB, then open WA with tracking code
     logOrderToBackend({
       product_name: name,
       product_id:   p.id,
@@ -2575,29 +2699,15 @@
       source:       'shop',
       session_id:   isGuest ? userId : undefined
     }, (trackingCode) => {
-      // Show tracking code in toast if available
+      const msg = buildMsg(trackingCode);
+      const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank');
       if (trackingCode) {
         showToast(`✅ ऑर्डर सेव! Tracking: ${trackingCode}`, 4000);
+      } else {
+        showToast('💬 WhatsApp ऑर्डर भेजा गया', 2000);
       }
     });
-
-    // Build WhatsApp message (open immediately, tracking code added async)
-    const msg =
-`🌾 KrashiMitra Order
-━━━━━━━━━━━━━━━━
-${userLabel}
-
-📦 Items:
-  • ${name} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${unit})
-
-📱 Phone: ${phone}
-💰 कुल: ₹${total.toLocaleString('en-IN')}
-━━━━━━━━━━━━━━━━`;
-
-    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-    document.getElementById('wa-modal').classList.remove('open');
-    showToast('💬 WhatsApp खुल रहा है...', 2000);
-    window.open(waUrl, '_blank');
   }
 
   // Stub functions kept so nothing else breaks
