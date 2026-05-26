@@ -217,7 +217,7 @@ def merge_cart(
     }
 
 
-# ── DELETE /cart/clear ────────────────────────────────────────
+# ── DELETE /cart/clear ───────────────────────────────────────
 
 @router.delete("/clear")
 def clear_cart(
@@ -238,4 +238,4 @@ def clear_cart(
         return {"success": False, "message": "session_id या token जरूरी है।"}
 
     db.commit()
-    return {"success": True}
+    return {"success": True}  
