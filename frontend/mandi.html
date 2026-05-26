@@ -1547,7 +1547,7 @@
   const WA_NUMBER = '919870951001';
 
   // ── Google Apps Script Web App URL (same as shop.html) ──
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwT43qm8xTzCo9u0NBzH5G2x4IWsIeg1AtKsgfqdEB6NTI9IRfpogYDzTCFtSS5PjaZ-A/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzUSp8BSsQp-wHwuLwVUFkHruk7-GE445CkIFC8qMOeJJ8MvX0sfxigC24x-6SEl-hwpg/exec';
 
   let _waFertKey  = null;
   let _waFertName = '';
@@ -1583,19 +1583,15 @@
     return { id: getSessionId(), isGuest: true };
   }
 
-  // POST order to Google Sheets via fetch (no-cors + URL-encoded)
+  // Log order to Google Sheets via image beacon GET (zero CORS issues)
   function logOrderToSheets(orderData) {
     if (!GAS_URL) return;
     const params = new URLSearchParams();
     Object.entries(orderData).forEach(([k, v]) => params.append(k, String(v)));
-    fetch(GAS_URL, {
-      method: 'POST',
-      mode:   'no-cors',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    params.toString()
-    })
-    .then(() => console.log('Order sent to Sheets ✓'))
-    .catch(err => console.error('Sheets error:', err));
+    const img = new Image();
+    img.onload  = () => console.log('Order logged to Sheets ✓');
+    img.onerror = () => console.log('Order sent to Sheets (beacon fired)');
+    img.src = GAS_URL + '?' + params.toString();
   }
 
   function openWAOrderFert(key, name, price, unit) {
