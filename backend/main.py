@@ -13,18 +13,22 @@
 #   ✅ search     → routes/search.py     + services/search_service.py  ← NEW
 # ============================================================
 
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
+load_dotenv()
+
 from backend.routes import chat, weather, mandi
-import os
+
+BASE_DIR = Path(__file__).resolve().parents[1]
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = int(os.getenv("APP_PORT", "8000"))
 DEBUG    = os.getenv("DEBUG", "true").lower() == "true"
-
-from dotenv import load_dotenv
-load_dotenv()
 
 from backend.database.db import MandiPrice, get_db, init_db
 
@@ -36,6 +40,7 @@ from backend.routes.chatbot    import router as chatbot_router
 from backend.routes.auth       import router as auth_router
 from backend.routes.profile    import router as profile_router
 from backend.routes.search     import router as search_router   # NEW
+
 
 from backend.services.weather_scheduler import start_scheduler  # WEATHER CACHE
 
@@ -88,6 +93,7 @@ app.include_router(chatbot_router)
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
+
 app.include_router(chat.router)
 app.include_router(weather.router)
 app.include_router(mandi.router)
@@ -127,7 +133,5 @@ async def root():
 async def health():
     return {"status": "ok"}
 
-from fastapi.staticfiles import StaticFiles
-
 # Add this AFTER all app.include_router() lines, at the bottom
-app.mount("/admin", StaticFiles(directory="admin", html=True), name="admin")
+app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")
