@@ -717,17 +717,56 @@
       font-size: 14px; color: var(--text-mid);
     }
 
-    /* Shimmer */
+    /* Shimmer — base pulse */
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .shimmer-block {
+      background: linear-gradient(90deg, #e8f0eb 25%, #d4e6da 50%, #e8f0eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+
+    /* Fertilizer card skeleton */
+    .fert-skeleton {
+      background: white;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      min-height: 130px;
+    }
+    .fert-skeleton-img {
+      width: 88px; min-width: 88px;
+      background: linear-gradient(90deg, #dceee2 25%, #c8e0cf 50%, #dceee2 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      flex-shrink: 0;
+    }
+    .fert-skeleton-body {
+      padding: 14px 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      justify-content: center;
+    }
+    .fert-skeleton-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    /* Mandi table shimmer (unchanged flat style) */
     .mandi-shimmer {
       background: linear-gradient(90deg, #e8f0eb 25%, #d4e6da 50%, #e8f0eb 75%);
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite;
       border-radius: var(--radius);
       height: 56px; margin-bottom: 8px;
-    }
-    @keyframes shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
     }
 
     /* ══════════════════════════════════════
@@ -949,10 +988,10 @@
   <div id="shop-fertilizer" style="display:none">
     <div class="shop-section-title" data-t="fert_title">🧪 Fertilizer Prices — Government MRP</div>
     <div id="fertilizer-grid" class="fertilizer-grid">
-      <!-- shimmer placeholders -->
-      <div class="mandi-shimmer"></div>
-      <div class="mandi-shimmer"></div>
-      <div class="mandi-shimmer"></div>
+      <!-- card skeletons shown until JS replaces them -->
+      <div class="fert-skeleton"><div class="fert-skeleton-img"></div><div class="fert-skeleton-body"><div class="fert-skeleton-row"><div class="shimmer-block" style="height:14px;width:55%;"></div><div class="shimmer-block" style="height:18px;width:22%;border-radius:10px;"></div></div><div class="shimmer-block" style="height:22px;width:38%;"></div><div class="shimmer-block" style="height:11px;width:90%;"></div><div class="shimmer-block" style="height:30px;width:100%;border-radius:8px;margin-top:4px;"></div></div></div>
+      <div class="fert-skeleton"><div class="fert-skeleton-img"></div><div class="fert-skeleton-body"><div class="fert-skeleton-row"><div class="shimmer-block" style="height:14px;width:60%;"></div><div class="shimmer-block" style="height:18px;width:20%;border-radius:10px;"></div></div><div class="shimmer-block" style="height:22px;width:42%;"></div><div class="shimmer-block" style="height:11px;width:85%;"></div><div class="shimmer-block" style="height:30px;width:100%;border-radius:8px;margin-top:4px;"></div></div></div>
+      <div class="fert-skeleton"><div class="fert-skeleton-img"></div><div class="fert-skeleton-body"><div class="fert-skeleton-row"><div class="shimmer-block" style="height:14px;width:50%;"></div><div class="shimmer-block" style="height:18px;width:24%;border-radius:10px;"></div></div><div class="shimmer-block" style="height:22px;width:35%;"></div><div class="shimmer-block" style="height:11px;width:92%;"></div><div class="shimmer-block" style="height:30px;width:100%;border-radius:8px;margin-top:4px;"></div></div></div>
     </div>
   </div>
 
@@ -1386,10 +1425,30 @@
   // ══════════════════════════════════════
   // FERTILIZER CARDS
   // ══════════════════════════════════════
+  function _fertSkeletonHTML() {
+    return `
+      <div class="fert-skeleton">
+        <div class="fert-skeleton-img"></div>
+        <div class="fert-skeleton-body">
+          <div class="fert-skeleton-row">
+            <div class="shimmer-block" style="height:14px;width:55%;"></div>
+            <div class="shimmer-block" style="height:18px;width:22%;border-radius:10px;"></div>
+          </div>
+          <div class="shimmer-block" style="height:22px;width:38%;"></div>
+          <div class="shimmer-block" style="height:11px;width:90%;"></div>
+          <div class="shimmer-block" style="height:11px;width:70%;"></div>
+          <div class="shimmer-block" style="height:30px;width:100%;border-radius:8px;margin-top:4px;"></div>
+        </div>
+      </div>`;
+  }
+
+  let _fertLoaded = false;
+
   async function loadFertilizers() {
+    if (_fertLoaded) return;   // don't re-fetch if already loaded
     const grid = document.getElementById('fertilizer-grid');
-    // Show shimmer
-    grid.innerHTML = '<div class="mandi-shimmer"></div><div class="mandi-shimmer"></div><div class="mandi-shimmer"></div>';
+    // Show card-shaped skeleton loaders
+    grid.innerHTML = _fertSkeletonHTML().repeat(6);
     try {
       const res   = await fetch('https://krashi-mitra-v1.onrender.com/shop/fertilizers');
       const data  = await res.json();
@@ -1425,6 +1484,7 @@
       }).join('');
 
       window.fertData = Object.fromEntries(items);
+      _fertLoaded = true;
 
     } catch (err) {
       grid.innerHTML = `<div class="shop-loading">${t('error_server')}</div>`;
@@ -1571,6 +1631,15 @@
 
   // Stub — keeps any leftover references safe
   function updateCartBadge() {}
+
+  // Stub — modal cart btn state (WhatsApp-only flow, no cart)
+  function _updateMandiModalCartBtn(key) {
+    const btn   = document.getElementById('fert-modal-cart-btn');
+    const label = document.getElementById('fert-modal-cart-label');
+    if (!btn || !label) return;
+    btn.style.background = '#25D366';
+    label.textContent = 'WhatsApp पर ऑर्डर करें';
+  }
 
   let _mandiToastTimer = null;
   function showMandiToast(msg, dur = 2200) {

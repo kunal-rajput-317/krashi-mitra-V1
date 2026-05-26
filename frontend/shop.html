@@ -2497,6 +2497,10 @@
   // WHATSAPP ORDER SYSTEM
   // ══════════════════════════════════════
   const WA_NUMBER = '919870951001'; // KrashiMitra WhatsApp
+
+  // ── Google Apps Script Web App URL (replace with your deployed URL) ──
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbznr08xX6_OErsU1azZi83w2X08N0Phse1a130-WSwL6FoSvYJ96c8lSxrRIejXaqe3Ag/exec';
+
   let _waProductId = null;
   let _waQty = 1;
 
@@ -2507,6 +2511,41 @@
       localStorage.setItem('km_session_id', sid);
     }
     return sid;
+  }
+
+  // Decode JWT payload (base64url → JSON), no library needed
+  function decodeJwtPayload(token) {
+    try {
+      const payload = token.split('.')[1];
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const json = atob(base64);
+      return JSON.parse(json);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Returns { id, isGuest } — logged-in user_id from JWT, or guest session id
+  function getUserId() {
+    const token = localStorage.getItem('krishi_token');
+    if (token) {
+      const payload = decodeJwtPayload(token);
+      if (payload && payload.user_id) {
+        return { id: String(payload.user_id), isGuest: false };
+      }
+    }
+    return { id: getSessionId(), isGuest: true };
+  }
+
+  // Fire-and-forget: POST order to Google Sheets via Apps Script
+  function logOrderToSheets(orderData) {
+    if (!GAS_URL || GAS_URL === 'https://script.google.com/macros/s/AKfycbznr08xX6_OErsU1azZi83w2X08N0Phse1a130-WSwL6FoSvYJ96c8lSxrRIejXaqe3Ag/exec') return;
+    fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors', // Apps Script doesn't send CORS headers on POST
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    }).catch(() => {}); // silent fail — WhatsApp order still goes through
   }
 
   function openWAOrder(productId) {
@@ -2559,15 +2598,29 @@
     const total = p.price * _waQty;
     const name = getProductName(p);
     const unit = getProductUnit(p);
-    const sessionId = getSessionId();
+    const { id: userId, isGuest } = getUserId();
+    const userLabel = isGuest ? `👤 Guest ID: ${userId}` : `👤 User ID: ${userId}`;
+    const itemsLine = `${name} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${unit})`;
+
+    // ── Log order to Google Sheets ──
+    logOrderToSheets({
+      timestamp:  new Date().toISOString(),
+      order_id:   orderId,
+      user_id:    userId,
+      is_guest:   isGuest,
+      items:      itemsLine,
+      total:      total,
+      phone:      phone,
+      status:     'Pending'
+    });
 
     const msg =
 `🌾 KrashiMitra Order
 ━━━━━━━━━━━━━━━━
-👤 Guest ID: ${sessionId}
+${userLabel}
 
 📦 Items:
-  • ${name} × ${_waQty} = ₹${total.toLocaleString('en-IN')}  (${unit})
+  • ${itemsLine}
 
 📱 Phone: ${phone}
 💰 कुल: ₹${total.toLocaleString('en-IN')}
