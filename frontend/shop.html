@@ -1542,8 +1542,8 @@
       </div>
     </div>
     <button class="topbar-search-btn" title="Search">🔍</button>
-    <!-- <div class="topbar-avatar-btn">👤</div> -->
-    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
+    <!-- <div class="topbar-avatar-btn">👤-</div> -->
+    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">77👨‍🌾</a>
 
   </div>
 </div>
@@ -2343,11 +2343,14 @@
     // With no-cors we cannot read the response body — that's expected and fine.
     fetch(GAS_URL, {
       method: 'POST',
-      mode: 'no-cors',                            // ← KEY FIX: prevents CORS block
-      headers: { 'Content-Type': 'text/plain' },  // text/plain avoids preflight
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderData)
     })
-    .then(() => console.log('Order logged to Sheets ✓'))
+    .then(response => {
+      if (response.ok) console.log('Order logged to Sheets ✓');
+      else console.error('Sheets response error:', response.status);
+    })
     .catch(err => console.error('Sheets fetch failed:', err));
   }
 
