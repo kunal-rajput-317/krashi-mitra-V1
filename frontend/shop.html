@@ -1542,8 +1542,8 @@
       </div>
     </div>
     <button class="topbar-search-btn" title="Search">🔍</button>
-    <!-- <div class="topbar-avatar-btn">👤</div> -->
-    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
+    <!-- <div class="topbar-avatar-btn">👤-</div> -->
+    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">77👨‍🌾</a>
 
   </div>
 </div>
@@ -1728,6 +1728,9 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Hidden iframe for Google Sheets form submission (no CORS issues) -->
+<iframe name="gas-submit-frame" id="gas-submit-frame" style="display:none"></iframe>
 
 <!-- ══ BOTTOM NAV (Mobile) ══ -->
 <nav class="bottom-nav">
@@ -2298,7 +2301,7 @@
   const WA_NUMBER = '919870951001'; // KrashiMitra WhatsApp
 
   // ── Google Apps Script Web App URL (replace with your deployed URL) ──
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycby6vnC2Wv18EHN2PCD2QaVBiGjcy0SoCJ-jtVipPcCV2RrlOp_bRwdPVXlOzruJ_rop4A/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwT43qm8xTzCo9u0NBzH5G2x4IWsIeg1AtKsgfqdEB6NTI9IRfpogYDzTCFtSS5PjaZ-A/exec';
 
   let _waProductId = null;
   let _waQty = 1;
@@ -2336,19 +2339,21 @@
     return { id: getSessionId(), isGuest: true };
   }
 
-  // POST order to Google Sheets via Apps Script
+  // POST order to Google Sheets via fetch (no-cors + URL-encoded form data)
+  // Google Apps Script processes doPost() BEFORE its redirect, so data is received.
   function logOrderToSheets(orderData) {
     if (!GAS_URL) return;
-    // Use no-cors so the browser doesn't block the cross-origin request to Apps Script.
-    // With no-cors we cannot read the response body — that's expected and fine.
+    const params = new URLSearchParams();
+    Object.entries(orderData).forEach(([k, v]) => params.append(k, String(v)));
+
     fetch(GAS_URL, {
       method: 'POST',
-      mode: 'no-cors',                            // ← KEY FIX: prevents CORS block
-      headers: { 'Content-Type': 'text/plain' },  // text/plain avoids preflight
-      body: JSON.stringify(orderData)
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    params.toString()
     })
-    .then(() => console.log('Order logged to Sheets ✓'))
-    .catch(err => console.error('Sheets fetch failed:', err));
+    .then(() => console.log('Order sent to Sheets ✓'))
+    .catch(err => console.error('Sheets error:', err));
   }
 
   function openWAOrder(productId) {
