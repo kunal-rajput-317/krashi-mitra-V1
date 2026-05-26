@@ -24,3 +24,4 @@ ollama                    # Ollama fallback
 asyncpg                 # PostgreSQL async driver
 pgvector                  # vector similarity in Postgres
 resend
+python-dotenv

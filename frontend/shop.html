@@ -2411,11 +2411,14 @@
     // Render free tier cold-starts can take up to 50s — try twice with longer timeout
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        // Use /health endpoint for ping — always returns 200 {"status":"ok"} when backend is up
-        const r = await fetch(`${API_BASE}/health`, {
+        // Use no-cors so CORS headers don't block the ping — opaque response still
+        // means the server is alive and reachable; a throw means it's down/offline
+        await fetch(`${API_BASE}/health`, {
+          mode:   'no-cors',
           signal: AbortSignal.timeout(15000)
         });
-        if (r.ok) { _backendAlive = true; return true; }
+        // If fetch resolves (even opaque), server is up
+        _backendAlive = true; return true;
       } catch { /* timeout or network error — try again */ }
     }
     _backendAlive = false;
