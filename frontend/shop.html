@@ -1729,6 +1729,9 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Hidden iframe for Google Sheets form submission (no CORS issues) -->
+<iframe name="gas-submit-frame" id="gas-submit-frame" style="display:none"></iframe>
+
 <!-- ══ BOTTOM NAV (Mobile) ══ -->
 <nav class="bottom-nav">
   <div class="bottom-nav-items">
@@ -2336,22 +2339,35 @@
     return { id: getSessionId(), isGuest: true };
   }
 
-  // POST order to Google Sheets via Apps Script
+  // POST order to Google Sheets via hidden form + iframe (bypasses CORS entirely)
   function logOrderToSheets(orderData) {
     if (!GAS_URL) return;
-    // Use no-cors so the browser doesn't block the cross-origin request to Apps Script.
-    // With no-cors we cannot read the response body — that's expected and fine.
-    fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    })
-    .then(response => {
-      if (response.ok) console.log('Order logged to Sheets ✓');
-      else console.error('Sheets response error:', response.status);
-    })
-    .catch(err => console.error('Sheets fetch failed:', err));
+    try {
+      // Create a temporary hidden form
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = GAS_URL;
+      form.target = 'gas-submit-frame';   // submit into hidden iframe
+      form.style.display = 'none';
+
+      // Add each field as a hidden input
+      Object.entries(orderData).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = key;
+        input.value = String(value);
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+
+      // Clean up the form after submission
+      setTimeout(() => form.remove(), 2000);
+      console.log('Order submitted to Sheets via form ✓');
+    } catch (err) {
+      console.error('Sheets form submit failed:', err);
+    }
   }
 
   function openWAOrder(productId) {
