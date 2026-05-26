@@ -2298,7 +2298,7 @@
   const WA_NUMBER = '919870951001'; // KrashiMitra WhatsApp
 
   // ── Google Apps Script Web App URL (replace with your deployed URL) ──
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzzhVnddpzwXOzXTtyRlh2dP__zvrzqHgXsHdwvlrV012b4qeiGaRonfayvI3k3pyxDVw/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycby6vnC2Wv18EHN2PCD2QaVBiGjcy0SoCJ-jtVipPcCV2RrlOp_bRwdPVXlOzruJ_rop4A/exec';
 
   let _waProductId = null;
   let _waQty = 1;
@@ -2338,14 +2338,16 @@
 
   // POST order to Google Sheets via Apps Script
   function logOrderToSheets(orderData) {
-    if (!GAS_URL || GAS_URL === 'https://script.google.com/macros/s/AKfycbzzhVnddpzwXOzXTtyRlh2dP__zvrzqHgXsHdwvlrV012b4qeiGaRonfayvI3k3pyxDVw/exec') return;
+    if (!GAS_URL) return;
+    // Use no-cors so the browser doesn't block the cross-origin request to Apps Script.
+    // With no-cors we cannot read the response body — that's expected and fine.
     fetch(GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight block
+      mode: 'no-cors',                            // ← KEY FIX: prevents CORS block
+      headers: { 'Content-Type': 'text/plain' },  // text/plain avoids preflight
       body: JSON.stringify(orderData)
     })
-    .then(r => r.json())
-    .then(res => { if (!res.success) console.error('Sheets error:', res.error); })
+    .then(() => console.log('Order logged to Sheets ✓'))
     .catch(err => console.error('Sheets fetch failed:', err));
   }
 
