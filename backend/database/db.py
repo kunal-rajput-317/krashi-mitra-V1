@@ -297,6 +297,23 @@ def _ensure_postgres_columns():
             ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
             ("session_id", "VARCHAR"),
         ],
+        "orders": [
+            ("tracking_code", "VARCHAR NOT NULL"),
+            ("user_id", "INTEGER"),
+            ("user_email", "VARCHAR"),
+            ("user_name", "VARCHAR"),
+            ("session_id", "VARCHAR"),
+            ("is_guest", "BOOLEAN DEFAULT TRUE"),
+            ("product_name", "VARCHAR NOT NULL"),
+            ("product_id", "INTEGER"),
+            ("quantity", "INTEGER DEFAULT 1"),
+            ("unit_price", "FLOAT"),
+            ("total", "FLOAT"),
+            ("phone", "VARCHAR"),
+            ("source", "VARCHAR DEFAULT 'shop'"),
+            ("status", "VARCHAR DEFAULT 'Pending'"),
+            ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
     }
 
     with engine.begin() as conn:
