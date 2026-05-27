@@ -68,7 +68,7 @@ def is_weather_question(q: str) -> bool:
 
 
 @router.post("/ask")
-def ask(body: Question, db: Session = Depends(get_db)):
+async def ask(body: Question, db: Session = Depends(get_db)):
 
     # ── Weather redirect ──────────────────────────────────────
     if is_weather_question(body.q):
@@ -136,7 +136,7 @@ def ask(body: Question, db: Session = Depends(get_db)):
 
     # ── Step 5: Build prompt + call AI ───────────────────────
     prompt = build_prompt(body.q, body.district, body.language, full_context, history_text)
-    answer, source = call_ai(prompt)
+    answer, source = await call_ai(prompt)
 
     # ── Step 6: Save to DB ────────────────────────────────────
     _save_to_db(db, body, body.q, answer)

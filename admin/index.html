@@ -1358,6 +1358,7 @@ function typewriterAdminMsg(text, source, speed = 18) {
   });
 }
 
+
 async function sendAdminChat() {
   const input = document.getElementById('admin-chat-input');
   const q     = input.value.trim();
@@ -1387,6 +1388,10 @@ async function sendAdminChat() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ q, crop, language: lang, district: 'Meerut' })
     });
+    if (!r.ok) {
+      const errText = await r.text();
+      throw new Error(`Server error ${r.status}: ${errText || 'Empty response'}`);
+    }
     const d = await r.json();
 
     const answer = d.answer || d.message || 'कोई उत्तर नहीं मिला।';
@@ -1413,7 +1418,7 @@ async function sendAdminChat() {
 
   } catch(e) {
     removeAdminTyping();
-    addAdminMsg('❌ Server से connect नहीं हो पाया।', 'bot', 'error');
+    addAdminMsg('❌ Server से connect नहीं हो पाया: ' + e.message, 'bot', 'error');
   }
 
   btn.disabled = false;
@@ -1459,6 +1464,10 @@ async function testRAG() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ q, crop, language: 'hindi', district: 'Meerut' })
     });
+    if (!r.ok) {
+      const errText = await r.text();
+      throw new Error(`Server error ${r.status}: ${errText || 'Empty response'}`);
+    }
     const d = await r.json();
 
     clearInterval(stepTimer);

@@ -7,6 +7,7 @@
 import json
 import os
 import requests
+import httpx
 
 # ── Bad answer phrases — never cache these ────────────────────
 BAD_ANSWER_PHRASES = [
@@ -111,7 +112,7 @@ ANSWER:"""
 
 
 # ── Gemini with multi-key rotation ───────────────────────────
-def call_gemini(prompt: str) -> str:
+async def call_gemini(prompt: str) -> str:
     """
     Try all configured Gemini keys in order.
     Supports GEMINI_API_KEY, GEMINI_API_KEY2/GEMINI_API_KEY_2,
@@ -153,15 +154,16 @@ def call_gemini(prompt: str) -> str:
             },
         }
         try:
-            resp = requests.post(url, json=payload, timeout=float(os.getenv("GEMINI_TIMEOUT", "15")))
-            if resp.status_code == 429:
-                print(f"[Gemini] {key_name} quota exceeded, trying next key...")
-                last_error = f"{key_name}: 429 quota"
-                continue
-            resp.raise_for_status()
-            answer = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-            print(f"[Gemini] Success with {key_name}")
-            return answer
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, json=payload, timeout=float(os.getenv("GEMINI_TIMEOUT", "30")))
+                if resp.status_code == 429:
+                    print(f"[Gemini] {key_name} quota exceeded, trying next key...")
+                    last_error = f"{key_name}: 429 quota"
+                    continue
+                resp.raise_for_status()
+                answer = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                print(f"[Gemini] Success with {key_name}")
+                return answer
         except Exception as e:
             print(f"[Gemini] {key_name} failed: {e}")
             last_error = str(e)
@@ -171,27 +173,28 @@ def call_gemini(prompt: str) -> str:
 
 
 # ── Ollama local fallback ─────────────────────────────────────
-def call_ollama(prompt: str) -> str:
+async def call_ollama(prompt: str) -> str:
     """Call local Ollama. Timeout=40s for 7B models."""
     hindi_prefix = "You must respond ONLY in Hindi. हिंदी में उत्तर दें।\n\n"
     model = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
     base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
-    response = requests.post(
-        f"{base_url}/api/generate",
-        json={"model": model, "prompt": hindi_prefix + prompt, "stream": False},
-        timeout=40,   # increased from 30 → 120 for 7B models
-    )
-    return response.json()["response"]
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{base_url}/api/generate",
+            json={"model": model, "prompt": hindi_prefix + prompt, "stream": False},
+            timeout=40,
+        )
+        return response.json()["response"]
 
 
 # ── Smart call: Gemini → Ollama ───────────────────────────────
-def call_ai(prompt: str) -> tuple[str, str]:
+async def call_ai(prompt: str) -> tuple[str, str]:
     """
     Returns: (answer, source)
     source = "gemini" | "ollama" | "error"
     """
     try:
-        answer = call_gemini(prompt)
+        answer = await call_gemini(prompt)
         if is_good_answer(answer):
             return answer, "gemini"
         print(f"[AI] Gemini returned bad answer, trying Ollama")
@@ -206,7 +209,7 @@ def call_ai(prompt: str) -> tuple[str, str]:
         )
 
     try:
-        answer = call_ollama(prompt)
+        answer = await call_ollama(prompt)
         if is_good_answer(answer):
             return answer, "ollama"
         print(f"[AI] Ollama returned bad answer")
