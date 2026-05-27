@@ -93,6 +93,7 @@ def ask(body: Question, db: Session = Depends(get_db)):
                     "source":   "cache",
                     "cached":   True,
                     "rag_chunks": 0,
+                    "api_usage_saved": True,
                 }
         except Exception as e:
             print(f"[Cache] Search failed: {e}")
@@ -154,6 +155,7 @@ def ask(body: Question, db: Session = Depends(get_db)):
         "answer":      answer,
         "source":      source,
         "cached":      False,
+        "api_usage_saved": False,
         "rag_chunks":  rag_chunks,
         "rag_context": rag_context[:300] if rag_context else "",
     }

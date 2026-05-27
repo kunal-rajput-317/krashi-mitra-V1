@@ -846,7 +846,24 @@
 
 <script>
 const API = 'https://krashi-mitra-v1.onrender.com';
-const AUTH = 'Basic ' + btoa('admin:krashi2025');
+
+function getAdminAuth() {
+  let encoded = localStorage.getItem('km_admin_auth');
+  if (!encoded) {
+    const user = prompt('Admin username', 'admin') || 'admin';
+    const pass = prompt('Admin password') || '';
+    encoded = btoa(`${user}:${pass}`);
+    localStorage.setItem('km_admin_auth', encoded);
+  }
+  return 'Basic ' + encoded;
+}
+
+function resetAdminAuth() {
+  localStorage.removeItem('km_admin_auth');
+  toast('Admin login reset. Refresh and enter credentials again.', 'ok');
+}
+
+const AUTH = getAdminAuth();
 
 // ── Clock ──────────────────────────────────────────────────────────
 setInterval(() => {

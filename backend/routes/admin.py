@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pathlib import Path
@@ -8,8 +10,8 @@ router  = APIRouter(prefix="/admin")
 security = HTTPBasic()
 
 # ── Simple hardcoded auth (replace with DB auth when going live) ──────
-ADMIN_USER = "admin"
-ADMIN_PASS = "krashi2025"   # change before deployment
+ADMIN_USER = os.getenv("ADMIN_USER", "admin")
+ADMIN_PASS = os.getenv("ADMIN_PASS", "krashi2025")   # set env vars before deployment
 
 UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)

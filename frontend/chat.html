@@ -1016,8 +1016,11 @@
   }
 
   function getAnswerMeta(data) {
+    const ragInfo = Number.isFinite(data.rag_chunks) && data.rag_chunks > 0
+      ? ` · RAG chunks: ${data.rag_chunks}`
+      : '';
     if (data.cached || data.source === 'cache') return { text: 'API usage saved - answered from cache', cacheHit: true };
-    if (data.source) return { text: `Answered by ${String(data.source).toUpperCase()}`, cacheHit: false };
+    if (data.source) return { text: `Answered by ${String(data.source).toUpperCase()}${ragInfo}`, cacheHit: false };
     return null;
   }
 
