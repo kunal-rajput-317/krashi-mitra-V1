@@ -363,6 +363,7 @@
 
     /* Suggestion chips — shown before first message */
     .chat-suggestions {
+      position: relative;
       padding: 0 28px 16px;
       display: flex;
       flex-wrap: wrap;
@@ -474,9 +475,12 @@
        CHAT INPUT BAR
     ══════════════════════════════════════ */
     .chat-input-bar {
+      position: fixed;
+      width: 100%;
+      bottom: 67px;
       background: var(--white);
       border-top: 1.5px solid var(--border);
-      padding: 12px 20px;
+      padding: 12px 40px;
       display: flex;
       align-items: flex-end;
       gap: 10px;
@@ -698,7 +702,7 @@
       .bottom-nav-item.active .bnav-label { color: var(--amber); }
 
       body { padding-bottom: 70px; }
-      .site-footer { display: none; }
+      .site-footer { display: flex; }
     }
 
     @supports (padding: max(0px)) {
@@ -815,17 +819,17 @@
 
 क्या पूछना है? 👇</div>
       </div>
+      <!-- Suggestion chips -->
+      <div class="chat-suggestions" id="chat-suggestions">
+        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌾 गेहूँ में पीली पत्ती</span>
+        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🎋 गन्ने में लाल सड़न</span>
+        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🍚 धान में खाद कब डालें</span>
+        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🥔 आलू में झुलसा रोग</span>
+        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌻 सरसों बुवाई का समय</span>
+        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🧪 यूरिया कितना डालें</span>
+      </div>
     </div>
 
-    <!-- Suggestion chips -->
-    <div class="chat-suggestions" id="chat-suggestions">
-      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌾 गेहूँ में पीली पत्ती</span>
-      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🎋 गन्ने में लाल सड़न</span>
-      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🍚 धान में खाद कब डालें</span>
-      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🥔 आलू में झुलसा रोग</span>
-      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌻 सरसों बुवाई का समय</span>
-      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🧪 यूरिया कितना डालें</span>
-    </div>
 
     <!-- Image preview strip -->
     <div id="chat-img-preview">
@@ -1134,7 +1138,7 @@ Always end with an encouraging note or offer to help further.`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'gemeini-flash-2.0',
           max_tokens: 1000,
           messages
         })

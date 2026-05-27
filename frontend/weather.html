@@ -320,24 +320,100 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-    #weather-district {
+
+    /* ── Searchable combo-box ── */
+    .wx-search-wrap {
       flex: 1;
       min-width: 200px;
-      font-size: 15px;
-      padding: 11px 16px;
-      border-radius: 12px;
-      border: 1.5px solid var(--border);
+      position: relative;
+    }
+    .wx-search-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       background: var(--white);
-      color: var(--text-dark);
-      min-height: 46px;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      cursor: pointer;
-      appearance: auto;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
       box-shadow: var(--shadow);
-      outline: none;
       transition: border-color 0.2s;
     }
-    #weather-district:focus { border-color: var(--green-mid); }
+    .wx-search-wrap:focus-within .wx-search-input-row {
+      border-color: var(--green-mid);
+    }
+    .wx-search-icon { font-size: 15px; opacity: 0.55; flex-shrink: 0; }
+    .wx-search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: var(--text-dark);
+      background: transparent;
+    }
+    .wx-search-input::placeholder { color: var(--text-light); }
+    .wx-search-clear {
+      font-size: 13px;
+      color: var(--text-light);
+      cursor: pointer;
+      flex-shrink: 0;
+      line-height: 1;
+      display: none;
+      padding: 2px 4px;
+      border-radius: 50%;
+      transition: background 0.15s, color 0.15s;
+    }
+    .wx-search-clear:hover { background: #f0f0f0; color: var(--text-dark); }
+    .wx-search-clear.visible { display: inline; }
+
+    /* Dropdown list */
+    .wx-district-list {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 300;
+      list-style: none;
+      padding: 6px 0;
+    }
+    .wx-district-list.open { display: block; }
+    .wx-district-list li {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: var(--text-dark);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.12s;
+    }
+    .wx-district-list li:hover,
+    .wx-district-list li.focused {
+      background: var(--green-pale);
+      color: var(--green-dark);
+    }
+    .wx-district-list li .wx-match-highlight { color: var(--green-mid); font-weight: 700; }
+    .wx-district-list li .wx-div-badge {
+      font-size: 10px;
+      color: var(--text-light);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .wx-district-list .wx-no-results {
+      text-align: center;
+      padding: 16px;
+      color: var(--text-light);
+      font-size: 13px;
+      cursor: default;
+    }
+    .wx-district-list .wx-no-results:hover { background: none; }
 
     .wx-age-pill {
       display: inline-flex;
@@ -777,8 +853,8 @@
         </button>
       </div>
     </div>
-    <button class="topbar-search-btn" title="Search">🔍</button>
-    <!-- <div class="topbar-avatar-btn">👨‍🌾</div> -->
+    
+<!-- <div class="topbar-avatar-btn">👨‍🌾</div> -->
     <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
 
   </div>
@@ -789,7 +865,28 @@
 
   <!-- District selector + age pill -->
   <div class="wx-selector-row">
-    <select id="weather-district" onchange="fetchWeather()">
+
+    <!-- Searchable combo-box wrapper -->
+    <div class="wx-search-wrap" id="wx-search-wrap">
+      <div class="wx-search-input-row">
+        <span class="wx-search-icon">🔍</span>
+        <input
+          type="text"
+          id="wx-search-input"
+          class="wx-search-input"
+          placeholder="Search district… (e.g. Bijnor)"
+          autocomplete="off"
+          oninput="wxFilterDistricts()"
+          onfocus="wxOpenDropdown()"
+          onkeydown="wxSearchKeydown(event)"
+        />
+        <span class="wx-search-clear" id="wx-search-clear" onclick="wxClearSearch()" title="Clear">✕</span>
+      </div>
+      <ul class="wx-district-list" id="wx-district-list" role="listbox"></ul>
+    </div>
+
+    <!-- Hidden select kept intact for fetchWeather() value reading -->
+    <select id="weather-district" style="display:none;" onchange="fetchWeather()">
       <optgroup label="── Agra Division ──">
         <option value="Agra">Agra</option><option value="Firozabad">Firozabad</option>
         <option value="Mainpuri">Mainpuri</option><option value="Mathura">Mathura</option>
@@ -868,6 +965,7 @@
         <option value="Jaunpur">Jaunpur</option><option value="Ghazipur">Ghazipur</option>
       </optgroup>
     </select>
+
     <div class="wx-age-pill" id="wx-age-pill">🕐 --</div>
   </div>
 
@@ -1204,9 +1302,142 @@
     }
   }
 
+  // ══════════════════════════════════════
+  // SEARCHABLE DISTRICT COMBO-BOX
+  // ══════════════════════════════════════
+
+  function wxGetAllDistricts() {
+    const sel = document.getElementById('weather-district');
+    const result = [];
+    sel.querySelectorAll('optgroup').forEach(grp => {
+      const divLabel = grp.label.replace(/^──\s*/, '').replace(/\s*──$/, '').replace(' Division', '').trim();
+      grp.querySelectorAll('option').forEach(opt => {
+        result.push({ value: opt.value, label: opt.text, division: divLabel });
+      });
+    });
+    return result;
+  }
+
+  let wxFocusedIndex = -1;
+
+  function wxHighlight(text, query) {
+    if (!query) return text;
+    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return text;
+    return text.slice(0, idx)
+      + '<span class="wx-match-highlight">' + text.slice(idx, idx + query.length) + '</span>'
+      + text.slice(idx + query.length);
+  }
+
+  function wxOpenDropdown() {
+    const list = document.getElementById('wx-district-list');
+    list.classList.add('open');
+    if (list.children.length === 0) wxFilterDistricts();
+  }
+
+  function wxCloseDropdown() {
+    document.getElementById('wx-district-list').classList.remove('open');
+    wxFocusedIndex = -1;
+  }
+
+  function wxFilterDistricts() {
+    const q = document.getElementById('wx-search-input').value.trim();
+    const clear = document.getElementById('wx-search-clear');
+    clear.classList.toggle('visible', q.length > 0);
+
+    const all = wxGetAllDistricts();
+    const filtered = q
+      ? all.filter(d => d.label.toLowerCase().includes(q.toLowerCase()))
+      : all;
+
+    const list = document.getElementById('wx-district-list');
+    list.classList.add('open');
+    list.innerHTML = '';
+    wxFocusedIndex = -1;
+
+    if (filtered.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'wx-no-results';
+      li.textContent = 'No districts found';
+      list.appendChild(li);
+      return;
+    }
+
+    filtered.forEach((d) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'option');
+      li.dataset.value = d.value;
+      li.innerHTML = '<span>\uD83D\uDCCD ' + wxHighlight(d.label, q) + '</span><span class="wx-div-badge">' + d.division + '</span>';
+      li.addEventListener('mousedown', e => {
+        e.preventDefault();
+        wxSelectDistrict(d.value, d.label);
+      });
+      list.appendChild(li);
+    });
+  }
+
+  function wxSelectDistrict(value, label) {
+    const sel = document.getElementById('weather-district');
+    sel.value = value;
+    const input = document.getElementById('wx-search-input');
+    input.value = label;
+    document.getElementById('wx-search-clear').classList.add('visible');
+    wxCloseDropdown();
+    fetchWeather();
+  }
+
+  function wxClearSearch() {
+    const input = document.getElementById('wx-search-input');
+    input.value = '';
+    document.getElementById('wx-search-clear').classList.remove('visible');
+    wxFilterDistricts();
+    input.focus();
+  }
+
+  function wxSearchKeydown(e) {
+    const list = document.getElementById('wx-district-list');
+    const items = [...list.querySelectorAll('li:not(.wx-no-results)')];
+    if (!list.classList.contains('open')) { wxOpenDropdown(); return; }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      wxFocusedIndex = Math.min(wxFocusedIndex + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      wxFocusedIndex = Math.max(wxFocusedIndex - 1, 0);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (wxFocusedIndex >= 0 && items[wxFocusedIndex]) {
+        const val = items[wxFocusedIndex].dataset.value;
+        const lbl = items[wxFocusedIndex].querySelector('span').textContent.replace('📍 ', '').trim();
+        wxSelectDistrict(val, lbl);
+      }
+      return;
+    } else if (e.key === 'Escape') {
+      wxCloseDropdown();
+      return;
+    }
+
+    items.forEach((li, i) => li.classList.toggle('focused', i === wxFocusedIndex));
+    if (items[wxFocusedIndex]) items[wxFocusedIndex].scrollIntoView({ block: 'nearest' });
+  }
+
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('wx-search-wrap');
+    if (wrap && !wrap.contains(e.target)) wxCloseDropdown();
+  });
+
   // ══ INIT ══
   document.addEventListener('DOMContentLoaded', () => {
     setLang(currentLang);
+
+    // Pre-fill search input with the default selected district
+    const sel = document.getElementById('weather-district');
+    const selectedOpt = sel.options[sel.selectedIndex];
+    if (selectedOpt) {
+      document.getElementById('wx-search-input').value = selectedOpt.text;
+    }
+
     fetchWeather();
   });
 </script>
