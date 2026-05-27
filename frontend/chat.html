@@ -987,6 +987,20 @@
   let chatHistory   = [];
   let isBotTyping   = false;
   let pendingImage  = null; // base64 string
+  const CHAT_API_BASE = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
+
+  function getChatLanguage() {
+    const map = { hi: 'hindi', en: 'english', kn: 'kannada' };
+    return map[currentLang] || 'hindi';
+  }
+
+  function detectCropKey(text) {
+    const q = (text || '').toLowerCase();
+    if (q.includes('ganna') || q.includes('sugarcane') || q.includes('cane') || q.includes('गन्न') || q.includes('ganne')) return 'sugarcane_up';
+    if (q.includes('dhan') || q.includes('rice') || q.includes('paddy') || q.includes('धान')) return 'rice_up';
+    if (q.includes('wheat') || q.includes('gehu') || q.includes('गेह') || q.includes('गेंह')) return 'wheat_up';
+    return 'wheat_up';
+  }
 
   // ── Auto-resize textarea ──
   function autoResize(el) {
@@ -1123,29 +1137,22 @@
     showTyping();
 
     try {
-      const systemPrompt = `You are KrashiMitra AI, a helpful agricultural assistant for Indian farmers. 
-You speak primarily in ${currentLang === 'en' ? 'English' : currentLang === 'kn' ? 'Kannada' : 'Hindi'} but understand all three languages.
-You help with: crop diseases, fertilizer advice, sowing/harvest timings, weather-based farming tips, and crop diagnosis from photos.
-Be concise, practical, and use simple language a farmer can understand.
-Format responses clearly with bullet points when listing multiple items.
-Always end with an encouraging note or offer to help further.`;
-
-      const messages = [
-        { role: 'user', content: systemPrompt + '\n\nConversation history:\n' + JSON.stringify(chatHistory.slice(-6)) + '\n\nCurrent message: ' + (typeof userContent === 'string' ? userContent : text || '[image sent]') }
-      ];
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const q = text || 'Image uploaded. Please ask the farmer to describe the crop problem in words.';
+      const res = await fetch(`${CHAT_API_BASE}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gemeini-flash-2.0',
-          max_tokens: 1000,
-          messages
+          q,
+          crop: detectCropKey(q),
+          language: getChatLanguage(),
+          district: 'Uttar Pradesh'
         })
       });
 
-      const data = await res.json();
-      const reply = data.content?.map(b => b.text || '').join('\n').trim()
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
+
+      const reply = (data.answer || data.message || '').trim()
                     || 'माफ करें, कोई जवाब नहीं मिला। कृपया दोबारा पूछें।';
 
       removeTyping();

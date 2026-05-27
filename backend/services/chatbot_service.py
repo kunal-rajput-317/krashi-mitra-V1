@@ -83,8 +83,8 @@ def build_prompt(question: str, district: str, language: str,
     """Build final prompt — strict retrieval-first instructions."""
     lang_instruction = (
         "तुम्हें केवल सरल हिंदी में जवाब देना है। English बिल्कुल मत लिखो।"
-        if language == "hindi"
-        else "Answer in simple English only."
+        if (language or "").lower() in ("hindi", "hi")
+        else ("Answer only in simple Kannada." if (language or "").lower() in ("kannada", "kn") else "Answer in simple English only.")
     )
     context_block = context.strip() if context.strip() else "No specific crop data available."
 
@@ -114,20 +114,29 @@ ANSWER:"""
 def call_gemini(prompt: str) -> str:
     """
     Try all configured Gemini keys in order.
-    Supports GEMINI_API_KEY, GEMINI_API_KEY_2, GEMINI_API_KEY_3.
-    Skips 429 (quota) and tries next key automatically.
+    Supports GEMINI_API_KEY, GEMINI_API_KEY2/GEMINI_API_KEY_2,
+    and GEMINI_API_KEY3/GEMINI_API_KEY_3.
+    Tries the next key automatically when the current key fails.
     """
     GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
     # Collect all configured keys
     keys = []
-    for key_name in ["GEMINI_API_KEY", "GEMINI_API_KEY_2", "GEMINI_API_KEY_3"]:
+    seen = set()
+    for key_name in [
+        "GEMINI_API_KEY",
+        "GEMINI_API_KEY2",
+        "GEMINI_API_KEY_2",
+        "GEMINI_API_KEY3",
+        "GEMINI_API_KEY_3",
+    ]:
         k = os.getenv(key_name, "").strip()
-        if k:
+        if k and k not in seen:
             keys.append((key_name, k))
+            seen.add(k)
 
     if not keys:
-        raise ValueError("No GEMINI_API_KEY set in .env")
+        raise ValueError("No Gemini API key set in environment")
 
     last_error = None
     for key_name, api_key in keys:
