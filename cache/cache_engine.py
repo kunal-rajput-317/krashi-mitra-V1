@@ -21,6 +21,9 @@ MAX_CACHE_SIZE       = 1000
 # ── In-memory index (loaded once, updated on write) ──────────
 _index: list[dict] | None = None   # list of {question, answer, embedding, ...}
 
+def _normalize_question(text: str) -> str:
+    return " ".join((text or "").strip().lower().split())
+
 def _get_index() -> list[dict]:
     """Load cache into memory once. Subsequent calls return cached list."""
     global _index
@@ -85,6 +88,18 @@ def search_cache(question: str) -> dict | None:
     if not index:
         return None
 
+    normalized_q = _normalize_question(question)
+    for entry in index:
+        if _normalize_question(entry.get("question", "")) == normalized_q:
+            entry["hits"] = entry.get("hits", 0) + 1
+            _persist()
+            return {
+                "answer":     entry["answer"],
+                "score":      1.0,
+                "source":     entry.get("source", "cache"),
+                "original_q": entry["question"],
+            }
+
     q_vec = _embed(question)
     best_score = 0.0
     best_idx   = -1
@@ -121,6 +136,11 @@ def save_to_cache(question: str, answer: str, source: str = "ai") -> bool:
         return False
 
     index = _get_index()
+    normalized_q = _normalize_question(question)
+    for entry in index:
+        if _normalize_question(entry.get("question", "")) == normalized_q:
+            return False
+
     q_vec = _embed(question)
 
     # Check for near-duplicate

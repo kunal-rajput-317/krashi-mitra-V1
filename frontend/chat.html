@@ -440,6 +440,19 @@
       color: #fff;
       border-bottom-right-radius: 4px;
     }
+    .msg-meta {
+      display: block;
+      margin-top: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      line-height: 1.35;
+      color: var(--text-light);
+      white-space: normal;
+    }
+    .msg-meta.cache-hit {
+      color: var(--green-dark);
+      font-weight: 700;
+    }
 
     /* Typing indicator */
     .typing-indicator {
@@ -1002,6 +1015,12 @@
     return 'wheat_up';
   }
 
+  function getAnswerMeta(data) {
+    if (data.cached || data.source === 'cache') return { text: 'API usage saved - answered from cache', cacheHit: true };
+    if (data.source) return { text: `Answered by ${String(data.source).toUpperCase()}`, cacheHit: false };
+    return null;
+  }
+
   // ── Auto-resize textarea ──
   function autoResize(el) {
     el.style.height = 'auto';
@@ -1156,7 +1175,7 @@
                     || 'माफ करें, कोई जवाब नहीं मिला। कृपया दोबारा पूछें।';
 
       removeTyping();
-      appendMessage('bot', reply);
+      appendMessage('bot', reply, null, getAnswerMeta(data));
       chatHistory.push({ role: 'assistant', content: reply });
 
     } catch (err) {
@@ -1168,7 +1187,7 @@
   // ══════════════════════════════════════
   // UI HELPERS
   // ══════════════════════════════════════
-  function appendMessage(role, text, imageDataUrl = null) {
+  function appendMessage(role, text, imageDataUrl = null, meta = null) {
     const container = document.getElementById('chat-messages');
     const div = document.createElement('div');
     div.className = `chat-msg ${role}`;
@@ -1190,6 +1209,12 @@
       const span = document.createElement('span');
       span.textContent = text;
       bubble.appendChild(span);
+    }
+    if (meta && meta.text) {
+      const metaEl = document.createElement('span');
+      metaEl.className = `msg-meta${meta.cacheHit ? ' cache-hit' : ''}`;
+      metaEl.textContent = meta.text;
+      bubble.appendChild(metaEl);
     }
 
     div.appendChild(avatar);
