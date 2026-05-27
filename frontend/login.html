@@ -255,6 +255,37 @@
     .step { display: none; }
     .step.active { display: block; }
 
+    /* ── Cooldown warning bar ── */
+    .cooldown-warning {
+      background: #fff8e1;
+      border: 1.5px solid #e9a825;
+      border-radius: var(--radius-sm);
+      padding: 10px 14px 8px;
+      margin-bottom: 12px;
+      display: none;
+      text-align: center;
+    }
+    .cooldown-warning.show { display: block; }
+    .cooldown-warning .cw-msg {
+      font-size: 13px;
+      font-weight: 600;
+      color: #7c4f2f;
+      margin-bottom: 7px;
+    }
+    .cooldown-warning .cw-track {
+      background: #fde68a;
+      border-radius: 20px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .cooldown-warning .cw-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #e9a825, #f59e0b);
+      border-radius: 20px;
+      width: 100%;
+      transition: width 1s linear;
+    }
+
     /* Mobile adjustments */
     @media screen and (max-width: 480px) {
       .page-wrapper { align-items: flex-end; padding: 0; }
@@ -288,6 +319,11 @@
       <div class="auth-modal-logo">🌾कृषि मित्र</div>
       <div class="auth-modal-title">वापस आए! Welcome Back</div>
       <div class="auth-modal-sub">अपने account में login करें</div>
+
+      <div class="cooldown-warning" id="login-cooldown-warning">
+        <div class="cw-msg" id="cw-msg"></div>
+        <div class="cw-track"><div class="cw-bar" id="cw-bar"></div></div>
+      </div>
 
       <div class="auth-error"  id="login-error"></div>
       <div class="auth-success" id="login-success"></div>
@@ -341,8 +377,8 @@
       </div>
 
       <div class="auth-field">
-        <label>Confirm Password</label>
-        <input type="password" id="signup-confirm-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password">
+        <label>Confirm Password / पुष्टि करें</label>
+        <input type="password" id="signup-confirm-password" placeholder="••••••••" autocomplete="new-password">
       </div>
 
       <button class="auth-btn" id="signup-btn" onclick="doSignup()">
@@ -354,7 +390,6 @@
       </div>
     </div>
 
-    <!-- ── STEP 3: OTP ── -->
     <!-- STEP: Forgot Password -->
     <div class="step" id="step-forgot">
       <div class="auth-modal-logo">🔐</div>
@@ -392,12 +427,12 @@
         <input type="text" id="reset-otp" maxlength="6" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
       </div>
       <div class="auth-field">
-        <label>New Password</label>
-        <input type="password" id="reset-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password">
+        <label>New Password / नया पासवर्ड</label>
+        <input type="password" id="reset-password" placeholder="••••••••" autocomplete="new-password">
       </div>
       <div class="auth-field">
-        <label>Confirm New Password</label>
-        <input type="password" id="reset-confirm-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password">
+        <label>Confirm New Password / पुष्टि करें</label>
+        <input type="password" id="reset-confirm-password" placeholder="••••••••" autocomplete="new-password">
       </div>
 
       <button class="auth-btn" id="reset-btn" onclick="doResetPassword()">
@@ -412,6 +447,7 @@
       </div>
     </div>
 
+    <!-- STEP: OTP Verification -->
     <div class="step" id="step-otp">
       <div class="auth-modal-logo">📨</div>
       <div class="auth-modal-title">Email Verify करें</div>
@@ -454,6 +490,16 @@
   let pendingResetEmail = "";
   let loginCooldownTimer = null;
   let loginCooldownActive = false;
+  let loginAttempts = 0;  // track failed login attempts client-side
+
+  // Progressive delay schedule: triggered after 2 wrong attempts
+  // attempt 2 → 15s, attempt 4 → 30s, attempt 6+ → 60s
+  function getClientCooldownSeconds(attempts) {
+    if (attempts >= 6) return 10060;
+    if (attempts >= 4) return 300;
+    if (attempts >= 2) return 30;
+    return 0;
+  }
 
   // ══════════════════════════════════════
   // STEP NAVIGATION
@@ -492,27 +538,50 @@
   }
 
   // ══════════════════════════════════════
-  // TOKEN HELPERS
+  // COOLDOWN / TOKEN HELPERS
   // ══════════════════════════════════════
-  function setLoginCooldown(seconds) {
-    const btn = document.getElementById("login-btn");
+  function setLoginCooldown(seconds, reason) {
+    const btn     = document.getElementById("login-btn");
+    const warning = document.getElementById("login-cooldown-warning");
+    const cwMsg   = document.getElementById("cw-msg");
+    const cwBar   = document.getElementById("cw-bar");
+
     clearInterval(loginCooldownTimer);
     loginCooldownActive = true;
-    let remaining = Math.max(1, Number(seconds) || 60);
+
+    let total     = Math.max(1, Number(seconds) || 15);
+    let remaining = total;
+
     btn.disabled = true;
+    warning.classList.add("show");
+    cwBar.style.transition = "none";
+    cwBar.style.width      = "100%";
+
     const tick = () => {
-      btn.innerText = `Try again in ${remaining}s`;
-      remaining -= 1;
-      if (remaining < 0) {
+      const label = remaining > 0
+        ? `⏳ ${remaining}s बाद try करें — ${reason || "सुरक्षा के लिए प्रतीक्षा करें"}`
+        : "";
+      cwMsg.innerText  = label;
+      btn.innerText    = remaining > 0 ? `🔒 ${remaining}s में unlock होगा` : "Login करें →";
+      // shrink bar proportionally
+      const pct = Math.max(0, (remaining / total) * 100);
+      cwBar.style.transition = "width 1s linear";
+      cwBar.style.width = pct + "%";
+
+      if (remaining <= 0) {
         clearInterval(loginCooldownTimer);
         loginCooldownActive = false;
         btn.disabled = false;
-        btn.innerText = "Login à¤•à¤°à¥‡à¤‚ â†’";
+        btn.innerText = "Login करें →";
+        warning.classList.remove("show");
       }
+      remaining -= 1;
     };
+
     tick();
     loginCooldownTimer = setInterval(tick, 1000);
   }
+
   function startForgotFromLogin() {
     const email = document.getElementById("login-email").value.trim();
     if (email) document.getElementById("forgot-email").value = email;
@@ -527,6 +596,8 @@
   // ══════════════════════════════════════
   async function doLogin() {
     clearAuthMsg("login-error", "login-success");
+    // Reset forgot-link visibility only if no prior failed attempts
+    if (loginAttempts === 0) document.getElementById("forgot-link").style.display = "none";
     const email    = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
 
@@ -546,15 +617,29 @@
         setToken(data.data.token);
         authOk("login-success", "✅ Login हो गया! Redirecting...");
         setTimeout(() => {
-          // Redirect back to main app (adjust path as needed)
           window.location.href = "profile.html";
         }, 800);
       } else {
         const info = data.data || {};
-        document.getElementById("forgot-link").style.display = info.forgot_available ? "block" : "none";
-        const attempts = Number.isFinite(info.attempts_remaining) ? ` Attempts left: ${info.attempts_remaining}.` : "";
-        authErr("login-error", (data.message || "Login failed. Email ya password check karein.") + attempts);
-        if (info.locked) setLoginCooldown(info.retry_after_seconds || 60);
+        loginAttempts += 1;
+
+        // Show forgot-password after 1st wrong attempt
+        if (loginAttempts >= 1 || info.forgot_available) {
+          document.getElementById("forgot-link").style.display = "block";
+        }
+
+        const attemptsLeft = Number.isFinite(info.attempts_remaining)
+          ? ` Attempts remaining: ${info.attempts_remaining}.`
+          : "";
+        authErr("login-error", (data.message || "Login failed. Email या password check करें।") + attemptsLeft);
+
+        // Client-side progressive delay: kicks in at attempt 2, 4, 6+
+        const clientDelay = getClientCooldownSeconds(loginAttempts);
+        if (info.locked) {
+          setLoginCooldown(info.retry_after_seconds || 60, "Account temporarily locked");
+        } else if (clientDelay > 0) {
+          setLoginCooldown(clientDelay, `${loginAttempts} गलत प्रयास`);
+        }
       }
     } catch (err) {
       authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
@@ -605,6 +690,8 @@
     }
   }
 
+  // ══════════════════════════════════════
+  // FORGOT / RESET PASSWORD
   // ══════════════════════════════════════
   async function doForgotPassword(resend = false) {
     clearAuthMsg("forgot-error", "forgot-success", "reset-error", "reset-success");
@@ -679,6 +766,7 @@
     }
   }
 
+  // ══════════════════════════════════════
   // OTP
   // ══════════════════════════════════════
   function otpNext(el, nextId) {
