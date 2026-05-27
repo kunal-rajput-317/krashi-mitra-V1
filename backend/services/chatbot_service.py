@@ -153,7 +153,7 @@ def call_gemini(prompt: str) -> str:
             },
         }
         try:
-            resp = requests.post(url, json=payload, timeout=15)
+            resp = requests.post(url, json=payload, timeout=float(os.getenv("GEMINI_TIMEOUT", "15")))
             if resp.status_code == 429:
                 print(f"[Gemini] {key_name} quota exceeded, trying next key...")
                 last_error = f"{key_name}: 429 quota"
@@ -175,8 +175,9 @@ def call_ollama(prompt: str) -> str:
     """Call local Ollama. Timeout=40s for 7B models."""
     hindi_prefix = "You must respond ONLY in Hindi. हिंदी में उत्तर दें।\n\n"
     model = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
     response = requests.post(
-        "http://localhost:11434/api/generate",
+        f"{base_url}/api/generate",
         json={"model": model, "prompt": hindi_prefix + prompt, "stream": False},
         timeout=40,   # increased from 30 → 120 for 7B models
     )
@@ -196,6 +197,13 @@ def call_ai(prompt: str) -> tuple[str, str]:
         print(f"[AI] Gemini returned bad answer, trying Ollama")
     except Exception as e:
         print(f"[AI] Gemini failed: {e}")
+
+    if os.getenv("OLLAMA_ENABLED", "false").lower() != "true":
+        print("[AI] Ollama fallback disabled")
+        return (
+            "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+            "error"
+        )
 
     try:
         answer = call_ollama(prompt)

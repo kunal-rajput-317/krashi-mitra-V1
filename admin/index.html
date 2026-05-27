@@ -900,7 +900,16 @@ async function loadStatus() {
     const r = await fetch(`${API}/admin/status`, {
       headers: { Authorization: AUTH, 'Content-Type': 'application/json' }
     });
-    const d = await r.json();
+    const raw = await r.text();
+    let d = {};
+    try {
+      d = raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      throw new Error(`Server returned non-JSON ${r.status}: ${raw.slice(0, 160) || 'empty response'}`);
+    }
+    if (!r.ok) {
+      throw new Error(`Server error ${r.status}: ${d.detail || d.message || raw.slice(0, 160) || 'empty response'}`);
+    }
 
     setCard('s-gemini', d.gemini_configured ? '✓' : '✗',
             d.gemini_configured ? 'ok' : 'err',
