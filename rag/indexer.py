@@ -52,7 +52,19 @@ def get_embedding_function():
 # ── Get or create ChromaDB collection ────────────────────────────────
 def get_collection():
     import chromadb
-    client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    # Ensure directory exists before creating client
+    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        # chromadb >= 0.5.0 style
+        client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    except TypeError:
+        # chromadb 0.4.x fallback with Settings
+        from chromadb.config import Settings
+        client = chromadb.Client(Settings(
+            chroma_db_impl="duckdb+parquet",
+            persist_directory=str(CHROMA_DIR),
+            anonymized_telemetry=False,
+        ))
     collection = client.get_or_create_collection(
         name=COLLECTION_NAME,
         metadata={"hnsw:space": "cosine"},

@@ -84,10 +84,16 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    Base.metadata.create_all(bind=engine)   # ← create tables (cart, etc.)
-    init_db()
-    print("✅ Krishi Mitra database initialized.")
-    await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
+    try:
+        Base.metadata.create_all(bind=engine)   # ← create tables (cart, etc.)
+        init_db()
+        print("✅ Krishi Mitra database initialized.")
+    except Exception as e:
+        print(f"⚠️ DB startup error (non-fatal): {e}")
+    try:
+        await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
+    except Exception as e:
+        print(f"⚠️ Scheduler startup error (non-fatal): {e}")
 
 # @app.post("/ask")
 # async def ask(data: dict):
