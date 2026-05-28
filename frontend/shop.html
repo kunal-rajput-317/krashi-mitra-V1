@@ -1673,6 +1673,57 @@
 
 
     /* ══════════════════════════════════════
+       NOT AVAILABLE POPUP
+    ══════════════════════════════════════ */
+    .notavail-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      z-index: 3200; align-items: center; justify-content: center; padding: 16px;
+    }
+    .notavail-overlay.open { display: flex; }
+    .notavail-box {
+      background: #fff; border-radius: 20px; width: 100%; max-width: 380px;
+      padding: 28px 24px 22px; box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+      position: relative; text-align: center;
+    }
+    .notavail-icon { font-size: 48px; margin-bottom: 10px; }
+    .notavail-title {
+      font-size: 18px; font-weight: 800; color: #c62828;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      margin-bottom: 6px;
+    }
+    .notavail-sub {
+      font-size: 13px; color: #666;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      margin-bottom: 20px; line-height: 1.5;
+    }
+    .notavail-close {
+      position: absolute; top: 14px; right: 14px; background: #f5f5f5;
+      border: none; border-radius: 50%; width: 32px; height: 32px;
+      font-size: 16px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #555; transition: background 0.15s;
+    }
+    .notavail-close:hover { background: #e0e0e0; }
+    .notavail-actions { display: flex; flex-direction: column; gap: 10px; }
+    .notavail-wa-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: #25D366; color: #fff; border: none; border-radius: 12px;
+      padding: 13px 18px; font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      text-decoration: none; transition: background 0.15s;
+      box-shadow: 0 3px 12px rgba(37,211,102,0.28);
+    }
+    .notavail-wa-btn:hover { background: #128C7E; }
+    .notavail-help-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: #fff; color: #2d6a4f; border: 2px solid #2d6a4f; border-radius: 12px;
+      padding: 11px 18px; font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      text-decoration: none; transition: background 0.15s, color 0.15s;
+    }
+    .notavail-help-btn:hover { background: #2d6a4f; color: #fff; }
+
+    /* ══════════════════════════════════════
        CHECKOUT SUCCESS TOAST
     ══════════════════════════════════════ */
     .toast {
@@ -1874,7 +1925,7 @@
   <div class="topbar-right">
     <!-- WhatsApp Order Button -->
     <a href="https://wa.me/919870951001" target="_blank" class="topbar-wa-btn" title="WhatsApp पर ऑर्डर करें">
-      <span>💬</span><span class="topbar-wa-label">HELP</span>
+      <img src="https://krashimitra.in/images/whatsapp_icon.png" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"><span class="topbar-wa-label">HELP</span>
     </a>
 
     <!-- Orders History Button -->
@@ -2038,7 +2089,7 @@
 
           <!-- WhatsApp Order CTA inside modal -->
           <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="openWAOrderFromModal()" style="background:#25D366">
-            💬 <span id="fert-modal-cart-label">WhatsApp पर ऑर्डर करें</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> <span id="fert-modal-cart-label">WhatsApp पर ऑर्डर करें</span>
           </button>
           <!-- Affiliate buy buttons inside modal -->
           <div class="affil-modal-row" id="fert-modal-affil-row">
@@ -2062,7 +2113,7 @@
   <div class="wa-modal-box">
     <button class="wa-modal-close" onclick="closeWAModal()">✕</button>
     <div class="wa-modal-header">
-      <span class="wa-modal-icon">💬</span>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="wa-modal-icon" style="width:40px;height:40px;flex-shrink:0">
       <div>
         <div class="wa-modal-title" id="wa-modal-product-name">उत्पाद का नाम</div>
         <div class="wa-modal-subtitle">WhatsApp पर ऑर्डर करें — तुरंत जवाब मिलेगा</div>
@@ -2086,7 +2137,7 @@
       <div class="wa-modal-total" id="wa-modal-total">कुल: ₹0</div>
     </div>
     <button class="wa-confirm-btn" onclick="confirmWAOrder()">
-      💬 WhatsApp पर ऑर्डर करें
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> WhatsApp पर ऑर्डर करें
     </button>
     <div class="wa-modal-note">आपका ऑर्डर सीधे हमारे WhatsApp पर जाएगा। हम 15 मिनट में जवाब देंगे।</div>
   </div>
@@ -2131,6 +2182,24 @@
     </a>
   </div>
 </nav>
+
+<!-- ══ NOT AVAILABLE POPUP ══ -->
+<div class="notavail-overlay" id="notavail-modal" onclick="if(event.target===this)closeNotAvailModal()">
+  <div class="notavail-box">
+    <button class="notavail-close" onclick="closeNotAvailModal()">✕</button>
+    <div class="notavail-icon">😔</div>
+    <div class="notavail-title">उत्पाद उपलब्ध नहीं</div>
+    <div class="notavail-sub" id="notavail-product-name">यह उत्पाद Amazon/Flipkart पर अभी उपलब्ध नहीं है।<br>WhatsApp पर ऑर्डर करें या सहायता लें।</div>
+    <div class="notavail-actions">
+      <button class="notavail-wa-btn" id="notavail-wa-btn" onclick="notAvailWAOrder()">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> WhatsApp पर ऑर्डर करें
+      </button>
+      <a class="notavail-help-btn" href="help.html">
+        ❓ सहायता / Help
+      </a>
+    </div>
+  </div>
+</div>
 
 <!-- ══ COPYRIGHT FOOTER ══ -->
 <footer class="site-footer">
@@ -2337,8 +2406,8 @@
       desc_en: 'Strengthens crop roots. Rich in Nitrogen & Phosphorus.',
       desc_kn: 'ಬೆಳೆ ಬೇರುಗಳನ್ನು ಮಜಬೂತಾಗಿಸುತ್ತದೆ. N & P ಭರಿತ.',
       price: 1350, mrp: 1450, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.8',
-      affil_amazon: 'https://www.amazon.in/s?k=DAP+Fertilizer+50kg&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=DAP+Fertilizer&affid=YOURAFFID' },
+      affil_amazon: 'not_available_DAP.jpg',
+      affil_flipkart: 'not_available_Dap.jpg' },
     { id: 6,  cat: 'fertilizer', emoji: '🌿', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
       name_hi: 'वर्मीकम्पोस्ट (जैविक खाद)', name_en: 'Vermicompost Organic', name_kn: 'ವರ್ಮಿಕಂಪೋಸ್ಟ್ ಜೈವಿಕ ಗೊಬ್ಬರ',
       desc_hi: '100% जैविक, मिट्टी की उर्वरता बढ़ाए। सभी फसलों के लिए।',
@@ -2346,23 +2415,23 @@
       desc_kn: '100% ಜೈವಿಕ, ಮಣ್ಣಿನ ಫಲವತ್ತತೆ ಹೆಚ್ಚಿಸುತ್ತದೆ.',
       price: 450, mrp: 550, unit_hi: '25 kg बैग', unit_en: '25 kg bag', unit_kn: '25 kg ಚೀಲ', rating: '⭐ 4.6',
       affil_amazon: 'https://amzn.to/3RvALcs',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Vermicompost+Organic+Fertilizer&affid=YOURAFFID' },
+      affil_flipkart: 'not_available_vermicompost.png' },
     { id: 7,  cat: 'fertilizer', emoji: '💧', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/urea.jpg',
       name_hi: 'यूरिया खाद 46% N', name_en: 'Urea Fertilizer 46% N', name_kn: 'ಯೂರಿಯಾ ಗೊಬ್ಬರ 46% N',
       desc_hi: 'नाइट्रोजन से भरपूर, हरी पत्तियों के लिए उत्तम। तेज असर।',
       desc_en: 'Nitrogen-rich, excellent for green leaf growth. Fast effect.',
       desc_kn: 'ನೈಟ್ರೋಜನ್ ಭರಿತ, ಹಸಿರು ಎಲೆ ಬೆಳವಣಿಗೆಗೆ ಉತ್ತಮ.',
       price: 280, mrp: 300, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Urea+Fertilizer+46+percent&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Urea+Fertilizer+46&affid=YOURAFFID' },
+      affil_amazon: 'not_available_urea.jpg',
+      affil_flipkart: 'not_available_urea.jpg' },
     { id: 8,  cat: 'fertilizer', emoji: '🔬', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/fertilizers/micronutrient-mix.png',
       name_hi: 'सूक्ष्म पोषक तत्व मिश्रण', name_en: 'Micronutrient Mix', name_kn: 'ಮೈಕ್ರೋನ್ಯೂಟ್ರಿಯೆಂಟ್ ಮಿಶ್ರಣ',
       desc_hi: 'जिंक, आयरन, बोरान युक्त। कमी के लक्षण दूर करे।',
       desc_en: 'Zinc, Iron, Boron enriched. Cures deficiency symptoms.',
       desc_kn: 'ಜಿಂಕ್, ಕಬ್ಬಿಣ, ಬೋರಾನ್ ಭರಿತ. ಕೊರತೆ ನಿವಾರಿಸುತ್ತದೆ.',
       price: 380, mrp: 460, unit_hi: '10 kg पैक', unit_en: '10 kg pack', unit_kn: '10 kg ಪ್ಯಾಕ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Micronutrient+Mix+Fertilizer&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Micronutrient+Mix+Fertilizer&affid=YOURAFFID' },
+      affil_amazon: 'not_available_micronutrient-mix.png',
+      affil_flipkart: 'not_available_micronutrient-mix.png' },
 
     // ── Fertilizers from Mandi ──
     { id: 21, cat: 'fertilizer', emoji: '🍂', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/MOP.jpg',
@@ -2371,40 +2440,40 @@
       desc_en: 'Potassium-rich. Improves fruit, vegetable & sugarcane quality. Disease resistant.',
       desc_kn: 'ಪೊಟ್ಯಾಶಿಯಂ ಭರಿತ. ಹಣ್ಣು, ತರಕಾರಿ ಗುಣಮಟ್ಟ ಸುಧಾರಿಸುತ್ತದೆ.',
       price: 1700, mrp: 1800, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=MOP+Muriate+of+Potash+Fertilizer&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=MOP+Muriate+Potash+Fertilizer&affid=YOURAFFID' },
+      affil_amazon: 'not_available_MOP.jpg',
+      affil_flipkart: 'not_available_MOP.jpg' },
     { id: 22, cat: 'fertilizer', emoji: '🌾', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/SSP.jpg',
       name_hi: 'SSP (सिंगल सुपर फॉस्फेट)', name_en: 'SSP (Single Super Phosphate)', name_kn: 'SSP (ಸಿಂಗಲ್ ಸೂಪರ್ ಫಾಸ್ಫೇಟ್)',
       desc_hi: 'फॉस्फोरस व सल्फर युक्त। जड़ विकास व फूल-फल के लिए उत्तम।',
       desc_en: 'Contains Phosphorus & Sulphur. Best for root development & flowering.',
       desc_kn: 'ಫಾಸ್ಫರಸ್ ಮತ್ತು ಸಲ್ಫರ್ ಭರಿತ. ಬೇರು ಬೆಳವಣಿಗೆಗೆ ಉತ್ತಮ.',
       price: 400, mrp: 480, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=SSP+Single+Super+Phosphate+Fertilizer&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=SSP+Single+Super+Phosphate&affid=YOURAFFID' },
+      affil_amazon: 'not_available_SSP.jpg',
+      affil_flipkart: 'not_available_SSP.jpg' },
     { id: 23, cat: 'fertilizer', emoji: '🌿', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/NPK.jpg',
       name_hi: 'NPK (10:26:26) खाद', name_en: 'NPK Fertilizer (10:26:26)', name_kn: 'NPK ಗೊಬ್ಬರ (10:26:26)',
       desc_hi: 'नाइट्रोजन, फॉस्फोरस, पोटैशियम का संतुलित मिश्रण। सभी फसलों के लिए।',
       desc_en: 'Balanced Nitrogen, Phosphorus & Potassium. Suitable for all crops.',
       desc_kn: 'ಸಮತೋಲಿತ N, P, K ಮಿಶ್ರಣ. ಎಲ್ಲಾ ಬೆಳೆಗಳಿಗೆ ಸೂಕ್ತ.',
       price: 1475, mrp: 1600, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.7',
-      affil_amazon: 'https://www.amazon.in/s?k=NPK+10+26+26+Fertilizer+50kg&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=NPK+10+26+26+fertilizer&affid=YOURAFFID' },
+      affil_amazon: 'not_available_NPK.jpg',
+      affil_flipkart: 'not_available_NPK.jpg' },
     { id: 24, cat: 'fertilizer', emoji: '💊', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/ammonium-sulphate.jpg',
       name_hi: 'अमोनियम सल्फेट (21% N)', name_en: 'Ammonium Sulphate (21% N)', name_kn: 'ಅಮೋನಿಯಂ ಸಲ್ಫೇಟ್ (21% N)',
       desc_hi: 'नाइट्रोजन व सल्फर का अच्छा स्रोत। धान, गेहूं व सब्जियों के लिए उपयुक्त।',
       desc_en: 'Good source of Nitrogen & Sulphur. Ideal for paddy, wheat & vegetables.',
       desc_kn: 'ನೈಟ್ರೋಜನ್ ಮತ್ತು ಸಲ್ಫರ್ ಮೂಲ. ಭತ್ತ, ಗೋಧಿ ಮತ್ತು ತರಕಾರಿಗಳಿಗೆ.',
       price: 900, mrp: 1050, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Ammonium+Sulphate+fertilizer+50kg&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Ammonium+Sulphate+fertilizer&affid=YOURAFFID' },
+      affil_amazon: 'not_available_ammonium-sulphate.jpg',
+      affil_flipkart: 'not_available_ammonium-sulphate.jpg' },
     { id: 25, cat: 'fertilizer', emoji: '✨', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/fertilizers/zinc-sulphate.jpg',
       name_hi: 'जिंक सल्फेट (21% Zn)', name_en: 'Zinc Sulphate (21% Zn)', name_kn: 'ಜಿಂಕ್ ಸಲ್ಫೇಟ್ (21% Zn)',
       desc_hi: 'जिंक की कमी दूर करे। धान में खैरा रोग का उपचार। उपज बढ़ाए।',
       desc_en: 'Corrects Zinc deficiency. Treats Khaira disease in paddy. Boosts yield.',
       desc_kn: 'ಜಿಂಕ್ ಕೊರತೆ ನಿವಾರಿಸುತ್ತದೆ. ಭತ್ತದಲ್ಲಿ ಖೈರಾ ರೋಗ ಚಿಕಿತ್ಸೆ.',
       price: 120, mrp: 150, unit_hi: '1 kg पैक', unit_en: '1 kg pack', unit_kn: '1 kg ಪ್ಯಾಕ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Zinc+Sulphate+21+percent+fertilizer&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Zinc+Sulphate+fertilizer&affid=YOURAFFID' },
+      affil_amazon: 'not_available_zinc-sulphate.jpg',
+      affil_flipkart: 'not_available_zinc-sulphate.jpg' },
 
     // ── Pesticides ──
     { id: 9,  cat: 'pesticide',  emoji: '🐛', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/chlorocil.png',
@@ -3037,17 +3106,25 @@
                 <span style="font-size:10px;color:var(--green-mid);font-weight:700;opacity:0.85">विवरण देखें →</span>
                 <button class="fert-h-cart-btn"
                   onclick="openWAOrder(${p.id}); event.stopPropagation()"
-                  style="font-size:11px;font-weight:700;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;background:#25D366;color:#fff;font-family:inherit;transition:background 0.18s">
-                  💬 ऑर्डर
+                  style="font-size:11px;font-weight:700;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;background:#25D366;color:#fff;font-family:inherit;transition:background 0.18s;display:inline-flex;align-items:center;gap:4px">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:13px;height:13px;flex-shrink:0"> ऑर्डर
                 </button>
               </div>
               <div class="affil-row" onclick="event.stopPropagation()">
-                <a class="affil-btn affil-btn-amazon" href="${p.affil_amazon}" target="_blank" rel="noopener sponsored">
-                  🛒 Amazon
-                </a>
-                <a class="affil-btn affil-btn-flipkart" href="${p.affil_flipkart}" target="_blank" rel="noopener sponsored">
-                  🛍️ Flipkart
-                </a>
+                ${p.affil_amazon && p.affil_amazon.startsWith('not_available_')
+                  ? `<button class="affil-btn affil-btn-amazon" onclick="openNotAvailModal(${p.id})" style="cursor:pointer;border:none">
+                      🛒 Amazon
+                    </button>`
+                  : `<a class="affil-btn affil-btn-amazon" href="${p.affil_amazon}" target="_blank" rel="noopener sponsored">
+                      🛒 Amazon
+                    </a>`}
+                ${p.affil_flipkart && p.affil_flipkart.startsWith('not_available_')
+                  ? `<button class="affil-btn affil-btn-flipkart" onclick="openNotAvailModal(${p.id})" style="cursor:pointer;border:none">
+                      🛍️ Flipkart
+                    </button>`
+                  : `<a class="affil-btn affil-btn-flipkart" href="${p.affil_flipkart}" target="_blank" rel="noopener sponsored">
+                      🛍️ Flipkart
+                    </a>`}
               </div>
             </div>
           </div>`;
@@ -3441,8 +3518,26 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
     // Set affiliate links in modal
     const amazonBtn   = document.getElementById('fert-modal-amazon-btn');
     const flipkartBtn = document.getElementById('fert-modal-flipkart-btn');
-    if (amazonBtn)   amazonBtn.href   = p.affil_amazon   || '#';
-    if (flipkartBtn) flipkartBtn.href = p.affil_flipkart || '#';
+    if (amazonBtn) {
+      if (p.affil_amazon && p.affil_amazon.startsWith('not_available_')) {
+        amazonBtn.removeAttribute('href');
+        amazonBtn.onclick = (ev) => { ev.preventDefault(); closeFertModal(); openNotAvailModal(productId); };
+        amazonBtn.style.cursor = 'pointer';
+      } else {
+        amazonBtn.href = p.affil_amazon || '#';
+        amazonBtn.onclick = null;
+      }
+    }
+    if (flipkartBtn) {
+      if (p.affil_flipkart && p.affil_flipkart.startsWith('not_available_')) {
+        flipkartBtn.removeAttribute('href');
+        flipkartBtn.onclick = (ev) => { ev.preventDefault(); closeFertModal(); openNotAvailModal(productId); };
+        flipkartBtn.style.cursor = 'pointer';
+      } else {
+        flipkartBtn.href = p.affil_flipkart || '#';
+        flipkartBtn.onclick = null;
+      }
+    }
 
     // Try to enrich with API data — only for fertilizers
     const apiKey = FERT_KEY_MAP[productId];
@@ -3562,6 +3657,34 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
     el.classList.add('show');
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+  }
+
+  // ══════════════════════════════════════
+  // NOT AVAILABLE POPUP
+  // ══════════════════════════════════════
+  let _notAvailProductId = null;
+
+  function openNotAvailModal(productId) {
+    _notAvailProductId = productId;
+    const p = PRODUCTS.find(x => x.id === productId);
+    if (p) {
+      document.getElementById('notavail-product-name').innerHTML =
+        `<strong>${getProductName(p)}</strong> Amazon/Flipkart पर अभी उपलब्ध नहीं है।<br>WhatsApp पर ऑर्डर करें या सहायता लें।`;
+    }
+    document.getElementById('notavail-modal').classList.add('open');
+  }
+
+  function closeNotAvailModal() {
+    document.getElementById('notavail-modal').classList.remove('open');
+    _notAvailProductId = null;
+  }
+
+  function notAvailWAOrder() {
+    const pid = _notAvailProductId;
+    closeNotAvailModal();
+    if (pid !== null) {
+      openWAOrder(pid);
+    }
   }
 
   // ══════════════════════════════════════
