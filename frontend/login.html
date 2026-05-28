@@ -255,6 +255,37 @@
     .step { display: none; }
     .step.active { display: block; }
 
+    /* ── Cooldown warning bar ── */
+    .cooldown-warning {
+      background: #fff8e1;
+      border: 1.5px solid #e9a825;
+      border-radius: var(--radius-sm);
+      padding: 10px 14px 8px;
+      margin-bottom: 12px;
+      display: none;
+      text-align: center;
+    }
+    .cooldown-warning.show { display: block; }
+    .cooldown-warning .cw-msg {
+      font-size: 13px;
+      font-weight: 600;
+      color: #7c4f2f;
+      margin-bottom: 7px;
+    }
+    .cooldown-warning .cw-track {
+      background: #fde68a;
+      border-radius: 20px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .cooldown-warning .cw-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #e9a825, #f59e0b);
+      border-radius: 20px;
+      width: 100%;
+      transition: width 1s linear;
+    }
+
     /* Mobile adjustments */
     @media screen and (max-width: 480px) {
       .page-wrapper { align-items: flex-end; padding: 0; }
@@ -289,6 +320,11 @@
       <div class="auth-modal-title">वापस आए! Welcome Back</div>
       <div class="auth-modal-sub">अपने account में login करें</div>
 
+      <div class="cooldown-warning" id="login-cooldown-warning">
+        <div class="cw-msg" id="cw-msg"></div>
+        <div class="cw-track"><div class="cw-bar" id="cw-bar"></div></div>
+      </div>
+
       <div class="auth-error"  id="login-error"></div>
       <div class="auth-success" id="login-success"></div>
 
@@ -308,6 +344,10 @@
       <button class="auth-btn" id="login-btn" onclick="doLogin()">
         Login करें →
       </button>
+
+      <div class="auth-switch" id="forgot-link" style="display:none;margin-top:12px;">
+        Password याद नहीं है? <a onclick="startForgotFromLogin()">Forgot password</a>
+      </div>
 
       <div class="auth-switch" style="margin-top:14px;">
         नया account बनाएं? <a onclick="showStep('signup')">Signup करें</a>
@@ -336,6 +376,11 @@
         <input type="password" id="signup-password" placeholder="••••••••" autocomplete="new-password">
       </div>
 
+      <div class="auth-field">
+        <label>Confirm Password / पुष्टि करें</label>
+        <input type="password" id="signup-confirm-password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+
       <button class="auth-btn" id="signup-btn" onclick="doSignup()">
         Account बनाएं →
       </button>
@@ -345,7 +390,64 @@
       </div>
     </div>
 
-    <!-- ── STEP 3: OTP ── -->
+    <!-- STEP: Forgot Password -->
+    <div class="step" id="step-forgot">
+      <div class="auth-modal-logo">🔐</div>
+      <div class="auth-modal-title">Password Reset</div>
+      <div class="auth-modal-sub">Registered email डालें, OTP भेजा जाएगा</div>
+
+      <div class="auth-error"  id="forgot-error"></div>
+      <div class="auth-success" id="forgot-success"></div>
+
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="forgot-email" placeholder="you@gmail.com" autocomplete="email">
+      </div>
+
+      <button class="auth-btn" id="forgot-btn" onclick="doForgotPassword()">
+        Send reset OTP →
+      </button>
+
+      <div class="auth-switch">
+        याद आ गया? <a onclick="showStep('login')">Login करें</a>
+      </div>
+    </div>
+
+    <!-- STEP: Reset Password -->
+    <div class="step" id="step-reset">
+      <div class="auth-modal-logo">✅</div>
+      <div class="auth-modal-title">New Password</div>
+      <div class="auth-modal-sub" id="reset-sub">OTP और नया password डालें</div>
+
+      <div class="auth-error"  id="reset-error"></div>
+      <div class="auth-success" id="reset-success"></div>
+
+      <div class="auth-field">
+        <label>Reset OTP</label>
+        <input type="text" id="reset-otp" maxlength="6" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
+      </div>
+      <div class="auth-field">
+        <label>New Password / नया पासवर्ड</label>
+        <input type="password" id="reset-password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label>Confirm New Password / पुष्टि करें</label>
+        <input type="password" id="reset-confirm-password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+
+      <button class="auth-btn" id="reset-btn" onclick="doResetPassword()">
+        Reset password →
+      </button>
+
+      <div class="auth-resend">
+        OTP नहीं मिला? <a onclick="doForgotPassword(true)">दोबारा भेजें</a>
+      </div>
+      <div class="auth-switch" style="margin-top:10px;">
+        <a onclick="showStep('login')">← Login पर जाएं</a>
+      </div>
+    </div>
+
+    <!-- STEP: OTP Verification -->
     <div class="step" id="step-otp">
       <div class="auth-modal-logo">📨</div>
       <div class="auth-modal-title">Email Verify करें</div>
@@ -385,6 +487,19 @@
   // ══════════════════════════════════════
   const API = "https://krashi-mitra-v1.onrender.com";
   let pendingEmail = "";
+  let pendingResetEmail = "";
+  let loginCooldownTimer = null;
+  let loginCooldownActive = false;
+  let loginAttempts = 0;  // track failed login attempts client-side
+
+  // Progressive delay schedule: triggered after 2 wrong attempts
+  // attempt 2 → 15s, attempt 4 → 30s, attempt 6+ → 60s
+  function getClientCooldownSeconds(attempts) {
+    if (attempts >= 6) return 10060;
+    if (attempts >= 4) return 300;
+    if (attempts >= 2) return 30;
+    return 0;
+  }
 
   // ══════════════════════════════════════
   // STEP NAVIGATION
@@ -423,8 +538,56 @@
   }
 
   // ══════════════════════════════════════
-  // TOKEN HELPERS
+  // COOLDOWN / TOKEN HELPERS
   // ══════════════════════════════════════
+  function setLoginCooldown(seconds, reason) {
+    const btn     = document.getElementById("login-btn");
+    const warning = document.getElementById("login-cooldown-warning");
+    const cwMsg   = document.getElementById("cw-msg");
+    const cwBar   = document.getElementById("cw-bar");
+
+    clearInterval(loginCooldownTimer);
+    loginCooldownActive = true;
+
+    let total     = Math.max(1, Number(seconds) || 15);
+    let remaining = total;
+
+    btn.disabled = true;
+    warning.classList.add("show");
+    cwBar.style.transition = "none";
+    cwBar.style.width      = "100%";
+
+    const tick = () => {
+      const label = remaining > 0
+        ? `⏳ ${remaining}s बाद try करें — ${reason || "सुरक्षा के लिए प्रतीक्षा करें"}`
+        : "";
+      cwMsg.innerText  = label;
+      btn.innerText    = remaining > 0 ? `🔒 ${remaining}s में unlock होगा` : "Login करें →";
+      // shrink bar proportionally
+      const pct = Math.max(0, (remaining / total) * 100);
+      cwBar.style.transition = "width 1s linear";
+      cwBar.style.width = pct + "%";
+
+      if (remaining <= 0) {
+        clearInterval(loginCooldownTimer);
+        loginCooldownActive = false;
+        btn.disabled = false;
+        btn.innerText = "Login करें →";
+        warning.classList.remove("show");
+      }
+      remaining -= 1;
+    };
+
+    tick();
+    loginCooldownTimer = setInterval(tick, 1000);
+  }
+
+  function startForgotFromLogin() {
+    const email = document.getElementById("login-email").value.trim();
+    if (email) document.getElementById("forgot-email").value = email;
+    showStep("forgot");
+  }
+
   function getToken()  { return localStorage.getItem("krishi_token"); }
   function setToken(t) { localStorage.setItem("krishi_token", t); }
 
@@ -433,6 +596,8 @@
   // ══════════════════════════════════════
   async function doLogin() {
     clearAuthMsg("login-error", "login-success");
+    // Reset forgot-link visibility only if no prior failed attempts
+    if (loginAttempts === 0) document.getElementById("forgot-link").style.display = "none";
     const email    = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
 
@@ -452,16 +617,36 @@
         setToken(data.data.token);
         authOk("login-success", "✅ Login हो गया! Redirecting...");
         setTimeout(() => {
-          // Redirect back to main app (adjust path as needed)
           window.location.href = "profile.html";
         }, 800);
       } else {
-        authErr("login-error", data.message || "Login failed। Email या password जाँचें।");
+        const info = data.data || {};
+        loginAttempts += 1;
+
+        // Show forgot-password after 1st wrong attempt
+        if (loginAttempts >= 1 || info.forgot_available) {
+          document.getElementById("forgot-link").style.display = "block";
+        }
+
+        const attemptsLeft = Number.isFinite(info.attempts_remaining)
+          ? ` Attempts remaining: ${info.attempts_remaining}.`
+          : "";
+        authErr("login-error", (data.message || "Login failed. Email या password check करें।") + attemptsLeft);
+
+        // Client-side progressive delay: kicks in at attempt 2, 4, 6+
+        const clientDelay = getClientCooldownSeconds(loginAttempts);
+        if (info.locked) {
+          setLoginCooldown(info.retry_after_seconds || 60, "Account temporarily locked");
+        } else if (clientDelay > 0) {
+          setLoginCooldown(clientDelay, `${loginAttempts} गलत प्रयास`);
+        }
       }
     } catch (err) {
       authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
-      setBtnLoading("login-btn", false, "Login करें →");
+      if (!loginCooldownActive) {
+        setBtnLoading("login-btn", false, "Login करें →");
+      }
     }
   }
 
@@ -473,17 +658,19 @@
     const name     = document.getElementById("signup-name").value.trim();
     const email    = document.getElementById("signup-email").value.trim();
     const password = document.getElementById("signup-password").value;
+    const confirmPassword = document.getElementById("signup-confirm-password").value;
 
     if (!name)               return authErr("signup-error", "कृपया अपना नाम दर्ज करें।");
     if (!email)              return authErr("signup-error", "कृपया email दर्ज करें।");
     if (password.length < 6) return authErr("signup-error", "Password कम से कम 6 characters का होना चाहिए।");
+    if (password !== confirmPassword) return authErr("signup-error", "Password और Confirm Password match नहीं कर रहे।");
 
     setBtnLoading("signup-btn", true, "Account बनाएं →");
     try {
       const res  = await fetch(`${API}/signup`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ name, email, password })
+        body:    JSON.stringify({ name, email, password, confirm_password: confirmPassword })
       });
       const data = await res.json().catch(() => ({}));
 
@@ -500,6 +687,82 @@
       authErr("signup-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
       setBtnLoading("signup-btn", false, "Account बनाएं →");
+    }
+  }
+
+  // ══════════════════════════════════════
+  // FORGOT / RESET PASSWORD
+  // ══════════════════════════════════════
+  async function doForgotPassword(resend = false) {
+    clearAuthMsg("forgot-error", "forgot-success", "reset-error", "reset-success");
+    const email = (document.getElementById("forgot-email").value || pendingResetEmail || "").trim();
+    if (!email) return authErr("forgot-error", "कृपया email दर्ज करें।");
+
+    setBtnLoading("forgot-btn", true, "Send reset OTP →");
+    try {
+      const res = await fetch(`${API}/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.success) {
+        pendingResetEmail = email;
+        document.getElementById("reset-sub").innerText = `Reset OTP भेजा गया: ${email}`;
+        document.getElementById("reset-otp").value = "";
+        document.getElementById("reset-password").value = "";
+        document.getElementById("reset-confirm-password").value = "";
+        if (resend) authOk("reset-success", "नया reset OTP भेज दिया गया।");
+        showStep("reset");
+      } else {
+        authErr("forgot-error", data.message || data.detail || "Reset OTP नहीं भेजा जा सका।");
+      }
+    } catch (err) {
+      authErr("forgot-error", "⚠️ Server से connect नहीं हो पाया।");
+    } finally {
+      setBtnLoading("forgot-btn", false, "Send reset OTP →");
+    }
+  }
+
+  async function doResetPassword() {
+    clearAuthMsg("reset-error", "reset-success");
+    const email = pendingResetEmail || document.getElementById("forgot-email").value.trim();
+    const otp = document.getElementById("reset-otp").value.replace(/[^0-9]/g, "").slice(0, 6);
+    const newPassword = document.getElementById("reset-password").value;
+    const confirmPassword = document.getElementById("reset-confirm-password").value;
+
+    if (!email) return authErr("reset-error", "Email missing है। Forgot password फिर से करें।");
+    if (otp.length < 6) return authErr("reset-error", "कृपया 6-digit OTP दर्ज करें।");
+    if (newPassword.length < 6) return authErr("reset-error", "Password कम से कम 6 characters का होना चाहिए।");
+    if (newPassword !== confirmPassword) return authErr("reset-error", "New password और Confirm Password match नहीं कर रहे।");
+
+    setBtnLoading("reset-btn", true, "Reset password →");
+    try {
+      const res = await fetch(`${API}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          otp,
+          new_password: newPassword,
+          confirm_password: confirmPassword
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.success) {
+        pendingResetEmail = "";
+        authOk("reset-success", "✅ Password reset हो गया। अब login करें।");
+        document.getElementById("login-email").value = email;
+        document.getElementById("login-password").value = "";
+        document.getElementById("forgot-link").style.display = "none";
+        setTimeout(() => showStep("login"), 1200);
+      } else {
+        authErr("reset-error", data.message || data.detail || "Password reset failed।");
+      }
+    } catch (err) {
+      authErr("reset-error", "⚠️ Server से connect नहीं हो पाया।");
+    } finally {
+      setBtnLoading("reset-btn", false, "Reset password →");
     }
   }
 

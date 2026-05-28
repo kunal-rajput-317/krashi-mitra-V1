@@ -1,5 +1,10 @@
 User-agent: *
 Allow: /
 
+# Block old/deprecated pages
+Disallow: /old_chat.html
+Disallow: /old_index.html
+Disallow: /articles/article_template.html
+
 # Sitemap location — Google इसे automatically पढ़ेगा
 Sitemap: https://krashimitra.in/sitemap.xml

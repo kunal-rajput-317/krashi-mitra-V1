@@ -440,6 +440,19 @@
       color: #fff;
       border-bottom-right-radius: 4px;
     }
+    .msg-meta {
+      display: block;
+      margin-top: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      line-height: 1.35;
+      color: var(--text-light);
+      white-space: normal;
+    }
+    .msg-meta.cache-hit {
+      color: var(--green-dark);
+      font-weight: 700;
+    }
 
     /* Typing indicator */
     .typing-indicator {
@@ -987,6 +1000,29 @@
   let chatHistory   = [];
   let isBotTyping   = false;
   let pendingImage  = null; // base64 string
+  const CHAT_API_BASE = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
+
+  function getChatLanguage() {
+    const map = { hi: 'hindi', en: 'english', kn: 'kannada' };
+    return map[currentLang] || 'hindi';
+  }
+
+  function detectCropKey(text) {
+    const q = (text || '').toLowerCase();
+    if (q.includes('ganna') || q.includes('sugarcane') || q.includes('cane') || q.includes('गन्न') || q.includes('ganne')) return 'sugarcane_up';
+    if (q.includes('dhan') || q.includes('rice') || q.includes('paddy') || q.includes('धान')) return 'rice_up';
+    if (q.includes('wheat') || q.includes('gehu') || q.includes('गेह') || q.includes('गेंह')) return 'wheat_up';
+    return 'wheat_up';
+  }
+
+  function getAnswerMeta(data) {
+    const ragInfo = Number.isFinite(data.rag_chunks) && data.rag_chunks > 0
+      ? ` · RAG chunks: ${data.rag_chunks}`
+      : '';
+    if (data.cached || data.source === 'cache') return { text: 'API usage saved - answered from cache', cacheHit: true };
+    if (data.source) return { text: `Answered by ${String(data.source).toUpperCase()}${ragInfo}`, cacheHit: false };
+    return null;
+  }
 
   // ── Auto-resize textarea ──
   function autoResize(el) {
@@ -1123,33 +1159,26 @@
     showTyping();
 
     try {
-      const systemPrompt = `You are KrashiMitra AI, a helpful agricultural assistant for Indian farmers. 
-You speak primarily in ${currentLang === 'en' ? 'English' : currentLang === 'kn' ? 'Kannada' : 'Hindi'} but understand all three languages.
-You help with: crop diseases, fertilizer advice, sowing/harvest timings, weather-based farming tips, and crop diagnosis from photos.
-Be concise, practical, and use simple language a farmer can understand.
-Format responses clearly with bullet points when listing multiple items.
-Always end with an encouraging note or offer to help further.`;
-
-      const messages = [
-        { role: 'user', content: systemPrompt + '\n\nConversation history:\n' + JSON.stringify(chatHistory.slice(-6)) + '\n\nCurrent message: ' + (typeof userContent === 'string' ? userContent : text || '[image sent]') }
-      ];
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const q = text || 'Image uploaded. Please ask the farmer to describe the crop problem in words.';
+      const res = await fetch(`${CHAT_API_BASE}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gemeini-flash-2.0',
-          max_tokens: 1000,
-          messages
+          q,
+          crop: detectCropKey(q),
+          language: getChatLanguage(),
+          district: 'Uttar Pradesh'
         })
       });
 
-      const data = await res.json();
-      const reply = data.content?.map(b => b.text || '').join('\n').trim()
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
+
+      const reply = (data.answer || data.message || '').trim()
                     || 'माफ करें, कोई जवाब नहीं मिला। कृपया दोबारा पूछें।';
 
       removeTyping();
-      appendMessage('bot', reply);
+      appendMessage('bot', reply, null, getAnswerMeta(data));
       chatHistory.push({ role: 'assistant', content: reply });
 
     } catch (err) {
@@ -1161,7 +1190,7 @@ Always end with an encouraging note or offer to help further.`;
   // ══════════════════════════════════════
   // UI HELPERS
   // ══════════════════════════════════════
-  function appendMessage(role, text, imageDataUrl = null) {
+  function appendMessage(role, text, imageDataUrl = null, meta = null) {
     const container = document.getElementById('chat-messages');
     const div = document.createElement('div');
     div.className = `chat-msg ${role}`;
@@ -1183,6 +1212,12 @@ Always end with an encouraging note or offer to help further.`;
       const span = document.createElement('span');
       span.textContent = text;
       bubble.appendChild(span);
+    }
+    if (meta && meta.text) {
+      const metaEl = document.createElement('span');
+      metaEl.className = `msg-meta${meta.cacheHit ? ' cache-hit' : ''}`;
+      metaEl.textContent = meta.text;
+      bubble.appendChild(metaEl);
     }
 
     div.appendChild(avatar);

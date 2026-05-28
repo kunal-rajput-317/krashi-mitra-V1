@@ -995,6 +995,96 @@
         gap: 14px;
       }
     }
+
+    /* ══════════════════════════════
+       SARKARI YOJANA SECTION
+    ══════════════════════════════ */
+    .yojana-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .yojana-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .yojana-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--yojana-accent, var(--green-mid));
+      border-radius: 4px 0 0 4px;
+    }
+    .yojana-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--green-light);
+    }
+    .yojana-card:active { transform: translateY(0); }
+
+    .yojana-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--yojana-bg, var(--green-soft));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .yojana-body { flex: 1; min-width: 0; }
+    .yojana-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-bottom: 4px;
+    }
+    .yojana-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.3;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      margin-bottom: 2px;
+    }
+    .yojana-benefit {
+      font-size: 12px;
+      color: var(--text-soft);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .yojana-arrow {
+      font-size: 16px;
+      color: var(--text-soft);
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+
+    @media (min-width: 600px) {
+      .yojana-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1017,6 +1107,7 @@
       <a class="nav-link" href="weather.html">मौसम</a>
       <a class="nav-link" href="mandi.html">मंडी</a>
       <a class="nav-link" href="articles/index.html">लेख</a>
+      <a class="nav-link" href="sarkari_yojana.html">योजनाएं</a>
       <a class="nav-link" href="chat.html">सहायता</a>
     </nav>
     <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👨‍🌾</div>
@@ -1131,6 +1222,10 @@
     <a class="quick-card" href="articles/index.html" style="--card-accent:#f57f17">
       <span class="qc-icon">📰</span>
       <span class="qc-label">लेख & टिप्स</span>
+    </a>
+    <a class="quick-card" href="sarkari_yojana.html" style="--card-accent:#1565c0">
+      <span class="qc-icon">📋</span>
+      <span class="qc-label">सरकारी योजनाएं</span>
     </a>
   </div>
 </section>
@@ -1260,6 +1355,60 @@
 </section>
 
 <!-- ══════════════════════════
+     SARKARI YOJANA SECTION
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
+  <div class="section-header">
+    <h2 class="section-title">📋 सरकारी योजनाएं</h2>
+    <a class="section-link" href="sarkari_yojana.html">सभी योजनाएं →</a>
+  </div>
+
+  <div class="yojana-grid">
+
+    <a class="yojana-card" href="sarkari_yojana.html#pmkisan" style="--yojana-accent:#2e7d32;--yojana-bg:#e8f5e9">
+      <div class="yojana-icon">🌾</div>
+      <div class="yojana-body">
+        <span class="yojana-tag" style="background:#e8f5e9;color:#2e7d32">आय सहायता</span>
+        <div class="yojana-name">PM-KISAN सम्मान निधि</div>
+        <div class="yojana-benefit">₹6,000/वर्ष — सीधे खाते में</div>
+      </div>
+      <span class="yojana-arrow">›</span>
+    </a>
+
+    <a class="yojana-card" href="sarkari_yojana.html#pmfby" style="--yojana-accent:#1565c0;--yojana-bg:#e3f2fd">
+      <div class="yojana-icon">🛡️</div>
+      <div class="yojana-body">
+        <span class="yojana-tag" style="background:#e3f2fd;color:#1565c0">फसल बीमा</span>
+        <div class="yojana-name">PM फसल बीमा योजना (PMFBY)</div>
+        <div class="yojana-benefit">2% प्रीमियम पर फसल सुरक्षा</div>
+      </div>
+      <span class="yojana-arrow">›</span>
+    </a>
+
+    <a class="yojana-card" href="sarkari_yojana.html#kcc" style="--yojana-accent:#e65100;--yojana-bg:#fff3e0">
+      <div class="yojana-icon">💳</div>
+      <div class="yojana-body">
+        <span class="yojana-tag" style="background:#fff3e0;color:#e65100">क्रेडिट</span>
+        <div class="yojana-name">किसान क्रेडिट कार्ड (KCC)</div>
+        <div class="yojana-benefit">₹3 लाख तक — 4% ब्याज दर पर</div>
+      </div>
+      <span class="yojana-arrow">›</span>
+    </a>
+
+    <a class="yojana-card" href="sarkari_yojana.html#sinchai" style="--yojana-accent:#00695c;--yojana-bg:#e0f2f1">
+      <div class="yojana-icon">💧</div>
+      <div class="yojana-body">
+        <span class="yojana-tag" style="background:#e0f2f1;color:#00695c">सिंचाई</span>
+        <div class="yojana-name">PM कृषि सिंचाई योजना</div>
+        <div class="yojana-benefit">ड्रिप/स्प्रिंकलर पर 55–75% सब्सिडी</div>
+      </div>
+      <span class="yojana-arrow">›</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════
      ARTICLES & TIPS SECTION
 ══════════════════════════ -->
 <section class="section" style="padding-bottom: 0;">
@@ -1270,31 +1419,31 @@
 
   <div class="articles-grid">
 
-    <a class="article-card" href="articles/gehun-pila.html" style="--article-accent:#f57f17">
-      <div class="article-thumb" style="background:#fff8e1">🌾</div>
+    <a class="article-card" href="articles/potato_guide_up.html" style="--article-accent:#795548">
+      <div class="article-thumb" style="background:#efebe9">🥔</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#fff8e1;color:#f57f17">गेहूं</span>
-        <div class="article-title">गेहूं में पीलापन: कारण और उपाय</div>
-        <div class="article-meta">⏱️ 3 मिनट &nbsp;·&nbsp; 📅 आज</div>
+        <span class="article-tag" style="background:#efebe9;color:#795548">आलू</span>
+        <div class="article-title">आलू की खेती — सम्पूर्ण मार्गदर्शिका | Uttar Pradesh</div>
+        <div class="article-meta">⏱️ 6 मिनट &nbsp;·&nbsp; 📅 आज</div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/dhan-buvai.html" style="--article-accent:#00695c">
-      <div class="article-thumb" style="background:#e0f2f1">🍚</div>
+    <a class="article-card" href="articles/paddy-guide-karnataka.html" style="--article-accent:#2e7d32">
+      <div class="article-thumb" style="background:#e8f5e9">🌾</div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e0f2f1;color:#00695c">धान</span>
-        <div class="article-title">धान की सही बुवाई का समय और तरीका</div>
+        <span class="article-tag" style="background:#e8f5e9;color:#2e7d32">ಭತ್ತ / Paddy</span>
+        <div class="article-title">ಕರ್ನಾಟಕ ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ | Paddy Farming Karnataka</div>
         <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 कल</div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/urea-guide.html" style="--article-accent:#1565c0">
+    <a class="article-card" href="articles/urea-guide-up.html" style="--article-accent:#1565c0">
       <div class="article-thumb" style="background:#e3f2fd">🧪</div>
       <div class="article-body">
         <span class="article-tag" style="background:#e3f2fd;color:#1565c0">खाद</span>
-        <div class="article-title">यूरिया और DAP: कब और कितना दें?</div>
+        <div class="article-title">यूरिया और DAP का सही उपयोग: कब और कितना दें?</div>
         <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 2 दिन पहले</div>
       </div>
       <span class="article-arrow">›</span>
@@ -1339,6 +1488,10 @@
   <a class="bn-item" href="articles/index.html">
     <span class="bn-icon">📰</span>
     <span class="bn-label">लेख</span>
+  </a>
+  <a class="bn-item" href="sarkari_yojana.html">
+    <span class="bn-icon">📋</span>
+    <span class="bn-label">योजनाएं</span>
   </a>
 </nav>
 

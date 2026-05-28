@@ -7,10 +7,12 @@ given a farmer's question.
 Returns top-k chunks to inject into the AI prompt.
 """
 
+import os
 from pathlib import Path
 from rag.indexer import get_collection, CHROMA_DIR, run_indexing
 
 TOP_K = 4   # number of chunks to retrieve
+AUTO_INDEX_ON_ASK = os.getenv("RAG_AUTO_INDEX_ON_ASK", "false").lower() == "true"
 
 
 def retrieve(query: str, crop: str = "general", top_k: int = TOP_K) -> list[dict]:
@@ -20,9 +22,13 @@ def retrieve(query: str, crop: str = "general", top_k: int = TOP_K) -> list[dict
     Returns list of dicts:
       { "text": ..., "title": ..., "crop": ..., "score": ... }
     """
-    # Auto-index if DB is empty
+    # Keep user chat fast on hosted services. Build/rebuild the index from admin.
     if not CHROMA_DIR.exists() or not any(CHROMA_DIR.iterdir()):
-        run_indexing()
+        if AUTO_INDEX_ON_ASK:
+            run_indexing()
+        else:
+            print("[RAG] Chroma index missing. Run /admin/reindex from admin panel.")
+            return []
 
     collection = get_collection()
 

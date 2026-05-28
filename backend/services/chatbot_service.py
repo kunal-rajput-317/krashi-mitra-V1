@@ -1,12 +1,12 @@
 # ============================================================
 # services/chatbot_service.py
 # KrashiMitra — Chatbot Service
-# Flow: Cache → RAG → Gemini (multi-key) → Ollama fallback
+# Flow: Cache → RAG → Gemini (multi-key, async) → Ollama fallback
 # ============================================================
 
 import json
 import os
-import requests
+import httpx   # ← async HTTP (replaces synchronous `requests`)
 
 # ── Bad answer phrases — never cache these ────────────────────
 BAD_ANSWER_PHRASES = [
@@ -83,8 +83,8 @@ def build_prompt(question: str, district: str, language: str,
     """Build final prompt — strict retrieval-first instructions."""
     lang_instruction = (
         "तुम्हें केवल सरल हिंदी में जवाब देना है। English बिल्कुल मत लिखो।"
-        if language == "hindi"
-        else "Answer in simple English only."
+        if (language or "").lower() in ("hindi", "hi")
+        else ("Answer only in simple Kannada." if (language or "").lower() in ("kannada", "kn") else "Answer in simple English only.")
     )
     context_block = context.strip() if context.strip() else "No specific crop data available."
 
@@ -110,89 +110,114 @@ QUESTION: {question}
 ANSWER:"""
 
 
-# ── Gemini with multi-key rotation ───────────────────────────
-def call_gemini(prompt: str) -> str:
+# ── Gemini with multi-key rotation (ASYNC) ───────────────────
+async def call_gemini(prompt: str) -> str:
     """
-    Try all configured Gemini keys in order.
-    Supports GEMINI_API_KEY, GEMINI_API_KEY_2, GEMINI_API_KEY_3.
-    Skips 429 (quota) and tries next key automatically.
+    Try all configured Gemini keys in order — fully async via httpx.
+    Supports GEMINI_API_KEY, GEMINI_API_KEY2, GEMINI_API_KEY3.
     """
     GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    TIMEOUT = float(os.getenv("GEMINI_TIMEOUT", "15"))   # 15s per key — 3 keys × 15s = 45s max
 
-    # Collect all configured keys
+    # Collect all configured keys (dedup)
     keys = []
-    for key_name in ["GEMINI_API_KEY", "GEMINI_API_KEY_2", "GEMINI_API_KEY_3"]:
+    seen = set()
+    for key_name in [
+        "GEMINI_API_KEY",
+        "GEMINI_API_KEY2",
+        "GEMINI_API_KEY_2",
+        "GEMINI_API_KEY3",
+        "GEMINI_API_KEY_3",
+    ]:
         k = os.getenv(key_name, "").strip()
-        if k:
+        if k and k not in seen:
             keys.append((key_name, k))
+            seen.add(k)
 
     if not keys:
-        raise ValueError("No GEMINI_API_KEY set in .env")
+        raise ValueError("No Gemini API key set in environment")
 
     last_error = None
-    for key_name, api_key in keys:
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{GEMINI_MODEL}:generateContent?key={api_key}"
-        )
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "temperature":     0.3,
-                "maxOutputTokens": 500,
-                "topP":            0.8,
-            },
-        }
-        try:
-            resp = requests.post(url, json=payload, timeout=15)
-            if resp.status_code == 429:
-                print(f"[Gemini] {key_name} quota exceeded, trying next key...")
-                last_error = f"{key_name}: 429 quota"
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        for key_name, api_key in keys:
+            url = (
+                f"https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{GEMINI_MODEL}:generateContent?key={api_key}"
+            )
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature":     0.3,
+                    "maxOutputTokens": 500,
+                    "topP":            0.8,
+                },
+            }
+            try:
+                resp = await client.post(url, json=payload)
+                if resp.status_code == 429:
+                    print(f"[Gemini] {key_name} quota exceeded, trying next key...")
+                    last_error = f"{key_name}: 429 quota"
+                    continue
+                resp.raise_for_status()
+                data = resp.json()
+                answer = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                print(f"[Gemini] ✅ Success with {key_name}")
+                return answer
+            except httpx.TimeoutException:
+                print(f"[Gemini] {key_name} timed out after {TIMEOUT}s")
+                last_error = f"{key_name}: timeout"
                 continue
-            resp.raise_for_status()
-            answer = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-            print(f"[Gemini] Success with {key_name}")
-            return answer
-        except Exception as e:
-            print(f"[Gemini] {key_name} failed: {e}")
-            last_error = str(e)
-            continue
+            except Exception as e:
+                print(f"[Gemini] {key_name} failed: {e}")
+                last_error = str(e)
+                continue
 
     raise Exception(f"All Gemini keys failed. Last error: {last_error}")
 
 
-# ── Ollama local fallback ─────────────────────────────────────
-def call_ollama(prompt: str) -> str:
-    """Call local Ollama. Timeout=40s for 7B models."""
+# ── Ollama local fallback (ASYNC) ─────────────────────────────
+async def call_ollama(prompt: str) -> str:
+    """Call local Ollama — async. Only used when OLLAMA_ENABLED=true."""
     hindi_prefix = "You must respond ONLY in Hindi. हिंदी में उत्तर दें।\n\n"
-    model = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={"model": model, "prompt": hindi_prefix + prompt, "stream": False},
-        timeout=40,   # increased from 30 → 120 for 7B models
-    )
-    return response.json()["response"]
+    model    = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(
+            f"{base_url}/api/generate",
+            json={"model": model, "prompt": hindi_prefix + prompt, "stream": False},
+        )
+        resp.raise_for_status()
+        return resp.json()["response"]
 
 
-# ── Smart call: Gemini → Ollama ───────────────────────────────
-def call_ai(prompt: str) -> tuple[str, str]:
+# ── Smart call: Gemini → Ollama (ASYNC) ───────────────────────
+async def call_ai(prompt: str) -> tuple[str, str]:
     """
     Returns: (answer, source)
     source = "gemini" | "ollama" | "error"
     """
+    # ── Try Gemini ────────────────────────────────────────────
     try:
-        answer = call_gemini(prompt)
+        answer = await call_gemini(prompt)
         if is_good_answer(answer):
             return answer, "gemini"
-        print(f"[AI] Gemini returned bad answer, trying Ollama")
+        print("[AI] Gemini returned bad/short answer, trying Ollama")
     except Exception as e:
         print(f"[AI] Gemini failed: {e}")
 
+    # ── Try Ollama fallback (if enabled) ──────────────────────
+    if os.getenv("OLLAMA_ENABLED", "false").lower() != "true":
+        print("[AI] Ollama fallback disabled (OLLAMA_ENABLED != true)")
+        return (
+            "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+            "error"
+        )
+
     try:
-        answer = call_ollama(prompt)
+        answer = await call_ollama(prompt)
         if is_good_answer(answer):
             return answer, "ollama"
-        print(f"[AI] Ollama returned bad answer")
+        print("[AI] Ollama returned bad answer")
     except Exception as e:
         print(f"[AI] Ollama failed: {e}")
 

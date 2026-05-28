@@ -26,7 +26,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from backend.database.db import User, UserProfile, get_db
@@ -44,6 +44,56 @@ from backend.utils.auth_utils import (
 
 router = APIRouter()
 
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_WINDOW_MINUTES = 15
+_login_attempts = {}
+
+
+def _login_key(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+def _attempt_state(email: str) -> dict:
+    key = _login_key(email)
+    now = datetime.utcnow()
+    state = _login_attempts.get(key)
+    if not state or state["reset_at"] <= now:
+        state = {"count": 0, "reset_at": now + timedelta(minutes=LOGIN_WINDOW_MINUTES)}
+        _login_attempts[key] = state
+    return state
+
+
+def _blocked_login_response(email: str) -> Optional[dict]:
+    state = _attempt_state(email)
+    if state["count"] < MAX_LOGIN_ATTEMPTS:
+        return None
+    retry_after = max(1, int((state["reset_at"] - datetime.utcnow()).total_seconds()))
+    return {
+        "success": False,
+        "message": f"Too many wrong attempts. Please try again after {retry_after // 60 + 1} minutes or reset password.",
+        "data": {
+            "locked": True,
+            "forgot_available": True,
+            "retry_after_seconds": retry_after,
+        },
+    }
+
+
+def _record_failed_login(email: str) -> dict:
+    state = _attempt_state(email)
+    state["count"] += 1
+    remaining = max(0, MAX_LOGIN_ATTEMPTS - state["count"])
+    return {
+        "attempts_remaining": remaining,
+        "forgot_available": True,
+        "locked": remaining == 0,
+        "retry_after_seconds": max(1, int((state["reset_at"] - datetime.utcnow()).total_seconds())),
+    }
+
+
+def _clear_failed_login(email: str):
+    _login_attempts.pop(_login_key(email), None)
+
 
 # ── Request Models ───────────────────────────────────────────
 
@@ -51,6 +101,7 @@ class SignupRequest(BaseModel):
     name:     str
     email:    EmailStr
     password: str
+    confirm_password: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email:    EmailStr
@@ -70,6 +121,7 @@ class ResetPasswordRequest(BaseModel):
     email:        EmailStr
     otp:          str
     new_password: str
+    confirm_password: Optional[str] = None
 
 class ProfileUpdateRequest(BaseModel):
     """Matches exactly what frontend saveProfile() sends."""
@@ -185,6 +237,9 @@ def _apply_profile_update(user: User, profile: UserProfile, body: ProfileUpdateR
 @router.post("/signup")
 def signup(body: SignupRequest, db: Session = Depends(get_db)):
     try:
+        if body.confirm_password is not None and body.password != body.confirm_password:
+            return {"success": False, "message": "Password और Confirm Password match नहीं कर रहे।", "data": {}}
+
         # Validate password strength first
         err = validate_password_strength(body.password)
         if err:
@@ -242,14 +297,21 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(body: LoginRequest, db: Session = Depends(get_db)):
     try:
+        blocked = _blocked_login_response(body.email)
+        if blocked:
+            return blocked
+
         user = db.query(User).filter(User.email == body.email).first()
         if not user:
-            return {"success": False, "message": "Email या password गलत है।", "data": {}}
+            data = _record_failed_login(body.email)
+            return {"success": False, "message": "Email या password गलत है। Forgot password use कर सकते हैं।", "data": data}
         if not user.is_verified:
             return {"success": False, "message": "कृपया पहले अपना email verify करें।", "data": {}}
         if not verify_password(body.password, user.hashed_password):
-            return {"success": False, "message": "Email या password गलत है।", "data": {}}
+            data = _record_failed_login(body.email)
+            return {"success": False, "message": "Email या password गलत है। Forgot password use कर सकते हैं।", "data": data}
 
+        _clear_failed_login(body.email)
         token = create_access_token(user_id=user.id, email=user.email)
         return {"success": True, "message": "Login successful", "data": {"token": token}}
 
@@ -331,6 +393,9 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
 @router.post("/reset-password")
 def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
     try:
+        if body.confirm_password is not None and body.new_password != body.confirm_password:
+            return {"success": False, "message": "New password और Confirm Password match नहीं कर रहे।", "data": {}}
+
         user = db.query(User).filter(User.email == body.email).first()
         if not user:
             return {"success": False, "message": "Email registered नहीं है।", "data": {}}
@@ -349,6 +414,7 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
         user.otp             = None
         user.otp_expiry      = None
         db.commit()
+        _clear_failed_login(body.email)
         return {"success": True, "message": "Password reset हो गया। अब login करें।", "data": {}}
 
     except Exception as e:

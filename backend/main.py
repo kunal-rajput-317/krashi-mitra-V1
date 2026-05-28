@@ -7,10 +7,11 @@
 #   ✅ weather    → routes/weather.py    + services/weather_service.py
 #   ✅ mandi      → routes/mandi.py      + services/mandi_service.py
 #   ✅ fertilizer → routes/fertilizer.py + services/fertilizer_service.py
-#   ✅ chatbot    → routes/chatbot.py    + services/chatbot_service.py
+#   ✅ chatbot    → routes/chatbot.py    + services/chatbot_service.py  (async)
 #   ✅ auth       → routes/auth.py
 #   ✅ profile    → routes/profile.py
-#   ✅ search     → routes/search.py     + services/search_service.py  ← NEW
+#   ✅ search     → routes/search.py     + services/search_service.py
+#   ⚠️  chat.py   → REMOVED (duplicated /ask from chatbot.py, caused route conflict)
 # ============================================================
 
 import os
@@ -84,10 +85,16 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    Base.metadata.create_all(bind=engine)   # ← create tables (cart, etc.)
-    init_db()
-    print("✅ Krishi Mitra database initialized.")
-    await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
+    try:
+        Base.metadata.create_all(bind=engine)   # ← create tables (cart, etc.)
+        init_db()
+        print("✅ Krishi Mitra database initialized.")
+    except Exception as e:
+        print(f"⚠️ DB startup error (non-fatal): {e}")
+    try:
+        await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
+    except Exception as e:
+        print(f"⚠️ Scheduler startup error (non-fatal): {e}")
 
 # @app.post("/ask")
 # async def ask(data: dict):
@@ -104,8 +111,9 @@ app.include_router(profile_router)
 app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
 app.include_router(order_router)    # ORDER
-# NOTE: duplicate chat.router, weather.router, mandi.router calls removed —
-# they are already registered above as chatbot_router/weather_router/mandi_router
+# NOTE: chat.py router deliberately NOT registered — chatbot.py has the full
+# pipeline (Cache→RAG→Gemini→Ollama). chat.py was an older simplified version
+# that duplicated POST /ask and caused routing conflicts.
 
 from backend.routes import admin as admin_route
 app.include_router(admin_route.router)

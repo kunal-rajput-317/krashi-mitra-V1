@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pathlib import Path
@@ -8,8 +10,8 @@ router  = APIRouter(prefix="/admin")
 security = HTTPBasic()
 
 # ── Simple hardcoded auth (replace with DB auth when going live) ──────
-ADMIN_USER = "admin"
-ADMIN_PASS = "krashi2025"   # change before deployment
+ADMIN_USER = os.getenv("ADMIN_USER", "admin")
+ADMIN_PASS = os.getenv("ADMIN_PASS", "krashi2025")   # set env vars before deployment
 
 UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -190,7 +192,16 @@ async def reindex(_: str = Depends(require_admin)):
 @router.get("/status")
 async def system_status():
     import os
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    gemini_keys = [
+        os.getenv(name, "").strip()
+        for name in (
+            "GEMINI_API_KEY",
+            "GEMINI_API_KEY2",
+            "GEMINI_API_KEY_2",
+            "GEMINI_API_KEY3",
+            "GEMINI_API_KEY_3",
+        )
+    ]
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     OLLAMA_MODEL    = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
 
@@ -220,7 +231,7 @@ async def system_status():
         pass
 
     return {
-        "gemini_configured": bool(GEMINI_API_KEY),
+        "gemini_configured": any(gemini_keys),
         "ollama_running":    ollama_ok,
         "ollama_model":      OLLAMA_MODEL,
         "chroma_chunks":     chroma_count,
