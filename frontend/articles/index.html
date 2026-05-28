@@ -431,7 +431,7 @@
   <p class="page-hero-sub" data-i18n="hero_sub">विशेषज्ञों द्वारा लिखे गए लेख — फसल, खाद, मौसम और खेती की पूरी जानकारी</p>
   <div class="hero-pills">
     <div class="hero-pill">📄 <span id="total-count">…</span> <span data-i18n="pill_articles">लेख</span></div>
-    <div class="hero-pill">🌾 8 <span data-i18n="pill_categories">श्रेणियां</span></div>
+    <div class="hero-pill">🌾 6 <span data-i18n="pill_categories">श्रेणियां</span></div>
     <div class="hero-pill">✍️ <span data-i18n="pill_expert">विशेषज्ञ सलाह</span></div>
   </div>
 </div>
@@ -456,13 +456,12 @@
 <!-- CATEGORY FILTER -->
 <div class="filter-bar" id="filter-bar">
   <div class="filter-chip active" onclick="setFilter(this,'all')"     data-i18n="cat_all">🌿 सभी</div>
-  <div class="filter-chip"        onclick="setFilter(this,'gehun')"   data-i18n="cat_gehun">🌾 गेहूं</div>
-  <div class="filter-chip"        onclick="setFilter(this,'dhan')"    data-i18n="cat_dhan">🍚 धान</div>
   <div class="filter-chip"        onclick="setFilter(this,'khad')"    data-i18n="cat_khad">🧪 खाद</div>
   <div class="filter-chip"        onclick="setFilter(this,'keet')"    data-i18n="cat_keet">🐛 कीट</div>
   <div class="filter-chip"        onclick="setFilter(this,'mausam')"  data-i18n="cat_mausam">🌦️ मौसम</div>
-  <div class="filter-chip"        onclick="setFilter(this,'sarso')"   data-i18n="cat_sarso">🌻 सरसों</div>
   <div class="filter-chip"        onclick="setFilter(this,'ganna')"   data-i18n="cat_ganna">🎋 गन्ना</div>
+  <div class="filter-chip"        onclick="setFilter(this,'sabji')"   data-i18n="cat_sabji">🥬 सब्जी</div>
+  <div class="filter-chip"        onclick="setFilter(this,'karnataka')" data-i18n="cat_karnataka">📍 कर्नाटक</div>
 </div>
 
 <!-- FEATURED -->
@@ -470,22 +469,22 @@
   <div class="section-header">
     <h2 class="section-title" data-i18n="featured_heading">⭐ विशेष लेख</h2>
   </div>
-  <a class="featured-card" href="gehun-pila.html" data-cat="gehun" data-title="गेहूं में पीलापन कारण उपाय">
-    <div class="featured-banner">
-      🌾
+  <a class="featured-card" href="ganna-guide-up.html" data-cat="ganna" data-title="उत्तर प्रदेश में गन्ने की खेती सम्पूर्ण मार्गदर्शिका">
+    <div class="featured-banner" style="background:linear-gradient(135deg,#2e1503 0%,#1b4d1c 50%,#f57f17 100%)">
+      🎋
       <span class="featured-badge" data-i18n="featured_badge">✨ FEATURED</span>
     </div>
     <div class="featured-body">
-      <span class="featured-tag" data-i18n="cat_gehun_plain">गेहूं</span>
-      <div class="featured-title" data-i18n="feat_title">गेहूं में पीलापन: कारण, पहचान और उपाय</div>
+      <span class="featured-tag" data-i18n="cat_ganna_plain">गन्ना</span>
+      <div class="featured-title" data-i18n="feat_title">उत्तर प्रदेश में गन्ने की खेती — सम्पूर्ण मार्गदर्शिका</div>
       <div class="featured-excerpt" data-i18n="feat_excerpt">
-        गेहूं की फसल में पत्तियों का पीला पड़ना एक आम समस्या है। सही समय पर पहचान और उचित उपाय से फसल को बचाया जा सकता है…
+        बुवाई से लेकर चीनी मिल भुगतान तक — किस्म चुनाव, खाद, सिंचाई, रोग नियंत्रण और SAP मूल्य — UP के हर गन्ना किसान के लिए सम्पूर्ण हिंदी गाइड।
       </div>
       <div class="featured-footer">
         <div class="meta-row">
-          <span data-i18n="feat_time">⏱️ 3 मिनट</span>
+          <span data-i18n="feat_time">⏱️ 10 मिनट</span>
           <span class="meta-dot"></span>
-          <span data-i18n="feat_date">📅 आज</span>
+          <span data-i18n="feat_date">📅 नया</span>
         </div>
         <span class="read-more-btn" data-i18n="read_more">पढ़ें →</span>
       </div>
@@ -504,13 +503,6 @@
         <span class="trending-sub"><span class="trending-hot">HOT</span> · <span data-i18n="tr1_time">4 मिनट</span></span>
       </div>
     </a>
-    <a class="trending-chip" href="dhan-jhoka.html">
-      <span class="trending-emoji">🌀</span>
-      <div class="trending-info">
-        <span class="trending-title" data-i18n="tr2_title">धान झोंका रोग</span>
-        <span class="trending-sub">2.1k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr2_time">4 मिनट</span></span>
-      </div>
-    </a>
     <a class="trending-chip" href="keet-niyantran.html">
       <span class="trending-emoji">🐛</span>
       <div class="trending-info">
@@ -518,11 +510,18 @@
         <span class="trending-sub">1.8k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr3_time">4 मिनट</span></span>
       </div>
     </a>
-    <a class="trending-chip" href="drip-sinchai.html">
-      <span class="trending-emoji">💧</span>
+    <a class="trending-chip" href="karnataka-monsoon.html">
+      <span class="trending-emoji">🌧️</span>
       <div class="trending-info">
-        <span class="trending-title" data-i18n="tr4_title">ड्रिप सिंचाई</span>
-        <span class="trending-sub">1.4k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr4_time">5 मिनट</span></span>
+        <span class="trending-title" data-i18n="tr2_title">कर्नाटक मानसून प्लान</span>
+        <span class="trending-sub">2.1k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr2_time">8 मिनट</span></span>
+      </div>
+    </a>
+    <a class="trending-chip" href="ganna-guide-up.html">
+      <span class="trending-emoji">🎋</span>
+      <div class="trending-info">
+        <span class="trending-title" data-i18n="tr4_title">गन्ना खेती UP</span>
+        <span class="trending-sub">1.4k <span data-i18n="reads">पढ़े</span> · <span data-i18n="tr4_time">10 मिनट</span></span>
       </div>
     </a>
   </div>
@@ -537,95 +536,14 @@
 
   <div class="articles-list" id="articles-list">
 
-    <!-- गेहूं -->
-    <a class="article-card" href="gehun-pila.html" data-cat="gehun" data-title="गेहूं में पीलापन कारण उपाय" style="--accent:#d97706">
-      <div class="article-thumb" style="background:#fef3c7">🌾</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#fef3c7;color:#92400e" data-i18n="cat_gehun_plain">गेहूं</span>
-        <div class="article-title" data-i18n="a1_title">गेहूं में पीलापन: कारण और उपाय<span class="new-badge">NEW</span></div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a1_time">3 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a1_date">आज</span></div>
-          <div class="article-views">👁 1.2k</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <a class="article-card" href="gehun-buvai.html" data-cat="gehun" data-title="गेहूं की बुवाई सही समय तरीका" style="--accent:#d97706">
-      <div class="article-thumb" style="background:#fef3c7">🌱</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#fef3c7;color:#92400e" data-i18n="cat_gehun_plain">गेहूं</span>
-        <div class="article-title" data-i18n="a2_title">गेहूं की बुवाई: सही समय और तरीका</div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a2_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a2_date">2 दिन पहले</span></div>
-          <div class="article-views">👁 980</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <!-- धान -->
-    <a class="article-card" href="dhan-buvai.html" data-cat="dhan" data-title="धान की बुवाई सही समय तरीका" style="--accent:#0f766e">
-      <div class="article-thumb" style="background:#ccfbf1">🍚</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#ccfbf1;color:#0f766e" data-i18n="cat_dhan_plain">धान</span>
-        <div class="article-title" data-i18n="a3_title">धान की सही बुवाई का समय और तरीका</div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a3_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a3_date">कल</span></div>
-          <div class="article-views">👁 754</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <a class="article-card" href="dhan-jhoka.html" data-cat="dhan" data-title="धान में झोंका रोग ब्लास्ट" style="--accent:#0f766e">
-      <div class="article-thumb" style="background:#ccfbf1">🌀</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#ccfbf1;color:#0f766e" data-i18n="cat_dhan_plain">धान</span>
-        <div class="article-title" data-i18n="a4_title">धान में झोंका रोग (Blast): पहचान और बचाव<span class="hot-badge">HOT</span></div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a4_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a4_date">3 दिन पहले</span></div>
-          <div class="article-views">👁 2.1k</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <!-- सिंचाई -->
-    <a class="article-card" href="drip-sinchai.html" data-cat="sinchai" data-title="ड्रिप सिंचाई तकनीक फायदे" style="--accent:#0369a1">
-      <div class="article-thumb" style="background:#e0f2fe">💧</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#e0f2fe;color:#0369a1" data-i18n="cat_sinchai_plain">सिंचाई</span>
-        <div class="article-title" data-i18n="a5_title">ड्रिप सिंचाई: कम पानी में ज़्यादा पैदावार</div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a5_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a5_date">1 दिन पहले</span></div>
-          <div class="article-views">👁 1.4k</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <a class="article-card" href="sprinkler-guide.html" data-cat="sinchai" data-title="स्प्रिंकलर सिंचाई सब्सिडी" style="--accent:#0369a1">
-      <div class="article-thumb" style="background:#e0f2fe">🚿</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#e0f2fe;color:#0369a1" data-i18n="cat_sinchai_plain">सिंचाई</span>
-        <div class="article-title" data-i18n="a6_title">स्प्रिंकलर सिंचाई और सरकारी सब्सिडी</div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a6_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a6_date">2 दिन पहले</span></div>
-          <div class="article-views">👁 620</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
     <!-- खाद -->
     <a class="article-card" href="urea-guide-up.html" data-cat="khad" data-title="यूरिया DAP खाद कब कितना" style="--accent:#1d4ed8">
       <div class="article-thumb" style="background:#dbeafe">🧪</div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
-        <div class="article-title" data-i18n="a7_title">यूरिया और DAP: कब और कितना दें?<span class="new-badge">NEW</span></div>
+        <div class="article-title" data-i18n="a1_title">यूरिया और DAP: कब और कितना दें?<span class="hot-badge">HOT</span></div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a7_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a7_date">2 दिन पहले</span></div>
+          <div class="article-meta">⏱️ <span data-i18n="a1_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a1_date">2 दिन पहले</span></div>
           <div class="article-views">👁 1.9k</div>
         </div>
       </div>
@@ -636,9 +554,9 @@
       <div class="article-thumb" style="background:#dbeafe">♻️</div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
-        <div class="article-title" data-i18n="a8_title">घर पर जैविक खाद कैसे बनाएं?</div>
+        <div class="article-title" data-i18n="a2_title">घर पर जैविक खाद कैसे बनाएं?</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a8_time">6 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a8_date">4 दिन पहले</span></div>
+          <div class="article-meta">⏱️ <span data-i18n="a2_time">6 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a2_date">4 दिन पहले</span></div>
           <div class="article-views">👁 845</div>
         </div>
       </div>
@@ -650,23 +568,10 @@
       <div class="article-thumb" style="background:#f3e8ff">🐛</div>
       <div class="article-body">
         <span class="article-tag" style="background:#f3e8ff;color:#7e22ce" data-i18n="cat_keet_plain">कीट</span>
-        <div class="article-title" data-i18n="a9_title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        <div class="article-title" data-i18n="a3_title">फसल में कीट नियंत्रण के देसी उपाय</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a9_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a9_date">3 दिन पहले</span></div>
+          <div class="article-meta">⏱️ <span data-i18n="a3_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a3_date">3 दिन पहले</span></div>
           <div class="article-views">👁 1.8k</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <a class="article-card" href="tiddi-bachav.html" data-cat="keet" data-title="टिड्डी दल से फसल बचाव" style="--accent:#7e22ce">
-      <div class="article-thumb" style="background:#f3e8ff">🦗</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#f3e8ff;color:#7e22ce" data-i18n="cat_keet_plain">कीट</span>
-        <div class="article-title" data-i18n="a10_title">टिड्डी दल से फसल को कैसे बचाएं?</div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a10_time">3 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a10_date">5 दिन पहले</span></div>
-          <div class="article-views">👁 670</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
@@ -677,51 +582,104 @@
       <div class="article-thumb" style="background:#e0f2fe">🌦️</div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0f2fe;color:#0284c7" data-i18n="cat_mausam_plain">मौसम</span>
-        <div class="article-title" data-i18n="a11_title">मौसम के अनुसार खेती की योजना कैसे बनाएं?</div>
+        <div class="article-title" data-i18n="a4_title">मौसम के अनुसार खेती की योजना कैसे बनाएं?</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a11_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a11_date">1 सप्ताह पहले</span></div>
+          <div class="article-meta">⏱️ <span data-i18n="a4_time">5 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a4_date">1 सप्ताह पहले</span></div>
           <div class="article-views">👁 1.1k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="sukha-prabandhan.html" data-cat="mausam" data-title="सूखा प्रबंधन पानी की कमी खेती" style="--accent:#0284c7">
-      <div class="article-thumb" style="background:#e0f2fe">☀️</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#e0f2fe;color:#0284c7" data-i18n="cat_mausam_plain">मौसम</span>
-        <div class="article-title" data-i18n="a12_title">सूखे में फसल बचाने के उपाय</div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a12_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a12_date">1 सप्ताह पहले</span></div>
-          <div class="article-views">👁 890</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <!-- सरसों -->
-    <a class="article-card" href="sarso-kheti.html" data-cat="sarso" data-title="सरसों की खेती उन्नत तरीका" style="--accent:#ca8a04">
-      <div class="article-thumb" style="background:#fef9c3">🌻</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#fef9c3;color:#ca8a04" data-i18n="cat_sarso_plain">सरसों</span>
-        <div class="article-title" data-i18n="a13_title">सरसों की उन्नत खेती: पूरी जानकारी</div>
-        <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a13_time">7 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a13_date">10 दिन पहले</span></div>
-          <div class="article-views">👁 730</div>
-        </div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
     <!-- गन्ना -->
-    <a class="article-card" href="ganna-rog.html" data-cat="ganna" data-title="गन्ने में लाल सड़न रोग" style="--accent:#16a34a">
+    <a class="article-card" href="ganna-rog.html" data-cat="ganna" data-title="गन्ने में लाल सड़न रोग पहचान उपचार" style="--accent:#16a34a">
       <div class="article-thumb" style="background:#dcfce7">🎋</div>
       <div class="article-body">
         <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
-        <div class="article-title" data-i18n="a14_title">गन्ने में लाल सड़न रोग: पहचान व उपचार</div>
+        <div class="article-title" data-i18n="a5_title">गन्ने में लाल सड़न रोग: पहचान व उपचार</div>
         <div class="article-footer">
-          <div class="article-meta">⏱️ <span data-i18n="a14_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a14_date">12 दिन पहले</span></div>
+          <div class="article-meta">⏱️ <span data-i18n="a5_time">4 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a5_date">12 दिन पहले</span></div>
           <div class="article-views">👁 560</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="ganna-guide-up.html" data-cat="ganna" data-title="उत्तर प्रदेश गन्ने की खेती सम्पूर्ण मार्गदर्शिका" style="--accent:#16a34a">
+      <div class="article-thumb" style="background:#dcfce7">🎋</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
+        <div class="article-title" data-i18n="a6_title">UP में गन्ने की खेती — सम्पूर्ण मार्गदर्शिका<span class="new-badge">NEW</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a6_time">10 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a6_date">नया</span></div>
+          <div class="article-views">👁 1.4k</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- सब्जी -->
+    <a class="article-card" href="potato_guide_up.html" data-cat="sabji" data-title="आलू की खेती उत्तर प्रदेश मार्गदर्शिका" style="--accent:#795548">
+      <div class="article-thumb" style="background:#efebe9">🥔</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#efebe9;color:#795548" data-i18n="cat_sabji_plain">सब्जी</span>
+        <div class="article-title" data-i18n="a7_title">UP में आलू की खेती — सम्पूर्ण मार्गदर्शिका<span class="new-badge">NEW</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a7_time">8 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a7_date">नया</span></div>
+          <div class="article-views">👁 920</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="tomato-guide-up.html" data-cat="sabji karnataka" data-title="टमाटर बेळे कर्नाटक tomato farming guide" style="--accent:#d32f2f">
+      <div class="article-thumb" style="background:#ffebee">🍅</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#ffebee;color:#d32f2f" data-i18n="cat_sabji_plain">सब्जी</span>
+        <div class="article-title" data-i18n="a8_title">ಟೊಮೆಟೊ ಬೆಳೆ — कर्नाटक टमाटर गाइड<span class="new-badge">NEW</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a8_time">7 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a8_date">नया</span></div>
+          <div class="article-views">👁 780</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="chilli-guide-karnataka.html" data-cat="sabji karnataka" data-title="मिर्ची बेळे कर्नाटक chilli farming guide" style="--accent:#c62828">
+      <div class="article-thumb" style="background:#ffebee">🌶️</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#ffebee;color:#c62828" data-i18n="cat_sabji_plain">सब्जी</span>
+        <div class="article-title" data-i18n="a9_title">ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ — कर्नाटक मिर्ची गाइड<span class="new-badge">NEW</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a9_time">8 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a9_date">नया</span></div>
+          <div class="article-views">👁 650</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <!-- कर्नाटक -->
+    <a class="article-card" href="paddy-guide-karnataka.html" data-cat="karnataka" data-title="ಭತ್ತ ಬೆಳೆ कर्नाटक paddy rice farming" style="--accent:#558b2f">
+      <div class="article-thumb" style="background:#f1f8e9">🌾</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#f1f8e9;color:#558b2f" data-i18n="cat_karnataka_plain">कर्नाटक</span>
+        <div class="article-title" data-i18n="a10_title">ಭತ್ತದ ಬೆಳೆ — कर्नाटक धान गाइड<span class="new-badge">NEW</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a10_time">6 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a10_date">नया</span></div>
+          <div class="article-views">👁 480</div>
+        </div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="karnataka-monsoon.html" data-cat="mausam karnataka" data-title="कर्नाटक मानसून monsoon farming plan kharif" style="--accent:#00695c">
+      <div class="article-thumb" style="background:#e0f2f1">🌧️</div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#e0f2f1;color:#00695c" data-i18n="cat_karnataka_plain">कर्नाटक</span>
+        <div class="article-title" data-i18n="a11_title">Karnataka Monsoon Farming Plan<span class="hot-badge">HOT</span></div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span data-i18n="a11_time">8 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span data-i18n="a11_date">नया</span></div>
+          <div class="article-views">👁 2.1k</div>
         </div>
       </div>
       <span class="article-arrow">›</span>
