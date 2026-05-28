@@ -16,8 +16,8 @@ from backend.database.db import ChatHistory, get_db
 from backend.services.chatbot_service import (
     build_context,
     build_prompt,
-    call_ollama,
-    call_ai,
+    call_ollama,   # now async
+    call_ai,       # now async
     get_crop_keys,
     is_good_answer,
 )
@@ -52,7 +52,7 @@ router = APIRouter()
 class Question(BaseModel):
     q:        str
     crop:     str = "wheat_up"
-    language: str = "english"
+    language: str = "hindi"
     district: str = "Uttar Pradesh"
     user_id:  Optional[int] = None
 
@@ -68,7 +68,7 @@ def is_weather_question(q: str) -> bool:
 
 
 @router.post("/ask")
-async def ask(body: Question, db: Session = Depends(get_db)):
+async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
 
     # ── Weather redirect ──────────────────────────────────────
     if is_weather_question(body.q):
@@ -98,7 +98,7 @@ async def ask(body: Question, db: Session = Depends(get_db)):
         except Exception as e:
             print(f"[Cache] Search failed: {e}")
 
-    # ── Step 2: Crop JSON context (question-aware, max 10 topics) ──
+    # ── Step 2: Crop JSON context ─────────────────────────────
     crop_context = build_context(body.crop, question=body.q)
 
     # ── Step 3: RAG retrieval ─────────────────────────────────
@@ -120,7 +120,7 @@ async def ask(body: Question, db: Session = Depends(get_db)):
     else:
         full_context = crop_context
 
-    # ── Step 4: Fetch conversation history ───────────────────
+    # ── Step 4: Conversation history ──────────────────────────
     history_text = ""
     if body.user_id:
         try:
@@ -134,14 +134,14 @@ async def ask(body: Question, db: Session = Depends(get_db)):
         except Exception as e:
             print(f"[History] Failed: {e}")
 
-    # ── Step 5: Build prompt + call AI ───────────────────────
+    # ── Step 5: Build prompt + call AI (awaited) ──────────────
     prompt = build_prompt(body.q, body.district, body.language, full_context, history_text)
-    answer, source = await call_ai(prompt)
+    answer, source = await call_ai(prompt)   # ← await async call
 
     # ── Step 6: Save to DB ────────────────────────────────────
     _save_to_db(db, body, body.q, answer)
 
-    # ── Step 7: Save to cache only if answer is good ─────────
+    # ── Step 7: Save to cache if AI gave good answer ──────────
     if source in ("gemini", "ollama") and _CACHE_AVAILABLE and is_good_answer(answer):
         try:
             saved = save_to_cache(body.q, answer, source=source)
@@ -151,13 +151,13 @@ async def ask(body: Question, db: Session = Depends(get_db)):
             print(f"[Cache] Save failed: {e}")
 
     return {
-        "question":    body.q,
-        "answer":      answer,
-        "source":      source,
-        "cached":      False,
+        "question":        body.q,
+        "answer":          answer,
+        "source":          source,
+        "cached":          False,
         "api_usage_saved": False,
-        "rag_chunks":  rag_chunks,
-        "rag_context": rag_context[:300] if rag_context else "",
+        "rag_chunks":      rag_chunks,
+        "rag_context":     rag_context[:300] if rag_context else "",
     }
 
 
