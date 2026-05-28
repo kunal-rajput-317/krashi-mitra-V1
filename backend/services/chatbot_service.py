@@ -117,7 +117,7 @@ async def call_gemini(prompt: str) -> str:
     Supports GEMINI_API_KEY, GEMINI_API_KEY2, GEMINI_API_KEY3.
     """
     GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-    TIMEOUT = float(os.getenv("GEMINI_TIMEOUT", "30"))   # 30s for Render cold starts
+    TIMEOUT = float(os.getenv("GEMINI_TIMEOUT", "15"))   # 15s per key — 3 keys × 15s = 45s max
 
     # Collect all configured keys (dedup)
     keys = []

@@ -4,6 +4,7 @@
 # Full pipeline: Cache → RAG → Gemini (multi-key) → Ollama
 # ============================================================
 
+import asyncio
 import os
 import sys
 
@@ -67,8 +68,44 @@ def is_weather_question(q: str) -> bool:
     return any(w in q.lower() for w in WEATHER_KEYWORDS)
 
 
+# ── Total timeout — must finish BEFORE Render gateway kills us ─
+PIPELINE_TIMEOUT = float(os.getenv("PIPELINE_TIMEOUT", "50"))  # seconds
+
+
 @router.post("/ask")
 async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
+    """
+    Full pipeline: Cache → RAG → Gemini (async) → Ollama → error.
+    Wrapped in asyncio.wait_for so we ALWAYS respond before Render's
+    60-second gateway timeout (returns 200 + error message, not 502).
+    """
+    try:
+        return await asyncio.wait_for(
+            _ask_pipeline(body, db),
+            timeout=PIPELINE_TIMEOUT,
+        )
+    except asyncio.TimeoutError:
+        print(f"[ASK] ⏰ Pipeline timed out after {PIPELINE_TIMEOUT}s for: {body.q[:50]}")
+        return {
+            "question": body.q,
+            "answer":   "⏰ सर्वर अभी व्यस्त है। कृपया 30 सेकंड बाद दोबारा पूछें।",
+            "source":   "timeout",
+            "cached":   False,
+            "rag_chunks": 0,
+        }
+    except Exception as e:
+        print(f"[ASK] ❌ Unexpected error: {e}")
+        return {
+            "question": body.q,
+            "answer":   "क्षमा करें, कुछ गड़बड़ हो गई। कृपया दोबारा कोशिश करें।",
+            "source":   "error",
+            "cached":   False,
+            "rag_chunks": 0,
+        }
+
+
+async def _ask_pipeline(body: Question, db: Session) -> dict:
+    """Inner pipeline — can be timed out by the caller."""
 
     # ── Weather redirect ──────────────────────────────────────
     if is_weather_question(body.q):
@@ -101,12 +138,16 @@ async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
     # ── Step 2: Crop JSON context ─────────────────────────────
     crop_context = build_context(body.crop, question=body.q)
 
-    # ── Step 3: RAG retrieval ─────────────────────────────────
+    # ── Step 3: RAG retrieval (run in thread — ChromaDB is sync) ──
     rag_context = ""
     rag_chunks  = 0
     if _RAG_AVAILABLE:
         try:
-            chunks, rag_context = retrieve_with_context(body.q, body.crop)
+            # ChromaDB + sentence-transformers are synchronous.
+            # Run in a thread so we don't block the async event loop.
+            chunks, rag_context = await asyncio.to_thread(
+                retrieve_with_context, body.q, body.crop
+            )
             rag_chunks = len(chunks)
             print(f"[RAG] {rag_chunks} chunks retrieved for: {body.q[:50]}")
         except Exception as e:
