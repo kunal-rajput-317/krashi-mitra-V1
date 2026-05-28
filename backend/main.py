@@ -56,22 +56,37 @@ app = FastAPI(
 
 # ── CORS ─────────────────────────────────────────────────────────────
 from fastapi.middleware.cors import CORSMiddleware
+from urllib.parse import urlparse
 
-cors_origins = [
-    origin.strip()
-    for origin in os.getenv(
-        "CORS_ORIGINS",
-        ",".join([
-            "https://krashimitra.in",
-            "https://www.krashimitra.in",
-            "https://krashi-mitra-v1.onrender.com",
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:5173",
-        ]),
-    ).split(",")
-    if origin.strip()
-]
+raw_origins = os.getenv(
+    "CORS_ORIGINS",
+    ",".join([
+        "https://krashimitra.in",
+        "https://www.krashimitra.in",
+        "https://krashi-mitra-v1.onrender.com",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+    ]),
+).split(",")
+
+cors_origins = []
+for origin in raw_origins:
+    origin = origin.strip()
+    if not origin:
+        continue
+    # Extract only scheme://netloc to ignore trailing slashes and paths
+    try:
+        parsed = urlparse(origin)
+        if parsed.scheme and parsed.netloc:
+            cors_origins.append(f"{parsed.scheme}://{parsed.netloc}")
+        else:
+            cors_origins.append(origin)
+    except Exception:
+        cors_origins.append(origin)
+
+# Remove duplicates while preserving order
+cors_origins = list(dict.fromkeys(cors_origins))
 
 app.add_middleware(
     CORSMiddleware,
