@@ -38,6 +38,10 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2792326360609634"
+     crossorigin="anonymous"></script>
+
 <!-- ══ SCHEMA MARKUP — WebPage + BreadcrumbList ══ -->
 <script type="application/ld+json">
 {
@@ -768,6 +772,8 @@ body {
 
   body { padding-bottom: 70px; }
   .site-footer { display: none; }
+  /* extra padding when sticky ad is showing */
+  body.has-sticky-ad { padding-bottom: 138px; }
 }
 
 @supports (padding: max(0px)) {
@@ -777,6 +783,280 @@ body {
 }
 
 .hidden { display: none !important; }
+
+/* ══════════════════════════════════════
+   AD UNITS — UX-SAFE STYLES
+══════════════════════════════════════ */
+
+/* Shared ad label */
+.ad-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* ── AD 1: Leaderboard Banner (below hero, above content) ── */
+.ad-leaderboard {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px; /* prevent CLS */
+}
+.ad-leaderboard-inner {
+  width: 100%;
+  max-width: 728px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%);
+  border: 1.5px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.ad-leaderboard-inner:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--green-light);
+}
+.ad-leaderboard-icon {
+  width: 48px; height: 48px;
+  background: var(--green-pale);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.ad-leaderboard-text { flex: 1; min-width: 0; }
+.ad-leaderboard-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 3px;
+}
+.ad-leaderboard-sub {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.45;
+}
+.ad-leaderboard-cta {
+  background: var(--green-dark);
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.ad-leaderboard-dismiss {
+  position: absolute;
+  top: 8px; right: 10px;
+  background: none; border: none;
+  color: var(--text-light);
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.ad-leaderboard-dismiss:hover { opacity: 1; }
+
+/* ── AD 2: Native In-Feed Card (inside the cards grid) ── */
+.ad-infeed-card {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef9e7 100%);
+  border: 1.5px dashed var(--amber);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+  position: relative;
+}
+.ad-infeed-card:hover {
+  box-shadow: 0 4px 20px rgba(233,168,37,0.18);
+}
+.ad-infeed-top {
+  padding: 18px 18px 14px;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.ad-infeed-icon {
+  width: 50px; height: 50px;
+  border-radius: 12px;
+  background: #fff8e1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.ad-infeed-meta { flex: 1; min-width: 0; }
+.ad-infeed-name {
+  font-size: 15px; font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+.ad-infeed-desc {
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+.ad-infeed-tag {
+  display: inline-block;
+  background: #fef3c7;
+  color: var(--amber-dark);
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+.ad-infeed-footer {
+  padding: 12px 18px 16px;
+  display: flex; gap: 8px;
+  margin-top: auto;
+  border-top: 1px solid rgba(233,168,37,0.2);
+}
+.ad-infeed-btn {
+  flex: 1;
+  background: var(--amber);
+  border: none;
+  border-radius: 10px;
+  color: var(--green-dark);
+  font-size: 14px; font-weight: 700;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s, transform 0.12s;
+}
+.ad-infeed-btn:hover { background: #f5b83d; }
+.ad-infeed-btn:active { transform: scale(0.97); }
+.ad-infeed-badge {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: var(--amber);
+  color: var(--green-dark);
+  font-size: 9px; font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.8px;
+}
+
+/* ── AD 3: Contextual Strip (before FAQ section) ── */
+.ad-contextual {
+  background: var(--white);
+  border: 1.5px solid var(--border-card);
+  border-left: 4px solid var(--amber);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin: 28px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  transition: box-shadow 0.18s;
+}
+.ad-contextual:hover {
+  box-shadow: var(--shadow);
+}
+.ad-contextual-icon { font-size: 28px; flex-shrink: 0; }
+.ad-contextual-body { flex: 1; min-width: 0; }
+.ad-contextual-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+}
+.ad-contextual-sub {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.45;
+}
+.ad-contextual-cta {
+  background: var(--amber-light);
+  border: 1.5px solid var(--amber);
+  color: var(--amber-dark);
+  font-size: 12px; font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ad-contextual-cta:hover { background: #fde68a; }
+
+/* ── AD 4: Sticky Bottom Banner (mobile only) ── */
+.ad-sticky-bottom {
+  display: none;
+}
+@media screen and (max-width: 1024px) {
+  .ad-sticky-bottom {
+    display: flex;
+    position: fixed;
+    bottom: 60px; /* sits above the bottom nav */
+    left: 0; right: 0;
+    background: var(--green-dark);
+    padding: 10px 14px;
+    align-items: center;
+    gap: 10px;
+    z-index: 999;
+    box-shadow: 0 -3px 16px rgba(0,0,0,0.25);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+  }
+  .ad-sticky-bottom.hidden-banner {
+    transform: translateY(100%);
+  }
+  body { padding-bottom: 130px; } /* extra space for bottom nav + sticky ad */
+  .ad-sticky-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .ad-sticky-text { flex: 1; min-width: 0; }
+  .ad-sticky-title {
+    font-size: 12px; font-weight: 700;
+    color: #fff;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ad-sticky-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+  }
+  .ad-sticky-btn {
+    background: var(--amber);
+    color: var(--green-dark);
+    border: none;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 800;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ad-sticky-close {
+    background: none; border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+}
 </style>
 </head>
 <body>
@@ -861,6 +1141,20 @@ body {
 
   <!-- CONTENT -->
   <div class="content-area">
+
+    <!-- ══ AD 1: LEADERBOARD — below hero, above fold content ══ -->
+    <div class="ad-leaderboard" id="ad-leaderboard">
+      <div style="width:100%;max-width:728px;">
+        <span class="ad-label">विज्ञापन</span>
+        <ins class="adsbygoogle"
+             style="display:block;min-height:90px;"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="5227562513"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
 
     <!-- INFO BOX -->
     <div class="info-box">
@@ -1129,6 +1423,18 @@ body {
         </div>
       </article>
 
+      <!-- ══ AD 2: IN-FEED (responsive, sits naturally in the card grid) ══ -->
+      <div class="ad-infeed-card" id="ad-infeed" style="min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;">
+        <span class="ad-label" style="align-self:flex-start;">विज्ञापन</span>
+        <ins class="adsbygoogle"
+             style="display:block;min-height:250px;width:100%;"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="2006502801"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+
       <!-- AIF -->
       <article class="scheme-card" data-tags="loan all" data-search="agriculture infrastructure fund aif कृषि अवसंरचना कोष गोदाम cold storage">
         <div class="card-top">
@@ -1207,8 +1513,21 @@ body {
 
     </div><!-- /.cards-grid -->
 
+    <!-- ══ AD 3: CONTEXTUAL STRIP — relevant to scheme applicants, above FAQ ══ -->
+    <div style="margin-top:28px;">
+      <span class="ad-label">विज्ञापन</span>
+      <a class="ad-contextual" href="#" onclick="return false;">
+        <span class="ad-contextual-icon">🏦</span>
+        <div class="ad-contextual-body">
+          <div class="ad-contextual-title">KCC या किसान लोन के लिए तुरंत ऑनलाइन आवेदन</div>
+          <div class="ad-contextual-sub">SBI, PNB, BoB — सभी बैंकों की तुलना एक जगह। 2 मिनट में पात्रता जांचें।</div>
+        </div>
+        <button class="ad-contextual-cta" onclick="return false;">पात्रता जांचें</button>
+      </a>
+    </div>
+
     <!-- ══ FAQ SECTION — FAQPage schema content, high-CTR for Google featured snippets ══ -->
-    <section style="margin-top:32px;" id="faq-section">
+    <section style="margin-top:20px;" id="faq-section">
       <h2 style="font-size:18px;font-weight:700;color:var(--green-dark);margin-bottom:16px;">अक्सर पूछे जाने वाले सवाल — UP किसान सरकारी योजना 2026</h2>
 
       <div style="display:flex;flex-direction:column;gap:10px;">
@@ -1272,6 +1591,18 @@ body {
 
       </div>
     </section>
+
+    <!-- ══ AD 5: RECTANGLE / RESPONSIVE — after FAQ, high engagement zone ══ -->
+    <div style="margin-top:28px;margin-bottom:4px;">
+      <span class="ad-label">विज्ञापन</span>
+      <ins class="adsbygoogle"
+           style="display:block;border-radius:var(--radius-sm);overflow:hidden;"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="3707127510"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
 
     <!-- ══ INTERNAL LINKS SECTION — connects to mandi, weather, crop disease pages per PDF strategy ══ -->
     <section style="margin-top:28px;background:var(--green-pale);border-radius:var(--radius);padding:20px 22px;">
@@ -1347,6 +1678,17 @@ body {
   <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; UP किसान सरकारी योजना | All rights reserved.</div>
 </footer>
 
+
+<!-- ══ AD 4: STICKY BOTTOM BANNER (mobile only, above bottom nav) ══ -->
+<div class="ad-sticky-bottom" id="ad-sticky-bottom">
+  <span class="ad-sticky-icon">☀️</span>
+  <div class="ad-sticky-text">
+    <div class="ad-sticky-title">सोलर पंप — 90% सब्सिडी</div>
+    <div class="ad-sticky-sub">PM-KUSUM योजना में आवेदन करें</div>
+  </div>
+  <button class="ad-sticky-btn" onclick="return false;">जानें →</button>
+  <button class="ad-sticky-close" onclick="document.getElementById('ad-sticky-bottom').classList.add('hidden-banner');" title="बंद करें">✕</button>
+</div>
 
 <script>
 // ── CONFIG ──
@@ -1451,6 +1793,30 @@ function whatsappHelp(name) {
   const msg = encodeURIComponent('नमस्ते! मुझे ' + name + ' के लिए मदद चाहिए।');
   window.open('https://wa.me/' + WA_NUMBER + '?text=' + msg, '_blank', 'noopener,noreferrer');
 }
+
+// ── STICKY AD BODY CLASS ──
+(function initStickyAd() {
+  const stickyAd = document.getElementById('ad-sticky-bottom');
+  if (!stickyAd) return;
+  // Add padding class on mobile
+  function checkMobile() {
+    if (window.innerWidth <= 1024) {
+      document.body.classList.add('has-sticky-ad');
+    } else {
+      document.body.classList.remove('has-sticky-ad');
+    }
+  }
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+  // Auto-hide sticky ad after scrolling past 80% of page
+  window.addEventListener('scroll', function() {
+    const scrolled = (window.scrollY + window.innerHeight) / document.body.scrollHeight;
+    if (scrolled > 0.88) {
+      stickyAd.classList.add('hidden-banner');
+      document.body.classList.remove('has-sticky-ad');
+    }
+  }, { passive: true });
+})();
 
 // ── INIT ──
 pickLang(currentLang);
