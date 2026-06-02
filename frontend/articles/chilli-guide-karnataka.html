@@ -29,6 +29,10 @@
   <meta name="twitter:description" content="Complete chilli farming guide for Karnataka farmers in Kannada and English." />
   <meta name="twitter:image" content="https://krashimitra.in/assets/og-banner.jpg" />
 
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2792326360609634"
+    crossorigin="anonymous"></script>
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -871,6 +875,68 @@
     @media (max-width: 600px) {
       .footer-main { grid-template-columns: 1fr; gap: 20px; }
     }
+
+    /* ══════════════════════════════
+       AD SLOTS — shared base
+    ══════════════════════════════ */
+    .ad-slot {
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 4px 0;
+    }
+    .ad-slot-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-bottom: 4px;
+      align-self: flex-start;
+      opacity: 0.55;
+    }
+    /* Banner — full-width, below hero */
+    .ad-slot.ad-slot-banner .ad-slot-inner {
+      width: 100%;
+      min-height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px dashed #dcedc8;
+    }
+    /* In-feed — between sections */
+    .ad-slot.ad-slot-infeed .ad-slot-inner {
+      width: 100%;
+      min-height: 90px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px dashed #dcedc8;
+    }
+    /* Rectangle — mid-article */
+    .ad-slot.ad-slot-rect .ad-slot-inner {
+      width: 100%;
+      max-width: 336px;
+      min-height: 280px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px dashed #dcedc8;
+    }
+    .ad-slot ins { display: block; width: 100%; }
+    .ad-slot-wrap {
+      padding: 16px 0 4px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    @media (max-width: 480px) {
+      .ad-slot.ad-slot-rect .ad-slot-inner { max-width: 100%; min-height: 100px; }
+    }
   </style>
 </head>
 <body class="lang-kn">
@@ -929,6 +995,24 @@
       <span>📍 ಕನ್ನಡ + English</span>
       <div class="hero-share">
         <button class="share-btn" onclick="navigator.share && navigator.share({title:'ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ',url:window.location.href})">📤 ಹಂಚಿ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AD SLOT 1 — Responsive Banner (Below Hero) -->
+<div class="article-wrapper" style="padding-top:14px; padding-bottom:0">
+  <div class="ad-slot-wrap">
+    <div class="ad-slot-label">ಜಾಹೀರಾತು · Advertisement</div>
+    <div class="ad-slot ad-slot-banner">
+      <div class="ad-slot-inner">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-2792326360609634"
+             data-ad-slot="5237803829"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
       </div>
     </div>
   </div>
@@ -1172,6 +1256,25 @@
 
   <hr class="section-divider" />
 
+  <!-- AD SLOT 2 — In-feed (Between Cultivation & Pest sections) -->
+  <div class="ad-slot-wrap">
+    <div class="ad-slot-label">ಜಾಹೀರಾತು · Advertisement</div>
+    <div class="ad-slot ad-slot-infeed">
+      <div class="ad-slot-inner">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-2792326360609634"
+             data-ad-slot="8003264044"
+             data-ad-format="fluid"
+             data-ad-layout-key="-fb+5w+4e-db+86"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
   <!-- PEST & DISEASE -->
   <section class="article-section">
     <div class="section-heading">
@@ -1308,6 +1411,24 @@
       </div>
     </div>
   </section>
+
+  <hr class="section-divider" />
+
+  <!-- AD SLOT 3 — Responsive Banner (Between Income & Govt Schemes) -->
+  <div class="ad-slot-wrap">
+    <div class="ad-slot-label">ಜಾಹೀರಾತು · Advertisement</div>
+    <div class="ad-slot ad-slot-banner">
+      <div class="ad-slot-inner">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-2792326360609634"
+             data-ad-slot="1981085091"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+  </div>
 
   <hr class="section-divider" />
 

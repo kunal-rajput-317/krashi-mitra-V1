@@ -143,6 +143,10 @@
   }
   </script>
 
+  <!-- ── Google AdSense ── -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2792326360609634"
+    crossorigin="anonymous"></script>
+
   <!-- ── 7. PWA / MOBILE ── -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#1b5e20">
@@ -1085,6 +1089,184 @@
         gap: 12px;
       }
     }
+
+    /* ══════════════════════════════
+       AD SLOTS — UX-safe, labelled
+    ══════════════════════════════ */
+
+    /* Wrapper shared by all ad slots */
+    .ad-slot {
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Tiny "Sponsored" label above every ad */
+    .ad-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+      align-self: flex-start;
+      padding-left: 2px;
+    }
+
+    /* ── Banner ad (below hero, full-width) ── */
+    .ad-banner {
+      padding: 12px 20px 0;
+    }
+    .ad-banner .ad-inner {
+      width: 100%;
+      min-height: 60px;         /* standard mobile banner height */
+      background: var(--white);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    /* ── In-feed native ad (sits between sections, looks like a card) ── */
+    .ad-native {
+      padding: 0 20px;
+      margin: 4px 0;
+    }
+    .ad-native .ad-inner {
+      width: 100%;
+      background: var(--gold-soft);
+      border: 1px solid #ffe082;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      text-decoration: none;
+      min-height: 72px;
+    }
+    .ad-native .ad-inner:hover { box-shadow: var(--shadow-sm); }
+    .ad-native-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      background: var(--white);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ad-native-body { flex: 1; min-width: 0; }
+    .ad-native-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.3;
+      margin-bottom: 2px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .ad-native-sub {
+      font-size: 11px;
+      color: var(--text-soft);
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+    .ad-native-cta {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green-dark);
+      background: #c8e6c9;
+      border-radius: 20px;
+      padding: 5px 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Rectangle ad (between articles & footer) ── */
+    .ad-rect {
+      padding: 0 20px 20px;
+    }
+    .ad-rect .ad-inner {
+      width: 100%;
+      min-height: 100px;
+      background: var(--white);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    /* ══════════════════════════════
+       AD SLOT SHARED — AdSense ready
+    ══════════════════════════════ */
+    .ad-slot {
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 6px 0;
+    }
+    .ad-slot-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+      align-self: flex-start;
+      padding-left: 22px;
+      opacity: 0.6;
+    }
+    /* Banner (below hero) — full-width, responsive */
+    .ad-slot.ad-slot-banner {
+      padding: 0 20px;
+    }
+    .ad-slot.ad-slot-banner .ad-slot-inner {
+      width: 100%;
+      min-height: 60px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--white);
+      border: 1px dashed var(--border);
+    }
+    /* In-feed native-style — between content sections */
+    .ad-slot.ad-slot-infeed {
+      padding: 0 20px;
+    }
+    .ad-slot.ad-slot-infeed .ad-slot-inner {
+      width: 100%;
+      min-height: 90px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--white);
+      border: 1px dashed var(--border);
+    }
+    /* Rectangle — before articles */
+    .ad-slot.ad-slot-rect {
+      padding: 0 20px;
+    }
+    .ad-slot.ad-slot-rect .ad-slot-inner {
+      width: 100%;
+      max-width: 336px;
+      min-height: 280px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--white);
+      border: 1px dashed var(--border);
+    }
+    .ad-slot ins { display: block; width: 100%; }
+
+    @media (max-width: 480px) {
+      .ad-slot.ad-slot-rect .ad-slot-inner { max-width: 100%; min-height: 100px; }
+    }
   </style>
 </head>
 <body>
@@ -1187,6 +1369,23 @@
 </section>
 
 <!-- ══════════════════════════
+     AD SLOT 1 — Banner (Below Hero)
+     Responsive leaderboard / smart banner
+══════════════════════════ -->
+<div class="ad-slot ad-slot-banner" aria-label="विज्ञापन">
+  <div class="ad-slot-label">विज्ञापन</div>
+  <div class="ad-slot-inner">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2792326360609634"
+         data-ad-slot="7947270796"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+</div>
+
+<!-- ══════════════════════════
      QUICK ACTIONS
 ══════════════════════════ -->
 <section class="section" style="padding-bottom: 0;">
@@ -1287,6 +1486,24 @@
     <div class="weather-update" id="w-updated">अपडेट हो रहा है…</div>
   </div>
 </section>
+
+<!-- ══════════════════════════
+     AD SLOT 2 — In-feed (Between Weather & Mandi)
+     Native / in-article format
+══════════════════════════ -->
+<div class="ad-slot ad-slot-infeed" aria-label="विज्ञापन">
+  <div class="ad-slot-label">विज्ञापन</div>
+  <div class="ad-slot-inner">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2792326360609634"
+            data-ad-slot="6496942388"
+         data-ad-format="fluid"
+         data-ad-layout-key="-fb+5w+4e-db+86"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+</div>
 
 <!-- ══════════════════════════
      MANDI SNAPSHOT
@@ -1407,6 +1624,23 @@
 
   </div>
 </section>
+
+<!-- ══════════════════════════
+     AD SLOT 3 — Responsive Banner (Before Articles)
+     Auto-sized, high viewability placement
+══════════════════════════ -->
+<div class="ad-slot ad-slot-banner" aria-label="विज्ञापन">
+  <div class="ad-slot-label">विज्ञापन</div>
+  <div class="ad-slot-inner">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-2792326360609634"
+         data-ad-slot="2557697379"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+</div>
 
 <!-- ══════════════════════════
      ARTICLES & TIPS SECTION
