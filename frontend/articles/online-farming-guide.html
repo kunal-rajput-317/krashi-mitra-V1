@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <title>प्याज की खेती — महाराष्ट्र/MP सम्पूर्ण गाइड | KrashiMitra.in</title>
+  <link rel="icon" type="image/png" href="https://krashimitra.in/images/favicon.png" />
+  <meta name="description" content="प्याज की खेती — नासिक, लासलगांव, मालवा के किसानों के लिए बुवाई, रोपाई, खाद, रोग, भंडारण और मंडी भाव की सम्पूर्ण हिंदी गाइड।" />
+  <meta name="keywords" content="प्याज खेती, onion farming Maharashtra, नासिक प्याज, लासलगांव मंडी, कांदा शेती, KrashiMitra, pyaj ki kheti" />
+  <meta name="author" content="KrashiMitra.in" />
+  <meta name="robots" content="index, follow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --green-dark:    #1a4d2e;
+      --green-mid:     #2e7d32;
+      --green-light:   #4caf50;
+      --green-pale:    #e8f5e9;
+      --gold:          #f9a825;
+      --gold-light:    #fff8e1;
+      --red-dark:      #7f0000;
+      --red-mid:       #b71c1c;
+      --red-light:     #e53935;
+      --red-soft:      #ffebee;
+      --red-border:    #ef9a9a;
+      --maroon:        #4e0000;
+      --cream:         #faf8f3;
+      --white:         #ffffff;
+      --text-dark:     #1b1b1b;
+      --text-mid:      #3d3d3d;
+      --text-light:    #666;
+      --border:        #dce0dc;
+      --shadow:        rgba(127,0,0,0.10);
+      --shadow-strong: rgba(127,0,0,0.20);
+      --warn:          #e65100;
+      --radius-sm:     10px;
+      --radius-md:     14px;
+      --radius-lg:     20px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Noto Serif Devanagari', Georgia, serif; background: var(--cream); color: var(--text-dark); line-height: 1.85; font-size: 16px; overflow-x: hidden; }
+
+    .top-announcement { background: var(--gold); color: var(--green-dark); text-align: center; font-family: 'Poppins', sans-serif; font-size: 0.72rem; font-weight: 600; padding: 6px 16px; }
+    .top-announcement a { color: var(--green-dark); text-decoration: underline; margin-left: 6px; }
+
+    .site-header { background: var(--green-dark); padding: 0 20px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(0,0,0,0.30); }
+    .site-header .logo { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.18rem; color: #fff; text-decoration: none; display: flex; flex-direction: column; line-height: 1.2; }
+    .site-header .logo .brand { display: flex; align-items: center; gap: 6px; }
+    .site-header .logo .brand .mitra { color: var(--gold); }
+    .site-header .logo .tagline { font-size: 0.6rem; color: #a5d6a7; font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase; }
+    .site-header nav { display: flex; align-items: center; gap: 2px; }
+    .site-header nav a { font-family: 'Poppins', sans-serif; font-size: 0.8rem; font-weight: 500; color: #c8e6c9; text-decoration: none; padding: 7px 11px; border-radius: 7px; transition: all 0.18s; }
+    .site-header nav a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .site-header nav a.active { background: rgba(249,168,37,0.18); color: var(--gold); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-search-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #c8e6c9; padding: 6px 14px; border-radius: 20px; font-family: 'Poppins', sans-serif; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.18s; }
+    .header-search-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    .user-icon { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; }
+    @media (max-width: 640px) { .site-header nav { display: none; } .site-header .logo .tagline { display: none; } .header-search-btn span { display: none; } .header-search-btn { padding: 6px 10px; } }
+
+    .reading-progress { position: fixed; top: 60px; left: 0; height: 3px; background: linear-gradient(90deg, var(--red-mid), var(--gold)); width: 0%; z-index: 99; transition: width 0.1s linear; border-radius: 0 2px 2px 0; }
+
+    .breadcrumb { background: #163d25; padding: 8px 20px; font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: #81c784; display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+    .breadcrumb a { color: #81c784; text-decoration: none; }
+    .breadcrumb a:hover { color: var(--gold); }
+    .breadcrumb .sep { margin: 0 4px; opacity: 0.5; }
+    .breadcrumb .current { color: #fff; font-weight: 500; }
+
+    /* HERO — deep onion-red/maroon */
+    .hero { background: linear-gradient(155deg, #2d0000 0%, #7f0000 45%, #4e1a00 100%); color: #fff; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(65deg, transparent, transparent 55px, rgba(255,255,255,0.018) 55px, rgba(255,255,255,0.018) 56px); pointer-events: none; }
+    .hero::after { content: '🧅'; position: absolute; right: -10px; bottom: -20px; font-size: 150px; opacity: 0.07; pointer-events: none; line-height: 1; }
+    .hero-inner { max-width: 860px; margin: 0 auto; padding: 36px 20px 32px; position: relative; z-index: 1; }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; font-family: 'Poppins', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.4px; }
+    .badge-crop     { background: var(--red-mid); color: #fff; }
+    .badge-season   { background: rgba(249,168,37,0.18); color: var(--gold); border: 1px solid rgba(249,168,37,0.4); }
+    .badge-location { background: rgba(255,255,255,0.1); color: #ffccbc; border: 1px solid rgba(255,255,255,0.15); }
+    .hero h1 { font-family: 'Noto Serif Devanagari', serif; font-size: clamp(1.45rem, 5vw, 2.1rem); font-weight: 700; line-height: 1.4; margin-bottom: 12px; color: #fff; }
+    .hero h1 .en-title { display: block; font-family: 'Poppins', sans-serif; font-size: clamp(0.78rem, 2.2vw, 0.95rem); font-weight: 400; color: #b0bec5; margin-top: 6px; }
+    .hero h1 .highlight { color: var(--gold); }
+    .hero-excerpt { font-family: 'Poppins', sans-serif; font-size: 0.88rem; color: #b0bec5; line-height: 1.7; margin-bottom: 20px; max-width: 620px; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: #78909c; }
+    .hero-meta span { display: flex; align-items: center; gap: 5px; }
+    .hero-meta .read-time { color: var(--gold); font-weight: 600; }
+    .hero-share { margin-left: auto; display: flex; gap: 8px; }
+    .share-btn { background: rgba(255,255,255,0.1); border: none; color: #ffccbc; padding: 5px 12px; border-radius: 15px; font-family: 'Poppins', sans-serif; font-size: 0.68rem; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.18s; }
+    .share-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    @media (max-width: 480px) { .hero-share { display: none; } }
+
+    .article-wrapper { max-width: 860px; margin: 0 auto; padding: 0 16px 80px; }
+
+    .featured-image { width: 100%; border-radius: 0 0 20px 20px; overflow: hidden; box-shadow: 0 6px 24px var(--shadow-strong); margin-bottom: 28px; }
+    .featured-image .img-placeholder { width: 100%; min-height: 200px; background: linear-gradient(135deg, #7f0000 0%, #b71c1c 50%, #4e1a00 100%); display: flex; align-items: center; justify-content: center; font-size: 5rem; opacity: 0.55; }
+    .featured-image figcaption { padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 0.75rem; color: var(--text-light); background: var(--red-soft); text-align: center; }
+
+    .quick-facts { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 20px 0; }
+    .fact-card { background: #fff; border-radius: var(--radius-sm); padding: 14px 12px; text-align: center; box-shadow: 0 2px 8px var(--shadow); border-top: 3px solid var(--red-mid); }
+    .fact-card.green { border-top-color: var(--green-light); }
+    .fact-card.gold  { border-top-color: var(--gold); }
+    .fact-card .f-icon { font-size: 1.6rem; margin-bottom: 4px; }
+    .fact-card .f-val { font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700; color: var(--red-dark); line-height: 1.2; }
+    .fact-card.green .f-val { color: var(--green-dark); }
+    .fact-card.gold .f-val  { color: #7c5c00; }
+    .fact-card .f-label { font-family: 'Poppins', sans-serif; font-size: 0.65rem; color: var(--text-light); margin-top: 2px; }
+    @media (max-width: 480px) { .quick-facts { grid-template-columns: repeat(2,1fr); } }
+
+    .toc-box { background: var(--red-soft); border: 1.5px solid var(--red-border); border-radius: var(--radius-md); padding: 16px 18px; margin: 24px 0; }
+    .toc-title { font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 700; color: var(--red-dark); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .toc-list li a { font-size: 0.82rem; color: var(--red-dark); text-decoration: none; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+    .toc-list li a:hover { color: var(--red-mid); }
+    .toc-num { width: 20px; height: 20px; background: var(--red-mid); color: var(--white); border-radius: 50%; font-size: 0.6rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .ad-block { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; margin: 20px 0; min-height: 90px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; box-shadow: 0 1px 6px var(--shadow); position: relative; overflow: hidden; }
+    .ad-block::before { content: 'विज्ञापन'; position: absolute; top: 4px; right: 8px; font-size: 0.55rem; color: #bbb; font-family: 'Poppins', sans-serif; letter-spacing: 0.5px; }
+    .ad-block-content { background: linear-gradient(135deg, var(--red-soft), var(--gold-light)); border-radius: 8px; padding: 14px 20px; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .ad-block-content .ad-icon { font-size: 2rem; flex-shrink: 0; }
+    .ad-block-content .ad-text { flex: 1; text-align: left; }
+    .ad-block-content .ad-text strong { font-size: 0.82rem; color: var(--text-dark); display: block; }
+    .ad-block-content .ad-text span { font-size: 0.72rem; color: var(--text-light); }
+    .ad-block-content .ad-cta { background: var(--red-mid); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-decoration: none; white-space: nowrap; transition: background 0.18s; }
+    .ad-block-content .ad-cta:hover { background: var(--red-dark); }
+
+    .inline-image { width: 100%; border-radius: var(--radius-md); overflow: hidden; margin: 20px 0; box-shadow: 0 4px 16px var(--shadow); }
+    .inline-image .img-placeholder { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; font-size: 4rem; opacity: 0.5; background: linear-gradient(135deg, var(--red-soft), #fff8e1); }
+    .inline-image figcaption { padding: 8px 14px; font-family: 'Poppins', sans-serif; font-size: 0.73rem; color: var(--text-light); background: var(--red-soft); text-align: center; }
+    .img-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+    .img-row .inline-image { margin: 0; }
+    .img-row .inline-image .img-placeholder { height: 160px; }
+
+    .article-section { margin: 28px 0 0; }
+    .section-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+    .section-heading .s-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .section-heading h2 { font-family: 'Noto Serif Devanagari', serif; font-size: clamp(1.05rem, 3vw, 1.3rem); font-weight: 700; color: var(--red-dark); line-height: 1.4; }
+    h3.sub-heading { font-family: 'Noto Serif Devanagari', serif; font-size: 1rem; font-weight: 600; color: var(--green-dark); margin: 18px 0 8px; }
+
+    p { margin-bottom: 12px; color: var(--text-mid); font-family: 'Noto Serif Devanagari', serif; }
+    p:last-child { margin-bottom: 0; }
+    ul, ol { padding-left: 20px; margin-bottom: 14px; }
+    ul li, ol li { margin-bottom: 7px; color: var(--text-mid); line-height: 1.75; font-family: 'Noto Serif Devanagari', serif; }
+    ul li::marker { color: var(--red-light); }
+    ol li::marker { color: var(--red-mid); font-weight: 700; font-family: 'Poppins', sans-serif; }
+    strong { color: var(--text-dark); }
+    em { color: var(--red-mid); font-style: normal; font-weight: 600; }
+
+    .intro-box { background: linear-gradient(135deg, var(--red-soft), var(--gold-light)); border-left: 4px solid var(--red-mid); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 14px 16px; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-mid); font-family: 'Noto Serif Devanagari', serif; line-height: 1.7; }
+    .intro-box strong { color: var(--red-dark); }
+
+    .tip-box { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius-sm); margin: 16px 0; border-left: 4px solid; }
+    .tip-box.warning { background: #fff3e0; border-color: var(--warn); }
+    .tip-box.tip     { background: var(--gold-light); border-color: var(--gold); }
+    .tip-box.info    { background: var(--red-soft); border-color: var(--red-mid); }
+    .tip-box.success { background: var(--green-pale); border-color: var(--green-light); }
+    .tip-box.danger  { background: #ffebee; border-color: #c62828; }
+    .tip-box .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .tip-box .tip-content { font-family: 'Poppins', sans-serif; font-size: 0.83rem; line-height: 1.65; color: var(--text-mid); }
+    .tip-box .tip-content strong { color: var(--text-dark); }
+
+    .pest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .pest-card { background: var(--white); border-radius: var(--radius-md); border: 1.5px solid var(--border); padding: 14px 12px; box-shadow: 0 2px 8px var(--shadow); transition: box-shadow 0.2s, transform 0.15s; position: relative; overflow: hidden; }
+    .pest-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--pc-accent, var(--red-mid)); }
+    .pest-card:hover { box-shadow: 0 6px 20px var(--shadow-strong); transform: translateY(-2px); }
+    .pest-icon { font-size: 26px; margin-bottom: 6px; }
+    .pest-name { font-size: 0.82rem; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; font-family: 'Noto Sans Devanagari', sans-serif; }
+    .pest-crops { font-size: 0.7rem; color: var(--text-light); font-family: 'Poppins', sans-serif; margin-bottom: 6px; }
+    .pest-sign { font-size: 0.7rem; color: var(--text-mid); font-family: 'Noto Sans Devanagari', sans-serif; line-height: 1.5; }
+    @media (min-width: 600px) { .pest-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (min-width: 900px) { .pest-grid { grid-template-columns: repeat(4,1fr); } }
+
+    .remedy-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+    .remedy-card { background: var(--white); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: 0 2px 8px var(--shadow); overflow: hidden; transition: box-shadow 0.2s; }
+    .remedy-card:hover { box-shadow: 0 5px 18px var(--shadow-strong); }
+    .remedy-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--rc-bg, var(--red-soft)); border-bottom: 1px solid var(--border); }
+    .remedy-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 2px 6px var(--shadow); }
+    .remedy-title { font-size: 0.88rem; font-weight: 700; color: var(--text-dark); font-family: 'Noto Sans Devanagari', sans-serif; }
+    .remedy-tag { font-size: 0.65rem; font-weight: 600; color: var(--rc-color, var(--red-mid)); letter-spacing: 0.3px; margin-top: 2px; font-family: 'Poppins', sans-serif; }
+    .remedy-body { padding: 12px 16px; }
+    .remedy-steps { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .remedy-steps li { font-size: 0.82rem; color: var(--text-mid); font-family: 'Noto Sans Devanagari', sans-serif; display: flex; align-items: flex-start; gap: 8px; line-height: 1.55; }
+    .remedy-steps li::before { content: '✦'; color: var(--rc-color, var(--red-mid)); font-size: 0.65rem; flex-shrink: 0; margin-top: 3px; }
+    .remedy-steps li strong { color: var(--text-dark); }
+
+    .article-table { width: 100%; border-collapse: collapse; font-family: 'Poppins', sans-serif; font-size: 0.82rem; margin: 14px 0; border-radius: var(--radius-sm); overflow: hidden; box-shadow: 0 2px 12px var(--shadow); }
+    .article-table thead tr { background: linear-gradient(90deg, var(--red-dark), var(--red-mid)); color: #fff; }
+    .article-table th { padding: 11px 14px; text-align: left; font-weight: 600; letter-spacing: 0.3px; }
+    .article-table tbody tr:nth-child(odd)  { background: #fff; }
+    .article-table tbody tr:nth-child(even) { background: var(--red-soft); }
+    .article-table td { padding: 10px 14px; border-bottom: 1px solid var(--red-border); color: var(--text-mid); vertical-align: top; }
+    .article-table td:first-child { font-weight: 500; color: var(--text-dark); }
+    .tick { color: #2e7d32; font-weight: 700; }
+    .cross { color: #c62828; font-weight: 700; }
+    @media (max-width: 500px) { .article-table { font-size: 0.73rem; } .article-table th, .article-table td { padding: 8px 9px; } }
+
+    .a-takeaway { background: linear-gradient(135deg, var(--red-dark), var(--maroon)); border-radius: var(--radius-lg); padding: 20px 18px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    .a-takeaway::before { content: '🧅'; position: absolute; right: -8px; bottom: -12px; font-size: 90px; opacity: 0.08; pointer-events: none; }
+    .a-takeaway-title { font-size: 0.88rem; font-weight: 800; color: var(--gold); margin-bottom: 10px; display: flex; align-items: center; gap: 7px; font-family: 'Poppins', sans-serif; }
+    .a-takeaway-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .a-takeaway-list li { font-size: 0.82rem; color: rgba(255,255,255,0.9); font-family: 'Noto Sans Devanagari', sans-serif; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+    .a-takeaway-list li::before { content: '→'; color: var(--gold); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+    .cta-block { background: linear-gradient(135deg, var(--red-dark), var(--green-dark)); border-radius: var(--radius-lg); padding: 28px 24px; text-align: center; margin-top: 36px; color: #fff; }
+    .cta-block .cta-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .cta-block h3 { font-family: 'Poppins', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .cta-block p { font-family: 'Poppins', sans-serif; font-size: 0.82rem; color: #cfd8dc; margin-bottom: 18px; }
+    .cta-block a { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-size: 0.88rem; font-weight: 700; padding: 10px 28px; border-radius: 25px; text-decoration: none; transition: transform 0.18s, box-shadow 0.18s; }
+    .cta-block a:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+
+    .section-divider { border: none; border-top: 1px dashed var(--border); margin: 24px 0; }
+
+    .faq-item { background: #fff; border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; box-shadow: 0 1px 6px var(--shadow); border-left: 4px solid var(--red-mid); }
+    .faq-q { font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--red-dark); padding: 12px 14px 0; display: flex; gap: 8px; }
+    .faq-q .num { background: var(--red-dark); color: var(--gold); border-radius: 50%; width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; }
+    .faq-a { font-family: 'Poppins', sans-serif; font-size: 0.8rem; color: var(--text-mid); padding: 6px 14px 12px 42px; line-height: 1.65; }
+
+    .relevant-articles { margin: 36px 0 0; }
+    .relevant-articles .section-title { font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+    .relevant-articles .section-title .title-icon { background: var(--green-dark); color: #fff; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+    .relevant-articles .section-title a { margin-left: auto; font-size: 0.75rem; font-weight: 500; color: var(--green-mid); text-decoration: none; }
+    .articles-grid { display: flex; flex-direction: column; gap: 10px; }
+    @media (min-width: 600px) { .articles-grid { display: grid; grid-template-columns: repeat(2,1fr); } }
+    .article-card { background: #fff; border-radius: var(--radius-md); border: 1px solid #e4ede4; box-shadow: 0 2px 8px var(--shadow); display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; transition: box-shadow 0.2s, transform 0.15s; position: relative; overflow: hidden; }
+    .article-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--rc-accent, var(--red-mid)); border-radius: 4px 0 0 4px; }
+    .article-card:hover { box-shadow: 0 5px 20px var(--shadow-strong); transform: translateY(-2px); }
+    .card-thumb { width: 46px; height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    .card-body { flex: 1; min-width: 0; }
+    .card-tag { font-family: 'Poppins', sans-serif; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-light); margin-bottom: 3px; }
+    .card-title { font-family: 'Noto Serif Devanagari', serif; font-size: 0.85rem; font-weight: 700; color: var(--text-dark); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-arrow { font-size: 1.1rem; color: var(--text-light); opacity: 0.45; flex-shrink: 0; }
+
+    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e0e0e0; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); z-index: 100; box-shadow: 0 -4px 16px rgba(0,0,0,0.08); }
+    .mobile-nav ul { list-style: none; display: flex; justify-content: space-around; padding: 0; margin: 0; }
+    .mobile-nav li a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: 'Poppins', sans-serif; font-size: 0.6rem; color: #888; text-decoration: none; padding: 2px 8px; }
+    .mobile-nav li a .nav-icon { font-size: 1.2rem; }
+    .mobile-nav li a.active { color: var(--green-dark); }
+    @media (max-width: 640px) { .mobile-nav { display: block; } .article-wrapper { padding-bottom: 90px; } }
+
+    .site-footer { background: #0f2d18; color: #a5d6a7; font-family: 'Poppins', sans-serif; }
+    .footer-main { max-width: 860px; margin: 0 auto; padding: 44px 20px 32px; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px; }
+    @media (max-width: 640px) { .footer-main { grid-template-columns: 1fr; gap: 28px; padding: 32px 16px 24px; } }
+    .footer-brand .logo-big { font-family: 'Poppins', sans-serif; font-size: 1.3rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+    .footer-brand .logo-big .mitra { color: var(--gold); }
+    .footer-brand p { font-size: 0.8rem; line-height: 1.7; color: #78909c; margin-bottom: 16px; }
+    .footer-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .footer-badge { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); color: #a5d6a7; font-size: 0.68rem; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
+    .footer-col h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #fff; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .footer-col ul { list-style: none; padding: 0; margin: 0; }
+    .footer-col ul li { margin-bottom: 9px; }
+    .footer-col ul li a { color: #78909c; text-decoration: none; font-size: 0.78rem; transition: color 0.18s; display: flex; align-items: center; gap: 5px; }
+    .footer-col ul li a:hover { color: var(--gold); }
+    .footer-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 0; }
+    .footer-bottom { max-width: 860px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .footer-copyright { font-size: 0.72rem; color: #546e7a; }
+    .footer-copyright a { color: var(--gold); text-decoration: none; }
+    .footer-legal-links { display: flex; gap: 16px; }
+    .footer-legal-links a { font-size: 0.7rem; color: #546e7a; text-decoration: none; transition: color 0.15s; }
+    .footer-legal-links a:hover { color: #a5d6a7; }
+    .footer-made { font-size: 0.68rem; color: #37474f; display: flex; align-items: center; gap: 4px; }
+    .footer-made .heart { color: #c62828; }
+    @media (max-width: 500px) { .footer-bottom { flex-direction: column; align-items: flex-start; } .footer-legal-links { flex-wrap: wrap; gap: 10px; } }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .article-section { animation: fadeUp 0.45s ease both; }
+    .article-section:nth-child(1) { animation-delay: 0.05s; }
+    .article-section:nth-child(2) { animation-delay: 0.10s; }
+    .article-section:nth-child(3) { animation-delay: 0.15s; }
+    .article-section:nth-child(4) { animation-delay: 0.20s; }
+    .article-section:nth-child(5) { animation-delay: 0.25s; }
+    .article-section:nth-child(6) { animation-delay: 0.30s; }
+  </style>
+</head>
+<body>
+
+<div class="reading-progress" id="reading-progress"></div>
+
+<div class="top-announcement">
+  🌾 किसान कॉल सेंटर: +91 9870951001 — निःशुल्क कृषि सलाह
+  <a href="https://krashimitra.in/chat?tab=chat">AI से पूछें →</a>
+</div>
+
+<header class="site-header">
+  <a href="https://krashimitra.in" class="logo">
+    <div class="brand">🌾 कृषि <span class="mitra">मित्र</span></div>
+    <div class="tagline">किसान का डिजिटल साथी</div>
+  </a>
+  <nav>
+    <a href="https://krashimitra.in">🏠 मुख्य</a>
+    <a href="https://krashimitra.in/chat?tab=weather">🌤️ मौसम</a>
+    <a href="https://krashimitra.in/chat?tab=mandi">💰 मंडी</a>
+    <a href="https://krashimitra.in/articles/" class="active">📰 लेख</a>
+    <a href="https://krashimitra.in/chat?tab=chat">💬 सहायता</a>
+  </nav>
+  <div class="header-right">
+    <button class="header-search-btn">🔍 <span>खोजें</span></button>
+    <div class="user-icon" onclick="avatarBtnClick()">👤</div>
+  </div>
+</header>
+
+<div class="breadcrumb">
+  <a href="https://krashimitra.in">🏠 मुख्य</a>
+  <span class="sep">›</span>
+  <a href="https://krashimitra.in/articles/">📰 लेख</a>
+  <span class="sep">›</span>
+  <a href="#">सब्जी मार्गदर्शिका</a>
+  <span class="sep">›</span>
+  <span class="current">प्याज की खेती — महाराष्ट्र/MP सम्पूर्ण गाइड</span>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badges">
+      <span class="badge badge-crop">🧅 सब्जी मार्गदर्शिका</span>
+      <span class="badge badge-season">🗓️ रबी · खरीफ 2025–26</span>
+      <span class="badge badge-location">📍 महाराष्ट्र · मध्य प्रदेश</span>
+    </div>
+    <h1>
+      प्याज की खेती — <span class="highlight">नासिक से मालवा तक सम्पूर्ण गाइड</span>
+      <span class="en-title">Onion Farming — Complete Hindi Guide for Maharashtra & MP Farmers | Kharif & Rabi 2025</span>
+    </h1>
+    <p class="hero-excerpt">
+      नर्सरी से लेकर कटाई, भंडारण और मंडी तक — उन्नत किस्में, खाद, सिंचाई, रोग-कीट नियंत्रण और भाव गिरने पर क्या करें — सब कुछ हिंदी में।
+    </p>
+    <div class="hero-meta">
+      <span>✍️ KrashiMitra.in</span>
+      <span class="read-time">⏱️ 9 मिनट पढ़ें</span>
+      <span>📅 जून 2026 अपडेट</span>
+      <div class="hero-share">
+        <button class="share-btn" onclick="if(navigator.share){navigator.share({title:'प्याज खेती गाइड',url:window.location.href})}else{navigator.clipboard.writeText(window.location.href);alert('लिंक कॉपी हो गया!')}">📤 शेयर</button>
+        <button class="share-btn" onclick="window.print()">🖨️ प्रिंट</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE -->
+<div class="article-wrapper">
+
+  <figure class="featured-image">
+    <div class="img-placeholder">🧅</div>
+    <figcaption>महाराष्ट्र का नासिक और MP का मालवा क्षेत्र — भारत के दो सबसे बड़े प्याज उत्पादक क्षेत्र। लासलगांव (नासिक) एशिया की सबसे बड़ी प्याज मंडी है।</figcaption>
+  </figure>
+
+  <!-- QUICK FACTS -->
+  <div class="quick-facts">
+    <div class="fact-card">
+      <div class="f-icon">🏆</div>
+      <div class="f-val">#1 महाराष्ट्र</div>
+      <div class="f-label">भारत में प्याज उत्पादन</div>
+    </div>
+    <div class="fact-card gold">
+      <div class="f-icon">💰</div>
+      <div class="f-val">₹8–35/kg</div>
+      <div class="f-label">मंडी भाव (मौसम अनुसार)</div>
+    </div>
+    <div class="fact-card green">
+      <div class="f-icon">📦</div>
+      <div class="f-val">25–35 टन/हे.</div>
+      <div class="f-label">औसत उपज (उन्नत)</div>
+    </div>
+    <div class="fact-card">
+      <div class="f-icon">📅</div>
+      <div class="f-val">3 सीजन</div>
+      <div class="f-label">खरीफ · रबी · लेट खरीफ</div>
+    </div>
+    <div class="fact-card gold">
+      <div class="f-icon">🌍</div>
+      <div class="f-val">150+ देश</div>
+      <div class="f-label">भारतीय प्याज निर्यात</div>
+    </div>
+    <div class="fact-card green">
+      <div class="f-icon">🏪</div>
+      <div class="f-val">लासलगांव</div>
+      <div class="f-label">एशिया की सबसे बड़ी मंडी</div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc-box">
+    <div class="toc-title">📋 इस लेख में क्या है</div>
+    <ul class="toc-list">
+      <li><a href="#intro"><span class="toc-num">1</span> प्याज की खेती — महाराष्ट्र/MP में क्यों खास?</a></li>
+      <li><a href="#varieties"><span class="toc-num">2</span> उन्नत किस्में — सीजन के अनुसार चुनाव</a></li>
+      <li><a href="#cultivation"><span class="toc-num">3</span> नर्सरी, रोपाई, खाद और सिंचाई</a></li>
+      <li><a href="#disease"><span class="toc-num">4</span> रोग और कीट नियंत्रण</a></li>
+      <li><a href="#storage"><span class="toc-num">5</span> कटाई, भंडारण और मंडी रणनीति</a></li>
+      <li><a href="#faq"><span class="toc-num">6</span> अक्सर पूछे जाने वाले सवाल</a></li>
+      <li><a href="#summary"><span class="toc-num">7</span> मुख्य बातें</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ SECTION 1 ═══ -->
+  <div class="article-section" id="intro">
+    <div class="section-heading">
+      <span class="s-icon">🧅</span>
+      <h2>प्याज की खेती — रोने वाली फसल जो मुनाफा हंसाए</h2>
+    </div>
+
+    <div class="intro-box">
+      <strong>किसान भाइयों,</strong> प्याज भारत की सबसे महत्वपूर्ण व्यावसायिक सब्जी फसलों में से एक है। <strong>महाराष्ट्र (नासिक, पुणे, सोलापुर) और मध्य प्रदेश (शाजापुर, मंदसौर, उज्जैन)</strong> मिलकर देश का लगभग 50% प्याज उत्पादन करते हैं। प्याज की मांग पूरे साल बनी रहती है — घरेलू बाजार से लेकर 150+ देशों को निर्यात तक।
+    </div>
+
+    <p>प्याज की खेती <strong>तीन सीजन में</strong> की जाती है — खरीफ (जून–अक्टूबर), लेट खरीफ (सितंबर–जनवरी) और रबी (अक्टूबर–मई)। <strong>रबी प्याज</strong> सबसे अधिक और लंबे समय तक भंडारण योग्य होती है — यही मुख्य व्यावसायिक फसल है।</p>
+
+    <figure class="inline-image">
+      <div class="img-placeholder">🌄</div>
+      <figcaption>📷 नासिक का प्याज बाजार — लासलगांव एशिया की सबसे बड़ी प्याज मंडी, जहां रोज हजारों टन प्याज की खरीद-बिक्री होती है</figcaption>
+    </figure>
+
+    <h3 class="sub-heading">📊 तीन सीजन — कब क्या होता है?</h3>
+    <table class="article-table">
+      <thead>
+        <tr><th>सीजन</th><th>नर्सरी</th><th>रोपाई</th><th>कटाई</th><th>भाव की स्थिति</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>खरीफ</td><td>जून–जुलाई</td><td>जुलाई–अगस्त</td><td>अक्टूबर–नवंबर</td><td>अच्छे भाव (कम आपूर्ति)</td></tr>
+        <tr><td>लेट खरीफ</td><td>अगस्त–सितंबर</td><td>सितंबर–अक्टूबर</td><td>जनवरी–फरवरी</td><td>मध्यम भाव</td></tr>
+        <tr><td>रबी</td><td>अक्टूबर–नवंबर</td><td>दिसंबर–जनवरी</td><td>मार्च–मई</td><td>सर्वाधिक उत्पादन — भाव कम</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip-box success">
+      <span class="tip-icon">✅</span>
+      <div class="tip-content"><strong>रणनीति:</strong> <em>खरीफ और लेट खरीफ प्याज</em> में भाव अधिक मिलते हैं क्योंकि आपूर्ति कम होती है। रबी की प्याज भंडारण करके अक्टूबर–नवंबर तक बेचने पर भी अच्छे भाव मिलते हैं।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <div class="ad-block">
+    <div class="ad-block-content">
+      <div class="ad-icon">💰</div>
+      <div class="ad-text">
+        <strong>आज का प्याज मंडी भाव — लासलगांव, पिंपलगांव, इंदौर</strong>
+        <span>सभी मंडियों के ताजा भाव एक क्लिक में — KrashiMitra LIVE</span>
+      </div>
+      <a class="ad-cta" href="https://krashimitra.in/chat?tab=mandi">अभी देखें →</a>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 2: VARIETIES ═══ -->
+  <div class="article-section" id="varieties">
+    <div class="section-heading">
+      <span class="s-icon">🌱</span>
+      <h2>उन्नत किस्में — सीजन और क्षेत्र के अनुसार सही चुनाव</h2>
+    </div>
+
+    <p>प्याज की किस्म का चुनाव सीजन, बाजार और भंडारण की जरूरत पर निर्भर करता है। महाराष्ट्र और MP के लिए ये किस्में सबसे अच्छी हैं:</p>
+
+    <div class="pest-grid">
+      <div class="pest-card" style="--pc-accent:#b71c1c">
+        <div class="pest-icon">🧅</div>
+        <div class="pest-name">Bhima Super</div>
+        <div class="pest-crops">रबी · लाल प्याज · NHRDF</div>
+        <div class="pest-sign">सबसे लोकप्रिय रबी किस्म। उपज 30–35 टन/हे.। भंडारण क्षमता 4–5 महीने। तीखापन अधिक — निर्यात पसंदीदा।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#7f0000">
+        <div class="pest-icon">🧅</div>
+        <div class="pest-name">Bhima Kiran</div>
+        <div class="pest-crops">रबी + लेट खरीफ · कम तीखापन</div>
+        <div class="pest-sign">हल्का तीखापन — घरेलू बाजार में अधिक मांग। उपज 28–32 टन/हे.। Purple Blotch के प्रति प्रतिरोधी।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#e53935">
+        <div class="pest-icon">🧅</div>
+        <div class="pest-name">Bhima Raj</div>
+        <div class="pest-crops">खरीफ · सबसे उपयुक्त</div>
+        <div class="pest-sign">खरीफ सीजन के लिए विशेष रूप से विकसित। Downy Mildew सहनशील। उपज 20–25 टन/हे.।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#f9a825">
+        <div class="pest-icon">🧅</div>
+        <div class="pest-name">N-2-4-1 (Nasik Red)</div>
+        <div class="pest-crops">रबी · नासिक क्षेत्र · निर्यात</div>
+        <div class="pest-sign">नासिक की ट्रेडिशनल किस्म। गहरे लाल रंग के बड़े कंद। निर्यात बाजार में विशेष पहचान।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#2e7d32">
+        <div class="pest-icon">🧅</div>
+        <div class="pest-name">Agrifound Light Red</div>
+        <div class="pest-crops">रबी · MP मालवा क्षेत्र</div>
+        <div class="pest-sign">MP की काली मिट्टी के लिए आदर्श। हल्के लाल-सुनहरे कंद। भंडारण क्षमता उत्तम — 5–6 महीने।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#1565c0">
+        <div class="pest-icon">🧅</div>
+        <div class="pest-name">Arka Niketan / Arka Kalyan</div>
+        <div class="pest-crops">रबी · IIHR किस्म · उच्च उपज</div>
+        <div class="pest-sign">IIHR बेंगलुरु की उन्नत किस्में। उपज 35–40 टन/हे.। Thrips और Downy Mildew सहनशील।</div>
+      </div>
+    </div>
+
+    <div class="tip-box tip">
+      <span class="tip-icon">💡</span>
+      <div class="tip-content"><strong>किस्म चुनाव सुझाव:</strong> निर्यात के लिए <em>Bhima Super या N-2-4-1,</em> भंडारण के लिए <em>Agrifound Light Red,</em> खरीफ के लिए <em>Bhima Raj</em> सबसे उपयुक्त। हमेशा <strong>NHRDF, MAHYCO या IARI प्रमाणित बीज</strong> ही खरीदें।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ═══ SECTION 3: CULTIVATION ═══ -->
+  <div class="article-section" id="cultivation">
+    <div class="section-heading">
+      <span class="s-icon">🌿</span>
+      <h2>नर्सरी, रोपाई, खाद और सिंचाई — कदम-दर-कदम</h2>
+    </div>
+
+    <div class="remedy-list">
+
+      <div class="remedy-card" style="--rc-bg:#ffebee;--rc-color:#b71c1c">
+        <div class="remedy-header">
+          <div class="remedy-icon">🌱</div>
+          <div>
+            <div class="remedy-title">नर्सरी तैयार करना — 40–45 दिन में पौध तैयार</div>
+            <div class="remedy-tag">✦ अच्छी नर्सरी = अच्छी फसल — इस पर ध्यान दें</div>
+          </div>
+        </div>
+        <div class="remedy-body">
+          <ul class="remedy-steps">
+            <li>नर्सरी के लिए <strong>उठी हुई क्यारियां (Raised Beds)</strong> बनाएं — 1 मीटर चौड़ी, 15 सेमी ऊंची।</li>
+            <li>प्रति हेक्टेयर के लिए <strong>10–12 kg बीज</strong> — 600–700 वर्ग मीटर नर्सरी काफी है।</li>
+            <li>बीज उपचार: <strong>Thiram 3g/kg + Carbendazim 1g/kg</strong> — फफूंद से सुरक्षा।</li>
+            <li>नर्सरी में <strong>Trichoderma 5g/kg मिट्टी</strong> में मिलाएं — Damping Off से बचाव।</li>
+            <li>40–45 दिन में पौध <strong>15–20 सेमी लंबी</strong> होने पर रोपाई के लिए तैयार।</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="remedy-card" style="--rc-bg:#fff8e1;--rc-color:#f9a825">
+        <div class="remedy-header">
+          <div class="remedy-icon">🌾</div>
+          <div>
+            <div class="remedy-title">रोपाई — दूरी, गहराई और समय</div>
+            <div class="remedy-tag">✦ सही दूरी से कंद बड़े और गुणवत्ता उत्तम</div>
+          </div>
+        </div>
+        <div class="remedy-body">
+          <ul class="remedy-steps">
+            <li><strong>कतार से कतार: 15 सेमी, पौधे से पौधे: 10 सेमी</strong> — यह मानक दूरी है।</li>
+            <li>रोपाई की गहराई <strong>2–3 सेमी</strong> — ज्यादा गहरा लगाने से कंद का आकार घटता है।</li>
+            <li>रोपाई से पहले पौध की <strong>जड़ें Carbendazim घोल में 30 मिनट</strong> डुबोएं।</li>
+            <li>शाम के समय रोपाई करें — <strong>रोपाई के तुरंत बाद सिंचाई</strong> जरूरी है।</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="remedy-card" style="--rc-bg:#e8f5e9;--rc-color:#2e7d32">
+        <div class="remedy-header">
+          <div class="remedy-icon">🧪</div>
+          <div>
+            <div class="remedy-title">खाद और उर्वरक — संतुलित पोषण जरूरी</div>
+            <div class="remedy-tag">✦ N : P : K : S = 120 : 60 : 60 : 30 kg/हे.</div>
+          </div>
+        </div>
+        <div class="remedy-body">
+          <ul class="remedy-steps">
+            <li><strong>बेसल खाद:</strong> FYM 25 टन + DAP 130 kg + MOP 100 kg + Gypsum 200 kg — रोपाई से पहले।</li>
+            <li><strong>पहली Top Dressing:</strong> रोपाई के 30 दिन बाद — Urea 65 kg/हे.।</li>
+            <li><strong>दूसरी Top Dressing:</strong> 45–50 दिन बाद — Urea 65 kg + MOP 50 kg।</li>
+            <li>Sulphur की पर्याप्त मात्रा दें — <strong>प्याज की तीखापन और भंडारण क्षमता</strong> Sulphur पर निर्भर है।</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="remedy-card" style="--rc-bg:#e3f2fd;--rc-color:#1565c0">
+        <div class="remedy-header">
+          <div class="remedy-icon">💧</div>
+          <div>
+            <div class="remedy-title">सिंचाई — कब कितनी और कैसे?</div>
+            <div class="remedy-tag">✦ कंद बनते समय पानी की कमी = छोटे कंद</div>
+          </div>
+        </div>
+        <div class="remedy-body">
+          <ul class="remedy-steps">
+            <li>रोपाई के बाद <strong>2–3 दिन पर</strong> सिंचाई, फिर <strong>7–10 दिन</strong> के अंतराल पर।</li>
+            <li><strong>कंद विकास अवस्था (45–90 दिन)</strong> में पर्याप्त नमी — इस समय की कमी सर्वाधिक नुकसानदायक।</li>
+            <li>कटाई से <strong>10–15 दिन पहले सिंचाई बंद</strong> करें — कंद की त्वचा सख्त होती है, भंडारण बेहतर।</li>
+            <li>ड्रिप सिंचाई + Fertigation से <strong>30% पानी बचत</strong> और उपज में 15–20% वृद्धि।</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="img-row">
+      <figure class="inline-image">
+        <div class="img-placeholder">🌱</div>
+        <figcaption>📷 उठी हुई क्यारियों में नर्सरी — 40 दिन में मजबूत पौध तैयार</figcaption>
+      </figure>
+      <figure class="inline-image">
+        <div class="img-placeholder">🧅</div>
+        <figcaption>📷 रोपाई के बाद तुरंत सिंचाई — पौध जमने के लिए नमी जरूरी</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <div class="ad-block">
+    <div class="ad-block-content">
+      <div class="ad-icon">🤖</div>
+      <div class="ad-text">
+        <strong>KrashiMitra AI — प्याज रोग तुरंत पहचानें</strong>
+        <span>पत्ती या कंद की फोटो खींचें — AI बताएगा रोग और इलाज हिंदी में</span>
+      </div>
+      <a class="ad-cta" href="https://krashimitra.in/chat?tab=disease">अभी जांचें →</a>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 4: DISEASE ═══ -->
+  <div class="article-section" id="disease">
+    <div class="section-heading">
+      <span class="s-icon">🦠</span>
+      <h2>रोग और कीट नियंत्रण — प्याज के सबसे बड़े दुश्मन</h2>
+    </div>
+
+    <p>प्याज की फसल में कुछ रोग और कीट बहुत नुकसान करते हैं — खासकर बारिश के मौसम में। <strong>समय पर पहचान और रोकथाम जरूरी है:</strong></p>
+
+    <h3 class="sub-heading">🍄 प्रमुख रोग</h3>
+    <div class="pest-grid">
+      <div class="pest-card" style="--pc-accent:#b71c1c">
+        <div class="pest-icon">🟣</div>
+        <div class="pest-name">Purple Blotch</div>
+        <div class="pest-crops">सबसे आम · बारिश के बाद</div>
+        <div class="pest-sign">पत्तियों पर बैंगनी-भूरे धब्बे, केंद्र में सफेद। Mancozeb 75WP — 2.5g/L या Iprodione से नियंत्रण।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#6a1b9a">
+        <div class="pest-icon">🔵</div>
+        <div class="pest-name">Downy Mildew</div>
+        <div class="pest-crops">ठंड और नमी में · खरीफ</div>
+        <div class="pest-sign">पत्तियां नरम पड़कर झुक जाती हैं, सफेद-बैंगनी फफूंद। Metalaxyl + Mancozeb से रोकें।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#e65100">
+        <div class="pest-icon">🟤</div>
+        <div class="pest-name">Basal Rot (Fusarium)</div>
+        <div class="pest-crops">मिट्टी जनित · जड़ें सड़ती हैं</div>
+        <div class="pest-sign">जड़ें भूरी होकर सड़ती हैं, पत्तियां पीली। बीज उपचार + Trichoderma से बचाव। फसल चक्र जरूरी।</div>
+      </div>
+      <div class="pest-card" style="--pc-accent:#1565c0">
+        <div class="pest-icon">⚫</div>
+        <div class="pest-name">Black Mould (Aspergillus)</div>
+        <div class="pest-crops">भंडारण में · कंद सड़ना</div>
+        <div class="pest-sign">भंडारण के दौरान कंद पर काला फफूंद। 12% से कम नमी पर भंडारण और अच्छे हवादार गोदाम से रोकें।</div>
+      </div>
+    </div>
+
+    <h3 class="sub-heading">🐛 प्रमुख कीट और उपाय</h3>
+    <table class="article-table">
+      <thead>
+        <tr><th>कीट</th><th>पहचान</th><th>नुकसान</th><th>उपाय</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>थ्रिप्स (Thrips)</td>
+          <td>पत्तियों पर सफेद-चांदी धब्बे, मुड़ी पत्तियां</td>
+          <td>सबसे अधिक — 30–50% उपज नुकसान</td>
+          <td>Spinosad 45SC — 75ml/100L + Neem Oil</td>
+        </tr>
+        <tr>
+          <td>प्याज की मक्खी (Maggot)</td>
+          <td>पत्तियां मुरझाना, कंद में छेद</td>
+          <td>कंद सड़ता है, भंडारण खराब</td>
+          <td>Chlorpyrifos 20EC — मिट्टी में मिलाएं</td>
+        </tr>
+        <tr>
+          <td>Mites (लाल कण)</td>
+          <td>पत्तियों पर जाला, कांसी रंग</td>
+          <td>पत्तियां सूख जाती हैं</td>
+          <td>Abamectin 1.8EC — 300ml/हे.</td>
+        </tr>
+        <tr>
+          <td>Leaf miner</td>
+          <td>पत्तियों में सफेद रेखाएं</td>
+          <td>Photosynthesis प्रभावित</td>
+          <td>Imidacloprid 17.8SL — 150ml/हे.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tip-box warning">
+      <span class="tip-icon">⚠️</span>
+      <div class="tip-content"><strong>थ्रिप्स से सावधान:</strong> थ्रिप्स प्याज का सबसे खतरनाक कीट है। <em>नीले या पीले चिपचिपे जाल</em> लगाएं — इससे जनसंख्या की निगरानी और नियंत्रण दोनों होते हैं। Neem Oil (5ml/L) का नियमित छिड़काव थ्रिप्स को <strong>40–50% तक कम</strong> करता है।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ═══ SECTION 5: STORAGE & MARKET ═══ -->
+  <div class="article-section" id="storage">
+    <div class="section-heading">
+      <span class="s-icon">🏚️</span>
+      <h2>कटाई, भंडारण और मंडी रणनीति — भाव गिरने पर क्या करें?</h2>
+    </div>
+
+    <p>प्याज किसान का सबसे बड़ा दर्द है — <strong>अच्छी फसल होने पर भाव गिर जाते हैं।</strong> सही भंडारण और बिक्री रणनीति से इस नुकसान को काफी कम किया जा सकता है:</p>
+
+    <div class="remedy-list">
+
+      <div class="remedy-card" style="--rc-bg:#ffebee;--rc-color:#b71c1c">
+        <div class="remedy-header">
+          <div class="remedy-icon">✂️</div>
+          <div>
+            <div class="remedy-title">सही समय पर कटाई — 50% पत्तियां गिरने पर</div>
+            <div class="remedy-tag">✦ समय पर कटाई = बेहतर भंडारण = अच्छे भाव</div>
+          </div>
+        </div>
+        <div class="remedy-body">
+          <ul class="remedy-steps">
+            <li>जब <strong>50–70% पत्तियां गिर जाएं (Neck Fall)</strong> तब कटाई करें — पहले काटने पर भंडारण खराब।</li>
+            <li>कटाई के बाद कंद को <strong>3–5 दिन खेत में ही सुखाएं</strong> — छाल सख्त होती है।</li>
+            <li>फिर <strong>छायादार, हवादार गोदाम में 15–20 दिन Curing</strong> करें — नमी 12–14% पर आए।</li>
+            <li><strong>Neck को 1–2 सेमी छोड़कर काटें</strong> — पूरा तना काटने पर फफूंद का खतरा बढ़ता है।</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="remedy-card" style="--rc-bg:#e8f5e9;--rc-color:#2e7d32">
+        <div class="remedy-header">
+          <div class="remedy-icon">🏚️</div>
+          <div>
+            <div class="remedy-title">भंडारण — देसी कोठी बनाम Cold Storage</div>
+            <div class="remedy-tag">✦ सही भंडारण से 4–6 महीने तक प्याज सुरक्षित</div>
+          </div>
+        </div>
+        <div class="remedy-body">
+          <ul class="remedy-steps">
+            <li><strong>देसी भंडारण (Onion Chawl):</strong> बांस/लकड़ी का हवादार ढांचा — 3–4 महीने तक। नासिक मॉडल सबसे अच्छा।</li>
+            <li>ढांचे में <strong>ऊंचाई 1.5 मीटर से अधिक न रखें</strong> — नीचे के कंद दबने से सड़ते हैं।</li>
+            <li><strong>Cold Storage (0–4°C, 65–70% नमी):</strong> 6 महीने तक — लेकिन निकालने पर तुरंत बेचना होगा।</li>
+            <li>हर महीने <strong>सड़े-खराब कंद निकालें</strong> — एक सड़ा कंद आसपास के कंद खराब करता है।</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="remedy-card" style="--rc-bg:#fff8e1;--rc-color:#f9a825">
+        <div class="remedy-header">
+          <div class="remedy-icon">📈</div>
+          <div>
+            <div class="remedy-title">मंडी रणनीति — भाव गिरे तो क्या करें?</div>
+            <div class="remedy-tag">✦ घबराकर बेचें नहीं — ये विकल्प आजमाएं</div>
+          </div>
+        </div>
+        <div class="remedy-body">
+          <ul class="remedy-steps">
+            <li><strong>भंडारण करें:</strong> मार्च–मई में कम भाव हों तो रोकें — जुलाई–अक्टूबर में भाव अक्सर 2–3 गुना।</li>
+            <li><strong>eNAM (ऑनलाइन मंडी):</strong> enam.gov.in पर रजिस्ट्रेशन — देशभर की मंडियों में बोली लगवाएं।</li>
+            <li><strong>FPO के जरिए बड़ी मात्रा बेचें</strong> — Processing companies और Exporters सीधे FPO से खरीदते हैं।</li>
+            <li><strong>Dehydrated Onion:</strong> कम भाव हो तो Processing Unit को बेचें — ₹8–10/kg भी फायदेमंद हो सकता है।</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tip-box danger">
+      <span class="tip-icon">🚨</span>
+      <div class="tip-content"><strong>निर्यात प्रतिबंध से बचाव:</strong> सरकार कभी-कभी प्याज निर्यात पर प्रतिबंध लगाती है जिससे भाव गिरते हैं। <em>NHRDF (nhrdf.com) और APEDA</em> की सूचनाएं नियमित देखें। FPO से जुड़ने पर बाजार जानकारी और सामूहिक बिक्री दोनों का फायदा मिलता है।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ═══ SECTION 6: FAQ ═══ -->
+  <div class="article-section" id="faq">
+    <div class="section-heading">
+      <span class="s-icon">❓</span>
+      <h2>अक्सर पूछे जाने वाले सवाल</h2>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">1</span>प्याज की पत्तियां पीली क्यों पड़ जाती हैं?</div>
+      <div class="faq-a">तीन मुख्य कारण हैं — <strong>Thrips का हमला, Fusarium Basal Rot (जड़ सड़न),</strong> और <strong>Nitrogen की कमी।</strong> Thrips में पत्तियां चांदी जैसी सफेद होती हैं, Fusarium में पीली होकर गिरती हैं, और Nitrogen कमी में पूरी पत्ती एकसमान पीली होती है। Soil Health Card से जांच करें।</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">2</span>प्याज में Bolting (फूल आना) की समस्या क्यों होती है?</div>
+      <div class="faq-a">Bolting तब होती है जब छोटी पौध को <strong>लंबे समय तक ठंड (10°C से कम)</strong> मिलती है। इससे कंद की बजाय बीज डंठल निकलता है और उपज घट जाती है। <strong>सही समय पर नर्सरी और रोपाई</strong> करने से Bolting से बचा जा सकता है।</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">3</span>प्याज को भंडारण में कितने नुकसान होते हैं?</div>
+      <div class="faq-a">सामान्य भंडारण में <strong>25–40% तक वजन कम</strong> हो जाता है — पानी उड़ने और सड़ने से। अच्छे हवादार Onion Chawl में यह नुकसान <strong>15–20%</strong> तक सीमित किया जा सकता है। Cold Storage में सबसे कम नुकसान — 5–8%।</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">4</span>MP में प्याज की खेती के लिए कौन सी मिट्टी अच्छी है?</div>
+      <div class="faq-a">MP में <strong>काली और दोमट मिट्टी</strong> प्याज के लिए बहुत अनुकूल है — शाजापुर, मंदसौर, उज्जैन जिले। pH 6.0–7.5 आदर्श है। <strong>जल निकासी अच्छी होना जरूरी</strong> — पानी भरने से जड़ सड़ती है। Zinc और Sulphur की कमी आम है — Soil Health Card जरूर बनवाएं।</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">5</span>प्याज पर सरकारी सब्सिडी क्या मिलती है?</div>
+      <div class="faq-a">NHRDF और NHB से <strong>Onion Storage Structure (Chawl) पर 50% सब्सिडी</strong> मिलती है। महाराष्ट्र में MAHA-DBT और MP में उद्यानिकी विभाग की वेबसाइट पर आवेदन करें। Cold Storage पर <strong>NHB की 35% सब्सिडी</strong> भी उपलब्ध है।</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">6</span>प्याज निर्यात कैसे करें?</div>
+      <div class="faq-a">APEDA (apeda.gov.in) पर रजिस्ट्रेशन करें। <strong>50 kg के जाल या 25 kg के बैग</strong> में ग्रेडिंग और पैकिंग करें। Nashik, Pune और Indore के APEDA पंजीकृत Exporters से संपर्क करें। FPO के जरिए Export करने पर <strong>Transportation और पैकेजिंग लागत कम</strong> होती है।</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><span class="num">7</span>खरीफ प्याज में ज्यादा फायदा होता है या रबी में?</div>
+      <div class="faq-a"><strong>खरीफ प्याज का भाव अधिक</strong> होता है (₹20–40/kg) क्योंकि आपूर्ति कम होती है। लेकिन उपज भी कम (15–20 टन/हे.) और रोग-कीट अधिक। <strong>रबी में उपज अधिक</strong> (25–35 टन/हे.) लेकिन भाव कम। भंडारण करके बेचने से रबी भी उतनी ही फायदेमंद हो सकती है।</div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ═══ SECTION 7: TAKEAWAYS ═══ -->
+  <div class="article-section" id="summary">
+    <div class="a-takeaway">
+      <div class="a-takeaway-title">✅ मुख्य बातें — याद रखें</div>
+      <ul class="a-takeaway-list">
+        <li>Bhima Super (रबी), Bhima Raj (खरीफ) — सीजन के अनुसार सही किस्म चुनना पहला कदम है</li>
+        <li>नर्सरी में Trichoderma और बीज उपचार — शुरुआत सही होगी तो फसल अच्छी होगी</li>
+        <li>Sulphur खाद जरूर दें — प्याज की तीखापन और भंडारण क्षमता इसी पर निर्भर है</li>
+        <li>थ्रिप्स पर नजर रखें — नीले/पीले जाल लगाएं, Spinosad + Neem Oil सबसे कारगर</li>
+        <li>कटाई से 10–15 दिन पहले पानी बंद करें — भंडारण बेहतर होगा</li>
+        <li>मार्च–मई में भाव कम हो तो रोकें — जुलाई–अक्टूबर में भाव अक्सर दोगुने होते हैं</li>
+        <li>FPO से जुड़ें और eNAM पर रजिस्ट्रेशन करें — बेहतर भाव और बाजार तक पहुंच</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <div class="cta-icon">🧅</div>
+    <h3>KrashiMitra.in — आपका विश्वसनीय कृषि साथी</h3>
+    <p>प्याज की खेती में कोई सवाल है? रोग पहचान से लेकर मंडी भाव और भंडारण सलाह तक — KrashiMitra AI हिंदी में मुफ्त जवाब देता है।</p>
+    <a href="https://krashimitra.in/chat?tab=chat">AI से पूछें →</a>
+  </div>
+
+  <!-- RELATED ARTICLES -->
+  <div class="relevant-articles">
+    <div class="section-title">
+      <span class="title-icon">📰</span>
+      संबंधित लेख
+      <a href="https://krashimitra.in/articles/">सभी लेख देखें →</a>
+    </div>
+    <div class="articles-grid">
+
+      <a class="article-card" href="https://krashimitra.in/articles/grape-farming.html" style="--rc-accent:#6a1b9a">
+        <div class="card-thumb" style="background:#f3e5f5">🍇</div>
+        <div class="card-body">
+          <div class="card-tag">महाराष्ट्र · अंगूर खेती</div>
+          <div class="card-title">अंगूर की खेती — महाराष्ट्र सम्पूर्ण गाइड</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/mop-guide.html" style="--rc-accent:#b45309">
+        <div class="card-thumb" style="background:#fff8e1">🧪</div>
+        <div class="card-body">
+          <div class="card-tag">खाद · पोटाश MOP</div>
+          <div class="card-title">MOP (पोटाश) का सही उपयोग</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/jaivik-kheti.html" style="--rc-accent:#00695c">
+        <div class="card-thumb" style="background:#e0f2f1">🌿</div>
+        <div class="card-body">
+          <div class="card-tag">जैविक खेती · शुरुआत</div>
+          <div class="card-title">जैविक खेती की शुरुआत कैसे करें?</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/soybean-mp.html" style="--rc-accent:#558b2f">
+        <div class="card-thumb" style="background:#f1f8e9">🫘</div>
+        <div class="card-body">
+          <div class="card-tag">MP · सोयाबीन</div>
+          <div class="card-title">सोयाबीन की खेती — MP सम्पूर्ण गाइड</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/articles/keet-niyantran.html" style="--rc-accent:#6a1b9a">
+        <div class="card-thumb" style="background:#f3e5f5">🐛</div>
+        <div class="card-body">
+          <div class="card-tag">फसल सुरक्षा · कीट</div>
+          <div class="card-title">फसल में कीट नियंत्रण के देसी उपाय</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+      <a class="article-card" href="https://krashimitra.in/chat?tab=mandi" style="--rc-accent:#b71c1c">
+        <div class="card-thumb" style="background:#ffebee">💰</div>
+        <div class="card-body">
+          <div class="card-tag">मंडी · आज के भाव</div>
+          <div class="card-title">प्याज मंडी भाव — LIVE अपडेट</div>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+
+    </div>
+  </div>
+
+</div><!-- /article-wrapper -->
+
+<nav class="mobile-nav">
+  <ul>
+    <li><a href="https://krashimitra.in"><span class="nav-icon">🏠</span>मुख्य</a></li>
+    <li><a href="https://krashimitra.in/chat?tab=chat"><span class="nav-icon">💬</span>Chat</a></li>
+    <li><a href="https://krashimitra.in/chat?tab=weather"><span class="nav-icon">🌤️</span>मौसम</a></li>
+    <li><a href="https://krashimitra.in/chat?tab=mandi"><span class="nav-icon">💰</span>मंडी</a></li>
+    <li><a href="https://krashimitra.in/articles/" class="active"><span class="nav-icon">📘</span>लेख</a></li>
+  </ul>
+</nav>
+
+<footer class="site-footer">
+  <div class="footer-main">
+    <div class="footer-brand">
+      <div class="logo-big">🌾 कृषि <span class="mitra">मित्र</span></div>
+      <p>KrashiMitra.in भारत के किसानों के लिए एक AI-संचालित डिजिटल कृषि सहायक है। फसल रोग, मंडी भाव, मौसम और सरकारी योजनाओं की जानकारी — सब कुछ हिंदी में, मुफ्त।</p>
+      <div class="footer-badges">
+        <span class="footer-badge">🌾 50+ फसलें</span>
+        <span class="footer-badge">📍 500+ जिले</span>
+        <span class="footer-badge">🤖 AI सहायक</span>
+        <span class="footer-badge">🇮🇳 भारत निर्मित</span>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>त्वरित लिंक</h4>
+      <ul>
+        <li><a href="https://krashimitra.in">🏠 मुख्य पृष्ठ</a></li>
+        <li><a href="https://krashimitra.in/articles/">📰 सभी लेख</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=disease">🌾 फसल रोग</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=mandi">💰 मंडी भाव</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=weather">🌤️ मौसम</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=fertilizer">🧪 खाद सलाह</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=chat">💬 AI सहायक</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>जानकारी</h4>
+      <ul>
+        <li><a href="https://krashimitra.in/about">ℹ️ हमारे बारे में</a></li>
+        <li><a href="https://krashimitra.in/contact">📞 संपर्क करें</a></li>
+        <li><a href="https://krashimitra.in/privacy">🔒 गोपनीयता नीति</a></li>
+        <li><a href="https://krashimitra.in/terms">📜 उपयोग शर्तें</a></li>
+        <li><a href="https://krashimitra.in/disclaimer">⚠️ अस्वीकरण</a></li>
+        <li><a href="https://krashimitra.in/sitemap.xml">🗺️ साइटमैप</a></li>
+      </ul>
+    </div>
+  </div>
+  <hr class="footer-divider" />
+  <div class="footer-bottom">
+    <div class="footer-copyright">&copy; 2026 <a href="https://krashimitra.in">KrashiMitra.in</a> — सर्वाधिकार सुरक्षित।</div>
+    <div class="footer-legal-links">
+      <a href="https://krashimitra.in/privacy">गोपनीयता</a>
+      <a href="https://krashimitra.in/terms">शर्तें</a>
+      <a href="https://krashimitra.in/disclaimer">अस्वीकरण</a>
+      <a href="https://krashimitra.in/sitemap.xml">साइटमैप</a>
+    </div>
+    <div class="footer-made"><span class="heart">♥</span> भारतीय किसानों के लिए बनाया गया</div>
+  </div>
+</footer>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('reading-progress').style.width = pct + '%';
+  });
+  function avatarBtnClick() {
+    const token = localStorage.getItem("krishi_token");
+    window.location.href = token ? "https://krashimitra.in/chat?tab=profile" : "https://krashimitra.in/chat?tab=login";
+  }
+</script>
+
+</body>
+</html>
