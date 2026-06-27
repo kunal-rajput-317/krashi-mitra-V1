@@ -673,6 +673,86 @@
       letter-spacing: 0.3px;
     }
 
+    /* ── Farming Activity Cards ── */
+    .wx-farm-section {
+      margin-bottom: 14px;
+    }
+    .wx-farm-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      margin-bottom: 10px;
+      padding-left: 2px;
+    }
+    .wx-farm-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .wx-farm-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      border-left: 4px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .wx-farm-card.good { border-left-color: #4caf50; background: linear-gradient(135deg, #fff, #f1f8e9); }
+    .wx-farm-card.warn { border-left-color: #ff9800; background: linear-gradient(135deg, #fff, #fff8e1); }
+    .wx-farm-card.bad  { border-left-color: #f44336; background: linear-gradient(135deg, #fff, #fbe9e7); }
+    .wx-farm-card.info { border-left-color: #2196f3; background: linear-gradient(135deg, #fff, #e3f2fd); }
+    .wx-farm-card-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .wx-farm-card-icon { font-size: 20px; flex-shrink: 0; }
+    .wx-farm-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.25;
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+    }
+    .wx-farm-card-desc {
+      font-size: 11.5px;
+      color: var(--text-mid);
+      line-height: 1.5;
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+    }
+
+    /* ── Seasonal Crop Tip ── */
+    .wx-season-card {
+      background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+      border: 1.5px solid #a5d6a7;
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .wx-season-card-icon { font-size: 26px; flex-shrink: 0; margin-top: 3px; }
+    .wx-season-card-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green-mid);
+      margin-bottom: 5px;
+    }
+    .wx-season-card-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-dark);
+      line-height: 1.65;
+      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+    }
+
     /* ── Loading shimmer ── */
     .wx-shimmer {
       background: linear-gradient(90deg, #e8f0eb 25%, #d4e6da 50%, #e8f0eb 75%);
@@ -1172,6 +1252,164 @@
     return ["wx-advisory-good", "✅"];
   }
 
+  // ══════════════════════════════════════
+  // FARMER-SPECIFIC INTELLIGENCE
+  // ══════════════════════════════════════
+
+  // Inline trilingual helper (avoids bloating TRANSLATIONS for small labels)
+  function _lt(hi, en, kn) {
+    if (currentLang === 'en') return en;
+    if (currentLang === 'kn') return kn;
+    return hi;
+  }
+
+  function computeFarmingReadiness(d) {
+    const temp    = d.temperature;
+    const hum     = d.humidity;
+    const windKmh = d.wind_speed * 3.6;
+    const cond    = (d.weather_condition || '').toLowerCase();
+    const hasRain = (d.rainfall && d.rainfall > 0) || /rain|drizzle|thunder|storm/.test(cond);
+
+    // Spraying window
+    let spray;
+    if (hasRain) {
+      spray = { level: 'bad',  icon: '🚫',
+        title: _lt('छिड़काव न करें',     'Avoid Spraying',       'ಸಿಂಪಡಿಸಬೇಡಿ'),
+        desc:  _lt('बारिश में दवाई बह जाएगी — रुकने के बाद करें।',
+                   'Rain will wash off spray — wait for dry weather.',
+                   'ಮಳೆಯಲ್ಲಿ ಔಷಧ ತೊಳೆದು ಹೋಗುತ್ತದೆ — ನಿಂತ ಮೇಲೆ ಮಾಡಿ.') };
+    } else if (windKmh > 20 || hum > 85) {
+      spray = { level: 'warn', icon: '⚠️',
+        title: _lt('सावधानी से छिड़काव', 'Spray with Caution',   'ಎಚ್ಚರಿಕೆಯಿಂದ ಸಿಂಪಡಿಸಿ'),
+        desc:  _lt('तेज़ हवा या अधिक नमी — सुबह जल्दी छिड़काव करें।',
+                   'High wind or humidity — spray early morning only.',
+                   'ಗಾಳಿ ಅಥವಾ ತೇವ ಹೆಚ್ಚು — ಬೆಳಿಗ್ಗೆ ಮಾತ್ರ ಸಿಂಪಡಿಸಿ.') };
+    } else {
+      spray = { level: 'good', icon: '✅',
+        title: _lt('छिड़काव करें',        'Good to Spray',        'ಸಿಂಪಡಿಸಿ'),
+        desc:  _lt('हवा ठीक, बारिश नहीं — आज छिड़काव का सही समय है।',
+                   'Low wind, no rain — ideal spray window today.',
+                   'ಗಾಳಿ ಕಡಿಮೆ, ಮಳೆಯಿಲ್ಲ — ಇಂದು ಸಿಂಪಡಿಸಲು ಸೂಕ್ತ.') };
+    }
+
+    // Irrigation
+    let irrigate;
+    if (hasRain || hum > 85) {
+      irrigate = { level: 'info', icon: '💧',
+        title: _lt('सिंचाई जरूरी नहीं',  'Irrigation Not Needed', 'ನೀರಾವರಿ ಬೇಡ'),
+        desc:  _lt('पर्याप्त नमी है — आज सिंचाई की जरूरत नहीं।',
+                   'Sufficient moisture — skip irrigation today.',
+                   'ಸಾಕಷ್ಟು ತೇವ ಇದೆ — ಇಂದು ನೀರು ಹಾಕಬೇಡಿ.') };
+    } else if (temp > 35 && hum < 50) {
+      irrigate = { level: 'good', icon: '🚿',
+        title: _lt('अभी सिंचाई करें',    'Irrigate Now',          'ಈಗ ನೀರು ಹಾಕಿ'),
+        desc:  _lt('तेज़ गर्मी व कम नमी — फसल को पानी की जरूरत है।',
+                   'High heat, low moisture — crops urgently need water.',
+                   'ತೀವ್ರ ಶಾಖ, ಕಡಿಮೆ ತೇವ — ಬೆಳೆಗೆ ನೀರು ಅಗತ್ಯ.') };
+    } else {
+      irrigate = { level: 'info', icon: '💧',
+        title: _lt('सुबह सिंचाई करें',   'Morning Irrigation',    'ಬೆಳಿಗ್ಗೆ ನೀರು ಹಾಕಿ'),
+        desc:  _lt('सुबह जल्दी सिंचाई करें — वाष्पीकरण कम होगा।',
+                   'Irrigate early morning to reduce evaporation.',
+                   'ಹಬೆಯಾಟ ತಡೆಯಲು ಬೆಳಿಗ್ಗೆ ಬೇಗ ನೀರು ಹಾಕಿ.') };
+    }
+
+    // Harvest safety
+    let harvest;
+    if (hasRain) {
+      harvest = { level: 'bad',  icon: '🚫',
+        title: _lt('कटाई न करें',        'Avoid Harvesting',      'ಕೊಯ್ಲು ಮಾಡಬೇಡಿ'),
+        desc:  _lt('बारिश में अनाज खराब होगा — सूखने पर काटें।',
+                   'Rain will damage harvested grain — wait for dry weather.',
+                   'ಮಳೆಯಲ್ಲಿ ಧಾನ್ಯ ಹಾಳಾಗುತ್ತದೆ — ಒಣಗಿದ ಮೇಲೆ ಕೊಯ್ಲು ಮಾಡಿ.') };
+    } else if (windKmh > 20 || hum > 80) {
+      harvest = { level: 'warn', icon: '⚠️',
+        title: _lt('सतर्कता से काटें',   'Harvest with Care',     'ಎಚ್ಚರಿಕೆಯಿಂದ ಕೊಯ್ಲು'),
+        desc:  _lt('ढेरी को ढककर रखें — हवा/नमी से बचाएं।',
+                   'Cover harvested grain — protect from wind and humidity.',
+                   'ಕಟಾವು ಧಾನ್ಯ ಮುಚ್ಚಿ ರಕ್ಷಿಸಿ.') };
+    } else {
+      harvest = { level: 'good', icon: '🌾',
+        title: _lt('कटाई के लिए उचित',   'Good for Harvesting',   'ಕೊಯ್ಲಿಗೆ ಸೂಕ್ತ'),
+        desc:  _lt('मौसम अनुकूल है — आज कटाई की जा सकती है।',
+                   'Suitable weather — go ahead with harvesting today.',
+                   'ಹವಾಮಾನ ಸೂಕ್ತ — ಇಂದು ಕೊಯ್ಲು ಮಾಡಬಹುದು.') };
+    }
+
+    // Fungal / disease risk from humidity × temperature
+    let disease;
+    if (hum > 85 && temp > 20) {
+      disease = { level: 'bad',  icon: '🦠',
+        title: _lt('रोग का खतरा अधिक',  'High Disease Risk',     'ರೋಗ ಅಪಾಯ ಹೆಚ್ಚು'),
+        desc:  _lt('बहुत अधिक नमी — फफूंद/झुलसा रोग का खतरा। निवारक फफूंदनाशक लगाएं।',
+                   'Very humid — high fungal blight risk. Apply preventive fungicide.',
+                   'ತೇವ ತುಂಬಾ ಹೆಚ್ಚು — ಶಿಲೀಂಧ್ರ ರೋಗ ಅಪಾಯ. ಶಿಲೀಂಧ್ರನಾಶಕ ಹಾಕಿ.') };
+    } else if (hum > 70 && temp > 18) {
+      disease = { level: 'warn', icon: '⚠️',
+        title: _lt('मध्यम रोग खतरा',    'Moderate Disease Risk', 'ಮಧ್ಯಮ ರೋಗ ಅಪಾಯ'),
+        desc:  _lt('नमी से रोग का मध्यम खतरा — फसल की निगरानी करें।',
+                   'Moderate fungal risk — monitor your crops closely.',
+                   'ಮಧ್ಯಮ ಶಿಲೀಂಧ್ರ ಅಪಾಯ — ಬೆಳೆ ಗಮನಿಸಿ.') };
+    } else {
+      disease = { level: 'good', icon: '✅',
+        title: _lt('रोग का खतरा कम',    'Low Disease Risk',      'ರೋಗ ಅಪಾಯ ಕಡಿಮೆ'),
+        desc:  _lt('मौसम से फसल रोग का कम खतरा है — सामान्य देखभाल करें।',
+                   'Low disease risk from weather — routine care is sufficient.',
+                   'ಹವಾಮಾನದಿಂದ ರೋಗ ಅಪಾಯ ಕಡಿಮೆ.') };
+    }
+
+    return { spray, irrigate, harvest, disease };
+  }
+
+  function getSeasonalCropTip() {
+    const m = new Date().getMonth() + 1;
+    const hi = {
+      1:  ['❄️', 'पाले से बचाव जरूरी। गेहूं-सरसों में सिंचाई करें और नाइट्रोजन खाद डालें।'],
+      2:  ['🌸', 'सरसों में फूल-फल आ रहे हैं। गेहूं में दूसरी-तीसरी सिंचाई का समय है।'],
+      3:  ['🌾', 'सरसों की कटाई करें। गेहूं में दाना पक रहा है — कटाई से 2 सप्ताह पहले सिंचाई बंद करें।'],
+      4:  ['☀️', 'गेहूं कटाई का मौसम। भंडारण से पहले दाने को अच्छे से सुखाएं, नमी न रहे।'],
+      5:  ['🔥', 'जायद सीजन: लौकी, खीरा, तरबूज। गर्मी में रोज़ सुबह सिंचाई जरूरी है।'],
+      6:  ['🌱', 'खरीफ सीजन: धान, मक्का, सोयाबीन और अरहर की बुवाई का सही समय आ गया है।'],
+      7:  ['🌿', 'धान की रोपाई और खरपतवार नियंत्रण करें। यूरिया का पहला डोज़ दें।'],
+      8:  ['🌾', 'धान-मक्का में कीट-रोग की निगरानी करें। पोटाश और फास्फोरस खाद दें।'],
+      9:  ['🌾', 'खरीफ फसलों में दाना भर रहा है — सिंचाई और पोषण बनाए रखें।'],
+      10: ['🍂', 'खरीफ कटाई शुरू होगी। रबी की बुवाई के लिए खेत तैयार करना शुरू करें।'],
+      11: ['🌱', 'रबी सीजन: गेहूं, सरसों और चना की बुवाई का उत्तम समय है।'],
+      12: ['🌿', 'गेहूं में पहली सिंचाई करें। सरसों में माहू (एफिड) कीट की निगरानी करें।'],
+    };
+    const en = {
+      1:  ['❄️', 'Protect crops from frost. Irrigate wheat & mustard, apply nitrogen fertilizer.'],
+      2:  ['🌸', 'Mustard in flowering/fruiting stage. Second and third irrigation for wheat.'],
+      3:  ['🌾', 'Harvest mustard. Wheat grain is maturing — stop irrigation 2 weeks before harvest.'],
+      4:  ['☀️', 'Wheat harvest season. Dry grain well before storage to prevent mold.'],
+      5:  ['🔥', 'Zaid crops: Bottle gourd, Cucumber, Watermelon. Daily morning irrigation needed.'],
+      6:  ['🌱', 'Kharif season: Right time to sow Paddy, Maize, Soybean, and Pigeon pea.'],
+      7:  ['🌿', 'Paddy transplanting and weed control. Apply first dose of Urea fertilizer.'],
+      8:  ['🌾', 'Monitor pests in Paddy and Maize. Apply Potash and Phosphorus now.'],
+      9:  ['🌾', 'Kharif crops in grain-filling stage — maintain irrigation and nutrition.'],
+      10: ['🍂', 'Kharif harvest approaching. Start preparing fields for Rabi crop sowing.'],
+      11: ['🌱', 'Rabi season: Ideal time to sow Wheat, Mustard, and Chickpea.'],
+      12: ['🌿', 'First irrigation in wheat. Watch for Aphids (Mahu) on mustard.'],
+    };
+    const kn = {
+      1:  ['❄️', 'ಮಂಜಿನಿಂದ ಬೆಳೆ ರಕ್ಷಿಸಿ. ಗೋಧಿ-ಸಾಸಿವೆಗೆ ನೀರು ಹಾಕಿ, ಸಾರಜನಕ ಗೊಬ್ಬರ ಹಾಕಿ.'],
+      2:  ['🌸', 'ಸಾಸಿವೆ ಹೂಬಿಡುತ್ತಿದೆ. ಗೋಧಿಗೆ 2ನೇ-3ನೇ ನೀರಾವರಿ ಸಮಯ.'],
+      3:  ['🌾', 'ಸಾಸಿವೆ ಕೊಯ್ಲು ಮಾಡಿ. ಗೋಧಿ ಕಾಳು ಮಾಗುತ್ತಿದೆ — ನೀರು ನಿಲ್ಲಿಸಿ.'],
+      4:  ['☀️', 'ಗೋಧಿ ಕೊಯ್ಲು ಕಾಲ. ಸಂಗ್ರಹಿಸುವ ಮೊದಲು ಕಾಳು ಚೆನ್ನಾಗಿ ಒಣಗಿಸಿ.'],
+      5:  ['🔥', 'ಬೇಸಿಗೆ ಬೆಳೆ: ಕಲ್ಲಂಗಡಿ, ಸೌತೆ, ಹೀರೆ. ಪ್ರತಿದಿನ ಬೆಳಿಗ್ಗೆ ನೀರು ಹಾಕಿ.'],
+      6:  ['🌱', 'ಖರೀಫ್ ಕಾಲ: ಭತ್ತ, ಮೆಕ್ಕೆ ಜೋಳ, ಸೋಯಾಬೀನ್ ಬಿತ್ತಲು ಸೂಕ್ತ ಸಮಯ.'],
+      7:  ['🌿', 'ಭತ್ತ ನಾಟಿ ಮತ್ತು ಕಳೆ ನಿಯಂತ್ರಣ ಮಾಡಿ. ಯೂರಿಯಾ ಗೊಬ್ಬರ ಮೊದಲ ಡೋಸ್ ಹಾಕಿ.'],
+      8:  ['🌾', 'ಭತ್ತ-ಮೆಕ್ಕೆ ಜೋಳದಲ್ಲಿ ಕೀಟ-ರೋಗ ಗಮನಿಸಿ. ಪೊಟ್ಯಾಶ್ ಮತ್ತು ರಂಜಕ ಹಾಕಿ.'],
+      9:  ['🌾', 'ಖರೀಫ್ ಬೆಳೆ ಕಾಳು ತುಂಬುತ್ತಿದೆ — ನೀರಾವರಿ ಮತ್ತು ಪೋಷಣೆ ಮುಂದುವರಿಸಿ.'],
+      10: ['🍂', 'ಖರೀಫ್ ಕೊಯ್ಲು ಕಾಲ. ರಬಿ ಬಿತ್ತನೆಗೆ ಭೂಮಿ ತಯಾರು ಮಾಡಿ.'],
+      11: ['🌱', 'ರಬಿ ಕಾಲ: ಗೋಧಿ, ಸಾಸಿವೆ, ಕಡಲೆ ಬಿತ್ತಲು ಉತ್ತಮ ಸಮಯ.'],
+      12: ['🌿', 'ಗೋಧಿಗೆ ಮೊದಲ ನೀರು ಹಾಕಿ. ಸಾಸಿವೆಯಲ್ಲಿ ಮಾಹು (ಜಿಗಿ ಹುಳ) ಗಮನಿಸಿ.'],
+    };
+    const src = currentLang === 'en' ? en : currentLang === 'kn' ? kn : hi;
+    const [icon, text] = src[m] || src[6];
+    return { icon, text };
+  }
+
   function renderWeather(json) {
     const result  = document.getElementById("weather-result");
     const agePill = document.getElementById("wx-age-pill");
@@ -1206,7 +1444,10 @@
     const tempInt   = Math.round(d.temperature);
     const feelsInt  = Math.round(d.feels_like);
     const windKmh   = (d.wind_speed * 3.6).toFixed(1);
+    const dewPt     = Math.round(d.temperature - (100 - d.humidity) / 5);
     const [advClass, advEmoji] = _wxAdvisoryClass(d.farming_tip);
+    const readiness = computeFarmingReadiness(d);
+    const seasonTip = getSeasonalCropTip();
 
     const staleHTML = (d.is_stale || json.message)
       ? `<div class="wx-stale-bar">⚠️ <span>${json.message || t('stale_msg')}</span></div>`
@@ -1255,9 +1496,9 @@
               <span class="wx-stat-lbl">${t('wind_unit')}</span>
             </div>
             <div class="wx-stat">
-              <span class="wx-stat-icon">🌡️</span>
-              <span class="wx-stat-val">${feelsInt}°</span>
-              <span class="wx-stat-lbl">${t('feels_lbl')}</span>
+              <span class="wx-stat-icon">💦</span>
+              <span class="wx-stat-val">${dewPt}°</span>
+              <span class="wx-stat-lbl">${_lt('ओस बिंदु', 'Dew Pt.', 'ಇಬ್ಬನಿ')}</span>
             </div>
           </div>
         </div>
@@ -1266,6 +1507,48 @@
       <div class="wx-advisory ${advClass}" data-emoji="${advEmoji}">
         <div class="wx-advisory-label">${t('advisory_label')}</div>
         <div class="wx-advisory-text">${d.farming_tip}</div>
+      </div>
+
+      <div class="wx-farm-section">
+        <div class="wx-farm-section-title">${_lt('🌿 आज की कृषि गतिविधि', '🌿 Today\'s Farm Activity', '🌿 ಇಂದಿನ ಕೃಷಿ ಚಟುವಟಿಕೆ')}</div>
+        <div class="wx-farm-cards">
+          <div class="wx-farm-card ${readiness.spray.level}">
+            <div class="wx-farm-card-header">
+              <span class="wx-farm-card-icon">${readiness.spray.icon}</span>
+              <span class="wx-farm-card-title">${readiness.spray.title}</span>
+            </div>
+            <div class="wx-farm-card-desc">${readiness.spray.desc}</div>
+          </div>
+          <div class="wx-farm-card ${readiness.irrigate.level}">
+            <div class="wx-farm-card-header">
+              <span class="wx-farm-card-icon">${readiness.irrigate.icon}</span>
+              <span class="wx-farm-card-title">${readiness.irrigate.title}</span>
+            </div>
+            <div class="wx-farm-card-desc">${readiness.irrigate.desc}</div>
+          </div>
+          <div class="wx-farm-card ${readiness.harvest.level}">
+            <div class="wx-farm-card-header">
+              <span class="wx-farm-card-icon">${readiness.harvest.icon}</span>
+              <span class="wx-farm-card-title">${readiness.harvest.title}</span>
+            </div>
+            <div class="wx-farm-card-desc">${readiness.harvest.desc}</div>
+          </div>
+          <div class="wx-farm-card ${readiness.disease.level}">
+            <div class="wx-farm-card-header">
+              <span class="wx-farm-card-icon">${readiness.disease.icon}</span>
+              <span class="wx-farm-card-title">${readiness.disease.title}</span>
+            </div>
+            <div class="wx-farm-card-desc">${readiness.disease.desc}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wx-season-card">
+        <span class="wx-season-card-icon">${seasonTip.icon}</span>
+        <div>
+          <div class="wx-season-card-label">${_lt('📅 मौसमी कृषि सलाह', '📅 Seasonal Crop Tip', '📅 ಋತು ಕೃಷಿ ಸಲಹೆ')}</div>
+          <div class="wx-season-card-text">${seasonTip.text}</div>
+        </div>
       </div>
 
       <div class="wx-footer-meta">${t('footer_meta')}</div>
@@ -1441,5 +1724,21 @@
     fetchWeather();
   });
 </script>
+
+<!-- ── Floating AI Chat Button ── -->
+<style>
+.ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;overflow:visible;padding:0;}
+.ai-chat-fab:hover{transform:scale(1.1);box-shadow:0 6px 26px rgba(45,106,45,.6),0 0 0 2.5px #5a8c1e;}
+.ai-chat-fab:active{transform:scale(.95);}
+.ai-fab-icon{width:62px;height:62px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ai-fab-icon img{width:88%;height:88%;object-fit:contain;}
+.ai-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:12px;font-weight:600;font-family:sans-serif;padding:5px 13px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;animation:ai-fab-label 35s ease-in-out 3s infinite;}
+@keyframes ai-fab-label{0%,100%{opacity:0;}8%{opacity:1;}20%{opacity:1;}28%{opacity:0;}}
+@media(min-width:1025px){.ai-chat-fab{bottom:28px;right:28px;width:68px;height:68px;}.ai-fab-icon{width:68px;height:68px;}}
+</style>
+<a href="chat.html" class="ai-chat-fab" title="AI सहायक से पूछें">
+  <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
+  <span class="ai-fab-tip">AI सहायक</span>
+</a>
 </body>
 </html>

@@ -848,5 +848,21 @@
 
   
 </script>
+
+<!-- ── Floating AI Chat Button ── -->
+<style>
+.ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;overflow:visible;padding:0;}
+.ai-chat-fab:hover{transform:scale(1.1);box-shadow:0 6px 26px rgba(45,106,45,.6),0 0 0 2.5px #5a8c1e;}
+.ai-chat-fab:active{transform:scale(.95);}
+.ai-fab-icon{width:62px;height:62px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ai-fab-icon img{width:88%;height:88%;object-fit:contain;}
+.ai-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:12px;font-weight:600;font-family:sans-serif;padding:5px 13px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;animation:ai-fab-label 35s ease-in-out 3s infinite;}
+@keyframes ai-fab-label{0%,100%{opacity:0;}8%{opacity:1;}20%{opacity:1;}28%{opacity:0;}}
+@media(min-width:1025px){.ai-chat-fab{bottom:28px;right:28px;width:68px;height:68px;}.ai-fab-icon{width:68px;height:68px;}}
+</style>
+<a href="chat.html" class="ai-chat-fab" title="AI सहायक से पूछें">
+  <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
+  <span class="ai-fab-tip">AI सहायक</span>
+</a>
 </body>
 </html>
