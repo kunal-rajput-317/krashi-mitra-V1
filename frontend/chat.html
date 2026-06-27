@@ -1,825 +1,684 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <!-- Google tag (gtag.js) -->
+<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-493H1PDP64');
 </script>
 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI सहायता | KrashiMitra</title>
+<link rel="icon" href="https://krashimitra.in/images/favicon.png" type="image/png">
+<link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
 
+<meta name="description" content="KrashiMitra AI सहायता — खेती की समस्या हिंदी में पूछें और तुरंत जवाब पाएं।" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://krashimitra.in/chat.html" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="AI कृषि सहायता — KrashiMitra" />
+<meta property="og:description" content="खेती की समस्या हिंदी में पूछें और तुरंत AI जवाब पाएं।" />
+<meta property="og:url" content="https://krashimitra.in/chat.html" />
+<meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <title>AI सहायता | KrashiMitra</title>
-  <link rel="icon" href="https://krashimitra.in/images/favicon.png" type="image/png">
-  <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&display=swap');
 
-  <meta name="description" content="KrashiMitra AI सहायता — खेती की समस्या हिंदी में पूछें और तुरंत जवाब पाएं।" />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://krashimitra.in/chat.html" />
+/* ── Variables ───────────────────────────────────────────── */
+:root {
+  --green-dark:  #1a3c2e;
+  --green-mid:   #2d6a4f;
+  --green-light: #52b788;
+  --green-pale:  #d8f3dc;
+  --amber:       #e9a825;
+  --amber-light: #fef3c7;
+  --soil:        #7c4f2f;
+  --cream:       #faf7f2;
+  --white:       #ffffff;
+  --text-dark:   #1a2e1e;
+  --text-mid:    #4a6355;
+  --text-light:  #8aab96;
+  --border:      #ddeee4;
+  --shadow:      0 2px 12px rgba(26,60,46,0.09);
+  --shadow-lg:   0 8px 32px rgba(26,60,46,0.14);
+  --radius:      14px;
+  --radius-sm:   8px;
+  --topbar-h:    60px;
+  --announce-h:  30px;
+  --header-h:    calc(var(--topbar-h) + var(--announce-h));
+}
 
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="AI कृषि सहायता — KrashiMitra" />
-  <meta property="og:description" content="खेती की समस्या हिंदी में पूछें और तुरंत AI जवाब पाएं।" />
-  <meta property="og:url" content="https://krashimitra.in/chat.html" />
-  <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; }
+body {
+  height: 100%;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  background: var(--cream);
+  color: var(--text-dark);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* chat fills viewport, messages scroll internally */
+}
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+/* ── Fixed header wrapper ────────────────────────────────── */
+.header-wrapper {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+}
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&display=swap');
+/* ── Announcement bar ────────────────────────────────────── */
+.top-announcement {
+  background: var(--amber-light);
+  color: var(--green-dark);
+  text-align: center;
+  font-size: 0.70rem;
+  font-weight: 600;
+  padding: 5px 16px;
+  letter-spacing: 0.2px;
+  height: var(--announce-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.top-announcement a {
+  color: var(--green-mid);
+  text-decoration: underline;
+}
 
-    /* ══════════════════════════════════════
-       CSS VARIABLES & RESET
-    ══════════════════════════════════════ */
-    :root {
-      --green-dark:    #1a3c2e;
-      --green-mid:     #2d6a4f;
-      --green-light:   #52b788;
-      --green-pale:    #d8f3dc;
-      --amber:         #e9a825;
-      --amber-light:   #fef3c7;
-      --soil:          #7c4f2f;
-      --cream:         #faf7f2;
-      --white:         #ffffff;
-      --text-dark:     #1a2e1e;
-      --text-mid:      #4a6355;
-      --text-light:    #8aab96;
-      --border:        #ddeee4;
-      --shadow:        0 4px 24px rgba(26,60,46,0.10);
-      --shadow-lg:     0 8px 40px rgba(26,60,46,0.16);
-      --radius:        14px;
-      --radius-sm:     8px;
-    }
+/* ── Topbar ──────────────────────────────────────────────── */
+.topbar {
+  background: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: var(--topbar-h);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.22);
+}
+.topbar-left {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.topbar-logo-icon { font-size: 24px; line-height: 1; }
+.topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.topbar-logo-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.3px;
+}
+.topbar-logo-name span { color: var(--amber); }
+.topbar-logo-sub { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 0.4px; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+.topbar-nav { display: flex; align-items: center; gap: 2px; }
+.tnav-btn {
+  padding: 6px 12px; border-radius: 8px; border: none;
+  background: transparent; color: rgba(255,255,255,0.65);
+  font-size: 13px; font-weight: 600;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+  transition: background 0.15s, color 0.15s; white-space: nowrap;
+}
+.tnav-btn:hover  { background: rgba(255,255,255,0.10); color: #fff; }
+.tnav-btn.active { background: rgba(255,255,255,0.14); color: #fff;
+                   box-shadow: 0 0 0 1.5px var(--green-mid) inset; }
 
-    html, body {
-      height: 100%;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      background: var(--cream);
-      color: var(--text-dark);
-    }
+.topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      overflow-y: auto;
-    }
+/* Language picker */
+.lang-picker { position: relative; }
+.lang-picker-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.85);
+  font-size: 12px; font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; white-space: nowrap; transition: background 0.15s;
+}
+.lang-picker-btn:hover { background: rgba(255,255,255,0.16); }
+.lang-chevron { font-size: 9px; opacity: 0.7; transition: transform 0.2s; }
+.lang-picker.open .lang-chevron { transform: rotate(180deg); }
+.lang-dropdown {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--green-dark); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; overflow: hidden; min-width: 130px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35); z-index: 300;
+}
+.lang-picker.open .lang-dropdown { display: block; }
+.lang-option {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 9px 14px; border: none;
+  background: transparent; color: rgba(255,255,255,0.68);
+  font-size: 13px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; text-align: left;
+  transition: background 0.14s, color 0.14s;
+}
+.lang-option:hover  { background: rgba(255,255,255,0.08); color: #fff; }
+.lang-option.active { color: var(--amber); background: rgba(233,168,37,0.10); }
+.lang-opt-code { font-size: 11px; opacity: 0.5; font-weight: 600; min-width: 22px; }
 
-    /* ══════════════════════════════════════
-       FIXED HEADER WRAPPER
-    ══════════════════════════════════════ */
-    .header-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 200;
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+.topbar-avatar-btn {
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; flex-shrink: 0;
+  transition: background 0.15s; text-decoration: none;
+}
+.topbar-avatar-btn:hover { background: rgba(255,255,255,0.20); }
 
-    /* ══════════════════════════════════════
-       TOP ANNOUNCEMENT BAR
-    ══════════════════════════════════════ */
-    .top-announcement {
-      background: var(--amber-light);
-      color: var(--green-dark);
-      text-align: center;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 6px 16px;
-      letter-spacing: 0.2px;
-    }
-    .top-announcement a {
-      color: var(--green-mid);
-      text-decoration: underline;
-      margin-left: 6px;
-    }
+/* ── Layout shell ────────────────────────────────────────── */
+/* spacer under fixed header */
+.header-spacer {
+  flex-shrink: 0;
+  height: var(--header-h);
+}
 
-    /* ══════════════════════════════════════
-       TOPBAR
-    ══════════════════════════════════════ */
-    .topbar {
-      background: var(--green-dark);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 28px;
-      height: 60px;
-      flex-shrink: 0;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
-    }
-    .topbar-spacer { flex-shrink: 0; }
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .topbar-logo-icon { font-size: 26px; line-height: 1; }
-    .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-    .topbar-logo-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 17px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.3px;
-    }
-    .topbar-logo-name span { color: var(--amber); }
-    .topbar-logo-sub {
-      font-size: 9.5px;
-      color: rgba(255,255,255,0.55);
-      letter-spacing: 0.5px;
-    }
+/* chat fills remaining viewport */
+.chat-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;          /* allow flex child to shrink */
+  overflow: hidden;
+}
 
-    /* Desktop center nav */
-    .topbar-nav { display: flex; align-items: center; gap: 2px; }
-    .tnav-btn {
-      padding: 6px 13px;
-      border-radius: 8px;
-      border: none;
-      background: transparent;
-      color: rgba(255,255,255,0.70);
-      font-size: 13px;
-      font-weight: 600;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: background 0.18s, color 0.18s;
-      white-space: nowrap;
-    }
-    .tnav-btn:hover   { background: rgba(255,255,255,0.10); color: #fff; }
-    .tnav-btn.active  { background: rgba(255,255,255,0.15); color: #fff;
-                        box-shadow: 0 0 0 1.5px var(--green-mid) inset; }
+/* ── Thin chat context bar ───────────────────────────────── */
+/* replaces the big hero — just one slim row */
+.chat-context-bar {
+  background: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 42px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.chat-context-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  font-family: 'DM Sans', sans-serif;
+}
+.chat-context-title strong { color: var(--green-light); font-weight: 700; }
+.chat-context-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green-light);
+  box-shadow: 0 0 0 3px rgba(82,183,136,0.2);
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { box-shadow: 0 0 0 3px rgba(82,183,136,0.2); }
+  50%     { box-shadow: 0 0 0 6px rgba(82,183,136,0.07); }
+}
+.chat-context-tags {
+  display: flex; gap: 6px; align-items: center;
+}
+.chat-context-tag {
+  font-size: 10.5px; font-weight: 600;
+  color: rgba(255,255,255,0.42);
+  padding: 2px 8px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.10);
+}
 
-    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* ── Messages area ───────────────────────────────────────── */
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+  background: var(--cream);
+}
+#chat-messages::-webkit-scrollbar { width: 4px; }
+#chat-messages::-webkit-scrollbar-track { background: transparent; }
+#chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    /* Language picker */
-    .lang-picker { position: relative; }
-    .lang-picker-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 11px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.20);
-      background: rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.85);
-      font-size: 12px;
-      font-weight: 700;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.18s;
-    }
-    .lang-picker-btn:hover { background: rgba(255,255,255,0.18); }
-    .lang-picker-btn .lang-chevron { font-size: 9px; opacity: 0.7; transition: transform 0.2s; }
-    .lang-picker.open .lang-chevron { transform: rotate(180deg); }
-    .lang-dropdown {
-      display: none;
-      position: absolute;
-      top: calc(100% + 6px);
-      right: 0;
-      background: var(--green-dark);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      overflow: hidden;
-      min-width: 130px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
-      z-index: 200;
-    }
-    .lang-picker.open .lang-dropdown { display: block; }
-    .lang-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 9px 14px;
-      border: none;
-      background: transparent;
-      color: rgba(255,255,255,0.70);
-      font-size: 13px;
-      font-weight: 500;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer;
-      text-align: left;
-      transition: background 0.15s, color 0.15s;
-    }
-    .lang-option:hover { background: rgba(255,255,255,0.08); color: #fff; }
-    .lang-option.active { color: var(--amber); background: rgba(233,168,37,0.10); }
-    .lang-option .lang-opt-code { font-size: 11px; opacity: 0.55; font-weight: 600; min-width: 22px; }
+/* ── Suggestion chips ────────────────────────────────────── */
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 2px 0 6px;
+}
+.chat-suggestion-chip {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  color: var(--text-mid);
+  border-radius: 20px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s;
+  font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+.chat-suggestion-chip:hover {
+  background: var(--green-pale);
+  border-color: var(--green-light);
+  color: var(--green-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.chat-suggestion-chip:active {
+  transform: translateY(0);
+  background: var(--green-pale);
+}
 
-    /* Avatar btn */
-    .topbar-avatar-btn {
-      background: rgba(255,255,255,0.10);
-      border: 1.5px solid rgba(255,255,255,0.20);
-      border-radius: 50%;
-      width: 34px; height: 34px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.15s;
-    }
-    .topbar-avatar-btn:hover { background: rgba(255,255,255,0.20); }
+/* ── Message bubbles ─────────────────────────────────────── */
+.chat-msg {
+  display: flex;
+  gap: 9px;
+  align-items: flex-end;
+  animation: msgUp 0.22s ease both;
+}
+@keyframes msgUp {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.chat-msg.user { flex-direction: row-reverse; }
 
-    /* ══════════════════════════════════════
-       BREADCRUMB
-    ══════════════════════════════════════ */
-    .breadcrumb {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 9px 28px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-light);
-      flex-shrink: 0;
-    }
-    .breadcrumb a {
-      color: var(--green-mid);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.15s;
-    }
-    .breadcrumb a:hover { color: var(--green-dark); text-decoration: underline; }
-    .breadcrumb-sep { opacity: 0.5; }
-    .breadcrumb-current { color: var(--text-dark); font-weight: 600; }
+.msg-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+  background: var(--green-pale);
+}
+.chat-msg.user .msg-avatar { background: var(--green-mid); }
 
-    /* ══════════════════════════════════════
-       MAIN CONTENT
-    ══════════════════════════════════════ */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+.msg-bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.62;
+  font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.chat-msg.bot .msg-bubble {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-bottom-left-radius: 4px;
+  color: var(--text-dark);
+  box-shadow: var(--shadow);
+}
+.chat-msg.user .msg-bubble {
+  background: var(--green-mid);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(45,106,79,0.22);
+}
 
-    /* ══════════════════════════════════════
-       CHAT HERO
-    ══════════════════════════════════════ */
-    .chat-hero {
-      background: linear-gradient(150deg, var(--green-dark) 0%, #2d6a4f 60%, #3a7d5e 100%);
-      padding: 28px 40px 24px;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .chat-hero::before {
-      content: '';
-      position: absolute;
-      top: -50px; right: -50px;
-      width: 240px; height: 240px;
-      background: radial-gradient(circle, rgba(82,183,136,.18) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .chat-hero::after {
-      content: '💬';
-      position: absolute;
-      right: 36px; bottom: 12px;
-      font-size: 72px;
-      opacity: 0.07;
-      pointer-events: none;
-      line-height: 1;
-    }
-    .chat-hero-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--green-light);
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-      opacity: 0.85;
-    }
-    .chat-hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 28px;
-      color: #fff;
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-    .chat-hero-sub {
-      font-size: 13px;
-      color: rgba(255,255,255,0.60);
-      line-height: 1.6;
-      max-width: 460px;
-    }
-    .chat-hero-badges {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-    .chat-hero-badge {
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: rgba(255,255,255,0.80);
-      border-radius: 20px;
-      padding: 5px 14px;
-      font-size: 11.5px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-    }
+/* meta line inside bubble */
+.msg-meta {
+  display: block;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10.5px;
+  color: var(--text-light);
+}
+.msg-meta.cache-hit {
+  color: var(--green-mid);
+  font-weight: 700;
+}
 
-    /* ══════════════════════════════════════
-       CHAT WINDOW
-    ══════════════════════════════════════ */
-    .chat-window {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: var(--cream);
-      position: relative;
-    }
+/* image inside bubble */
+.msg-image {
+  max-width: 200px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  display: block;
+  border: 1.5px solid var(--border);
+}
 
-    /* Messages area */
-    #chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      scroll-behavior: smooth;
-    }
+/* ── Loading bar (top of messages) ──────────────────────── */
+.chat-loading-bar {
+  flex-shrink: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--green-light) 30%,
+    var(--amber) 50%,
+    var(--green-light) 70%,
+    transparent 100%);
+  background-size: 250% 100%;
+  display: none;
+  animation: bar-sweep 1.6s ease-in-out infinite;
+}
+.chat-loading-bar.active { display: block; }
+@keyframes bar-sweep {
+  0%   { background-position: 140% center; }
+  100% { background-position: -40% center; }
+}
 
-    /* Suggestion chips — shown before first message */
-    .chat-suggestions {
-      position: relative;
-      padding: 0 28px 16px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .chat-suggestion-chip {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      color: var(--text-mid);
-      border-radius: 20px;
-      padding: 7px 14px;
-      font-size: 12.5px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.18s;
-      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .chat-suggestion-chip:hover {
-      background: var(--green-pale);
-      border-color: var(--green-light);
-      color: var(--green-dark);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow);
-    }
-    .chat-suggestion-chip:active {
-      background: var(--green-pale);
-      border-color: var(--green-light);
-    }
+/* ── Typing indicator ────────────────────────────────────── */
+.typing-indicator {
+  display: flex; gap: 9px; align-items: flex-end;
+}
+.typing-dots {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  padding: 10px 15px;
+  display: flex; gap: 6px; align-items: center;
+  box-shadow: var(--shadow);
+  background-image: linear-gradient(100deg, #fff 30%, #f4faf6 55%, #fff 70%);
+  background-size: 200% 100%;
+  animation: bubble-shimmer 2s ease-in-out infinite;
+}
+@keyframes bubble-shimmer {
+  0%,100% { background-position: 0% center; }
+  50%      { background-position: 100% center; }
+}
+.typing-label {
+  font-size: 12px;
+  color: var(--text-light);
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  font-style: italic;
+  white-space: nowrap;
+  margin-right: 2px;
+}
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%; background: var(--green-light);
+  animation: tdot 1.1s ease infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.18s; }
+.typing-dot:nth-child(3) { animation-delay: 0.36s; }
+@keyframes tdot {
+  0%,70%,100% { transform: translateY(0)   scale(0.75); opacity: 0.4; }
+  35%          { transform: translateY(-5px) scale(1.1);  opacity: 1;   }
+}
 
-    /* Message bubbles */
-    .chat-msg {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      animation: msgFadeUp 0.25s ease both;
-    }
-    @keyframes msgFadeUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .chat-msg.user  { flex-direction: row-reverse; }
+/* ── Image preview strip ─────────────────────────────────── */
+#chat-img-preview {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  background: rgba(255,255,255,0.8);
+  border-top: 1px solid var(--border);
+}
+#chat-img-preview.visible { display: flex; }
+.img-preview-thumb {
+  width: 48px; height: 48px;
+  object-fit: cover; border-radius: 8px;
+  border: 1.5px solid var(--border);
+}
+.img-preview-remove {
+  background: none; border: none;
+  font-size: 15px; cursor: pointer; color: var(--text-light);
+  padding: 4px; border-radius: 6px;
+  transition: color 0.14s;
+}
+.img-preview-remove:hover { color: #c0392b; }
 
-    .msg-avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-      background: var(--green-pale);
-    }
-    .chat-msg.user .msg-avatar {
-      background: var(--green-mid);
-    }
+/* ── Input bar ───────────────────────────────────────────── */
+.chat-input-bar {
+  flex-shrink: 0;
+  padding: 10px 20px 12px;
+  background: rgba(250,247,242,0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.chat-input-wrap {
+  flex: 1;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 24px;
+  display: flex;
+  align-items: flex-end;
+  padding: 9px 14px;
+  gap: 6px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.chat-input-wrap:focus-within {
+  border-color: var(--green-light);
+  box-shadow: 0 0 0 3px rgba(82,183,136,0.12);
+}
+#chat-input {
+  flex: 1; border: none; outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+  color: var(--text-dark);
+  resize: none;
+  max-height: 100px; min-height: 22px;
+  line-height: 1.5;
+}
+#chat-input::placeholder { color: var(--text-light); font-size: 13px; }
 
-    .msg-bubble {
-      max-width: 72%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      font-size: 14px;
-      line-height: 1.6;
-      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      white-space: pre-wrap;
-    }
-    .chat-msg.bot  .msg-bubble {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-bottom-left-radius: 4px;
-      color: var(--text-dark);
-      box-shadow: var(--shadow);
-    }
-    .chat-msg.user .msg-bubble {
-      background: var(--green-mid);
-      color: #fff;
-      border-bottom-right-radius: 4px;
-    }
-    .msg-meta {
-      display: block;
-      margin-top: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
-      line-height: 1.35;
-      color: var(--text-light);
-      white-space: normal;
-    }
-    .msg-meta.cache-hit {
-      color: var(--green-dark);
-      font-weight: 700;
-    }
+/* icon buttons inside input */
+.chat-icon-btn {
+  background: none; border: none;
+  font-size: 17px; cursor: pointer;
+  color: var(--text-light); padding: 1px;
+  border-radius: 6px; flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+  min-width: 26px; min-height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.chat-icon-btn:hover   { color: var(--green-mid); }
+.chat-icon-btn:active  { background: var(--green-pale); }
+.chat-icon-btn.recording {
+  color: #c0392b;
+  animation: mic-pulse 0.8s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%,100% { transform: scale(1);    }
+  50%      { transform: scale(1.18); }
+}
 
-    /* Typing indicator */
-    .typing-indicator {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-    }
-    .typing-dots {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 18px;
-      border-bottom-left-radius: 4px;
-      padding: 14px 18px;
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      box-shadow: var(--shadow);
-    }
-    .typing-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--green-light);
-      animation: tdot 1.2s ease infinite;
-    }
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes tdot {
-      0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
-      40%           { transform: scale(1.1); opacity: 1; }
-    }
+/* send button */
+.chat-send-btn {
+  background: var(--green-mid);
+  border: none;
+  border-radius: 50%;
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  cursor: pointer; flex-shrink: 0;
+  color: white;
+  transition: background 0.16s, transform 0.14s;
+  box-shadow: 0 3px 10px rgba(45,106,79,0.30);
+}
+.chat-send-btn:hover  { background: var(--green-dark); }
+.chat-send-btn:active { transform: scale(0.92); }
+.chat-send-btn:disabled {
+  background: var(--border);
+  cursor: not-allowed;
+  box-shadow: none;
+  color: var(--text-light);
+}
 
-    /* ══════════════════════════════════════
-       CHAT INPUT BAR
-    ══════════════════════════════════════ */
-    .chat-input-bar {
-      position: fixed;
-      width: 100%;
-      bottom: 67px;
-      background: var(--white);
-      border-top: 1.5px solid var(--border);
-      padding: 12px 40px;
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .chat-input-wrap {
-      flex: 1;
-      background: var(--cream);
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      display: flex;
-      align-items: flex-end;
-      padding: 10px 14px;
-      gap: 8px;
-      transition: border-color 0.18s;
-    }
-    .chat-input-wrap:focus-within {
-      border-color: var(--green-light);
-      background: var(--white);
-    }
-    #chat-input {
-      flex: 1;
-      border: none;
-      outline: none;
-      background: transparent;
-      font-size: 14px;
-      font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
-      color: var(--text-dark);
-      resize: none;
-      max-height: 120px;
-      min-height: 22px;
-      line-height: 1.5;
-    }
-    #chat-input::placeholder { color: var(--text-light); font-size: 13px; }
+/* ── Site footer ─────────────────────────────────────────── */
+.site-footer {
+  background: var(--green-dark);
+  color: rgba(255,255,255,0.55);
+  text-align: center;
+  padding: 12px 24px;
+  font-size: 11.5px;
+  flex-shrink: 0;
+}
+.site-footer a { color: var(--green-light); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+.site-footer-links {
+  display: flex; justify-content: center;
+  gap: 14px; margin-bottom: 5px; flex-wrap: wrap;
+}
 
-    /* Mic button inside input */
-    .chat-mic-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      color: var(--text-light);
-      padding: 2px;
-      border-radius: 6px;
-      flex-shrink: 0;
-      transition: all 0.18s;
-      -webkit-tap-highlight-color: transparent;
-      min-width: 28px; min-height: 28px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .chat-mic-btn:active { background: var(--green-pale); color: var(--green-mid); }
-    .chat-mic-btn.recording {
-      color: #c0392b;
-      animation: mic-pulse 0.8s ease-in-out infinite;
-    }
-    @keyframes mic-pulse {
-      0%,100% { transform: scale(1); }
-      50%      { transform: scale(1.18); }
-    }
+/* ── Bottom nav (mobile) ─────────────────────────────────── */
+.bottom-nav { display: none; }
 
-    /* Send button */
-    .chat-send-btn {
-      background: var(--green-mid);
-      border: none;
-      border-radius: 12px;
-      width: 44px; height: 44px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.18s, transform 0.15s;
-      color: white;
-      box-shadow: 0 3px 10px rgba(45,106,79,0.35);
-    }
-    .chat-send-btn:hover  { background: var(--green-dark); }
-    .chat-send-btn:active { transform: scale(0.93); }
-    .chat-send-btn:disabled {
-      background: var(--border);
-      cursor: not-allowed;
-      box-shadow: none;
-    }
+/* ── Responsive ──────────────────────────────────────────── */
+@media screen and (max-width: 1024px) {
+  :root {
+    --topbar-h:    54px;
+    --announce-h:  28px;
+  }
+  .topbar-nav     { display: none; }
+  .topbar         { padding: 0 14px; }
+  .topbar-logo-name { font-size: 15px; }
+  .topbar-logo-sub  { display: none; }
 
-    /* Image upload btn */
-    .chat-img-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      color: var(--text-light);
-      padding: 2px;
-      border-radius: 6px;
-      flex-shrink: 0;
-      transition: all 0.18s;
-      min-width: 28px; min-height: 28px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .chat-img-btn:hover { color: var(--green-mid); }
+  .chat-context-bar { padding: 0 14px; }
+  .chat-context-tags { display: none; }
 
-    /* Image preview */
-    #chat-img-preview {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 20px 0;
-      background: var(--white);
-    }
-    #chat-img-preview.visible { display: flex; }
-    .img-preview-thumb {
-      width: 56px; height: 56px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-    }
-    .img-preview-remove {
-      background: none; border: none;
-      font-size: 16px; cursor: pointer; color: var(--text-light);
-      padding: 4px; border-radius: 6px;
-    }
-    .img-preview-remove:hover { color: #c0392b; }
+  #chat-messages  { padding: 14px 14px 6px; gap: 10px; }
+  .msg-bubble     { max-width: 84%; font-size: 13.5px; }
+  .chat-input-bar { padding: 8px 12px 10px; gap: 8px; }
 
-    /* Image in message */
-    .msg-image {
-      max-width: 220px;
-      border-radius: 10px;
-      margin-bottom: 6px;
-      display: block;
-      border: 1.5px solid var(--border);
-    }
+  /* bottom nav */
+  .bottom-nav {
+    display: block;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--green-dark);
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom, 6px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .bottom-nav-items {
+    display: flex; align-items: center;
+    height: 58px; padding: 0 4px; gap: 2px;
+  }
+  .bottom-nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    padding: 6px 2px; text-decoration: none; gap: 2px;
+  }
+  .bnav-icon  { font-size: 20px; line-height: 1; color: rgba(255,255,255,0.50); transition: color 0.16s; }
+  .bnav-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.50); white-space: nowrap; transition: color 0.16s;
+                font-family: 'DM Sans','Noto Sans Devanagari',sans-serif; }
+  .bottom-nav-item.active .bnav-icon,
+  .bottom-nav-item.active .bnav-label { color: var(--amber); }
 
-    /* ══════════════════════════════════════
-       COPYRIGHT FOOTER
-    ══════════════════════════════════════ */
-    .site-footer {
-      background: var(--green-dark);
-      color: rgba(255,255,255,0.65);
-      text-align: center;
-      padding: 16px 24px;
-      font-size: 12px;
-      letter-spacing: 0.3px;
-      flex-shrink: 0;
-    }
-    .site-footer a { color: var(--green-light); text-decoration: none; }
-    .site-footer a:hover { text-decoration: underline; }
-    .site-footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
+  /* shift input bar above bottom nav */
+  .chat-input-bar { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  body { padding-bottom: 58px; }
+  .site-footer { display: none; }
+}
 
-    /* ══════════════════════════════════════
-       BOTTOM NAVIGATION (Mobile Only)
-    ══════════════════════════════════════ */
-    .bottom-nav { display: none; }
-
-    /* ══════════════════════════════════════
-       MOBILE — max-width 1024px
-    ══════════════════════════════════════ */
-    @media screen and (max-width: 1024px) {
-      .topbar-nav { display: none; }
-      .topbar-avatar-btn { display: flex; }
-      .top-announcement { font-size: 11.5px; padding: 6px 12px; }
-      .topbar { padding: 0 12px; height: 54px; }
-      .topbar-logo-name { font-size: 15px; }
-      .topbar-logo-sub { display: none; }
-
-      .breadcrumb { padding: 8px 14px; font-size: 11px; }
-
-      .chat-hero { padding: 18px 16px 16px; }
-      .chat-hero::after { font-size: 56px; right: 16px; bottom: 10px; }
-      .chat-hero-title { font-size: 20px; }
-      .chat-hero-sub { font-size: 12px; }
-      .chat-hero-badges { margin-top: 12px; gap: 7px; }
-      .chat-hero-badge { font-size: 11px; padding: 4px 11px; }
-
-      #chat-messages { padding: 14px 13px; gap: 12px; }
-      .chat-suggestions { padding: 0 13px 12px; }
-      .msg-bubble { max-width: 85%; font-size: 13.5px; }
-
-      .chat-input-bar { padding: 10px 13px; }
-
-      .bottom-nav {
-        display: block;
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        background: var(--green-dark);
-        box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
-        z-index: 1000;
-        padding-bottom: env(safe-area-inset-bottom, 6px);
-        border-top: 1px solid rgba(255,255,255,0.08);
-      }
-      .bottom-nav-items {
-        display: flex;
-        align-items: center;
-        height: 60px;
-        padding: 0 4px;
-        gap: 2px;
-      }
-      .bottom-nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        padding: 6px 2px;
-        text-decoration: none;
-        gap: 3px;
-      }
-      .bnav-icon { font-size: 20px; line-height: 1; color: rgba(255,255,255,0.55); transition: color 0.18s; }
-      .bnav-label {
-        font-size: 10px; font-weight: 600;
-        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-        color: rgba(255,255,255,0.55); white-space: nowrap; transition: color 0.18s;
-      }
-      .bottom-nav-item.active .bnav-icon,
-      .bottom-nav-item.active .bnav-label { color: var(--amber); }
-
-      body { padding-bottom: 70px; }
-      .site-footer { display: flex; }
-    }
-
-    @supports (padding: max(0px)) {
-      @media (max-width: 1024px) {
-        .bottom-nav { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
-      }
-    }
-  </style>
+@supports (padding: max(0px)) {
+  @media (max-width: 1024px) {
+    .bottom-nav { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
+  }
+}
+</style>
 </head>
 <body>
 
-<!-- ══ FIXED HEADER WRAPPER ══ -->
+<!-- ── Fixed header ───────────────────────────────────────── -->
 <div class="header-wrapper" id="header-wrapper">
 
-<!-- ══ TOP ANNOUNCEMENT BAR ══ -->
-<div class="top-announcement">
-  🌾 किसान कॉल सेंटर: +91 9870951001 — निःशुल्क कृषि सलाह
-  <a href="khoj.html">खोजें →</a>
-</div>
-
-<!-- ══ TOPBAR ══ -->
-<div class="topbar">
-  <div class="topbar-left">
-    <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
-      <span class="topbar-logo-icon">🌾</span>
-      <div class="topbar-logo-text">
-        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
-        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
-      </div>
-    </a>
+  <div class="top-announcement">
+    🌾 किसान कॉल सेंटर: +91 9870951001 — निःशुल्क कृषि सलाह
+    <a href="khoj.html">खोजें →</a>
   </div>
 
-  <!-- Desktop center nav -->
-  <nav class="topbar-nav">
-    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
-    <a class="tnav-btn" href="weather.html">🌤️ <span data-t="nav_weather">मौसम</span></a>
-    <a class="tnav-btn" href="mandi.html">🏪 <span data-t="nav_mandi">मंडी</span></a>
-    <a class="tnav-btn" href="shop.html">🛒 <span data-t="nav_shop">दुकान</span></a>
-    <a class="tnav-btn active" href="chat.html">💬 <span data-t="nav_chat">AI सहायता</span></a>
-    <a class="tnav-btn" href="khoj.html">🔍 <span data-t="nav_khoj">खोज</span></a>
-  </nav>
-
-  <div class="topbar-right">
-    <!-- Language picker -->
-    <div class="lang-picker" id="lang-picker">
-      <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
-        <span id="lang-picker-label">हिं</span>
-        <span class="lang-chevron">▾</span>
-      </button>
-      <div class="lang-dropdown" id="lang-dropdown">
-        <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
-          <span class="lang-opt-code">हिं</span> हिंदी
-        </button>
-        <button class="lang-option" id="opt-en" onclick="pickLang('en')">
-          <span class="lang-opt-code">EN</span> English
-        </button>
-        <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
-          <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
-        </button>
-      </div>
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+        <span class="topbar-logo-icon">🌾</span>
+        <div class="topbar-logo-text">
+          <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
+          <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
+        </div>
+      </a>
     </div>
-    <!-- <div class="topbar-avatar-btn" onclick="openLoginModal()" title="Login / Profile">👨‍🌾</div> -->
-    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
 
-  </div>
-</div>
+    <nav class="topbar-nav">
+      <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
+      <a class="tnav-btn" href="weather.html">🌤️ <span data-t="nav_weather">मौसम</span></a>
+      <a class="tnav-btn" href="mandi.html">🏪 <span data-t="nav_mandi">मंडी</span></a>
+      <a class="tnav-btn" href="shop.html">🛒 <span data-t="nav_shop">दुकान</span></a>
+      <a class="tnav-btn active" href="chat.html">💬 <span data-t="nav_chat">AI सहायता</span></a>
+      <a class="tnav-btn" href="khoj.html">🔍 <span data-t="nav_khoj">खोज</span></a>
+    </nav>
 
-</div><!-- /.header-wrapper -->
-
-<!-- Spacer -->
-<div class="topbar-spacer" id="topbar-spacer"></div>
-
-<!-- ══ BREADCRUMB ══ -->
-<div class="breadcrumb">
-  <a href="index.html">🏠 मुख्य</a>
-  <span class="breadcrumb-sep">›</span>
-  <span class="breadcrumb-current">💬 <span data-t="nav_chat">AI सहायता</span></span>
-</div>
-
-<!-- ══ MAIN CONTENT ══ -->
-<div class="main-content" id="main-content">
-
-  <!-- Chat Hero -->
-  <div class="chat-hero">
-    <div class="chat-hero-label" data-t="chat_label">💬 KRASHIMITRA AI</div>
-    <div class="chat-hero-title" data-t="chat_title">AI कृषि सहायता</div>
-    <div class="chat-hero-sub" data-t="chat_sub">खेती की कोई भी समस्या पूछें — हिंदी, English या Kannada में</div>
-    <div class="chat-hero-badges">
-      <span class="chat-hero-badge">🌾 फसल रोग</span>
-      <span class="chat-hero-badge">🧪 खाद सलाह</span>
-      <span class="chat-hero-badge">📅 बुवाई समय</span>
-      <span class="chat-hero-badge">📷 फोटो से जाँच</span>
+    <div class="topbar-right">
+      <div class="lang-picker" id="lang-picker">
+        <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
+          <span id="lang-picker-label">हिं</span>
+          <span class="lang-chevron">▾</span>
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
+            <span class="lang-opt-code">हिं</span> हिंदी
+          </button>
+          <button class="lang-option" id="opt-en" onclick="pickLang('en')">
+            <span class="lang-opt-code">EN</span> English
+          </button>
+          <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
+            <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
+          </button>
+        </div>
+      </div>
+      <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
     </div>
   </div>
 
-  <!-- Chat Window -->
-  <div class="chat-window">
+</div>
 
-    <!-- Messages -->
-    <div id="chat-messages">
-      <!-- Welcome message -->
-      <div class="chat-msg bot" id="welcome-msg">
-        <div class="msg-avatar">🌾</div>
-        <div class="msg-bubble" data-t="welcome_msg">नमस्ते किसान भाई! 🙏
+<!-- spacer under fixed header -->
+<div class="header-spacer" id="topbar-spacer"></div>
+
+<!-- ── Chat shell ─────────────────────────────────────────── -->
+<div class="chat-shell">
+
+  <!-- thin context bar (replaces the big hero) -->
+  <div class="chat-context-bar">
+    <div class="chat-context-title">
+      <div class="chat-context-dot"></div>
+      <span><strong>KrashiMitra AI</strong> &nbsp;·&nbsp; <span data-t="chat_sub">खेती की कोई भी समस्या पूछें</span></span>
+    </div>
+    <div class="chat-context-tags">
+      <span class="chat-context-tag">🌾 फसल रोग</span>
+      <span class="chat-context-tag">🧪 खाद सलाह</span>
+      <span class="chat-context-tag">📅 बुवाई समय</span>
+    </div>
+  </div>
+
+  <!-- thin animated bar while AI is thinking -->
+  <div class="chat-loading-bar" id="chat-loading-bar"></div>
+
+  <!-- messages -->
+  <div id="chat-messages">
+    <div class="chat-msg bot" id="welcome-msg">
+      <div class="msg-avatar">🌾</div>
+      <div class="msg-bubble" data-t="welcome_msg">नमस्ते किसान भाई! 🙏
 
 मैं KrashiMitra AI हूँ — आपका डिजिटल कृषि सहायक।
 
@@ -831,49 +690,47 @@
 • फोटो भेजकर फसल की जाँच
 
 क्या पूछना है? 👇</div>
-      </div>
-      <!-- Suggestion chips -->
-      <div class="chat-suggestions" id="chat-suggestions">
-        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌾 गेहूँ में पीली पत्ती</span>
-        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🎋 गन्ने में लाल सड़न</span>
-        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🍚 धान में खाद कब डालें</span>
-        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🥔 आलू में झुलसा रोग</span>
-        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌻 सरसों बुवाई का समय</span>
-        <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🧪 यूरिया कितना डालें</span>
-      </div>
     </div>
 
-
-    <!-- Image preview strip -->
-    <div id="chat-img-preview">
-      <img id="chat-img-thumb" class="img-preview-thumb" src="" alt="preview">
-      <span style="font-size:12px;color:var(--text-mid);flex:1;">फोटो तैयार है</span>
-      <button class="img-preview-remove" onclick="removeImagePreview()">✕</button>
+    <div class="chat-suggestions" id="chat-suggestions">
+      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌾 गेहूँ में पीली पत्ती</span>
+      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🎋 गन्ने में लाल सड़न</span>
+      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🍚 धान में खाद कब डालें</span>
+      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🥔 आलू में झुलसा रोग</span>
+      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🌻 सरसों बुवाई का समय</span>
+      <span class="chat-suggestion-chip" onclick="sendSuggestion(this)">🧪 यूरिया कितना डालें</span>
     </div>
+  </div>
 
-    <!-- Input bar -->
-    <div class="chat-input-bar">
-      <div class="chat-input-wrap">
-        <textarea id="chat-input"
-                  placeholder="यहाँ लिखें या बोलें..."
-                  rows="1"
-                  oninput="autoResize(this)"
-                  onkeydown="handleChatKey(event)"></textarea>
-        <button class="chat-img-btn" onclick="document.getElementById('chat-img-upload').click()" title="फोटो भेजें">📷</button>
-        <button class="chat-mic-btn" id="chat-mic-btn" onclick="toggleChatMic()" title="Voice input">🎤</button>
-      </div>
-      <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()" title="भेजें">➤</button>
+  <!-- image preview strip -->
+  <div id="chat-img-preview">
+    <img id="chat-img-thumb" class="img-preview-thumb" src="" alt="preview">
+    <span style="font-size:12px;color:var(--text-mid);flex:1;">फोटो तैयार है</span>
+    <button class="img-preview-remove" onclick="removeImagePreview()">✕</button>
+  </div>
+
+  <!-- input bar -->
+  <div class="chat-input-bar">
+    <div class="chat-input-wrap">
+      <button class="chat-icon-btn" onclick="document.getElementById('chat-img-upload').click()" title="फोटो भेजें">📷</button>
+      <textarea id="chat-input"
+        placeholder="यहाँ लिखें या बोलें..."
+        rows="1"
+        oninput="autoResize(this)"
+        onkeydown="handleChatKey(event)"></textarea>
+      <button class="chat-icon-btn" id="chat-mic-btn" onclick="toggleChatMic()" title="Voice input">🎤</button>
     </div>
+    <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()" title="भेजें">
+      ➤
+    </button>
+  </div>
 
-    <!-- Hidden file input -->
-    <input type="file" id="chat-img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+  <input type="file" id="chat-img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
 
-  </div><!-- /.chat-window -->
-
-</div><!-- /.main-content -->
+</div><!-- /.chat-shell -->
 
 
-<!-- ══ BOTTOM NAV (Mobile) ══ -->
+<!-- ── Bottom nav (mobile) ────────────────────────────────── -->
 <nav class="bottom-nav">
   <div class="bottom-nav-items">
     <a class="bottom-nav-item" href="index.html">
@@ -899,7 +756,7 @@
   </div>
 </nav>
 
-<!-- ══ COPYRIGHT FOOTER ══ -->
+<!-- ── Footer ─────────────────────────────────────────────── -->
 <footer class="site-footer">
   <div class="site-footer-links">
     <a href="index.html">Home</a>
@@ -913,410 +770,364 @@
 </footer>
 
 <script>
-  // ══════════════════════════════════════
-  // TRANSLATIONS
-  // ══════════════════════════════════════
-  const TRANSLATIONS = {
-    hi: {
-      nav_chat:       "AI से पूछें",
-      nav_weather:    "मौसम",
-      nav_mandi:      "मंडी",
-      nav_shop:       "दुकान",
-      nav_khoj:       "खोज",
-      chat_label:     "💬 KRASHIMITRA AI",
-      chat_title:     "AI कृषि सहायता",
-      chat_sub:       "खेती की कोई भी समस्या पूछें — हिंदी, English या Kannada में",
-      welcome_msg:    "नमस्ते किसान भाई! 🙏\n\nमैं KrashiMitra AI हूँ — आपका डिजिटल कृषि सहायक।\n\nआप मुझसे पूछ सकते हैं:\n• फसल की बीमारी और उपचार\n• खाद और कीटनाशक की सलाह\n• बुवाई और कटाई का सही समय\n• मौसम के अनुसार खेती की टिप्स\n• फोटो भेजकर फसल की जाँच\n\nक्या पूछना है? 👇",
-      input_placeholder: "यहाँ लिखें या बोलें...",
-      thinking:       "सोच रहे हैं...",
-    },
-    en: {
-      nav_chat:       "AI Advisor",
-      nav_weather:    "Weather",
-      nav_mandi:      "Mandi",
-      nav_shop:       "Shop",
-      nav_khoj:       "Search",
-      chat_label:     "💬 KRASHIMITRA AI",
-      chat_title:     "AI Farming Advisor",
-      chat_sub:       "Ask any farming question — in Hindi, English or Kannada",
-      welcome_msg:    "Hello Farmer! 🙏\n\nI am KrashiMitra AI — your digital farming assistant.\n\nYou can ask me about:\n• Crop diseases and treatments\n• Fertilizer and pesticide advice\n• Sowing and harvest timings\n• Weather-based farming tips\n• Photo-based crop diagnosis\n\nWhat would you like to know? 👇",
-      input_placeholder: "Type or speak here...",
-      thinking:       "Thinking...",
-    },
-    kn: {
-      nav_chat:       "AI ಕೇಳಿ",
-      nav_weather:    "ಹವಾಮಾನ",
-      nav_mandi:      "ಮಂಡಿ",
-      nav_shop:       "ಅಂಗಡಿ",
-      nav_khoj:       "ಹುಡುಕಿ",
-      chat_label:     "💬 KRASHIMITRA AI",
-      chat_title:     "AI ಕೃಷಿ ಸಹಾಯಕ",
-      chat_sub:       "ಯಾವುದೇ ಕೃಷಿ ಪ್ರಶ್ನೆ ಕೇಳಿ — ಹಿಂದಿ, English ಅಥವಾ ಕನ್ನಡದಲ್ಲಿ",
-      welcome_msg:    "ನಮಸ್ಕಾರ ರೈತ ಬಂಧು! 🙏\n\nನಾನು KrashiMitra AI — ನಿಮ್ಮ ಡಿಜಿಟಲ್ ಕೃಷಿ ಸಹಾಯಕ.\n\nನೀವು ಕೇಳಬಹುದು:\n• ಬೆಳೆ ರೋಗ ಮತ್ತು ಚಿಕಿತ್ಸೆ\n• ಗೊಬ್ಬರ ಮತ್ತು ಕೀಟನಾಶಕ ಸಲಹೆ\n• ಬಿತ್ತನೆ ಮತ್ತು ಕಟಾವು ಸಮಯ\n• ಹವಾಮಾನ ಆಧಾರಿತ ಸಲಹೆ\n• ಫೋಟೋ ಮೂಲಕ ಬೆಳೆ ತಪಾಸಣೆ\n\nಏನು ಕೇಳಬೇಕು? 👇",
-      input_placeholder: "ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಮಾತನಾಡಿ...",
-      thinking:       "ಯೋಚಿಸುತ್ತಿದ್ದೇವೆ...",
-    }
-  };
-
-  const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
-  let currentLang = localStorage.getItem('km_lang') || 'hi';
-
-  function toggleLangPicker(e) {
-    e.stopPropagation();
-    document.getElementById('lang-picker').classList.toggle('open');
+// ══════════════════════════════════════
+// TRANSLATIONS
+// ══════════════════════════════════════
+const TRANSLATIONS = {
+  hi: {
+    nav_chat:       "AI से पूछें",
+    nav_weather:    "मौसम",
+    nav_mandi:      "मंडी",
+    nav_shop:       "दुकान",
+    nav_khoj:       "खोज",
+    chat_label:     "💬 KRASHIMITRA AI",
+    chat_title:     "AI कृषि सहायता",
+    chat_sub:       "खेती की कोई भी समस्या पूछें — हिंदी, English या Kannada में",
+    welcome_msg:    "नमस्ते किसान भाई! 🙏\n\nमैं KrashiMitra AI हूँ — आपका डिजिटल कृषि सहायक।\n\nआप मुझसे पूछ सकते हैं:\n• फसल की बीमारी और उपचार\n• खाद और कीटनाशक की सलाह\n• बुवाई और कटाई का सही समय\n• मौसम के अनुसार खेती की टिप्स\n• फोटो भेजकर फसल की जाँच\n\nक्या पूछना है? 👇",
+    input_placeholder: "यहाँ लिखें या बोलें...",
+    thinking:       "सोच रहे हैं...",
+  },
+  en: {
+    nav_chat:       "AI Advisor",
+    nav_weather:    "Weather",
+    nav_mandi:      "Mandi",
+    nav_shop:       "Shop",
+    nav_khoj:       "Search",
+    chat_label:     "💬 KRASHIMITRA AI",
+    chat_title:     "AI Farming Advisor",
+    chat_sub:       "Ask any farming question — in Hindi, English or Kannada",
+    welcome_msg:    "Hello Farmer! 🙏\n\nI am KrashiMitra AI — your digital farming assistant.\n\nYou can ask me about:\n• Crop diseases and treatments\n• Fertilizer and pesticide advice\n• Sowing and harvest timings\n• Weather-based farming tips\n• Photo-based crop diagnosis\n\nWhat would you like to know? 👇",
+    input_placeholder: "Type or speak here...",
+    thinking:       "Thinking...",
+  },
+  kn: {
+    nav_chat:       "AI ಕೇಳಿ",
+    nav_weather:    "ಹವಾಮಾನ",
+    nav_mandi:      "ಮಂಡಿ",
+    nav_shop:       "ಅಂಗಡಿ",
+    nav_khoj:       "ಹುಡುಕಿ",
+    chat_label:     "💬 KRASHIMITRA AI",
+    chat_title:     "AI ಕೃಷಿ ಸಹಾಯಕ",
+    chat_sub:       "ಯಾವುದೇ ಕೃಷಿ ಪ್ರಶ್ನೆ ಕೇಳಿ — ಹಿಂದಿ, English ಅಥವಾ ಕನ್ನಡದಲ್ಲಿ",
+    welcome_msg:    "ನಮಸ್ಕಾರ ರೈತ ಬಂಧು! 🙏\n\nನಾನು KrashiMitra AI — ನಿಮ್ಮ ಡಿಜಿಟಲ್ ಕೃಷಿ ಸಹಾಯಕ.\n\nನೀವು ಕೇಳಬಹುದು:\n• ಬೆಳೆ ರೋಗ ಮತ್ತು ಚಿಕಿತ್ಸೆ\n• ಗೊಬ್ಬರ ಮತ್ತು ಕೀಟನಾಶಕ ಸಲಹೆ\n• ಬಿತ್ತನೆ ಮತ್ತು ಕಟಾವು ಸಮಯ\n• ಹವಾಮಾನ ಆಧಾರಿತ ಸಲಹೆ\n• ಫೋಟೋ ಮೂಲಕ ಬೆಳೆ ತಪಾಸಣೆ\n\nಏನು ಕೇಳಬೇಕು? 👇",
+    input_placeholder: "ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಮಾತನಾಡಿ...",
+    thinking:       "ಯೋಚಿಸುತ್ತಿದ್ದೇವೆ...",
   }
-  document.addEventListener('click', () => {
-    const lp = document.getElementById('lang-picker');
-    if (lp) lp.classList.remove('open');
+};
+
+const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
+let currentLang = localStorage.getItem('km_lang') || 'hi';
+
+function toggleLangPicker(e) {
+  e.stopPropagation();
+  document.getElementById('lang-picker').classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  const lp = document.getElementById('lang-picker');
+  if (lp) lp.classList.remove('open');
+});
+function pickLang(lang) {
+  document.getElementById('lang-picker').classList.remove('open');
+  setLang(lang);
+}
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('km_lang', lang);
+  const lbl = document.getElementById('lang-picker-label');
+  if (lbl) lbl.textContent = LANG_LABELS[lang] || lang.toUpperCase();
+  ['hi','en','kn'].forEach(l => {
+    const opt = document.getElementById(`opt-${l}`);
+    if (opt) opt.classList.toggle('active', l === lang);
   });
-  function pickLang(lang) {
-    document.getElementById('lang-picker').classList.remove('open');
-    setLang(lang);
-  }
-  function setLang(lang) {
-    currentLang = lang;
-    localStorage.setItem('km_lang', lang);
-    const lbl = document.getElementById('lang-picker-label');
-    if (lbl) lbl.textContent = LANG_LABELS[lang] || lang.toUpperCase();
-    ['hi','en','kn'].forEach(l => {
-      const opt = document.getElementById(`opt-${l}`);
-      if (opt) opt.classList.toggle('active', l === lang);
-    });
-    const tr = TRANSLATIONS[lang] || TRANSLATIONS.hi;
-    document.querySelectorAll('[data-t]').forEach(el => {
-      const key = el.getAttribute('data-t');
-      if (tr[key]) el.textContent = tr[key];
-    });
-    const inp = document.getElementById('chat-input');
-    if (inp) inp.placeholder = tr.input_placeholder || '';
-  }
-  function t(key) {
-    return (TRANSLATIONS[currentLang] || TRANSLATIONS.hi)[key] || key;
-  }
+  const tr = TRANSLATIONS[lang] || TRANSLATIONS.hi;
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    if (tr[key]) el.textContent = tr[key];
+  });
+  const inp = document.getElementById('chat-input');
+  if (inp) inp.placeholder = tr.input_placeholder || '';
+}
+function t(key) {
+  return (TRANSLATIONS[currentLang] || TRANSLATIONS.hi)[key] || key;
+}
 
-  // ══════════════════════════════════════
-  // CHAT STATE
-  // ══════════════════════════════════════
-  let chatHistory   = [];
-  let isBotTyping   = false;
-  let pendingImage  = null; // base64 string
-  const CHAT_API_BASE = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
+// ══════════════════════════════════════
+// CHAT STATE
+// ══════════════════════════════════════
+let chatHistory  = [];
+let isBotTyping  = false;
+let pendingImage = null;
+const CHAT_API_BASE = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
 
-  function getChatLanguage() {
-    const map = { hi: 'hindi', en: 'english', kn: 'kannada' };
-    return map[currentLang] || 'hindi';
-  }
+function getChatLanguage() {
+  const map = { hi: 'hindi', en: 'english', kn: 'kannada' };
+  return map[currentLang] || 'hindi';
+}
 
-  function detectCropKey(text) {
-    const q = (text || '').toLowerCase();
-    if (q.includes('ganna') || q.includes('sugarcane') || q.includes('cane') || q.includes('गन्न') || q.includes('ganne')) return 'sugarcane_up';
-    if (q.includes('dhan') || q.includes('rice') || q.includes('paddy') || q.includes('धान')) return 'rice_up';
-    if (q.includes('wheat') || q.includes('gehu') || q.includes('गेह') || q.includes('गेंह')) return 'wheat_up';
-    return 'wheat_up';
-  }
+function detectCropKey(text) {
+  const q = (text || '').toLowerCase();
+  if (q.includes('ganna') || q.includes('sugarcane') || q.includes('गन्न') || q.includes('ganne')) return 'sugarcane_up';
+  if (q.includes('dhan') || q.includes('rice') || q.includes('paddy') || q.includes('धान')) return 'rice_up';
+  if (q.includes('wheat') || q.includes('gehu') || q.includes('गेह') || q.includes('गेंह')) return 'wheat_up';
+  return 'wheat_up';
+}
 
-  function getAnswerMeta(data) {
-    const ragInfo = Number.isFinite(data.rag_chunks) && data.rag_chunks > 0
-      ? ` · RAG chunks: ${data.rag_chunks}`
-      : '';
-    if (data.cached || data.source === 'cache') return { text: 'API usage saved - answered from cache', cacheHit: true };
-    if (data.source) return { text: `Answered by ${String(data.source).toUpperCase()}${ragInfo}`, cacheHit: false };
-    return null;
-  }
+function getAnswerMeta(data) {
+  const ragInfo = Number.isFinite(data.rag_chunks) && data.rag_chunks > 0
+    ? ` · RAG: ${data.rag_chunks} chunks` : '';
+  if (data.cached || data.source === 'cache')
+    return { text: '⚡ Cache से मिला — API usage saved', cacheHit: true };
+  if (data.source)
+    return { text: `${String(data.source).toUpperCase()}${ragInfo}`, cacheHit: false };
+  return null;
+}
 
-  // ── Auto-resize textarea ──
-  function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-  }
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
 
-  function handleChatKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendChatMessage();
-    }
-  }
-
-  // ══════════════════════════════════════
-  // IMAGE UPLOAD
-  // ══════════════════════════════════════
-  function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      pendingImage = ev.target.result; // data URL
-      const thumb = document.getElementById('chat-img-thumb');
-      const preview = document.getElementById('chat-img-preview');
-      thumb.src = pendingImage;
-      preview.classList.add('visible');
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  }
-
-  function removeImagePreview() {
-    pendingImage = null;
-    document.getElementById('chat-img-preview').classList.remove('visible');
-    document.getElementById('chat-img-thumb').src = '';
-  }
-
-  // ══════════════════════════════════════
-  // VOICE INPUT
-  // ══════════════════════════════════════
-  let chatRecognition = null;
-  let chatMicActive   = false;
-
-  function toggleChatMic() {
-    const micBtn = document.getElementById('chat-mic-btn');
-    if (!micBtn) return;
-
-    if (chatMicActive) {
-      if (chatRecognition) chatRecognition.stop();
-      chatMicActive = false;
-      micBtn.classList.remove('recording');
-      micBtn.textContent = '🎤';
-      return;
-    }
-
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      alert('आपका browser voice input support नहीं करता। Chrome try करें।');
-      return;
-    }
-
-    chatRecognition = new SR();
-    const langMap = { hi: 'hi-IN', en: 'en-IN', kn: 'kn-IN' };
-    chatRecognition.lang = langMap[currentLang] || 'hi-IN';
-    chatRecognition.interimResults = false;
-    chatRecognition.maxAlternatives = 1;
-
-    chatRecognition.onstart = () => {
-      chatMicActive = true;
-      micBtn.classList.add('recording');
-      micBtn.textContent = '🔴';
-    };
-    chatRecognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      const inp = document.getElementById('chat-input');
-      if (inp) {
-        inp.value = transcript;
-        autoResize(inp);
-      }
-    };
-    chatRecognition.onerror = () => {
-      chatMicActive = false;
-      micBtn.classList.remove('recording');
-      micBtn.textContent = '🎤';
-    };
-    chatRecognition.onend = () => {
-      chatMicActive = false;
-      micBtn.classList.remove('recording');
-      micBtn.textContent = '🎤';
-    };
-    chatRecognition.start();
-  }
-
-  // ══════════════════════════════════════
-  // SEND MESSAGE
-  // ══════════════════════════════════════
-  function sendSuggestion(el) {
-    const text = el.textContent.trim();
-    document.getElementById('chat-input').value = text;
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
     sendChatMessage();
   }
+}
 
-  async function sendChatMessage() {
+// ══════════════════════════════════════
+// IMAGE UPLOAD
+// ══════════════════════════════════════
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    pendingImage = ev.target.result;
+    document.getElementById('chat-img-thumb').src = pendingImage;
+    document.getElementById('chat-img-preview').classList.add('visible');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function removeImagePreview() {
+  pendingImage = null;
+  document.getElementById('chat-img-preview').classList.remove('visible');
+  document.getElementById('chat-img-thumb').src = '';
+}
+
+// ══════════════════════════════════════
+// VOICE INPUT
+// ══════════════════════════════════════
+let chatRecognition = null;
+let chatMicActive   = false;
+
+function toggleChatMic() {
+  const micBtn = document.getElementById('chat-mic-btn');
+  if (!micBtn) return;
+  if (chatMicActive) {
+    if (chatRecognition) chatRecognition.stop();
+    chatMicActive = false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('आपका browser voice input support नहीं करता। Chrome try करें।'); return; }
+  chatRecognition = new SR();
+  const langMap = { hi: 'hi-IN', en: 'en-IN', kn: 'kn-IN' };
+  chatRecognition.lang = langMap[currentLang] || 'hi-IN';
+  chatRecognition.interimResults = false;
+  chatRecognition.maxAlternatives = 1;
+  chatRecognition.onstart = () => {
+    chatMicActive = true;
+    micBtn.classList.add('recording');
+    micBtn.textContent = '🔴';
+  };
+  chatRecognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
     const inp = document.getElementById('chat-input');
-    const text = inp.value.trim();
-    if (!text && !pendingImage) return;
-    if (isBotTyping) return;
+    if (inp) { inp.value = transcript; autoResize(inp); }
+  };
+  chatRecognition.onerror = () => {
+    chatMicActive = false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+  };
+  chatRecognition.onend = () => {
+    chatMicActive = false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+  };
+  chatRecognition.start();
+}
 
-    // Hide suggestion chips after first message
-    const chips = document.getElementById('chat-suggestions');
-    if (chips) chips.style.display = 'none';
+// ══════════════════════════════════════
+// SEND MESSAGE
+// ══════════════════════════════════════
+function sendSuggestion(el) {
+  document.getElementById('chat-input').value = el.textContent.trim();
+  sendChatMessage();
+}
 
-    // Build user message content
-    const userContent = [];
-    if (pendingImage) {
-      // Show image in UI
-      appendMessage('user', text, pendingImage);
-      userContent.push({ type: 'image_url', image_url: { url: pendingImage } });
-      if (text) userContent.push({ type: 'text', text });
-      removeImagePreview();
-    } else {
-      appendMessage('user', text);
-      userContent.push({ type: 'text', text });
-    }
+async function sendChatMessage() {
+  const inp  = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text && !pendingImage) return;
+  if (isBotTyping) return;
 
-    inp.value = '';
-    inp.style.height = 'auto';
+  const chips = document.getElementById('chat-suggestions');
+  if (chips) chips.style.display = 'none';
 
-    // Add to history
-    chatHistory.push({ role: 'user', content: userContent.length === 1 ? userContent[0].text : userContent });
-
-    // Show typing
-    showTyping();
-
-    try {
-      const q = text || 'Image uploaded. Please ask the farmer to describe the crop problem in words.';
-      const res = await fetch(`${CHAT_API_BASE}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          q,
-          crop: detectCropKey(q),
-          language: getChatLanguage(),
-          district: 'Uttar Pradesh'
-        })
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
-
-      const reply = (data.answer || data.message || '').trim()
-                    || 'माफ करें, कोई जवाब नहीं मिला। कृपया दोबारा पूछें।';
-
-      removeTyping();
-      appendMessage('bot', reply, null, getAnswerMeta(data));
-      chatHistory.push({ role: 'assistant', content: reply });
-
-    } catch (err) {
-      removeTyping();
-      appendMessage('bot', '⚠️ Server से connect नहीं हो पाया। कृपया internet connection जाँचें और दोबारा try करें।');
-    }
+  const userContent = [];
+  if (pendingImage) {
+    appendMessage('user', text, pendingImage);
+    userContent.push({ type: 'image_url', image_url: { url: pendingImage } });
+    if (text) userContent.push({ type: 'text', text });
+    removeImagePreview();
+  } else {
+    appendMessage('user', text);
+    userContent.push({ type: 'text', text });
   }
 
-  // ══════════════════════════════════════
-  // UI HELPERS
-  // ══════════════════════════════════════
-  function appendMessage(role, text, imageDataUrl = null, meta = null) {
-    const container = document.getElementById('chat-messages');
-    const div = document.createElement('div');
-    div.className = `chat-msg ${role}`;
+  inp.value = '';
+  inp.style.height = 'auto';
+  chatHistory.push({ role: 'user', content: userContent.length === 1 ? userContent[0].text : userContent });
+  showTyping();
 
-    const avatar = document.createElement('div');
-    avatar.className = 'msg-avatar';
-    avatar.textContent = role === 'bot' ? '🌾' : '👨‍🌾';
+  try {
+    const q = text || 'Image uploaded. Farmer needs crop diagnosis.';
+    const res = await fetch(`${CHAT_API_BASE}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        q,
+        crop: detectCropKey(q),
+        language: getChatLanguage(),
+        district: 'Uttar Pradesh'
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
+    const reply = (data.answer || data.message || '').trim()
+                  || 'माफ करें, कोई जवाब नहीं मिला। कृपया दोबारा पूछें।';
+    removeTyping();
+    appendMessage('bot', reply, null, getAnswerMeta(data));
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    removeTyping();
+    appendMessage('bot', '⚠️ Server से connect नहीं हो पाया। कृपया internet connection जाँचें और दोबारा try करें।');
+  }
+}
 
-    const bubble = document.createElement('div');
-    bubble.className = 'msg-bubble';
+// ══════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════
+function appendMessage(role, text, imageDataUrl = null, meta = null) {
+  const container = document.getElementById('chat-messages');
+  const div    = document.createElement('div');
+  div.className = `chat-msg ${role}`;
 
-    if (imageDataUrl) {
-      const img = document.createElement('img');
-      img.src = imageDataUrl;
-      img.className = 'msg-image';
-      bubble.appendChild(img);
-    }
-    if (text) {
-      const span = document.createElement('span');
-      span.textContent = text;
-      bubble.appendChild(span);
-    }
-    if (meta && meta.text) {
-      const metaEl = document.createElement('span');
-      metaEl.className = `msg-meta${meta.cacheHit ? ' cache-hit' : ''}`;
-      metaEl.textContent = meta.text;
-      bubble.appendChild(metaEl);
-    }
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.textContent = role === 'bot' ? '🌾' : '👨‍🌾';
 
-    div.appendChild(avatar);
-    div.appendChild(bubble);
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+
+  if (imageDataUrl) {
+    const img = document.createElement('img');
+    img.src = imageDataUrl; img.className = 'msg-image';
+    bubble.appendChild(img);
+  }
+  if (text) {
+    const span = document.createElement('span');
+    span.textContent = text;
+    bubble.appendChild(span);
+  }
+  if (meta && meta.text) {
+    const metaEl = document.createElement('span');
+    metaEl.className = `msg-meta${meta.cacheHit ? ' cache-hit' : ''}`;
+    metaEl.textContent = meta.text;
+    bubble.appendChild(metaEl);
   }
 
-  function showTyping() {
-    isBotTyping = true;
-    document.getElementById('chat-send-btn').disabled = true;
-    const container = document.getElementById('chat-messages');
-    const div = document.createElement('div');
-    div.className = 'typing-indicator';
-    div.id = 'typing-indicator';
-    div.innerHTML = `
-      <div class="msg-avatar">🌾</div>
-      <div class="typing-dots">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>`;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  isBotTyping = true;
+  document.getElementById('chat-send-btn').disabled = true;
+  document.getElementById('chat-loading-bar').classList.add('active');
+  const typingLabel = t('thinking') || 'सोच रहे हैं';
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'typing-indicator'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-avatar">🌾</div>
+    <div class="typing-dots">
+      <span class="typing-label">${typingLabel}</span>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  isBotTyping = false;
+  document.getElementById('chat-send-btn').disabled = false;
+  document.getElementById('chat-loading-bar').classList.remove('active');
+  const ti = document.getElementById('typing-indicator');
+  if (ti) {
+    ti.style.opacity = '0';
+    ti.style.transition = 'opacity 0.2s';
+    setTimeout(() => ti.remove(), 200);
+  }
+}
+
+// ══════════════════════════════════════
+// SCROLL-AWARE HEADER
+// ══════════════════════════════════════
+(function initScrollHeader() {
+  const wrapper = document.getElementById('header-wrapper');
+  const spacer  = document.getElementById('topbar-spacer');
+  let lastScrollY = 0, announcementH = 0, ticking = false;
+
+  function measureHeader() {
+    const ann = document.querySelector('.top-announcement');
+    if (!ann || !wrapper || !spacer) return;
+    announcementH = ann.getBoundingClientRect().height;
+    spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
   }
 
-  function removeTyping() {
-    isBotTyping = false;
-    document.getElementById('chat-send-btn').disabled = false;
-    const ti = document.getElementById('typing-indicator');
-    if (ti) ti.remove();
+  // For chat page, messages scroll internally — header stays fixed
+  measureHeader();
+  window.addEventListener('resize', measureHeader);
+})();
+
+// ══════════════════════════════════════
+// URL PARAM ?q=
+// ══════════════════════════════════════
+(function checkUrlQuery() {
+  const q = new URLSearchParams(window.location.search).get('q');
+  if (q) {
+    setTimeout(() => {
+      const inp = document.getElementById('chat-input');
+      if (inp) { inp.value = q; autoResize(inp); sendChatMessage(); }
+    }, 600);
   }
+})();
 
-  // ══════════════════════════════════════
-  // SCROLL-AWARE HEADER
-  // ══════════════════════════════════════
-  (function initScrollHeader() {
-    const wrapper = document.getElementById('header-wrapper');
-    const spacer  = document.getElementById('topbar-spacer');
-    let lastScrollY   = window.scrollY;
-    let announcementH = 0;
-    let ticking       = false;
-
-    function measureHeader() {
-      const ann = document.querySelector('.top-announcement');
-      const tb  = document.querySelector('.topbar');
-      if (!ann || !tb || !wrapper || !spacer) return;
-      announcementH = ann.getBoundingClientRect().height;
-      const totalH  = wrapper.getBoundingClientRect().height;
-      spacer.style.height = totalH + 'px';
-      const topbarH = tb.getBoundingClientRect().height;
-      document.documentElement.style.setProperty('--topbar-h', topbarH + 'px');
-    }
-
-    function onScroll() {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentY = window.scrollY;
-          if (currentY > lastScrollY && currentY > announcementH) {
-            wrapper.style.transform = 'translateY(-' + announcementH + 'px)';
-          } else {
-            wrapper.style.transform = 'translateY(0)';
-          }
-          lastScrollY = currentY;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }
-
-    measureHeader();
-    window.addEventListener('resize', measureHeader);
-    window.addEventListener('scroll', onScroll, { passive: true });
-  })();
-
-  // ══════════════════════════════════════
-  // CHECK FOR ?q= URL PARAM (from khoj.html)
-  // ══════════════════════════════════════
-  (function checkUrlQuery() {
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get('q');
-    if (q) {
-      setTimeout(() => {
-        const inp = document.getElementById('chat-input');
-        if (inp) {
-          inp.value = q;
-          autoResize(inp);
-          sendChatMessage();
-        }
-      }, 600);
-    }
-  })();
-
-  // ══════════════════════════════════════
-  // INIT
-  // ══════════════════════════════════════
-  (function init() {
-    setLang(currentLang);
-  })();
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+(function init() {
+  setLang(currentLang);
+})();
 </script>
 
 </body>
