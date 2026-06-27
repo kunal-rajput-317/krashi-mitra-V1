@@ -5,8 +5,11 @@ In-memory embedding index for fast similarity search.
 Persists to JSON on disk. Loads into RAM on first use.
 
 Flow:
-  search_cache(q) → embed q → cosine similarity → return if score >= threshold
+  search_cache(q) → fuzzy text match first → if miss + semantic enabled → embed → cosine sim
   save_to_cache(q, a) → embed q → check duplicate → append → persist
+
+Semantic search is enabled by default (CACHE_SEMANTIC_ENABLED=true).
+Admin can toggle at runtime via POST /admin/settings.
 """
 
 import json
@@ -17,14 +20,23 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 
-CACHE_FILE           = Path(__file__).parent / "cache_store.json"
-SIMILARITY_THRESHOLD = 0.92
-FUZZY_THRESHOLD      = 0.94
-MAX_CACHE_SIZE       = 1000
-CACHE_SEMANTIC_ENABLED = os.getenv("CACHE_SEMANTIC_ENABLED", "false").lower() == "true"
+CACHE_FILE        = Path(__file__).parent / "cache_store.json"
+SIM_THRESHOLD     = 0.92   # cosine similarity threshold for semantic match
+FUZZY_THRESHOLD   = 0.94   # SequenceMatcher ratio for text match
+MAX_CACHE_SIZE    = 1000
 
 # ── In-memory index (loaded once, updated on write) ──────────
-_index: list[dict] | None = None   # list of {question, answer, embedding, ...}
+_index: list[dict] | None = None
+
+
+def _semantic_enabled() -> bool:
+    """Read semantic setting from runtime config (admin-toggleable)."""
+    try:
+        from backend.config import get_setting
+        return get_setting("cache_semantic_enabled", True)
+    except ImportError:
+        return os.getenv("CACHE_SEMANTIC_ENABLED", "true").lower() == "true"
+
 
 def _normalize_question(text: str) -> str:
     text = (text or "").strip().lower()
@@ -41,7 +53,6 @@ def _is_same_question(a: str, b: str) -> bool:
     return SequenceMatcher(None, a_norm, b_norm).ratio() >= FUZZY_THRESHOLD
 
 def _get_index() -> list[dict]:
-    """Load cache into memory once. Subsequent calls return cached list."""
     global _index
     if _index is None:
         _index = _load_from_disk()
@@ -57,14 +68,13 @@ def _load_from_disk() -> list[dict]:
         return []
 
 def _persist():
-    """Write in-memory index to disk."""
     global _index
     if _index is None:
         return
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(_index, f, ensure_ascii=False, indent=2)
 
-# Keep _load and _save as aliases for admin.py compatibility
+# Aliases used by admin.py for direct list manipulation
 def _load() -> list[dict]:
     return _get_index()
 
@@ -74,7 +84,7 @@ def _save(entries: list[dict]):
     _persist()
 
 
-# ── Embedding model (lazy, singleton) ────────────────────────
+# ── Embedding model (lazy singleton) ─────────────────────────
 _model = None
 
 def _get_model():
@@ -86,8 +96,7 @@ def _get_model():
     return _model
 
 def _embed(text: str) -> list[float]:
-    model = _get_model()
-    vec = model.encode(f"query: {text}", normalize_embeddings=True)
+    vec = _get_model().encode(f"query: {text}", normalize_embeddings=True)
     return vec.tolist()
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -95,15 +104,19 @@ def _cosine(a: list[float], b: list[float]) -> float:
 
 
 # ── Public API ────────────────────────────────────────────────
+
 def search_cache(question: str) -> dict | None:
     """
-    Search in-memory index for a semantically similar question.
-    Returns cached entry or None.
+    Search for a cached answer:
+      1. Fuzzy text match (no embedding, instant)
+      2. Semantic cosine similarity (if semantic enabled)
+    Returns cached entry dict or None.
     """
     index = _get_index()
     if not index:
         return None
 
+    # Step 1 — fuzzy text match (fast, no model needed)
     for entry in index:
         if _is_same_question(entry.get("question", ""), question):
             entry["hits"] = entry.get("hits", 0) + 1
@@ -115,7 +128,8 @@ def search_cache(question: str) -> dict | None:
                 "original_q": entry["question"],
             }
 
-    if not CACHE_SEMANTIC_ENABLED:
+    # Step 2 — semantic similarity (only if enabled)
+    if not _semantic_enabled():
         return None
 
     q_vec = _embed(question)
@@ -131,7 +145,7 @@ def search_cache(question: str) -> dict | None:
             best_score = score
             best_idx   = i
 
-    if best_score >= SIMILARITY_THRESHOLD and best_idx >= 0:
+    if best_score >= SIM_THRESHOLD and best_idx >= 0:
         index[best_idx]["hits"] = index[best_idx].get("hits", 0) + 1
         _persist()
         return {
@@ -146,26 +160,28 @@ def search_cache(question: str) -> dict | None:
 
 def save_to_cache(question: str, answer: str, source: str = "ai") -> bool:
     """
-    Save Q&A to cache.
-    Skips: duplicates, bad answers, error messages.
+    Save Q&A to cache. Skips duplicates and bad answers.
+    Stores embedding if semantic search is enabled.
     """
-    # Basic quality check
     if not answer or len(answer.strip()) < 20:
         return False
 
     index = _get_index()
+
+    # Fuzzy duplicate check
     for entry in index:
         if _is_same_question(entry.get("question", ""), question):
             return False
 
-    q_vec = _embed(question) if CACHE_SEMANTIC_ENABLED else None
+    semantic = _semantic_enabled()
+    q_vec = _embed(question) if semantic else None
 
-    # Check for near-duplicate
-    if CACHE_SEMANTIC_ENABLED and q_vec is not None:
+    # Semantic duplicate check
+    if semantic and q_vec is not None:
         for entry in index:
             emb = entry.get("embedding")
-            if emb and _cosine(q_vec, emb) >= SIMILARITY_THRESHOLD:
-                return False  # already cached
+            if emb and _cosine(q_vec, emb) >= SIM_THRESHOLD:
+                return False
 
     index.append({
         "question":  question,
@@ -176,7 +192,7 @@ def save_to_cache(question: str, answer: str, source: str = "ai") -> bool:
         "saved_at":  datetime.now().isoformat(),
     })
 
-    # Prune if over limit — keep highest-hit entries
+    # Prune to max size — keep highest-hit entries
     if len(index) > MAX_CACHE_SIZE:
         index.sort(key=lambda x: x.get("hits", 0), reverse=True)
         del index[MAX_CACHE_SIZE:]
@@ -186,18 +202,16 @@ def save_to_cache(question: str, answer: str, source: str = "ai") -> bool:
 
 
 def get_cache_stats() -> dict:
-    """Stats for admin panel — strips embeddings from top questions."""
     index = _get_index()
     total_hits = sum(e.get("hits", 0) for e in index)
     top = sorted(index, key=lambda x: x.get("hits", 0), reverse=True)[:10]
-    # Strip embeddings before sending to UI
     top_clean = [{k: v for k, v in e.items() if k != "embedding"} for e in top]
     return {
-        "total_entries":  len(index),
-        "total_hits":     total_hits,
-        "cache_file_kb":  round(CACHE_FILE.stat().st_size / 1024, 1) if CACHE_FILE.exists() else 0,
-        "semantic_enabled": CACHE_SEMANTIC_ENABLED,
-        "top_questions":  top_clean,
+        "total_entries":      len(index),
+        "total_hits":         total_hits,
+        "cache_file_kb":      round(CACHE_FILE.stat().st_size / 1024, 1) if CACHE_FILE.exists() else 0,
+        "semantic_enabled":   _semantic_enabled(),
+        "top_questions":      top_clean,
     }
 
 

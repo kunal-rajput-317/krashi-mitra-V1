@@ -11,18 +11,31 @@ import os
 from pathlib import Path
 from rag.indexer import get_collection, CHROMA_DIR, run_indexing
 
-TOP_K = 4   # number of chunks to retrieve
+TOP_K = 4
 AUTO_INDEX_ON_ASK = os.getenv("RAG_AUTO_INDEX_ON_ASK", "false").lower() == "true"
+
+# Maps internal crop JSON keys → natural language for better RAG enrichment.
+# Using the JSON filename key directly ("wheat_up") in the ChromaDB query
+# hurts semantic similarity because the index contains natural language text.
+CROP_NAME_MAP: dict[str, str] = {
+    "wheat_up":     "wheat गेहूँ",
+    "rice_up":      "rice धान",
+    "sugarcane_up": "sugarcane गन्ना",
+    "rice":         "rice धान",
+    "mustard":      "mustard सरसों",
+    "potato":       "potato आलू",
+    "maize":        "maize मक्का",
+    "cotton":       "cotton कपास",
+    "general":      "",   # no prefix for general
+    "other":        "",
+}
 
 
 def retrieve(query: str, crop: str = "general", top_k: int = TOP_K) -> list[dict]:
     """
     Semantic search for relevant agriculture knowledge.
-
-    Returns list of dicts:
-      { "text": ..., "title": ..., "crop": ..., "score": ... }
+    Returns list of dicts: { text, title, crop, topic, score, source }
     """
-    # Keep user chat fast on hosted services. Build/rebuild the index from admin.
     if not CHROMA_DIR.exists() or not any(CHROMA_DIR.iterdir()):
         if AUTO_INDEX_ON_ASK:
             run_indexing()
@@ -31,14 +44,12 @@ def retrieve(query: str, crop: str = "general", top_k: int = TOP_K) -> list[dict
             return []
 
     collection = get_collection()
-
     if collection.count() == 0:
         return []
 
-    # Build query — boost with crop context if not "general"
-    enriched_query = query
-    if crop and crop.lower() not in ["general", "other", ""]:
-        enriched_query = f"{crop} farming: {query}"
+    # Enrich query with natural language crop name (not the JSON key)
+    crop_display = CROP_NAME_MAP.get((crop or "").lower(), crop or "")
+    enriched_query = f"{crop_display}: {query}" if crop_display else query
 
     results = collection.query(
         query_texts=[enriched_query],
@@ -52,45 +63,36 @@ def retrieve(query: str, crop: str = "general", top_k: int = TOP_K) -> list[dict
     distances = results["distances"][0]
 
     for doc, meta, dist in zip(docs, metas, distances):
-        similarity = round(1 - dist, 4)  # cosine distance → similarity
-        if similarity < 0.55:            # skip irrelevant chunks (raised from 0.3)
+        similarity = round(1 - dist, 4)   # cosine distance → similarity
+        if similarity < 0.55:
             continue
         chunks.append({
-            "text":     doc,
-            "title":    meta.get("title", ""),
-            "crop":     meta.get("crop", ""),
-            "topic":    meta.get("topic", ""),
-            "score":    similarity,
-            "source":   meta.get("source", ""),
+            "text":   doc,
+            "title":  meta.get("title", ""),
+            "crop":   meta.get("crop", ""),
+            "topic":  meta.get("topic", ""),
+            "score":  similarity,
+            "source": meta.get("source", ""),
         })
 
-    # Sort by relevance
     chunks.sort(key=lambda x: x["score"], reverse=True)
     return chunks
 
 
 def build_context_prompt(chunks: list[dict]) -> str:
-    """
-    Format retrieved chunks into a context block
-    to inject into the Gemini/Ollama prompt.
-    """
+    """Format retrieved chunks into a context block for the AI prompt."""
     if not chunks:
         return ""
-
     lines = ["नीचे दी गई कृषि जानकारी के आधार पर उत्तर दें:\n"]
     for i, chunk in enumerate(chunks, 1):
         lines.append(f"[संदर्भ {i}] {chunk['title']}")
         lines.append(chunk["text"])
         lines.append("")
-
     return "\n".join(lines)
 
 
 def retrieve_with_context(query: str, crop: str = "general") -> tuple[list[dict], str]:
-    """
-    Convenience function: retrieve chunks + build prompt context string.
-    Returns (chunks, context_string)
-    """
+    """Convenience: retrieve chunks + build context string. Returns (chunks, context)."""
     chunks  = retrieve(query, crop)
     context = build_context_prompt(chunks)
     return chunks, context
