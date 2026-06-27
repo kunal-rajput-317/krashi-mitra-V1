@@ -1,61 +1,164 @@
 import os
-
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from pathlib import Path
-import shutil, secrets, json
 from datetime import datetime
+from pathlib import Path
 
-router  = APIRouter(prefix="/admin")
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import shutil, secrets, json
+
+router   = APIRouter(prefix="/admin")
 security = HTTPBasic()
 
-# ── Simple hardcoded auth (replace with DB auth when going live) ──────
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "krashi2025")   # set env vars before deployment
+ADMIN_PASS = os.getenv("ADMIN_PASS", "krashi2025")
 
 UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
+
 
 def require_admin(creds: HTTPBasicCredentials = Depends(security)):
     ok_user = secrets.compare_digest(creds.username.encode(), ADMIN_USER.encode())
     ok_pass = secrets.compare_digest(creds.password.encode(), ADMIN_PASS.encode())
     if not (ok_user and ok_pass):
-        raise HTTPException(status_code=401, detail="Invalid credentials",
-                            headers={"WWW-Authenticate": "Basic"})
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )
     return creds.username
 
 
-# ── Upload PDF ────────────────────────────────────────────────────────
+# ── System Status ─────────────────────────────────────────────
+
+@router.get("/status")
+async def system_status():
+    from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS
+
+    gemini_keys = [
+        os.getenv(name, "").strip()
+        for name in (
+            "GEMINI_API_KEY",
+            "GEMINI_API_KEY2",  "GEMINI_API_KEY_2",
+            "GEMINI_API_KEY3",  "GEMINI_API_KEY_3",
+        )
+    ]
+
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+
+    ollama_ok = False
+    try:
+        import httpx
+        r = httpx.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=2)
+        ollama_ok = r.status_code == 200
+    except Exception:
+        pass
+
+    chroma_count = 0
+    try:
+        from rag.indexer import get_collection
+        chroma_count = get_collection().count()
+    except Exception:
+        pass
+
+    cache_count = 0
+    try:
+        from cache.cache_engine import get_cache_stats
+        cache_count = get_cache_stats()["total_entries"]
+    except Exception:
+        pass
+
+    settings = get_all_settings()
+
+    return {
+        "gemini_configured":    any(gemini_keys),
+        "gemini_keys_count":    sum(1 for k in gemini_keys if k),
+        "ollama_running":       ollama_ok,
+        "ollama_model":         settings.get("ollama_model", "—"),
+        "chroma_chunks":        chroma_count,
+        "cache_entries":        cache_count,
+        "upload_dir":           str(UPLOAD_DIR),
+        "checked_at":           datetime.now().strftime("%d %b %Y %H:%M:%S"),
+        # current runtime pipeline config
+        "current_model":        settings.get("gemini_model"),
+        "semantic_cache":       settings.get("cache_semantic_enabled"),
+        "ollama_enabled":       settings.get("ollama_enabled"),
+        "pipeline_timeout":     settings.get("pipeline_timeout"),
+        "gemini_timeout":       settings.get("gemini_timeout"),
+        "allowed_models":       ALLOWED_GEMINI_MODELS,
+    }
+
+
+# ── Runtime Settings ──────────────────────────────────────────
+
+@router.get("/settings")
+async def get_settings(_: str = Depends(require_admin)):
+    """Return all runtime-configurable settings."""
+    from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS
+    return {
+        "settings": get_all_settings(),
+        "allowed_models": ALLOWED_GEMINI_MODELS,
+    }
+
+
+@router.post("/settings")
+async def update_settings(payload: dict, _: str = Depends(require_admin)):
+    """
+    Update one or more runtime settings.
+    Changes take effect immediately (no restart needed).
+    Changes are lost on server restart — set env vars for persistence.
+    """
+    from backend.config import update_setting, get_all_settings, ALLOWED_GEMINI_MODELS
+
+    if "gemini_model" in payload:
+        model = payload["gemini_model"]
+        if model not in ALLOWED_GEMINI_MODELS:
+            raise HTTPException(400, f"Unknown model. Allowed: {ALLOWED_GEMINI_MODELS}")
+
+    updated = {}
+    skipped = []
+    for key, value in payload.items():
+        if update_setting(key, value):
+            updated[key] = value
+        else:
+            skipped.append(key)
+
+    # If semantic cache toggled on, reload cache model lazily (happens on next request)
+    return {
+        "updated": updated,
+        "skipped": skipped,
+        "settings": get_all_settings(),
+    }
+
+
+# ── PDF Upload ────────────────────────────────────────────────
+
 @router.post("/upload")
 async def upload_pdf(
     file: UploadFile = File(...),
-    _: str = Depends(require_admin)
+    _: str = Depends(require_admin),
 ):
     if not file.filename.endswith(".pdf"):
-        raise HTTPException(400, "Only PDF files allowed")
+        raise HTTPException(400, "Only PDF files are allowed")
 
     dest = UPLOAD_DIR / file.filename
     with open(dest, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    # Trigger re-indexing of the new PDF
     indexed = 0
     try:
         from rag.indexer import get_collection, index_pdf
-        collection = get_collection()
-        indexed = index_pdf(collection, dest)
-    except Exception as e:
-        pass  # index later — file is saved
+        indexed = index_pdf(get_collection(), dest)
+    except Exception:
+        pass  # file is saved; admin can re-index manually
 
     return {
-        "status":   "uploaded",
-        "filename": file.filename,
+        "status":         "uploaded",
+        "filename":       file.filename,
         "chunks_indexed": indexed,
-        "saved_at": datetime.now().isoformat(),
+        "saved_at":       datetime.now().isoformat(),
     }
 
 
-# ── List uploaded files ───────────────────────────────────────────────
 @router.get("/files")
 async def list_files(_: str = Depends(require_admin)):
     files = []
@@ -69,7 +172,6 @@ async def list_files(_: str = Depends(require_admin)):
     return {"files": files, "count": len(files)}
 
 
-# ── Delete uploaded file ──────────────────────────────────────────────
 @router.delete("/files/{filename}")
 async def delete_file(filename: str, _: str = Depends(require_admin)):
     target = UPLOAD_DIR / filename
@@ -79,13 +181,13 @@ async def delete_file(filename: str, _: str = Depends(require_admin)):
     return {"status": "deleted", "filename": filename}
 
 
-# ── Cache stats ───────────────────────────────────────────────────────
+# ── Cache Management ──────────────────────────────────────────
+
 @router.get("/cache/stats")
 async def cache_stats(_: str = Depends(require_admin)):
     try:
         from cache.cache_engine import get_cache_stats
         stats = get_cache_stats()
-        # Strip embeddings from top_questions before sending to UI
         for q in stats.get("top_questions", []):
             q.pop("embedding", None)
         return stats
@@ -93,7 +195,6 @@ async def cache_stats(_: str = Depends(require_admin)):
         return {"error": str(e)}
 
 
-# ── Clear cache ───────────────────────────────────────────────────────
 @router.delete("/cache/clear")
 async def clear_cache(_: str = Depends(require_admin)):
     try:
@@ -104,9 +205,7 @@ async def clear_cache(_: str = Depends(require_admin)):
         raise HTTPException(500, str(e))
 
 
-# ── Re-index all knowledge ────────────────────────────────────────────
-# ── Delete single cache entry ────────────────────────────────
-@router.delete("/cache/delete")
+@router.post("/cache/delete")
 async def delete_cache_entry(payload: dict, _: str = Depends(require_admin)):
     """Delete a specific cache entry by question text."""
     question = payload.get("question", "").strip()
@@ -125,7 +224,6 @@ async def delete_cache_entry(payload: dict, _: str = Depends(require_admin)):
         raise HTTPException(500, str(e))
 
 
-# ── Edit single cache entry answer ───────────────────────────
 @router.put("/cache/edit")
 async def edit_cache_entry(payload: dict, _: str = Depends(require_admin)):
     """Update the answer of a specific cache entry."""
@@ -150,7 +248,6 @@ async def edit_cache_entry(payload: dict, _: str = Depends(require_admin)):
         raise HTTPException(500, str(e))
 
 
-# ── Add Q&A entry manually ────────────────────────────────────
 @router.post("/cache/add")
 async def add_cache_entry(payload: dict, _: str = Depends(require_admin)):
     """Manually add a Q&A pair to the cache from the admin panel."""
@@ -168,8 +265,6 @@ async def add_cache_entry(payload: dict, _: str = Depends(require_admin)):
         saved = save_to_cache(question, answer, source=source)
         if saved:
             return {"saved": True}
-        # save_to_cache returns False for both duplicates and quality fails.
-        # Re-check: if a semantic hit exists it's a duplicate, else quality fail.
         hit = search_cache(question)
         if hit:
             return {"saved": False, "duplicate": True}
@@ -177,6 +272,30 @@ async def add_cache_entry(payload: dict, _: str = Depends(require_admin)):
     except Exception as e:
         raise HTTPException(500, str(e))
 
+
+@router.post("/cache/search")
+async def search_cache_test(payload: dict, _: str = Depends(require_admin)):
+    """
+    Test whether a question would hit the cache.
+    Returns the match result without saving anything.
+    """
+    question = payload.get("question", "").strip()
+    if not question:
+        raise HTTPException(400, "question required")
+    try:
+        from cache.cache_engine import search_cache
+        result = search_cache(question)
+        if result:
+            result.pop("embedding", None)
+        return {
+            "hit":    result is not None,
+            "result": result,
+        }
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+# ── RAG Re-index ──────────────────────────────────────────────
 
 @router.post("/reindex")
 async def reindex(_: str = Depends(require_admin)):
@@ -186,56 +305,3 @@ async def reindex(_: str = Depends(require_admin)):
         return {"status": "reindexed", "total_chunks": total}
     except Exception as e:
         raise HTTPException(500, str(e))
-
-
-# ── System status ─────────────────────────────────────────────────────
-@router.get("/status")
-async def system_status():
-    import os
-    gemini_keys = [
-        os.getenv(name, "").strip()
-        for name in (
-            "GEMINI_API_KEY",
-            "GEMINI_API_KEY2",
-            "GEMINI_API_KEY_2",
-            "GEMINI_API_KEY3",
-            "GEMINI_API_KEY_3",
-        )
-    ]
-    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL    = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
-
-    # Check Ollama
-    ollama_ok = False
-    try:
-        import httpx
-        r = httpx.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=2)
-        ollama_ok = r.status_code == 200
-    except Exception:
-        pass
-
-    # ChromaDB chunk count
-    chroma_count = 0
-    try:
-        from rag.indexer import get_collection
-        chroma_count = get_collection().count()
-    except Exception:
-        pass
-
-    # Cache entry count
-    cache_count = 0
-    try:
-        from cache.cache_engine import get_cache_stats
-        cache_count = get_cache_stats()["total_entries"]
-    except Exception:
-        pass
-
-    return {
-        "gemini_configured": any(gemini_keys),
-        "ollama_running":    ollama_ok,
-        "ollama_model":      OLLAMA_MODEL,
-        "chroma_chunks":     chroma_count,
-        "cache_entries":     cache_count,
-        "upload_dir":        str(UPLOAD_DIR),
-        "checked_at":        datetime.now().strftime("%d %b %Y %H:%M:%S"),
-    }

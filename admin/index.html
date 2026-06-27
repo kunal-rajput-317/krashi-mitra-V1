@@ -6,1059 +6,1669 @@
 <title>KrashiMitra — Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* ── Dark tech theme (default) ── */
-  :root {
-    --bg:        #0f1410;
-    --surface:   #161d17;
-    --border:    #2a352b;
-    --green:     #4ade80;
-    --green-dim: #166534;
-    --amber:     #fbbf24;
-    --red:       #f87171;
-    --text:      #e2e8e2;
-    --muted:     #6b7a6c;
-    --mono:      'DM Mono', monospace;
-    --hindi:     'Noto Sans Devanagari', sans-serif;
-    --display:   'Syne', sans-serif;
-  }
+/* ── Tokens ───────────────────────────────────────────────── */
+:root {
+  --bg:        #0b0f0c;
+  --surface:   #111714;
+  --surface2:  #161d17;
+  --border:    #232e24;
+  --border2:   #2e3d2f;
+  --green:     #4ade80;
+  --green-dim: #14532d;
+  --green-glow:rgba(74,222,128,.12);
+  --amber:     #fbbf24;
+  --red:       #f87171;
+  --blue:      #63b3ed;
+  --text:      #dde8dd;
+  --text2:     #a8b8a9;
+  --muted:     #5a6b5b;
+  --mono:      'DM Mono', monospace;
+  --hindi:     'Noto Sans Devanagari', sans-serif;
+  --display:   'Syne', sans-serif;
+  --radius:    10px;
+  --sidebar-w: 230px;
+}
 
-  /* ── Agriculture theme (खेत) ── */
-  :root.agri {
-    --bg:        #f5f0e8;
-    --surface:   #fffdf7;
-    --border:    #d4c9a8;
-    --green:     #3d7a3a;
-    --green-dim: #c8e6c5;
-    --amber:     #c97c1a;
-    --red:       #c0392b;
-    --text:      #2c1e0f;
-    --muted:     #7a6a50;
-  }
-  :root.agri body {
-    background-image:
-      radial-gradient(ellipse at 10% 20%, rgba(120,160,80,.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 90% 80%, rgba(180,140,60,.07) 0%, transparent 50%);
-  }
-  :root.agri .sidebar {
-    background: linear-gradient(180deg, #2d4a1e 0%, #1e3512 100%);
-    border-right-color: #3d6b28;
-  }
-  :root.agri .logo h1        { color: #a8d878; }
-  :root.agri .logo p         { color: #7aaa5a; }
-  :root.agri .logo-badge     { background: #f5c842; color: #1a2e0a; }
-  :root.agri .nav-item       { color: #8aba6a; }
-  :root.agri .nav-item:hover { color: #c8e8a8; background: rgba(168,216,120,.1); }
-  :root.agri .nav-item.active{ color: #c8e8a8; border-left-color: #a8d878; background: rgba(168,216,120,.15); }
-  :root.agri .sidebar-footer { color: #6a9a4a; border-top-color: #3d6b28; }
-  :root.agri .card           { box-shadow: 0 2px 8px rgba(60,90,30,.08); border-color: #d4c9a8; }
-  :root.agri .card-value.ok  { color: #2d6e2a; }
-  :root.agri .card-value.warn{ color: #c97c1a; }
-  :root.agri .card-value.err { color: #c0392b; }
-  :root.agri .btn-green      { background: #3d7a3a; color: #fff; }
-  :root.agri .btn-green:hover{ background: #2d5e2a; }
-  :root.agri .log-box        { background: #1e3512; color: #a8d878; border-color: #3d6b28; }
-  :root.agri .log-ok         { color: #a8d878; }
-  :root.agri .log-warn       { color: #f5c842; }
-  :root.agri .log-err        { color: #e57373; }
-  :root.agri .upload-zone    { background: #faf6ec; border-color: #c8b87a; }
-  :root.agri .upload-zone:hover,
-  :root.agri .upload-zone.drag { border-color: #3d7a3a; background: rgba(61,122,58,.04); }
-  :root.agri .table-wrap     { box-shadow: 0 2px 8px rgba(60,90,30,.06); }
-  :root.agri th              { background: #f0e8d0; color: #5a4a2a; }
-  :root.agri tr:hover td     { background: rgba(61,122,58,.04); }
-  :root.agri #toast.ok       { border-color: #3d7a3a; color: #2d6e2a; background: #f0faee; }
-  :root.agri #toast.err      { border-color: #c0392b; color: #c0392b; background: #fdf0ee; }
-  :root.agri .page-header    { border-bottom-color: #d4c9a8; }
-  :root.agri .page-header h2 { color: #2c1e0f; }
+/* ── Agri (light) theme ──────────────────────────────────── */
+:root.agri {
+  --bg:        #f0ebe0;
+  --surface:   #faf6ee;
+  --surface2:  #f5f0e4;
+  --border:    #d8ccab;
+  --border2:   #c8bc98;
+  --green:     #3a7535;
+  --green-dim: #d0e8cc;
+  --green-glow:rgba(58,117,53,.1);
+  --amber:     #b8720e;
+  --red:       #b83030;
+  --blue:      #1a6090;
+  --text:      #22180a;
+  --text2:     #5a4830;
+  --muted:     #8a7858;
+}
+:root.agri body { background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8a878' fill-opacity='0.06'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+:root.agri .sidebar { background:linear-gradient(170deg,#243d18 0%,#182d0e 100%); border-right-color:#2d5020; }
+:root.agri .sidebar * { --muted:#6a9a50; --text:#c8e8a0; --border:#2d5020; }
+:root.agri .nav-item { color:#7aaa5a; }
+:root.agri .nav-item:hover { color:#b8e090; background:rgba(140,200,80,.1); }
+:root.agri .nav-item.active { color:#d0f0a0; background:rgba(140,200,80,.18); }
+:root.agri .nav-item.active .nav-icon-wrap { background:rgba(140,200,80,.2); color:#c0e890; }
+:root.agri .logo-title { color:#a8d870; }
+:root.agri .logo-sub { color:#6a9a50; }
+:root.agri .logo-badge { background:#e8c030; color:#182d0e; }
+:root.agri .sidebar-footer { color:#5a8a40; border-top-color:#2d5020; }
+:root.agri .theme-row { border-top-color:#2d5020; }
+:root.agri .log-box { background:#0c180a; border-color:#2d5020; }
+:root.agri th { background:rgba(0,0,0,.06); }
+:root.agri .upload-zone { background:var(--surface2); border-color:var(--border2); }
+:root.agri #toast.ok  { border-color:var(--green); color:var(--green); background:var(--surface); }
+:root.agri #toast.err { border-color:var(--red); color:var(--red); background:var(--surface); }
 
-  /* ── Theme toggle ── */
-  .theme-toggle {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 20px; margin-top: 8px;
-    cursor: pointer; border: none; background: none;
-    width: 100%; font-family: var(--display);
-  }
-  .toggle-track {
-    width: 38px; height: 20px;
-    background: var(--border); border-radius: 10px;
-    position: relative; transition: background .3s; flex-shrink: 0;
-  }
-  .toggle-thumb {
-    position: absolute; top: 3px; left: 3px;
-    width: 14px; height: 14px; border-radius: 50%;
-    background: var(--muted); transition: all .3s;
-  }
-  .agri-on .toggle-track { background: #3d7a3a; }
-  .agri-on .toggle-thumb { left: 21px; background: #f5c842; }
-  .toggle-label {
-    font-size: 11px; font-weight: 700; color: var(--muted);
-    text-transform: uppercase; letter-spacing: .5px;
-  }
-  :root.agri .toggle-label { color: #8aba6a; }
+/* ── Reset ───────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;display:flex;line-height:1.5;}
+::selection{background:var(--green-glow);color:var(--green);}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar-w);min-height:100vh;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;
+  z-index:100;
+}
+.logo-area{
+  padding:22px 18px 18px;
+  border-bottom:1px solid var(--border);
+}
+.logo-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--green);color:#000;
+  font-size:9px;font-weight:800;letter-spacing:2px;
+  padding:2px 8px;border-radius:3px;text-transform:uppercase;
+  margin-bottom:10px;
+}
+.logo-title{
+  font-size:20px;font-weight:800;color:var(--green);letter-spacing:-.3px;
+  display:flex;align-items:center;gap:8px;
+}
+.logo-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--display);
-    min-height: 100vh;
-    display: flex;
-  }
+.nav-section{padding:10px 0 4px;}
+.nav-label{
+  font-size:9px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1.5px;
+  padding:0 18px 6px;font-family:var(--mono);
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px 8px 14px;
+  margin:1px 8px;border-radius:8px;
+  font-size:12.5px;font-weight:600;color:var(--text2);
+  cursor:pointer;transition:all .15s;
+  text-transform:uppercase;letter-spacing:.4px;
+  position:relative;
+}
+.nav-item:hover{color:var(--text);background:var(--green-glow);}
+.nav-item.active{color:var(--green);background:var(--green-glow);}
+.nav-icon-wrap{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+  background:transparent;
+  transition:background .15s;
+}
+.nav-item.active .nav-icon-wrap{background:rgba(74,222,128,.15);}
+.nav-item:hover .nav-icon-wrap{background:rgba(74,222,128,.08);}
+.nav-active-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--green);margin-left:auto;
+  display:none;
+}
+.nav-item.active .nav-active-dot{display:block;}
 
-  /* ── Sidebar ── */
-  .sidebar {
-    width: 220px;
-    min-height: 100vh;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 24px 0;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-  }
+.sidebar-spacer{flex:1;}
+.theme-row{
+  padding:12px 14px;
+  border-top:1px solid var(--border);
+}
+.theme-btn{
+  display:flex;align-items:center;gap:10px;
+  width:100%;background:none;border:none;cursor:pointer;
+  padding:7px 10px;border-radius:8px;
+  transition:background .15s;
+}
+.theme-btn:hover{background:var(--green-glow);}
+.sw-mini-track{
+  width:34px;height:18px;background:var(--border2);border-radius:9px;
+  position:relative;transition:background .25s;flex-shrink:0;
+}
+.sw-mini-track.on{background:var(--green);}
+.sw-mini-thumb{
+  position:absolute;top:2px;left:2px;
+  width:14px;height:14px;border-radius:50%;background:#fff;
+  transition:left .25s;
+}
+.sw-mini-track.on .sw-mini-thumb{left:18px;}
+.theme-lbl{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;}
+:root.agri .theme-lbl{color:#7aaa5a;}
 
-  .logo {
-    padding: 0 20px 24px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-  .logo-badge {
-    display: inline-block;
-    background: var(--green);
-    color: #000;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 2px 8px;
-    border-radius: 2px;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-  }
-  .logo h1 { font-size: 18px; font-weight: 800; color: var(--green); }
-  .logo p  { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+.sidebar-footer{
+  padding:12px 18px;border-top:1px solid var(--border);
+  font-size:10.5px;color:var(--muted);font-family:var(--mono);
+  line-height:1.8;
+}
 
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    border-left: 3px solid transparent;
-    transition: all .15s;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-  }
-  .nav-item:hover  { color: var(--text); background: rgba(74,222,128,.06); }
-  .nav-item.active { color: var(--green); border-left-color: var(--green); background: rgba(74,222,128,.08); }
-  .nav-item .icon  { font-size: 16px; }
+/* ── Main ────────────────────────────────────────────────── */
+.main{margin-left:var(--sidebar-w);flex:1;padding:28px 32px;max-width:1080px;}
+.page{display:none;animation:fade-in .18s ease;}
+.page.active{display:block;}
+@keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-  .sidebar-footer {
-    margin-top: auto;
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--mono);
-  }
+/* ── Page header ─────────────────────────────────────────── */
+.page-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:24px;padding-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+.page-header-left h2{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.2px;}
+.page-header-left p{font-size:12.5px;color:var(--muted);margin-top:3px;font-family:var(--hindi);}
+.page-header-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
 
-  /* ── Main ── */
-  .main {
-    margin-left: 220px;
-    flex: 1;
-    padding: 32px;
-    max-width: 1100px;
-  }
+/* ── Cards ───────────────────────────────────────────────── */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 18px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--card-accent,var(--border2));
+  border-radius:var(--radius) var(--radius) 0 0;
+}
+.card:hover{border-color:var(--border2);}
+.card-icon{font-size:18px;margin-bottom:8px;display:block;}
+.card-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono);}
+.card-value{font-size:24px;font-weight:800;margin:5px 0 3px;line-height:1;}
+.card-sub{font-size:10.5px;color:var(--muted);font-family:var(--mono);}
+.card-value.ok  {color:var(--green);}  .card[data-ok]   {--card-accent:var(--green);}
+.card-value.warn{color:var(--amber);}  .card[data-warn] {--card-accent:var(--amber);}
+.card-value.err {color:var(--red);}    .card[data-err]  {--card-accent:var(--red);}
+.card-value.info{color:var(--blue);}   .card[data-info] {--card-accent:var(--blue);}
 
-  .page { display: none; }
-  .page.active { display: block; }
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:7px;
+  font-size:12.5px;font-weight:700;cursor:pointer;border:none;
+  letter-spacing:.2px;transition:all .15s;font-family:var(--display);
+  white-space:nowrap;
+}
+.btn-green{background:var(--green);color:#000;}
+.btn-green:hover{background:#6ee7a0;}
+.btn-amber{background:var(--amber);color:#000;}
+.btn-amber:hover{background:#fcd34d;}
+.btn-blue{background:rgba(99,179,237,.12);color:var(--blue);border:1px solid rgba(99,179,237,.35);}
+.btn-blue:hover{background:rgba(99,179,237,.22);}
+.btn-red{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.35);}
+.btn-red:hover{background:rgba(248,113,113,.22);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted);}
+.btn:disabled{opacity:.38;cursor:not-allowed;}
+.btn-sm{padding:5px 11px;font-size:11.5px;border-radius:5px;}
+.btn-icon{width:34px;height:34px;padding:0;justify-content:center;border-radius:7px;font-size:15px;}
 
-  .page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .page-header h2 { font-size: 24px; font-weight: 800; color: var(--text); }
-  .page-header p  { font-size: 13px; color: var(--muted); margin-top: 4px; font-family: var(--hindi); }
+/* ── Section label ───────────────────────────────────────── */
+.sec-label{
+  font-size:10.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1.2px;
+  margin-bottom:12px;font-family:var(--mono);
+  display:flex;align-items:center;gap:8px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
-  /* ── Status cards ── */
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 18px 20px;
-  }
-  .card-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--mono); }
-  .card-value { font-size: 28px; font-weight: 800; margin: 6px 0 4px; }
-  .card-sub   { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-  .card-value.ok   { color: var(--green); }
-  .card-value.warn { color: var(--amber); }
-  .card-value.err  { color: var(--red);   }
+/* ── Panel / Box ─────────────────────────────────────────── */
+.panel{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:16px;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+}
+.panel-title{font-size:13px;font-weight:700;letter-spacing:.2px;}
+.panel-body{padding:18px;}
 
-  /* ── Buttons ── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    letter-spacing: .3px;
-    transition: all .15s;
-    font-family: var(--display);
-  }
-  .btn-green  { background: var(--green); color: #000; }
-  .btn-green:hover  { background: #6ee7a0; }
-  .btn-amber  { background: var(--amber); color: #000; }
-  .btn-amber:hover  { background: #fcd34d; }
-  .btn-red    { background: rgba(248,113,113,.15); color: var(--red); border: 1px solid var(--red); }
-  .btn-red:hover    { background: rgba(248,113,113,.25); }
-  .btn-ghost  { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn-ghost:hover  { color: var(--text); border-color: var(--muted); }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
+/* ── Inputs ──────────────────────────────────────────────── */
+.inp{
+  background:var(--bg);border:1px solid var(--border2);border-radius:7px;
+  color:var(--text);font-family:var(--hindi);font-size:13px;
+  padding:9px 13px;outline:none;transition:border-color .18s;width:100%;
+}
+.inp:focus{border-color:var(--green);}
+.inp-mono{font-family:var(--mono);font-size:12px;}
+.inp-row{display:flex;gap:8px;align-items:center;}
 
-  /* ── Upload zone ── */
-  .upload-zone {
-    border: 2px dashed var(--border);
-    border-radius: 10px;
-    padding: 40px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s;
-    margin-bottom: 24px;
-    background: var(--surface);
-  }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--green); background: rgba(74,222,128,.04); }
-  .upload-zone .icon { font-size: 36px; margin-bottom: 10px; }
-  .upload-zone h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-  .upload-zone p  { font-size: 13px; color: var(--muted); font-family: var(--hindi); }
-  #file-input { display: none; }
+/* ── Log box ─────────────────────────────────────────────── */
+.log-box{
+  background:#060b07;border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;font-family:var(--mono);font-size:11.5px;color:#7a9a7a;
+  max-height:200px;overflow-y:auto;line-height:1.8;white-space:pre-wrap;
+}
+.log-ok {color:var(--green);}
+.log-warn{color:var(--amber);}
+.log-err {color:var(--red);}
 
-  /* ── Table ── */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    padding: 12px 16px;
-    text-align: left;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-    background: rgba(0,0,0,.2);
-    font-family: var(--mono);
-  }
-  td { padding: 12px 16px; font-size: 13px; border-top: 1px solid var(--border); }
-  tr:hover td { background: rgba(74,222,128,.03); }
-  .tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-family: var(--mono);
-    font-weight: 500;
-  }
-  .tag-green { background: var(--green-dim); color: var(--green); }
-  .tag-amber { background: rgba(251,191,36,.15); color: var(--amber); }
-  .tag-red   { background: rgba(248,113,113,.15); color: var(--red); }
+/* ── Table ───────────────────────────────────────────────── */
+.table-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);background:rgba(0,0,0,.15);font-family:var(--mono);}
+td{padding:11px 14px;font-size:13px;border-top:1px solid var(--border);}
+tr:hover td{background:var(--green-glow);}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-family:var(--mono);font-weight:600;}
+.tag-green{background:var(--green-dim);color:var(--green);}
+.tag-amber{background:rgba(251,191,36,.12);color:var(--amber);}
+.tag-red{background:rgba(248,113,113,.12);color:var(--red);}
+.tag-blue{background:rgba(99,179,237,.12);color:var(--blue);}
 
-  /* ── Log ── */
-  .log-box {
-    background: #080d09;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: #9ca;
-    max-height: 220px;
-    overflow-y: auto;
-    line-height: 1.7;
-  }
-  .log-ok   { color: var(--green); }
-  .log-warn { color: var(--amber); }
-  .log-err  { color: var(--red); }
+/* ── Upload zone ─────────────────────────────────────────── */
+.upload-zone{
+  border:2px dashed var(--border2);border-radius:var(--radius);
+  padding:36px 24px;text-align:center;cursor:pointer;
+  transition:all .2s;margin-bottom:16px;background:var(--surface2);
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--green);background:var(--green-glow);}
+.upload-zone .uz-icon{font-size:32px;margin-bottom:10px;display:block;}
+.upload-zone h3{font-size:14px;font-weight:700;margin-bottom:5px;}
+.upload-zone p{font-size:12px;color:var(--muted);font-family:var(--hindi);}
+#file-input{display:none;}
 
-  /* ── Add Q&A panel ── */
-  .add-qa-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 24px;
-    overflow: hidden;
-    transition: border-color .2s;
-  }
-  .add-qa-panel:focus-within { border-color: var(--green); }
-  .add-qa-toggle {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-family: var(--display);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: .3px;
-  }
-  .add-qa-toggle:hover { color: var(--green); }
-  .add-qa-toggle .toggle-icon {
-    font-size: 18px;
-    transition: transform .25s;
-    color: var(--green);
-  }
-  .add-qa-toggle.open .toggle-icon { transform: rotate(45deg); }
-  .add-qa-body {
-    display: none;
-    padding: 0 18px 18px;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .add-qa-body.open { display: flex; }
-  .add-qa-field { display: flex; flex-direction: column; gap: 6px; }
-  .add-qa-label {
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .add-qa-input, .add-qa-textarea {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--hindi);
-    font-size: 14px;
-    padding: 10px 14px;
-    outline: none;
-    transition: border-color .2s;
-    resize: vertical;
-  }
-  .add-qa-input:focus, .add-qa-textarea:focus { border-color: var(--green); }
-  .add-qa-textarea { min-height: 90px; line-height: 1.6; }
-  .add-qa-actions { display: flex; gap: 10px; align-items: center; }
-  .add-qa-charcount { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-left: auto; }
+/* ── Settings page ───────────────────────────────────────── */
+.settings-group{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:16px;overflow:hidden;
+}
+.settings-group-head{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  font-size:10.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono);
+  background:rgba(0,0,0,.1);
+  display:flex;align-items:center;gap:6px;
+}
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--border);gap:24px;
+}
+.setting-row:last-child{border-bottom:none;}
+.setting-info{flex:1;}
+.setting-label{font-size:13px;font-weight:700;color:var(--text);}
+.setting-desc{font-size:11.5px;color:var(--muted);margin-top:3px;font-family:var(--hindi);line-height:1.5;}
+.setting-control{flex-shrink:0;}
+select.s-select{
+  background:var(--bg);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text);font-family:var(--mono);font-size:12px;
+  padding:7px 11px;outline:none;cursor:pointer;
+}
+select.s-select:focus{border-color:var(--green);}
+input.s-num{
+  background:var(--bg);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text);font-family:var(--mono);font-size:12px;
+  padding:7px 11px;outline:none;width:80px;text-align:center;
+}
+input.s-num:focus{border-color:var(--green);}
+.sw-track{
+  width:44px;height:22px;background:var(--border2);border-radius:11px;
+  position:relative;cursor:pointer;transition:background .22s;border:none;display:block;
+}
+.sw-track.on{background:var(--green);}
+.sw-thumb{
+  position:absolute;top:3px;left:3px;width:16px;height:16px;
+  border-radius:50%;background:#fff;transition:left .22s;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.sw-track.on .sw-thumb{left:25px;}
+.info-banner{
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);
+  border-radius:8px;padding:11px 15px;margin-bottom:16px;
+  font-size:12px;font-family:var(--mono);color:var(--green);
+}
 
-  /* ── Cache questions ── */
-  .q-list { display: flex; flex-direction: column; gap: 10px; }
-  .q-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .q-text  { font-size: 14px; font-family: var(--hindi); }
-  .q-meta  { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 4px; }
-  .q-hits  { font-size: 20px; font-weight: 800; color: var(--green); }
+/* ── Cache test ──────────────────────────────────────────── */
+.cache-test-result{
+  margin-top:12px;padding:12px 15px;border-radius:8px;
+  font-family:var(--hindi);font-size:13px;display:none;line-height:1.6;
+}
+.cache-test-result.hit {background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.3);}
+.cache-test-result.miss{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);}
 
-  /* ── Toast ── */
-  #toast {
-    position: fixed;
-    bottom: 24px; right: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 20px;
-    font-size: 13px;
-    font-family: var(--hindi);
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all .3s;
-    z-index: 999;
-    max-width: 320px;
-  }
-  #toast.show { opacity: 1; transform: translateY(0); }
-  #toast.ok   { border-color: var(--green); color: var(--green); }
-  #toast.err  { border-color: var(--red);   color: var(--red);   }
+/* ── Add Q&A accordion ───────────────────────────────────── */
+.acc-head{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;background:none;border:none;cursor:pointer;
+  color:var(--text);font-family:var(--display);font-size:13px;font-weight:700;
+  border-radius:var(--radius);transition:color .15s;
+}
+.acc-head:hover{color:var(--green);}
+.acc-arrow{font-size:17px;color:var(--green);transition:transform .22s;}
+.acc-head.open .acc-arrow{transform:rotate(45deg);}
+.acc-body{display:none;padding:0 18px 18px;flex-direction:column;gap:13px;}
+.acc-body.open{display:flex;}
+.field-label{font-size:10.5px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
 
-  .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 14px;
-    font-family: var(--mono);
-  }
+/* ── Cache Q list ────────────────────────────────────────── */
+.q-list{display:flex;flex-direction:column;gap:8px;}
+.q-item{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:12px 14px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  transition:border-color .15s;
+}
+.q-item:hover{border-color:var(--border2);}
+.q-text{font-size:13.5px;font-family:var(--hindi);color:var(--text);}
+.q-meta{font-size:10.5px;color:var(--muted);font-family:var(--mono);margin-top:4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.q-answer-box{
+  font-size:12px;color:var(--text2);font-family:var(--hindi);
+  margin-top:8px;display:none;padding:10px 12px;
+  background:var(--bg);border-radius:6px;border:1px solid var(--border);
+  line-height:1.6;
+}
+.q-actions{display:flex;gap:6px;flex-shrink:0;margin-left:12px;}
 
-  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-  .spacer { flex: 1; }
+/* ── Pipeline steps ──────────────────────────────────────── */
+.pipeline-viz{
+  display:flex;flex-direction:column;gap:5px;
+  padding:13px 15px;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;font-family:var(--mono);font-size:11.5px;
+}
+.pipe-step{
+  display:flex;align-items:center;gap:9px;color:var(--muted);
+  opacity:0;transform:translateX(-6px);transition:all .28s ease;
+}
+.pipe-step.active{opacity:1;transform:translateX(0);color:var(--text);}
+.pipe-step.done{color:var(--green);}
+.pipe-step-icon{font-size:13px;width:18px;text-align:center;}
 
-  /* ── Mic button ── */
-  .mic-btn {
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--muted);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .2s;
-    flex-shrink: 0;
-  }
-  .mic-btn:hover { border-color: var(--green); color: var(--green); }
-  .mic-btn.listening {
-    background: rgba(248,113,113,.15);
-    border-color: var(--red);
-    color: var(--red);
-    animation: pulse-mic .8s ease-in-out infinite;
-  }
-  @keyframes pulse-mic {
-    0%, 100% { transform: scale(1); }
-    50%       { transform: scale(1.12); }
-  }
+/* ── RAG result grid ─────────────────────────────────────── */
+.rag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.rag-pane{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:13px;}
+.rag-pane-label{font-size:9.5px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.rag-pane-body{font-size:12px;font-family:var(--hindi);line-height:1.7;color:var(--text);max-height:150px;overflow-y:auto;}
 
-  /* ── AI thinking animation ── */
-  .ai-thinking {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 16px 16px 16px 4px;
-    width: fit-content;
-    max-width: 200px;
-  }
-  .ai-thinking-text {
-    font-size: 12px;
-    color: var(--muted);
-    font-family: var(--mono);
-    white-space: nowrap;
-  }
-  .dots {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-  .dots span {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: dot-bounce .9s ease-in-out infinite;
-    display: block;
-  }
-  .dots span:nth-child(2) { animation-delay: .15s; background: var(--amber); }
-  .dots span:nth-child(3) { animation-delay: .30s; background: var(--green); opacity:.6; }
-  @keyframes dot-bounce {
-    0%, 80%, 100% { transform: translateY(0);   opacity: .4; }
-    40%            { transform: translateY(-6px); opacity: 1;  }
-  }
+/* ── Chat page layout ────────────────────────────────────── */
+#page-chat{
+  display:none;
+  flex-direction:column;
+  height:calc(100vh - 0px);
+  padding:0;
+  /* override default .main padding for chat */
+  margin:-28px -32px;
+}
+#page-chat.active{display:flex;}
 
-  /* ── RAG pipeline steps animation ── */
-  .rag-pipeline {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 14px 16px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-  .pipeline-step {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    opacity: 0;
-    transform: translateX(-8px);
-    transition: all .3s ease;
-  }
-  .pipeline-step.active {
-    opacity: 1;
-    transform: translateX(0);
-    color: var(--text);
-  }
-  .pipeline-step.done { color: var(--green); }
-  .pipeline-step .step-icon { font-size: 14px; width: 20px; text-align: center; }
-  .step-spinner {
-    width: 12px; height: 12px;
-    border: 2px solid var(--border);
-    border-top-color: var(--green);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-    flex-shrink: 0;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+.chat-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0;
+  gap:12px;
+}
+.chat-topbar-title{
+  display:flex;align-items:center;gap:10px;
+}
+.chat-topbar-title h2{
+  font-size:15px;font-weight:800;letter-spacing:-.2px;color:var(--text);
+}
+.chat-topbar-title .chat-pipe-badge{
+  font-size:10px;font-family:var(--mono);color:var(--muted);
+  background:var(--bg);border:1px solid var(--border);
+  padding:2px 8px;border-radius:20px;
+  display:none;
+}
+.chat-topbar-title .chat-pipe-badge.visible{display:inline-block;}
+.chat-topbar-controls{display:flex;align-items:center;gap:8px;}
+.chat-topbar-controls select{
+  background:var(--bg);border:1px solid var(--border2);border-radius:20px;
+  color:var(--text2);font-family:var(--mono);font-size:11px;
+  padding:5px 12px;outline:none;cursor:pointer;
+  transition:border-color .15s;
+}
+.chat-topbar-controls select:focus{border-color:var(--green);}
+.chat-clear-btn{
+  background:none;border:none;color:var(--muted);font-size:14px;
+  cursor:pointer;padding:5px 8px;border-radius:6px;
+  transition:all .15s;display:flex;align-items:center;
+}
+.chat-clear-btn:hover{color:var(--red);background:rgba(248,113,113,.1);}
 
-  /* Quick test log shimmer */
-  .log-shimmer {
-    background: linear-gradient(90deg,
-      var(--surface) 25%,
-      rgba(74,222,128,.08) 50%,
-      var(--surface) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 4px;
-    height: 14px;
-    margin: 4px 0;
-  }
-  @keyframes shimmer { to { background-position: -200% 0; } }
+/* scrollable messages area */
+.chat-area{
+  flex:1;overflow-y:auto;
+  padding:24px 32px;
+  display:flex;flex-direction:column;
+  gap:16px;
+  scroll-behavior:smooth;
+}
 
-  @media (max-width: 700px) {
-    .sidebar { display: none; }
-    .main { margin-left: 0; padding: 16px; }
-  }
+/* empty state */
+.chat-empty-state{
+  margin:auto;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+}
+.chat-empty-icon{font-size:40px;opacity:.5;}
+.chat-empty-text{font-size:13px;color:var(--muted);font-family:var(--hindi);line-height:1.7;}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;}
+.chat-suggestion{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:20px;padding:6px 14px;
+  font-size:12px;font-family:var(--hindi);color:var(--text2);
+  cursor:pointer;transition:all .15s;
+}
+.chat-suggestion:hover{border-color:var(--green);color:var(--green);background:var(--green-glow);}
+
+/* message rows */
+.chat-msg{
+  display:flex;flex-direction:column;gap:5px;
+  animation:msg-in .2s ease;
+}
+@keyframes msg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user{align-items:flex-end;}
+.chat-msg.bot{align-items:flex-start;}
+
+.chat-bubble{
+  max-width:72%;padding:10px 15px;
+  font-family:var(--hindi);font-size:13.5px;line-height:1.65;
+  white-space:pre-wrap;word-break:break-word;
+}
+.chat-msg.user .chat-bubble{
+  background:var(--green);color:#000;
+  border-radius:18px 18px 4px 18px;
+  font-weight:500;
+}
+.chat-msg.bot .chat-bubble{
+  background:var(--surface2);color:var(--text);
+  border:1px solid var(--border2);
+  border-radius:18px 18px 18px 4px;
+}
+
+/* per-message meta pills */
+.chat-meta{
+  display:flex;align-items:center;gap:6px;
+  padding:0 4px;
+}
+.chat-pill{
+  font-size:10px;font-family:var(--mono);font-weight:600;
+  padding:2px 8px;border-radius:20px;
+  letter-spacing:.3px;
+}
+.chat-pill-gemini{background:rgba(74,222,128,.1); color:var(--green);  border:1px solid rgba(74,222,128,.2);}
+.chat-pill-ollama {background:rgba(251,191,36,.1); color:var(--amber);  border:1px solid rgba(251,191,36,.2);}
+.chat-pill-cache  {background:rgba(99,179,237,.1);  color:var(--blue);   border:1px solid rgba(99,179,237,.2);}
+.chat-pill-error  {background:rgba(248,113,113,.1);color:var(--red);    border:1px solid rgba(248,113,113,.2);}
+.chat-pill-rag    {background:rgba(251,191,36,.08);color:var(--amber);  border:1px solid rgba(251,191,36,.15);}
+.chat-pill-hit    {background:rgba(74,222,128,.08); color:var(--green);  border:1px solid rgba(74,222,128,.15);}
+
+/* input footer */
+.chat-footer{
+  padding:16px 24px 20px;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0;
+}
+.chat-input-wrap{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg);
+  border:1px solid var(--border2);
+  border-radius:28px;
+  padding:6px 6px 6px 18px;
+  transition:border-color .2s;
+}
+.chat-input-wrap:focus-within{border-color:var(--green);}
+.chat-input{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--text);font-family:var(--hindi);font-size:13.5px;
+  line-height:1.5;padding:4px 0;
+}
+.chat-input::placeholder{color:var(--muted);}
+.chat-send-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--green);border:none;color:#000;
+  font-size:16px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.chat-send-btn:hover{background:#6ee7a0;transform:scale(1.05);}
+.chat-send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.chat-mic-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:none;border:none;color:var(--muted);
+  font-size:16px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.chat-mic-btn:hover{color:var(--text);}
+.chat-mic-btn.listening{color:var(--red);animation:mic-pulse .8s ease-in-out infinite;}
+
+/* AI thinking bubble */
+.chat-thinking{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 15px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:18px 18px 18px 4px;
+  width:fit-content;
+}
+.chat-thinking-text{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.dots{display:flex;gap:4px;align-items:center;}
+.dots span{width:6px;height:6px;border-radius:50%;display:block;animation:dbounce .9s ease-in-out infinite;}
+.dots span:nth-child(1){background:var(--green);}
+.dots span:nth-child(2){background:var(--amber);animation-delay:.15s;}
+.dots span:nth-child(3){background:var(--green);opacity:.6;animation-delay:.3s;}
+@keyframes dbounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+
+/* agri theme chat overrides */
+:root.agri .chat-topbar{background:var(--surface);border-bottom-color:var(--border);}
+:root.agri .chat-footer{background:var(--surface);border-top-color:var(--border);}
+:root.agri .chat-input-wrap{background:var(--bg);}
+:root.agri .chat-msg.user .chat-bubble{color:#fff;}
+:root.agri .chat-send-btn{color:#fff;}
+
+/* ── AI Thinking ─────────────────────────────────────────── */
+.ai-thinking{
+  display:flex;align-items:center;gap:9px;padding:10px 14px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:14px 14px 14px 3px;width:fit-content;
+}
+.ai-thinking-text{font-size:11.5px;color:var(--muted);font-family:var(--mono);white-space:nowrap;}
+.dots{display:flex;gap:4px;align-items:center;}
+.dots span{width:6px;height:6px;border-radius:50%;display:block;animation:dbounce .9s ease-in-out infinite;}
+.dots span:nth-child(1){background:var(--green);}
+.dots span:nth-child(2){background:var(--amber);animation-delay:.15s;}
+.dots span:nth-child(3){background:var(--green);opacity:.6;animation-delay:.3s;}
+@keyframes dbounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+
+/* ── Mic button ──────────────────────────────────────────── */
+.mic-btn{
+  width:36px;height:36px;border-radius:7px;
+  border:1px solid var(--border2);background:var(--surface2);
+  color:var(--muted);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;flex-shrink:0;
+}
+.mic-btn:hover{border-color:var(--green);color:var(--green);}
+.mic-btn.listening{background:rgba(248,113,113,.12);border-color:var(--red);color:var(--red);animation:mic-pulse .8s ease-in-out infinite;}
+@keyframes mic-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* ── Toast ───────────────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:22px;right:22px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:9px;padding:11px 18px;
+  font-size:13px;font-family:var(--hindi);
+  opacity:0;transform:translateY(8px);
+  transition:all .25s;z-index:999;max-width:300px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+#toast.show{opacity:1;transform:translateY(0);}
+#toast.ok {border-color:rgba(74,222,128,.5);color:var(--green);}
+#toast.err{border-color:rgba(248,113,113,.5);color:var(--red);}
+
+/* ── Misc helpers ────────────────────────────────────────── */
+.flex-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.mb-16{margin-bottom:16px;}
+.mb-24{margin-bottom:24px;}
+.text-muted{color:var(--muted);}
+.text-mono{font-family:var(--mono);}
+.text-hindi{font-family:var(--hindi);}
+.text-sm{font-size:12px;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media(max-width:720px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding:16px;}
+  .rag-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<aside class="sidebar">
-  <div class="logo">
-    <div class="logo-badge">Admin</div>
-    <h1>🌾 KrashiMitra</h1>
-    <p>v0.1.0 · local</p>
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo-area">
+    <div class="logo-badge">🌾 Admin</div>
+    <div class="logo-title">KrashiMitra</div>
+    <div class="logo-sub">v0.1.0 · pipeline control</div>
   </div>
 
-  <div class="nav-item active" onclick="showPage('status', this)">
-    <span class="icon">📊</span> Status
-  </div>
-  <div class="nav-item" onclick="showPage('uploads', this)">
-    <span class="icon">📄</span> PDFs
-  </div>
-  <div class="nav-item" onclick="showPage('cache', this)">
-    <span class="icon">⚡</span> Cache
-  </div>
-  <div class="nav-item" onclick="showPage('reindex', this)">
-    <span class="icon">🔄</span> Re-index
-  </div>
-  <div class="nav-item" onclick="showPage('chat', this)">
-    <span class="icon">🤖</span> AI Chat
+  <div class="nav-section">
+    <div class="nav-label">Monitor</div>
+    <div class="nav-item active" onclick="showPage('status',this)">
+      <div class="nav-icon-wrap">📊</div>
+      <span>Status</span>
+      <div class="nav-active-dot"></div>
+    </div>
+    <div class="nav-item" onclick="showPage('chat',this)">
+      <div class="nav-icon-wrap">🤖</div>
+      <span>AI Chat</span>
+      <div class="nav-active-dot"></div>
+    </div>
   </div>
 
-  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
-    <div class="toggle-track"><div class="toggle-thumb"></div></div>
-    <span class="toggle-label">🌾 खेत थीम</span>
-  </button>
+  <div class="nav-section">
+    <div class="nav-label">Manage</div>
+    <div class="nav-item" onclick="showPage('settings',this)">
+      <div class="nav-icon-wrap">⚙️</div>
+      <span>Settings</span>
+      <div class="nav-active-dot"></div>
+    </div>
+    <div class="nav-item" onclick="showPage('cache',this)">
+      <div class="nav-icon-wrap">⚡</div>
+      <span>Cache</span>
+      <div class="nav-active-dot"></div>
+    </div>
+    <div class="nav-item" onclick="showPage('uploads',this)">
+      <div class="nav-icon-wrap">📄</div>
+      <span>PDFs / RAG</span>
+      <div class="nav-active-dot"></div>
+    </div>
+    <div class="nav-item" onclick="showPage('reindex',this)">
+      <div class="nav-icon-wrap">🔄</div>
+      <span>Re-index</span>
+      <div class="nav-active-dot"></div>
+    </div>
+  </div>
+
+  <div class="sidebar-spacer"></div>
+
+  <div class="theme-row">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">
+      <div class="sw-mini-track" id="theme-track"><div class="sw-mini-thumb"></div></div>
+      <span class="theme-lbl">🌾 खेत थीम</span>
+    </button>
+  </div>
 
   <div class="sidebar-footer">
-    API: <span style="color:var(--green)">https://krashi-mitra-v1.onrender.com</span><br>
-    <span id="clock"></span>
+    <span style="color:var(--green)" id="api-base-display">—</span><br>
+    <span id="clock" style="opacity:.6;"></span>
   </div>
 </aside>
 
-<!-- Main -->
+<!-- ══════════ MAIN ══════════ -->
 <main class="main">
 
-  <!-- STATUS PAGE -->
-  <div class="page active" id="page-status">
-    <div class="page-header">
-      <div>
-        <h2>System Status</h2>
-        <p>सभी सेवाओं की स्थिति</p>
-      </div>
-      <button class="btn btn-ghost" onclick="loadStatus()">↻ Refresh</button>
+<!-- ─────────────── STATUS ─────────────── -->
+<div class="page active" id="page-status">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>System Status</h2>
+      <p>Pipeline health: Cache → RAG → AI · सभी सेवाओं की स्थिति</p>
     </div>
-
-    <div class="cards" id="status-cards">
-      <div class="card">
-        <div class="card-label">Gemini API</div>
-        <div class="card-value warn" id="s-gemini">—</div>
-        <div class="card-sub" id="s-gemini-sub">checking...</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Ollama</div>
-        <div class="card-value warn" id="s-ollama">—</div>
-        <div class="card-sub" id="s-ollama-sub">checking...</div>
-      </div>
-      <div class="card">
-        <div class="card-label">ChromaDB Chunks</div>
-        <div class="card-value ok" id="s-chroma">—</div>
-        <div class="card-sub">indexed documents</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Cache Entries</div>
-        <div class="card-value ok" id="s-cache">—</div>
-        <div class="card-sub">saved Q&amp;A pairs</div>
-      </div>
-    </div>
-
-    <!-- RAG Inspector -->
-    <div class="section-title">RAG Inspector</div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:28px;">
-      <div class="row" style="margin-bottom:12px;">
-        <input id="rag-q" type="text" placeholder="कोई भी सवाल लिखें — देखें RAG क्या retrieve करता है..." onkeydown="if(event.key==='Enter'){event.preventDefault();testRAG();}"
-          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--hindi);font-size:13px;outline:none;">
-        <select id="rag-crop" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
-          <option value="wheat_up">🌾 Wheat</option>
-          <option value="rice">🌾 Rice</option>
-          <option value="mustard">🌿 Mustard</option>
-          <option value="potato">🥔 Potato</option>
-          <option value="general">📚 General</option>
-        </select>
-        <button class="btn btn-amber" onclick="testRAG()">🔍 Inspect RAG</button>
-        <button class="mic-btn" id="mic-rag" onclick="startMic('rag-q', 'mic-rag')" title="बोलें">🎤</button>
-      </div>
-      <div id="rag-result" style="display:none;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
-            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📚 RAG Retrieved Chunks</div>
-            <div id="rag-chunks" style="font-size:12px;font-family:var(--hindi);line-height:1.7;color:var(--text);max-height:160px;overflow-y:auto;"></div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;">
-            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">🤖 AI Answer</div>
-            <div id="rag-answer" style="font-size:13px;font-family:var(--hindi);line-height:1.7;color:var(--text);max-height:160px;overflow-y:auto;"></div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <span id="rag-source-badge" style="font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:3px;background:var(--green-dim);color:var(--green);">SOURCE</span>
-          <span id="rag-chunks-count" style="font-size:11px;color:var(--muted);font-family:var(--mono);"></span>
-          <span id="rag-from-rag" style="font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:3px;"></span>
-        </div>
-      </div>
-      <div id="rag-loading" style="display:none;margin-top:12px;">
-        <div class="rag-pipeline" id="rag-pipeline">
-          <div class="pipeline-step" id="step-1"><span class="step-icon">🔍</span> ChromaDB में खोज रहे हैं...</div>
-          <div class="pipeline-step" id="step-2"><span class="step-icon">📚</span> Relevant chunks retrieve हो रहे हैं...</div>
-          <div class="pipeline-step" id="step-3"><span class="step-icon">🤖</span> AI answer generate कर रहा है...</div>
-          <div class="pipeline-step" id="step-4"><span class="step-icon">✅</span> उत्तर तैयार हो रहा है...</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-title">Quick Test</div>
-    <div class="row">
-      <input id="test-q" type="text" placeholder="गेहूं में पीले धब्बे क्यों होते हैं?" onkeydown="if(event.key==='Enter'){event.preventDefault();testAsk();}"
-        style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--hindi);font-size:13px;outline:none;">
-      <button class="btn btn-green" onclick="testAsk()">Ask →</button>
-      <button class="mic-btn" id="mic-test" onclick="startMic('test-q', 'mic-test')" title="बोलें">🎤</button>
-    </div>
-    <div class="log-box" id="test-log">// Test response will appear here...</div>
-  </div>
-
-  <!-- UPLOADS PAGE -->
-  <div class="page" id="page-uploads">
-    <div class="page-header">
-      <div>
-        <h2>Knowledge PDFs</h2>
-        <p>कृषि दस्तावेज़ अपलोड करें</p>
-      </div>
-    </div>
-
-    <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <input type="file" id="file-input" accept=".pdf" onchange="uploadFile(this)">
-      <div class="icon">📄</div>
-      <h3>PDF Drop करें या Click करें</h3>
-      <p>कृषि गाइड, सरकारी योजनाएं, फसल मैनुअल — सभी PDF स्वीकार</p>
-    </div>
-
-    <div id="upload-progress" style="display:none;margin-bottom:16px;">
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
-        <div id="progress-bar" style="height:100%;background:var(--green);width:0%;transition:width .3s;"></div>
-      </div>
-      <p style="font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--mono);" id="progress-label">Uploading...</p>
-    </div>
-
-    <div class="section-title">Uploaded Files</div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead>
-        <tbody id="files-tbody">
-          <tr><td colspan="4" style="color:var(--muted);font-family:var(--mono);">Loading...</td></tr>
-        </tbody>
-      </table>
+    <div class="page-header-actions">
+      <button class="btn btn-ghost" onclick="loadStatus()" id="refresh-btn">↻ Refresh</button>
     </div>
   </div>
 
-  <!-- CACHE PAGE -->
-  <div class="page" id="page-cache">
-    <div class="page-header">
-      <div>
-        <h2>Cache Manager</h2>
-        <p>सहेजे गए सवाल-जवाब</p>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost" onclick="loadCache()">↻ Refresh</button>
-        <button class="btn btn-red" onclick="clearCache()">🗑 Clear All</button>
-      </div>
+  <!-- Status cards -->
+  <div class="cards" id="status-cards">
+    <div class="card" data-ok>
+      <span class="card-icon">🔑</span>
+      <div class="card-label">Gemini API</div>
+      <div class="card-value warn" id="s-gemini">—</div>
+      <div class="card-sub" id="s-gemini-sub">checking…</div>
     </div>
-
-    <div class="cards">
-      <div class="card">
-        <div class="card-label">Total Cached</div>
-        <div class="card-value ok" id="c-total">—</div>
-        <div class="card-sub">Q&A pairs</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Total Hits</div>
-        <div class="card-value ok" id="c-hits">—</div>
-        <div class="card-sub">API calls saved</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Cache Size</div>
-        <div class="card-value ok" id="c-size">—</div>
-        <div class="card-sub">KB on disk</div>
-      </div>
+    <div class="card" data-info>
+      <span class="card-icon">🤖</span>
+      <div class="card-label">Active Model</div>
+      <div class="card-value info" id="s-model" style="font-size:13px;margin-top:8px;line-height:1.3;">—</div>
+      <div class="card-sub">Gemini model</div>
     </div>
-
-    <div class="section-title">Top Questions (by hits)</div>
-
-    <!-- ── Add Q&A entry ── -->
-    <div class="add-qa-panel" id="add-qa-panel">
-      <button class="add-qa-toggle" id="add-qa-toggle" onclick="toggleAddQA()" type="button">
-        <span>✏️ &nbsp;नया Q&amp;A Cache में जोड़ें</span>
-        <span class="toggle-icon">+</span>
-      </button>
-      <div class="add-qa-body" id="add-qa-body">
-        <div class="add-qa-field">
-          <label class="add-qa-label" for="qa-question">Question (सवाल)</label>
-          <input class="add-qa-input" id="qa-question"
-                 placeholder="जैसे: गेहूं में पानी कब दें?"
-                 oninput="updateQACount()" autocomplete="off">
-        </div>
-        <div class="add-qa-field">
-          <label class="add-qa-label" for="qa-answer">Answer (जवाब)</label>
-          <textarea class="add-qa-textarea" id="qa-answer"
-                    placeholder="जैसे: गेहूं में पहली सिंचाई बुवाई के 20-25 दिन बाद करें।"
-                    oninput="updateQACount()"></textarea>
-        </div>
-        <div class="add-qa-actions">
-          <button class="btn btn-green" onclick="addCacheEntry()" id="add-qa-btn" type="button" disabled>
-            💾 Cache में Save करें
-          </button>
-          <button class="btn btn-ghost" onclick="clearQAForm()" type="button">Clear</button>
-          <span class="add-qa-charcount" id="qa-charcount">Q: 0 &nbsp;|&nbsp; A: 0</span>
-        </div>
-      </div>
+    <div class="card" data-ok>
+      <span class="card-icon">⚡</span>
+      <div class="card-label">Semantic Cache</div>
+      <div class="card-value ok" id="s-semantic">—</div>
+      <div class="card-sub">vector match</div>
     </div>
-
-    <div class="q-list" id="q-list">
-      <div style="color:var(--muted);font-family:var(--mono);font-size:13px;">Loading cache data...</div>
+    <div class="card" data-warn>
+      <span class="card-icon">🦙</span>
+      <div class="card-label">Ollama</div>
+      <div class="card-value warn" id="s-ollama">—</div>
+      <div class="card-sub" id="s-ollama-sub">fallback AI</div>
+    </div>
+    <div class="card" data-ok>
+      <span class="card-icon">🔍</span>
+      <div class="card-label">ChromaDB</div>
+      <div class="card-value ok" id="s-chroma">—</div>
+      <div class="card-sub">indexed chunks</div>
+    </div>
+    <div class="card" data-ok>
+      <span class="card-icon">💾</span>
+      <div class="card-label">Cache</div>
+      <div class="card-value ok" id="s-cache">—</div>
+      <div class="card-sub">Q&amp;A pairs saved</div>
     </div>
   </div>
 
-  <!-- RE-INDEX PAGE -->
-  <div class="page" id="page-reindex">
-    <div class="page-header">
-      <div>
-        <h2>Re-index Knowledge</h2>
-        <p>ChromaDB को अपडेट करें</p>
-      </div>
+  <!-- RAG Inspector -->
+  <div class="sec-label">RAG Inspector</div>
+  <div class="panel mb-24">
+    <div class="panel-head">
+      <span class="panel-title">🔍 Test what RAG retrieves for any question</span>
     </div>
-
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:24px;">
-      <h3 style="font-size:15px;margin-bottom:8px;">🔄 Full Re-index</h3>
-      <p style="font-size:13px;color:var(--muted);font-family:var(--hindi);margin-bottom:16px;">
-        सभी seed data और uploaded PDFs को ChromaDB में फिर से index करता है।
-        नए PDF अपलोड के बाद यह चलाएं।
-      </p>
-      <button class="btn btn-amber" onclick="runReindex()" id="reindex-btn">
-        ⚡ Run Re-index
-      </button>
-    </div>
-
-    <div class="section-title">Index Log</div>
-    <div class="log-box" id="reindex-log">// Re-index output will appear here...</div>
-  </div>
-
-  <!-- CHAT PAGE -->
-  <div class="page" id="page-chat">
-    <div class="page-header">
-      <div>
-        <h2>🤖 AI Chat Test</h2>
-        <p>पूरी बातचीत करें — multi-turn chat with RAG + AI</p>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <select id="chat-crop" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
+    <div class="panel-body">
+      <div class="flex-row mb-16">
+        <input class="inp" id="rag-q" type="text"
+          placeholder="कोई भी सवाल — RAG क्या retrieve करता है देखें…"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();testRAG();}">
+        <select class="s-select" id="rag-crop">
           <option value="wheat_up">🌾 Wheat UP</option>
-          <option value="rice">🌾 Rice</option>
+          <option value="rice_up">🌾 Rice UP</option>
+          <option value="sugarcane_up">🎋 Sugarcane UP</option>
           <option value="mustard">🌿 Mustard</option>
           <option value="potato">🥔 Potato</option>
           <option value="general">📚 General</option>
         </select>
-        <select id="chat-lang" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
-          <option value="hindi">हिंदी</option>
-          <option value="english">English</option>
-        </select>
-        <button class="btn btn-ghost" onclick="clearAdminChat()">🗑 Clear</button>
+        <button class="btn btn-amber" onclick="testRAG()">Inspect →</button>
+        <button class="mic-btn" id="mic-rag" onclick="startMic('rag-q','mic-rag')" title="बोलें">🎤</button>
       </div>
-    </div>
 
-    <!-- Chat messages -->
-    <div id="admin-chat-messages" style="
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:20px;
-      height:420px;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      margin-bottom:16px;
-      scroll-behavior:smooth;
-    ">
-      <div style="text-align:center;color:var(--muted);font-family:var(--hindi);font-size:13px;margin:auto;">
-        🌾 कोई भी कृषि सवाल पूछें...
+      <div id="rag-loading" style="display:none;">
+        <div class="pipeline-viz">
+          <div class="pipe-step" id="step-1"><span class="pipe-step-icon">⚡</span>Cache में खोज रहे हैं…</div>
+          <div class="pipe-step" id="step-2"><span class="pipe-step-icon">🔍</span>ChromaDB में semantic search…</div>
+          <div class="pipe-step" id="step-3"><span class="pipe-step-icon">🤖</span>AI answer generate कर रहा है…</div>
+          <div class="pipe-step" id="step-4"><span class="pipe-step-icon">✅</span>उत्तर तैयार हो रहा है…</div>
+        </div>
       </div>
-    </div>
 
-    <!-- Source indicator bar -->
-    <div id="admin-source-bar" style="display:none;margin-bottom:10px;padding:8px 14px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:12px;align-items:center;">
-      Last answer from: <span id="admin-last-source" style="color:var(--green);font-weight:700;">—</span>
-      &nbsp;|&nbsp; RAG chunks used: <span id="admin-rag-used" style="color:var(--amber);">—</span>
-    </div>
-
-    <!-- Input -->
-    <div style="display:flex;gap:10px;">
-      <input id="admin-chat-input" type="text"
-        placeholder="गेहूं में कौन सी खाद डालें? / What fertilizer for wheat?"
-        style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:var(--hindi);font-size:14px;outline:none;transition:border-color .2s;"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();sendAdminChat();}"
-        onfocus="this.style.borderColor='var(--green)'"
-        onblur="this.style.borderColor='var(--border)'">
-      <button class="mic-btn" id="mic-chat" onclick="startMic('admin-chat-input', 'mic-chat')" title="बोलें" style="width:46px;height:46px;font-size:18px;">🎤</button>
-      <button class="btn btn-green" id="admin-send-btn" onclick="sendAdminChat()" style="padding:12px 24px;font-size:14px;">
-        Send ↵
-      </button>
+      <div id="rag-result" style="display:none;">
+        <div class="rag-grid">
+          <div class="rag-pane">
+            <div class="rag-pane-label">📚 RAG Chunks Retrieved</div>
+            <div class="rag-pane-body" id="rag-chunks"></div>
+          </div>
+          <div class="rag-pane">
+            <div class="rag-pane-label">🤖 AI Answer</div>
+            <div class="rag-pane-body" id="rag-answer"></div>
+          </div>
+        </div>
+        <div class="flex-row">
+          <span id="rag-source-badge" class="tag tag-green">SOURCE</span>
+          <span id="rag-chunks-count" class="text-muted text-mono text-sm"></span>
+          <span id="rag-from-rag" class="tag"></span>
+        </div>
+      </div>
     </div>
   </div>
 
-</main>
+  <!-- Quick test -->
+  <div class="sec-label">Quick Test</div>
+  <div class="flex-row mb-16">
+    <input class="inp" id="test-q" type="text"
+      placeholder="गेहूं में पीले धब्बे क्यों होते हैं?"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();testAsk();}">
+    <button class="btn btn-green" onclick="testAsk()">Ask →</button>
+    <button class="mic-btn" id="mic-test" onclick="startMic('test-q','mic-test')">🎤</button>
+  </div>
+  <div class="log-box" id="test-log">// Test response will appear here…</div>
+</div>
+
+
+<!-- ─────────────── SETTINGS ─────────────── -->
+<div class="page" id="page-settings">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>⚙️ Pipeline Settings</h2>
+      <p>Cache → RAG → AI pipeline को runtime में control करें — no restart needed</p>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn btn-ghost" onclick="loadSettings()">↻ Reload</button>
+      <button class="btn btn-green" onclick="saveSettings()" id="save-settings-btn">💾 Save</button>
+    </div>
+  </div>
+
+  <div class="info-banner">
+    ⚡&nbsp; Changes apply instantly. They reset to <code>.env</code> defaults on server restart.
+  </div>
+
+  <!-- AI Engine -->
+  <div class="settings-group">
+    <div class="settings-group-head">🤖 AI Engine</div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">Gemini Model</div>
+        <div class="setting-desc">gemini-1.5-flash — fast, cheap, no thinking tokens (recommended). gemini-2.5-flash drains quota via hidden thinking tokens.</div>
+      </div>
+      <div class="setting-control">
+        <select class="s-select" id="set-model">
+          <option value="gemini-1.5-flash">gemini-1.5-flash ⚡ (Recommended)</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash ⚠️</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">Gemini Timeout (seconds)</div>
+        <div class="setting-desc">Wait time per Gemini key before trying the next. 15s is a safe default.</div>
+      </div>
+      <div class="setting-control">
+        <input type="number" class="s-num" id="set-gemini-timeout" min="5" max="30" value="15">
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">Ollama Fallback</div>
+        <div class="setting-desc">Use local Ollama when all Gemini keys fail. Requires OLLAMA_BASE_URL.</div>
+      </div>
+      <div class="setting-control">
+        <button class="sw-track" id="sw-ollama" onclick="toggleSwitch('sw-ollama','set-ollama')">
+          <div class="sw-thumb"></div>
+        </button>
+        <input type="hidden" id="set-ollama" value="false">
+      </div>
+    </div>
+  </div>
+
+  <!-- Cache Engine -->
+  <div class="settings-group">
+    <div class="settings-group-head">⚡ Cache Engine</div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">Semantic Cache</div>
+        <div class="setting-desc">Vector-similarity matching — similar questions return the same cached answer without hitting Gemini. Highly recommended.</div>
+      </div>
+      <div class="setting-control">
+        <button class="sw-track" id="sw-semantic" onclick="toggleSwitch('sw-semantic','set-semantic')">
+          <div class="sw-thumb"></div>
+        </button>
+        <input type="hidden" id="set-semantic" value="true">
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeouts -->
+  <div class="settings-group">
+    <div class="settings-group-head">⏱️ Pipeline Timeout</div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-label">Pipeline Timeout (seconds)</div>
+        <div class="setting-desc">Total time for Cache → RAG → AI. Must stay under 60s (Render gateway limit).</div>
+      </div>
+      <div class="setting-control">
+        <input type="number" class="s-num" id="set-pipeline-timeout" min="20" max="58" value="50">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">Live Settings (from server)</div>
+  <div class="log-box" id="settings-log">// Click Reload to fetch current server settings…</div>
+</div>
+
+
+<!-- ─────────────── CACHE ─────────────── -->
+<div class="page" id="page-cache">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>⚡ Cache Manager</h2>
+      <p>सहेजे गए सवाल-जवाब — पहला gate in the pipeline</p>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn btn-ghost" onclick="loadCache()">↻ Refresh</button>
+      <button class="btn btn-red" onclick="clearCache()">🗑 Clear All</button>
+    </div>
+  </div>
+
+  <div class="cards mb-24">
+    <div class="card" data-ok>
+      <span class="card-icon">📦</span>
+      <div class="card-label">Total Cached</div>
+      <div class="card-value ok" id="c-total">—</div>
+      <div class="card-sub">Q&amp;A pairs</div>
+    </div>
+    <div class="card" data-ok>
+      <span class="card-icon">🎯</span>
+      <div class="card-label">Total Hits</div>
+      <div class="card-value ok" id="c-hits">—</div>
+      <div class="card-sub">API calls saved</div>
+    </div>
+    <div class="card" data-info>
+      <span class="card-icon">💾</span>
+      <div class="card-label">Cache Size</div>
+      <div class="card-value info" id="c-size">—</div>
+      <div class="card-sub">on disk</div>
+    </div>
+    <div class="card" data-ok>
+      <span class="card-icon">🧠</span>
+      <div class="card-label">Semantic</div>
+      <div class="card-value ok" id="c-semantic">—</div>
+      <div class="card-sub">vector search</div>
+    </div>
+  </div>
+
+  <!-- Cache search test -->
+  <div class="sec-label">Cache Search Test</div>
+  <div class="panel mb-24">
+    <div class="panel-body">
+      <p class="text-sm text-muted text-hindi mb-16">कोई भी सवाल टाइप करें — देखें क्या यह cache में मिलता है बिना AI call के।</p>
+      <div class="flex-row">
+        <input class="inp" id="cache-test-q" type="text"
+          placeholder="जैसे: गेहूं में पानी कब दें?"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();testCacheSearch();}">
+        <button class="btn btn-blue" onclick="testCacheSearch()">⚡ Test Hit</button>
+      </div>
+      <div id="cache-test-result" class="cache-test-result"></div>
+    </div>
+  </div>
+
+  <!-- Add Q&A -->
+  <div class="sec-label">Add Q&amp;A</div>
+  <div class="panel mb-24">
+    <button class="acc-head" id="acc-toggle" onclick="toggleAddQA()" type="button">
+      <span>✏️ &nbsp;नया Q&amp;A Cache में जोड़ें</span>
+      <span class="acc-arrow">+</span>
+    </button>
+    <div class="acc-body" id="acc-body">
+      <div>
+        <div class="field-label">Question (सवाल)</div>
+        <input class="inp" id="qa-question" placeholder="जैसे: गेहूं में पानी कब दें?" oninput="updateQACount()" autocomplete="off">
+      </div>
+      <div>
+        <div class="field-label">Answer (जवाब)</div>
+        <textarea class="inp" id="qa-answer" rows="3" style="resize:vertical;line-height:1.6;"
+          placeholder="जैसे: गेहूं में पहली सिंचाई बुवाई के 20-25 दिन बाद करें।" oninput="updateQACount()"></textarea>
+      </div>
+      <div class="flex-row">
+        <button class="btn btn-green" onclick="addCacheEntry()" id="add-qa-btn" type="button" disabled>💾 Save to Cache</button>
+        <button class="btn btn-ghost" onclick="clearQAForm()" type="button">Clear</button>
+        <span class="text-muted text-mono text-sm" id="qa-charcount" style="margin-left:auto;">Q: 0 | A: 0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q list -->
+  <div class="sec-label">Top Questions (by hits)</div>
+  <div class="q-list" id="q-list">
+    <div class="text-muted text-mono text-sm">Loading cache data…</div>
+  </div>
+</div>
+
+
+<!-- ─────────────── UPLOADS / RAG ─────────────── -->
+<div class="page" id="page-uploads">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>📄 Knowledge PDFs</h2>
+      <p>कृषि दस्तावेज़ अपलोड करें — RAG knowledge base में जुड़ेंगे</p>
+    </div>
+  </div>
+
+  <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <input type="file" id="file-input" accept=".pdf" onchange="uploadFile(this)">
+    <span class="uz-icon">📄</span>
+    <h3>PDF Drop करें या Click करें</h3>
+    <p>कृषि गाइड, सरकारी योजनाएं, फसल मैनुअल — सभी PDF स्वीकार</p>
+  </div>
+
+  <div id="upload-progress" style="display:none;" class="mb-16">
+    <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;">
+      <div id="progress-bar" style="height:100%;background:var(--green);width:0%;transition:width .3s;"></div>
+    </div>
+    <p class="text-sm text-muted text-mono" style="margin-top:6px;" id="progress-label">Uploading…</p>
+  </div>
+
+  <div class="sec-label">Uploaded Files</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead>
+      <tbody id="files-tbody">
+        <tr><td colspan="4" class="text-muted text-mono">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ─────────────── RE-INDEX ─────────────── -->
+<div class="page" id="page-reindex">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>🔄 Re-index Knowledge</h2>
+      <p>ChromaDB को अपडेट करें — RAG के लिए</p>
+    </div>
+  </div>
+
+  <div class="panel mb-24">
+    <div class="panel-head">
+      <span class="panel-title">🔄 Full Re-index</span>
+    </div>
+    <div class="panel-body">
+      <p class="text-sm text-hindi text-muted mb-16">
+        सभी seed data और uploaded PDFs को ChromaDB में फिर से index करता है।
+        नए PDF अपलोड के बाद या <code>agri_knowledge.json</code> update के बाद यह चलाएं।
+      </p>
+      <button class="btn btn-amber" onclick="runReindex()" id="reindex-btn">⚡ Run Re-index</button>
+    </div>
+  </div>
+
+  <div class="sec-label">Index Log</div>
+  <div class="log-box" id="reindex-log">// Re-index output will appear here…</div>
+</div>
+
+
+<!-- ─────────────── AI CHAT ─────────────── -->
+<div class="page" id="page-chat">
+
+  <!-- Top bar -->
+  <div class="chat-topbar">
+    <div class="chat-topbar-title">
+      <h2>🤖 AI Chat</h2>
+      <span class="chat-pipe-badge" id="admin-source-bar">
+        <span id="admin-last-source">—</span>
+        &nbsp;·&nbsp; <span id="admin-rag-used" style="color:var(--amber);">—</span>
+        &nbsp;·&nbsp; <span id="admin-cache-info">—</span>
+      </span>
+    </div>
+    <div class="chat-topbar-controls">
+      <select id="chat-crop">
+        <option value="wheat_up">🌾 Wheat UP</option>
+        <option value="rice_up">🌾 Rice UP</option>
+        <option value="sugarcane_up">🎋 Sugarcane</option>
+        <option value="mustard">🌿 Mustard</option>
+        <option value="potato">🥔 Potato</option>
+        <option value="general">📚 General</option>
+      </select>
+      <select id="chat-lang">
+        <option value="hindi">हिंदी</option>
+        <option value="english">English</option>
+      </select>
+      <button class="chat-clear-btn" onclick="clearAdminChat()" title="Clear chat">🗑</button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div id="admin-chat-messages" class="chat-area">
+    <div class="chat-empty-state">
+      <div class="chat-empty-icon">🌾</div>
+      <div class="chat-empty-text">
+        कोई भी कृषि सवाल पूछें<br>
+        <span style="font-size:11px;opacity:.6;">Cache → RAG → AI pipeline live test</span>
+      </div>
+      <div class="chat-suggestions">
+        <span class="chat-suggestion" onclick="fillChat('गेहूं में कौन सी खाद डालें?')">गेहूं में खाद?</span>
+        <span class="chat-suggestion" onclick="fillChat('धान में सिंचाई कब करें?')">धान में सिंचाई?</span>
+        <span class="chat-suggestion" onclick="fillChat('गन्ने की बुवाई का सही समय?')">गन्ने की बुवाई?</span>
+        <span class="chat-suggestion" onclick="fillChat('आलू में कौन सी बीमारी लगती है?')">आलू की बीमारी?</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input footer -->
+  <div class="chat-footer">
+    <div class="chat-input-wrap">
+      <button class="chat-mic-btn" id="mic-chat" onclick="startMic('admin-chat-input','mic-chat')" title="बोलें">🎤</button>
+      <input id="admin-chat-input" class="chat-input" type="text"
+        placeholder="कोई भी कृषि सवाल पूछें…"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();sendAdminChat();}">
+      <button class="chat-send-btn" id="admin-send-btn" onclick="sendAdminChat()" title="Send">↑</button>
+    </div>
+  </div>
+
+</div>
+
+</main><!-- /main -->
 
 <div id="toast"></div>
 
 <script>
-const API='https://krashi-mitra-v1.onrender.com';
-function getAdminAuth(){let e=localStorage.getItem('km_admin_auth');if(!e){const u=prompt('Admin username','admin')||'admin',p=prompt('Admin password')||'';e=btoa(`${u}:${p}`);localStorage.setItem('km_admin_auth',e);}return'Basic '+e;}
-function resetAdminAuth(){localStorage.removeItem('km_admin_auth');toast('Admin login reset. Refresh and enter credentials again.','ok');}
-const AUTH=getAdminAuth();
-setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-IN');},1000);
-function showPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');el.classList.add('active');if(name==='status')loadStatus();if(name==='uploads')loadFiles();if(name==='cache')loadCache();}
-function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;setTimeout(()=>t.className='',3000);}
-async function safeJson(r){const raw=await r.text();try{return raw?JSON.parse(raw):{};}catch(_){return{_raw:raw};}}
+// ── Config ──────────────────────────────────────────────────
+const API=(()=>{
+  const h=window.location.hostname;
+  if(h==='localhost'||h==='127.0.0.1') return 'http://localhost:8000';
+  return window.location.origin;
+})();
+document.getElementById('api-base-display').textContent=API;
 
-async function loadStatus(){
-  const btn=document.querySelector('#page-status .btn-ghost');
-  if(btn){btn.innerHTML='<span style="display:inline-block;animation:spin .7s linear infinite;margin-right:4px;">\u21bb</span> Loading';btn.disabled=true;}
-  try{
-    const r=await fetch(`${API}/admin/status`,{headers:{Authorization:AUTH,'Content-Type':'application/json'}});
-    const d=await safeJson(r);
-    if(!r.ok)throw new Error(`Server error ${r.status}: ${d.detail||d.message||(d._raw||'').slice(0,160)||'empty'}`);
-    setCard('s-gemini',d.gemini_configured?'\u2713':'\u2717',d.gemini_configured?'ok':'err',d.gemini_configured?'Key configured':'Key not set');
-    setCard('s-ollama',d.ollama_running?'\u2713':'\u2717',d.ollama_running?'ok':'warn',d.ollama_running?d.ollama_model:'Not running');
-    document.getElementById('s-chroma').textContent=d.chroma_chunks??'\u2014';
-    document.getElementById('s-cache').textContent=d.cache_entries??'\u2014';
-  }catch(e){toast('Backend \u0938\u0947 connect \u0928\u0939\u0940\u0902 \u0939\u094b \u092a\u093e\u092f\u093e: '+e.message,'err');}
-  finally{if(btn){btn.textContent='\u21bb Refresh';btn.disabled=false;}}
+function getAdminAuth(){
+  let e=localStorage.getItem('km_admin_auth');
+  if(!e){
+    const u=prompt('Admin username','admin')||'admin';
+    const p=prompt('Admin password')||'';
+    e=btoa(`${u}:${p}`);
+    localStorage.setItem('km_admin_auth',e);
+  }
+  return 'Basic '+e;
 }
-function setCard(id,val,cls,sub){const el=document.getElementById(id);el.textContent=val;el.className=`card-value ${cls}`;if(sub)document.getElementById(id+'-sub').textContent=sub;}
+const AUTH=getAdminAuth();
+
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-IN');},1000);
+
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='status')   loadStatus();
+  if(name==='uploads')  loadFiles();
+  if(name==='cache')    loadCache();
+  if(name==='settings') loadSettings();
+}
+
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`show ${type}`;
+  setTimeout(()=>t.className='',3200);
+}
+async function safeJson(r){
+  const raw=await r.text();
+  try{return raw?JSON.parse(raw):{};}catch(_){return{_raw:raw};}
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── Status ──────────────────────────────────────────────────
+async function loadStatus(){
+  const btn=document.getElementById('refresh-btn');
+  btn.textContent='↻ Loading…'; btn.disabled=true;
+  try{
+    const r=await fetch(`${API}/admin/status`,{headers:{Authorization:AUTH}});
+    const d=await safeJson(r);
+    if(!r.ok) throw new Error(`${r.status}: ${d.detail||d._raw||''}`);
+    setCard('s-gemini',d.gemini_configured?'✓':'✗',d.gemini_configured?'ok':'err',
+      d.gemini_configured?`${d.gemini_keys_count} key(s) set`:'No key set');
+    const mEl=document.getElementById('s-model');
+    mEl.textContent=d.current_model||'—';
+    document.getElementById('s-semantic').textContent=d.semantic_cache?'ON':'OFF';
+    document.getElementById('s-semantic').className=`card-value ${d.semantic_cache?'ok':'warn'}`;
+    setCard('s-ollama',d.ollama_running?'✓':'✗',d.ollama_running?'ok':'warn',
+      d.ollama_running?d.ollama_model:(d.ollama_enabled?'Enabled, not running':'Disabled'));
+    document.getElementById('s-chroma').textContent=d.chroma_chunks??'—';
+    document.getElementById('s-cache').textContent =d.cache_entries??'—';
+  }catch(e){toast('Backend से connect नहीं: '+e.message,'err');}
+  finally{btn.textContent='↻ Refresh';btn.disabled=false;}
+}
+function setCard(id,val,cls,sub){
+  const el=document.getElementById(id);
+  el.textContent=val; el.className=`card-value ${cls}`;
+  const s=document.getElementById(id+'-sub');
+  if(s&&sub)s.textContent=sub;
+}
 
 async function testAsk(){
-  const q=document.getElementById('test-q').value.trim();if(!q)return;
+  const q=document.getElementById('test-q').value.trim(); if(!q) return;
   const log=document.getElementById('test-log');
-  log.innerHTML='<span class="log-warn">AI \u0915\u094b \u0938\u0935\u093e\u0932 \u092d\u0947\u091c\u093e \u091c\u093e \u0930\u0939\u093e \u0939\u0948...</span>';
+  log.innerHTML='<span class="log-warn">Sending to pipeline…</span>';
   try{
-    const r=await fetch(`${API}/ask`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,crop:'wheat_up',language:'hindi',district:'Meerut',user_id:null})});
+    const r=await fetch(`${API}/ask`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({q,crop:'wheat_up',language:'hindi',district:'Meerut',user_id:null})});
     const d=await safeJson(r);
-    if(!r.ok){log.innerHTML=`<span class="log-err">\u274c Server error ${r.status}: ${escHtml(d.detail||d.message||d._raw||'')}</span>`;return;}
+    if(!r.ok){log.innerHTML=`<span class="log-err">❌ ${r.status}: ${esc(d.detail||d._raw||'')}</span>`;return;}
     const src=d.source||'unknown';
-    const cached=d.cached?' \u2022 <span style="color:var(--amber)">[CACHE HIT \u2014 API saved \u2705]</span>':'';
-    log.innerHTML=`<span class="log-ok">[${src.toUpperCase()}]${cached}</span>\n\n`+escHtml(d.answer||d.message||JSON.stringify(d));
-  }catch(e){log.innerHTML=`<span class="log-err">\u274c Network error: ${escHtml(e.message)}</span>`;}
+    const cached=d.cached?` · <span style="color:var(--amber)">[CACHE HIT ✅]</span>`:'';
+    log.innerHTML=`<span class="log-ok">[${src.toUpperCase()}]</span>${cached}\n\n`+esc(d.answer||d.message||JSON.stringify(d));
+  }catch(e){log.innerHTML=`<span class="log-err">❌ Network: ${esc(e.message)}</span>`;}
 }
 
+async function testRAG(){
+  const q=document.getElementById('rag-q').value.trim();
+  const crop=document.getElementById('rag-crop').value;
+  if(!q) return;
+  document.getElementById('rag-result').style.display='none';
+  document.getElementById('rag-loading').style.display='block';
+  const steps=['step-1','step-2','step-3','step-4'];
+  steps.forEach(s=>document.getElementById(s).classList.remove('active','done'));
+  let si=0;
+  const st=setInterval(()=>{
+    if(si>0) document.getElementById(steps[si-1]).classList.add('done');
+    if(si<steps.length){document.getElementById(steps[si]).classList.add('active');si++;}
+    else clearInterval(st);
+  },600);
+  try{
+    const r=await fetch(`${API}/ask`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({q,crop,language:'hindi',district:'Meerut'})});
+    const d=await safeJson(r);
+    clearInterval(st);
+    steps.forEach(s=>document.getElementById(s).classList.add('done'));
+    setTimeout(()=>{document.getElementById('rag-loading').style.display='none';document.getElementById('rag-result').style.display='block';},380);
+    if(!r.ok){document.getElementById('rag-chunks').textContent=`Error ${r.status}: ${d.detail||d._raw||''}`;return;}
+    const source=d.source||'unknown', fromRAG=d.rag_chunks&&d.rag_chunks>0;
+    document.getElementById('rag-answer').textContent=d.answer||'—';
+    const chunksEl=document.getElementById('rag-chunks');
+    chunksEl.innerHTML=d.rag_context
+      ?esc(d.rag_context).replace(/\n/g,'<br>')
+      :'<span style="color:var(--muted)">No chunks found — ChromaDB empty? Run Re-index.</span>';
+    const badge=document.getElementById('rag-source-badge');
+    const colors={gemini:'green',ollama:'amber',cache:'blue',error:'red'};
+    badge.textContent=source.toUpperCase();
+    badge.className=`tag tag-${colors[source]||'amber'}`;
+    document.getElementById('rag-chunks-count').textContent=d.rag_chunks?`${d.rag_chunks} chunks`:'';
+    const rb=document.getElementById('rag-from-rag');
+    rb.textContent=fromRAG?'✅ RAG used':'⚠️ RAG not used';
+    rb.className=`tag tag-${fromRAG?'green':'amber'}`;
+  }catch(e){
+    clearInterval(st);
+    document.getElementById('rag-loading').style.display='none';
+    document.getElementById('rag-chunks').textContent='Network error: '+e.message;
+    document.getElementById('rag-result').style.display='block';
+  }
+}
+
+// ── Settings ────────────────────────────────────────────────
+async function loadSettings(){
+  const log=document.getElementById('settings-log');
+  log.innerHTML='<span class="log-warn">Loading from server…</span>';
+  try{
+    const r=await fetch(`${API}/admin/settings`,{headers:{Authorization:AUTH}});
+    if(r.status===401){toast('Auth failed — check credentials','err');return;}
+    const d=await safeJson(r);
+    const s=d.settings||{};
+    if(s.gemini_model) document.getElementById('set-model').value=s.gemini_model;
+    if(s.gemini_timeout!==undefined) document.getElementById('set-gemini-timeout').value=s.gemini_timeout;
+    if(s.pipeline_timeout!==undefined) document.getElementById('set-pipeline-timeout').value=s.pipeline_timeout;
+    applySwitch('sw-semantic','set-semantic',!!s.cache_semantic_enabled);
+    applySwitch('sw-ollama','set-ollama',!!s.ollama_enabled);
+    log.innerHTML=`<span class="log-ok">// Active settings:</span>\n`+
+      Object.entries(s).map(([k,v])=>`<span class="log-warn">${k}</span>: ${JSON.stringify(v)}`).join('\n');
+  }catch(e){log.innerHTML=`<span class="log-err">// Error: ${esc(e.message)}</span>`;}
+}
+
+async function saveSettings(){
+  const btn=document.getElementById('save-settings-btn');
+  btn.disabled=true; btn.textContent='⏳ Saving…';
+  const payload={
+    gemini_model:           document.getElementById('set-model').value,
+    gemini_timeout:         parseFloat(document.getElementById('set-gemini-timeout').value)||15,
+    pipeline_timeout:       parseFloat(document.getElementById('set-pipeline-timeout').value)||50,
+    cache_semantic_enabled: document.getElementById('set-semantic').value==='true',
+    ollama_enabled:         document.getElementById('set-ollama').value==='true',
+  };
+  try{
+    const r=await fetch(`${API}/admin/settings`,{method:'POST',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await safeJson(r);
+    if(!r.ok) throw new Error(d.detail||`HTTP ${r.status}`);
+    toast('✅ Settings saved!','ok');
+    const log=document.getElementById('settings-log');
+    log.innerHTML=`<span class="log-ok">// Updated:</span>\n`+
+      Object.entries(d.settings||{}).map(([k,v])=>`<span class="log-warn">${k}</span>: ${JSON.stringify(v)}`).join('\n');
+  }catch(e){toast('Save failed: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='💾 Save';}
+}
+
+function toggleSwitch(trackId,inputId){
+  applySwitch(trackId,inputId,document.getElementById(inputId).value!=='true');
+}
+function applySwitch(trackId,inputId,isOn){
+  document.getElementById(trackId).classList.toggle('on',isOn);
+  document.getElementById(inputId).value=String(isOn);
+}
+
+// ── Cache ────────────────────────────────────────────────────
+async function loadCache(){
+  try{
+    const r=await fetch(`${API}/admin/cache/stats`,{headers:{Authorization:AUTH}});
+    const d=await safeJson(r);
+    document.getElementById('c-total').textContent=d.total_entries??'—';
+    document.getElementById('c-hits').textContent=d.total_hits??'—';
+    document.getElementById('c-size').textContent=(d.cache_file_kb??'—')+' KB';
+    document.getElementById('c-semantic').textContent=d.semantic_enabled?'ON':'OFF';
+    document.getElementById('c-semantic').className=`card-value ${d.semantic_enabled?'ok':'warn'}`;
+    const list=document.getElementById('q-list'), qs=d.top_questions||[];
+    if(!qs.length){
+      list.innerHTML='<div class="text-muted text-mono text-sm">Cache is empty. Ask questions to populate it.</div>';
+      return;
+    }
+    list.innerHTML=qs.map((q,i)=>`
+      <div class="q-item" id="qitem-${i}">
+        <div style="flex:1;min-width:0;">
+          <div class="q-text">${esc(q.question)}</div>
+          <div class="q-meta">
+            <span class="tag tag-${q.source==='gemini'?'green':q.source==='manual'?'blue':'amber'}">${q.source||'?'}</span>
+            <span>${q.saved_at?.split('T')[0]||''}</span>
+            <span style="color:var(--amber)">↑${q.hits||0} hits</span>
+          </div>
+          <div id="qanswer-${i}" class="q-answer-box">${esc(q.answer||'—')}</div>
+        </div>
+        <div class="q-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAnswer(${i})">👁</button>
+          <button class="btn btn-amber btn-sm" onclick="editCacheEntry(${i},${JSON.stringify(q.question)},${JSON.stringify(q.answer||'')})">✏️</button>
+          <button class="btn btn-red btn-sm" onclick="deleteCacheEntry(${i},${JSON.stringify(q.question)})">🗑</button>
+        </div>
+      </div>`).join('');
+  }catch(e){toast('Cache load failed: '+e.message,'err');}
+}
+
+function toggleAnswer(i){
+  const el=document.getElementById(`qanswer-${i}`);
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+async function testCacheSearch(){
+  const q=document.getElementById('cache-test-q').value.trim(); if(!q) return;
+  const el=document.getElementById('cache-test-result');
+  el.style.display='none'; el.className='cache-test-result';
+  try{
+    const r=await fetch(`${API}/admin/cache/search`,{method:'POST',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+    const d=await safeJson(r);
+    if(!r.ok) throw new Error(d.detail||`HTTP ${r.status}`);
+    el.style.display='block';
+    if(d.hit){
+      el.classList.add('hit');
+      el.innerHTML=`<strong style="color:var(--green)">✅ CACHE HIT</strong> (score: ${d.result?.score??'exact'})<br><br>`+
+        `<strong>Matched:</strong> ${esc(d.result?.original_q||'')}<br><br>`+
+        `<strong>Answer:</strong><br>${esc(d.result?.answer||'')}`;
+    }else{
+      el.classList.add('miss');
+      el.innerHTML=`<strong style="color:var(--amber)">⚠️ CACHE MISS</strong><br>इस सवाल का जवाब cache में नहीं है — AI call होगी।`;
+    }
+  }catch(e){
+    el.style.display='block'; el.classList.add('miss');
+    el.innerHTML=`<strong style="color:var(--red)">❌ Error:</strong> ${esc(e.message)}`;
+  }
+}
+
+async function deleteCacheEntry(i,question){
+  if(!confirm(`Delete?\n"${question}"`)) return;
+  try{
+    const r=await fetch(`${API}/admin/cache/delete`,{method:'POST',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question})});
+    const d=await safeJson(r);
+    if(d.deleted){
+      const el=document.getElementById(`qitem-${i}`);
+      el.style.transition='opacity .25s'; el.style.opacity='0';
+      setTimeout(()=>{el.remove();},270);
+      toast('✅ Deleted','ok'); loadCache();
+    }else toast('Entry not found','err');
+  }catch(e){toast('Delete failed: '+e.message,'err');}
+}
+
+async function editCacheEntry(i,question,cur){
+  const na=prompt(`Edit answer for:\n"${question}"`,cur);
+  if(!na||na===cur) return;
+  try{
+    const r=await fetch(`${API}/admin/cache/edit`,{method:'PUT',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question,new_answer:na})});
+    const d=await safeJson(r);
+    if(d.updated){toast('✅ Updated','ok');loadCache();}
+    else toast('Entry not found','err');
+  }catch(e){toast('Edit failed','err');}
+}
+
+async function clearCache(){
+  if(!confirm('सभी cached entries delete होंगी?')) return;
+  try{
+    const r=await fetch(`${API}/admin/cache/clear`,{method:'DELETE',headers:{Authorization:AUTH}});
+    const d=await safeJson(r);
+    toast(`✅ ${d.deleted_entries} entries cleared`,'ok'); loadCache();
+  }catch(e){toast('Clear failed','err');}
+}
+
+function toggleAddQA(){
+  const tog=document.getElementById('acc-toggle'), body=document.getElementById('acc-body');
+  const open=body.classList.contains('open');
+  body.classList.toggle('open',!open); tog.classList.toggle('open',!open);
+  if(!open) document.getElementById('qa-question').focus();
+}
+function updateQACount(){
+  const q=document.getElementById('qa-question').value.trim();
+  const a=document.getElementById('qa-answer').value.trim();
+  document.getElementById('qa-charcount').textContent=`Q: ${q.length} | A: ${a.length}`;
+  document.getElementById('add-qa-btn').disabled=!(q.length>3&&a.length>=20);
+}
+function clearQAForm(){
+  document.getElementById('qa-question').value='';
+  document.getElementById('qa-answer').value='';
+  updateQACount(); document.getElementById('qa-question').focus();
+}
+async function addCacheEntry(){
+  const question=document.getElementById('qa-question').value.trim();
+  const answer=document.getElementById('qa-answer').value.trim();
+  if(!question||answer.length<20) return;
+  const btn=document.getElementById('add-qa-btn');
+  btn.disabled=true; btn.textContent='⏳ Saving…';
+  try{
+    const r=await fetch(`${API}/admin/cache/add`,{method:'POST',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question,answer,source:'manual'})});
+    const d=await safeJson(r);
+    if(d.saved){toast('✅ Saved to cache!','ok');clearQAForm();loadCache();}
+    else if(d.duplicate) toast('⚠️ Already in cache','err');
+    else toast('Save failed: '+(d.reason||'unknown'),'err');
+  }catch(e){toast('Save failed','err');}
+  finally{btn.disabled=false;btn.textContent='💾 Save to Cache';updateQACount();}
+}
+
+// ── Files ────────────────────────────────────────────────────
 async function loadFiles(){
   const tbody=document.getElementById('files-tbody');
   try{
     const r=await fetch(`${API}/admin/files`,{headers:{Authorization:AUTH}});
     const d=await safeJson(r);
-    if(!d.files||!d.files.length){tbody.innerHTML='<tr><td colspan="4" style="color:var(--muted)">No PDFs uploaded yet.</td></tr>';return;}
-    tbody.innerHTML=d.files.map(f=>`<tr><td>\ud83d\udcc4 ${f.name}</td><td style="font-family:var(--mono);color:var(--muted)">${f.size_kb} KB</td><td style="font-family:var(--mono);color:var(--muted)">${f.uploaded_at}</td><td><button class="btn btn-red" style="padding:4px 10px;font-size:11px;" onclick="deleteFile('${f.name}')">Delete</button></td></tr>`).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="4" style="color:var(--red)">Error: ${escHtml(e.message)}</td></tr>`;}
+    if(!d.files?.length){tbody.innerHTML='<tr><td colspan="4" class="text-muted text-mono">No PDFs uploaded yet.</td></tr>';return;}
+    tbody.innerHTML=d.files.map(f=>`<tr>
+      <td>📄 ${esc(f.name)}</td>
+      <td class="text-muted text-mono">${f.size_kb} KB</td>
+      <td class="text-muted text-mono">${f.uploaded_at}</td>
+      <td><button class="btn btn-red btn-sm" onclick="deleteFile('${esc(f.name)}')">Delete</button></td>
+    </tr>`).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="4" style="color:var(--red)">Error: ${esc(e.message)}</td></tr>`;}
 }
 async function uploadFile(input){
-  const file=input.files[0];if(!file)return;
-  const prog=document.getElementById('upload-progress'),bar=document.getElementById('progress-bar'),lbl=document.getElementById('progress-label');
-  prog.style.display='block';bar.style.width='30%';lbl.textContent=`Uploading ${file.name}...`;
-  const fd=new FormData();fd.append('file',file);
+  const file=input.files[0]; if(!file) return;
+  const prog=document.getElementById('upload-progress');
+  const bar=document.getElementById('progress-bar');
+  const lbl=document.getElementById('progress-label');
+  prog.style.display='block'; bar.style.width='30%'; lbl.textContent=`Uploading ${file.name}…`;
+  const fd=new FormData(); fd.append('file',file);
   try{
     bar.style.width='70%';
     const r=await fetch(`${API}/admin/upload`,{method:'POST',headers:{Authorization:AUTH},body:fd});
-    const d=await safeJson(r);bar.style.width='100%';
-    lbl.textContent=`\u2713 ${d.filename} \u2014 ${d.chunks_indexed} chunks indexed`;
-    toast(`\u2705 ${d.filename} uploaded & indexed`,'ok');
-    setTimeout(()=>{prog.style.display='none';bar.style.width='0%';},2000);loadFiles();
-  }catch(e){lbl.textContent='Upload failed';toast('Upload failed: '+e.message,'err');}
+    const d=await safeJson(r); bar.style.width='100%';
+    lbl.textContent=`✓ ${d.filename} — ${d.chunks_indexed} chunks indexed`;
+    toast(`✅ ${d.filename} uploaded`,'ok');
+    setTimeout(()=>{prog.style.display='none';bar.style.width='0%';},2000);
+    loadFiles();
+  }catch(e){lbl.textContent='Upload failed';toast('Upload failed','err');}
   input.value='';
 }
-async function deleteFile(name){if(!confirm(`Delete "${name}"?`))return;try{await fetch(`${API}/admin/files/${name}`,{method:'DELETE',headers:{Authorization:AUTH}});toast(`\ud83d\uddd1 ${name} deleted`,'ok');loadFiles();}catch(e){toast('Delete failed','err');}}
+async function deleteFile(name){
+  if(!confirm(`Delete "${name}"?`)) return;
+  try{
+    await fetch(`${API}/admin/files/${name}`,{method:'DELETE',headers:{Authorization:AUTH}});
+    toast(`🗑 Deleted`,'ok'); loadFiles();
+  }catch(e){toast('Delete failed','err');}
+}
 const dz=document.getElementById('drop-zone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const fi=document.getElementById('file-input');fi.files=e.dataTransfer.files;uploadFile(fi);});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');document.getElementById('file-input').files=e.dataTransfer.files;uploadFile(document.getElementById('file-input'));});
 
-async function loadCache(){
-  try{
-    const r=await fetch(`${API}/admin/cache/stats`,{headers:{Authorization:AUTH}});
-    const d=await safeJson(r);
-    document.getElementById('c-total').textContent=d.total_entries??'\u2014';
-    document.getElementById('c-hits').textContent=d.total_hits??'\u2014';
-    document.getElementById('c-size').textContent=(d.cache_file_kb??'\u2014')+' KB';
-    const list=document.getElementById('q-list'),qs=d.top_questions||[];
-    if(!qs.length){list.innerHTML='<div style="color:var(--muted);font-family:var(--mono);font-size:13px;">Cache is empty.</div>';return;}
-    list.innerHTML=qs.map((q,i)=>`<div class="q-item" id="qitem-${i}"><div style="flex:1;min-width:0;"><div class="q-text">${escHtml(q.question)}</div><div class="q-meta" style="margin-top:4px;"><span style="color:var(--green);font-weight:700;">${q.source||'unknown'}</span> \u00b7 ${q.saved_at?.split('T')[0]||''} \u00b7 <span style="color:var(--amber);">${q.hits||0} hits</span></div><div id="qanswer-${i}" style="font-size:12px;color:var(--muted);font-family:var(--hindi);margin-top:6px;display:none;padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">${escHtml(q.answer||'\u2014')}</div></div><div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;margin-left:12px;"><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;" onclick="toggleAnswer(${i})">\ud83d\udc41 Answer</button><button class="btn btn-amber" style="padding:4px 10px;font-size:11px;" onclick="editCacheEntry(${i},${JSON.stringify(q.question).replace(/'/g,'&#39;')},${JSON.stringify(q.answer||'').replace(/'/g,'&#39;')})">\u270f\ufe0f Edit</button><button class="btn btn-red" style="padding:4px 10px;font-size:11px;" onclick="deleteCacheEntry(${i},${JSON.stringify(q.question).replace(/'/g,'&#39;')})">\ud83d\uddd1 Delete</button></div></div>`).join('');
-  }catch(e){toast('Cache load failed: '+e.message,'err');}
-}
-function toggleAnswer(i){const el=document.getElementById(`qanswer-${i}`);el.style.display=el.style.display==='none'?'block':'none';}
-async function deleteCacheEntry(i,question){
-  if(!confirm(`Delete this entry?\n"${question}"`))return;
-  try{const r=await fetch(`${API}/admin/cache/delete`,{method:'DELETE',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question})});const d=await safeJson(r);if(d.deleted){document.getElementById(`qitem-${i}`).style.opacity='0';setTimeout(()=>{document.getElementById(`qitem-${i}`).remove();},300);toast('\u2705 Entry deleted','ok');loadCache();}else{toast('Entry not found','err');}}
-  catch(e){toast('Delete failed: '+e.message,'err');}
-}
-async function editCacheEntry(i,question,currentAnswer){
-  const newAnswer=prompt('Edit answer for:\n"'+question+'"',currentAnswer);
-  if(!newAnswer||newAnswer===currentAnswer)return;
-  try{const r=await fetch(`${API}/admin/cache/edit`,{method:'PUT',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question,new_answer:newAnswer})});const d=await safeJson(r);if(d.updated){toast('\u2705 Answer updated','ok');loadCache();}else{toast('Entry not found','err');}}
-  catch(e){toast('Edit failed: '+e.message,'err');}
-}
-async function clearCache(){
-  if(!confirm('\u0938\u092d\u0940 cached entries delete \u0939\u094b\u0902\u0917\u0940\u0964 \u091c\u093e\u0930\u0940 \u0930\u0916\u0947\u0902?'))return;
-  try{const r=await fetch(`${API}/admin/cache/clear`,{method:'DELETE',headers:{Authorization:AUTH}});const d=await safeJson(r);toast(`\u2705 ${d.deleted_entries} entries cleared`,'ok');loadCache();}
-  catch(e){toast('Clear failed','err');}
-}
-function toggleAddQA(){const toggle=document.getElementById('add-qa-toggle'),body=document.getElementById('add-qa-body'),isOpen=body.classList.contains('open');body.classList.toggle('open',!isOpen);toggle.classList.toggle('open',!isOpen);if(!isOpen)document.getElementById('qa-question').focus();}
-function updateQACount(){const q=document.getElementById('qa-question').value.trim(),a=document.getElementById('qa-answer').value.trim(),btn=document.getElementById('add-qa-btn');document.getElementById('qa-charcount').textContent=`Q: ${q.length} | A: ${a.length}`;btn.disabled=!(q.length>3&&a.length>=20);}
-function clearQAForm(){document.getElementById('qa-question').value='';document.getElementById('qa-answer').value='';updateQACount();document.getElementById('qa-question').focus();}
-async function addCacheEntry(){
-  const question=document.getElementById('qa-question').value.trim(),answer=document.getElementById('qa-answer').value.trim();
-  if(!question||answer.length<20)return;
-  const btn=document.getElementById('add-qa-btn');btn.disabled=true;btn.textContent='\u23f3 Saving...';
-  try{
-    const r=await fetch(`${API}/admin/cache/add`,{method:'POST',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question,answer,source:'manual'})});
-    const d=await safeJson(r);
-    if(d.saved){toast('\u2705 Q&A cache \u092e\u0947\u0902 save \u0939\u094b \u0917\u092f\u093e!','ok');clearQAForm();loadCache();}
-    else if(d.duplicate){toast('\u26a0\ufe0f \u092f\u0939 \u0938\u0935\u093e\u0932 \u092a\u0939\u0932\u0947 \u0938\u0947 cache \u092e\u0947\u0902 \u0939\u0948\u0964','err');}
-    else{toast('Entry save \u0928\u0939\u0940\u0902 \u0939\u0941\u0908: '+(d.reason||'unknown'),'err');}
-  }catch(e){toast('Save failed: '+e.message,'err');}
-  finally{btn.disabled=false;btn.textContent='\ud83d\udcbe Cache \u092e\u0947\u0902 Save \u0915\u0930\u0947\u0902';updateQACount();}
-}
-
+// ── Re-index ─────────────────────────────────────────────────
 async function runReindex(){
-  const btn=document.getElementById('reindex-btn'),log=document.getElementById('reindex-log');
-  btn.disabled=true;btn.textContent='\u23f3 Indexing...';
-  log.innerHTML='<span class="log-warn">Starting re-index...</span>\n';
+  const btn=document.getElementById('reindex-btn');
+  const log=document.getElementById('reindex-log');
+  btn.disabled=true; btn.textContent='⏳ Indexing…';
+  log.innerHTML='<span class="log-warn">Starting re-index…</span>\n';
   try{
     const r=await fetch(`${API}/admin/reindex`,{method:'POST',headers:{Authorization:AUTH}});
     const d=await safeJson(r);
-    if(!r.ok){const msg=d.detail||d.message||(d._raw||'').slice(0,300)||`HTTP ${r.status}`;log.innerHTML+=`<span class="log-err">\u274c Error ${r.status}: ${escHtml(msg)}</span>`;toast('Re-index failed \u2014 see log','err');}
-    else{const chunks=d.total_chunks!==undefined?d.total_chunks:'?';log.innerHTML+=`<span class="log-ok">\u2713 Done \u2014 ${chunks} total chunks in ChromaDB</span>`;toast('\u2705 Re-index complete','ok');}
-  }catch(e){log.innerHTML+=`<span class="log-err">\u274c Network error: ${escHtml(e.message)}</span>`;toast('Re-index failed','err');}
-  btn.disabled=false;btn.textContent='\u26a1 Run Re-index';
+    if(!r.ok){
+      log.innerHTML+=`<span class="log-err">❌ ${r.status}: ${esc(d.detail||d._raw||'')}</span>`;
+      toast('Re-index failed','err');
+    }else{
+      log.innerHTML+=`<span class="log-ok">✓ Done — ${d.total_chunks??'?'} chunks in ChromaDB</span>`;
+      toast('✅ Re-index complete','ok');
+    }
+  }catch(e){
+    log.innerHTML+=`<span class="log-err">❌ Network: ${esc(e.message)}</span>`;
+    toast('Re-index failed','err');
+  }
+  btn.disabled=false; btn.textContent='⚡ Run Re-index';
 }
 
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function toggleTheme(){const isAgri=document.documentElement.classList.toggle('agri');document.getElementById('theme-btn').classList.toggle('agri-on',isAgri);localStorage.setItem('km_theme',isAgri?'agri':'dark');}
-(function(){const saved=localStorage.getItem('km_theme');if(saved==='agri'){document.documentElement.classList.add('agri');document.getElementById('theme-btn').classList.add('agri-on');}})();
+// ── Admin Chat ────────────────────────────────────────────────
+const chatHistory=[];
 
-const adminChatHistory=[];
-function addAdminMsg(text,role,source){
-  const box=document.getElementById('admin-chat-messages'),isMe=role==='user';
-  const div=document.createElement('div');div.style.cssText=`display:flex;flex-direction:column;align-items:${isMe?'flex-end':'flex-start'};gap:4px;`;
+function fillChat(q){
+  document.getElementById('admin-chat-input').value=q;
+  document.getElementById('admin-chat-input').focus();
+}
+
+function addMsg(text,role,meta){
+  const box=document.getElementById('admin-chat-messages');
+  // remove empty state
+  const empty=box.querySelector('.chat-empty-state');
+  if(empty) empty.remove();
+
+  const wrap=document.createElement('div');
+  wrap.className=`chat-msg ${role}`;
+
   const bubble=document.createElement('div');
-  bubble.style.cssText=`max-width:75%;padding:10px 14px;border-radius:${isMe?'16px 16px 4px 16px':'16px 16px 16px 4px'};background:${isMe?'var(--green)':'var(--bg)'};color:${isMe?'#000':'var(--text)'};font-family:var(--hindi);font-size:13px;line-height:1.6;border:1px solid ${isMe?'transparent':'var(--border)'};white-space:pre-wrap;`;
-  bubble.textContent=text;div.appendChild(bubble);
-  if(source&&!isMe){const src=document.createElement('div');src.style.cssText='font-size:10px;font-family:var(--mono);color:var(--muted);padding:0 4px;';const color=source==='gemini'?'var(--green)':source==='ollama'?'var(--amber)':source==='cache'?'#63b3ed':'var(--red)';src.innerHTML=`<span style="color:${color};font-weight:700;">[${source.toUpperCase()}]</span>`;div.appendChild(src);}
-  box.appendChild(div);box.scrollTop=box.scrollHeight;
+  bubble.className='chat-bubble';
+  bubble.textContent=text;
+  wrap.appendChild(bubble);
+
+  // per-message meta pills for bot messages
+  if(role==='bot'&&meta){
+    const {source,rag_chunks,cached}=meta;
+    const pillClass={gemini:'chat-pill-gemini',ollama:'chat-pill-ollama',cache:'chat-pill-cache',error:'chat-pill-error'};
+    const metaRow=document.createElement('div');
+    metaRow.className='chat-meta';
+    // source pill
+    const sp=document.createElement('span');
+    sp.className=`chat-pill ${pillClass[source]||'chat-pill-error'}`;
+    sp.textContent=source.toUpperCase();
+    metaRow.appendChild(sp);
+    // cache hit pill
+    if(cached){
+      const cp=document.createElement('span');
+      cp.className='chat-pill chat-pill-hit';
+      cp.textContent='⚡ Cache Hit';
+      metaRow.appendChild(cp);
+    }
+    // rag chunks pill
+    if(rag_chunks>0){
+      const rp=document.createElement('span');
+      rp.className='chat-pill chat-pill-rag';
+      rp.textContent=`📚 ${rag_chunks} chunks`;
+      metaRow.appendChild(rp);
+    }
+    wrap.appendChild(metaRow);
+  }
+
+  box.appendChild(wrap);
+  box.scrollTop=box.scrollHeight;
 }
-function addAdminTyping(){const box=document.getElementById('admin-chat-messages'),div=document.createElement('div');div.id='admin-typing';div.innerHTML='<div class="ai-thinking"><div class="dots"><span></span><span></span><span></span></div><span class="ai-thinking-text">AI \u0938\u094b\u091a \u0930\u0939\u093e \u0939\u0948...</span></div>';box.appendChild(div);box.scrollTop=box.scrollHeight;}
-function removeAdminTyping(){const t=document.getElementById('admin-typing');if(t)t.remove();}
-function typewriterAdminMsg(text,source,speed=18){
-  return new Promise(resolve=>{
-    const box=document.getElementById('admin-chat-messages'),div=document.createElement('div');
-    div.style.cssText='display:flex;flex-direction:column;align-items:flex-start;gap:4px;';
-    const bubble=document.createElement('div');
-    bubble.style.cssText='max-width:75%;padding:10px 14px;border-radius:16px 16px 16px 4px;background:var(--bg);color:var(--text);font-family:var(--hindi);font-size:13px;line-height:1.6;border:1px solid var(--border);white-space:pre-wrap;';
-    div.appendChild(bubble);
-    if(source){const src=document.createElement('div');src.style.cssText='font-size:10px;font-family:var(--mono);color:var(--muted);padding:0 4px;';const color=source==='cache'?'#63b3ed':source==='gemini'?'var(--green)':'var(--amber)';src.innerHTML=`<span style="color:${color};font-weight:700;">[${source.toUpperCase()}]</span>`;div.appendChild(src);}
-    box.appendChild(div);box.scrollTop=box.scrollHeight;
-    let i=0;function type(){if(i<text.length){bubble.textContent+=text[i++];box.scrollTop=box.scrollHeight;setTimeout(type,speed);}else{resolve();}}type();
-  });
+
+function addTyping(){
+  const box=document.getElementById('admin-chat-messages');
+  const d=document.createElement('div');
+  d.id='admin-typing'; d.className='chat-msg bot';
+  d.innerHTML='<div class="chat-thinking"><div class="dots"><span></span><span></span><span></span></div><span class="chat-thinking-text">Pipeline चल रही है…</span></div>';
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
 }
+function removeTyping(){const t=document.getElementById('admin-typing');if(t)t.remove();}
+
 async function sendAdminChat(){
-  const input=document.getElementById('admin-chat-input'),q=input.value.trim();if(!q)return;
-  const crop=document.getElementById('chat-crop').value,lang=document.getElementById('chat-lang').value,btn=document.getElementById('admin-send-btn'),box=document.getElementById('admin-chat-messages');
-  if(box.children.length===1&&box.children[0].style.textAlign==='center')box.innerHTML='';
-  addAdminMsg(q,'user');input.value='';btn.disabled=true;btn.textContent='\u23f3';addAdminTyping();
-  adminChatHistory.push({role:'user',content:q});
-  try{
-    const r=await fetch(`${API}/ask`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,crop,language:lang,district:'Meerut'})});
-    const d=await safeJson(r);
-    const answer=d.answer||d.message||'\u0915\u094b\u0908 \u0909\u0924\u094d\u0924\u0930 \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e\u0964',source=d.source||'unknown';
-    removeAdminTyping();
-    if(source==='cache'){await typewriterAdminMsg(answer,source);}else{addAdminMsg(answer,'bot',source);}
-    adminChatHistory.push({role:'assistant',content:answer});
-    const bar=document.getElementById('admin-source-bar');bar.style.display='flex';
-    document.getElementById('admin-last-source').textContent=source.toUpperCase();
-    document.getElementById('admin-last-source').style.color=source==='gemini'?'var(--green)':source==='ollama'?'var(--amber)':source==='cache'?'#63b3ed':'var(--red)';
-    document.getElementById('admin-rag-used').textContent=d.rag_chunks!==undefined?d.rag_chunks:'N/A';
-  }catch(e){removeAdminTyping();addAdminMsg('\u274c Server \u0938\u0947 connect \u0928\u0939\u0940\u0902 \u0939\u094b \u092a\u093e\u092f\u093e\u0964','bot','error');}
-  btn.disabled=false;btn.textContent='Send \u21b5';input.focus();
-}
-function clearAdminChat(){const box=document.getElementById('admin-chat-messages');box.innerHTML='<div style="text-align:center;color:var(--muted);font-family:var(--hindi);font-size:13px;margin:auto;">\ud83c\udf3e \u0915\u094b\u0908 \u092d\u0940 \u0915\u0943\u0937\u093f \u0938\u0935\u093e\u0932 \u092a\u0942\u091b\u0947\u0902...</div>';document.getElementById('admin-source-bar').style.display='none';adminChatHistory.length=0;}
+  const input=document.getElementById('admin-chat-input');
+  const q=input.value.trim(); if(!q) return;
+  const crop=document.getElementById('chat-crop').value;
+  const lang=document.getElementById('chat-lang').value;
+  const btn=document.getElementById('admin-send-btn');
 
-async function testRAG(){
-  const q=document.getElementById('rag-q').value.trim(),crop=document.getElementById('rag-crop').value;if(!q)return;
-  document.getElementById('rag-result').style.display='none';document.getElementById('rag-loading').style.display='block';
-  const steps=['step-1','step-2','step-3','step-4'];steps.forEach(s=>document.getElementById(s).classList.remove('active','done'));
-  let stepIdx=0;const stepTimer=setInterval(()=>{if(stepIdx>0)document.getElementById(steps[stepIdx-1]).classList.add('done');if(stepIdx<steps.length){document.getElementById(steps[stepIdx]).classList.add('active');stepIdx++;}else{clearInterval(stepTimer);}},600);
+  addMsg(q,'user');
+  input.value=''; btn.disabled=true; btn.textContent='…';
+  addTyping();
+
   try{
-    const r=await fetch(`${API}/ask`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,crop,language:'hindi',district:'Meerut'})});
+    const r=await fetch(`${API}/ask`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({q,crop,language:lang,district:'Meerut'})});
     const d=await safeJson(r);
-    clearInterval(stepTimer);steps.forEach(s=>document.getElementById(s).classList.add('done'));
-    setTimeout(()=>{document.getElementById('rag-loading').style.display='none';document.getElementById('rag-result').style.display='block';},400);
-    if(!r.ok){document.getElementById('rag-chunks').textContent=`Error ${r.status}: ${d.detail||d.message||d._raw||''}`;return;}
-    const source=d.source||'unknown',fromRAG=source==='rag'||(d.rag_chunks&&d.rag_chunks>0);
-    document.getElementById('rag-answer').textContent=d.answer||'\u2014';
-    const chunksEl=document.getElementById('rag-chunks');
-    chunksEl.innerHTML=d.rag_context?escHtml(d.rag_context).replace(/\n/g,'<br>'):'<span style="color:var(--muted)">No RAG context \u2014 ChromaDB is empty.<br>Run Re-index from the RE-INDEX tab first.</span>';
-    const badge=document.getElementById('rag-source-badge');
-    badge.textContent=source.toUpperCase();
-    badge.style.background=source==='gemini'?'rgba(74,222,128,.15)':source==='ollama'?'rgba(251,191,36,.15)':source==='cache'?'rgba(99,179,237,.15)':'rgba(248,113,113,.15)';
-    badge.style.color=source==='gemini'?'var(--green)':source==='ollama'?'var(--amber)':source==='cache'?'#63b3ed':'var(--red)';
-    document.getElementById('rag-chunks-count').textContent=d.rag_chunks?`${d.rag_chunks} chunks retrieved`:'';
-    const ragBadge=document.getElementById('rag-from-rag');ragBadge.textContent=fromRAG?'\u2705 RAG data used':'\u26a0\ufe0f RAG not used (no relevant chunks found)';ragBadge.style.background=fromRAG?'rgba(74,222,128,.1)':'rgba(251,191,36,.1)';ragBadge.style.color=fromRAG?'var(--green)':'var(--amber)';
-  }catch(e){clearInterval(stepTimer);document.getElementById('rag-loading').style.display='none';document.getElementById('rag-chunks').textContent='Network error: '+e.message;document.getElementById('rag-result').style.display='block';}
+    removeTyping();
+    const source=d.source||'unknown';
+    addMsg(d.answer||d.message||'कोई उत्तर नहीं मिला।','bot',{
+      source, rag_chunks:d.rag_chunks||0, cached:!!d.cached
+    });
+    // update topbar badge
+    const bar=document.getElementById('admin-source-bar');
+    bar.classList.add('visible');
+    const colors={gemini:'var(--green)',ollama:'var(--amber)',cache:'var(--blue)',error:'var(--red)'};
+    const srcEl=document.getElementById('admin-last-source');
+    srcEl.textContent=source.toUpperCase(); srcEl.style.color=colors[source]||'var(--muted)';
+    document.getElementById('admin-rag-used').textContent=
+      d.rag_chunks>0?`📚 ${d.rag_chunks} chunks`:'no RAG';
+    const ci=document.getElementById('admin-cache-info');
+    ci.textContent=d.cached?'⚡ cached':'AI called';
+    ci.style.color=d.cached?'var(--green)':'var(--muted)';
+  }catch(e){
+    removeTyping();
+    addMsg('❌ Server से connect नहीं हो पाया।','bot',{source:'error',rag_chunks:0,cached:false});
+  }
+  btn.disabled=false; btn.textContent='↑'; input.focus();
 }
 
-let _activeMic=null;
+function clearAdminChat(){
+  const box=document.getElementById('admin-chat-messages');
+  box.innerHTML=`<div class="chat-empty-state">
+    <div class="chat-empty-icon">🌾</div>
+    <div class="chat-empty-text">कोई भी कृषि सवाल पूछें<br><span style="font-size:11px;opacity:.6;">Cache → RAG → AI pipeline live test</span></div>
+    <div class="chat-suggestions">
+      <span class="chat-suggestion" onclick="fillChat('गेहूं में कौन सी खाद डालें?')">गेहूं में खाद?</span>
+      <span class="chat-suggestion" onclick="fillChat('धान में सिंचाई कब करें?')">धान में सिंचाई?</span>
+      <span class="chat-suggestion" onclick="fillChat('गन्ने की बुवाई का सही समय?')">गन्ने की बुवाई?</span>
+      <span class="chat-suggestion" onclick="fillChat('आलू में कौन सी बीमारी लगती है?')">आलू की बीमारी?</span>
+    </div>
+  </div>`;
+  const bar=document.getElementById('admin-source-bar');
+  bar.classList.remove('visible');
+  chatHistory.length=0;
+}
+
+// ── Voice ─────────────────────────────────────────────────────
+let _mic=null;
 function startMic(inputId,btnId){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('\u0906\u092a\u0915\u093e browser voice input support \u0928\u0939\u0940\u0902 \u0915\u0930\u0924\u093e\u0964','err');return;}
-  const btn=document.getElementById(btnId);if(_activeMic&&_activeMic._btnId===btnId){_activeMic.stop();return;}if(_activeMic)_activeMic.stop();
-  const rec=new SR();rec._btnId=btnId;rec.lang='hi-IN';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
-  rec.onstart=()=>{_activeMic=rec;btn.classList.add('listening');btn.textContent='\ud83d\udd34';};
-  rec.onresult=(e)=>{document.getElementById(inputId).value=Array.from(e.results).map(r=>r[0].transcript).join('');};
-  rec.onerror=(e)=>{if(e.error==='no-speech')toast('\u0915\u094b\u0908 \u0906\u0935\u093e\u091c\u093c \u0928\u0939\u0940\u0902 \u0938\u0941\u0928\u0940 \u2014 \u092b\u093f\u0930 \u0938\u0947 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964','err');else if(e.error==='not-allowed')toast('Microphone permission \u0926\u0947\u0902\u0964','err');else toast('Mic error: '+e.error,'err');btn.classList.remove('listening');btn.textContent='\ud83c\udfa4';_activeMic=null;};
-  rec.onend=()=>{btn.classList.remove('listening');btn.textContent='\ud83c\udfa4';_activeMic=null;if(inputId==='admin-chat-input'){const val=document.getElementById('admin-chat-input').value.trim();if(val)sendAdminChat();}};
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Browser voice support नहीं है','err');return;}
+  const btn=document.getElementById(btnId);
+  if(_mic&&_mic._btnId===btnId){_mic.stop();return;}
+  if(_mic) _mic.stop();
+  const rec=new SR(); rec._btnId=btnId; rec.lang='hi-IN'; rec.interimResults=true;
+  rec.onstart=()=>{_mic=rec;btn.classList.add('listening');btn.textContent='🔴';btn.style.color='var(--red)';};
+  rec.onresult=e=>{document.getElementById(inputId).value=Array.from(e.results).map(r=>r[0].transcript).join('');};
+  rec.onerror=e=>{
+    const msgs={'no-speech':'कोई आवाज़ नहीं','not-allowed':'Mic permission दें'};
+    toast(msgs[e.error]||'Mic error: '+e.error,'err');
+    btn.classList.remove('listening');btn.textContent='🎤';btn.style.color='';_mic=null;
+  };
+  rec.onend=()=>{
+    btn.classList.remove('listening');btn.textContent='🎤';btn.style.color='';_mic=null;
+    if(inputId==='admin-chat-input'){const v=document.getElementById('admin-chat-input').value.trim();if(v)sendAdminChat();}
+  };
   rec.start();
 }
 
+// ── Theme ─────────────────────────────────────────────────────
+function toggleTheme(){
+  const on=document.documentElement.classList.toggle('agri');
+  document.getElementById('theme-track').classList.toggle('on',on);
+  localStorage.setItem('km_theme',on?'agri':'dark');
+}
+(()=>{
+  if(localStorage.getItem('km_theme')==='agri'){
+    document.documentElement.classList.add('agri');
+    document.getElementById('theme-track').classList.add('on');
+  }
+})();
+
+// ── Init ──────────────────────────────────────────────────────
 loadStatus();
 </script>
 </body>

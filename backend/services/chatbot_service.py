@@ -6,7 +6,9 @@
 
 import json
 import os
-import httpx   # ← async HTTP (replaces synchronous `requests`)
+import httpx
+
+from backend.config import get_setting
 
 # ── Bad answer phrases — never cache these ────────────────────
 BAD_ANSWER_PHRASES = [
@@ -17,7 +19,7 @@ BAD_ANSWER_PHRASES = [
 ]
 
 def is_good_answer(answer: str) -> bool:
-    """Reject empty, too short, or error answers before caching."""
+    """Reject empty, too short, or error-message answers before caching."""
     if not answer or len(answer.strip()) < 20:
         return False
     lower = answer.lower()
@@ -52,14 +54,12 @@ def get_crop_keys() -> list:
 def build_context(crop_key: str, question: str = "") -> str:
     """
     Build context from crop JSON.
-    If question provided, return only relevant topics (max 10).
-    Avoids sending entire JSON to Gemini.
+    Scores topics by keyword overlap with the question — returns top 10.
     """
     data = all_crops.get(crop_key, {})
     if not data:
         return ""
 
-    # If question given, score topics by keyword overlap
     if question:
         q_words = set(question.lower().split())
         scored = []
@@ -68,7 +68,6 @@ def build_context(crop_key: str, question: str = "") -> str:
             answer_words = set(content.get("answer", "").lower().split()[:20])
             overlap = len(q_words & (topic_words | answer_words))
             scored.append((overlap, topic, content))
-        # Sort by relevance, take top 10
         scored.sort(reverse=True)
         items = scored[:10]
     else:
@@ -84,7 +83,11 @@ def build_prompt(question: str, district: str, language: str,
     lang_instruction = (
         "तुम्हें केवल सरल हिंदी में जवाब देना है। English बिल्कुल मत लिखो।"
         if (language or "").lower() in ("hindi", "hi")
-        else ("Answer only in simple Kannada." if (language or "").lower() in ("kannada", "kn") else "Answer in simple English only.")
+        else (
+            "Answer only in simple Kannada."
+            if (language or "").lower() in ("kannada", "kn")
+            else "Answer in simple English only."
+        )
     )
     context_block = context.strip() if context.strip() else "No specific crop data available."
 
@@ -114,20 +117,19 @@ ANSWER:"""
 async def call_gemini(prompt: str) -> str:
     """
     Try all configured Gemini keys in order — fully async via httpx.
-    Supports GEMINI_API_KEY, GEMINI_API_KEY2, GEMINI_API_KEY3.
+    Reads model/timeout from runtime config (admin-controllable).
+    Disables thinking tokens to protect quota.
     """
-    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-    TIMEOUT = float(os.getenv("GEMINI_TIMEOUT", "15"))   # 15s per key — 3 keys × 15s = 45s max
+    model   = get_setting("gemini_model",   "gemini-1.5-flash")
+    timeout = get_setting("gemini_timeout", 15.0)
 
-    # Collect all configured keys (dedup)
+    # Collect all configured keys (dedup, preserve order)
     keys = []
     seen = set()
     for key_name in [
         "GEMINI_API_KEY",
-        "GEMINI_API_KEY2",
-        "GEMINI_API_KEY_2",
-        "GEMINI_API_KEY3",
-        "GEMINI_API_KEY_3",
+        "GEMINI_API_KEY2", "GEMINI_API_KEY_2",
+        "GEMINI_API_KEY3", "GEMINI_API_KEY_3",
     ]:
         k = os.getenv(key_name, "").strip()
         if k and k not in seen:
@@ -135,36 +137,41 @@ async def call_gemini(prompt: str) -> str:
             seen.add(k)
 
     if not keys:
-        raise ValueError("No Gemini API key set in environment")
+        raise ValueError("No Gemini API key configured in environment")
+
+    # generationConfig — disable thinking for gemini-2.5-flash to save quota
+    gen_config: dict = {
+        "temperature":     0.3,
+        "maxOutputTokens": 500,
+        "topP":            0.8,
+    }
+    if "2.5" in model:
+        gen_config["thinkingConfig"] = {"thinkingBudget": 0}
 
     last_error = None
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with httpx.AsyncClient(timeout=timeout) as client:
         for key_name, api_key in keys:
             url = (
                 f"https://generativelanguage.googleapis.com/v1beta/models/"
-                f"{GEMINI_MODEL}:generateContent?key={api_key}"
+                f"{model}:generateContent?key={api_key}"
             )
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature":     0.3,
-                    "maxOutputTokens": 500,
-                    "topP":            0.8,
-                },
+                "generationConfig": gen_config,
             }
             try:
                 resp = await client.post(url, json=payload)
                 if resp.status_code == 429:
                     print(f"[Gemini] {key_name} quota exceeded, trying next key...")
-                    last_error = f"{key_name}: 429 quota"
+                    last_error = f"{key_name}: 429 quota exceeded"
                     continue
                 resp.raise_for_status()
                 data = resp.json()
                 answer = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                print(f"[Gemini] ✅ Success with {key_name}")
+                print(f"[Gemini] ✅ Success with {key_name} ({model})")
                 return answer
             except httpx.TimeoutException:
-                print(f"[Gemini] {key_name} timed out after {TIMEOUT}s")
+                print(f"[Gemini] {key_name} timed out after {timeout}s")
                 last_error = f"{key_name}: timeout"
                 continue
             except Exception as e:
@@ -177,10 +184,10 @@ async def call_gemini(prompt: str) -> str:
 
 # ── Ollama local fallback (ASYNC) ─────────────────────────────
 async def call_ollama(prompt: str) -> str:
-    """Call local Ollama — async. Only used when OLLAMA_ENABLED=true."""
-    hindi_prefix = "You must respond ONLY in Hindi. हिंदी में उत्तर दें।\n\n"
-    model    = os.getenv("OLLAMA_MODEL", "gemma4:e4b")
+    """Call local Ollama — only when ollama_enabled=true in settings."""
+    model    = get_setting("ollama_model",   "gemma3:4b")
     base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    hindi_prefix = "You must respond ONLY in Hindi. हिंदी में उत्तर दें।\n\n"
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
             f"{base_url}/api/generate",
@@ -195,22 +202,32 @@ async def call_ai(prompt: str) -> tuple[str, str]:
     """
     Returns: (answer, source)
     source = "gemini" | "ollama" | "error"
+
+    If Gemini returns a substantive answer (even if borderline quality),
+    we use it rather than discarding it. Only true error/refusal messages
+    are discarded and fall through to Ollama.
     """
     # ── Try Gemini ────────────────────────────────────────────
     try:
         answer = await call_gemini(prompt)
         if is_good_answer(answer):
             return answer, "gemini"
-        print("[AI] Gemini returned bad/short answer, trying Ollama")
+        # Gemini gave a valid but very short or borderline answer.
+        # Only fall through if it looks like a refusal — not just short.
+        is_refusal = any(p.lower() in answer.lower() for p in BAD_ANSWER_PHRASES)
+        if not is_refusal and len(answer.strip()) >= 10:
+            print(f"[AI] Gemini short answer (len={len(answer)}), using anyway")
+            return answer, "gemini"
+        print("[AI] Gemini returned a refusal/error message, trying Ollama")
     except Exception as e:
         print(f"[AI] Gemini failed: {e}")
 
-    # ── Try Ollama fallback (if enabled) ──────────────────────
-    if os.getenv("OLLAMA_ENABLED", "false").lower() != "true":
-        print("[AI] Ollama fallback disabled (OLLAMA_ENABLED != true)")
+    # ── Try Ollama fallback ───────────────────────────────────
+    if not get_setting("ollama_enabled", False):
+        print("[AI] Ollama fallback disabled (ollama_enabled=false in settings)")
         return (
             "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
-            "error"
+            "error",
         )
 
     try:
@@ -223,5 +240,5 @@ async def call_ai(prompt: str) -> tuple[str, str]:
 
     return (
         "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
-        "error"
+        "error",
     )

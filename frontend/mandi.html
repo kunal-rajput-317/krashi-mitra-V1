@@ -1550,7 +1550,10 @@
     result.innerHTML = `<div class="shop-loading">${t('loading')}</div>`;
 
     try {
-      const url  = `https://krashi-mitra-v1.onrender.com/shop/mandi?commodity=${encodeURIComponent(commodity)}&district=${encodeURIComponent(district)}&state=${encodeURIComponent(state)}`;
+      const params = new URLSearchParams({ state });
+      if (commodity) params.set('commodity', commodity);
+      if (district)  params.set('district', district);
+      const url = `https://krashi-mitra-v1.onrender.com/shop/mandi?${params.toString()}`;
       const res  = await fetch(url);
       const data = await res.json();
 
