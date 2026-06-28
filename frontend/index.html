@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi" xml:lang="hi">
 <head>
+<script src="api-config.js"></script>
  <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
 <script>
@@ -1798,7 +1799,7 @@
 
   async function fetchWeather() {
     try {
-      const res  = await fetch(`https://krashi-mitra-v1.onrender.com/weather?district=${WEATHER_DISTRICT}`);
+      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/weather?district=${WEATHER_DISTRICT}`);
       const json = await res.json();
       if (!json.success) return;
       const d = json.data;

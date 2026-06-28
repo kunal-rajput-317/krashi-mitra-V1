@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+<script src="api-config.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0,">
   <title>किसान प्रोफाइल | KrashiMitra</title>
@@ -808,7 +809,7 @@
   </footer>
 
   <script>
-    const API_BASE = "https://krashi-mitra-v1.onrender.com";
+    const API_BASE = window.KRASHIMITRA_API_BASE;
     let hasProfile = false;
     let lastProfile = null;
 

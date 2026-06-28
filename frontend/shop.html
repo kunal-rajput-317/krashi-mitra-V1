@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+<script src="api-config.js"></script>
    <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
 <script>
@@ -3407,7 +3408,7 @@
   }
 
   // ── Backend API URL ──
-  const API_BASE = 'https://krashi-mitra-v1-ybtn.onrender.com';
+  const API_BASE = window.KRASHIMITRA_API_BASE;
 
   // Log order to NeonDB via backend API (zero CORS issues)
   function logOrderToBackend(orderData, callback) {
@@ -3656,7 +3657,7 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
   async function fetchFertData() {
     if (_fertCache) return _fertCache;
     try {
-      const res  = await fetch('https://krashi-mitra-v1.onrender.com/shop/fertilizers');
+      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/shop/fertilizers`);
       const data = await res.json();
       _fertCache = Object.fromEntries(Object.entries(data.fertilizers));
       return _fertCache;
