@@ -845,8 +845,8 @@
         display: flex;
         align-items: center;
         height: 60px;
-        padding: 0 4px;
-        gap: 2px;
+        padding: 0 2px;
+        gap: 0;
       }
       .bottom-nav-item {
         flex: 1;
@@ -861,13 +861,13 @@
         gap: 3px;
       }
       .bnav-icon {
-        font-size: 20px;
+        font-size: 18px;
         line-height: 1;
         color: rgba(255,255,255,0.55);
         transition: color 0.18s;
       }
       .bnav-label {
-        font-size: 10px;
+        font-size: 9.5px;
         font-weight: 600;
         font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
         color: rgba(255,255,255,0.55);
@@ -1064,21 +1064,25 @@
       <span class="bnav-icon">🏠</span>
       <span class="bnav-label">मुख्य</span>
     </a>
-    <a class="bottom-nav-item" href="chat.html">
-      <span class="bnav-icon">💬</span>
-      <span class="bnav-label" data-t="nav_chat">Chat</span>
-    </a>
     <a class="bottom-nav-item active" href="weather.html">
       <span class="bnav-icon">🌤️</span>
-      <span class="bnav-label" data-t="nav_weather">मौसम</span>
+      <span class="bnav-label">मौसम</span>
     </a>
     <a class="bottom-nav-item" href="mandi.html">
       <span class="bnav-icon">🏪</span>
-      <span class="bnav-label" data-t="nav_mandi">मंडी</span>
+      <span class="bnav-label">मंडी</span>
+    </a>
+    <a class="bottom-nav-item" href="shop.html">
+      <span class="bnav-icon">🛒</span>
+      <span class="bnav-label">दुकान</span>
     </a>
     <a class="bottom-nav-item" href="articles/index.html">
       <span class="bnav-icon">📰</span>
       <span class="bnav-label">लेख</span>
+    </a>
+    <a class="bottom-nav-item" href="sarkari_yojana.html">
+      <span class="bnav-icon">🏛️</span>
+      <span class="bnav-label">योजना</span>
     </a>
   </div>
 </nav>
@@ -1725,6 +1729,16 @@
   });
 </script>
 
+<!-- ── Floating Map Button ── -->
+<style>
+.map-fab{position:fixed;bottom:154px;right:18px;width:46px;height:46px;border-radius:50%;background:#1a3c2e;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 3px 14px rgba(26,60,46,.4);z-index:9998;transition:transform .18s,box-shadow .18s;-webkit-tap-highlight-color:transparent;font-size:21px;color:#fff;}
+.map-fab:hover{transform:scale(1.1);box-shadow:0 5px 20px rgba(26,60,46,.6);}
+.map-fab:active{transform:scale(.93);}
+.map-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:11px;font-weight:600;font-family:sans-serif;padding:4px 11px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s;}
+.map-fab:hover .map-fab-tip{opacity:1;}
+@media(min-width:1025px){.map-fab{bottom:108px;right:28px;width:50px;height:50px;font-size:22px;}}
+</style>
+<a href="map.html" class="map-fab" title="कृषि मानचित्र">🗺️<span class="map-fab-tip">कृषि मैप</span></a>
 <!-- ── Floating AI Chat Button ── -->
 <style>
 .ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;overflow:visible;padding:0;}

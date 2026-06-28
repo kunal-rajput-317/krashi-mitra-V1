@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.get("/shop/mandi")
-def mandi_prices(commodity: str = "Wheat", district: str = "", state: str = ""):
+def mandi_prices(commodity: str = "", district: str = "", state: str = ""):
     return get_mandi_prices(commodity, district, state)
 
 

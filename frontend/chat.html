@@ -521,6 +521,82 @@ body {
   color: var(--text-light);
 }
 
+/* ── Khoj fallback button (floating) ────────────────────── */
+.khoj-fallback {
+  position: fixed;
+  right: 20px;
+  bottom: 100px;
+  z-index: 600;
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  animation: khoj-in 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.khoj-fallback.visible { display: flex; }
+@keyframes khoj-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.khoj-fallback-hint {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-light);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: var(--shadow);
+}
+.khoj-fallback-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--amber);
+  color: var(--green-dark);
+  border: none;
+  border-radius: 24px;
+  padding: 10px 18px 10px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(233,168,37,0.42);
+  transition: background 0.15s, transform 0.14s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+.khoj-fallback-pill:hover {
+  background: #f0b430;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 22px rgba(233,168,37,0.50);
+}
+.khoj-fallback-pill:active { transform: scale(0.96); }
+.khoj-fallback-close {
+  position: absolute;
+  top: -7px; right: -7px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-light);
+  box-shadow: var(--shadow);
+  transition: color 0.14s;
+  line-height: 1;
+}
+.khoj-fallback-close:hover { color: #c0392b; }
+.khoj-pill-wrap { position: relative; }
+
+@media (max-width: 1024px) {
+  .khoj-fallback { bottom: calc(58px + 82px); right: 14px; }
+}
+
 /* ── Site footer ─────────────────────────────────────────── */
 .site-footer {
   background: var(--green-dark);
@@ -571,17 +647,18 @@ body {
   }
   .bottom-nav-items {
     display: flex; align-items: center;
-    height: 58px; padding: 0 4px; gap: 2px;
+    height: 58px; padding: 0 2px; gap: 0;
   }
   .bottom-nav-item {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
-    padding: 6px 2px; text-decoration: none; gap: 2px;
+    padding: 5px 1px; text-decoration: none; gap: 2px;
+    min-width: 0;
   }
-  .bnav-icon  { font-size: 20px; line-height: 1; color: rgba(255,255,255,0.50); transition: color 0.16s; }
-  .bnav-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.50); white-space: nowrap; transition: color 0.16s;
-                font-family: 'DM Sans','Noto Sans Devanagari',sans-serif; }
+  .bnav-icon  { font-size: 18px; line-height: 1; color: rgba(255,255,255,0.50); transition: color 0.16s; }
+  .bnav-label { font-size: 9.5px; font-weight: 600; color: rgba(255,255,255,0.50); white-space: nowrap; transition: color 0.16s;
+                font-family: 'DM Sans','Noto Sans Devanagari',sans-serif; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .bottom-nav-item.active .bnav-icon,
   .bottom-nav-item.active .bnav-label { color: var(--amber); }
 
@@ -730,16 +807,23 @@ body {
 </div><!-- /.chat-shell -->
 
 
+<!-- ── Khoj fallback (floating, shown on AI failure) ─────── -->
+<div class="khoj-fallback" id="khoj-fallback">
+  <span class="khoj-fallback-hint">AI काम नहीं किया? यहाँ खोजें</span>
+  <div class="khoj-pill-wrap">
+    <a href="khoj.html" id="khoj-fallback-link" class="khoj-fallback-pill">
+      🔍 खोज पर ढूंढें →
+    </a>
+    <button class="khoj-fallback-close" onclick="hideKhojFallback()" title="बंद करें">✕</button>
+  </div>
+</div>
+
 <!-- ── Bottom nav (mobile) ────────────────────────────────── -->
 <nav class="bottom-nav">
   <div class="bottom-nav-items">
     <a class="bottom-nav-item" href="index.html">
       <span class="bnav-icon">🏠</span>
       <span class="bnav-label">मुख्य</span>
-    </a>
-    <a class="bottom-nav-item active" href="chat.html">
-      <span class="bnav-icon">💬</span>
-      <span class="bnav-label" data-t="nav_chat">AI से पूछें</span>
     </a>
     <a class="bottom-nav-item" href="weather.html">
       <span class="bnav-icon">🌤️</span>
@@ -749,9 +833,17 @@ body {
       <span class="bnav-icon">🏪</span>
       <span class="bnav-label" data-t="nav_mandi">मंडी</span>
     </a>
-    <a class="bottom-nav-item" href="khoj.html">
-      <span class="bnav-icon">🔍</span>
-      <span class="bnav-label" data-t="nav_khoj">खोज</span>
+    <a class="bottom-nav-item" href="shop.html">
+      <span class="bnav-icon">🛒</span>
+      <span class="bnav-label" data-t="nav_shop">दुकान</span>
+    </a>
+    <a class="bottom-nav-item" href="articles/index.html">
+      <span class="bnav-icon">📰</span>
+      <span class="bnav-label">लेख</span>
+    </a>
+    <a class="bottom-nav-item" href="sarkari_yojana.html">
+      <span class="bnav-icon">🏛️</span>
+      <span class="bnav-label">योजना</span>
     </a>
   </div>
 </nav>
@@ -854,10 +946,29 @@ function t(key) {
 // ══════════════════════════════════════
 // CHAT STATE
 // ══════════════════════════════════════
-let chatHistory  = [];
-let isBotTyping  = false;
-let pendingImage = null;
-const CHAT_API_BASE = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
+let chatHistory      = [];
+let isBotTyping      = false;
+let pendingImage     = null;
+let khojFallbackTimer = null;
+const CHAT_API_BASE  = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
+
+// ── Khoj fallback ──────────────────────────────────────────
+function showKhojFallback(query) {
+  const wrap = document.getElementById('khoj-fallback');
+  const link = document.getElementById('khoj-fallback-link');
+  if (!wrap || !link) return;
+  link.href = query ? `khoj.html?q=${encodeURIComponent(query)}` : 'khoj.html';
+  wrap.classList.remove('visible');
+  void wrap.offsetWidth; // restart animation
+  wrap.classList.add('visible');
+  clearTimeout(khojFallbackTimer);
+  khojFallbackTimer = setTimeout(hideKhojFallback, 18000);
+}
+function hideKhojFallback() {
+  const wrap = document.getElementById('khoj-fallback');
+  if (wrap) wrap.classList.remove('visible');
+  clearTimeout(khojFallbackTimer);
+}
 
 function getChatLanguage() {
   const map = { hi: 'hindi', en: 'english', kn: 'kannada' };
@@ -885,6 +996,7 @@ function getAnswerMeta(data) {
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  if (el.value.trim()) hideKhojFallback();
 }
 
 function handleChatKey(e) {
@@ -975,6 +1087,7 @@ async function sendChatMessage() {
   const text = inp.value.trim();
   if (!text && !pendingImage) return;
   if (isBotTyping) return;
+  hideKhojFallback();
 
   const chips = document.getElementById('chat-suggestions');
   if (chips) chips.style.display = 'none';
@@ -1009,14 +1122,16 @@ async function sendChatMessage() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
-    const reply = (data.answer || data.message || '').trim()
-                  || 'माफ करें, कोई जवाब नहीं मिला। कृपया दोबारा पूछें।';
+    const raw = (data.answer || data.message || '').trim();
+    const reply = raw || 'माफ करें, कोई जवाब नहीं मिला। कृपया दोबारा पूछें।';
     removeTyping();
     appendMessage('bot', reply, null, getAnswerMeta(data));
     chatHistory.push({ role: 'assistant', content: reply });
+    if (!raw) showKhojFallback(q);
   } catch (err) {
     removeTyping();
     appendMessage('bot', '⚠️ Server से connect नहीं हो पाया। कृपया internet connection जाँचें और दोबारा try करें।');
+    showKhojFallback(q);
   }
 }
 
