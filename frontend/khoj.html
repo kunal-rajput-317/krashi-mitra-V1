@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+<script src="api-config.js"></script>
    <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
 <script>
@@ -794,10 +795,12 @@
     <div class="search-hero-title" data-t="khoj_title">कृषि खोज</div>
     <div class="search-hero-sub" data-t="khoj_sub">बीमारी, खाद, बुवाई समय — सब कुछ हिंदी में लिखकर या बोलकर खोजें</div>
     <div class="hero-badges">
-      <span class="hero-badge">🌾 6 फसलें</span>
+      <span class="hero-badge">🌾 25+ फसलें</span>
       <span class="hero-badge">💊 रोग उपचार</span>
+      <span class="hero-badge">🐛 कीट नियंत्रण</span>
       <span class="hero-badge">🧪 खाद जानकारी</span>
       <span class="hero-badge">📅 बुवाई समय</span>
+      <span class="hero-badge">🏛️ सरकारी योजना</span>
     </div>
   </div>
 
@@ -820,6 +823,14 @@
       <span class="search-crop-chip" onclick="setSearchCrop(this,'ganna')">🎋 गन्ना</span>
       <span class="search-crop-chip" onclick="setSearchCrop(this,'sarson')">🌻 सरसों</span>
       <span class="search-crop-chip" onclick="setSearchCrop(this,'aloo')">🥔 आलू</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'tomato')">🍅 टमाटर</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'pyaaz')">🧅 प्याज</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'makka')">🌽 मक्का</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'chana')">🫘 चना</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'mirch')">🌶️ मिर्च</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'soybean')">🫛 सोयाबीन</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'kapas')">🌱 कपास</span>
+      <span class="search-crop-chip" onclick="setSearchCrop(this,'lehsun')">🧄 लहसुन</span>
     </div>
   </div>
 
@@ -881,6 +892,86 @@
             <div>
               <div class="pq-text">यूरिया कब और कितना डालें</div>
               <div class="pq-sub">Urea Dosage &amp; Timing</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('PM-KISAN योजना')">
+            <span class="pq-icon">🏛️</span>
+            <div>
+              <div class="pq-text">PM-KISAN योजना — ₹6000 किस्त</div>
+              <div class="pq-sub">PM-KISAN Scheme &amp; Eligibility</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('फसल बीमा कैसे कराएं')">
+            <span class="pq-icon">🛡️</span>
+            <div>
+              <div class="pq-text">फसल बीमा (PMFBY) कैसे कराएं</div>
+              <div class="pq-sub">Crop Insurance — Premium &amp; Apply</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('किसान क्रेडिट कार्ड KCC')">
+            <span class="pq-icon">💳</span>
+            <div>
+              <div class="pq-text">किसान क्रेडिट कार्ड (KCC)</div>
+              <div class="pq-sub">4% Loan — Kisan Credit Card</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('टमाटर में पत्ती मोड़ रोग')">
+            <span class="pq-icon">🍅</span>
+            <div>
+              <div class="pq-text">टमाटर में पत्ती मोड़ रोग</div>
+              <div class="pq-sub">Tomato Leaf Curl Virus</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('मक्का में फॉल आर्मीवर्म')">
+            <span class="pq-icon">🌽</span>
+            <div>
+              <div class="pq-text">मक्का में फॉल आर्मीवर्म</div>
+              <div class="pq-sub">Maize Fall Armyworm Control</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('प्याज में थ्रिप्स कीट')">
+            <span class="pq-icon">🧅</span>
+            <div>
+              <div class="pq-text">प्याज में थ्रिप्स कीट</div>
+              <div class="pq-sub">Onion Thrips Management</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('मिट्टी की जाँच कैसे कराएं')">
+            <span class="pq-icon">🧪</span>
+            <div>
+              <div class="pq-text">मिट्टी की जाँच कैसे कराएं</div>
+              <div class="pq-sub">Soil Health Card &amp; Testing</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('ड्रिप सिंचाई पर सब्सिडी')">
+            <span class="pq-icon">💧</span>
+            <div>
+              <div class="pq-text">ड्रिप सिंचाई पर सब्सिडी</div>
+              <div class="pq-sub">Drip Irrigation Subsidy (PMKSY)</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('जैविक खेती कैसे शुरू करें')">
+            <span class="pq-icon">♻️</span>
+            <div>
+              <div class="pq-text">जैविक खेती कैसे शुरू करें</div>
+              <div class="pq-sub">How to Start Organic Farming</div>
+            </div>
+            <span class="pq-arrow">›</span>
+          </div>
+          <div class="popular-query-pill" onclick="runPopularQuery('पराली प्रबंधन जलाएं नहीं')">
+            <span class="pq-icon">🔥</span>
+            <div>
+              <div class="pq-text">पराली प्रबंधन — जलाएं नहीं</div>
+              <div class="pq-sub">Stubble / Parali Management</div>
             </div>
             <span class="pq-arrow">›</span>
           </div>
@@ -954,6 +1045,1121 @@
   </div>
   <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; All rights reserved.</div>
 </footer>
+
+<!-- ════════════════════════════════════════════════════════════
+     KRASHIMITRA KHOJ — EMBEDDED KNOWLEDGE BASE
+     250+ curated, real-world farmer Q&As (crops, diseases, pests,
+     khaad/fertilizer, sowing, irrigation, govt schemes, organic).
+     Pure on-device keyword search — works instantly & offline.
+     NOTE: This is the SEARCH (Khoj) knowledge base, separate from
+     the AI chat. Adding entries here only adds more answers.
+     ════════════════════════════════════════════════════════════ -->
+<script id="khoj-kb">
+  // ── Crop aliases → canonical key (for icon + filter) ──
+  const KB_CROP_ALIASES = {
+    gehu:["gehu","gehun","wheat","गेहूँ","गेहूं","गेहु"],
+    dhaan:["dhaan","dhan","rice","paddy","धान","चावल"],
+    ganna:["ganna","ganne","sugarcane","गन्ना","गन्ने","ईख"],
+    sarson:["sarson","sarso","mustard","rai","सरसों","राई"],
+    aloo:["aloo","alu","potato","आलू"],
+    tomato:["tomato","tamatar","टमाटर"],
+    pyaaz:["pyaaz","pyaz","onion","प्याज","प्याज़"],
+    makka:["makka","makai","maize","corn","मक्का","मकई"],
+    chana:["chana","gram","chickpea","चना","छोला"],
+    soybean:["soybean","soyabean","सोयाबीन"],
+    kapas:["kapas","cotton","कपास","रुई"],
+    mirch:["mirch","mirchi","chilli","chili","मिर्च"],
+    lehsun:["lehsun","garlic","लहसुन"],
+    matar:["matar","pea","peas","मटर"],
+    moong:["moong","mung","greengram","मूंग"],
+    urad:["urad","blackgram","उड़द"],
+    arhar:["arhar","tur","toor","pigeonpea","अरहर","तूर"],
+    masoor:["masoor","lentil","मसूर"],
+    bajra:["bajra","pearlmillet","बाजरा"],
+    jowar:["jowar","sorghum","ज्वार"],
+    baingan:["baingan","brinjal","eggplant","बैंगन","बैगन"],
+    bhindi:["bhindi","okra","भिंडी"],
+    gobhi:["gobhi","cauliflower","cabbage","गोभी","फूलगोभी","पत्तागोभी"],
+    aam:["aam","mango","आम"],
+    kela:["kela","banana","केला"]
+  };
+  const KB_ALIAS_TO_KEY = {};
+  for (const k in KB_CROP_ALIASES)
+    KB_CROP_ALIASES[k].forEach(a => KB_ALIAS_TO_KEY[a.toLowerCase()] = k);
+
+  // ── Stopwords + romanized synonym expansion (mirrors backend) ──
+  const KB_STOPWORDS = new Set([
+    "का","की","के","में","से","है","हैं","और","या","पर","को","ने","कि","एक","यह","वह",
+    "इस","उस","जो","भी","तो","हो","कर","रहा","रही","रहे","था","थी","थे","कौन","सी","कब",
+    "क्या","कैसे","कितना","कितनी","कौनसी","लिए","हेतु","बारे","बताओ","बताइए",
+    "me","ka","ki","ke","se","hai","aur","ya","par","ko","ek","yeh","voh","jo","bhi","to",
+    "ho","kar","kab","kaun","kya","kaise","kitna","mein","liye","ke","for","the","a","an",
+    "of","in","is","to","how","what","when","my","me","i"
+  ]);
+  const KB_SYNONYMS = {
+    buwai:["sowing","बुवाई"], buai:["sowing","बुवाई"], buvai:["sowing","बुवाई"],
+    bona:["sowing","बुवाई"], lagana:["sowing","planting","रोपाई"], ropai:["transplanting","रोपाई"],
+    ilaj:["treatment","उपचार","दवा"], upay:["treatment","prevention","उपाय","रोकथाम"],
+    dawa:["treatment","दवा","कीटनाशक"], khad:["fertilizer","खाद","urea","yuria"],
+    bimari:["disease","रोग","बीमारी"], rog:["disease","बीमारी"], keet:["pest","कीट","कीड़ा"],
+    keeda:["pest","कीट"], keede:["pest","कीट"], sukh:["wilt","सूख","मुरझा"],
+    pilapan:["yellow","पीला","पीली"], yojana:["scheme","योजना","सरकारी"],
+    paani:["water","irrigation","सिंचाई","पानी"], sinchai:["irrigation","सिंचाई"],
+    beej:["seed","बीज"], kism:["variety","किस्म"], samay:["time","season","समय"]
+  };
+
+  function kbNormalize(text) {
+    text = (text || "").toLowerCase().trim();
+    text = text.replace(/[।,.!?;:()\[\]"'’`]/g, " ");
+    const out = [];
+    for (const tok of text.split(/\s+/)) {
+      if (!tok || tok.length <= 1) continue;
+      if (KB_STOPWORDS.has(tok)) continue;
+      out.push(tok);
+      (KB_SYNONYMS[tok] || []).forEach(s => out.push(s.toLowerCase()));
+    }
+    return out;
+  }
+
+  function kbScore(e, tokens) {
+    let score = 0;
+    const name        = ((e.name || "") + " " + (e.name_en || "")).toLowerCase();
+    const keywords    = (e.keywords || []).join(" ").toLowerCase();
+    const symptoms    = (e.symptoms || "").toLowerCase();
+    const treatment   = (e.treatment || "").toLowerCase();
+    const prevention  = (e.prevention || "").toLowerCase();
+    const description = (e.description || "").toLowerCase();
+    const extra       = ((e.dosage || "") + " " + (e.season || "")).toLowerCase();
+    const all = `${name} ${keywords} ${symptoms} ${treatment} ${prevention} ${description} ${extra}`;
+    for (const tok of tokens) {
+      if (name.includes(tok))        score += 10;
+      if (keywords.includes(tok))    score += 8;
+      if (symptoms.includes(tok))    score += 5;
+      if (treatment.includes(tok))   score += 3;
+      if (prevention.includes(tok))  score += 3;
+      if (description.includes(tok)) score += 2;
+      if (all.includes(tok))         score += 1;
+    }
+    if (tokens.length >= 2) {
+      const phrase = tokens.slice(0, 2).join(" ");
+      if (name.includes(phrase))     score += 8;
+      if (keywords.includes(phrase)) score += 5;
+    }
+    return score;
+  }
+
+  // Detect the crop the farmer means, from the active chip or the query itself
+  function kbDetectCrop(tokens, explicit) {
+    if (explicit) return KB_ALIAS_TO_KEY[explicit.toLowerCase()] || explicit.toLowerCase();
+    for (const tok of tokens) if (KB_ALIAS_TO_KEY[tok]) return KB_ALIAS_TO_KEY[tok];
+    return "";
+  }
+
+  // Main local search — returns up to 8 scored result cards
+  function searchLocalKB(query, cropFilter) {
+    const allTokens = kbNormalize(query);
+    if (!allTokens.length) return [];
+    const crop = kbDetectCrop(allTokens, cropFilter);
+    // When the crop is fixed (chip selected or named in query), drop the redundant
+    // crop word so the real intent (रोग/खाद/बुवाई…) drives ranking among that crop.
+    let tokens = crop ? allTokens.filter(t => KB_ALIAS_TO_KEY[t] !== crop) : allTokens;
+    if (!tokens.length) tokens = allTokens; // farmer typed only the crop name
+    const scored = [];
+    for (const e of KHOJ_KB) {
+      if (crop && e.crop_key && e.crop_key !== crop) continue; // crop filter
+      const s = kbScore(e, tokens);
+      if (s > 0) scored.push(Object.assign({}, e, { score: s }));
+    }
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 8);
+  }
+
+  // Merge local KB results with any unique server results (local first)
+  function mergeResults(local, server) {
+    const seen = new Set();
+    const key  = s => (s || "").toLowerCase().replace(/\s+/g, "").slice(0, 40);
+    const out  = [];
+    (local  || []).forEach(r => { const k = key(r.name || r.title); if (k && !seen.has(k)) { seen.add(k); out.push(r); } });
+    (server || []).forEach(r => { const k = key(r.name || r.title); if (k && !seen.has(k)) { seen.add(k); out.push(r); } });
+    return out.slice(0, 8);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  THE KNOWLEDGE BASE — 250+ farmer questions & answers
+  //  type: disease | fertilizer | sowing | general
+  // ══════════════════════════════════════════════════════════
+  const KHOJ_KB = [
+
+  /* ───────────────────────── गेहूँ (WHEAT) ───────────────────────── */
+  { type:"disease", crop:"गेहूँ", crop_key:"gehu", name:"पीला रतुआ / पीली पत्ती (Yellow Rust)", name_en:"wheat yellow rust peeli patti",
+    keywords:["पीला रतुआ","पीली पत्ती","yellow rust","peeli patti","जंग","रतुआ","धारियाँ"],
+    symptoms:"पत्तियों पर पीले रंग की लंबी धारियाँ बनती हैं, हाथ लगाने पर पीला पाउडर लगता है। ठंडे-नम मौसम में तेज़ी से फैलता है।",
+    treatment:"Propiconazole 25% EC (1 मिली/लीटर) या Tebuconazole 25.9% EC (1 मिली/लीटर) का छिड़काव करें। 15 दिन बाद दोहराएं।",
+    prevention:"रोग-प्रतिरोधी किस्में (DBW 187, PBW 725, HD 3086) लगाएं, समय पर बुवाई करें और संतुलित नाइट्रोजन दें।" },
+  { type:"disease", crop:"गेहूँ", crop_key:"gehu", name:"भूरा रतुआ (Brown / Leaf Rust)", name_en:"wheat brown leaf rust bhura ratua",
+    keywords:["भूरा रतुआ","brown rust","leaf rust","नारंगी धब्बे","भूरे धब्बे"],
+    symptoms:"पत्तियों पर बिखरे हुए नारंगी-भूरे गोल फफोले बनते हैं। उपज और दाने की गुणवत्ता घटती है।",
+    treatment:"Propiconazole 25% EC या Mancozeb 75% WP (2.5 ग्राम/लीटर) का छिड़काव। रोग दिखते ही करें।",
+    prevention:"प्रतिरोधी किस्में लगाएं, खेत में पुराने अवशेष नष्ट करें, समय पर बुवाई करें।" },
+  { type:"disease", crop:"गेहूँ", crop_key:"gehu", name:"करनाल बंट (Karnal Bunt)", name_en:"wheat karnal bunt",
+    keywords:["करनाल बंट","karnal bunt","काला पाउडर","दाने काले","मछली गंध"],
+    symptoms:"दानों में काला पाउडर भर जाता है और मछली जैसी बदबू आती है। बाली बनते समय नमी से फैलता है।",
+    treatment:"बीज उपचार Vitavax Power (Carboxin+Thiram) 2.5 ग्राम/किग्रा बीज। खड़ी फसल में Propiconazole छिड़काव।",
+    prevention:"प्रमाणित बीज और बीज उपचार ज़रूर करें, फसल चक्र अपनाएं।" },
+  { type:"disease", crop:"गेहूँ", crop_key:"gehu", name:"कंडुआ / अनावृत कंड (Loose Smut)", name_en:"wheat loose smut kandua",
+    keywords:["कंडुआ","loose smut","काली बाली","kandua","smut"],
+    symptoms:"बालियों में दानों की जगह काला चूर्ण बन जाता है, जो हवा से दूसरी बालियों में फैलता है।",
+    treatment:"बीज उपचार Carboxin 37.5%+Thiram 37.5% (Vitavax) 2.5–3 ग्राम/किग्रा बीज से करें।",
+    prevention:"रोग-मुक्त प्रमाणित बीज लें और बुवाई से पहले बीज उपचार अनिवार्य रूप से करें।" },
+  { type:"disease", crop:"गेहूँ", crop_key:"gehu", name:"चूर्णिल आसिता (Powdery Mildew)", name_en:"wheat powdery mildew churnil",
+    keywords:["चूर्णिल","powdery mildew","सफेद पाउडर","भूरी फफूंद"],
+    symptoms:"पत्तियों व तने पर सफेद आटे जैसी परत जम जाती है, बाद में पत्तियाँ पीली पड़ जाती हैं।",
+    treatment:"घुलनशील सल्फर 80% WP (2.5–3 ग्राम/लीटर) या Propiconazole (1 मिली/लीटर) छिड़काव करें।",
+    prevention:"अधिक नाइट्रोजन से बचें, हवादार दूरी पर बुवाई करें।" },
+  { type:"disease", crop:"गेहूँ", crop_key:"gehu", name:"दीमक (Termite)", name_en:"wheat termite dimak",
+    keywords:["दीमक","termite","जड़ कटना","पौधे सूखना","सफेद गिडार"],
+    symptoms:"पौधे अचानक सूखकर खींचने पर आसानी से उखड़ जाते हैं; जड़ें कटी मिलती हैं, खेत में सूखे धब्बे।",
+    treatment:"बीज उपचार Chlorpyriphos 20% EC (4 मिली/किग्रा) या Fipronil; खड़ी फसल में Chlorpyriphos सिंचाई के साथ डालें।",
+    prevention:"गहरी जुताई करें, कच्ची गोबर खाद न डालें, खेत साफ रखें।" },
+  { type:"disease", crop:"गेहूँ", crop_key:"gehu", name:"गेहूँ में माहू / चेंपा (Aphid)", name_en:"wheat aphid mahu chepa",
+    keywords:["माहू","चेंपा","aphid","रस चूसना","चिपचिपा"],
+    symptoms:"बालियों व पत्तियों पर हरे-काले छोटे कीट झुंड में रस चूसते हैं, पत्तियाँ चिपचिपी हो जाती हैं।",
+    treatment:"Imidacloprid 17.8% SL (0.3 मिली/लीटर) या Thiamethoxam 25% WG (0.2 ग्राम/लीटर) छिड़काव; ज़रूरत पड़ने पर ही।",
+    prevention:"प्राकृतिक मित्र कीट (लेडी बर्ड बीटल) को बचाएं, अंधाधुंध छिड़काव न करें।" },
+  { type:"fertilizer", crop:"गेहूँ", crop_key:"gehu", name:"गेहूँ में यूरिया कब और कितना डालें", name_en:"wheat urea nitrogen schedule",
+    keywords:["यूरिया","urea","नाइट्रोजन","गेहूँ खाद","कितना यूरिया"],
+    description:"गेहूँ को कुल 120 किग्रा नाइट्रोजन/हेक्टेयर चाहिए — तीन बार में देना सबसे असरदार।",
+    dosage:"बुवाई पर 1/3 N (DAP के साथ), पहली सिंचाई (बुवाई के 20–25 दिन बाद, CRI अवस्था) पर 1/3 यूरिया, दूसरी सिंचाई पर शेष 1/3। लगभग 260 किग्रा यूरिया/हेक्टेयर कुल।",
+    season:"नवंबर–मार्च" },
+  { type:"fertilizer", crop:"गेहूँ", crop_key:"gehu", name:"गेहूँ में DAP और पोटाश (बेसल डोज)", name_en:"wheat dap potash basal",
+    keywords:["DAP","dap","पोटाश","potash","बेसल","फॉस्फोरस"],
+    description:"DAP जड़ विकास व अंकुरण के लिए और पोटाश (MOP) दाना भरने व रोग-प्रतिरोध के लिए ज़रूरी।",
+    dosage:"बुवाई के समय 100 किग्रा DAP + 33 किग्रा MOP/हेक्टेयर बीज के नीचे डालें।",
+    season:"बुवाई के समय — अक्टूबर-नवंबर" },
+  { type:"sowing", crop:"गेहूँ", crop_key:"gehu", name:"गेहूँ बुवाई का सही समय, बीज दर व किस्में", name_en:"wheat sowing time seed rate variety",
+    keywords:["गेहूँ बुवाई","कब बोएं","बीज दर","किस्म","variety","seed rate"],
+    description:"समय पर बुवाई: बीज दर 100 किग्रा/हे, कतार दूरी 20–22 सेमी। पछेती बुवाई में बीज दर 125 किग्रा/हे बढ़ाएं। अनुशंसित किस्में: HD 2967, DBW 187, DBW 303, PBW 725, HD 3086।",
+    season:"समय पर: 1–20 नवंबर। पछेती: दिसंबर के अंत तक (उपज घटती है)।" },
+  { type:"general", crop:"गेहूँ", crop_key:"gehu", name:"गेहूँ में सिंचाई कब-कब करें", name_en:"wheat irrigation schedule critical stages",
+    keywords:["गेहूँ सिंचाई","सिंचाई","irrigation","पानी कब"],
+    description:"6 क्रांतिक अवस्थाएँ: (1) ताज जड़ CRI 20–25 दिन — सबसे ज़रूरी, (2) कल्ले 40–45 दिन, (3) गाँठ बनना 60–65 दिन, (4) फूल/बाली 80–85 दिन, (5) दूधिया 100–105 दिन, (6) दाना भरना 115–120 दिन। पानी कम हो तो CRI और बाली अवस्था को प्राथमिकता दें।",
+    season:"रबी" },
+  { type:"general", crop:"गेहूँ", crop_key:"gehu", name:"गेहूँ में खरपतवार (गेहूँसा/बथुआ) नियंत्रण", name_en:"wheat weed control gehunsa phalaris",
+    keywords:["खरपतवार","गेहूँसा","मंडूसी","phalaris","बथुआ","weed","निंदाई"],
+    description:"सकरी पत्ती (गेहूँसा/मंडूसी) के लिए Sulfosulfuron 75% WG (33 ग्राम/हे) या Clodinafop; चौड़ी पत्ती (बथुआ) के लिए 2,4-D या Metsulfuron। बुवाई के 30–35 दिन के अंदर छिड़काव करें।",
+    season:"बुवाई के 30-35 दिन बाद" },
+
+  /* ───────────────────────── धान (PADDY / RICE) ───────────────────────── */
+  { type:"disease", crop:"धान", crop_key:"dhaan", name:"धान का झोंका / ब्लास्ट (Blast)", name_en:"rice paddy blast jhonka",
+    keywords:["झोंका","ब्लास्ट","blast","jhonka","गर्दन सड़न","neck blast","आँख जैसे धब्बे"],
+    symptoms:"पत्तियों पर आँख/नाव जैसे भूरे धब्बे जिनका बीच राख जैसा होता है; नेक ब्लास्ट में बाली की गर्दन सड़कर टूट जाती है।",
+    treatment:"Tricyclazole 75% WP (0.6 ग्राम/लीटर) छिड़काव; बाली निकलने से पहले व बाद दो छिड़काव 10 दिन के अंतर पर।",
+    prevention:"अधिक नाइट्रोजन से बचें, प्रतिरोधी किस्में लगाएं, बीज उपचार करें।" },
+  { type:"disease", crop:"धान", crop_key:"dhaan", name:"जीवाणु झुलसा (Bacterial Leaf Blight)", name_en:"rice bacterial leaf blight jhulsa",
+    keywords:["जीवाणु झुलसा","bacterial blight","BLB","पत्ती सूखना","किनारे सूखना"],
+    symptoms:"पत्तियों के किनारे से पीला-भूरा सूखना शुरू होकर लहरदार धारी बनती है; सुबह पीला रिसाव दिखता है।",
+    treatment:"Copper Oxychloride 50% WP (3 ग्राम/लीटर) + Streptocycline (0.15 ग्राम/लीटर) का छिड़काव; नाइट्रोजन रोक दें।",
+    prevention:"प्रतिरोधी किस्में, संतुलित खाद, खेत का पानी निकालकर सुखाएं।" },
+  { type:"disease", crop:"धान", crop_key:"dhaan", name:"शीथ ब्लाइट / आवरण झुलसा (Sheath Blight)", name_en:"rice sheath blight",
+    keywords:["शीथ ब्लाइट","sheath blight","तना धब्बा","आवरण झुलसा"],
+    symptoms:"पानी की सतह के पास पत्ती-आवरण पर अंडाकार हरे-भूरे धब्बे जो ऊपर फैलते हैं।",
+    treatment:"Validamycin 3% L (2 मिली/लीटर) या Hexaconazole 5% EC (2 मिली/लीटर) छिड़काव।",
+    prevention:"घनी रोपाई न करें, अधिक N से बचें, खेत साफ रखें।" },
+  { type:"disease", crop:"धान", crop_key:"dhaan", name:"खैरा रोग — जिंक की कमी (Zinc Deficiency)", name_en:"rice khaira zinc deficiency",
+    keywords:["खैरा","khaira","जिंक","zinc","पत्ती पीली भूरी","कांसा"],
+    symptoms:"रोपाई के 2-3 हफ्ते बाद पत्तियाँ पीली-भूरी (कांसे जैसी) पड़ जाती हैं, पौधे बौने रह जाते हैं।",
+    treatment:"0.5% जिंक सल्फेट (5 ग्राम/लीटर) + 0.25% बिना बुझा चूना मिलाकर छिड़काव; भूमि में 25 किग्रा जिंक सल्फेट/हे।",
+    prevention:"बुवाई से पहले जिंक सल्फेट मिट्टी में मिलाएं।" },
+  { type:"disease", crop:"धान", crop_key:"dhaan", name:"तना छेदक (Stem Borer) — कीट", name_en:"rice stem borer tana chhedak",
+    keywords:["तना छेदक","stem borer","सूखी गोभ","dead heart","सफेद बाली","white ear"],
+    symptoms:"बीच की गोभ सूख जाती है (dead heart); बाली अवस्था में सफेद खाली बाली (white ear head) बनती है।",
+    treatment:"Cartap Hydrochloride 4G या Chlorantraniliprole 0.4% GR का प्रयोग; छिड़काव में Cartap 50% SP (1 ग्राम/लीटर)।",
+    prevention:"फेरोमोन ट्रैप लगाएं, अंडे के समूह नष्ट करें, ठूंठ नष्ट करें।" },
+  { type:"disease", crop:"धान", crop_key:"dhaan", name:"भूरा फुदका — BPH (Brown Plant Hopper)", name_en:"rice brown plant hopper BPH bhura phudka",
+    keywords:["भूरा फुदका","BPH","brown plant hopper","फुदका","hopper burn","गोलाई में सूखना"],
+    symptoms:"पौधे गोलाकार में झुलसकर सूखते हैं (hopper burn); तने के आधार पर भूरे छोटे कीट दिखते हैं।",
+    treatment:"खेत से पानी निकालें; Buprofezin 25% SC (2 मिली/लीटर) या Pymetrozine 50% WG (0.6 ग्राम/लीटर) छिड़काव तने की ओर।",
+    prevention:"अधिक N न दें, घनी रोपाई न करें, पंक्तियों के बीच जगह छोड़ें।" },
+  { type:"disease", crop:"धान", crop_key:"dhaan", name:"पत्ती लपेटक (Leaf Folder) — कीट", name_en:"rice leaf folder patti lapetak",
+    keywords:["पत्ती लपेटक","leaf folder","पत्ती मुड़ना","सफेद धारी"],
+    symptoms:"सूँडी पत्ती को मोड़कर अंदर से हरा भाग खाती है, पत्ती पर सफेद धारियाँ बनती हैं।",
+    treatment:"Flubendiamide 39.35% SC (0.2 मिली/लीटर) या Cartap 50% SP (1 ग्राम/लीटर) छिड़काव।",
+    prevention:"संतुलित खाद, खेत की निगरानी, मित्र कीट संरक्षण।" },
+  { type:"fertilizer", crop:"धान", crop_key:"dhaan", name:"धान में खाद/यूरिया प्रबंधन", name_en:"rice paddy urea nitrogen fertilizer",
+    keywords:["धान यूरिया","धान खाद","urea","नाइट्रोजन","कितनी खाद"],
+    description:"धान को कुल 120 किग्रा N, 60 किग्रा P, 40 किग्रा K/हेक्टेयर — नाइट्रोजन तीन बार में।",
+    dosage:"रोपाई पर 1/3 N (+ पूरा P, K), कल्ले फूटते समय 1/3, बाली निकलते समय 1/3। नील-हरित शैवाल व जिंक भी लाभकारी।",
+    season:"खरीफ — जून-जुलाई रोपाई" },
+  { type:"sowing", crop:"धान", crop_key:"dhaan", name:"धान नर्सरी, रोपाई व किस्में", name_en:"rice nursery transplanting variety",
+    keywords:["धान नर्सरी","रोपाई","बुवाई","किस्म","variety","बीज दर"],
+    description:"नर्सरी मई-जून में डालें, 20-25 दिन का पौधा रोपें। बीज दर 20-25 किग्रा/हे, रोपाई दूरी 20×15 सेमी, 2-3 पौधे/स्थान। किस्में: Pusa Basmati 1121/1509, Swarna (MTU 7029), Sarjoo 52, BPT 5204।",
+    season:"नर्सरी मई-जून, रोपाई जुलाई" },
+  { type:"general", crop:"धान", crop_key:"dhaan", name:"सीधी बुवाई धान (DSR — Direct Seeded Rice)", name_en:"rice DSR direct seeded",
+    keywords:["DSR","सीधी बुवाई","direct seeded","बिना रोपाई","पानी बचाना"],
+    description:"DSR में बिना नर्सरी-रोपाई के सीधे बीज ड्रिल से बोते हैं — 25-30% पानी व मज़दूरी बचती है। समतल खेत, बीज दर 20-25 किग्रा/हे, बुवाई के तुरंत बाद Pendimethalin से खरपतवार नियंत्रण ज़रूरी।",
+    season:"जून (मानसून पूर्व)" },
+  { type:"general", crop:"धान", crop_key:"dhaan", name:"धान में पानी प्रबंधन (AWD तकनीक)", name_en:"rice water management AWD",
+    keywords:["धान पानी","सिंचाई","AWD","पानी बचाना","water management"],
+    description:"खेत में 3-5 सेमी पानी रखें; AWD (Alternate Wetting & Drying) में पानी 5 सेमी नीचे जाने पर ही दोबारा सिंचाई करें — ~30% पानी बचता है। कटाई से 10-15 दिन पहले पानी बंद करें।",
+    season:"खरीफ" },
+  { type:"general", crop:"धान", crop_key:"dhaan", name:"धान में खरपतवार नियंत्रण", name_en:"rice weed control kharpatwar",
+    keywords:["धान खरपतवार","weed","सावां","मोथा","निंदाई"],
+    description:"रोपाई के 2-3 दिन बाद Pretilachlor 50% EC या Butachlor डालें; बाद में Bispyribac-sodium 10% SC (छिड़काव) से सावां-मोथा नियंत्रण। DSR में Pendimethalin बुवाई के तुरंत बाद।",
+    season:"रोपाई/बुवाई के तुरंत बाद" },
+
+  /* ───────────────────────── गन्ना (SUGARCANE) ───────────────────────── */
+  { type:"disease", crop:"गन्ना", crop_key:"ganna", name:"लाल सड़न रोग (Red Rot)", name_en:"sugarcane red rot lal sadan",
+    keywords:["लाल सड़न","red rot","लाल सदन","तना लाल","शराब गंध","सड़न"],
+    symptoms:"तना अंदर से लाल हो जाता है, बीच में सफेद धारियाँ, शराब जैसी गंध; पत्तियाँ पीली होकर सूखती हैं।",
+    treatment:"रोगग्रस्त झुंड उखाड़कर जला दें। बीज गन्ने को Carbendazim 50% WP (1 ग्राम/लीटर) में 15-30 मिनट डुबोएं।",
+    prevention:"प्रतिरोधी किस्में Co 0238 के विकल्प (Co 0118, CoLk 94184, Co 15023) लगाएं, स्वस्थ बीज लें, जल-निकासी ठीक रखें।" },
+  { type:"disease", crop:"गन्ना", crop_key:"ganna", name:"कंडुआ / चाबुक रोग (Smut)", name_en:"sugarcane smut kandua whip",
+    keywords:["कंडुआ","smut","चाबुक","काला चाबुक","whip"],
+    symptoms:"गन्ने के अग्र भाग से काले चाबुक जैसी संरचना निकलती है, पौधे पतले व झाड़ीनुमा हो जाते हैं।",
+    treatment:"रोगग्रस्त पौधे चाबुक सहित निकालकर जलाएं; बीज उपचार Carbendazim + गर्म जल उपचार (54°C, 2 घंटे)।",
+    prevention:"रोग-मुक्त बीज, प्रतिरोधी किस्में, पेड़ी (ratoon) रोगग्रस्त खेत में न लें।" },
+  { type:"disease", crop:"गन्ना", crop_key:"ganna", name:"अग्र तना छेदक / चोटी बेधक (Top Borer)", name_en:"sugarcane top borer agra tana chhedak",
+    keywords:["चोटी बेधक","top borer","अग्र छेदक","dead heart","गोभ सूखना"],
+    symptoms:"बीच की गोभ सूख जाती है, पत्तियों पर लाल-छेद वाली सुरंगें; ऊपरी भाग गुच्छेदार दिखता है।",
+    treatment:"Cartap Hydrochloride 4G (18 किग्रा/हे) या Chlorantraniliprole डालें; अंडे के समूह नष्ट करें।",
+    prevention:"हल्की मिट्टी चढ़ाएं, ट्राइकोग्रामा कार्ड लगाएं, समय पर सिंचाई।" },
+  { type:"disease", crop:"गन्ना", crop_key:"ganna", name:"पायरिल्ला / सफेद मक्खी (Pyrilla)", name_en:"sugarcane pyrilla pest",
+    keywords:["पायरिल्ला","pyrilla","रस चूसक","माहू","पत्ती पीली"],
+    symptoms:"पत्तियों का रस चूसने से पत्तियाँ पीली पड़ती हैं, चिपचिपे स्राव पर काली फफूंद जम जाती है।",
+    treatment:"प्राकृतिक परजीवी Epiricania melanoleuca को बढ़ावा दें; तीव्र प्रकोप पर Imidacloprid 17.8% SL (0.5 मिली/लीटर)।",
+    prevention:"अधिक नाइट्रोजन न दें, खेत की सफाई रखें, मित्र कीट बचाएं।" },
+  { type:"disease", crop:"गन्ना", crop_key:"ganna", name:"सफेद गिडार / white grub", name_en:"sugarcane white grub safed gidar",
+    keywords:["सफेद गिडार","white grub","जड़ खाना","पौधे सूखना"],
+    symptoms:"भूमि में सफेद मुड़े हुए गिडार जड़ें खाते हैं; पौधे झुंड में सूखकर आसानी से उखड़ते हैं।",
+    treatment:"Chlorpyriphos 20% EC या Fipronil का भूमि उपचार सिंचाई के साथ; प्रकाश प्रपंच से वयस्क बीटल पकड़ें।",
+    prevention:"गहरी गर्मी की जुताई, कच्ची गोबर खाद न डालें, फसल चक्र।" },
+  { type:"fertilizer", crop:"गन्ना", crop_key:"ganna", name:"गन्ने में खाद/नाइट्रोजन प्रबंधन", name_en:"sugarcane fertilizer nitrogen urea",
+    keywords:["गन्ना खाद","यूरिया","नाइट्रोजन","कितनी खाद","fertilizer"],
+    description:"गन्ने को भारी नाइट्रोजन चाहिए — कुल 180-225 किग्रा N/हे तीन किस्तों में।",
+    dosage:"बुवाई पर 1/3 N (+ पूरा P 80 किग्रा, K 60 किग्रा), 60 दिन पर 1/3, 120 दिन पर शेष 1/3। मिट्टी चढ़ाते समय ऊपर से।",
+    season:"फरवरी-मार्च (बसंत) / अक्टूबर (शरद)" },
+  { type:"sowing", crop:"गन्ना", crop_key:"ganna", name:"गन्ना बुवाई का समय, विधि व किस्में", name_en:"sugarcane planting time variety spacing",
+    keywords:["गन्ना बुवाई","कब लगाएं","किस्म","दूरी","बीज गन्ना"],
+    description:"शरदकालीन (अक्टूबर) बुवाई सबसे अधिक उपज देती है, बसंतकालीन फरवरी-मार्च। 3 आँख वाले टुकड़े, कतार दूरी 90-120 सेमी, बीज दर 35-40 हज़ार टुकड़े/हे। किस्में: Co 0238 के विकल्प Co 0118, CoLk 94184, Co 15023। ट्रेंच/रिंग विधि लाभकारी।",
+    season:"शरद: अक्टूबर | बसंत: फरवरी-मार्च" },
+  { type:"general", crop:"गन्ना", crop_key:"ganna", name:"गन्ने की पेड़ी (Ratoon) प्रबंधन", name_en:"sugarcane ratoon management pedi",
+    keywords:["पेड़ी","ratoon","दूसरी फसल","कटाई के बाद"],
+    description:"कटाई ज़मीन की सतह से करें, ठूंठ न जलाएं। तुरंत हल्की सिंचाई व 25% अधिक नाइट्रोजन दें, खाली स्थान पर नई आँख भरें। अच्छी पेड़ी से दोबारा बुवाई की लागत बचती है।",
+    season:"मुख्य फसल कटाई के बाद" },
+
+  /* ───────────────────────── सरसों (MUSTARD) ───────────────────────── */
+  { type:"disease", crop:"सरसों", crop_key:"sarson", name:"सफेद रतुआ / सफेद गेरुई (White Rust)", name_en:"mustard white rust safed gerui",
+    keywords:["सफेद रतुआ","सफेद गेरुई","white rust","सफेद फफोले"],
+    symptoms:"पत्तियों की निचली सतह पर सफेद उभरे फफोले, ऊपर पीले धब्बे; फूल-फली विकृत (स्टैगहेड) हो जाती है।",
+    treatment:"Metalaxyl + Mancozeb (Ridomil Gold) 2 ग्राम/लीटर छिड़काव; रोग शुरू होते ही व 15 दिन बाद।",
+    prevention:"समय पर बुवाई (15 अक्टूबर तक), प्रतिरोधी किस्में, जल-जमाव न होने दें।" },
+  { type:"disease", crop:"सरसों", crop_key:"sarson", name:"आल्टरनेरिया झुलसा (Alternaria Blight)", name_en:"mustard alternaria blight jhulsa",
+    keywords:["आल्टरनेरिया","alternaria","झुलसा","भूरे धब्बे","गोल छल्ले"],
+    symptoms:"पत्तियों व फलियों पर गहरे भूरे गोल धब्बे जिनमें छल्ले बनते हैं; तेज़ नमी में फैलता है।",
+    treatment:"Mancozeb 75% WP (2.5 ग्राम/लीटर) या Iprodione छिड़काव 15 दिन के अंतर पर।",
+    prevention:"स्वस्थ बीज, बीज उपचार, फसल अवशेष नष्ट करें।" },
+  { type:"disease", crop:"सरसों", crop_key:"sarson", name:"सरसों में माहू / चेंपा (Aphid)", name_en:"mustard aphid mahu lipaphis",
+    keywords:["माहू","चेंपा","aphid","रस चूसक","फूल पर कीट","lipaphis"],
+    symptoms:"फूल आते समय हरे-काले माहू तने, फूल व फलियों पर झुंड में रस चूसते हैं; 30-40% तक उपज घट सकती है।",
+    treatment:"Imidacloprid 17.8% SL (0.3 मिली/लीटर) या Thiamethoxam 25% WG; शाम के समय छिड़काव करें।",
+    prevention:"समय पर बुवाई, पीले स्टिकी ट्रैप, मित्र कीट संरक्षण।" },
+  { type:"disease", crop:"सरसों", crop_key:"sarson", name:"चितकबरा कीट (Painted Bug)", name_en:"mustard painted bug chitkabra",
+    keywords:["चितकबरा","painted bug","अंकुरण कीट","नारंगी काला कीट"],
+    symptoms:"अंकुरण व पकने के समय नारंगी-काले बग रस चूसते हैं, छोटे पौधे सूख जाते हैं।",
+    treatment:"Malathion 5% धूल भुरकाव या Quinalphos छिड़काव; अंकुरण के समय निगरानी रखें।",
+    prevention:"समय पर बुवाई, खेत के किनारे की सफाई।" },
+  { type:"fertilizer", crop:"सरसों", crop_key:"sarson", name:"सरसों में खाद व सल्फर का महत्व", name_en:"mustard fertilizer sulphur npk",
+    keywords:["सरसों खाद","सल्फर","sulphur","गंधक","तेल बढ़ाना","NPK"],
+    description:"सरसों को सल्फर (गंधक) की विशेष ज़रूरत — तेल की मात्रा बढ़ती है।",
+    dosage:"N:P:K = 80:40:40 किग्रा/हे + 40 किग्रा सल्फर (250 किग्रा जिप्सम या बेन्टोनाइट सल्फर से) बुवाई पर।",
+    season:"रबी — बुवाई के समय" },
+  { type:"sowing", crop:"सरसों", crop_key:"sarson", name:"सरसों बुवाई का सही समय व किस्में", name_en:"mustard sowing time variety",
+    keywords:["सरसों बुवाई","कब बोएं","किस्म","variety","बीज दर"],
+    description:"सर्वोत्तम समय 1-20 अक्टूबर; देर से उपज व तेल दोनों घटते हैं। बीज दर 5-6 किग्रा/हे, कतार दूरी 30-45 सेमी। किस्में: Pusa Bold, Varuna, RH 749, Giriraj, NRCHB 101 (पछेती)। पहली सिंचाई फूल आने से पहले 30-35 दिन पर।",
+    season:"रबी — 1-20 अक्टूबर सर्वोत्तम" },
+
+  /* ───────────────────────── आलू (POTATO) ───────────────────────── */
+  { type:"disease", crop:"आलू", crop_key:"aloo", name:"पछेती झुलसा (Late Blight)", name_en:"potato late blight pacheti jhulsa",
+    keywords:["पछेती झुलसा","late blight","झुलसा","काले धब्बे","सफेद फफूंद"],
+    symptoms:"पत्तियों पर भूरे-काले पानीदार धब्बे जो तेज़ी से फैलते हैं; नमी में पत्ती की निचली सतह पर सफेद फफूंद। कंद भी सड़ते हैं।",
+    treatment:"रोकथाम में Mancozeb 75% WP (2.5 ग्राम/लीटर); रोग आने पर Cymoxanil+Mancozeb या Metalaxyl+Mancozeb (2.5 ग्राम/लीटर) 7-10 दिन के अंतर पर।",
+    prevention:"रोग-मुक्त बीज, मेड़ पर बुवाई, कोहरे-ठंड में सतर्क छिड़काव।" },
+  { type:"disease", crop:"आलू", crop_key:"aloo", name:"अगेती झुलसा (Early Blight)", name_en:"potato early blight ageti jhulsa",
+    keywords:["अगेती झुलसा","early blight","भूरे छल्ले","alternaria"],
+    symptoms:"पुरानी पत्तियों पर गहरे भूरे धब्बे जिनमें संकेंद्रित छल्ले (target spots) बनते हैं।",
+    treatment:"Mancozeb 75% WP (2.5 ग्राम/लीटर) या Chlorothalonil छिड़काव।",
+    prevention:"संतुलित खाद, फसल चक्र, स्वस्थ बीज।" },
+  { type:"disease", crop:"आलू", crop_key:"aloo", name:"काला रूसा / ब्लैक स्कर्फ (Black Scurf)", name_en:"potato black scurf kala roosa rhizoctonia",
+    keywords:["ब्लैक स्कर्फ","black scurf","काले धब्बे कंद","rhizoctonia"],
+    symptoms:"कंदों पर मिट्टी जैसे काले चिपके धब्बे (कठोर), अंकुरण कमज़ोर।",
+    treatment:"बीज कंद उपचार: Pencycuron या Carbendazim घोल में डुबोएं।",
+    prevention:"प्रमाणित बीज, फसल चक्र, उथली बुवाई न करें।" },
+  { type:"fertilizer", crop:"आलू", crop_key:"aloo", name:"आलू में खाद (पोटाश की ज़रूरत)", name_en:"potato fertilizer npk potash",
+    keywords:["आलू खाद","पोटाश","potash","NPK","कंद आकार"],
+    description:"आलू को पोटाश की अधिक ज़रूरत — कंद का आकार व गुणवत्ता पोटाश पर निर्भर।",
+    dosage:"N:P:K = 180:80:100 किग्रा/हे। आधा N + पूरा P,K बुवाई पर, शेष N मिट्टी चढ़ाते समय (30-35 दिन)।",
+    season:"रबी — बुवाई व मिट्टी चढ़ाते समय" },
+  { type:"sowing", crop:"आलू", crop_key:"aloo", name:"आलू बुवाई का समय व किस्में", name_en:"potato sowing time variety",
+    keywords:["आलू बुवाई","कब लगाएं","किस्म","बीज आलू","variety"],
+    description:"बुवाई 15 अक्टूबर-15 नवंबर। बीज दर 25-30 क्विंटल/हे, कंद 30-40 ग्राम, कतार 60 सेमी × पौधा 20 सेमी। किस्में: Kufri Pukhraj, Kufri Bahar, Kufri Jyoti, Kufri Chipsona (चिप्स हेतु)।",
+    season:"रबी — 15 अक्टूबर से 15 नवंबर" },
+  { type:"general", crop:"आलू", crop_key:"aloo", name:"आलू भंडारण व हॉल्म कटाई (Dehaulming)", name_en:"potato storage dehaulming haulm cutting",
+    keywords:["आलू भंडारण","storage","हॉल्म","डिहॉल्मिंग","कोल्ड स्टोर"],
+    description:"खुदाई से 10-15 दिन पहले बेल (हॉल्म) काट दें ताकि छिलका सख्त हो। खुदाई के बाद छाया में सुखाकर 2-4°C कोल्ड स्टोरेज में रखें; बीज आलू को विसरित रोशनी (diffused light) में रखें।",
+    season:"फरवरी-मार्च खुदाई के बाद" },
+
+  /* ───────────────────────── टमाटर (TOMATO) ───────────────────────── */
+  { type:"disease", crop:"टमाटर", crop_key:"tomato", name:"टमाटर अगेती झुलसा (Early Blight)", name_en:"tomato early blight ageti jhulsa",
+    keywords:["टमाटर झुलसा","early blight","भूरे छल्ले धब्बे","alternaria"],
+    symptoms:"पुरानी पत्तियों पर गहरे भूरे धब्बे जिनमें छल्ले (target ring) बनते हैं; पत्तियाँ पीली होकर गिरती हैं।",
+    treatment:"Mancozeb 75% WP (2.5 ग्राम/लीटर) या Chlorothalonil; 10 दिन के अंतर पर छिड़काव।",
+    prevention:"फसल चक्र, स्वस्थ पौध, ड्रिप सिंचाई से पत्ती गीली न रखें।" },
+  { type:"disease", crop:"टमाटर", crop_key:"tomato", name:"टमाटर पछेती झुलसा (Late Blight)", name_en:"tomato late blight pacheti",
+    keywords:["टमाटर पछेती","late blight","पानीदार धब्बे","सफेद फफूंद"],
+    symptoms:"पत्तियों-फलों पर भूरे पानीदार धब्बे, नमी में सफेद रुई जैसी फफूंद; पूरी फसल जल्दी झुलस सकती है।",
+    treatment:"Cymoxanil+Mancozeb या Metalaxyl+Mancozeb (2.5 ग्राम/लीटर) छिड़काव 7 दिन के अंतर पर।",
+    prevention:"रोग-प्रतिरोधी संकर, हवादार दूरी, ठंडी-नम मौसम में सतर्कता।" },
+  { type:"disease", crop:"टमाटर", crop_key:"tomato", name:"टमाटर पत्ती मोड़क विषाणु (Leaf Curl Virus)", name_en:"tomato leaf curl virus patti modak whitefly",
+    keywords:["पत्ती मोड़","leaf curl","virus","विषाणु","सफेद मक्खी","मुड़ी पत्ती"],
+    symptoms:"पत्तियाँ ऊपर की ओर मुड़ती-सिकुड़ती हैं, पौधा बौना रह जाता है, फल नहीं लगते। सफेद मक्खी से फैलता है।",
+    treatment:"रोग का सीधा इलाज नहीं — फैलाने वाली सफेद मक्खी रोकें: Imidacloprid 17.8% SL (0.3 मिली/लीटर) या Diafenthiuron; रोगग्रस्त पौधे उखाड़ें।",
+    prevention:"विषाणु-सहिष्णु संकर लगाएं, नर्सरी को नायलॉन नेट से ढकें, पीले स्टिकी ट्रैप, खरपतवार हटाएं।" },
+  { type:"disease", crop:"टमाटर", crop_key:"tomato", name:"टमाटर उकठा / फ्यूजेरियम विल्ट (Wilt)", name_en:"tomato fusarium wilt ukatha",
+    keywords:["उकठा","wilt","मुरझाना","fusarium","एकतरफा पीला"],
+    symptoms:"पौधा दिन में मुरझाता है, निचली पत्तियाँ पीली; तना काटने पर अंदर भूरी धारियाँ दिखती हैं।",
+    treatment:"भूमि में Trichoderma viride मिलाएं; Carbendazim ड्रेंचिंग (1 ग्राम/लीटर) जड़ों के पास।",
+    prevention:"प्रतिरोधी किस्में, फसल चक्र, जल-निकासी, बीज/पौध उपचार।" },
+  { type:"disease", crop:"टमाटर", crop_key:"tomato", name:"फल छेदक (Fruit Borer — Helicoverpa)", name_en:"tomato fruit borer phal chhedak helicoverpa",
+    keywords:["फल छेदक","fruit borer","सुंडी","helicoverpa","फल में छेद"],
+    symptoms:"सूँडी फल में गोल छेद कर अंदर का गूदा खाती है, फल सड़ जाता है।",
+    treatment:"Spinosad 45% SC (0.3 मिली/लीटर) या Emamectin benzoate 5% SG (0.4 ग्राम/लीटर); फेरोमोन ट्रैप व NPV।",
+    prevention:"फेरोमोन ट्रैप 5/एकड़, बर्ड पर्च, अंडे-सूँडी हाथ से हटाएं, गेंदा सहफसल।" },
+  { type:"fertilizer", crop:"टमाटर", crop_key:"tomato", name:"टमाटर में खाद व कैल्शियम (फल फटना/काला होना)", name_en:"tomato fertilizer calcium blossom end rot",
+    keywords:["टमाटर खाद","कैल्शियम","blossom end rot","फल काला","नीचे सड़न"],
+    description:"फल के निचले सिरे का काला सड़ना कैल्शियम की कमी व अनियमित पानी से होता है।",
+    dosage:"N:P:K = 100:60:60 किग्रा/हे; कैल्शियम नाइट्रेट (0.5%) या कैल्शियम क्लोराइड का छिड़काव; ड्रिप से नियमित पानी दें।",
+    season:"पूरे फल विकास के दौरान" },
+  { type:"sowing", crop:"टमाटर", crop_key:"tomato", name:"टमाटर नर्सरी, रोपाई व किस्में", name_en:"tomato nursery transplanting variety",
+    keywords:["टमाटर नर्सरी","रोपाई","बुवाई","किस्म","hybrid"],
+    description:"नर्सरी में बीज बोकर 25-30 दिन का पौधा रोपें (दूरी 60×45 सेमी)। साल में दो मौसम: जुलाई-अगस्त (खरीफ) व अक्टूबर-नवंबर (रबी)। संकर: Arka Rakshak, Pusa Ruby, NS व अन्य रोग-सहिष्णु हाइब्रिड।",
+    season:"खरीफ (जुलाई-अगस्त) व रबी (अक्टूबर-नवंबर)" },
+
+  /* ───────────────────────── प्याज (ONION) ───────────────────────── */
+  { type:"disease", crop:"प्याज", crop_key:"pyaaz", name:"बैंगनी धब्बा (Purple Blotch)", name_en:"onion purple blotch baingani dhabba alternaria",
+    keywords:["बैंगनी धब्बा","purple blotch","प्याज धब्बे","alternaria"],
+    symptoms:"पत्तियों व डंठल पर बैंगनी केंद्र वाले धब्बे जो बड़े होकर पत्ती सुखा देते हैं।",
+    treatment:"Mancozeb 75% WP (2.5 ग्राम/लीटर) या Hexaconazole; छिड़काव में स्टिकर मिलाएं (प्याज पत्ती चिकनी)।",
+    prevention:"बीज उपचार, फसल चक्र, संतुलित खाद।" },
+  { type:"disease", crop:"प्याज", crop_key:"pyaaz", name:"प्याज में थ्रिप्स (Thrips) — कीट", name_en:"onion thrips keet",
+    keywords:["थ्रिप्स","thrips","प्याज कीट","सफेद धारी","चांदी जैसी पत्ती"],
+    symptoms:"पत्तियों पर चांदी-सफेद खुरचन वाली धारियाँ, पत्ती मुड़ती-टेढ़ी होती है, कंद छोटा रह जाता है।",
+    treatment:"Fipronil 5% SC (1.5 मिली/लीटर) या Spinosad 45% SC (0.3 मिली/लीटर) + स्टिकर; नीले स्टिकी ट्रैप।",
+    prevention:"समय पर सिंचाई, नीले/पीले स्टिकी ट्रैप, अधिक सूखा तनाव न दें।" },
+  { type:"fertilizer", crop:"प्याज", crop_key:"pyaaz", name:"प्याज में खाद व सल्फर", name_en:"onion fertilizer sulphur npk",
+    keywords:["प्याज खाद","सल्फर","sulphur","NPK","कंद आकार"],
+    description:"सल्फर से प्याज की तीखापन व भंडारण क्षमता बढ़ती है।",
+    dosage:"N:P:K = 100:50:50 किग्रा/हे + 30-40 किग्रा सल्फर। नाइट्रोजन दो बार में; कंद बनते समय N बंद कर दें।",
+    season:"रबी" },
+  { type:"sowing", crop:"प्याज", crop_key:"pyaaz", name:"प्याज नर्सरी, रोपाई व किस्में", name_en:"onion nursery sowing variety",
+    keywords:["प्याज नर्सरी","रोपाई","बुवाई","किस्म","variety"],
+    description:"रबी: नर्सरी अक्टूबर-नवंबर, रोपाई दिसंबर (6-8 हफ्ते का पौधा), दूरी 15×10 सेमी। किस्में: Nasik Red (N-53), Agrifound Light Red, Bhima Super/Bhima Red, Pusa Red।",
+    season:"रबी नर्सरी अक्टूबर-नवंबर; खरीफ भी संभव" },
+  { type:"general", crop:"प्याज", crop_key:"pyaaz", name:"प्याज भंडारण व जल्दी फूल आना (Bolting)", name_en:"onion storage bolting neck fall",
+    keywords:["प्याज भंडारण","storage","bolting","फूल आना","गर्दन गिरना"],
+    description:"50% पौधों की गर्दन गिरने (neck fall) पर खुदाई करें, 3-5 दिन खेत में व फिर छाया में सुखाएं (curing)। हवादार, सूखे स्थान पर पतली परत में रखें। बड़ी पौध रोपने से बोल्टिंग (असमय फूल) बढ़ता है — सही उम्र की पौध लगाएं।",
+    season:"खुदाई के बाद" },
+
+  /* ───────────────────────── मक्का (MAIZE) ───────────────────────── */
+  { type:"disease", crop:"मक्का", crop_key:"makka", name:"फॉल आर्मीवर्म / फौजी कीट (Fall Armyworm)", name_en:"maize fall armyworm fauji keet spodoptera",
+    keywords:["फॉल आर्मीवर्म","fall armyworm","फौजी कीट","सुंडी","गोभ खाना","spodoptera"],
+    symptoms:"सूँडी पत्तियों व गोभ (whorl) को खाती है, गोभ में छेद व कतरन-मल (frass) दिखता है; नई पत्तियाँ छलनी।",
+    treatment:"गोभ में बालू+चूना डालें; Emamectin benzoate 5% SG (0.4 ग्राम/लीटर) या Spinetoram/Chlorantraniliprole गोभ की ओर छिड़काव शाम को।",
+    prevention:"फेरोमोन ट्रैप, समय पर बुवाई, खेत के चारों ओर नेपियर ट्रैप-क्रॉप, नियमित निगरानी।" },
+  { type:"disease", crop:"मक्का", crop_key:"makka", name:"तना सड़न (Stalk Rot)", name_en:"maize stalk rot tana sadan",
+    keywords:["तना सड़न","stalk rot","पौधा गिरना","तना मुलायम"],
+    symptoms:"तने का निचला भाग मुलायम-भूरा होकर सड़ता है, पौधे गिर जाते हैं; जल-जमाव में अधिक।",
+    treatment:"Copper Oxychloride या Carbendazim की ड्रेंचिंग; प्रभावित पौधे हटाएं।",
+    prevention:"जल-निकासी ठीक रखें, पोटाश संतुलित दें, फसल चक्र।" },
+  { type:"disease", crop:"मक्का", crop_key:"makka", name:"टर्सिकम पत्ती झुलसा (Turcicum Leaf Blight)", name_en:"maize turcicum leaf blight patti jhulsa",
+    keywords:["पत्ती झुलसा","turcicum","leaf blight","लंबे धब्बे","नाव जैसे धब्बे"],
+    symptoms:"पत्तियों पर लंबे नाव/सिगार जैसे भूरे धब्बे जो आपस में मिलकर पत्ती सुखा देते हैं।",
+    treatment:"Mancozeb 75% WP (2.5 ग्राम/लीटर) या Zineb छिड़काव 8-10 दिन के अंतर पर।",
+    prevention:"प्रतिरोधी संकर, फसल अवशेष नष्ट करें, संतुलित खाद।" },
+  { type:"fertilizer", crop:"मक्का", crop_key:"makka", name:"मक्का में खाद/नाइट्रोजन", name_en:"maize fertilizer nitrogen npk",
+    keywords:["मक्का खाद","यूरिया","नाइट्रोजन","NPK","fertilizer"],
+    description:"मक्का को अधिक नाइट्रोजन व जिंक चाहिए।",
+    dosage:"N:P:K = 120:60:40 किग्रा/हे। N चार बार में: बुवाई, 4-पत्ती, घुटना अवस्था, नर मंजरी; + 25 किग्रा जिंक सल्फेट/हे।",
+    season:"खरीफ/रबी/जायद" },
+  { type:"sowing", crop:"मक्का", crop_key:"makka", name:"मक्का बुवाई का समय, दूरी व संकर", name_en:"maize sowing time spacing hybrid",
+    keywords:["मक्का बुवाई","कब बोएं","दूरी","संकर","hybrid","बीज दर"],
+    description:"खरीफ जून-जुलाई, रबी अक्टूबर, जायद फरवरी। बीज दर 20 किग्रा/हे, दूरी 60×20 सेमी, मेड़ पर बुवाई बेहतर। संकर: HQPM-1, Pioneer/DKC व अन्य उन्नत हाइब्रिड।",
+    season:"खरीफ, रबी व जायद तीनों" },
+
+  /* ───────────────────────── चना (CHICKPEA / GRAM) ───────────────────────── */
+  { type:"disease", crop:"चना", crop_key:"chana", name:"चना उकठा / विल्ट (Fusarium Wilt)", name_en:"chickpea gram fusarium wilt ukatha chana",
+    keywords:["चना उकठा","wilt","मुरझाना","fusarium","सूखना"],
+    symptoms:"पौधे अचानक मुरझाकर सूख जाते हैं; जड़/तना काटने पर अंदर काली-भूरी धारियाँ।",
+    treatment:"बीज उपचार Trichoderma viride (5-10 ग्राम/किग्रा) + Carbendazim; रोगग्रस्त पौधे हटाएं।",
+    prevention:"प्रतिरोधी किस्में (JG 11, JG 14), गहरी बुवाई न करें, फसल चक्र, देर से बुवाई से बचें।" },
+  { type:"disease", crop:"चना", crop_key:"chana", name:"चना फली छेदक (Pod Borer — Helicoverpa)", name_en:"chickpea pod borer phali chhedak helicoverpa",
+    keywords:["फली छेदक","pod borer","सुंडी","helicoverpa","फली में छेद"],
+    symptoms:"सूँडी फली में छेद कर दाने खाती है; एक सूँडी कई फलियाँ नष्ट करती है।",
+    treatment:"HaNPV 250 LE/हे या Emamectin benzoate 5% SG (0.4 ग्राम/लीटर)/Chlorantraniliprole; फूल अवस्था से निगरानी।",
+    prevention:"फेरोमोन ट्रैप, बर्ड पर्च (T-आकार), खेत में पक्षी बैठने दें, NPV का प्रयोग।" },
+  { type:"general", crop:"चना", crop_key:"chana", name:"चना में निपिंग (शीर्ष तोड़ना)", name_en:"chickpea nipping shirsh todna",
+    keywords:["निपिंग","nipping","शीर्ष तोड़ना","चना शाखा","अधिक फूल"],
+    description:"बुवाई के 30-40 दिन बाद ऊपरी कोपलें तोड़ने (निपिंग) से शाखाएँ व फूल-फलियाँ अधिक बनती हैं और उपज बढ़ती है। अधिक बढ़वार वाली फसल में लाभकारी।",
+    season:"बुवाई के 30-40 दिन बाद" },
+  { type:"fertilizer", crop:"चना", crop_key:"chana", name:"चना में खाद व राइज़ोबियम", name_en:"chickpea fertilizer dap rhizobium",
+    keywords:["चना खाद","DAP","राइज़ोबियम","rhizobium","दलहन खाद"],
+    description:"दलहन होने से चना खुद नाइट्रोजन स्थिर करता है — कम N चाहिए।",
+    dosage:"बुवाई पर 20 किग्रा N + 40-50 किग्रा P (≈ 100 किग्रा DAP)/हे। बीज को Rhizobium + PSB कल्चर से उपचारित करें।",
+    season:"रबी — बुवाई पर" },
+  { type:"sowing", crop:"चना", crop_key:"chana", name:"चना बुवाई का समय व किस्में", name_en:"chickpea sowing time variety",
+    keywords:["चना बुवाई","कब बोएं","किस्म","देसी काबुली","variety"],
+    description:"बुवाई 20 अक्टूबर-10 नवंबर। बीज दर देसी 75-80 किग्रा/हे, काबुली 100 किग्रा/हे, दूरी 30 सेमी। किस्में: JG 11, JAKI 9218, JG 14, Pusa 372; काबुली: Pusa 1108।",
+    season:"रबी — अक्टूबर-नवंबर" },
+
+  /* ───────────────────────── सोयाबीन (SOYBEAN) ───────────────────────── */
+  { type:"disease", crop:"सोयाबीन", crop_key:"soybean", name:"सोयाबीन पीला मोज़ेक (Yellow Mosaic Virus)", name_en:"soybean yellow mosaic virus peela mosaic",
+    keywords:["पीला मोज़ेक","yellow mosaic","virus","सफेद मक्खी","पत्ती पीली"],
+    symptoms:"पत्तियों पर पीले-हरे धब्बे/चकत्ते, पौधा बौना, फलियाँ कम; सफेद मक्खी से फैलता है।",
+    treatment:"सफेद मक्खी नियंत्रण: Thiamethoxam 25% WG या Imidacloprid छिड़काव; रोगग्रस्त पौधे हटाएं।",
+    prevention:"प्रतिरोधी किस्में (JS 20-69, JS 20-34), पीले स्टिकी ट्रैप, बीज उपचार।" },
+  { type:"disease", crop:"सोयाबीन", crop_key:"soybean", name:"सोयाबीन गर्डल बीटल व पत्ती भक्षक", name_en:"soybean girdle beetle defoliator keet",
+    keywords:["गर्डल बीटल","girdle beetle","तना मक्खी","पत्ती खाना","semilooper"],
+    symptoms:"गर्डल बीटल तने में दो छल्ले बनाकर ऊपरी भाग सुखा देती है; सेमीलूपर/तंबाकू सूँडी पत्तियाँ खाती हैं।",
+    treatment:"Chlorantraniliprole 18.5% SC या Indoxacarb छिड़काव; प्रभावित तना-भाग काटकर नष्ट करें।",
+    prevention:"समय पर बुवाई, फसल चक्र, खेत की निगरानी, अंडे-सूँडी हटाएं।" },
+  { type:"sowing", crop:"सोयाबीन", crop_key:"soybean", name:"सोयाबीन बुवाई, बीज दर व किस्में", name_en:"soybean sowing seed rate variety rhizobium",
+    keywords:["सोयाबीन बुवाई","कब बोएं","बीज दर","किस्म","राइज़ोबियम"],
+    description:"बुवाई मानसून आते ही जून-जुलाई (कम से कम 4 इंच बारिश पर)। बीज दर 70-80 किग्रा/हे, दूरी 45×5 सेमी। बीज को Rhizobium+PSB व फफूंदनाशक से उपचारित करें। किस्में: JS 95-60, JS 20-34, JS 20-69।",
+    season:"खरीफ — जून-जुलाई" },
+
+  /* ───────────────────────── कपास (COTTON) ───────────────────────── */
+  { type:"disease", crop:"कपास", crop_key:"kapas", name:"गुलाबी सुंडी (Pink Bollworm)", name_en:"cotton pink bollworm gulabi sundi",
+    keywords:["गुलाबी सुंडी","pink bollworm","टिंडा छेदक","गुलाबी कीड़ा","boll"],
+    symptoms:"सूँडी टिंडे (boll) के अंदर घुसकर बीज व रेशा खाती है; फूल 'रोज़ेट' बन जाते हैं, टिंडे सड़ते हैं।",
+    treatment:"फेरोमोन ट्रैप (PB ट्रैप/Gossyplure) 8-10/एकड़; प्रकोप पर Emamectin benzoate या Profenophos; प्रभावित टिंडे तोड़कर नष्ट करें।",
+    prevention:"समय पर बुवाई व जल्दी फसल समाप्ति, गुलाबी सुंडी की निगरानी, Bt कपास में रिफ्यूज लगाएं, खेत साफ रखें।" },
+  { type:"disease", crop:"कपास", crop_key:"kapas", name:"सफेद मक्खी व हरा तेला (Whitefly & Jassids)", name_en:"cotton whitefly jassid safed makkhi",
+    keywords:["सफेद मक्खी","whitefly","हरा तेला","jassid","रस चूसक","पत्ती मुड़ना"],
+    symptoms:"रस चूसने से पत्तियाँ पीली/मुड़ती हैं, चिपचिपे स्राव पर काली फफूंद; सफेद मक्खी पत्ती मोड़ विषाणु भी फैलाती है।",
+    treatment:"Diafenthiuron 50% WP या Flonicamid 50% WG छिड़काव; नीम तेल (5 मिली/लीटर) शुरूआती अवस्था में।",
+    prevention:"पीले स्टिकी ट्रैप, समय पर बुवाई, अंतर-फसल, मित्र कीट संरक्षण।" },
+  { type:"fertilizer", crop:"कपास", crop_key:"kapas", name:"कपास में खाद प्रबंधन", name_en:"cotton fertilizer npk",
+    keywords:["कपास खाद","NPK","नाइट्रोजन","fertilizer"],
+    description:"बीटी कपास को अधिक पोषण चाहिए; नाइट्रोजन कई किस्तों में।",
+    dosage:"N:P:K ≈ 120:60:60 किग्रा/हे (संकर हेतु अधिक)। N को 3-4 बार में बाँटें; फूल-टिंडा अवस्था में पोटाश व मैग्नीशियम लाभकारी।",
+    season:"खरीफ" },
+  { type:"sowing", crop:"कपास", crop_key:"kapas", name:"कपास (Bt) बुवाई का समय व दूरी", name_en:"cotton bt sowing time spacing",
+    keywords:["कपास बुवाई","Bt कपास","कब बोएं","दूरी","रिफ्यूज"],
+    description:"बुवाई मई-जून (सिंचित) / मानसून आधारित। संकर दूरी 90-120 × 45-60 सेमी (सघन: 60×10)। Bt पैकेट के साथ नॉन-Bt रिफ्यूज ज़रूर लगाएं। बीज पहले से उपचारित आता है।",
+    season:"मई-जून" },
+
+  /* ───────────────────────── मिर्च (CHILLI) ───────────────────────── */
+  { type:"disease", crop:"मिर्च", crop_key:"mirch", name:"मिर्च पत्ती मोड़ / मुरड़ा (Leaf Curl — Thrips+Mite)", name_en:"chilli leaf curl murda thrips mite",
+    keywords:["मिर्च मुरड़ा","leaf curl","पत्ती मोड़","थ्रिप्स","माइट","चुरडा मुरडा"],
+    symptoms:"पत्तियाँ ऊपर/नीचे मुड़कर सिकुड़ती हैं (नाव जैसी), पौधा झाड़ीनुमा-बौना; थ्रिप्स व माइट दोनों कारण।",
+    treatment:"थ्रिप्स हेतु Fipronil/Spinosad + माइट हेतु Spiromesifen 22.9% SC (1 मिली/लीटर) या घुलनशील सल्फर; बारी-बारी दवा बदलें।",
+    prevention:"नर्सरी नेट में, नीले/पीले स्टिकी ट्रैप, रोगग्रस्त पौधे हटाएं, संतुलित खाद।" },
+  { type:"disease", crop:"मिर्च", crop_key:"mirch", name:"मिर्च एंथ्रेक्नोज / फल सड़न व डाई-बैक", name_en:"chilli anthracnose die back phal sadan",
+    keywords:["एंथ्रेक्नोज","anthracnose","फल सड़न","die back","फल पर धब्बे","ठनठनी"],
+    symptoms:"फलों पर धँसे हुए काले-भूरे गोल धब्बे, टहनियाँ ऊपर से सूखती हैं (die-back)।",
+    treatment:"Azoxystrobin या Carbendazim+Mancozeb (2 ग्राम/लीटर) छिड़काव; प्रभावित फल हटाएं।",
+    prevention:"स्वस्थ बीज, बीज उपचार, हवादार दूरी, फसल चक्र।" },
+  { type:"fertilizer", crop:"मिर्च", crop_key:"mirch", name:"मिर्च में खाद व फूल झड़ना रोकना", name_en:"chilli fertilizer flower drop npk",
+    keywords:["मिर्च खाद","फूल झड़ना","NPK","flower drop"],
+    description:"फूल झड़ना अनियमित पानी, अधिक N या पोषण असंतुलन से होता है।",
+    dosage:"N:P:K ≈ 100:50:50 किग्रा/हे; फूल अवस्था में 0-52-34 या सूक्ष्म पोषक का छिड़काव; नियमित ड्रिप सिंचाई दें।",
+    season:"पूरे मौसम" },
+  { type:"sowing", crop:"मिर्च", crop_key:"mirch", name:"मिर्च नर्सरी, रोपाई व किस्में", name_en:"chilli nursery sowing variety",
+    keywords:["मिर्च नर्सरी","रोपाई","बुवाई","किस्म","hybrid"],
+    description:"नर्सरी में बीज बोकर 30-40 दिन का पौधा रोपें, दूरी 60×45 सेमी। मौसम: खरीफ (जून-जुलाई) व रबी (अक्टूबर)। किस्में/संकर: Pusa Jwala, Kashi Anmol व रोग-सहिष्णु हाइब्रिड।",
+    season:"खरीफ व रबी" },
+
+  /* ───────────────────────── लहसुन (GARLIC) ───────────────────────── */
+  { type:"disease", crop:"लहसुन", crop_key:"lehsun", name:"लहसुन/प्याज में बैंगनी धब्बा व थ्रिप्स", name_en:"garlic purple blotch thrips",
+    keywords:["लहसुन रोग","बैंगनी धब्बा","थ्रिप्स","purple blotch","thrips"],
+    symptoms:"पत्तियों पर बैंगनी केंद्र वाले धब्बे; थ्रिप्स से चांदी जैसी धारियाँ व मुड़ाव।",
+    treatment:"Mancozeb (2.5 ग्राम/लीटर) + थ्रिप्स हेतु Fipronil/Spinosad, स्टिकर के साथ छिड़काव।",
+    prevention:"बीज उपचार, फसल चक्र, स्टिकी ट्रैप, संतुलित सिंचाई।" },
+  { type:"sowing", crop:"लहसुन", crop_key:"lehsun", name:"लहसुन बुवाई का समय व किस्में", name_en:"garlic sowing time variety",
+    keywords:["लहसुन बुवाई","कब लगाएं","किस्म","कली","variety"],
+    description:"बुवाई अक्टूबर-नवंबर, स्वस्थ कलियाँ अलग कर 15×7.5 सेमी दूरी पर लगाएं, बीज दर 5-6 क्विंटल/हे। किस्में: G-282, Yamuna Safed (G-1/G-50), Agrifound White।",
+    season:"रबी — अक्टूबर-नवंबर" },
+  { type:"fertilizer", crop:"लहसुन", crop_key:"lehsun", name:"लहसुन में खाद व सल्फर", name_en:"garlic fertilizer sulphur",
+    keywords:["लहसुन खाद","सल्फर","NPK"],
+    description:"सल्फर से कंद का आकार व तीखापन बढ़ता है।",
+    dosage:"N:P:K = 100:50:50 किग्रा/हे + 20-30 किग्रा सल्फर; N दो बार में।",
+    season:"रबी" },
+
+  /* ───────────────────────── मटर (PEA) ───────────────────────── */
+  { type:"disease", crop:"मटर", crop_key:"matar", name:"मटर में चूर्णिल आसिता (Powdery Mildew)", name_en:"pea powdery mildew churnil matar",
+    keywords:["मटर रोग","चूर्णिल","powdery mildew","सफेद पाउडर"],
+    symptoms:"पत्तियों-फलियों पर सफेद आटे जैसी परत, बाद में पौधा सूख जाता है (पछेती फसल में अधिक)।",
+    treatment:"घुलनशील सल्फर 80% WP (2.5 ग्राम/लीटर) या Hexaconazole छिड़काव।",
+    prevention:"समय पर बुवाई, प्रतिरोधी किस्में, हवादार दूरी।" },
+  { type:"sowing", crop:"मटर", crop_key:"matar", name:"मटर बुवाई का समय व किस्में", name_en:"pea sowing time variety matar",
+    keywords:["मटर बुवाई","कब बोएं","किस्म","बीज दर","variety"],
+    description:"बुवाई अक्टूबर-नवंबर; बीज दर 80-100 किग्रा/हे, दूरी 30×10 सेमी। बीज को Rhizobium से उपचारित करें। किस्में: Arkel (अगेती), Azad P-1, Pusa Pragati।",
+    season:"रबी — अक्टूबर-नवंबर" },
+
+  /* ───────────────────────── अन्य दलहन (PULSES) ───────────────────────── */
+  { type:"sowing", crop:"मूंग", crop_key:"moong", name:"मूंग (ग्रीष्म/खरीफ) बुवाई व किस्में", name_en:"moong green gram sowing summer variety",
+    keywords:["मूंग बुवाई","ग्रीष्म मूंग","कब बोएं","किस्म","greengram"],
+    description:"ग्रीष्म: मार्च-अप्रैल; खरीफ: जुलाई। बीज दर ग्रीष्म 20-25, खरीफ 12-15 किग्रा/हे; दूरी 30×10 सेमी, Rhizobium उपचार। किस्में: IPM 02-3, Samrat, SML 668। कम अवधि (60-65 दिन) में तैयार।",
+    season:"ग्रीष्म (मार्च-अप्रैल) व खरीफ (जुलाई)" },
+  { type:"disease", crop:"मूंग", crop_key:"moong", name:"मूंग/उड़द में पीला मोज़ेक (YMV)", name_en:"moong urad yellow mosaic virus YMV",
+    keywords:["पीला मोज़ेक","yellow mosaic","YMV","सफेद मक्खी","पत्ती पीली"],
+    symptoms:"पत्तियों पर पीले-हरे चकत्ते, पौधा बौना, फलियाँ कम; सफेद मक्खी से फैलता है।",
+    treatment:"सफेद मक्खी नियंत्रण हेतु Imidacloprid/Thiamethoxam; रोगग्रस्त पौधे हटाएं।",
+    prevention:"प्रतिरोधी किस्में, बीज उपचार, समय पर बुवाई, पीले स्टिकी ट्रैप।" },
+  { type:"disease", crop:"अरहर", crop_key:"arhar", name:"अरहर/तूर में उकठा व फली छेदक", name_en:"arhar tur pigeonpea wilt pod borer",
+    keywords:["अरहर रोग","तूर","उकठा","wilt","फली छेदक","pod borer"],
+    symptoms:"उकठा से पौधे आंशिक/पूर्ण मुरझाते हैं (तना अंदर काला); फली छेदक दाने खाती है।",
+    treatment:"उकठा: Trichoderma + प्रतिरोधी किस्में; फली छेदक: HaNPV/Emamectin benzoate छिड़काव।",
+    prevention:"फसल चक्र, प्रतिरोधी किस्में (Asha, Bahar), फेरोमोन ट्रैप।" },
+  { type:"sowing", crop:"अरहर", crop_key:"arhar", name:"अरहर/तूर बुवाई का समय व किस्में", name_en:"arhar tur pigeonpea sowing variety",
+    keywords:["अरहर बुवाई","तूर बुवाई","कब बोएं","किस्म"],
+    description:"बुवाई जून-जुलाई; बीज दर 12-15 किग्रा/हे, दूरी 60×20 सेमी (मध्यम अवधि)। किस्में: UPAS 120 (अगेती), Bahar, Narendra Arhar 1। दलहन हेतु Rhizobium उपचार करें।",
+    season:"खरीफ — जून-जुलाई" },
+  { type:"sowing", crop:"मसूर", crop_key:"masoor", name:"मसूर बुवाई का समय व किस्में", name_en:"masoor lentil sowing variety",
+    keywords:["मसूर बुवाई","दाल","कब बोएं","किस्म","lentil"],
+    description:"बुवाई अक्टूबर-नवंबर; बीज दर 30-40 किग्रा/हे, दूरी 30 सेमी, Rhizobium उपचार। किस्में: Pusa Vaibhav, IPL 81, Narendra Masoor 1। कम पानी में रबी हेतु उत्तम।",
+    season:"रबी — अक्टूबर-नवंबर" },
+
+  /* ───────────────────────── बाजरा / ज्वार (MILLETS) ───────────────────────── */
+  { type:"disease", crop:"बाजरा", crop_key:"bajra", name:"बाजरा में हरित बाली / डाउनी मिल्ड्यू", name_en:"bajra pearl millet downy mildew green ear",
+    keywords:["हरित बाली","downy mildew","green ear","बाजरा रोग"],
+    symptoms:"बाली में दानों की जगह हरी पत्ती जैसी संरचना (green ear), पत्तियों के नीचे सफेद वृद्धि।",
+    treatment:"बीज उपचार Metalaxyl (Apron) 6 ग्राम/किग्रा; रोगग्रस्त बालियाँ निकालकर नष्ट करें।",
+    prevention:"प्रतिरोधी संकर, स्वस्थ बीज, फसल चक्र।" },
+  { type:"sowing", crop:"बाजरा", crop_key:"bajra", name:"बाजरा बुवाई का समय व संकर", name_en:"bajra pearl millet sowing variety",
+    keywords:["बाजरा बुवाई","कब बोएं","संकर","बीज दर","millet"],
+    description:"बुवाई मानसून आते ही जून-जुलाई; बीज दर 4-5 किग्रा/हे, दूरी 45×15 सेमी। सूखा-सहिष्णु, कम पानी की फसल। उन्नत संकर (HHB श्रृंखला) लगाएं। श्री अन्न (millet) मिशन में प्रोत्साहन।",
+    season:"खरीफ — जून-जुलाई" },
+  { type:"disease", crop:"ज्वार", crop_key:"jowar", name:"ज्वार में तना मक्खी (Shoot Fly)", name_en:"jowar sorghum shoot fly tana makkhi",
+    keywords:["तना मक्खी","shoot fly","ज्वार कीट","dead heart","गोभ सूखना"],
+    symptoms:"अंकुरण के 1-3 हफ्ते में बीच की गोभ सूख जाती है (dead heart), पौधे कमज़ोर।",
+    treatment:"बीज उपचार Thiamethoxam/Imidacloprid; जल्दी व घनी बुवाई कर बाद में पतला करें।",
+    prevention:"समय पर बुवाई, बीज दर बढ़ाएं, प्रतिरोधी किस्में।" },
+
+  /* ───────────────────────── बैंगन / भिंडी / गोभी (VEGETABLES) ───────────────────────── */
+  { type:"disease", crop:"बैंगन", crop_key:"baingan", name:"बैंगन तना व फल छेदक (Shoot & Fruit Borer)", name_en:"brinjal shoot fruit borer baingan leucinodes",
+    keywords:["बैंगन छेदक","shoot fruit borer","तना छेदक","फल छेदक","मुरझाई कोपल"],
+    symptoms:"सूँडी नई कोपल में घुसकर सुखा देती है व फलों में छेद कर देती है; फल खाने योग्य नहीं रहते।",
+    treatment:"प्रभावित कोपल-फल तोड़कर नष्ट करें; Emamectin benzoate 5% SG (0.4 ग्राम/लीटर) या Spinosad; फेरोमोन ट्रैप।",
+    prevention:"फेरोमोन ट्रैप, नियमित तुड़ाई, सहफसल, प्रतिरोधी किस्में।" },
+  { type:"disease", crop:"भिंडी", crop_key:"bhindi", name:"भिंडी पीला शिरा मोज़ेक (YVMV)", name_en:"okra yellow vein mosaic bhindi virus",
+    keywords:["भिंडी रोग","पीला शिरा","yellow vein mosaic","YVMV","सफेद मक्खी"],
+    symptoms:"पत्तियों की शिराएँ पीली पड़कर जाल जैसी दिखती हैं, फल पीले-कठोर; सफेद मक्खी से फैलता है।",
+    treatment:"सफेद मक्खी नियंत्रण Imidacloprid/Diafenthiuron; रोगग्रस्त पौधे उखाड़ें।",
+    prevention:"प्रतिरोधी किस्में (Kashi Pragati, Arka Anamika), पीले स्टिकी ट्रैप, बीज उपचार।" },
+  { type:"sowing", crop:"भिंडी", crop_key:"bhindi", name:"भिंडी बुवाई का समय व किस्में", name_en:"okra bhindi sowing variety",
+    keywords:["भिंडी बुवाई","कब बोएं","किस्म","बीज दर"],
+    description:"बुवाई फरवरी-मार्च (ग्रीष्म) व जून-जुलाई (खरीफ)। बीज दर 8-10 किग्रा/हे, दूरी 45×30 सेमी। किस्में: Arka Anamika, Kashi Pragati, Parbhani Kranti (रोग-सहिष्णु)।",
+    season:"ग्रीष्म व खरीफ" },
+  { type:"disease", crop:"गोभी", crop_key:"gobhi", name:"गोभी में हीरक पृष्ठ कीट (Diamondback Moth)", name_en:"cauliflower cabbage diamondback moth DBM gobhi",
+    keywords:["गोभी कीट","हीरक पृष्ठ","diamondback moth","DBM","पत्ती छेद"],
+    symptoms:"हरी छोटी सूँडियाँ पत्तियों को खुरचकर झरोखे/छेद बनाती हैं; फूलगोभी की दही (curd) खराब होती है।",
+    treatment:"Spinosad 45% SC (0.3 मिली/लीटर) या Bt (Bacillus thuringiensis); दवाएँ बदल-बदल कर डालें।",
+    prevention:"फेरोमोन ट्रैप, सरसों ट्रैप-क्रॉप, नीम आधारित कीटनाशक।" },
+  { type:"sowing", crop:"गोभी", crop_key:"gobhi", name:"फूलगोभी/पत्तागोभी नर्सरी व रोपाई", name_en:"cauliflower cabbage nursery sowing gobhi",
+    keywords:["गोभी नर्सरी","रोपाई","कब लगाएं","किस्म"],
+    description:"मौसमवार किस्में अहम — अगेती (जून-जुलाई नर्सरी), मध्यम (अगस्त-सितंबर), पछेती (अक्टूबर)। 4-5 हफ्ते का पौधा रोपें, दूरी 45×45 सेमी। बोरॉन व मॉलिब्डेनम की कमी से दही में दोष आते हैं।",
+    season:"मौसमवार — जून से अक्टूबर नर्सरी" },
+
+  /* ───────────────────────── आम / केला (FRUITS) ───────────────────────── */
+  { type:"disease", crop:"आम", crop_key:"aam", name:"आम में खर्रा / चूर्णिल आसिता (Powdery Mildew)", name_en:"mango powdery mildew kharra bauar",
+    keywords:["आम खर्रा","powdery mildew","बौर","सफेद पाउडर","मंजरी सूखना"],
+    symptoms:"बौर (मंजरी) व नई पत्तियों पर सफेद पाउडर जम जाता है, बौर सूखकर झड़ जाता है, फल नहीं बनते।",
+    treatment:"बौर निकलते समय घुलनशील सल्फर (2 ग्राम/लीटर); बाद में Hexaconazole/Dinocap छिड़काव।",
+    prevention:"समय पर तीन छिड़काव (बौर पूर्व, बौर, मटर आकार फल), बाग की सफाई।" },
+  { type:"disease", crop:"आम", crop_key:"aam", name:"आम का भुनगा / मिज (Mango Hopper)", name_en:"mango hopper bhunga keet",
+    keywords:["आम भुनगा","mango hopper","फुदका","बौर रस चूसना","चिपचिपा"],
+    symptoms:"भुनगे बौर का रस चूसते हैं, बौर सूखता है; मधुस्राव पर काली फफूंद (सूटी मोल्ड) जमती है।",
+    treatment:"बौर अवस्था में Imidacloprid 17.8% SL (0.3 मिली/लीटर) या Thiamethoxam का छिड़काव।",
+    prevention:"बाग की छंटाई-सफाई, घने पेड़ न रखें, समय पर छिड़काव।" },
+  { type:"general", crop:"आम", crop_key:"aam", name:"आम में फल झड़ना रोकना व किस्में", name_en:"mango fruit drop control variety dashehari",
+    keywords:["आम फल झड़ना","fruit drop","आम किस्म","dashehari","langra","chausa"],
+    description:"प्रारंभिक फल झड़ना सामान्य है; अत्यधिक झड़ना रोकने हेतु मटर-आकार पर NAA (planofix) 4.5% का सूक्ष्म छिड़काव व नियमित सिंचाई करें। उत्तर भारत की किस्में: Dashehari, Langra, Chausa, Amrapali।",
+    season:"फरवरी-जून" },
+  { type:"disease", crop:"केला", crop_key:"kela", name:"केला में पनामा विल्ट (Panama Wilt)", name_en:"banana panama wilt fusarium kela",
+    keywords:["केला रोग","पनामा विल्ट","panama wilt","fusarium","पत्ती पीली"],
+    symptoms:"निचली पत्तियाँ पीली होकर लटक जाती हैं, तना (छद्म स्तंभ) चिरने पर अंदर भूरी धारियाँ।",
+    treatment:"रोगग्रस्त पौधे हटाएं; Trichoderma + Carbendazim ड्रेंचिंग; प्रभावित खेत में केला न लगाएं।",
+    prevention:"रोग-मुक्त टिश्यू-कल्चर पौध, प्रतिरोधी किस्में (G-9 सावधानी), जल-निकासी।" },
+  { type:"sowing", crop:"केला", crop_key:"kela", name:"केला रोपाई, दूरी व प्रबंधन", name_en:"banana planting spacing management kela",
+    keywords:["केला रोपाई","कब लगाएं","दूरी","टिश्यू कल्चर"],
+    description:"टिश्यू-कल्चर पौध जून-जुलाई या फरवरी-मार्च लगाएं, दूरी 1.8×1.8 मी (≈3000 पौधे/हे)। भारी खाद व नियमित ड्रिप+फर्टिगेशन; घौद को सहारा दें, अतिरिक्त पिल्ले (sucker) हटाएं।",
+    season:"जून-जुलाई व फरवरी-मार्च" },
+
+  /* ───────────────────────── सरकारी योजनाएँ (GOVT SCHEMES) ───────────────────────── */
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"PM-KISAN सम्मान निधि योजना", name_en:"pm kisan samman nidhi yojana 6000",
+    keywords:["pm kisan","पीएम किसान","सम्मान निधि","6000","2000 किस्त","scheme","योजना"],
+    description:"पात्र किसानों को सालाना ₹6000 तीन किस्तों (₹2000 प्रत्येक) में सीधे बैंक खाते (DBT) में मिलते हैं। पात्रता: कृषि योग्य भूमि वाले किसान। आवश्यक: आधार लिंक बैंक खाता, भू-अभिलेख व e-KYC अनिवार्य। रजिस्ट्रेशन: pmkisan.gov.in या नज़दीकी CSC केंद्र।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"प्रधानमंत्री फसल बीमा योजना (PMFBY)", name_en:"pmfby fasal bima crop insurance yojana",
+    keywords:["फसल बीमा","fasal bima","pmfby","crop insurance","बीमा","प्रीमियम","ओलावृष्टि"],
+    description:"प्राकृतिक आपदा (सूखा, बाढ़, ओलावृष्टि, कीट-रोग) से फसल नुकसान पर मुआवज़ा। किसान का प्रीमियम: खरीफ 2%, रबी 1.5%, व्यावसायिक/बागवानी फसल 5% — बाकी सरकार वहन करती है। आवेदन बैंक/CSC/pmfby.gov.in पर बुवाई के निर्धारित अंतिम तिथि से पहले।",
+    season:"प्रत्येक खरीफ व रबी" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"किसान क्रेडिट कार्ड (KCC)", name_en:"kisan credit card kcc loan 4 percent",
+    keywords:["kcc","किसान क्रेडिट कार्ड","ऋण","loan","4 प्रतिशत","ब्याज","फसली ऋण"],
+    description:"फसल हेतु सस्ता ऋण। ब्याज मूलतः 7% पर, समय पर चुकाने पर 3% छूट (ब्याज सहायता + प्रॉम्प्ट इंसेंटिव) से प्रभावी दर ₹5 लाख तक केवल 4% सालाना। ₹2 लाख तक बिना गारंटी। आधार-लिंक खाता अनिवार्य। आवेदन: बैंक शाखा।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"मृदा स्वास्थ्य कार्ड (Soil Health Card)", name_en:"soil health card scheme mridā swasthya",
+    keywords:["मृदा स्वास्थ्य कार्ड","soil health card","मिट्टी जांच","NPK","पोषक तत्व"],
+    description:"हर खेत की मिट्टी की 12 जाँच (NPK, सूक्ष्म पोषक, pH, EC, जैविक कार्बन) कर किसान को फसलवार खाद की सही मात्रा बताई जाती है। हर 3 साल में कार्ड मिलता है। इससे अनावश्यक खाद घटती व लागत बचती है। आवेदन: कृषि विभाग/मिट्टी जाँच प्रयोगशाला।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"PM-KUSUM सौर पंप योजना", name_en:"pm kusum solar pump yojana subsidy",
+    keywords:["kusum","सौर पंप","solar pump","सोलर","सब्सिडी","बिजली बचत"],
+    description:"सिंचाई हेतु सौर ऊर्जा पंप व ग्रिड-कनेक्टेड सोलर पर भारी सब्सिडी (केंद्र+राज्य मिलाकर सामान्यतः ~60% तक, शेष ऋण/अंशदान)। डीज़ल/बिजली खर्च घटता है, अतिरिक्त बिजली बेचकर आय भी। आवेदन: राज्य ऊर्जा/कृषि पोर्टल।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"eNAM — राष्ट्रीय कृषि बाज़ार", name_en:"enam national agriculture market online mandi",
+    keywords:["enam","ई-नाम","ऑनलाइन मंडी","national agriculture market","फसल बेचना"],
+    description:"देशभर की मंडियों को जोड़ने वाला ऑनलाइन ट्रेडिंग प्लेटफॉर्म — किसान अपनी उपज की ऑनलाइन बोली लगाकर बेहतर दाम पा सकते हैं, बिचौलिए घटते हैं। पंजीकरण नज़दीकी eNAM मंडी या enam.gov.in पर।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"सूक्ष्म सिंचाई (PMKSY — Per Drop More Crop)", name_en:"pmksy drip sprinkler micro irrigation subsidy",
+    keywords:["pmksy","सूक्ष्म सिंचाई","ड्रिप सब्सिडी","drip subsidy","sprinkler","प्रति बूंद"],
+    description:"ड्रिप व स्प्रिंकलर पर सब्सिडी (सामान्यतः छोटे/सीमांत किसानों को ~55% व अन्य को ~45%, राज्यवार भिन्न)। पानी, खाद व बिजली की बचत और उपज वृद्धि। आवेदन: राज्य उद्यान/कृषि विभाग पोर्टल।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"न्यूनतम समर्थन मूल्य (MSP) व खरीद", name_en:"msp minimum support price wheat paddy procurement",
+    keywords:["msp","समर्थन मूल्य","गेहूँ msp","धान msp","खरीद","सरकारी रेट"],
+    description:"सरकार प्रमुख फसलों का MSP घोषित करती है और एजेंसियाँ (FCI आदि) खरीदती हैं। 2025-26 हेतु गेहूँ ₹2425/क्विंटल व सामान्य धान ₹2369/क्विंटल। बेचने हेतु पंजीकरण व गुणवत्ता मानक ज़रूरी; जानकारी राज्य खाद्य/मंडी पोर्टल पर।",
+    season:"रबी व खरीफ खरीद सीज़न" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"कृषि यंत्र पर सब्सिडी (SMAM)", name_en:"farm machinery subsidy SMAM rotavator happy seeder",
+    keywords:["कृषि यंत्र सब्सिडी","machinery subsidy","रोटावेटर","ट्रैक्टर","happy seeder","SMAM"],
+    description:"ट्रैक्टर-चालित व अन्य कृषि यंत्रों (रोटावेटर, सीड ड्रिल, हैप्पी सीडर, स्प्रेयर आदि) तथा कस्टम हायरिंग केंद्रों पर सब्सिडी। छोटे/SC-ST किसानों को अधिक प्रतिशत। आवेदन: राज्य कृषि अभियांत्रिकी पोर्टल/agrimachinery.nic.in।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"किसान कॉल सेंटर व कृषि हेल्पलाइन", name_en:"kisan call center helpline 1800 180 1551",
+    keywords:["किसान कॉल सेंटर","हेल्पलाइन","helpline","1800-180-1551","सलाह","फोन"],
+    description:"निःशुल्क कृषि सलाह हेतु किसान कॉल सेंटर: 1800-180-1551 (टोल-फ्री, कई भाषाओं में)। फसल, रोग-कीट, खाद, मौसम व योजनाओं की जानकारी विशेषज्ञ से ले सकते हैं। ‘किसान सुविधा’ व ‘Meghdoot’ ऐप भी उपयोगी।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"PM किसान मानधन (पेंशन) योजना", name_en:"pm kisan maandhan pension yojana 3000",
+    keywords:["मानधन","pension","पेंशन","3000","बुढ़ापा","किसान पेंशन"],
+    description:"18-40 वर्ष के छोटे/सीमांत किसानों हेतु स्वैच्छिक पेंशन — मासिक अंशदान पर 60 वर्ष बाद ₹3000/माह पेंशन। सरकार बराबर अंशदान करती है। पंजीकरण CSC केंद्र पर आधार व बैंक खाते से।",
+    season:"वर्षभर" },
+
+  /* ───────────────────────── मृदा एवं पोषण (SOIL & NUTRIENTS) ───────────────────────── */
+  { type:"general", crop:"मृदा एवं पोषण", crop_key:"soil", name:"मिट्टी की जाँच कैसे और कब कराएं", name_en:"soil testing how when mitti janch",
+    keywords:["मिट्टी जांच","soil test","मृदा परीक्षण","नमूना","sample"],
+    description:"फसल कटाई के बाद खेत के 8-10 जगह से 15 सेमी गहराई तक नमूना लें, मिलाकर ½ किग्रा भेजें। हर 2-3 साल में जाँच कराएं। रिपोर्ट से NPK, pH व सूक्ष्म पोषक के अनुसार ही खाद डालें — पैसा व मिट्टी दोनों बचते हैं।",
+    season:"फसल कटाई के बाद" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"जिंक की कमी व समाधान", name_en:"zinc deficiency zinc sulphate jST",
+    keywords:["जिंक","zinc","जिंक सल्फेट","zinc sulphate","पत्ती पीली","सूक्ष्म पोषक"],
+    description:"जिंक की कमी से नई पत्तियाँ पीली-छोटी, गाँठें पास-पास; धान में खैरा रोग। समाधान: 25 किग्रा जिंक सल्फेट/हे मिट्टी में, या खड़ी फसल में 0.5% जिंक सल्फेट + 0.25% चूना का छिड़काव।",
+    season:"बुवाई पर या लक्षण दिखने पर" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"सल्फर (गंधक) की कमी", name_en:"sulphur deficiency gandhak gypsum",
+    keywords:["सल्फर","गंधक","sulphur","तेल फसल","तिलहन","जिप्सम"],
+    description:"सल्फर की कमी से नई पत्तियाँ एकसमान पीली; तिलहन-दलहन में तेल/प्रोटीन घटता है। समाधान: जिप्सम (250 किग्रा/हे) या बेन्टोनाइट सल्फर या SSP खाद का प्रयोग — सरसों, मूंगफली, प्याज, लहसुन में विशेष ज़रूरी।",
+    season:"बुवाई पर" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"बोरॉन की कमी (दरार/दही दोष)", name_en:"boron deficiency boron crack hollow",
+    keywords:["बोरॉन","boron","दरार","फल फटना","गोभी दही","सूक्ष्म पोषक"],
+    description:"बोरॉन की कमी से तने/फल में दरार, गोभी की दही भूरी-खोखली, फूल-फल कम। समाधान: बोरेक्स 10-15 किग्रा/हे मिट्टी में या 0.2% बोरॉन का छिड़काव (फूल अवस्था)। अधिक मात्रा हानिकारक — संयम से दें।",
+    season:"फूल अवस्था" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"ऊसर/क्षारीय भूमि में जिप्सम का प्रयोग", name_en:"alkaline usar soil gypsum reclamation",
+    keywords:["ऊसर","क्षारीय","alkaline","जिप्सम","gypsum","रेह","सुधार"],
+    description:"ऊसर/क्षारीय (अधिक pH, सफेद रेह) भूमि सुधार हेतु मिट्टी जाँच अनुसार जिप्सम डालें, पानी से लीचिंग करें, फिर धान/ढैंचा लगाएं। जैविक खाद व हरी खाद मिलाने से सुधार तेज़ होता है।",
+    season:"गर्मी/मानसून पूर्व" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"अम्लीय (खट्टी) भूमि में चूना", name_en:"acidic soil lime amliya bhumi",
+    keywords:["अम्लीय","खट्टी मिट्टी","acidic","चूना","lime","कम pH"],
+    description:"अम्लीय भूमि (कम pH) में चूना (lime/डोलोमाइट) मिट्टी जाँच अनुसार बुवाई से 3-4 हफ्ते पहले मिलाएं — इससे पोषक उपलब्धता व जड़ वृद्धि सुधरती है। पूर्वी/पहाड़ी क्षेत्रों में आम समस्या।",
+    season:"बुवाई से 3-4 हफ्ते पहले" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"नैनो यूरिया का सही उपयोग", name_en:"nano urea usage spray ifco",
+    keywords:["नैनो यूरिया","nano urea","तरल यूरिया","छिड़काव खाद","spray"],
+    description:"नैनो यूरिया तरल रूप में पत्तियों पर छिड़का जाता है (आमतौर पर 2-4 मिली/लीटर, फसल के सक्रिय बढ़वार व कल्ले/फूल अवस्था पर)। यह दानेदार यूरिया का कुछ भाग घटा सकता है; बेसल नाइट्रोजन की पूरी जगह नहीं लेता। सुबह/शाम छिड़काव करें।",
+    season:"बढ़वार अवस्था" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"नीम लेपित यूरिया के फायदे", name_en:"neem coated urea benefit",
+    keywords:["नीम यूरिया","neem coated urea","नाइट्रोजन बचत","धीमी खाद"],
+    description:"नीम लेपित यूरिया से नाइट्रोजन धीरे-धीरे निकलती है, पौधा अधिक उपयोग कर पाता है व रिसाव-वाष्पन घटता है — खाद की बचत व बेहतर उपज। भारत में अधिकांश यूरिया अब नीम लेपित ही मिलती है।",
+    season:"वर्षभर" },
+  { type:"general", crop:"मृदा एवं पोषण", crop_key:"soil", name:"हरी खाद (ढैंचा/सनई) से मिट्टी सुधार", name_en:"green manure dhaincha sanai soil health",
+    keywords:["हरी खाद","green manure","ढैंचा","सनई","dhaincha","मिट्टी सुधार"],
+    description:"धान/मुख्य फसल से पहले ढैंचा या सनई बोकर 40-50 दिन में (फूल आने पर) खेत में पलट दें — मिट्टी में जैविक पदार्थ व नाइट्रोजन बढ़ता है, संरचना सुधरती है। एक हरी खाद ≈ 20-25 किग्रा N/हे देती है।",
+    season:"मानसून पूर्व/गर्मी" },
+
+  /* ───────────────────────── सिंचाई एवं जल (IRRIGATION) ───────────────────────── */
+  { type:"general", crop:"सिंचाई", crop_key:"water", name:"ड्रिप सिंचाई के फायदे", name_en:"drip irrigation benefits tapak",
+    keywords:["ड्रिप","drip","टपक सिंचाई","पानी बचत","सिंचाई","फर्टिगेशन"],
+    description:"ड्रिप से सीधे जड़ क्षेत्र में बूंद-बूंद पानी — 40-60% पानी की बचत, खरपतवार व रोग कम, उपज अधिक। खाद भी पानी के साथ (फर्टिगेशन) दी जा सकती है। सब्ज़ी, फल, गन्ना, कपास में बहुत लाभकारी। PMKSY में सब्सिडी मिलती है।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सिंचाई", crop_key:"water", name:"स्प्रिंकलर (फव्वारा) सिंचाई", name_en:"sprinkler irrigation fawwara",
+    keywords:["स्प्रिंकलर","sprinkler","फव्वारा","छिड़काव सिंचाई","पानी बचत"],
+    description:"स्प्रिंकलर बारिश जैसी सिंचाई देता है — असमतल व रेतीली भूमि, गेहूँ, चना, सब्ज़ी व चारा फसलों हेतु उत्तम; ~30-50% पानी बचत। पाला-संवेदी फसलों में रात को चलाकर पाले से भी कुछ बचाव। सब्सिडी उपलब्ध।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सिंचाई", crop_key:"water", name:"मल्चिंग (पलवार) से नमी संरक्षण", name_en:"mulching moisture nami palwar",
+    keywords:["मल्चिंग","mulch","पलवार","नमी","plastic mulch","पुआल"],
+    description:"पुआल/पत्तियों या प्लास्टिक मल्च से मिट्टी ढकने पर नमी टिकती है, खरपतवार घटते हैं, तापमान संतुलित रहता है व पानी बचता है। सब्ज़ी, फल व ड्रिप के साथ प्लास्टिक मल्च बहुत प्रभावी।",
+    season:"वर्षभर (गर्मी में विशेष)" },
+  { type:"general", crop:"सिंचाई", crop_key:"water", name:"खेत तालाब व वर्षा जल संचय", name_en:"farm pond rainwater harvesting talab",
+    keywords:["खेत तालाब","farm pond","वर्षा जल","rainwater","जल संचय","रिचार्ज"],
+    description:"खेत तालाब (farm pond) में मानसूनी पानी जमा कर सूखे समय में जीवनरक्षक सिंचाई दें; भूजल रिचार्ज भी होता है। मनरेगा/राज्य योजनाओं में तालाब निर्माण पर सहायता मिलती है।",
+    season:"मानसून" },
+  { type:"general", crop:"सिंचाई", crop_key:"water", name:"फसल को पानी कब चाहिए — पहचान", name_en:"when to irrigate signs critical stage",
+    keywords:["सिंचाई कब","पानी कब दें","critical stage","नमी","irrigation timing"],
+    description:"सामान्य नियम: सुबह पत्तियाँ मुरझाई दिखें, मिट्टी 5-6 सेमी नीचे सूखी लगे तो पानी दें। हर फसल की क्रांतिक अवस्थाओं (अंकुरण, कल्ले/शाखा, फूल, दाना/फल भरना) पर पानी की कमी न होने दें — इन्हीं पर उपज सबसे अधिक निर्भर है।",
+    season:"वर्षभर" },
+
+  /* ───────────────────────── जैविक खेती (ORGANIC) ───────────────────────── */
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"जैविक खेती की शुरुआत कैसे करें", name_en:"organic farming start jaivik kheti",
+    keywords:["जैविक खेती","organic farming","जैविक","रसायन मुक्त","प्राकृतिक खेती"],
+    description:"रासायनिक खाद-दवा घटाकर गोबर खाद, कम्पोस्ट, हरी खाद, जैव-उर्वरक व जैव-कीटनाशक अपनाएं। फसल चक्र व अंतर-फसल लगाएं। 2-3 साल में मिट्टी सुधरती है। प्रमाणन हेतु PGS-India या NPOP पंजीकरण से बेहतर दाम मिलते हैं।",
+    season:"वर्षभर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"वर्मीकम्पोस्ट (केंचुआ खाद) बनाना", name_en:"vermicompost kenchua khad organic",
+    keywords:["वर्मीकम्पोस्ट","केंचुआ खाद","vermicompost","कम्पोस्ट","जैविक खाद"],
+    description:"छायादार गड्ढे/बेड में गोबर व फसल अवशेष की परत बनाकर एपीजेइक केंचुए (Eisenia fetida) डालें, नमी 40-50% रखें। 45-60 दिन में दानेदार काली खाद तैयार। यह पोषक व सूक्ष्म जीवों से भरपूर — रासायनिक खाद घटाती है।",
+    season:"वर्षभर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"जीवामृत व बीजामृत बनाना", name_en:"jeevamrit beejamrit natural farming",
+    keywords:["जीवामृत","बीजामृत","jeevamrit","प्राकृतिक खेती","देसी गाय","घनजीवामृत"],
+    description:"जीवामृत: 10 किग्रा देसी गोबर + 10 लीटर गोमूत्र + 2 किग्रा गुड़ + 2 किग्रा बेसन + मुट्ठीभर मिट्टी, 200 लीटर पानी में घोलकर 5-7 दिन छाया में रखें, फिर सिंचाई/छिड़काव में दें। मिट्टी के सूक्ष्म जीव बढ़ते हैं। बीजामृत से बीज उपचार करें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"जैव-उर्वरक (राइज़ोबियम, एज़ोटोबैक्टर, PSB)", name_en:"biofertilizer rhizobium azotobacter psb",
+    keywords:["जैव उर्वरक","biofertilizer","राइज़ोबियम","एज़ोटोबैक्टर","PSB","कल्चर"],
+    description:"राइज़ोबियम (दलहन हेतु) व एज़ोटोबैक्टर (अनाज हेतु) नाइट्रोजन स्थिर करते हैं; PSB फॉस्फोरस घुलनशील बनाता है। बीज/जड़ को कल्चर से उपचारित करें — रासायनिक खाद की बचत व उपज वृद्धि। सस्ता व सुरक्षित।",
+    season:"बुवाई पर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"नीम आधारित जैव-कीटनाशक", name_en:"neem oil biopesticide organic pest",
+    keywords:["नीम तेल","neem oil","जैव कीटनाशक","नीम","azadirachtin","रस चूसक"],
+    description:"नीम तेल/नीम आधारित (1500 ppm, ~5 मिली/लीटर) रस चूसक कीट, सूँडी व फफूंद को रोकता है, मित्र कीट को कम नुकसान। शाम को छिड़कें, स्टिकर मिलाएं। शुरूआती प्रकोप व IPM में बहुत उपयोगी।",
+    season:"वर्षभर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"ट्राइकोडर्मा से बीज व मिट्टी उपचार", name_en:"trichoderma seed soil treatment biofungicide",
+    keywords:["ट्राइकोडर्मा","trichoderma","जैव फफूंदनाशक","बीज उपचार","उकठा","जड़ सड़न"],
+    description:"ट्राइकोडर्मा विरिडी/हर्जियानम मित्र फफूंद है जो उकठा, जड़ व तना सड़न रोकती है। बीज उपचार 5-10 ग्राम/किग्रा, या गोबर खाद में मिलाकर मिट्टी में दें (1 किग्रा/100 किग्रा FYM)। रासायनिक फफूंदनाशक की ज़रूरत घटती है।",
+    season:"बुवाई पर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"फेरोमोन ट्रैप व स्टिकी ट्रैप का उपयोग", name_en:"pheromone trap sticky trap ipm",
+    keywords:["फेरोमोन ट्रैप","pheromone trap","स्टिकी ट्रैप","sticky trap","कीट निगरानी","IPM"],
+    description:"फेरोमोन ट्रैप (नर कीट को आकर्षित) से सूँडी/छेदक की निगरानी व नियंत्रण — फसलवार ल्योर बदलें, 5-10/एकड़। पीले स्टिकी ट्रैप सफेद मक्खी/माहू और नीले थ्रिप्स पकड़ते हैं। ये रसायन घटाकर सही समय पर छिड़काव में मदद करते हैं।",
+    season:"वर्षभर" },
+
+  /* ───────────────────────── सामान्य कृषि (GENERAL PRACTICES) ───────────────────────── */
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"बीज उपचार क्यों और कैसे करें", name_en:"seed treatment beej upchar importance",
+    keywords:["बीज उपचार","seed treatment","बीज दवा","फफूंदनाशक","trichoderma","बावस्टिन"],
+    description:"बुवाई से पहले बीज उपचार बीज-जनित रोग व मिट्टी की फफूंद से बचाता है। क्रम: पहले फफूंदनाशक (Carbendazim/Thiram 2-3 ग्राम/किग्रा या Trichoderma), फिर कीटनाशक, अंत में जैव-उर्वरक कल्चर। थोड़ी लागत में बड़ा फायदा।",
+    season:"बुवाई से पहले" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"फसल चक्र (Crop Rotation) क्यों ज़रूरी", name_en:"crop rotation fasal chakra",
+    keywords:["फसल चक्र","crop rotation","अदला-बदली","मिट्टी उर्वरता","रोग कम"],
+    description:"एक ही फसल बार-बार लेने से रोग-कीट व खरपतवार बढ़ते और मिट्टी थकती है। अनाज के बाद दलहन (नाइट्रोजन बढ़ाने वाली) लगाएं, गहरी-उथली जड़ वाली फसलें बदलें। इससे रोग-कीट टूटते हैं व उर्वरता बनी रहती है।",
+    season:"वर्षभर योजना" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"पराली प्रबंधन — जलाएं नहीं", name_en:"parali stubble management happy seeder decomposer",
+    keywords:["पराली","stubble","parali","ठूंठ","happy seeder","डीकंपोजर","मत जलाओ"],
+    description:"पराली जलाने से पोषक तत्व, मित्र जीव व पर्यावरण को नुकसान होता है और जुर्माना भी। विकल्प: हैप्पी सीडर/सुपर सीडर से सीधे अगली फसल बोएं, मल्चर से मिट्टी में मिलाएं, या पूसा डीकंपोजर/वेस्ट डीकंपोजर से 20-25 दिन में सड़ाएं। पराली बेल बनाकर बेची भी जा सकती है।",
+    season:"धान/गेहूँ कटाई के बाद" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"अनाज का सुरक्षित भंडारण", name_en:"grain storage bhandaran neem hermetic",
+    keywords:["भंडारण","storage","अनाज","घुन","नमी","नीम पत्ती","कीट"],
+    description:"भंडारण से पहले अनाज को अच्छी तरह सुखाएं (नमी ~10-12%)। साफ, सूखे व हवादार स्थान पर एयरटाइट (हर्मेटिक/PICS बैग) या कोठियों में रखें। नीम की सूखी पत्तियाँ मिलाएं। घुन लगने पर एल्युमिनियम फॉस्फाइड का प्रयोग केवल विशेषज्ञ निगरानी में करें।",
+    season:"कटाई के बाद" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"एकीकृत कीट प्रबंधन (IPM)", name_en:"integrated pest management ipm",
+    keywords:["IPM","एकीकृत कीट प्रबंधन","कीट नियंत्रण","जैविक","कम दवा"],
+    description:"IPM में रोग-कीट नियंत्रण के सभी तरीके मिलाकर अपनाते हैं: प्रतिरोधी किस्में, फसल चक्र, ट्रैप, मित्र कीट व जैव-कीटनाशक पहले — रासायनिक दवा अंतिम विकल्प, वह भी आर्थिक हानि स्तर (ETL) पार होने पर। इससे लागत, अवशेष व प्रतिरोध घटते हैं।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"कीटनाशक का सुरक्षित व सही छिड़काव", name_en:"safe pesticide spray ppe timing",
+    keywords:["कीटनाशक छिड़काव","सुरक्षा","safe spray","मास्क","कब छिड़कें","बारिश"],
+    description:"सही मात्रा ही लें (अधिक से प्रतिरोध व अवशेष)। दस्ताने-मास्क पहनें, हवा की दिशा में पीठ करके सुबह/शाम छिड़कें, फूल आने पर मधुमक्खी-सक्रिय समय व बारिश से ठीक पहले छिड़काव टालें। खाली डिब्बे तोड़कर सुरक्षित नष्ट करें, खाने-पीने से पहले हाथ धोएं।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"लू/गर्मी से फसल व सब्ज़ी की सुरक्षा", name_en:"heat wave loo crop protection summer",
+    keywords:["लू","गर्मी","heat wave","तापमान","सब्ज़ी सुरक्षा","छाया"],
+    description:"लू में हल्की-बार-बार सिंचाई (सुबह/शाम) करें, मल्चिंग से नमी बचाएं, नर्सरी/सब्ज़ी पर शेड नेट लगाएं, पोटाश व काओलिन/केल्शियम स्प्रे तनाव घटाते हैं। पशुओं को छाया व पानी दें।",
+    season:"ग्रीष्म (अप्रैल-जून)" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"पाला (Frost) से फसल बचाव", name_en:"frost pala protection winter",
+    keywords:["पाला","frost","ठंड","सब्ज़ी पाला","धुआं","सिंचाई"],
+    description:"पाले की रात में खेत के किनारे धुआं करें, हल्की सिंचाई करें (गीली मिट्टी कम जमती है), सब्ज़ी/नर्सरी को पुआल या पॉलीथीन से ढकें। 0.1% गंधक के तेज़ाब (सल्फ्यूरिक) या घुलनशील सल्फर का छिड़काव पाला-सहनशीलता बढ़ाता है।",
+    season:"दिसंबर-जनवरी" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"जल-जमाव/बाढ़ के बाद फसल प्रबंधन", name_en:"waterlogging flood crop management",
+    keywords:["जल जमाव","बाढ़","waterlogging","flood","पानी निकासी","सड़न"],
+    description:"खेत से अतिरिक्त पानी जल्दी निकालें (नाली बनाएं)। पानी उतरने पर हल्की गुड़ाई कर परत तोड़ें, यूरिया का छिड़काव (2%) करें ताकि जड़ें कमज़ोर होने पर भी पोषण मिले। जड़/तना सड़न हेतु फफूंदनाशक ड्रेंचिंग करें।",
+    season:"मानसून" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"सूखा/कम पानी में खेती", name_en:"drought management less water farming",
+    keywords:["सूखा","drought","कम पानी","सूखा सहनशील","मल्च","दलहन"],
+    description:"सूखा-सहिष्णु फसलें (बाजरा, ज्वार, मूंग, अरहर, तिल) चुनें; मल्चिंग, ड्रिप/स्प्रिंकलर, खेत तालाब अपनाएं। कम बीज दर पर चौड़ी दूरी, हरी खाद व जैविक पदार्थ से नमी-धारण बढ़ाएं। क्रांतिक अवस्था पर ही सीमित पानी दें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"नीलगाय/जंगली जानवर से फसल बचाव", name_en:"nilgai wild animal crop protection",
+    keywords:["नीलगाय","जंगली जानवर","फसल नुकसान","बाड़","सुरक्षा","सूअर"],
+    description:"खेत के चारों ओर कँटीली/जैविक बाड़ (करौंदा, मेहंदी) लगाएं, सोलर फेंसिंग या रात में रोशनी/आवाज़ यंत्र लगाएं। तेज़ गंध वाले घोल (गोमूत्र+नीम) किनारों पर छिड़कें। नीलगाय कुछ फसलें (तिल, मिर्च, प्याज) कम खाती है — किनारों पर ये लगाएं।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"अंतर-फसल व सहफसल (Intercropping)", name_en:"intercropping mixed cropping antar fasal",
+    keywords:["अंतर फसल","intercropping","सहफसल","मिश्रित खेती","जोखिम कम"],
+    description:"एक ही खेत में दो फसलें (जैसे गन्ना+मसूर/आलू, अरहर+मूंग, मक्का+उड़द) उगाने से जगह-पानी का बेहतर उपयोग, जोखिम कम व अतिरिक्त आय होती है। दलहन सहफसल मिट्टी में नाइट्रोजन भी बढ़ाती है।",
+    season:"फसलानुसार" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"मंडी में अच्छे दाम के लिए सुझाव", name_en:"mandi better price selling tips msp enam grading",
+    keywords:["मंडी","mandi","भाव","दाम","बेचना","ग्रेडिंग","enam","msp"],
+    description:"उपज को साफ-सुखाकर ग्रेडिंग कर बेचें — अच्छी गुणवत्ता का दाम अधिक मिलता है। MSP वाली फसल समय पर पंजीकरण कर सरकारी खरीद केंद्र पर बेचें; eNAM/कई मंडियों के भाव देखकर निर्णय लें। भंडारण क्षमता हो तो दाम बढ़ने पर बेचें।",
+    season:"कटाई के बाद" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"मौसम आधारित खेती व मोबाइल ऐप", name_en:"weather based farming advisory meghdoot app",
+    keywords:["मौसम","weather","पूर्वानुमान","advisory","meghdoot","ऐप","forecast"],
+    description:"बुवाई, सिंचाई, छिड़काव व कटाई से पहले मौसम पूर्वानुमान ज़रूर देखें — बारिश से पहले छिड़काव/यूरिया न डालें। ‘Meghdoot’, ‘Mausam’ व ‘Kisan Suvidha’ ऐप तथा कृषि विज्ञान केंद्र (KVK) की सलाह उपयोगी है। KrashiMitra का मौसम पेज भी देखें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"शुरुआती किसान — आमदनी बढ़ाने के तरीके", name_en:"increase farm income doubling tips",
+    keywords:["आमदनी","आय बढ़ाना","income","मुनाफा","कम लागत","विविधता"],
+    description:"लागत घटाएं (मिट्टी जाँच आधारित खाद, बीज उपचार, IPM), फसल विविधता व सब्ज़ी/बागवानी जोड़ें, पशुपालन-मधुमक्खी-मशरूम जैसी पूरक आय अपनाएं, ड्रिप व मल्च से उपज बढ़ाएं, और FPO से जुड़कर सामूहिक रूप से बेचें। सरकारी योजनाओं का लाभ लें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"मशरूम की खेती (अतिरिक्त आय)", name_en:"mushroom farming button oyster extra income",
+    keywords:["मशरूम","mushroom","बटन मशरूम","ओएस्टर","अतिरिक्त आय","कम जगह"],
+    description:"कम जगह व कम लागत में अच्छी आय — बटन मशरूम सर्दियों में (कम्पोस्ट पर), ओएस्टर/ढिंगरी लगभग सालभर (भूसे पर) उगाई जा सकती है। साफ-सफाई, सही तापमान-नमी व अच्छा स्पॉन ज़रूरी। KVK से प्रशिक्षण लें।",
+    season:"बटन: सर्दी | ओएस्टर: वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"मधुमक्खी पालन व परागण लाभ", name_en:"beekeeping madhumakkhi pollination honey",
+    keywords:["मधुमक्खी पालन","beekeeping","शहद","परागण","pollination","आय"],
+    description:"मधुमक्खी पालन से शहद/मोम की आय और सरसों, सूरजमुखी, फल-सब्ज़ी में परागण से 20-30% तक उपज वृद्धि। सरसों/लीची के मौसम में बक्से रखें। राज्य/राष्ट्रीय मधुमक्खी मिशन में प्रशिक्षण व सहायता मिलती है।",
+    season:"फूल वाले मौसम में" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"डेयरी व अज़ोला हरा चारा", name_en:"dairy fodder azolla green fodder",
+    keywords:["डेयरी","पशुपालन","चारा","azolla","अज़ोला","दूध","fodder"],
+    description:"पूरक आय हेतु डेयरी अपनाएं; हरे चारे (बरसीम, नेपियर, मक्का) से दूध बढ़ता है। अज़ोला सस्ता प्रोटीनयुक्त चारा है जो छोटे गड्ढे में पानी पर उगता है — दुधारू पशुओं को 1-2 किग्रा/दिन दें। गोबर से खाद व बायोगैस भी।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"पॉलीहाउस/शेड नेट संरक्षित खेती", name_en:"polyhouse shade net protected cultivation",
+    keywords:["पॉलीहाउस","polyhouse","शेड नेट","संरक्षित खेती","protected cultivation","सब्ज़ी"],
+    description:"पॉलीहाउस/शेड नेट में बेमौसमी व उच्च मूल्य वाली सब्ज़ी-फूल (शिमला मिर्च, खीरा, टमाटर, जरबेरा) उगाकर अधिक व बेहतर उपज मिलती है; कीट-रोग व मौसम का असर कम। राज्य उद्यान विभाग में सब्सिडी उपलब्ध। तकनीकी प्रशिक्षण ज़रूरी।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"सहजन/मोरिंगा की खेती", name_en:"moringa sahjan drumstick cultivation income",
+    keywords:["सहजन","मोरिंगा","moringa","drumstick","कम पानी","पोषण","आय"],
+    description:"सहजन (मोरिंगा) कम पानी व कम देखभाल में उगने वाली पोषक-समृद्ध फसल — फली, पत्ती व बीज की अच्छी मांग। मेड़ों या अलग खेत में लगाएं, साल में कई बार कटाई। सूखा-सहिष्णु क्षेत्रों हेतु उत्तम अतिरिक्त आय।",
+    season:"वर्षभर (वर्षा आधारित बुवाई)" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"FPO (किसान उत्पादक संगठन) से जुड़ें", name_en:"fpo farmer producer organization collective",
+    keywords:["FPO","किसान उत्पादक संगठन","सामूहिक","collective","बिक्री","सस्ता इनपुट"],
+    description:"FPO से जुड़कर किसान सामूहिक रूप से सस्ता बीज-खाद खरीद और उपज को बेहतर दाम पर बेच सकते हैं; भंडारण, प्रसंस्करण व ब्रांडिंग का लाभ मिलता है। सरकार ‘10,000 FPO’ योजना में सहायता देती है। नज़दीकी FPO/CSC से जुड़ें।",
+    season:"वर्षभर" },
+
+  /* ═══════════ बैच 2 — और फसलें, योजनाएँ व विषय ═══════════ */
+
+  /* ── मूंगफली (GROUNDNUT) ── */
+  { type:"disease", crop:"मूंगफली", crop_key:"moongfali", name:"मूंगफली टिक्का / पर्ण चित्ती (Leaf Spot)", name_en:"groundnut tikka leaf spot moongfali cercospora",
+    keywords:["मूंगफली रोग","टिक्का","tikka","leaf spot","पर्ण चित्ती","भूरे धब्बे"],
+    symptoms:"पत्तियों पर गोल भूरे-काले धब्बे (अगेती व पछेती टिक्का), तेज़ प्रकोप में पत्तियाँ झड़ जाती हैं।",
+    treatment:"Mancozeb 75% WP (2.5 ग्राम/लीटर) या Chlorothalonil/Hexaconazole छिड़काव 15 दिन के अंतर पर।",
+    prevention:"स्वस्थ बीज, बीज उपचार, फसल चक्र, खेत की सफाई।" },
+  { type:"sowing", crop:"मूंगफली", crop_key:"moongfali", name:"मूंगफली बुवाई, जिप्सम व किस्में", name_en:"groundnut sowing gypsum variety moongfali",
+    keywords:["मूंगफली बुवाई","कब बोएं","जिप्सम","किस्म","पेगिंग"],
+    description:"बुवाई खरीफ जून-जुलाई, ग्रीष्म जनवरी-फरवरी। बीज उपचार + Rhizobium; फली बनते (पेगिंग) समय 200-250 किग्रा जिप्सम/हे डालें — कैल्शियम से फली भरती है। किस्में: TG 37A, GG 20, Kadiri श्रृंखला।",
+    season:"खरीफ व ग्रीष्म" },
+
+  /* ── कद्दू वर्गीय: खीरा/लौकी/करेला (CUCURBITS) ── */
+  { type:"disease", crop:"कद्दू वर्गीय", crop_key:"khira", name:"खीरा/लौकी/करेला में मृदुरोमिल व चूर्णिल आसिता", name_en:"cucurbit khira lauki karela downy powdery mildew",
+    keywords:["खीरा रोग","लौकी रोग","करेला","downy mildew","powdery mildew","मिल्ड्यू","सफेद पाउडर"],
+    symptoms:"मृदुरोमिल: पत्ती पर पीले कोणीय धब्बे, नीचे बैंगनी फफूंद। चूर्णिल: पत्ती पर सफेद आटे जैसी परत।",
+    treatment:"मृदुरोमिल हेतु Metalaxyl+Mancozeb (2.5 ग्राम/लीटर); चूर्णिल हेतु घुलनशील सल्फर (2.5 ग्राम/लीटर) या Hexaconazole।",
+    prevention:"हवादार दूरी, सुबह सिंचाई, रोगग्रस्त पत्ती हटाएं, फसल चक्र।" },
+  { type:"disease", crop:"कद्दू वर्गीय", crop_key:"khira", name:"कद्दू वर्गीय में फल मक्खी (Fruit Fly)", name_en:"cucurbit fruit fly phal makkhi melon",
+    keywords:["फल मक्खी","fruit fly","करेला कीड़ा","फल सड़न","मैगट","फल में कीड़े"],
+    symptoms:"मक्खी कोमल फल में अंडे देती है, अंदर सूँडी (मैगट) से फल टेढ़ा होकर सड़-गिर जाता है।",
+    treatment:"क्यू-ल्योर/फेरोमोन ट्रैप लगाएं; गुड़+कीटनाशक का बैट छिड़काव; नीम तेल; गिरे-सड़े फल रोज़ इकट्ठा कर गाड़ें।",
+    prevention:"फल को कागज़/जाली से ढकें (बैगिंग), साफ-सफाई, ट्रैप जल्दी लगाएं।" },
+  { type:"sowing", crop:"कद्दू वर्गीय", crop_key:"khira", name:"खीरा-लौकी-करेला बुवाई का समय", name_en:"cucurbit sowing time khira lauki karela kaddu",
+    keywords:["कद्दू बुवाई","खीरा बुवाई","लौकी","करेला","कब बोएं","बेल"],
+    description:"ग्रीष्म: फरवरी-मार्च, वर्षा: जून-जुलाई। थालों/नालियों में 2-3 बीज, दूरी फसलानुसार 1-2 मी; बेल को मचान/सहारा देने से उपज व गुणवत्ता बढ़ती है। नदी-तट व बाड़ी में लाभकारी।",
+    season:"ग्रीष्म व वर्षा" },
+  { type:"sowing", crop:"तरबूज/खरबूज", crop_key:"tarbooz", name:"तरबूज व खरबूज की खेती", name_en:"watermelon muskmelon tarbooz kharbooz cultivation",
+    keywords:["तरबूज","खरबूज","watermelon","muskmelon","बुवाई","नदी किनारे"],
+    description:"बुवाई फरवरी-मार्च (गर्मी की फसल), रेतीली-जल निकास वाली भूमि व नदी-तट उपयुक्त। थालों में बीज, बेल फैलाएं; नियमित हल्की सिंचाई पर मीठा फल। फल मक्खी व उकठा से बचाव करें; ड्रिप+मल्च लाभकारी।",
+    season:"ग्रीष्म — फरवरी-मार्च" },
+
+  /* ── शिमला मिर्च / जड़ व पत्तेदार सब्ज़ी ── */
+  { type:"sowing", crop:"शिमला मिर्च", crop_key:"shimla", name:"शिमला मिर्च (कैप्सिकम) की खेती", name_en:"capsicum shimla mirch bell pepper cultivation",
+    keywords:["शिमला मिर्च","कैप्सिकम","capsicum","bell pepper","पॉलीहाउस","रंगीन"],
+    description:"नर्सरी से 30-35 दिन का पौधा रोपें (दूरी 45×30 सेमी); ठंडी जलवायु पसंद। पॉलीहाउस/शेड नेट में रंगीन शिमला मिर्च बहुत लाभकारी। पत्ती मोड़ (थ्रिप्स/माइट) व फल सड़न से बचाव करें, नियमित ड्रिप दें।",
+    season:"रबी मुख्यतः; पॉलीहाउस में वर्षभर" },
+  { type:"sowing", crop:"गाजर/मूली", crop_key:"gajar", name:"गाजर व मूली की खेती", name_en:"carrot radish gajar mooli sowing root",
+    keywords:["गाजर","मूली","carrot","radish","जड़ वाली सब्ज़ी","बुवाई"],
+    description:"भुरभुरी, गहरी जुती भूमि चाहिए; ताज़ा कच्ची गोबर खाद न डालें (जड़ें फटती/शाखाएँ बनती हैं)। गाजर अक्टूबर-नवंबर, मूली लगभग सालभर (मौसमी किस्म)। मेड़ों पर बीज, हल्की-नियमित सिंचाई से सीधी-चिकनी जड़।",
+    season:"मुख्यतः रबी" },
+  { type:"sowing", crop:"पालक/मेथी/धनिया", crop_key:"palak", name:"पालक, मेथी व धनिया (पत्तेदार) की खेती", name_en:"spinach fenugreek coriander palak methi dhaniya leafy",
+    keywords:["पालक","मेथी","धनिया","leafy","साग","जल्दी फसल","बुवाई"],
+    description:"30-45 दिन में तैयार होने वाली कम लागत-त्वरित आय फसलें; हर 15-20 दिन पर थोड़ा-थोड़ा बोएं ताकि निरंतर साग मिले। हल्की नाइट्रोजन व नियमित हल्की सिंचाई; कई बार कटाई। शहर के पास अच्छी मांग।",
+    season:"मुख्यतः रबी (पालक/मेथी), धनिया रबी" },
+
+  /* ── मसाले: हल्दी / अदरक ── */
+  { type:"sowing", crop:"हल्दी", crop_key:"haldi", name:"हल्दी की खेती व किस्में", name_en:"turmeric haldi cultivation variety",
+    keywords:["हल्दी","turmeric","कंद","प्रकंद","बुवाई","किस्म"],
+    description:"प्रकंद (कंद) की बुवाई अप्रैल-जून, फसल 8-9 माह में तैयार। मेड़ों पर 30×20 सेमी, भरपूर जैविक खाद व जल-निकासी ज़रूरी। किस्में: Rajendra Sonia, Pragati, Suroma। उबाल-सुखाकर पॉलिश कर बेचें।",
+    season:"बुवाई अप्रैल-जून" },
+  { type:"disease", crop:"हल्दी", crop_key:"haldi", name:"हल्दी/अदरक में कंद सड़न (Rhizome Rot)", name_en:"turmeric ginger rhizome rot kand sadan",
+    keywords:["कंद सड़न","rhizome rot","हल्दी सड़न","अदरक सड़न","गलन","पीली पत्ती"],
+    symptoms:"पत्तियाँ पीली होकर सूखती हैं, कंद मुलायम होकर सड़ जाता है व बदबू आती है; जल-जमाव में अधिक।",
+    treatment:"बीज-कंद उपचार Trichoderma/Carbendazim+Mancozeb; प्रभावित पौधे हटाकर ड्रेंचिंग करें।",
+    prevention:"रोग-मुक्त कंद, उठी हुई मेड़, अच्छी जल-निकासी, फसल चक्र।" },
+  { type:"sowing", crop:"अदरक", crop_key:"adrak", name:"अदरक की खेती व प्रबंधन", name_en:"ginger adrak cultivation",
+    keywords:["अदरक","ginger","कंद","बुवाई","छाया"],
+    description:"बुवाई अप्रैल-मई, मेड़ों पर स्वस्थ कंद-टुकड़े (20-25 ग्राम) लगाएं; मल्चिंग ज़रूरी। भरपूर जैविक खाद, हल्की छाया व अच्छी जल-निकासी पसंद। कंद सड़न से बचाव हेतु बीज उपचार करें। फसल 8 माह में।",
+    season:"बुवाई अप्रैल-मई" },
+
+  /* ── फल: अमरूद / पपीता / नींबू-संतरा / अंगूर / अनार ── */
+  { type:"disease", crop:"अमरूद", crop_key:"amrood", name:"अमरूद में फल मक्खी व उकठा", name_en:"guava amrood fruit fly wilt",
+    keywords:["अमरूद","guava","फल मक्खी","उकठा","wilt","फल सड़न"],
+    symptoms:"फल मक्खी से फल अंदर सड़कर गिरते हैं; उकठा में पेड़ की पत्तियाँ पीली होकर शाखा सूखती है।",
+    treatment:"फल मक्खी: क्यू-ल्योर ट्रैप + बैगिंग + गिरे फल नष्ट। उकठा: रोगग्रस्त भाग हटाएं, Trichoderma+Carbendazim ड्रेंचिंग।",
+    prevention:"बाग की सफाई-छंटाई, जल-निकासी; वर्षा-फसल की बजाय शीत-फसल (मृग बहार) लेने से गुणवत्ता बेहतर।" },
+  { type:"disease", crop:"पपीता", crop_key:"papita", name:"पपीता में रिंगस्पॉट/मोज़ेक विषाणु", name_en:"papaya papita ringspot mosaic virus",
+    keywords:["पपीता","papaya","रिंगस्पॉट","मोज़ेक","virus","माहू","पत्ती सिकुड़न"],
+    symptoms:"पत्तियाँ पीली-सिकुड़ी, तने-फल पर छल्लेनुमा धब्बे; पौधा बौना, फल विकृत। माहू (aphid) से फैलता है।",
+    treatment:"रोग का सीधा इलाज नहीं — माहू नियंत्रण (नीम/Imidacloprid) व रोगग्रस्त पौधे तुरंत हटाएं।",
+    prevention:"रोग-सहिष्णु/स्वस्थ पौध, खेत के किनारे ऊँची फसल का अवरोध, खरपतवार हटाएं।" },
+  { type:"disease", crop:"नींबू/संतरा", crop_key:"nimbu", name:"नींबू-संतरा (सिट्रस) में कैंकर व ग्रीनिंग", name_en:"citrus nimbu santra canker greening HLB",
+    keywords:["नींबू","संतरा","citrus","कैंकर","canker","ग्रीनिंग","greening","सिल्ला"],
+    symptoms:"कैंकर: पत्ती-फल पर उभरे खुरदरे भूरे धब्बे। ग्रीनिंग (HLB): पत्तियाँ चितकबरी पीली, फल छोटे-टेढ़े-कड़वे; सिल्ला कीट फैलाता है।",
+    treatment:"कैंकर: Copper Oxychloride (3 ग्राम/लीटर) + छंटाई। ग्रीनिंग: सिल्ला नियंत्रण (Imidacloprid), रोगग्रस्त पेड़ हटाएं।",
+    prevention:"प्रमाणित रोग-मुक्त पौध लगाएं, बाग की सफाई, सूक्ष्म पोषक (जिंक/मैंगनीज) का छिड़काव।" },
+  { type:"disease", crop:"अंगूर", crop_key:"angur", name:"अंगूर में मृदुरोमिल व चूर्णिल आसिता", name_en:"grape angur downy powdery mildew",
+    keywords:["अंगूर","grape","downy mildew","powdery mildew","फफूंद","गुच्छा सड़न"],
+    symptoms:"मृदुरोमिल: पत्ती पर तैलीय धब्बे, नीचे सफेद वृद्धि; चूर्णिल: पत्ती-गुच्छों पर सफेद पाउडर, फल फटते हैं।",
+    treatment:"मृदुरोमिल हेतु Bordeaux मिश्रण/Metalaxyl+Mancozeb; चूर्णिल हेतु घुलनशील सल्फर/Hexaconazole; समय पर छँटाई।",
+    prevention:"सही छंटाई व पंडाल प्रणाली, हवादार बाग, मौसम आधारित छिड़काव।" },
+  { type:"disease", crop:"अनार", crop_key:"anar", name:"अनार में तेलिया (Bacterial Blight) व फल छेदक", name_en:"pomegranate anar bacterial blight telya fruit borer",
+    keywords:["अनार","pomegranate","तेलिया","bacterial blight","फल छेदक","fruit borer","तैलीय धब्बे"],
+    symptoms:"तेलिया: पत्ती-फल पर तैलीय काले धब्बे, फल फटते हैं; अनार तितली की सूँडी फल में घुसकर खाती है।",
+    treatment:"तेलिया: Copper + Streptocycline छिड़काव व रोगग्रस्त भाग हटाना; फल छेदक: फल बैगिंग + Emamectin benzoate।",
+    prevention:"रोगग्रस्त अवशेष नष्ट करें, बाग की सफाई, बहार नियमन, संतुलित खाद।" },
+
+  /* ── तिलहन: तिल / सूरजमुखी ── */
+  { type:"sowing", crop:"तिल", crop_key:"til", name:"तिल की खेती व फिलोडी रोग", name_en:"sesame til sowing phyllody",
+    keywords:["तिल","sesame","til","बुवाई","फिलोडी","phyllody"],
+    description:"तिल खरीफ (जून-जुलाई) व ग्रीष्म दोनों में; कम पानी-कम लागत वाली तिलहन फसल। फिलोडी रोग में फूल हरी पत्तियों में बदल जाते हैं (जैसिड वाहक) — जैसिड नियंत्रण व रोगग्रस्त पौधे हटाएं। बीज दर 4-5 किग्रा/हे।",
+    season:"खरीफ व ग्रीष्म" },
+  { type:"sowing", crop:"सूरजमुखी", crop_key:"surajmukhi", name:"सूरजमुखी की खेती व परागण", name_en:"sunflower surajmukhi sowing pollination",
+    keywords:["सूरजमुखी","sunflower","बुवाई","परागण","मधुमक्खी","दाना भरना"],
+    description:"रबी/जायद में बुवाई, दूरी 45-60×30 सेमी। फूल अवस्था में मधुमक्खी/हाथ-परागण से दाना भरना बढ़ता है — मधुमक्खी बक्से रखना लाभकारी। थ्रिप्सजनित नेक्रोसिस व सिर छेदक से बचाव करें; बोरॉन छिड़काव दाना भरने में मदद।",
+    season:"रबी व जायद" },
+
+  /* ── फूल / दलहन ── */
+  { type:"general", crop:"गेंदा", crop_key:"genda", name:"गेंदा (मैरीगोल्ड) की खेती — आय व ट्रैप फसल", name_en:"marigold genda flower farming trap crop income",
+    keywords:["गेंदा","marigold","फूल खेती","floriculture","ट्रैप फसल","आय"],
+    description:"त्योहारों-शादियों में गेंदे की भारी मांग — अच्छी नकद आय। 30-40 दिन की पौध रोपें, शीर्ष तोड़ने (पिंचिंग) से अधिक फूल। टमाटर के साथ सहफसल में गेंदा फल-छेदक को आकर्षित कर ट्रैप फसल का काम करता है।",
+    season:"लगभग वर्षभर (मौसमी किस्में)" },
+  { type:"sowing", crop:"उड़द", crop_key:"urad", name:"उड़द की खेती व किस्में", name_en:"urad blackgram sowing variety",
+    keywords:["उड़द","blackgram","दाल","बुवाई","किस्म","YMV"],
+    description:"खरीफ (जुलाई) व ग्रीष्म दोनों; बीज दर 15-20 किग्रा/हे, Rhizobium उपचार। पीला मोज़ेक (YMV) हेतु प्रतिरोधी किस्में (Pant U-31, Shekhar, IPU श्रृंखला) व सफेद मक्खी नियंत्रण। कम अवधि की दलहन — मिट्टी में नाइट्रोजन भी बढ़ाती है।",
+    season:"खरीफ व ग्रीष्म" },
+
+  /* ── और सरकारी योजनाएँ ── */
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"नमो ड्रोन दीदी योजना", name_en:"namo drone didi scheme women shg spray",
+    keywords:["ड्रोन दीदी","namo drone didi","ड्रोन","महिला","स्वयं सहायता समूह","SHG"],
+    description:"महिला स्वयं सहायता समूहों (SHG) को ड्रोन व प्रशिक्षण देकर किराये पर खाद/दवा छिड़काव सेवा से आय का अवसर। किसानों को कम लागत-कम समय में समान छिड़काव मिलता है। जानकारी: कृषि विभाग/राज्य ग्रामीण आजीविका मिशन।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"कृषि अवसंरचना कोष (AIF)", name_en:"agriculture infrastructure fund AIF warehouse cold storage",
+    keywords:["कृषि अवसंरचना कोष","AIF","गोदाम","कोल्ड स्टोर","प्रसंस्करण","सस्ता ऋण"],
+    description:"फसलोपरांत ढाँचे (गोदाम, कोल्ड स्टोरेज, छँटाई-ग्रेडिंग, प्रसंस्करण इकाई, कस्टम हायरिंग केंद्र) हेतु सस्ता ऋण व 3% ब्याज छूट। किसान, FPO, उद्यमी पात्र। आवेदन ऑनलाइन AIF पोर्टल/बैंक पर।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"PM-AASHA (दलहन-तिलहन मूल्य संरक्षण)", name_en:"pm aasha price support pulses oilseeds msp",
+    keywords:["pm aasha","मूल्य संरक्षण","दलहन","तिलहन","MSP","price support"],
+    description:"दलहन, तिलहन व खोपरा में MSP सुनिश्चित करने हेतु मूल्य समर्थन/मूल्य कमी भुगतान योजना — बाज़ार भाव MSP से नीचे जाने पर किसान को संरक्षण मिलता है। बेचने हेतु पंजीकरण व खरीद केंद्र की जानकारी राज्य पोर्टल पर।",
+    season:"खरीद सीज़न" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"प्रमाणित बीज व मिनीकिट सब्सिडी", name_en:"certified seed subsidy minikit variety scheme",
+    keywords:["प्रमाणित बीज","seed subsidy","मिनीकिट","नई किस्म","बीज अनुदान","KVK"],
+    description:"उन्नत/प्रमाणित बीज पर अनुदान तथा KVK/कृषि विभाग द्वारा नई किस्मों के निःशुल्क बीज मिनीकिट वितरण होते हैं। हर 2-3 साल में बीज बदलें (विशेषकर स्वपरागित फसलों में) ताकि उपज बनी रहे। जानकारी: नज़दीकी KVK/बीज भंडार।",
+    season:"बुवाई सीज़न" },
+
+  /* ── पशुपालन व अतिरिक्त आय ── */
+  { type:"general", crop:"पशुपालन", crop_key:"bakri", name:"बकरी पालन (कम लागत आय)", name_en:"goat farming bakri palan",
+    keywords:["बकरी पालन","goat farming","bakri","पशुपालन","कम लागत","आय"],
+    description:"कम पूँजी-कम जगह में तेज़ आय; मांस व दूध दोनों की मांग। उन्नत नस्लें: सिरोही, बरबरी, जमुनापारी, ब्लैक बंगाल। साफ हवादार बाड़ा, हरा+सूखा चारा व समय पर टीकाकरण (PPR, ET) ज़रूरी। NLM योजना में सहायता।",
+    season:"वर्षभर" },
+  { type:"general", crop:"पशुपालन", crop_key:"murgi", name:"मुर्गी पालन (बैकयार्ड/ब्रॉयलर)", name_en:"poultry farming murgi palan backyard broiler",
+    keywords:["मुर्गी पालन","poultry","murgi","कड़कनाथ","अंडा","ब्रॉयलर","बैकयार्ड"],
+    description:"बैकयार्ड (कड़कनाथ, वनराजा) कम लागत में अंडा-मांस की आय देता है; व्यावसायिक ब्रॉयलर/लेयर अधिक पूँजी पर। साफ-सूखा शेड, संतुलित दाना, स्वच्छ पानी व टीकाकरण (रानीखेत/ND, गम्बोरो) अनिवार्य।",
+    season:"वर्षभर" },
+  { type:"general", crop:"मछली पालन", crop_key:"machhli", name:"मछली पालन (तालाब)", name_en:"fish farming machhli palan pond pmmsy",
+    keywords:["मछली पालन","fish farming","तालाब","मत्स्य","रोहू","कतला","PMMSY"],
+    description:"तालाब में मिश्रित मछली पालन (कतला, रोहू, मृगल) अच्छी आय देता है; चूना-गोबर से तालाब तैयार करें, गुणवत्ता वाला बीज (फ्राई/फिंगरलिंग) डालें, नियमित पूरक आहार दें। PMMSY (प्रधानमंत्री मत्स्य संपदा) में सब्सिडी/सहायता।",
+    season:"वर्षभर" },
+
+  /* ── और सामान्य कृषि विषय ── */
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"ड्रोन से दवा व खाद का छिड़काव", name_en:"drone spraying agriculture pesticide nano urea",
+    keywords:["ड्रोन","drone","छिड़काव spray","दवा","नैनो यूरिया","समय बचत"],
+    description:"ड्रोन से बड़े खेत में तेज़, समान व कम पानी में छिड़काव — मज़दूरी व समय की बचत और सुरक्षित (शरीर पर दवा कम)। केवल अनुमोदित (drone-label) फॉर्मूलेशन व प्रशिक्षित पायलट से कराएं; नैनो यूरिया/तरल खाद के लिए उपयुक्त। कस्टम हायरिंग/सब्सिडी उपलब्ध।",
+    season:"वर्षभर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"गोबर गैस (बायोगैस) व स्लरी खाद", name_en:"biogas gobar gas slurry manure",
+    keywords:["बायोगैस","गोबर गैस","biogas","स्लरी","रसोई गैस","गोबर"],
+    description:"गोबर-बायोगैस संयंत्र से रसोई हेतु स्वच्छ गैस मिलती है और बची स्लरी उत्तम जैविक खाद (पोषक-समृद्ध) बन जाती है। ईंधन खर्च घटता व खेत की उर्वरता बढ़ती है। निर्माण पर सरकारी सब्सिडी उपलब्ध।",
+    season:"वर्षभर" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"नाडेप/गोबर कम्पोस्ट बनाना", name_en:"nadep compost gobar khad making",
+    keywords:["नाडेप","nadep","कम्पोस्ट","गोबर खाद","compost","सड़ी खाद"],
+    description:"नाडेप टांके/गड्ढे में फसल अवशेष + गोबर + मिट्टी की परतें भरकर नमी बनाए रखें; 3-4 माह में बढ़िया कम्पोस्ट तैयार। सस्ती जैविक खाद जो मिट्टी की संरचना व जैविक कार्बन बढ़ाती है। कच्ची गोबर खाद कभी न डालें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"कृषि वानिकी / मेड़ पर पेड़ (Agroforestry)", name_en:"agroforestry trees on bund poplar income",
+    keywords:["कृषि वानिकी","agroforestry","मेड़ पर पेड़","poplar","सहजन","दीर्घ आय"],
+    description:"खेत की मेड़ों/बेकार जगह पर पॉपुलर, सहजन, मेलिया, बाँस जैसे पेड़ लगाकर दीर्घकालिक आय, ईंधन-चारा व हवा-रोक मिलती है तथा मिट्टी का कटाव घटता है। फसल के साथ संतुलन रखें ताकि छाया से उपज न घटे।",
+    season:"मानसून रोपाई" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"अपना बीज बचाना व बीज बैंक", name_en:"seed saving seed bank self seed cost",
+    keywords:["बीज बचाना","seed saving","बीज बैंक","स्वयं बीज","लागत कम","स्वपरागित"],
+    description:"स्वपरागित फसलों (गेहूँ, धान, दलहन) में स्वस्थ-रोगमुक्त पौधों का बीज चुनकर सुखाकर नीम-मिश्रित भंडारण में रखें — बीज लागत बचती है। संकर (हाइब्रिड) का बीज न रखें (अगली पीढ़ी कमज़ोर)। हर 2-3 साल में प्रमाणित बीज से बदलें।",
+    season:"कटाई के समय" },
+  { type:"general", crop:"गेहूँ", crop_key:"gehu", name:"गेहूँ की कटाई कब करें व गिरना (Lodging) रोकें", name_en:"wheat harvest time lodging girna",
+    keywords:["गेहूँ कटाई","कब काटें","फसल गिरना","lodging","पकना"],
+    description:"दाना सख्त व सुनहरा होने (नमी ~20%) पर कटाई करें; अधिक देर से दाने झड़ते हैं। फसल गिरने (lodging) से बचने हेतु अधिक नाइट्रोजन व अति-सिंचाई न करें और बौनी/मज़बूत तने वाली किस्में लगाएं।",
+    season:"मार्च-अप्रैल" },
+  { type:"general", crop:"धान", crop_key:"dhaan", name:"धान की कटाई व सुरक्षित नमी", name_en:"rice paddy harvest time moisture drying",
+    keywords:["धान कटाई","कब काटें","नमी","गहाई","सुखाना"],
+    description:"जब ~80% दाने सुनहरे व सख्त हो जाएँ (दाने में नमी ~20-22%) तब कटाई करें। गहाई के बाद दानों को 12-14% नमी तक धूप में सुखाकर ही भंडारण करें — अधिक नमी पर फफूंद व घुन लगते हैं।",
+    season:"अक्टूबर-नवंबर" },
+  { type:"general", crop:"मृदा एवं पोषण", crop_key:"soil", name:"मिट्टी का जैविक कार्बन कैसे बढ़ाएं", name_en:"soil organic carbon improve fertility",
+    keywords:["जैविक कार्बन","organic carbon","मिट्टी उर्वरता","कम्पोस्ट","अवशेष"],
+    description:"गोबर/कम्पोस्ट व वर्मीकम्पोस्ट डालें, हरी खाद लगाएं, फसल अवशेष खेत में मिलाएं (जलाएं नहीं), कम जुताई करें व फसल चक्र में दलहन रखें। जैविक कार्बन बढ़ने से जल-धारण, पोषक उपलब्धता व उपज सभी सुधरते हैं।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"खरपतवार रोकने की स्टेल सीडबेड विधि", name_en:"stale seedbed weed management organic",
+    keywords:["खरपतवार","weed","स्टेल सीडबेड","निंदाई","बिना दवा","खरपतवार रोकथाम"],
+    description:"बुवाई से पहले खेत तैयार कर हल्की सिंचाई करें ताकि खरपतवार उग आएँ; फिर उथली जुताई/समतलन से उन्हें नष्ट कर बीज बोएं — खड़ी फसल में खरपतवार बहुत घटते हैं। मल्चिंग व सही दूरी भी खरपतवार दबाती है।",
+    season:"बुवाई से पहले" },
+
+  /* ═══════════ बैच 3 — खेती की बुनियादी जानकारी ═══════════ */
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"NPK क्या है — पोषक तत्वों की भूमिका", name_en:"npk nutrients role nitrogen phosphorus potassium",
+    keywords:["NPK","पोषक तत्व","नाइट्रोजन","फॉस्फोरस","पोटाश","nutrient","खाद तत्व"],
+    description:"N (नाइट्रोजन): पत्ती-तना की बढ़वार व हरापन। P (फॉस्फोरस): जड़ विकास, फूल व दाना बनना। K (पोटाश): रोग-प्रतिरोध, दाना भराव व गुणवत्ता। साथ में सल्फर/कैल्शियम/मैग्नीशियम व सूक्ष्म पोषक (जिंक, बोरॉन, आयरन) भी ज़रूरी। संतुलित मात्रा मिट्टी जाँच अनुसार दें।",
+    season:"वर्षभर" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"DAP और यूरिया में अंतर", name_en:"difference dap urea fertilizer",
+    keywords:["DAP","यूरिया","urea","अंतर","कौन सी खाद","difference"],
+    description:"यूरिया में 46% नाइट्रोजन — मुख्यतः बढ़वार/हरापन के लिए, खड़ी फसल में टॉप-ड्रेसिंग। DAP में 18% नाइट्रोजन + 46% फॉस्फोरस — बुवाई पर (बेसल) जड़ व अंकुरण हेतु। दोनों अलग काम करते हैं; DAP बुवाई पर, यूरिया बाद में किस्तों में दें।",
+    season:"वर्षभर" },
+  { type:"fertilizer", crop:"जैविक खाद", crop_key:"organic", name:"गोबर खाद (FYM) कब और कितनी डालें", name_en:"fym farmyard manure gobar khad dose",
+    keywords:["गोबर खाद","FYM","सड़ी खाद","कम्पोस्ट मात्रा","जैविक खाद"],
+    description:"अच्छी तरह सड़ी गोबर खाद ही डालें (कच्ची से दीमक व खरपतवार बढ़ते हैं)। सामान्य फसल में 10-15 टन/हे, सब्ज़ी व गन्ना में 20-25 टन/हे, बुवाई से 3-4 हफ्ते पहले खेत में मिलाएं। इससे मिट्टी की संरचना, जल-धारण व जैविक कार्बन सुधरते हैं।",
+    season:"बुवाई से 3-4 हफ्ते पहले" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"खरीफ, रबी व जायद फसलें क्या हैं", name_en:"kharif rabi zaid seasons crops",
+    keywords:["खरीफ","रबी","जायद","फसल मौसम","season","kharif rabi zaid"],
+    description:"खरीफ (मानसून, जून-अक्टूबर): धान, मक्का, कपास, सोयाबीन, अरहर, बाजरा। रबी (सर्दी, अक्टूबर-मार्च): गेहूँ, चना, सरसों, आलू, मटर, मसूर। जायद (ग्रीष्म, मार्च-जून): मूंग, तरबूज-खरबूज, खीरा व गर्मी की सब्ज़ी।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"हाइब्रिड बनाम देसी (सामान्य) बीज", name_en:"hybrid vs desi seed difference",
+    keywords:["हाइब्रिड","देसी बीज","संकर","सामान्य बीज","अंतर","कौन सा बीज"],
+    description:"हाइब्रिड (संकर): अधिक उपज पर हर बार नया प्रमाणित बीज लेना पड़ता है, अधिक खाद-पानी-देखभाल माँगता है। देसी/सामान्य (OP) किस्म: बीज बचाया जा सकता है, सस्ता व विपरीत परिस्थिति-सहिष्णु, उपज तुलना में कम। ज़रूरत व संसाधन अनुसार चुनें।",
+    season:"बुवाई से पहले" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"सब्ज़ी की नर्सरी (पौध) कैसे तैयार करें", name_en:"vegetable nursery raising seedling protray",
+    keywords:["नर्सरी","पौध","seedling","nursery","प्रो-ट्रे","बीज बोना"],
+    description:"उठी हुई क्यारी या प्रो-ट्रे में अच्छी सड़ी खाद+कोकोपीट भरें, उपचारित बीज बोएं, नायलॉन नेट/छाया से ढकें व हल्की सिंचाई करें। 25-35 दिन में स्वस्थ पौध रोपाई योग्य। प्रो-ट्रे पौध रोग कम व जड़ें मज़बूत देती है।",
+    season:"रोपाई से पहले" },
+  { type:"general", crop:"जैविक खेती", crop_key:"organic", name:"नीम खली (नीम केक) का उपयोग", name_en:"neem cake neem khali soil nematode",
+    keywords:["नीम खली","नीम केक","neem cake","सूत्रकृमि","nematode","दीमक","जैविक"],
+    description:"नीम खली मिट्टी में डालने से दीमक व सूत्रकृमि (निमेटोड) घटते हैं और नाइट्रोजन धीरे-धीरे मिलती है। यूरिया के साथ मिलाकर डालने पर नाइट्रोजन का असर लंबा चलता है। सब्ज़ी, गन्ना व बाग में उपयोगी जैविक आदान।",
+    season:"बुवाई/रोपाई पर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"PM-KISAN eKYC कैसे करें", name_en:"pm kisan ekyc otp aadhaar process",
+    keywords:["ekyc","eKYC","पीएम किसान","किस्त रुकी","आधार","otp"],
+    description:"बिना e-KYC किस्त रुक सकती है। दो तरीके: (1) pmkisan.gov.in पर ‘e-KYC’ में आधार नंबर डालकर मोबाइल OTP से, या (2) नज़दीकी CSC केंद्र पर बायोमेट्रिक से। आधार से लिंक मोबाइल नंबर ज़रूरी। स्थिति ‘Beneficiary Status’ में देखें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"कृषि विज्ञान केंद्र (KVK) से सलाह", name_en:"kvk krishi vigyan kendra advice training",
+    keywords:["KVK","कृषि विज्ञान केंद्र","सलाह","प्रशिक्षण","मिट्टी जांच","विशेषज्ञ"],
+    description:"लगभग हर ज़िले में KVK से निःशुल्क कृषि सलाह, मिट्टी व जल जाँच, नई किस्मों के प्रदर्शन-बीज मिनीकिट तथा पशुपालन-मशरूम-मधुमक्खी जैसे विषयों पर प्रशिक्षण मिलता है। नई तकनीक व समस्या-समाधान हेतु नज़दीकी KVK से संपर्क करें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सिंचाई", crop_key:"water", name:"सिंचाई व छिड़काव सुबह करें या शाम", name_en:"irrigation spray morning evening best time",
+    keywords:["सुबह शाम","सिंचाई समय","छिड़काव समय","कब करें","दोपहर","वाष्पन"],
+    description:"गर्मी में सिंचाई व दवा-छिड़काव सुबह जल्दी या शाम को करें — वाष्पन कम होता है, पानी-दवा का असर अधिक और पौधों पर तनाव कम। तेज़ धूप/दोपहर तथा तेज़ हवा में छिड़काव न करें; फूल अवस्था में मधुमक्खी-सक्रिय समय भी टालें।",
+    season:"वर्षभर (ग्रीष्म में विशेष)" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"बीज दर व अंकुरण (जमाव) जाँच", name_en:"seed rate germination test ankuran",
+    keywords:["बीज दर","अंकुरण जांच","germination test","जमाव","seed rate","बीज परीक्षण"],
+    description:"बोने से पहले 100 बीज गीले कपड़े/मिट्टी में रखकर अंकुरण जाँचें — 80%+ जमाव अच्छा माना जाता है। कम जमाव पर बीज दर बढ़ाएं या बीज बदलें। सही बीज दर व प्रमाणित बीज से समान-घना खड़ा फसल मिलता है।",
+    season:"बुवाई से पहले" },
+  { type:"general", crop:"सामान्य", crop_key:"general", name:"टमाटर/मिर्च/बेल में मचान (Staking)", name_en:"staking trellis tomato chilli vine machan",
+    keywords:["मचान","staking","सहारा","trellis","टमाटर","बेल","फल सड़न"],
+    description:"टमाटर, मिर्च, खीरा-करेला आदि बेलों को बाँस-तार के मचान/सहारे पर चढ़ाने से फल मिट्टी से दूर रहते हैं — सड़न-रोग कम, फल साफ-बड़े, हवा-धूप बेहतर और तुड़ाई आसान। उपज व गुणवत्ता दोनों बढ़ती हैं।",
+    season:"फसल बढ़वार के दौरान" },
+  { type:"fertilizer", crop:"मृदा एवं पोषण", crop_key:"soil", name:"मृदा का pH क्या है व क्यों ज़रूरी", name_en:"soil ph acidic alkaline mridā",
+    keywords:["pH","मृदा pH","अम्लीय","क्षारीय","मिट्टी","acidic alkaline"],
+    description:"pH मिट्टी की अम्लीयता/क्षारीयता मापता है। अधिकांश फसलों हेतु 6.5-7.5 उत्तम। 6 से कम (अम्लीय) में चूना, 8 से अधिक (क्षारीय/ऊसर) में जिप्सम से सुधार करें। गलत pH पर पोषक तत्व उपलब्ध नहीं होते — मिट्टी जाँच से पता करें।",
+    season:"वर्षभर" },
+  { type:"general", crop:"सिंचाई", crop_key:"water", name:"लेज़र लैंड लेवलिंग से पानी की बचत", name_en:"laser land leveling water saving",
+    keywords:["लेज़र लेवलिंग","समतलीकरण","laser leveling","पानी बचत","समान सिंचाई"],
+    description:"लेज़र लेवलर से खेत पूरी तरह समतल होने पर सिंचाई का पानी समान फैलता है — 20-25% पानी, समय व खाद की बचत, खरपतवार कम व उपज वृद्धि। कस्टम हायरिंग केंद्र से किराये पर मशीन ली जा सकती है।",
+    season:"बुवाई से पहले" },
+  { type:"general", crop:"सरकारी योजना", crop_key:"scheme", name:"मनरेगा से खेत-तालाब, कूप व मेड़बंदी", name_en:"mgnrega farm pond well bunding works",
+    keywords:["मनरेगा","MGNREGA","खेत तालाब","कूप","मेड़बंदी","जल संरक्षण","श्रम"],
+    description:"मनरेगा (MGNREGA) के अंतर्गत खेत-तालाब, सिंचाई कूप, मेड़बंदी, कम्पोस्ट गड्ढा व भूमि-समतलीकरण जैसे कार्य व्यक्तिगत/सामुदायिक रूप से कराए जा सकते हैं — इससे जल संरक्षण व खेती की उत्पादकता बढ़ती है। आवेदन ग्राम पंचायत में करें।",
+    season:"वर्षभर" }
+
+  ];
+</script>
 
 <script>
   // ══════════════════════════════════════
@@ -1163,6 +2369,15 @@
     const q = document.getElementById("search-input").value.trim();
     if (!q) return;
     showSearchLoading();
+
+    // 1️⃣ Local knowledge base — answers instantly & works offline
+    //    (hundreds of curated farmer Q&As embedded in this page)
+    const localResults = (typeof searchLocalKB === "function")
+      ? searchLocalKB(q, searchCropFilter) : [];
+
+    // 2️⃣ Server — live weather context + backend crop data (best-effort)
+    let serverResults = [];
+    let weatherCtx     = null;
     try {
       const params = new URLSearchParams({
         q,
@@ -1170,20 +2385,48 @@
         lang:     selectedLanguage || "hindi",
         district: selectedDistrict || "",
       });
-      const res  = await fetch(`https://krashi-mitra-v1.onrender.com/search?${params}`);
+      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/search?${params}`);
       const data = await res.json();
-      renderWeatherContext(data.weather_context || null);
-      renderSearchResults(data.results || [], q);
+      weatherCtx    = data.weather_context || null;
+      serverResults = data.results || [];
     } catch {
-      renderWeatherContext(null);
-      renderSearchResults([], q, true);
+      /* server asleep / offline — local KB still answers the farmer */
     }
+
+    renderWeatherContext(weatherCtx);
+
+    // 3️⃣ Merge: local KB first (curated & comprehensive), then unique server extras
+    const merged = (typeof mergeResults === "function")
+      ? mergeResults(localResults, serverResults)
+      : (localResults.length ? localResults : serverResults);
+
+    renderSearchResults(merged, q);
   }
 
   const CROP_ICONS = {
     gehu:"🌾", wheat:"🌾", dhaan:"🍚", rice:"🍚",
     ganna:"🎋", sugarcane:"🎋", sarson:"🌻", mustard:"🌻",
-    aloo:"🥔", potato:"🥔"
+    aloo:"🥔", potato:"🥔",
+    // ── extended crops (KrashiMitra Khoj knowledge base) ──
+    tomato:"🍅", tamatar:"🍅", pyaaz:"🧅", onion:"🧅",
+    makka:"🌽", maize:"🌽", chana:"🫘", gram:"🫘",
+    soybean:"🫛", soyabean:"🫛", kapas:"🌱", cotton:"🌱",
+    mirch:"🌶️", chilli:"🌶️", lehsun:"🧄", garlic:"🧄",
+    matar:"🟢", pea:"🟢", moong:"🫘", urad:"🫘",
+    arhar:"🫘", tur:"🫘", masoor:"🫘", bajra:"🌾", jowar:"🌾",
+    baingan:"🍆", brinjal:"🍆", bhindi:"🫑", okra:"🫑",
+    gobhi:"🥦", cauliflower:"🥦", aam:"🥭", mango:"🥭",
+    kela:"🍌", banana:"🍌",
+    // ── more crops (batch 2) ──
+    moongfali:"🥜", groundnut:"🥜", khira:"🥒", cucumber:"🥒",
+    tarbooz:"🍉", kharbooz:"🍈", gajar:"🥕", mooli:"🥬",
+    palak:"🥬", methi:"🌿", dhaniya:"🌿", shimla:"🫑",
+    haldi:"🫚", turmeric:"🫚", adrak:"🫚", amrood:"🍐",
+    papita:"🌴", nimbu:"🍋", santra:"🍊", angur:"🍇",
+    anar:"🔴", til:"🌰", surajmukhi:"🌻", genda:"🌼",
+    gulab:"🌹", urad:"🫘", bakri:"🐐", murgi:"🐔", machhli:"🐟",
+    // ── cross-cutting topic icons ──
+    scheme:"🏛️", soil:"🧪", water:"💧", organic:"♻️", general:"📋"
   };
   function getCropIcon(k) { return CROP_ICONS[(k||"").toLowerCase()] || "🌿"; }
 

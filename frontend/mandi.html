@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+<script src="api-config.js"></script>
    <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
 <script>
@@ -652,40 +653,195 @@
     .mandi-cards-mobile { display: none; flex-direction: column; gap: 10px; }
 
     .mandi-card-mobile {
-      background: white; border-radius: 14px;
+      background: #fff; border-radius: 16px;
       border: 1.5px solid var(--border);
       box-shadow: var(--shadow); overflow: hidden;
+      display: flex; transition: box-shadow 0.18s, border-color 0.18s;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
-    .mandi-card-header-bar {
-      background: linear-gradient(90deg, var(--green-dark), #2d6a4f);
-      padding: 10px 14px;
-      display: flex; justify-content: space-between; align-items: center;
+    .mandi-card-mobile:hover { box-shadow: var(--shadow-lg); border-color: #b7d9c2; }
+    .mandi-card-mobile:active { transform: scale(0.985); }
+    .mandi-card-accent {
+      width: 4px; flex-shrink: 0;
+      background: linear-gradient(180deg, var(--amber) 0%, #e9932a 100%);
     }
-    .mandi-card-market {
-      font-size: 14px; font-weight: 700; color: #fff;
-      display: flex; align-items: center; gap: 6px;
+    .mandi-card-content {
+      flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+      min-width: 0;
     }
-    .mandi-card-district { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 2px; }
-    .mandi-card-price-badge {
-      background: var(--amber);
-      border-radius: 10px; padding: 6px 12px;
-      text-align: center; flex-shrink: 0;
+    .mandi-card-top {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
     }
-    .mandi-card-price-val { font-size: 18px; font-weight: 800; color: #1a2e1e; line-height: 1; }
-    .mandi-card-price-unit { font-size: 10px; color: rgba(26,46,30,0.65); font-weight: 600; }
-    .mandi-card-body {
-      padding: 10px 14px;
-      display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    .mandi-card-commodity {
+      font-size: 15px; font-weight: 800; color: var(--text-dark); line-height: 1.2;
     }
-    .mandi-tag {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; background: var(--green-pale);
-      border-radius: 20px; font-size: 11px; font-weight: 600;
-      color: var(--green-mid); border: 1px solid var(--border);
-    }
-    .mandi-tag.variety {
+    .mandi-card-variety-chip {
+      display: inline-block; margin-top: 5px;
+      font-size: 11px; font-weight: 700;
       background: var(--amber-light); color: var(--soil);
-      border-color: rgba(233,168,37,0.3);
+      border: 1px solid rgba(233,168,37,0.35);
+      border-radius: 20px; padding: 2px 10px;
+    }
+    .mandi-card-date {
+      font-size: 11px; font-weight: 600; color: var(--text-light);
+      white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+    }
+    .mandi-card-price-section {
+      display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    }
+    .mandi-card-price-main {
+      font-size: 28px; font-weight: 800;
+      color: var(--green-dark); line-height: 1;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .mandi-card-price-main span {
+      font-size: 13px; font-weight: 500; color: var(--text-mid); margin-left: 2px;
+    }
+    .mandi-card-range {
+      font-size: 12px; font-weight: 600; color: var(--text-mid);
+      background: var(--green-pale); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .mandi-card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 8px; border-top: 1px solid var(--border);
+      font-size: 12px; font-weight: 600; color: var(--text-mid); gap: 8px;
+    }
+    .mandi-card-footer span {
+      display: flex; align-items: center; gap: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Mandi skeleton loading cards */
+    .mandi-card-skel {
+      background: #fff; border-radius: 16px;
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; display: flex;
+    }
+    .mandi-skel-accent {
+      width: 4px; flex-shrink: 0;
+      background: linear-gradient(90deg, #e0ece4 25%, #cde2d5 50%, #e0ece4 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    .mandi-skel-body {
+      flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .mandi-skel-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    }
+
+    /* ══════════════════════════════════════
+       MANDI DETAIL BOTTOM SHEET
+    ══════════════════════════════════════ */
+    .mandi-detail-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      z-index: 3500; align-items: flex-end; justify-content: center;
+    }
+    .mandi-detail-overlay.open { display: flex; }
+    .mandi-detail-sheet {
+      background: #fff; border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 540px;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.22);
+      position: relative; max-height: 92vh; overflow-y: auto;
+      animation: sheet-up 0.32s cubic-bezier(0.34,1.1,0.64,1);
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    @keyframes sheet-up {
+      from { transform: translateY(100%); opacity: 0.6; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .mandi-detail-handle {
+      width: 40px; height: 4px; border-radius: 2px;
+      background: #dde5e0; margin: 14px auto 0;
+    }
+    .mandi-detail-close {
+      position: absolute; top: 12px; right: 14px;
+      background: #f0f4f2; border: none; border-radius: 50%;
+      width: 32px; height: 32px; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #555; transition: background 0.15s;
+    }
+    .mandi-detail-close:hover { background: #dde8e2; }
+    .mandi-detail-header { padding: 18px 20px 0; }
+    .mandi-detail-commodity {
+      font-size: 22px; font-weight: 800; color: var(--text-dark);
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; line-height: 1.2;
+    }
+    .mandi-detail-variety-chip {
+      display: inline-block; margin-top: 7px;
+      font-size: 12px; font-weight: 700;
+      background: var(--amber-light); color: var(--soil);
+      border: 1px solid rgba(233,168,37,0.35); border-radius: 20px; padding: 3px 12px;
+    }
+    .mandi-detail-price-hero {
+      margin: 16px 0 0;
+      background: linear-gradient(135deg, var(--green-dark) 0%, #2d6a4f 100%);
+      padding: 20px 20px 0;
+    }
+    .mandi-detail-price-label {
+      font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.55);
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .mandi-detail-price-val {
+      font-size: 44px; font-weight: 800; color: var(--amber);
+      font-family: 'DM Sans', sans-serif; line-height: 1;
+    }
+    .mandi-detail-price-unit {
+      font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 4px; font-weight: 500;
+      padding-bottom: 16px;
+    }
+    .mandi-detail-range-section {
+      background: linear-gradient(135deg, var(--green-dark) 0%, #2d6a4f 100%);
+      padding: 0 20px 18px;
+    }
+    .mandi-detail-range-bar-wrap {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .mandi-detail-range-min,
+    .mandi-detail-range-max {
+      font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.65);
+      white-space: nowrap; min-width: 54px;
+    }
+    .mandi-detail-range-max { text-align: right; }
+    .mandi-detail-range-track {
+      flex: 1; height: 6px; background: rgba(255,255,255,0.2);
+      border-radius: 3px; position: relative;
+    }
+    .mandi-detail-range-fill {
+      height: 100%; background: var(--amber); border-radius: 3px;
+      position: absolute; left: 0; top: 0;
+    }
+    .mandi-detail-range-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #fff; border: 2.5px solid var(--amber);
+      position: absolute; top: 50%; transform: translate(-50%, -50%);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    .mandi-detail-range-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.45);
+      margin-top: 7px;
+    }
+    .mandi-detail-info {
+      padding: 6px 20px 20px;
+    }
+    .mandi-detail-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 0; border-bottom: 1px solid #edf3f0;
+    }
+    .mandi-detail-row:last-child { border-bottom: none; }
+    .mandi-detail-row-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+    .mandi-detail-row-label { font-size: 13px; font-weight: 600; color: var(--text-mid); flex: 1; }
+    .mandi-detail-row-val   { font-size: 13px; font-weight: 700; color: var(--text-dark); text-align: right; }
+
+    @media (min-width: 1025px) {
+      .mandi-detail-overlay { align-items: center; }
+      .mandi-detail-sheet {
+        border-radius: 20px; max-width: 480px;
+        animation: wa-pop 0.28s cubic-bezier(0.34,1.4,0.64,1);
+        padding-bottom: 0;
+      }
     }
 
     /* ══════════════════════════════════════
@@ -1326,6 +1482,68 @@
   </div>
 </div>
 
+<!-- ══ MANDI DETAIL BOTTOM SHEET ══ -->
+<div class="mandi-detail-overlay" id="mandi-detail-modal" onclick="if(event.target===this)closeMandiDetail()">
+  <div class="mandi-detail-sheet">
+    <div class="mandi-detail-handle"></div>
+    <button class="mandi-detail-close" onclick="closeMandiDetail()">✕</button>
+
+    <div class="mandi-detail-header">
+      <div class="mandi-detail-commodity" id="md-commodity"></div>
+      <div class="mandi-detail-variety-chip" id="md-variety"></div>
+    </div>
+
+    <div class="mandi-detail-price-hero">
+      <div class="mandi-detail-price-label" id="md-price-label">Modal Price</div>
+      <div class="mandi-detail-price-val" id="md-price"></div>
+      <div class="mandi-detail-price-unit" id="md-price-unit">per quintal</div>
+    </div>
+
+    <div class="mandi-detail-range-section">
+      <div class="mandi-detail-range-bar-wrap">
+        <span class="mandi-detail-range-min" id="md-min"></span>
+        <div class="mandi-detail-range-track">
+          <div class="mandi-detail-range-fill" id="md-range-fill"></div>
+          <div class="mandi-detail-range-dot"  id="md-range-dot"></div>
+        </div>
+        <span class="mandi-detail-range-max" id="md-max"></span>
+      </div>
+      <div class="mandi-detail-range-labels">
+        <span>Min</span><span>Modal ▲</span><span>Max</span>
+      </div>
+    </div>
+
+    <div class="mandi-detail-info">
+      <div class="mandi-detail-row">
+        <span class="mandi-detail-row-icon">🏪</span>
+        <span class="mandi-detail-row-label">मंडी (Market)</span>
+        <span class="mandi-detail-row-val" id="md-market"></span>
+      </div>
+      <div class="mandi-detail-row">
+        <span class="mandi-detail-row-icon">📍</span>
+        <span class="mandi-detail-row-label">जिला (District)</span>
+        <span class="mandi-detail-row-val" id="md-district"></span>
+      </div>
+      <div class="mandi-detail-row">
+        <span class="mandi-detail-row-icon">🗺️</span>
+        <span class="mandi-detail-row-label">राज्य (State)</span>
+        <span class="mandi-detail-row-val" id="md-state"></span>
+      </div>
+      <div class="mandi-detail-row">
+        <span class="mandi-detail-row-icon">📉</span>
+        <span class="mandi-detail-row-label">Min — Max</span>
+        <span class="mandi-detail-row-val" id="md-minmax"></span>
+      </div>
+      <div class="mandi-detail-row">
+        <span class="mandi-detail-row-icon">📅</span>
+        <span class="mandi-detail-row-label">तारीख (Date)</span>
+        <span class="mandi-detail-row-val" id="md-date"></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ══ BOTTOM NAV (Mobile) ══ -->
 <nav class="bottom-nav">
   <div class="bottom-nav-items">
@@ -1393,6 +1611,13 @@
       no_data_sub:      "अलग combination try करें",
       error_server:     "⚠️ Server से connect नहीं हुआ।",
       footer_meta:      "मंडी भाव · सरकारी दरें · कृषि मित्र · krashimitra.in",
+      per_quintal:      "/क्विंटल",
+      prices_in:        "कीमतें ₹/क्विंटल में",
+      th_market:        "मंडी", th_district: "जिला", th_commodity: "फसल",
+      th_variety:       "किस्म", th_modal: "Modal भाव", th_range: "Min / Max", th_date: "तारीख",
+      share_btn:        "💬 WhatsApp पर शेयर करें",
+      modal_price_lbl:  "Modal भाव",
+      per_quintal_long: "प्रति क्विंटल",
     },
     en: {
       nav_chat:         "AI Advisor",
@@ -1414,6 +1639,13 @@
       no_data_sub:      "Try a different combination",
       error_server:     "⚠️ Could not reach server.",
       footer_meta:      "Mandi Rates · Govt. Prices · KrashiMitra · krashimitra.in",
+      per_quintal:      "/quintal",
+      prices_in:        "Prices in ₹/quintal",
+      th_market:        "Market", th_district: "District", th_commodity: "Commodity",
+      th_variety:       "Variety", th_modal: "Modal Price", th_range: "Min / Max", th_date: "Date",
+      share_btn:        "💬 Share on WhatsApp",
+      modal_price_lbl:  "Modal Price",
+      per_quintal_long: "per quintal",
     },
     kn: {
       nav_chat:         "AI ಕೇಳಿ",
@@ -1435,11 +1667,203 @@
       no_data_sub:      "ಬೇರೆ combination ಪ್ರಯತ್ನಿಸಿ",
       error_server:     "⚠️ ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಲಿಲ್ಲ.",
       footer_meta:      "ಮಂಡಿ ಬೆಲೆ · ಸರ್ಕಾರಿ ದರ · ಕೃಷಿ ಮಿತ್ರ",
+      per_quintal:      "/ಕ್ವಿಂಟಲ್",
+      prices_in:        "ಬೆಲೆ ₹/ಕ್ವಿಂಟಲ್ ನಲ್ಲಿ",
+      th_market:        "ಮಾರ್ಕೆಟ್", th_district: "ಜಿಲ್ಲೆ", th_commodity: "ಸರಕು",
+      th_variety:       "ತಳಿ", th_modal: "Modal ಬೆಲೆ", th_range: "Min / Max", th_date: "ದಿನಾಂಕ",
+      share_btn:        "💬 WhatsApp ನಲ್ಲಿ ಹಂಚಿ",
+      modal_price_lbl:  "Modal ಬೆಲೆ",
+      per_quintal_long: "ಪ್ರತಿ ಕ್ವಿಂಟಲ್",
     }
   };
 
   const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
   let currentLang = localStorage.getItem('km_lang') || 'hi';
+
+  // ── Commodity & Variety name translations ──
+  const COMMODITY_HI = {
+    'wheat':'गेहूं','paddy':'धान','rice':'चावल','maize':'मक्का','corn':'मक्का',
+    'soybean':'सोयाबीन','onion':'प्याज','potato':'आलू','tomato':'टमाटर',
+    'tobacco':'तंबाकू','firewood':'जलाऊ लकड़ी','cotton':'कपास','mustard':'सरसों',
+    'sugarcane':'गन्ना','garlic':'लहसुन','chilli':'मिर्च','green chilli':'हरी मिर्च',
+    'groundnut':'मूंगफली','bajra':'बाजरा','jowar':'ज्वार','jwar':'ज्वार',
+    'barley':'जौ','gram':'चना','arhar':'अरहर','toor':'अरहर','moong':'मूंग',
+    'urad':'उड़द','sunflower':'सूरजमुखी','turmeric':'हल्दी','ginger':'अदरक',
+    'banana':'केला','mango':'आम','apple':'सेब','grapes':'अंगूर',
+    'pomegranate':'अनार','peas':'मटर','cabbage':'पत्तागोभी',
+    'cauliflower':'फूलगोभी','brinjal':'बैंगन','ladyfinger':'भिंडी',
+    'lady finger':'भिंडी','okra':'भिंडी','bitter gourd':'करेला',
+    'bottle gourd':'लौकी','pumpkin':'कद्दू','coriander':'धनिया',
+    'cumin':'जीरा','fennel':'सौंफ','fenugreek':'मेथी','spinach':'पालक',
+    'radish':'मूली','carrot':'गाजर','lemon':'नींबू','orange':'संतरा',
+    'guava':'अमरूद','papaya':'पपीता','watermelon':'तरबूज','muskmelon':'खरबूजा',
+    'lentil':'मसूर','masoor':'मसूर','rajma':'राजमा','moth':'मोठ',
+    'sesame':'तिल','niger seed':'रामतिल','safflower':'कुसुम',
+    'isabgul':'इसबगोल','saunf':'सौंफ','ajwain':'अजवाइन',
+  };
+  const VARIETY_HI = {
+    'common':'सामान्य','hybrid':'संकर','local':'स्थानीय','other':'अन्य',
+    'desi':'देसी','fine':'बारीक','bold':'मोटा','medium':'मध्यम',
+    'large':'बड़ा','small':'छोटा','new':'नया','old':'पुराना',
+    'faq':'एफएक्यू','average':'औसत','superior':'उत्तम','grade a':'ग्रेड A',
+  };
+
+  // UP city / market name → Hindi (comprehensive APMC coverage)
+  const MARKET_CITY_HI = {
+    // Major cities
+    'agra':'आगरा','lucknow':'लखनऊ','kanpur':'कानपुर','varanasi':'वाराणसी',
+    'prayagraj':'प्रयागराज','allahabad':'प्रयागराज','meerut':'मेरठ',
+    'aligarh':'अलीगढ़','gorakhpur':'गोरखपुर','bareilly':'बरेली',
+    'moradabad':'मुरादाबाद','mathura':'मथुरा','ghaziabad':'गाजियाबाद',
+    'noida':'नोएडा','greater noida':'ग्रेटर नोएडा',
+    // Districts
+    'azamgarh':'आजमगढ़','etah':'एटा','balrampur':'बलरामपुर',
+    'gonda':'गोंडा','sultanpur':'सुल्तानपुर','raebareli':'रायबरेली',
+    'rae bareli':'रायबरेली','sitapur':'सीतापुर','hardoi':'हरदोई',
+    'unnao':'उन्नाव','fatehpur':'फतेहपुर','pratapgarh':'प्रतापगढ़',
+    'jaunpur':'जौनपुर','ghazipur':'गाजीपुर','ballia':'बलिया',
+    'deoria':'देवरिया','kushinagar':'कुशीनगर','maharajganj':'महाराजगंज',
+    'basti':'बस्ती','farrukhabad':'फर्रुखाबाद','farrukabad':'फर्रुखाबाद',
+    'kannauj':'कन्नौज','auraiya':'औरैया','etawah':'इटावा',
+    'mainpuri':'मैनपुरी','firozabad':'फिरोजाबाद','hathras':'हाथरस',
+    'kasganj':'कासगंज','bulandshahr':'बुलंदशहर','hapur':'हापुड़',
+    'muzaffarnagar':'मुजफ्फरनगर','shamli':'शामली','saharanpur':'सहारनपुर',
+    'amroha':'अमरोहा','rampur':'रामपुर','sambhal':'संभल',
+    'badaun':'बदायूं','budaun':'बदायूं','pilibhit':'पीलीभीत',
+    'shahjahanpur':'शाहजहांपुर','lakhimpur':'लखीमपुर','bahraich':'बहराइच',
+    'shrawasti':'श्रावस्ती','barabanki':'बाराबंकी','amethi':'अमेठी',
+    'jhansi':'झाँसी','lalitpur':'ललितपुर','hamirpur':'हमीरपुर',
+    'mahoba':'महोबा','banda':'बांदा','chitrakoot':'चित्रकूट',
+    'mirzapur':'मिर्जापुर','sonbhadra':'सोनभद्र','chandauli':'चंदौली',
+    'bhadohi':'भदोही','mau':'मऊ','bijnor':'बिजनौर','baghpat':'बागपत',
+    'sant kabir nagar':'संत कबीर नगर','ambedkar nagar':'अंबेडकर नगर',
+    'gautam buddha nagar':'गौतम बुद्ध नगर',
+    'ayodhya':'अयोध्या','faizabad':'फैजाबाद','utraula':'उतरौला',
+    // Tehsil / Town level (APMC markets)
+    'aliganj':'अलीगंज','gulavati':'गुलावटी','gulawati':'गुलावटी',
+    'anandnagar':'आनंदनगर','anand nagar':'आनंदनगर',
+    'jasvantnagar':'जसवंतनगर','jasawantnagar':'जसवंतनगर',
+    'jaswantnagar':'जसवंतनगर',
+    'khurja':'खुर्जा','pilkhuwa':'पिलखुवा','dadri':'दादरी',
+    'iglas':'इगलास','sadabad':'सादाबाद','hathras':'हाथरस',
+    'tundla':'टुंडला','shikohabad':'शिकोहाबाद','jasrana':'जसराना',
+    'sirsaganj':'सिरसागंज','kosi kalan':'कोसी कलां',
+    'dibiyapur':'दिबियापुर','orai':'ओरई','jalaun':'जालौन',
+    'urai':'उरई','kalpi':'कालपी',
+    'mathura':'मथुरा','vrindavan':'वृंदावन','govardhan':'गोवर्धन',
+    'chhata':'छाता','kosi':'कोसी','mat':'माट',
+    'khair':'खैर','atrauli':'अतरौली',
+    'khurja':'खुर्जा','siana':'सियाना',
+    'dasna':'दसना','modinagar':'मोदीनगर','hapur':'हापुड़',
+    'khatauli':'खतौली','kairana':'कैराना',
+    'gangoh':'गंगोह','deoband':'देवबंद','nakur':'नकुर','behat':'बेहट',
+    'gajraula':'गजरौला','bahjoi':'बहजोई','hasanpur':'हसनपुर',
+    'bilaspur':'बिलासपुर','milak':'मिलक','chandausi':'चंदौसी',
+    'gunnaur':'गुन्नौर','thakurdwara':'ठाकुरद्वारा',
+    'dataganj':'दातागंज','bilsi':'बिल्सी','sahaswan':'सहसवान',
+    'puranpur':'पूरनपुर','bisalpur':'बिसलपुर',
+    'faridpur':'फरीदपुर','shergarh':'शेरगढ़','aonla':'आँवला',
+    'nawabganj':'नवाबगंज','miranpur katra':'मीरानपुर कटरा',
+    'tilhar':'तिलहर','jalalabad':'जलालाबाद','banda':'बांदा',
+    'bindki':'बिंदकी','khaga':'खागा','fatehpur':'फतेहपुर',
+    'bidhuna':'बिधूना','tirwa':'तिर्वा','chhibramau':'छिबरामऊ',
+    'kaimganj':'कायमगंज','shamsabad':'शमसाबाद',
+    'saifai':'सैफई','kishni':'किशनी','bhongaon':'भोगांव',
+    'purwa':'पुरवा','bangarmau':'बांगरमऊ','ghatampur':'घाटमपुर',
+    'rath':'रथ','saidpur':'सैदपुर','zamania':'जमानिया',
+    'rasra':'रसड़ा','bansdih':'बांसडीह',
+    'barhaj':'बड़हज','bhatpar rani':'भाटपाररानी',
+    'gola':'गोला','sahjanwa':'सहजनवा',
+    'harraiya':'हर्रैया','menhdawal':'मेंहदावल',
+    'khalilabad':'खलीलाबाद','kasia':'कासिया',
+    'padrauna':'पडरौना','tamkuhi':'तमकुही',
+    'siswa':'सिसवा','laxmiganj':'लक्ष्मीगंज',
+    'naugarh':'नौगढ़','sonauli':'सोनौली',
+    'tanda':'टांडा','akbarpur':'अकबरपुर',
+    'musafirkhana':'मुसाफिरखाना','jagdishpur':'जगदीशपुर',
+    'salon':'सलोन','unchahar':'ऊंचाहार',
+    'haidergarh':'हैदरगढ़','sirauli':'सिरौली',
+    'bikapur':'बिकापुर','rudauli':'रुदौली',
+    'shahganj':'शाहगंज','machhalishahar':'मच्छलीशहर',
+    'mungra badshahpur':'मुंगरा बादशाहपुर',
+    'kunda':'कुंडा','patti':'पट्टी','lalgopalganj':'लालगोपालगंज',
+    'chunar':'चुनार','vindhyachal':'विंध्याचल','gopiganj':'गोपीगंज',
+    'mughalsarai':'मुगलसराय','chakia':'चकिया',
+    'robertsganj':'रॉबर्ट्सगंज','obra':'ओबरा','renukut':'रेणुकूट',
+    'anpara':'अनपरा','atarra':'अतर्रा','karwi':'कर्वी','maudaha':'मौदहा',
+    'ghosia':'घोसिया','domariyaganj':'डुमरियागंज','bansi':'बांसी',
+    'mankapur':'मनकापुर','colonelganj':'कर्नलगंज','tarabganj':'तरबगंज',
+    'tulsipur':'तुलसीपुर','kaiserganj':'कैसरगंज','nanpara':'नानपारा',
+    'mihinpurwa':'मिहीपुरवा','ikauna':'इकौना','bhinga':'भिनगा',
+    'biswan':'बिसवां','laharpur':'लहरपुर','hargaon':'हरगाँव',
+    'sidhauli':'सिधौली','mishrikot':'मिश्रिख','khairabad':'खैराबाद',
+    'pihani':'पिहानी','madhoganj':'माधोगंज','shahabad':'शाहाबाद',
+    'lalganj':'लालगंज','phulpur':'फूलपुर','mohammadabad':'मुहम्मदाबाद',
+    'kopaganj':'कोपागंज','barhalganj':'बरहलगंज',
+    'siddharthnagar':'सिद्धार्थनगर','sidharthnagar':'सिद्धार्थनगर',
+    'vrindaban':'वृंदावन','balrampur':'बलरामपुर','sandila':'सांडीला',
+    'bilgram':'बिलग्राम','balamau':'बलामऊ','bishrampur':'बिशरामपुर',
+    // Other states (common)
+    'indore':'इंदौर','bhopal':'भोपाल','ujjain':'उज्जैन','gwalior':'ग्वालियर',
+    'nagpur':'नागपुर','pune':'पुणे','nashik':'नासिक','mumbai':'मुंबई',
+    'delhi':'दिल्ली','jaipur':'जयपुर','jodhpur':'जोधपुर','kota':'कोटा',
+    'patna':'पटना','gaya':'गया','muzaffarpur':'मुजफ्फरपुर',
+    'hyderabad':'हैदराबाद','vijayawada':'विजयवाड़ा',
+    'bangalore':'बेंगलुरु','bengaluru':'बेंगलुरु',
+    'chennai':'चेन्नई','coimbatore':'कोयंबटूर',
+    'kolkata':'कोलकाता','siliguri':'सिलीगुड़ी',
+    'ahmedabad':'अहमदाबाद','surat':'सूरत','rajkot':'राजकोट',
+    'chandigarh':'चंडीगढ़','ludhiana':'लुधियाना','amritsar':'अमृतसर',
+  };
+
+  function tMarket(name) {
+    if (currentLang !== 'hi') return name;
+    const lower = name.toLowerCase().trim();
+    // 1. Exact full match
+    if (MARKET_CITY_HI[lower]) return MARKET_CITY_HI[lower];
+    // 2. Split off known suffixes: APMC, Mandi, Market, Krishi Mandi
+    const suffixRx = /^(.+?)\s+(apmc|mandi|market|krishi mandi|km)$/i;
+    const m = lower.match(suffixRx);
+    if (m) {
+      const cityPart = m[1].trim();
+      const suffix   = m[2];
+      // Try full city string first, then word-by-word
+      const cityHi = MARKET_CITY_HI[cityPart]
+        || cityPart.split(/\s+/).map(w => MARKET_CITY_HI[w] || _capitalise(w)).join(' ');
+      const suffixHi = /apmc/i.test(suffix) ? 'APMC' : 'मंडी';
+      return cityHi + ' ' + suffixHi;
+    }
+    // 3. Word-by-word for plain district names
+    return name.split(/\s+/)
+      .map(w => MARKET_CITY_HI[w.toLowerCase()] || w)
+      .join(' ');
+  }
+  function _capitalise(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+
+  function tCommodity(name) {
+    if (currentLang !== 'hi') return name;
+    const lower = name.toLowerCase().trim();
+    if (COMMODITY_HI[lower]) return COMMODITY_HI[lower];
+    // Handle "Name(Variety)" pattern e.g. "Paddy(Common)"
+    const m = name.match(/^(.+?)\s*\((.+?)\)$/);
+    if (m) {
+      const base = m[1].trim();
+      const vari = m[2].trim();
+      const baseHi = COMMODITY_HI[base.toLowerCase()] || base;
+      const variHi = VARIETY_HI[vari.toLowerCase()] || vari;
+      return baseHi + '(' + variHi + ')';
+    }
+    // Partial starts-with match
+    for (const [en, hi] of Object.entries(COMMODITY_HI)) {
+      if (lower.startsWith(en)) return hi + name.slice(en.length);
+    }
+    return name;
+  }
+
+  function tVariety(name) {
+    if (currentLang !== 'hi') return name;
+    return VARIETY_HI[name.toLowerCase().trim()] || name;
+  }
 
   function toggleLangPicker(e) {
     e.stopPropagation();
@@ -1474,6 +1898,28 @@
         sel.options[0].text = tr[keyMap[id]] || sel.options[0].text;
       }
     });
+    // Re-render mandi cards in the new language (no re-fetch needed)
+    if (window._mandiPrices && window._mandiPrices.length) {
+      renderMandiResult(window._mandiPrices);
+    }
+    // Update detail sheet static labels if it is currently open
+    const detailOpen = document.getElementById('mandi-detail-modal');
+    if (detailOpen && detailOpen.classList.contains('open')) {
+      const priceUnit  = document.getElementById('md-price-unit');
+      const priceLabel = document.getElementById('md-price-label');
+      if (priceUnit)  priceUnit.textContent  = tr.per_quintal_long || priceUnit.textContent;
+      if (priceLabel) priceLabel.textContent = tr.modal_price_lbl  || priceLabel.textContent;
+      // Re-translate commodity/variety names in the open detail sheet
+      const mdCom = document.getElementById('md-commodity');
+      const mdVar = document.getElementById('md-variety');
+      if (mdCom && window._lastOpenedMandiIdx !== undefined) {
+        const p = window._mandiPrices[window._lastOpenedMandiIdx];
+        if (p) {
+          mdCom.textContent = '🌾 ' + tCommodity(p.commodity);
+          mdVar.textContent = '🏷️ ' + tVariety(p.variety);
+        }
+      }
+    }
   }
   function t(key) {
     return (TRANSLATIONS[currentLang] || TRANSLATIONS.hi)[key] || key;
@@ -1498,7 +1944,7 @@
   // ══════════════════════════════════════
   async function loadStates() {
     try {
-      const res  = await fetch('https://krashi-mitra-v1.onrender.com/shop/states');
+      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/shop/states`);
       const data = await res.json();
       const sel  = document.getElementById('mandi-state');
       sel.innerHTML = `<option value="">${t('select_state')}</option>` +
@@ -1522,13 +1968,13 @@
     if (!state) return;
 
     try {
-      const dRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/districts?state=${encodeURIComponent(state)}`);
+      const dRes  = await fetch(`${window.KRASHIMITRA_API_BASE}/shop/districts?state=${encodeURIComponent(state)}`);
       const dData = await dRes.json();
       const dSel  = document.getElementById('mandi-district-filter');
       dSel.innerHTML = `<option value="">${t('select_district')}</option>` +
         dData.districts.map(d => `<option value="${d}">${d}</option>`).join('');
 
-      const cRes  = await fetch(`https://krashi-mitra-v1.onrender.com/shop/commodities?state=${encodeURIComponent(state)}`);
+      const cRes  = await fetch(`${window.KRASHIMITRA_API_BASE}/shop/commodities?state=${encodeURIComponent(state)}`);
       const cData = await cRes.json();
       const cSel  = document.getElementById('mandi-commodity');
       cSel.innerHTML = `<option value="">🌾 All Commodities</option>` +
@@ -1538,6 +1984,89 @@
     }
 
     fetchMandiPrices();
+  }
+
+  // ══════════════════════════════════════
+  // RENDER MANDI RESULT (called on fetch + on lang change)
+  // ══════════════════════════════════════
+  function renderMandiResult(prices) {
+    const result = document.getElementById('mandi-result');
+    if (!result || !prices || !prices.length) return;
+    result.innerHTML = `
+      <div class="mandi-table-wrap">
+        <table class="mandi-table">
+          <thead>
+            <tr>
+              <th>${t('th_market')}</th><th>${t('th_district')}</th><th>${t('th_commodity')}</th>
+              <th>${t('th_variety')}</th><th>${t('th_modal')}</th><th>${t('th_range')}</th><th>${t('th_date')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${prices.map(p => `
+              <tr>
+                <td>${tMarket(p.market)}</td>
+                <td>${tMarket(p.district)}</td>
+                <td>${tCommodity(p.commodity)}</td>
+                <td>${tVariety(p.variety)}</td>
+                <td class="price-modal">₹${p.modal_price}${t('per_quintal')}</td>
+                <td class="price-range">₹${p.min_price} – ₹${p.max_price}</td>
+                <td>${p.date}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mandi-cards-mobile">
+        ${prices.map((p, i) => `
+          <div class="mandi-card-mobile" onclick="openMandiDetail(${i})">
+            <div class="mandi-card-accent"></div>
+            <div class="mandi-card-content">
+              <div class="mandi-card-top">
+                <div>
+                  <div class="mandi-card-commodity">🌾 ${tCommodity(p.commodity)}</div>
+                  <div class="mandi-card-variety-chip">🏷️ ${tVariety(p.variety)}</div>
+                </div>
+                <div class="mandi-card-date">📅 ${p.date}</div>
+              </div>
+              <div class="mandi-card-price-section">
+                <div class="mandi-card-price-main">₹${p.modal_price}<span>${t('per_quintal')}</span></div>
+                <div class="mandi-card-range">↕ ₹${p.min_price} – ₹${p.max_price}</div>
+              </div>
+              <div class="mandi-card-footer">
+                <span>🏪 ${tMarket(p.market)}</span>
+                <span>📍 ${tMarket(p.district)}</span>
+                <span style="margin-left:auto;color:var(--green-light);font-size:16px;">›</span>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div style="font-size:11px;color:#aaa;margin-top:10px;text-align:right;">
+        ${t('prices_in')}
+      </div>`;
+  }
+
+  // ══════════════════════════════════════
+  // MANDI SKELETON CARD
+  // ══════════════════════════════════════
+  function _mandiSkeletonHTML() {
+    return `
+      <div class="mandi-card-skel">
+        <div class="mandi-skel-accent"></div>
+        <div class="mandi-skel-body">
+          <div class="mandi-skel-row">
+            <div class="shimmer-block" style="height:16px;width:48%;"></div>
+            <div class="shimmer-block" style="height:13px;width:20%;"></div>
+          </div>
+          <div class="shimmer-block" style="height:12px;width:32%;border-radius:20px;"></div>
+          <div class="shimmer-block" style="height:30px;width:44%;margin-top:4px;"></div>
+          <div class="shimmer-block" style="height:13px;width:54%;border-radius:20px;margin-top:2px;"></div>
+          <div class="mandi-skel-row" style="margin-top:6px;padding-top:8px;border-top:1px solid #eef4f0;">
+            <div class="shimmer-block" style="height:12px;width:40%;"></div>
+            <div class="shimmer-block" style="height:12px;width:30%;"></div>
+          </div>
+        </div>
+      </div>`;
   }
 
   // ══════════════════════════════════════
@@ -1551,15 +2080,19 @@
 
     if (!state) return;
 
-    result.innerHTML = `<div class="shop-loading">${t('loading')}</div>`;
+    result.innerHTML = `<div class="mandi-cards-mobile" style="display:flex">
+      ${_mandiSkeletonHTML().repeat(4)}
+    </div>`;
 
     try {
       const params = new URLSearchParams({ state });
       if (commodity) params.set('commodity', commodity);
       if (district)  params.set('district', district);
-      const url = `https://krashi-mitra-v1.onrender.com/shop/mandi?${params.toString()}`;
+      const url = `${window.KRASHIMITRA_API_BASE}/shop/mandi?${params.toString()}`;
       const res  = await fetch(url);
       const data = await res.json();
+      window._mandiPrices = data.prices;
+      window._mandiState  = state;
 
       if (!data.prices || data.prices.length === 0) {
         result.innerHTML = `
@@ -1571,57 +2104,7 @@
         return;
       }
 
-      result.innerHTML = `
-        <!-- Desktop: table -->
-        <div class="mandi-table-wrap">
-          <table class="mandi-table">
-            <thead>
-              <tr>
-                <th>Market</th><th>District</th><th>Commodity</th>
-                <th>Variety</th><th>Modal Price</th><th>Min / Max</th><th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.prices.map(p => `
-                <tr>
-                  <td>${p.market}</td>
-                  <td>${p.district}</td>
-                  <td>${p.commodity}</td>
-                  <td>${p.variety}</td>
-                  <td class="price-modal">₹${p.modal_price}/q</td>
-                  <td class="price-range">₹${p.min_price} – ₹${p.max_price}</td>
-                  <td>${p.date}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Mobile cards -->
-        <div class="mandi-cards-mobile">
-          ${data.prices.map(p => `
-            <div class="mandi-card-mobile">
-              <div class="mandi-card-header-bar">
-                <div>
-                  <div class="mandi-card-market">🏪 ${p.market}</div>
-                  <div class="mandi-card-district">📍 ${p.district}</div>
-                </div>
-                <div class="mandi-card-price-badge">
-                  <div class="mandi-card-price-val">₹${p.modal_price}</div>
-                  <div class="mandi-card-price-unit">/quintal</div>
-                </div>
-              </div>
-              <div class="mandi-card-body">
-                <span class="mandi-tag">🌾 ${p.commodity}</span>
-                <span class="mandi-tag variety">🏷️ ${p.variety}</span>
-                <span class="mandi-tag">📉 ₹${p.min_price}–₹${p.max_price}</span>
-                <span class="mandi-tag">📅 ${p.date}</span>
-              </div>
-            </div>`).join('')}
-        </div>
-
-        <div style="font-size:11px;color:#aaa;margin-top:10px;text-align:right;">
-          Prices in ₹/quintal
-        </div>`;
+      renderMandiResult(data.prices);
 
     } catch (err) {
       result.innerHTML = `<div class="shop-loading">${t('error_server')}</div>`;
@@ -1675,7 +2158,7 @@
     // Show card-shaped skeleton loaders
     grid.innerHTML = _fertSkeletonHTML().repeat(6);
     try {
-      const res   = await fetch('https://krashi-mitra-v1.onrender.com/shop/fertilizers');
+      const res   = await fetch(`${window.KRASHIMITRA_API_BASE}/shop/fertilizers`);
       const data  = await res.json();
       const items = Object.entries(data.fertilizers);
 
@@ -1805,7 +2288,7 @@
   }
 
   // ── Backend API URL ──
-  const API_BASE = 'https://krashi-mitra-v1-ybtn.onrender.com';
+  const API_BASE = window.KRASHIMITRA_API_BASE;
 
   // Log order to NeonDB via backend API
   function logOrderToBackend(orderData, callback) {
@@ -2098,6 +2581,50 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
     clearTimeout(_mandiToastTimer);
     _mandiToastTimer = setTimeout(() => el.classList.remove('show'), dur);
   }
+
+  // ══════════════════════════════════════
+  // MANDI DETAIL BOTTOM SHEET
+  // ══════════════════════════════════════
+  function openMandiDetail(index) {
+    const p = window._mandiPrices && window._mandiPrices[index];
+    if (!p) return;
+    window._lastOpenedMandiIdx = index;
+
+    document.getElementById('md-commodity').textContent   = '🌾 ' + tCommodity(p.commodity);
+    document.getElementById('md-variety').textContent     = '🏷️ ' + tVariety(p.variety);
+    document.getElementById('md-price-label').textContent = t('modal_price_lbl');
+    document.getElementById('md-price-unit').textContent  = t('per_quintal_long');
+    document.getElementById('md-price').textContent       = '₹' + Number(p.modal_price).toLocaleString('en-IN');
+    document.getElementById('md-market').textContent      = tMarket(p.market);
+    document.getElementById('md-district').textContent    = tMarket(p.district);
+    document.getElementById('md-state').textContent       = window._mandiState || '—';
+    document.getElementById('md-minmax').textContent      = '₹' + p.min_price + ' — ₹' + p.max_price;
+    document.getElementById('md-date').textContent        = p.date;
+    document.getElementById('md-min').textContent         = '₹' + p.min_price;
+    document.getElementById('md-max').textContent         = '₹' + p.max_price;
+
+    // Price range bar: position dot at modal price between min and max
+    const min   = parseFloat(p.min_price)   || 0;
+    const max   = parseFloat(p.max_price)   || 1;
+    const modal = parseFloat(p.modal_price) || min;
+    const pct   = max > min ? Math.min(100, Math.max(0, ((modal - min) / (max - min)) * 100)) : 50;
+    document.getElementById('md-range-fill').style.width = pct + '%';
+    document.getElementById('md-range-dot').style.left   = pct + '%';
+
+
+    document.getElementById('mandi-detail-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMandiDetail() {
+    document.getElementById('mandi-detail-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeMandiDetail();
+  });
 
   // ══ INIT ══
   document.addEventListener('DOMContentLoaded', () => {
