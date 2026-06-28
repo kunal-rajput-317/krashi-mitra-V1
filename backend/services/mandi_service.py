@@ -20,8 +20,10 @@ with open(_json_path, "r") as f:
 
 def get_mandi_prices(commodity: str, district: str, state: str) -> dict:
     records = mandi_data.get("records", [])
+    filtered = records
 
-    filtered = [r for r in records if r.get("commodity", "").lower() == commodity.lower()]
+    if commodity:
+        filtered = [r for r in filtered if r.get("commodity", "").lower() == commodity.lower()]
 
     if state:
         filtered = [r for r in filtered if r.get("state", "").lower() == state.lower()]
@@ -30,8 +32,9 @@ def get_mandi_prices(commodity: str, district: str, state: str) -> dict:
         filtered = [r for r in filtered if r.get("district", "").lower() == district.lower()]
 
     if not filtered:
-        return {"commodity": commodity, "prices": [], "message": "No data found"}
+        return {"commodity": commodity or "all", "prices": [], "message": "No data found"}
 
+    limit = 50 if commodity else 150
     prices = [{
         "market":      r.get("market", "-"),
         "district":    r.get("district", "-"),
@@ -43,9 +46,9 @@ def get_mandi_prices(commodity: str, district: str, state: str) -> dict:
         "max_price":   str(r.get("max_price", "-")),
         "modal_price": str(r.get("modal_price", "-")),
         "date":        r.get("arrival_date", "-")
-    } for r in filtered[:50]]
+    } for r in filtered[:limit]]
 
-    return {"commodity": commodity, "prices": prices}
+    return {"commodity": commodity or "all", "prices": prices}
 
 
 def get_states() -> dict:
