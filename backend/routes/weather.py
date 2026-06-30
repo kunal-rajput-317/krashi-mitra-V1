@@ -16,7 +16,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Query, Header, HTTPException
-from backend.database.db import SessionLocal, WeatherCache, UP_DISTRICT_CITY_MAP
+from backend.database.db import SessionLocal, WeatherCache, WeatherHistory, UP_DISTRICT_CITY_MAP
 from backend.services.weather_service import refresh_all_districts, get_farming_tip
 
 logger = logging.getLogger("krishi.weather_route")
@@ -268,6 +268,70 @@ async def get_cache_status():
             "success": False,
             "message": "Cache status check failed.",
             "data":    {}
+        }
+    finally:
+        db.close()
+
+
+# ── GET /weather/history ─────────────────────────────────────
+
+@router.get("/weather/history")
+async def get_weather_history(district: str = Query(default="Lucknow")):
+    """
+    Return the last 7 days of weather snapshots for a UP district.
+    With 3 fetches/day, up to 21 data points are returned, newest first.
+    """
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(WeatherHistory)
+            .filter(WeatherHistory.district == district)
+            .order_by(WeatherHistory.fetched_at.desc())
+            .all()
+        )
+
+        if not rows:
+            is_known = any(d.lower() == district.lower() for d in UP_DISTRICT_CITY_MAP)
+            msg = (
+                f"'{district}' का अभी तक कोई इतिहास नहीं — पहला डेटा अगले रिफ्रेश में आएगा।"
+                if is_known else
+                f"'{district}' उत्तर प्रदेश का मान्य जिला नहीं है।"
+            )
+            return {"success": False, "message": msg, "data": {"district": district, "count": 0, "history": []}}
+
+        ist = timedelta(hours=5, minutes=30)
+        history = [
+            {
+                "temperature":       r.temperature,
+                "feels_like":        r.feels_like,
+                "humidity":          r.humidity,
+                "wind_speed":        r.wind_speed,
+                "rainfall":          r.rainfall,
+                "weather_condition": r.weather_condition,
+                "icon_url":          r.icon_url,
+                "farming_tip":       r.farming_tip,
+                "fetched_at_utc":    r.fetched_at.isoformat() if r.fetched_at else None,
+                "fetched_at_ist":    (r.fetched_at + ist).strftime("%d %b %Y, %I:%M %p IST") if r.fetched_at else None,
+            }
+            for r in rows
+        ]
+
+        return {
+            "success": True,
+            "message": "",
+            "data": {
+                "district": district,
+                "count":    len(history),
+                "history":  history,
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"❌ weather history error for {district}: {e}")
+        return {
+            "success": False,
+            "message": "मौसम इतिहास प्राप्त करने में त्रुटि।",
+            "data":    {"district": district, "count": 0, "history": []}
         }
     finally:
         db.close()

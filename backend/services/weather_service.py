@@ -17,12 +17,13 @@ import logging
 import asyncio
 import httpx
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from backend.database.db import (
     SessionLocal,
     WeatherCache,
+    WeatherHistory,
     UP_DISTRICT_CITY_MAP,
 )
 
@@ -143,6 +144,22 @@ async def _fetch_and_upsert(
             )
             db.add(row)
 
+        # Record this fetch in the rolling 7-day history
+        db.add(WeatherHistory(
+            district          = district,
+            city              = city,
+            state             = "Uttar Pradesh",
+            temperature       = temp,
+            feels_like        = feels,
+            humidity          = humidity,
+            wind_speed        = wind,
+            rainfall          = rainfall,
+            weather_condition = desc,
+            icon_url          = icon_url,
+            farming_tip       = tip,
+            fetched_at        = now,
+        ))
+
         db.commit()
         logger.info(f"✅ Cached: {district:<25} {temp}°C  {desc}")
         return True
@@ -170,6 +187,20 @@ def _mark_stale(district: str, db: Session):
             db.commit()
     except Exception as e:
         logger.error(f"⚠️  Could not mark stale for {district}: {e}")
+
+
+# ── History Purge ───────────────────────────────────────────
+
+def purge_old_history(db: Session) -> int:
+    """Delete weather_history rows older than 7 days. Returns deleted count."""
+    cutoff = datetime.utcnow() - timedelta(days=7)
+    deleted = (
+        db.query(WeatherHistory)
+        .filter(WeatherHistory.fetched_at < cutoff)
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+    return deleted
 
 
 # ── Scheduler Entry Point ────────────────────────────────────
@@ -220,6 +251,10 @@ async def refresh_all_districts():
                 # but good practice with free OWM plan)
                 if i + batch_size < total:
                     await asyncio.sleep(1)
+
+        deleted = purge_old_history(db)
+        if deleted:
+            logger.info(f"🗑️  Purged {deleted} history rows older than 7 days")
 
     finally:
         db.close()
