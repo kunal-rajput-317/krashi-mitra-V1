@@ -3,13 +3,12 @@
 <head>
 <script src="api-config.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>किसान प्रोफाइल | KrashiMitra</title>
   <link rel="icon" href="https://krashimitra.in/images/favicon.png" type="image/png">
   <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
-
   <link rel="canonical" href="https://krashimitra.in/profile.html">
-  <meta name="description" content="KrashiMitra किसान प्रोफाइल - अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें ताकि सलाह आपके खेत के हिसाब से मिले।">
+  <meta name="description" content="KrashiMitra किसान प्रोफाइल - अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें।">
   <meta name="robots" content="noindex, follow">
   <meta property="og:type" content="website">
   <meta property="og:title" content="किसान प्रोफाइल - KrashiMitra">
@@ -29,7 +28,7 @@
       --amber: #e9a825;
       --amber-light: #fef3c7;
       --soil: #7c4f2f;
-      --cream: #faf7f2;
+      --cream: #f5f7f5;
       --white: #ffffff;
       --text-dark: #1a2e1e;
       --text-mid: #4a6355;
@@ -37,10 +36,10 @@
       --border: #ddeee4;
       --danger: #b42318;
       --danger-bg: #fff1f0;
-      --shadow: 0 4px 24px rgba(26,60,46,0.10);
+      --shadow: 0 2px 16px rgba(26,60,46,0.08);
       --shadow-lg: 0 8px 40px rgba(26,60,46,0.16);
-      --radius: 14px;
-      --radius-sm: 8px;
+      --radius: 16px;
+      --radius-sm: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,15 +51,10 @@
       color: var(--text-dark);
     }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
+    body { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
     a { color: inherit; }
 
+    /* ── Pre-topbar ── */
     .pre-topbar {
       background: var(--amber);
       color: #1a2e1e;
@@ -74,9 +68,6 @@
       text-align: center;
       flex-shrink: 0;
     }
-
-    .pre-topbar-helpline { opacity: 0.88; white-space: nowrap; }
-
     .pre-topbar-cta {
       background: #1a2e1e;
       color: #fff;
@@ -87,6 +78,7 @@
       white-space: nowrap;
     }
 
+    /* ── Topbar ── */
     .topbar {
       background: var(--green-dark);
       display: flex;
@@ -100,44 +92,13 @@
       z-index: 100;
       box-shadow: 0 2px 16px rgba(0,0,0,0.25);
     }
-
-    .topbar-left a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-
+    .topbar-left a { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .topbar-logo-icon { font-size: 26px; line-height: 1; }
-
-    .topbar-logo-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.1;
-    }
-
-    .topbar-logo-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 17px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.3px;
-    }
-
+    .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .topbar-logo-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: #fff; }
     .topbar-logo-name span { color: var(--amber); }
-
-    .topbar-logo-sub {
-      font-size: 9.5px;
-      color: rgba(255,255,255,0.55);
-      letter-spacing: 0.5px;
-    }
-
-    .topbar-nav {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
-
+    .topbar-logo-sub { font-size: 9.5px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; }
+    .topbar-nav { display: flex; align-items: center; gap: 2px; }
     .tnav-btn {
       color: rgba(255,255,255,0.80);
       padding: 7px 14px;
@@ -150,22 +111,9 @@
       gap: 5px;
       white-space: nowrap;
     }
-
     .tnav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
-
-    .tnav-btn.active {
-      background: rgba(255,255,255,0.14);
-      color: #fff;
-      box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25) inset;
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
+    .tnav-btn.active { background: rgba(255,255,255,0.14); color: #fff; box-shadow: 0 0 0 1.5px rgba(255,255,255,0.25) inset; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .topbar-action {
       border: 1px solid rgba(255,255,255,0.18);
       background: rgba(255,255,255,0.08);
@@ -182,223 +130,361 @@
       align-items: center;
       gap: 6px;
     }
-
     .topbar-action:hover { background: rgba(255,255,255,0.16); }
 
+    /* ── Main ── */
     .main-content {
-      width: min(1180px, calc(100% - 32px));
+      width: min(1200px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 26px 0 34px;
+      padding: 28px 0 48px;
       flex: 1;
     }
 
+    /* ── Hero Card ── */
     .profile-hero {
-      background:
-        linear-gradient(135deg, rgba(26,60,46,0.96), rgba(45,106,79,0.92)),
-        url('https://krashimitra.in/images/og-banner.jpg') center/cover;
+      background: linear-gradient(135deg, #1a3c2e 0%, #2d6a4f 55%, #1e5c40 100%);
       color: #fff;
       border-radius: var(--radius);
-      min-height: 220px;
-      padding: 28px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-      gap: 24px;
+      padding: 0;
       box-shadow: var(--shadow-lg);
       overflow: hidden;
       position: relative;
+      margin-bottom: 24px;
     }
-
-    .profile-hero::after {
-      content: "";
+    .hero-bg-pattern {
       position: absolute;
-      inset: auto -60px -90px auto;
-      width: 230px;
-      height: 230px;
-      border-radius: 50%;
-      background: rgba(233,168,37,0.18);
+      inset: 0;
+      opacity: 0.07;
+      background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+      background-size: 28px 28px;
       pointer-events: none;
     }
-
-    .eyebrow {
-      display: inline-flex;
-      width: fit-content;
+    .hero-glow {
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(233,168,37,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: 7px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.22);
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
+      gap: 28px;
+      padding: 32px 36px;
     }
 
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(30px, 4vw, 48px);
-      line-height: 1;
-      margin-bottom: 10px;
-      max-width: 700px;
-    }
-
-    .hero-sub {
-      color: rgba(255,255,255,0.78);
-      font-size: 15px;
-      line-height: 1.6;
-      max-width: 640px;
-    }
-
+    /* Avatar */
+    .avatar-wrap { position: relative; flex-shrink: 0; }
     .profile-avatar {
-      width: 118px;
-      height: 118px;
+      width: 110px;
+      height: 110px;
       border-radius: 50%;
       border: 4px solid rgba(255,255,255,0.9);
       background: var(--amber-light);
       display: grid;
       place-items: center;
-      font-size: 52px;
-      box-shadow: 0 16px 36px rgba(0,0,0,0.22);
+      font-size: 50px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
       position: relative;
-      z-index: 1;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .avatar-edit-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      border-radius: 50%;
+    }
+    .profile-avatar:hover .avatar-edit-overlay { opacity: 1; }
+
+    /* Completion ring */
+    .completion-ring {
+      position: absolute;
+      inset: -6px;
+      pointer-events: none;
+    }
+    .completion-ring svg { transform: rotate(-90deg); }
+
+    .hero-info { min-width: 0; }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .hero-name {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    .hero-sub {
+      color: rgba(255,255,255,0.72);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .hero-tag {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 700;
     }
 
-    .dashboard-grid {
+    /* Completion card */
+    .hero-completion {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      min-width: 180px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+    .completion-label { font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.7; margin-bottom: 8px; }
+    .completion-percent { font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 700; color: var(--amber); line-height: 1; }
+    .completion-bar-wrap { background: rgba(255,255,255,0.15); border-radius: 99px; height: 6px; margin: 10px 0 6px; overflow: hidden; }
+    .completion-bar { background: var(--amber); height: 100%; border-radius: 99px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+    .completion-hint { font-size: 11px; opacity: 0.65; }
+
+    /* Quick stats row */
+    .hero-stats {
+      background: rgba(0,0,0,0.18);
+      border-top: 1px solid rgba(255,255,255,0.08);
       display: grid;
-      grid-template-columns: 0.86fr 1.14fr;
-      gap: 18px;
-      margin-top: 18px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .stat-item {
+      padding: 14px 20px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-icon { font-size: 18px; margin-bottom: 3px; }
+    .stat-val { font-size: 15px; font-weight: 800; color: var(--amber); }
+    .stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; opacity: 0.6; text-transform: uppercase; }
+
+    /* ── Layout ── */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
       align-items: start;
     }
 
-    .panel {
+    /* ── Sidebar ── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
       background: var(--white);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
     }
-
-    .panel-head {
-      padding: 18px 20px 14px;
+    .card-head {
+      padding: 16px 18px 12px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
     }
+    .card-title { font-size: 15px; font-weight: 800; }
+    .card-sub { font-size: 11px; color: var(--text-light); margin-top: 2px; }
 
-    .panel-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: var(--text-dark);
-    }
-
-    .panel-sub {
-      color: var(--text-light);
-      font-size: 12px;
-      margin-top: 3px;
-      line-height: 1.5;
-    }
-
-    .status-pill {
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 800;
-      white-space: nowrap;
-      background: var(--green-pale);
-      color: var(--green-dark);
-    }
-
-    .status-pill.empty {
-      background: var(--amber-light);
-      color: #76500b;
-    }
-
-    .summary-list {
+    /* Summary list */
+    .sum-list { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .sum-row {
       display: grid;
+      grid-template-columns: 34px 1fr;
       gap: 10px;
-      padding: 18px;
-    }
-
-    .summary-row {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
-      gap: 12px;
       align-items: center;
-      padding: 12px;
-      border: 1px solid var(--border);
+      padding: 10px;
       border-radius: var(--radius-sm);
-      background: #fffdf8;
+      background: #f9fbf9;
+      border: 1px solid var(--border);
     }
-
-    .summary-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
+    .sum-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--green-pale);
       display: grid;
       place-items: center;
-      background: var(--green-pale);
-      color: var(--green-dark);
-      font-size: 18px;
+      font-size: 16px;
     }
+    .sum-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); margin-bottom: 1px; }
+    .sum-val { font-size: 13px; font-weight: 700; color: var(--text-dark); word-break: break-word; }
 
-    .summary-label {
-      color: var(--text-light);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
+    /* Crop chips */
+    .crop-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 14px; }
+    .crop-chip { background: var(--green-pale); color: var(--green-dark); border-radius: 999px; padding: 5px 10px; font-size: 11px; font-weight: 800; }
 
-    .summary-value {
-      color: var(--text-dark);
-      font-size: 15px;
-      font-weight: 800;
-      word-break: break-word;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 0 18px 18px;
-    }
-
-    .chip {
-      border-radius: 999px;
-      padding: 7px 11px;
-      background: var(--green-pale);
-      color: var(--green-dark);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .profile-form {
-      padding: 18px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .field {
+    /* Quick actions */
+    .quick-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px 14px; }
+    .quick-link {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fafcfa;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-mid);
+      transition: all 0.18s;
+    }
+    .quick-link:hover { background: var(--green-pale); border-color: var(--green-light); color: var(--green-dark); }
+    .quick-link span:first-child { font-size: 22px; }
+
+    /* Sign out box */
+    .signout-box {
+      margin: 14px;
+      background: #fffdf8;
+      border: 1px dashed #dfc16e;
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-mid);
     }
 
+    /* Scheme tags */
+    .scheme-list { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .scheme-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #f9fbf9;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .scheme-badge {
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .badge-yes { background: var(--green-pale); color: var(--green-dark); }
+    .badge-no { background: var(--amber-light); color: #76500b; }
+    .badge-na { background: #f0f0f0; color: #888; }
+
+    /* ── Main Form Area ── */
+    .form-area { display: flex; flex-direction: column; gap: 20px; }
+
+    /* Tab nav */
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: max-content;
+      padding: 9px 14px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-mid);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { background: var(--green-pale); color: var(--green-dark); }
+    .tab-btn.active { background: var(--green-mid); color: #fff; box-shadow: 0 4px 12px rgba(45,106,79,0.25); }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Form card */
+    .form-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .form-card-head {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .form-card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--green-pale);
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .form-card-title { font-size: 16px; font-weight: 800; }
+    .form-card-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+    .form-grid {
+      padding: 20px 22px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
     .field.full { grid-column: 1 / -1; }
+    .field.col3 { grid-column: span 1; }
 
     label {
-      color: var(--text-mid);
       font-size: 12px;
       font-weight: 800;
+      color: var(--text-mid);
       letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
+    label .req { color: #e9a825; font-size: 14px; line-height: 1; }
+    label .hint { font-weight: 500; color: var(--text-light); font-size: 11px; margin-left: 4px; }
 
     input, select, textarea {
       width: 100%;
@@ -407,110 +493,170 @@
       border-radius: var(--radius-sm);
       background: #fff;
       color: var(--text-dark);
-      padding: 11px 12px;
+      padding: 11px 13px;
       font: inherit;
       font-size: 14px;
       outline: none;
       transition: border-color 0.18s, box-shadow 0.18s;
+      appearance: auto;
     }
-
-    textarea {
-      min-height: 78px;
-      resize: vertical;
-      line-height: 1.5;
-    }
-
+    textarea { min-height: 82px; resize: vertical; line-height: 1.5; }
     input:focus, select:focus, textarea:focus {
       border-color: var(--green-light);
       box-shadow: 0 0 0 4px rgba(82,183,136,0.14);
     }
+    input::placeholder, textarea::placeholder { color: #b0c4bb; }
 
-    .form-actions {
-      grid-column: 1 / -1;
+    /* Toggle row */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.18s;
+    }
+    .toggle-row:hover { border-color: var(--green-light); }
+    .toggle-row-info { flex: 1; min-width: 0; }
+    .toggle-row-title { font-size: 13px; font-weight: 700; }
+    .toggle-row-sub { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+    .toggle-switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #d4ddd8;
+      border-radius: 99px;
+      transition: background 0.18s;
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--green-mid); }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.18s;
+    }
+    .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+    /* Checkbox grid */
+    .check-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .check-item:has(input:checked) { border-color: var(--green-light); background: var(--green-pale); color: var(--green-dark); }
+    .check-item input { accent-color: var(--green-mid); width: 15px; height: 15px; }
+
+    /* Info box */
+    .info-box {
+      background: #f0f9f4;
+      border: 1px solid #a8d8bb;
+      border-radius: var(--radius-sm);
+      padding: 12px 15px;
+      font-size: 12.5px;
+      color: var(--green-dark);
+      line-height: 1.6;
       display: flex;
       gap: 10px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      padding-top: 4px;
+      align-items: flex-start;
     }
+    .info-box-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
-    .btn {
-      border: none;
-      border-radius: var(--radius-sm);
-      min-height: 46px;
-      padding: 0 16px;
-      font: inherit;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .btn-primary {
-      background: var(--green-mid);
-      color: #fff;
-      box-shadow: 0 8px 18px rgba(45,106,79,0.18);
-    }
-
-    .btn-primary:hover { background: var(--green-dark); }
-
-    .btn-secondary {
-      background: #fff;
-      color: var(--green-dark);
-      border: 1.5px solid var(--border);
-    }
-
-    .btn-secondary:hover { border-color: var(--green-light); }
-
-    .btn-danger {
-      background: var(--danger-bg);
-      color: var(--danger);
-      border: 1.5px solid #ffd6d1;
-    }
-
+    /* Message */
     .message {
-      margin: 18px 18px 0;
-      padding: 11px 13px;
+      margin: 0 22px 16px;
+      padding: 11px 14px;
       border-radius: var(--radius-sm);
       font-size: 13px;
       font-weight: 700;
       display: none;
       line-height: 1.5;
     }
-
     .message.show { display: block; }
     .message.ok { background: var(--green-pale); color: var(--green-dark); border: 1px solid var(--green-light); }
     .message.err { background: var(--danger-bg); color: var(--danger); border: 1px solid #ffb4aa; }
 
-    .signed-out {
-      display: none;
-      padding: 18px;
+    /* Form actions */
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
     }
+    .form-actions-left { display: flex; gap: 8px; }
+    .form-actions-right { display: flex; gap: 8px; }
 
+    .btn {
+      border: none;
+      border-radius: var(--radius-sm);
+      min-height: 44px;
+      padding: 0 18px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.18s;
+    }
+    .btn-primary { background: var(--green-mid); color: #fff; box-shadow: 0 4px 14px rgba(45,106,79,0.22); }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-secondary { background: #fff; color: var(--green-dark); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--green-light); background: var(--green-pale); }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border: 1.5px solid #ffd6d1; }
+    .btn-danger:hover { background: #ffd6d1; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* Save bar (sticky) */
+    .save-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: 0 -4px 20px rgba(26,60,46,0.10);
+    }
+    .save-bar-hint { font-size: 12px; color: var(--text-light); font-weight: 600; }
+    .save-bar-actions { display: flex; gap: 8px; }
+
+    /* Signed out */
+    .signed-out { display: none; padding: 18px; }
     .signed-out.show { display: block; }
 
-    .signed-out-box {
-      background: #fffdf8;
-      border: 1px dashed #dfc16e;
-      border-radius: var(--radius-sm);
-      padding: 18px;
-      line-height: 1.6;
-    }
-
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      padding: 0 18px 18px;
-    }
-
-    .quick-actions .btn { width: 100%; }
-
+    /* Footer */
     .site-footer {
       border-top: 1px solid var(--border);
       background: #fffdf8;
@@ -520,7 +666,6 @@
       font-size: 12px;
       line-height: 1.7;
     }
-
     .site-footer-links {
       display: flex;
       justify-content: center;
@@ -530,48 +675,48 @@
       font-weight: 800;
       color: var(--green-mid);
     }
-
     .site-footer a { text-decoration: none; }
 
+    /* Bottom nav */
     .bottom-nav { display: none; }
 
-    @media (max-width: 980px) {
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .content-grid { grid-template-columns: 260px 1fr; }
+    }
+    @media (max-width: 840px) {
       .topbar { padding: 0 16px; }
       .topbar-nav { display: none; }
-      .dashboard-grid { grid-template-columns: 1fr; }
-      .profile-hero { grid-template-columns: 1fr; }
-      .profile-avatar { width: 92px; height: 92px; font-size: 42px; }
+      .content-grid { grid-template-columns: 1fr; }
+      .sidebar { order: 2; }
+      .form-area { order: 1; }
+      .hero-inner { grid-template-columns: auto 1fr; }
+      .hero-completion { display: none; }
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+      .check-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
     @media (max-width: 640px) {
       body { padding-bottom: 70px; }
-      .pre-topbar { padding: 6px 10px; font-size: 11.5px; }
-      .pre-topbar-helpline {
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
+      .pre-topbar { font-size: 11.5px; }
       .pre-topbar-cta { display: none; }
       .topbar { height: 56px; }
-      .topbar-logo-name { font-size: 15px; }
-      .topbar-logo-sub { font-size: 8.5px; }
-      .topbar-action { height: 32px; padding: 0 9px; font-size: 11px; }
-      .main-content { width: min(100% - 20px, 1180px); padding: 14px 0 22px; }
-      .profile-hero { min-height: 190px; padding: 20px; border-radius: 12px; }
-      .hero-title { font-size: 30px; }
-      .hero-sub { font-size: 13px; }
-      .panel-head { align-items: flex-start; flex-direction: column; }
-      .profile-form { grid-template-columns: 1fr; padding: 14px; }
-      .summary-list { padding: 14px; }
-      .chips, .quick-actions { padding-left: 14px; padding-right: 14px; }
-      .quick-actions { grid-template-columns: 1fr; }
-      .form-actions { justify-content: stretch; }
-      .form-actions .btn { width: 100%; }
+      .main-content { width: min(100% - 16px, 1200px); padding: 16px 0 28px; }
+      .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 16px; padding: 24px 20px; }
+      .avatar-wrap { justify-self: center; }
+      .profile-avatar { width: 90px; height: 90px; font-size: 42px; }
+      .hero-tags { justify-content: center; }
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+      .form-grid { grid-template-columns: 1fr; padding: 16px; }
+      .check-grid { grid-template-columns: 1fr 1fr; }
+      .form-actions { flex-direction: column; }
+      .form-actions-left, .form-actions-right { width: 100%; }
+      .form-actions-right .btn { flex: 1; }
+      .save-bar { padding: 12px 16px; }
+      .tab-btn { font-size: 12px; padding: 8px 10px; }
       .bottom-nav {
         display: block;
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        bottom: 0; left: 0; right: 0;
         background: var(--green-dark);
         border-top: 1px solid rgba(255,255,255,0.10);
         z-index: 110;
@@ -585,7 +730,6 @@
         margin: 0 auto;
       }
       .bottom-nav-item {
-        min-width: 0;
         color: rgba(255,255,255,0.70);
         text-decoration: none;
         display: flex;
@@ -595,15 +739,8 @@
         gap: 2px;
         min-height: 50px;
       }
-      .bnav-icon { font-size: 18px; line-height: 1; }
-      .bnav-label {
-        font-size: 9.5px;
-        font-weight: 800;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
+      .bnav-icon { font-size: 18px; }
+      .bnav-label { font-size: 9.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
       .bottom-nav-item.active .bnav-icon,
       .bottom-nav-item.active .bnav-label { color: var(--amber); }
     }
@@ -611,13 +748,13 @@
 </head>
 <body>
   <div class="pre-topbar">
-    <span class="pre-topbar-helpline">🌾 किसान helpline: +91 9870951001 - निःशुल्क कृषि सलाह</span>
+    <span>🌾 किसान helpline: +91 9870951001 - निःशुल्क कृषि सलाह</span>
     <a href="chat.html" class="pre-topbar-cta">AI से पूछें</a>
   </div>
 
   <header class="topbar">
     <div class="topbar-left">
-      <a href="index.html" aria-label="KrashiMitra home">
+      <a href="index.html">
         <span class="topbar-logo-icon">🌾</span>
         <span class="topbar-logo-text">
           <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
@@ -625,8 +762,7 @@
         </span>
       </a>
     </div>
-
-    <nav class="topbar-nav" aria-label="Primary navigation">
+    <nav class="topbar-nav">
       <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
       <a class="tnav-btn" href="weather.html">🌤️ मौसम</a>
       <a class="tnav-btn" href="mandi.html">🏪 मंडी</a>
@@ -634,7 +770,6 @@
       <a class="tnav-btn" href="chat.html">💬 सहायता</a>
       <a class="tnav-btn active" href="profile.html">👨‍🌾 प्रोफाइल</a>
     </nav>
-
     <div class="topbar-right">
       <a class="topbar-action" href="login.html" id="login-link">Login</a>
       <button class="topbar-action" type="button" id="logout-top" onclick="logout()" style="display:none;">Logout</button>
@@ -642,158 +777,625 @@
   </header>
 
   <main class="main-content">
+
+    <!-- ── Hero ── -->
     <section class="profile-hero">
-      <div>
-        <div class="eyebrow">👨‍🌾 Farmer Profile</div>
-        <h1 class="hero-title" id="hero-name">किसान प्रोफाइल</h1>
-        <p class="hero-sub" id="hero-sub">अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें ताकि KrashiMitra की सलाह आपके खेत के हिसाब से मिले।</p>
+      <div class="hero-bg-pattern"></div>
+      <div class="hero-glow"></div>
+      <div class="hero-inner">
+        <div class="avatar-wrap">
+          <div class="profile-avatar" id="profile-avatar" title="अवतार बदलें">
+            👨‍🌾
+            <div class="avatar-edit-overlay">✏️</div>
+          </div>
+        </div>
+
+        <div class="hero-info">
+          <div class="hero-eyebrow">👨‍🌾 Farmer Profile</div>
+          <h1 class="hero-name" id="hero-name">किसान प्रोफाइल</h1>
+          <p class="hero-sub" id="hero-sub">अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें।</p>
+          <div class="hero-tags" id="hero-tags"></div>
+        </div>
+
+        <div class="hero-completion" id="completion-card">
+          <div class="completion-label">प्रोफाइल पूर्णता</div>
+          <div class="completion-percent" id="completion-pct">0%</div>
+          <div class="completion-bar-wrap"><div class="completion-bar" id="completion-bar" style="width:0%"></div></div>
+          <div class="completion-hint" id="completion-hint">जानकारी भरें</div>
+        </div>
       </div>
-      <div class="profile-avatar" id="profile-avatar" aria-hidden="true">👨‍🌾</div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-icon">📍</div>
+          <div class="stat-val" id="stat-location">-</div>
+          <div class="stat-lbl">जिला</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🌱</div>
+          <div class="stat-val" id="stat-crop">-</div>
+          <div class="stat-lbl">मुख्य फसल</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🧭</div>
+          <div class="stat-val" id="stat-farm">-</div>
+          <div class="stat-lbl">खेत का आकार</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🌊</div>
+          <div class="stat-val" id="stat-irrigation">-</div>
+          <div class="stat-lbl">सिंचाई</div>
+        </div>
+      </div>
     </section>
 
-    <section class="dashboard-grid">
-      <aside class="panel">
-        <div class="panel-head">
-          <div>
-            <h2 class="panel-title">आपकी खेती</h2>
-            <p class="panel-sub">सेव की गई जानकारी का छोटा सारांश</p>
+    <div class="content-grid">
+      <!-- ── Sidebar ── -->
+      <aside class="sidebar">
+
+        <!-- Summary card -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">आपकी खेती</div>
+              <div class="card-sub">सेव की गई जानकारी</div>
+            </div>
+            <span id="profile-status" style="border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;background:var(--amber-light);color:#76500b;">Loading</span>
           </div>
-          <span class="status-pill empty" id="profile-status">Loading</span>
+
+          <div class="signed-out" id="signed-out">
+            <div class="signout-box">
+              प्रोफाइल देखने के लिए पहले login करें।
+              <div style="margin-top:12px;"><a class="btn btn-primary" href="login.html" style="width:100%">Login करें</a></div>
+            </div>
+          </div>
+
+          <div id="summary-content">
+            <div class="sum-list">
+              <div class="sum-row">
+                <div class="sum-icon">📍</div>
+                <div><div class="sum-lbl">स्थान</div><div class="sum-val" id="summary-location">-</div></div>
+              </div>
+              <div class="sum-row">
+                <div class="sum-icon">🌱</div>
+                <div><div class="sum-lbl">मुख्य फसल</div><div class="sum-val" id="summary-crop">-</div></div>
+              </div>
+              <div class="sum-row">
+                <div class="sum-icon">🧭</div>
+                <div><div class="sum-lbl">खेत का आकार</div><div class="sum-val" id="summary-farm">-</div></div>
+              </div>
+              <div class="sum-row">
+                <div class="sum-icon">🗣️</div>
+                <div><div class="sum-lbl">भाषा</div><div class="sum-val" id="summary-language">Hindi</div></div>
+              </div>
+              <div class="sum-row">
+                <div class="sum-icon">📞</div>
+                <div><div class="sum-lbl">मोबाइल</div><div class="sum-val" id="summary-phone">-</div></div>
+              </div>
+            </div>
+            <div class="crop-chips" id="crop-chips"></div>
+          </div>
         </div>
 
-        <div class="signed-out" id="signed-out">
-          <div class="signed-out-box">
-            प्रोफाइल देखने या सेव करने के लिए पहले login करें। Login के बाद यह पेज अपने आप आपकी जानकारी लोड करेगा।
-            <div style="margin-top:14px;">
-              <a class="btn btn-primary" href="login.html">Login करें</a>
+        <!-- Schemes status card -->
+        <div class="card" id="scheme-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">सरकारी योजनाएं</div>
+              <div class="card-sub">आपकी पात्रता स्थिति</div>
+            </div>
+          </div>
+          <div class="scheme-list">
+            <div class="scheme-item">
+              <span>🌾 PM-Kisan</span>
+              <span class="scheme-badge badge-na" id="scheme-pmkisan">-</span>
+            </div>
+            <div class="scheme-item">
+              <span>💳 Kisan Credit Card</span>
+              <span class="scheme-badge badge-na" id="scheme-kcc">-</span>
+            </div>
+            <div class="scheme-item">
+              <span>🆔 Aadhaar Linked</span>
+              <span class="scheme-badge badge-na" id="scheme-aadhaar">-</span>
+            </div>
+            <div class="scheme-item">
+              <span>📋 Fasal Bima</span>
+              <span class="scheme-badge badge-na" id="scheme-bima">-</span>
             </div>
           </div>
         </div>
 
-        <div id="summary-content">
-          <div class="summary-list">
-            <div class="summary-row">
-              <div class="summary-icon">📍</div>
-              <div>
-                <div class="summary-label">स्थान</div>
-                <div class="summary-value" id="summary-location">-</div>
-              </div>
-            </div>
-            <div class="summary-row">
-              <div class="summary-icon">🌱</div>
-              <div>
-                <div class="summary-label">मुख्य फसल</div>
-                <div class="summary-value" id="summary-crop">-</div>
-              </div>
-            </div>
-            <div class="summary-row">
-              <div class="summary-icon">🧭</div>
-              <div>
-                <div class="summary-label">खेत का आकार</div>
-                <div class="summary-value" id="summary-farm">-</div>
-              </div>
-            </div>
-            <div class="summary-row">
-              <div class="summary-icon">🗣️</div>
-              <div>
-                <div class="summary-label">भाषा</div>
-                <div class="summary-value" id="summary-language">Hindi</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="chips" id="crop-chips">
-            <span class="chip">फसल जोड़ें</span>
-          </div>
-
-          <div class="quick-actions">
-            <a class="btn btn-secondary" href="chat.html">💬 AI सलाह</a>
-            <a class="btn btn-secondary" href="weather.html">🌤️ मौसम</a>
-            <a class="btn btn-secondary" href="mandi.html">🏪 मंडी भाव</a>
-            <a class="btn btn-secondary" href="shop.html">🛒 दुकान</a>
+        <!-- Quick links -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">त्वरित लिंक</div></div>
+          <div class="quick-links" style="padding:14px;">
+            <a class="quick-link" href="chat.html"><span>💬</span><span>AI सलाह</span></a>
+            <a class="quick-link" href="weather.html"><span>🌤️</span><span>मौसम</span></a>
+            <a class="quick-link" href="mandi.html"><span>🏪</span><span>मंडी भाव</span></a>
+            <a class="quick-link" href="shop.html"><span>🛒</span><span>दुकान</span></a>
           </div>
         </div>
+
       </aside>
 
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <h2 class="panel-title">प्रोफाइल जानकारी</h2>
-            <p class="panel-sub">नाम और खेत की जानकारी अपडेट करें</p>
-          </div>
-          <span class="status-pill" id="save-mode">Ready</span>
+      <!-- ── Form Area ── -->
+      <div class="form-area">
+
+        <!-- Tab nav -->
+        <div class="tab-nav" role="tablist">
+          <button class="tab-btn active" role="tab" onclick="switchTab('personal')">👤 व्यक्तिगत</button>
+          <button class="tab-btn" role="tab" onclick="switchTab('farm')">🌾 खेत</button>
+          <button class="tab-btn" role="tab" onclick="switchTab('crops')">🌱 फसल</button>
+          <button class="tab-btn" role="tab" onclick="switchTab('schemes')">🏛️ योजना</button>
+          <button class="tab-btn" role="tab" onclick="switchTab('prefs')">⚙️ सेटिंग</button>
         </div>
 
         <div class="message" id="message"></div>
 
-        <form class="profile-form" id="profile-form">
-          <div class="field">
-            <label for="full_name">पूरा नाम</label>
-            <input id="full_name" name="full_name" type="text" placeholder="जैसे: राम कुमार" autocomplete="name" required>
+        <form id="profile-form" onsubmit="saveProfile(event)" novalidate>
+
+          <!-- ── Tab: Personal ── -->
+          <div class="tab-panel active" id="tab-personal">
+            <div class="form-card">
+              <div class="form-card-head">
+                <div class="form-card-icon">👤</div>
+                <div>
+                  <div class="form-card-title">व्यक्तिगत जानकारी</div>
+                  <div class="form-card-sub">नाम, संपर्क और पहचान की जानकारी</div>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="full_name">पूरा नाम <span class="req">*</span></label>
+                  <input id="full_name" name="full_name" type="text" placeholder="जैसे: राम कुमार" autocomplete="name" required>
+                </div>
+                <div class="field">
+                  <label for="phone_number">मोबाइल नंबर</label>
+                  <input id="phone_number" name="phone_number" type="tel" placeholder="10 अंकों का नंबर" autocomplete="tel" maxlength="10">
+                </div>
+                <div class="field">
+                  <label for="whatsapp_number">WhatsApp नंबर <span class="hint">(अलग हो तो)</span></label>
+                  <input id="whatsapp_number" name="whatsapp_number" type="tel" placeholder="WhatsApp नंबर" maxlength="10">
+                </div>
+                <div class="field">
+                  <label for="dob">जन्म तिथि</label>
+                  <input id="dob" name="dob" type="date">
+                </div>
+                <div class="field">
+                  <label for="gender">लिंग</label>
+                  <select id="gender" name="gender">
+                    <option value="">चुनें</option>
+                    <option value="male">पुरुष</option>
+                    <option value="female">महिला</option>
+                    <option value="other">अन्य</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="education">शिक्षा</label>
+                  <select id="education" name="education">
+                    <option value="">चुनें</option>
+                    <option value="illiterate">अनपढ़</option>
+                    <option value="primary">प्राथमिक (1-5)</option>
+                    <option value="middle">मिडिल (6-8)</option>
+                    <option value="high_school">हाई स्कूल (10th)</option>
+                    <option value="intermediate">इंटरमीडिएट (12th)</option>
+                    <option value="graduate">स्नातक</option>
+                    <option value="post_graduate">स्नातकोत्तर</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="farming_experience">खेती का अनुभव</label>
+                  <select id="farming_experience" name="farming_experience">
+                    <option value="">चुनें</option>
+                    <option value="0-2">0-2 साल</option>
+                    <option value="3-5">3-5 साल</option>
+                    <option value="6-10">6-10 साल</option>
+                    <option value="11-20">11-20 साल</option>
+                    <option value="20+">20+ साल</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="family_size">परिवार के सदस्य</label>
+                  <input id="family_size" name="family_size" type="number" placeholder="जैसे: 5" min="1" max="30">
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="phone_number">मोबाइल नंबर</label>
-            <input id="phone_number" name="phone_number" type="tel" placeholder="10 digit mobile" autocomplete="tel">
+          <!-- ── Tab: Farm ── -->
+          <div class="tab-panel" id="tab-farm">
+            <div class="form-card">
+              <div class="form-card-head">
+                <div class="form-card-icon">📍</div>
+                <div>
+                  <div class="form-card-title">स्थान की जानकारी</div>
+                  <div class="form-card-sub">राज्य, जिला और गांव की सटीक जानकारी</div>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="state">राज्य <span class="req">*</span></label>
+                  <select id="state" name="state">
+                    <option value="">राज्य चुनें</option>
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                    <option value="Jharkhand">Jharkhand</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Odisha">Odisha</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Uttar Pradesh" selected>Uttar Pradesh</option>
+                    <option value="Uttarakhand">Uttarakhand</option>
+                    <option value="West Bengal">West Bengal</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="district">जिला</label>
+                  <input id="district" name="district" type="text" placeholder="जैसे: Bijnor">
+                </div>
+                <div class="field">
+                  <label for="tehsil">तहसील / तालुका</label>
+                  <input id="tehsil" name="tehsil" type="text" placeholder="तहसील का नाम">
+                </div>
+                <div class="field">
+                  <label for="village">गांव</label>
+                  <input id="village" name="village" type="text" placeholder="गांव का नाम">
+                </div>
+                <div class="field">
+                  <label for="pin_code">पिन कोड</label>
+                  <input id="pin_code" name="pin_code" type="text" placeholder="जैसे: 246701" maxlength="6">
+                </div>
+                <div class="field">
+                  <label for="nearest_mandi">नजदीकी मंडी</label>
+                  <input id="nearest_mandi" name="nearest_mandi" type="text" placeholder="नजदीकी मंडी का नाम">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-card" style="margin-top:16px;">
+              <div class="form-card-head">
+                <div class="form-card-icon">🌾</div>
+                <div>
+                  <div class="form-card-title">खेत की जानकारी</div>
+                  <div class="form-card-sub">जमीन का आकार, प्रकार और सिंचाई</div>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="farm_size">खेत का आकार</label>
+                  <input id="farm_size" name="farm_size" type="text" placeholder="जैसे: 2.5 acres">
+                </div>
+                <div class="field">
+                  <label for="farm_size_unit">इकाई</label>
+                  <select id="farm_size_unit" name="farm_size_unit">
+                    <option value="acres">Acres (एकड़)</option>
+                    <option value="bigha">Bigha (बीघा)</option>
+                    <option value="hectare">Hectare (हेक्टेयर)</option>
+                    <option value="guntha">Guntha</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="land_ownership">जमीन का प्रकार</label>
+                  <select id="land_ownership" name="land_ownership">
+                    <option value="">चुनें</option>
+                    <option value="owned">स्वामित्व (अपनी जमीन)</option>
+                    <option value="leased">पट्टे पर (लीज)</option>
+                    <option value="both">दोनों</option>
+                    <option value="family">पारिवारिक</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="soil_type">मिट्टी का प्रकार</label>
+                  <select id="soil_type" name="soil_type">
+                    <option value="">चुनें</option>
+                    <option value="alluvial">जलोढ़ (Alluvial)</option>
+                    <option value="black">काली (Black/Regur)</option>
+                    <option value="red">लाल (Red)</option>
+                    <option value="laterite">लैटेराइट</option>
+                    <option value="sandy">रेतीली (Sandy)</option>
+                    <option value="loamy">दोमट (Loamy)</option>
+                    <option value="clayey">चिकनी (Clayey)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="irrigation_type">सिंचाई का प्रकार</label>
+                  <select id="irrigation_type" name="irrigation_type">
+                    <option value="">चुनें</option>
+                    <option value="canal">नहर (Canal)</option>
+                    <option value="borewell">बोरवेल / ट्यूबवेल</option>
+                    <option value="well">कुआं (Well)</option>
+                    <option value="drip">ड्रिप सिंचाई</option>
+                    <option value="sprinkler">स्प्रिंकलर</option>
+                    <option value="rain_fed">वर्षा आधारित</option>
+                    <option value="pond">तालाब / झील</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="khasra_number">खसरा / खाता नंबर <span class="hint">(वैकल्पिक)</span></label>
+                  <input id="khasra_number" name="khasra_number" type="text" placeholder="भूमि रिकॉर्ड नंबर">
+                </div>
+                <div class="field full">
+                  <label for="equipment_owned">उपकरण/मशीनरी</label>
+                  <div class="check-grid" style="margin-top:4px;">
+                    <label class="check-item"><input type="checkbox" name="eq_tractor" id="eq_tractor"> ट्रैक्टर</label>
+                    <label class="check-item"><input type="checkbox" name="eq_pump" id="eq_pump"> पंप सेट</label>
+                    <label class="check-item"><input type="checkbox" name="eq_thresher" id="eq_thresher"> थ्रेशर</label>
+                    <label class="check-item"><input type="checkbox" name="eq_sprayer" id="eq_sprayer"> स्प्रेयर</label>
+                    <label class="check-item"><input type="checkbox" name="eq_harvester" id="eq_harvester"> हार्वेस्टर</label>
+                    <label class="check-item"><input type="checkbox" name="eq_none" id="eq_none"> कोई नहीं</label>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="state">राज्य</label>
-            <input id="state" name="state" type="text" placeholder="Uttar Pradesh" value="Uttar Pradesh">
+          <!-- ── Tab: Crops ── -->
+          <div class="tab-panel" id="tab-crops">
+            <div class="form-card">
+              <div class="form-card-head">
+                <div class="form-card-icon">🌱</div>
+                <div>
+                  <div class="form-card-title">फसल की जानकारी</div>
+                  <div class="form-card-sub">मुख्य फसल, सीजन और खेती का तरीका</div>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="primary_crop">मुख्य फसल <span class="req">*</span></label>
+                  <select id="primary_crop" name="primary_crop">
+                    <option value="">फसल चुनें</option>
+                    <option value="Wheat">गेहूं (Wheat)</option>
+                    <option value="Rice">धान (Rice)</option>
+                    <option value="Sugarcane">गन्ना (Sugarcane)</option>
+                    <option value="Cotton">कपास (Cotton)</option>
+                    <option value="Maize">मक्का (Maize)</option>
+                    <option value="Soybean">सोयाबीन (Soybean)</option>
+                    <option value="Mustard">सरसों (Mustard)</option>
+                    <option value="Potato">आलू (Potato)</option>
+                    <option value="Tomato">टमाटर (Tomato)</option>
+                    <option value="Onion">प्याज (Onion)</option>
+                    <option value="Pulses">दाल (Pulses)</option>
+                    <option value="Groundnut">मूंगफली (Groundnut)</option>
+                    <option value="Chilli">मिर्च (Chilli)</option>
+                    <option value="Banana">केला (Banana)</option>
+                    <option value="Mango">आम (Mango)</option>
+                    <option value="Other">अन्य</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="farming_season">खेती का मौसम</label>
+                  <select id="farming_season" name="farming_season">
+                    <option value="">चुनें</option>
+                    <option value="kharif">खरीफ (Kharif)</option>
+                    <option value="rabi">रबी (Rabi)</option>
+                    <option value="zaid">जायद (Zaid)</option>
+                    <option value="all">सभी मौसम</option>
+                  </select>
+                </div>
+                <div class="field full">
+                  <label for="crops_grown">सभी फसलें <span class="hint">(comma से अलग करें)</span></label>
+                  <input id="crops_grown" name="crops_grown" type="text" placeholder="जैसे: sugarcane, wheat, rice, vegetables">
+                </div>
+                <div class="field">
+                  <label for="farming_type">खेती का प्रकार</label>
+                  <select id="farming_type" name="farming_type">
+                    <option value="">चुनें</option>
+                    <option value="conventional">पारंपरिक (Conventional)</option>
+                    <option value="organic">जैविक (Organic)</option>
+                    <option value="semi_organic">अर्ध-जैविक</option>
+                    <option value="natural">प्राकृतिक खेती</option>
+                    <option value="integrated">एकीकृत खेती</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="yield_per_acre">उत्पादन प्रति एकड़ <span class="hint">(अनुमानित)</span></label>
+                  <input id="yield_per_acre" name="yield_per_acre" type="text" placeholder="जैसे: 30 quintal">
+                </div>
+                <div class="field full">
+                  <label for="crop_problems">फसल की मुख्य समस्याएं</label>
+                  <textarea id="crop_problems" name="crop_problems" placeholder="जैसे: कीट, रोग, पानी की कमी, बाजार मूल्य आदि..." style="min-height:70px;"></textarea>
+                </div>
+                <div class="field full">
+                  <div class="info-box">
+                    <span class="info-box-icon">💡</span>
+                    <span>फसल की जानकारी भरने से AI सहायक आपको <strong>सटीक और व्यक्तिगत कृषि सलाह</strong> दे पाएगा। मंडी भाव और मौसम अलर्ट भी आपकी फसल के अनुसार मिलेंगे।</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="district">जिला</label>
-            <input id="district" name="district" type="text" placeholder="जैसे: Bijnor">
+          <!-- ── Tab: Schemes ── -->
+          <div class="tab-panel" id="tab-schemes">
+            <div class="form-card">
+              <div class="form-card-head">
+                <div class="form-card-icon">🏛️</div>
+                <div>
+                  <div class="form-card-title">सरकारी योजनाएं</div>
+                  <div class="form-card-sub">पात्रता और नामांकन की जानकारी</div>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="field full">
+                  <div class="info-box">
+                    <span class="info-box-icon">ℹ️</span>
+                    <span>यह जानकारी आपको सही सरकारी योजनाओं की जानकारी देने के लिए उपयोग होती है। यह डेटा सुरक्षित रहता है।</span>
+                  </div>
+                </div>
+
+                <div class="field full">
+                  <label>PM-Kisan सम्मान निधि</label>
+                  <label class="toggle-row">
+                    <div class="toggle-row-info">
+                      <div class="toggle-row-title">PM-Kisan में नामांकित हैं?</div>
+                      <div class="toggle-row-sub">₹6,000 प्रति वर्ष की सहायता राशि</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="pm_kisan_registered" name="pm_kisan_registered">
+                      <div class="toggle-track"></div>
+                      <div class="toggle-thumb"></div>
+                    </label>
+                  </label>
+                </div>
+
+                <div class="field full">
+                  <label>किसान क्रेडिट कार्ड (KCC)</label>
+                  <label class="toggle-row">
+                    <div class="toggle-row-info">
+                      <div class="toggle-row-title">KCC उपलब्ध है?</div>
+                      <div class="toggle-row-sub">खेती के लिए कम ब्याज पर ऋण</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="has_kcc" name="has_kcc">
+                      <div class="toggle-track"></div>
+                      <div class="toggle-thumb"></div>
+                    </label>
+                  </label>
+                </div>
+
+                <div class="field full">
+                  <label>आधार लिंकिंग</label>
+                  <label class="toggle-row">
+                    <div class="toggle-row-info">
+                      <div class="toggle-row-title">बैंक खाता आधार से लिंक है?</div>
+                      <div class="toggle-row-sub">DBT सब्सिडी के लिए जरूरी</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="aadhaar_linked" name="aadhaar_linked">
+                      <div class="toggle-track"></div>
+                      <div class="toggle-thumb"></div>
+                    </label>
+                  </label>
+                </div>
+
+                <div class="field full">
+                  <label>प्रधानमंत्री फसल बीमा योजना</label>
+                  <label class="toggle-row">
+                    <div class="toggle-row-info">
+                      <div class="toggle-row-title">फसल बीमा कराया है?</div>
+                      <div class="toggle-row-sub">फसल नुकसान पर मुआवजा</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="fasal_bima" name="fasal_bima">
+                      <div class="toggle-track"></div>
+                      <div class="toggle-thumb"></div>
+                    </label>
+                  </label>
+                </div>
+
+                <div class="field">
+                  <label for="bank_name">बैंक का नाम</label>
+                  <input id="bank_name" name="bank_name" type="text" placeholder="जैसे: SBI, PNB">
+                </div>
+                <div class="field">
+                  <label for="annual_income">वार्षिक आय (₹) <span class="hint">(अनुमानित)</span></label>
+                  <select id="annual_income" name="annual_income">
+                    <option value="">चुनें</option>
+                    <option value="below_50k">₹50,000 से कम</option>
+                    <option value="50k_1l">₹50,000 - ₹1 लाख</option>
+                    <option value="1l_2l">₹1 - 2 लाख</option>
+                    <option value="2l_5l">₹2 - 5 लाख</option>
+                    <option value="above_5l">₹5 लाख से अधिक</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="village">गांव</label>
-            <input id="village" name="village" type="text" placeholder="अपने गांव का नाम">
+          <!-- ── Tab: Preferences ── -->
+          <div class="tab-panel" id="tab-prefs">
+            <div class="form-card">
+              <div class="form-card-head">
+                <div class="form-card-icon">⚙️</div>
+                <div>
+                  <div class="form-card-title">प्राथमिकताएं</div>
+                  <div class="form-card-sub">भाषा, सूचनाएं और AI सेटिंग</div>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="preferred_language">पसंदीदा भाषा</label>
+                  <select id="preferred_language" name="preferred_language">
+                    <option value="hindi">हिंदी (Hindi)</option>
+                    <option value="english">English</option>
+                    <option value="kannada">ಕನ್ನಡ (Kannada)</option>
+                    <option value="marathi">मराठी (Marathi)</option>
+                    <option value="punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
+                    <option value="gujarati">ગુજરાતી (Gujarati)</option>
+                    <option value="bengali">বাংলা (Bengali)</option>
+                    <option value="telugu">తెలుగు (Telugu)</option>
+                    <option value="tamil">தமிழ் (Tamil)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="advisory_type">सलाह का प्रकार</label>
+                  <select id="advisory_type" name="advisory_type">
+                    <option value="">चुनें</option>
+                    <option value="detailed">विस्तृत (Detailed)</option>
+                    <option value="simple">सरल (Simple)</option>
+                    <option value="technical">तकनीकी (Technical)</option>
+                  </select>
+                </div>
+
+                <div class="field full">
+                  <label>सूचना प्राथमिकता</label>
+                  <div class="check-grid">
+                    <label class="check-item"><input type="checkbox" name="notif_weather" id="notif_weather"> 🌤️ मौसम अलर्ट</label>
+                    <label class="check-item"><input type="checkbox" name="notif_mandi" id="notif_mandi"> 🏪 मंडी भाव</label>
+                    <label class="check-item"><input type="checkbox" name="notif_scheme" id="notif_scheme"> 🏛️ योजना अपडेट</label>
+                    <label class="check-item"><input type="checkbox" name="notif_pest" id="notif_pest"> 🐛 कीट चेतावनी</label>
+                    <label class="check-item"><input type="checkbox" name="notif_tips" id="notif_tips"> 💡 कृषि टिप्स</label>
+                    <label class="check-item"><input type="checkbox" name="notif_none" id="notif_none"> 🔕 कोई नहीं</label>
+                  </div>
+                </div>
+
+                <div class="field full">
+                  <label for="special_needs">विशेष जरूरत / टिप्पणी</label>
+                  <textarea id="special_needs" name="special_needs" placeholder="कोई विशेष समस्या या जानकारी जो आप AI से साझा करना चाहते हैं..." style="min-height:80px;"></textarea>
+                </div>
+
+                <div class="field full">
+                  <div class="info-box">
+                    <span class="info-box-icon">🔒</span>
+                    <span>आपकी सभी जानकारी <strong>सुरक्षित और निजी</strong> है। इसे किसी तीसरे पक्ष के साथ साझा नहीं किया जाएगा।</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="farm_size">खेत का आकार</label>
-            <input id="farm_size" name="farm_size" type="text" placeholder="जैसे: 2.5 acres">
+          <!-- ── Save bar ── -->
+          <div class="save-bar">
+            <span class="save-bar-hint" id="save-mode-hint">जानकारी भरें और सेव करें</span>
+            <div class="save-bar-actions">
+              <button class="btn btn-secondary" type="button" onclick="loadProfile()">↺ Reset</button>
+              <button class="btn btn-danger" type="button" onclick="logout()" id="logout-form" style="display:none;">Logout</button>
+              <button class="btn btn-primary" type="submit" id="save-btn">✅ सेव करें</button>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="preferred_language">भाषा</label>
-            <select id="preferred_language" name="preferred_language">
-              <option value="hindi">Hindi</option>
-              <option value="english">English</option>
-              <option value="kannada">Kannada</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="primary_crop">मुख्य फसल</label>
-            <input id="primary_crop" name="primary_crop" type="text" placeholder="जैसे: Sugarcane">
-          </div>
-
-          <div class="field full">
-            <label for="crops_grown">फसलें</label>
-            <textarea id="crops_grown" name="crops_grown" placeholder="फसलें comma से लिखें: sugarcane, wheat, rice"></textarea>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn btn-secondary" type="button" onclick="loadProfile()">Reset</button>
-            <button class="btn btn-danger" type="button" onclick="logout()" id="logout-form" style="display:none;">Logout</button>
-            <button class="btn btn-primary" type="submit" id="save-btn">सेव करें</button>
-          </div>
         </form>
-      </section>
-    </section>
+      </div>
+    </div>
   </main>
 
-  <nav class="bottom-nav" aria-label="Mobile navigation">
+  <nav class="bottom-nav">
     <div class="bottom-nav-items">
       <a class="bottom-nav-item" href="index.html"><span class="bnav-icon">🏠</span><span class="bnav-label">मुख्य</span></a>
       <a class="bottom-nav-item" href="weather.html"><span class="bnav-icon">🌤️</span><span class="bnav-label">मौसम</span></a>
       <a class="bottom-nav-item" href="mandi.html"><span class="bnav-icon">🏪</span><span class="bnav-label">मंडी</span></a>
       <a class="bottom-nav-item" href="shop.html"><span class="bnav-icon">🛒</span><span class="bnav-label">दुकान</span></a>
       <a class="bottom-nav-item" href="articles/index.html"><span class="bnav-icon">📰</span><span class="bnav-label">लेख</span></a>
-      <a class="bottom-nav-item" href="sarkari_yojana.html"><span class="bnav-icon">🏛️</span><span class="bnav-label">योजना</span></a>
+      <a class="bottom-nav-item active" href="profile.html"><span class="bnav-icon">👨‍🌾</span><span class="bnav-label">प्रोफाइल</span></a>
     </div>
   </nav>
 
@@ -808,40 +1410,61 @@
     <div>© 2026 <strong>KrashiMitra</strong> - krashimitra.in | किसान का डिजिटल साथी | All rights reserved.</div>
   </footer>
 
+  <!-- Floating buttons -->
+  <style>
+    .map-fab{position:fixed;bottom:154px;right:18px;width:46px;height:46px;border-radius:50%;background:#1a3c2e;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 3px 14px rgba(26,60,46,.4);z-index:9998;transition:transform .18s,box-shadow .18s;font-size:21px;color:#fff;}
+    .map-fab:hover{transform:scale(1.1);}
+    .ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;}
+    .ai-chat-fab:hover{transform:scale(1.1);}
+    .ai-fab-icon{width:62px;height:62px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+    .ai-fab-icon img{width:88%;height:88%;object-fit:contain;}
+    @media(min-width:1025px){.map-fab{bottom:108px;right:28px;width:50px;height:50px;}.ai-chat-fab{bottom:28px;right:28px;width:68px;height:68px;}.ai-fab-icon{width:68px;height:68px;}}
+  </style>
+  <a href="map.html" class="map-fab" title="कृषि मानचित्र">🗺️</a>
+  <a href="chat.html" class="ai-chat-fab" title="AI सहायक">
+    <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
+  </a>
+
   <script>
     const API_BASE = window.KRASHIMITRA_API_BASE;
     let hasProfile = false;
     let lastProfile = null;
 
-    const fields = [
-      "full_name",
-      "phone_number",
-      "state",
-      "district",
-      "village",
-      "preferred_language",
-      "farm_size",
-      "crops_grown",
-      "primary_crop"
+    // All form fields sent to/from API
+    const TEXT_FIELDS = [
+      "full_name","phone_number","whatsapp_number","dob","gender","education",
+      "farming_experience","family_size","state","district","tehsil","village",
+      "pin_code","nearest_mandi","farm_size","farm_size_unit","land_ownership",
+      "soil_type","irrigation_type","khasra_number","primary_crop","farming_season",
+      "crops_grown","farming_type","yield_per_acre","crop_problems","bank_name",
+      "annual_income","preferred_language","advisory_type","special_needs"
     ];
 
-    function getToken() {
-      return localStorage.getItem("krishi_token");
-    }
+    const BOOL_FIELDS = [
+      "pm_kisan_registered","has_kcc","aadhaar_linked","fasal_bima",
+      "notif_weather","notif_mandi","notif_scheme","notif_pest","notif_tips","notif_none"
+    ];
 
-    function setSignedInUI(isSignedIn) {
-      document.getElementById("login-link").style.display = isSignedIn ? "none" : "inline-flex";
-      document.getElementById("logout-top").style.display = isSignedIn ? "inline-flex" : "none";
-      document.getElementById("logout-form").style.display = isSignedIn ? "inline-flex" : "none";
-      document.getElementById("signed-out").classList.toggle("show", !isSignedIn);
-      document.getElementById("summary-content").style.display = isSignedIn ? "block" : "none";
-      document.getElementById("profile-form").style.display = isSignedIn ? "grid" : "none";
+    const CHECKBOX_FIELDS = [
+      "eq_tractor","eq_pump","eq_thresher","eq_sprayer","eq_harvester","eq_none"
+    ];
+
+    function getToken() { return localStorage.getItem("krishi_token"); }
+
+    function setSignedInUI(isIn) {
+      document.getElementById("login-link").style.display = isIn ? "none" : "inline-flex";
+      document.getElementById("logout-top").style.display = isIn ? "inline-flex" : "none";
+      document.getElementById("logout-form").style.display = isIn ? "inline-flex" : "none";
+      document.getElementById("signed-out").classList.toggle("show", !isIn);
+      document.getElementById("summary-content").style.display = isIn ? "block" : "none";
+      document.getElementById("profile-form").style.display = isIn ? "block" : "none";
     }
 
     function showMessage(text, type) {
       const el = document.getElementById("message");
       el.textContent = text;
       el.className = `message show ${type}`;
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
     function clearMessage() {
@@ -850,169 +1473,227 @@
       el.className = "message";
     }
 
-    function setLoading(isLoading) {
-      const btn = document.getElementById("save-btn");
-      btn.disabled = isLoading;
-      btn.textContent = isLoading ? "सेव हो रहा है..." : "सेव करें";
-      document.getElementById("save-mode").textContent = isLoading ? "Saving" : (hasProfile ? "Update" : "Create");
+    function dash(val) { return val && String(val).trim() ? val : "-"; }
+
+    function normCrops(val) {
+      return String(val || "").split(",").map(s => s.trim()).filter(Boolean);
     }
 
-    function emptyToDash(value) {
-      return value && String(value).trim() ? value : "-";
+    function escHtml(s) {
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
-    function normalizeCrops(value) {
-      return String(value || "")
-        .split(",")
-        .map(item => item.trim())
-        .filter(Boolean);
-    }
-
-    function fillForm(profile) {
-      fields.forEach(name => {
+    /* ── Fill form from saved profile ── */
+    function fillForm(p) {
+      TEXT_FIELDS.forEach(name => {
         const el = document.getElementById(name);
         if (!el) return;
-        el.value = profile[name] || "";
+        el.value = p[name] || "";
+      });
+      BOOL_FIELDS.forEach(name => {
+        const el = document.getElementById(name);
+        if (el) el.checked = !!p[name];
+      });
+      CHECKBOX_FIELDS.forEach(name => {
+        const el = document.getElementById(name);
+        if (el) el.checked = !!p[name];
       });
 
-      if (!document.getElementById("state").value) {
-        document.getElementById("state").value = "Uttar Pradesh";
-      }
+      // defaults
+      if (!document.getElementById("state").value) document.getElementById("state").value = "Uttar Pradesh";
+      if (!document.getElementById("preferred_language").value) document.getElementById("preferred_language").value = "hindi";
+      if (!document.getElementById("farm_size_unit").value) document.getElementById("farm_size_unit").value = "acres";
     }
 
-    function updateSummary(profile) {
-      const name = profile.full_name || "किसान प्रोफाइल";
-      const crops = normalizeCrops(profile.crops_grown || profile.primary_crop);
-      const primaryCrop = profile.primary_crop || crops[0] || "-";
-      const location = [profile.village, profile.district, profile.state].filter(Boolean).join(", ");
+    /* ── Update sidebar summary ── */
+    function updateSummary(p) {
+      const name = p.full_name || "किसान प्रोफाइल";
+      const crops = normCrops(p.crops_grown || p.primary_crop);
+      const primaryCrop = p.primary_crop || crops[0] || "-";
+      const location = [p.village, p.district, p.state].filter(Boolean).join(", ");
 
+      // Hero
       document.getElementById("hero-name").textContent = name;
       document.getElementById("hero-sub").textContent = primaryCrop !== "-"
-        ? `${emptyToDash(profile.district)} में ${primaryCrop} के लिए आपकी खेती प्रोफाइल तैयार है।`
-        : "अपनी फसल, जमीन, भाषा और जिले की जानकारी सेव करें ताकि सलाह आपके खेत के हिसाब से मिले।";
-      document.getElementById("summary-location").textContent = emptyToDash(location);
-      document.getElementById("summary-crop").textContent = emptyToDash(primaryCrop);
-      document.getElementById("summary-farm").textContent = emptyToDash(profile.farm_size);
-      document.getElementById("summary-language").textContent = emptyToDash(profile.preferred_language || "hindi");
-      document.getElementById("profile-status").textContent = hasProfile ? "Saved" : "New";
-      document.getElementById("profile-status").classList.toggle("empty", !hasProfile);
+        ? `${dash(p.district)} में ${primaryCrop} के लिए आपकी खेती प्रोफाइल तैयार है।`
+        : "अपनी फसल, जमीन और जिले की जानकारी सेव करें।";
 
-      const chips = crops.length ? crops : ["फसल जोड़ें"];
-      document.getElementById("crop-chips").innerHTML = chips
-        .map(crop => `<span class="chip">${escapeHtml(crop)}</span>`)
-        .join("");
+      // Hero tags
+      const tags = [];
+      if (p.farming_type) tags.push({ "conventional":"पारंपरिक", "organic":"जैविक", "natural":"प्राकृतिक", "integrated":"एकीकृत" }[p.farming_type] || p.farming_type);
+      if (p.irrigation_type) tags.push({ "canal":"नहर सिंचाई", "borewell":"बोरवेल", "drip":"ड्रिप", "rain_fed":"वर्षा आधारित" }[p.irrigation_type] || p.irrigation_type);
+      if (p.farming_experience) tags.push(p.farming_experience + " अनुभव");
+      document.getElementById("hero-tags").innerHTML = tags.map(t => `<span class="hero-tag">${escHtml(t)}</span>`).join("");
+
+      // Stats bar
+      document.getElementById("stat-location").textContent = dash(p.district);
+      document.getElementById("stat-crop").textContent = dash(primaryCrop);
+      const farmStr = p.farm_size ? `${p.farm_size} ${p.farm_size_unit || "acres"}` : "-";
+      document.getElementById("stat-farm").textContent = farmStr;
+      document.getElementById("stat-irrigation").textContent = p.irrigation_type
+        ? ({ "canal":"नहर", "borewell":"बोरवेल", "drip":"ड्रिप", "rain_fed":"वर्षा", "well":"कुआं", "sprinkler":"स्प्रिंकलर", "pond":"तालाब" }[p.irrigation_type] || p.irrigation_type)
+        : "-";
+
+      // Sidebar summary
+      document.getElementById("summary-location").textContent = dash(location);
+      document.getElementById("summary-crop").textContent = dash(primaryCrop);
+      document.getElementById("summary-farm").textContent = dash(farmStr === "-" ? null : farmStr);
+      document.getElementById("summary-language").textContent = dash(p.preferred_language || "hindi");
+      document.getElementById("summary-phone").textContent = p.phone_number ? p.phone_number.replace(/(\d{5})(\d{5})/, "$1 $2") : "-";
+
+      const statusEl = document.getElementById("profile-status");
+      statusEl.textContent = hasProfile ? "Saved ✓" : "New";
+      statusEl.style.background = hasProfile ? "var(--green-pale)" : "var(--amber-light)";
+      statusEl.style.color = hasProfile ? "var(--green-dark)" : "#76500b";
+
+      // Crop chips
+      const chipArr = crops.length ? crops : [];
+      document.getElementById("crop-chips").innerHTML = chipArr.map(c => `<span class="crop-chip">${escHtml(c)}</span>`).join("");
+
+      // Scheme badges
+      const sbadge = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (val === true || val === "true" || val === 1) { el.textContent = "हाँ ✓"; el.className = "scheme-badge badge-yes"; }
+        else if (val === false || val === "false" || val === 0) { el.textContent = "नहीं"; el.className = "scheme-badge badge-no"; }
+        else { el.textContent = "-"; el.className = "scheme-badge badge-na"; }
+      };
+      const hasSaved = hasProfile || Object.keys(p).length > 0;
+      sbadge("scheme-pmkisan", hasSaved ? !!p.pm_kisan_registered : null);
+      sbadge("scheme-kcc", hasSaved ? !!p.has_kcc : null);
+      sbadge("scheme-aadhaar", hasSaved ? !!p.aadhaar_linked : null);
+      sbadge("scheme-bima", hasSaved ? !!p.fasal_bima : null);
+
+      // Completion
+      calcCompletion(p);
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    /* ── Profile completion ── */
+    function calcCompletion(p) {
+      const checks = [
+        p.full_name, p.phone_number, p.state, p.district, p.village,
+        p.primary_crop, p.farm_size, p.irrigation_type, p.soil_type,
+        p.farming_type, p.preferred_language, p.farming_experience,
+        (p.pm_kisan_registered !== undefined), (p.has_kcc !== undefined)
+      ];
+      const filled = checks.filter(Boolean).length;
+      const pct = Math.round((filled / checks.length) * 100);
+      document.getElementById("completion-pct").textContent = pct + "%";
+      document.getElementById("completion-bar").style.width = pct + "%";
+      document.getElementById("completion-hint").textContent =
+        pct < 40 ? "अधिक जानकारी भरें" :
+        pct < 75 ? "अच्छी प्रगति!" :
+        pct < 100 ? "लगभग पूर्ण!" :
+        "प्रोफाइल पूर्ण! 🎉";
     }
 
+    /* ── Collect payload ── */
     function getPayload() {
-      const payload = {};
-      fields.forEach(name => {
-        if (name === "primary_crop") return;
+      const p = {};
+      TEXT_FIELDS.forEach(name => {
         const el = document.getElementById(name);
-        payload[name] = el ? el.value.trim() : "";
+        if (el) p[name] = el.value.trim();
+      });
+      BOOL_FIELDS.forEach(name => {
+        const el = document.getElementById(name);
+        if (el) p[name] = el.checked;
+      });
+      CHECKBOX_FIELDS.forEach(name => {
+        const el = document.getElementById(name);
+        if (el) p[name] = el.checked;
       });
 
-      const primaryCrop = document.getElementById("primary_crop").value.trim();
-      const crops = normalizeCrops(payload.crops_grown);
-      if (primaryCrop && !crops.some(c => c.toLowerCase() === primaryCrop.toLowerCase())) {
-        crops.unshift(primaryCrop);
-      }
-      payload.crops_grown = crops.join(", ");
-      return payload;
+      // Merge primary_crop into crops_grown
+      const crops = normCrops(p.crops_grown || "");
+      const pc = (p.primary_crop || "").trim();
+      if (pc && !crops.some(c => c.toLowerCase() === pc.toLowerCase())) crops.unshift(pc);
+      p.crops_grown = crops.join(", ");
+      return p;
     }
 
+    /* ── Load profile ── */
     async function loadProfile() {
       clearMessage();
       const token = getToken();
-
       if (!token) {
         hasProfile = false;
         setSignedInUI(false);
-        document.getElementById("profile-status").textContent = "Login needed";
-        document.getElementById("save-mode").textContent = "Locked";
+        updateSummary({});
+        document.getElementById("save-mode-hint").textContent = "Login करें";
         return;
       }
-
       setSignedInUI(true);
-      document.getElementById("profile-status").textContent = "Loading";
-
+      document.getElementById("profile-status").textContent = "Loading…";
       try {
-        const res = await fetch(`${API_BASE}/profile`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch(`${API_BASE}/profile`, { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json().catch(() => ({}));
-
         if (data.success && data.data) {
           hasProfile = true;
           lastProfile = data.data;
           fillForm(data.data);
           updateSummary(data.data);
+          document.getElementById("save-mode-hint").textContent = "प्रोफाइल लोड हो गई — बदलाव करके सेव करें";
         } else {
           hasProfile = false;
           lastProfile = null;
-          fillForm({ state: "Uttar Pradesh", preferred_language: "hindi" });
+          fillForm({ state: "Uttar Pradesh", preferred_language: "hindi", farm_size_unit: "acres" });
           updateSummary({});
           showMessage(data.message || "अभी प्रोफाइल नहीं बनी है। जानकारी भरकर सेव करें।", "ok");
+          document.getElementById("save-mode-hint").textContent = "नई प्रोफाइल बनाएं";
         }
-      } catch (err) {
+      } catch {
         hasProfile = false;
         showMessage("Server से connect नहीं हो पाया। थोड़ी देर बाद दोबारा कोशिश करें।", "err");
         document.getElementById("profile-status").textContent = "Offline";
-      } finally {
-        document.getElementById("save-mode").textContent = hasProfile ? "Update" : "Create";
+        document.getElementById("save-mode-hint").textContent = "Offline";
       }
     }
 
-    async function saveProfile(event) {
-      event.preventDefault();
+    /* ── Save profile ── */
+    async function saveProfile(e) {
+      e.preventDefault();
       clearMessage();
-
       const token = getToken();
-      if (!token) {
-        window.location.href = "login.html";
-        return;
-      }
-
+      if (!token) { window.location.href = "login.html"; return; }
       const payload = getPayload();
-      if (!payload.full_name) {
-        showMessage("कृपया अपना पूरा नाम भरें।", "err");
-        return;
-      }
-
-      setLoading(true);
+      if (!payload.full_name) { showMessage("कृपया अपना पूरा नाम भरें।", "err"); return; }
+      const btn = document.getElementById("save-btn");
+      btn.disabled = true;
+      btn.textContent = "⏳ सेव हो रहा है…";
+      document.getElementById("save-mode-hint").textContent = "सेव हो रहा है…";
       try {
         const res = await fetch(`${API_BASE}/profile`, {
           method: hasProfile ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify(payload)
         });
         const data = await res.json().catch(() => ({}));
-
         if (data.success && data.data) {
           hasProfile = true;
           lastProfile = data.data;
           fillForm(data.data);
           updateSummary(data.data);
-          showMessage(data.message || "प्रोफाइल सेव हो गई।", "ok");
+          showMessage("✅ " + (data.message || "प्रोफाइल सेव हो गई।"), "ok");
+          document.getElementById("save-mode-hint").textContent = "अंतिम बार सेव: अभी";
         } else {
           showMessage(data.message || "प्रोफाइल सेव नहीं हो पाई।", "err");
+          document.getElementById("save-mode-hint").textContent = "सेव नहीं हो पाई";
         }
-      } catch (err) {
+      } catch {
         showMessage("Server से connect नहीं हो पाया।", "err");
       } finally {
-        setLoading(false);
+        btn.disabled = false;
+        btn.textContent = "✅ सेव करें";
       }
+    }
+
+    /* ── Tab switching ── */
+    function switchTab(tab) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("tab-" + tab).classList.add("active");
+      event.currentTarget.classList.add("active");
+      clearMessage();
     }
 
     function logout() {
@@ -1020,34 +1701,7 @@
       window.location.href = "login.html";
     }
 
-    document.getElementById("profile-form").addEventListener("submit", saveProfile);
     window.addEventListener("load", loadProfile);
   </script>
-
-<!-- ── Floating Map Button ── -->
-<style>
-.map-fab{position:fixed;bottom:154px;right:18px;width:46px;height:46px;border-radius:50%;background:#1a3c2e;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 3px 14px rgba(26,60,46,.4);z-index:9998;transition:transform .18s,box-shadow .18s;-webkit-tap-highlight-color:transparent;font-size:21px;color:#fff;}
-.map-fab:hover{transform:scale(1.1);box-shadow:0 5px 20px rgba(26,60,46,.6);}
-.map-fab:active{transform:scale(.93);}
-.map-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:11px;font-weight:600;font-family:sans-serif;padding:4px 11px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s;}
-.map-fab:hover .map-fab-tip{opacity:1;}
-@media(min-width:1025px){.map-fab{bottom:108px;right:28px;width:50px;height:50px;font-size:22px;}}
-</style>
-<a href="map.html" class="map-fab" title="कृषि मानचित्र">🗺️<span class="map-fab-tip">कृषि मैप</span></a>
-<!-- ── Floating AI Chat Button ── -->
-<style>
-.ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;overflow:visible;padding:0;}
-.ai-chat-fab:hover{transform:scale(1.1);box-shadow:0 6px 26px rgba(45,106,45,.6),0 0 0 2.5px #5a8c1e;}
-.ai-chat-fab:active{transform:scale(.95);}
-.ai-fab-icon{width:62px;height:62px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ai-fab-icon img{width:88%;height:88%;object-fit:contain;}
-.ai-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:12px;font-weight:600;font-family:sans-serif;padding:5px 13px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;animation:ai-fab-label 35s ease-in-out 3s infinite;}
-@keyframes ai-fab-label{0%,100%{opacity:0;}8%{opacity:1;}20%{opacity:1;}28%{opacity:0;}}
-@media(min-width:1025px){.ai-chat-fab{bottom:28px;right:28px;width:68px;height:68px;}.ai-fab-icon{width:68px;height:68px;}}
-</style>
-<a href="chat.html" class="ai-chat-fab" title="AI सहायक से पूछें">
-  <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
-  <span class="ai-fab-tip">AI सहायक</span>
-</a>
 </body>
 </html>

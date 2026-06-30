@@ -9,7 +9,7 @@
     <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/"/>
     <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/"/>
-    <lastmod>2026-05-28</lastmod>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -17,72 +17,85 @@
   <url>
     <loc>https://krashimitra.in/shop.html</loc>
     <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/shop.html"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/shop.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/shop.html"/>
-    <lastmod>2026-05-28</lastmod>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/mandi.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/chat.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/chat.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/chat.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/weather.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/weather.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/weather.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/sarkari_yojana.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/sarkari_yojana.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/sarkari_yojana.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/khoj.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/khoj.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/khoj.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/map.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/map.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/map.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/help.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/help.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/help.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/login.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
 
   <url>
     <loc>https://krashimitra.in/profile.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
@@ -91,17 +104,41 @@
 
   <url>
     <loc>https://krashimitra.in/articles/</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- ===== INDIVIDUAL ARTICLES ===== -->
+  <!-- ===== HINDI ARTICLES (हिंदी लेख) ===== -->
 
-  <!-- Urea Guide (यूरिया गाइड — UP) -->
+  <!-- Urea Guide — UP -->
   <url>
     <loc>https://krashimitra.in/articles/urea-guide-up.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/urea-guide-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/urea-guide-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- DAP Guide — UP -->
+  <url>
+    <loc>https://krashimitra.in/articles/DAP-guide-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/DAP-guide-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/DAP-guide-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- MOP (Potash) Guide -->
+  <url>
+    <loc>https://krashimitra.in/articles/MOP-guide.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/MOP-guide.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/MOP-guide.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -109,7 +146,9 @@
   <!-- Organic Fertilizer (जैविक खाद) -->
   <url>
     <loc>https://krashimitra.in/articles/jaivik-khad.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/jaivik-khad.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/jaivik-khad.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -117,7 +156,9 @@
   <!-- Pest Control (कीट नियंत्रण) -->
   <url>
     <loc>https://krashimitra.in/articles/keet-niyantran.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/keet-niyantran.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/keet-niyantran.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -125,63 +166,263 @@
   <!-- Weather Guide (मौसम गाइड) -->
   <url>
     <loc>https://krashimitra.in/articles/mausam-guide.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/mausam-guide.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/mausam-guide.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Sugarcane Disease (गन्ना रोग) -->
+  <!-- Sugarcane Disease — UP (गन्ना लाल सड़न रोग) -->
   <url>
     <loc>https://krashimitra.in/articles/ganna-rog.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/ganna-rog.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/ganna-rog.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Sugarcane Guide — UP (गन्ना गाइड — UP) -->
+  <!-- Sugarcane Guide — UP (गन्ना गाइड) -->
   <url>
     <loc>https://krashimitra.in/articles/ganna-guide-up.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/ganna-guide-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/ganna-guide-up.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
 
-  <!-- Tomato Guide — UP (टमाटर गाइड — UP) -->
+  <!-- Sugarcane Price Analytics — UP (गन्ना भाव) -->
   <url>
-    <loc>https://krashimitra.in/articles/tomato-guide-up.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <loc>https://krashimitra.in/articles/ganna-pricing-analytics-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/ganna-pricing-analytics-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/ganna-pricing-analytics-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Sugar Production — UP (चीनी उत्पादन) -->
+  <url>
+    <loc>https://krashimitra.in/articles/chini-utpadan.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/chini-utpadan.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/chini-utpadan.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Potato Guide — UP (आलू गाइड — UP) -->
+  <!-- Wheat Price Analytics — UP (गेहूं भाव) -->
+  <url>
+    <loc>https://krashimitra.in/articles/gehuu-price-analytic-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/gehuu-price-analytic-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/gehuu-price-analytic-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Potato Guide — UP (आलू गाइड) -->
   <url>
     <loc>https://krashimitra.in/articles/potato_guide_up.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/potato_guide_up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/potato_guide_up.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Chilli Guide — Karnataka (मिर्ची गाइड — कर्नाटक) -->
+  <!-- Mustard Guide — UP (सरसों गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/sarso-guide-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/sarso-guide-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/sarso-guide-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Maize Guide — UP (मक्का गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/makka-guide-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/makka-guide-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/makka-guide-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Soybean Guide — MP (सोयाबीन गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/soyabean-MP-guide.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/soyabean-MP-guide.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/soyabean-MP-guide.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Groundnut Guide — Rajasthan (मूंगफली गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/moongfali-guide-rajisthan.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/moongfali-guide-rajisthan.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/moongfali-guide-rajisthan.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Garlic Guide — MP (लहसुन गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/garlic-farming-guide.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/garlic-farming-guide.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/garlic-farming-guide.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Onion Guide — Maharashtra/MP (प्याज गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/online-farming-guide.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/online-farming-guide.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/online-farming-guide.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Mango Guide — UP (आम गाइड — UP) -->
+  <url>
+    <loc>https://krashimitra.in/articles/aam-utpadan-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/aam-utpadan-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/aam-utpadan-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Mango Guide — MP (आम गाइड — MP) -->
+  <url>
+    <loc>https://krashimitra.in/articles/aam-utpadan-mp.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/aam-utpadan-mp.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/aam-utpadan-mp.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Apple Guide — Kashmir (सेब गाइड — कश्मीर) -->
+  <url>
+    <loc>https://krashimitra.in/articles/apple-kashmir.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/apple-kashmir.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/apple-kashmir.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Pomegranate Guide — Maharashtra (अनार गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/anaar-maharastra.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/anaar-maharastra.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/anaar-maharastra.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Grapes Guide — Maharashtra (अंगूर गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/grapes-maharastra.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/grapes-maharastra.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/grapes-maharastra.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Litchi Guide — Bihar (लीची गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/litchi-guide-bihar.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/litchi-guide-bihar.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/litchi-guide-bihar.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- UP Agriculture Guide (UP कृषि गाइड) -->
+  <url>
+    <loc>https://krashimitra.in/articles/up-agriculture-guide.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/up-agriculture-guide.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/up-agriculture-guide.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Agricultural Land Prices — UP (जमीन के दाम) -->
+  <url>
+    <loc>https://krashimitra.in/articles/land-price-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/land-price-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/land-price-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- PM Kisan Samman Nidhi (PM किसान) -->
+  <url>
+    <loc>https://krashimitra.in/articles/PM-kisan-samman-nidhi.html</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/PM-kisan-samman-nidhi.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/PM-kisan-samman-nidhi.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ===== KANNADA ARTICLES (ಕನ್ನಡ ಲೇಖನಗಳು) ===== -->
+
+  <!-- Chilli Guide — Karnataka (ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ) -->
   <url>
     <loc>https://krashimitra.in/articles/chilli-guide-karnataka.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/articles/chilli-guide-karnataka.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/chilli-guide-karnataka.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Paddy Guide — Karnataka (धान गाइड — कर्नाटक) -->
+  <!-- Paddy Guide — Karnataka (ಭತ್ತದ ಬೆಳೆ) -->
   <url>
     <loc>https://krashimitra.in/articles/paddy-guide-karnataka.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/articles/paddy-guide-karnataka.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/paddy-guide-karnataka.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Karnataka Monsoon (कर्नाटक मानसून) -->
+  <!-- Tomato Guide — Karnataka (ಟೊಮೆಟೊ ಬೆಳೆ) -->
+  <url>
+    <loc>https://krashimitra.in/articles/tomato-guide-up.html</loc>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/articles/tomato-guide-up.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/tomato-guide-up.html"/>
+    <lastmod>2026-06-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ===== ENGLISH ARTICLES ===== -->
+
+  <!-- Karnataka Monsoon Farming Plan -->
   <url>
     <loc>https://krashimitra.in/articles/karnataka-monsoon.html</loc>
-    <lastmod>2026-05-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://krashimitra.in/articles/karnataka-monsoon.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/karnataka-monsoon.html"/>
+    <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

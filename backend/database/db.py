@@ -57,6 +57,27 @@ class WeatherCache(Base):
     is_stale          = Column(Boolean,  default=False)
 
 
+# ── WEATHER HISTORY MODEL ────────────────────────────────────
+
+class WeatherHistory(Base):
+    """One row per fetch per district — retains last 7 days, auto-purged."""
+    __tablename__ = "weather_history"
+
+    id                = Column(Integer,  primary_key=True, index=True)
+    district          = Column(String,   nullable=False, index=True)
+    city              = Column(String,   nullable=False)
+    state             = Column(String,   default="Uttar Pradesh", nullable=False)
+    temperature       = Column(Float,    nullable=True)
+    feels_like        = Column(Float,    nullable=True)
+    humidity          = Column(Integer,  nullable=True)
+    wind_speed        = Column(Float,    nullable=True)
+    rainfall          = Column(Float,    default=0.0, nullable=True)
+    weather_condition = Column(String,   nullable=True)
+    icon_url          = Column(String,   nullable=True)
+    farming_tip       = Column(Text,     nullable=True)
+    fetched_at        = Column(DateTime, nullable=False, index=True)
+
+
 # ── DISTRICT → OWM CITY MAP (ALL 75 UP DISTRICTS) ───────────
 
 UP_DISTRICT_CITY_MAP = {
@@ -161,19 +182,76 @@ class User(Base):
 
 class UserProfile(Base):
     __tablename__ = "user_profiles"
-    id           = Column(Integer,  primary_key=True, index=True)
-    user_id      = Column(Integer,  nullable=True, index=True)
-    name         = Column(String,   nullable=False)
-    phone_number = Column(String,   nullable=True)
-    village      = Column(String,   nullable=True)
-    district     = Column(String,   nullable=True)
-    state        = Column(String,   nullable=True)
-    primary_crop = Column(String,   default="Sugarcane")
-    crops_grown  = Column(String,   nullable=True)
-    farm_size    = Column(String,   nullable=True)
-    language     = Column(String,   default="hindi")
-    created_at   = Column(DateTime, default=datetime.utcnow)
-    updated_at   = Column(DateTime, default=datetime.utcnow)
+
+    # Core
+    id                   = Column(Integer,  primary_key=True, index=True)
+    user_id              = Column(Integer,  nullable=True, index=True)
+
+    # Personal
+    name                 = Column(String,   nullable=False)
+    phone_number         = Column(String,   nullable=True)
+    whatsapp_number      = Column(String,   nullable=True)
+    dob                  = Column(String,   nullable=True)   # stored as string YYYY-MM-DD
+    gender               = Column(String,   nullable=True)
+    education            = Column(String,   nullable=True)
+    farming_experience   = Column(String,   nullable=True)
+    family_size          = Column(Integer,  nullable=True)
+
+    # Location
+    state                = Column(String,   nullable=True)
+    district             = Column(String,   nullable=True)
+    tehsil               = Column(String,   nullable=True)
+    village              = Column(String,   nullable=True)
+    pin_code             = Column(String,   nullable=True)
+    nearest_mandi        = Column(String,   nullable=True)
+
+    # Farm
+    farm_size            = Column(String,   nullable=True)
+    farm_size_unit       = Column(String,   default="acres")
+    land_ownership       = Column(String,   nullable=True)
+    soil_type            = Column(String,   nullable=True)
+    irrigation_type      = Column(String,   nullable=True)
+    khasra_number        = Column(String,   nullable=True)
+
+    # Equipment (checkboxes)
+    eq_tractor           = Column(Boolean,  default=False)
+    eq_pump              = Column(Boolean,  default=False)
+    eq_thresher          = Column(Boolean,  default=False)
+    eq_sprayer           = Column(Boolean,  default=False)
+    eq_harvester         = Column(Boolean,  default=False)
+    eq_none              = Column(Boolean,  default=False)
+
+    # Crops
+    primary_crop         = Column(String,   default="Sugarcane")
+    crops_grown          = Column(String,   nullable=True)
+    farming_season       = Column(String,   nullable=True)
+    farming_type         = Column(String,   nullable=True)
+    yield_per_acre       = Column(String,   nullable=True)
+    crop_problems        = Column(Text,     nullable=True)
+
+    # Schemes & Finance
+    pm_kisan_registered  = Column(Boolean,  default=False)
+    has_kcc              = Column(Boolean,  default=False)
+    aadhaar_linked       = Column(Boolean,  default=False)
+    fasal_bima           = Column(Boolean,  default=False)
+    bank_name            = Column(String,   nullable=True)
+    annual_income        = Column(String,   nullable=True)
+
+    # Preferences
+    language             = Column(String,   default="hindi")
+    advisory_type        = Column(String,   nullable=True)
+    special_needs        = Column(Text,     nullable=True)
+
+    # Notifications
+    notif_weather        = Column(Boolean,  default=False)
+    notif_mandi          = Column(Boolean,  default=False)
+    notif_scheme         = Column(Boolean,  default=False)
+    notif_pest           = Column(Boolean,  default=False)
+    notif_tips           = Column(Boolean,  default=False)
+    notif_none           = Column(Boolean,  default=False)
+
+    created_at           = Column(DateTime, default=datetime.utcnow)
+    updated_at           = Column(DateTime, default=datetime.utcnow)
 
 
 class ChatHistory(Base):
@@ -244,17 +322,63 @@ def _ensure_postgres_columns():
             ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
         "user_profiles": [
-            ("user_id", "INTEGER"),
-            ("phone_number", "VARCHAR"),
-            ("village", "VARCHAR"),
-            ("district", "VARCHAR"),
-            ("state", "VARCHAR"),
-            ("primary_crop", "VARCHAR DEFAULT 'Sugarcane'"),
-            ("crops_grown", "VARCHAR"),
-            ("farm_size", "VARCHAR"),
-            ("language", "VARCHAR DEFAULT 'hindi'"),
-            ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
-            ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("user_id",              "INTEGER"),
+            # Personal
+            ("phone_number",         "VARCHAR"),
+            ("whatsapp_number",      "VARCHAR"),
+            ("dob",                  "VARCHAR"),
+            ("gender",               "VARCHAR"),
+            ("education",            "VARCHAR"),
+            ("farming_experience",   "VARCHAR"),
+            ("family_size",          "INTEGER"),
+            # Location
+            ("state",                "VARCHAR"),
+            ("district",             "VARCHAR"),
+            ("tehsil",               "VARCHAR"),
+            ("village",              "VARCHAR"),
+            ("pin_code",             "VARCHAR"),
+            ("nearest_mandi",        "VARCHAR"),
+            # Farm
+            ("farm_size",            "VARCHAR"),
+            ("farm_size_unit",       "VARCHAR DEFAULT 'acres'"),
+            ("land_ownership",       "VARCHAR"),
+            ("soil_type",            "VARCHAR"),
+            ("irrigation_type",      "VARCHAR"),
+            ("khasra_number",        "VARCHAR"),
+            # Equipment
+            ("eq_tractor",           "BOOLEAN DEFAULT FALSE"),
+            ("eq_pump",              "BOOLEAN DEFAULT FALSE"),
+            ("eq_thresher",          "BOOLEAN DEFAULT FALSE"),
+            ("eq_sprayer",           "BOOLEAN DEFAULT FALSE"),
+            ("eq_harvester",         "BOOLEAN DEFAULT FALSE"),
+            ("eq_none",              "BOOLEAN DEFAULT FALSE"),
+            # Crops
+            ("primary_crop",         "VARCHAR DEFAULT 'Sugarcane'"),
+            ("crops_grown",          "VARCHAR"),
+            ("farming_season",       "VARCHAR"),
+            ("farming_type",         "VARCHAR"),
+            ("yield_per_acre",       "VARCHAR"),
+            ("crop_problems",        "TEXT"),
+            # Schemes
+            ("pm_kisan_registered",  "BOOLEAN DEFAULT FALSE"),
+            ("has_kcc",              "BOOLEAN DEFAULT FALSE"),
+            ("aadhaar_linked",       "BOOLEAN DEFAULT FALSE"),
+            ("fasal_bima",           "BOOLEAN DEFAULT FALSE"),
+            ("bank_name",            "VARCHAR"),
+            ("annual_income",        "VARCHAR"),
+            # Preferences
+            ("language",             "VARCHAR DEFAULT 'hindi'"),
+            ("advisory_type",        "VARCHAR"),
+            ("special_needs",        "TEXT"),
+            # Notifications
+            ("notif_weather",        "BOOLEAN DEFAULT FALSE"),
+            ("notif_mandi",          "BOOLEAN DEFAULT FALSE"),
+            ("notif_scheme",         "BOOLEAN DEFAULT FALSE"),
+            ("notif_pest",           "BOOLEAN DEFAULT FALSE"),
+            ("notif_tips",           "BOOLEAN DEFAULT FALSE"),
+            ("notif_none",           "BOOLEAN DEFAULT FALSE"),
+            ("created_at",           "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("updated_at",           "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
         "weather_cache": [
             ("city", "VARCHAR"),

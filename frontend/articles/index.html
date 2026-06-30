@@ -561,6 +561,14 @@
   </div>
 </div>
 
+<!-- LANGUAGE FILTER -->
+<div class="filter-bar" id="lang-filter-bar" style="border-bottom:none;padding-bottom:6px;">
+  <div class="filter-chip active" onclick="setLangFilter(this,'all')" data-lang-filter="all">🌐 सभी भाषाएं</div>
+  <div class="filter-chip"        onclick="setLangFilter(this,'hi')"  data-lang-filter="hi">🇮🇳 हिंदी</div>
+  <div class="filter-chip"        onclick="setLangFilter(this,'en')"  data-lang-filter="en">🇬🇧 English</div>
+  <div class="filter-chip"        onclick="setLangFilter(this,'kn')"  data-lang-filter="kn">🅺 ಕನ್ನಡ</div>
+</div>
+
 <!-- CATEGORY FILTER -->
 <div class="filter-bar" id="filter-bar">
   <div class="filter-chip active" onclick="setFilter(this,'all')"     data-i18n="cat_all">🌿 सभी</div>
@@ -646,7 +654,7 @@
   <div class="articles-list" id="articles-list">
 
     <!-- खाद -->
-    <a class="article-card" href="urea-guide-up.html" data-cat="khad" data-title="यूरिया DAP खाद कब कितना" style="--accent:#1d4ed8">
+    <a class="article-card" href="urea-guide-up.html" data-cat="khad" data-lang="hi" data-title="यूरिया DAP खाद कब कितना" style="--accent:#1d4ed8">
       <div class="article-thumb" style="background:#dbeafe">🧪</div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
@@ -659,7 +667,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="jaivik-khad.html" data-cat="khad" data-title="जैविक खाद घर पर बनाएं" style="--accent:#1d4ed8">
+    <a class="article-card" href="jaivik-khad.html" data-cat="khad" data-lang="hi" data-title="जैविक खाद घर पर बनाएं" style="--accent:#1d4ed8">
       <div class="article-thumb" style="background:#dbeafe">♻️</div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
@@ -673,7 +681,7 @@
     </a>
 
     <!-- कीट -->
-    <a class="article-card" href="keet-niyantran.html" data-cat="keet" data-title="कीट नियंत्रण देसी उपाय" style="--accent:#7e22ce">
+    <a class="article-card" href="keet-niyantran.html" data-cat="keet" data-lang="hi" data-title="कीट नियंत्रण देसी उपाय" style="--accent:#7e22ce">
       <div class="article-thumb" style="background:#f3e8ff">🐛</div>
       <div class="article-body">
         <span class="article-tag" style="background:#f3e8ff;color:#7e22ce" data-i18n="cat_keet_plain">कीट</span>
@@ -687,7 +695,7 @@
     </a>
 
     <!-- मौसम -->
-    <a class="article-card" href="mausam-guide.html" data-cat="mausam" data-title="मौसम के अनुसार खेती कैसे करें" style="--accent:#0284c7">
+    <a class="article-card" href="mausam-guide.html" data-cat="mausam" data-lang="hi" data-title="मौसम के अनुसार खेती कैसे करें" style="--accent:#0284c7">
       <div class="article-thumb" style="background:#e0f2fe">🌦️</div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0f2fe;color:#0284c7" data-i18n="cat_mausam_plain">मौसम</span>
@@ -701,7 +709,7 @@
     </a>
 
     <!-- गन्ना -->
-    <a class="article-card" href="ganna-rog.html" data-cat="ganna" data-title="गन्ने में लाल सड़न रोग पहचान उपचार" style="--accent:#16a34a">
+    <a class="article-card" href="ganna-rog.html" data-cat="ganna" data-lang="hi" data-title="गन्ने में लाल सड़न रोग पहचान उपचार" style="--accent:#16a34a">
       <div class="article-thumb" style="background:#dcfce7">🎋</div>
       <div class="article-body">
         <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
@@ -714,7 +722,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="ganna-guide-up.html" data-cat="ganna" data-title="उत्तर प्रदेश गन्ने की खेती सम्पूर्ण मार्गदर्शिका" style="--accent:#16a34a">
+    <a class="article-card" href="ganna-guide-up.html" data-cat="ganna" data-lang="hi" data-title="उत्तर प्रदेश गन्ने की खेती सम्पूर्ण मार्गदर्शिका" style="--accent:#16a34a">
       <div class="article-thumb" style="background:#dcfce7">🎋</div>
       <div class="article-body">
         <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
@@ -728,7 +736,7 @@
     </a>
 
     <!-- सब्जी -->
-    <a class="article-card" href="potato_guide_up.html" data-cat="sabji" data-title="आलू की खेती उत्तर प्रदेश मार्गदर्शिका" style="--accent:#795548">
+    <a class="article-card" href="potato_guide_up.html" data-cat="sabji" data-lang="hi" data-title="आलू की खेती उत्तर प्रदेश मार्गदर्शिका" style="--accent:#795548">
       <div class="article-thumb" style="background:#efebe9">🥔</div>
       <div class="article-body">
         <span class="article-tag" style="background:#efebe9;color:#795548" data-i18n="cat_sabji_plain">सब्जी</span>
@@ -741,7 +749,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="tomato-guide-up.html" data-cat="sabji karnataka" data-title="टमाटर बेळे कर्नाटक tomato farming guide" style="--accent:#d32f2f">
+    <a class="article-card" href="tomato-guide-up.html" data-cat="sabji karnataka" data-lang="kn" data-title="टमाटर बेळे कर्नाटक tomato farming guide" style="--accent:#d32f2f">
       <div class="article-thumb" style="background:#ffebee">🍅</div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffebee;color:#d32f2f" data-i18n="cat_sabji_plain">सब्जी</span>
@@ -754,7 +762,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="chilli-guide-karnataka.html" data-cat="sabji karnataka" data-title="मिर्ची बेळे कर्नाटक chilli farming guide" style="--accent:#c62828">
+    <a class="article-card" href="chilli-guide-karnataka.html" data-cat="sabji karnataka" data-lang="kn" data-title="मिर्ची बेळे कर्नाटक chilli farming guide" style="--accent:#c62828">
       <div class="article-thumb" style="background:#ffebee">🌶️</div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffebee;color:#c62828" data-i18n="cat_sabji_plain">सब्जी</span>
@@ -768,7 +776,7 @@
     </a>
 
     <!-- कर्नाटक -->
-    <a class="article-card" href="paddy-guide-karnataka.html" data-cat="karnataka" data-title="ಭತ್ತ ಬೆಳೆ कर्नाटक paddy rice farming" style="--accent:#558b2f">
+    <a class="article-card" href="paddy-guide-karnataka.html" data-cat="karnataka" data-lang="kn" data-title="ಭತ್ತ ಬೆಳೆ कर्नाटक paddy rice farming" style="--accent:#558b2f">
       <div class="article-thumb" style="background:#f1f8e9">🌾</div>
       <div class="article-body">
         <span class="article-tag" style="background:#f1f8e9;color:#558b2f" data-i18n="cat_karnataka_plain">कर्नाटक</span>
@@ -781,7 +789,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="karnataka-monsoon.html" data-cat="mausam karnataka" data-title="कर्नाटक मानसून monsoon farming plan kharif" style="--accent:#00695c">
+    <a class="article-card" href="karnataka-monsoon.html" data-cat="mausam karnataka" data-lang="en" data-title="कर्नाटक मानसून monsoon farming plan kharif" style="--accent:#00695c">
       <div class="article-thumb" style="background:#e0f2f1">🌧️</div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0f2f1;color:#00695c" data-i18n="cat_karnataka_plain">कर्नाटक</span>
@@ -1178,13 +1186,23 @@ function avatarBtnClick() {
    FILTER
 ═══════════════════════════════════════════ */
 let activeFilter = 'all';
+let activeLangFilter = 'all';
 
 function setFilter(el, cat) {
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   activeFilter = cat;
   const trending = document.getElementById('trending-section');
-  if (trending) trending.style.display = (cat === 'all') ? 'block' : 'none';
+  if (trending) trending.style.display = (cat === 'all' && activeLangFilter === 'all') ? 'block' : 'none';
+  applyFilters();
+}
+
+function setLangFilter(el, lang) {
+  document.querySelectorAll('#lang-filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeLangFilter = lang;
+  const trending = document.getElementById('trending-section');
+  if (trending) trending.style.display = (lang === 'all' && activeFilter === 'all') ? 'block' : 'none';
   applyFilters();
 }
 
@@ -1224,8 +1242,9 @@ function applyFilters(query = '') {
       : (card.dataset.title || '').toLowerCase();
 
     const matchesCat    = (activeFilter === 'all' || (cat && cat.split(' ').includes(activeFilter)));
+    const matchesLang   = (activeLangFilter === 'all' || card.dataset.lang === activeLangFilter);
     const matchesSearch = (searchVal === '' || translatedTitle.includes(searchVal));
-    const isVisible     = matchesCat && matchesSearch;
+    const isVisible     = matchesCat && matchesLang && matchesSearch;
     card.style.display  = isVisible ? 'flex' : 'none';
     if (isVisible) visible++;
   });

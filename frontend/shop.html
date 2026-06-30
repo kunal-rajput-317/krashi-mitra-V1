@@ -1077,7 +1077,9 @@
       margin-bottom: 14px;
       font-family: 'Noto Sans Devanagari','DM Sans',sans-serif;
     }
+    .wa-modal-box { max-height: 90vh; overflow-y: auto; }
     .wa-modal-form { margin-bottom: 14px; }
+    .wa-req { color: #e53935; font-weight: 800; }
     .wa-modal-label {
       display: block;
       font-size: 13px; font-weight: 700; color: var(--text-dark);
@@ -1167,14 +1169,34 @@
       color: white;
       box-shadow: var(--shadow-lg);
     }
-    .shop-hero::after {
-      content: "🌾";
+    .shop-hero::after { content: none; }
+    .shop-hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 62%;
+    }
+    .shop-hero-img-wrap {
       position: absolute;
-      right: 20px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 72px;
-      opacity: 0.12;
+      top: 0; right: 0; bottom: 0;
+      width: 30%;
+      z-index: 1;
+      border: none;
+      outline: none;
+    }
+    .shop-hero-img-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, #2d6a4f 0%, transparent 55%);
+      z-index: 2;
       pointer-events: none;
+    }
+    .shop-hero-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border: none;
     }
     .shop-hero-orb {
       position: absolute;
@@ -1183,6 +1205,11 @@
       border-radius: 50%;
       background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 65%);
       pointer-events: none;
+      z-index: 1;
+    }
+    @media screen and (max-width: 600px) {
+      .shop-hero-content { max-width: 58%; }
+      .shop-hero-img-wrap { width: 42%; }
     }
     .shop-hero-label {
       font-size: 10px;
@@ -1258,6 +1285,22 @@
       border-color: var(--green-dark);
       color: #fff;
       box-shadow: 0 4px 12px rgba(26,60,46,0.25);
+    }
+    .shop-filter-btn.cat-extra {
+      display: none;
+    }
+    .shop-filter-btn.cat-extra.cat-extra-show {
+      display: inline-flex;
+    }
+    .cat-more-btn {
+      background: var(--green-pale);
+      border-color: var(--green-light);
+      color: var(--green-mid);
+      font-weight: 700;
+    }
+    .cat-more-btn:hover {
+      background: var(--green-light);
+      color: #fff;
     }
 
     /* Search bar */
@@ -1511,9 +1554,7 @@
       box-shadow: 0 2px 12px rgba(26,60,46,0.07);
       display: flex;
       flex-direction: row;
-      cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
-      min-height: 130px;
       overflow: hidden;
     }
     .fert-h-card:hover {
@@ -1523,17 +1564,17 @@
     }
     .fert-h-card:active { transform: scale(0.98); }
 
-    /* Left image col */
+    /* Left image col — 45% of card */
     .fert-h-img {
-      width: 84px; min-width: 84px;
+      width: 45%; min-width: 45%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 40px;
+      font-size: 52px;
       flex-shrink: 0;
-      padding: 12px 6px;
+      padding: 10px 8px;
       background: transparent;
     }
     .fert-h-img img {
-      width: 64px; height: 74px;
+      width: 95%; height: 100px;
       object-fit: contain; display: block;
     }
 
@@ -1576,10 +1617,104 @@
       overflow: hidden;
     }
 
-    /* CTA */
-    .fert-h-cta {
-      font-size: 11px; color: var(--green-mid); font-weight: 700;
-      margin-top: 7px; text-align: right; opacity: 0.85;
+    /* Action buttons row */
+    .fert-h-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .fert-btn-detail {
+      font-size: 12px; font-weight: 700;
+      padding: 6px 2px; border-radius: 0;
+      border: none; background: transparent; color: var(--green-mid);
+      cursor: pointer; font-family: inherit;
+      transition: color 0.15s; text-align: left;
+      white-space: nowrap;
+    }
+    .fert-btn-detail:hover { color: var(--green-dark); }
+    .fert-btn-order {
+      font-size: 12px; font-weight: 700;
+      padding: 7px 10px; border-radius: 8px;
+      border: none; background: var(--green-dark); color: #fff;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.15s, transform 0.1s;
+      text-align: center;
+    }
+    .fert-btn-order:hover { background: var(--green-mid); }
+    .fert-btn-order:active { transform: scale(0.97); }
+
+    /* ══════════════════════════════════════
+       ORDER CHOICE BOTTOM-SHEET MODAL
+    ══════════════════════════════════════ */
+    .order-choice-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.50); backdrop-filter: blur(4px);
+      z-index: 2100; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .order-choice-overlay.open { display: flex; }
+    .order-choice-box {
+      background: #fff; border-radius: 22px;
+      width: 100%; max-width: 400px;
+      padding: 22px 20px 28px; position: relative;
+      box-shadow: 0 16px 60px rgba(0,0,0,0.28);
+      animation: order-pop-in 0.25s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    @keyframes order-pop-in {
+      from { transform: scale(0.88); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .order-choice-close {
+      position: absolute; top: 14px; right: 14px;
+      background: #f2f2f2; border: none; border-radius: 50%;
+      width: 30px; height: 30px; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #555; transition: background 0.15s;
+    }
+    .order-choice-close:hover { background: #e0e0e0; }
+    .order-choice-pill {
+      width: 36px; height: 4px; background: #ddd; border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+    .order-choice-product-name {
+      font-size: 15px; font-weight: 800; color: #1a2e1e;
+      margin-bottom: 3px; padding-right: 28px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+    }
+    .order-choice-price {
+      font-size: 21px; font-weight: 800; color: var(--green-dark);
+      margin-bottom: 16px;
+    }
+    .order-choice-label {
+      font-size: 11px; font-weight: 700; color: #aaa;
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;
+    }
+    .order-choice-btns { display: flex; flex-direction: column; gap: 9px; }
+    .order-choice-wa {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: #25D366; color: #fff; border: none; border-radius: 12px;
+      padding: 14px; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+      text-decoration: none;
+    }
+    .order-choice-wa:hover { background: #128C7E; }
+    .order-choice-amazon {
+      display: flex; align-items: center; justify-content: center;
+      background: #FF9900; color: #111; border-radius: 12px;
+      padding: 13px; font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: opacity 0.15s; border: none; cursor: pointer;
+    }
+    .order-choice-amazon:hover { opacity: 0.88; }
+    .order-choice-flipkart {
+      display: flex; align-items: center; justify-content: center;
+      background: #2874F0; color: #fff; border-radius: 12px;
+      padding: 13px; font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: opacity 0.15s; border: none; cursor: pointer;
+    }
+    .order-choice-flipkart:hover { opacity: 0.88; }
+    .order-choice-unavail {
+      background: #eee !important; color: #999 !important; cursor: not-allowed !important;
     }
 
     /* ══════════════════════════════════════
@@ -1612,14 +1747,19 @@
       width: 260px; min-width: 260px; flex-shrink: 0;
       display: flex; flex-direction: column; border-right: 1px solid #e0d9c6;
     }
-    .fert-image-wrap { flex: 1; overflow: hidden; border-radius: 20px 0 0 0; }
+    .fert-image-wrap {
+      flex: 1; overflow: hidden; border-radius: 20px 0 0 0;
+      background: #f0faf2;
+      display: flex; align-items: center; justify-content: center;
+    }
     .fert-modal-img {
       width: 100%; height: 100%; min-height: 280px;
-      object-fit: cover; display: block;
+      object-fit: contain; display: block;
+      padding: 12px;
     }
     .fert-modal-img-placeholder {
       width: 100%; min-height: 280px;
-      background: linear-gradient(135deg, #4e9e6e, #2d6a4f);
+      background: linear-gradient(135deg, #d8f3dc, #b7e4c7);
       display: flex; align-items: center; justify-content: center; font-size: 80px;
     }
     .fert-left-info {
@@ -1756,7 +1896,7 @@
 
     /* Mobile modal overrides */
     @media screen and (max-width: 700px) {
-      .fert-modal-overlay { padding: 10px; align-items: flex-end; }
+      .fert-modal-overlay { padding: 12px; align-items: center; justify-content: center; }
       .fert-modal { width: 100%; max-width: 100%; border-radius: 20px 20px 14px 14px; max-height: 90vh; overflow-y: auto; }
       .fert-card-inner { flex-direction: column; min-height: unset; }
       .fert-left-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #e0d9c6; flex-direction: row; }
@@ -1784,19 +1924,66 @@
 
       /* Fert horizontal cards — 1-col full-width on mobile (like mandi.html) */
       .fert-grid { grid-template-columns: 1fr; gap: 10px; }
-      .fert-h-card { min-height: 100px; border-radius: 14px; background: #fff; }
-      .fert-h-img { width: 80px; min-width: 80px; font-size: 36px; padding: 10px 8px; }
-      .fert-h-img img { width: 58px; height: 68px; }
+      .fert-h-card { border-radius: 14px; background: #fff; }
+      .fert-h-img { width: 45%; min-width: 45%; font-size: 44px; padding: 10px 6px; }
+      .fert-h-img img { width: 92%; height: 90px; }
       .fert-h-body { padding: 11px 12px 10px 4px; }
-      .fert-h-name { font-size: 13.5px; }
-      .fert-h-type { font-size: 10px; padding: 3px 8px; }
-      .fert-h-price { font-size: 17px; margin: 4px 0 4px; }
+      .fert-h-name { font-size: 13px; }
+      .fert-h-type { font-size: 9.5px; padding: 2px 7px; }
+      .fert-h-price { font-size: 16px; margin: 4px 0 4px; }
       .fert-h-price span { font-size: 11px; }
-      .fert-h-use { font-size: 11px; }
-      .fert-h-cta { font-size: 11px; margin-top: 6px; }
     }
 
 
+
+    /* ══════════════════════════════════════
+       WA ORDER LOADING OVERLAY
+    ══════════════════════════════════════ */
+    .wa-loading-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+      z-index: 4000; align-items: center; justify-content: center;
+    }
+    .wa-loading-overlay.active { display: flex; }
+    .wa-loading-box {
+      background: #fff; border-radius: 20px;
+      padding: 32px 36px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      min-width: 220px;
+      animation: wa-pop 0.22s cubic-bezier(0.34,1.4,0.64,1);
+    }
+    .wa-spinner {
+      width: 52px; height: 52px;
+      border: 4px solid #e8f5e9;
+      border-top-color: #25D366;
+      border-radius: 50%;
+      animation: wa-spin 0.8s linear infinite;
+    }
+    @keyframes wa-spin {
+      to { transform: rotate(360deg); }
+    }
+    .wa-loading-title {
+      font-size: 15px; font-weight: 800; color: #1a2e1e;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      line-height: 1.3;
+    }
+    .wa-loading-sub {
+      font-size: 12px; color: #888;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+    }
+    .wa-loading-dots span {
+      display: inline-block;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #25D366; margin: 0 3px;
+      animation: wa-dot-bounce 1.2s infinite ease-in-out;
+    }
+    .wa-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .wa-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes wa-dot-bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%           { transform: scale(1.1); opacity: 1; }
+    }
 
     /* ══════════════════════════════════════
        NOT AVAILABLE POPUP
@@ -1961,6 +2148,7 @@
        COPYRIGHT FOOTER
     ══════════════════════════════════════ */
     .site-footer {
+      display: none;
       background: var(--green-dark);
       color: rgba(255,255,255,0.65);
       text-align: center;
@@ -1968,6 +2156,9 @@
       font-size: 12px;
       letter-spacing: 0.3px;
       flex-shrink: 0;
+    }
+    .site-footer.footer-visible {
+      display: block;
     }
     .site-footer a { color: var(--green-light); text-decoration: none; }
     .site-footer a:hover { text-decoration: underline; }
@@ -2128,13 +2319,20 @@
   <!-- Shop Hero Banner -->
   <div class="shop-hero">
     <div class="shop-hero-orb"></div>
-    <div class="shop-hero-label" data-t="shop_hero_label">🛒 KRASHIMITRA SHOP</div>
-    <div class="shop-hero-title" data-t="shop_hero_title">किसान की दुकान</div>
-    <div class="shop-hero-sub" data-t="shop_hero_sub">बीज, खाद, कीटनाशक और कृषि उपकरण — सब एक जगह</div>
-    <div class="shop-hero-badges">
-      <span class="shop-hero-badge" data-t="badge_free_delivery">🚚 निःशुल्क डिलीवरी ₹500+</span>
-      <span class="shop-hero-badge" data-t="badge_genuine">✅ प्रमाणित उत्पाद</span>
-      <span class="shop-hero-badge" data-t="badge_cod">💰 Cash on Delivery</span>
+    <div class="shop-hero-content">
+      <div class="shop-hero-label" data-t="shop_hero_label">🛒 KRASHIMITRA SHOP</div>
+      <div class="shop-hero-title" data-t="shop_hero_title">किसान की दुकान</div>
+      <div class="shop-hero-sub" data-t="shop_hero_sub">बीज, खाद, कीटनाशक और कृषि उपकरण — सब एक जगह</div>
+      <div class="shop-hero-badges">
+        <span class="shop-hero-badge" data-t="badge_genuine">✅ प्रमाणित उत्पाद</span>
+        <span class="shop-hero-badge" data-t="badge_cod">💰 Cash on Delivery</span>
+        <span class="shop-hero-badge">🔷 UPI accepted</span>
+      </div>
+    </div>
+    <!-- Replace src with your hero image path -->
+    <div class="shop-hero-img-wrap">
+      <img src="images/shop-hero.png" alt="किसान की दुकान" id="shop-hero-img"
+           onerror="this.parentElement.style.display='none'">
     </div>
   </div>
 
@@ -2147,16 +2345,17 @@
     <button class="shop-filter-btn active" data-cat="all" onclick="setCategory('all', this)" data-t="cat_all">सभी</button>
     <button class="shop-filter-btn" data-cat="seeds" onclick="setCategory('seeds', this)" data-t="cat_seeds">🌱 बीज</button>
     <button class="shop-filter-btn" data-cat="fertilizer" onclick="setCategory('fertilizer', this)" data-t="cat_fertilizer">🧪 खाद</button>
-    <button class="shop-filter-btn" data-cat="pesticide" onclick="setCategory('pesticide', this)" data-t="cat_pesticide">🌿 कीटनाशक</button>
-    <button class="shop-filter-btn" data-cat="tools" onclick="setCategory('tools', this)" data-t="cat_tools">🔧 उपकरण</button>
-    <button class="shop-filter-btn" data-cat="pashu_aahaar" onclick="setCategory('pashu_aahaar', this)" data-t="cat_pashu_aahaar">🐄 पशु आहार</button>
-    <button class="shop-filter-btn" data-cat="sprayers" onclick="setCategory('sprayers', this)">🔵 स्प्रेयर</button>
-    <button class="shop-filter-btn" data-cat="irrigation" onclick="setCategory('irrigation', this)">💧 सिंचाई</button>
-    <button class="shop-filter-btn" data-cat="soil" onclick="setCategory('soil', this)">🧪 मिट्टी / ग्रोथ</button>
-    <button class="shop-filter-btn" data-cat="protection" onclick="setCategory('protection', this)">🛡️ फसल सुरक्षा</button>
-    <button class="shop-filter-btn" data-cat="structures" onclick="setCategory('structures', this)">🏗️ नेट व संरचनाएं</button>
-    <button class="shop-filter-btn" data-cat="machinery" onclick="setCategory('machinery', this)">⚙️ मशीनरी</button>
-    <button class="shop-filter-btn" data-cat="misc" onclick="setCategory('misc', this)">📦 अन्य</button>
+    <button class="shop-filter-btn cat-extra" data-cat="pesticide" onclick="setCategory('pesticide', this)" data-t="cat_pesticide">🌿 कीटनाशक</button>
+    <button class="shop-filter-btn cat-extra" data-cat="tools" onclick="setCategory('tools', this)" data-t="cat_tools">🔧 उपकरण</button>
+    <button class="shop-filter-btn cat-extra" data-cat="pashu_aahaar" onclick="setCategory('pashu_aahaar', this)" data-t="cat_pashu_aahaar">🐄 पशु आहार</button>
+    <button class="shop-filter-btn cat-extra" data-cat="sprayers" onclick="setCategory('sprayers', this)">🔵 स्प्रेयर</button>
+    <button class="shop-filter-btn cat-extra" data-cat="irrigation" onclick="setCategory('irrigation', this)">💧 सिंचाई</button>
+    <button class="shop-filter-btn cat-extra" data-cat="soil" onclick="setCategory('soil', this)">🧪 मिट्टी / ग्रोथ</button>
+    <button class="shop-filter-btn cat-extra" data-cat="protection" onclick="setCategory('protection', this)">🛡️ फसल सुरक्षा</button>
+    <button class="shop-filter-btn cat-extra" data-cat="structures" onclick="setCategory('structures', this)">🏗️ नेट व संरचनाएं</button>
+    <button class="shop-filter-btn cat-extra" data-cat="machinery" onclick="setCategory('machinery', this)">⚙️ मशीनरी</button>
+    <button class="shop-filter-btn cat-extra" data-cat="misc" onclick="setCategory('misc', this)">📦 अन्य</button>
+    <button class="shop-filter-btn cat-more-btn" id="cat-more-btn" onclick="toggleMoreCats(this)" data-expanded="0">और देखें</button>
   </div>
 
   <!-- Section heading -->
@@ -2199,7 +2398,30 @@
     <p class="seo-para">खरीदारी से पहले आज के <strong>UP mandi bhav</strong> देखें — Meerut, Lucknow, Kanpur, Agra, Varanasi सहित सभी प्रमुख मंडियों के gehu, dhan, sarson और aalu के live rates। <a href="mandi.html" class="seo-link">Aaj ka Mandi Bhav देखें →</a> &nbsp;|&nbsp; <a href="weather.html" class="seo-link">Kisan Mausam →</a></p>
   </section>
 
+  <div id="footer-sentinel" style="height:1px;"></div>
 </main><!-- /.main-content -->
+
+<!-- ══ ORDER CHOICE MODAL ══ -->
+<div class="order-choice-overlay" id="order-choice-modal" onclick="closeOrderModal(event)">
+  <div class="order-choice-box">
+    <div class="order-choice-pill"></div>
+    <button class="order-choice-close" onclick="closeOrderModal()">✕</button>
+    <div class="order-choice-product-name" id="order-choice-name"></div>
+    <div class="order-choice-price" id="order-choice-price"></div>
+    <div class="order-choice-label">कहाँ से खरीदें?</div>
+    <div class="order-choice-btns">
+      <button class="order-choice-wa" id="order-choice-wa-btn" onclick="openWAFromOrderModal()">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:20px;height:20px;flex-shrink:0"> WhatsApp पर ऑर्डर करें
+      </button>
+      <a class="order-choice-amazon" id="order-choice-amazon-btn" target="_blank" rel="noopener sponsored">
+        🛒 Amazon पर खरीदें
+      </a>
+      <a class="order-choice-flipkart" id="order-choice-flipkart-btn" target="_blank" rel="noopener sponsored">
+        🛍️ Flipkart पर खरीदें
+      </a>
+    </div>
+  </div>
+</div>
 
 <!-- ══ FERTILIZER DETAIL MODAL ══ -->
 <div class="fert-modal-overlay" id="fert-modal">
@@ -2269,24 +2491,25 @@
           </div>
           <div class="fert-modal-crops" id="fert-popup-crops"></div>
 
-          <!-- WhatsApp Order CTA inside modal -->
-          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="openWAOrderFromModal()" style="background:#25D366">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> <span id="fert-modal-cart-label">WhatsApp पर ऑर्डर करें</span>
+          <!-- Order CTA inside modal -->
+          <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="openOrderModalFromDetail()">
+            🛒 <span id="fert-modal-cart-label">ऑर्डर करें</span>
           </button>
-          <!-- Affiliate buy buttons inside modal -->
-          <div class="affil-modal-row" id="fert-modal-affil-row">
-            <a class="affil-modal-btn affil-modal-btn-amazon" id="fert-modal-amazon-btn"
-               href="#" target="_blank" rel="noopener sponsored">
-              🛒 Buy on Amazon
-            </a>
-            <a class="affil-modal-btn affil-modal-btn-flipkart" id="fert-modal-flipkart-btn"
-               href="#" target="_blank" rel="noopener sponsored">
-              🛍️ Buy on Flipkart
-            </a>
-          </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══ WA ORDER LOADING OVERLAY ══ -->
+<div class="wa-loading-overlay" id="wa-loading-overlay">
+  <div class="wa-loading-box">
+    <div class="wa-spinner"></div>
+    <div class="wa-loading-title">ऑर्डर तैयार हो रहा है...</div>
+    <div class="wa-loading-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="wa-loading-sub">WhatsApp खुलने वाला है</div>
   </div>
 </div>
 
@@ -2303,13 +2526,19 @@
     </div>
     <div class="wa-modal-product-info" id="wa-modal-product-info"></div>
     <div class="wa-modal-form">
-      <label class="wa-modal-label">📱 आपका मोबाइल नंबर</label>
+      <label class="wa-modal-label">👤 किसान का नाम <span class="wa-req">*</span></label>
+      <input type="text" id="wa-name-input" class="wa-modal-input"
+        placeholder="जैसे: रामलाल सिंह"
+        onkeydown="if(event.key==='Enter')document.getElementById('wa-phone-input').focus()" />
+
+      <label class="wa-modal-label">📱 मोबाइल नंबर <span class="wa-req">*</span></label>
       <input type="tel" id="wa-phone-input" class="wa-modal-input"
         placeholder="जैसे: 9876543210" maxlength="10"
         oninput="this.value=this.value.replace(/\D/g,'')"
-        onkeydown="if(event.key==='Enter')confirmWAOrder()" />
+        onkeydown="if(event.key==='Enter')document.getElementById('wa-address-input').focus()" />
+
       <div class="wa-modal-qty-row">
-        <label class="wa-modal-label">📦 मात्रा</label>
+        <label class="wa-modal-label">📦 मात्रा <span class="wa-req">*</span></label>
         <div class="wa-qty-controls">
           <button class="wa-qty-btn" onclick="changeWAQty(-1)">−</button>
           <span class="wa-qty-val" id="wa-qty-display">1</span>
@@ -2317,6 +2546,16 @@
         </div>
       </div>
       <div class="wa-modal-total" id="wa-modal-total">कुल: ₹0</div>
+
+      <label class="wa-modal-label" style="margin-top:10px">📍 डिलीवरी का पता <span class="wa-req">*</span></label>
+      <input type="text" id="wa-address-input" class="wa-modal-input"
+        placeholder="मकान नं., गली, मोहल्ला..."
+        onkeydown="if(event.key==='Enter')document.getElementById('wa-village-input').focus()" />
+
+      <label class="wa-modal-label">🏘️ गाँव / जिला</label>
+      <input type="text" id="wa-village-input" class="wa-modal-input"
+        placeholder="जैसे: मेरठ, UP (वैकल्पिक)"
+        onkeydown="if(event.key==='Enter')confirmWAOrder()" />
     </div>
     <button class="wa-confirm-btn" onclick="confirmWAOrder()">
       <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> WhatsApp पर ऑर्डर करें
@@ -3294,33 +3533,10 @@
                 <div class="fert-h-name">${getProductName(p)}</div>
                 <div class="fert-h-type">${badgePrefix}${typeLabel}</div>
               </div>
-              <div class="fert-h-price">₹${p.price}<span> / ${getProductUnit(p)}</span>
-                <span style="font-size:10px;color:#e53935;font-weight:700;margin-left:4px">-${discount}%</span>
-              </div>
-              <div class="fert-h-use">💡 ${getProductDesc(p)}</div>
-              <div class="fert-h-cta" style="display:flex;align-items:center;justify-content:space-between;margin-top:7px">
-                <span style="font-size:10px;color:var(--green-mid);font-weight:700;opacity:0.85">विवरण देखें →</span>
-                <button class="fert-h-cart-btn"
-                  onclick="openWAOrder(${p.id}); event.stopPropagation()"
-                  style="font-size:11px;font-weight:700;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;background:#25D366;color:#fff;font-family:inherit;transition:background 0.18s;display:inline-flex;align-items:center;gap:4px">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:13px;height:13px;flex-shrink:0"> ऑर्डर
-                </button>
-              </div>
-              <div class="affil-row" onclick="event.stopPropagation()">
-                ${p.affil_amazon && p.affil_amazon.startsWith('not_available_')
-                  ? `<button class="affil-btn affil-btn-amazon" onclick="openNotAvailModal(${p.id})" style="cursor:pointer;border:none">
-                      🛒 Amazon
-                    </button>`
-                  : `<a class="affil-btn affil-btn-amazon" href="${p.affil_amazon}" target="_blank" rel="noopener sponsored">
-                      🛒 Amazon
-                    </a>`}
-                ${p.affil_flipkart && p.affil_flipkart.startsWith('not_available_')
-                  ? `<button class="affil-btn affil-btn-flipkart" onclick="openNotAvailModal(${p.id})" style="cursor:pointer;border:none">
-                      🛍️ Flipkart
-                    </button>`
-                  : `<a class="affil-btn affil-btn-flipkart" href="${p.affil_flipkart}" target="_blank" rel="noopener sponsored">
-                      🛍️ Flipkart
-                    </a>`}
+              <div class="fert-h-price">₹${p.price}<span> / ${getProductUnit(p)}</span></div>
+              <div class="fert-h-actions">
+                <button class="fert-btn-detail" onclick="onCardClick(${p.id}, event)">विवरण करें →</button>
+                <button class="fert-btn-order" onclick="openOrderModal(${p.id}); event.stopPropagation()">ऑर्डर करें</button>
               </div>
             </div>
           </div>`;
@@ -3340,6 +3556,15 @@
       tools:      { hi: 'उपकरण', en: 'Tools', kn: 'ಉಪಕರಣ' },
     };
     return map[cat]?.[currentLang] || map[cat]?.hi || cat;
+  }
+
+  function toggleMoreCats(btn) {
+    const expanded = btn.getAttribute('data-expanded') === '1';
+    document.querySelectorAll('.shop-filter-btn.cat-extra').forEach(b => {
+      b.classList.toggle('cat-extra-show', !expanded);
+    });
+    btn.setAttribute('data-expanded', expanded ? '0' : '1');
+    btn.textContent = expanded ? 'और देखें' : '← वापस';
   }
 
   function setCategory(cat, btn) {
@@ -3530,6 +3755,54 @@
     document.getElementById('orders-modal').classList.remove('open');
   }
 
+  let _orderModalProductId = null;
+
+  function openOrderModal(productId) {
+    _orderModalProductId = productId;
+    const p = PRODUCTS.find(x => x.id === productId);
+    if (!p) return;
+
+    document.getElementById('order-choice-name').textContent = getProductName(p);
+    document.getElementById('order-choice-price').textContent = `₹${p.price} / ${getProductUnit(p)}`;
+
+    const amazonBtn = document.getElementById('order-choice-amazon-btn');
+    if (p.affil_amazon && p.affil_amazon.startsWith('not_available_')) {
+      amazonBtn.removeAttribute('href');
+      amazonBtn.classList.add('order-choice-unavail');
+      amazonBtn.onclick = (e) => { e.preventDefault(); closeOrderModal(); openNotAvailModal(productId); };
+    } else {
+      amazonBtn.href = p.affil_amazon || '#';
+      amazonBtn.classList.remove('order-choice-unavail');
+      amazonBtn.onclick = null;
+    }
+
+    const flipkartBtn = document.getElementById('order-choice-flipkart-btn');
+    if (p.affil_flipkart && p.affil_flipkart.startsWith('not_available_')) {
+      flipkartBtn.removeAttribute('href');
+      flipkartBtn.classList.add('order-choice-unavail');
+      flipkartBtn.onclick = (e) => { e.preventDefault(); closeOrderModal(); openNotAvailModal(productId); };
+    } else {
+      flipkartBtn.href = p.affil_flipkart || '#';
+      flipkartBtn.classList.remove('order-choice-unavail');
+      flipkartBtn.onclick = null;
+    }
+
+    document.getElementById('order-choice-modal').classList.add('open');
+  }
+
+  function closeOrderModal(e) {
+    if (e && e.target !== document.getElementById('order-choice-modal')) return;
+    document.getElementById('order-choice-modal').classList.remove('open');
+    _orderModalProductId = null;
+  }
+
+  function openWAFromOrderModal() {
+    const pid = _orderModalProductId;
+    document.getElementById('order-choice-modal').classList.remove('open');
+    _orderModalProductId = null;
+    if (pid !== null) openWAOrder(pid);
+  }
+
   function openWAOrder(productId) {
     _waProductId = productId;
     _waQty = 1;
@@ -3539,18 +3812,28 @@
     document.getElementById('wa-modal-product-name').textContent = getProductName(p);
     document.getElementById('wa-modal-product-info').textContent =
       `${p.emoji}  ₹${p.price} / ${getProductUnit(p)}  ·  ${getProductDesc(p)}`;
+    document.getElementById('wa-name-input').value = '';
     document.getElementById('wa-phone-input').value = '';
+    document.getElementById('wa-address-input').value = '';
+    document.getElementById('wa-village-input').value = '';
     document.getElementById('wa-qty-display').textContent = 1;
     document.getElementById('wa-modal-total').textContent = `कुल: ₹${p.price}`;
     document.getElementById('wa-modal').classList.add('open');
-    setTimeout(() => document.getElementById('wa-phone-input').focus(), 200);
+    setTimeout(() => document.getElementById('wa-name-input').focus(), 200);
   }
 
   function openWAOrderFromModal() {
-    const pid = _currentFertId;  // save before close clears it
+    const pid = _currentFertId;
     if (!pid) return;
     closeFertModal();
     openWAOrder(pid);
+  }
+
+  function openOrderModalFromDetail() {
+    const pid = _currentFertId;
+    if (!pid) return;
+    closeFertModal();
+    openOrderModal(pid);
   }
 
   function closeWAModal(e) {
@@ -3565,60 +3848,74 @@
     if (p) document.getElementById('wa-modal-total').textContent = `कुल: ₹${(p.price * _waQty).toLocaleString('en-IN')}`;
   }
 
+  function _shakeInput(id) {
+    const el = document.getElementById(id);
+    el.style.borderColor = '#e53935';
+    el.focus();
+    setTimeout(() => el.style.borderColor = '', 1400);
+  }
+
   function confirmWAOrder() {
-    const phone = document.getElementById('wa-phone-input').value.trim();
-    if (!phone || phone.length < 10) {
-      document.getElementById('wa-phone-input').style.borderColor = '#e53935';
-      document.getElementById('wa-phone-input').focus();
-      setTimeout(() => document.getElementById('wa-phone-input').style.borderColor = '', 1200);
-      return;
-    }
+    const customerName = document.getElementById('wa-name-input').value.trim();
+    const phone        = document.getElementById('wa-phone-input').value.trim();
+    const address      = document.getElementById('wa-address-input').value.trim();
+    const village      = document.getElementById('wa-village-input').value.trim();
+
+    if (!customerName) { _shakeInput('wa-name-input'); return; }
+    if (!phone || phone.length < 10) { _shakeInput('wa-phone-input'); return; }
+    if (!address) { _shakeInput('wa-address-input'); return; }
 
     const p = PRODUCTS.find(x => x.id === _waProductId);
     if (!p) return;
 
     const total = p.price * _waQty;
-    const name = getProductName(p);
+    const productName = getProductName(p);
     const unit = getProductUnit(p);
     const { id: userId, isGuest } = getUserId();
-    const userLabel = isGuest ? `👤 Guest: ${userId}` : `👤 User ID: ${userId}`;
+    const userLabel = isGuest ? `Guest: ${userId}` : `User ID: ${userId}`;
     const now = new Date();
     const dateStr = now.toLocaleDateString('hi-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
-    // Close modal & open WA immediately (avoid popup blocker)
     document.getElementById('wa-modal').classList.remove('open');
+    document.getElementById('wa-loading-overlay').classList.add('active');
 
     const buildMsg = (trackingCode) => {
-      const tkLine = trackingCode ? `🆔 Tracking: ${trackingCode}` : '';
+      const tkLine = trackingCode ? `🆔 Tracking: ${trackingCode}\n` : '';
       return `🌾 *KrashiMitra Order*
 ━━━━━━━━━━━━━━━━
-${tkLine ? tkLine + '\n' : ''}${userLabel}
+${tkLine}
+👤 *किसान:* ${customerName}
+📱 *मोबाइल:* ${phone}
 
-📦 *Product:* ${name}
-   Product ID: #${p.id}
-   Category: ${categoryLabel(p.cat)}
+📦 *उत्पाद:* ${productName}
+   ID: #${p.id} · ${categoryLabel(p.cat)}
 
-🔢 Qty: ${_waQty} × ₹${p.price.toLocaleString('en-IN')} (${unit})
-💰 *Total: ₹${total.toLocaleString('en-IN')}*
+🔢 *मात्रा:* ${_waQty} × ₹${p.price.toLocaleString('en-IN')} (${unit})
+💰 *कुल: ₹${total.toLocaleString('en-IN')}*
 
-📱 Phone: ${phone}
-📅 Date: ${dateStr}
+📍 *डिलीवरी पता:* ${address}${village ? `\n🏘️ *गाँव/जिला:* ${village}` : ''}
+
+📅 ${dateStr} · ${userLabel}
 ━━━━━━━━━━━━━━━━
-🛒 Source: KrashiMitra Shop
+🛒 KrashiMitra Shop
 💬 कृपया इस ऑर्डर की पुष्टि करें`;
     };
 
     // Save to NeonDB, then open WA with tracking code
     logOrderToBackend({
-      product_name: name,
-      product_id:   p.id,
-      quantity:     _waQty,
-      unit_price:   p.price,
-      total:        total,
-      phone:        phone,
-      source:       'shop',
-      session_id:   isGuest ? userId : undefined
+      product_name:     productName,
+      product_id:       p.id,
+      quantity:         _waQty,
+      unit_price:       p.price,
+      total:            total,
+      phone:            phone,
+      customer_name:    customerName,
+      delivery_address: address,
+      village_district: village || null,
+      source:           'shop',
+      session_id:       isGuest ? userId : undefined
     }, (trackingCode) => {
+      document.getElementById('wa-loading-overlay').classList.remove('active');
       const msg = buildMsg(trackingCode);
       const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, '_blank');
@@ -3822,11 +4119,8 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
   }
 
   function _updateFertModalCartBtn(productId) {
-    const btn = document.getElementById('fert-modal-cart-btn');
     const lbl = document.getElementById('fert-modal-cart-label');
-    if (!btn || !lbl) return;
-    lbl.textContent = 'WhatsApp पर ऑर्डर करें';
-    btn.style.background = '#25D366';
+    if (lbl) lbl.textContent = 'ऑर्डर करें';
   }
 
   function fertModalAddCart() {
@@ -3904,6 +4198,16 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
 
     // Pre-warm fertilizer API in background when fertilizer category active
     if (catParam === 'fertilizer') fetchFertData();
+
+    // Show footer only when user scrolls to the bottom
+    const footerEl = document.querySelector('.site-footer');
+    const sentinel = document.getElementById('footer-sentinel');
+    if (footerEl && sentinel && window.IntersectionObserver) {
+      const obs = new IntersectionObserver(entries => {
+        footerEl.classList.toggle('footer-visible', entries[0].isIntersecting);
+      }, { threshold: 0 });
+      obs.observe(sentinel);
+    }
   });
 
 

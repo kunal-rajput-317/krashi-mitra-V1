@@ -1,10 +1,12 @@
 User-agent: *
 Allow: /
 
-# Block old/deprecated pages
+# Block non-public pages
+Disallow: /admin/
 Disallow: /old_chat.html
 Disallow: /old_index.html
 Disallow: /articles/article_template.html
+Disallow: /assets/redirecting-animation.html
 
-# Sitemap location — Google इसे automatically पढ़ेगा
+# Sitemap location
 Sitemap: https://krashimitra.in/sitemap.xml
