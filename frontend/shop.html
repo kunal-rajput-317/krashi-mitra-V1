@@ -1117,6 +1117,15 @@
       font-size: 18px; font-weight: 800; min-width: 24px;
       text-align: center; color: var(--text-dark);
     }
+    input.wa-qty-val {
+      width: 58px; padding: 5px 4px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      background: var(--white); outline: none;
+      font-family: inherit; -moz-appearance: textfield;
+    }
+    input.wa-qty-val:focus { border-color: #25D366; }
+    input.wa-qty-val::-webkit-outer-spin-button,
+    input.wa-qty-val::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .wa-modal-total {
       font-size: 17px; font-weight: 800; color: var(--green-dark);
       font-family: 'Playfair Display', serif;
@@ -1633,7 +1642,14 @@
       white-space: nowrap;
     }
     .fert-btn-detail:hover { color: var(--green-dark); }
+    .fert-h-btn-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
     .fert-btn-order {
+      width: 100%;
       font-size: 12px; font-weight: 700;
       padding: 7px 10px; border-radius: 8px;
       border: none; background: var(--green-dark); color: #fff;
@@ -1643,6 +1659,20 @@
     }
     .fert-btn-order:hover { background: var(--green-mid); }
     .fert-btn-order:active { transform: scale(0.97); }
+    .fert-btn-share {
+      font-size: 12px; font-weight: 700;
+      padding: 6px 6px; border-radius: 8px;
+      border: none; background: transparent; color: var(--text-light);
+      cursor: pointer; font-family: inherit;
+      transition: color 0.15s, text-shadow 0.15s, box-shadow 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+    .fert-btn-share:hover {
+      color: var(--amber);
+      text-shadow: 0 0 8px rgba(233,168,37,0.65);
+      box-shadow: 0 0 12px rgba(233,168,37,0.45);
+      background: rgba(233,168,37,0.08);
+    }
 
     /* ══════════════════════════════════════
        ORDER CHOICE BOTTOM-SHEET MODAL
@@ -1846,6 +1876,21 @@
     .fert-modal-buy-btn.in-cart {
       background: var(--green-pale); color: var(--green-dark);
       border: 1.5px solid var(--green-light); box-shadow: none;
+    }
+    .fert-modal-share-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; margin-top: 8px;
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 700; color: var(--text-light);
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      padding: 8px 0; border-radius: 10px;
+      transition: color 0.15s, text-shadow 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .fert-modal-share-btn:hover {
+      color: var(--amber);
+      text-shadow: 0 0 8px rgba(233,168,37,0.65);
+      box-shadow: 0 0 14px rgba(233,168,37,0.45);
+      background: rgba(233,168,37,0.08);
     }
 
     /* ══════════════════════════════════════
@@ -2495,6 +2540,7 @@
           <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="openOrderModalFromDetail()">
             🛒 <span id="fert-modal-cart-label">ऑर्डर करें</span>
           </button>
+          <button class="fert-modal-share-btn" onclick="shareProduct(_currentFertId, event)">🔗 शेयर करें</button>
         </div>
       </div>
     </div>
@@ -2541,7 +2587,8 @@
         <label class="wa-modal-label">📦 मात्रा <span class="wa-req">*</span></label>
         <div class="wa-qty-controls">
           <button class="wa-qty-btn" onclick="changeWAQty(-1)">−</button>
-          <span class="wa-qty-val" id="wa-qty-display">1</span>
+          <input type="number" class="wa-qty-val" id="wa-qty-display" value="1" min="1"
+                 inputmode="numeric" oninput="setWAQty(this.value)" onblur="this.value = _waQty">
           <button class="wa-qty-btn" onclick="changeWAQty(1)">+</button>
         </div>
       </div>
@@ -3535,7 +3582,10 @@
               </div>
               <div class="fert-h-price">₹${p.price}<span> / ${getProductUnit(p)}</span></div>
               <div class="fert-h-actions">
-                <button class="fert-btn-detail" onclick="onCardClick(${p.id}, event)">विवरण करें →</button>
+                <div class="fert-h-btn-row">
+                  <button class="fert-btn-detail" onclick="onCardClick(${p.id}, event)">विवरण करें →</button>
+                  <button class="fert-btn-share" onclick="shareProduct(${p.id}, event)">शेयर करें</button>
+                </div>
                 <button class="fert-btn-order" onclick="openOrderModal(${p.id}); event.stopPropagation()">ऑर्डर करें</button>
               </div>
             </div>
@@ -3755,6 +3805,24 @@
     document.getElementById('orders-modal').classList.remove('open');
   }
 
+  function shareProduct(id, e) {
+    e.stopPropagation();
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) return;
+    const name = getProductName(p);
+    // Build a direct link to THIS product (opens its detail on load)
+    const url = window.location.origin + window.location.pathname + '?product=' + id;
+    if (navigator.share) {
+      navigator.share({ title: name, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url).then(() => {
+        alert('लिंक कॉपी हो गया!');
+      }).catch(() => {
+        window.open('https://wa.me/?text=' + encodeURIComponent(url), '_blank');
+      });
+    }
+  }
+
   let _orderModalProductId = null;
 
   function openOrderModal(productId) {
@@ -3816,7 +3884,7 @@
     document.getElementById('wa-phone-input').value = '';
     document.getElementById('wa-address-input').value = '';
     document.getElementById('wa-village-input').value = '';
-    document.getElementById('wa-qty-display').textContent = 1;
+    document.getElementById('wa-qty-display').value = 1;
     document.getElementById('wa-modal-total').textContent = `कुल: ₹${p.price}`;
     document.getElementById('wa-modal').classList.add('open');
     setTimeout(() => document.getElementById('wa-name-input').focus(), 200);
@@ -3843,7 +3911,19 @@
 
   function changeWAQty(delta) {
     _waQty = Math.max(1, (_waQty || 1) + delta);
-    document.getElementById('wa-qty-display').textContent = _waQty;
+    document.getElementById('wa-qty-display').value = _waQty;
+    _updateWATotal();
+  }
+
+  // Called when the user types directly into the quantity field
+  function setWAQty(val) {
+    let q = parseInt(val, 10);
+    if (isNaN(q) || q < 1) q = 1;
+    _waQty = q;
+    _updateWATotal();
+  }
+
+  function _updateWATotal() {
     const p = PRODUCTS.find(x => x.id === _waProductId);
     if (p) document.getElementById('wa-modal-total').textContent = `कुल: ₹${(p.price * _waQty).toLocaleString('en-IN')}`;
   }
@@ -4196,6 +4276,15 @@ ${tkLine}
 
     renderProducts();
 
+    // Handle ?product= URL param — open shared product's detail modal
+    const productParam = urlParams.get('product');
+    if (productParam !== null) {
+      const pid = parseInt(productParam, 10);
+      if (!isNaN(pid) && PRODUCTS.some(p => p.id === pid)) {
+        setTimeout(() => openShopFertModal(pid), 300);
+      }
+    }
+
     // Pre-warm fertilizer API in background when fertilizer category active
     if (catParam === 'fertilizer') fetchFertData();
 
@@ -4238,5 +4327,6 @@ ${tkLine}
   <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
   <span class="ai-fab-tip">AI सहायक</span>
 </a>
+  <script src="fab-autohide.js"></script>
 </body>
 </html>
