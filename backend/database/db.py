@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, Boolean, Float, text
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
@@ -172,6 +172,8 @@ class User(Base):
     otp                = Column(String,   nullable=True)
     otp_expiry         = Column(DateTime, nullable=True)
     preferred_language = Column(String,   default="hindi", nullable=True)
+    auth_provider      = Column(String,   default="email", nullable=True)  # "email" | "google"
+    google_id          = Column(String,   nullable=True, index=True)        # Google's permanent sub
     village            = Column(String,   nullable=True)
     district           = Column(String,   nullable=True)
     primary_crop       = Column(String,   default="Sugarcane", nullable=True)
@@ -267,16 +269,42 @@ class ChatHistory(Base):
 
 
 class MandiPrice(Base):
+    """Latest snapshot — rebuilt every fetch. One row per market/commodity/variety."""
     __tablename__ = "mandi_prices"
+    id               = Column(Integer,  primary_key=True, index=True)
+    state            = Column(String,   nullable=True, index=True)
+    commodity        = Column(String,   nullable=False, index=True)
+    district         = Column(String,   nullable=True, index=True)
+    market           = Column(String,   nullable=True)
+    variety          = Column(String,   nullable=True)
+    grade            = Column(String,   nullable=True)
+    min_price        = Column(String,   nullable=True)
+    max_price        = Column(String,   nullable=True)
+    modal_price      = Column(String,   nullable=True)
+    prev_modal_price = Column(String,   nullable=True)   # last recorded modal before this date
+    change_pct       = Column(Float,    nullable=True)   # % change vs prev_modal_price
+    spark            = Column(String,   nullable=True)   # comma-joined last ~8 modal prices (chronological)
+    arrival_date     = Column(String,   nullable=True)
+    fetched_at       = Column(DateTime, default=datetime.utcnow)
+
+
+class MandiPriceHistory(Base):
+    """Append-only daily history. Never auto-purged — full trend retained."""
+    __tablename__ = "mandi_price_history"
     id           = Column(Integer,  primary_key=True, index=True)
-    commodity    = Column(String,   nullable=False)
-    district     = Column(String,   nullable=True)
+    state        = Column(String,   nullable=True, index=True)
+    district     = Column(String,   nullable=True, index=True)
     market       = Column(String,   nullable=True)
+    commodity    = Column(String,   nullable=False, index=True)
     variety      = Column(String,   nullable=True)
+    grade        = Column(String,   nullable=True)
     min_price    = Column(String,   nullable=True)
     max_price    = Column(String,   nullable=True)
     modal_price  = Column(String,   nullable=True)
-    arrival_date = Column(String,   nullable=True)
+    arrival_date = Column(String,   nullable=True)          # original DD/MM/YYYY from API
+    arrival_dt   = Column(Date,     nullable=True, index=True)  # parsed for ordering
+    group_key    = Column(String,   nullable=True, index=True)  # md5(state|district|market|commodity|variety|grade)
+    row_key      = Column(String,   nullable=True, unique=True, index=True)  # group_key + arrival_date — dedup
     fetched_at   = Column(DateTime, default=datetime.utcnow)
 
 
@@ -316,6 +344,8 @@ def _ensure_postgres_columns():
             ("otp", "VARCHAR"),
             ("otp_expiry", "TIMESTAMP"),
             ("preferred_language", "VARCHAR DEFAULT 'hindi'"),
+            ("auth_provider", "VARCHAR DEFAULT 'email'"),
+            ("google_id",     "VARCHAR"),
             ("village", "VARCHAR"),
             ("district", "VARCHAR"),
             ("primary_crop", "VARCHAR DEFAULT 'Sugarcane'"),
@@ -403,14 +433,35 @@ def _ensure_postgres_columns():
             ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
         "mandi_prices": [
+            ("state", "VARCHAR"),
             ("commodity", "VARCHAR"),
             ("district", "VARCHAR"),
             ("market", "VARCHAR"),
             ("variety", "VARCHAR"),
+            ("grade", "VARCHAR"),
+            ("min_price", "VARCHAR"),
+            ("max_price", "VARCHAR"),
+            ("modal_price", "VARCHAR"),
+            ("prev_modal_price", "VARCHAR"),
+            ("change_pct", "FLOAT"),
+            ("spark", "VARCHAR"),
+            ("arrival_date", "VARCHAR"),
+            ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
+        "mandi_price_history": [
+            ("state", "VARCHAR"),
+            ("district", "VARCHAR"),
+            ("market", "VARCHAR"),
+            ("commodity", "VARCHAR"),
+            ("variety", "VARCHAR"),
+            ("grade", "VARCHAR"),
             ("min_price", "VARCHAR"),
             ("max_price", "VARCHAR"),
             ("modal_price", "VARCHAR"),
             ("arrival_date", "VARCHAR"),
+            ("arrival_dt", "DATE"),
+            ("group_key", "VARCHAR"),
+            ("row_key", "VARCHAR"),
             ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
         "carts": [
@@ -490,6 +541,16 @@ def _ensure_postgres_columns():
             CREATE UNIQUE INDEX IF NOT EXISTS carts_session_product_uidx
             ON carts(session_id, product_id)
             WHERE session_id IS NOT NULL AND user_id IS NULL;
+        """))
+        # Mandi history: dedup one row per group per arrival_date, fast group lookups
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS mandi_history_row_key_uidx
+            ON mandi_price_history(row_key)
+            WHERE row_key IS NOT NULL;
+        """))
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS mandi_history_group_dt_idx
+            ON mandi_price_history(group_key, arrival_dt DESC);
         """))
 
 

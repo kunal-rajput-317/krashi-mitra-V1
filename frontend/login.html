@@ -25,6 +25,9 @@
   <meta name="robots" content="noindex" />
 
 
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -287,6 +290,33 @@
       transition: width 1s linear;
     }
 
+    /* ── Google login divider & button wrapper ── */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 0 14px;
+      color: var(--text-light);
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .google-btn-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      min-height: 44px;
+    }
+    /* Hide Google button container when GSI not configured */
+    .google-section { display: none; }
+    .google-section.visible { display: block; }
+
     /* Mobile adjustments */
     @media screen and (max-width: 480px) {
       .page-wrapper { align-items: flex-end; padding: 0; }
@@ -350,6 +380,12 @@
         Password याद नहीं है? <a onclick="startForgotFromLogin()">Forgot password</a>
       </div>
 
+      <!-- Google Sign-In -->
+      <div class="google-section" id="google-section-login">
+        <div class="auth-divider"><span>या Google से</span></div>
+        <div class="google-btn-wrap" id="google-btn-login"></div>
+      </div>
+
       <div class="auth-switch" style="margin-top:14px;">
         नया account बनाएं? <a onclick="showStep('signup')">Signup करें</a>
       </div>
@@ -385,6 +421,12 @@
       <button class="auth-btn" id="signup-btn" onclick="doSignup()">
         Account बनाएं →
       </button>
+
+      <!-- Google Sign-In -->
+      <div class="google-section" id="google-section-signup">
+        <div class="auth-divider"><span>या Google से directly</span></div>
+        <div class="google-btn-wrap" id="google-btn-signup"></div>
+      </div>
 
       <div class="auth-switch">
         पहले से account है? <a onclick="showStep('login')">Login करें</a>
@@ -834,6 +876,69 @@
   }
 
   // ══════════════════════════════════════
+  // GOOGLE OAUTH
+  // ══════════════════════════════════════
+  const GOOGLE_CLIENT_ID = window.KRASHIMITRA_GOOGLE_CLIENT_ID || "";
+
+  async function handleGoogleCredential(response) {
+    const idToken = response.credential;
+    // Show login step to display errors/success there
+    showStep("login");
+    clearAuthMsg("login-error", "login-success");
+    setBtnLoading("login-btn", true, "Login करें →");
+    try {
+      const res  = await fetch(`${API}/auth/google`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ id_token: idToken }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.token) {
+        setToken(data.data.token);
+        authOk("login-success", "✅ Google से Login हो गया! Redirecting...");
+        setTimeout(() => { window.location.href = "profile.html"; }, 800);
+      } else {
+        authErr("login-error", data.message || "Google login failed। दोबारा try करें।");
+        setBtnLoading("login-btn", false, "Login करें →");
+      }
+    } catch (err) {
+      authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
+      setBtnLoading("login-btn", false, "Login करें →");
+    }
+  }
+
+  function initGoogleSignIn() {
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE")) return;
+    if (!window.google?.accounts?.id) return;
+
+    google.accounts.id.initialize({
+      client_id:             GOOGLE_CLIENT_ID,
+      callback:              handleGoogleCredential,
+      auto_select:           false,
+      cancel_on_tap_outside: true,
+    });
+
+    const btnContainers = [
+      { wrap: document.getElementById("google-btn-login"),  section: document.getElementById("google-section-login") },
+      { wrap: document.getElementById("google-btn-signup"), section: document.getElementById("google-section-signup") },
+    ];
+
+    btnContainers.forEach(({ wrap, section }) => {
+      if (!wrap || !section) return;
+      google.accounts.id.renderButton(wrap, {
+        type:   "standard",
+        shape:  "rectangular",
+        theme:  "outline",
+        text:   "continue_with",
+        size:   "large",
+        locale: "hi",
+        width:  wrap.parentElement?.offsetWidth || 320,
+      });
+      section.classList.add("visible");
+    });
+  }
+
+  // ══════════════════════════════════════
   // AUTO-REDIRECT if already logged in
   // ══════════════════════════════════════
   window.addEventListener("load", () => {
@@ -843,6 +948,19 @@
     // Focus email on load
     const emailInp = document.getElementById("login-email");
     if (emailInp) emailInp.focus();
+
+    // Init Google Sign-In — GSI script is async so poll until ready
+    if (GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE")) {
+      let tries = 0;
+      const poll = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(poll);
+          initGoogleSignIn();
+        } else if (++tries > 30) {
+          clearInterval(poll);
+        }
+      }, 100);
+    }
   });
 
   localStorage.setItem('km_just_logged_in', '1');
@@ -875,5 +993,6 @@
   <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
   <span class="ai-fab-tip">AI सहायक</span>
 </a>
+  <script src="fab-autohide.js"></script>
 </body>
 </html>

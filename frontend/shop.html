@@ -964,15 +964,23 @@
     .order-status {
       font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 10px;
       text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap;
-      flex-shrink: 0;
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;
+      border: 1px solid transparent;
     }
-    .order-status.pending   { background: #fff3e0; color: #e65100; }
-    .order-status.verified  { background: #e8f5e9; color: #2e7d32; }
-    .order-status.purchased { background: #e3f2fd; color: #1565c0; }
-    .order-status.delivered { background: #f3e5f5; color: #7b1fa2; }
-    .order-status.deleivered{ background: #f3e5f5; color: #7b1fa2; }
-    .order-status.cancelled { background: #fce4ec; color: #c62828; }
-    .order-status.dispatched{ background: #e0f7fa; color: #00695c; }
+    /* status dot denoter */
+    .order-status::before {
+      content: ''; width: 7px; height: 7px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+    .order-status.pending     { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+    .order-status.verified    { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+    .order-status.purchased   { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+    .order-status.delivered   { background: #f3e5f5; color: #7b1fa2; border-color: #ce93d8; }
+    .order-status.deleivered  { background: #f3e5f5; color: #7b1fa2; border-color: #ce93d8; }
+    .order-status.cancelled   { background: #fce4ec; color: #c62828; border-color: #ef9a9a; }
+    .order-status.dispatched  { background: #e0f7fa; color: #00695c; border-color: #80deea; }
+    .order-status.unavailable,
+    .order-status.notavailable{ background: #eceff1; color: #546e7a; border-color: #b0bec5; }
 
     .order-product {
       font-size: 14px; font-weight: 700; color: #1a2e1e;
@@ -1117,6 +1125,15 @@
       font-size: 18px; font-weight: 800; min-width: 24px;
       text-align: center; color: var(--text-dark);
     }
+    input.wa-qty-val {
+      width: 58px; padding: 5px 4px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      background: var(--white); outline: none;
+      font-family: inherit; -moz-appearance: textfield;
+    }
+    input.wa-qty-val:focus { border-color: #25D366; }
+    input.wa-qty-val::-webkit-outer-spin-button,
+    input.wa-qty-val::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .wa-modal-total {
       font-size: 17px; font-weight: 800; color: var(--green-dark);
       font-family: 'Playfair Display', serif;
@@ -1633,7 +1650,14 @@
       white-space: nowrap;
     }
     .fert-btn-detail:hover { color: var(--green-dark); }
+    .fert-h-btn-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
     .fert-btn-order {
+      width: 100%;
       font-size: 12px; font-weight: 700;
       padding: 7px 10px; border-radius: 8px;
       border: none; background: var(--green-dark); color: #fff;
@@ -1643,6 +1667,20 @@
     }
     .fert-btn-order:hover { background: var(--green-mid); }
     .fert-btn-order:active { transform: scale(0.97); }
+    .fert-btn-share {
+      font-size: 12px; font-weight: 700;
+      padding: 6px 6px; border-radius: 8px;
+      border: none; background: transparent; color: var(--text-light);
+      cursor: pointer; font-family: inherit;
+      transition: color 0.15s, text-shadow 0.15s, box-shadow 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+    .fert-btn-share:hover {
+      color: var(--amber);
+      text-shadow: 0 0 8px rgba(233,168,37,0.65);
+      box-shadow: 0 0 12px rgba(233,168,37,0.45);
+      background: rgba(233,168,37,0.08);
+    }
 
     /* ══════════════════════════════════════
        ORDER CHOICE BOTTOM-SHEET MODAL
@@ -1846,6 +1884,21 @@
     .fert-modal-buy-btn.in-cart {
       background: var(--green-pale); color: var(--green-dark);
       border: 1.5px solid var(--green-light); box-shadow: none;
+    }
+    .fert-modal-share-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; margin-top: 8px;
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 700; color: var(--text-light);
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      padding: 8px 0; border-radius: 10px;
+      transition: color 0.15s, text-shadow 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .fert-modal-share-btn:hover {
+      color: var(--amber);
+      text-shadow: 0 0 8px rgba(233,168,37,0.65);
+      box-shadow: 0 0 14px rgba(233,168,37,0.45);
+      background: rgba(233,168,37,0.08);
     }
 
     /* ══════════════════════════════════════
@@ -2495,6 +2548,7 @@
           <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="openOrderModalFromDetail()">
             🛒 <span id="fert-modal-cart-label">ऑर्डर करें</span>
           </button>
+          <button class="fert-modal-share-btn" onclick="shareProduct(_currentFertId, event)">🔗 शेयर करें</button>
         </div>
       </div>
     </div>
@@ -2541,7 +2595,8 @@
         <label class="wa-modal-label">📦 मात्रा <span class="wa-req">*</span></label>
         <div class="wa-qty-controls">
           <button class="wa-qty-btn" onclick="changeWAQty(-1)">−</button>
-          <span class="wa-qty-val" id="wa-qty-display">1</span>
+          <input type="number" class="wa-qty-val" id="wa-qty-display" value="1" min="1"
+                 inputmode="numeric" oninput="setWAQty(this.value)" onblur="this.value = _waQty">
           <button class="wa-qty-btn" onclick="changeWAQty(1)">+</button>
         </div>
       </div>
@@ -2635,6 +2690,8 @@
     <a href="mandi.html">मंडी भाव / Mandi</a>
     <a href="shop.html">Shop / दुकान</a>
     <a href="articles/index.html">लेख / Articles</a>
+    <a href="about.html">About Us</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
   </div>
   <div class="site-footer-links" style="font-size:11px; opacity:0.75; margin-bottom:4px;">
     <a href="mandi.html?district=meerut">Meerut Mandi</a>
@@ -2808,7 +2865,7 @@
       desc_kn: 'ಹೆಚ್ಚು ಇಳುವರಿ ನೀಡುವ ಗೋಧಿ ತಳಿ, ತುಕ್ಕು ರೋಗ ನಿರೋಧಕ.',
       price: 280, mrp: 350, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.7',
       affil_amazon: 'https://amzn.to/43wKBxh',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Wheat+Seeds+HD-2967&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Wheat+Seeds+HD-2967&affid=krashimitr' },
     { id: 2,  cat: 'seeds',      emoji: '🌽', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/seeds/makka-hybrid-crop.png',
       name_hi: 'मक्का हाइब्रिड बीज', name_en: 'Hybrid Maize Seeds', name_kn: 'ಹೈಬ್ರಿಡ್ ಮೆಕ್ಕೆ ಬೀಜ',
       desc_hi: 'तेज विकास, 90-100 दिन में कटाई। जल सहनशील।',
@@ -2816,7 +2873,7 @@
       desc_kn: '90-100 ದಿನದಲ್ಲಿ ಕೊಯ್ಲು. ಬರ ಸಹಿಷ್ಣು.',
       price: 420, mrp: 500, unit_hi: '2 kg पैक', unit_en: '2 kg pack', unit_kn: '2 kg ಪ್ಯಾಕ್', rating: '⭐ 4.5',
       affil_amazon: 'https://amzn.to/3Q4F3Hi',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Hybrid+Maize+Seeds&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Hybrid+Maize+Seeds&affid=krashimitr' },
     { id: 3,  cat: 'seeds',      emoji: '🧅', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/seeds/onion-seed-nasik-red.png',
       name_hi: 'प्याज बीज अग्रीफाउंड', name_en: 'Onion Seeds Agrifound', name_kn: 'ಈರುಳ್ಳಿ ಬೀಜ ಅಗ್ರಿಫೌಂಡ್',
       desc_hi: 'लाल प्याज, उच्च भंडारण क्षमता। खरीफ व रबी दोनों के लिए।',
@@ -2824,7 +2881,7 @@
       desc_kn: 'ಕೆಂಪು ಈರುಳ್ಳಿ, ಹೆಚ್ಚಿನ ಶೇಖರಣಾ ಸಾಮರ್ಥ್ಯ.',
       price: 180, mrp: 220, unit_hi: '500g पैक', unit_en: '500g pack', unit_kn: '500g ಪ್ಯಾಕ್', rating: '⭐ 4.4',
       affil_amazon: 'https://amzn.to/4dwKasM',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Onion+Seeds+Agrifound&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Onion+Seeds+Agrifound&affid=krashimitr' },
     { id: 4,  cat: 'seeds',      emoji: '🫘', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/seeds/soyabean-js-335.png',
       name_hi: 'सोयाबीन बीज JS-335', name_en: 'Soybean Seeds JS-335', name_kn: 'ಸೋಯಾಬೀನ್ ಬೀಜ JS-335',
       desc_hi: '100-105 दिन में परिपक्व। उच्च प्रोटीन सामग्री।',
@@ -2832,7 +2889,7 @@
       desc_kn: '100-105 ದಿನದಲ್ಲಿ ಪಕ್ವ. ಹೆಚ್ಚಿನ ಪ್ರೊಟೀನ್.',
       price: 320, mrp: 380, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.3',
       affil_amazon: 'https://amzn.to/3RuMJ69',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Soybean+Seeds+JS-335&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Soybean+Seeds+JS-335&affid=krashimitr' },
 
     // ── Fertilizers ──
     { id: 5,  cat: 'fertilizer', emoji: '🧪', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/DAP.jpg',
@@ -2841,8 +2898,8 @@
       desc_en: 'Strengthens crop roots. Rich in Nitrogen & Phosphorus.',
       desc_kn: 'ಬೆಳೆ ಬೇರುಗಳನ್ನು ಮಜಬೂತಾಗಿಸುತ್ತದೆ. N & P ಭರಿತ.',
       price: 1350, mrp: 1450, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.8',
-      affil_amazon: 'not_available_DAP.jpg',
-      affil_flipkart: 'not_available_Dap.jpg' },
+      affil_amazon: 'https://www.amazon.in/s?k=DAP+fertilizer+50kg+agriculture&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=DAP+fertilizer+50kg&affid=krashimitr' },
     { id: 6,  cat: 'fertilizer', emoji: '🌿', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
       name_hi: 'वर्मीकम्पोस्ट (जैविक खाद)', name_en: 'Vermicompost Organic', name_kn: 'ವರ್ಮಿಕಂಪೋಸ್ಟ್ ಜೈವಿಕ ಗೊಬ್ಬರ',
       desc_hi: '100% जैविक, मिट्टी की उर्वरता बढ़ाए। सभी फसलों के लिए।',
@@ -2882,7 +2939,7 @@
       desc_hi: 'फॉस्फोरस व सल्फर युक्त। जड़ विकास व फूल-फल के लिए उत्तम।',
       desc_en: 'Contains Phosphorus & Sulphur. Best for root development & flowering.',
       desc_kn: 'ಫಾಸ್ಫರಸ್ ಮತ್ತು ಸಲ್ಫರ್ ಭರಿತ. ಬೇರು ಬೆಳವಣಿಗೆಗೆ ಉತ್ತಮ.',
-      price: 400, mrp: 480, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5',
+      price: 460, mrp: 540, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.5',
       affil_amazon: 'not_available_SSP.jpg',
       affil_flipkart: 'not_available_SSP.jpg' },
     { id: 23, cat: 'fertilizer', emoji: '🌿', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/NPK.jpg',
@@ -2916,33 +2973,33 @@
       desc_hi: 'कीट व दीमक नियंत्रण। व्यापक प्रभाव वाला कीटनाशक।',
       desc_en: 'Controls insects & termites. Broad-spectrum insecticide.',
       desc_kn: 'ಕೀಟ ಮತ್ತು ಗೆದ್ದಲು ನಿಯಂತ್ರಣ. ಬ್ರಾಡ್-ಸ್ಪೆಕ್ಟ್ರಮ್.',
-      price: 320, mrp: 400, unit_hi: '500 ml बोतल', unit_en: '500 ml bottle', unit_kn: '500 ml ಬಾಟಲ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Chlorpyrifos+20+EC+pesticide&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Chlorpyrifos+20+EC&affid=YOURAFFID' },
+      price: 260, mrp: 340, unit_hi: '500 ml बोतल', unit_en: '500 ml bottle', unit_kn: '500 ml ಬಾಟಲ್', rating: '⭐ 4.5',
+      affil_amazon: 'https://www.amazon.in/s?k=Chlorpyrifos+20+EC+pesticide&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Chlorpyrifos+20+EC&affid=krashimitr' },
     { id: 10, cat: 'pesticide',  emoji: '🍄', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/Pesticides/neem-oil.png',
       name_hi: 'नीम का तेल (जैव कीटनाशक)', name_en: 'Neem Oil Bio-Pesticide', name_kn: 'ಬೇವಿನ ಎಣ್ಣೆ ಜೈವಿಕ ಕೀಟನಾಶಕ',
       desc_hi: '100% जैविक, मकड़ी, माहू और सफेद मक्खी को नष्ट करे।',
       desc_en: '100% organic. Controls mites, aphids & whiteflies.',
       desc_kn: '100% ಜೈವಿಕ. ಮಿಟೆ, ಗಿಡಹೇನು ನಿಯಂತ್ರಿಸುತ್ತದೆ.',
       price: 240, mrp: 300, unit_hi: '1 litre', unit_en: '1 litre', unit_kn: '1 ಲೀಟರ್', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Neem+Oil+Bio+Pesticide+1litre&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Neem+Oil+Bio+Pesticide&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Neem+Oil+Bio+Pesticide+1litre&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Neem+Oil+Bio+Pesticide&affid=krashimitr' },
     { id: 11, cat: 'pesticide',  emoji: '🌾', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/carbendazim.png',
       name_hi: 'कार्बेन्डाजिम 50% WP (फफूंदनाशी)', name_en: 'Carbendazim 50% WP Fungicide', name_kn: 'ಕಾರ್ಬೆಂಡಾಜಿಮ್ 50% WP ಶಿಲೀಂಧ್ರನಾಶಕ',
       desc_hi: 'ब्लास्ट, रस्ट, और ब्लाइट रोग नियंत्रण। बीज उपचार भी।',
       desc_en: 'Controls blast, rust & blight. Seed treatment too.',
       desc_kn: 'ಬ್ಲಾಸ್ಟ್, ರಸ್ಟ್, ಬ್ಲೈಟ್ ರೋಗ ನಿಯಂತ್ರಣ.',
       price: 180, mrp: 230, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Carbendazim+50+WP+Fungicide&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Carbendazim+50+WP+Fungicide&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Carbendazim+50+WP+Fungicide&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Carbendazim+50+WP+Fungicide&affid=krashimitr' },
     { id: 12, cat: 'pesticide',  emoji: '🌱', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/Pesticides/trichoderma-viride.png',
       name_hi: 'ट्राइकोडर्मा विरिडी (जैव फफूंदनाशी)', name_en: 'Trichoderma Viride Bio-Fungicide', name_kn: 'ಟ್ರೈಕೋಡರ್ಮಾ ವಿರಿಡಿ ಜೈವಿಕ',
       desc_hi: 'मिट्टी में हानिकारक फफूंद का जैविक नियंत्रण।',
       desc_en: 'Biological control of soil-borne fungi. Safe for crops.',
       desc_kn: 'ಮಣ್ಣಿನ ಹಾನಿಕರ ಶಿಲೀಂಧ್ರದ ಜೈವಿಕ ನಿಯಂತ್ರಣ.',
       price: 160, mrp: 200, unit_hi: '250g पैक', unit_en: '250g pack', unit_kn: '250g ಪ್ಯಾಕ್', rating: '⭐ 4.3',
-      affil_amazon: 'https://www.amazon.in/s?k=Trichoderma+Viride+Bio+Fungicide&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Trichoderma+Viride+Bio+Fungicide&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Trichoderma+Viride+Bio+Fungicide&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Trichoderma+Viride+Bio+Fungicide&affid=krashimitr' },
 
     // ── Tools ──
     { id: 13, cat: 'tools',      emoji: '🔧', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/tools/khurpa.png',
@@ -2951,32 +3008,32 @@
       desc_en: 'Strong HRC steel blade, wooden handle. For weeding.',
       desc_kn: 'ಬಲಿಷ್ಠ HRC ಉಕ್ಕಿನ ಬ್ಲೇಡ್. ಕಳೆ ತೆಗೆಯಲು.',
       price: 120, mrp: 160, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Hand+Khurpi+HRC+Steel+weeding&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Hand+Khurpi+HRC+Steel&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Hand+Khurpi+HRC+Steel+weeding&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Hand+Khurpi+HRC+Steel&affid=krashimitr' },
     { id: 14, cat: 'tools',      emoji: '💦', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/neptune-16.png',
       name_hi: 'नैपसैक स्प्रेयर 16L', name_en: 'Knapsack Sprayer 16L', name_kn: 'ನ್ಯಾಪ್ಸ್ಯಾಕ್ ಸ್ಪ್ರೇಯರ್ 16L',
       desc_hi: 'मजबूत पीवीसी टैंक, एडजस्टेबल नोजल। कीटनाशक छिड़काव के लिए।',
       desc_en: 'Durable PVC tank, adjustable nozzle. For pesticide spray.',
       desc_kn: 'ಗಟ್ಟಿಯಾದ PVC ಟ್ಯಾಂಕ್, ಸ್ಪ್ರೇಗೆ.',
       price: 850, mrp: 1100, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Knapsack+Sprayer+16+litre&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Knapsack+Sprayer+16L&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Knapsack+Sprayer+16+litre&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Knapsack+Sprayer+16L&affid=krashimitr' },
     { id: 15, cat: 'tools',      emoji: '🪚', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'ड्रिप इरिगेशन किट (1 एकड़)', name_en: 'Drip Irrigation Kit (1 Acre)', name_kn: 'ಡ್ರಿಪ್ ಸಿಂಚಾಯಿ ಕಿಟ್ (1 ಎಕರೆ)',
       desc_hi: '60% पानी की बचत। सब्जी व बाग के लिए उपयुक्त। स्थापित करना आसान।',
       desc_en: '60% water saving. For vegetables & orchards. Easy install.',
       desc_kn: '60% ನೀರು ಉಳಿತಾಯ. ತರಕಾರಿ ಮತ್ತು ತೋಟಕ್ಕೆ.',
-      price: 2800, mrp: 3500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.7',
-      affil_amazon: 'https://www.amazon.in/s?k=Drip+Irrigation+Kit+1+acre&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Drip+Irrigation+Kit+1+acre&affid=YOURAFFID' },
+      price: 3800, mrp: 4500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.7',
+      affil_amazon: 'https://www.amazon.in/s?k=Drip+Irrigation+Kit+1+acre&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Drip+Irrigation+Kit+1+acre&affid=krashimitr' },
     { id: 16, cat: 'tools',      emoji: '🌡️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/mrada-parikshan-kit.png',
       name_hi: 'मृदा परीक्षण किट', name_en: 'Soil Testing Kit', name_kn: 'ಮಣ್ಣು ಪರೀಕ್ಷಾ ಕಿಟ್',
       desc_hi: 'pH, N, P, K और 8 अन्य पोषक तत्वों की जांच। 50 टेस्ट।',
       desc_en: 'Tests pH, N, P, K and 8 nutrients. 50 tests included.',
       desc_kn: 'pH, N, P, K ಮತ್ತು 8 ಪೋಷಕಾಂಶ ಪರೀಕ್ಷೆ. 50 ಟೆಸ್ಟ್.',
       price: 650, mrp: 800, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Soil+Testing+Kit+agriculture&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Soil+Testing+Kit+agriculture&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Soil+Testing+Kit+agriculture&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Soil+Testing+Kit+agriculture&affid=krashimitr' },
 
     // ── पशु आहार (Animal Feed) ──
     { id: 17, cat: 'pashu_aahaar', emoji: '🐄', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/animal_food/kapila.png',
@@ -2985,32 +3042,32 @@
       desc_en: 'Special for dairy animals. Boosts milk production, rich in protein & minerals.',
       desc_kn: 'ಹಾಲಿನ ಜಾನುವಾರುಗಳಿಗೆ ವಿಶೇಷ. ಹಾಲಿನ ಉತ್ಪಾದನೆ ಹೆಚ್ಚಿಸುತ್ತದೆ.',
       price: 850, mrp: 950, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.7',
-      affil_amazon: 'https://www.amazon.in/s?k=Kapila+cattle+feed+50kg&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Kapila+cattle+feed&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Kapila+cattle+feed+50kg&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Kapila+cattle+feed&affid=krashimitr' },
     { id: 18, cat: 'pashu_aahaar', emoji: '🥛', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/animal_food/MilkoMore.png',
       name_hi: 'MilkoMore पशु आहार', name_en: 'MilkoMore Cattle Feed', name_kn: 'MilkoMore ಜಾನುವಾರು ಆಹಾರ',
       desc_hi: 'दूध की मात्रा व वसा बढ़ाने के लिए। सभी नस्ल की गायों और भैंसों के लिए उपयुक्त।',
       desc_en: 'Increases milk yield & fat content. Suitable for all breeds of cows & buffaloes.',
       desc_kn: 'ಹಾಲಿನ ಪ್ರಮಾಣ ಮತ್ತು ಕೊಬ್ಬು ಹೆಚ್ಚಿಸುತ್ತದೆ. ಎಲ್ಲಾ ತಳಿಗಳಿಗೆ ಸೂಕ್ತ.',
       price: 920, mrp: 1050, unit_hi: '50 kg बैग', unit_en: '50 kg bag', unit_kn: '50 kg ಚೀಲ', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=MilkoMore+cattle+feed&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=MilkoMore+cattle+feed&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=MilkoMore+cattle+feed&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=MilkoMore+cattle+feed&affid=krashimitr' },
     { id: 19, cat: 'pashu_aahaar', emoji: '🐂', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/animal_food/khhal.png',
       name_hi: 'खली (सरसों/मूंगफली) पशु चारा', name_en: 'Mustard/Groundnut Oil Cake Feed', name_kn: 'ಸಾಸಿವೆ/ಶೇಂಗಾ ಎಣ್ಣೆ ಹಿಂಡಿ',
       desc_hi: 'प्राकृतिक प्रोटीन स्रोत। गाय, भैंस, बकरी सभी के लिए। पाचन सुधारे।',
       desc_en: 'Natural protein source for cows, buffaloes & goats. Improves digestion.',
       desc_kn: 'ನೈಸರ್ಗಿಕ ಪ್ರೋಟೀನ್ ಮೂಲ. ಹಸು, ಎಮ್ಮೆ, ಮೇಕೆಗಳಿಗೆ.',
       price: 420, mrp: 500, unit_hi: '25 kg बैग', unit_en: '25 kg bag', unit_kn: '25 kg ಚೀಲ', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=mustard+oil+cake+cattle+feed&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=mustard+oil+cake+cattle+feed&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=mustard+oil+cake+cattle+feed&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=mustard+oil+cake+cattle+feed&affid=krashimitr' },
     { id: 20, cat: 'pashu_aahaar', emoji: '🌿', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/animal_food/mineral-mixture-food.png',
       name_hi: 'मिनरल मिक्स्चर (पशु पोषण)', name_en: 'Mineral Mixture for Animals', name_kn: 'ಜಾನುವಾರು ಖನಿಜ ಮಿಶ್ರಣ',
       desc_hi: 'कैल्शियम, फॉस्फोरस, आयोडीन युक्त। हड्डियाँ मजबूत करे, प्रजनन सुधारे।',
       desc_en: 'Calcium, phosphorus & iodine enriched. Strengthens bones, improves reproduction.',
       desc_kn: 'ಕ್ಯಾಲ್ಸಿಯಂ, ಫಾಸ್ಫರಸ್, ಅಯೋಡಿನ್ ಭರಿತ. ಮೂಳೆ ಬಲಪಡಿಸುತ್ತದೆ.',
       price: 280, mrp: 340, unit_hi: '5 kg पैक', unit_en: '5 kg pack', unit_kn: '5 kg ಪ್ಯಾಕ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=mineral+mixture+cattle+animals&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=mineral+mixture+cattle+feed&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=mineral+mixture+cattle+animals&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=mineral+mixture+cattle+feed&affid=krashimitr' },
 
     // ── Sprayers & Pumps ──
     { id: 26, cat: 'sprayers', emoji: '🔵', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/tools/battery-sprayer-12V.png',
@@ -3020,7 +3077,7 @@
       desc_kn: '20L ಟ್ಯಾಂಕ್, ಡಬಲ್ ಮೋಟಾರ್.',
       price: 2500, mrp: 4500, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.7',
       affil_amazon: 'https://amzn.to/4x1MsrF',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Battery+Sprayer+Pump+12V&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Battery+Sprayer+Pump+12V&affid=krashimitr' },
     { id: 27, cat: 'sprayers', emoji: '💦', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/neptune-16.png',
       name_hi: 'नैपसैक मैनुअल स्प्रेयर (16L)', name_en: 'Knapsack Manual Sprayer 16L', name_kn: 'ನ್ಯಾಪ್ಸ್ಯಾಕ್ ಮ್ಯಾನ್ಯುಯಲ್ ಸ್ಪ್ರೇಯರ್ 16L',
       desc_hi: '16L हाथ से चलाने वाला, 3 नोजल सेट।',
@@ -3028,7 +3085,7 @@
       desc_kn: '16L ಕೈ ಸ್ಪ್ರೇಯರ್, 3 ನಳ್ಳಿ ಸೆಟ್.',
       price: 1000, mrp: 1800, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
       affil_amazon: 'https://amzn.to/3RuM84p',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Knapsack+Manual+Sprayer+16L&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Knapsack+Manual+Sprayer+16L&affid=krashimitr' },
     { id: 28, cat: 'sprayers', emoji: '🔋', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/tools/usb-rechargable-sprayer-12V.png',
       name_hi: 'USB रिचार्जेबल इलेक्ट्रिक स्प्रेयर', name_en: 'USB Rechargeable Electric Sprayer', name_kn: 'USB ರಿಚಾರ್ಜೇಬಲ್ ಸ್ಪ್ರೇಯರ್',
       desc_hi: '5L पोर्टेबल, टेलीस्कोपिक पाइप, 2 नोजल।',
@@ -3036,7 +3093,7 @@
       desc_kn: '5L ಪೋರ್ಟಬಲ್, ಟೆಲಿಸ್ಕೋಪಿಕ್ ಪೈಪ್.',
       price: 1500, mrp: 2500, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.4',
       affil_amazon: 'https://amzn.to/4wPaeXz',
-      affil_flipkart: 'https://www.flipkart.com/search?q=USB+Rechargeable+Electric+Sprayer&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=USB+Rechargeable+Electric+Sprayer&affid=krashimitr' },
     { id: 29, cat: 'sprayers', emoji: '💪', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/HTP-high-pressure-sprayer.png',
       name_hi: 'HTP हाई-प्रेशर स्प्रेयर', name_en: 'HTP High-Pressure Sprayer', name_kn: 'HTP ಹೈ-ಪ್ರೆಶರ್ ಸ್ಪ್ರೇಯರ್',
       desc_hi: 'बाग और ऊंची फसलों के लिए हाई-प्रेशर पंप।',
@@ -3044,7 +3101,7 @@
       desc_kn: 'ತೋಟ ಮತ್ತು ಎತ್ತರದ ಬೆಳೆಗಳಿಗೆ ಹೈ-ಪ್ರೆಶರ್ ಪಂಪ್.',
       price: 4500, mrp: 8000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
       affil_amazon: 'https://amzn.to/4fJziZU',
-      affil_flipkart: 'https://www.flipkart.com/search?q=HTP+High+Pressure+Sprayer&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=HTP+High+Pressure+Sprayer&affid=krashimitr' },
     { id: 30, cat: 'sprayers', emoji: '🔩', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/sprayer-parts-kit.png',
       name_hi: 'स्प्रेयर स्पेयर पार्ट्स किट', name_en: 'Sprayer Spare Parts Kit', name_kn: 'ಸ್ಪ್ರೇಯರ್ ಸ್ಪೇರ್ ಪಾರ್ಟ್ಸ್ ಕಿಟ್',
       desc_hi: 'पाइप, ट्रिगर, SS लांस, 4-नोजल सेट — बार-बार खरीदने वाला।',
@@ -3052,7 +3109,7 @@
       desc_kn: 'ಪೈಪ್, ಟ್ರಿಗರ್, SS ಲ್ಯಾನ್ಸ್, 4-ನಳ್ಳಿ ಸೆಟ್.',
       price: 400, mrp: 700, unit_hi: '1 सेट', unit_en: '1 set', unit_kn: '1 ಸೆಟ್', rating: '⭐ 4.3',
       affil_amazon: 'https://amzn.to/4fde32E',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Sprayer+Spare+Parts+Kit&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Sprayer+Spare+Parts+Kit&affid=krashimitr' },
     { id: 31, cat: 'sprayers', emoji: '🔌', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/sprayer-battery-charger.png',
       name_hi: 'स्प्रेयर बैटरी चार्जर (12V)', name_en: 'Sprayer Battery Charger 12V', name_kn: 'ಸ್ಪ್ರೇಯರ್ ಬ್ಯಾಟರಿ ಚಾರ್ಜರ್ 12V',
       desc_hi: 'बैटरी स्प्रेयर के लिए चार्जर — बार-बार खरीदे जाने वाला।',
@@ -3060,7 +3117,7 @@
       desc_kn: 'ಬ್ಯಾಟರಿ ಸ್ಪ್ರೇಯರ್ ಚಾರ್ಜರ್.',
       price: 400, mrp: 600, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.2',
       affil_amazon: 'https://amzn.to/4fbLC59',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Sprayer+Battery+Charger+12V&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Sprayer+Battery+Charger+12V&affid=krashimitr' },
 
     // ── Irrigation Equipment ──
     { id: 32, cat: 'irrigation', emoji: '💧', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
@@ -3069,64 +3126,64 @@
       desc_en: 'Complete set with drippers, pipes, connectors.',
       desc_kn: 'ಡ್ರಿಪ್ಪರ್, ಪೈಪ್, ಕನೆಕ್ಟರ್ ಸಹಿತ ಪೂರ್ಣ ಸೆಟ್.',
       price: 700, mrp: 1500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Drip+Irrigation+Kit+100+plants&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Drip+Irrigation+Kit+100+plants&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Drip+Irrigation+Kit+100+plants&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Drip+Irrigation+Kit+100+plants&affid=krashimitr' },
     { id: 33, cat: 'irrigation', emoji: '🌫️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'मिस्टिंग / फॉगर नोजल सेट', name_en: 'Misting / Fogger Nozzles Set', name_kn: 'ಮಿಸ್ಟಿಂಗ್ / ಫಾಗರ್ ನಳ್ಳಿ ಸೆಟ್',
       desc_hi: 'ब्रास फॉगर नोजल — कूलिंग और फोलियर स्प्रे के लिए।',
       desc_en: 'Brass fogger nozzles for cooling & foliar spray.',
       desc_kn: 'ಬ್ರಾಸ್ ಫಾಗರ್ ನಳ್ಳಿ, ತಂಪಾಗಿಸಲು ಮತ್ತು ಎಲೆ ಸ್ಪ್ರೇಗೆ.',
       price: 450, mrp: 800, unit_hi: '1 सेट', unit_en: '1 set', unit_kn: '1 ಸೆಟ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Misting+Fogger+Nozzles+Set+brass&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Misting+Fogger+Nozzles+Set&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Misting+Fogger+Nozzles+Set+brass&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Misting+Fogger+Nozzles+Set&affid=krashimitr' },
     { id: 34, cat: 'irrigation', emoji: '🪣', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: '16mm ड्रिप मेन लाइन पाइप', name_en: '16mm Drip Main Line Pipe', name_kn: '16mm ಡ್ರಿಪ್ ಮುಖ್ಯ ಪೈಪ್',
       desc_hi: 'UV प्रतिरोधी, 10–100 मीटर रोल में उपलब्ध।',
       desc_en: 'UV resistant, sold per 10–100 metre roll.',
       desc_kn: 'UV ನಿರೋಧಕ, 10–100 ಮೀಟರ್ ರೋಲ್.',
       price: 900, mrp: 2000, unit_hi: '50 मीटर रोल', unit_en: '50 metre roll', unit_kn: '50 ಮೀಟರ್ ರೋಲ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=16mm+Drip+Main+Line+Pipe+UV&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=16mm+Drip+Main+Line+Pipe&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=16mm+Drip+Main+Line+Pipe+UV&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=16mm+Drip+Main+Line+Pipe&affid=krashimitr' },
     { id: 35, cat: 'irrigation', emoji: '💦', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'स्प्रिंकलर हेड सेट (बटरफ्लाई/रोटेटिंग)', name_en: 'Sprinkler Head Set (Butterfly/Rotating)', name_kn: 'ಸ್ಪ್ರಿಂಕ್ಲರ್ ಹೆಡ್ ಸೆಟ್',
       desc_hi: '360° स्प्रिंकलर — खेत और लॉन दोनों के लिए।',
       desc_en: '360° sprinklers for field & lawn use.',
       desc_kn: '360° ಸ್ಪ್ರಿಂಕ್ಲರ್ — ಹೊಲ ಮತ್ತು ಹಸಿರುಹಾಸಿಗೆ.',
       price: 300, mrp: 600, unit_hi: '1 सेट', unit_en: '1 set', unit_kn: '1 ಸೆಟ್', rating: '⭐ 4.3',
-      affil_amazon: 'https://www.amazon.in/s?k=Sprinkler+Head+Set+360+degree&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Sprinkler+Head+Set+Butterfly&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Sprinkler+Head+Set+360+degree&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Sprinkler+Head+Set+Butterfly&affid=krashimitr' },
     { id: 36, cat: 'irrigation', emoji: '🌧️', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'रेन पाइप / लेटरल पाइप', name_en: 'Rain Pipe / Lateral Pipe', name_kn: 'ರೇನ್ ಪೈಪ್ / ಲ್ಯಾಟರಲ್ ಪೈಪ್',
       desc_hi: 'फ्लैट ड्रिप टेप — UP में बहुत popular।',
       desc_en: 'Flat drip tape for row crops — very popular in UP.',
       desc_kn: 'ಸಾಲು ಬೆಳೆಗಳಿಗೆ ಫ್ಲ್ಯಾಟ್ ಡ್ರಿಪ್ ಟೇಪ್.',
       price: 1200, mrp: 2500, unit_hi: '1 रोल', unit_en: '1 roll', unit_kn: '1 ರೋಲ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Rain+Pipe+Lateral+drip+tape&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Rain+Pipe+Lateral+Tape&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Rain+Pipe+Lateral+drip+tape&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Rain+Pipe+Lateral+Tape&affid=krashimitr' },
     { id: 37, cat: 'irrigation', emoji: '🔗', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'ड्रिप इरिगेशन फिटिंग्स किट', name_en: 'Drip Irrigation Fittings Kit', name_kn: 'ಡ್ರಿಪ್ ಸಿಂಚಾಯಿ ಫಿಟ್ಟಿಂಗ್ಸ್ ಕಿಟ್',
       desc_hi: 'एल्बो, टी, एंड प्लग, कनेक्टर — कॉम्बो।',
       desc_en: 'Elbows, tees, end plugs, connectors combo.',
       desc_kn: 'ಎಲ್ಬೊ, ಟೀ, ಎಂಡ್ ಪ್ಲಗ್, ಕನೆಕ್ಟರ್ ಕಾಂಬೊ.',
       price: 280, mrp: 500, unit_hi: '1 सेट', unit_en: '1 set', unit_kn: '1 ಸೆಟ್', rating: '⭐ 4.3',
-      affil_amazon: 'https://www.amazon.in/s?k=Drip+Irrigation+Fittings+Kit&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Drip+Irrigation+Fittings+Kit&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Drip+Irrigation+Fittings+Kit&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Drip+Irrigation+Fittings+Kit&affid=krashimitr' },
     { id: 38, cat: 'irrigation', emoji: '☀️', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'सोलर DC सबमर्सिबल पंप', name_en: 'Solar DC Submersible Pump', name_kn: 'ಸೌರ DC ಸಬ್ಮರ್ಸಿಬಲ್ ಪಂಪ್',
       desc_hi: 'PM-KUSUM — ग्रामीण UP/Bihar में बहुत ज्यादा मांग।',
       desc_en: 'PM-KUSUM demand is huge in rural UP/Bihar.',
       desc_kn: 'PM-KUSUM ಯೋಜನೆಗೆ — ಗ್ರಾಮೀಣ ಪ್ರದೇಶದಲ್ಲಿ ಹೆಚ್ಚಿನ ಬೇಡಿಕೆ.',
       price: 7000, mrp: 15000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Solar+DC+Submersible+Pump+farming&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Solar+DC+Submersible+Pump&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Solar+DC+Submersible+Pump+farming&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Solar+DC+Submersible+Pump&affid=krashimitr' },
     { id: 39, cat: 'irrigation', emoji: '🚰', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'सेल्फ-प्राइमिंग मोनोब्लॉक वाटर पंप', name_en: 'Self-Priming Monoblock Water Pump', name_kn: 'ಸ್ವ-ಪ್ರೈಮಿಂಗ್ ಮೊನೊಬ್ಲಾಕ್ ವಾಟರ್ ಪಂಪ್',
       desc_hi: 'छोटे खेतों के लिए स्टैंडर्ड सेंट्रीफ्यूगल पंप।',
       desc_en: 'Standard centrifugal pump for small farms.',
       desc_kn: 'ಸಣ್ಣ ಫಾರ್ಮ್‌ಗಳಿಗೆ ಸ್ಟ್ಯಾಂಡರ್ಡ್ ಪಂಪ್.',
       price: 3000, mrp: 6000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Self+Priming+Monoblock+Water+Pump&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Self+Priming+Monoblock+Water+Pump&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Self+Priming+Monoblock+Water+Pump&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Self+Priming+Monoblock+Water+Pump&affid=krashimitr' },
 
     // ── Seeds (Additional) ──
     { id: 40, cat: 'seeds', emoji: '🍅', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/seeds/wheat-seed-HD-2967.png',
@@ -3135,40 +3192,40 @@
       desc_en: 'High-yield varieties — ordered every sowing season.',
       desc_kn: 'ಹೆಚ್ಚು ಇಳುವರಿ ತಳಿಗಳು — ಪ್ರತಿ ಬಿತ್ತನೆ ಸೀಜನ್‌ನಲ್ಲಿ ಆರ್ಡರ್.',
       price: 200, mrp: 400, unit_hi: '10g पैक', unit_en: '10g pack', unit_kn: '10g ಪ್ಯಾಕ್', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Hybrid+Tomato+Seeds+high+yield&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Hybrid+Tomato+Seeds&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Hybrid+Tomato+Seeds+high+yield&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Hybrid+Tomato+Seeds&affid=krashimitr' },
     { id: 41, cat: 'seeds', emoji: '🌶️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/seeds/onion-seed-nasik-red.png',
       name_hi: 'हाइब्रिड मिर्च / शिमला मिर्च बीज', name_en: 'Hybrid Chilli / Capsicum Seeds', name_kn: 'ಹೈಬ್ರಿಡ್ ಮೆಣಸಿನಕಾಯಿ / ಕ್ಯಾಪ್ಸಿಕಂ ಬೀಜ',
       desc_hi: 'Kaashi Anmol, NS-1701 किस्में — बहुत बिकती हैं।',
       desc_en: 'Kaashi Anmol, NS-1701 varieties sell heavily.',
       desc_kn: 'Kaashi Anmol, NS-1701 ತಳಿಗಳು.',
       price: 250, mrp: 500, unit_hi: '10g पैक', unit_en: '10g pack', unit_kn: '10g ಪ್ಯಾಕ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Hybrid+Chilli+Seeds+Kaashi+Anmol&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Hybrid+Chilli+Capsicum+Seeds&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Hybrid+Chilli+Seeds+Kaashi+Anmol&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Hybrid+Chilli+Capsicum+Seeds&affid=krashimitr' },
     { id: 42, cat: 'seeds', emoji: '🍆', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/seeds/soyabean-js-335.png',
       name_hi: 'बैंगन / करेला बीज', name_en: 'Brinjal / Bitter Gourd Seeds', name_kn: 'ಬದನೆ / ಕಾರ್ಟ ಬೀಜ',
       desc_hi: 'उत्तर भारत में लोकप्रिय सब्जी बीज।',
       desc_en: 'Popular vegetable seeds in North India.',
       desc_kn: 'ಉತ್ತರ ಭಾರತದಲ್ಲಿ ಜನಪ್ರಿಯ ತರಕಾರಿ ಬೀಜ.',
       price: 150, mrp: 300, unit_hi: '10g पैक', unit_en: '10g pack', unit_kn: '10g ಪ್ಯಾಕ್', rating: '⭐ 4.3',
-      affil_amazon: 'https://www.amazon.in/s?k=Brinjal+Bitter+Gourd+Seeds+hybrid&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Brinjal+Bitter+Gourd+Seeds&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Brinjal+Bitter+Gourd+Seeds+hybrid&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Brinjal+Bitter+Gourd+Seeds&affid=krashimitr' },
     { id: 43, cat: 'seeds', emoji: '🌸', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/seeds/onion-seed-nasik-red.png',
       name_hi: 'फूल बीज (गेंदा, पेटुनिया)', name_en: 'Flower Seeds (Marigold, Petunia)', name_kn: 'ಹೂ ಬೀಜ (ಮ್ಯಾರಿಗೋಲ್ಡ್, ಪೆಟೂನಿಯಾ)',
       desc_hi: 'साल भर मांग — खासकर त्यौहारों से पहले।',
       desc_en: 'Year-round demand, especially pre-festival.',
       desc_kn: 'ವರ್ಷಪೂರ್ತಿ ಬೇಡಿಕೆ, ವಿಶೇಷವಾಗಿ ಹಬ್ಬಗಳ ಮೊದಲು.',
       price: 150, mrp: 300, unit_hi: '5g पैक', unit_en: '5g pack', unit_kn: '5g ಪ್ಯಾಕ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Marigold+Petunia+Flower+Seeds&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Marigold+Petunia+Flower+Seeds&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Marigold+Petunia+Flower+Seeds&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Marigold+Petunia+Flower+Seeds&affid=krashimitr' },
     { id: 44, cat: 'seeds', emoji: '🌿', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/seeds/makka-hybrid-crop-cp-333.png',
       name_hi: 'माइक्रोग्रीन्स बीज कॉम्बो पैक', name_en: 'Microgreens Seeds Combo Pack', name_kn: 'ಮೈಕ್ರೋಗ್ರೀನ್ಸ್ ಬೀಜ ಕಾಂಬೊ',
       desc_hi: 'अर्बन फार्मिंग ट्रेंड — सूरजमुखी, मूली, मटर।',
       desc_en: 'Urban farming trend — sunflower, radish, pea shoots.',
       desc_kn: 'ನಗರ ಕೃಷಿ ಟ್ರೆಂಡ್ — ಸೂರ್ಯಕಾಂತಿ, ಮೂಲಂಗಿ, ಬಟಾಣಿ.',
       price: 300, mrp: 600, unit_hi: '1 कॉम्बो', unit_en: '1 combo', unit_kn: '1 ಕಾಂಬೊ', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Microgreens+Seeds+Combo+Pack&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Microgreens+Seeds+Combo&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Microgreens+Seeds+Combo+Pack&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Microgreens+Seeds+Combo&affid=krashimitr' },
 
     // ── Soil, Fertilizers & Growth ──
     { id: 45, cat: 'soil', emoji: '🪴', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
@@ -3177,48 +3234,48 @@
       desc_en: 'Growing medium — huge demand from kitchen gardeners.',
       desc_kn: 'ಬೆಳೆ ಮಾಧ್ಯಮ — ಕಿಚನ್ ಗಾರ್ಡನರ್‌ಗಳಲ್ಲಿ ಹೆಚ್ಚಿನ ಬೇಡಿಕೆ.',
       price: 250, mrp: 500, unit_hi: '5 kg ब्लॉक', unit_en: '5 kg block', unit_kn: '5 kg ಬ್ಲಾಕ್', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Cocopeat+Block+5kg&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Cocopeat+Coco+Peat+Block&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Cocopeat+Block+5kg&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Cocopeat+Coco+Peat+Block&affid=krashimitr' },
     { id: 46, cat: 'soil', emoji: '🧪', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/NPK.jpg',
       name_hi: 'NPK खाद (19-19-19 वाटर सॉल्यूबल)', name_en: 'NPK Fertilizer (19-19-19 Water Soluble)', name_kn: 'NPK ಗೊಬ್ಬರ (19-19-19 ನೀರಿನಲ್ಲಿ ಕರಗುವ)',
       desc_hi: 'Amazon India पर सबसे ज्यादा खोजा जाने वाला fertilizer।',
       desc_en: 'Most searched fertilizer on Amazon India.',
       desc_kn: 'Amazon India ನಲ್ಲಿ ಅತ್ಯಂತ ಹೆಚ್ಚು ಹುಡುಕಲಾದ ಗೊಬ್ಬರ.',
       price: 400, mrp: 800, unit_hi: '1 kg पैक', unit_en: '1 kg pack', unit_kn: '1 kg ಪ್ಯಾಕ್', rating: '⭐ 4.7',
-      affil_amazon: 'https://www.amazon.in/s?k=NPK+19-19-19+Water+Soluble+Fertilizer&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=NPK+19-19-19+Water+Soluble+Fertilizer&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=NPK+19-19-19+Water+Soluble+Fertilizer&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=NPK+19-19-19+Water+Soluble+Fertilizer&affid=krashimitr' },
     { id: 47, cat: 'soil', emoji: '🌰', badge: 'organic', badgeClass: 'organic', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
       name_hi: 'नीम केक / नीम पेलेट्स', name_en: 'Neem Cake / Neem Pellets', name_kn: 'ಬೇವಿನ ಹಿಂಡಿ / ಬೇವಿನ ಗುಳಿಗೆ',
       desc_hi: 'मिट्टी सुधारक + कीट नाशक — ऑर्गेनिक खेती के लिए।',
       desc_en: 'Soil amendment + pest repellent — organic farming.',
       desc_kn: 'ಮಣ್ಣು ಸುಧಾರಕ + ಕೀಟ ನಿರೋಧಕ — ಸಾವಯವ ಕೃಷಿ.',
       price: 300, mrp: 600, unit_hi: '5 kg बैग', unit_en: '5 kg bag', unit_kn: '5 kg ಚೀಲ', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Neem+Cake+Neem+Pellets+fertilizer&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Neem+Cake+Neem+Pellets&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Neem+Cake+Neem+Pellets+fertilizer&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Neem+Cake+Neem+Pellets&affid=krashimitr' },
     { id: 48, cat: 'soil', emoji: '🔬', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/mrada-parikshan-kit.png',
       name_hi: 'मिट्टी pH और NPK टेस्टिंग किट', name_en: 'Soil pH & NPK Testing Kit', name_kn: 'ಮಣ್ಣು pH & NPK ಪರೀಕ್ಷಾ ಕಿಟ್',
       desc_hi: 'मीटर टाइप — मिट्टी स्वास्थ्य की बढ़ती जागरूकता।',
       desc_en: 'Meter type — growing awareness of soil health.',
       desc_kn: 'ಮೀಟರ್ ಪ್ರಕಾರ — ಮಣ್ಣಿನ ಆರೋಗ್ಯ ಜಾಗೃತಿ ಹೆಚ್ಚುತ್ತಿದೆ.',
       price: 1200, mrp: 2500, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Soil+pH+NPK+Testing+Kit+Meter&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Soil+pH+NPK+Testing+Kit&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Soil+pH+NPK+Testing+Kit+Meter&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Soil+pH+NPK+Testing+Kit&affid=krashimitr' },
     { id: 49, cat: 'soil', emoji: '⚪', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
       name_hi: 'पर्लाइट / वर्मीक्यूलाइट', name_en: 'Perlite / Vermiculite', name_kn: 'ಪರ್ಲೈಟ್ / ವರ್ಮಿಕ್ಯುಲೈಟ್',
       desc_hi: 'हाइड्रोपोनिक्स और पॉटिंग मिक्स के लिए grow media।',
       desc_en: 'Grow media for hydroponics & potting mix.',
       desc_kn: 'ಹೈಡ್ರೋಪೋನಿಕ್ಸ್ ಮತ್ತು ಪಾಟಿಂಗ್ ಮಿಕ್ಸ್‌ಗೆ ಬೆಳೆ ಮಾಧ್ಯಮ.',
       price: 450, mrp: 900, unit_hi: '5 kg', unit_en: '5 kg', unit_kn: '5 kg', rating: '⭐ 4.3',
-      affil_amazon: 'https://www.amazon.in/s?k=Perlite+Vermiculite+grow+media&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Perlite+Vermiculite&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Perlite+Vermiculite+grow+media&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Perlite+Vermiculite&affid=krashimitr' },
     { id: 50, cat: 'soil', emoji: '🍂', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
       name_hi: 'ह्यूमिक एसिड / फुल्विक एसिड लिक्विड', name_en: 'Humic Acid / Fulvic Acid Liquid', name_kn: 'ಹ್ಯೂಮಿಕ್ ಆಸಿಡ್ / ಫುಲ್ವಿಕ್ ಆಸಿಡ್ ಲಿಕ್ವಿಡ್',
       desc_hi: 'मिट्टी सुधारक — प्रगतिशील किसानों में ट्रेंडिंग।',
       desc_en: 'Soil conditioner — trending with progressive farmers.',
       desc_kn: 'ಮಣ್ಣು ಸುಧಾರಕ — ಮುಂದಾಳತ್ವದ ರೈತರಲ್ಲಿ ಟ್ರೆಂಡಿಂಗ್.',
       price: 600, mrp: 1200, unit_hi: '500ml', unit_en: '500ml', unit_kn: '500ml', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Humic+Acid+Fulvic+Acid+Liquid+Fertilizer&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Humic+Acid+Fulvic+Acid+Liquid&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Humic+Acid+Fulvic+Acid+Liquid+Fertilizer&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Humic+Acid+Fulvic+Acid+Liquid&affid=krashimitr' },
 
     // ── Crop Protection ──
     { id: 51, cat: 'protection', emoji: '🌿', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/neem-oil.png',
@@ -3227,40 +3284,40 @@
       desc_en: 'Bio-pesticide — organic pest control bestseller.',
       desc_kn: 'ಜೈವಿಕ ಕೀಟನಾಶಕ — ಸಾವಯವ ಕೀಟ ನಿಯಂತ್ರಣ.',
       price: 400, mrp: 800, unit_hi: '500ml', unit_en: '500ml', unit_kn: '500ml', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Neem+Oil+Concentrate+Bio+Pesticide&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Neem+Oil+Concentrate+Pesticide&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Neem+Oil+Concentrate+Bio+Pesticide&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Neem+Oil+Concentrate+Pesticide&affid=krashimitr' },
     { id: 52, cat: 'protection', emoji: '🎭', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/neem-oil.png',
       name_hi: 'मल्चिंग फिल्म / प्लास्टिक मल्च', name_en: 'Mulching Film / Plastic Mulch', name_kn: 'ಮಲ್ಚಿಂಗ್ ಫಿಲ್ಮ್ / ಪ್ಲಾಸ್ಟಿಕ್ ಮಲ್ಚ್',
       desc_hi: 'काले/सिल्वर — खरपतवार नियंत्रण और नमी बनाए रखने के लिए।',
       desc_en: 'Black/silver — weed suppression & moisture retention.',
       desc_kn: 'ಕಪ್ಪು/ಬೆಳ್ಳಿ — ಕಳೆ ನಿಯಂತ್ರಣ ಮತ್ತು ತೇವ ಉಳಿಸಲು.',
       price: 1500, mrp: 3000, unit_hi: '1 रोल', unit_en: '1 roll', unit_kn: '1 ರೋಲ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Mulching+Film+Plastic+Mulch+Black&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Mulching+Film+Plastic+Mulch&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Mulching+Film+Plastic+Mulch+Black&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Mulching+Film+Plastic+Mulch&affid=krashimitr' },
     { id: 53, cat: 'protection', emoji: '💛', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/neem-oil.png',
       name_hi: 'स्टिकी येलो इन्सेक्ट ट्रैप', name_en: 'Sticky Yellow Insect Trap', name_kn: 'ಸ್ಟಿಕ್ಕಿ ಹಳದಿ ಕೀಟ ಬಲೆ',
       desc_hi: 'व्हाइटफ्लाई / एफिड ट्रैप — बार-बार खरीदे जाने वाले।',
       desc_en: 'Whitefly / aphid traps — very affordable, repeat buy.',
       desc_kn: 'ಬಿಳಿ ನೊಣ / ಗಿಡಹೇನು ಬಲೆ — ಅಗ್ಗದ, ಮರು ಖರೀದಿ.',
       price: 200, mrp: 400, unit_hi: '10 पीस', unit_en: '10 pieces', unit_kn: '10 ತುಂಡು', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Sticky+Yellow+Insect+Trap+Whitefly&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Sticky+Yellow+Insect+Trap&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Sticky+Yellow+Insect+Trap+Whitefly&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Sticky+Yellow+Insect+Trap&affid=krashimitr' },
     { id: 54, cat: 'protection', emoji: '🪲', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/neem-oil.png',
       name_hi: 'फेरोमोन ल्यूर ट्रैप', name_en: 'Pheromone Lure Traps', name_kn: 'ಫೆರೋಮೋನ್ ಲ್ಯೂರ್ ಬಲೆ',
       desc_hi: 'कीट मॉनिटरिंग — कपास, मिर्च, टमाटर में उपयोगी।',
       desc_en: 'Pest monitoring — used in cotton, chilli, tomato crops.',
       desc_kn: 'ಕೀಟ ಮೇಲ್ವಿಚಾರಣೆ — ಹತ್ತಿ, ಮೆಣಸಿನಕಾಯಿ, ಟೊಮೇಟೊ ಬೆಳೆಗಳಲ್ಲಿ.',
       price: 500, mrp: 1000, unit_hi: '1 सेट', unit_en: '1 set', unit_kn: '1 ಸೆಟ್', rating: '⭐ 4.3',
-      affil_amazon: 'https://www.amazon.in/s?k=Pheromone+Lure+Trap+farming&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Pheromone+Lure+Trap&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Pheromone+Lure+Trap+farming&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Pheromone+Lure+Trap&affid=krashimitr' },
     { id: 55, cat: 'protection', emoji: '🪴', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/fertilizers/vermicompost.png',
       name_hi: 'ग्रो बैग्स (HDPE फैब्रिक / पॉली)', name_en: 'Grow Bags (HDPE Fabric / Poly)', name_kn: 'ಗ್ರೋ ಬ್ಯಾಗ್ಸ್ (HDPE ಫ್ಯಾಬ್ರಿಕ್ / ಪಾಲಿ)',
       desc_hi: 'सभी साइज़ — टेरेस गार्डनिंग में बहुत ज्यादा मांग।',
       desc_en: 'All sizes — terrace gardening boom driving sales.',
       desc_kn: 'ಎಲ್ಲಾ ಗಾತ್ರ — ಟೆರೇಸ್ ಗಾರ್ಡನಿಂಗ್ ಬೂಮ್.',
       price: 400, mrp: 800, unit_hi: '10 पीस', unit_en: '10 pieces', unit_kn: '10 ತುಂಡು', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Grow+Bags+HDPE+Fabric+terrace+gardening&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Grow+Bags+HDPE+Fabric&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Grow+Bags+HDPE+Fabric+terrace+gardening&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Grow+Bags+HDPE+Fabric&affid=krashimitr' },
 
     // ── Nets, Films & Structures ──
     { id: 56, cat: 'structures', emoji: '🟩', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
@@ -3269,32 +3326,32 @@
       desc_en: 'Green HDPE nets — polyhouse & nursery use.',
       desc_kn: 'ಹಸಿರು HDPE ನೆಟ್ — ಪಾಲಿಹೌಸ್ ಮತ್ತು ನರ್ಸರಿ.',
       price: 2000, mrp: 4000, unit_hi: '1 रोल', unit_en: '1 roll', unit_kn: '1 ರೋಲ್', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Shade+Net+50+percent+HDPE+polyhouse&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Shade+Net+50+75+percent+HDPE&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Shade+Net+50+percent+HDPE+polyhouse&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Shade+Net+50+75+percent+HDPE&affid=krashimitr' },
     { id: 57, cat: 'structures', emoji: '🐦', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'एंटी-बर्ड नेट', name_en: 'Anti-Bird Net', name_kn: 'ಆಂಟಿ-ಬರ್ಡ್ ನೆಟ್',
       desc_hi: 'फल, अनाज, मछली तालाब की सुरक्षा — मीटर में बिकता है।',
       desc_en: 'Protects fruits, grains, fish ponds — sold by metre.',
       desc_kn: 'ಹಣ್ಣು, ಧಾನ್ಯ, ಮೀನು ಕೊಳ ರಕ್ಷಣೆ — ಮೀಟರ್ ಲೆಕ್ಕ.',
       price: 1000, mrp: 2000, unit_hi: '10 मीटर', unit_en: '10 metres', unit_kn: '10 ಮೀಟರ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Anti+Bird+Net+garden+protection&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Anti+Bird+Net&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Anti+Bird+Net+garden+protection&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Anti+Bird+Net&affid=krashimitr' },
     { id: 58, cat: 'structures', emoji: '🏗️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'सिलपॉलिन तिरपाल', name_en: 'Silpaulin Tarpaulin', name_kn: 'ಸಿಲ್ಪಾಲಿನ್ ತಾರ್ಪಲ್',
       desc_hi: 'हेवी-ड्यूटी फार्म तार्प — थ्रेशिंग, स्टोरेज, ट्रांसपोर्ट।',
       desc_en: 'Heavy-duty farm tarp — threshing, storage, transport.',
       desc_kn: 'ಹೆವಿ-ಡ್ಯೂಟಿ ಫಾರ್ಮ್ ತಾರ್ಪ್ — ಒಕ್ಕಣೆ, ಶೇಖರಣೆ, ಸಾರಿಗೆ.',
       price: 1500, mrp: 3000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Silpaulin+Tarpaulin+heavy+duty+farm&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Silpaulin+Tarpaulin+Heavy+Duty&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Silpaulin+Tarpaulin+heavy+duty+farm&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Silpaulin+Tarpaulin+Heavy+Duty&affid=krashimitr' },
     { id: 59, cat: 'structures', emoji: '🌿', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'ग्रीनहाउस पॉलीफिल्म UV शीट', name_en: 'Greenhouse Polyfilm UV Sheet', name_kn: 'ಗ್ರೀನ್‌ಹೌಸ್ ಪಾಲಿಫಿಲ್ಮ್ UV ಶೀಟ್',
       desc_hi: '200 माइक्रोन UV स्टेबलाइज्ड — पॉलीहाउस निर्माण के लिए।',
       desc_en: '200 micron UV stabilised — polyhouse construction.',
       desc_kn: '200 ಮೈಕ್ರಾನ್ UV ಸ್ಥಿರೀಕರಿಸಿದ — ಪಾಲಿಹೌಸ್ ನಿರ್ಮಾಣ.',
       price: 3000, mrp: 6000, unit_hi: '1 रोल', unit_en: '1 roll', unit_kn: '1 ರೋಲ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Greenhouse+Polyfilm+UV+Sheet+200+micron&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Greenhouse+Polyfilm+UV+Sheet&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Greenhouse+Polyfilm+UV+Sheet+200+micron&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Greenhouse+Polyfilm+UV+Sheet&affid=krashimitr' },
 
     // ── Machinery & Power Tools ──
     { id: 60, cat: 'machinery', emoji: '⚙️', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
@@ -3303,40 +3360,40 @@
       desc_en: 'Soil preparation — replaces bullocks, high ticket.',
       desc_kn: 'ಮಣ್ಣು ತಯಾರಿ — ಎತ್ತುಗಳ ಬದಲಾಗಿ, ಹೈ ಟಿಕೆಟ್.',
       price: 15000, mrp: 25000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.7',
-      affil_amazon: 'https://www.amazon.in/s?k=Power+Tiller+Mini+Rotavator+farming&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Power+Tiller+Mini+Rotavator&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Power+Tiller+Mini+Rotavator+farming&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Power+Tiller+Mini+Rotavator&affid=krashimitr' },
     { id: 61, cat: 'machinery', emoji: '🐄', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/animal_food/kapila.png',
       name_hi: 'इलेक्ट्रिक चाफ कटर', name_en: 'Electric Chaff Cutter', name_kn: 'ಎಲೆಕ್ಟ್ರಿಕ್ ಚಾಫ್ ಕಟರ್',
       desc_hi: 'पशु चारा काटने की मशीन — डेयरी बेल्ट UP में बहुत मांग।',
       desc_en: 'Cattle fodder cutting — huge demand in dairy belt UP.',
       desc_kn: 'ಜಾನುವಾರು ಮೇವು ಕತ್ತರಿಸುವ ಯಂತ್ರ — ಡೇರಿ ಬೆಲ್ಟ್ UP.',
       price: 6000, mrp: 12000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.6',
-      affil_amazon: 'https://www.amazon.in/s?k=Electric+Chaff+Cutter+cattle+fodder&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Electric+Chaff+Cutter&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Electric+Chaff+Cutter+cattle+fodder&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Electric+Chaff+Cutter&affid=krashimitr' },
     { id: 62, cat: 'machinery', emoji: '🌱', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'सीड ड्रिल / मैनुअल सीडर', name_en: 'Seed Drill / Manual Seeder', name_kn: 'ಸೀಡ್ ಡ್ರಿಲ್ / ಮ್ಯಾನ್ಯುಯಲ್ ಸೀಡರ್',
       desc_hi: 'सब्जी और अनाज की पंक्ति बुवाई का टूल।',
       desc_en: 'Vegetable & grain row planting tool.',
       desc_kn: 'ತರಕಾರಿ ಮತ್ತು ಧಾನ್ಯ ಸಾಲು ಬಿತ್ತನೆ ಸಾಧನ.',
       price: 1500, mrp: 3000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Seed+Drill+Manual+Seeder+farming&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Seed+Drill+Manual+Seeder&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Seed+Drill+Manual+Seeder+farming&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Seed+Drill+Manual+Seeder&affid=krashimitr' },
     { id: 63, cat: 'machinery', emoji: '✂️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'ब्रश कटर / वीड कटर', name_en: 'Brush Cutter / Weed Cutter', name_kn: 'ಬ್ರಷ್ ಕಟರ್ / ವೀಡ್ ಕಟರ್',
       desc_hi: 'पेट्रोल या इलेक्ट्रिक — बाग और खेत किनारे ट्रिमिंग।',
       desc_en: 'Petrol or electric — orchard & field edge trimming.',
       desc_kn: 'ಪೆಟ್ರೋಲ್ ಅಥವಾ ಎಲೆಕ್ಟ್ರಿಕ್ — ತೋಟ ಮತ್ತು ಹೊಲ ತ್ರಿಮ್ಮಿಂಗ್.',
       price: 6000, mrp: 10000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Brush+Cutter+Weed+Cutter+petrol&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Brush+Cutter+Weed+Cutter&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Brush+Cutter+Weed+Cutter+petrol&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Brush+Cutter+Weed+Cutter&affid=krashimitr' },
     { id: 64, cat: 'machinery', emoji: '🌾', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
       name_hi: 'मिनी ग्रेन थ्रेशर', name_en: 'Mini Grain Thresher', name_kn: 'ಮಿನಿ ಗ್ರೇನ್ ಥ್ರೆಶರ್',
       desc_hi: 'गेहूं और धान की थ्रेशिंग — Oct-Dec में बहुत मांग।',
       desc_en: 'Wheat & paddy threshing — high demand in Oct–Dec.',
       desc_kn: 'ಗೋಧಿ ಮತ್ತು ಭತ್ತ ಒಕ್ಕಣೆ — Oct-Dec ನಲ್ಲಿ ಹೆಚ್ಚಿನ ಬೇಡಿಕೆ.',
       price: 10000, mrp: 20000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Mini+Grain+Thresher+wheat+paddy&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Mini+Grain+Thresher+wheat&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Mini+Grain+Thresher+wheat+paddy&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Mini+Grain+Thresher+wheat&affid=krashimitr' },
 
     // ── Hand Tools (Additional) ──
     { id: 65, cat: 'tools', emoji: '🌾', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/khurpa.png',
@@ -3345,24 +3402,24 @@
       desc_en: 'Stainless steel — seasonal spike in demand.',
       desc_kn: 'ಸ್ಟೇನ್ಲೆಸ್ ಸ್ಟೀಲ್ — ಮೌಸಮಿ ಬೇಡಿಕೆ.',
       price: 200, mrp: 400, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Sickle+Harvesting+Knife+Stainless+Steel&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Sickle+Harvesting+Knife&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Sickle+Harvesting+Knife+Stainless+Steel&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Sickle+Harvesting+Knife&affid=krashimitr' },
     { id: 66, cat: 'tools', emoji: '🍂', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/khurpa.png',
       name_hi: 'गार्डन फोर्क और स्पेड कॉम्बो', name_en: 'Garden Fork & Spade Combo', name_kn: 'ಗಾರ್ಡನ್ ಫೋರ್ಕ್ & ಸ್ಪೇಡ್ ಕಾಂಬೊ',
       desc_hi: 'किचन और खेत बागवानी के लिए मिट्टी तैयार करना।',
       desc_en: 'Soil preparation for kitchen & field gardening.',
       desc_kn: 'ಕಿಚನ್ ಮತ್ತು ಹೊಲ ತೋಟಕ್ಕೆ ಮಣ್ಣು ತಯಾರಿ.',
       price: 450, mrp: 800, unit_hi: '1 सेट', unit_en: '1 set', unit_kn: '1 ಸೆಟ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Garden+Fork+Spade+Combo+Set&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Garden+Fork+Spade+Combo&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Garden+Fork+Spade+Combo+Set&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Garden+Fork+Spade+Combo&affid=krashimitr' },
     { id: 67, cat: 'tools', emoji: '✂️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/khurpa.png',
       name_hi: 'प्रूनिंग शियर्स / सिकेचर', name_en: 'Pruning Shears / Secateur', name_kn: 'ಪ್ರೂನಿಂಗ್ ಶಿಯರ್ಸ್ / ಸೆಕೇಟರ್',
       desc_hi: 'बाग और नर्सरी की छंटाई — Amazon पर बहुत लोकप्रिय।',
       desc_en: 'Orchard & nursery pruning — popular on Amazon.',
       desc_kn: 'ತೋಟ ಮತ್ತು ನರ್ಸರಿ ಕಟಾವು — Amazon ನಲ್ಲಿ ಜನಪ್ರಿಯ.',
       price: 500, mrp: 1200, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.5',
-      affil_amazon: 'https://www.amazon.in/s?k=Pruning+Shears+Secateur+garden&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Pruning+Shears+Secateur&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Pruning+Shears+Secateur+garden&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Pruning+Shears+Secateur&affid=krashimitr' },
 
     // ── Other / Miscellaneous ──
     { id: 68, cat: 'misc', emoji: '🌿', badge: 'new', badgeClass: 'new-badge', img: 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png',
@@ -3371,8 +3428,8 @@
       desc_en: 'Urban farming trend — growing on Amazon India.',
       desc_kn: 'ನಗರ ಕೃಷಿ ಟ್ರೆಂಡ್ — Amazon India ನಲ್ಲಿ ಬೆಳೆಯುತ್ತಿದೆ.',
       price: 3500, mrp: 8000, unit_hi: '1 किट', unit_en: '1 kit', unit_kn: '1 ಕಿಟ್', rating: '⭐ 4.4',
-      affil_amazon: 'https://www.amazon.in/s?k=Hydroponic+NFT+Kit+Starter&tag=YOURTAG-21',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Hydroponic+NFT+Kit&affid=YOURAFFID' },
+      affil_amazon: 'https://www.amazon.in/s?k=Hydroponic+NFT+Kit+Starter&tag=krashimitra-21',
+      affil_flipkart: 'https://www.flipkart.com/search?q=Hydroponic+NFT+Kit&affid=krashimitr' },
     { id: 69, cat: 'misc', emoji: '🌡️', badge: '', badgeClass: '', img: 'https://krashimitra.in/images/tools/mini-thermometer.png',
       name_hi: 'मिनी वेदर स्टेशन / थर्मोमीटर', name_en: 'Mini Weather Station / Thermometer', name_kn: 'ಮಿನಿ ವೆದರ್ ಸ್ಟೇಷನ್ / ಥರ್ಮಾಮೀಟರ್',
       desc_hi: 'तापमान, आर्द्रता, ओस बिंदु — पॉलीहाउस के लिए।',
@@ -3380,7 +3437,7 @@
       desc_kn: 'ತಾಪಮಾನ, ಆರ್ದ್ರತೆ, ಇಬ್ಬನಿ ಬಿಂದು — ಪಾಲಿಹೌಸ್.',
       price: 1500, mrp: 3000, unit_hi: '1 पीस', unit_en: '1 piece', unit_kn: '1 ತುಂಡು', rating: '⭐ 4.3',
       affil_amazon: 'https://amzn.to/4viw4Bm',
-      affil_flipkart: 'https://www.flipkart.com/search?q=Mini+Weather+Station+Thermometer&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=Mini+Weather+Station+Thermometer&affid=krashimitr' },
     { id: 70, cat: 'misc', emoji: '📦', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/animal_food/kapila.png',
       name_hi: 'अनाज/चारा भंडारण बैग (HDPE वोवन)', name_en: 'Grain/Fodder Storage Bags (HDPE Woven)', name_kn: 'ಧಾನ್ಯ/ಮೇವು ಸಂಗ್ರಹ ಚೀಲ (HDPE ನೇಯ್ದ)',
       desc_hi: 'गेहूं, चावल, मक्का भंडारण — UP में बहुत ज्यादा मांग।',
@@ -3388,7 +3445,7 @@
       desc_kn: 'ಗೋಧಿ, ಅಕ್ಕಿ, ಜೋಳ ಸಂಗ್ರಹ — UP ನಲ್ಲಿ ಹೆಚ್ಚಿನ ಪ್ರಮಾಣ.',
       price: 800, mrp: 1500, unit_hi: '10 पीस', unit_en: '10 pieces', unit_kn: '10 ತುಂಡು', rating: '⭐ 4.5',
       affil_amazon: 'https://amzn.to/432EX5X',
-      affil_flipkart: 'https://www.flipkart.com/search?q=HDPE+Woven+Grain+Storage+Bags&affid=YOURAFFID' },
+      affil_flipkart: 'https://www.flipkart.com/search?q=HDPE+Woven+Grain+Storage+Bags&affid=krashimitr' },
   ];
 
   // ══════════════════════════════════════
@@ -3535,7 +3592,10 @@
               </div>
               <div class="fert-h-price">₹${p.price}<span> / ${getProductUnit(p)}</span></div>
               <div class="fert-h-actions">
-                <button class="fert-btn-detail" onclick="onCardClick(${p.id}, event)">विवरण करें →</button>
+                <div class="fert-h-btn-row">
+                  <button class="fert-btn-detail" onclick="onCardClick(${p.id}, event)">विवरण करें →</button>
+                  <button class="fert-btn-share" onclick="shareProduct(${p.id}, event)">शेयर करें</button>
+                </div>
                 <button class="fert-btn-order" onclick="openOrderModal(${p.id}); event.stopPropagation()">ऑर्डर करें</button>
               </div>
             </div>
@@ -3696,15 +3756,23 @@
 
       container.innerHTML = orders.map(o => {
         const statusRaw   = (o.status || 'Pending');
-        const statusClass = statusRaw.toLowerCase().replace(/\s+/g, '');
-        const statusLabel = statusRaw === 'Pending'    ? '⏳ Pending'
-          : statusRaw === 'Verified'   ? '✅ Verified'
-          : statusRaw === 'Purchased'  ? '💳 Purchased'
-          : statusRaw === 'Delivered'  ? '📦 Delivered'
-          : statusRaw === 'Deleivered' ? '📦 Delivered'
-          : statusRaw === 'Dispatched' ? '🚚 Dispatched'
-          : statusRaw === 'Cancelled'  ? '❌ Cancelled'
-          : statusRaw;
+        const statusKey   = statusRaw.toLowerCase().replace(/[\s_-]+/g, '');
+        const STATUS_META = {
+          pending:      { cls: 'pending',      label: '⏳ Pending' },
+          verified:     { cls: 'verified',     label: '✅ Verified' },
+          purchased:    { cls: 'purchased',    label: '💳 Purchased' },
+          dispatched:   { cls: 'dispatched',   label: '🚚 Dispatched' },
+          delivered:    { cls: 'delivered',    label: '📦 Delivered' },
+          deleivered:   { cls: 'delivered',    label: '📦 Delivered' },
+          cancelled:    { cls: 'cancelled',    label: '❌ Cancelled' },
+          canceled:     { cls: 'cancelled',    label: '❌ Cancelled' },
+          unavailable:  { cls: 'unavailable',  label: '🚫 Unavailable' },
+          notavailable: { cls: 'notavailable', label: '🚫 Not Available' },
+          outofstock:   { cls: 'unavailable',  label: '🚫 Out of Stock' },
+        };
+        const meta        = STATUS_META[statusKey] || { cls: statusKey, label: statusRaw };
+        const statusClass = meta.cls;
+        const statusLabel = meta.label;
 
         const date = new Date(o.created_at).toLocaleDateString('hi-IN', {
           day: 'numeric', month: 'short', year: 'numeric',
@@ -3753,6 +3821,24 @@
 
   function closeOrdersModal() {
     document.getElementById('orders-modal').classList.remove('open');
+  }
+
+  function shareProduct(id, e) {
+    e.stopPropagation();
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) return;
+    const name = getProductName(p);
+    // Build a direct link to THIS product (opens its detail on load)
+    const url = window.location.origin + window.location.pathname + '?product=' + id;
+    if (navigator.share) {
+      navigator.share({ title: name, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url).then(() => {
+        alert('लिंक कॉपी हो गया!');
+      }).catch(() => {
+        window.open('https://wa.me/?text=' + encodeURIComponent(url), '_blank');
+      });
+    }
   }
 
   let _orderModalProductId = null;
@@ -3816,7 +3902,7 @@
     document.getElementById('wa-phone-input').value = '';
     document.getElementById('wa-address-input').value = '';
     document.getElementById('wa-village-input').value = '';
-    document.getElementById('wa-qty-display').textContent = 1;
+    document.getElementById('wa-qty-display').value = 1;
     document.getElementById('wa-modal-total').textContent = `कुल: ₹${p.price}`;
     document.getElementById('wa-modal').classList.add('open');
     setTimeout(() => document.getElementById('wa-name-input').focus(), 200);
@@ -3843,7 +3929,19 @@
 
   function changeWAQty(delta) {
     _waQty = Math.max(1, (_waQty || 1) + delta);
-    document.getElementById('wa-qty-display').textContent = _waQty;
+    document.getElementById('wa-qty-display').value = _waQty;
+    _updateWATotal();
+  }
+
+  // Called when the user types directly into the quantity field
+  function setWAQty(val) {
+    let q = parseInt(val, 10);
+    if (isNaN(q) || q < 1) q = 1;
+    _waQty = q;
+    _updateWATotal();
+  }
+
+  function _updateWATotal() {
     const p = PRODUCTS.find(x => x.id === _waProductId);
     if (p) document.getElementById('wa-modal-total').textContent = `कुल: ₹${(p.price * _waQty).toLocaleString('en-IN')}`;
   }
@@ -4196,6 +4294,15 @@ ${tkLine}
 
     renderProducts();
 
+    // Handle ?product= URL param — open shared product's detail modal
+    const productParam = urlParams.get('product');
+    if (productParam !== null) {
+      const pid = parseInt(productParam, 10);
+      if (!isNaN(pid) && PRODUCTS.some(p => p.id === pid)) {
+        setTimeout(() => openShopFertModal(pid), 300);
+      }
+    }
+
     // Pre-warm fertilizer API in background when fertilizer category active
     if (catParam === 'fertilizer') fetchFertData();
 
@@ -4238,5 +4345,6 @@ ${tkLine}
   <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
   <span class="ai-fab-tip">AI सहायक</span>
 </a>
+  <script src="fab-autohide.js"></script>
 </body>
 </html>

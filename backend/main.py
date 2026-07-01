@@ -47,6 +47,7 @@ from backend.routes.cart       import router as cart_router     # CART
 from backend.routes.order      import router as order_router    # ORDER
 
 from backend.services.weather_scheduler import start_scheduler  # WEATHER CACHE
+from backend.services.mandi_scheduler   import start_scheduler as start_mandi_scheduler  # MANDI CACHE
 
 app = FastAPI(
     title="KrashiMitra API",
@@ -110,6 +111,10 @@ async def startup():
         await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
     except Exception as e:
         print(f"⚠️ Scheduler startup error (non-fatal): {e}")
+    try:
+        await start_mandi_scheduler()  # MANDI — daily fetch + immediate fetch if snapshot empty
+    except Exception as e:
+        print(f"⚠️ Mandi scheduler startup error (non-fatal): {e}")
 
 # @app.post("/ask")
 # async def ask(data: dict):

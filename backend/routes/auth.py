@@ -23,6 +23,9 @@
 #   GET  /users         ← legacy
 # ============================================================
 
+import os
+import httpx
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
@@ -43,6 +46,8 @@ from backend.utils.auth_utils import (
 )
 
 router = APIRouter()
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_WINDOW_MINUTES = 15
@@ -123,6 +128,9 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
     confirm_password: Optional[str] = None
 
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+
 class ProfileUpdateRequest(BaseModel):
     """Matches exactly what frontend saveProfile() sends."""
     full_name:          Optional[str] = None
@@ -150,86 +158,8 @@ class UserProfileUpdate(BaseModel):
     language:     Optional[str] = None
 
 
-# ── HELPERS ──────────────────────────────────────────────────
-
-def _profile_response(user: User, profile: Optional[UserProfile] = None) -> dict:
-    """Build profile dict matching what frontend applyProfile() reads."""
-    full_name = profile.name if profile and profile.name else user.name
-    village = profile.village if profile else getattr(user, "village", None)
-    district = profile.district if profile else getattr(user, "district", None)
-    primary_crop = (
-        profile.primary_crop if profile and profile.primary_crop
-        else getattr(user, "primary_crop", None)
-    )
-    preferred_language = (
-        profile.language if profile and profile.language
-        else getattr(user, "preferred_language", "hindi")
-    )
-
-    return {
-        "id":                 user.id,
-        "profile_id":         profile.id if profile else None,
-        "full_name":          full_name,
-        "name":               full_name,
-        "email":              user.email,
-        "phone_number":       profile.phone_number if profile else None,
-        "state":              profile.state if profile else None,
-        "village":            village,
-        "district":           district,
-        "primary_crop":       primary_crop,
-        "crops_grown":        profile.crops_grown if profile and profile.crops_grown else primary_crop,
-        "farm_size":          profile.farm_size if profile else None,
-        "preferred_language": preferred_language,
-        "is_verified":        user.is_verified,
-        "created_at":         str(user.created_at),
-        "updated_at":         str(profile.updated_at) if profile and profile.updated_at else None,
-    }
-
-
-def _get_or_create_farmer_profile(user: User, db: Session) -> UserProfile:
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
-    if profile:
-        return profile
-
-    profile = UserProfile(
-        user_id=user.id,
-        name=user.name,
-        village=getattr(user, "village", None),
-        district=getattr(user, "district", None),
-        primary_crop=getattr(user, "primary_crop", None) or "Sugarcane",
-        language=getattr(user, "preferred_language", None) or "hindi",
-    )
-    db.add(profile)
-    db.flush()
-    return profile
-
-
-def _apply_profile_update(user: User, profile: UserProfile, body: ProfileUpdateRequest):
-    if body.full_name is not None:
-        user.name = body.full_name
-        profile.name = body.full_name
-    if body.preferred_language is not None:
-        user.preferred_language = body.preferred_language
-        profile.language = body.preferred_language
-    if body.phone_number is not None:
-        profile.phone_number = body.phone_number
-    if body.state is not None:
-        profile.state = body.state
-    if body.village is not None:
-        user.village = body.village
-        profile.village = body.village
-    if body.district is not None:
-        user.district = body.district
-        profile.district = body.district
-    if body.farm_size is not None:
-        profile.farm_size = body.farm_size
-    if body.crops_grown is not None:
-        user.primary_crop = body.crops_grown
-        profile.crops_grown = body.crops_grown
-        first_crop = body.crops_grown.split(",")[0].strip()
-        if first_crop:
-            profile.primary_crop = first_crop
-    profile.updated_at = datetime.utcnow()
+# (Profile-building helpers were removed along with the duplicate /profile
+#  handlers — the canonical profile logic lives in routes/profile.py.)
 
 
 # ── AUTH ENDPOINTS ───────────────────────────────────────────
@@ -421,163 +351,89 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Reset password failed: " + str(e))
 
 
-# ── ACTIVE PROFILE ENDPOINTS ─────────────────────────────────
-# Registered before the older compatibility handlers below, so FastAPI
-# uses these for GET/PUT/POST /profile.
+# ── GOOGLE OAUTH ─────────────────────────────────────────────
 
-@router.get("/me")
-@router.get("/profile")
-def get_active_profile(
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
+@router.post("/auth/google")
+def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """Verify a Google id_token, then find-or-create user and return a JWT."""
     try:
-        user = db.query(User).filter(User.id == current_user["user_id"]).first()
+        resp = httpx.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"id_token": body.id_token},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return {"success": False, "message": "Google login verify नहीं हो पाया। दोबारा try करें।", "data": {}}
+
+        info = resp.json()
+
+        # Ensure token was issued for our application
+        if GOOGLE_CLIENT_ID and info.get("aud") != GOOGLE_CLIENT_ID:
+            return {"success": False, "message": "Google token mismatch। सही account से try करें।", "data": {}}
+
+        email     = (info.get("email") or "").strip().lower()
+        google_id = (info.get("sub")   or "").strip()
+
+        if not email:
+            return {"success": False, "message": "Google account से email नहीं मिली।", "data": {}}
+        if not info.get("email_verified"):
+            return {"success": False, "message": "Google email verified नहीं है।", "data": {}}
+
+        name = info.get("name") or email.split("@")[0]
+
+        # Look up by google_id first (handles email-change edge case), fallback to email
+        user = None
+        if google_id:
+            user = db.query(User).filter(User.google_id == google_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="User not found.")
+            user = db.query(User).filter(User.email == email).first()
 
-        profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
-        return {"success": True, "message": "", "data": _profile_response(user, profile)}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Profile fetch failed: " + str(e))
-
-
-@router.put("/profile")
-def update_active_profile(
-    body: ProfileUpdateRequest,
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    try:
-        user = db.query(User).filter(User.id == current_user["user_id"]).first()
         if not user:
-            raise HTTPException(status_code=404, detail="User not found.")
+            user = User(
+                name               = name,
+                email              = email,
+                hashed_password    = "GOOGLE_OAUTH",  # sentinel — bcrypt never matches this
+                is_verified        = True,
+                auth_provider      = "google",
+                google_id          = google_id,
+                preferred_language = "hindi",
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            # Patch any missing fields on returning Google user
+            updated = False
+            if not user.google_id and google_id:
+                user.google_id = google_id
+                updated = True
+            if not user.is_verified:
+                user.is_verified = True
+                updated = True
+            if user.auth_provider != "google" and not user.hashed_password.startswith("$2"):
+                user.auth_provider = "google"
+                updated = True
+            if updated:
+                db.commit()
 
-        profile = _get_or_create_farmer_profile(user, db)
-        _apply_profile_update(user, profile, body)
+        _clear_failed_login(email)
+        token = create_access_token(user_id=user.id, email=user.email)
+        return {"success": True, "message": "Google login successful", "data": {"token": token}}
 
-        db.commit()
-        db.refresh(user)
-        db.refresh(profile)
-        return {"success": True, "message": "Profile updated.", "data": _profile_response(user, profile)}
-    except HTTPException:
-        raise
+    except httpx.TimeoutException:
+        return {"success": False, "message": "Google server से response नहीं मिला। दोबारा try करें।", "data": {}}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Profile update failed: " + str(e))
+        raise HTTPException(status_code=500, detail="Google login failed: " + str(e))
 
 
-@router.post("/profile")
-def create_active_profile(
-    body: ProfileUpdateRequest,
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    try:
-        user = db.query(User).filter(User.id == current_user["user_id"]).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found.")
-
-        profile = _get_or_create_farmer_profile(user, db)
-        _apply_profile_update(user, profile, body)
-
-        db.commit()
-        db.refresh(user)
-        db.refresh(profile)
-        return {"success": True, "message": "Profile saved.", "data": _profile_response(user, profile)}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Profile save failed: " + str(e))
-
-
-# ── PROFILE ENDPOINTS ─────────────────────────────────────────
-# Frontend calls GET/PUT/POST /profile — these MUST exist
-# or fetch() throws a network error mis-reported as "API not running"
-
-@router.get("/me")
-@router.get("/profile")
-def get_profile(
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """GET /profile — called by loadUserProfile() on every page load."""
-    try:
-        user = db.query(User).filter(User.id == current_user["user_id"]).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User नहीं मिला।")
-        return {"success": True, "message": "", "data": _profile_response(user)}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Profile fetch failed: " + str(e))
-
-
-@router.put("/profile")
-def update_profile(
-    body: ProfileUpdateRequest,
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """PUT /profile — called by saveProfile() in frontend."""
-    try:
-        user = db.query(User).filter(User.id == current_user["user_id"]).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User नहीं मिला।")
-
-        if body.full_name is not None:
-            user.name = body.full_name
-        if body.preferred_language is not None:
-            user.preferred_language = body.preferred_language
-        if body.village is not None and hasattr(user, "village"):
-            user.village = body.village
-        if body.district is not None and hasattr(user, "district"):
-            user.district = body.district
-        if body.crops_grown is not None and hasattr(user, "primary_crop"):
-            user.primary_crop = body.crops_grown
-
-        db.commit()
-        db.refresh(user)
-        return {"success": True, "message": "Profile updated।", "data": _profile_response(user)}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Profile update failed: " + str(e))
-
-
-@router.post("/profile")
-def create_profile(
-    body: ProfileUpdateRequest,
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """POST /profile — fallback upsert from frontend saveProfile()."""
-    try:
-        user = db.query(User).filter(User.id == current_user["user_id"]).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User नहीं मिला।")
-
-        if body.full_name is not None:
-            user.name = body.full_name
-        if body.preferred_language is not None:
-            user.preferred_language = body.preferred_language
-        if body.village is not None and hasattr(user, "village"):
-            user.village = body.village
-        if body.district is not None and hasattr(user, "district"):
-            user.district = body.district
-        if body.crops_grown is not None and hasattr(user, "primary_crop"):
-            user.primary_crop = body.crops_grown
-
-        db.commit()
-        db.refresh(user)
-        return {"success": True, "message": "Profile saved।", "data": _profile_response(user)}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Profile save failed: " + str(e))
+# ── /profile and /me ─────────────────────────────────────────
+# Intentionally NOT defined in this router. The dedicated full-field
+# profile router (backend/routes/profile.py, prefix="/profile") owns
+# GET/POST/PUT /profile, so every farmer-profile field is persisted and
+# returned. Earlier this file registered its own /profile handlers that —
+# because auth_router is included before profile_router — shadowed the real
+# ones and silently dropped most fields on save. They were removed to fix
+# that. Do not re-add /profile here.
 
 
 # ── LEGACY PROFILE CRUD (UNCHANGED) ──────────────────────────

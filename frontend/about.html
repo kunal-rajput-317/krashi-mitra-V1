@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-493H1PDP64');
+  </script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>हमारे बारे में — About Us | KrashiMitra</title>
+  <link rel="icon" type="image/png" href="https://krashimitra.in/images/favicon.png">
+  <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
+  <meta name="theme-color" content="#1a3c2e">
+
+  <meta name="description" content="KrashiMitra — भारतीय किसानों का डिजिटल साथी। रियल-टाइम मंडी भाव, मौसम, AI कृषि सहायता और सरकारी योजनाओं की जानकारी एक जगह। जानिए हमारे बारे में।">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://krashimitra.in/about.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="हमारे बारे में | KrashiMitra — किसान का डिजिटल साथी">
+  <meta property="og:description" content="KrashiMitra भारतीय किसानों को रियल-टाइम मंडी भाव, मौसम जानकारी, AI कृषि सहायता और सरकारी योजनाओं से जोड़ता है।">
+  <meta property="og:url" content="https://krashimitra.in/about.html">
+  <meta property="og:site_name" content="KrashiMitra — किसान का डिजिटल साथी">
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2792326360609634"
+    crossorigin="anonymous"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --green-dark:  #1a3c2e;
+      --green-mid:   #2d6a4f;
+      --green-light: #52b788;
+      --green-pale:  #d8f3dc;
+      --amber:       #e9a825;
+      --cream:       #f5f7f4;
+      --white:       #ffffff;
+      --text-dark:   #1a2e1e;
+      --text-mid:    #4a6355;
+      --text-light:  #8aab96;
+      --border:      #ddeee4;
+      --shadow:      0 2px 12px rgba(26,60,46,0.08);
+      --radius:      14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--green-dark);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 60px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .topbar-logo-icon { font-size: 26px; line-height: 1; }
+    .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .topbar-logo-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: #fff; }
+    .topbar-logo-name span { color: var(--amber); }
+    .topbar-logo-sub { font-size: 9.5px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; }
+    .topbar-nav { display: flex; align-items: center; gap: 2px; }
+    .tnav-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: rgba(255,255,255,0.80);
+      padding: 7px 14px; border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .tnav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .topbar-avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25);
+      color: #fff; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; text-decoration: none;
+    }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 10px 28px; font-size: 12.5px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .breadcrumb a { color: var(--green-mid); text-decoration: none; font-weight: 600; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb-sep { color: var(--text-light); }
+    .breadcrumb-current { color: var(--text-mid); font-weight: 600; }
+
+    /* ── MAIN ── */
+    .main-content {
+      max-width: 860px; margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── PAGE HERO ── */
+    .page-hero {
+      background: linear-gradient(135deg, var(--green-dark) 0%, #245c42 60%, #2d6a4f 100%);
+      padding: 32px 28px 28px; margin-bottom: 32px;
+    }
+    .hero-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px; font-weight: 700; color: #fff;
+      line-height: 1.25; margin-bottom: 8px;
+    }
+    .hero-sub { font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 500; }
+
+    /* ── CARDS ── */
+    .about-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+
+    .about-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; color: var(--green-dark);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--green-pale);
+    }
+
+    .about-card p {
+      font-size: 14px; line-height: 1.85;
+      color: var(--text-mid); margin-bottom: 12px;
+    }
+    .about-card p:last-child { margin-bottom: 0; }
+
+    .about-card ul {
+      padding-left: 20px; margin-bottom: 12px;
+    }
+    .about-card ul li {
+      font-size: 14px; line-height: 1.8;
+      color: var(--text-mid); margin-bottom: 4px;
+    }
+    .about-card a {
+      color: var(--green-mid); font-weight: 600; text-decoration: underline;
+    }
+    .about-card a:hover { color: var(--green-dark); }
+
+    /* ── FEATURE GRID ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .feature-item {
+      background: var(--cream);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .feature-icon { font-size: 26px; margin-bottom: 8px; }
+    .feature-name { font-size: 14px; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
+    .feature-desc { font-size: 12.5px; color: var(--text-mid); line-height: 1.6; }
+
+    /* ── STAT ROW ── */
+    .stat-row {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .stat-box {
+      flex: 1; min-width: 120px;
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+      border-radius: 10px; padding: 18px 14px; text-align: center;
+    }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--amber); }
+    .stat-label { font-size: 11.5px; color: rgba(255,255,255,0.72); margin-top: 4px; font-weight: 600; }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box {
+      background: var(--green-pale);
+      border-left: 4px solid var(--green-light);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      font-size: 13.5px; color: var(--text-dark); line-height: 1.7;
+    }
+
+    /* ── TEAM CARD ── */
+    .team-card {
+      display: flex; align-items: flex-start; gap: 18px;
+      background: var(--cream); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 20px; margin-top: 16px;
+    }
+    .team-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0;
+    }
+    .team-info { flex: 1; }
+    .team-name { font-size: 16px; font-weight: 700; color: var(--green-dark); margin-bottom: 3px; }
+    .team-role { font-size: 12px; color: var(--amber); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .team-bio { font-size: 13.5px; color: var(--text-mid); line-height: 1.7; }
+
+    /* ── CONTACT BOX ── */
+    .contact-box {
+      background: var(--amber);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-top: 8px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .contact-box-icon { font-size: 32px; flex-shrink: 0; }
+    .contact-box-text { flex: 1; }
+    .contact-box-title { font-size: 15px; font-weight: 800; color: var(--green-dark); margin-bottom: 4px; }
+    .contact-box-sub { font-size: 13px; color: #3a3a3a; line-height: 1.6; }
+    .contact-box-sub a { color: var(--green-dark); font-weight: 700; text-decoration: none; }
+
+    /* ── BOTTOM NAV (Mobile) ── */
+    .bottom-nav { display: none; }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      background: var(--green-dark); color: rgba(255,255,255,0.65);
+      text-align: center; padding: 16px 24px;
+      font-size: 12px; letter-spacing: 0.3px;
+    }
+    .site-footer a { color: var(--green-light); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .site-footer-links { display: flex; justify-content: center; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 1024px) {
+      .topbar-nav { display: none; }
+      .topbar { padding: 0 14px; height: 54px; }
+      .topbar-logo-name { font-size: 15px; }
+      .topbar-logo-sub { display: none; }
+      .breadcrumb { padding: 9px 14px; }
+      .main-content { padding: 0 12px 90px; }
+      .page-hero { padding: 22px 16px 20px; margin-bottom: 20px; }
+      .hero-title { font-size: 22px; }
+      .about-card { padding: 18px 16px; }
+      .about-card h2 { font-size: 16px; }
+      .feature-grid { grid-template-columns: 1fr; gap: 10px; }
+      .stat-row { gap: 10px; }
+      .stat-box { min-width: 90px; padding: 14px 10px; }
+      .stat-num { font-size: 22px; }
+
+      .bottom-nav {
+        display: block; position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--green-dark);
+        box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
+        z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 6px);
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      .bottom-nav-items { display: flex; align-items: center; height: 60px; padding: 0 2px; }
+      .bottom-nav-item {
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+        padding: 6px 2px; text-decoration: none; gap: 3px;
+      }
+      .bnav-icon { font-size: 18px; line-height: 1; color: rgba(255,255,255,0.55); transition: color 0.18s; }
+      .bnav-label {
+        font-size: 9.5px; font-weight: 600;
+        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+        color: rgba(255,255,255,0.55); white-space: nowrap;
+      }
+      .bottom-nav-item.active .bnav-icon,
+      .bottom-nav-item.active .bnav-label { color: var(--amber); }
+      .site-footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+      <span class="topbar-logo-icon">🌾</span>
+      <div class="topbar-logo-text">
+        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
+        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+  </div>
+  <nav class="topbar-nav">
+    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
+    <a class="tnav-btn" href="weather.html">🌤️ मौसम</a>
+    <a class="tnav-btn" href="mandi.html">🏪 मंडी</a>
+    <a class="tnav-btn" href="articles/index.html">📰 लेख</a>
+    <a class="tnav-btn" href="chat.html">💬 AI सहायता</a>
+    <a class="tnav-btn" href="shop.html">🛒 दुकान</a>
+  </nav>
+  <div class="topbar-right">
+    <a href="login.html" class="topbar-avatar-btn">👨‍🌾</a>
+  </div>
+</div>
+
+<!-- ══ BREADCRUMB ══ -->
+<nav class="breadcrumb" aria-label="breadcrumb">
+  <a href="index.html">🏠 मुख्य</a>
+  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-current">🌿 हमारे बारे में</span>
+</nav>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="page-hero">
+  <div class="main-content" style="padding-bottom:0;">
+    <div class="hero-label">About KrashiMitra</div>
+    <h1 class="hero-title">किसान का डिजिटल साथी</h1>
+    <p class="hero-sub">भारतीय किसानों को सही जानकारी, सही समय पर — यही हमारा मकसद है।</p>
+  </div>
+</div>
+
+<main class="main-content">
+
+  <!-- MISSION -->
+  <section class="about-card">
+    <h2>🌾 हम क्या हैं?</h2>
+    <p><strong>KrashiMitra</strong> (कृषि मित्र) एक हिंदी-प्रथम डिजिटल मंच है जो भारतीय किसानों को कृषि से जुड़ी हर ज़रूरी जानकारी एक जगह देता है — मंडी भाव से लेकर मौसम, सरकारी योजनाओं से लेकर AI कृषि सहायता तक।</p>
+    <p>भारत में 14 करोड़ से अधिक किसान परिवार हैं। इनमें से अधिकांश के पास सही समय पर सही जानकारी नहीं पहुँचती — न मंडी भाव की, न मौसम की, न सरकारी योजनाओं की। KrashiMitra यही खाई पाटने के लिए बना है।</p>
+    <div class="highlight-box">
+      💡 <strong>हमारा विश्वास:</strong> जब किसान को सही जानकारी मिलती है, तो वह बेहतर फ़ैसला करता है — और बेहतर फ़ैसले से बेहतर आमदनी होती है।
+    </div>
+  </section>
+
+  <!-- WHAT WE OFFER -->
+  <section class="about-card">
+    <h2>🛠️ हम क्या सुविधाएँ देते हैं?</h2>
+    <p>KrashiMitra पर किसानों को मिलता है:</p>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="feature-icon">🏪</div>
+        <div class="feature-name">मंडी भाव</div>
+        <div class="feature-desc">35+ राज्यों की 3,000+ मंडियों का रियल-टाइम फसल भाव, हर दिन अपडेट।</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🌤️</div>
+        <div class="feature-name">7-दिन मौसम</div>
+        <div class="feature-desc">गाँव-स्तर पर 7 दिन का सटीक मौसम पूर्वानुमान, हिंदी में।</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-name">AI कृषि सहायक</div>
+        <div class="feature-desc">फसल, खाद, कीट, सिंचाई — किसी भी सवाल का जवाब AI से, हिंदी में।</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📋</div>
+        <div class="feature-name">सरकारी योजनाएँ</div>
+        <div class="feature-desc">PM किसान, फसल बीमा, KCC समेत 20+ योजनाओं की पूरी जानकारी।</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📰</div>
+        <div class="feature-name">कृषि लेख</div>
+        <div class="feature-desc">फसल गाइड, उर्वरक जानकारी, बाज़ार विश्लेषण — 30+ हिंदी लेख।</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🛒</div>
+        <div class="feature-name">किसान दुकान</div>
+        <div class="feature-desc">बीज, खाद, कृषि उपकरण — विश्वसनीय ऑनलाइन खरीदारी।</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="about-card">
+    <h2>📊 KrashiMitra एक नज़र में</h2>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-num">35+</div>
+        <div class="stat-label">राज्य / केंद्रशासित प्रदेश</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">3,000+</div>
+        <div class="stat-label">मंडियाँ</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">300+</div>
+        <div class="stat-label">फसलें ट्रैक</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">3</div>
+        <div class="stat-label">भाषाएँ — हिंदी, English, ಕನ್ನಡ</div>
+      </div>
+    </div>
+    <p style="margin-top:16px;">डेटा स्रोत: <strong>data.gov.in</strong> (भारत सरकार का आधिकारिक ओपन डेटा पोर्टल) और <strong>OpenWeatherMap API</strong>। मंडी भाव प्रतिदिन स्वचालित रूप से अपडेट होता है।</p>
+  </section>
+
+  <!-- OUR STORY -->
+  <section class="about-card">
+    <h2>📖 हमारी कहानी</h2>
+    <p>KrashiMitra की शुरुआत एक सीधे सवाल से हुई: <em>"किसान को मंडी भाव जानने के लिए 5 अलग-अलग वेबसाइट क्यों देखनी पड़ती हैं?"</em></p>
+    <p>भारत सरकार का कृषि डेटा मौजूद है — लेकिन बिखरा हुआ है, अंग्रेज़ी में है, और मोबाइल-फ्रेंडली नहीं है। हमने तय किया कि इसे किसान के हाथ में सीधे — उसकी भाषा में, उसके फ़ोन पर — पहुँचाया जाए।</p>
+    <p>2025 में एक छोटे प्रोटोटाइप से शुरू होकर, KrashiMitra आज उत्तर प्रदेश, मध्य प्रदेश, राजस्थान, महाराष्ट्र, कर्नाटक समेत पूरे भारत के किसानों के लिए उपयोगी मंच बन चुका है।</p>
+    <div class="highlight-box">
+      🌱 <strong>हमारा वादा:</strong> KrashiMitra हमेशा <strong>मुफ़्त</strong> रहेगा। किसान से कोई शुल्क नहीं, कोई सदस्यता नहीं। सेवा पहले, बाकी बाद में।
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="about-card">
+    <h2>👨‍💻 हमारी टीम</h2>
+    <p>KrashiMitra एक छोटी लेकिन समर्पित टीम द्वारा बनाया गया है जो तकनीक और कृषि दोनों को समझती है।</p>
+    <div class="team-card">
+      <div class="team-avatar">👨‍💻</div>
+      <div class="team-info">
+        <div class="team-name">Kunal Rajput</div>
+        <div class="team-role">Founder & Lead Developer</div>
+        <div class="team-bio">Kunal एक टेक उद्यमी हैं जो भारतीय किसानों के डिजिटल सशक्तिकरण में विश्वास रखते हैं। उन्होंने KrashiMitra को इस सोच के साथ बनाया कि सही तकनीक सही हाथों में पहुँचे — चाहे किसान UP के खेत में हो या Karnataka की मंडी में।</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA & PRIVACY -->
+  <section class="about-card">
+    <h2>🔒 डेटा और पारदर्शिता</h2>
+    <p>KrashiMitra उपयोगकर्ताओं की गोपनीयता को सर्वोच्च प्राथमिकता देता है।</p>
+    <ul>
+      <li>मंडी डेटा <strong>data.gov.in</strong> (भारत सरकार) से लिया जाता है — 100% आधिकारिक और विश्वसनीय।</li>
+      <li>हम <strong>Google Analytics</strong> का उपयोग केवल वेबसाइट उपयोग को समझने के लिए करते हैं।</li>
+      <li>हम <strong>Google AdSense</strong> के माध्यम से विज्ञापन दिखाते हैं जो सेवा को मुफ़्त बनाए रखने में मदद करते हैं।</li>
+      <li>हम आपका व्यक्तिगत डेटा कभी नहीं बेचते।</li>
+    </ul>
+    <p>विस्तृत जानकारी के लिए हमारी <a href="privacy-policy.html">गोपनीयता नीति</a> पढ़ें।</p>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="about-card">
+    <h2>📬 संपर्क करें</h2>
+    <p>कोई सुझाव, शिकायत, या सहयोग की बात करनी हो — हम हमेशा उपलब्ध हैं।</p>
+    <div class="contact-box">
+      <div class="contact-box-icon">✉️</div>
+      <div class="contact-box-text">
+        <div class="contact-box-title">हमसे सम्पर्क करें</div>
+        <div class="contact-box-sub">
+          ईमेल: <a href="mailto:krdhmp13@gmail.com">krdhmp13@gmail.com</a><br>
+          WhatsApp: <a href="https://wa.me/919870951001">+91 9870951001</a><br>
+          वेबसाइट: <a href="https://krashimitra.in">krashimitra.in</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══ BOTTOM NAV (Mobile) ══ -->
+<nav class="bottom-nav" aria-label="bottom navigation">
+  <div class="bottom-nav-items">
+    <a class="bottom-nav-item" href="index.html">
+      <span class="bnav-icon">🏠</span><span class="bnav-label">मुख्य</span>
+    </a>
+    <a class="bottom-nav-item" href="mandi.html">
+      <span class="bnav-icon">🏪</span><span class="bnav-label">मंडी</span>
+    </a>
+    <a class="bottom-nav-item" href="weather.html">
+      <span class="bnav-icon">🌤️</span><span class="bnav-label">मौसम</span>
+    </a>
+    <a class="bottom-nav-item" href="chat.html">
+      <span class="bnav-icon">💬</span><span class="bnav-label">AI</span>
+    </a>
+    <a class="bottom-nav-item" href="shop.html">
+      <span class="bnav-icon">🛒</span><span class="bnav-label">दुकान</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="index.html">मुख्य पृष्ठ</a>
+    <a href="mandi.html">मंडी भाव</a>
+    <a href="articles/index.html">लेख</a>
+    <a href="about.html">हमारे बारे में</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+  </div>
+  <div>© 2025–2026 KrashiMitra — किसान का डिजिटल साथी | krashimitra.in</div>
+</footer>
+
+</body>
+</html>

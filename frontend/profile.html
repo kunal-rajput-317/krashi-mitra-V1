@@ -2,6 +2,13 @@
 <html lang="hi">
 <head>
 <script src="api-config.js"></script>
+<script>
+  // Auth guard: profile is a protected page. Send guests straight to login
+  // before the page paints, so they never see an empty profile shell.
+  if (!localStorage.getItem("krishi_token")) {
+    window.location.replace("login.html");
+  }
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>किसान प्रोफाइल | KrashiMitra</title>
@@ -1616,10 +1623,8 @@
       clearMessage();
       const token = getToken();
       if (!token) {
-        hasProfile = false;
-        setSignedInUI(false);
-        updateSummary({});
-        document.getElementById("save-mode-hint").textContent = "Login करें";
+        // Not logged in — go to login page (don't show the profile shell).
+        window.location.replace("login.html");
         return;
       }
       setSignedInUI(true);
@@ -1703,5 +1708,6 @@
 
     window.addEventListener("load", loadProfile);
   </script>
+  <script src="fab-autohide.js"></script>
 </body>
 </html>

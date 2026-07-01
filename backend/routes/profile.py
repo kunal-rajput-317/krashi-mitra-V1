@@ -4,7 +4,7 @@
 # ============================================================
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Optional
@@ -81,6 +81,15 @@ class ProfileCreateRequest(BaseModel):
     notif_tips:           Optional[bool] = False
     notif_none:           Optional[bool] = False
 
+    # Frontend sends "" for blank number inputs; treat blank as None so the
+    # whole save doesn't 422 when family_size is left empty.
+    @field_validator("family_size", mode="before")
+    @classmethod
+    def _blank_to_none(cls, v):
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
+
 
 class ProfileUpdateRequest(BaseModel):
     # All fields optional — only sent fields get updated
@@ -138,6 +147,15 @@ class ProfileUpdateRequest(BaseModel):
     notif_pest:           Optional[bool] = None
     notif_tips:           Optional[bool] = None
     notif_none:           Optional[bool] = None
+
+    # Frontend sends "" for blank number inputs; treat blank as None so the
+    # whole save doesn't 422 when family_size is left empty.
+    @field_validator("family_size", mode="before")
+    @classmethod
+    def _blank_to_none(cls, v):
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
 
 
 # ── Helper ───────────────────────────────────────────────────
@@ -443,8 +461,14 @@ def get_profile(
             "data":    {}
         }
 
+    user = db.query(User).filter(User.id == user_id).first()
+    data = _profile_to_dict(profile)
+    if user:
+        data["email"]         = user.email
+        data["auth_provider"] = user.auth_provider or "email"
+
     return {
         "success": True,
         "message": "",
-        "data":    _profile_to_dict(profile),
+        "data":    data,
     }
