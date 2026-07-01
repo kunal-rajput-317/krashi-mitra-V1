@@ -23,6 +23,9 @@
 #   GET  /users         ← legacy
 # ============================================================
 
+import os
+import httpx
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
@@ -43,6 +46,8 @@ from backend.utils.auth_utils import (
 )
 
 router = APIRouter()
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_WINDOW_MINUTES = 15
@@ -122,6 +127,9 @@ class ResetPasswordRequest(BaseModel):
     otp:          str
     new_password: str
     confirm_password: Optional[str] = None
+
+class GoogleAuthRequest(BaseModel):
+    id_token: str
 
 class ProfileUpdateRequest(BaseModel):
     """Matches exactly what frontend saveProfile() sends."""
@@ -341,6 +349,81 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail="Reset password failed: " + str(e))
+
+
+# ── GOOGLE OAUTH ─────────────────────────────────────────────
+
+@router.post("/auth/google")
+def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """Verify a Google id_token, then find-or-create user and return a JWT."""
+    try:
+        resp = httpx.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"id_token": body.id_token},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return {"success": False, "message": "Google login verify नहीं हो पाया। दोबारा try करें।", "data": {}}
+
+        info = resp.json()
+
+        # Ensure token was issued for our application
+        if GOOGLE_CLIENT_ID and info.get("aud") != GOOGLE_CLIENT_ID:
+            return {"success": False, "message": "Google token mismatch। सही account से try करें।", "data": {}}
+
+        email     = (info.get("email") or "").strip().lower()
+        google_id = (info.get("sub")   or "").strip()
+
+        if not email:
+            return {"success": False, "message": "Google account से email नहीं मिली।", "data": {}}
+        if not info.get("email_verified"):
+            return {"success": False, "message": "Google email verified नहीं है।", "data": {}}
+
+        name = info.get("name") or email.split("@")[0]
+
+        # Look up by google_id first (handles email-change edge case), fallback to email
+        user = None
+        if google_id:
+            user = db.query(User).filter(User.google_id == google_id).first()
+        if not user:
+            user = db.query(User).filter(User.email == email).first()
+
+        if not user:
+            user = User(
+                name               = name,
+                email              = email,
+                hashed_password    = "GOOGLE_OAUTH",  # sentinel — bcrypt never matches this
+                is_verified        = True,
+                auth_provider      = "google",
+                google_id          = google_id,
+                preferred_language = "hindi",
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            # Patch any missing fields on returning Google user
+            updated = False
+            if not user.google_id and google_id:
+                user.google_id = google_id
+                updated = True
+            if not user.is_verified:
+                user.is_verified = True
+                updated = True
+            if user.auth_provider != "google" and not user.hashed_password.startswith("$2"):
+                user.auth_provider = "google"
+                updated = True
+            if updated:
+                db.commit()
+
+        _clear_failed_login(email)
+        token = create_access_token(user_id=user.id, email=user.email)
+        return {"success": True, "message": "Google login successful", "data": {"token": token}}
+
+    except httpx.TimeoutException:
+        return {"success": False, "message": "Google server से response नहीं मिला। दोबारा try करें।", "data": {}}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Google login failed: " + str(e))
 
 
 # ── /profile and /me ─────────────────────────────────────────

@@ -477,7 +477,7 @@
     ══════════════════════════════════════ */
     .main-content {
       flex: 1; padding: 0 0 32px;
-      max-width: 980px; margin: 0 auto; width: 100%;
+      max-width: 1280px; margin: 0 auto; width: 100%;
     }
 
     /* ══════════════════════════════════════
@@ -625,6 +625,14 @@
     }
     .mn-combo-clear.visible { display: inline; }
     .mn-combo-clear:hover { background: #e8ede9; color: var(--text-dark); }
+    .mn-mic-btn {
+      background: none; border: none; padding: 2px 3px; cursor: pointer;
+      font-size: 14px; flex-shrink: 0; opacity: 0.55; line-height: 1;
+      border-radius: 50%; transition: opacity 0.15s, background 0.15s;
+    }
+    .mn-mic-btn:hover { opacity: 1; background: #e8ede9; }
+    .mn-mic-btn.listening { opacity: 1; animation: mn-mic-pulse 0.7s ease-in-out infinite alternate; }
+    @keyframes mn-mic-pulse { from { opacity: 0.7; } to { opacity: 1; color: #e53935; } }
     .mn-combo-chevron {
       font-size: 9px; color: var(--text-light); flex-shrink: 0;
       pointer-events: none; transition: transform 0.2s;
@@ -645,6 +653,7 @@
     }
     .mn-combo-list li:hover,
     .mn-combo-list li.focused { background: var(--green-pale); color: var(--green-dark); }
+    .mn-en-tag { font-size: 11px; color: var(--text-light); font-weight: 500; margin-left: 4px; }
     .mn-combo-list .mn-no-results {
       text-align: center; padding: 14px; color: var(--text-light);
       font-size: 13px; cursor: default;
@@ -676,7 +685,7 @@
     }
     .mandi-table {
       width: 100%; border-collapse: collapse;
-      font-size: 13px; background: white; min-width: 600px;
+      font-size: 13px; background: white; min-width: 900px;
     }
     .mandi-table thead tr { background: var(--green-dark); color: white; }
     .mandi-table th {
@@ -699,78 +708,109 @@
     .desktop-card-mode .mandi-cards-mobile { display: flex !important; }
 
     /* ══════════════════════════════════════
-       MANDI MOBILE CARDS
+       MANDI CARDS
     ══════════════════════════════════════ */
-    .mandi-cards-mobile { display: none; flex-direction: column; gap: 10px; }
+    .mandi-cards-mobile { display: none; flex-direction: column; gap: 12px; }
 
-    .mandi-card-mobile {
+    .mandi-card {
       background: #fff; border-radius: 16px;
       border: 1.5px solid var(--border);
-      box-shadow: var(--shadow); overflow: hidden;
-      display: flex; transition: box-shadow 0.18s, border-color 0.18s;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      overflow: hidden; cursor: pointer;
+      transition: box-shadow 0.18s, transform 0.12s, border-color 0.18s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .mandi-card-mobile:hover { box-shadow: var(--shadow-lg); border-color: #b7d9c2; }
-    .mandi-card-mobile:active { transform: scale(0.985); }
-    .mandi-card-accent {
-      width: 4px; flex-shrink: 0;
-      background: linear-gradient(180deg, var(--amber) 0%, #e9932a 100%);
+    .mandi-card:hover  { box-shadow: 0 4px 18px rgba(0,0,0,0.11); border-color: #b7d9c2; }
+    .mandi-card:active { transform: scale(0.985); }
+
+    /* top accent bar — colored by price direction */
+    .mc-bar { height: 5px; width: 100%; }
+    .mc-bar.up   { background: linear-gradient(90deg, #34c759, #1b8a3a); }
+    .mc-bar.down { background: linear-gradient(90deg, #ff6b6b, #d32f2f); }
+    .mc-bar.flat { background: linear-gradient(90deg, var(--amber), #e9932a); }
+
+    .mc-inner { padding: 14px 16px 0; display: flex; flex-direction: column; }
+
+    /* header: commodity name + delta badge */
+    .mc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .mc-name {
+      font-size: 17px; font-weight: 800; color: var(--text-dark); line-height: 1.2;
+      flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .mandi-card-content {
-      flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
-      min-width: 0;
-    }
-    .mandi-card-top {
-      display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
-    }
-    .mandi-card-commodity {
-      font-size: 15px; font-weight: 800; color: var(--text-dark); line-height: 1.2;
-    }
-    .mandi-card-variety-chip {
-      display: inline-block; margin-top: 5px;
-      font-size: 11px; font-weight: 700;
-      background: var(--amber-light); color: var(--soil);
-      border: 1px solid rgba(233,168,37,0.35);
-      border-radius: 20px; padding: 2px 10px;
-    }
-    .mandi-card-date {
-      font-size: 11px; font-weight: 600; color: var(--text-light);
-      white-space: nowrap; flex-shrink: 0; margin-top: 2px;
-    }
-    .mandi-card-price-section {
-      display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
-    }
-    .mandi-card-price-main {
-      font-size: 28px; font-weight: 800;
-      color: var(--green-dark); line-height: 1;
-      font-family: 'DM Sans', sans-serif;
-    }
-    .mandi-card-price-main span {
-      font-size: 13px; font-weight: 500; color: var(--text-mid); margin-left: 2px;
-    }
-    .mandi-card-range {
-      font-size: 12px; font-weight: 600; color: var(--text-mid);
-      background: var(--green-pale); border: 1px solid var(--border);
-      border-radius: 20px; padding: 3px 10px;
-    }
-    .mandi-card-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding-top: 8px; border-top: 1px solid var(--border);
-      font-size: 12px; font-weight: 600; color: var(--text-mid); gap: 8px;
-    }
-    .mandi-card-footer span {
-      display: flex; align-items: center; gap: 4px;
+    .mc-mkt {
+      font-size: 12px; font-weight: 600; color: var(--text-mid); margin-top: 4px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+
+    /* price + sparkline row */
+    .mc-prow {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-top: 10px;
+    }
+    .mc-price {
+      font-size: 34px; font-weight: 800; color: var(--green-dark);
+      line-height: 1; font-family: 'DM Sans', sans-serif; letter-spacing: -0.5px;
+    }
+    .mc-price span { font-size: 12px; font-weight: 500; color: var(--text-mid); margin-left: 2px; letter-spacing: 0; }
+    .mc-prev { font-size: 11px; color: var(--text-light); font-weight: 600; margin-top: 5px; }
+    .mc-prev s { opacity: 0.8; }
+
+    /* inline sparkline */
+    .mc-spark { width: 92px; height: 34px; display: block; }
+    .mc-spark-line { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+    .mc-spark-dot  { stroke: #fff; stroke-width: 1.5; }
+    .mc-spark.up   .mc-spark-line { stroke: #1b8a3a; } .mc-spark.up   .mc-spark-area { fill: rgba(27,138,58,0.13); }  .mc-spark.up   .mc-spark-dot { fill: #1b8a3a; }
+    .mc-spark.down .mc-spark-line { stroke: #d32f2f; } .mc-spark.down .mc-spark-area { fill: rgba(211,47,47,0.12); }  .mc-spark.down .mc-spark-dot { fill: #d32f2f; }
+    .mc-spark.flat .mc-spark-line { stroke: var(--green-mid); } .mc-spark.flat .mc-spark-area { fill: rgba(45,106,79,0.10); } .mc-spark.flat .mc-spark-dot { fill: var(--green-mid); }
+
+    /* compact min↔max range bar */
+    .mc-range {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; color: var(--text-mid); margin-top: 8px;
+    }
+    .mc-range-track {
+      flex: 1; height: 5px; background: var(--green-pale);
+      border-radius: 3px; position: relative; min-width: 60px;
+    }
+    .mc-range-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--green-light); border-radius: 3px; }
+    .mc-range-dot {
+      position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%;
+      background: #fff; border: 2.5px solid var(--amber); transform: translate(-50%, -50%);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* card footer: tags + date */
+    .mc-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-top: 12px; padding: 8px 0 10px;
+      border-top: 1px solid var(--border);
+    }
+    .mc-tags { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; overflow: hidden; }
+    .mc-tag {
+      display: inline-block; background: var(--green-pale); color: var(--green-dark);
+      border-radius: 20px; padding: 2px 8px;
+      font-size: 10px; font-weight: 700; white-space: nowrap;
+    }
+    .mc-tag.variety { background: var(--amber-light); color: var(--soil); border: 1px solid rgba(233,168,37,0.3); }
+    .mc-date { font-size: 11px; color: var(--text-light); font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+    .mc-chevron { color: var(--green-light); font-size: 15px; font-weight: 700; }
+
+    /* table trend cell */
+    .mandi-table .mt-trend { display: flex; align-items: center; gap: 8px; }
+    .mandi-table .mc-spark { width: 64px; height: 26px; }
+    .mt-none { color: var(--text-light); font-size: 13px; font-weight: 600; }
+    /* district column: truncate long names so all columns stay visible */
+    .mandi-table td:nth-child(2) { max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Mandi skeleton loading cards */
     .mandi-card-skel {
       background: #fff; border-radius: 16px;
       border: 1.5px solid var(--border);
-      box-shadow: var(--shadow); overflow: hidden; display: flex;
+      box-shadow: var(--shadow); overflow: hidden;
+      display: flex; flex-direction: column;
     }
     .mandi-skel-accent {
-      width: 4px; flex-shrink: 0;
+      height: 5px; width: 100%;
       background: linear-gradient(90deg, #e0ece4 25%, #cde2d5 50%, #e0ece4 75%);
       background-size: 200% 100%; animation: shimmer 1.4s infinite;
     }
@@ -885,6 +925,45 @@
     .mandi-detail-row-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
     .mandi-detail-row-label { font-size: 13px; font-weight: 600; color: var(--text-mid); flex: 1; }
     .mandi-detail-row-val   { font-size: 13px; font-weight: 700; color: var(--text-dark); text-align: right; }
+
+    /* ── PRICE DELTA BADGE (vs previous recorded day) ── */
+    .mn-delta {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 800; line-height: 1;
+      padding: 3px 7px; border-radius: 20px; white-space: nowrap;
+      vertical-align: middle;
+    }
+    .mn-delta.up   { color: #1b8a3a; background: #e7f6ec; border: 1px solid #bfe6cb; }
+    .mn-delta.down { color: #c62828; background: #fdeaea; border: 1px solid #f3c9c9; }
+    .mn-delta.flat { color: #8a8a8a; background: #f1f1f1; border: 1px solid #e2e2e2; }
+    td .mn-delta { margin-left: 8px; }
+
+    /* ── PRICE TREND CHART (detail sheet) ── */
+    .mn-trend {
+      margin: 4px 20px 0; padding: 14px 16px 12px;
+      background: #f7fbf8; border: 1.5px solid var(--border); border-radius: 14px;
+    }
+    .mn-trend-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 10px;
+    }
+    .mn-trend-title {
+      font-size: 13px; font-weight: 800; color: var(--text-dark);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .mn-trend-svg { width: 100%; height: 110px; display: block; overflow: visible; }
+    .mn-trend-svg .mn-area { fill: rgba(45,106,79,0.12); }
+    .mn-trend-svg .mn-line { fill: none; stroke: var(--green-mid); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+    .mn-trend-svg .mn-dot  { fill: var(--green-dark); }
+    .mn-trend-svg .mn-last { fill: var(--amber); stroke: #fff; stroke-width: 2; }
+    .mn-trend-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10.5px; color: var(--text-light); font-weight: 600; margin-top: 6px;
+    }
+    .mn-trend-empty {
+      font-size: 12px; color: var(--text-light); text-align: center;
+      padding: 18px 8px; line-height: 1.5;
+    }
 
     @media (min-width: 1025px) {
       .mandi-detail-overlay { align-items: center; }
@@ -1163,6 +1242,31 @@
       color: var(--text-light); padding: 12px 0 4px; letter-spacing: 0.3px;
     }
 
+    /* ── WhatsApp Share — card inline button (left of date) ── */
+    .mc-wa-inline-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; border: none; cursor: pointer;
+      color: #25D366; font-size: 12px; font-weight: 700;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      padding: 0; white-space: nowrap; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s;
+    }
+    .mc-wa-inline-btn:hover  { opacity: 0.75; }
+    .mc-wa-inline-btn:active { opacity: 0.5; }
+
+    /* ── WhatsApp Share — table row inline button ── */
+    .mt-wa-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #25D366; color: #fff; border: none;
+      border-radius: 8px; padding: 5px 11px;
+      font-size: 11.5px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .mt-wa-btn:hover { background: #1da851; }
+
     /* ── BOTTOM NAV (Mobile) ── */
     .bottom-nav { display: none; }
 
@@ -1416,6 +1520,7 @@
               onkeydown="mnComboKeydown(event,'commodity')"
               onblur="mnComboBlur('commodity')" />
             <span class="mn-combo-clear" id="mn-commodity-clear" onclick="mnComboClear('commodity')" title="Clear">✕</span>
+            <button class="mn-mic-btn" id="mn-commodity-mic" onmousedown="event.preventDefault()" onclick="mnStartVoice('commodity')" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
             <span class="mn-combo-chevron">▾</span>
           </div>
           <ul class="mn-combo-list" id="mn-commodity-list" role="listbox"></ul>
@@ -1602,7 +1707,7 @@
       <div class="mandi-detail-price-unit" id="md-price-unit">per quintal</div>
     </div>
 
-    <div class="mandi-detail-range-section">
+    <div class="mandi-detail-range-section" id="md-range-section">
       <div class="mandi-detail-range-bar-wrap">
         <span class="mandi-detail-range-min" id="md-min"></span>
         <div class="mandi-detail-range-track">
@@ -1614,6 +1719,14 @@
       <div class="mandi-detail-range-labels">
         <span>Min</span><span>Modal ▲</span><span>Max</span>
       </div>
+    </div>
+
+    <div class="mn-trend" id="md-trend" style="display:none;">
+      <div class="mn-trend-head">
+        <span class="mn-trend-title">📈 <span id="md-trend-title">मूल्य रुझान</span></span>
+        <span id="md-trend-delta"></span>
+      </div>
+      <div id="md-trend-body"></div>
     </div>
 
     <div class="mandi-detail-info">
@@ -1632,7 +1745,7 @@
         <span class="mandi-detail-row-label">राज्य (State)</span>
         <span class="mandi-detail-row-val" id="md-state"></span>
       </div>
-      <div class="mandi-detail-row">
+      <div class="mandi-detail-row" id="md-minmax-row">
         <span class="mandi-detail-row-icon">📉</span>
         <span class="mandi-detail-row-label">Min — Max</span>
         <span class="mandi-detail-row-val" id="md-minmax"></span>
@@ -1642,6 +1755,9 @@
         <span class="mandi-detail-row-label">तारीख (Date)</span>
         <span class="mandi-detail-row-val" id="md-date"></span>
       </div>
+      <button class="wa-confirm-btn" style="margin-top:16px;" onclick="shareMandiPrice(window._lastOpenedMandiIdx)">
+        💬 WhatsApp पर शेयर करें
+      </button>
     </div>
 
   </div>
@@ -1685,6 +1801,8 @@
     <a href="weather.html">Weather</a>
     <a href="mandi.html">Mandi</a>
     <a href="shop.html">Shop</a>
+    <a href="about.html">About Us</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
   </div>
   <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; All rights reserved.</div>
 </footer>
@@ -1717,10 +1835,14 @@
       per_quintal:      "/क्विंटल",
       prices_in:        "कीमतें ₹/क्विंटल में",
       th_market:        "मंडी", th_district: "जिला", th_commodity: "फसल",
-      th_variety:       "किस्म", th_modal: "Modal भाव", th_range: "Min / Max", th_date: "तारीख",
+      th_variety:       "किस्म", th_modal: "Modal भाव", th_trend: "रुझान", th_range: "Min / Max", th_date: "तारीख",
       share_btn:        "💬 WhatsApp पर शेयर करें",
       modal_price_lbl:  "Modal भाव",
       per_quintal_long: "प्रति क्विंटल",
+      price_trend:      "मूल्य रुझान",
+      trend_loading:    "रुझान लोड हो रहा है...",
+      trend_none:       "अभी पिछला डेटा उपलब्ध नहीं। रुझान कुछ दिनों में दिखेगा।",
+      vs_prev:          "पिछले दिन की तुलना में",
     },
     en: {
       nav_chat:         "AI Advisor",
@@ -1745,10 +1867,14 @@
       per_quintal:      "/quintal",
       prices_in:        "Prices in ₹/quintal",
       th_market:        "Market", th_district: "District", th_commodity: "Commodity",
-      th_variety:       "Variety", th_modal: "Modal Price", th_range: "Min / Max", th_date: "Date",
+      th_variety:       "Variety", th_modal: "Modal Price", th_trend: "Trend", th_range: "Min / Max", th_date: "Date",
       share_btn:        "💬 Share on WhatsApp",
       modal_price_lbl:  "Modal Price",
       per_quintal_long: "per quintal",
+      price_trend:      "Price Trend",
+      trend_loading:    "Loading trend...",
+      trend_none:       "No previous data yet. The trend will appear over the next few days.",
+      vs_prev:          "vs previous day",
     },
     kn: {
       nav_chat:         "AI ಕೇಳಿ",
@@ -1773,10 +1899,14 @@
       per_quintal:      "/ಕ್ವಿಂಟಲ್",
       prices_in:        "ಬೆಲೆ ₹/ಕ್ವಿಂಟಲ್ ನಲ್ಲಿ",
       th_market:        "ಮಾರ್ಕೆಟ್", th_district: "ಜಿಲ್ಲೆ", th_commodity: "ಸರಕು",
-      th_variety:       "ತಳಿ", th_modal: "Modal ಬೆಲೆ", th_range: "Min / Max", th_date: "ದಿನಾಂಕ",
+      th_variety:       "ತಳಿ", th_modal: "Modal ಬೆಲೆ", th_trend: "ಪ್ರವೃತ್ತಿ", th_range: "Min / Max", th_date: "ದಿನಾಂಕ",
       share_btn:        "💬 WhatsApp ನಲ್ಲಿ ಹಂಚಿ",
       modal_price_lbl:  "Modal ಬೆಲೆ",
       per_quintal_long: "ಪ್ರತಿ ಕ್ವಿಂಟಲ್",
+      price_trend:      "ಬೆಲೆ ಪ್ರವೃತ್ತಿ",
+      trend_loading:    "ಪ್ರವೃತ್ತಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+      trend_none:       "ಹಿಂದಿನ ಡೇಟಾ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ. ಕೆಲವು ದಿನಗಳಲ್ಲಿ ಪ್ರವೃತ್ತಿ ಕಾಣಿಸುತ್ತದೆ.",
+      vs_prev:          "ಹಿಂದಿನ ದಿನಕ್ಕೆ ಹೋಲಿಸಿದರೆ",
     }
   };
 
@@ -2079,15 +2209,14 @@
   // ══════════════════════════════════════
   // MANDI — Load states on init
   // ══════════════════════════════════════
-  async function loadStates() {
+  async function loadStates(presetState) {
     const states = Object.keys(INDIA_STATES_DISTRICTS).sort();
     const sel = document.getElementById('mandi-state');
     sel.innerHTML = `<option value="">${t('select_state')}</option>` +
       states.map(s => `<option value="${s}">${s}</option>`).join('');
     _mnOptions.state = states;
 
-    // Default to Uttar Pradesh
-    const defaultState = 'Uttar Pradesh';
+    const defaultState = (presetState && states.includes(presetState)) ? presetState : 'Uttar Pradesh';
     sel.value = defaultState;
     const stateInput = document.getElementById('mn-state-input');
     if (stateInput) { stateInput.value = defaultState; document.getElementById('mn-state-clear').classList.add('visible'); }
@@ -2128,6 +2257,73 @@
   // ══════════════════════════════════════
   // RENDER MANDI RESULT (called on fetch + on lang change)
   // ══════════════════════════════════════
+
+  // WhatsApp SVG logo — reused in both card and table buttons
+  const WA_ICON_SM  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+  // Green-filled variant — used inline without a coloured background
+  const WA_ICON_GREEN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+  const WA_ICON_LG  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+  // Day-over-day delta chip from the snapshot's change_pct field
+  function mnDeltaBadge(p) {
+    if (p.change_pct === null || p.change_pct === undefined) return '';
+    const v = Number(p.change_pct);
+    if (isNaN(v)) return '';
+    const cls = v > 0 ? 'up' : (v < 0 ? 'down' : 'flat');
+    const arrow = v > 0 ? '▲' : (v < 0 ? '▼' : '■');
+    const sign = v > 0 ? '+' : '';
+    return `<span class="mn-delta ${cls}" title="${t('vs_prev')}">${arrow} ${sign}${v}%</span>`;
+  }
+
+  // Direction class from change_pct (defaults to flat)
+  function mnTrendCls(p) {
+    const v = Number(p.change_pct);
+    if (isNaN(v) || v === 0) return 'flat';
+    return v > 0 ? 'up' : 'down';
+  }
+
+  // Inline mini sparkline from p.spark (array of recent modal prices)
+  function mnSparkline(p, w = 92, h = 34) {
+    const vals = (p.spark || []).map(Number).filter(v => !isNaN(v));
+    if (vals.length < 2) return '';
+    const lo = Math.min(...vals), hi = Math.max(...vals), span = (hi - lo) || 1;
+    const padY = 3;
+    const xs = vals.map((_, i) => i * w / (vals.length - 1));
+    const ys = vals.map(v => padY + (h - 2 * padY) * (1 - (v - lo) / span));
+    const line = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+    const area = `0,${h} ${line} ${w},${h}`;
+    const lx = xs[xs.length - 1], ly = ys[ys.length - 1];
+    return `<svg class="mc-spark ${mnTrendCls(p)}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        <polygon class="mc-spark-area" points="${area}"></polygon>
+        <polyline class="mc-spark-line" points="${line}"></polyline>
+        <circle class="mc-spark-dot" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.6"></circle>
+      </svg>`;
+  }
+
+  // Compact min↔max bar with modal dot — hidden when min == max (no real range)
+  function mnRangeBar(p) {
+    const min = parseFloat(p.min_price);
+    const max = parseFloat(p.max_price);
+    if (isNaN(min) || isNaN(max) || max <= min) return '';
+    const modal = parseFloat(p.modal_price) || min;
+    const pct = Math.min(100, Math.max(0, ((modal - min) / (max - min)) * 100));
+    return `<div class="mc-range">
+        <span>₹${p.min_price}</span>
+        <div class="mc-range-track">
+          <div class="mc-range-fill" style="width:${pct}%"></div>
+          <div class="mc-range-dot" style="left:${pct}%"></div>
+        </div>
+        <span>₹${p.max_price}</span>
+      </div>`;
+  }
+
+  // Trend cell content; shows a muted "–" when no trend data yet
+  function mnTrendInline(p) {
+    const badge = mnDeltaBadge(p);
+    const spark = mnSparkline(p);
+    if (!badge && !spark) return '<span class="mt-none">–</span>';
+    return badge + spark;
+  }
+
   function renderMandiResult(prices) {
     const result = document.getElementById('mandi-result');
     if (!result || !prices || !prices.length) return;
@@ -2137,19 +2333,24 @@
           <thead>
             <tr>
               <th>${t('th_market')}</th><th>${t('th_district')}</th><th>${t('th_commodity')}</th>
-              <th>${t('th_variety')}</th><th>${t('th_modal')}</th><th>${t('th_range')}</th><th>${t('th_date')}</th>
+              <th>${t('th_variety')}</th><th>${t('th_modal')}</th><th>${t('th_trend')}</th><th>${t('th_range')}</th><th>${t('th_date')}</th>
+              <th style="width:110px;text-align:center;">${WA_ICON_SM}</th>
             </tr>
           </thead>
           <tbody>
-            ${prices.map(p => `
+            ${prices.map((p, i) => `
               <tr>
                 <td>${tMarket(p.market)}</td>
                 <td>${tMarket(p.district)}</td>
                 <td>${tCommodity(p.commodity)}</td>
                 <td>${tVariety(p.variety)}</td>
                 <td class="price-modal">₹${p.modal_price}${t('per_quintal')}</td>
-                <td class="price-range">₹${p.min_price} – ₹${p.max_price}</td>
+                <td><div class="mt-trend">${mnTrendInline(p)}</div></td>
+                <td class="price-range">${parseFloat(p.max_price) > parseFloat(p.min_price) ? '₹' + p.min_price + ' – ₹' + p.max_price : '—'}</td>
                 <td>${p.date}</td>
+                <td style="text-align:center;">
+                  <button class="mt-wa-btn" onclick="shareMandiPrice(${i})">${WA_ICON_SM} शेयर करें</button>
+                </td>
               </tr>`).join('')}
           </tbody>
         </table>
@@ -2157,24 +2358,33 @@
 
       <div class="mandi-cards-mobile">
         ${prices.map((p, i) => `
-          <div class="mandi-card-mobile" onclick="openMandiDetail(${i})">
-            <div class="mandi-card-accent"></div>
-            <div class="mandi-card-content">
-              <div class="mandi-card-top">
-                <div>
-                  <div class="mandi-card-commodity">🌾 ${tCommodity(p.commodity)}</div>
-                  <div class="mandi-card-variety-chip">🏷️ ${tVariety(p.variety)}</div>
+          <div class="mandi-card" onclick="openMandiDetail(${i})">
+            <div class="mc-bar ${mnTrendCls(p)}"></div>
+            <div class="mc-inner">
+              <div class="mc-head">
+                <div style="min-width:0;flex:1;">
+                  <div class="mc-name">${tCommodity(p.commodity)}</div>
+                  <div class="mc-mkt">${tMarket(p.market)} · ${tMarket(p.district)}</div>
                 </div>
-                <div class="mandi-card-date">📅 ${p.date}</div>
+                ${mnDeltaBadge(p)}
               </div>
-              <div class="mandi-card-price-section">
-                <div class="mandi-card-price-main">₹${p.modal_price}<span>${t('per_quintal')}</span></div>
-                <div class="mandi-card-range">↕ ₹${p.min_price} – ₹${p.max_price}</div>
+              <div class="mc-prow">
+                <div>
+                  <div class="mc-price">₹${p.modal_price}<span>${t('per_quintal')}</span></div>
+                  ${p.prev_modal_price ? `<div class="mc-prev">${t('vs_prev')}: <s>₹${p.prev_modal_price}</s></div>` : ''}
+                </div>
+                ${mnSparkline(p, 88, 38)}
               </div>
-              <div class="mandi-card-footer">
-                <span>🏪 ${tMarket(p.market)}</span>
-                <span>📍 ${tMarket(p.district)}</span>
-                <span style="margin-left:auto;color:var(--green-light);font-size:16px;">›</span>
+              ${mnRangeBar(p)}
+              <div class="mc-foot">
+                <div class="mc-tags">
+                  ${p.variety && p.variety !== '-' ? `<span class="mc-tag variety">${tVariety(p.variety)}</span>` : ''}
+                  ${p.state && p.state !== '-' ? `<span class="mc-tag">${p.state}</span>` : ''}
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                  <button class="mc-wa-inline-btn" onclick="event.stopPropagation();shareMandiPrice(${i})">${WA_ICON_GREEN} WhatsApp पर शेयर करें</button>
+                  <span class="mc-date">${p.date} <span class="mc-chevron">›</span></span>
+                </div>
               </div>
             </div>
           </div>`).join('')}
@@ -2288,7 +2498,17 @@
     if (clearBtn) clearBtn.classList.toggle('visible', q.length > 0);
 
     const all = _mnOptions[id] || [];
-    const filtered = q ? all.filter(o => o.toLowerCase().includes(q.toLowerCase())) : all;
+    let filtered;
+    if (id === 'commodity' && q) {
+      const ql = q.toLowerCase();
+      filtered = all.filter(o => {
+        if (o.toLowerCase().includes(ql)) return true;
+        const hi = COMMODITY_HI[o.toLowerCase()] || '';
+        return hi.includes(ql);
+      });
+    } else {
+      filtered = q ? all.filter(o => o.toLowerCase().includes(q.toLowerCase())) : all;
+    }
 
     const list = document.getElementById('mn-' + id + '-list');
     document.getElementById('mn-' + id + '-wrap').classList.add('open');
@@ -2308,9 +2528,22 @@
     filtered.forEach(opt => {
       const li = document.createElement('li');
       li.setAttribute('role', 'option');
-      li.dataset.value = (id === 'commodity' && opt === 'All Commodities') ? '' : opt;
-      li.innerHTML = icon + ' ' + mnHighlight(opt, q);
-      li.addEventListener('mousedown', e => { e.preventDefault(); mnComboSelect(id, opt, li.dataset.value); });
+
+      if (id === 'commodity') {
+        const hiName = COMMODITY_HI[opt.toLowerCase()] || null;
+        const displayLabel = hiName ? hiName + ' • ' + opt : opt;
+        li.dataset.value = opt === 'All Commodities' ? '' : opt;
+        li.dataset.label = displayLabel;
+        li.innerHTML = '🌾 ' + (hiName
+          ? mnHighlight(hiName, q) + '<span class="mn-en-tag">' + mnHighlight(opt, q) + '</span>'
+          : mnHighlight(opt, q));
+        li.addEventListener('mousedown', e => { e.preventDefault(); mnComboSelect(id, displayLabel, li.dataset.value); });
+      } else {
+        li.dataset.value = opt;
+        li.innerHTML = icon + ' ' + mnHighlight(opt, q);
+        li.addEventListener('mousedown', e => { e.preventDefault(); mnComboSelect(id, opt, li.dataset.value); });
+      }
+
       list.appendChild(li);
     });
   }
@@ -2336,6 +2569,30 @@
     mnComboFilter(id);
   }
 
+  function mnStartVoice(id) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('आपका ब्राउज़र voice input सपोर्ट नहीं करता।'); return; }
+    const btn   = document.getElementById('mn-' + id + '-mic');
+    const input = document.getElementById('mn-' + id + '-input');
+    if (btn.classList.contains('listening')) return;
+    const rec  = new SR();
+    const lang = window._lang || 'hi';
+    rec.lang            = lang === 'kn' ? 'kn-IN' : lang === 'en' ? 'en-IN' : 'hi-IN';
+    rec.interimResults  = false;
+    rec.maxAlternatives = 1;
+    btn.classList.add('listening');
+    rec.start();
+    rec.onresult = function(e) {
+      const text = e.results[0][0].transcript.trim();
+      input.value = text;
+      btn.classList.remove('listening');
+      mnComboFilter(id);
+      mnComboOpen(id);
+    };
+    rec.onerror = function() { btn.classList.remove('listening'); };
+    rec.onend   = function() { btn.classList.remove('listening'); };
+  }
+
   function mnComboKeydown(e, id) {
     const wrap = document.getElementById('mn-' + id + '-wrap');
     if (!wrap.classList.contains('open')) { mnComboOpen(id); return; }
@@ -2350,7 +2607,7 @@
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const focused = items[_mnFocusIdx[id]];
-      if (focused) mnComboSelect(id, focused.textContent.replace(/^[🏛️📍🌾]\s/, '').trim(), focused.dataset.value);
+      if (focused) mnComboSelect(id, focused.dataset.label || focused.textContent.replace(/^[🏛️📍🌾]\s/, '').trim(), focused.dataset.value);
       return;
     } else if (e.key === 'Escape') {
       mnComboClose(id); return;
@@ -2873,27 +3130,141 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
     document.getElementById('md-market').textContent      = tMarket(p.market);
     document.getElementById('md-district').textContent    = tMarket(p.district);
     document.getElementById('md-state').textContent       = window._mandiState || '—';
-    document.getElementById('md-minmax').textContent      = '₹' + p.min_price + ' — ₹' + p.max_price;
     document.getElementById('md-date').textContent        = p.date;
-    document.getElementById('md-min').textContent         = '₹' + p.min_price;
-    document.getElementById('md-max').textContent         = '₹' + p.max_price;
 
-    // Price range bar: position dot at modal price between min and max
+    // Price range bar: show only when min < max
     const min   = parseFloat(p.min_price)   || 0;
-    const max   = parseFloat(p.max_price)   || 1;
+    const max   = parseFloat(p.max_price)   || 0;
     const modal = parseFloat(p.modal_price) || min;
-    const pct   = max > min ? Math.min(100, Math.max(0, ((modal - min) / (max - min)) * 100)) : 50;
-    document.getElementById('md-range-fill').style.width = pct + '%';
-    document.getElementById('md-range-dot').style.left   = pct + '%';
+    const hasRange = max > min;
+    document.getElementById('md-range-section').style.display = hasRange ? '' : 'none';
+    document.getElementById('md-minmax-row').style.display    = hasRange ? '' : 'none';
+    if (hasRange) {
+      document.getElementById('md-minmax').textContent = '₹' + p.min_price + ' — ₹' + p.max_price;
+      document.getElementById('md-min').textContent    = '₹' + p.min_price;
+      document.getElementById('md-max').textContent    = '₹' + p.max_price;
+      const pct = Math.min(100, Math.max(0, ((modal - min) / (max - min)) * 100));
+      document.getElementById('md-range-fill').style.width = pct + '%';
+      document.getElementById('md-range-dot').style.left   = pct + '%';
+    }
 
 
     document.getElementById('mandi-detail-modal').classList.add('open');
     document.body.style.overflow = 'hidden';
+
+    loadMandiTrend(p);
+  }
+
+  // ══════════════════════════════════════
+  // PRICE TREND (history chart in detail sheet)
+  // ══════════════════════════════════════
+  let _mnTrendReqId = 0;
+  async function loadMandiTrend(p) {
+    const box   = document.getElementById('md-trend');
+    const title = document.getElementById('md-trend-title');
+    const delta = document.getElementById('md-trend-delta');
+    const body  = document.getElementById('md-trend-body');
+    if (!box) return;
+
+    title.textContent = t('price_trend');
+    delta.innerHTML   = mnDeltaBadge(p);
+    box.style.display = 'block';
+    body.innerHTML    = `<div class="mn-trend-empty">${t('trend_loading')}</div>`;
+
+    const reqId  = ++_mnTrendReqId;
+    const params = new URLSearchParams({ commodity: p.commodity || '' });
+    if (p.market)              params.set('market',   p.market);
+    if (p.district)            params.set('district', p.district);
+    if (window._mandiState)    params.set('state',    window._mandiState);
+    if (p.variety && p.variety !== '-') params.set('variety', p.variety);
+
+    try {
+      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/shop/mandi/history?${params.toString()}`);
+      const data = await res.json();
+      if (reqId !== _mnTrendReqId) return;   // a newer card was opened
+      renderMandiTrend(data.points || []);
+    } catch (e) {
+      if (reqId !== _mnTrendReqId) return;
+      body.innerHTML = `<div class="mn-trend-empty">${t('trend_none')}</div>`;
+    }
+  }
+
+  function renderMandiTrend(points) {
+    const body = document.getElementById('md-trend-body');
+    const pts  = points
+      .map(p => ({ date: p.date, v: parseFloat(p.modal_price) }))
+      .filter(p => !isNaN(p.v));
+
+    // Need at least 2 points to draw a meaningful trend
+    if (pts.length < 2) {
+      body.innerHTML = `<div class="mn-trend-empty">${t('trend_none')}</div>`;
+      return;
+    }
+
+    const W = 320, H = 110, padX = 6, padY = 14;
+    const xs = pts.map((_, i) => padX + i * (W - 2 * padX) / (pts.length - 1));
+    const vals = pts.map(p => p.v);
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const span = (hi - lo) || 1;
+    const ys = vals.map(v => padY + (H - 2 * padY) * (1 - (v - lo) / span));
+
+    const linePts = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+    const areaPts = `${padX},${H - padY} ${linePts} ${(W - padX)},${H - padY}`;
+    const lastI   = pts.length - 1;
+
+    const svg = `
+      <svg class="mn-trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <polygon class="mn-area" points="${areaPts}"></polygon>
+        <polyline class="mn-line" points="${linePts}"></polyline>
+        ${xs.map((x, i) => i === lastI
+          ? `<circle class="mn-last" cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="4.5"></circle>`
+          : `<circle class="mn-dot" cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="2"></circle>`
+        ).join('')}
+      </svg>
+      <div class="mn-trend-labels">
+        <span>₹${lo.toLocaleString('en-IN')}</span>
+        <span>${pts[0].date} → ${pts[lastI].date}</span>
+        <span>₹${hi.toLocaleString('en-IN')}</span>
+      </div>`;
+    body.innerHTML = svg;
   }
 
   function closeMandiDetail() {
     document.getElementById('mandi-detail-modal').classList.remove('open');
     document.body.style.overflow = '';
+  }
+
+  // ══════════════════════════════════════
+  // WHATSAPP SHARE — crop-specific deep link
+  // ══════════════════════════════════════
+  function shareMandiPrice(index) {
+    const p = window._mandiPrices && window._mandiPrices[index];
+    if (!p) return;
+    const state = window._mandiState || '';
+
+    const commodityHi = tCommodity(p.commodity);
+    const marketHi    = tMarket(p.market);
+    const districtHi  = tMarket(p.district);
+
+    const url = 'https://krashimitra.in/mandi.html'
+      + '?state='     + encodeURIComponent(state)
+      + '&commodity=' + encodeURIComponent(p.commodity)
+      + (p.district ? '&district=' + encodeURIComponent(p.district) : '');
+
+    let msg = '🌾 *' + commodityHi + ' — आज का मंडी भाव*\n\n';
+    msg += '💰 भाव: *₹' + Number(p.modal_price).toLocaleString('en-IN') + '/क्विंटल*\n';
+    const pct = Number(p.change_pct);
+    if (!isNaN(pct) && p.change_pct != null) {
+      if (pct > 0)      msg += '📈 कल से +' + pct + '% वृद्धि\n';
+      else if (pct < 0) msg += '📉 कल से ' + pct + '% गिरावट\n';
+    }
+    msg += '🏪 मंडी: ' + marketHi + '\n';
+    msg += '📍 जिला: ' + districtHi + '\n';
+    msg += '📅 तारीख: ' + p.date + '\n\n';
+    msg += '👉 ताजा भाव देखें:\n' + url + '\n\n';
+    msg += '📲 *KrashiMitra* — किसान का डिजिटल साथी';
+
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
   }
 
   // Close on Escape key
@@ -2902,9 +3273,44 @@ ${tkLine ? tkLine + '\n' : ''}${userLabel}
   });
 
   // ══ INIT ══
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     setLang(currentLang);
-    loadStates();
+
+    // Read URL params — shared crop links land here
+    const _urlParams    = new URLSearchParams(window.location.search);
+    const _urlState     = _urlParams.get('state');
+    const _urlCommodity = _urlParams.get('commodity');
+    const _urlDistrict  = _urlParams.get('district');
+
+    // Load states (pass URL state so it's selected immediately, avoiding a double fetch)
+    await loadStates(_urlState || undefined);
+
+    // If commodity or district were in the URL, apply them and re-fetch
+    if (_urlCommodity || _urlDistrict) {
+      if (_urlDistrict) {
+        const dSel = document.getElementById('mandi-district-filter');
+        if (dSel) {
+          dSel.value = _urlDistrict;
+          const dInp = document.getElementById('mn-district-input');
+          if (dInp) { dInp.value = _urlDistrict; document.getElementById('mn-district-clear').classList.add('visible'); }
+        }
+      }
+      if (_urlCommodity) {
+        const cSel = document.getElementById('mandi-commodity');
+        if (cSel) {
+          cSel.value = _urlCommodity;
+          const cInp = document.getElementById('mn-commodity-input');
+          if (cInp) { cInp.value = tCommodity(_urlCommodity); document.getElementById('mn-commodity-clear').classList.add('visible'); }
+        }
+      }
+      await fetchMandiPrices();
+      // Scroll results into view after a short delay
+      setTimeout(() => {
+        const r = document.getElementById('mandi-result');
+        if (r) r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 600);
+    }
+
     // Set hero date
     const dateEl = document.getElementById('mandi-hero-date');
     if (dateEl) {

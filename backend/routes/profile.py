@@ -461,8 +461,14 @@ def get_profile(
             "data":    {}
         }
 
+    user = db.query(User).filter(User.id == user_id).first()
+    data = _profile_to_dict(profile)
+    if user:
+        data["email"]         = user.email
+        data["auth_provider"] = user.auth_provider or "email"
+
     return {
         "success": True,
         "message": "",
-        "data":    _profile_to_dict(profile),
+        "data":    data,
     }

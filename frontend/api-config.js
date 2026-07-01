@@ -1,13 +1,6 @@
 // ============================================================
 // KrashiMitra — Frontend API base auto-detection
-// ------------------------------------------------------------
-// When the page is opened locally (Live Server, file://, localhost,
-// 127.0.0.1, or a LAN IP), API calls go to your LOCAL backend at
-// http://<host>:8000. In production they go to the Render server.
-//
-// Override manually if needed BEFORE this script loads, e.g.:
-//   <script>window.KRASHIMITRA_API_BASE = 'http://localhost:8000';</script>
-//   <script src="api-config.js"></script>
+
 // ============================================================
 (function () {
   if (window.KRASHIMITRA_API_BASE) return; // respect a manual override
@@ -27,3 +20,6 @@
 
   console.log('[KrashiMitra] API base =', window.KRASHIMITRA_API_BASE);
 })();
+
+// ── Google OAuth Client ID ────────────────────────────────────
+window.KRASHIMITRA_GOOGLE_CLIENT_ID = "235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com";
