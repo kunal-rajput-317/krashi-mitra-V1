@@ -1025,7 +1025,7 @@
 ══════════════════════════ -->
 <header class="header">
   <a class="header-logo" href="#">
-    <div class="logo-icon">🌾</div>
+    <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="logo-icon" style="border-radius:50%;object-fit:cover;">
     <div class="logo-text">
       <span class="logo-title">कृषि मित्र</span>
       <span class="logo-tagline"> किसान का डिजिटल साथी</span>
@@ -1056,7 +1056,7 @@
 
   <div class="hero-portrait" id="hero-portrait">
     <img id="hero-photo" src="assets/hero-section-photo.png" alt=""
-      onerror="document.getElementById('hero-portrait').style.display='none'">
+      onerror="this.style.display='none'">
   </div>
 
   <div class="hero-inner">
@@ -1374,7 +1374,7 @@
       const profile = await res.json();
       if (profile.photo) {
         const hp = document.getElementById('hero-photo');
-        if (hp) hp.src = profile.photo;
+        if (hp) { hp.style.display = ''; hp.src = profile.photo; }
       }
       if (profile.district) {
         const badge = document.getElementById('w-district');

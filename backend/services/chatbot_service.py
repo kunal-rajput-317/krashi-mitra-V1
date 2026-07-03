@@ -26,6 +26,148 @@ def is_good_answer(answer: str) -> bool:
     return not any(phrase.lower() in lower for phrase in BAD_ANSWER_PHRASES)
 
 
+# ── Website feature suggestions ──────────────────────────────
+# After answering a farmer's question, surface the most relevant KrashiMitra
+# tool so the assistant actively guides users to site features. Deterministic
+# (intent keywords → feature) so it's reliable, testable and token-free.
+# First matching rule wins, so order = priority.
+FEATURE_RULES = [
+    {
+        "id": "mandi",
+        "url": "mandi.html",
+        "keywords": [
+            "भाव", "कीमत", "रेट", "मंडी", "दाम", "मूल्य", "क्विंटल",
+            "बेच", "बेचना", "बेचूं", "बेचूँ", "बेचनी",
+            "price", "rate", "mandi", "sell", "bhav", "daam", "quintal", "bhaav",
+        ],
+        "label": {
+            "hindi": "📊 आज का मंडी भाव देखें",
+            "kannada": "📊 ಇಂದಿನ ಮಂಡಿ ಬೆಲೆ ನೋಡಿ",
+            "english": "📊 See today's mandi prices",
+        },
+    },
+    {
+        "id": "shop",
+        "url": "shop.html",
+        "keywords": [
+            "बीज", "खाद", "उर्वरक", "यूरिया", "डीएपी", "कीटनाशक", "दवा", "दवाई",
+            "स्प्रे", "छिड़काव", "उपकरण", "खरीद", "खरीदना", "खरपतवार",
+            "रोग", "बीमारी", "इलाज", "कीट", "फफूंद",
+            "seed", "fertilizer", "urea", "dap", "npk", "pesticide", "spray",
+            "tool", "buy", "khareed", "khaad", "disease", "pest", "fungus",
+        ],
+        "label": {
+            "hindi": "🛒 बीज/खाद/दवा खरीदें (दुकान)",
+            "kannada": "🛒 ಬೀಜ/ಗೊಬ್ಬರ ಖರೀದಿಸಿ (ಅಂಗಡಿ)",
+            "english": "🛒 Buy seeds / fertilizer (Shop)",
+        },
+    },
+    {
+        "id": "yojana",
+        "url": "sarkari_yojana.html",
+        # NOTE: use "फसल बीमा" / "बीमा योजना" (not bare "बीमा") — "बीमा" is a
+        # substring of "बीमारी" (disease) and would wrongly match crop-disease
+        # questions to the schemes page.
+        "keywords": [
+            "योजना", "सब्सिडी", "अनुदान", "ऋण", "लोन", "फसल बीमा", "बीमा योजना",
+            "सरकारी", "scheme", "subsidy", "loan", "insurance", "pm kisan",
+            "किसान सम्मान", "kcc", "credit card", "yojana", "yojna",
+        ],
+        "label": {
+            "hindi": "🏛️ सरकारी योजनाएं देखें",
+            "kannada": "🏛️ ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು ನೋಡಿ",
+            "english": "🏛️ See govt schemes",
+        },
+    },
+    {
+        "id": "articles",
+        "url": "articles/index.html",
+        "keywords": [
+            "कैसे", "तरीका", "विधि", "गाइड", "कब",
+            "उगाना", "बुवाई", "सिंचाई", "पैदावार", "उत्पादन",
+            "how", "guide", "method", "when", "grow",
+            "irrigation", "yield", "kaise",
+        ],
+        "label": {
+            "hindi": "📰 विस्तृत खेती गाइड पढ़ें",
+            "kannada": "📰 ವಿವರವಾದ ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ ಓದಿ",
+            "english": "📰 Read detailed farming guides",
+        },
+    },
+]
+
+
+# Features that aren't keyword-matched here but are surfaced by the router
+# (e.g. the weather redirect intercepts weather questions before this runs).
+_EXTRA_FEATURES = {
+    "weather": {
+        "url": "weather.html",
+        "label": {
+            "hindi": "🌤️ मौसम देखें",
+            "kannada": "🌤️ ಹವಾಮಾನ ನೋಡಿ",
+            "english": "🌤️ Check weather",
+        },
+    },
+}
+
+
+def _lang_key(language: str) -> str:
+    lang = (language or "hindi").lower()
+    if lang in ("kannada", "kn"):
+        return "kannada"
+    if lang in ("english", "en"):
+        return "english"
+    return "hindi"
+
+
+def feature_suggestion(feature_id: str, language: str = "hindi") -> dict | None:
+    """Build a {id, url, label} chip for a known feature id (any language)."""
+    meta = _EXTRA_FEATURES.get(feature_id)
+    if not meta:
+        meta = next(({"url": r["url"], "label": r["label"]}
+                     for r in FEATURE_RULES if r["id"] == feature_id), None)
+    if not meta:
+        return None
+    lk = _lang_key(language)
+    return {
+        "id": feature_id,
+        "url": meta["url"],
+        "label": meta["label"].get(lk, meta["label"]["hindi"]),
+    }
+
+
+# Greetings / small talk — used to suppress a weak "articles" suggestion that
+# only matched on generic words like "कैसे" (as in "आप कैसे हैं" = how are you).
+_GREETINGS = [
+    "नमस्ते", "नमस्कार", "प्रणाम", "राम राम", "हैलो", "हेलो", "हाय",
+    "कैसे हैं", "कैसे हो", "धन्यवाद", "शुक्रिया",
+    "hello", "hii", "hey", "thanks", "thank you", "how are you", "good morning",
+]
+
+
+def suggest_feature(question: str, language: str = "hindi") -> dict | None:
+    """
+    Map a farmer's question to the most relevant KrashiMitra feature.
+    Returns {id, url, label} for a clickable chip, or None when nothing
+    is clearly relevant (we don't force a suggestion on every message).
+    """
+    if not question:
+        return None
+    q = question.lower()
+    lk = _lang_key(language)
+    for rule in FEATURE_RULES:
+        if any(kw.lower() in q for kw in rule["keywords"]):
+            # Don't push a generic "read guides" chip on a plain greeting.
+            if rule["id"] == "articles" and any(g in q for g in _GREETINGS):
+                return None
+            return {
+                "id": rule["id"],
+                "url": rule["url"],
+                "label": rule["label"].get(lk, rule["label"]["hindi"]),
+            }
+    return None
+
+
 # ── Load all crop JSON files once at import ──────────────────
 def _load_all_crops() -> dict:
     crops = {}
@@ -139,13 +281,13 @@ async def call_gemini(prompt: str) -> str:
     if not keys:
         raise ValueError("No Gemini API key configured in environment")
 
-    # generationConfig — disable thinking for gemini-2.5-flash to save quota
+    # generationConfig — disable thinking for models that support it, to save quota
     gen_config: dict = {
         "temperature":     0.3,
         "maxOutputTokens": 500,
         "topP":            0.8,
     }
-    if "2.5" in model:
+    if "2.5" in model or "3.5" in model:
         gen_config["thinkingConfig"] = {"thinkingBudget": 0}
 
     last_error = None

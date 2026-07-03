@@ -3,10 +3,63 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Help Centre — 🌾कृषि मित्र Helpline</title>
+
+  <!-- ═══════════════ SEO ═══════════════ -->
+  <title>किसान हेल्पलाइन व सहायता केंद्र – Help Centre | KrashiMitra</title>
 
   <link rel="icon" href="https://krashimitra.in/images/favicon.png" type="image/png">
   <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
+
+  <meta name="description" content="KrashiMitra सहायता केंद्र — किसान हेल्पलाइन +91 9870951001 पर कॉल करें या WhatsApp करें। मंडी भाव, मौसम, AI सलाह से जुड़े सवालों के जवाब। निःशुल्क सहायता।"/>
+  <meta name="keywords" content="kisan helpline, किसान हेल्पलाइन नंबर, krashimitra help, kisan sahayata, farmer support india, kheti helpline hindi"/>
+  <meta name="robots" content="index, follow"/>
+  <link rel="canonical" href="https://krashimitra.in/help.html"/>
+  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/help.html"/>
+  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/help.html"/>
+  <meta name="geo.region" content="IN"/>
+  <meta name="author" content="KrashiMitra — krashimitra.in"/>
+  <meta name="theme-color" content="#4A6741"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:locale" content="hi_IN"/>
+  <meta property="og:title" content="किसान हेल्पलाइन व सहायता केंद्र – Help Centre | KrashiMitra"/>
+  <meta property="og:description" content="किसान हेल्पलाइन +91 9870951001 — कॉल या WhatsApp करें। निःशुल्क कृषि सहायता।"/>
+  <meta property="og:url" content="https://krashimitra.in/help.html"/>
+  <meta property="og:site_name" content="KrashiMitra — किसान का साथी"/>
+  <meta property="og:image" content="https://krashimitra.in/images/og-mandi-banner.png"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="किसान हेल्पलाइन व सहायता केंद्र | KrashiMitra"/>
+  <meta name="twitter:description" content="किसान हेल्पलाइन +91 9870951001 — निःशुल्क कृषि सहायता।"/>
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ContactPage",
+        "@id": "https://krashimitra.in/help.html#webpage",
+        "url": "https://krashimitra.in/help.html",
+        "name": "किसान हेल्पलाइन व सहायता केंद्र – Help Centre | KrashiMitra",
+        "inLanguage": ["hi", "en-IN"],
+        "isPartOf": { "@id": "https://krashimitra.in/#website" },
+        "about": { "@id": "https://krashimitra.in/#organization" },
+        "dateModified": "2026-07-03"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://krashimitra.in/help.html#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "होम", "item": "https://krashimitra.in/" },
+          { "@type": "ListItem", "position": 2, "name": "Help Centre", "item": "https://krashimitra.in/help.html" }
+        ]
+      }
+    ]
+  }
+  </script>
   
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
@@ -444,7 +497,7 @@
 
 <!-- NAV -->
 <nav>
-  <a href="/" class="logo"><span class="logo-leaf">🌾</span>कृषि मित्र</a>
+  <a href="/" class="logo"><img src="assets/krashimitra_logo.png" alt="" class="logo-leaf" style="width:1.1em;height:1.1em;border-radius:50%;object-fit:cover;vertical-align:middle;display:inline-block;">कृषि मित्र</a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
     <li><a href="khoj.html">Crop Advisory</a></li>
@@ -682,16 +735,6 @@ document.getElementById('searchInput').addEventListener('keydown', e => { if (e.
 renderFAQ('crops');
 </script>
 
-<!-- ── Floating Map Button ── -->
-<style>
-.map-fab{position:fixed;bottom:154px;right:18px;width:46px;height:46px;border-radius:50%;background:#1a3c2e;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 3px 14px rgba(26,60,46,.4);z-index:9998;transition:transform .18s,box-shadow .18s;-webkit-tap-highlight-color:transparent;font-size:21px;color:#fff;}
-.map-fab:hover{transform:scale(1.1);box-shadow:0 5px 20px rgba(26,60,46,.6);}
-.map-fab:active{transform:scale(.93);}
-.map-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:11px;font-weight:600;font-family:sans-serif;padding:4px 11px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s;}
-.map-fab:hover .map-fab-tip{opacity:1;}
-@media(min-width:1025px){.map-fab{bottom:108px;right:28px;width:50px;height:50px;font-size:22px;}}
-</style>
-<a href="map.html" class="map-fab" title="कृषि मानचित्र">🗺️<span class="map-fab-tip">कृषि मैप</span></a>
 <!-- ── Floating AI Chat Button ── -->
 <style>
 .ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;overflow:visible;padding:0;}

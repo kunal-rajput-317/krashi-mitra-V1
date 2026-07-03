@@ -14,6 +14,7 @@
 #   ⚠️  chat.py   → REMOVED (duplicated /ask from chatbot.py, caused route conflict)
 # ============================================================
 
+import asyncio
 import os
 from pathlib import Path
 
@@ -23,6 +24,9 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 load_dotenv()
+
+# Quieter HuggingFace loads (skip telemetry round-trips on model init)
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 from backend.routes import cart  # ensure CartItem model registered before create_all
 
@@ -92,11 +96,40 @@ cors_origins = list(dict.fromkeys(cors_origins))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    # Accept any localhost/127.0.0.1 port for local dev (Live Server hops
+    # between 5500/5501/5502/… whenever a port is busy). Avoids having to
+    # re-list each new port in CORS_ORIGINS. Production origins stay in the
+    # explicit allow_origins list above.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
     expose_headers=["*"],
 )
+
+
+async def _warm_up_models():
+    """
+    Pre-load the sentence-transformer embedding model used by the semantic
+    cache and RAG retriever. Without this, the FIRST /ask request pays the
+    full cold-load cost (model download/load + first encode), which can
+    exceed the 50s pipeline timeout — so the request dies before ever
+    reaching Gemini. Runs in a background thread so boot isn't blocked.
+    """
+    def _load():
+        try:
+            from cache.cache_engine import _get_model
+            _get_model()  # loads cache embedding model
+        except Exception as e:
+            print(f"⚠️ Cache model warm-up failed (non-fatal): {e}")
+        try:
+            from rag.indexer import get_collection
+            get_collection()  # loads ChromaDB embedding function (same model)
+        except Exception as e:
+            print(f"⚠️ RAG model warm-up failed (non-fatal): {e}")
+
+    await asyncio.to_thread(_load)
+    print("🔥 Embedding models warmed up — first /ask will be fast.")
 
 
 @app.on_event("startup")
@@ -107,6 +140,8 @@ async def startup():
         print("✅ Krishi Mitra database initialized.")
     except Exception as e:
         print(f"⚠️ DB startup error (non-fatal): {e}")
+    # Warm up embedding models in the background so the first question is fast
+    asyncio.create_task(_warm_up_models())
     try:
         await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
     except Exception as e:
