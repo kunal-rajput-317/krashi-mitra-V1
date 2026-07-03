@@ -12,9 +12,10 @@
 # ============================================================
 
 import os
+import time
 import hashlib
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 import requests
 from dotenv import load_dotenv
@@ -35,9 +36,53 @@ API_KEY = os.getenv("DATA_GOV_API_KEY", "")
 RESOURCE_ID = "9ef84268-d588-465a-a308-a864a43d0070"
 ENDPOINT    = f"https://api.data.gov.in/resource/{RESOURCE_ID}"
 
-PAGE_LIMIT = 1000      # rows per request
-MAX_PAGES  = 60        # safety cap → up to 60k rows / run
+PAGE_LIMIT = 5000      # rows per request
+MAX_PAGES  = 20        # safety cap on pages per state
+
+# History retention: trim mandi_price_history to the last N days after each
+# fetch so it doesn't grow unbounded (~14 MB/day). 0 = keep forever.
+HISTORY_DAYS = int(os.getenv("MANDI_HISTORY_DAYS", "90"))
+
+# data.gov.in is Elasticsearch-backed: offset + limit must be <= 10000, so
+# plain nationwide offset-paging can never reach rows beyond 10k (~56% of the
+# ~17.7k daily total). We instead partition by state — every state's result set
+# is well under 10k — using the EXACT-match "state.keyword" filter. NOTE:
+# "filters[state]" does analyzed/token matching (e.g. every "* Pradesh" state
+# collides), so the ".keyword" sub-field is required for correct partitioning.
+STATE_FILTER_FIELD = "filters[state.keyword]"
+
+# Canonical state/UT spellings as data.gov.in stores them (note the non-standard
+# ones: "Keralam", "Chattisgarh", "Pondicherry"). States absent on a given day
+# simply return zero rows and are skipped — extra spellings are harmless.
+STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chattisgarh",
+    "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+    "Karnataka", "Kerala", "Keralam", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
+    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+    "Uttrakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+    "Dadra and Nagar Haveli", "NCT of Delhi", "Delhi", "Jammu and Kashmir",
+    "Ladakh", "Lakshadweep", "Puducherry", "Pondicherry", "Daman and Diu",
+]
 TIMEOUT    = 120       # seconds per request
+
+# data.gov.in's API gateway throws intermittent 5xx errors under load;
+# retry each page a few times before giving up on the whole run.
+TRANSIENT_STATUS = {500, 502, 503, 504}
+RATE_LIMIT_STATUS = 429          # data.gov throttles rapid bursts of requests
+MAX_RETRIES       = 5            # attempts per page
+STATE_DELAY       = 0.4          # polite pause (s) between per-state requests
+
+# IMPORTANT: data.gov.in's WAF returns HTTP 502 for the default
+# "python-requests/x.y" User-Agent. A browser-like UA is required or
+# every request fails. (curl / browsers work; python-requests does not.)
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    ),
+    "Accept": "application/json",
+}
 
 
 # ── Helpers ──────────────────────────────────────────────────
@@ -73,41 +118,102 @@ def _group_key(r: dict) -> str:
 
 # ── Fetch ────────────────────────────────────────────────────
 
-def _fetch_all_records() -> list:
-    """Page through the data.gov resource and return all records (nationwide)."""
-    if not API_KEY:
-        logger.error("DATA_GOV_API_KEY not set — cannot fetch mandi prices.")
-        return []
+def _get_page(params: dict, label: str) -> list | None:
+    """
+    GET one page with retry+backoff on transient (5xx / network) errors.
+    Returns the list of records, or None if the page ultimately failed
+    (so the caller can distinguish "empty" from "error").
+    """
+    for attempt in range(MAX_RETRIES):
+        try:
+            res = requests.get(ENDPOINT, params=params, headers=HEADERS, timeout=TIMEOUT)
+        except requests.RequestException as e:
+            wait = 2 ** attempt
+            logger.warning(f"{label} attempt {attempt + 1}/{MAX_RETRIES} "
+                           f"request error: {e} — retrying in {wait}s")
+            time.sleep(wait)
+            continue
 
-    all_records, offset = [], 0
+        if res.status_code == RATE_LIMIT_STATUS:
+            # Rate limited — back off harder, honoring Retry-After when present.
+            wait = int(res.headers.get("Retry-After") or 0) or (3 * (attempt + 1))
+            logger.warning(f"{label} attempt {attempt + 1}/{MAX_RETRIES} "
+                           f"HTTP 429 (rate limited) — retrying in {wait}s")
+            time.sleep(wait)
+            continue
+
+        if res.status_code in TRANSIENT_STATUS:
+            wait = 2 ** attempt
+            logger.warning(f"{label} attempt {attempt + 1}/{MAX_RETRIES} "
+                           f"HTTP {res.status_code} — retrying in {wait}s")
+            time.sleep(wait)
+            continue
+
+        if res.status_code != 200 or not res.text.strip():
+            logger.error(f"{label}: bad response HTTP {res.status_code}")
+            return None
+
+        return res.json().get("records", [])
+
+    logger.error(f"{label}: exhausted {MAX_RETRIES} retries — giving up on this page.")
+    return None
+
+
+def _fetch_state(state: str) -> list:
+    """Page through all rows for one state via the exact-match keyword filter."""
+    records, offset = [], 0
     for page in range(MAX_PAGES):
         params = {
             "api-key": API_KEY,
             "format":  "json",
             "limit":   PAGE_LIMIT,
             "offset":  offset,
+            STATE_FILTER_FIELD: state,
         }
-        try:
-            res = requests.get(ENDPOINT, params=params, timeout=TIMEOUT)
-        except Exception as e:
-            logger.error(f"Request failed at offset={offset}: {e}")
+        recs = _get_page(params, f"[{state}] offset={offset}")
+        if recs is None:      # hard error for this page — stop this state
+            break
+        if not recs:          # no (more) rows for this state
             break
 
-        if res.status_code != 200 or not res.text.strip():
-            logger.error(f"Bad response at offset={offset}: HTTP {res.status_code}")
-            break
-
-        recs = res.json().get("records", [])
-        if not recs:
-            break
-
-        all_records.extend(recs)
-        logger.info(f"📥 page {page + 1}: +{len(recs)} (total {len(all_records)})")
-
+        records.extend(recs)
         if len(recs) < PAGE_LIMIT:
             break
         offset += PAGE_LIMIT
+        time.sleep(STATE_DELAY)
 
+    return records
+
+
+def _fetch_all_records() -> list:
+    """
+    Fetch the full nationwide dataset by partitioning per state (data.gov caps
+    plain offset-paging at 10k rows). Deduplicates across states by row identity.
+    """
+    if not API_KEY:
+        logger.error("DATA_GOV_API_KEY not set — cannot fetch mandi prices.")
+        return []
+
+    all_records, seen = [], set()
+    states_hit = 0
+    for state in STATES:
+        recs = _fetch_state(state)
+        time.sleep(STATE_DELAY)   # pace requests to avoid data.gov 429 throttling
+        if not recs:
+            continue
+        added = 0
+        for r in recs:
+            rk = _group_key(r) + "|" + _norm(r.get("arrival_date"))
+            if rk in seen:
+                continue
+            seen.add(rk)
+            all_records.append(r)
+            added += 1
+        if added:
+            states_hit += 1
+            logger.info(f"📥 {state}: +{added} (total {len(all_records)})")
+
+    logger.info(f"🌾 Fetched {len(all_records)} rows across {states_hit} states.")
     return all_records
 
 
@@ -224,6 +330,19 @@ def fetch_and_store() -> dict:
             res = db.execute(stmt)
             history_added += (res.rowcount or 0)
         db.commit()
+
+        # 1b) Retention — drop history older than HISTORY_DAYS (keeps table flat).
+        if HISTORY_DAYS > 0:
+            cutoff = date.today() - timedelta(days=HISTORY_DAYS)
+            trim = db.execute(
+                text("DELETE FROM mandi_price_history "
+                     "WHERE arrival_dt IS NOT NULL AND arrival_dt < :cutoff"),
+                {"cutoff": cutoff},
+            )
+            db.commit()
+            if trim.rowcount:
+                logger.info(f"🧹 Trimmed {trim.rowcount} history rows older than "
+                            f"{cutoff} ({HISTORY_DAYS}d retention).")
 
         # Recent price series per group (includes the day we just inserted)
         spark_map = _spark_map(db, group_keys)

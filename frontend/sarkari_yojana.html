@@ -213,137 +213,217 @@ body {
 }
 
 /* ══════════════════════════════════════
-   TOP ANNOUNCEMENT BAR
+   ANNOUNCEMENT BAR (amber, matches mandi/weather/chat)
 ══════════════════════════════════════ */
-.top-announcement {
-  background: var(--amber-light);
-  color: var(--green-dark);
+.pre-topbar {
+  background: var(--amber);
+  color: #1a2e1e;
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 7px 16px;
+  font-size: 13px; font-weight: 600;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
   text-align: center;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 6px 16px;
-  letter-spacing: 0.2px;
 }
-.top-announcement a {
-  color: var(--green-mid);
-  text-decoration: underline;
-  margin-left: 6px;
+.pre-topbar-helpline {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: inherit; text-decoration: none; opacity: 0.9; white-space: nowrap;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.pre-topbar-helpline:hover { opacity: 1; text-decoration: underline; }
+.pre-topbar-phone-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 19px; height: 19px; border-radius: 50%; flex-shrink: 0;
+  font-size: 10px; line-height: 1;
 }
 
 /* ══════════════════════════════════════
-   TOPBAR
+   LAYER 1 · TOP UTILITY BAR (white)
 ══════════════════════════════════════ */
-.topbar {
-  background: var(--green-dark);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  height: 60px;
-  flex-shrink: 0;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.25);
-}
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-.topbar-logo-icon { font-size: 26px; line-height: 1; }
-.topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-.topbar-logo-name {
-  font-family: 'Playfair Display', serif;
-  font-size: 17px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.3px;
-}
-.topbar-logo-name span { color: var(--amber); }
-.topbar-logo-sub {
-  font-size: 9.5px;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 0.5px;
-}
-
-.topbar-nav { display: flex; align-items: center; gap: 2px; }
-.tnav-btn {
-  padding: 6px 13px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: rgba(255,255,255,0.70);
-  font-size: 13px;
-  font-weight: 600;
+.top-utility-bar {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 6px 0;
+  font-size: 12px;
   font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: background 0.18s, color 0.18s;
-  white-space: nowrap;
 }
-.tnav-btn:hover  { background: rgba(255,255,255,0.10); color: #fff; }
-.tnav-btn.active { background: rgba(255,255,255,0.15); color: #fff; box-shadow: 0 0 0 1.5px var(--green-mid) inset; }
+.top-utility-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 0 80px;
+}
+.top-utility-left, .top-utility-right { display: flex; align-items: center; gap: 12px; }
+.top-utility-link { color: #4a5568; text-decoration: none; font-weight: 600; transition: color 0.15s; }
+.top-utility-link:hover { color: #2d6a4f; }
+.top-utility-divider { color: #cbd5e1; user-select: none; }
+.top-utility-helpline {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #1a3c2e; font-weight: 700; text-decoration: none;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.top-utility-helpline:hover { opacity: 0.8; text-decoration: underline; }
 
-.topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* ══════════════════════════════════════
+   LAYER 2 · MAIN HEADER (white)
+══════════════════════════════════════ */
+.main-header {
+  background: #ffffff;
+  border-bottom: 1px solid #edf2f7;
+  padding: 10px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.main-header-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 0 80px;
+}
+.main-header-inner > .hamburger-btn     { order: 2; }
+.main-header-inner > .header-left-group { order: 1; }
+.main-header-inner > .header-nav        { order: 3; }
+.main-header-inner > .header-right-group{ order: 4; }
+.header-left-group { display: flex; align-items: center; gap: 14px; }
+.header-logo-link { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.header-logo-circle {
+  width: 38px; height: 38px; background: #eaf6ed; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(45,106,79,0.15);
+}
+.header-logo-text {
+  font-family: 'Playfair Display', 'Noto Sans Devanagari', serif;
+  font-size: 21px; font-weight: 800; color: #2d6a4f; letter-spacing: 0.2px;
+}
+.hamburger-btn {
+  background: none; border: none; font-size: 24px; cursor: pointer;
+  color: #1a2e1e; padding: 4px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; transition: background 0.15s;
+}
+.hamburger-btn:hover { background: #f7fafc; }
 
+.header-nav { display: flex; align-items: center; gap: 24px; }
+.header-nav-link {
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  font-size: 14.5px; font-weight: 700; color: #1a202c;
+  text-decoration: none; transition: color 0.15s;
+  padding: 6px 0; border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.header-nav-link:hover { color: #2d6a4f; }
+.header-nav-link.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
+
+.header-right-group { display: flex; align-items: center; gap: 12px; }
+.header-avatar-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #edf2f7; border: 1px solid #cbd5e0;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none; transition: transform 0.15s;
+}
+.header-avatar-btn:hover { transform: scale(1.05); }
+
+/* ── Language picker (light theme) ── */
 .lang-picker { position: relative; }
 .lang-picker-btn {
-  display: flex; align-items: center; gap: 4px;
-  padding: 6px 11px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.20);
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.85);
-  font-size: 12px; font-weight: 700;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer; white-space: nowrap;
-  transition: background 0.18s;
+  display: flex; align-items: center; gap: 5px;
+  background: #f1f5f9; border: 1px solid #cbd5e0;
+  border-radius: 20px; padding: 5px 12px 5px 14px;
+  color: #334155; font-size: 12px; font-weight: 700;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  cursor: pointer; transition: background 0.15s; white-space: nowrap; user-select: none;
 }
-.lang-picker-btn:hover { background: rgba(255,255,255,0.18); }
-.lang-chevron { font-size: 9px; opacity: 0.7; transition: transform 0.2s; }
+.lang-picker-btn:hover { background: #e2e8f0; }
+.lang-chevron { font-size: 9px; opacity: 0.7; transition: transform 0.2s; display: inline-block; }
 .lang-picker.open .lang-chevron { transform: rotate(180deg); }
 .lang-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px); right: 0;
-  background: var(--green-dark);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
-  overflow: hidden;
-  min-width: 130px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
-  z-index: 200;
+  display: none; position: absolute; top: calc(100% + 6px); right: 0;
+  background: #ffffff; border: 1px solid #e2e8f0;
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12); min-width: 130px; z-index: 300;
 }
 .lang-picker.open .lang-dropdown { display: block; }
 .lang-option {
-  display: flex; align-items: center; gap: 8px;
-  width: 100%; padding: 9px 14px;
-  border: none; background: transparent;
-  color: rgba(255,255,255,0.70);
-  font-size: 13px; font-weight: 500;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer; text-align: left;
-  transition: background 0.15s, color 0.15s;
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 10px 16px; border: none;
+  background: none; color: #334155;
+  font-size: 13px; font-weight: 600;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  cursor: pointer; text-align: left; transition: background 0.15s;
 }
-.lang-option:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.lang-option.active { color: var(--amber); background: rgba(233,168,37,0.10); }
+.lang-option:hover  { background: #f1f5f9; color: #1e293b; }
+.lang-option.active { color: var(--green-mid); background: #eaf6ed; }
 .lang-opt-code { font-size: 11px; opacity: 0.55; font-weight: 600; min-width: 22px; }
 
-.topbar-avatar-btn {
-  background: rgba(255,255,255,0.10);
-  border: 1.5px solid rgba(255,255,255,0.20);
-  border-radius: 50%;
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  cursor: pointer; flex-shrink: 0;
-  text-decoration: none;
-  transition: background 0.15s;
+/* ── Sidebar slide-out drawer ── */
+.sidebar-drawer-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+  z-index: 4000; justify-content: flex-start;
 }
-.topbar-avatar-btn:hover { background: rgba(255,255,255,0.20); }
+.sidebar-drawer-overlay.open { display: flex; }
+.sidebar-drawer {
+  width: 280px; background: #ffffff; height: 100%;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  display: flex; flex-direction: column;
+  animation: slide-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.sidebar-drawer-header {
+  padding: 16px 20px; border-bottom: 1px solid #edf2f7;
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.sidebar-drawer-title {
+  font-size: 18px; font-weight: 800; color: #2d6a4f;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+}
+.sidebar-drawer-close {
+  background: none; border: none; font-size: 20px; cursor: pointer;
+  color: #718096; width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; transition: background 0.15s;
+}
+.sidebar-drawer-close:hover { background: #f7fafc; }
+.sidebar-drawer-links { padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.sidebar-drawer-link {
+  padding: 12px 16px;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  font-size: 15px; font-weight: 700; color: #2d3748;
+  text-decoration: none; border-radius: 8px; transition: background 0.15s, color 0.15s;
+}
+.sidebar-drawer-link:hover { background: #f0f7f4; color: #2d6a4f; }
+.sidebar-drawer-link.active { background: #eaf6ed; color: #2d6a4f; }
+button.sidebar-drawer-link { background: none; border: none; text-align: left; cursor: pointer; width: 100%; font-family: inherit; }
+.sidebar-drawer-divider { height: 1px; background: #eef2ef; margin: 6px 4px; }
+.sidebar-drawer-lang-row { display: flex; align-items: center; gap: 8px; padding: 10px 16px; flex-wrap: wrap; }
+.sidebar-drawer-lang-label { font-size: 13px; font-weight: 700; color: #718096; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; }
+.sidebar-lang-btn {
+  background: #f0f7f4; border: 1.5px solid #e0ece4; border-radius: 20px;
+  padding: 5px 13px; font-size: 12.5px; font-weight: 700; color: #2d3748;
+  cursor: pointer; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+
+/* ══════════════════════════════════════
+   LAYER 3 · BLUE QUICK-NAV BAR (scheme category chips)
+══════════════════════════════════════ */
+.commodity-navbar {
+  background: #17268c;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+}
+.cnav-inner {
+  display: flex; align-items: stretch; gap: 0;
+  padding: 0 20px; overflow-x: auto;
+  scrollbar-width: none; -ms-overflow-style: none;
+  max-width: 1280px; margin: 0 auto;
+}
+.cnav-inner::-webkit-scrollbar { display: none; }
+.cnav-item {
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,0.90); font-size: 13px; font-weight: 600;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  padding: 11px 14px; white-space: nowrap; line-height: 1.2;
+  border-bottom: 3px solid transparent;
+  transition: background 0.15s, color 0.15s;
+}
+.cnav-item:hover  { background: rgba(255,255,255,0.09); color: #fff; }
+.cnav-item.active { color: var(--amber); font-style: italic; font-weight: 700; }
 
 /* ══════════════════════════════════════
    BREADCRUMB
@@ -710,11 +790,19 @@ body {
    MOBILE
 ══════════════════════════════════════ */
 @media screen and (max-width: 1024px) {
-  .topbar-nav { display: none; }
-  .top-announcement { font-size: 11.5px; padding: 6px 12px; }
-  .topbar { padding: 0 12px; height: 54px; }
-  .topbar-logo-name { font-size: 15px; }
-  .topbar-logo-sub { display: none; }
+  .header-nav      { display: none; }
+  .top-utility-bar { display: none; }
+  .pre-topbar      { font-size: 11.5px; padding: 6px 12px; }
+  .top-utility-inner, .main-header-inner { padding: 0 12px; }
+  .main-header     { padding: 8px 0; }
+  .header-logo-text { font-size: 18px; }
+  .cnav-inner      { padding: 0 12px; }
+
+  /* Language switch moves into the hamburger drawer on mobile */
+  .lang-picker { display: none; }
+  .main-header-inner > .hamburger-btn     { order: 1; flex: 0 0 auto; }
+  .main-header-inner > .header-left-group { order: 2; flex: 1 1 auto; display: flex; justify-content: center; }
+  .main-header-inner > .header-right-group{ order: 3; flex: 0 0 auto; }
 
   .breadcrumb { padding: 8px 14px; font-size: 11px; }
 
@@ -1064,55 +1152,123 @@ body {
 <!-- ══ FIXED HEADER ══ -->
 <div class="header-wrapper" id="header-wrapper">
 
-<div class="top-announcement">
-  🌾 PM-KISAN 20वीं किस्त 2026 — अपना स्टेटस चेक करें &nbsp;|&nbsp; फसल रोग पहचान के लिए
-  <a href="chat.html">AI से पूछें →</a>
+<div class="pre-topbar">
+  <a href="tel:+919870951001" class="pre-topbar-helpline" title="किसान हेल्पलाइन पर कॉल करें">
+    <span class="pre-topbar-phone-icon">📞</span> PM-KISAN 20वीं किस्त 2026 — अपना स्टेटस चेक करें
+  </a>
 </div>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
-      <span class="topbar-logo-icon">🌾</span>
-      <div class="topbar-logo-text">
-        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
-        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
-      </div>
-    </a>
-  </div>
-
-  <nav class="topbar-nav">
-    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
-    <a class="tnav-btn" href="weather.html">🌤️ मौसम</a>
-    <a class="tnav-btn" href="mandi.html">🏪 मंडी</a>
-    <a class="tnav-btn" href="shop.html">🛒 दुकान</a>
-    <a class="tnav-btn" href="chat.html">💬 AI सहायता</a>
-    <a class="tnav-btn" href="khoj.html">🔍 खोज</a>
-    <a class="tnav-btn active" href="yojana.html">📋 योजनाएं</a>
-  </nav>
-
-  <div class="topbar-right">
-    <div class="lang-picker" id="lang-picker">
-      <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
-        <span id="lang-picker-label">हिं</span>
-        <span class="lang-chevron">▾</span>
-      </button>
-      <div class="lang-dropdown" id="lang-dropdown">
-        <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
-          <span class="lang-opt-code">हिं</span> हिंदी
-        </button>
-        <button class="lang-option" id="opt-en" onclick="pickLang('en')">
-          <span class="lang-opt-code">EN</span> English
-        </button>
-        <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
-          <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
-        </button>
-      </div>
+<!-- Layer 1: white top utility bar -->
+<div class="top-utility-bar">
+  <div class="top-utility-inner">
+    <div class="top-utility-left">
+      <a href="khoj.html" class="top-utility-link">कृषि खोज</a>
+      <span class="top-utility-divider">|</span>
+      <a href="mandi.html" class="top-utility-link">मंडी भाव</a>
+      <span class="top-utility-divider">|</span>
+      <a href="weather.html" class="top-utility-link">मौसम व सलाह</a>
+      <span class="top-utility-divider">|</span>
+      <a href="map.html" class="top-utility-link">कृषि मानचित्र</a>
+      <span class="top-utility-divider">|</span>
+      <a href="shop.html" class="top-utility-link">खरीदें/बेचें</a>
     </div>
-    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👨‍🌾</a>
+    <div class="top-utility-right">
+      <a href="tel:+919870951001" class="top-utility-helpline" title="किसान हेल्पलाइन पर कॉल करें">
+        <span class="pre-topbar-phone-icon">📞</span> किसान हेल्पलाइन: +91 9870951001
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Layer 2: white main header -->
+<header class="main-header">
+  <div class="main-header-inner">
+    <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
+
+    <div class="header-left-group">
+      <a href="index.html" class="header-logo-link">
+        <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" style="border-radius:50%;object-fit:cover;background:none;box-shadow:none;">
+        <span class="header-logo-text">कृषि मित्र</span>
+      </a>
+    </div>
+
+    <nav class="header-nav">
+      <a class="header-nav-link active" href="sarkari_yojana.html">सरकारी योजनाएं</a>
+      <a class="header-nav-link" href="mandi.html">कृषि बाजार मूल्य</a>
+      <a class="header-nav-link" href="weather.html">मौसम व सलाह</a>
+      <a class="header-nav-link" href="articles/index.html">कृषि समाचार</a>
+    </nav>
+
+    <div class="header-right-group">
+      <div class="lang-picker" id="lang-picker">
+        <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
+          <span id="lang-picker-label">हिं</span>
+          <span class="lang-chevron">▾</span>
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
+            <span class="lang-opt-code">हिं</span> हिंदी
+          </button>
+          <button class="lang-option" id="opt-en" onclick="pickLang('en')">
+            <span class="lang-opt-code">EN</span> English
+          </button>
+          <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
+            <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
+          </button>
+        </div>
+      </div>
+      <a href="https://krashimitra.in/login.html" class="header-avatar-btn">👨‍🌾</a>
+    </div>
+  </div>
+</header>
+
+<!-- ══ BLUE QUICK-NAV BAR (scheme category shortcuts) ══ -->
+<div class="commodity-navbar">
+  <div class="cnav-inner">
+    <button class="cnav-item" onclick="quickJumpFilter('all')">📋 सभी योजनाएं</button>
+    <button class="cnav-item" onclick="quickJumpFilter('income')">💰 आमदनी</button>
+    <button class="cnav-item" onclick="quickJumpFilter('loan')">🏦 लोन / क्रेडिट</button>
+    <button class="cnav-item" onclick="quickJumpFilter('bima')">🛡️ बीमा</button>
+    <button class="cnav-item" onclick="quickJumpFilter('input')">🌿 खाद / इनपुट</button>
+    <button class="cnav-item" onclick="quickJumpFilter('irrigation')">💧 सिंचाई</button>
+    <button class="cnav-item" onclick="quickJumpFilter('up')">📍 UP योजनाएं</button>
   </div>
 </div>
 
 </div><!-- /.header-wrapper -->
+
+<!-- ══ SIDEBAR SLIDE-OUT DRAWER MENU ══ -->
+<div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
+  <div class="sidebar-drawer" onclick="event.stopPropagation()">
+    <div class="sidebar-drawer-header">
+      <span class="sidebar-drawer-title">मेनु</span>
+      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()">✕</button>
+    </div>
+    <div class="sidebar-drawer-links">
+      <a href="index.html" class="sidebar-drawer-link">🏠 मुख्य</a>
+      <a href="weather.html" class="sidebar-drawer-link">🌤️ मौसम</a>
+      <a href="mandi.html" class="sidebar-drawer-link">🏪 मंडी</a>
+      <a href="articles/index.html" class="sidebar-drawer-link">📰 लेख</a>
+      <a href="chat.html" class="sidebar-drawer-link">💬 AI सहायता</a>
+      <a href="shop.html" class="sidebar-drawer-link">🛒 दुकान</a>
+      <a href="khoj.html" class="sidebar-drawer-link">🔍 खोज</a>
+      <a href="sarkari_yojana.html" class="sidebar-drawer-link active">🏛️ सरकारी योजना</a>
+
+      <div class="sidebar-drawer-divider"></div>
+
+      <a href="https://wa.me/919870951001" target="_blank" class="sidebar-drawer-link">💬 व्हाट्सएप सहायता</a>
+
+      <div class="sidebar-drawer-divider"></div>
+
+      <div class="sidebar-drawer-lang-row">
+        <span class="sidebar-drawer-lang-label">🌐 भाषा:</span>
+        <button class="sidebar-lang-btn active" id="drawer-lang-hi" onclick="pickLang('hi')">हिंदी</button>
+        <button class="sidebar-lang-btn" id="drawer-lang-en" onclick="pickLang('en')">English</button>
+        <button class="sidebar-lang-btn" id="drawer-lang-kn" onclick="pickLang('kn')">ಕನ್ನಡ</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="topbar-spacer" id="topbar-spacer"></div>
 
@@ -1197,14 +1353,14 @@ body {
       </div>
     </div>
 
-    <div class="filter-chips" style="margin-bottom:20px;">
-      <button class="chip active" onclick="setFilter('all',this)">सभी</button>
-      <button class="chip" onclick="setFilter('income',this)">💰 आमदनी</button>
-      <button class="chip" onclick="setFilter('loan',this)">🏦 लोन / क्रेडिट</button>
-      <button class="chip" onclick="setFilter('bima',this)">🛡️ बीमा</button>
-      <button class="chip" onclick="setFilter('input',this)">🌿 खाद / इनपुट</button>
-      <button class="chip" onclick="setFilter('irrigation',this)">💧 सिंचाई</button>
-      <button class="chip" onclick="setFilter('up',this)">📍 UP योजनाएं</button>
+    <div class="filter-chips" style="margin-bottom:20px;" id="scheme-filter-chips">
+      <button class="chip active" id="chip-all" onclick="setFilter('all',this)">सभी</button>
+      <button class="chip" id="chip-income" onclick="setFilter('income',this)">💰 आमदनी</button>
+      <button class="chip" id="chip-loan" onclick="setFilter('loan',this)">🏦 लोन / क्रेडिट</button>
+      <button class="chip" id="chip-bima" onclick="setFilter('bima',this)">🛡️ बीमा</button>
+      <button class="chip" id="chip-input" onclick="setFilter('input',this)">🌿 खाद / इनपुट</button>
+      <button class="chip" id="chip-irrigation" onclick="setFilter('irrigation',this)">💧 सिंचाई</button>
+      <button class="chip" id="chip-up" onclick="setFilter('up',this)">📍 UP योजनाएं</button>
     </div>
 
     <!-- RESULT COUNT -->
@@ -1721,7 +1877,22 @@ function pickLang(lang) {
   ['hi','en','kn'].forEach(l => {
     const opt = document.getElementById('opt-' + l);
     if (opt) opt.classList.toggle('active', l === lang);
+    const drawerOpt = document.getElementById('drawer-lang-' + l);
+    if (drawerOpt) drawerOpt.classList.toggle('active', l === lang);
   });
+}
+
+// ── Sidebar slide-out drawer ──
+function toggleSidebarMenu() {
+  document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
+}
+
+// ── Blue quick-nav bar → triggers the matching filter chip below ──
+function quickJumpFilter(tag) {
+  const chip = document.getElementById('chip-' + tag);
+  if (chip) chip.click();
+  const target = document.getElementById('scheme-filter-chips');
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── SCROLL HEADER ──
@@ -1733,7 +1904,7 @@ function pickLang(lang) {
   let ticking = false;
 
   function measureHeader() {
-    const ann = document.querySelector('.top-announcement');
+    const ann = document.querySelector('.pre-topbar');
     if (!ann || !wrapper || !spacer) return;
     announcementH = ann.getBoundingClientRect().height;
     spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
@@ -1829,16 +2000,6 @@ pickLang(currentLang);
 </script>
 
 
-<!-- ── Floating Map Button ── -->
-<style>
-.map-fab{position:fixed;bottom:154px;right:18px;width:46px;height:46px;border-radius:50%;background:#1a3c2e;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 3px 14px rgba(26,60,46,.4);z-index:9998;transition:transform .18s,box-shadow .18s;-webkit-tap-highlight-color:transparent;font-size:21px;color:#fff;}
-.map-fab:hover{transform:scale(1.1);box-shadow:0 5px 20px rgba(26,60,46,.6);}
-.map-fab:active{transform:scale(.93);}
-.map-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:11px;font-weight:600;font-family:sans-serif;padding:4px 11px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s;}
-.map-fab:hover .map-fab-tip{opacity:1;}
-@media(min-width:1025px){.map-fab{bottom:108px;right:28px;width:50px;height:50px;font-size:22px;}}
-</style>
-<a href="map.html" class="map-fab" title="कृषि मानचित्र">🗺️<span class="map-fab-tip">कृषि मैप</span></a>
 <!-- ── Floating AI Chat Button ── -->
 <style>
 .ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;overflow:visible;padding:0;}

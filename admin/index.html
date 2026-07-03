@@ -67,6 +67,101 @@
 /* ── Reset ───────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;display:flex;line-height:1.5;}
+
+/* ── Login Overlay ──────────────────────────────────────── */
+#login-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  animation:fadeIn .3s ease;
+}
+#login-overlay.hidden{display:none;}
+.login-card{
+  width:100%;max-width:420px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:40px 36px 36px;
+  box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 0 1px var(--border);
+  position:relative;
+  overflow:hidden;
+}
+.login-card::before{
+  content:'';
+  position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(74,222,128,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.login-logo{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:28px;
+}
+.login-logo-icon{
+  width:44px;height:44px;
+  background:linear-gradient(135deg,var(--green),#22c55e);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+}
+.login-logo-text{font-size:22px;font-weight:800;color:var(--green);letter-spacing:-.3px;}
+.login-logo-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:1px;}
+.login-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.login-subtitle{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:28px;}
+.login-label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;display:block;}
+.login-inp{
+  width:100%;padding:10px 14px;
+  background:var(--surface2);color:var(--text);
+  border:1px solid var(--border2);border-radius:8px;
+  font-family:var(--mono);font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  margin-bottom:16px;
+}
+.login-inp:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow);}
+.login-inp.error-field{border-color:var(--red);box-shadow:0 0 0 3px rgba(248,113,113,.15);}
+.login-btn{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,var(--green),#22c55e);
+  color:#000;font-weight:800;font-size:14px;letter-spacing:.3px;
+  border:none;border-radius:8px;cursor:pointer;
+  transition:opacity .2s,transform .1s;
+  margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.login-btn:hover{opacity:.9;}
+.login-btn:active{transform:scale(.98);}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{
+  display:none;
+  background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);
+  color:var(--red);border-radius:8px;
+  padding:10px 14px;font-size:12px;font-family:var(--mono);
+  margin-top:14px;text-align:center;
+}
+.login-error.visible{display:block;animation:shake .3s ease;}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-6px)}
+  75%{transform:translateX(6px)}
+}
+.login-footer{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:22px;text-align:center;opacity:.7;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.login-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Admin-app hidden until auth */
+#admin-app{display:none;}
+#admin-app.visible{display:flex;width:100%;}
+/* Logout button */
+.logout-btn{
+  width:100%;padding:8px 12px;
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);
+  color:var(--red);font-size:12px;font-weight:600;
+  border-radius:6px;cursor:pointer;margin-top:8px;
+  transition:background .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.logout-btn:hover{background:rgba(248,113,113,.16);}
 ::selection{background:var(--green-glow);color:var(--green);}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -641,6 +736,36 @@ input.s-num:focus{border-color:var(--green);}
 </head>
 <body>
 
+<!-- ════════════ LOGIN OVERLAY ════════════ -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🌾</div>
+      <div>
+        <div class="login-logo-text">KrashiMitra</div>
+        <div class="login-logo-sub">Admin Panel · v0.1.0</div>
+      </div>
+    </div>
+    <div class="login-title">Welcome back 👋</div>
+    <div class="login-subtitle">Sign in to access the admin dashboard</div>
+
+    <label class="login-label" for="login-username">Username</label>
+    <input id="login-username" class="login-inp" type="text"
+      placeholder="admin" autocomplete="username" spellcheck="false">
+
+    <label class="login-label" for="login-password">Password</label>
+    <input id="login-password" class="login-inp" type="password"
+      placeholder="••••••••" autocomplete="current-password">
+
+    <button id="login-submit-btn" class="login-btn" onclick="doLogin()">🔐 Login to Admin Panel</button>
+    <div id="login-error" class="login-error"></div>
+  </div>
+  <div class="login-footer">KrashiMitra · Admin Dashboard · Secured with HTTP Basic Auth</div>
+</div>
+
+<!-- ════════════ ADMIN APP (hidden until auth) ════════════ -->
+<div id="admin-app">
+
 <!-- ══════════ SIDEBAR ══════════ -->
 <aside class="sidebar" id="sidebar">
   <div class="logo-area">
@@ -699,6 +824,9 @@ input.s-num:focus{border-color:var(--green);}
   <div class="sidebar-footer">
     <span style="color:var(--green)" id="api-base-display">—</span><br>
     <span id="clock" style="opacity:.6;"></span>
+    <button class="logout-btn" onclick="logout()" title="Clear session & return to login">
+      🔓 Logout
+    </button>
   </div>
 </aside>
 
@@ -1142,17 +1270,120 @@ const API=(()=>{
 })();
 document.getElementById('api-base-display').textContent=API;
 
-function getAdminAuth(){
-  let e=localStorage.getItem('km_admin_auth');
-  if(!e){
-    const u=prompt('Admin username','admin')||'admin';
-    const p=prompt('Admin password')||'';
-    e=btoa(`${u}:${p}`);
-    localStorage.setItem('km_admin_auth',e);
-  }
-  return 'Basic '+e;
+// ── Auth State ───────────────────────────────────────────────
+// Credentials stored in sessionStorage → auto-cleared when tab/browser closes.
+let AUTH = '';
+
+function _buildBasic(user, pass){ return 'Basic ' + btoa(user.trim() + ':' + pass); }
+
+// ── Login Flow ───────────────────────────────────────────────
+const overlay  = document.getElementById('login-overlay');
+const adminApp = document.getElementById('admin-app');
+const loginBtn = document.getElementById('login-submit-btn');
+const loginErr = document.getElementById('login-error');
+const loginUser= document.getElementById('login-username');
+const loginPass= document.getElementById('login-password');
+
+function showLoginError(msg){
+  loginErr.textContent = msg;
+  loginErr.classList.add('visible');
+  loginUser.classList.add('error-field');
+  loginPass.classList.add('error-field');
+  loginPass.value = '';
+  loginPass.focus();
 }
-const AUTH=getAdminAuth();
+function clearLoginError(){
+  loginErr.classList.remove('visible');
+  loginUser.classList.remove('error-field');
+  loginPass.classList.remove('error-field');
+}
+
+async function doLogin(){
+  const user = loginUser.value.trim();
+  const pass = loginPass.value;
+  if(!user){ loginUser.focus(); return; }
+  if(!pass){ loginPass.focus(); return; }
+
+  clearLoginError();
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = '<span class="login-spinner"></span> Verifying…';
+
+  const creds = _buildBasic(user, pass);
+  try{
+    const r = await fetch(`${API}/admin/status`, { headers:{ Authorization: creds } });
+    if(r.status === 401){
+      showLoginError('❌ Invalid username or password');
+      return;
+    }
+    if(!r.ok){
+      showLoginError(`❌ Server error ${r.status} — backend running?`);
+      return;
+    }
+    // ✅ Auth success
+    AUTH = creds;
+    sessionStorage.setItem('km_admin_auth', creds);
+    overlay.classList.add('hidden');
+    adminApp.classList.add('visible');
+    loadStatus();
+  } catch(e){
+    showLoginError('❌ Cannot reach backend — is it running?');
+  } finally{
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = '🔐 Login to Admin Panel';
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem('km_admin_auth');
+  AUTH = '';
+  adminApp.classList.remove('visible');
+  overlay.classList.remove('hidden');
+  loginPass.value = '';
+  clearLoginError();
+  loginUser.focus();
+}
+
+// ── Handle 401 on API calls (session expired / changed) ──────
+function handle401(r){
+  if(r && r.status===401){
+    sessionStorage.removeItem('km_admin_auth');
+    AUTH = '';
+    toast('❌ Session expired — please login again.','err');
+    setTimeout(()=>logout(), 1200);
+    return true;
+  }
+  return false;
+}
+
+// ── Keyboard submit on login form ────────────────────────────
+[loginUser, loginPass].forEach(el=>{
+  el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); doLogin(); } });
+  el.addEventListener('input', clearLoginError);
+});
+
+// ── Auto-restore session from sessionStorage ─────────────────
+(async ()=>{
+  const saved = sessionStorage.getItem('km_admin_auth');
+  if(saved){
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span class="login-spinner"></span> Restoring session…';
+    try{
+      const r = await fetch(`${API}/admin/status`, { headers:{ Authorization: saved } });
+      if(r.ok){
+        AUTH = saved;
+        overlay.classList.add('hidden');
+        adminApp.classList.add('visible');
+        loadStatus();
+        return;
+      }
+    } catch(_){}
+    // session invalid — clear and show login
+    sessionStorage.removeItem('km_admin_auth');
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = '🔐 Login to Admin Panel';
+  }
+  loginUser.focus();
+})();
 
 setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-IN');},1000);
 
@@ -1271,7 +1502,7 @@ async function loadSettings(){
   log.innerHTML='<span class="log-warn">Loading from server…</span>';
   try{
     const r=await fetch(`${API}/admin/settings`,{headers:{Authorization:AUTH}});
-    if(r.status===401){toast('Auth failed — check credentials','err');return;}
+    if(handle401(r))return;
     const d=await safeJson(r);
     const s=d.settings||{};
     if(s.gemini_model) document.getElementById('set-model').value=s.gemini_model;
@@ -1318,6 +1549,7 @@ function applySwitch(trackId,inputId,isOn){
 async function loadCache(){
   try{
     const r=await fetch(`${API}/admin/cache/stats`,{headers:{Authorization:AUTH}});
+    if(handle401(r))return;
     const d=await safeJson(r);
     document.getElementById('c-total').textContent=d.total_entries??'—';
     document.getElementById('c-hits').textContent=d.total_hits??'—';
@@ -1437,11 +1669,13 @@ async function addCacheEntry(){
   btn.disabled=true; btn.textContent='⏳ Saving…';
   try{
     const r=await fetch(`${API}/admin/cache/add`,{method:'POST',headers:{Authorization:AUTH,'Content-Type':'application/json'},body:JSON.stringify({question,answer,source:'manual'})});
+    if(handle401(r))return;
     const d=await safeJson(r);
+    if(!r.ok){toast('Save failed ('+r.status+'): '+esc(d.detail||d._raw||'server error'),'err');return;}
     if(d.saved){toast('✅ Saved to cache!','ok');clearQAForm();loadCache();}
     else if(d.duplicate) toast('⚠️ Already in cache','err');
     else toast('Save failed: '+(d.reason||'unknown'),'err');
-  }catch(e){toast('Save failed','err');}
+  }catch(e){toast('Save failed: '+e.message,'err');}
   finally{btn.disabled=false;btn.textContent='💾 Save to Cache';updateQACount();}
 }
 
@@ -1450,6 +1684,7 @@ async function loadFiles(){
   const tbody=document.getElementById('files-tbody');
   try{
     const r=await fetch(`${API}/admin/files`,{headers:{Authorization:AUTH}});
+    if(handle401(r)){tbody.innerHTML='';return;}
     const d=await safeJson(r);
     if(!d.files?.length){tbody.innerHTML='<tr><td colspan="4" class="text-muted text-mono">No PDFs uploaded yet.</td></tr>';return;}
     tbody.innerHTML=d.files.map(f=>`<tr>
@@ -1481,7 +1716,8 @@ async function uploadFile(input){
 async function deleteFile(name){
   if(!confirm(`Delete "${name}"?`)) return;
   try{
-    await fetch(`${API}/admin/files/${name}`,{method:'DELETE',headers:{Authorization:AUTH}});
+    const r=await fetch(`${API}/admin/files/${encodeURIComponent(name)}`,{method:'DELETE',headers:{Authorization:AUTH}});
+    if(handle401(r))return;
     toast(`🗑 Deleted`,'ok'); loadFiles();
   }catch(e){toast('Delete failed','err');}
 }
@@ -1669,7 +1905,9 @@ function toggleTheme(){
 })();
 
 // ── Init ──────────────────────────────────────────────────────
-loadStatus();
+// NOTE: loadStatus() is called by auth flow after successful login.
+// Do NOT call it here — it would fire before AUTH is set.
 </script>
+</div><!-- /#admin-app -->
 </body>
 </html>

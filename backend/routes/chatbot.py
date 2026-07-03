@@ -21,6 +21,8 @@ from backend.services.chatbot_service import (
     call_ai,       # now async
     get_crop_keys,
     is_good_answer,
+    suggest_feature,
+    feature_suggestion,
 )
 
 # ── Resolve project root once at module level (not inside handler) ──
@@ -59,9 +61,14 @@ class Question(BaseModel):
 
 
 # ── Weather redirect keywords ─────────────────────────────────
+# Includes both Devanagari and common Hinglish/romanized spellings —
+# users often type "barish", "garmi" etc. without diacritics.
 WEATHER_KEYWORDS = [
     "weather", "mausam", "मौसम", "temperature", "rain",
-    "बारिश", "तापमान", "ठंड", "गर्मी", "forecast", "बाढ़"
+    "बारिश", "तापमान", "ठंड", "गर्मी", "forecast", "बाढ़",
+    "barish", "baarish", "barsaat", "barsega", "barsegi", "baarish",
+    "garmi", "garam", "thand", "thandi", "sardi", "tapman", "taapman",
+    "baadh", "baad", "dhoop", "toofan", "aandhi", "barsaat",
 ]
 
 def is_weather_question(q: str) -> bool:
@@ -111,10 +118,11 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
     if is_weather_question(body.q):
         return {
             "question": body.q,
-            "answer":   "🌤️ मौसम की जानकारी के लिए कृपया 'Weather' tab पर जाएं — वहाँ आपके जिले का live मौसम और कृषि सलाह मिलेगी।",
+            "answer":   "🌤️ मौसम की जानकारी के लिए नीचे 'मौसम देखें' पर टैप करें — वहाँ आपके जिले का live मौसम और कृषि सलाह मिलेगी।",
             "source":   "redirect",
             "cached":   False,
             "rag_chunks": 0,
+            "suggestion": feature_suggestion("weather", body.language),
         }
 
     # ── Step 1: Cache check ───────────────────────────────────
@@ -131,6 +139,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
                     "cached":   True,
                     "rag_chunks": 0,
                     "api_usage_saved": True,
+                    "suggestion": suggest_feature(body.q, body.language),
                 }
         except Exception as e:
             print(f"[Cache] Search failed: {e}")
@@ -199,6 +208,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
         "api_usage_saved": False,
         "rag_chunks":      rag_chunks,
         "rag_context":     rag_context[:300] if rag_context else "",
+        "suggestion":      suggest_feature(body.q, body.language) if source in ("gemini", "ollama", "cache") else None,
     }
 
 

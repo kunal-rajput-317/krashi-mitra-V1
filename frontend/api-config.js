@@ -17,6 +17,7 @@
   window.KRASHIMITRA_API_BASE = isLocal
     ? 'http://' + (host || 'localhost') + ':8000'
     : 'https://krashi-mitra-v1.onrender.com';
+  window.KRASHIMITRA_IS_LOCAL = isLocal;
 
   console.log('[KrashiMitra] API base =', window.KRASHIMITRA_API_BASE);
 })();

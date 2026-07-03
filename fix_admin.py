@@ -1,10 +1,20 @@
 """
-Quick fix: replaces everything from <script> to end of file in admin/index.html
-with a clean version. 
+⚠️ DEPRECATED — DO NOT RUN.
 
-Run: python fix_admin.py
-(from project root or anywhere, just update the PATH below if needed)
+This one-off script used to rewrite the <script> block of admin/index.html,
+but the embedded version below is now STALE: it is missing loadSettings /
+saveSettings / toggleSwitch / testCacheSearch and the s-model / s-semantic
+status handling. Running it would silently break the Settings tab and the
+cache-search test in the current, working admin panel.
+
+Kept only for history. Edit admin/index.html directly instead.
 """
+import sys
+
+print(__doc__)
+print("Refusing to run — this would overwrite admin/index.html with an outdated script.")
+sys.exit(1)
+
 from pathlib import Path
 
 p = Path(__file__).parent / 'admin' / 'index.html'

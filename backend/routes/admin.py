@@ -31,7 +31,7 @@ def require_admin(creds: HTTPBasicCredentials = Depends(security)):
 # ── System Status ─────────────────────────────────────────────
 
 @router.get("/status")
-async def system_status():
+async def system_status(_: str = Depends(require_admin)):
     from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS
 
     gemini_keys = [

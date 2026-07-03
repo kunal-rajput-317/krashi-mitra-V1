@@ -8,7 +8,7 @@
 import os
 
 _settings: dict = {
-    "gemini_model":           os.getenv("GEMINI_MODEL",        "gemini-1.5-flash"),
+    "gemini_model":           os.getenv("GEMINI_MODEL",        "gemini-2.5-flash"),
     "gemini_timeout":         float(os.getenv("GEMINI_TIMEOUT",  "15")),
     "cache_semantic_enabled": os.getenv("CACHE_SEMANTIC_ENABLED", "true").lower() == "true",
     "ollama_enabled":         os.getenv("OLLAMA_ENABLED",      "false").lower() == "true",
@@ -17,11 +17,8 @@ _settings: dict = {
 }
 
 ALLOWED_GEMINI_MODELS = [
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
     "gemini-2.5-flash",
-    "gemini-1.5-pro",
-    "gemini-2.0-flash-lite",
+    "gemini-3.5-flash",
 ]
 
 

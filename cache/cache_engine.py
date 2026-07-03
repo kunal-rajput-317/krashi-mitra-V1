@@ -132,7 +132,12 @@ def search_cache(question: str) -> dict | None:
     if not _semantic_enabled():
         return None
 
-    q_vec = _embed(question)
+    try:
+        q_vec = _embed(question)
+    except Exception as e:
+        # Model unavailable — fall back to fuzzy-only (already checked above).
+        print(f"[Cache] Embedding failed during search: {e}")
+        return None
     best_score = 0.0
     best_idx   = -1
 
@@ -174,7 +179,15 @@ def save_to_cache(question: str, answer: str, source: str = "ai") -> bool:
             return False
 
     semantic = _semantic_enabled()
-    q_vec = _embed(question) if semantic else None
+    q_vec = None
+    if semantic:
+        # Embedding can fail (e.g. model can't load / OOM on small hosts).
+        # Degrade to a non-semantic save instead of failing the whole request.
+        try:
+            q_vec = _embed(question)
+        except Exception as e:
+            print(f"[Cache] Embedding failed, saving without vector: {e}")
+            q_vec = None
 
     # Semantic duplicate check
     if semantic and q_vec is not None:
