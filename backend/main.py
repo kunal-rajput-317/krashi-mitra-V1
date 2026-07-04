@@ -117,12 +117,16 @@ async def _warm_up_models():
     reaching Gemini. Runs in a background thread so boot isn't blocked.
     """
     def _load():
-        try:
-            from cache.cache_engine import _get_model
-            _get_model()  # loads cache embedding model
-        except Exception as e:
-            print(f"⚠️ Cache model warm-up failed (non-fatal): {e}")
         from backend.config import get_setting
+        if get_setting("cache_semantic_enabled", True):
+            try:
+                from cache.cache_engine import _get_model
+                _get_model()  # loads cache embedding model
+            except Exception as e:
+                print(f"⚠️ Cache model warm-up failed (non-fatal): {e}")
+        else:
+            print("[Cache] semantic disabled via CACHE_SEMANTIC_ENABLED=false — "
+                  "skipping model warm-up (fuzzy text match only)")
         if not get_setting("rag_enabled", True):
             print("[RAG] disabled via RAG_ENABLED=false — skipping warm-up")
             return
