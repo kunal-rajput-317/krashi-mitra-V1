@@ -49,28 +49,48 @@ def _register_job():
 
 async def start_scheduler():
     """
-    Start the scheduler. Fires an immediate first fetch ONLY when the
-    snapshot table is empty (avoids hammering the API on every restart;
-    nationwide fetch is ~10k rows). Called from FastAPI startup.
+    Start the scheduler. Fires an immediate fetch when the snapshot table
+    is empty OR stale (newest fetched_at older than STALE_AFTER_HOURS).
+    The staleness catch-up matters on free-tier hosting: the instance
+    sleeps/restarts, so the 06:30 IST cron (1h misfire grace) is often
+    missed entirely — without this, data silently stays days old.
+    Called from FastAPI startup.
     """
     _register_job()
     scheduler.start()
     logger.info("🟢 Mandi APScheduler started | timezone=Asia/Kolkata")
 
+    STALE_AFTER_HOURS = 20  # < 24 so a daily-ish restart still refreshes
+
     try:
+        from datetime import timedelta, timezone as _tz
+        from sqlalchemy import func
         from backend.database.db import SessionLocal, MandiPrice
+
         db = SessionLocal()
         try:
-            empty = db.query(MandiPrice).count() == 0
+            newest = db.query(func.max(MandiPrice.fetched_at)).scalar()
         finally:
             db.close()
 
-        if empty:
+        reason = None
+        if newest is None:
+            reason = "snapshot empty"
+        else:
+            if newest.tzinfo is None:  # column stores naive UTC
+                newest = newest.replace(tzinfo=_tz.utc)
+            age = datetime.now(_tz.utc) - newest
+            if age > timedelta(hours=STALE_AFTER_HOURS):
+                reason = f"snapshot stale ({age.total_seconds() / 3600:.1f}h old)"
+
+        if reason:
             job = scheduler.get_job("mandi_price_refresh")
             if job:
                 now_ist = datetime.now(IST)
                 job.modify(next_run_time=now_ist)
-                logger.info(f"⚡ Snapshot empty — immediate first fetch at {now_ist:%H:%M:%S IST}")
+                logger.info(f"⚡ {reason} — immediate fetch at {now_ist:%H:%M:%S IST}")
+        else:
+            logger.info("Mandi snapshot fresh — next fetch at daily 06:30 IST")
     except Exception as e:
         logger.error(f"Could not check/trigger first mandi fetch: {e}")
 
