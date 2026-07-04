@@ -360,14 +360,16 @@
     .logo-title { font-size: 15px; font-weight: 800; color: var(--green-dark); line-height: 1.1; letter-spacing: -0.3px; }
     .logo-sub   { font-size: 9.5px; color: var(--text-soft); font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif; }
     .header-right { display: flex; align-items: center; gap: 8px; }
-    .header-nav { display: none; gap: 2px; }
+    /* Center nav — mirrors mandi.html's .header-nav / .header-nav-link */
+    .header-nav { display: none; align-items: center; gap: 28px; }
     .nav-link {
-      font-size: 12.5px; font-weight: 500; color: var(--text-mid);
-      text-decoration: none; padding: 5px 10px; border-radius: 8px;
-      transition: background 0.2s, color 0.2s; white-space: nowrap;
+      font-size: 15px; font-weight: 700; color: #1a202c;
+      text-decoration: none; padding: 6px 0;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s; white-space: nowrap;
     }
-    .nav-link:hover { background: var(--green-xsoft); color: var(--green-mid); }
-    .nav-link.active { color: var(--green-dark); font-weight: 700; background: var(--green-soft); }
+    .nav-link:hover { color: #2d6a4f; }
+    .nav-link.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
     .avatar-btn {
       width: 34px; height: 34px; border-radius: 50%;
       background: linear-gradient(135deg, var(--green-main), var(--gold));
@@ -798,8 +800,11 @@
       .cnav-inner{padding:0 36px}
       .top-utility-bar{display:block}
       .top-utility-inner{padding:0 36px}
-      /* Restore normal left-aligned flow — the mobile-only centering trick no longer applies */
-      .header > .header-left { flex: 0 0 auto; justify-content: flex-start; }
+      /* Desktop order mirrors mandi.html: logo, hamburger, centered nav, right group */
+      .header > .header-left { order: 1; flex: 0 0 auto; justify-content: flex-start; }
+      .header > .hamburger-btn { order: 2; }
+      .header > .header-nav { order: 3; }
+      .header > .header-right { order: 4; }
       .lang-picker { display: block; }
     }
     @media(min-width:900px){
@@ -860,15 +865,12 @@
       </div>
     </a>
   </div>
+  <nav class="header-nav" id="desktop-nav">
+    <a class="nav-link" href="../mandi.html"       data-i18n="nav_mandi_bhav">कृषि बाजार मूल्य</a>
+    <a class="nav-link" href="../shop.html"        data-i18n="nav_shop_full">खरीदें और बेचें</a>
+    <a class="nav-link active" href="index.html"   data-i18n="nav_news">कृषि समाचार</a>
+  </nav>
   <div class="header-right">
-    <nav class="header-nav" id="desktop-nav">
-      <a class="nav-link" href="../index.html"           data-i18n="nav_home">मुख्य</a>
-      <a class="nav-link" href="../chat.html?tab=weather" data-i18n="nav_weather">मौसम</a>
-
-      <a class="nav-link active" href="index.html"       data-i18n="nav_articles">लेख</a>
-
-    </nav>
-
     <!-- Language Picker (dropdown) -->
     <div class="lang-picker" id="lang-picker">
       <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
@@ -1561,6 +1563,9 @@ const TRANSLATIONS = {
     nav_home:             "मुख्य",
     nav_weather:          "मौसम",
     nav_mandi:            "मंडी",
+    nav_mandi_bhav:       "कृषि बाजार मूल्य",
+    nav_shop_full:        "खरीदें और बेचें",
+    nav_news:             "कृषि समाचार",
     nav_articles:         "लेख",
     nav_help:             "सहायता",
     nav_chat:             "Chat",
@@ -1689,6 +1694,9 @@ const TRANSLATIONS = {
     nav_home:             "Home",
     nav_weather:          "Weather",
     nav_mandi:            "Market",
+    nav_mandi_bhav:       "Market Prices",
+    nav_shop_full:        "Buy & Sell",
+    nav_news:             "Farm News",
     nav_articles:         "Articles",
     nav_help:             "Help",
     nav_chat:             "Chat",
@@ -1817,6 +1825,9 @@ const TRANSLATIONS = {
     nav_home:             "ಮನೆ",
     nav_weather:          "ಹವಾಮಾನ",
     nav_mandi:            "ಮಾರುಕಟ್ಟೆ",
+    nav_mandi_bhav:       "ಮಂಡಿ ಬೆಲೆ",
+    nav_shop_full:        "ಖರೀದಿ/ಮಾರಾಟ",
+    nav_news:             "ಕೃಷಿ ಸುದ್ದಿ",
     nav_articles:         "ಲೇಖನ",
     nav_help:             "ಸಹಾಯ",
     nav_chat:             "ಚಾಟ್",
