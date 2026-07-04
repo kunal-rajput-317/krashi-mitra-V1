@@ -122,9 +122,13 @@ async def _warm_up_models():
             _get_model()  # loads cache embedding model
         except Exception as e:
             print(f"⚠️ Cache model warm-up failed (non-fatal): {e}")
+        from backend.config import get_setting
+        if not get_setting("rag_enabled", True):
+            print("[RAG] disabled via RAG_ENABLED=false — skipping warm-up")
+            return
         try:
             from rag.indexer import get_collection
-            get_collection()  # loads ChromaDB embedding function (same model)
+            get_collection()  # loads ChromaDB (reuses cache's embedding model)
         except Exception as e:
             print(f"⚠️ RAG model warm-up failed (non-fatal): {e}")
 

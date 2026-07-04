@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 
+from backend.config import get_setting
 from backend.database.db import ChatHistory, get_db
 from backend.services.chatbot_service import (
     build_context,
@@ -150,7 +151,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
     # ── Step 3: RAG retrieval (run in thread — ChromaDB is sync) ──
     rag_context = ""
     rag_chunks  = 0
-    if _RAG_AVAILABLE:
+    if _RAG_AVAILABLE and get_setting("rag_enabled", True):
         try:
             # ChromaDB + sentence-transformers are synchronous.
             # Run in a thread so we don't block the async event loop.
@@ -185,8 +186,14 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
             print(f"[History] Failed: {e}")
 
     # ── Step 5: Build prompt + call AI (awaited) ──────────────
-    prompt = build_prompt(body.q, body.district, body.language, full_context, history_text)
-    answer, source = await call_ai(prompt)   # ← await async call
+    if get_setting("ai_enabled", True):
+        prompt = build_prompt(body.q, body.district, body.language, full_context, history_text)
+        answer, source = await call_ai(prompt)   # ← await async call
+    else:
+        answer, source = (
+            "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+            "disabled",
+        )
 
     # ── Step 6: Save to DB ────────────────────────────────────
     _save_to_db(db, body, body.q, answer)

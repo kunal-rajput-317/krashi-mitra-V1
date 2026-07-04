@@ -14,6 +14,10 @@ _settings: dict = {
     "ollama_enabled":         os.getenv("OLLAMA_ENABLED",      "false").lower() == "true",
     "ollama_model":           os.getenv("OLLAMA_MODEL",        "gemma3:4b"),
     "pipeline_timeout":       float(os.getenv("PIPELINE_TIMEOUT", "50")),
+    # RAM-saving killswitches for low-memory hosts — set to "false" in env
+    # to run cache-only (no ChromaDB index in memory, no Gemini/Ollama calls).
+    "rag_enabled":            os.getenv("RAG_ENABLED",          "true").lower() == "true",
+    "ai_enabled":             os.getenv("AI_RESPONSE_ENABLED",   "true").lower() == "true",
 }
 
 ALLOWED_GEMINI_MODELS = [
