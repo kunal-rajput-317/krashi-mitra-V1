@@ -38,15 +38,30 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
     return [c for c in chunks if len(c) > 30]  # skip tiny chunks
 
 
-# ── Embedding function (sentence-transformers, avoids ChromaDB default) ──
+# ── Embedding function (reuses the cache's model — avoids a 2nd copy) ────
 _ef = None
 def get_embedding_function():
+    """
+    Wraps the SentenceTransformer instance cache/cache_engine.py already
+    loads, instead of instantiating a second intfloat/multilingual-e5-small
+    (each copy is ~300-500MB — doubling it was blowing past 512MB hosts).
+    Mirrors chromadb's SentenceTransformerEmbeddingFunction.__call__ exactly
+    (convert_to_numpy=True, normalize_embeddings=False) so existing indexed
+    vectors stay compatible.
+    """
     global _ef
     if _ef is None:
-        from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
-        _ef = SentenceTransformerEmbeddingFunction(
-            model_name="intfloat/multilingual-e5-small"
-        )
+        import numpy as np
+        from cache.cache_engine import _get_model as _get_shared_model
+
+        class _SharedSentenceTransformerEF:
+            def __call__(self, input):
+                embeddings = _get_shared_model().encode(
+                    list(input), convert_to_numpy=True, normalize_embeddings=False,
+                )
+                return [np.array(e, dtype=np.float32) for e in embeddings]
+
+        _ef = _SharedSentenceTransformerEF()
     return _ef
 
 # ── Get or create ChromaDB collection ────────────────────────────────
