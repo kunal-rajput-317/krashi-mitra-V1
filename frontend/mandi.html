@@ -31,9 +31,9 @@
   <title>आज का मंडी भाव 2026 – UP, MP, राजस्थान, कर्नाटक रेट | KrashiMitra</title>
 
   <!-- ── Favicon & App Icons ── -->
-  <link rel="icon" type="image/png" sizes="32x32" href="https://krashimitra.in/images/favicon.png">
-  <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
-  <link rel="apple-touch-icon" href="https://krashimitra.in/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://krashimitra.in/assets/krashimitra_logo.png">
+  <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
+  <link rel="apple-touch-icon" href="https://krashimitra.in/assets/krashimitra_logo.png">
   <meta name="theme-color" content="#1a3c2e">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -224,7 +224,7 @@
           "url": "https://krashimitra.in",
           "logo": {
             "@type": "ImageObject",
-            "url": "https://krashimitra.in/images/favicon.png"
+            "url": "https://krashimitra.in/assets/krashimitra_logo.png"
           }
         }
       },
@@ -295,7 +295,7 @@
   <!-- ═══════════════════════════════════════════════════════════════ -->
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&family=Noto+Serif+Devanagari:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
@@ -472,7 +472,7 @@
       box-shadow: inset 0 0 0 1px rgba(45,106,79,0.15);
     }
     .header-logo-text {
-      font-family: 'Playfair Display', 'Noto Sans Devanagari', serif;
+      font-family: 'Noto Serif Devanagari', 'Playfair Display', serif;
       font-size: 21px;
       font-weight: 800;
       color: #2d6a4f;
@@ -644,13 +644,13 @@
     .lang-option.active { color: var(--green-mid); background: #eaf6ed; }
     .lang-option .lang-opt-code { font-size: 11px; opacity: 0.55; font-weight: 600; min-width: 22px; }
 
-    /* Sidebar Slide-Out Drawer Overlay */
+    /* Sidebar Slide-Out Drawer Overlay — minimal single-column menu */
     .sidebar-drawer-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.52);
-      backdrop-filter: blur(4px);
+      background: rgba(15,23,20,0.5);
+      backdrop-filter: blur(3px);
       z-index: 4000;
       justify-content: flex-start;
     }
@@ -658,94 +658,117 @@
       display: flex;
     }
     .sidebar-drawer {
-      width: 280px;
+      width: 288px;
+      max-width: 84vw;
       background: #ffffff;
       height: 100%;
-      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      box-shadow: 6px 0 28px rgba(0,0,0,0.18);
       display: flex;
       flex-direction: column;
-      animation: slide-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: slide-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes slide-right {
       from { transform: translateX(-100%); }
       to { transform: translateX(0); }
     }
     .sidebar-drawer-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid #edf2f7;
+      padding: 18px 16px 12px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
     }
     .sidebar-drawer-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
-      color: #2d6a4f;
+      color: #1c2b22;
       font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
     }
     .sidebar-drawer-close {
-      background: none;
+      background: #f2f5f3;
       border: none;
-      font-size: 20px;
+      font-size: 15px;
       cursor: pointer;
-      color: #718096;
+      color: #5b675f;
       width: 32px;
       height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      transition: background 0.15s;
+      transition: background 0.15s, color 0.15s;
     }
     .sidebar-drawer-close:hover {
-      background: #f7fafc;
+      background: #e6ebe8;
+      color: #1c2b22;
     }
     .sidebar-drawer-links {
-      padding: 12px;
+      flex: 1;
+      padding: 6px 12px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
       overflow-y: auto;
     }
     .sidebar-drawer-link {
-      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-height: 46px;
+      box-sizing: border-box;
+      padding: 10px 12px;
       font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
       font-size: 15px;
       font-weight: 700;
       color: #2d3748;
       text-decoration: none;
-      border-radius: 8px;
-      transition: background 0.15s, color 0.15s;
+      border-radius: 10px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
+    .sidebar-drawer-link-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
     .sidebar-drawer-link:hover {
-      background: #f0f7f4;
-      color: #2d6a4f;
+      background: #f2f8f4;
     }
     .sidebar-drawer-link.active {
       background: #eaf6ed;
       color: #2d6a4f;
+      border-left-color: #2d6a4f;
     }
     button.sidebar-drawer-link {
-      background: none; border: none; text-align: left; cursor: pointer;
-      width: 100%; font-family: inherit;
+      background: none; border: none; border-left: 3px solid transparent;
+      text-align: left; cursor: pointer; width: 100%; font-family: inherit;
     }
-    .sidebar-drawer-divider { height: 1px; background: #eef2ef; margin: 6px 4px; }
+    .sidebar-drawer-footer {
+      flex-shrink: 0;
+      border-top: 1px solid #eef2ef;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     .sidebar-drawer-lang-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 16px; flex-wrap: wrap;
+      display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
     }
     .sidebar-drawer-lang-label {
-      font-size: 13px; font-weight: 700; color: #718096;
+      font-size: 12px; font-weight: 700; color: #8a958f;
       font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
     }
     .sidebar-lang-btn {
-      background: #f0f7f4; border: 1.5px solid #e0ece4; border-radius: 20px;
-      padding: 5px 13px; font-size: 12.5px; font-weight: 700; color: #2d3748;
+      background: #f2f8f4; border: 1.5px solid #e3ece5; border-radius: 20px;
+      padding: 5px 12px; font-size: 12px; font-weight: 700; color: #2d3748;
       cursor: pointer; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
       transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
     .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+    .sidebar-drawer-utility-row { display: flex; align-items: center; gap: 16px; }
+    .sidebar-drawer-utility-link {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 700; color: #4a5a52;
+      text-decoration: none; background: none; border: none; cursor: pointer;
+      padding: 0; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+    }
+    .sidebar-drawer-utility-link:hover { color: #2d6a4f; }
 
     /* Override top sticky position of commodity bar to fit new header size */
     .commodity-navbar {
@@ -1182,7 +1205,10 @@
     .mandi-table-v2 tbody tr:nth-child(even) { background: #f5f6fb; }
     .mandi-table-v2 tbody tr:nth-child(odd)  { background: #ffffff; }
     .mandi-table-v2 tbody tr { cursor: pointer; }
-    .mtv2-market { color: #9c5a20; font-weight: 700; }
+    .mtv2-market {
+      color: #9c5a20; font-weight: 700;
+      max-width: 140px; white-space: normal; word-break: break-word;
+    }
     .mtv2-commodity { color: var(--text-dark); font-weight: 700; }
     .mtv2-min, .mtv2-max, .mtv2-modal { color: #0f7d87; font-weight: 700; }
     .mtv2-modal { font-weight: 800; }
@@ -1554,8 +1580,6 @@
     }
     .mt-wa-btn:hover { background: #1da851; }
 
-    /* ── BOTTOM NAV (Mobile) ── */
-    .bottom-nav { display: none; }
 
     /* ── COPYRIGHT FOOTER ── */
     .site-footer {
@@ -1609,37 +1633,17 @@
       .mandi-table-v2 tbody tr:nth-child(even) td:first-child { background: #f5f6fb; }
       .mandi-table-v2 td:first-child,
       .mandi-table-v2 th:first-child { box-shadow: 2px 0 5px rgba(0,0,0,0.06); }
+      /* Narrow बाज़ार column on mobile so more price columns fit on screen */
+      .mandi-table-v2 th:first-child,
+      .mandi-table-v2 td:first-child {
+        width: 104px; max-width: 104px;
+        padding-left: 10px; padding-right: 8px;
+        white-space: normal; word-break: break-word;
+      }
 
       .cart-drawer { width: 100%; max-width: 100%; }
 
-      .bottom-nav {
-        display: block; position: fixed; bottom: 0; left: 0; right: 0;
-        background: var(--green-dark); box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
-        z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 6px);
-        border-top: 1px solid rgba(255,255,255,0.08);
-      }
-      .bottom-nav-items { display: flex; align-items: center; height: 60px; padding: 0 2px; gap: 0; }
-      .bottom-nav-item {
-        flex: 1; display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        cursor: pointer; -webkit-tap-highlight-color: transparent;
-        padding: 6px 2px; text-decoration: none; gap: 3px;
-      }
-      .bnav-icon { font-size: 18px; line-height: 1; color: rgba(255,255,255,0.55); transition: color 0.18s; }
-      .bnav-label {
-        font-size: 9.5px; font-weight: 600;
-        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-        color: rgba(255,255,255,0.55); white-space: nowrap; transition: color 0.18s;
-      }
-      .bottom-nav-item.active .bnav-icon,
-      .bottom-nav-item.active .bnav-label { color: var(--amber); }
       .site-footer { display: none; }
-    }
-
-    @supports (padding: max(0px)) {
-      @media (max-width: 1024px) {
-        .bottom-nav { padding-bottom: max(6px, env(safe-area-inset-bottom)); }
-      }
     }
   </style>
 </head>
@@ -1647,8 +1651,8 @@
 
 <!-- ══ ANNOUNCEMENT BAR (same as shop.html) ══ -->
 <div class="pre-topbar">
-  <a href="tel:+919870951001" class="pre-topbar-helpline" title="किसान हेल्पलाइन पर कॉल करें">
-    <span class="pre-topbar-phone-icon">📞</span> किसान हेल्पलाइन: +91 9870951001
+  <a href="tel:+919870951001" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
+    <span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001
   </a>
 </div>
 
@@ -1667,8 +1671,8 @@
       <a href="shop.html" class="top-utility-link" data-t="nav_shop_short">खरीदें/बेचें</a>
     </div>
     <div class="top-utility-right">
-      <a href="tel:+919870951001" class="top-utility-helpline" id="top-utility-helpline-span" title="किसान हेल्पलाइन पर कॉल करें">
-        <span class="pre-topbar-phone-icon">📞</span> <span data-t="nav_helpline">किसान हेल्पलाइन: +91 9870951001</span>
+      <a href="tel:+919870951001" class="top-utility-helpline" id="top-utility-helpline-span" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
+        <span class="pre-topbar-phone-icon">📞</span> <span data-t="nav_helpline">कृषिमित्र हेल्पलाइन: +91 9870951001</span>
       </a>
       <span class="top-utility-divider">|</span>
       <a href="chat.html" class="top-utility-link" data-t="nav_contact">संपर्क</a>
@@ -1725,7 +1729,7 @@
       </div>
 
       <!-- Profile Avatar -->
-      <a href="https://krashimitra.in/login.html" class="header-avatar-btn">👨‍🌾</a>
+      <a href="https://krashimitra.in/login.html" class="header-avatar-btn">👤</a>
     </div>
   </div>
 </header>
@@ -1735,29 +1739,27 @@
   <div class="sidebar-drawer" onclick="event.stopPropagation()">
     <div class="sidebar-drawer-header">
       <span class="sidebar-drawer-title" data-t="menu_title">मेनु</span>
-      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()">✕</button>
+      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()" aria-label="Close menu">✕</button>
     </div>
     <div class="sidebar-drawer-links">
-      <a href="index.html" class="sidebar-drawer-link" data-t="nav_home">🏠 मुख्य</a>
-      <a href="weather.html" class="sidebar-drawer-link" data-t="nav_weather">🌤️ मौसम</a>
-      <a href="mandi.html" class="sidebar-drawer-link active" data-t="nav_mandi">🏪 मंडी</a>
-      <a href="articles/index.html" class="sidebar-drawer-link" data-t="nav_news">📰 लेख</a>
-      <a href="chat.html" class="sidebar-drawer-link" data-t="nav_chat">💬 सहायता</a>
-      <a href="shop.html" class="sidebar-drawer-link" data-t="nav_shop">🛒 दुकान</a>
-      <a href="sarkari_yojana.html" class="sidebar-drawer-link" data-t="nav_schemes">🏛️ सरकारी योजना</a>
-
-      <div class="sidebar-drawer-divider"></div>
-
-      <a href="https://wa.me/919870951001" target="_blank" class="sidebar-drawer-link">💬 व्हाट्सएप सहायता</a>
-      <button class="sidebar-drawer-link" onclick="toggleSidebarMenu(); openOrdersModal();">📋 मेरे ऑर्डर</button>
-
-      <div class="sidebar-drawer-divider"></div>
-
+      <a href="index.html" class="sidebar-drawer-link" data-t="nav_home"><span class="sidebar-drawer-link-icon">🏠</span>मुख्य</a>
+      <a href="weather.html" class="sidebar-drawer-link" data-t="nav_weather"><span class="sidebar-drawer-link-icon">🌤️</span>मौसम</a>
+      <a href="mandi.html" class="sidebar-drawer-link active" data-t="nav_mandi"><span class="sidebar-drawer-link-icon">🏪</span>मंडी</a>
+      <a href="shop.html" class="sidebar-drawer-link" data-t="nav_shop"><span class="sidebar-drawer-link-icon">🛒</span>दुकान</a>
+      <a href="articles/index.html" class="sidebar-drawer-link" data-t="nav_news"><span class="sidebar-drawer-link-icon">📰</span>लेख</a>
+      <a href="chat.html" class="sidebar-drawer-link" data-t="nav_chat"><span class="sidebar-drawer-link-icon">💬</span>सहायता</a>
+      <a href="sarkari_yojana.html" class="sidebar-drawer-link" data-t="nav_schemes"><span class="sidebar-drawer-link-icon">🏛️</span>सरकारी योजना</a>
+      <button class="sidebar-drawer-link" onclick="toggleSidebarMenu(); openOrdersModal();"><span class="sidebar-drawer-link-icon">📋</span>मेरे ऑर्डर</button>
+    </div>
+    <div class="sidebar-drawer-footer">
       <div class="sidebar-drawer-lang-row">
         <span class="sidebar-drawer-lang-label">🌐 भाषा:</span>
         <button class="sidebar-lang-btn" id="drawer-lang-hi" onclick="pickLang('hi')">हिंदी</button>
         <button class="sidebar-lang-btn" id="drawer-lang-en" onclick="pickLang('en')">English</button>
         <button class="sidebar-lang-btn" id="drawer-lang-kn" onclick="pickLang('kn')">ಕನ್ನಡ</button>
+      </div>
+      <div class="sidebar-drawer-utility-row">
+        <a href="https://wa.me/919870951001" target="_blank" class="sidebar-drawer-utility-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> व्हाट्सएप सहायता</a>
       </div>
     </div>
   </div>
@@ -1859,6 +1861,7 @@
                 onfocus="mnComboOpen('state')"
                 onkeydown="mnComboKeydown(event,'state')"
                 onblur="mnComboBlur('state')" />
+              <button class="mn-mic-btn" id="mn-state-mic" onmousedown="event.preventDefault()" onclick="mnStartVoice('state')" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
               <span class="mn-combo-clear" id="mn-state-clear" onclick="mnComboClear('state')" title="Clear">✕</span>
               <span class="mn-combo-chevron">▾</span>
             </div>
@@ -1878,6 +1881,7 @@
                 onfocus="mnComboOpen('district')"
                 onkeydown="mnComboKeydown(event,'district')"
                 onblur="mnComboBlur('district')" />
+              <button class="mn-mic-btn" id="mn-district-mic" onmousedown="event.preventDefault()" onclick="mnStartVoice('district')" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
               <span class="mn-combo-clear" id="mn-district-clear" onclick="mnComboClear('district')" title="Clear">✕</span>
               <span class="mn-combo-chevron">▾</span>
             </div>
@@ -1940,6 +1944,7 @@
           <input id="state-search" type="text" autocomplete="off"
             placeholder="राज्य खोजें... (उत्तर प्रदेश, बिहार)"
             oninput="filterStateGrid()" />
+          <button class="mn-mic-btn" id="state-search-mic" onmousedown="event.preventDefault()" onclick="stateGridVoice()" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
         </div>
       </div>
       <div class="shop-section-title"><span>📍 राज्य चुनें — सभी फसलों के भाव देखें</span></div>
@@ -1965,6 +1970,7 @@
         <input id="state-commodity-search" type="text" autocomplete="off"
           placeholder="फसल खोजें... (गेहूं, प्याज, आलू)"
           oninput="filterStatePrices()" />
+        <button class="mn-mic-btn" id="state-commodity-search-mic" onmousedown="event.preventDefault()" onclick="stateCommodityVoice()" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
       </div>
 
       <div id="state-result"></div>
@@ -2101,36 +2107,6 @@
   </div>
 </div>
 
-<!-- ══ BOTTOM NAV (Mobile) ══ -->
-<nav class="bottom-nav">
-  <div class="bottom-nav-items">
-    <a class="bottom-nav-item" href="index.html">
-      <span class="bnav-icon">🏠</span>
-      <span class="bnav-label">मुख्य</span>
-    </a>
-    <a class="bottom-nav-item" href="weather.html">
-      <span class="bnav-icon">🌤️</span>
-      <span class="bnav-label">मौसम</span>
-    </a>
-    <a class="bottom-nav-item active" href="mandi.html">
-      <span class="bnav-icon">🏪</span>
-      <span class="bnav-label">मंडी</span>
-    </a>
-    <a class="bottom-nav-item" href="shop.html">
-      <span class="bnav-icon">🛒</span>
-      <span class="bnav-label">दुकान</span>
-    </a>
-    <a class="bottom-nav-item" href="articles/index.html">
-      <span class="bnav-icon">📰</span>
-      <span class="bnav-label">लेख</span>
-    </a>
-    <a class="bottom-nav-item" href="sarkari_yojana.html">
-      <span class="bnav-icon">🏛️</span>
-      <span class="bnav-label">योजना</span>
-    </a>
-  </div>
-</nav>
-
 <!-- ══ COPYRIGHT FOOTER ══ -->
 <footer class="site-footer">
   <div class="site-footer-links">
@@ -2196,7 +2172,7 @@
       nav_loan:         "कृषि ऋण",
       nav_projects:     "कृषि परियोजनाएं",
       nav_deals:        "कृषि सौदे",
-      nav_helpline:     "किसान हेल्पलाइन: +91 9870951001",
+      nav_helpline:     "कृषिमित्र हेल्पलाइन: +91 9870951001",
       nav_contact:      "संपर्क",
       nav_mandi_bhav:   "कृषि बाजार मूल्य",
       nav_veg_prices:   "खरीदें और बेचें",
@@ -3007,22 +2983,29 @@
 
   function filterCommodityGrid() { renderCommodityGrid(); }
 
-  // Voice search for the crop grid
-  function cgridVoice() {
+  // Generic voice search: fills `inputId` from speech, pulses `btnId`, then runs `onDone`.
+  function _mnVoiceSearch(inputId, btnId, onDone) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert('आपका ब्राउज़र voice input सपोर्ट नहीं करता।'); return; }
-    const btn   = document.getElementById('ctile-search-mic');
-    const input = document.getElementById('ctile-search');
+    const btn   = document.getElementById(btnId);
+    const input = document.getElementById(inputId);
     if (btn.classList.contains('listening')) return;
     const rec  = new SR();
     rec.lang = currentLang === 'kn' ? 'kn-IN' : currentLang === 'en' ? 'en-IN' : 'hi-IN';
     rec.interimResults = false; rec.maxAlternatives = 1;
     btn.classList.add('listening');
     rec.start();
-    rec.onresult = e => { input.value = e.results[0][0].transcript.trim(); btn.classList.remove('listening'); renderCommodityGrid(); };
+    rec.onresult = e => { input.value = e.results[0][0].transcript.trim(); btn.classList.remove('listening'); onDone(); };
     rec.onerror  = () => btn.classList.remove('listening');
     rec.onend    = () => btn.classList.remove('listening');
   }
+
+  // Voice search for the crop grid
+  function cgridVoice() { _mnVoiceSearch('ctile-search', 'ctile-search-mic', renderCommodityGrid); }
+
+  // Voice search for the state grid and the in-state crop filter
+  function stateGridVoice()      { _mnVoiceSearch('state-search', 'state-search-mic', filterStateGrid); }
+  function stateCommodityVoice() { _mnVoiceSearch('state-commodity-search', 'state-commodity-search-mic', filterStatePrices); }
 
   // Tap a tile → open its price list (reuses fetchMandiPrices + detail sheet)
   // Grid tile tap → open by index into the rendered grid
