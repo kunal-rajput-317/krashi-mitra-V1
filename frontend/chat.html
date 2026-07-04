@@ -470,6 +470,22 @@ button.sidebar-drawer-link {
   flex-shrink: 0;
   border-bottom: 1px solid rgba(255,255,255,0.07);
 }
+/* slim maintenance notice under the context bar */
+.chat-maintenance-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: #fff8e6;
+  border-bottom: 1px solid #f2e3b3;
+  color: #8a6d1a;
+  font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  flex-shrink: 0;
+}
 .chat-context-title {
   display: flex;
   align-items: center;
@@ -1114,6 +1130,12 @@ button.sidebar-drawer-link {
     </div>
   </div>
 
+  <!-- maintenance notice — remove when the full AI pipeline is back on -->
+  <div class="chat-maintenance-note">
+    <span>🛠️</span>
+    <span data-t="maintenance_note">AI अभी सुधार की प्रक्रिया में है — कुछ सवालों के जवाब सीमित मिल सकते हैं। जल्द ही पूरी सेवा वापस आएगी।</span>
+  </div>
+
   <!-- blue quick-topics bar (parallels mandi/weather quick-nav) -->
   <div class="commodity-navbar">
     <div class="cnav-inner">
@@ -1240,6 +1262,7 @@ const TRANSLATIONS = {
     welcome_msg:    "नमस्ते किसान भाई! 🙏\n\nमैं KrashiMitra AI हूँ — आपका डिजिटल कृषि सहायक।\n\nआप मुझसे पूछ सकते हैं:\n• फसल की बीमारी और उपचार\n• खाद और कीटनाशक की सलाह\n• बुवाई और कटाई का सही समय\n• मौसम के अनुसार खेती की टिप्स\n• फोटो भेजकर फसल की जाँच\n\nक्या पूछना है? 👇",
     input_placeholder: "यहाँ लिखें या बोलें...",
     thinking:       "सोच रहे हैं...",
+    maintenance_note: "AI अभी सुधार की प्रक्रिया में है — कुछ सवालों के जवाब सीमित मिल सकते हैं। जल्द ही पूरी सेवा वापस आएगी।",
   },
   en: {
     nav_chat:       "AI Advisor",
@@ -1266,6 +1289,7 @@ const TRANSLATIONS = {
     welcome_msg:    "Hello Farmer! 🙏\n\nI am KrashiMitra AI — your digital farming assistant.\n\nYou can ask me about:\n• Crop diseases and treatments\n• Fertilizer and pesticide advice\n• Sowing and harvest timings\n• Weather-based farming tips\n• Photo-based crop diagnosis\n\nWhat would you like to know? 👇",
     input_placeholder: "Type or speak here...",
     thinking:       "Thinking...",
+    maintenance_note: "AI is under maintenance — some answers may be limited. Full service will be back soon.",
   },
   kn: {
     nav_chat:       "AI ಕೇಳಿ",
@@ -1292,6 +1316,7 @@ const TRANSLATIONS = {
     welcome_msg:    "ನಮಸ್ಕಾರ ರೈತ ಬಂಧು! 🙏\n\nನಾನು KrashiMitra AI — ನಿಮ್ಮ ಡಿಜಿಟಲ್ ಕೃಷಿ ಸಹಾಯಕ.\n\nನೀವು ಕೇಳಬಹುದು:\n• ಬೆಳೆ ರೋಗ ಮತ್ತು ಚಿಕಿತ್ಸೆ\n• ಗೊಬ್ಬರ ಮತ್ತು ಕೀಟನಾಶಕ ಸಲಹೆ\n• ಬಿತ್ತನೆ ಮತ್ತು ಕಟಾವು ಸಮಯ\n• ಹವಾಮಾನ ಆಧಾರಿತ ಸಲಹೆ\n• ಫೋಟೋ ಮೂಲಕ ಬೆಳೆ ತಪಾಸಣೆ\n\nಏನು ಕೇಳಬೇಕು? 👇",
     input_placeholder: "ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಮಾತನಾಡಿ...",
     thinking:       "ಯೋಚಿಸುತ್ತಿದ್ದೇವೆ...",
+    maintenance_note: "AI ಸದ್ಯ ನಿರ್ವಹಣೆಯಲ್ಲಿದೆ — ಕೆಲವು ಉತ್ತರಗಳು ಸೀಮಿತವಾಗಿರಬಹುದು. ಪೂರ್ಣ ಸೇವೆ ಶೀಘ್ರದಲ್ಲೇ ಮರಳಲಿದೆ।",
   }
 };
 
