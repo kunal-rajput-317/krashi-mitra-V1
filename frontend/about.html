@@ -14,8 +14,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <title>हमारे बारे में — About Us | KrashiMitra</title>
-  <link rel="icon" type="image/png" href="https://krashimitra.in/images/favicon.png">
-  <link rel="shortcut icon" href="https://krashimitra.in/images/favicon.png" type="image/x-icon">
+  <link rel="icon" type="image/png" href="https://krashimitra.in/assets/krashimitra_logo.png">
+  <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
   <meta name="theme-color" content="#1a3c2e">
 
   <meta name="description" content="KrashiMitra — भारतीय किसानों का डिजिटल साथी। रियल-टाइम मंडी भाव, मौसम, AI कृषि सहायता और सरकारी योजनाओं की जानकारी एक जगह। जानिए हमारे बारे में।">
@@ -59,7 +59,7 @@
         "url": "https://krashimitra.in",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://krashimitra.in/images/favicon.png"
+          "url": "https://krashimitra.in/assets/krashimitra_logo.png"
         },
         "description": "Free digital companion for Indian farmers — live mandi prices, district-wise weather with farming advisory, AI crop assistance in Hindi, and government scheme guides.",
         "areaServed": { "@type": "Country", "name": "India" },
@@ -99,7 +99,7 @@
     crossorigin="anonymous"></script>
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Devanagari:wght@700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -138,7 +138,7 @@
     .topbar-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .topbar-logo-icon { font-size: 26px; line-height: 1; }
     .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-    .topbar-logo-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: #fff; }
+    .topbar-logo-name { font-family: 'Noto Serif Devanagari', 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: #fff; }
     .topbar-logo-name span { color: var(--amber); }
     .topbar-logo-sub { font-size: 9.5px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; }
     .topbar-nav { display: flex; align-items: center; gap: 2px; }
@@ -161,6 +161,56 @@
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0; text-decoration: none;
     }
+
+    /* ── Hamburger (opens sidebar drawer) ── */
+    .hamburger-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 22px; color: rgba(255,255,255,0.92);
+      padding: 4px 6px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; transition: background 0.15s;
+      flex-shrink: 0; margin-right: 4px;
+    }
+    .hamburger-btn:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── Sidebar slide-out drawer ── */
+    .sidebar-drawer-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      z-index: 4000; justify-content: flex-start;
+    }
+    .sidebar-drawer-overlay.open { display: flex; }
+    .sidebar-drawer {
+      width: 280px; background: var(--white); height: 100%;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column;
+      animation: slide-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    .sidebar-drawer-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .sidebar-drawer-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 700; color: var(--green-mid);
+    }
+    .sidebar-drawer-close {
+      background: none; border: none; font-size: 20px; cursor: pointer;
+      color: var(--text-mid); width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; transition: background 0.15s;
+    }
+    .sidebar-drawer-close:hover { background: var(--cream); }
+    .sidebar-drawer-links { padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .sidebar-drawer-link {
+      padding: 12px 16px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-size: 15px; font-weight: 700; color: var(--text-dark);
+      text-decoration: none; border-radius: 8px; transition: background 0.15s, color 0.15s;
+    }
+    .sidebar-drawer-link:hover { background: var(--green-pale); color: var(--green-mid); }
+    .sidebar-drawer-link.active { background: var(--green-pale); color: var(--green-dark); }
 
     /* ── BREADCRUMB ── */
     .breadcrumb {
@@ -303,9 +353,6 @@
     .contact-box-sub { font-size: 13px; color: #3a3a3a; line-height: 1.6; }
     .contact-box-sub a { color: var(--green-dark); font-weight: 700; text-decoration: none; }
 
-    /* ── BOTTOM NAV (Mobile) ── */
-    .bottom-nav { display: none; }
-
     /* ── FOOTER ── */
     .site-footer {
       background: var(--green-dark); color: rgba(255,255,255,0.65);
@@ -323,7 +370,7 @@
       .topbar-logo-name { font-size: 15px; }
       .topbar-logo-sub { display: none; }
       .breadcrumb { padding: 9px 14px; }
-      .main-content { padding: 0 12px 90px; }
+      .main-content { padding: 0 12px 60px; }
       .page-hero { padding: 22px 16px 20px; margin-bottom: 20px; }
       .hero-title { font-size: 22px; }
       .about-card { padding: 18px 16px; }
@@ -333,28 +380,6 @@
       .stat-box { min-width: 90px; padding: 14px 10px; }
       .stat-num { font-size: 22px; }
 
-      .bottom-nav {
-        display: block; position: fixed; bottom: 0; left: 0; right: 0;
-        background: var(--green-dark);
-        box-shadow: 0 -2px 16px rgba(0,0,0,0.28);
-        z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 6px);
-        border-top: 1px solid rgba(255,255,255,0.08);
-      }
-      .bottom-nav-items { display: flex; align-items: center; height: 60px; padding: 0 2px; }
-      .bottom-nav-item {
-        flex: 1; display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        cursor: pointer; -webkit-tap-highlight-color: transparent;
-        padding: 6px 2px; text-decoration: none; gap: 3px;
-      }
-      .bnav-icon { font-size: 18px; line-height: 1; color: rgba(255,255,255,0.55); transition: color 0.18s; }
-      .bnav-label {
-        font-size: 9.5px; font-weight: 600;
-        font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-        color: rgba(255,255,255,0.55); white-space: nowrap;
-      }
-      .bottom-nav-item.active .bnav-icon,
-      .bottom-nav-item.active .bnav-label { color: var(--amber); }
       .site-footer { display: none; }
     }
   </style>
@@ -363,6 +388,7 @@
 
 <!-- ══ TOPBAR ══ -->
 <div class="topbar">
+  <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
   <div class="topbar-left">
     <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
       <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="topbar-logo-icon" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">
@@ -381,7 +407,27 @@
     <a class="tnav-btn" href="shop.html">🛒 दुकान</a>
   </nav>
   <div class="topbar-right">
-    <a href="login.html" class="topbar-avatar-btn">👨‍🌾</a>
+    <a href="login.html" class="topbar-avatar-btn">👤</a>
+  </div>
+</div>
+
+<!-- SIDEBAR SLIDE-OUT DRAWER MENU -->
+<div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
+  <div class="sidebar-drawer" onclick="event.stopPropagation()">
+    <div class="sidebar-drawer-header">
+      <span class="sidebar-drawer-title">मेनु</span>
+      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()">✕</button>
+    </div>
+    <div class="sidebar-drawer-links">
+      <a href="index.html" class="sidebar-drawer-link">🏠 मुख्य</a>
+      <a href="weather.html" class="sidebar-drawer-link">🌤️ मौसम</a>
+      <a href="mandi.html" class="sidebar-drawer-link">🏪 मंडी</a>
+      <a href="articles/index.html" class="sidebar-drawer-link">📰 लेख</a>
+      <a href="chat.html" class="sidebar-drawer-link">💬 AI सहायता</a>
+      <a href="shop.html" class="sidebar-drawer-link">🛒 दुकान</a>
+      <a href="khoj.html" class="sidebar-drawer-link">🔍 खोज</a>
+      <a href="sarkari_yojana.html" class="sidebar-drawer-link">🏛️ सरकारी योजना</a>
+    </div>
   </div>
 </div>
 
@@ -532,27 +578,6 @@
 
 </main>
 
-<!-- ══ BOTTOM NAV (Mobile) ══ -->
-<nav class="bottom-nav" aria-label="bottom navigation">
-  <div class="bottom-nav-items">
-    <a class="bottom-nav-item" href="index.html">
-      <span class="bnav-icon">🏠</span><span class="bnav-label">मुख्य</span>
-    </a>
-    <a class="bottom-nav-item" href="mandi.html">
-      <span class="bnav-icon">🏪</span><span class="bnav-label">मंडी</span>
-    </a>
-    <a class="bottom-nav-item" href="weather.html">
-      <span class="bnav-icon">🌤️</span><span class="bnav-label">मौसम</span>
-    </a>
-    <a class="bottom-nav-item" href="chat.html">
-      <span class="bnav-icon">💬</span><span class="bnav-label">AI</span>
-    </a>
-    <a class="bottom-nav-item" href="shop.html">
-      <span class="bnav-icon">🛒</span><span class="bnav-label">दुकान</span>
-    </a>
-  </div>
-</nav>
-
 <!-- ══ FOOTER ══ -->
 <footer class="site-footer">
   <div class="site-footer-links">
@@ -564,6 +589,13 @@
   </div>
   <div>© 2025–2026 KrashiMitra — किसान का डिजिटल साथी | krashimitra.in</div>
 </footer>
+
+<script>
+  // ── Sidebar slide-out drawer ──
+  function toggleSidebarMenu() {
+    document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
+  }
+</script>
 
 </body>
 </html>
