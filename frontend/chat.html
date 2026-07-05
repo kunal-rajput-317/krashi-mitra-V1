@@ -23,6 +23,7 @@
 <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="https://krashimitra.in/assets/krashimitra_logo.png">
 <meta name="theme-color" content="#1a3c2e">
+<link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="KrashiMitra AI">
 
@@ -37,14 +38,15 @@
   buvai ka samay, बुवाई का सही समय, sowing time advice,
   kisan AI app, किसान AI सहायक, agriculture chatbot india,
   krashimitra AI, free kheti salah hindi
-, kisan sahayata, kheti ki salah, krishi sawal jawab, fasal ki bimari ka ilaj, kheti AI salah, kisan helpline chat, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app" />
+, kisan sahayata, kheti ki salah, krishi sawal jawab, fasal ki bimari ka ilaj, kheti AI salah, kisan helpline chat, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app, yellowing leaf remedy, organic pest control, neem oil spray, sugarcane red rot treatment" />
 
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
 <link rel="canonical" href="https://krashimitra.in/chat.html" />
 <link rel="dns-prefetch" href="https://krashimitra.in">
 
-<link rel="alternate" hreflang="hi" href="https://krashimitra.in/chat.html" />
-<link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/chat.html" />
+<link rel="alternate" hreflang="hi" href="https://krashimitra.in/chat.html?lang=hi" />
+<link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/chat.html?lang=en" />
+<link rel="alternate" hreflang="kn" href="https://krashimitra.in/chat.html?lang=kn" />
 <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/chat.html" />
 
 <meta name="geo.region" content="IN" />
@@ -1153,6 +1155,11 @@ button.sidebar-drawer-link {
       <a href="chat.html" class="sidebar-drawer-link active"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
       <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
     </div>
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" style="display:block;margin-top:auto;padding:14px 16px;border-top:1px solid #eef2ef;background:#fff8e1;text-align:center;">
+      <p style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:8px;line-height:1.4;font-family:'Poppins',sans-serif;">📲 KrashiMitra ऐप को होम स्क्रीन पर जोड़ें</p>
+      <button id="pwa-install-btn" style="background:#2d6a4f;border:none;border-radius:18px;color:#fff;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;box-shadow:0 2px 6px rgba(45,106,79,0.25);">अभी इंस्टॉल करें</button>
+    </div>
     <div class="sidebar-drawer-footer">
       <div class="sidebar-drawer-lang-row">
         <span class="sidebar-drawer-lang-label">🌐 भाषा:</span>
@@ -1369,7 +1376,11 @@ const TRANSLATIONS = {
 };
 
 const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
-let currentLang = localStorage.getItem('km_lang') || 'hi';
+const urlParams = new URLSearchParams(window.location.search);
+let currentLang = urlParams.get('lang') || localStorage.getItem('km_lang') || 'hi';
+if (urlParams.get('lang')) {
+  localStorage.setItem('km_lang', currentLang);
+}
 
 function toggleLangPicker(e) {
   e.stopPropagation();
@@ -1790,5 +1801,44 @@ function removeTyping() {
 })();
 </script>
 
+  <!-- PWA Service Worker & Custom Install Prompt -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => console.log('Service Worker registered successfully. Scope:', reg.scope))
+          .catch((err) => console.error('Service Worker registration failed:', err));
+      });
+    }
+
+    // Custom Install Banner logic
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBanner = document.getElementById('pwa-install-banner');
+      if (installBanner) installBanner.style.display = 'block';
+    });
+
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        deferredPrompt = null;
+        const installBanner = document.getElementById('pwa-install-banner');
+        if (installBanner) installBanner.style.display = 'none';
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      const installBanner = document.getElementById('pwa-install-banner');
+      if (installBanner) installBanner.style.display = 'none';
+      deferredPrompt = null;
+      console.log('KrashiMitra was installed successfully!');
+    });
+  </script>
 </body>
 </html>
