@@ -90,17 +90,38 @@ for origin in raw_origins:
     except Exception:
         cors_origins.append(origin)
 
+# In local development (not running on Render) also accept file:// pages
+# (Origin header is the literal "null") and any LAN-IP host, so the frontend
+# opened straight from disk or over the local network can reach the API.
+# api-config.js treats the same hosts as "local" — localhost / 127.0.0.1 /
+# 192.168.* / 10.* / 172.16–31.* — so keep both sides in sync.
+IS_PROD = bool(os.getenv("RENDER"))
+if not IS_PROD:
+    cors_origins.append("null")  # file:// pages send Origin: null
+
 # Remove duplicates while preserving order
 cors_origins = list(dict.fromkeys(cors_origins))
+
+# Accept any port for local dev (Live Server hops between 5500/5501/… when a
+# port is busy). In dev this also covers LAN IPs so a phone on the same Wi-Fi
+# can hit the API; in production only localhost is allowed via regex and the
+# real origins come from the explicit allow_origins list above.
+if IS_PROD:
+    local_origin_regex = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+else:
+    local_origin_regex = (
+        r"^https?://("
+        r"localhost|127\.0\.0\.1|"
+        r"192\.168\.\d{1,3}\.\d{1,3}|"
+        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+        r"172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}"
+        r")(:\d+)?$"
+    )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    # Accept any localhost/127.0.0.1 port for local dev (Live Server hops
-    # between 5500/5501/5502/… whenever a port is busy). Avoids having to
-    # re-list each new port in CORS_ORIGINS. Production origins stay in the
-    # explicit allow_origins list above.
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origin_regex=local_origin_regex,
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -181,6 +202,12 @@ app.include_router(order_router)    # ORDER
 from backend.routes import admin as admin_route
 app.include_router(admin_route.router)
 
+from backend.routes import share as share_route
+app.include_router(share_route.router)  # OG link previews for shared mandi links
+
+from backend.routes import bazar as bazar_route
+app.include_router(bazar_route.router)  # KRASHI BAZAR — social crop marketplace
+
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(
@@ -208,3 +235,6 @@ async def health():
 
 # Add this AFTER all app.include_router() lines, at the bottom
 app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")
+
+# Bazar post photos/videos (uploads/bazar/*) — dir is created by routes/bazar.py
+app.mount("/uploads", StaticFiles(directory=BASE_DIR / "uploads"), name="uploads")

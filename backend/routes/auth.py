@@ -28,6 +28,7 @@ import httpx
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
@@ -56,6 +57,43 @@ _login_attempts = {}
 
 def _login_key(email: str) -> str:
     return (email or "").strip().lower()
+
+
+def _norm_email(email: str) -> str:
+    """Canonical form for storing/comparing emails: trimmed + lowercased."""
+    return (email or "").strip().lower()
+
+
+def _ensure_profile(db: Session, user: User):
+    """Every verified account gets a user_profiles row (created lazily here,
+    prefilled from signup data). Farm fields stay NULL until the farmer fills
+    them — this just guarantees the users ↔ user_profiles 1:1 for verified
+    accounts. Caller commits."""
+    exists = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+    if exists:
+        return
+    db.add(UserProfile(
+        user_id  = user.id,
+        name     = user.name,
+        language = user.preferred_language or "hindi",
+    ))
+
+
+def _find_user_by_email(db: Session, email: str) -> Optional[User]:
+    """Case-insensitive email lookup.
+
+    Emails were historically stored with whatever casing the user typed, so
+    `User.email == body.email` missed `VPS@Gmail.com` vs `vps@gmail.com` —
+    login failed and re-signup created a duplicate account. Match
+    case-insensitively and, if legacy duplicates exist for the same address,
+    prefer the verified (real) account over an unverified husk.
+    """
+    return (
+        db.query(User)
+        .filter(func.lower(User.email) == _norm_email(email))
+        .order_by(User.is_verified.desc(), User.id.asc())
+        .first()
+    )
 
 
 def _attempt_state(email: str) -> dict:
@@ -175,7 +213,7 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
         if err:
             return {"success": False, "message": err, "data": {}}
 
-        existing = db.query(User).filter(User.email == body.email).first()
+        existing = _find_user_by_email(db, body.email)
         if existing:
             if existing.is_verified:
                 return {"success": False, "message": "यह email पहले से registered है।", "data": {}}
@@ -194,7 +232,7 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
         otp      = generate_otp()
         new_user = User(
             name               = body.name,
-            email              = body.email,
+            email              = _norm_email(body.email),
             hashed_password    = hash_password(body.password),
             is_verified        = False,
             otp                = otp,
@@ -231,7 +269,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
         if blocked:
             return blocked
 
-        user = db.query(User).filter(User.email == body.email).first()
+        user = _find_user_by_email(db, body.email)
         if not user:
             data = _record_failed_login(body.email)
             return {"success": False, "message": "Email या password गलत है। Forgot password use कर सकते हैं।", "data": data}
@@ -252,7 +290,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 @router.post("/verify-otp")
 def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
     try:
-        user = db.query(User).filter(User.email == body.email).first()
+        user = _find_user_by_email(db, body.email)
         if not user:
             return {"success": False, "message": "Email registered नहीं है।", "data": {}}
         if user.is_verified:
@@ -267,6 +305,7 @@ def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
         user.is_verified = True
         user.otp         = None
         user.otp_expiry  = None
+        _ensure_profile(db, user)   # verified user → profile row exists
         db.commit()
         return {"success": True, "message": "Email verify हो गया। अब login करें।", "data": {}}
 
@@ -277,7 +316,7 @@ def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
 @router.post("/resend-otp")
 def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
     try:
-        user = db.query(User).filter(User.email == body.email).first()
+        user = _find_user_by_email(db, body.email)
         if not user:
             return {"success": True, "message": "अगर यह email registered है तो OTP भेज दिया गया है।", "data": {}}
         if user.is_verified:
@@ -300,7 +339,7 @@ def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
 @router.post("/forgot-password")
 def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     try:
-        user = db.query(User).filter(User.email == body.email).first()
+        user = _find_user_by_email(db, body.email)
         if not user:
             return {"success": True, "message": "अगर यह email registered है तो OTP भेज दिया गया है।", "data": {}}
         if not user.is_verified:
@@ -326,7 +365,7 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
         if body.confirm_password is not None and body.new_password != body.confirm_password:
             return {"success": False, "message": "New password और Confirm Password match नहीं कर रहे।", "data": {}}
 
-        user = db.query(User).filter(User.email == body.email).first()
+        user = _find_user_by_email(db, body.email)
         if not user:
             return {"success": False, "message": "Email registered नहीं है।", "data": {}}
         if not user.otp or not user.otp_expiry:
@@ -386,7 +425,7 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
         if google_id:
             user = db.query(User).filter(User.google_id == google_id).first()
         if not user:
-            user = db.query(User).filter(User.email == email).first()
+            user = _find_user_by_email(db, email)
 
         if not user:
             user = User(
@@ -401,20 +440,18 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
             db.add(user)
             db.commit()
             db.refresh(user)
+            _ensure_profile(db, user)   # Google users are verified from the start
+            db.commit()
         else:
             # Patch any missing fields on returning Google user
-            updated = False
             if not user.google_id and google_id:
                 user.google_id = google_id
-                updated = True
             if not user.is_verified:
                 user.is_verified = True
-                updated = True
             if user.auth_provider != "google" and not user.hashed_password.startswith("$2"):
                 user.auth_provider = "google"
-                updated = True
-            if updated:
-                db.commit()
+            _ensure_profile(db, user)   # verified user → profile row exists
+            db.commit()
 
         _clear_failed_login(email)
         token = create_access_token(user_id=user.id, email=user.email)

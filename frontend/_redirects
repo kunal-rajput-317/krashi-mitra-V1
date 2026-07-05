@@ -1,1 +1,4 @@
+# Proxy share-preview pages to the backend (crop-specific OG tags for WhatsApp)
+/share/*  https://krashi-mitra-v1.onrender.com/share/:splat  200
+
 /* /index.html 200
