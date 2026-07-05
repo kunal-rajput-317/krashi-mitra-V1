@@ -29,10 +29,8 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
-
     :root {
       --green-dark:    #1a3c2e;
       --green-mid:     #2d6a4f;
@@ -47,264 +45,598 @@
       --text-mid:      #4a6355;
       --text-light:    #8aab96;
       --border:        #ddeee4;
-      --shadow:        0 4px 24px rgba(26,60,46,0.10);
-      --shadow-lg:     0 8px 40px rgba(26,60,46,0.16);
-      --radius:        14px;
-      --radius-sm:     8px;
+      --shadow:        0 4px 24px rgba(26,60,46,0.06);
+      --shadow-lg:     0 12px 40px rgba(26,60,46,0.12);
+      --radius:        16px;
+      --radius-sm:     10px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: radial-gradient(circle at top right, var(--green-pale) 0%, var(--cream) 70%);
       color: var(--text-dark);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
 
-    /* ── Pre-topbar ── */
-    .pre-topbar {
-      background: linear-gradient(135deg, #1a3c2e, #2d6a4f);
-      padding: 12px 10px;
+    /* ── Header ── */
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
+      justify-content: space-between;
       position: sticky;
       top: 0;
-      z-index: 101;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .pre-topbar h1 { font-size: 24px; color: white; }
-    .pre-topbar-sub {
-      color: rgba(255,255,255,0.7);
-      font-size: 9px;
-      letter-spacing: 1px;
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .logo-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--green-pale);
+    }
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .logo-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green-dark);
+      letter-spacing: -0.3px;
+    }
+    .logo-title span {
+      color: var(--amber);
+    }
+    .logo-tagline {
+      font-size: 10px;
+      color: var(--text-light);
+      font-weight: 600;
     }
     .home-btn {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      margin-left: auto;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: #fff;
+      gap: 6px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      color: var(--text-dark);
       font-size: 13px;
       font-weight: 600;
-      padding: 5px 12px;
+      padding: 7px 14px;
       border-radius: 20px;
       text-decoration: none;
-      transition: background 0.2s;
-      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .home-btn:hover {
+      background: var(--green-pale);
+      color: var(--green-dark);
+      border-color: var(--green-light);
+      transform: translateY(-1px);
+    }
+    .home-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ── Hamburger Menu Button ── */
+    .hamburger-btn {
+      display: none; /* Hidden on desktop */
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--green-dark);
+      padding: 6px;
+      line-height: 1;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .hamburger-btn:hover {
+      background: var(--green-pale);
+    }
+
+    /* ══ Sidebar Slide-Out Drawer Menu ══ */
+    .sidebar-drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,20,0.5);
+      backdrop-filter: blur(3px);
+      z-index: 4000;
+      justify-content: flex-start;
+    }
+    .sidebar-drawer-overlay.open { display: flex; }
+    .sidebar-drawer {
+      width: 288px;
+      max-width: 84vw;
+      background: #ffffff;
+      height: 100%;
+      box-shadow: 6px 0 28px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      animation: slide-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slide-right {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(0); }
+    }
+    .sidebar-drawer-header {
+      padding: 18px 16px 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       flex-shrink: 0;
     }
-    .home-btn:hover { background: rgba(255,255,255,0.28); }
-    .home-btn span { font-size: 12px; }
+    .sidebar-drawer-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #1c2b22;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+    }
+    .sidebar-drawer-close {
+      background: #f2f5f3;
+      border: none;
+      font-size: 15px;
+      cursor: pointer;
+      color: #5b675f;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar-drawer-close:hover { background: #e6ebe8; color: #1c2b22; }
+    .sidebar-drawer-links {
+      flex: 1;
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+    .sidebar-drawer-link {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-height: 46px;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #2d3748;
+      text-decoration: none;
+      border-radius: 10px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sidebar-drawer-link-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
+    .sidebar-drawer-link:hover { background: #f2f8f4; }
+    .sidebar-drawer-link.active {
+      background: #eaf6ed;
+      color: #2d6a4f;
+      border-left-color: #2d6a4f;
+    }
+    .sidebar-drawer-footer {
+      flex-shrink: 0;
+      border-top: 1px solid #eef2ef;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sidebar-drawer-utility-row { display: flex; align-items: center; gap: 16px; }
+    .sidebar-drawer-utility-link {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 700; color: #4a5a52;
+      text-decoration: none; background: none; border: none; cursor: pointer;
+      padding: 0; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+    }
+    .sidebar-drawer-utility-link:hover { color: #2d6a4f; }
 
     /* ── Page wrapper — centers the auth card ── */
     .page-wrapper {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 32px 16px 48px;
-    }
-
-    /* ── Auth Modals ── */
-    .auth-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 32px 28px 28px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: var(--shadow-lg);
+      padding: 28px 16px 64px;
       position: relative;
     }
+
+    /* Decorative blurred circles */
+    .bg-blur-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.35;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-blur-1 {
+      width: 320px;
+      height: 320px;
+      background: var(--green-light);
+      top: 10%;
+      left: 10%;
+    }
+    .bg-blur-2 {
+      width: 280px;
+      height: 280px;
+      background: var(--amber);
+      bottom: 10%;
+      right: 10%;
+    }
+
+    /* ── Auth Card ── */
+    .auth-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px -5px rgba(26,60,46,0.05), 0 20px 40px -10px rgba(26,60,46,0.08);
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-card::before {
+      content: "";
+      display: none;
+      width: 42px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      margin: -12px auto 16px;
+    }
+
     .auth-modal-logo {
-      text-align: center;
-      font-size: 36px;
-      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 8px;
+    }
+    .auth-modal-logo img {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--green-pale);
+    }
+    .auth-emoji-badge {
+      width: 58px;
+      height: 58px;
+      background: var(--green-pale);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 16px;
+      border: 1px solid var(--border);
     }
     .auth-modal-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
+      font-size: 20px;
+      font-weight: 700;
       color: var(--text-dark);
       text-align: center;
       margin-bottom: 4px;
+      letter-spacing: -0.2px;
     }
     .auth-modal-sub {
-      font-size: 12px;
-      color: var(--text-light);
+      font-size: 13px;
+      color: var(--text-mid);
       text-align: center;
-      margin-bottom: 22px;
+      margin-bottom: 16px;
+      line-height: 1.4;
     }
-    .auth-field { margin-bottom: 14px; }
+
+    /* Form Fields */
+    .auth-field {
+      margin-bottom: 12px;
+      position: relative;
+    }
     .auth-field label {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-mid);
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 0.8px;
+      transition: color 0.2s ease;
+    }
+    .auth-field:focus-within label {
+      color: var(--green-mid);
     }
     .auth-field input {
       width: 100%;
-      padding: 12px 14px;
+      padding: 12px 16px;
       border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       font-size: 15px;
       font-family: 'DM Sans', sans-serif;
       outline: none;
       color: var(--text-dark);
-      transition: border 0.2s;
+      background: var(--white);
+      transition: all 0.2s ease;
       min-height: 48px;
     }
-    .auth-field input:focus { border-color: var(--green-light); }
+    .auth-field input:focus {
+      border-color: var(--green-mid);
+      box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.08);
+    }
+    .auth-field input::placeholder {
+      color: var(--text-light);
+      opacity: 0.8;
+    }
 
+    /* Buttons */
     .auth-btn {
       width: 100%;
       padding: 14px;
-      background: var(--green-mid);
+      background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
       color: white;
       border: none;
       border-radius: var(--radius-sm);
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       margin-top: 6px;
       min-height: 50px;
-      transition: background 0.2s;
-    }
-    .auth-btn:hover { background: var(--green-dark); }
-    .auth-btn:disabled { background: var(--text-light); cursor: not-allowed; }
-
-    .auth-switch {
-      text-align: center;
-      margin-top: 16px;
-      font-size: 13px;
-      color: var(--text-mid);
-    }
-    .auth-switch a {
-      color: var(--green-mid);
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .auth-switch a:hover { text-decoration: underline; }
-
-    .auth-error {
-      background: #fef2f2;
-      border: 1px solid #fca5a5;
-      color: #b91c1c;
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 13px;
-      margin-bottom: 14px;
-      display: none;
-      line-height: 1.5;
-    }
-    .auth-error.show { display: block; }
-
-    .auth-success {
-      background: var(--green-pale);
-      border: 1px solid var(--green-light);
-      color: var(--green-dark);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 13px;
-      margin-bottom: 14px;
-      display: none;
-      line-height: 1.5;
-    }
-    .auth-success.show { display: block; }
-
-    /* OTP digits */
-    .otp-input-row {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 12px rgba(45, 106, 79, 0.12);
       display: flex;
-      gap: 8px;
+      align-items: center;
       justify-content: center;
-      margin-bottom: 6px;
+      gap: 8px;
     }
-    .otp-digit {
-      width: 48px;
-      height: 56px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: 700;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--text-dark);
-      outline: none;
-      transition: border 0.2s;
-    }
-    .otp-digit:focus { border-color: var(--green-light); }
-
-    .auth-resend {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-light);
-      margin-top: 12px;
-    }
-    .auth-resend a {
-      color: var(--green-mid);
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    /* Step panels */
-    .step { display: none; }
-    .step.active { display: block; }
-
-    /* ── Cooldown warning bar ── */
-    .cooldown-warning {
-      background: #fff8e1;
-      border: 1.5px solid #e9a825;
-      border-radius: var(--radius-sm);
-      padding: 10px 14px 8px;
-      margin-bottom: 12px;
+    /* Minimal Loading Popup */
+    .loading-popup-overlay {
       display: none;
-      text-align: center;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 20, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 5000;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .loading-popup-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    .loading-popup-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 25px rgba(26,60,46,0.15);
+      transform: scale(0.9);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .loading-popup-overlay.show .loading-popup-card {
+      transform: scale(1);
+    }
+    .loading-popup-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3.5px solid var(--green-pale);
+      border-radius: 50%;
+      border-top-color: var(--green-mid);
+      animation: spin 0.8s linear infinite;
+    }
+    .loading-popup-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      letter-spacing: 0.2px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .auth-btn:hover {
+      background: linear-gradient(135deg, var(--green-light), var(--green-mid));
+      box-shadow: 0 6px 16px rgba(45, 106, 79, 0.2);
+      transform: translateY(-1px);
+    }
+    .auth-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(45, 106, 79, 0.12);
+    }
+    .auth-btn:disabled {
+      background: var(--text-light) !important;
+      box-shadow: none !important;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Cooldown Warning */
+    .cooldown-warning {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-left: 4px solid var(--amber);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      display: none;
+      text-align: left;
+      box-shadow: 0 2px 6px rgba(233, 168, 37, 0.05);
+      animation: alert-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .cooldown-warning.show { display: block; }
     .cooldown-warning .cw-msg {
       font-size: 13px;
       font-weight: 600;
-      color: #7c4f2f;
-      margin-bottom: 7px;
+      color: #7c2d12;
+      margin-bottom: 8px;
     }
     .cooldown-warning .cw-track {
-      background: #fde68a;
+      background: #fef3c7;
       border-radius: 20px;
       height: 6px;
       overflow: hidden;
     }
     .cooldown-warning .cw-bar {
       height: 6px;
-      background: linear-gradient(90deg, #e9a825, #f59e0b);
+      background: linear-gradient(90deg, var(--amber), #f59e0b);
       border-radius: 20px;
       width: 100%;
       transition: width 1s linear;
     }
 
-    /* ── Google login divider & button wrapper ── */
+    /* Alerts */
+    .auth-error {
+      background: #fef2f2;
+      border: 1px solid #fee2e2;
+      color: #991b1b;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      display: none;
+      line-height: 1.5;
+      box-shadow: 0 2px 6px rgba(153, 27, 27, 0.03);
+      border-left: 4px solid #ef4444;
+      animation: alert-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .auth-error.show { display: block; }
+
+    .auth-success {
+      background: #f0fdf4;
+      border: 1px solid #dcfce7;
+      color: #166534;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      display: none;
+      line-height: 1.5;
+      box-shadow: 0 2px 6px rgba(22, 101, 52, 0.03);
+      border-left: 4px solid #22c55e;
+      animation: alert-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .auth-success.show { display: block; }
+
+    @keyframes alert-slide-in {
+      from { transform: translateY(-8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* OTP digts */
+    .otp-input-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 18px 0 14px;
+    }
+    .otp-digit {
+      width: 44px;
+      height: 50px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-dark);
+      outline: none;
+      background: var(--cream);
+      transition: all 0.2s ease;
+    }
+    .otp-digit:focus {
+      border-color: var(--green-mid);
+      box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.08);
+      background: var(--white);
+    }
+
+    .auth-resend {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 16px;
+    }
+    .auth-resend a {
+      color: var(--green-mid);
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .auth-resend a:hover {
+      text-decoration: underline;
+    }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--text-mid);
+    }
+    .auth-switch a {
+      color: var(--green-mid);
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .auth-switch a:hover {
+      color: var(--green-dark);
+      text-decoration: underline;
+    }
+
+    /* Google login divider */
     .auth-divider {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin: 18px 0 14px;
+      gap: 12px;
+      margin: 16px 0 12px;
       color: var(--text-light);
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
     }
     .auth-divider::before,
     .auth-divider::after {
       content: "";
       flex: 1;
-      height: 1px;
+      height: 1.5px;
       background: var(--border);
     }
     .google-btn-wrap {
@@ -313,45 +645,194 @@
       justify-content: center;
       min-height: 44px;
     }
-    /* Hide Google button container when GSI not configured */
     .google-section { display: none; }
     .google-section.visible { display: block; }
 
+    /* Step transition animations */
+    .step {
+      display: none;
+    }
+    .step.active {
+      display: block;
+      animation: step-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes step-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* Mobile adjustments */
     @media screen and (max-width: 480px) {
-      .page-wrapper { align-items: flex-end; padding: 0; }
+      .header {
+        display: grid;
+        grid-template-columns: 44px 1fr 44px;
+        align-items: center;
+        justify-items: center;
+        padding: 0 12px;
+      }
+      .hamburger-btn {
+        display: flex;
+        grid-column: 1;
+        justify-self: start;
+      }
+      .header-logo {
+        grid-column: 2;
+        justify-self: center;
+        margin-left: 0;
+        gap: 6px;
+      }
+      .logo-img {
+        width: 30px;
+        height: 30px;
+      }
+      .logo-tagline {
+        display: none;
+      }
+      .header-right {
+        grid-column: 3;
+        justify-self: end;
+        margin-left: 0;
+      }
+      .home-btn {
+        padding: 6px 10px;
+      }
+      .home-btn span {
+        display: none;
+      }
+
+      .page-wrapper {
+        align-items: flex-start;
+        padding: 16px 16px 36px;
+      }
+      .bg-blur-circle {
+        display: none;
+      }
       .auth-card {
-        border-radius: 20px 20px 0 0;
-        padding: 28px 20px 32px;
+        border-radius: 20px;
+        padding: 28px 22px;
         max-width: 100%;
         max-height: 92vh;
         overflow-y: auto;
+        box-shadow: 0 10px 30px -5px rgba(26,60,46,0.05), 0 20px 40px -10px rgba(26,60,46,0.08);
+      }
+      .auth-card::before {
+        display: none;
       }
     }
   </style>
+<style id="km-drawer-css">
+  /* Canonical sidebar drawer - identical across all pages */
+  .sidebar-drawer-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,20,0.5); backdrop-filter: blur(3px);
+    z-index: 4000; justify-content: flex-start;
+  }
+  .sidebar-drawer-overlay.open { display: flex; }
+  .sidebar-drawer {
+    width: 288px; max-width: 84vw; background: #ffffff; height: 100%;
+    box-shadow: 6px 0 28px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column;
+    animation: km-slide-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes km-slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  .sidebar-drawer-header {
+    padding: 18px 16px 12px 20px; display: flex; align-items: center;
+    justify-content: space-between; flex-shrink: 0;
+  }
+  .sidebar-drawer-title { font-size: 17px; font-weight: 800; color: #1c2b22; }
+  .sidebar-drawer-close {
+    background: #f2f5f3; border: none; font-size: 15px; cursor: pointer; color: #5b675f;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: background 0.15s, color 0.15s;
+  }
+  .sidebar-drawer-close:hover { background: #e6ebe8; color: #1c2b22; }
+  .sidebar-drawer-links { flex: 1; padding: 6px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .sidebar-drawer-link {
+    display: flex; align-items: center; gap: 13px; min-height: 46px;
+    padding: 10px 12px; font-size: 15px; font-weight: 700; color: #2d3748;
+    text-decoration: none; border-radius: 10px; border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .sidebar-drawer-link-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
+  .sidebar-drawer-link:hover { background: #f2f8f4; }
+  .sidebar-drawer-link.active { background: #eaf6ed; color: #2d6a4f; border-left-color: #2d6a4f; }
+  .sidebar-drawer-footer { flex-shrink: 0; border-top: 1px solid #eef2ef; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar-drawer-lang-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .sidebar-drawer-lang-label { font-size: 12px; font-weight: 700; color: #8a958f; }
+  .sidebar-lang-btn {
+    background: #f2f8f4; border: 1.5px solid #e3ece5; border-radius: 20px;
+    padding: 5px 12px; font-size: 12px; font-weight: 700; color: #2d3748;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+</style>
 </head>
 <body>
 
-<!-- Pre-topbar -->
-<div class="pre-topbar">
-  <h1 style="display:flex;align-items:center;gap:8px;"><img src="assets/krashimitra_logo.png" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">कृषि मित्र</h1>
-  <span class="pre-topbar-sub">जय जवान जय किसान</span>
-  <a href="index.html" class="home-btn" title="Homepage पर जाएं">
-    🏠 <span>Home</span>
+<!-- Header -->
+<header class="header">
+  <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
+  <a href="index.html" class="header-logo">
+    <img src="assets/krashimitra_logo.png" alt="कृषि मित्र Logo" class="logo-img">
+    <div class="logo-text">
+      <span class="logo-title">कृषि <span>मित्र</span></span>
+      <span class="logo-tagline">जय जवान जय किसान</span>
+    </div>
   </a>
+  <div class="header-right">
+    <a href="index.html" class="home-btn" title="Homepage पर जाएं">
+      🏠 <span>Home</span>
+    </a>
+  </div>
+</header>
+
+<!-- Sidebar Slide-Out Drawer Menu -->
+<!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
+<div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
+  <div class="sidebar-drawer" onclick="event.stopPropagation()">
+    <div class="sidebar-drawer-header">
+      <span class="sidebar-drawer-title" data-t="menu_title">मेनु</span>
+      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()" aria-label="Close menu">✕</button>
+    </div>
+    <div class="sidebar-drawer-links">
+      <a href="index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
+      <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
+      <a href="mandi.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
+      <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
+      <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
+      <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
+      <a href="map.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span data-t="nav_map">कृषि मानचित्र</span></a>
+      <a href="articles/index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
+      <a href="sarkari_yojana.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span data-t="nav_schemes">सरकारी योजना</span></a>
+      <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
+      <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
+    </div>
+  </div>
 </div>
 
 <!-- Auth card -->
 <div class="page-wrapper">
+  <!-- Decorative Background Blurs -->
+  <div class="bg-blur-circle bg-blur-1"></div>
+  <div class="bg-blur-circle bg-blur-2"></div>
+
   <div class="auth-card">
 
     <!-- ── STEP 1: Login ── -->
     <div class="step active" id="step-login">
-      <div class="auth-modal-logo" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:24px;">
-        <img src="assets/krashimitra_logo.png" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">कृषि मित्र
+      <div class="auth-modal-logo">
+        <img src="assets/krashimitra_logo.png" alt="Logo">
+        कृषि मित्र
       </div>
-      <div class="auth-modal-title">आपका कृषि मित्र में स्वागत है</div>
-      <div class="auth-modal-sub">अपने account में login करें</div>
+      <div class="auth-modal-title">आपका स्वागत है</div>
+      <div class="auth-modal-sub">कृषि मित्र में लॉगिन करें</div>
 
       <div class="cooldown-warning" id="login-cooldown-warning">
         <div class="cw-msg" id="cw-msg"></div>
@@ -364,20 +845,20 @@
       <!-- Google Sign-In -->
       <div class="google-section" id="google-section-login">
         <div class="google-btn-wrap" id="google-btn-login"></div>
-        <div class="auth-divider"><span>या email से</span></div>
+        <div class="auth-divider"><span>या email से login करें</span></div>
       </div>
 
       <div class="auth-field">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="you@gmail.com"
+        <label>Email ID</label>
+        <input type="email" id="login-email" placeholder="you@example.com"
                autocomplete="email"
-               onkeydown="if(event.key==='Enter') doLogin()">
+               onkeydown="handleAuthInputKeydown(event, 'login-password', null, 'login-btn')">
       </div>
       <div class="auth-field">
         <label>Password</label>
         <input type="password" id="login-password" placeholder="••••••••"
                autocomplete="current-password"
-               onkeydown="if(event.key==='Enter') doLogin()">
+               onkeydown="handleAuthInputKeydown(event, null, doLogin, 'login-btn')">
       </div>
 
       <button class="auth-btn" id="login-btn" onclick="doLogin()">
@@ -395,42 +876,47 @@
 
     <!-- ── STEP 2: Signup ── -->
     <div class="step" id="step-signup">
-      <div class="auth-modal-logo" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:24px;">
-        <img src="assets/krashimitra_logo.png" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">कृषि मित्र
+      <div class="auth-modal-logo">
+        <img src="assets/krashimitra_logo.png" alt="Logo">
+        कृषि मित्र
       </div>
-      <div class="auth-modal-title"></div>
-      <div class="auth-modal-sub">नया account बनाएं — Create your account</div>
+      <div class="auth-modal-title">नया Account बनाएं</div>
+      <div class="auth-modal-sub">Create your KrashiMitra account</div>
 
       <div class="auth-error"  id="signup-error"></div>
       <div class="auth-success" id="signup-success"></div>
 
+      <!-- Google Sign-In -->
+      <div class="google-section" id="google-section-signup">
+        <div class="google-btn-wrap" id="google-btn-signup"></div>
+        <div class="auth-divider"><span>या email से signup करें</span></div>
+      </div>
+
       <div class="auth-field">
         <label>पूरा नाम / Full Name</label>
-        <input type="text" id="signup-name" placeholder="Ramesh Kumar" autocomplete="name">
+        <input type="text" id="signup-name" placeholder="Ramesh Kumar" autocomplete="name"
+               onkeydown="handleAuthInputKeydown(event, 'signup-email', null, 'signup-btn')">
       </div>
       <div class="auth-field">
-        <label>Email</label>
-        <input type="email" id="signup-email" placeholder="you@gmail.com" autocomplete="email">
+        <label>Email ID</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"
+               onkeydown="handleAuthInputKeydown(event, 'signup-password', null, 'signup-btn')">
       </div>
       <div class="auth-field">
         <label>Password (कम से कम 6 अक्षर)</label>
-        <input type="password" id="signup-password" placeholder="••••••••" autocomplete="new-password">
+        <input type="password" id="signup-password" placeholder="••••••••" autocomplete="new-password"
+               onkeydown="handleAuthInputKeydown(event, 'signup-confirm-password', null, 'signup-btn')">
       </div>
 
       <div class="auth-field">
         <label>Confirm Password / पुष्टि करें</label>
-        <input type="password" id="signup-confirm-password" placeholder="••••••••" autocomplete="new-password">
+        <input type="password" id="signup-confirm-password" placeholder="••••••••" autocomplete="new-password"
+               onkeydown="handleAuthInputKeydown(event, null, doSignup, 'signup-btn')">
       </div>
 
       <button class="auth-btn" id="signup-btn" onclick="doSignup()">
         Account बनाएं →
       </button>
-
-      <!-- Google Sign-In -->
-      <div class="google-section" id="google-section-signup">
-        <div class="auth-divider"><span>या Google से directly</span></div>
-        <div class="google-btn-wrap" id="google-btn-signup"></div>
-      </div>
 
       <div class="auth-switch">
         पहले से account है? <a onclick="showStep('login')">Login करें</a>
@@ -439,7 +925,7 @@
 
     <!-- STEP: Forgot Password -->
     <div class="step" id="step-forgot">
-      <div class="auth-modal-logo">🔐</div>
+      <div class="auth-emoji-badge">🔐</div>
       <div class="auth-modal-title">Password Reset</div>
       <div class="auth-modal-sub">Registered email डालें, OTP भेजा जाएगा</div>
 
@@ -447,8 +933,9 @@
       <div class="auth-success" id="forgot-success"></div>
 
       <div class="auth-field">
-        <label>Email</label>
-        <input type="email" id="forgot-email" placeholder="you@gmail.com" autocomplete="email">
+        <label>Email ID</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email"
+               onkeydown="handleAuthInputKeydown(event, null, doForgotPassword, 'forgot-btn')">
       </div>
 
       <button class="auth-btn" id="forgot-btn" onclick="doForgotPassword()">
@@ -462,7 +949,7 @@
 
     <!-- STEP: Reset Password -->
     <div class="step" id="step-reset">
-      <div class="auth-modal-logo">✅</div>
+      <div class="auth-emoji-badge">🔑</div>
       <div class="auth-modal-title">New Password</div>
       <div class="auth-modal-sub" id="reset-sub">OTP और नया password डालें</div>
 
@@ -471,15 +958,18 @@
 
       <div class="auth-field">
         <label>Reset OTP</label>
-        <input type="text" id="reset-otp" maxlength="6" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
+        <input type="text" id="reset-otp" maxlength="6" inputmode="numeric" placeholder="123456" autocomplete="one-time-code"
+               onkeydown="handleAuthInputKeydown(event, 'reset-password', null, 'reset-btn')">
       </div>
       <div class="auth-field">
         <label>New Password / नया पासवर्ड</label>
-        <input type="password" id="reset-password" placeholder="••••••••" autocomplete="new-password">
+        <input type="password" id="reset-password" placeholder="••••••••" autocomplete="new-password"
+               onkeydown="handleAuthInputKeydown(event, 'reset-confirm-password', null, 'reset-btn')">
       </div>
       <div class="auth-field">
         <label>Confirm New Password / पुष्टि करें</label>
-        <input type="password" id="reset-confirm-password" placeholder="••••••••" autocomplete="new-password">
+        <input type="password" id="reset-confirm-password" placeholder="••••••••" autocomplete="new-password"
+               onkeydown="handleAuthInputKeydown(event, null, doResetPassword, 'reset-btn')">
       </div>
 
       <button class="auth-btn" id="reset-btn" onclick="doResetPassword()">
@@ -496,7 +986,7 @@
 
     <!-- STEP: OTP Verification -->
     <div class="step" id="step-otp">
-      <div class="auth-modal-logo">📨</div>
+      <div class="auth-emoji-badge">✉️</div>
       <div class="auth-modal-title">Email Verify करें</div>
       <div class="auth-modal-sub" id="otp-sub">आपके email पर 6-digit OTP भेजा गया है</div>
 
@@ -504,12 +994,12 @@
       <div class="auth-success" id="otp-success"></div>
 
       <div class="otp-input-row">
-        <input class="otp-digit" id="otp-d1" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d2')" onkeydown="otpBack(event,this,'')">
-        <input class="otp-digit" id="otp-d2" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d3')" onkeydown="otpBack(event,this,'otp-d1')">
-        <input class="otp-digit" id="otp-d3" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d4')" onkeydown="otpBack(event,this,'otp-d2')">
-        <input class="otp-digit" id="otp-d4" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d5')" onkeydown="otpBack(event,this,'otp-d3')">
-        <input class="otp-digit" id="otp-d5" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d6')" onkeydown="otpBack(event,this,'otp-d4')">
-        <input class="otp-digit" id="otp-d6" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'')"       onkeydown="otpBack(event,this,'otp-d5')">
+        <input class="otp-digit" id="otp-d1" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d2')" onkeydown="if(event.key==='Enter'){event.preventDefault();}else{otpBack(event,this,'');}">
+        <input class="otp-digit" id="otp-d2" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d3')" onkeydown="if(event.key==='Enter'){event.preventDefault();}else{otpBack(event,this,'otp-d1');}">
+        <input class="otp-digit" id="otp-d3" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d4')" onkeydown="if(event.key==='Enter'){event.preventDefault();}else{otpBack(event,this,'otp-d2');}">
+        <input class="otp-digit" id="otp-d4" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d5')" onkeydown="if(event.key==='Enter'){event.preventDefault();}else{otpBack(event,this,'otp-d3');}">
+        <input class="otp-digit" id="otp-d5" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'otp-d6')" onkeydown="if(event.key==='Enter'){event.preventDefault();}else{otpBack(event,this,'otp-d4');}">
+        <input class="otp-digit" id="otp-d6" maxlength="1" type="text" inputmode="numeric" oninput="otpNext(this,'')"       onkeydown="if(event.key==='Enter'){event.preventDefault();if(!document.getElementById('otp-btn').disabled)doVerifyOtp();}else{otpBack(event,this,'otp-d5');}">
       </div>
 
       <button class="auth-btn" id="otp-btn" onclick="doVerifyOtp()">
@@ -529,6 +1019,74 @@
 </div><!-- /.page-wrapper -->
 
 <script>
+  function handleAuthInputKeydown(event, nextFieldId, submitFunction, btnId) {
+    if (event.key !== 'Enter') return;
+    
+    // Check which step we are in
+    const activeStep = document.querySelector(".step.active");
+    if (!activeStep) return;
+    const stepId = activeStep.id; // e.g. "step-login", "step-signup", "step-reset"
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (stepId === "step-login") {
+      const emailVal = document.getElementById("login-email").value.trim();
+      if (!emailVal || !emailRegex.test(emailVal)) {
+        event.preventDefault();
+        document.getElementById("login-email").focus();
+        authErr("login-error", "कृपया एक valid email id (e.g. name@example.com) दर्ज करें।");
+        return;
+      }
+    } else if (stepId === "step-signup") {
+      const nameVal = document.getElementById("signup-name").value.trim();
+      const emailVal = document.getElementById("signup-email").value.trim();
+      
+      // If we are not on the name field itself, ensure name is filled
+      if (event.target.id !== "signup-name" && !nameVal) {
+        event.preventDefault();
+        document.getElementById("signup-name").focus();
+        authErr("signup-error", "कृपया अपना नाम दर्ज करें।");
+        return;
+      }
+      // If we are on password or confirm password, ensure email is filled and valid
+      if (event.target.id !== "signup-name" && event.target.id !== "signup-email") {
+        if (!emailVal || !emailRegex.test(emailVal)) {
+          event.preventDefault();
+          document.getElementById("signup-email").focus();
+          authErr("signup-error", "कृपया एक valid email id (e.g. name@example.com) दर्ज करें।");
+          return;
+        }
+      }
+    } else if (stepId === "step-reset") {
+      const otpVal = document.getElementById("reset-otp").value.trim();
+      if (event.target.id !== "reset-otp" && (!otpVal || otpVal.length < 6)) {
+        event.preventDefault();
+        document.getElementById("reset-otp").focus();
+        authErr("reset-error", "कृपया 6-digit OTP दर्ज करें।");
+        return;
+      }
+    }
+    
+    if (nextFieldId) {
+      event.preventDefault();
+      const nextEl = document.getElementById(nextFieldId);
+      if (nextEl) nextEl.focus();
+      return;
+    }
+    
+    if (btnId) {
+      const btn = document.getElementById(btnId);
+      if (btn && btn.disabled) {
+        event.preventDefault();
+        return;
+      }
+    }
+    
+    if (submitFunction) {
+      event.preventDefault();
+      submitFunction();
+    }
+  }
+
   // ══════════════════════════════════════
   // CONFIG
   // ══════════════════════════════════════
@@ -537,7 +1095,7 @@
   let pendingResetEmail = "";
   let loginCooldownTimer = null;
   let loginCooldownActive = false;
-  let loginAttempts = 0;  // track failed login attempts client-side
+  let loginAttempts = parseInt(localStorage.getItem('km_login_attempts') || '0', 10);
 
   // Progressive delay schedule: triggered after 2 wrong attempts
   // attempt 2 → 15s, attempt 4 → 30s, attempt 6+ → 60s
@@ -554,9 +1112,13 @@
   function showStep(name) {
     document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
     document.getElementById("step-" + name).classList.add("active");
-    // Focus first input in the step
-    const first = document.querySelector("#step-" + name + " input");
-    if (first) setTimeout(() => first.focus(), 150);
+    // Scroll window back to the top so new steps open from the top of the screen
+    window.scrollTo(0, 0);
+    // Focus first input in the step (except for signup to highlight Google option first)
+    if (name !== 'signup') {
+      const first = document.querySelector("#step-" + name + " input");
+      if (first) setTimeout(() => first.focus(), 150);
+    }
   }
 
   // ══════════════════════════════════════
@@ -580,8 +1142,15 @@
   }
   function setBtnLoading(id, loading, defaultText) {
     const btn = document.getElementById(id);
-    btn.disabled  = loading;
-    btn.innerText = loading ? "कृपया प्रतीक्षा करें..." : defaultText;
+    if (btn) btn.disabled = loading;
+    const popup = document.getElementById("loading-popup");
+    if (popup) {
+      if (loading) {
+        popup.classList.add("show");
+      } else {
+        popup.classList.remove("show");
+      }
+    }
   }
 
   // ══════════════════════════════════════
@@ -621,9 +1190,15 @@
         btn.disabled = false;
         btn.innerText = "Login करें →";
         warning.classList.remove("show");
+        localStorage.removeItem('km_cooldown_until');
+        localStorage.removeItem('km_cooldown_reason');
       }
       remaining -= 1;
     };
+
+    // Persist cooldown expiry in localStorage
+    localStorage.setItem('km_cooldown_until', String(Date.now() + total * 1000));
+    localStorage.setItem('km_cooldown_reason', reason || '');
 
     tick();
     loginCooldownTimer = setInterval(tick, 1000);
@@ -647,9 +1222,15 @@
     if (loginAttempts === 0) document.getElementById("forgot-link").style.display = "none";
     const email    = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
-
-    if (!email)    return authErr("login-error", "कृपया email दर्ज करें।");
-    if (!password) return authErr("login-error", "कृपया password दर्ज करें।");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      document.getElementById("login-email").focus();
+      return authErr("login-error", "कृपया एक valid email id (e.g. name@example.com) दर्ज करें।");
+    }
+    if (!password) {
+      document.getElementById("login-password").focus();
+      return authErr("login-error", "कृपया password दर्ज करें।");
+    }
 
     setBtnLoading("login-btn", true, "Login करें →");
     try {
@@ -662,6 +1243,10 @@
 
       if (data.success && data.data && data.data.token) {
         setToken(data.data.token);
+        // Clear persisted attempts on successful login
+        localStorage.removeItem('km_login_attempts');
+        localStorage.removeItem('km_cooldown_until');
+        localStorage.removeItem('km_cooldown_reason');
         authOk("login-success", "✅ Login हो गया! Redirecting...");
         setTimeout(() => {
           window.location.href = "profile.html";
@@ -669,6 +1254,7 @@
       } else {
         const info = data.data || {};
         loginAttempts += 1;
+        localStorage.setItem('km_login_attempts', String(loginAttempts));
 
         // Show forgot-password after 1st wrong attempt
         if (loginAttempts >= 1 || info.forgot_available) {
@@ -691,6 +1277,8 @@
     } catch (err) {
       authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
+      const popup = document.getElementById("loading-popup");
+      if (popup) popup.classList.remove("show");
       if (!loginCooldownActive) {
         setBtnLoading("login-btn", false, "Login करें →");
       }
@@ -707,10 +1295,23 @@
     const password = document.getElementById("signup-password").value;
     const confirmPassword = document.getElementById("signup-confirm-password").value;
 
-    if (!name)               return authErr("signup-error", "कृपया अपना नाम दर्ज करें।");
-    if (!email)              return authErr("signup-error", "कृपया email दर्ज करें।");
-    if (password.length < 6) return authErr("signup-error", "Password कम से कम 6 characters का होना चाहिए।");
-    if (password !== confirmPassword) return authErr("signup-error", "Password और Confirm Password match नहीं कर रहे।");
+    if (!name) {
+      document.getElementById("signup-name").focus();
+      return authErr("signup-error", "कृपया अपना नाम दर्ज करें।");
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      document.getElementById("signup-email").focus();
+      return authErr("signup-error", "कृपया एक valid email id (e.g. name@example.com) दर्ज करें।");
+    }
+    if (password.length < 6) {
+      document.getElementById("signup-password").focus();
+      return authErr("signup-error", "Password कम से कम 6 characters का होना चाहिए।");
+    }
+    if (password !== confirmPassword) {
+      document.getElementById("signup-confirm-password").focus();
+      return authErr("signup-error", "Password और Confirm Password match नहीं कर रहे।");
+    }
 
     setBtnLoading("signup-btn", true, "Account बनाएं →");
     try {
@@ -743,7 +1344,11 @@
   async function doForgotPassword(resend = false) {
     clearAuthMsg("forgot-error", "forgot-success", "reset-error", "reset-success");
     const email = (document.getElementById("forgot-email").value || pendingResetEmail || "").trim();
-    if (!email) return authErr("forgot-error", "कृपया email दर्ज करें।");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      document.getElementById("forgot-email").focus();
+      return authErr("forgot-error", "कृपया एक valid email id (e.g. name@example.com) दर्ज करें।");
+    }
 
     setBtnLoading("forgot-btn", true, "Send reset OTP →");
     try {
@@ -779,9 +1384,18 @@
     const confirmPassword = document.getElementById("reset-confirm-password").value;
 
     if (!email) return authErr("reset-error", "Email missing है। Forgot password फिर से करें।");
-    if (otp.length < 6) return authErr("reset-error", "कृपया 6-digit OTP दर्ज करें।");
-    if (newPassword.length < 6) return authErr("reset-error", "Password कम से कम 6 characters का होना चाहिए।");
-    if (newPassword !== confirmPassword) return authErr("reset-error", "New password और Confirm Password match नहीं कर रहे।");
+    if (otp.length < 6) {
+      document.getElementById("reset-otp").focus();
+      return authErr("reset-error", "कृपया 6-digit OTP दर्ज करें।");
+    }
+    if (newPassword.length < 6) {
+      document.getElementById("reset-password").focus();
+      return authErr("reset-error", "Password कम से कम 6 characters का होना चाहिए।");
+    }
+    if (newPassword !== confirmPassword) {
+      document.getElementById("reset-confirm-password").focus();
+      return authErr("reset-error", "New password और Confirm Password match नहीं कर रहे।");
+    }
 
     setBtnLoading("reset-btn", true, "Reset password →");
     try {
@@ -832,7 +1446,10 @@
   async function doVerifyOtp() {
     clearAuthMsg("otp-error", "otp-success");
     const otp = getOtpValue();
-    if (otp.length < 6) return authErr("otp-error", "कृपया 6-digit OTP दर्ज करें।");
+    if (otp.length < 6) {
+      document.getElementById("otp-d1").focus();
+      return authErr("otp-error", "कृपया 6-digit OTP दर्ज करें।");
+    }
 
     setBtnLoading("otp-btn", true, "Verify करें ✓");
     try {
@@ -949,9 +1566,21 @@
     if (getToken()) {
       window.location.href = "profile.html";
     }
+    // Restore cooldown if it was active before refresh
+    const savedCooldownUntil = parseInt(localStorage.getItem('km_cooldown_until') || '0', 10);
+    const savedReason = localStorage.getItem('km_cooldown_reason') || '';
+    const remainingMs = savedCooldownUntil - Date.now();
+    if (remainingMs > 1000) {
+      setLoginCooldown(Math.ceil(remainingMs / 1000), savedReason || 'गलत प्रयास');
+    } else {
+      // No active cooldown, clear stale values
+      localStorage.removeItem('km_cooldown_until');
+      localStorage.removeItem('km_cooldown_reason');
+    }
+
     // Focus email on load
     const emailInp = document.getElementById("login-email");
-    if (emailInp) emailInp.focus();
+    if (emailInp && !loginCooldownActive) emailInp.focus();
 
     // Init Google Sign-In — GSI script is async so poll until ready
     if (GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE")) {
@@ -969,7 +1598,9 @@
 
   localStorage.setItem('km_just_logged_in', '1');
 
-  
+  function toggleSidebarMenu() {
+    document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
+  }
 </script>
 
 <!-- ── Floating AI Chat Button ── -->
@@ -987,6 +1618,14 @@
   <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
   <span class="ai-fab-tip">AI सहायक</span>
 </a>
+<!-- Minimal Loading Popup -->
+<div class="loading-popup-overlay" id="loading-popup">
+  <div class="loading-popup-card">
+    <div class="loading-popup-spinner"></div>
+    <div class="loading-popup-text">कृपया प्रतीक्षा करें...</div>
+  </div>
+</div>
+
   <script src="fab-autohide.js"></script>
 </body>
 </html>

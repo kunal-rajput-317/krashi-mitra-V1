@@ -3,16 +3,26 @@
 # KrashiMitra — Farmer Profile Router
 # ============================================================
 
-from fastapi import APIRouter, Depends
+import os
+import uuid
+from pathlib import Path
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Optional
 
-from backend.database.db import UserProfile, User, get_db
+from backend.database.db import UserProfile, User, BazarPost, BazarFollow, get_db
 from backend.utils.auth_utils import get_current_user
 
 router = APIRouter(prefix="/profile", tags=["profile"])
+
+# ── Profile Pic Upload Storage ───────────────────────────────
+PROFILE_UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads" / "avatar"
+PROFILE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB for profile avatar
 
 
 # ── Request Models ───────────────────────────────────────────
@@ -83,7 +93,7 @@ class ProfileCreateRequest(BaseModel):
 
     # Frontend sends "" for blank number inputs; treat blank as None so the
     # whole save doesn't 422 when family_size is left empty.
-    @field_validator("family_size", mode="before")
+    @field_validator("family_size", "dob", mode="before")
     @classmethod
     def _blank_to_none(cls, v):
         if isinstance(v, str) and v.strip() == "":
@@ -150,7 +160,7 @@ class ProfileUpdateRequest(BaseModel):
 
     # Frontend sends "" for blank number inputs; treat blank as None so the
     # whole save doesn't 422 when family_size is left empty.
-    @field_validator("family_size", mode="before")
+    @field_validator("family_size", "dob", mode="before")
     @classmethod
     def _blank_to_none(cls, v):
         if isinstance(v, str) and v.strip() == "":
@@ -173,6 +183,7 @@ def _profile_to_dict(p: UserProfile) -> dict:
         "education":            p.education,
         "farming_experience":   p.farming_experience,
         "family_size":          p.family_size,
+        "avatar_url":           p.avatar_url,
         # Location
         "state":                p.state,
         "district":             p.district,
@@ -224,14 +235,14 @@ def _profile_to_dict(p: UserProfile) -> dict:
     }
 
 
-def _derive_primary_crop(body_primary_crop: Optional[str], crops_grown: Optional[str]) -> str:
+def _derive_primary_crop(body_primary_crop: Optional[str], crops_grown: Optional[str]) -> Optional[str]:
     if body_primary_crop and body_primary_crop.strip():
         return body_primary_crop.strip()
     if crops_grown:
         first = crops_grown.split(",")[0].strip()
         if first:
             return first
-    return "Wheat"
+    return None  # no fabricated default — stays NULL until the user picks one
 
 
 def _sync_user(user: User, profile: UserProfile, db: Session):
@@ -240,6 +251,7 @@ def _sync_user(user: User, profile: UserProfile, db: Session):
     user.village            = profile.village  or user.village
     user.district           = profile.district or user.district
     user.primary_crop       = profile.primary_crop or user.primary_crop
+    user.avatar_url         = profile.avatar_url   or user.avatar_url
     db.add(user)
 
 
@@ -455,20 +467,142 @@ def get_profile(
 
     profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
     if not profile:
+        # No profile yet, but the caller IS authenticated — still return the
+        # account email + signup name so the frontend can show them
+        # (read-only email, name as prefill) and verify the session maps
+        # to a real account.
+        acct = db.query(User).filter(User.id == user_id).first()
         return {
             "success": False,
             "message": "Profile नहीं मिला। पहले POST /profile से profile बनाएं।",
-            "data":    {}
+            "data": {
+                "email":     acct.email if acct else None,
+                "full_name": acct.name  if acct else None,
+            },
         }
 
     user = db.query(User).filter(User.id == user_id).first()
     data = _profile_to_dict(profile)
+    
+    # Query stats for the header card
+    data["posts_count"] = db.query(BazarPost).filter(BazarPost.user_id == user_id).count()
+    data["followers_count"] = db.query(BazarFollow).filter(BazarFollow.following_id == user_id).count()
+    data["following_count"] = db.query(BazarFollow).filter(BazarFollow.follower_id == user_id).count()
+    
     if user:
         data["email"]         = user.email
         data["auth_provider"] = user.auth_provider or "email"
+        data["verified"]      = bool(user.seller_verified)
 
     return {
         "success": True,
         "message": "",
         "data":    data,
+    }
+
+
+# ── POST /profile/avatar — upload profile picture ────────────
+
+@router.post("/avatar")
+async def upload_avatar(
+    file:         UploadFile = File(...),
+    current_user: dict       = Depends(get_current_user),
+    db:           Session    = Depends(get_db),
+):
+    user_id = current_user["user_id"]
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    if not profile:
+        raise HTTPException(
+            status_code=403,
+            detail="PROFILE_REQUIRED",
+        )
+
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in IMAGE_EXTS:
+        raise HTTPException(400, "केवल photo (jpg/jpeg/png/webp) upload करें।")
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    dest = PROFILE_UPLOAD_DIR / filename
+    size = 0
+    try:
+        with open(dest, "wb") as f:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_IMAGE_BYTES:
+                    raise HTTPException(
+                        400,
+                        f"File बहुत बड़ी है — अधिकतम {MAX_IMAGE_BYTES // (1024*1024)} MB।",
+                    )
+                f.write(chunk)
+    except HTTPException as e:
+        dest.unlink(missing_ok=True)
+        raise e
+    except Exception as e:
+        dest.unlink(missing_ok=True)
+        raise HTTPException(500, f"Upload error: {str(e)}")
+
+    # Save to db
+    old_avatar = profile.avatar_url
+    profile.avatar_url = f"/uploads/avatar/{filename}"
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.avatar_url = profile.avatar_url
+
+    db.commit()
+
+    # Try to clean up old avatar file
+    if old_avatar and "/uploads/avatar/" in old_avatar:
+        try:
+            old_name = old_avatar.split("/uploads/avatar/")[-1]
+            old_path = PROFILE_UPLOAD_DIR / old_name
+            old_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    return {
+        "success": True,
+        "message": "Profile picture upload हो गया।",
+        "data": {
+            "avatar_url": profile.avatar_url
+        }
+    }
+
+
+# ── DELETE /profile/avatar — remove profile picture ──────────
+
+@router.delete("/avatar")
+def delete_avatar(
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    user_id = current_user["user_id"]
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile नहीं मिला।")
+
+    old_avatar = profile.avatar_url
+    profile.avatar_url = None
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.avatar_url = None
+
+    db.commit()
+
+    # Remove the file from disk (only our own uploads, never external URLs)
+    if old_avatar and "/uploads/avatar/" in old_avatar:
+        try:
+            old_name = old_avatar.split("/uploads/avatar/")[-1]
+            (PROFILE_UPLOAD_DIR / old_name).unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    return {
+        "success": True,
+        "message": "Profile picture हटा दी गई।",
+        "data": {"avatar_url": None},
     }

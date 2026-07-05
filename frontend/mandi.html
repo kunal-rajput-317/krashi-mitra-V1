@@ -72,7 +72,7 @@
     krashimitra mandi, kisan mandi price, online mandi bhav india,
     fasal rate today, crop price india, commodity price india, apmc mandi rate,
     eNAM price, kisaan mandi app, mandi bhav app hindi, live krishi mandi
-  " />
+  , mandi bhav aaj ka, aaj ka mandi rate, gehu ka rate aaj, pyaz ka bhav aaj, sarso ka rate, dhan ka bhav, anaj mandi bhav, sabji mandi rate, apni mandi ka bhav, mandi bhav app, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app" />
 
   <!-- ── Indexing, Canonical & Preconnect ── -->
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -184,6 +184,7 @@
         "@id": "https://krashimitra.in/#website",
         "url": "https://krashimitra.in",
         "name": "KrashiMitra — किसान का डिजिटल साथी",
+        "alternateName": ["Krashi Mitra", "Krushi Mitra", "Krushimitra", "Krishi Mitra", "Krishimitra", "Kisan Mitra", "कृषि मित्र", "कृषिमित्र"],
         "inLanguage": ["hi", "en-IN"],
         "potentialAction": {
           "@type": "SearchAction",
@@ -1213,6 +1214,19 @@
     .mtv2-min, .mtv2-max, .mtv2-modal { color: #0f7d87; font-weight: 700; }
     .mtv2-modal { font-weight: 800; }
 
+    /* Detail ("और जानकारी") column */
+    .mtv2-detail-th { text-align: center; width: 96px; }
+    .mtv2-detail-td { text-align: center; }
+    .mtv2-detail-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fff; color: var(--green-dark);
+      border: 1.5px solid var(--green-mid); border-radius: 8px;
+      font-size: 12px; font-weight: 700; padding: 5px 10px; cursor: pointer;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+    }
+    .mtv2-detail-btn:hover  { background: #eef7f0; }
+    .mtv2-detail-btn:active { opacity: 0.6; }
+
     /* WhatsApp share column */
     .mtv2-share-th { text-align: center; width: 100px; }
     .mtv2-share-td { text-align: center; }
@@ -1377,7 +1391,13 @@
     .mandi-detail-commodity {
       font-size: 22px; font-weight: 800; color: var(--text-dark);
       font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; line-height: 1.2;
+      display: flex; align-items: center; gap: 11px;
     }
+    .mandi-detail-commodity .md-crop-img {
+      width: 46px; height: 46px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--green-mid); background: #fff; flex: 0 0 auto;
+    }
+    .mandi-detail-commodity .md-crop-emoji { font-size: 32px; line-height: 1; }
     .mandi-detail-variety-chip {
       display: inline-block; margin-top: 7px;
       font-size: 12px; font-weight: 700;
@@ -1470,11 +1490,21 @@
       font-size: 13px; font-weight: 800; color: var(--text-dark);
       display: flex; align-items: center; gap: 6px;
     }
-    .mn-trend-svg { width: 100%; height: 110px; display: block; overflow: visible; }
+    .mn-trend-plot { position: relative; }
+    .mn-trend-svg { width: 100%; height: auto; display: block; overflow: visible; }
     .mn-trend-svg .mn-area { fill: rgba(45,106,79,0.12); }
-    .mn-trend-svg .mn-line { fill: none; stroke: var(--green-mid); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+    .mn-trend-svg .mn-line { fill: none; stroke: var(--green-mid); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
     .mn-trend-svg .mn-dot  { fill: var(--green-dark); }
     .mn-trend-svg .mn-last { fill: var(--amber); stroke: #fff; stroke-width: 2; }
+    .mn-trend-svg .mn-grid { stroke: #e1ebe3; stroke-width: 1; }
+    .mn-trend-svg .mn-ax   { font-size: 10px; font-weight: 600; fill: var(--text-light); }
+    .mn-trend-svg .mn-cross { stroke: #9db8a5; stroke-width: 1; stroke-dasharray: 3 3; }
+    .mn-trend-svg .mn-hover-dot { fill: var(--green-dark); stroke: #fff; stroke-width: 2; }
+    .mn-tip {
+      position: absolute; background: #14330f; color: #fff;
+      font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 8px;
+      pointer-events: none; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
     .mn-trend-labels {
       display: flex; justify-content: space-between;
       font-size: 10.5px; color: var(--text-light); font-weight: 600; margin-top: 6px;
@@ -1646,6 +1676,53 @@
       .site-footer { display: none; }
     }
   </style>
+<style id="km-drawer-css">
+  /* Canonical sidebar drawer - identical across all pages */
+  .sidebar-drawer-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,20,0.5); backdrop-filter: blur(3px);
+    z-index: 4000; justify-content: flex-start;
+  }
+  .sidebar-drawer-overlay.open { display: flex; }
+  .sidebar-drawer {
+    width: 288px; max-width: 84vw; background: #ffffff; height: 100%;
+    box-shadow: 6px 0 28px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column;
+    animation: km-slide-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes km-slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  .sidebar-drawer-header {
+    padding: 18px 16px 12px 20px; display: flex; align-items: center;
+    justify-content: space-between; flex-shrink: 0;
+  }
+  .sidebar-drawer-title { font-size: 17px; font-weight: 800; color: #1c2b22; }
+  .sidebar-drawer-close {
+    background: #f2f5f3; border: none; font-size: 15px; cursor: pointer; color: #5b675f;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: background 0.15s, color 0.15s;
+  }
+  .sidebar-drawer-close:hover { background: #e6ebe8; color: #1c2b22; }
+  .sidebar-drawer-links { flex: 1; padding: 6px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .sidebar-drawer-link {
+    display: flex; align-items: center; gap: 13px; min-height: 46px;
+    padding: 10px 12px; font-size: 15px; font-weight: 700; color: #2d3748;
+    text-decoration: none; border-radius: 10px; border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .sidebar-drawer-link-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
+  .sidebar-drawer-link:hover { background: #f2f8f4; }
+  .sidebar-drawer-link.active { background: #eaf6ed; color: #2d6a4f; border-left-color: #2d6a4f; }
+  .sidebar-drawer-footer { flex-shrink: 0; border-top: 1px solid #eef2ef; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar-drawer-lang-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .sidebar-drawer-lang-label { font-size: 12px; font-weight: 700; color: #8a958f; }
+  .sidebar-lang-btn {
+    background: #f2f8f4; border: 1.5px solid #e3ece5; border-radius: 20px;
+    padding: 5px 12px; font-size: 12px; font-weight: 700; color: #2d3748;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+</style>
 </head>
 <body>
 
@@ -1668,7 +1745,7 @@
       <span class="top-utility-divider">|</span>
       <a href="sarkari_yojana.html" class="top-utility-link" data-t="nav_schemes_short">सरकारी योजना</a>
       <span class="top-utility-divider">|</span>
-      <a href="shop.html" class="top-utility-link" data-t="nav_shop_short">खरीदें/बेचें</a>
+      <a href="krashi_bajar.html" class="top-utility-link" data-t="nav_shop_short">खरीदें/बेचें</a>
     </div>
     <div class="top-utility-right">
       <a href="tel:+919870951001" class="top-utility-helpline" id="top-utility-helpline-span" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
@@ -1702,8 +1779,9 @@
 
     <!-- Center: Main Nav Links styled exactly like reference image -->
     <nav class="header-nav">
-      <a class="header-nav-link active" href="mandi.html" data-t="nav_mandi_bhav">कृषि बाजार मूल्य</a>
-      <a class="header-nav-link" href="shop.html" data-t="nav_veg_prices">खरीदें और बेचें</a>
+      <a class="header-nav-link active" href="mandi.html" data-t="nav_mandi_bhav">कृषि मंडी भाव</a>
+      <a class="header-nav-link" href="krashi_bajar.html" data-t="nav_veg_prices">खरीदें और बेचें</a>
+      <a class="header-nav-link" href="krashi_bajar.html" data-t="nav_bazar">कृषि बाज़ार</a>
       <a class="header-nav-link" href="articles/index.html" data-t="nav_news">कृषि समाचार</a>
     </nav>
 
@@ -1735,6 +1813,7 @@
 </header>
 
 <!-- ══ SIDEBAR SLIDE-OUT DRAWER MENU ══ -->
+<!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
 <div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
   <div class="sidebar-drawer" onclick="event.stopPropagation()">
     <div class="sidebar-drawer-header">
@@ -1742,14 +1821,17 @@
       <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()" aria-label="Close menu">✕</button>
     </div>
     <div class="sidebar-drawer-links">
-      <a href="index.html" class="sidebar-drawer-link" data-t="nav_home"><span class="sidebar-drawer-link-icon">🏠</span>मुख्य</a>
-      <a href="weather.html" class="sidebar-drawer-link" data-t="nav_weather"><span class="sidebar-drawer-link-icon">🌤️</span>मौसम</a>
-      <a href="mandi.html" class="sidebar-drawer-link active" data-t="nav_mandi"><span class="sidebar-drawer-link-icon">🏪</span>मंडी</a>
-      <a href="shop.html" class="sidebar-drawer-link" data-t="nav_shop"><span class="sidebar-drawer-link-icon">🛒</span>दुकान</a>
-      <a href="articles/index.html" class="sidebar-drawer-link" data-t="nav_news"><span class="sidebar-drawer-link-icon">📰</span>लेख</a>
-      <a href="chat.html" class="sidebar-drawer-link" data-t="nav_chat"><span class="sidebar-drawer-link-icon">💬</span>सहायता</a>
-      <a href="sarkari_yojana.html" class="sidebar-drawer-link" data-t="nav_schemes"><span class="sidebar-drawer-link-icon">🏛️</span>सरकारी योजना</a>
-      <button class="sidebar-drawer-link" onclick="toggleSidebarMenu(); openOrdersModal();"><span class="sidebar-drawer-link-icon">📋</span>मेरे ऑर्डर</button>
+      <a href="index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
+      <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
+      <a href="mandi.html" class="sidebar-drawer-link active"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
+      <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
+      <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
+      <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
+      <a href="map.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span data-t="nav_map">कृषि मानचित्र</span></a>
+      <a href="articles/index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
+      <a href="sarkari_yojana.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span data-t="nav_schemes">सरकारी योजना</span></a>
+      <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
+      <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
     </div>
     <div class="sidebar-drawer-footer">
       <div class="sidebar-drawer-lang-row">
@@ -1757,9 +1839,6 @@
         <button class="sidebar-lang-btn" id="drawer-lang-hi" onclick="pickLang('hi')">हिंदी</button>
         <button class="sidebar-lang-btn" id="drawer-lang-en" onclick="pickLang('en')">English</button>
         <button class="sidebar-lang-btn" id="drawer-lang-kn" onclick="pickLang('kn')">ಕನ್ನಡ</button>
-      </div>
-      <div class="sidebar-drawer-utility-row">
-        <a href="https://wa.me/919870951001" target="_blank" class="sidebar-drawer-utility-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> व्हाट्सएप सहायता</a>
       </div>
     </div>
   </div>
@@ -1774,16 +1853,16 @@
 <div class="main-content">
 
   <!-- Simple page heading (no hero box) -->
-  <h1 class="mandi-page-heading" data-t="nav_mandi_bhav">कृषि बाजार मूल्य</h1>
+  <h1 class="mandi-page-heading" data-t="nav_mandi_bhav">कृषि मंडी भाव</h1>
 
   <div class="mandi-inner">
 
   <!-- Tab switcher: by Crop / by State -->
   <div class="shop-tabs">
     <button class="shop-tab-btn active" id="shop-btn-mandi"
-            onclick="switchShopTab('mandi')" data-t="tab_mandi">🌾 फसल के आधार पर</button>
+            onclick="switchShopTab('mandi')" data-t="tab_mandi"> फसल के आधार पर</button>
     <button class="shop-tab-btn" id="shop-btn-state"
-            onclick="switchShopTab('state')" data-t="tab_state">📍 राज्य के आधार पर</button>
+            onclick="switchShopTab('state')" data-t="tab_state"> राज्य के आधार पर</button>
   </div>
 
   <!-- ── MANDI RATES ── -->
@@ -1802,7 +1881,7 @@
         </div>
       </div>
 
-      <div class="shop-section-title"><span data-t="pick_crop">🌾 आज के भाव — अपनी फसल चुनें</span></div>
+      <div class="shop-section-title"><span data-t="pick_crop"> आज के भाव — अपनी फसल चुनें</span></div>
       <div class="commodity-grid" id="commodity-grid"></div>
 
       <!-- ── Ad Slots — Below Commodity Grid ── -->
@@ -1947,7 +2026,7 @@
           <button class="mn-mic-btn" id="state-search-mic" onmousedown="event.preventDefault()" onclick="stateGridVoice()" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
         </div>
       </div>
-      <div class="shop-section-title"><span>📍 राज्य चुनें — सभी फसलों के भाव देखें</span></div>
+      <div class="shop-section-title"><span> राज्य चुनें — सभी फसलों के भाव देखें</span></div>
       <div class="commodity-grid" id="state-grid"></div>
     </div>
 
@@ -1980,7 +2059,7 @@
 
   <!-- ══ SEO LINK HUB — crawlable state & crop deep links (real ?state=/?commodity= views) ══ -->
   <section class="seo-link-hub" aria-label="राज्य अनुसार मंडी भाव">
-    <h2>📍 राज्य अनुसार आज का मंडी भाव</h2>
+    <h2> राज्य अनुसार आज का मंडी भाव</h2>
     <div class="seo-link-row">
       <a href="mandi.html?tab=state&state=Uttar%20Pradesh" title="उत्तर प्रदेश मंडी भाव आज">यूपी (UP) मंडी भाव</a>
       <a href="mandi.html?tab=state&state=Madhya%20Pradesh" title="मध्य प्रदेश मंडी भाव आज">एमपी (MP) मंडी भाव</a>
@@ -1997,7 +2076,7 @@
       <a href="mandi.html?tab=state&state=West%20Bengal" title="पश्चिम बंगाल मंडी भाव">पश्चिम बंगाल भाव</a>
     </div>
 
-    <h2>🌾 लोकप्रिय फसल भाव — राज्य अनुसार</h2>
+    <h2> लोकप्रिय फसल भाव — राज्य अनुसार</h2>
     <div class="seo-link-row">
       <a href="mandi.html?state=Uttar%20Pradesh&commodity=Wheat" title="UP में गेहूं का भाव आज">गेहूं भाव UP</a>
       <a href="mandi.html?state=Madhya%20Pradesh&commodity=Soybean" title="MP में सोयाबीन का भाव आज">सोयाबीन भाव MP</a>
@@ -2027,9 +2106,9 @@
 <div class="orders-modal-overlay" id="orders-modal" onclick="if(event.target===this)closeOrdersModal()">
   <div class="orders-modal-box">
     <button class="orders-modal-close" onclick="closeOrdersModal()">✕</button>
-    <div class="orders-modal-title">📋 मेरे ऑर्डर</div>
+    <div class="orders-modal-title"> मेरे ऑर्डर</div>
     <div id="orders-list">
-      <div class="orders-loading">🔄 लोड हो रहा है...</div>
+      <div class="orders-loading"> लोड हो रहा है...</div>
     </div>
   </div>
 </div>
@@ -2136,16 +2215,16 @@
       nav_map:          "कृषि मानचित्र",
       nav_schemes_short:"सरकारी योजना",
       nav_shop_short:   "खरीदें/बेचें",
-      tab_mandi:        "🌾 फसल के आधार पर",
-      tab_state:        "📍 राज्य के आधार पर",
-      mandi_title:      "📊 Live Mandi Rates",
+      tab_mandi:        " फसल के आधार पर",
+      tab_state:        " राज्य के आधार पर",
+      mandi_title:      " Live Mandi Rates",
       select_state:     "State चुनें",
       select_district:  "District चुनें",
       select_commodity: "Commodity चुनें",
       card_view:        "Card View",
       table_view:       "Table View",
       select_state_hint:"State चुनें — मंडी भाव लोड होगा",
-      loading:          "🔄 लोड हो रहा है...",
+      loading:          " लोड हो रहा है...",
       no_data:          "कोई डेटा नहीं मिला",
       no_data_sub:      "अलग combination try करें",
       error_server:     "⚠️ Server से connect नहीं हुआ।",
@@ -2154,14 +2233,14 @@
       prices_in:        "कीमतें ₹/क्विंटल में",
       th_market:        "मंडी", th_district: "जिला", th_commodity: "फसल",
       th_variety:       "किस्म", th_modal: "Modal भाव", th_trend: "रुझान", th_range: "Min / Max", th_date: "तारीख",
-      share_btn:        "💬 WhatsApp पर शेयर करें",
+      share_btn:        " WhatsApp पर शेयर करें",
       modal_price_lbl:  "Modal भाव",
       per_quintal_long: "प्रति क्विंटल",
       price_trend:      "मूल्य रुझान",
       trend_loading:    "रुझान लोड हो रहा है...",
       trend_none:       "अभी पिछला डेटा उपलब्ध नहीं। रुझान कुछ दिनों में दिखेगा।",
       vs_prev:          "पिछले दिन की तुलना में",
-      pick_crop:        "🌾 आज के भाव — अपनी फसल चुनें",
+      pick_crop:        " आज के भाव — अपनी फसल चुनें",
       back:             "वापस",
       filter_district_lbl: "मंडी / जिला छाँटें",
       filter_state_district_lbl: "राज्य / जिला छाँटें",
@@ -2174,13 +2253,15 @@
       nav_deals:        "कृषि सौदे",
       nav_helpline:     "कृषिमित्र हेल्पलाइन: +91 9870951001",
       nav_contact:      "संपर्क",
-      nav_mandi_bhav:   "कृषि बाजार मूल्य",
+      nav_mandi_bhav:   "कृषि मंडी भाव",
       nav_veg_prices:   "खरीदें और बेचें",
+      nav_bazar:        "कृषि बाज़ार",
+      nav_bazar_menu:   "कृषि बाज़ार",
       nav_news:         "कृषि समाचार",
       search_btn_text:  "खोज",
       my_orders_lbl:    "ऑर्डर",
       menu_title:       "मेनु",
-      nav_home:         "🏠 मुख्य",
+      nav_home:         " मुख्य",
       nav_schemes:      "🏛️ सरकारी योजना",
     },
     en: {
@@ -2193,16 +2274,16 @@
       nav_map:          "Agri Map",
       nav_schemes_short:"Govt Schemes",
       nav_shop_short:   "Buy/Sell",
-      tab_mandi:        "🌾 By Crop",
-      tab_state:        "📍 By State",
-      mandi_title:      "📊 Live Mandi Rates",
+      tab_mandi:        " By Crop",
+      tab_state:        " By State",
+      mandi_title:      " Live Mandi Rates",
       select_state:     "Select State",
       select_district:  "Select District",
       select_commodity: "Select Commodity",
       card_view:        "Card View",
       table_view:       "Table View",
       select_state_hint:"Select a state to load mandi rates",
-      loading:          "🔄 Loading prices...",
+      loading:          "Loading prices...",
       no_data:          "No price data found",
       no_data_sub:      "Try a different combination",
       error_server:     "⚠️ Could not reach server.",
@@ -2218,7 +2299,7 @@
       trend_loading:    "Loading trend...",
       trend_none:       "No previous data yet. The trend will appear over the next few days.",
       vs_prev:          "vs previous day",
-      pick_crop:        "🌾 Today's rates — pick your crop",
+      pick_crop:        " Today's rates — pick your crop",
       back:             "Back",
       filter_district_lbl: "Filter by market / district",
       filter_state_district_lbl: "Filter by state / district",
@@ -2231,8 +2312,10 @@
       nav_deals:        "Agri Deals",
       nav_helpline:     "Helpline: +91 9870951001",
       nav_contact:      "Contact Us",
-      nav_mandi_bhav:   "Agri Market Rates",
+      nav_mandi_bhav:   "Krashi Mandi Bhav",
       nav_veg_prices:   "Buy & Sell",
+      nav_bazar:        "Krashi Bazar",
+      nav_bazar_menu:   "Krashi Bazar",
       nav_news:         "Agri News",
       search_btn_text:  "Search",
       my_orders_lbl:    "Orders",
@@ -2250,16 +2333,16 @@
       nav_map:          "ಕೃಷಿ ನಕ್ಷೆ",
       nav_schemes_short:"ಸರ್ಕಾರಿ ಯೋಜನೆ",
       nav_shop_short:   "ಖರೀದಿ/ಮಾರಾಟ",
-      tab_mandi:        "🌾 ಬೆಳೆ ಆಧಾರದ ಮೇಲೆ",
-      tab_state:        "📍 ರಾಜ್ಯ ಆಧಾರದ ಮೇಲೆ",
-      mandi_title:      "📊 ನೇರ ಮಂಡಿ ಬೆಲೆ",
+      tab_mandi:        " ಬೆಳೆ ಆಧಾರದ ಮೇಲೆ",
+      tab_state:        " ರಾಜ್ಯ ಆಧಾರದ ಮೇಲೆ",
+      mandi_title:      " ನೇರ ಮಂಡಿ ಬೆಲೆ",
       select_state:     "ರಾಜ್ಯ ಆಯ್ಕೆ ಮಾಡಿ",
       select_district:  "ಜಿಲ್ಲೆ ಆಯ್ಕೆ ಮಾಡಿ",
       select_commodity: "ಸರಕು ಆಯ್ಕೆ ಮಾಡಿ",
       card_view:        "ಕಾರ್ಡ್ ವೀಕ್ಷಣೆ",
       table_view:       "ಟೇಬಲ್ ವೀಕ್ಷಣೆ",
       select_state_hint:"ಮಂಡಿ ಬೆಲೆ ಲೋಡ್ ಮಾಡಲು ರಾಜ್ಯ ಆಯ್ಕೆ ಮಾಡಿ",
-      loading:          "🔄 ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+      loading:          " ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
       no_data:          "ಯಾವುದೇ ಡೇಟಾ ಕಂಡುಬಂದಿಲ್ಲ",
       no_data_sub:      "ಬೇರೆ combination ಪ್ರಯತ್ನಿಸಿ",
       error_server:     "⚠️ ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಲಿಲ್ಲ.",
@@ -2268,14 +2351,14 @@
       prices_in:        "ಬೆಲೆ ₹/ಕ್ವಿಂಟಲ್ ನಲ್ಲಿ",
       th_market:        "ಮಾರ್ಕೆಟ್", th_district: "ಜಿಲ್ಲೆ", th_commodity: "ಸರಕು",
       th_variety:       "ತಳಿ", th_modal: "Modal ಬೆಲೆ", th_trend: "ಪ್ರವೃತ್ತಿ", th_range: "Min / Max", th_date: "ದಿನಾಂಕ",
-      share_btn:        "💬 WhatsApp ನಲ್ಲಿ ಹಂಚಿ",
+      share_btn:        " WhatsApp ನಲ್ಲಿ ಹಂಚಿ",
       modal_price_lbl:  "Modal ಬೆಲೆ",
       per_quintal_long: "ಪ್ರತಿ ಕ್ವಿಂಟಲ್",
       price_trend:      "ಬೆಲೆ ಪ್ರವೃತ್ತಿ",
       trend_loading:    "ಪ್ರವೃತ್ತಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
       trend_none:       "ಹಿಂದಿನ ಡೇಟಾ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ. ಕೆಲವು ದಿನಗಳಲ್ಲಿ ಪ್ರವೃತ್ತಿ ಕಾಣಿಸುತ್ತದೆ.",
       vs_prev:          "ಹಿಂದಿನ ದಿನಕ್ಕೆ ಹೋಲಿಸಿದರೆ",
-      pick_crop:        "🌾 ಇಂದಿನ ಬೆಲೆ — ನಿಮ್ಮ ಬೆಳೆ ಆಯ್ಕೆ ಮಾಡಿ",
+      pick_crop:        " ಇಂದಿನ ಬೆಲೆ — ನಿಮ್ಮ ಬೆಳೆ ಆಯ್ಕೆ ಮಾಡಿ",
       back:             "ಹಿಂದೆ",
       filter_district_lbl: "ಮಾರುಕಟ್ಟೆ / ಜಿಲ್ಲೆ ಫಿಲ್ಟರ್",
       filter_state_district_lbl: "ರಾಜ್ಯ / ಜಿಲ್ಲೆ ಫಿಲ್ಟರ್",
@@ -2288,8 +2371,10 @@
       nav_deals:        "ಕೃಷಿ ಒಪ್ಪಂದಗಳು",
       nav_helpline:     "ಸಹಾಯವಾಣಿ: +91 9870951001",
       nav_contact:      "ಸಂಪರ್ಕಿಸಿ",
-      nav_mandi_bhav:   "ಕೃಷಿ ಮಾರುಕಟ್ಟೆ ಬೆಲೆ",
+      nav_mandi_bhav:   "ಕೃಷಿ ಮಂಡಿ ಬೆಲೆ",
       nav_veg_prices:   "ಖರೀದಿ ಮತ್ತು ಮಾರಾಟ",
+      nav_bazar:        "ಕೃಷಿ ಬಜಾರ್",
+      nav_bazar_menu:   "ಕೃಷಿ ಬಜಾರ್",
       nav_news:         "ಕೃಷಿ ಸುದ್ದಿ",
       search_btn_text:  "ಹುಡುಕು",
       my_orders_lbl:    "ಆರ್ಡರ್‌ಗಳು",
@@ -2661,7 +2746,7 @@
       if (mdCom && window._lastOpenedMandiIdx !== undefined) {
         const p = window._mandiPrices[window._lastOpenedMandiIdx];
         if (p) {
-          mdCom.textContent = '🌾 ' + tCommodity(p.commodity);
+          mdCom.innerHTML   = _mdCropHtml(p);
           mdVar.textContent = '🏷️ ' + tVariety(p.variety);
         }
       }
@@ -2869,6 +2954,7 @@
               <th>न्यूनतम कीमत</th>
               <th>अधिकतम कीमत</th>
               <th>मॉडल कीमत</th>
+              <th class="mtv2-detail-th">विवरण</th>
               <th class="mtv2-share-th">शेयर</th>
             </tr>
           </thead>
@@ -2882,6 +2968,9 @@
                 <td class="mtv2-min">₹${p.min_price}</td>
                 <td class="mtv2-max">₹${p.max_price}</td>
                 <td class="mtv2-modal">₹${p.modal_price}</td>
+                <td class="mtv2-detail-td">
+                  <button class="mtv2-detail-btn" onclick="event.stopPropagation();openMandiDetail(${i})" title="और जानकारी के लिए क्लिक करें">🔍 विवरण देखें</button>
+                </td>
                 <td class="mtv2-share-td">
                   <button class="mtv2-share-btn" onclick="event.stopPropagation();shareMandiPrice(${i})" title="WhatsApp पर शेयर करें">${WA_ICON_GREEN} शेयर</button>
                 </td>
@@ -2902,35 +2991,46 @@
   // substrings used to match the state's live commodity list (data.gov
   // names are verbose, e.g. "Paddy(Dhan)(Common)"). `file` = Wikimedia
   // Commons filename; falls back to `emoji` if the photo fails to load.
+  // `h` is the md5-prefix of the underscored filename — lets _wikiThumb build
+  // the direct upload.wikimedia.org URL (CORS-safe; FilePath redirects aren't)
   const COMMODITY_TILES = [
-    { en:'Wheat',       hi:'गेहूं',    emoji:'🌾', file:'Wheat close-up.JPG',                       keys:['wheat'] },
-    { en:'Paddy',       hi:'धान',      emoji:'🌾', file:'Rice_grains_(IRRI).jpg',                   keys:['paddy','dhan','rice'] },
-    { en:'Onion',       hi:'प्याज',    emoji:'🧅', file:'Onion on White.JPG',                       keys:['onion'] },
-    { en:'Potato',      hi:'आलू',      emoji:'🥔', file:'Patates.jpg',                              keys:['potato'] },
-    { en:'Tomato',      hi:'टमाटर',   emoji:'🍅', file:'Bright red tomato and cross section02.jpg', keys:['tomato'] },
-    { en:'Maize',       hi:'मक्का',    emoji:'🌽', file:'Corncobs.jpg',                             keys:['maize','corn'] },
-    { en:'Soybean',     hi:'सोयाबीन', emoji:'🫘', file:'Soybean.USDA.jpg',                         keys:['soyabean','soybean'] },
-    { en:'Gram',        hi:'चना',      emoji:'🫛', file:'Chickpea.jpg',                             keys:['gram','chana','bengal'] },
-    { en:'Mustard',     hi:'सरसों',    emoji:'🌼', file:'',                                         keys:['mustard','rai','sarson'] },
-    { en:'Garlic',      hi:'लहसुन',    emoji:'🧄', file:'Garlic.jpg',                               keys:['garlic'] },
-    { en:'Chilli',      hi:'मिर्च',    emoji:'🌶️', file:'Red Chili Pepper.jpg',                     keys:['chilli','chili','mirch'] },
-    { en:'Turmeric',    hi:'हल्दी',    emoji:'🟡', file:'Turmeric-powder.jpg',                      keys:['turmeric'] },
-    { en:'Groundnut',   hi:'मूंगफली', emoji:'🥜', file:'Groundnut (Arachis hypogaea).jpg',         keys:['groundnut'] },
-    { en:'Bajra',       hi:'बाजरा',    emoji:'🌾', file:'',                                         keys:['bajra','pearl millet'] },
-    { en:'Arhar',       hi:'अरहर',     emoji:'🫘', file:'Toor dal.jpg',                             keys:['arhar','tur','red gram'] },
-    { en:'Urad',        hi:'उड़द',     emoji:'🫘', file:'Vigna mungo.jpg',                          keys:['urad','black gram'] },
-    { en:'Moong',       hi:'मूंग',     emoji:'🫛', file:'Mung beans.jpg',                           keys:['moong','green gram'] },
-    { en:'Sugarcane',   hi:'गन्ना',    emoji:'🎋', file:'Sugar cane.jpg',                           keys:['sugarcane'] },
-    { en:'Cotton',      hi:'कपास',     emoji:'🧵', file:'CottonPlant.JPG',                          keys:['cotton'] },
-    { en:'Lentil',      hi:'मसूर',     emoji:'🫘', file:'Lentil.jpg',                               keys:['lentil','masur','masoor'] },
-    { en:'Peas',        hi:'मटर',      emoji:'🟢', file:'Green peas.jpg',                           keys:['peas','pea'] },
-    { en:'Brinjal',     hi:'बैंगन',    emoji:'🍆', file:'Aubergine.jpg',                            keys:['brinjal'] },
-    { en:'Cauliflower', hi:'फूलगोभी', emoji:'🥦', file:'Cauliflower.jpg',                          keys:['cauliflower'] },
-    { en:'Ginger',      hi:'अदरक',     emoji:'🫚', file:'Ginger root.jpg',                          keys:['ginger'] },
+    { en:'Wheat',       hi:'गेहूं',    emoji:'🌾', file:'Wheat close-up.JPG',                       h:'b4', keys:['wheat'] },
+    { en:'Paddy',       hi:'धान',      emoji:'🌾', file:'Rice_grains_(IRRI).jpg',                   h:'ba', keys:['paddy','dhan','rice'] },
+    { en:'Onion',       hi:'प्याज',    emoji:'🧅', file:'Onion on White.JPG',                       h:'25', keys:['onion'] },
+    { en:'Potato',      hi:'आलू',      emoji:'🥔', file:'Patates.jpg',                              h:'ab', keys:['potato'] },
+    { en:'Tomato',      hi:'टमाटर',   emoji:'🍅', file:'Bright red tomato and cross section02.jpg', h:'88', keys:['tomato'] },
+    { en:'Maize',       hi:'मक्का',    emoji:'🌽', file:'Corncobs.jpg',                             h:'7d', keys:['maize','corn'] },
+    { en:'Soybean',     hi:'सोयाबीन', emoji:'🫘', file:'Soybean.USDA.jpg',                         h:'82', keys:['soyabean','soybean'] },
+    { en:'Gram',        hi:'चना',      emoji:'🫛', file:'Chickpea.jpg',                             h:'3d', keys:['gram','chana','bengal'] },
+    { en:'Mustard',     hi:'सरसों',    emoji:'🌼', file:'',                                         h:'',   keys:['mustard','rai','sarson'] },
+    { en:'Garlic',      hi:'लहसुन',    emoji:'🧄', file:'Garlic.jpg',                               h:'22', keys:['garlic'] },
+    { en:'Chilli',      hi:'मिर्च',    emoji:'🌶️', file:'Red Chili Pepper.jpg',                     h:'2a', keys:['chilli','chili','mirch'] },
+    { en:'Turmeric',    hi:'हल्दी',    emoji:'🟡', file:'Turmeric-powder.jpg',                      h:'0a', keys:['turmeric'] },
+    { en:'Groundnut',   hi:'मूंगफली', emoji:'🥜', file:'Groundnut (Arachis hypogaea).jpg',         h:'0e', keys:['groundnut'] },
+    { en:'Bajra',       hi:'बाजरा',    emoji:'🌾', file:'',                                         h:'',   keys:['bajra','pearl millet'] },
+    { en:'Arhar',       hi:'अरहर',     emoji:'🫘', file:'Toor dal.jpg',                             h:'de', keys:['arhar','tur','red gram'] },
+    { en:'Urad',        hi:'उड़द',     emoji:'🫘', file:'Vigna mungo.jpg',                          h:'e2', keys:['urad','black gram'] },
+    { en:'Moong',       hi:'मूंग',     emoji:'🫛', file:'Mung beans.jpg',                           h:'5e', keys:['moong','green gram'] },
+    { en:'Sugarcane',   hi:'गन्ना',    emoji:'🎋', file:'Sugar cane.jpg',                           h:'cb', keys:['sugarcane'] },
+    { en:'Cotton',      hi:'कपास',     emoji:'🧵', file:'CottonPlant.JPG',                          h:'68', keys:['cotton'] },
+    { en:'Lentil',      hi:'मसूर',     emoji:'🫘', file:'Lentil.jpg',                               h:'9d', keys:['lentil','masur','masoor'] },
+    { en:'Peas',        hi:'मटर',      emoji:'🟢', file:'Green peas.jpg',                           h:'a7', keys:['peas','pea'] },
+    { en:'Brinjal',     hi:'बैंगन',    emoji:'🍆', file:'Aubergine.jpg',                            h:'fb', keys:['brinjal'] },
+    { en:'Cauliflower', hi:'फूलगोभी', emoji:'🥦', file:'Cauliflower.jpg',                          h:'7c', keys:['cauliflower'] },
+    { en:'Ginger',      hi:'अदरक',     emoji:'🫚', file:'Ginger root.jpg',                          h:'cf', keys:['ginger'] },
   ];
 
   function _wikiImg(file) {
     return file ? 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(file) + '?width=320' : '';
+  }
+
+  // Direct thumb URL on upload.wikimedia.org — required for canvas use:
+  // it serves Access-Control-Allow-Origin, the FilePath redirect chain doesn't
+  function _wikiThumb(file, h) {
+    if (!file || !h) return '';
+    const n = encodeURIComponent(file.replace(/ /g, '_'))
+      .replace(/\(/g, '%28').replace(/\)/g, '%29');
+    return 'https://upload.wikimedia.org/wikipedia/commons/thumb/' + h[0] + '/' + h + '/' + n + '/330px-' + n;
   }
 
   // Find the exact DB commodity string (for the active state) a tile maps to.
@@ -3062,7 +3162,7 @@
     const tiles = window._gridTiles || [];
     if (!tiles.length) { box.innerHTML = ''; return; }
     const priceWord = currentLang === 'hi' ? 'की कीमत' : 'price';
-    const title     = currentLang === 'hi' ? '🌾 अन्य फसलें देखें' : '🌾 See other crops';
+    const title     = currentLang === 'hi' ? ' अन्य फसलें देखें' : ' See other crops';
     const cells = tiles.map((tl, i) => {
       if (window._activeTile && tl.en === window._activeTile.en) return '';
       const name = currentLang === 'hi' ? tl.hi : tl.en;
@@ -3721,7 +3821,7 @@
     if (!p) return;
     window._lastOpenedMandiIdx = index;
 
-    document.getElementById('md-commodity').textContent   = '🌾 ' + tCommodity(p.commodity);
+    document.getElementById('md-commodity').innerHTML     = _mdCropHtml(p);
     document.getElementById('md-variety').textContent     = '🏷️ ' + tVariety(p.variety);
     document.getElementById('md-price-label').textContent = t('modal_price_lbl');
     document.getElementById('md-price-unit').textContent  = t('per_quintal_long');
@@ -3752,6 +3852,18 @@
     document.body.style.overflow = 'hidden';
 
     loadMandiTrend(p);
+  }
+
+  // Sheet header: crop photo (same tile image as the grid) beside the name
+  function _mdCropHtml(p) {
+    const tile  = _shareTileFor(p.commodity);
+    const url   = tile ? _wikiImg(tile.file) : '';
+    const emoji = (tile && tile.emoji) || '🌾';
+    const icon  = url
+      ? `<img class="md-crop-img" src="${url}" alt=""
+           onerror="this.outerHTML='<span class=&quot;md-crop-emoji&quot;>${emoji}</span>'">`
+      : `<span class="md-crop-emoji">${emoji}</span>`;
+    return icon + `<span>${tCommodity(p.commodity)}</span>`;
   }
 
   // ══════════════════════════════════════
@@ -3800,32 +3912,80 @@
       return;
     }
 
-    const W = 320, H = 110, padX = 6, padY = 14;
-    const xs = pts.map((_, i) => padX + i * (W - 2 * padX) / (pts.length - 1));
+    // price (y) vs date (x), with real axes and a hover/touch tooltip
+    const W  = Math.max(body.clientWidth || 320, 280), H = 160;
+    const mL = 50, mR = 12, mT = 10, mB = 24;
+    const iw = W - mL - mR, ih = H - mT - mB;
+    const n  = pts.length, lastI = n - 1;
+
     const vals = pts.map(p => p.v);
-    const lo = Math.min(...vals), hi = Math.max(...vals);
-    const span = (hi - lo) || 1;
-    const ys = vals.map(v => padY + (H - 2 * padY) * (1 - (v - lo) / span));
+    const dLo = Math.min(...vals), dHi = Math.max(...vals);
+    const pad = (dHi - dLo || Math.max(dHi * 0.01, 1)) * 0.15;
+    const lo  = dLo - pad, hi = dHi + pad, span = hi - lo;
 
-    const linePts = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
-    const areaPts = `${padX},${H - padY} ${linePts} ${(W - padX)},${H - padY}`;
-    const lastI   = pts.length - 1;
+    const X = i => mL + i * iw / lastI;
+    const Y = v => mT + ih * (1 - (v - lo) / span);
+    const shortDate = d => {
+      const m = String(d).match(/^(\d{1,2}\/\d{1,2})\/\d{2,4}$/);
+      return m ? m[1] : String(d);
+    };
 
-    const svg = `
-      <svg class="mn-trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-        <polygon class="mn-area" points="${areaPts}"></polygon>
-        <polyline class="mn-line" points="${linePts}"></polyline>
-        ${xs.map((x, i) => i === lastI
-          ? `<circle class="mn-last" cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="4.5"></circle>`
-          : `<circle class="mn-dot" cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="2"></circle>`
-        ).join('')}
-      </svg>
-      <div class="mn-trend-labels">
-        <span>₹${lo.toLocaleString('en-IN')}</span>
-        <span>${pts[0].date} → ${pts[lastI].date}</span>
-        <span>₹${hi.toLocaleString('en-IN')}</span>
+    // recessive horizontal gridlines at data-min / mid / data-max
+    const grid = [dLo, (dLo + dHi) / 2, dHi].map(v =>
+      `<line class="mn-grid" x1="${mL}" y1="${Y(v).toFixed(1)}" x2="${W - mR}" y2="${Y(v).toFixed(1)}"></line>
+       <text class="mn-ax" x="${mL - 7}" y="${(Y(v) + 3.5).toFixed(1)}" text-anchor="end">₹${Math.round(v).toLocaleString('en-IN')}</text>`
+    ).join('');
+
+    // date labels: first / third points / last
+    const xIdx = [...new Set(n <= 4 ? pts.map((_, i) => i)
+      : [0, Math.round(lastI / 3), Math.round(2 * lastI / 3), lastI])];
+    const xLabels = xIdx.map(i =>
+      `<text class="mn-ax" x="${X(i).toFixed(1)}" y="${H - 6}"
+         text-anchor="${i === 0 ? 'start' : (i === lastI ? 'end' : 'middle')}">${shortDate(pts[i].date)}</text>`
+    ).join('');
+
+    const linePts = pts.map((p, i) => `${X(i).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
+    const areaPts = `${mL},${mT + ih} ${linePts} ${W - mR},${mT + ih}`;
+    const dots = pts.map((p, i) => i === lastI
+      ? `<circle class="mn-last" cx="${X(i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="4.5"></circle>`
+      : `<circle class="mn-dot" cx="${X(i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="2.2"></circle>`
+    ).join('');
+
+    body.innerHTML = `
+      <div class="mn-trend-plot">
+        <svg class="mn-trend-svg" viewBox="0 0 ${W} ${H}">
+          ${grid}
+          ${xLabels}
+          <polygon class="mn-area" points="${areaPts}"></polygon>
+          <polyline class="mn-line" points="${linePts}"></polyline>
+          ${dots}
+          <line class="mn-cross" x1="0" x2="0" y1="${mT}" y2="${mT + ih}" style="display:none"></line>
+          <circle class="mn-hover-dot" r="5" style="display:none"></circle>
+        </svg>
+        <div class="mn-tip" style="display:none"></div>
       </div>`;
-    body.innerHTML = svg;
+
+    const svg   = body.querySelector('svg');
+    const tip   = body.querySelector('.mn-tip');
+    const cross = body.querySelector('.mn-cross');
+    const hdot  = body.querySelector('.mn-hover-dot');
+    const move = ev => {
+      const r  = svg.getBoundingClientRect();
+      const px = (ev.clientX - r.left) * (W / r.width);
+      const i  = Math.max(0, Math.min(lastI, Math.round((px - mL) / (iw / lastI))));
+      const x = X(i), y = Y(pts[i].v);
+      cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.style.display = '';
+      hdot.setAttribute('cx', x);  hdot.setAttribute('cy', y);  hdot.style.display  = '';
+      tip.textContent = shortDate(pts[i].date) + ' • ₹' + pts[i].v.toLocaleString('en-IN');
+      tip.style.display = '';
+      const leftPx = (x / W) * r.width;
+      tip.style.left = Math.max(4, Math.min(r.width - 96, leftPx - 48)) + 'px';
+      tip.style.top  = Math.max(0, (y / H) * r.height - 36) + 'px';
+    };
+    const hide = () => { tip.style.display = cross.style.display = hdot.style.display = 'none'; };
+    svg.addEventListener('pointermove', move);
+    svg.addEventListener('pointerdown', move);
+    svg.addEventListener('pointerleave', hide);
   }
 
   function closeMandiDetail() {
@@ -3848,36 +4008,284 @@
   }
 
   // ══════════════════════════════════════
-  // WHATSAPP SHARE — crop-specific deep link
+  // WHATSAPP SHARE — image rate card via Web Share API (files),
+  // falls back to the wa.me text deep link where files can't be shared
   // ══════════════════════════════════════
-  function shareMandiPrice(index) {
-    const p = window._mandiPrices && window._mandiPrices[index];
-    if (!p) return;
-    const state = window._mandiState || '';
+  // Card + share-message strings per language (labels not in STRINGS)
+  function _cardStrings() {
+    const CS = {
+      hi: { sub: 'आज का मंडी भाव',  rate: 'भाव',  mandi: 'मंडी',  district: 'जिला',  date: 'तारीख',
+            min: 'न्यूनतम', max: 'अधिकतम', see: 'ताजा भाव देखें',
+            more: 'और जानकारी के लिए krashimitra.in पर जाएं',
+            tagline: 'किसान का डिजिटल साथी',
+            delta: (pct) => 'कल से ' + (pct > 0 ? '+' : '') + pct + '%' },
+      en: { sub: "Today's Mandi Rates", rate: 'Rate', mandi: 'Market', district: 'District', date: 'Date',
+            min: 'Min', max: 'Max', see: 'See latest rates',
+            more: 'For more information visit krashimitra.in',
+            tagline: "Farmer's Digital Companion",
+            delta: (pct) => (pct > 0 ? '+' : '') + pct + '% vs yesterday' },
+      kn: { sub: 'ಇಂದಿನ ಮಂಡಿ ದರ',  rate: 'ದರ',  mandi: 'ಮಂಡಿ',  district: 'ಜಿಲ್ಲೆ',  date: 'ದಿನಾಂಕ',
+            min: 'ಕನಿಷ್ಠ', max: 'ಗರಿಷ್ಠ', see: 'ತಾಜಾ ದರ ನೋಡಿ',
+            more: 'ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗೆ krashimitra.in ಗೆ ಭೇಟಿ ನೀಡಿ',
+            tagline: 'ರೈತರ ಡಿಜಿಟಲ್ ಸಂಗಾತಿ',
+            delta: (pct) => 'ನಿನ್ನೆಗಿಂತ ' + (pct > 0 ? '+' : '') + pct + '%' },
+    };
+    return CS[currentLang] || CS.hi;
+  }
 
-    const commodityHi = tCommodity(p.commodity);
-    const marketHi    = tMarket(p.market);
-    const districtHi  = tMarket(p.district);
+  function _shareTileFor(commodity) {
+    const cl = String(commodity || '').toLowerCase();
+    return COMMODITY_TILES.find(t => t.keys.some(k => cl.includes(k))) || null;
+  }
 
-    const url = 'https://krashimitra.in/mandi.html'
-      + '?state='     + encodeURIComponent(state)
+  // Crop name in the active language (COMMODITY_KN has no variety forms,
+  // so Kannada falls back to the base tile name)
+  function _cardCropName(p, tile) {
+    if (currentLang === 'kn' && tile) {
+      const kn = COMMODITY_KN[tile.en.toLowerCase()];
+      if (kn) return kn;
+    }
+    return tCommodity(p.commodity);
+  }
+
+  // /share/mandi (Netlify-proxied to the backend) serves crop-specific OG
+  // tags for WhatsApp previews, then bounces the visitor to mandi.html
+  function _mandiShareUrl(p) {
+    return 'https://krashimitra.in/share/mandi'
+      + '?state='     + encodeURIComponent(window._mandiState || '')
       + '&commodity=' + encodeURIComponent(p.commodity)
       + (p.district ? '&district=' + encodeURIComponent(p.district) : '');
+  }
 
-    let msg = '🌾 *' + commodityHi + ' — आज का मंडी भाव*\n\n';
-    msg += '💰 भाव: *₹' + Number(p.modal_price).toLocaleString('en-IN') + '/क्विंटल*\n';
+  function _buildShareText(p) {
+    const s    = _cardStrings();
+    const tile = _shareTileFor(p.commodity);
+    const url  = _mandiShareUrl(p);
+
+    let msg = '🌾 *' + _cardCropName(p, tile) + ' — ' + s.sub + '*\n\n';
+    msg += '💰 ' + s.rate + ': *₹' + Number(p.modal_price).toLocaleString('en-IN') + t('per_quintal') + '*\n';
     const pct = Number(p.change_pct);
-    if (!isNaN(pct) && p.change_pct != null) {
-      if (pct > 0)      msg += '📈 कल से +' + pct + '% वृद्धि\n';
-      else if (pct < 0) msg += '📉 कल से ' + pct + '% गिरावट\n';
+    if (!isNaN(pct) && p.change_pct != null && pct !== 0) {
+      msg += (pct > 0 ? '📈 ' : '📉 ') + s.delta(pct) + '\n';
     }
-    msg += '🏪 मंडी: ' + marketHi + '\n';
-    msg += '📍 जिला: ' + districtHi + '\n';
-    msg += '📅 तारीख: ' + p.date + '\n\n';
-    msg += '👉 ताजा भाव देखें:\n' + url + '\n\n';
-    msg += '📲 *KrashiMitra* — किसान का डिजिटल साथी';
+    msg += '🏪 ' + s.mandi + ': ' + tMarket(p.market) + '\n';
+    msg += '📍 ' + s.district + ': ' + tMarket(p.district) + '\n';
+    msg += '📅 ' + s.date + ': ' + p.date + '\n\n';
+    msg += '👉 ' + s.see + ':\n' + url + '\n\n';
+    msg += '🔎 ' + s.more + '\n\n';
+    msg += '📲 *कृषि मित्र (KrashiMitra)* — ' + s.tagline;
+    return msg;
+  }
 
-    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+  // Resolves null on error/timeout so the card falls back to the emoji
+  function _loadCardImg(url, timeoutMs) {
+    return new Promise(resolve => {
+      if (!url) return resolve(null);
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => resolve(null), timeoutMs || 2500);
+      im.onload  = () => { clearTimeout(timer); resolve(im); };
+      im.onerror = () => { clearTimeout(timer); resolve(null); };
+      im.src = url;
+    });
+  }
+
+  function _cardRoundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  async function _buildRateCardBlob(p) {
+    const W = 1080, H = 1080;
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    const F = "'Noto Sans Devanagari','Noto Sans Kannada','DM Sans',sans-serif";
+    const s = _cardStrings();
+
+    try { await document.fonts.ready; } catch (e) {}
+    const tile = _shareTileFor(p.commodity);
+    const [logo, img] = await Promise.all([
+      _loadCardImg('assets/krashimitra_logo.png', 4000),
+      _loadCardImg(tile ? _wikiThumb(tile.file, tile.h) : '', 6000),
+    ]);
+
+    ctx.fillStyle = '#f4f9f1';
+    ctx.fillRect(0, 0, W, H);
+
+    // header band: logo + कृषि मित्र + date
+    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, '#1b5e20');
+    grad.addColorStop(1, '#388e3c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 190);
+
+    const lx = 104, ly = 94, lr = 56;
+    ctx.beginPath(); ctx.arc(lx, ly, lr, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    if (logo) {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(lx, ly, lr - 4, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(logo, lx - lr + 4, ly - lr + 4, (lr - 4) * 2, (lr - 4) * 2);
+      ctx.restore();
+    } else {
+      ctx.font = '60px ' + F;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🌾', lx, ly + 4);
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 58px ' + F;
+    ctx.fillText(t('logo_text'), 188, 92);
+    ctx.fillStyle = '#c8e6c9';
+    ctx.font = '600 38px ' + F;
+    ctx.fillText(s.sub, 188, 150);
+    ctx.textAlign = 'right';
+    ctx.fillText('📅 ' + (p.date || ''), W - 56, 150);
+
+    // ── body: photo on the left, details on the right ──
+    // left: crop photo in a circle — same image as the website tile
+    const cx = 285, cy = 580, cr = 195;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.closePath();
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.clip();
+    if (img) {
+      const sc = Math.max((cr * 2) / img.width, (cr * 2) / img.height);
+      const dw = img.width * sc, dh = img.height * sc;
+      ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+    } else {
+      ctx.font = '210px ' + F;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText((tile && tile.emoji) || '🌾', cx, cy + 16);
+      ctx.textBaseline = 'alphabetic';
+    }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+    ctx.lineWidth = 12; ctx.strokeStyle = '#2e7d32'; ctx.stroke();
+
+    // right column
+    const colX = 540, colW = W - 56 - colX;
+    ctx.textAlign = 'left';
+
+    // shrink a font size until `text` fits colW
+    const fitPx = (text, weight, startPx, minPx) => {
+      let px = startPx;
+      ctx.font = weight + ' ' + px + 'px ' + F;
+      while (ctx.measureText(text).width > colW && px > minPx) {
+        px -= 2;
+        ctx.font = weight + ' ' + px + 'px ' + F;
+      }
+      return px;
+    };
+
+    // crop name (active language)
+    const cropName = _cardCropName(p, tile);
+    ctx.fillStyle = '#14290e';
+    fitPx(cropName, '800', 78, 44);
+    ctx.fillText(cropName, colX, 400);
+
+    // price as one line: ₹2,375/क्विंटल
+    const priceTxt = '₹' + Number(p.modal_price).toLocaleString('en-IN');
+    const unitTxt  = t('per_quintal');
+    let pricePx = 116;
+    ctx.font = '800 ' + pricePx + 'px ' + F;
+    let wPrice = ctx.measureText(priceTxt).width;
+    ctx.font = '700 ' + Math.round(pricePx * 0.4) + 'px ' + F;
+    let wUnit = ctx.measureText(unitTxt).width;
+    while (wPrice + 6 + wUnit > colW && pricePx > 60) {
+      pricePx -= 4;
+      ctx.font = '800 ' + pricePx + 'px ' + F;
+      wPrice = ctx.measureText(priceTxt).width;
+      ctx.font = '700 ' + Math.round(pricePx * 0.4) + 'px ' + F;
+      wUnit = ctx.measureText(unitTxt).width;
+    }
+    ctx.fillStyle = '#1b5e20';
+    ctx.font = '800 ' + pricePx + 'px ' + F;
+    ctx.fillText(priceTxt, colX, 530);
+    ctx.fillStyle = '#4c5b45';
+    ctx.font = '700 ' + Math.round(pricePx * 0.4) + 'px ' + F;
+    ctx.fillText(unitTxt, colX + wPrice + 6, 530);
+
+    // min–max range (when the mandi reported a real range)
+    const minP = parseFloat(p.min_price) || 0, maxP = parseFloat(p.max_price) || 0;
+    if (maxP > minP) {
+      const rangeTxt = s.min + ' ₹' + minP.toLocaleString('en-IN') + ' • ' + s.max + ' ₹' + maxP.toLocaleString('en-IN');
+      ctx.fillStyle = '#6b7a5f';
+      fitPx(rangeTxt, '600', 34, 24);
+      ctx.fillText(rangeTxt, colX, 596);
+    }
+
+    // delta pill (only when we have yesterday's comparison)
+    const pct = Number(p.change_pct);
+    if (!isNaN(pct) && p.change_pct != null && pct !== 0) {
+      const up    = pct > 0;
+      const label = (up ? '▲ ' : '▼ ') + s.delta(pct);
+      ctx.font = '700 38px ' + F;
+      const tw = ctx.measureText(label).width;
+      const pw = Math.min(tw + 64, colW), ph = 62, py = 636;
+      ctx.fillStyle = up ? '#e3f2e4' : '#fdecea';
+      _cardRoundRect(ctx, colX, py, pw, ph, 31);
+      ctx.fill();
+      ctx.fillStyle = up ? '#1b5e20' : '#c62828';
+      ctx.fillText(label, colX + 32, py + 44);
+    }
+
+    // mandi + district on their own lines, shrink to fit
+    const marketTxt   = '🏪 ' + tMarket(p.market);
+    const districtTxt = '📍 ' + tMarket(p.district);
+    ctx.fillStyle = '#33421f';
+    fitPx(marketTxt, '600', 40, 26);
+    ctx.fillText(marketTxt, colX, 790);
+    fitPx(districtTxt, '600', 40, 26);
+    ctx.fillText(districtTxt, colX, 856);
+    ctx.textAlign = 'center';
+
+    // footer band
+    ctx.fillStyle = '#14330f';
+    ctx.fillRect(0, 1012, W, H - 1012);
+    ctx.fillStyle = '#a5d6a7';
+    ctx.font = '600 34px ' + F;
+    ctx.fillText('www.krashimitra.in  •  ' + s.tagline, W / 2, 1056);
+
+    return new Promise(res => cv.toBlob(res, 'image/jpeg', 0.92));
+  }
+
+  async function shareMandiPrice(index) {
+    const p = window._mandiPrices && window._mandiPrices[index];
+    if (!p) return;
+    // Share the /share/mandi deep link with a short caption — WhatsApp/
+    // Telegram unfurl it into ONE rich preview card (crop photo + rate in
+    // the title, served as OG tags by the backend). No separate image file:
+    // sharing a canvas image + text arrived as two messages, and the link
+    // preview got lost under the attachment.
+    const url = _mandiShareUrl(p);
+    const s   = _cardStrings();
+    let caption = '🌾 *' + _cardCropName(p, _shareTileFor(p.commodity)) + '*'
+      + ' — 💰 ₹' + Number(p.modal_price).toLocaleString('en-IN') + t('per_quintal');
+    const pct = Number(p.change_pct);
+    if (!isNaN(pct) && p.change_pct != null && pct !== 0) {
+      caption += ' (' + (pct > 0 ? '📈 +' : '📉 ') + pct + '%)';
+    }
+    caption += '\n👉 ' + s.see + ' 👇';
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: caption, url });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // user closed the share sheet
+        // fall through to wa.me
+      }
+    }
+    window.open('https://wa.me/?text=' + encodeURIComponent(caption + '\n' + url), '_blank');
   }
 
   // Close on Escape key

@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
@@ -176,7 +176,10 @@ class User(Base):
     google_id          = Column(String,   nullable=True, index=True)        # Google's permanent sub
     village            = Column(String,   nullable=True)
     district           = Column(String,   nullable=True)
-    primary_crop       = Column(String,   default="Sugarcane", nullable=True)
+    primary_crop       = Column(String,   nullable=True)  # NULL until the user actually picks a crop
+    avatar_url         = Column(String,   nullable=True)
+    # Blue-tick for Krashi Bazar sellers — toggled manually by admin in DB
+    seller_verified    = Column(Boolean,  default=False, nullable=True)
     created_at         = Column(DateTime, default=datetime.utcnow)
 
 
@@ -193,11 +196,12 @@ class UserProfile(Base):
     name                 = Column(String,   nullable=False)
     phone_number         = Column(String,   nullable=True)
     whatsapp_number      = Column(String,   nullable=True)
-    dob                  = Column(String,   nullable=True)   # stored as string YYYY-MM-DD
+    dob                  = Column(Date,     nullable=True)   # live column is DATE; input "YYYY-MM-DD"
     gender               = Column(String,   nullable=True)
     education            = Column(String,   nullable=True)
     farming_experience   = Column(String,   nullable=True)
     family_size          = Column(Integer,  nullable=True)
+    avatar_url           = Column(String,   nullable=True)
 
     # Location
     state                = Column(String,   nullable=True)
@@ -224,7 +228,7 @@ class UserProfile(Base):
     eq_none              = Column(Boolean,  default=False)
 
     # Crops
-    primary_crop         = Column(String,   default="Sugarcane")
+    primary_crop         = Column(String,   nullable=True)  # NULL until the user actually picks a crop
     crops_grown          = Column(String,   nullable=True)
     farming_season       = Column(String,   nullable=True)
     farming_type         = Column(String,   nullable=True)
@@ -308,6 +312,63 @@ class MandiPriceHistory(Base):
     fetched_at   = Column(DateTime, default=datetime.utcnow)
 
 
+# ── KRASHI BAZAR (social crop marketplace) ──────────────────
+
+class BazarPost(Base):
+    """A sell/buy listing in the Krashi Bazar feed (image/video optional)."""
+    __tablename__ = "bazar_posts"
+
+    id             = Column(Integer,  primary_key=True, index=True)
+    user_id        = Column(Integer,  nullable=False, index=True)   # users.id
+    post_type      = Column(String,   default="sell", nullable=False)  # "sell" | "buy"
+    crop           = Column(String,   nullable=True, index=True)
+    text           = Column(Text,     nullable=True)
+    media_url      = Column(String,   nullable=True)   # /uploads/bazar/<file>
+    media_type     = Column(String,   nullable=True)   # "image" | "video"
+    price          = Column(Float,    nullable=True)   # asking price
+    old_price      = Column(Float,    nullable=True)   # struck-through previous price
+    quantity       = Column(Float,    nullable=True)
+    unit           = Column(String,   default="क्विंटल")
+    location       = Column(String,   nullable=True)   # denormalized "village, district"
+    status         = Column(String,   default="active", index=True)  # active | sold | closed
+    likes_count    = Column(Integer,  default=0)
+    comments_count = Column(Integer,  default=0)
+    created_at     = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class BazarLike(Base):
+    __tablename__ = "bazar_likes"
+    __table_args__ = (UniqueConstraint("post_id", "user_id", name="bazar_like_uidx"),)
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    post_id    = Column(Integer,  nullable=False, index=True)
+    user_id    = Column(Integer,  nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class BazarComment(Base):
+    """Comments and price offers ('kind' distinguishes them) on a post."""
+    __tablename__ = "bazar_comments"
+
+    id           = Column(Integer,  primary_key=True, index=True)
+    post_id      = Column(Integer,  nullable=False, index=True)
+    user_id      = Column(Integer,  nullable=False, index=True)
+    kind         = Column(String,   default="comment")  # "comment" | "offer"
+    text         = Column(Text,     nullable=True)
+    offer_amount = Column(Float,    nullable=True)      # set when kind == "offer"
+    created_at   = Column(DateTime, default=datetime.utcnow)
+
+
+class BazarFollow(Base):
+    __tablename__ = "bazar_follows"
+    __table_args__ = (UniqueConstraint("follower_id", "following_id", name="bazar_follow_uidx"),)
+
+    id           = Column(Integer,  primary_key=True, index=True)
+    follower_id  = Column(Integer,  nullable=False, index=True)
+    following_id = Column(Integer,  nullable=False, index=True)
+    created_at   = Column(DateTime, default=datetime.utcnow)
+
+
 class Order(Base):
     __tablename__ = "orders"
     __table_args__ = {"extend_existing": True}
@@ -349,6 +410,8 @@ def _ensure_postgres_columns():
             ("village", "VARCHAR"),
             ("district", "VARCHAR"),
             ("primary_crop", "VARCHAR DEFAULT 'Sugarcane'"),
+            ("avatar_url", "VARCHAR"),
+            ("seller_verified", "BOOLEAN DEFAULT FALSE"),
             ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
         "user_profiles": [
@@ -361,6 +424,7 @@ def _ensure_postgres_columns():
             ("education",            "VARCHAR"),
             ("farming_experience",   "VARCHAR"),
             ("family_size",          "INTEGER"),
+            ("avatar_url",           "VARCHAR"),
             # Location
             ("state",                "VARCHAR"),
             ("district",             "VARCHAR"),

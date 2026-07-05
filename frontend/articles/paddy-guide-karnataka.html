@@ -2,19 +2,39 @@
 <html lang="kn">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- SEO -->
   <title>ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ | Paddy Farming Guide Karnataka – KrashiMitra.in</title>
+  <link rel="icon" type="image/png" href="https://krashimitra.in/assets/krashimitra_logo.png">
   <meta name="description" content="ಕರ್ನಾಟಕದಲ್ಲಿ ಭತ್ತದ ಬೆಳೆ ಬೆಳೆಯುವ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ. Complete paddy/rice farming guide for Karnataka farmers in Kannada and English." />
   <meta name="keywords" content="ಭತ್ತದ ಬೆಳೆ ಕರ್ನಾಟಕ, paddy farming Karnataka, ಭತ್ತ ಕೃಷಿ, rice cultivation guide, ಕರ್ನಾಟಕ ರೈತ" />
   <meta name="author" content="KrashiMitra.in" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href="https://krashimitra.in/articles/paddy-guide-karnataka.html" />
   <link rel="alternate" hreflang="kn" href="https://krashimitra.in/articles/paddy-guide-karnataka.html" />
   <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/paddy-guide-karnataka.html" />
-  <meta property="og:locale" content="kn_IN" />
+  <meta name="theme-color" content="#1a4d2e" />
 
+  <!-- Open Graph -->
+  <meta property="og:title" content="ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ | Paddy Farming Guide Karnataka – KrashiMitra.in" />
+  <meta property="og:description" content="ಕರ್ನಾಟಕದಲ್ಲಿ ಭತ್ತದ ಬೆಳೆ ಬೆಳೆಯುವ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ — ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲೀಷ್‌ನಲ್ಲಿ." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://krashimitra.in/articles/paddy-guide-karnataka.html" />
+  <meta property="og:image" content="https://krashimitra.in/assets/og-banner.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="kn_IN" />
+  <meta property="og:site_name" content="KrashiMitra" />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Tiro+Kannada&family=Noto+Serif+Kannada:wght@400;600;700&family=Poppins:wght@400;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Kannada&family=Noto+Serif+Kannada:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-493H1PDP64');</script>
 
   <style>
     :root {
@@ -24,213 +44,485 @@
       --green-pale:   #e8f5e9;
       --paddy:        #558b2f;
       --paddy-light:  #f1f8e9;
-      --paddy-gold:   #f9a825;
       --water-blue:   #0277bd;
       --water-light:  #e1f5fe;
       --gold:         #f9a825;
+      --gold-light:   #fff8e1;
+      --red-disease:  #c62828;
+      --red-light:    #ffebee;
+      --red-warn:     #ff5722;
       --cream:        #faf8f3;
+      --white:        #ffffff;
       --text-dark:    #1b1b1b;
       --text-mid:     #3d3d3d;
       --text-light:   #666;
       --border:       #dcedc8;
       --shadow:       rgba(30, 77, 46, 0.12);
+      --shadow-strong:rgba(30, 77, 46, 0.22);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: 'Tiro Kannada', 'Noto Serif Kannada', Georgia, serif;
       background: var(--cream);
       color: var(--text-dark);
       line-height: 1.85;
+      font-size: 16px;
     }
 
-    /* ══ SITE HEADER ══ */
-    .site-header {
-      background: var(--green-dark);
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 56px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    }
-    .logo-block { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .logo-text { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.15rem; color: #fff; letter-spacing: 0.3px; line-height: 1.1; }
-    .logo-text span { color: var(--gold); }
-    .tagline-sub { font-family: 'Poppins', sans-serif; font-size: 0.65rem; color: #a5d6a7; font-weight: 400; display: block; margin-top: 1px; }
-    .nav-links { display: flex; align-items: center; gap: 4px; }
-    .nav-links a { font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 600; color: #c8e6c9; text-decoration: none; padding: 6px 10px; border-radius: 6px; transition: background 0.18s, color 0.18s; white-space: nowrap; }
-    .nav-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    .nav-links a.home-link { color: var(--gold); }
-    .nav-links a.home-link:hover { background: rgba(249,168,37,0.15); }
-
-    /* Lang toggle */
-    .lang-pill { display: flex; background: rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
-    .lang-pill button { font-family: 'Poppins', sans-serif; font-size: 0.72rem; font-weight: 600; padding: 4px 10px; border: none; cursor: pointer; background: transparent; color: #a5d6a7; transition: all 0.18s; line-height: 1; }
-    .lang-pill button.active { background: var(--gold); color: var(--green-dark); border-radius: 18px; }
-    .right-group { display: flex; align-items: center; gap: 8px; }
-    .user-icon { font-size: 1.1rem; cursor: pointer; opacity: 0.85; }
-
-    /* ── Hamburger (opens sidebar drawer) ── */
-    .hamburger-btn {
-      background: none; border: none; cursor: pointer;
-      font-size: 22px; color: rgba(255,255,255,0.92);
-      padding: 4px 6px; line-height: 1;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 8px; transition: background 0.15s;
-      flex-shrink: 0;
-    }
-    .hamburger-btn:hover { background: rgba(255,255,255,0.12); }
-
-    /* ── Sidebar slide-out drawer ── */
-    .sidebar-drawer-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
-      z-index: 4000; justify-content: flex-start;
-    }
-    .sidebar-drawer-overlay.open { display: flex; }
-    .sidebar-drawer {
-      width: 280px; background: #fff; height: 100%;
-      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
-      display: flex; flex-direction: column;
-      animation: slide-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-    .sidebar-drawer-header {
-      padding: 16px 20px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-    }
-    .sidebar-drawer-title {
-      font-family: 'Poppins', sans-serif;
-      font-size: 18px; font-weight: 700; color: var(--green-mid);
-    }
-    .sidebar-drawer-close {
-      background: none; border: none; font-size: 20px; cursor: pointer;
-      color: var(--text-light); width: 32px; height: 32px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; transition: background 0.15s;
-    }
-    .sidebar-drawer-close:hover { background: var(--cream); }
-    .sidebar-drawer-links { padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
-    .sidebar-drawer-link {
-      padding: 12px 16px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 15px; font-weight: 700; color: var(--text-dark);
-      text-decoration: none; border-radius: 8px; transition: background 0.15s, color 0.15s;
-    }
-    .sidebar-drawer-link:hover { background: var(--green-pale); color: var(--green-mid); }
-    .sidebar-drawer-link.active { background: var(--green-pale); color: var(--green-dark); }
-
-    @media (max-width: 600px) { .nav-links a:not(.home-link) { display: none; } .logo-text { font-size: 1rem; } }
-
-    /* ══ BREADCRUMB ══ */
-    .breadcrumb { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--text-light); padding: 10px 20px; max-width: 900px; margin: 0 auto; }
-    .breadcrumb a { color: var(--green-mid); text-decoration: none; }
-    .breadcrumb span { margin: 0 5px; }
-
-    /* ══ WRAPPER ══ */
-    .article-wrapper { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
-
-    /* ══ HERO ══ */
-    .hero {
-      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #33691e 100%);
-      border-radius: 0 0 20px 20px;
-      padding: 42px 28px 38px;
-      color: #fff;
-      margin-bottom: 28px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before { content: '🌾'; position: absolute; right: 22px; top: 10px; font-size: 6rem; opacity: 0.12; pointer-events: none; }
-    .category-tag { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-size: 0.7rem; font-weight: 700; padding: 3px 12px; border-radius: 12px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
-    .hero h1 { font-family: 'Noto Serif Kannada', serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 700; line-height: 1.4; color: #fff; margin-bottom: 8px; }
-    .hero h1 .en { font-family: 'Poppins', sans-serif; font-size: clamp(0.88rem, 2.2vw, 1.05rem); font-weight: 500; color: #a5d6a7; display: block; margin-top: 6px; }
-    .hero .meta { font-family: 'Poppins', sans-serif; font-size: 0.74rem; color: #c8e6c9; margin-top: 12px; }
-
-    /* ══ FEATURED IMAGE ══ */
-    .featured-image { width: 100%; border-radius: 14px; overflow: hidden; margin-bottom: 28px; box-shadow: 0 6px 24px var(--shadow); }
-    .img-placeholder { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; }
-    .img-placeholder.tall { height: 320px; background: linear-gradient(135deg, #c8e6c9, #a5d6a7); color: var(--green-dark); }
-    .img-placeholder.mid  { height: 220px; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); color: var(--green-dark); }
-    .img-placeholder .icon { font-size: 3rem; margin-bottom: 8px; }
-    .img-placeholder p { font-size: 0.8rem; font-weight: 600; opacity: 0.6; }
-    .img-placeholder p.hint { font-size: 0.68rem; opacity: 0.45; margin-top: 3px; }
-    figcaption { padding: 8px 14px; font-family: 'Poppins', sans-serif; font-size: 0.73rem; color: var(--text-light); background: #f1f8e9; text-align: center; }
-
-    .inline-image { width: 100%; border-radius: 10px; overflow: hidden; margin: 22px 0; box-shadow: 0 3px 12px var(--shadow); }
-
-    /* ══ QUICK FACTS ══ */
-    .quick-facts { background: var(--paddy-light); border-left: 5px solid var(--paddy); border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
-    .fact { text-align: center; }
-    .fact .icon { font-size: 1.5rem; }
-    .fact .label { font-family: 'Poppins', sans-serif; font-size: 0.63rem; font-weight: 600; color: var(--paddy); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
-    .fact .value { font-family: 'Poppins', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--green-dark); }
-
-    /* ══ SECTIONS ══ */
-    section { margin-bottom: 40px; }
-    .section-heading { border-left: 5px solid var(--paddy); padding-left: 14px; margin-bottom: 16px; }
-    .section-heading h2 { font-family: 'Noto Serif Kannada', serif; font-size: 1.25rem; font-weight: 700; color: var(--green-dark); line-height: 1.4; }
-    .section-heading h2 .en { font-family: 'Poppins', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--paddy); display: block; margin-top: 2px; }
-
-    /* ══ BILINGUAL TEXT ══ */
-    .bilingual p.kn { font-family: 'Tiro Kannada', serif; font-size: 1rem; color: var(--text-dark); margin-bottom: 5px; line-height: 1.9; }
-    .bilingual p.en { font-family: 'Merriweather', serif; font-size: 0.85rem; color: var(--text-mid); margin-bottom: 16px; font-style: italic; padding-left: 12px; border-left: 2px solid var(--border); }
-
-    /* Lang visibility */
+    /* Lang visibility styles */
     body.lang-kn .en-only { display: none !important; }
     body.lang-en .kn-only { display: none !important; }
 
-    /* ══ STEP CARDS ══ */
-    .step-cards { display: grid; gap: 14px; }
-    .step-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 7px var(--shadow); }
-    .step-num { background: var(--green-dark); color: #fff; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.82rem; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 3px; }
-    .step-content .step-title-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
-    .step-content .step-title-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--paddy); font-weight: 600; margin-bottom: 6px; }
-    .step-content .step-detail-kn { font-family: 'Tiro Kannada', serif; font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
-    .step-content .step-detail-en { font-family: 'Merriweather', serif; font-size: 0.76rem; color: #888; font-style: italic; }
+    /* ═══════════════════════════════════════
+       TOP ANNOUNCEMENT BAR
+    ═══════════════════════════════════════ */
+    .top-announcement {
+      background: var(--gold);
+      color: var(--green-dark);
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      letter-spacing: 0.2px;
+    }
+    .top-announcement a {
+      color: var(--green-dark);
+      text-decoration: underline;
+      margin-left: 6px;
+    }
 
-    /* ══ INFO GRID ══ */
-    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-    .info-card { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 14px; box-shadow: 0 2px 7px var(--shadow); }
-    .info-card .icon { font-size: 1.4rem; margin-bottom: 7px; }
-    .info-card .kn { font-family: 'Noto Serif Kannada', serif; font-size: 0.92rem; font-weight: 700; color: var(--green-dark); margin-bottom: 3px; }
-    .info-card .en { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); margin-bottom: 6px; font-weight: 600; }
-    .info-card .detail { font-family: 'Tiro Kannada', serif; font-size: 0.84rem; color: var(--text-mid); line-height: 1.65; }
-    .info-card .detail-en { font-family: 'Merriweather', serif; font-size: 0.72rem; color: #999; font-style: italic; margin-top: 3px; }
+    /* ═══════════════════════════════════════
+       SITE HEADER
+    ═══════════════════════════════════════ */
+    .site-header {
+      background: var(--green-dark);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.30);
+    }
+    .site-header .logo {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.18rem;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .site-header .logo .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .site-header .logo .brand .mitra { color: var(--gold); }
+    .site-header .logo .tagline {
+      font-size: 0.6rem;
+      color: #a5d6a7;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
 
-    /* ══ TABLE ══ */
-    .article-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); margin-top: 6px; }
-    .article-table thead tr { background: var(--green-dark); color: #fff; }
-    .article-table thead th { padding: 11px 14px; text-align: left; font-weight: 600; font-size: 0.77rem; font-family: 'Poppins', sans-serif; }
-    .article-table tbody tr:nth-child(even) { background: var(--paddy-light); }
-    .article-table tbody tr:nth-child(odd)  { background: #fff; }
-    .article-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-mid); vertical-align: top; font-size: 0.86rem; line-height: 1.6; }
-    .article-table tbody td:first-child { font-family: 'Noto Serif Kannada', serif; font-weight: 700; color: var(--green-dark); }
-    .article-table tbody td .en-sub { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); display: block; margin-top: 2px; }
-    .article-table tfoot td { padding: 10px 14px; background: #e8f5e9; font-family: 'Poppins', sans-serif; font-size: 0.8rem; color: var(--green-dark); }
+    .site-header nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .site-header nav a {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #c8e6c9;
+      text-decoration: none;
+      padding: 7px 11px;
+      border-radius: 7px;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .site-header nav a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .site-header nav a.active { background: rgba(249,168,37,0.18); color: var(--gold); }
 
-    /* ══ TIP BOXES ══ */
-    .tip-box { border-radius: 10px; padding: 16px 18px; margin: 18px 0; display: flex; gap: 12px; align-items: flex-start; }
-    .tip-box.tip     { background: #fff8e1;          border-left: 5px solid var(--gold); }
-    .tip-box.info    { background: var(--paddy-light); border-left: 5px solid var(--paddy); }
-    .tip-box.warning { background: #fff3e0;            border-left: 5px solid #e65100; }
-    .tip-box.danger  { background: #ffebee;            border-left: 5px solid #b71c1c; }
-    .tip-box.water   { background: var(--water-light);  border-left: 5px solid var(--water-blue); }
-    .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
-    .tip-content .kn { font-family: 'Tiro Kannada', serif; font-size: 0.93rem; color: var(--text-dark); line-height: 1.75; margin-bottom: 4px; }
-    .tip-content .en { font-family: 'Merriweather', serif; font-size: 0.78rem; color: var(--text-mid); font-style: italic; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Lang toggle */
+    .lang-pill {
+      display: flex;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .lang-pill button {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: #a5d6a7;
+      transition: all 0.18s;
+      line-height: 1.2;
+    }
+    .lang-pill button.active {
+      background: var(--gold);
+      color: var(--green-dark);
+      border-radius: 18px;
+    }
+
+    .user-icon {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #fff;
+      transition: background 0.18s;
+    }
+    .user-icon:hover { background: rgba(255,255,255,0.25); }
+
+    @media (max-width: 640px) {
+      .site-header nav { display: none; }
+      .site-header .logo .tagline { display: none; }
+    }
+
+    /* ═══════════════════════════════════════
+       BREADCRUMB
+    ═══════════════════════════════════════ */
+    .breadcrumb {
+      background: #163d25;
+      padding: 8px 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      color: #81c784;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+    .breadcrumb a { color: #81c784; text-decoration: none; transition: color 0.15s; }
+    .breadcrumb a:hover { color: var(--gold); }
+    .breadcrumb .sep { margin: 0 4px; opacity: 0.5; }
+    .breadcrumb .current { color: #fff; font-weight: 500; }
+
+    /* ═══════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════ */
+    .hero {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #33691e 100%);
+      padding: 0;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '🌾';
+      position: absolute;
+      right: 22px; top: 10px;
+      font-size: 6rem;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 36px 20px 32px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+    }
+    .badge-crop {
+      background: var(--paddy);
+      color: #white;
+    }
+    .badge-season {
+      background: rgba(249,168,37,0.18);
+      color: var(--gold);
+      border: 1px solid rgba(249,168,37,0.4);
+    }
+    .badge-location {
+      background: rgba(255,255,255,0.1);
+      color: #a5d6a7;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .hero h1 {
+      font-family: 'Noto Serif Kannada', serif;
+      font-size: clamp(1.4rem, 5vw, 2.1rem);
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      color: #white;
+    }
+    .hero h1 .en {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(0.78rem, 2.2vw, 0.95rem);
+      font-weight: 400;
+      color: #a5d6a7;
+      margin-top: 6px;
+    }
+    .hero-excerpt {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bec5;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      max-width: 620px;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      color: #c8e6c9;
+    }
+    .hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hero-meta .read-time {
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .hero-share {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+    .share-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #a5d6a7;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.68rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.18s;
+    }
+    .share-btn:hover { background: rgba(255,255,255,0.18); color: #white; }
+
+    @media (max-width: 480px) {
+      .hero-share { display: none; }
+    }
+
+    /* ═══════════════════════════════════════
+       ARTICLE LAYOUT
+    ═══════════════════════════════════════ */
+    .article-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 16px 80px;
+    }
+
+    .featured-image {
+      width: 100%;
+      border-radius: 0 0 20px 20px;
+      overflow: hidden;
+      box-shadow: 0 6px 24px var(--shadow-strong);
+      background: #c8e6c9;
+      margin-bottom: 28px;
+    }
+    .featured-image .img-placeholder {
+      width: 100%; height: 240px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1b5e20, #33691e);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      gap: 8px;
+    }
+    .featured-image .img-placeholder .icon { font-size: 3.5rem; }
+    .featured-image .img-placeholder p { font-size: 0.85rem; opacity: 0.8; }
+    .featured-image figcaption {
+      padding: 9px 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      color: var(--text-light);
+      background: #f1f8e9;
+      text-align: center;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION HEADINGS
+    ═══════════════════════════════════════ */
+    .article-section { margin: 28px 0 0; }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-heading h2 {
+      font-family: 'Noto Serif Kannada', serif;
+      font-size: clamp(1.05rem, 3vw, 1.3rem);
+      font-weight: 700;
+      color: var(--green-dark);
+      line-height: 1.4;
+    }
+    .section-heading h2 .en {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--paddy);
+      margin-top: 2px;
+    }
+
+    p { margin-bottom: 12px; color: var(--text-mid); }
+    p.kn { font-family: 'Tiro Kannada', serif; font-size: 1rem; color: var(--text-dark); line-height: 1.9; }
+    p.en { font-family: 'Merriweather', serif; font-size: 0.85rem; color: var(--text-mid); line-height: 1.8; font-style: italic; padding-left: 12px; border-left: 2px solid var(--border); margin-bottom: 16px; }
+
+    strong { color: var(--green-dark); }
+    em { color: var(--paddy); font-style: normal; font-weight: 600; }
+
+    /* ═══════════════════════════════════════
+       TIP / WARNING / INFO BOXES
+    ═══════════════════════════════════════ */
+    .tip-box {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin: 16px 0;
+      border-left: 4px solid;
+    }
+    .tip-box.warning { background: #fff3e0; border-color: #e65100; }
+    .tip-box.danger { background: #ffebee; border-color: #b71c1c; }
+    .tip-box.tip { background: #fff8e1; border-color: var(--gold); }
+    .tip-box.info { background: var(--paddy-light); border-color: var(--paddy); }
+    .tip-box.water { background: var(--water-light); border-color: var(--water-blue); }
+    .tip-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .tip-content {
+      font-size: 0.93rem;
+      line-height: 1.75;
+      color: var(--text-mid);
+    }
+    .tip-content .kn { font-family: 'Tiro Kannada', serif; font-size: 0.93rem; color: var(--text-dark); }
+    .tip-content .en { font-family: 'Merriweather', serif; font-size: 0.78rem; color: var(--text-light); font-style: italic; margin-top: 4px; }
     .tip-content strong { font-family: 'Noto Serif Kannada', serif; color: var(--green-dark); }
 
-    /* ══ SEASON CARDS ══ */
-    .season-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-    .season-card { background: #fff; border-radius: 12px; border: 2px solid var(--border); padding: 16px; box-shadow: 0 2px 7px var(--shadow); }
+    /* ═══════════════════════════════════════
+       TABLES
+    ═══════════════════════════════════════ */
+    .table-scroll { overflow-x: auto; width: 100%; margin: 14px 0; }
+    .article-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .article-table thead tr { background: var(--green-dark); color: #white; }
+    .article-table th { padding: 11px 14px; text-align: left; font-weight: 600; font-family: 'Poppins', sans-serif; color: #fff; }
+    .article-table tbody tr:nth-child(odd) { background: #fff; }
+    .article-table tbody tr:nth-child(even) { background: var(--paddy-light); }
+    .article-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-mid); vertical-align: top; }
+    .article-table td:first-child { font-family: 'Noto Serif Kannada', serif; font-weight: 700; color: var(--green-dark); }
+    .article-table .en-sub { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); display: block; margin-top: 2px; }
+
+    /* ═══════════════════════════════════════
+       QUICK FACTS BAR
+    ═══════════════════════════════════════ */
+    .quick-facts {
+      background: var(--paddy-light);
+      border-left: 5px solid var(--paddy);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin: 20px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 14px;
+    }
+    .fact { text-align: center; }
+    .fact .icon { font-size: 1.5rem; }
+    .fact .label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.63rem;
+      font-weight: 600;
+      color: var(--paddy);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-top: 4px;
+    }
+    .fact .value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    /* ═══════════════════════════════════════
+       SEASON CARDS
+    ═══════════════════════════════════════ */
+    .season-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .season-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      padding: 16px;
+      box-shadow: 0 2px 7px var(--shadow);
+    }
     .season-card.kharif { border-color: #1976d2; }
     .season-card.rabi   { border-color: var(--gold); }
     .season-card.summer { border-color: #e53935; }
-    .season-card .season-label { font-family: 'Poppins', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .season-card .season-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
     .season-card.kharif .season-label { color: #1976d2; }
     .season-card.rabi   .season-label { color: #f9a825; }
     .season-card.summer .season-label { color: #e53935; }
@@ -238,15 +530,94 @@
     .season-card .season-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--text-light); margin-bottom: 8px; }
     .season-card .season-detail { font-family: 'Tiro Kannada', serif; font-size: 0.84rem; color: var(--text-mid); line-height: 1.65; }
 
-    /* ══ FAQ ══ */
-    .faq-item { background: #fff; border-radius: 10px; border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 10px; box-shadow: 0 2px 5px var(--shadow); }
+    /* ═══════════════════════════════════════
+       STEP CARDS
+    ═══════════════════════════════════════ */
+    .step-cards {
+      display: grid;
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .step-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      box-shadow: 0 2px 7px var(--shadow);
+    }
+    .step-num {
+      background: var(--green-dark);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      min-width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .step-content { flex: 1; }
+    .step-content .step-title-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
+    .step-content .step-title-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--paddy); font-weight: 600; margin-bottom: 6px; }
+    .step-content .step-detail-kn { font-family: 'Tiro Kannada', serif; font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
+    .step-content .step-detail-en { font-family: 'Merriweather', serif; font-size: 0.76rem; color: #888; font-style: italic; }
+
+    /* ═══════════════════════════════════════
+       INFO GRID
+    ═══════════════════════════════════════ */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .info-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      box-shadow: 0 2px 7px var(--shadow);
+    }
+    .info-card .icon { font-size: 1.4rem; margin-bottom: 7px; }
+    .info-card .kn { font-family: 'Noto Serif Kannada', serif; font-size: 0.92rem; font-weight: 700; color: var(--green-dark); margin-bottom: 3px; }
+    .info-card .en { font-family: 'Poppins', sans-serif; font-size: 0.7rem; color: var(--text-light); margin-bottom: 6px; font-weight: 600; }
+    .info-card .detail { font-family: 'Tiro Kannada', serif; font-size: 0.84rem; color: var(--text-mid); line-height: 1.65; }
+    .info-card .detail-en { font-family: 'Merriweather', serif; font-size: 0.72rem; color: #999; font-style: italic; margin-top: 3px; }
+
+    /* ═══════════════════════════════════════
+       FAQ
+    ═══════════════════════════════════════ */
+    .faq-item {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px var(--shadow);
+    }
     .faq-item .q-kn { font-family: 'Noto Serif Kannada', serif; font-size: 1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 2px; }
     .faq-item .q-en { font-family: 'Poppins', sans-serif; font-size: 0.72rem; color: var(--paddy); font-weight: 600; margin-bottom: 8px; }
     .faq-item .a-kn { font-family: 'Tiro Kannada', serif; font-size: 0.92rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 4px; }
     .faq-item .a-en { font-family: 'Merriweather', serif; font-size: 0.76rem; color: #999; font-style: italic; }
 
-    /* ══ CTA ══ */
-    .cta-block { background: linear-gradient(135deg, var(--green-dark), #1b5e20); border-radius: 14px; padding: 32px 24px; text-align: center; color: #fff; margin-top: 36px; }
+    /* ═══════════════════════════════════════
+       CTA BLOCK
+    ═══════════════════════════════════════ */
+    .cta-block {
+      background: linear-gradient(135deg, var(--green-dark), #1b5e20);
+      border-radius: 14px;
+      padding: 32px 24px;
+      text-align: center;
+      color: #fff;
+      margin-top: 36px;
+    }
     .cta-block .emoji { font-size: 2.2rem; margin-bottom: 10px; }
     .cta-block h3 { font-family: 'Noto Serif Kannada', serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: #fff; line-height: 1.5; }
     .cta-block h3 .en { font-family: 'Poppins', sans-serif; font-size: 0.9rem; font-weight: 500; color: #a5d6a7; display: block; margin-top: 4px; }
@@ -254,113 +625,411 @@
     .cta-block a { display: inline-block; background: var(--gold); color: var(--green-dark); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem; padding: 11px 26px; border-radius: 30px; text-decoration: none; transition: opacity 0.2s; }
     .cta-block a:hover { opacity: 0.88; }
 
-    strong { color: var(--green-dark); }
-    em { color: var(--paddy); font-style: normal; font-weight: 600; }
+    /* ═══════════════════════════════════════
+       RELEVANT ARTICLES
+    ═══════════════════════════════════════ */
+    .relevant-articles {
+      margin: 36px 0 0;
+    }
+    .relevant-articles .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+    }
+    .relevant-articles .section-title .title-icon {
+      background: var(--green-dark);
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+    }
+    .relevant-articles .section-title a {
+      margin-left: auto;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--green-mid);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .relevant-articles .section-title a:hover { color: var(--green-dark); }
 
-    @media (max-width: 600px) {
-      .hero { padding: 28px 16px 24px; }
-      .quick-facts { grid-template-columns: repeat(2, 1fr); }
-      .article-table { font-size: 0.72rem; }
-      .article-table thead th, .article-table tbody td { padding: 8px 9px; }
-      .season-grid { grid-template-columns: 1fr; }
+    .articles-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .article-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e4ede4;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      text-decoration: none;
+      transition: box-shadow 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .article-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--rc-accent, var(--green-mid));
+      border-radius: 4px 0 0 4px;
+    }
+    .article-card:hover {
+      box-shadow: 0 5px 20px var(--shadow-strong);
+      transform: translateY(-2px);
+    }
+
+    .card-thumb {
+      width: 46px; height: 46px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .card-body { flex: 1; min-width: 0; }
+    .card-tag {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-light);
+      margin-bottom: 3px;
+    }
+    .card-title {
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-arrow {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      opacity: 0.45;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════
+       MOBILE BOTTOM NAV
+    ═══════════════════════════════════════ */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-top: 1px solid #e0e0e0;
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      z-index: 100;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+    }
+    .mobile-nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: space-around;
+      padding: 0; margin: 0;
+    }
+    .mobile-nav li a {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6rem;
+      color: #888;
+      text-decoration: none;
+      padding: 2px 8px;
+    }
+    .mobile-nav li a .nav-icon { font-size: 1.2rem; }
+    .mobile-nav li a.active { color: var(--green-dark); }
+    @media (max-width: 640px) {
+      .mobile-nav { display: block; }
+      .article-wrapper { padding-bottom: 90px; }
+    }
+
+    /* ═══════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════ */
+    .site-footer {
+      background: #0f2d18;
+      color: #a5d6a7;
+      font-family: 'Poppins', sans-serif;
+      margin-top: 0;
+    }
+    .footer-main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 44px 20px 32px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 36px;
+    }
+    @media (max-width: 640px) {
+      .footer-main { grid-template-columns: 1fr; gap: 28px; padding: 32px 16px 24px; }
+    }
+
+    .footer-brand .logo-big {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .footer-brand .logo-big .mitra { color: var(--gold); }
+    .footer-brand p {
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #78909c;
+      margin-bottom: 16px;
+    }
+    .footer-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .footer-badge {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #a5d6a7;
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .footer-col h4 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #fff;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .footer-col ul {
+      list-style: none;
+      padding: 0; margin: 0;
+    }
+    .footer-col ul li {
+      margin-bottom: 9px;
+    }
+    .footer-col ul li a {
+      color: #78909c;
+      text-decoration: none;
+      font-size: 0.78rem;
+      transition: color 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .footer-col ul li a:hover { color: var(--gold); }
+
+    .footer-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      margin: 0;
+    }
+
+    .footer-bottom {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .footer-copyright {
+      font-size: 0.72rem;
+      color: #546e7a;
+    }
+    .footer-copyright a { color: var(--gold); text-decoration: none; }
+    .footer-copyright a:hover { text-decoration: underline; }
+    .footer-legal-links {
+      display: flex;
+      gap: 16px;
+    }
+    .footer-legal-links a {
+      font-size: 0.7rem;
+      color: #546e7a;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-legal-links a:hover { color: #a5d6a7; }
+    .footer-made {
+      font-size: 0.68rem;
+      color: #37474f;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .footer-made .heart { color: var(--red-disease); }
+
+    @media (max-width: 500px) {
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+      .footer-legal-links { flex-wrap: wrap; gap: 10px; }
     }
   </style>
 </head>
 <body class="lang-kn">
 
-<!-- SITE HEADER -->
+<!-- ════════════════════════════════════════
+     TOP ANNOUNCEMENT BAR
+════════════════════════════════════════ -->
+<div class="top-announcement">
+  <span class="kn-only">🌾 ಕೃಷಿ ಸಹಾಯವಾಣಿ:+91 9870951001 — ಉಚಿತ ಕೃಷಿ ಸಲಹೆ <a href="https://krashimitra.in/chat?tab=chat">AI ಸಹಾಯ ಕೇಳಿ →</a></span>
+  <span class="en-only">🌾 Kisan Call Center:+91 9870951001 — Free Crop Advice <a href="https://krashimitra.in/chat?tab=chat">Ask AI →</a></span>
+</div>
+
+<!-- ════════════════════════════════════════
+     SITE HEADER
+════════════════════════════════════════ -->
 <header class="site-header">
-  <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
-  <a href="index.html" class="logo-block">
-    <div>
-      <div class="logo-text"><img src="../assets/krashimitra_logo.png" alt="" style="height:1.1em;width:1.1em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;display:inline-block;"> कृषि<span>मित्र</span></div>
-      <span class="tagline-sub">किसान का डिजिटल साथी</span>
-    </div>
+  <a href="https://krashimitra.in" class="logo">
+    <div class="brand"><img src="../assets/krashimitra_logo.png" alt="" style="height:1.1em;width:1.1em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;display:inline-block;"> ಕೃಷಿ <span class="mitra">ಮಿತ್ರ</span></div>
+    <div class="tagline">ರೈತನ ಡಿಜಿಟಲ್ ಜೊತೆಗಾರ</div>
   </a>
-  <nav class="nav-links">
-    <a href="index.html" class="home-link">🏠 मुख्य</a>
-    <a href="index.html#weather">मौसम</a>
-    <a href="index.html#mandi">मंडी</a>
-    <a href="index.html#articles">लेख</a>
-    <a href="#">सहायता</a>
+
+  <nav>
+    <a href="https://krashimitra.in">🏠 ಮುಖ್ಯ</a>
+    <a href="https://krashimitra.in/chat?tab=weather">🌤️ ಹವಾಮಾನ</a>
+    <a href="https://krashimitra.in/chat?tab=mandi">💰 ಮಾರುಕಟ್ಟೆ</a>
+    <a href="https://krashimitra.in/articles/" class="active">📰 ಲೇಖನಗಳು</a>
+    <a href="https://krashimitra.in/chat?tab=chat">💬 ಸಹಾಯ</a>
   </nav>
-  <div class="right-group">
+
+  <div class="header-right">
     <div class="lang-pill">
       <button class="active" id="btn-kn" onclick="setLang('kn')">ಕನ್ನಡ</button>
       <button id="btn-en" onclick="setLang('en')">EN</button>
     </div>
-    <span class="user-icon">👤</span>
+    <div class="user-icon">👤</div>
   </div>
 </header>
 
-<!-- SIDEBAR SLIDE-OUT DRAWER MENU -->
-<div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
-  <div class="sidebar-drawer" onclick="event.stopPropagation()">
-    <div class="sidebar-drawer-header">
-      <span class="sidebar-drawer-title">मेनु</span>
-      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()">✕</button>
-    </div>
-    <div class="sidebar-drawer-links">
-      <a href="../index.html" class="sidebar-drawer-link">🏠 मुख्य</a>
-      <a href="../weather.html" class="sidebar-drawer-link">🌤️ मौसम</a>
-      <a href="../mandi.html" class="sidebar-drawer-link">🏪 मंडी</a>
-      <a href="index.html" class="sidebar-drawer-link active">📰 लेख</a>
-      <a href="../chat.html" class="sidebar-drawer-link">💬 AI सहायता</a>
-      <a href="../shop.html" class="sidebar-drawer-link">🛒 दुकान</a>
-      <a href="../khoj.html" class="sidebar-drawer-link">🔍 खोज</a>
-      <a href="../sarkari_yojana.html" class="sidebar-drawer-link">🏛️ सरकारी योजना</a>
-    </div>
-  </div>
-</div>
-
-<!-- BREADCRUMB -->
+<!-- Breadcrumb -->
 <div class="breadcrumb">
-  <a href="index.html">मुख्य</a>
-  <span>›</span>
-  <a href="index.html#articles">ಕೃಷಿ ಮಾಹಿತಿ</a>
-  <span>›</span>
-  ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ — Karnataka
+  <a href="https://krashimitra.in">🏠 ಮುಖ್ಯ</a>
+  <span class="sep">›</span>
+  <a href="https://krashimitra.in/articles/">📰 ಲೇಖನಗಳು</a>
+  <span class="sep">›</span>
+  <a href="#">ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ</a>
+  <span class="sep">›</span>
+  <span class="current">ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ</span>
 </div>
 
-<div class="article-wrapper">
+<!-- ════════════════════════════════════════
+     HERO
+════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badges">
+      <span class="badge badge-crop">🌾 ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ</span>
+      <span class="badge badge-season">🗓️ ಖರೀಫ್/ರಬಿ</span>
+      <span class="badge badge-location">📍 ಕರ್ನಾಟಕ</span>
+    </div>
 
-  <!-- HERO -->
-  <div class="hero">
-    <span class="category-tag">🌾 ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ · Crop Guide</span>
     <h1>
       ಕರ್ನಾಟಕದಲ್ಲಿ ಭತ್ತದ ಬೆಳೆ — ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ
       <span class="en">Complete Paddy Farming Guide for Karnataka Farmers</span>
     </h1>
-    <p class="meta">KrashiMitra.in &nbsp;|&nbsp; ಕನ್ನಡ + English &nbsp;|&nbsp; ಕರ್ನಾಟಕ ರೈತರಿಗಾಗಿ</p>
+
+    <p class="hero-excerpt">
+      <span class="kn-only">ಸರಿಯಾದ ತಳಿ ಆಯ್ಕೆ, ಸಸಿ ಮಡಿ ತಯಾರಿ, ಸಮರ್ಪಕ ನೀರು ನಿರ್ವಹಣೆ ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣದ ಮೂಲಕ ಭತ್ತದಲ್ಲಿ ಗರಿಷ್ಠ ಇಳುವರಿ ಪಡೆಯುವ ಸರಳ ವಿಧಾನಗಳು.</span>
+      <span class="en-only">Complete handbook on variety selection, nursery management, water saving practices, and pest control for maximum paddy yield in Karnataka.</span>
+    </p>
+
+    <div class="hero-meta">
+      <span>✍️ KrashiMitra.in</span>
+      <span class="read-time">⏱️ 8 Min Read</span>
+      <span>📅 May 2026 Updated</span>
+      <div class="hero-share">
+        <button class="share-btn" onclick="if(navigator.share){navigator.share({title:'ಕರ್ನಾಟಕದಲ್ಲಿ ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ',url:window.location.href})}else{navigator.clipboard.writeText(window.location.href);alert('Link copied!')}">
+          📤 Share
+        </button>
+        <button class="share-btn" onclick="window.print()">🖨️ Print</button>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ARTICLE CONTENT
+════════════════════════════════════════ -->
+<div class="article-wrapper">
 
   <!-- FEATURED IMAGE -->
   <figure class="featured-image">
-    <div class="img-placeholder tall">
-      <div class="icon">🌾</div>
-      <p>Featured Image — ಭತ್ತದ ಗದ್ದೆ ಫೋಟೋ ಇಲ್ಲಿ ಹಾಕಿ</p>
-      <p class="hint">Replace src · 1200×630px recommended</p>
+    <div class="img-placeholder">
+      <span class="icon">🌾</span>
+      <p>Paddy Field in Karnataka</p>
     </div>
-    <!-- UNCOMMENT TO USE:
-    <img src="YOUR_IMAGE_URL_HERE" alt="ಕರ್ನಾಟಕ ಭತ್ತದ ಗದ್ದೆ Karnataka paddy field" width="1200" height="630" loading="eager" />
-    -->
     <figcaption>ಕರ್ನಾಟಕದ ಭತ್ತದ ಗದ್ದೆ — ಉಡುಪಿ, ದಕ್ಷಿಣ ಕನ್ನಡ, ಶಿವಮೊಗ್ಗ ಮತ್ತು ಉತ್ತರ ಕರ್ನಾಟಕ ಪ್ರಮುಖ ಭತ್ತ ಬೆಳೆಯುವ ಪ್ರದೇಶಗಳು</figcaption>
   </figure>
 
   <!-- QUICK FACTS -->
   <div class="quick-facts">
-    <div class="fact"><div class="icon">🌡️</div><div class="label">Temperature</div><div class="value">22°C – 32°C</div></div>
-    <div class="fact"><div class="icon">💧</div><div class="label">ನೀರಾವರಿ / Water</div><div class="value">1200–2000 mm</div></div>
-    <div class="fact"><div class="icon">🌱</div><div class="label">ನರ್ಸರಿ / Nursery</div><div class="value">20–30 ದಿನ</div></div>
-    <div class="fact"><div class="icon">🌾</div><div class="label">ಇಳುವರಿ / Yield</div><div class="value">20–30 ಕ್ವಿ/ಎಕರೆ</div></div>
-    <div class="fact"><div class="icon">📅</div><div class="label">ಮುಖ್ಯ ಋತು</div><div class="value">ಖರೀಫ್ (ಕನ್ನಡ)</div></div>
-    <div class="fact"><div class="icon">⏳</div><div class="label">ಅವಧಿ / Duration</div><div class="value">90–130 ದಿನ</div></div>
+    <div class="fact">
+      <div class="icon">🌡️</div>
+      <div class="label">Temperature</div>
+      <div class="value">22°C – 32°C</div>
+    </div>
+    <div class="fact">
+      <div class="icon">💧</div>
+      <div class="label">Irrigation</div>
+      <div class="value">1200–2000 mm</div>
+    </div>
+    <div class="fact">
+      <div class="icon">🌱</div>
+      <div class="label">Nursery</div>
+      <div class="value">20–30 Days</div>
+    </div>
+    <div class="fact">
+      <div class="icon">🌾</div>
+      <div class="label">Yield</div>
+      <div class="value">20-30 Q/Acre</div>
+    </div>
+    <div class="fact">
+      <div class="icon">📅</div>
+      <div class="label">Season</div>
+      <div class="value">Kharif / Rabi</div>
+    </div>
+    <div class="fact">
+      <div class="icon">⏳</div>
+      <div class="label">Duration</div>
+      <div class="value">90–130 Days</div>
+    </div>
   </div>
 
   <article>
 
     <!-- INTRO -->
-    <section>
+    <section class="article-section">
       <div class="section-heading">
         <h2>ಪರಿಚಯ <span class="en">Introduction</span></h2>
       </div>
@@ -373,7 +1042,7 @@
     </section>
 
     <!-- SEASONS -->
-    <section>
+    <section class="article-section">
       <div class="section-heading">
         <h2>ಭತ್ತ ಬೆಳೆಯುವ ಋತುಗಳು <span class="en">Paddy Cropping Seasons</span></h2>
       </div>
@@ -396,13 +1065,13 @@
           <div class="season-label">☀️ ಬೇಸಿಗೆ — ಮುಂಗಾರು ಪೂರ್ವ</div>
           <div class="season-kn">ಬೇಸಿಗೆ ಭತ್ತ</div>
           <div class="season-en">Summer Season</div>
-          <div class="season-detail">ಮಡಿ: ಜನವರಿ–ಫೆಬ್ರವರಿ | ನಾಟಿ: ფೆಬ್ರವರಿ–ಮಾರ್ಚ್ | ಕಟಾವು: ಮೇ–ಜೂನ್<br/><span style="font-family:'Poppins',sans-serif;font-size:0.72rem;color:var(--text-light);">Nursery: Jan–Feb | Transplant: Feb–Mar | Harvest: May–Jun</span></div>
+          <div class="season-detail">ಮಡಿ: ಜನವರಿ–ಫೆಬ್ರವರಿ | ನಾಟಿ: ಫೆಬ್ರವರಿ–ಮಾರ್ಚ್ | ಕಟಾವು: ಮೇ–ಜೂನ್<br/><span style="font-family:'Poppins',sans-serif;font-size:0.72rem;color:var(--text-light);">Nursery: Jan–Feb | Transplant: Feb–Mar | Harvest: May–Jun</span></div>
         </div>
       </div>
     </section>
 
     <!-- STEP-BY-STEP CULTIVATION -->
-    <section>
+    <section class="article-section">
       <div class="section-heading">
         <h2>ಭತ್ತ ಬೆಳೆಯುವ ಹಂತಗಳು <span class="en">Step-by-Step Paddy Cultivation</span></h2>
       </div>
@@ -432,7 +1101,7 @@
           <div class="step-content">
             <div class="step-title-kn">ಗೊಬ್ಬರ ಮತ್ತು ಪೋಷಕಾಂಶಗಳ ನಿರ್ವಹಣೆ</div>
             <div class="step-title-en">Fertilizer and Nutrient Management</div>
-            <div class="step-detail-kn">ಕೊನೆಯ ಉಳುಮೆಯಲ್ಲಿ 4-5 ಟನ್ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ ಹಾಕಿ. ಪ್ರತಿ ಎಕರೆಗೆ 40 ಕೆಜಿ ಸಾರಜನಕ (Nitrogen), 20 ಕೆಜಿ ರಂಜಕ (Phosphorus) ಮತ್ತು 20 ಕೆಜಿ ಪೊಟ್ಯಾಶ್ (Potassium) ಗೊಬ್ಬರ kneeಡಿ. ಸಾರಜನಕವನ್ನು ಮೂರು ಹಂತಗಳಲ್ಲಿ ವಿಂಗಡಿಸಿ ನೀಡುವುದು ಉತ್ತಮ.</div>
+            <div class="step-detail-kn">ಕೊನೆಯ ಉಳುಮೆಯಲ್ಲಿ 4-5 ಟನ್ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ ಹಾಕಿ. ಪ್ರತಿ ಎಕರೆಗೆ 40 ಕೆಜಿ ಸಾರಜನಕ (Nitrogen), 20 ಕೆಜಿ ರಂಜಕ (Phosphorus) ಮತ್ತು 20 ಕೆಜಿ పొటాష్ (Potassium) ಗೊಬ್ಬರ ನೀಡಿ. ಸಾರಜನಕವನ್ನು ಮೂರು ಹಂತಗಳಲ್ಲಿ ವಿಂಗಡಿಸಿ ನೀಡುವುದು ಉತ್ತಮ.</div>
             <div class="step-detail-en">Apply 4-5 tons of farmyard manure during final ploughing. Give 40 kg Nitrogen, 20 kg Phosphorus, and 20 kg Potash per acre. Apply Nitrogen in three split doses for better absorption.</div>
           </div>
         </div>
@@ -450,7 +1119,7 @@
     </section>
 
     <!-- WEEDS AND DISEASES -->
-    <section>
+    <section class="article-section">
       <div class="section-heading">
         <h2>ರೋಗಗಳು ಮತ್ತು ಕೀಟ ನಿಯಂತ್ರಣ <span class="en">Diseases & Pest Management</span></h2>
       </div>
@@ -489,7 +1158,7 @@
     </section>
 
     <!-- ECONOMICS -->
-    <section>
+    <section class="article-section">
       <div class="section-heading">
         <h2>ಖರ್ಚು ಮತ್ತು ಆದಾಯ ಅಂದಾಜು <span class="en">Cost and Income Analysis</span></h2>
       </div>
@@ -519,7 +1188,7 @@
     </section>
 
     <!-- FAQ -->
-    <section>
+    <section class="article-section">
       <div class="section-heading">
         <h2>ಪದೇ ಪದೇ ಕೇಳುವ ಪ್ರಶ್ನೆಗಳು <span class="en">Frequently Asked Questions</span></h2>
       </div>
@@ -558,48 +1227,116 @@
     </div>
 
     <!-- RELATED ARTICLES -->
-    <section>
+    <section class="article-section">
       <div class="section-heading">
         <h2>ಸಂಬಂಧಿತ ಲೇಖನಗಳು <span class="en">Related Articles</span></h2>
       </div>
-      <div class="related-grid">
-        <a class="related-card" href="karnataka-monsoon.html" style="--rc-accent:#0277bd">
-          <div class="related-thumb" style="background:#e1f5fe">🌧️</div>
-          <div class="related-text">
-            <div class="related-tag">ಹವಾಮಾನ / Monsoon</div>
-            <div class="related-title">ಕರ್ನಾಟಕ ಮುಂಗಾರು ಮಳೆ ಮುನ್ಸೂಚನೆ ಮತ್ತು ಕೃಷಿ ಸಲಹೆಗಳು</div>
+      <div class="articles-grid">
+        <a class="article-card" href="karnataka-monsoon.html" style="--rc-accent:#0277bd">
+          <div class="card-thumb">🌧️</div>
+          <div class="card-body">
+            <div class="card-tag">ಹವಾಮಾನ · Monsoon</div>
+            <div class="card-title">ಕರ್ನಾಟಕ ಮುಂಗಾರು ಮಳೆ ಮುನ್ಸೂಚನೆ ಮತ್ತು ಕೃಷಿ ಸಲಹೆಗಳು</div>
           </div>
-          <span class="related-arrow">›</span>
+          <span class="card-arrow">›</span>
         </a>
-        <a class="related-card" href="chilli-guide-karnataka.html" style="--rc-accent:#e53935">
-          <div class="related-thumb" style="background:#ffebee">🌶️</div>
-          <div class="related-text">
-            <div class="related-tag">ಮೆಣಸಿನಕಾಯಿ / Chilli</div>
-            <div class="related-title">ಬ್ಯಾಡಗಿ ಮೆಣಸಿನಕಾಯಿ ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ</div>
+        <a class="article-card" href="chilli-guide-karnataka.html" style="--rc-accent:#e53935">
+          <div class="card-thumb">🌶️</div>
+          <div class="card-body">
+            <div class="card-tag">ಮೆಣಸಿನಕಾಯಿ · Chilli</div>
+            <div class="card-title">ಬ್ಯಾಡಗಿ ಮೆಣಸಿನಕಾಯಿ ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ</div>
           </div>
-          <span class="related-arrow">›</span>
+          <span class="card-arrow">›</span>
         </a>
-        <a class="related-card" href="jaivik-khad.html" style="--rc-accent:#2e7d32">
-          <div class="related-thumb" style="background:#e8f5e9">♻️</div>
-          <div class="related-text">
-            <div class="related-tag">ಗೊಬ್ಬರ / Compost</div>
-            <div class="related-title">ಮನೆಯಲ್ಲೇ ಸಾವಯವ ಮತ್ತು ಜೈವಿಕ ಗೊಬ್ಬರ ತಯಾರಿಸುವುದು</div>
+        <a class="article-card" href="jaivik-khad.html" style="--rc-accent:#2e7d32">
+          <div class="card-thumb">♻️</div>
+          <div class="card-body">
+            <div class="card-tag">ಗೊಬ್ಬರ · Compost</div>
+            <div class="card-title">ಮನೆಯಲ್ಲೇ ಸಾವಯವ ಮತ್ತು ಜೈವಿಕ ಗೊಬ್ಬರ ತಯಾರಿಸುವುದು</div>
           </div>
-          <span class="related-arrow">›</span>
-        </a>
-        <a class="related-card" href="urea-guide-up.html" style="--rc-accent:#f9a825">
-          <div class="related-thumb" style="background:#fff8e1">🧪</div>
-          <div class="related-text">
-            <div class="related-tag">ಯೂರಿಯಾ / Fertilizers</div>
-            <div class="related-title">ಯೂರಿಯಾ ಮತ್ತು ಡಿಎಪಿ ಗೊಬ್ಬರ ಬಳಸುವ ಸರಿಯಾದ ಕ್ರಮ</div>
-          </div>
-          <span class="related-arrow">›</span>
+          <span class="card-arrow">›</span>
         </a>
       </div>
     </section>
 
   </article>
 </div>
+
+<!-- ════════════════════════════════════════
+     MOBILE BOTTOM NAV
+════════════════════════════════════════ -->
+<nav class="mobile-nav">
+  <ul>
+    <li><a href="https://krashimitra.in"><span class="nav-icon">🏠</span>ಮುಖ್ಯ</a></li>
+    <li><a href="https://krashimitra.in/chat?tab=chat"><span class="nav-icon">💬</span>Chat</a></li>
+    <li><a href="https://krashimitra.in/chat?tab=weather"><span class="nav-icon">🌤️</span>ಹವಾಮಾನ</a></li>
+    <li><a href="https://krashimitra.in/chat?tab=mandi"><span class="nav-icon">💰</span>ಮಂಡಿ</a></li>
+    <li><a href="https://krashimitra.in/articles/" class="active"><span class="nav-icon">📘</span>ಲೇಖನಗಳು</a></li>
+  </ul>
+</nav>
+
+<!-- ════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-main">
+    <div class="footer-brand">
+      <div class="logo-big">🌾 ಕೃಷಿ <span class="mitra">ಮಿತ್ರ</span></div>
+      <p>
+        KrashiMitra.in ಭಾರತದ ರೈತರಿಗಾಗಿ ಕೃಷಿ ಡಿಜಿಟಲ್ ಮಾರ್ಗದರ್ಶಿ. ಬೆಳೆ ರೋಗ ಮಾಹಿತಿ, ಮಾರುಕಟ್ಟೆ ದರಗಳು, ಮತ್ತು ಹವಾಮಾನ ವರದಿಗಳು — ಕನ್ನಡ, ಹಿಂದಿ ಮತ್ತು ಇಂಗ್ಲೀಷ್‌ನಲ್ಲಿ.
+      </p>
+      <div class="footer-badges">
+        <span class="footer-badge">🌾 50+ Crops</span>
+        <span class="footer-badge">📍 500+ Districts</span>
+        <span class="footer-badge">🤖 AI Assistant</span>
+        <span class="footer-badge">🇮🇳 Made in India</span>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="https://krashimitra.in">🏠 Home</a></li>
+        <li><a href="https://krashimitra.in/articles/">📰 Articles</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=disease">🌾 Crop Disease</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=mandi">💰 Mandi Prices</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=weather">🌤️ Weather</a></li>
+        <li><a href="https://krashimitra.in/chat?tab=chat">💬 AI Support</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Information</h4>
+      <ul>
+        <li><a href="https://krashimitra.in/about">ℹ️ About Us</a></li>
+        <li><a href="https://krashimitra.in/contact">📞 Contact Us</a></li>
+        <li><a href="https://krashimitra.in/privacy">🔒 Privacy Policy</a></li>
+        <li><a href="https://krashimitra.in/terms">📜 Terms of Use</a></li>
+        <li><a href="https://krashimitra.in/disclaimer">⚠️ Disclaimer</a></li>
+        <li><a href="https://krashimitra.in/sitemap.xml">🗺️ Sitemap</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="footer-divider" />
+
+  <div class="footer-bottom">
+    <div class="footer-copyright">
+      &copy; 2026 <a href="https://krashimitra.in">KrashiMitra.in</a> — All rights reserved.
+    </div>
+
+    <div class="footer-legal-links">
+      <a href="https://krashimitra.in/privacy">Privacy</a>
+      <a href="https://krashimitra.in/terms">Terms</a>
+      <a href="https://krashimitra.in/disclaimer">Disclaimer</a>
+      <a href="https://krashimitra.in/sitemap.xml">Sitemap</a>
+    </div>
+
+    <div class="footer-made">
+      <span class="heart">♥</span> Built for Indian Farmers
+    </div>
+  </div>
+</footer>
 
 <script>
   /* Reading progress */
@@ -608,7 +1345,7 @@
     const scrollTop = doc.scrollTop || document.body.scrollTop;
     const scrollHeight = doc.scrollHeight - doc.clientHeight;
     const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-    document.getElementById('reading-progress').style.width = pct + '%';
+    document.getElementById('reading-progress')?.style.setProperty('width', pct + '%');
   });
 
   /* Language Switcher */
@@ -617,19 +1354,7 @@
     document.getElementById('btn-kn').classList.toggle('active', lang === 'kn');
     document.getElementById('btn-en').classList.toggle('active', lang === 'en');
   }
-
-  /* Avatar button click */
-  function avatarBtnClick() {
-    const token = localStorage.getItem("krishi_token");
-    window.location.href = token ? "../chat.html?tab=profile" : "../chat.html?tab=login";
-  }
-
-  /* Sidebar slide-out drawer */
-  function toggleSidebarMenu() {
-    document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
-  }
 </script>
-
 
 <!-- ── Floating AI Chat Button ── -->
 <style>
