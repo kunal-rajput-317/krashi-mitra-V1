@@ -34,9 +34,9 @@
   <meta name="HandheldFriendly" content="True">
 
   <!-- Language Alternates -->
-  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/">
-  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/articles/">
-  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/articles/">
+  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/articles/?lang=hi">
+  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/articles/?lang=en">
+  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/articles/?lang=kn">
   <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/articles/">
 
   <!-- Geo Targeting -->
@@ -2001,7 +2001,11 @@ const TRANSLATIONS = {
 /* ═══════════════════════════════════════════
    ACTIVE LANGUAGE  —  Hindi is always default
 ═══════════════════════════════════════════ */
-let currentLang = localStorage.getItem('km_lang') || 'hi';
+const urlParams = new URLSearchParams(window.location.search);
+let currentLang = urlParams.get('lang') || localStorage.getItem('km_lang') || 'hi';
+if (urlParams.get('lang')) {
+  localStorage.setItem('km_lang', currentLang);
+}
 const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
 
 function toggleLangPicker(e) {

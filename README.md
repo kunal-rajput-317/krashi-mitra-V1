@@ -7,7 +7,7 @@ An Agriculture based website ...
 
 ## IMPORTANT
 
-This is an EXISTING agriculture AI project.
+This is an agricultural project.
 
 DO NOT:
 

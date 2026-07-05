@@ -233,6 +233,8 @@ async def root():
 async def health():
     return {"status": "ok"}
 
+
+
 # Add this AFTER all app.include_router() lines, at the bottom
 app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")
 

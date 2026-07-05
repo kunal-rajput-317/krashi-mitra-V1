@@ -35,6 +35,7 @@
   <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
   <link rel="apple-touch-icon" href="https://krashimitra.in/assets/krashimitra_logo.png">
   <meta name="theme-color" content="#1a3c2e">
+  <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -72,7 +73,7 @@
     krashimitra mandi, kisan mandi price, online mandi bhav india,
     fasal rate today, crop price india, commodity price india, apmc mandi rate,
     eNAM price, kisaan mandi app, mandi bhav app hindi, live krishi mandi
-  , mandi bhav aaj ka, aaj ka mandi rate, gehu ka rate aaj, pyaz ka bhav aaj, sarso ka rate, dhan ka bhav, anaj mandi bhav, sabji mandi rate, apni mandi ka bhav, mandi bhav app, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app" />
+  , mandi bhav aaj ka, aaj ka mandi rate, gehu ka rate aaj, pyaz ka bhav aaj, sarso ka rate, dhan ka bhav, anaj mandi bhav, sabji mandi rate, apni mandi ka bhav, mandi bhav app, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app, wholesale market rate, wheat wholesale rate, grain market trend, onion wholesale price today, bulk crop suppliers, krushi mandi, krishi mandi, karshi mandi" />
 
   <!-- ── Indexing, Canonical & Preconnect ── -->
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -83,9 +84,9 @@
   <link rel="dns-prefetch" href="https://krashimitra.in">
 
   <!-- ── Language Alternates ── -->
-  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html" />
-  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html" />
-  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html" />
+  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?lang=hi" />
+  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?lang=en" />
+  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?lang=kn" />
   <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html" />
 
   <!-- ── Geo / Location Targeting (pan-India) ── -->
@@ -219,6 +220,15 @@
           { "@type": "State", "name": "Telangana" },
           { "@type": "State", "name": "West Bengal" }
         ],
+        "creator": {
+          "@type": "Organization",
+          "name": "KrashiMitra",
+          "url": "https://krashimitra.in",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://krashimitra.in/assets/krashimitra_logo.png"
+          }
+        },
         "publisher": {
           "@type": "Organization",
           "name": "KrashiMitra",
@@ -227,7 +237,8 @@
             "@type": "ImageObject",
             "url": "https://krashimitra.in/assets/krashimitra_logo.png"
           }
-        }
+        },
+        "license": "https://creativecommons.org/licenses/by/4.0/"
       },
       {
         "@type": "FAQPage",
@@ -1833,6 +1844,11 @@
       <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
       <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
     </div>
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" style="display:block;margin-top:auto;padding:14px 16px;border-top:1px solid #eef2ef;background:#fff8e1;text-align:center;">
+      <p style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:8px;line-height:1.4;font-family:'Poppins',sans-serif;">📲 KrashiMitra ऐप को होम स्क्रीन पर जोड़ें</p>
+      <button id="pwa-install-btn" style="background:#2d6a4f;border:none;border-radius:18px;color:#fff;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;box-shadow:0 2px 6px rgba(45,106,79,0.25);">अभी इंस्टॉल करें</button>
+    </div>
     <div class="sidebar-drawer-footer">
       <div class="sidebar-drawer-lang-row">
         <span class="sidebar-drawer-lang-label">🌐 भाषा:</span>
@@ -2419,7 +2435,11 @@
   };
 
   const LANG_LABELS = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
-  let currentLang = localStorage.getItem('km_lang') || 'hi';
+  const urlParams = new URLSearchParams(window.location.search);
+  let currentLang = urlParams.get('lang') || localStorage.getItem('km_lang') || 'hi';
+  if (urlParams.get('lang')) {
+    localStorage.setItem('km_lang', currentLang);
+  }
 
   // ── Commodity & Variety name translations ──
   const COMMODITY_HI = {
@@ -4379,5 +4399,45 @@
   <span class="ai-fab-tip">AI सहायक</span>
 </a>
   <script src="fab-autohide.js"></script>
+
+  <!-- PWA Service Worker & Custom Install Prompt -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => console.log('Service Worker registered successfully. Scope:', reg.scope))
+          .catch((err) => console.error('Service Worker registration failed:', err));
+      });
+    }
+
+    // Custom Install Banner logic
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBanner = document.getElementById('pwa-install-banner');
+      if (installBanner) installBanner.style.display = 'block';
+    });
+
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        deferredPrompt = null;
+        const installBanner = document.getElementById('pwa-install-banner');
+        if (installBanner) installBanner.style.display = 'none';
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      const installBanner = document.getElementById('pwa-install-banner');
+      if (installBanner) installBanner.style.display = 'none';
+      deferredPrompt = null;
+      console.log('KrashiMitra was installed successfully!');
+    });
+  </script>
 </body>
 </html>

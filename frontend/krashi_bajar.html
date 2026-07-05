@@ -17,7 +17,7 @@
 
   <title>कृषि बाज़ार — किसान से सीधे फसल खरीदें व बेचें, कोई बिचौलिया नहीं | KrashiMitra</title>
   <meta name="description" content="कृषि बाज़ार — किसानों का सोशल मार्केटप्लेस। अपनी फसल की फोटो/वीडियो पोस्ट करें, सीधे खरीदार से जुड़ें, ऑफर पाएं — कोई बिचौलिया नहीं, कोई कमीशन नहीं। गेहूं, धान, प्याज, सोयाबीन, टमाटर व सभी फसलें। KrashiMitra पर मुफ़्त।" />
-  <meta name="keywords" content="फसल बेचें, फसल खरीदें, किसान बाज़ार, kisan bazar, sell crops online india, buy crops direct from farmer, farmer marketplace india, बिना बिचौलिया फसल बेचें, crop selling app, गेहूं बेचना, धान बेचना, प्याज बेचना, farm produce direct, krashi bazar, krishi bazar, fasal bechna hai, fasal kharidna hai, kisan se direct kharide, gehu bechna hai, pyaz bechna hai, dhan bechna hai, bina bichauliya fasal beche, kisan ka bazar, fasal ka sahi bhav, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app" />
+  <meta name="keywords" content="फसल बेचें, फसल खरीदें, किसान बाज़ार, kisan bazar, sell crops online india, buy crops direct from farmer, farmer marketplace india, बिना बिचौलिया फसल बेचें, crop selling app, गेहूं बेचना, धान बेचना, प्याज बेचना, farm produce direct, krashi bazar, krishi bazar, fasal bechna hai, fasal kharidna hai, kisan se direct kharide, gehu bechna hai, pyaz bechna hai, dhan bechna hai, bina bichauliya fasal beche, kisan ka bazar, fasal ka sahi bhav, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app, wholesale crop buyers, direct crop sourcing, exporters buy grains, potato wholesale market, onion wholesale suppliers, bulk grain buyer, fasal bechne ka app, online fasal kaise beche, aalu bechna hai, dhan bechne ka tarika, wholesaler ko fasal kaise beche, apni fasal online beche, krushi bazar, karshi bazar, krushi kendra" />
   <meta name="author" content="KrashiMitra" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="googlebot" content="index, follow" />
@@ -33,10 +33,15 @@
   <meta name="HandheldFriendly" content="True" />
   <meta name="MobileOptimized" content="320" />
   <link rel="canonical" href="https://krashimitra.in/krashi_bajar.html" />
+  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/krashi_bajar.html?lang=hi" />
+  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/krashi_bajar.html?lang=en" />
+  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/krashi_bajar.html?lang=kn" />
+  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/krashi_bajar.html" />
 
   <link rel="icon" type="image/png" sizes="32x32" href="https://krashimitra.in/assets/krashimitra_logo.png">
   <link rel="apple-touch-icon" href="https://krashimitra.in/assets/krashimitra_logo.png">
   <meta name="theme-color" content="#1a3c2e">
+  <link rel="manifest" href="manifest.json">
 
   <!-- ═══ OPEN GRAPH — Facebook, WhatsApp, LinkedIn ═══ -->
   <meta property="og:type" content="website" />
@@ -1300,6 +1305,11 @@
       <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
       <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
     </div>
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" style="display:block;margin-top:auto;padding:14px 16px;border-top:1px solid #eef2ef;background:#fff8e1;text-align:center;">
+      <p style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:8px;line-height:1.4;font-family:'Poppins',sans-serif;">📲 KrashiMitra ऐप को होम स्क्रीन पर जोड़ें</p>
+      <button id="pwa-install-btn" style="background:#2d6a4f;border:none;border-radius:18px;color:#fff;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;box-shadow:0 2px 6px rgba(45,106,79,0.25);">अभी इंस्टॉल करें</button>
+    </div>
     <div class="sidebar-drawer-footer">
       <div class="sidebar-drawer-lang-row">
         <span class="sidebar-drawer-lang-label">🌐 भाषा:</span>
@@ -1649,7 +1659,11 @@ const TRANSLATIONS = {
     bluetick_note:'ನೀಲಿ ಟಿಕ್ ✓ ಎಂದರೆ ಈ ಮಾರಾಟಗಾರರು KrashiMitra ನಿಂದ ಪರಿಶೀಲಿಸಲ್ಪಟ್ಟಿದ್ದಾರೆ. ಪರಿಶೀಲಿತ ಮಾರಾಟಗಾರರು ಹೆಚ್ಚು ವಿಶ್ವಾಸಾರ್ಹರು.',
   },
 };
-let currentLang = localStorage.getItem('km_lang') || 'hi';
+const urlParams = new URLSearchParams(window.location.search);
+let currentLang = urlParams.get('lang') || localStorage.getItem('km_lang') || 'hi';
+if (urlParams.get('lang')) {
+  localStorage.setItem('km_lang', currentLang);
+}
 const T = () => TRANSLATIONS[currentLang] || TRANSLATIONS.hi;
 
 function toggleLangPicker(e) { e.stopPropagation(); document.getElementById('lang-picker').classList.toggle('open'); }
@@ -3212,6 +3226,44 @@ async function submitPost() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 1600);
 })();
-</script>
+  <!-- PWA Service Worker & Custom Install Prompt -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => console.log('Service Worker registered successfully. Scope:', reg.scope))
+          .catch((err) => console.error('Service Worker registration failed:', err));
+      });
+    }
+
+    // Custom Install Banner logic
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBanner = document.getElementById('pwa-install-banner');
+      if (installBanner) installBanner.style.display = 'block';
+    });
+
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        deferredPrompt = null;
+        const installBanner = document.getElementById('pwa-install-banner');
+        if (installBanner) installBanner.style.display = 'none';
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      const installBanner = document.getElementById('pwa-install-banner');
+      if (installBanner) installBanner.style.display = 'none';
+      deferredPrompt = null;
+      console.log('KrashiMitra was installed successfully!');
+    });
+  </script>
 </body>
 </html>
