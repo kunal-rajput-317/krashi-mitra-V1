@@ -2755,7 +2755,9 @@ async function uploadModalAvatar(input) {
       // Also update top header avatar button
       const headerBtn = document.getElementById('header-avatar-btn');
       if (headerBtn) {
-        headerBtn.innerHTML = `<img src="${mediaSrc(data.data.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+        const avSrc = mediaSrc(data.data.avatar_url);
+        if (window.KrashiMitraRenderAvatar) window.KrashiMitraRenderAvatar(headerBtn, avSrc);
+        else headerBtn.innerHTML = `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
       }
       // Update local cached data
       if (bazarMe) {
@@ -3203,7 +3205,9 @@ async function submitPost() {
       const btn = document.getElementById('header-avatar-btn');
       btn.href = 'profile.html';
       if (me.avatar_url) {
-        btn.innerHTML = `<img src="${mediaSrc(me.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+        const avSrc = mediaSrc(me.avatar_url);
+        if (window.KrashiMitraRenderAvatar) window.KrashiMitraRenderAvatar(btn, avSrc);
+        else btn.innerHTML = `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
       }
     }
     // deep link ?user=ID (or ?user=me) → open that profile overlay.
