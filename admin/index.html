@@ -833,10 +833,10 @@ body {
   position: fixed;
   z-index: 10000;
   background: rgba(12, 16, 13, 0.95);
-  border: 1px solid var(--border-hl);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 10px 14px;
   border-radius: 8px;
-  color: var(--text);
+  color: #ffffff;
   font-size: 12px;
   font-family: var(--font-mono);
   pointer-events: none;
@@ -1956,10 +1956,62 @@ const loginErr = document.getElementById('login-error');
 const loginUser = document.getElementById('login-username');
 const loginPass = document.getElementById('login-password');
 
-loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-loginUser.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+loginPass.addEventListener('keydown', e => { if (e.key === 'Enter' && !isCooldownActive()) doLogin(); });
+loginUser.addEventListener('keydown', e => { if (e.key === 'Enter' && !isCooldownActive()) doLogin(); });
+
+let cooldownInterval = null;
+
+function isCooldownActive() {
+  const expiry = localStorage.getItem('km_admin_cooldown_expiry');
+  if (!expiry) return false;
+  return Date.now() < parseInt(expiry, 10);
+}
+
+function checkActiveCooldown() {
+  const expiry = localStorage.getItem('km_admin_cooldown_expiry');
+  if (expiry) {
+    const remaining = Math.ceil((parseInt(expiry, 10) - Date.now()) / 1000);
+    if (remaining > 0) {
+      startCooldown(remaining);
+    } else {
+      localStorage.removeItem('km_admin_cooldown_expiry');
+    }
+  }
+}
+
+function startCooldown(seconds) {
+  loginUser.disabled = true;
+  loginPass.disabled = true;
+  loginBtn.disabled = true;
+  
+  const expiryTime = Date.now() + (seconds * 1000);
+  localStorage.setItem('km_admin_cooldown_expiry', expiryTime);
+  
+  if (cooldownInterval) clearInterval(cooldownInterval);
+  
+  const updateTimer = () => {
+    const remaining = Math.ceil((expiryTime - Date.now()) / 1000);
+    if (remaining <= 0) {
+      clearInterval(cooldownInterval);
+      loginUser.disabled = false;
+      loginPass.disabled = false;
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = '🔐 Verify & Establish Session';
+      loginErr.classList.remove('visible');
+      localStorage.removeItem('km_admin_cooldown_expiry');
+    } else {
+      loginBtn.innerHTML = `⏳ Locked (retry in ${remaining}s)`;
+    }
+  };
+  
+  updateTimer();
+  cooldownInterval = setInterval(updateTimer, 1000);
+}
+
+checkActiveCooldown();
 
 function doLogin() {
+  if (isCooldownActive()) return;
   const user = loginUser.value.trim();
   const pass = loginPass.value;
   if (!user || !pass) return;
@@ -2017,10 +2069,13 @@ function doLogin() {
       loginErr.textContent = e.message;
       loginErr.classList.add('visible');
       loginPass.value = '';
+      startCooldown(30); // 30 seconds cooldown lock
     })
     .finally(() => {
-      loginBtn.disabled = false;
-      loginBtn.innerHTML = '🔐 Verify & Establish Session';
+      if (!isCooldownActive()) {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '🔐 Verify & Establish Session';
+      }
     });
 }
 
@@ -2029,8 +2084,10 @@ function logout() {
   AUTH_TOKEN = '';
   adminApp.classList.remove('visible');
   overlay.classList.remove('hidden');
-  loginPass.value = '';
-  loginErr.classList.remove('visible');
+  if (!isCooldownActive()) {
+    loginPass.value = '';
+    loginErr.classList.remove('visible');
+  }
 }
 
 // Initialize Dashboard with Default/Mock Data immediately on page load
@@ -2052,14 +2109,17 @@ initDashboard(defaultMockData);
 
 // Background silent login/connection checking logic
 (async () => {
+  let serverOnline = false;
   const saved = sessionStorage.getItem('km_admin_auth_new');
   if (saved) {
     try {
       const r = await fetch(`${API}/admin/status`, { headers: { Authorization: saved } });
+      serverOnline = true;
       if (r.ok) {
         const data = await r.json();
         AUTH_TOKEN = saved;
         initDashboard(data);
+        loadOverview();
         printTerminalLog('System: Connected using active session.');
         return;
       }
@@ -2070,11 +2130,13 @@ initDashboard(defaultMockData);
   const defaultToken = 'Basic ' + btoa('admin:krashi2025');
   try {
     const r = await fetch(`${API}/admin/status`, { headers: { Authorization: defaultToken } });
+    serverOnline = true;
     if (r.ok) {
       const data = await r.json();
       AUTH_TOKEN = defaultToken;
       sessionStorage.setItem('km_admin_auth_new', defaultToken);
       initDashboard(data);
+      loadOverview();
       printTerminalLog('System: Connected to backend using default credentials (admin/krashi2025).');
       return;
     }
@@ -2084,18 +2146,26 @@ initDashboard(defaultMockData);
   const emptyPassToken = 'Basic ' + btoa('admin:');
   try {
     const r = await fetch(`${API}/admin/status`, { headers: { Authorization: emptyPassToken } });
+    serverOnline = true;
     if (r.ok) {
       const data = await r.json();
       AUTH_TOKEN = emptyPassToken;
       sessionStorage.setItem('km_admin_auth_new', emptyPassToken);
       initDashboard(data);
+      loadOverview();
       printTerminalLog('System: Connected to backend using admin [no password].');
       return;
     }
   } catch(e) {}
 
-  console.warn('Backend server is offline or requires other authorization variables. Operating in Mock Control Mode.');
-  printTerminalLog('System Warning: Operating in Mock Control Mode (FastAPI server offline or unauthenticated).', 'log-entry-warn');
+  // If server is online but credentials failed, force logout to show login overlay!
+  if (serverOnline) {
+    logout();
+  } else {
+    console.warn('Backend server is offline. Operating in Mock Control Mode.');
+    printTerminalLog('System Warning: Operating in Mock Control Mode (FastAPI server offline).', 'log-entry-warn');
+    loadOverview();
+  }
 })();
 
 // Clock logic
