@@ -2301,7 +2301,9 @@
   // WEEKLY WEATHER — CHART + DAY CARDS
   // ══════════════════════════════════════
 
-  function buildTempChart(canvas, points, darkBg) {
+  // dayKey (optional, 'YYYY-MM-DD' IST) → single-day mode: x-axis is fixed to
+  // that day 12am→12am IST with 3-hour clock ticks (12am 3am … 9pm).
+  function buildTempChart(canvas, points, darkBg, dayKey) {
     if (!canvas || points.length < 2) return;
     const dpr  = window.devicePixelRatio || 1;
     const cssW = canvas.clientWidth || canvas.offsetWidth || 400;
@@ -2322,21 +2324,36 @@
     const minT  = Math.min(...temps) - 1.5;
     const maxT  = Math.max(...temps) + 1.5;
     const N     = points.length;
+    const IST_MS = (5 * 60 + 30) * 60000;
 
-    const toX = i  => PAD + (i / (N - 1)) * (cssW - PAD * 2);
+    // Real UTC timestamp (ms) for each reading
+    const times = points.map(p => {
+      const s = p.fetched_at_utc || '';
+      return new Date(s.endsWith('Z') ? s : s + 'Z').getTime();
+    });
+    let minMs = Math.min(...times);
+    let maxMs = Math.max(...times);
+    if (dayKey) {
+      // Fixed 24h domain: IST midnight of dayKey → next IST midnight
+      minMs = Date.parse(dayKey + 'T00:00:00Z') - IST_MS;
+      maxMs = minMs + 24 * 3600000;
+    }
+    const span  = maxMs - minMs;               // 0 if all timestamps identical
+    const useIndex = span <= 0;                // safety fallback
+
+    // x is proportional to REAL time — uneven sampling reads as uneven gaps,
+    // so the timeline is always monotonic left→right (no more 5pm→1pm→11pm).
+    const toX = (ms, i) => useIndex
+      ? PAD + (i / (N - 1)) * (cssW - PAD * 2)
+      : PAD + ((ms - minMs) / span) * (cssW - PAD * 2);
     const toY = t  => TOP + CH - ((t - minT) / (maxT - minT)) * CH;
 
-    const pts = points.map((p, i) => {
-      const d = new Date((p.fetched_at_utc || '').endsWith('Z') ? p.fetched_at_utc : (p.fetched_at_utc || '') + 'Z');
-      const ist = new Date(d.getTime() + (5 * 60 + 30) * 60000);
-      const h   = ist.getUTCHours();
-      return {
-        x: toX(i),
-        y: toY(p.temperature),
-        temp: Math.round(p.temperature),
-        time: `${((h % 12) || 12)}${h >= 12 ? 'pm' : 'am'}`
-      };
-    });
+    const pts = points.map((p, i) => ({
+      x:    toX(times[i], i),
+      y:    toY(p.temperature),
+      temp: Math.round(p.temperature),
+      ms:   times[i],
+    }));
 
     // Gradient fill
     const fillPath = new Path2D();
@@ -2367,32 +2384,75 @@
     ctx.lineCap     = 'round';
     ctx.stroke();
 
-    // Labels (no dots) — space them out so they never overlap
     ctx.font      = `600 ${Math.round(9.5 * dpr) / dpr}px "DM Sans",sans-serif`;
     ctx.textAlign = 'center';
 
-    // Minimum horizontal gap between two labels, based on widest label
+    // ── Temp labels above the line (thinned so they never overlap) ──
     let maxLabelW = 0;
-    pts.forEach(p => {
-      maxLabelW = Math.max(maxLabelW, ctx.measureText(p.time).width, ctx.measureText(`${p.temp}°`).width);
-    });
-    const minGap = maxLabelW + 8;
+    pts.forEach(p => { maxLabelW = Math.max(maxLabelW, ctx.measureText(`${p.temp}°`).width); });
+    const minGap = maxLabelW + 10;
 
     let lastLabelX = -Infinity;
     pts.forEach((p, i) => {
-      // Always draw the first and last point; others only if far enough apart
       const forced = i === 0 || i === pts.length - 1;
       if (!forced && p.x - lastLabelX < minGap) return;
-      // Skip a mid-point that would collide with the forced last label
       if (!forced && pts[pts.length - 1].x - p.x < minGap) return;
       lastLabelX = p.x;
-
-      // Temp label above the line
       ctx.fillStyle = tempColor;
       ctx.fillText(`${p.temp}°`, p.x, p.y - 7);
-      // Time label below chart
-      ctx.fillStyle = timeColor;
-      ctx.fillText(p.time, p.x, cssH - 3);
+    });
+
+    // ── Time axis: evenly-spaced clock ticks aligned to IST midnight ──
+    // Decoupled from data points → always consistent, monotonic labels.
+    const fmtHour = h => `${(h % 12) || 12}${h >= 12 ? 'pm' : 'am'}`;
+    const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const spanH = span / 3600000;
+    const ticks = [];   // { ms, label }
+
+    if (dayKey) {
+      // Fixed grid for a single day: 12am 3am 6am 9am 12pm 3pm 6pm 9pm 12am
+      for (let h = 0; h <= 24; h += 3) {
+        ticks.push({ ms: minMs + h * 3600000, label: fmtHour(h % 24) });
+      }
+    } else if (!useIndex && spanH > 0) {
+      // Choose a step giving ~4-6 ticks: hours for short spans, days for long.
+      const CAND  = [3, 6, 12, 24, 48, 72, 168];
+      const stepH = CAND.find(c => spanH / c <= 6) || 168;
+      const stepMs   = stepH * 3600000;
+      const dayLabel = stepH >= 24;
+      // Align to the IST clock grid so ticks land on nice boundaries.
+      const firstIst = Math.ceil((minMs + IST_MS) / stepMs) * stepMs;
+      for (let ist = firstIst; ist - IST_MS <= maxMs; ist += stepMs) {
+        const d = new Date(ist);   // shifted, so getUTC* reads IST wall-clock
+        ticks.push({
+          ms:    ist - IST_MS,
+          label: dayLabel ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]}` : fmtHour(d.getUTCHours()),
+        });
+      }
+    }
+    // Fallback (tiny/degenerate span): label the two real endpoints by hour.
+    if (ticks.length < 2) {
+      ticks.length = 0;
+      [minMs, maxMs].forEach(ms => {
+        const d = new Date(ms + IST_MS);
+        ticks.push({ ms, label: fmtHour(d.getUTCHours()) });
+      });
+    }
+
+    // Draw tick labels, thinned + clamped inside the canvas.
+    ctx.fillStyle = timeColor;
+    let tMaxW = 0;
+    ticks.forEach(t => { tMaxW = Math.max(tMaxW, ctx.measureText(t.label).width); });
+    const tGap = tMaxW + 12;
+    const tickX = t => Math.max(PAD, Math.min(cssW - PAD, toX(t.ms, 0)));
+    const endTx = tickX(ticks[ticks.length - 1]);
+    let lastTx = -Infinity;
+    ticks.forEach((t, i) => {
+      const x = tickX(t);
+      const forced = i === 0 || i === ticks.length - 1;
+      if (!forced && (x - lastTx < tGap || endTx - x < tGap)) return;
+      lastTx = x;
+      ctx.fillText(t.label, x, cssH - 3);
     });
   }
 
@@ -2455,13 +2515,13 @@
       </div>
       <div class="wx-week-day-row">${dayCardsHtml}</div>`;
 
-    const drawChart = pts => requestAnimationFrame(() => {
+    const drawChart = (pts, dayKey) => requestAnimationFrame(() => {
       const c = document.getElementById('wx-temp-canvas');
-      if (c) buildTempChart(c, pts, true);
+      if (c) buildTempChart(c, pts, true, dayKey);
     });
-    drawChart(points);
 
-    // Day cards filter the chart to that day's hourly readings; click again = full history
+    // Day cards filter the chart to that day's hourly readings (12am–9pm axis);
+    // clicking the selected day again = full history with date labels.
     const row = el.querySelector('.wx-week-day-row');
     let selectedDay = null;
     const selectDay = key => {
@@ -2472,10 +2532,11 @@
         drawChart(points);
         return;
       }
+      const dayPts = dayMap[key] || [];
+      if (dayPts.length < 2) return;       // not enough readings to chart that day
       selectedDay = key;
       cards.forEach(c => c.classList.toggle('selected', c.getAttribute('data-day') === key));
-      const dayPts = dayMap[key] || [];
-      drawChart(dayPts.length >= 2 ? dayPts : points);
+      drawChart(dayPts, key);
     };
     row.querySelectorAll('.wx-week-day').forEach(card => {
       const key = card.getAttribute('data-day');
@@ -2484,6 +2545,11 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectDay(key); }
       });
     });
+
+    // Default view: today's hourly curve; fall back to full history if today
+    // has too few readings yet (e.g. just after midnight).
+    if ((dayMap[todayKey] || []).length >= 2) selectDay(todayKey);
+    else drawChart(points);
   }
 
   async function fetchWeatherHistory(district) {

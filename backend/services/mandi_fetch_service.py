@@ -30,7 +30,9 @@ load_dotenv()
 
 logger = logging.getLogger("krishi.mandi_fetch")
 
-API_KEY = os.getenv("DATA_GOV_API_KEY", "")
+# .strip() guards against the #1 cause of "403 Key not authorised": a key
+# pasted into the host env with surrounding quotes or a trailing newline/space.
+API_KEY = os.getenv("DATA_GOV_API_KEY", "").strip().strip('"').strip("'").strip()
 
 # Variety-wise Daily Market Prices Data of Commodity (Agmarknet)
 RESOURCE_ID = "9ef84268-d588-465a-a308-a864a43d0070"
@@ -149,6 +151,16 @@ def _get_page(params: dict, label: str) -> list | None:
             time.sleep(wait)
             continue
 
+        if res.status_code == 403:
+            # data.gov returns 403 {"error":"Key not authorised"} for a bad /
+            # expired / malformed key — not transient, so don't waste retries.
+            logger.error(
+                f"{label}: HTTP 403 from data.gov ({res.text.strip()[:160]}). "
+                f"DATA_GOV_API_KEY is missing/expired or has stray quotes or "
+                f"whitespace — set it to the exact key (no quotes) and redeploy."
+            )
+            return None
+
         if res.status_code != 200 or not res.text.strip():
             logger.error(f"{label}: bad response HTTP {res.status_code}")
             return None
@@ -159,8 +171,12 @@ def _get_page(params: dict, label: str) -> list | None:
     return None
 
 
-def _fetch_state(state: str) -> list:
-    """Page through all rows for one state via the exact-match keyword filter."""
+def _fetch_state(state: str) -> tuple[list, bool]:
+    """
+    Page through all rows for one state via the exact-match keyword filter.
+    Returns (records, complete) — complete=False when a page hard-failed
+    after retries, i.e. the state's data may be partial.
+    """
     records, offset = [], 0
     for page in range(MAX_PAGES):
         params = {
@@ -172,7 +188,7 @@ def _fetch_state(state: str) -> list:
         }
         recs = _get_page(params, f"[{state}] offset={offset}")
         if recs is None:      # hard error for this page — stop this state
-            break
+            return records, False
         if not recs:          # no (more) rows for this state
             break
 
@@ -182,23 +198,29 @@ def _fetch_state(state: str) -> list:
         offset += PAGE_LIMIT
         time.sleep(STATE_DELAY)
 
-    return records
+    return records, True
 
 
-def _fetch_all_records() -> list:
+def _fetch_all_records() -> tuple[list, set]:
     """
     Fetch the full nationwide dataset by partitioning per state (data.gov caps
     plain offset-paging at 10k rows). Deduplicates across states by row identity.
+    Returns (records, failed_states) — failed_states are the state names whose
+    fetch hard-failed midway, so their records may be incomplete. (The keyword
+    filter is exact-match, so the filter string equals the stored state name.)
     """
     if not API_KEY:
         logger.error("DATA_GOV_API_KEY not set — cannot fetch mandi prices.")
-        return []
+        return [], set()
 
     all_records, seen = [], set()
+    failed_states = set()
     states_hit = 0
     for state in STATES:
-        recs = _fetch_state(state)
+        recs, complete = _fetch_state(state)
         time.sleep(STATE_DELAY)   # pace requests to avoid data.gov 429 throttling
+        if not complete:
+            failed_states.add(state)
         if not recs:
             continue
         added = 0
@@ -213,8 +235,11 @@ def _fetch_all_records() -> list:
             states_hit += 1
             logger.info(f"📥 {state}: +{added} (total {len(all_records)})")
 
+    if failed_states:
+        logger.warning(f"⚠️ Incomplete fetch for {len(failed_states)} state(s): "
+                       f"{sorted(failed_states)} — their snapshot rows will be kept as-is.")
     logger.info(f"🌾 Fetched {len(all_records)} rows across {states_hit} states.")
-    return all_records
+    return all_records, failed_states
 
 
 # ── Store ────────────────────────────────────────────────────
@@ -278,10 +303,40 @@ def _change_pct(modal: str, prev: str):
     return None
 
 
+# Snapshot rows not refreshed for this many days are dropped — covers states
+# kept on fetch failure that then never reappear in the feed.
+SNAPSHOT_KEEP_DAYS = 7
+
+
+def check_api_key() -> bool:
+    """One-row probe logged on startup so every deploy shows immediately whether
+    DATA_GOV_API_KEY is authorised — turns a silent 403 into an obvious log line."""
+    if not API_KEY:
+        logger.error("🔑 DATA_GOV_API_KEY is not set — mandi fetch will be skipped.")
+        return False
+    try:
+        res = requests.get(
+            ENDPOINT,
+            params={"api-key": API_KEY, "format": "json", "limit": 1},
+            headers=HEADERS, timeout=30,
+        )
+    except requests.RequestException as e:
+        logger.error(f"🔑 DATA_GOV_API_KEY check — request error: {e}")
+        return False
+    if res.status_code == 200:
+        logger.info(f"🔑 DATA_GOV_API_KEY OK (ends …{API_KEY[-6:]}) — data.gov authorised.")
+        return True
+    logger.error(
+        f"🔑 DATA_GOV_API_KEY REJECTED — HTTP {res.status_code}: "
+        f"{res.text.strip()[:140]} (key len={len(API_KEY)}, ends …{API_KEY[-6:] or '∅'})"
+    )
+    return False
+
+
 def fetch_and_store() -> dict:
     """Main entry point. Returns a small summary dict for logging/tests."""
     init_db()
-    records = _fetch_all_records()
+    records, failed_states = _fetch_all_records()
 
     db = SessionLocal()
     try:
@@ -347,10 +402,19 @@ def fetch_and_store() -> dict:
         # Recent price series per group (includes the day we just inserted)
         spark_map = _spark_map(db, group_keys)
 
-        # 2) Rebuild latest snapshot with day-over-day deltas + sparkline series
-        db.query(MandiPrice).delete()
+        # 2) Refresh the latest snapshot PER STATE with day-over-day deltas +
+        #    sparkline series. States whose fetch hard-failed midway keep their
+        #    existing snapshot rows — a wholesale delete-and-rebuild used to
+        #    wipe good data whenever data.gov flaked mid-run (e.g. a run that
+        #    got only 20 of 30 states replaced the whole nationwide snapshot).
+        complete_rows = [x for x in rows if x["state"] not in failed_states]
+        states_to_replace = {x["state"] for x in complete_rows}
+        if states_to_replace:
+            db.query(MandiPrice).filter(
+                MandiPrice.state.in_(states_to_replace)
+            ).delete(synchronize_session=False)
         snapshot = []
-        for x in rows:
+        for x in complete_rows:
             prev = prev_map.get(x["group_key"])
             snapshot.append({
                 "state":            x["state"],
@@ -369,13 +433,21 @@ def fetch_and_store() -> dict:
                 "fetched_at":       now,
             })
         db.bulk_insert_mappings(MandiPrice, snapshot)
+
+        # Age out rows never refreshed recently (state kept on failure but
+        # then absent from the feed for a week+) so they don't linger forever.
+        db.query(MandiPrice).filter(
+            MandiPrice.fetched_at < now - timedelta(days=SNAPSHOT_KEEP_DAYS)
+        ).delete(synchronize_session=False)
         db.commit()
 
         logger.info(
             f"✅ Mandi fetch done | fetched={len(rows)} "
-            f"snapshot={len(snapshot)} history_added={history_added}"
+            f"snapshot_inserted={len(snapshot)} history_added={history_added} "
+            f"failed_states={len(failed_states)}"
         )
-        return {"fetched": len(rows), "snapshot": len(snapshot), "history_added": history_added}
+        return {"fetched": len(rows), "snapshot": len(snapshot),
+                "history_added": history_added, "failed_states": sorted(failed_states)}
 
     except Exception as e:
         db.rollback()

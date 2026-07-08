@@ -2439,70 +2439,169 @@
 </head>
 <body>
 
-<!-- ══ ANNOUNCEMENT BAR ══ -->
+<!-- ══ HEADER SYSTEM — ported from mandi.html (light, multi-layer) ══ -->
+<style id="km-shop-header-css">
+  /* Layer 0: Announcement bar (amber) */
+  .pre-topbar {
+    position: static;
+    background: var(--amber); color: #1a2e1e;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; padding: 7px 16px; font-size: 13px; font-weight: 600;
+    font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; flex-shrink: 0; text-align: center;
+  }
+  .pre-topbar-helpline {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: inherit; text-decoration: none; opacity: 0.9; white-space: nowrap; cursor: pointer; transition: opacity 0.15s;
+  }
+  .pre-topbar-helpline:hover { opacity: 1; text-decoration: underline; }
+  .pre-topbar-phone-icon { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; border-radius: 50%; flex-shrink: 0; font-size: 10px; line-height: 1; }
+
+  /* Layer 1: Top utility bar */
+  .top-utility-bar { position: static; background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 6px 0; font-size: 12px; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; flex-shrink: 0; }
+  .top-utility-inner { max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 80px; }
+  .top-utility-left, .top-utility-right { display: flex; align-items: center; gap: 12px; }
+  .top-utility-link { color: #4a5568; text-decoration: none; font-weight: 600; transition: color 0.15s; }
+  .top-utility-link:hover { color: #2d6a4f; }
+  .top-utility-divider { color: #cbd5e1; user-select: none; }
+  .top-utility-helpline { display: inline-flex; align-items: center; gap: 6px; color: #1a3c2e; font-weight: 700; text-decoration: none; cursor: pointer; transition: opacity 0.15s; }
+  .top-utility-helpline:hover { opacity: 0.8; text-decoration: underline; }
+  .top-utility-social-icon { color: #4a5568; display: inline-flex; align-items: center; justify-content: center; transition: color 0.15s; }
+  .top-utility-social-icon:hover { color: #2d6a4f; }
+
+  /* Layer 2: Main header */
+  .main-header { background: #ffffff; border-bottom: 1px solid #edf2f7; padding: 10px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-shrink: 0; }
+  .main-header-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 80px; }
+  .main-header-inner > .hamburger-btn { order: 2; }
+  .main-header-inner > .header-left-group { order: 1; }
+  .main-header-inner > .header-nav { order: 3; }
+  .main-header-inner > .header-right-group { order: 4; }
+  .header-left-group { display: flex; align-items: center; gap: 14px; }
+  .header-logo-link { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .header-logo-circle { width: 38px; height: 38px; background: #eaf6ed; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(45,106,79,0.15); object-fit: cover; }
+  .header-logo-text { font-family: 'Noto Serif Devanagari', 'Playfair Display', serif; font-size: 21px; font-weight: 800; color: #2d6a4f; letter-spacing: 0.2px; }
+  .main-header .hamburger-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #1a2e1e; padding: 4px; line-height: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: background 0.15s; }
+  .main-header .hamburger-btn:hover { background: #f7fafc; }
+  .header-nav { display: flex; align-items: center; gap: 28px; }
+  .header-nav-link { font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; font-size: 15px; font-weight: 700; color: #1a202c; text-decoration: none; transition: color 0.15s; padding: 6px 0; border-bottom: 2px solid transparent; }
+  .header-nav-link:hover { color: #2d6a4f; }
+  .header-nav-link.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
+  .header-right-group { display: flex; align-items: center; gap: 12px; }
+  .header-wa-btn { display: inline-flex; align-items: center; gap: 6px; background: #25D366; border: none; border-radius: 20px; padding: 6px 12px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; transition: background 0.15s; white-space: nowrap; }
+  .header-wa-btn:hover { background: #128C7E; }
+  .header-avatar-btn { width: 32px; height: 32px; border-radius: 50%; background: #edf2f7; border: 1px solid #cbd5e0; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; transition: transform 0.15s; }
+  .header-avatar-btn:hover { transform: scale(1.05); }
+  .header-right-group .lang-picker { position: relative; }
+  .header-right-group .lang-picker-btn { background: #f1f5f9; border: 1px solid #cbd5e0; color: #1a202c; border-radius: 16px; padding: 5px 10px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+  /* Notification bell */
+  .header-bell-btn { position: relative; background: #f1f5f9; border: 1px solid #cbd5e0; border-radius: 50%; width: 34px; height: 34px; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.15s, background 0.15s; flex-shrink: 0; }
+  .header-bell-btn:hover { transform: scale(1.05); background: #e8eef3; }
+  .header-bell-badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; background: #e53935; color: #fff; border-radius: 9px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 0 0 2px #fff; }
+
+  /* Blue category quick-nav bar */
+  .commodity-navbar { background: #17268c; box-shadow: 0 2px 10px rgba(0,0,0,0.18); position: sticky; top: 59px; z-index: 90; }
+  .cnav-inner { display: flex; align-items: stretch; gap: 0; padding: 0 20px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; max-width: 1280px; margin: 0 auto; }
+  .cnav-inner::-webkit-scrollbar { display: none; }
+  .cnav-item { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.90); font-size: 13px; font-weight: 600; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; padding: 11px 14px; white-space: nowrap; line-height: 1.2; border-bottom: 3px solid transparent; transition: background 0.15s, color 0.15s; }
+  .cnav-item:hover { background: rgba(255,255,255,0.09); color: #fff; }
+  .cnav-item.active { color: var(--amber); font-style: italic; font-weight: 700; border-bottom-color: var(--amber); }
+
+  /* Mobile */
+  @media screen and (max-width: 1024px) {
+    .top-utility-bar { display: none; }
+    .main-header { padding: 8px 0; }
+    .main-header-inner { padding: 0 12px; }
+    .header-nav { display: none; }
+    .header-logo-text { font-size: 17px; }
+    .header-wa-btn .header-wa-label { display: none; }
+    .header-wa-btn { padding: 7px 9px; }
+    .main-header-inner > .hamburger-btn { order: 1; flex: 0 0 auto; }
+    .main-header-inner > .header-left-group { order: 2; flex: 1 1 auto; display: flex; justify-content: center; }
+    .main-header-inner > .header-right-group { order: 3; flex: 0 0 auto; gap: 8px; }
+    .commodity-navbar { position: static; }
+  }
+</style>
+
+<!-- ══ ANNOUNCEMENT BAR (amber) ══ -->
 <div class="pre-topbar">
-  <span class="pre-topbar-helpline">🌾 किसान helpline: +91 9870951001 — निःशुल्क कृषि सलाह</span>
-  <a href="chat.html" class="pre-topbar-cta">AI से पूछें →</a>
+  <a href="tel:+919870951001" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
+    <span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001
+  </a>
 </div>
 
-<!-- ══ TOPBAR ══ -->
-<div class="topbar">
-  <div class="topbar-left">
-    <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
-    <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:10px;">
-      <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="topbar-logo-icon" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-      <div class="topbar-logo-text">
-        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
-        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
-      </div>
-    </a>
-  </div>
-
-  <!-- Desktop center nav -->
-  <nav class="topbar-nav">
-    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
-    <a class="tnav-btn" href="weather.html">🌤️ <span data-t="nav_weather">मौसम</span></a>
-    <a class="tnav-btn" href="mandi.html">🏪 <span data-t="nav_mandi">मंडी</span></a>
-    <a class="tnav-btn" href="articles/index.html">📰 लेख</a>
-    <a class="tnav-btn" href="chat.html">💬 सहायता</a>
-    <a class="tnav-btn active" href="shop.html">🛒 <span data-t="nav_shop">दुकान</span></a>
-  </nav>
-
-  <div class="topbar-right">
-    <!-- WhatsApp Order Button -->
-    <a href="https://wa.me/919870951001" target="_blank" class="topbar-wa-btn" title="WhatsApp पर ऑर्डर करें">
-      <img src="https://krashimitra.in/images/whatsapp_icon.png" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"><span class="topbar-wa-label">HELP</span>
-    </a>
-
-    <!-- Orders History Button -->
-    <button class="topbar-orders-btn" onclick="openOrdersModal()" title="मेरे ऑर्डर">
-      📋 <span>ऑर्डर देखे!</span>
-    </button>
-
-    <!-- Unified language picker -->
-    <div class="lang-picker" id="lang-picker">
-      <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
-        <span id="lang-picker-label">हिं</span>
-        <span class="lang-chevron">▾</span>
-      </button>
-      <div class="lang-dropdown" id="lang-dropdown">
-        <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
-          <span class="lang-opt-code">हिं</span> हिंदी
-        </button>
-        <button class="lang-option" id="opt-en" onclick="pickLang('en')">
-          <span class="lang-opt-code">EN</span> English
-        </button>
-        <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
-          <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
-        </button>
-      </div>
+<!-- ══ TOP UTILITY BAR (Layer 1) ══ -->
+<div class="top-utility-bar">
+  <div class="top-utility-inner">
+    <div class="top-utility-left">
+      <a href="khoj.html" class="top-utility-link" data-t="nav_khoj">कृषि खोज</a>
+      <span class="top-utility-divider">|</span>
+      <a href="weather.html" class="top-utility-link" data-t="nav_weather_full">मौसम व सलाह</a>
+      <span class="top-utility-divider">|</span>
+      <a href="map.html" class="top-utility-link" data-t="nav_map">कृषि मानचित्र</a>
+      <span class="top-utility-divider">|</span>
+      <a href="sarkari_yojana.html" class="top-utility-link" data-t="nav_schemes_short">सरकारी योजना</a>
+      <span class="top-utility-divider">|</span>
+      <a href="krashi_bajar.html" class="top-utility-link" data-t="nav_shop_short">खरीदें/बेचें</a>
     </div>
-    <button class="topbar-search-btn" title="Search">🔍</button>
-    <!-- <div class="topbar-avatar-btn">👤-</div> -->
-    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👤</a>
-
+    <div class="top-utility-right">
+      <a href="tel:+919870951001" class="top-utility-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
+        <span class="pre-topbar-phone-icon">📞</span> <span data-t="nav_helpline">कृषिमित्र हेल्पलाइन: +91 9870951001</span>
+      </a>
+      <span class="top-utility-divider">|</span>
+      <a href="chat.html" class="top-utility-link" data-t="nav_contact">संपर्क</a>
+      <a href="https://facebook.com" target="_blank" class="top-utility-social-icon" title="Facebook">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+      </a>
+      <a href="https://wa.me/919870951001" target="_blank" class="top-utility-social-icon" title="WhatsApp">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/></svg>
+      </a>
+    </div>
   </div>
 </div>
+
+<!-- ══ MAIN HEADER (Layer 2) ══ -->
+<header class="main-header">
+  <div class="main-header-inner">
+    <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
+    <div class="header-left-group">
+      <a href="index.html" class="header-logo-link">
+        <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" style="border-radius:50%;object-fit:cover;background:none;box-shadow:none;">
+        <span class="header-logo-text" data-t="logo_text">कृषि मित्र</span>
+      </a>
+    </div>
+    <nav class="header-nav">
+      <a class="header-nav-link" href="mandi.html" data-t="nav_mandi_bhav">कृषि मंडी भाव</a>
+      <a class="header-nav-link" href="krashi_bajar.html" data-t="nav_bazar">कृषि बाज़ार</a>
+      <a class="header-nav-link active" href="shop.html" data-t="nav_shop">कृषि दुकान</a>
+      <a class="header-nav-link" href="articles/index.html" data-t="nav_news">कृषि समाचार</a>
+    </nav>
+    <div class="header-right-group">
+      <div class="lang-picker" id="lang-picker">
+        <button class="lang-picker-btn" id="lang-picker-btn" onclick="toggleLangPicker(event)">
+          <span id="lang-picker-label">हिं</span>
+          <span class="lang-chevron">▾</span>
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="lang-option active" id="opt-hi" onclick="pickLang('hi')">
+            <span class="lang-opt-code">हिं</span> हिंदी
+          </button>
+          <button class="lang-option" id="opt-en" onclick="pickLang('en')">
+            <span class="lang-opt-code">EN</span> English
+          </button>
+          <button class="lang-option" id="opt-kn" onclick="pickLang('kn')">
+            <span class="lang-opt-code">ಕ</span> ಕನ್ನಡ
+          </button>
+        </div>
+      </div>
+      <button class="header-bell-btn" id="header-bell-btn" onclick="openOrdersModal()" title="मेरे ऑर्डर व सूचनाएं" aria-label="Notifications">
+        🔔<span class="header-bell-badge" id="header-bell-badge" style="display:none">0</span>
+      </button>
+      <a href="https://wa.me/919870951001" target="_blank" class="header-wa-btn" title="WhatsApp सहायता">
+        <img src="https://krashimitra.in/images/whatsapp_icon.png" alt="WhatsApp" style="width:16px;height:16px;flex-shrink:0"><span class="header-wa-label">HELP</span>
+      </a>
+      <a href="https://krashimitra.in/login.html" class="header-avatar-btn">👤</a>
+    </div>
+  </div>
+</header>
 
 <!-- ══ SIDEBAR SLIDE-OUT DRAWER MENU ══ -->
 <!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
@@ -2538,6 +2637,22 @@
         <button class="sidebar-lang-btn" id="drawer-lang-kn" onclick="pickLang('kn')">ಕನ್ನಡ</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══ BLUE CATEGORY QUICK-NAV BAR ══ -->
+<div class="commodity-navbar" id="shop-cat-navbar">
+  <div class="cnav-inner">
+    <button class="cnav-item active" data-cat="all" onclick="setCategory('all', null)" data-t="cat_all">सभी उत्पाद</button>
+    <button class="cnav-item" data-cat="seeds" onclick="setCategory('seeds', null)" data-t="cat_seeds">🌱 बीज</button>
+    <button class="cnav-item" data-cat="fertilizer" onclick="setCategory('fertilizer', null)" data-t="cat_fertilizer">🧪 खाद</button>
+    <button class="cnav-item" data-cat="pesticide" onclick="setCategory('pesticide', null)" data-t="cat_pesticide">🌿 कीटनाशक</button>
+    <button class="cnav-item" data-cat="tools" onclick="setCategory('tools', null)" data-t="cat_tools">🔧 उपकरण</button>
+    <button class="cnav-item" data-cat="pashu_aahaar" onclick="setCategory('pashu_aahaar', null)" data-t="cat_pashu_aahaar">🐄 पशु आहार</button>
+    <button class="cnav-item" data-cat="sprayers" onclick="setCategory('sprayers', null)">🔵 स्प्रेयर</button>
+    <button class="cnav-item" data-cat="irrigation" onclick="setCategory('irrigation', null)">💧 सिंचाई</button>
+    <button class="cnav-item" data-cat="soil" onclick="setCategory('soil', null)">🧪 मिट्टी / ग्रोथ</button>
+    <button class="cnav-item" data-cat="machinery" onclick="setCategory('machinery', null)">⚙️ मशीनरी</button>
   </div>
 </div>
 
@@ -2638,10 +2753,10 @@
     <button class="order-choice-close" onclick="closeOrderModal()">✕</button>
     <div class="order-choice-product-name" id="order-choice-name"></div>
     <div class="order-choice-price" id="order-choice-price"></div>
-    <div class="order-choice-label">कहाँ से खरीदें?</div>
+    <div class="order-choice-label">कैसे मंगाएं?</div>
     <div class="order-choice-btns">
       <button class="order-choice-wa" id="order-choice-wa-btn" onclick="openWAFromOrderModal()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:20px;height:20px;flex-shrink:0"> WhatsApp पर ऑर्डर करें
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:20px;height:20px;flex-shrink:0"> हमसे प्री-बुक करें
       </button>
       <a class="order-choice-amazon" id="order-choice-amazon-btn" target="_blank" rel="noopener sponsored">
         🛒 Amazon पर खरीदें
@@ -2723,7 +2838,7 @@
 
           <!-- Order CTA inside modal -->
           <button class="fert-modal-buy-btn" id="fert-modal-cart-btn" onclick="openOrderModalFromDetail()">
-            🛒 <span id="fert-modal-cart-label">ऑर्डर करें</span>
+            🛒 <span id="fert-modal-cart-label">खरीदें</span>
           </button>
           <button class="fert-modal-share-btn" onclick="shareProduct(_currentFertId, event)">🔗 शेयर करें</button>
         </div>
@@ -2752,7 +2867,7 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="wa-modal-icon" style="width:40px;height:40px;flex-shrink:0">
       <div>
         <div class="wa-modal-title" id="wa-modal-product-name">उत्पाद का नाम</div>
-        <div class="wa-modal-subtitle">WhatsApp पर ऑर्डर करें — तुरंत जवाब मिलेगा</div>
+        <div class="wa-modal-subtitle">प्री-बुक करें — हम dealer ढूँढकर पूरा दाम भेजेंगे</div>
       </div>
     </div>
     <div class="wa-modal-product-info" id="wa-modal-product-info"></div>
@@ -2766,7 +2881,7 @@
       <input type="tel" id="wa-phone-input" class="wa-modal-input"
         placeholder="जैसे: 9876543210" maxlength="10"
         oninput="this.value=this.value.replace(/\D/g,'')"
-        onkeydown="if(event.key==='Enter')document.getElementById('wa-address-input').focus()" />
+        onkeydown="if(event.key==='Enter')document.getElementById('wa-pincode-input').focus()" />
 
       <div class="wa-modal-qty-row">
         <label class="wa-modal-label">📦 मात्रा <span class="wa-req">*</span></label>
@@ -2777,11 +2892,12 @@
           <button class="wa-qty-btn" onclick="changeWAQty(1)">+</button>
         </div>
       </div>
-      <div class="wa-modal-total" id="wa-modal-total">कुल: ₹0</div>
+      <div class="wa-modal-total" id="wa-modal-total">अनुमानित: ₹0</div>
 
-      <label class="wa-modal-label" style="margin-top:10px">📍 डिलीवरी का पता <span class="wa-req">*</span></label>
-      <input type="text" id="wa-address-input" class="wa-modal-input"
-        placeholder="मकान नं., गली, मोहल्ला..."
+      <label class="wa-modal-label" style="margin-top:10px">📍 पिनकोड — कहाँ डिलीवरी चाहिए <span class="wa-req">*</span></label>
+      <input type="tel" id="wa-pincode-input" class="wa-modal-input"
+        placeholder="जैसे: 273001" maxlength="6"
+        oninput="this.value=this.value.replace(/\D/g,'')"
         onkeydown="if(event.key==='Enter')document.getElementById('wa-village-input').focus()" />
 
       <label class="wa-modal-label">🏘️ गाँव / जिला</label>
@@ -2790,9 +2906,9 @@
         onkeydown="if(event.key==='Enter')confirmWAOrder()" />
     </div>
     <button class="wa-confirm-btn" onclick="confirmWAOrder()">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> WhatsApp पर ऑर्डर करें
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> प्री-बुक करें
     </button>
-    <div class="wa-modal-note">आपका ऑर्डर सीधे हमारे WhatsApp पर जाएगा। हम 15 मिनट में जवाब देंगे।</div>
+    <div class="wa-modal-note">हम आपके क्षेत्र में dealer ढूँढकर पूरा दाम (delivery सहित) 🔔 सूचना पर भेजेंगे। अभी कोई भुगतान नहीं।</div>
   </div>
 </div>
 
@@ -2816,10 +2932,10 @@
     <button class="notavail-close" onclick="closeNotAvailModal()">✕</button>
     <div class="notavail-icon">😔</div>
     <div class="notavail-title">उत्पाद उपलब्ध नहीं</div>
-    <div class="notavail-sub" id="notavail-product-name">यह उत्पाद Amazon/Flipkart पर अभी उपलब्ध नहीं है।<br>WhatsApp पर ऑर्डर करें या सहायता लें।</div>
+    <div class="notavail-sub" id="notavail-product-name">यह उत्पाद Amazon/Flipkart पर अभी उपलब्ध नहीं है।<br>हमसे प्री-बुक करें या सहायता लें।</div>
     <div class="notavail-actions">
       <button class="notavail-wa-btn" id="notavail-wa-btn" onclick="notAvailWAOrder()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> WhatsApp पर ऑर्डर करें
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> हमसे प्री-बुक करें
       </button>
       <a class="notavail-help-btn" href="help.html">
         ❓ सहायता / Help
@@ -3754,7 +3870,7 @@
                   <button class="fert-btn-detail" onclick="onCardClick(${p.id}, event)">विवरण करें →</button>
                   <button class="fert-btn-share" onclick="shareProduct(${p.id}, event)">शेयर करें</button>
                 </div>
-                <button class="fert-btn-order" onclick="openOrderModal(${p.id}); event.stopPropagation()">ऑर्डर करें</button>
+                <button class="fert-btn-order" onclick="openOrderModal(${p.id}); event.stopPropagation()">खरीदें</button>
               </div>
             </div>
           </div>`;
@@ -3787,8 +3903,9 @@
 
   function setCategory(cat, btn) {
     activeCategory = cat;
-    document.querySelectorAll('.shop-filter-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+    // Keep the chip row AND the blue quick-nav bar in sync via data-cat
+    document.querySelectorAll('.shop-filter-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-cat') === cat));
+    document.querySelectorAll('.cnav-item').forEach(i => i.classList.toggle('active', i.getAttribute('data-cat') === cat));
 
     // Update section heading
     const headings = {
@@ -3907,7 +4024,7 @@
           <div class="orders-empty">
             <div class="emoji">📭</div>
             <div>अभी तक कोई ऑर्डर नहीं</div>
-            <div style="font-size:12px;margin-top:6px">ऑर्डर करें — यहाँ दिखेगा!</div>
+            <div style="font-size:12px;margin-top:6px">प्री-बुक करें — यहाँ दिखेगा!</div>
           </div>`;
         return;
       }
@@ -4058,10 +4175,10 @@
       `${p.emoji}  ₹${p.price} / ${getProductUnit(p)}  ·  ${getProductDesc(p)}`;
     document.getElementById('wa-name-input').value = '';
     document.getElementById('wa-phone-input').value = '';
-    document.getElementById('wa-address-input').value = '';
+    document.getElementById('wa-pincode-input').value = '';
     document.getElementById('wa-village-input').value = '';
     document.getElementById('wa-qty-display').value = 1;
-    document.getElementById('wa-modal-total').textContent = `कुल: ₹${p.price}`;
+    document.getElementById('wa-modal-total').textContent = `अनुमानित: ₹${p.price}`;
     document.getElementById('wa-modal').classList.add('open');
     setTimeout(() => document.getElementById('wa-name-input').focus(), 200);
   }
@@ -4101,7 +4218,7 @@
 
   function _updateWATotal() {
     const p = PRODUCTS.find(x => x.id === _waProductId);
-    if (p) document.getElementById('wa-modal-total').textContent = `कुल: ₹${(p.price * _waQty).toLocaleString('en-IN')}`;
+    if (p) document.getElementById('wa-modal-total').textContent = `अनुमानित: ₹${(p.price * _waQty).toLocaleString('en-IN')}`;
   }
 
   function _shakeInput(id) {
@@ -4114,12 +4231,12 @@
   function confirmWAOrder() {
     const customerName = document.getElementById('wa-name-input').value.trim();
     const phone        = document.getElementById('wa-phone-input').value.trim();
-    const address      = document.getElementById('wa-address-input').value.trim();
+    const pincode      = document.getElementById('wa-pincode-input').value.trim();
     const village      = document.getElementById('wa-village-input').value.trim();
 
     if (!customerName) { _shakeInput('wa-name-input'); return; }
     if (!phone || phone.length < 10) { _shakeInput('wa-phone-input'); return; }
-    if (!address) { _shakeInput('wa-address-input'); return; }
+    if (!pincode || pincode.length < 6) { _shakeInput('wa-pincode-input'); return; }
 
     const p = PRODUCTS.find(x => x.id === _waProductId);
     if (!p) return;
@@ -4137,7 +4254,7 @@
 
     const buildMsg = (trackingCode) => {
       const tkLine = trackingCode ? `🆔 Tracking: ${trackingCode}\n` : '';
-      return `🌾 *KrashiMitra Order*
+      return `🌾 *KrashiMitra प्री-बुक अनुरोध*
 ━━━━━━━━━━━━━━━━
 ${tkLine}
 👤 *किसान:* ${customerName}
@@ -4146,15 +4263,15 @@ ${tkLine}
 📦 *उत्पाद:* ${productName}
    ID: #${p.id} · ${categoryLabel(p.cat)}
 
-🔢 *मात्रा:* ${_waQty} × ₹${p.price.toLocaleString('en-IN')} (${unit})
-💰 *कुल: ₹${total.toLocaleString('en-IN')}*
+🔢 *मात्रा:* ${_waQty} (${unit})
+🏷️ *अनुमानित दर:* ₹${p.price.toLocaleString('en-IN')}
 
-📍 *डिलीवरी पता:* ${address}${village ? `\n🏘️ *गाँव/जिला:* ${village}` : ''}
+📍 *पिनकोड:* ${pincode}${village ? `\n🏘️ *गाँव/जिला:* ${village}` : ''}
 
 📅 ${dateStr} · ${userLabel}
 ━━━━━━━━━━━━━━━━
-🛒 KrashiMitra Shop
-💬 कृपया इस ऑर्डर की पुष्टि करें`;
+🛒 KrashiMitra
+💬 कृपया मेरे क्षेत्र में dealer ढूँढकर पूरा दाम (delivery सहित) भेजें`;
     };
 
     // Save to NeonDB, then open WA with tracking code
@@ -4166,9 +4283,9 @@ ${tkLine}
       total:            total,
       phone:            phone,
       customer_name:    customerName,
-      delivery_address: address,
+      pincode:          pincode,
       village_district: village || null,
-      source:           'shop',
+      source:           'prebook',
       session_id:       isGuest ? userId : undefined
     }, (trackingCode) => {
       document.getElementById('wa-loading-overlay').classList.remove('active');
@@ -4176,9 +4293,9 @@ ${tkLine}
       const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, '_blank');
       if (trackingCode) {
-        showToast(`✅ ऑर्डर सेव! Tracking: ${trackingCode}`, 4000);
+        showToast(`✅ प्री-बुक हो गई! दाम तैयार होते ही 🔔 पर आएगा · ${trackingCode}`, 4500);
       } else {
-        showToast('💬 WhatsApp ऑर्डर भेजा गया', 2000);
+        showToast('✅ प्री-बुक अनुरोध भेज दिया गया', 2500);
       }
     });
   }
@@ -4376,7 +4493,7 @@ ${tkLine}
 
   function _updateFertModalCartBtn(productId) {
     const lbl = document.getElementById('fert-modal-cart-label');
-    if (lbl) lbl.textContent = 'ऑर्डर करें';
+    if (lbl) lbl.textContent = 'खरीदें';
   }
 
   function fertModalAddCart() {
@@ -4415,7 +4532,7 @@ ${tkLine}
     const p = PRODUCTS.find(x => x.id === productId);
     if (p) {
       document.getElementById('notavail-product-name').innerHTML =
-        `<strong>${getProductName(p)}</strong> Amazon/Flipkart पर अभी उपलब्ध नहीं है।<br>WhatsApp पर ऑर्डर करें या सहायता लें।`;
+        `<strong>${getProductName(p)}</strong> Amazon/Flipkart पर अभी उपलब्ध नहीं है।<br>हमसे प्री-बुक करें या सहायता लें।`;
     }
     document.getElementById('notavail-modal').classList.add('open');
   }

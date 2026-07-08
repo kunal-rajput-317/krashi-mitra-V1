@@ -1596,6 +1596,19 @@
       color: var(--text-light); padding: 12px 0 4px; letter-spacing: 0.3px;
     }
 
+    /* ── DATA SOURCE & DISCLAIMER NOTE ── */
+    .mandi-source-note {
+      margin: 18px 16px 0;
+      background: #fffdf5; border: 1px solid #f0e6c8;
+      border-radius: 12px; padding: 12px 14px;
+      font-size: 11.5px; line-height: 1.65; color: var(--text-mid);
+    }
+    .mandi-source-note .msn-src { margin-bottom: 6px; }
+    .mandi-source-note .msn-src strong { color: var(--text-dark); }
+    .mandi-source-note a { color: var(--green-mid); font-weight: 700; text-decoration: none; white-space: nowrap; }
+    .mandi-source-note a:hover { text-decoration: underline; }
+    .mandi-source-note .msn-disc { color: var(--text-light); font-size: 11px; }
+
     /* ── WhatsApp Share — card inline button (left of date) ── */
     .mc-wa-inline-btn {
       display: inline-flex; align-items: center; gap: 4px;
@@ -2111,6 +2124,18 @@
     </div>
   </section>
 
+  <!-- Data source attribution + legal disclaimer -->
+  <div class="mandi-source-note">
+    <div class="msn-src">
+      📊 <strong data-t="src_label">डेटा स्रोत:</strong>
+      <span data-t="src_text">मंडी भाव भारत सरकार के आधिकारिक ओपन-डेटा पोर्टल (Agmarknet — कृषि एवं किसान कल्याण मंत्रालय) से प्रतिदिन स्वतः अपडेट होते हैं:</span>
+      <a href="https://www.data.gov.in/resource/variety-wise-daily-market-prices-data-commodity" target="_blank" rel="noopener nofollow">data.gov.in ↗</a>
+    </div>
+    <div class="msn-disc"><span data-t="src_disclaimer">अस्वीकरण: ये भाव केवल सामान्य जानकारी के लिए हैं। वास्तविक भाव मंडी, फसल की गुणवत्ता और समय के अनुसार भिन्न हो सकते हैं, और स्रोत डेटा में देरी या त्रुटि संभव है। खरीद-बिक्री का कोई भी निर्णय लेने से पहले अपनी स्थानीय मंडी/APMC से भाव की पुष्टि अवश्य करें। इस जानकारी के आधार पर लिए गए किसी निर्णय या हानि के लिए KrashiMitra ज़िम्मेदार नहीं होगा।</span>
+      <a href="privacy-policy.html#mandi-data" data-t="src_policy_link">पूरी नीति पढ़ें ↗</a>
+    </div>
+  </div>
+
   <div class="wx-footer-meta" data-t="footer_meta">
     मंडी भाव · सरकारी दरें · कृषि मित्र · krashimitra.in
   </div>
@@ -2245,6 +2270,10 @@
       no_data_sub:      "अलग combination try करें",
       error_server:     "⚠️ Server से connect नहीं हुआ।",
       footer_meta:      "मंडी भाव · सरकारी दरें · कृषि मित्र · krashimitra.in",
+      src_label:        "डेटा स्रोत:",
+      src_text:         "मंडी भाव भारत सरकार के आधिकारिक ओपन-डेटा पोर्टल (Agmarknet — कृषि एवं किसान कल्याण मंत्रालय) से प्रतिदिन स्वतः अपडेट होते हैं:",
+      src_disclaimer:   "अस्वीकरण: ये भाव केवल सामान्य जानकारी के लिए हैं। वास्तविक भाव मंडी, फसल की गुणवत्ता और समय के अनुसार भिन्न हो सकते हैं, और स्रोत डेटा में देरी या त्रुटि संभव है। खरीद-बिक्री का कोई भी निर्णय लेने से पहले अपनी स्थानीय मंडी/APMC से भाव की पुष्टि अवश्य करें। इस जानकारी के आधार पर लिए गए किसी निर्णय या हानि के लिए KrashiMitra ज़िम्मेदार नहीं होगा।",
+      src_policy_link:  "पूरी नीति पढ़ें ↗",
       per_quintal:      "/क्विंटल",
       prices_in:        "कीमतें ₹/क्विंटल में",
       th_market:        "मंडी", th_district: "जिला", th_commodity: "फसल",
@@ -2304,6 +2333,10 @@
       no_data_sub:      "Try a different combination",
       error_server:     "⚠️ Could not reach server.",
       footer_meta:      "Mandi Rates · Govt. Prices · KrashiMitra · krashimitra.in",
+      src_label:        "Data source:",
+      src_text:         "Mandi prices auto-update daily from the Government of India's official open-data portal (Agmarknet — Ministry of Agriculture & Farmers Welfare):",
+      src_disclaimer:   "Disclaimer: Prices are for general information only. Actual rates may vary by mandi, crop quality and time, and the source data may be delayed or contain errors. Always confirm rates with your local mandi/APMC before any buying or selling decision. KrashiMitra is not liable for any decision or loss based on this information.",
+      src_policy_link:  "Read full policy ↗",
       per_quintal:      "/quintal",
       prices_in:        "Prices in ₹/quintal",
       th_market:        "Market", th_district: "District", th_commodity: "Commodity",
@@ -2363,6 +2396,10 @@
       no_data_sub:      "ಬೇರೆ combination ಪ್ರಯತ್ನಿಸಿ",
       error_server:     "⚠️ ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲಾಗಲಿಲ್ಲ.",
       footer_meta:      "ಮಂಡಿ ಬೆಲೆ · ಸರ್ಕಾರಿ ದರ · ಕೃಷಿ ಮಿತ್ರ",
+      src_label:        "ಡೇಟಾ ಮೂಲ:",
+      src_text:         "ಮಂಡಿ ಬೆಲೆಗಳು ಭಾರತ ಸರ್ಕಾರದ ಅಧಿಕೃತ ಓಪನ್-ಡೇಟಾ ಪೋರ್ಟಲ್‌ನಿಂದ (Agmarknet — ಕೃಷಿ ಮತ್ತು ರೈತ ಕಲ್ಯಾಣ ಸಚಿವಾಲಯ) ಪ್ರತಿದಿನ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ನವೀಕರಣಗೊಳ್ಳುತ್ತವೆ:",
+      src_disclaimer:   "ಹಕ್ಕು ನಿರಾಕರಣೆ: ಈ ಬೆಲೆಗಳು ಸಾಮಾನ್ಯ ಮಾಹಿತಿಗಾಗಿ ಮಾತ್ರ. ನಿಜವಾದ ದರಗಳು ಮಂಡಿ, ಬೆಳೆ ಗುಣಮಟ್ಟ ಮತ್ತು ಸಮಯದ ಪ್ರಕಾರ ಬದಲಾಗಬಹುದು; ಮೂಲ ಡೇಟಾದಲ್ಲಿ ವಿಳಂಬ ಅಥವಾ ದೋಷ ಇರಬಹುದು. ಖರೀದಿ/ಮಾರಾಟದ ನಿರ್ಧಾರಕ್ಕೂ ಮೊದಲು ನಿಮ್ಮ ಸ್ಥಳೀಯ ಮಂಡಿ/APMC ಯಲ್ಲಿ ದರ ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ. ಈ ಮಾಹಿತಿಯ ಆಧಾರದ ಮೇಲಿನ ನಿರ್ಧಾರ ಅಥವಾ ನಷ್ಟಕ್ಕೆ KrashiMitra ಜವಾಬ್ದಾರವಾಗಿರುವುದಿಲ್ಲ.",
+      src_policy_link:  "ಪೂರ್ಣ ನೀತಿ ಓದಿ ↗",
       per_quintal:      "/ಕ್ವಿಂಟಲ್",
       prices_in:        "ಬೆಲೆ ₹/ಕ್ವಿಂಟಲ್ ನಲ್ಲಿ",
       th_market:        "ಮಾರ್ಕೆಟ್", th_district: "ಜಿಲ್ಲೆ", th_commodity: "ಸರಕು",

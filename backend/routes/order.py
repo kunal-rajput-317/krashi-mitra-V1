@@ -51,14 +51,16 @@ def _get_token_optional(authorization: str = None):
 # ── Pydantic Models ──────────────────────────────────────────
 
 class OrderCreateRequest(BaseModel):
-    product_name: str
-    product_id:   Optional[int] = None
-    quantity:     int = 1
-    unit_price:   float
-    total:        float
-    phone:        str
-    source:       str = "shop"       # "shop" or "mandi"
-    session_id:   Optional[str] = None   # send if guest
+    product_name:  str
+    product_id:    Optional[int] = None
+    quantity:      int = 1
+    unit_price:    float
+    total:         float
+    phone:         str
+    source:        str = "shop"       # "shop" / "mandi" / "prebook"
+    session_id:    Optional[str] = None   # send if guest
+    customer_name: Optional[str] = None   # farmer name (pre-book form)
+    pincode:       Optional[str] = None   # delivery pincode (pre-book demand map)
 
 
 class OrderResponse(BaseModel):
@@ -116,6 +118,8 @@ def create_order(
         phone         = body.phone,
         source        = body.source,
         status        = "Pending",
+        customer_name = body.customer_name,
+        pincode       = body.pincode,
     )
 
     db.add(order)
@@ -170,6 +174,13 @@ def get_order_history(
             "source":        o.source,
             "status":        o.status,
             "created_at":    o.created_at.isoformat() if o.created_at else "",
+            "pincode":       o.pincode,
+            "customer_name": o.customer_name,
+            "quote_total":   o.quote_total,
+            "delivery_info": o.delivery_info,
+            "dealer_name":   o.dealer_name,
+            "quote_note":    o.quote_note,
+            "quoted_at":     o.quoted_at.isoformat() if o.quoted_at else None,
         })
 
     return {"success": True, "orders": orders}
@@ -177,7 +188,8 @@ def get_order_history(
 
 # ── PUT /order/status — Admin updates order status ───────────
 
-VALID_STATUSES = ["Pending", "Verified", "Purchased", "Delivered"]
+VALID_STATUSES = ["Pending", "Prebook", "Quoted", "Verified", "Purchased",
+                  "Dispatched", "Delivered", "Cancelled", "Unavailable"]
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "krashimitra_admin_2026")
 
 
@@ -216,6 +228,48 @@ def update_order_status(
     }
 
 
+# ── PUT /order/quote — Admin sends a quote for a pre-book ─────
+
+class QuoteUpdateRequest(BaseModel):
+    tracking_code: str
+    admin_key:     str
+    quote_total:   float                 # full price incl. delivery + our commission
+    delivery_info: str                   # dealer + delivery details shown to the farmer
+    dealer_name:   Optional[str] = None
+    quote_note:    Optional[str] = None
+
+
+@router.put("/quote")
+def send_order_quote(
+    body: QuoteUpdateRequest,
+    db:   Session = Depends(get_db),
+):
+    """Owner attaches a quote to a pre-book after sourcing a local dealer.
+    Sets status='Quoted' — the farmer then sees it via the 🔔 notification bell."""
+    if body.admin_key != ADMIN_SECRET:
+        return {"success": False, "message": "❌ Invalid admin key"}
+
+    order = db.query(Order).filter(Order.tracking_code == body.tracking_code).first()
+    if not order:
+        return {"success": False, "message": f"❌ Order {body.tracking_code} not found"}
+
+    order.quote_total   = body.quote_total
+    order.delivery_info = body.delivery_info
+    order.dealer_name   = body.dealer_name
+    order.quote_note    = body.quote_note
+    order.status        = "Quoted"
+    order.quoted_at     = datetime.utcnow()
+    db.commit()
+
+    return {
+        "success":       True,
+        "tracking_code": order.tracking_code,
+        "status":        order.status,
+        "quote_total":   order.quote_total,
+        "message":       f"✅ Quote sent for {order.tracking_code}: ₹{order.quote_total}",
+    }
+
+
 # ── GET /order/all — Admin views all orders ──────────────────
 
 @router.get("/all")
@@ -247,6 +301,13 @@ def get_all_orders(
             "source":        o.source,
             "status":        o.status,
             "created_at":    o.created_at.isoformat() if o.created_at else "",
+            "customer_name": o.customer_name,
+            "pincode":       o.pincode,
+            "quote_total":   o.quote_total,
+            "delivery_info": o.delivery_info,
+            "dealer_name":   o.dealer_name,
+            "quote_note":    o.quote_note,
+            "quoted_at":     o.quoted_at.isoformat() if o.quoted_at else None,
         })
 
     return {"success": True, "total": len(orders), "orders": orders}

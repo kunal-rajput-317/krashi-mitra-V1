@@ -98,7 +98,7 @@ def share_bazar(post_id: int, db: Session = Depends(get_db)):
     target = f"{SITE}/krashi_bajar.html?post={post_id}"
 
     title = "कृषि बाज़ार — किसान से सीधे खरीदें व बेचें | कृषि मित्र"
-    desc  = "फसल की फोटो/वीडियो, सीधा भाव और ऑफर — कोई बिचौलिया नहीं। KrashiMitra पर देखें।"
+    desc  = "फसल की फोटो/वीडियो, सीधा भाव और ऑफर — सीधे किसान से जुड़ें। KrashiMitra पर देखें।"
     image = _FALLBACK_IMAGE
 
     try:
