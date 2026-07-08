@@ -11,6 +11,7 @@ from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron      import CronTrigger
+from apscheduler.triggers.interval  import IntervalTrigger
 from apscheduler.events             import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
 logger = logging.getLogger("krishi.mandi_scheduler")
@@ -31,6 +32,53 @@ scheduler.add_listener(_on_job_executed, EVENT_JOB_EXECUTED)
 scheduler.add_listener(_on_job_error,    EVENT_JOB_ERROR)
 
 
+STALE_AFTER_HOURS = 20  # < 24 so a daily-ish refresh window is never missed
+
+
+def _snapshot_stale_reason():
+    """Return why the snapshot needs a refresh ('empty' / 'stale Xh'), or None if fresh."""
+    from datetime import timedelta, timezone as _tz
+    from sqlalchemy import func
+    from backend.database.db import SessionLocal, MandiPrice
+
+    db = SessionLocal()
+    try:
+        newest = db.query(func.max(MandiPrice.fetched_at)).scalar()
+    finally:
+        db.close()
+
+    if newest is None:
+        return "snapshot empty"
+    if newest.tzinfo is None:  # column stores naive UTC
+        newest = newest.replace(tzinfo=_tz.utc)
+    age = datetime.now(_tz.utc) - newest
+    if age > timedelta(hours=STALE_AFTER_HOURS):
+        return f"snapshot stale ({age.total_seconds() / 3600:.1f}h old)"
+    return None
+
+
+def _refresh_if_stale():
+    """
+    Trigger an immediate fetch when the snapshot is empty or stale.
+    Routes through the registered job (job.modify) instead of calling
+    fetch_and_store directly so max_instances=1 still prevents overlap
+    with the daily cron run.
+    """
+    try:
+        reason = _snapshot_stale_reason()
+        if not reason:
+            return False
+        job = scheduler.get_job("mandi_price_refresh")
+        if job:
+            now_ist = datetime.now(IST)
+            job.modify(next_run_time=now_ist)
+            logger.info(f"⚡ {reason} — immediate fetch at {now_ist:%H:%M:%S IST}")
+        return True
+    except Exception as e:
+        logger.error(f"Mandi staleness check failed: {e}")
+        return False
+
+
 def _register_job():
     """Register the daily mandi refresh job. data.gov updates ~once a day."""
     from backend.services.mandi_fetch_service import fetch_and_store
@@ -42,57 +90,43 @@ def _register_job():
         name               = "Nationwide Mandi Prices — Daily 06:30 IST",
         replace_existing   = True,
         max_instances      = 1,
-        misfire_grace_time = 60 * 60,   # 1h grace if app was down at 06:30
+        coalesce           = True,
+        misfire_grace_time = None,   # run whenever noticed, however late (laptop/instance slept)
     )
-    logger.info("📅 Mandi job registered | daily @ 06:30 IST | scope=nationwide")
+
+    # Watchdog: the 06:30 cron is routinely missed when the host is asleep at
+    # that moment, and a startup-only catch-up leaves data stale for days when
+    # the process stays alive. Re-check staleness every 30 min instead.
+    scheduler.add_job(
+        func               = _refresh_if_stale,
+        trigger            = IntervalTrigger(minutes=30),
+        id                 = "mandi_stale_watchdog",
+        name               = "Mandi Snapshot Staleness Watchdog — every 30 min",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
+    )
+    logger.info("📅 Mandi jobs registered | daily @ 06:30 IST + 30-min staleness watchdog")
 
 
 async def start_scheduler():
     """
-    Start the scheduler. Fires an immediate fetch when the snapshot table
-    is empty OR stale (newest fetched_at older than STALE_AFTER_HOURS).
-    The staleness catch-up matters on free-tier hosting: the instance
-    sleeps/restarts, so the 06:30 IST cron (1h misfire grace) is often
-    missed entirely — without this, data silently stays days old.
-    Called from FastAPI startup.
+    Start the scheduler and run an immediate staleness catch-up. The
+    watchdog job repeats that check every 30 min so a missed 06:30 cron
+    (sleeping laptop, spun-down free-tier instance) can't leave the
+    snapshot days old. Called from FastAPI startup.
     """
     _register_job()
     scheduler.start()
     logger.info("🟢 Mandi APScheduler started | timezone=Asia/Kolkata")
 
-    STALE_AFTER_HOURS = 20  # < 24 so a daily-ish restart still refreshes
+    # Probe the data.gov key on boot so a 403 shows up immediately in the logs
+    # (instead of only when the daily/watchdog fetch quietly fails).
+    from backend.services.mandi_fetch_service import check_api_key
+    check_api_key()
 
-    try:
-        from datetime import timedelta, timezone as _tz
-        from sqlalchemy import func
-        from backend.database.db import SessionLocal, MandiPrice
-
-        db = SessionLocal()
-        try:
-            newest = db.query(func.max(MandiPrice.fetched_at)).scalar()
-        finally:
-            db.close()
-
-        reason = None
-        if newest is None:
-            reason = "snapshot empty"
-        else:
-            if newest.tzinfo is None:  # column stores naive UTC
-                newest = newest.replace(tzinfo=_tz.utc)
-            age = datetime.now(_tz.utc) - newest
-            if age > timedelta(hours=STALE_AFTER_HOURS):
-                reason = f"snapshot stale ({age.total_seconds() / 3600:.1f}h old)"
-
-        if reason:
-            job = scheduler.get_job("mandi_price_refresh")
-            if job:
-                now_ist = datetime.now(IST)
-                job.modify(next_run_time=now_ist)
-                logger.info(f"⚡ {reason} — immediate fetch at {now_ist:%H:%M:%S IST}")
-        else:
-            logger.info("Mandi snapshot fresh — next fetch at daily 06:30 IST")
-    except Exception as e:
-        logger.error(f"Could not check/trigger first mandi fetch: {e}")
+    if not _refresh_if_stale():
+        logger.info("Mandi snapshot fresh — next fetch at daily 06:30 IST")
 
 
 async def stop_scheduler():

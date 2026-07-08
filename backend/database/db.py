@@ -312,6 +312,26 @@ class MandiPriceHistory(Base):
     fetched_at   = Column(DateTime, default=datetime.utcnow)
 
 
+# ── DATA SYNC LOG ────────────────────────────────────────────
+
+class SyncLog(Base):
+    """
+    One row per data-sync run (mandi / weather). An audit trail of *when*
+    external data was last fetched, whether it succeeded, and how much came
+    in — surfaced in the admin panel so a silently-stale feed is obvious.
+    """
+    __tablename__ = "sync_log"
+
+    id          = Column(Integer,  primary_key=True, index=True)
+    source      = Column(String,   nullable=False, index=True)   # "mandi" | "weather"
+    status      = Column(String,   nullable=False)               # "success" | "partial" | "failed"
+    rows        = Column(Integer,  default=0)                     # rows fetched / districts updated
+    detail      = Column(String,   nullable=True)                # short human-readable summary
+    duration_ms = Column(Integer,  nullable=True)                # wall-clock run time
+    started_at  = Column(DateTime, nullable=True)
+    finished_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 # ── KRASHI BAZAR (social crop marketplace) ──────────────────
 
 class BazarPost(Base):
@@ -386,9 +406,19 @@ class Order(Base):
     unit_price    = Column(Float,    nullable=False)
     total         = Column(Float,    nullable=False)
     phone         = Column(String,   nullable=False)
-    source        = Column(String,   default="shop")   # "shop" or "mandi"
-    status        = Column(String,   default="Pending")  # Pending / Confirmed / Delivered
+    source        = Column(String,   default="shop")   # "shop" / "mandi" / "prebook"
+    status        = Column(String,   default="Pending")  # Pending / Booked / Quoted / Purchased / Delivered
     created_at    = Column(DateTime, default=datetime.utcnow)
+
+    # ── Pre-book (RFQ) fields ─────────────────────────────────
+    # Farmer pre-books → owner sources a local dealer → sends a quote back (seen via the 🔔 bell)
+    pincode       = Column(String,   nullable=True)   # farmer delivery pincode (demand map + dealer match)
+    customer_name = Column(String,   nullable=True)   # name from the pre-book form
+    quote_total   = Column(Float,    nullable=True)   # full quoted price incl. delivery + our commission
+    delivery_info = Column(String,   nullable=True)   # dealer + delivery details sent to the farmer
+    dealer_name   = Column(String,   nullable=True)   # local dealer fulfilling the order
+    quote_note    = Column(String,   nullable=True)   # optional free-text note in the quote
+    quoted_at     = Column(DateTime, nullable=True)   # when the quote was sent (drives the 🔔 badge)
 
 
 # ── DB Helpers ───────────────────────────────────────────────
@@ -528,6 +558,15 @@ def _ensure_postgres_columns():
             ("row_key", "VARCHAR"),
             ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
+        "sync_log": [
+            ("source", "VARCHAR"),
+            ("status", "VARCHAR"),
+            ("rows", "INTEGER DEFAULT 0"),
+            ("detail", "VARCHAR"),
+            ("duration_ms", "INTEGER"),
+            ("started_at", "TIMESTAMP"),
+            ("finished_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
         "carts": [
             ("id", "INTEGER"),
             ("user_id", "INTEGER"),
@@ -552,6 +591,13 @@ def _ensure_postgres_columns():
             ("source", "VARCHAR DEFAULT 'shop'"),
             ("status", "VARCHAR DEFAULT 'Pending'"),
             ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("pincode", "VARCHAR"),
+            ("customer_name", "VARCHAR"),
+            ("quote_total", "FLOAT"),
+            ("delivery_info", "VARCHAR"),
+            ("dealer_name", "VARCHAR"),
+            ("quote_note", "VARCHAR"),
+            ("quoted_at", "TIMESTAMP"),
         ],
     }
 

@@ -43,18 +43,45 @@ document.addEventListener("DOMContentLoaded", function () {
     window.location.href = avatarTarget();
   });
 
+  // Renders the avatar image into `el` with a graceful fallback.
+  // The image is served by the backend (Render free tier), which can be
+  // cold-starting or briefly unreachable — a plain <img> would then show a
+  // broken-image icon and "disappear". Instead we retry once with a cache-bust
+  // after a short delay, and only then fall back to the 👤 icon.
+  // Exposed on window so page-level scripts can reuse the same behaviour.
+  function renderHeaderAvatar(el, src) {
+    if (!el || !src) return;
+    const img = document.createElement("img");
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;";
+    img.alt = "";
+    let retried = false;
+    img.onerror = function () {
+      if (!retried) {
+        retried = true;
+        setTimeout(function () {
+          img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "r=" + Date.now();
+        }, 1800);
+      } else {
+        el.textContent = "👤";
+      }
+    };
+    img.src = src;
+    el.innerHTML = "";
+    el.appendChild(img);
+  }
+  window.KrashiMitraRenderAvatar = renderHeaderAvatar;
+
   const token = localStorage.getItem("krishi_token");
   if (token) {
     // Keep href in sync for hover/middle-click/right-click UX
     btn.href = "profile.html";
 
+    const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
     const cachedAvatar = localStorage.getItem("user_avatar_url");
     if (cachedAvatar && cachedAvatar !== "null") {
-      const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
       const src = cachedAvatar.startsWith("/") ? apiBase + cachedAvatar : cachedAvatar;
-      btn.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+      renderHeaderAvatar(btn, src);
     } else {
-      const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
       fetch(`${apiBase}/profile`, {
         headers: { "Authorization": `Bearer ${token}` }
       })
@@ -65,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (res.data.avatar_url) {
             localStorage.setItem("user_avatar_url", res.data.avatar_url);
             const src = res.data.avatar_url.startsWith("/") ? apiBase + res.data.avatar_url : res.data.avatar_url;
-            btn.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
+            renderHeaderAvatar(btn, src);
           }
           if (res.data.full_name) {
             localStorage.setItem("user_name", res.data.full_name);
