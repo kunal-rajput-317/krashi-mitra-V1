@@ -312,6 +312,26 @@ class MandiPriceHistory(Base):
     fetched_at   = Column(DateTime, default=datetime.utcnow)
 
 
+# ── DATA SYNC LOG ────────────────────────────────────────────
+
+class SyncLog(Base):
+    """
+    One row per data-sync run (mandi / weather). An audit trail of *when*
+    external data was last fetched, whether it succeeded, and how much came
+    in — surfaced in the admin panel so a silently-stale feed is obvious.
+    """
+    __tablename__ = "sync_log"
+
+    id          = Column(Integer,  primary_key=True, index=True)
+    source      = Column(String,   nullable=False, index=True)   # "mandi" | "weather"
+    status      = Column(String,   nullable=False)               # "success" | "partial" | "failed"
+    rows        = Column(Integer,  default=0)                     # rows fetched / districts updated
+    detail      = Column(String,   nullable=True)                # short human-readable summary
+    duration_ms = Column(Integer,  nullable=True)                # wall-clock run time
+    started_at  = Column(DateTime, nullable=True)
+    finished_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 # ── KRASHI BAZAR (social crop marketplace) ──────────────────
 
 class BazarPost(Base):
@@ -387,7 +407,7 @@ class Order(Base):
     total         = Column(Float,    nullable=False)
     phone         = Column(String,   nullable=False)
     source        = Column(String,   default="shop")   # "shop" / "mandi" / "prebook"
-    status        = Column(String,   default="Pending")  # Pending / Quoted / Verified / Purchased / Delivered
+    status        = Column(String,   default="Pending")  # Pending / Booked / Quoted / Purchased / Delivered
     created_at    = Column(DateTime, default=datetime.utcnow)
 
     # ── Pre-book (RFQ) fields ─────────────────────────────────
@@ -537,6 +557,15 @@ def _ensure_postgres_columns():
             ("group_key", "VARCHAR"),
             ("row_key", "VARCHAR"),
             ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
+        "sync_log": [
+            ("source", "VARCHAR"),
+            ("status", "VARCHAR"),
+            ("rows", "INTEGER DEFAULT 0"),
+            ("detail", "VARCHAR"),
+            ("duration_ms", "INTEGER"),
+            ("started_at", "TIMESTAMP"),
+            ("finished_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
         "carts": [
             ("id", "INTEGER"),

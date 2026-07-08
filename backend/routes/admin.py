@@ -2,9 +2,10 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import shutil, secrets, json
+from sqlalchemy.orm import Session
 
 router   = APIRouter(prefix="/admin")
 security = HTTPBasic()
@@ -26,6 +27,11 @@ def require_admin(creds: HTTPBasicCredentials = Depends(security)):
             headers={"WWW-Authenticate": "Basic"},
         )
     return creds.username
+
+
+def admin_db():
+    from backend.database.db import get_db
+    yield from get_db()
 
 
 # ── System Status ─────────────────────────────────────────────
@@ -85,6 +91,26 @@ async def system_status(_: str = Depends(require_admin)):
         "pipeline_timeout":     settings.get("pipeline_timeout"),
         "gemini_timeout":       settings.get("gemini_timeout"),
         "allowed_models":       ALLOWED_GEMINI_MODELS,
+    }
+
+
+# ── Data Sync Log ─────────────────────────────────────────────
+
+@router.get("/sync-log")
+async def sync_log(
+    limit: int = Query(40, ge=1, le=200),
+    source: str | None = Query(None, description="mandi | weather"),
+    _: str = Depends(require_admin),
+):
+    """
+    Audit trail of mandi/weather data fetches — when each ran, whether it
+    succeeded, how many rows came in. Powers the admin 'Data Sync Log' panel.
+    """
+    from backend.services.sync_log_service import get_recent, get_summary
+    return {
+        "success": True,
+        "summary": get_summary(),          # latest run per source
+        "runs":    get_recent(limit, source),
     }
 
 
@@ -303,5 +329,230 @@ async def reindex(_: str = Depends(require_admin)):
         from rag.indexer import run_indexing
         total = run_indexing(force=True)
         return {"status": "reindexed", "total_chunks": total}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+# ── Regional Heatmap stats ─────────────────────────────────────
+
+# Admin order operations -----------------------------------------------------
+
+def _order_to_dict(o):
+    return {
+        "id":            o.id,
+        "tracking_code": o.tracking_code,
+        "user_id":       o.user_id,
+        "user_email":    o.user_email,
+        "user_name":     o.user_name,
+        "is_guest":      o.is_guest,
+        "session_id":    o.session_id,
+        "product_name":  o.product_name,
+        "product_id":    o.product_id,
+        "quantity":      o.quantity,
+        "unit_price":    o.unit_price,
+        "total":         o.total,
+        "phone":         o.phone,
+        "source":        o.source,
+        "status":        o.status,
+        "created_at":    o.created_at.isoformat() if o.created_at else "",
+        "customer_name": o.customer_name,
+        "pincode":       o.pincode,
+        "quote_total":   o.quote_total,
+        "delivery_info": o.delivery_info,
+        "dealer_name":   o.dealer_name,
+        "quote_note":    o.quote_note,
+        "quoted_at":     o.quoted_at.isoformat() if o.quoted_at else None,
+    }
+
+
+@router.get("/orders")
+async def list_admin_orders(
+    limit: int = Query(100, ge=1, le=500),
+    source: str | None = Query(None),
+    status: str | None = Query(None),
+    _: str = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.database.db import Order
+
+    q = db.query(Order)
+    if source:
+        q = q.filter(Order.source == source)
+    if status:
+        q = q.filter(Order.status == status)
+
+    rows = q.order_by(Order.created_at.desc()).limit(limit).all()
+    return {
+        "success": True,
+        "total": len(rows),
+        "orders": [_order_to_dict(o) for o in rows],
+    }
+
+
+@router.put("/orders/{tracking_code}/quote")
+async def quote_admin_order(
+    tracking_code: str,
+    payload: dict,
+    _: str = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.database.db import Order
+
+    try:
+        quote_total = float(payload.get("quote_total"))
+    except (TypeError, ValueError):
+        raise HTTPException(400, "quote_total must be a number")
+
+    delivery_info = (payload.get("delivery_info") or "").strip()
+    if not delivery_info:
+        raise HTTPException(400, "delivery_info required")
+
+    order = db.query(Order).filter(Order.tracking_code == tracking_code).first()
+    if not order:
+        raise HTTPException(404, f"Order {tracking_code} not found")
+
+    order.quote_total = quote_total
+    order.delivery_info = delivery_info
+    order.dealer_name = (payload.get("dealer_name") or "").strip() or None
+    order.quote_note = (payload.get("quote_note") or "").strip() or None
+    order.status = "Quoted"
+    order.quoted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(order)
+
+    return {
+        "success": True,
+        "tracking_code": order.tracking_code,
+        "status": order.status,
+        "quote_total": order.quote_total,
+        "order": _order_to_dict(order),
+    }
+
+
+@router.put("/orders/{tracking_code}/status")
+async def update_admin_order_status(
+    tracking_code: str,
+    payload: dict,
+    _: str = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.database.db import Order
+
+    valid_statuses = {
+        "Pending", "Booked", "Quoted", "Purchased",
+        "Dispatched", "Delivered", "Cancelled", "Unavailable",
+    }
+    next_status = (payload.get("status") or "").strip()
+    if next_status not in valid_statuses:
+        raise HTTPException(400, f"Invalid status. Use: {', '.join(sorted(valid_statuses))}")
+
+    order = db.query(Order).filter(Order.tracking_code == tracking_code).first()
+    if not order:
+        raise HTTPException(404, f"Order {tracking_code} not found")
+
+    old_status = order.status
+    order.status = next_status
+    db.commit()
+    db.refresh(order)
+
+    return {
+        "success": True,
+        "tracking_code": order.tracking_code,
+        "old_status": old_status,
+        "new_status": order.status,
+        "order": _order_to_dict(order),
+    }
+
+
+@router.get("/heatmap")
+async def get_admin_heatmap(
+    _: str = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.database.db import Order
+
+    try:
+        orders = db.query(Order).all()
+
+        tracked_states = [
+            "Uttar Pradesh", "Maharashtra", "Rajasthan", "Gujarat",
+            "Madhya Pradesh", "Punjab", "Haryana", "Karnataka", "Bihar",
+            "West Bengal", "Tamil Nadu", "Odisha", "Andhra Pradesh",
+            "Telangana", "Kerala", "Jammu and Kashmir", "Ladakh", "Assam",
+            "Delhi", "Uttarakhand", "Jharkhand", "Chhattisgarh",
+        ]
+        state_demand = {
+            state: {"state": state, "demand": 0, "delivered": 0, "not_available": 0}
+            for state in tracked_states
+        }
+
+        grid = {
+            "Meerut":    [0] * 12,
+            "Lucknow":   [0] * 12,
+            "Varanasi":  [0] * 12,
+            "Aligarh":   [0] * 12,
+            "Bareilly":  [0] * 12,
+            "Gorakhpur": [0] * 12,
+            "Kanpur":    [0] * 12,
+            "Other":     [0] * 12,
+        }
+
+        def state_from_pincode(pincode: str | None) -> str:
+            digits = "".join(ch for ch in str(pincode or "") if ch.isdigit())
+            if not digits:
+                return "Uttar Pradesh"
+            first = digits[0]
+            if first == "2":
+                return "Uttar Pradesh"
+            if first == "3":
+                return "Rajasthan"
+            if first == "4":
+                return "Maharashtra"
+            if first == "5":
+                return "Karnataka"
+            if first == "6":
+                return "Tamil Nadu"
+            if first == "7":
+                return "West Bengal"
+            if first == "8":
+                return "Bihar"
+            if first == "1":
+                return "Delhi"
+            return "Uttar Pradesh"
+
+        def district_bucket(order) -> str:
+            haystack = " ".join(str(v or "") for v in (
+                order.customer_name, order.delivery_info, order.dealer_name,
+                order.quote_note, order.user_name, order.user_email,
+            )).lower()
+            for name in grid.keys():
+                if name != "Other" and name.lower() in haystack:
+                    return name
+            return "Other"
+
+        for order in orders:
+            qty = order.quantity or 1
+            state_key = state_from_pincode(order.pincode)
+            if state_key not in state_demand:
+                state_demand[state_key] = {"state": state_key, "demand": 0, "delivered": 0, "not_available": 0}
+
+            state_demand[state_key]["demand"] += qty
+            status_lower = (order.status or "").lower()
+            if status_lower == "delivered":
+                state_demand[state_key]["delivered"] += qty
+            elif status_lower in {"unavailable", "cancelled"} or "not" in status_lower or "reject" in status_lower:
+                state_demand[state_key]["not_available"] += qty
+
+            month_idx = 6
+            if order.created_at:
+                month_idx = max(0, min(11, order.created_at.month - 1))
+            grid[district_bucket(order)][month_idx] += qty
+
+        return {
+            "success": True,
+            "state_demand": list(state_demand.values()),
+            "monthly_grid": grid,
+            "orders_count": len(orders),
+        }
     except Exception as e:
         raise HTTPException(500, str(e))

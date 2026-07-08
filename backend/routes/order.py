@@ -188,14 +188,14 @@ def get_order_history(
 
 # ── PUT /order/status — Admin updates order status ───────────
 
-VALID_STATUSES = ["Pending", "Prebook", "Quoted", "Verified", "Purchased",
+VALID_STATUSES = ["Pending", "Booked", "Quoted", "Purchased",
                   "Dispatched", "Delivered", "Cancelled", "Unavailable"]
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "krashimitra_admin_2026")
 
 
 class StatusUpdateRequest(BaseModel):
     tracking_code: str
-    status:        str       # Pending / Verified / Purchased / Delivered
+    status:        str       # Pending / Booked / Quoted / Purchased / Delivered
     admin_key:     str       # must match ADMIN_SECRET
 
 

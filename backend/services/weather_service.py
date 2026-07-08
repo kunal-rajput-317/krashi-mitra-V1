@@ -26,6 +26,7 @@ from backend.database.db import (
     WeatherHistory,
     UP_DISTRICT_CITY_MAP,
 )
+from backend.services.sync_log_service import record_sync
 
 logger = logging.getLogger("krishi.weather_service")
 
@@ -217,9 +218,13 @@ async def refresh_all_districts():
       - avoids hammering OWM with 75 simultaneous requests
       - total wall-clock time: ~15-20 seconds per full cycle
     """
+    start_time = datetime.utcnow()
+
     api_key = os.getenv("OPENWEATHER_API_KEY", "")
     if not api_key:
         logger.error("❌ OPENWEATHER_API_KEY not set — skipping weather refresh")
+        record_sync("weather", "failed", 0,
+                    "OPENWEATHER_API_KEY not set — refresh skipped", start_time)
         return
 
     districts = list(UP_DISTRICT_CITY_MAP.items())   # list of (district, city)
@@ -227,7 +232,6 @@ async def refresh_all_districts():
     batch_size = 10
 
     logger.info(f"🌦️  Starting weather refresh — {total} districts in batches of {batch_size}")
-    start_time = datetime.utcnow()
 
     success_count = 0
     fail_count    = 0
@@ -256,6 +260,11 @@ async def refresh_all_districts():
         if deleted:
             logger.info(f"🗑️  Purged {deleted} history rows older than 7 days")
 
+    except Exception as e:
+        logger.error(f"❌ Weather refresh crashed: {e}")
+        record_sync("weather", "failed", success_count,
+                    f"refresh crashed after {success_count}/{total}: {e}", start_time)
+        raise
     finally:
         db.close()
 
@@ -264,6 +273,15 @@ async def refresh_all_districts():
         f"🏁 Weather refresh complete — "
         f"✅ {success_count} ok | ❌ {fail_count} failed | "
         f"⏱️  {elapsed}s elapsed"
+    )
+
+    # Record this run so the admin panel shows when weather last synced.
+    status = "success" if fail_count == 0 else ("partial" if success_count else "failed")
+    record_sync(
+        "weather", status, success_count,
+        f"{success_count}/{total} districts updated"
+        + (f", {fail_count} failed" if fail_count else ""),
+        start_time,
     )
 
 

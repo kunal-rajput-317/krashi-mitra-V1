@@ -335,6 +335,9 @@ def check_api_key() -> bool:
 
 def fetch_and_store() -> dict:
     """Main entry point. Returns a small summary dict for logging/tests."""
+    from backend.services.sync_log_service import record_sync
+
+    started_at = datetime.utcnow()
     init_db()
     records, failed_states = _fetch_all_records()
 
@@ -343,6 +346,11 @@ def fetch_and_store() -> dict:
         if not records:
             existing = db.query(MandiPrice).count()
             logger.warning(f"No records fetched. Keeping existing snapshot ({existing} rows).")
+            record_sync(
+                "mandi", "failed", 0,
+                f"no records fetched — kept existing snapshot ({existing} rows)",
+                started_at,
+            )
             return {"fetched": 0, "snapshot": existing, "history_added": 0}
 
         # Normalise + enrich every record
@@ -446,12 +454,18 @@ def fetch_and_store() -> dict:
             f"snapshot_inserted={len(snapshot)} history_added={history_added} "
             f"failed_states={len(failed_states)}"
         )
+        status = "partial" if failed_states else "success"
+        detail = f"{len(rows)} rows, {len(snapshot)} snapshot, +{history_added} history"
+        if failed_states:
+            detail += f" — {len(failed_states)} state(s) incomplete"
+        record_sync("mandi", status, len(rows), detail, started_at)
         return {"fetched": len(rows), "snapshot": len(snapshot),
                 "history_added": history_added, "failed_states": sorted(failed_states)}
 
     except Exception as e:
         db.rollback()
         logger.error(f"❌ fetch_and_store failed: {e}")
+        record_sync("mandi", "failed", 0, f"fetch_and_store crashed: {e}", started_at)
         raise
     finally:
         db.close()
