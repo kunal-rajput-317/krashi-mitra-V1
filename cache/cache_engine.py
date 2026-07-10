@@ -68,11 +68,28 @@ def _load_from_disk() -> list[dict]:
         return []
 
 def _persist():
-    global _index
+    global _index, _unsaved_hits
     if _index is None:
         return
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(_index, f, ensure_ascii=False, indent=2)
+    _unsaved_hits = 0
+
+
+# Hit counters are analytics-only — don't rewrite the whole JSON (embeddings
+# included, >1MB) on every cache hit. That write is slow and trips file
+# watchers (VS Code Live Server reloads the page on every question).
+# Persist at most every N hits; any other persist (save/edit/clear) flushes
+# pending counts too since they live in the same in-memory index.
+_HITS_PERSIST_EVERY = 10
+_unsaved_hits = 0
+
+def _bump_hits(entry: dict):
+    global _unsaved_hits
+    entry["hits"] = entry.get("hits", 0) + 1
+    _unsaved_hits += 1
+    if _unsaved_hits >= _HITS_PERSIST_EVERY:
+        _persist()
 
 # Aliases used by admin.py for direct list manipulation
 def _load() -> list[dict]:
@@ -119,8 +136,7 @@ def search_cache(question: str) -> dict | None:
     # Step 1 — fuzzy text match (fast, no model needed)
     for entry in index:
         if _is_same_question(entry.get("question", ""), question):
-            entry["hits"] = entry.get("hits", 0) + 1
-            _persist()
+            _bump_hits(entry)
             return {
                 "answer":     entry["answer"],
                 "score":      1.0,
@@ -151,8 +167,7 @@ def search_cache(question: str) -> dict | None:
             best_idx   = i
 
     if best_score >= SIM_THRESHOLD and best_idx >= 0:
-        index[best_idx]["hits"] = index[best_idx].get("hits", 0) + 1
-        _persist()
+        _bump_hits(index[best_idx])
         return {
             "answer":     index[best_idx]["answer"],
             "score":      round(best_score, 4),
@@ -217,7 +232,9 @@ def save_to_cache(question: str, answer: str, source: str = "ai") -> bool:
 def get_cache_stats() -> dict:
     index = _get_index()
     total_hits = sum(e.get("hits", 0) for e in index)
-    top = sorted(index, key=lambda x: x.get("hits", 0), reverse=True)[:10]
+    # Full index, newest first — the admin panel is a management view, so a
+    # just-saved entry must be visible immediately (a top-10-by-hits cut hid it).
+    top = sorted(index, key=lambda x: x.get("saved_at", ""), reverse=True)
     top_clean = [{k: v for k, v in e.items() if k != "embedding"} for e in top]
     return {
         "total_entries":      len(index),
