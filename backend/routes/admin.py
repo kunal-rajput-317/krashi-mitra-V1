@@ -114,6 +114,53 @@ async def sync_log(
     }
 
 
+# ── Manual data-fetch trigger ─────────────────────────────────
+
+# Each source's registered APScheduler job (module, job_id). Triggering runs
+# through the job (next_run_time=now) instead of calling the fetch directly, so
+# it reuses the job's max_instances=1 guard (no overlap with the scheduled run)
+# and executes in the scheduler's background thread — the HTTP call returns at
+# once and the result lands in the Data Sync Log a minute or two later.
+_FETCH_JOBS = {
+    "mandi":   ("backend.services.mandi_scheduler",   "mandi_price_refresh"),
+    "weather": ("backend.services.weather_scheduler", "weather_cache_refresh"),
+}
+
+
+@router.post("/fetch/{source}")
+async def trigger_fetch(source: str, _: str = Depends(require_admin)):
+    """
+    Manually kick off a mandi or weather data fetch from the admin panel.
+
+    Note the data.gov mandi feed is wiped overnight and refills through the
+    day (scheduled runs: 08/10/13/16/20h IST) — a manual fetch can only get
+    what mandis have reported so far. That's always safe: results are MERGED
+    into the snapshot per market, and near-empty results are discarded by
+    the sparse-feed guard.
+    """
+    import importlib
+    import pytz
+
+    if source not in _FETCH_JOBS:
+        raise HTTPException(400, "source must be 'mandi' or 'weather'")
+
+    module_path, job_id = _FETCH_JOBS[source]
+    scheduler = getattr(importlib.import_module(module_path), "scheduler", None)
+    job = scheduler.get_job(job_id) if scheduler else None
+    if job is None:
+        raise HTTPException(503, f"{source} scheduler is not running — cannot trigger a fetch")
+
+    now_ist = datetime.now(pytz.timezone("Asia/Kolkata"))
+    job.modify(next_run_time=now_ist)
+    return {
+        "status":       "triggered",
+        "source":       source,
+        "message":      f"{source.title()} fetch started in the background — "
+                        f"refresh the sync log in a minute to see the result.",
+        "triggered_at": now_ist.strftime("%d %b %Y, %I:%M %p IST"),
+    }
+
+
 # ── Runtime Settings ──────────────────────────────────────────
 
 @router.get("/settings")

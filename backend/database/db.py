@@ -273,7 +273,9 @@ class ChatHistory(Base):
 
 
 class MandiPrice(Base):
-    """Latest snapshot — rebuilt every fetch. One row per market/commodity/variety."""
+    """Latest snapshot — MERGED every fetch (upsert per market identity).
+    Markets that haven't reported today keep their last known price until
+    they report again (aged out after ~7 days unrefreshed)."""
     __tablename__ = "mandi_prices"
     id               = Column(Integer,  primary_key=True, index=True)
     state            = Column(String,   nullable=True, index=True)
@@ -293,7 +295,9 @@ class MandiPrice(Base):
 
 
 class MandiPriceHistory(Base):
-    """Append-only daily history. Never auto-purged — full trend retained."""
+    """Append-only daily history, deduped by row_key. Trimmed after each
+    fetch to the last MANDI_HISTORY_DAYS days (default 30; 0 = keep forever)
+    — powers prev-price deltas, sparklines and the trend chart."""
     __tablename__ = "mandi_price_history"
     id           = Column(Integer,  primary_key=True, index=True)
     state        = Column(String,   nullable=True, index=True)

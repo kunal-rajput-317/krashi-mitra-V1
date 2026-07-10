@@ -80,14 +80,27 @@ def _refresh_if_stale():
 
 
 def _register_job():
-    """Register the daily mandi refresh job. data.gov updates ~once a day."""
+    """
+    Register the mandi refresh job. data.gov wipes the daily feed overnight
+    and refills it as mandis report through the day (2 rows at 06:30 IST,
+    ~half by ~09:30, ~10k by 11:30, full ~18k by evening). Five runs/day:
+      08:00 IST — today's early reporters start flowing in
+      10:00 IST — late-morning top-up
+      13:00 IST — feed mostly full
+      16:00 IST — afternoon top-up
+      20:00 IST — end-of-day sweep before the overnight wipe, so pre-dawn
+                  users always see yesterday's complete final prices
+    All runs are idempotent AND safe at any feed level: the snapshot is
+    MERGED per market identity (never wholesale-deleted), history dedupes by
+    row_key, and the sparse guard rejects near-empty results.
+    """
     from backend.services.mandi_fetch_service import fetch_and_store
 
     scheduler.add_job(
         func               = fetch_and_store,
-        trigger            = CronTrigger(hour=6, minute=30, timezone=IST),
+        trigger            = CronTrigger(hour="8,10,13,16,20", minute=0, timezone=IST),
         id                 = "mandi_price_refresh",
-        name               = "Nationwide Mandi Prices — Daily 06:30 IST",
+        name               = "Nationwide Mandi Prices — Daily 08/10/13/16/20h IST",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,
@@ -106,7 +119,7 @@ def _register_job():
         max_instances      = 1,
         coalesce           = True,
     )
-    logger.info("📅 Mandi jobs registered | daily @ 06:30 IST + 30-min staleness watchdog")
+    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h IST + 30-min staleness watchdog")
 
 
 async def start_scheduler():
@@ -126,7 +139,7 @@ async def start_scheduler():
     check_api_key()
 
     if not _refresh_if_stale():
-        logger.info("Mandi snapshot fresh — next fetch at daily 06:30 IST")
+        logger.info("Mandi snapshot fresh — next scheduled fetch at 08/10/13/16/20h IST")
 
 
 async def stop_scheduler():
