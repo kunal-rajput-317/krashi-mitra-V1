@@ -1199,7 +1199,11 @@ body {
         <div class="dashboard-panel" style="margin-top:16px;">
           <div class="panel-header" style="flex-wrap:wrap; gap:10px;">
             <span class="panel-title">🔄 Recent Data Fetches</span>
-            <button class="btn btn-secondary btn-sm" onclick="loadSyncLog()">↻ Refresh</button>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-left:auto;">
+              <button class="btn btn-primary btn-sm" id="fetch-mandi-btn" onclick="triggerFetch('mandi', this)">🌾 Fetch Mandi Now</button>
+              <button class="btn btn-secondary btn-sm" id="fetch-weather-btn" onclick="triggerFetch('weather', this)">⛅ Fetch Weather Now</button>
+              <button class="btn btn-secondary btn-sm" onclick="loadSyncLog()">↻ Refresh</button>
+            </div>
           </div>
           <div class="panel-body">
             <p class="text-muted" style="font-size:12px; margin-bottom:14px;">
@@ -2267,10 +2271,62 @@ async function loadSyncLog() {
         <td class="text-muted text-mono" style="font-size:11px;" title="${escapeHtml(x.finished_at || '')}">${escapeHtml(x.age || x.finished_at || '—')}</td>
       </tr>`).join('') : '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:16px;">No sync runs recorded yet — the scheduler logs each fetch here.</td></tr>';
     }
+    return d;
   } catch (e) {
     _syncSummaryCard('sync-mandi-age', 'sync-mandi-detail', null, 'Backend offline');
     _syncSummaryCard('sync-weather-age', 'sync-weather-detail', null, 'Backend offline');
     if (tb) tb.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:16px;">Could not load sync log — backend offline.</td></tr>';
+    return null;
+  }
+}
+
+// Manually kick off a mandi/weather fetch. The backend triggers the registered
+// scheduler job (runs in a background thread) and returns immediately, so we
+// poll loadSyncLog() until its summary shows a genuinely NEW run for this
+// source — a nationwide mandi fetch (~42 states, with retries) can take
+// several minutes, well past any fixed short timer, so we compare against the
+// pre-trigger baseline run instead of giving up on a clock.
+async function triggerFetch(source, btn) {
+  const label = btn ? btn.textContent : '';
+  const buttons = ['fetch-mandi-btn', 'fetch-weather-btn'].map(id => document.getElementById(id));
+  buttons.forEach(b => { if (b) b.disabled = true; });
+  if (btn) btn.textContent = '⏳ Starting…';
+
+  const baselineData = await loadSyncLog();
+  const baseline = baselineData && baselineData.summary && baselineData.summary[source];
+
+  try {
+    const r = await fetch(`${API}/admin/fetch/${source}`, { method: 'POST', headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.status !== 'triggered') throw new Error(d.detail || 'trigger failed');
+
+    showToast(d.message || `${source} fetch started.`);
+    if (btn) btn.textContent = '⏳ Fetching…';
+
+    const deadline = Date.now() + 6 * 60 * 1000;   // give up after 6 min
+    let done = false;
+    while (Date.now() < deadline) {
+      await new Promise(res => setTimeout(res, 10000));
+      const latestData = await loadSyncLog();
+      const latestRun = latestData && latestData.summary && latestData.summary[source];
+      if (latestRun && latestRun.finished_at && latestRun.finished_at !== (baseline && baseline.finished_at)) {
+        showToast(
+          `${source === 'mandi' ? 'Mandi' : 'Weather'} fetch complete — ${(latestRun.status || '').toUpperCase()}, ${latestRun.rows ?? 0} rows.`,
+          latestRun.status === 'failed' ? 'error' : 'success'
+        );
+        done = true;
+        break;
+      }
+    }
+    if (!done) {
+      showToast(`${source} fetch is still running in the background — check the log again shortly.`, 'error');
+    }
+  } catch (e) {
+    showToast(`Could not start ${source} fetch: ${e.message}`, 'error');
+  } finally {
+    buttons.forEach(b => { if (b) b.disabled = false; });
+    if (btn) btn.textContent = label;
   }
 }
 

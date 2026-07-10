@@ -42,8 +42,20 @@ PAGE_LIMIT = 5000      # rows per request
 MAX_PAGES  = 20        # safety cap on pages per state
 
 # History retention: trim mandi_price_history to the last N days after each
-# fetch so it doesn't grow unbounded (~14 MB/day). 0 = keep forever.
-HISTORY_DAYS = int(os.getenv("MANDI_HISTORY_DAYS", "90"))
+# fetch so it doesn't grow unbounded (~8 MB/day at full ~18k-row capture).
+# 30d ≈ ~400 MB — fits Neon's free tier; 90d (~1 GB+) does not. Everything
+# downstream needs far less: deltas 1 day, sparklines ~8, trend chart a few
+# weeks. 0 = keep forever.
+HISTORY_DAYS = int(os.getenv("MANDI_HISTORY_DAYS", "30"))
+
+# Sparse-feed floor: data.gov wipes this resource overnight and refills it
+# through the day (seen 2026-07-09/10: 2 rows at 06:30 IST, ~5.7k by 09:40,
+# ~10k by 11:40, ~17.9k by evening). A normal day lands thousands of rows, so
+# a tiny result means "fetched too early", NOT "markets were quiet". Runs
+# below this floor must never replace the snapshot — they'd clobber it down
+# to a handful of rows AND mark it fresh, silencing the staleness watchdog
+# for a whole day (exactly the 2-row bug of 2026-07-09/10).
+MIN_ROWS = int(os.getenv("MANDI_MIN_ROWS", "500"))
 
 # data.gov.in is Elasticsearch-backed: offset + limit must be <= 10000, so
 # plain nationwide offset-paging can never reach rows beyond 10k (~56% of the
@@ -407,22 +419,60 @@ def fetch_and_store() -> dict:
                 logger.info(f"🧹 Trimmed {trim.rowcount} history rows older than "
                             f"{cutoff} ({HISTORY_DAYS}d retention).")
 
+        # SPARSE-FEED GUARD — keep whatever rows came in as history (they're
+        # real and dedupe against the later full fetch), but never let a
+        # near-empty run touch the snapshot or bump fetched_at: keeping
+        # fetched_at old leaves the staleness watchdog armed, so the fetch
+        # simply retries once the feed has actually filled up.
+        if len(rows) < MIN_ROWS:
+            existing = db.query(MandiPrice).count()
+            logger.warning(
+                f"⚠️ Feed sparse: only {len(rows)} rows (< MANDI_MIN_ROWS={MIN_ROWS}) — "
+                f"keeping existing snapshot ({existing} rows), history +{history_added}."
+            )
+            record_sync(
+                "mandi", "partial", len(rows),
+                f"feed sparse ({len(rows)} rows < {MIN_ROWS}) — kept snapshot "
+                f"({existing} rows), +{history_added} history; will refetch when feed fills",
+                started_at,
+            )
+            return {"fetched": len(rows), "snapshot": existing,
+                    "history_added": history_added, "sparse": True}
+
         # Recent price series per group (includes the day we just inserted)
         spark_map = _spark_map(db, group_keys)
 
-        # 2) Refresh the latest snapshot PER STATE with day-over-day deltas +
-        #    sparkline series. States whose fetch hard-failed midway keep their
-        #    existing snapshot rows — a wholesale delete-and-rebuild used to
-        #    wipe good data whenever data.gov flaked mid-run (e.g. a run that
-        #    got only 20 of 30 states replaced the whole nationwide snapshot).
-        complete_rows = [x for x in rows if x["state"] not in failed_states]
-        states_to_replace = {x["state"] for x in complete_rows}
-        if states_to_replace:
+        # 2) MERGE into the latest snapshot (upsert per market/commodity
+        #    identity), with day-over-day deltas + sparkline series. The feed
+        #    refills through the day, so an early fetch only carries what
+        #    mandis have reported so far — the old delete-whole-state rebuild
+        #    gutted the page every morning (e.g. UP down to 9 rows at 09:38
+        #    on 2026-07-10). Instead: replace only rows whose identity
+        #    re-appeared in this fetch; every other market keeps its last
+        #    known price until it reports again (aged out after
+        #    SNAPSHOT_KEEP_DAYS). No wholesale delete also means rows from
+        #    states whose fetch hard-failed midway are safe to merge — a
+        #    fetch can now only improve the snapshot, never shrink it.
+        fetched_keys   = {x["group_key"] for x in rows}
+        touched_states = {x["state"] for x in rows}
+        stale_ids = []
+        existing_q = db.query(
+            MandiPrice.id, MandiPrice.state, MandiPrice.district,
+            MandiPrice.market, MandiPrice.commodity, MandiPrice.variety,
+            MandiPrice.grade,
+        ).filter(MandiPrice.state.in_(touched_states))
+        for rid, st, di, mk, co, va, gr in existing_q:
+            gk = _group_key({"state": st, "district": di, "market": mk,
+                             "commodity": co, "variety": va, "grade": gr})
+            if gk in fetched_keys:
+                stale_ids.append(rid)
+        CHUNK_IDS = 5000
+        for i in range(0, len(stale_ids), CHUNK_IDS):
             db.query(MandiPrice).filter(
-                MandiPrice.state.in_(states_to_replace)
+                MandiPrice.id.in_(stale_ids[i:i + CHUNK_IDS])
             ).delete(synchronize_session=False)
         snapshot = []
-        for x in complete_rows:
+        for x in rows:
             prev = prev_map.get(x["group_key"])
             snapshot.append({
                 "state":            x["state"],
@@ -442,8 +492,8 @@ def fetch_and_store() -> dict:
             })
         db.bulk_insert_mappings(MandiPrice, snapshot)
 
-        # Age out rows never refreshed recently (state kept on failure but
-        # then absent from the feed for a week+) so they don't linger forever.
+        # Age out rows never refreshed recently (market stopped reporting for
+        # a week+) so last-known prices don't linger forever.
         db.query(MandiPrice).filter(
             MandiPrice.fetched_at < now - timedelta(days=SNAPSHOT_KEEP_DAYS)
         ).delete(synchronize_session=False)
@@ -451,16 +501,18 @@ def fetch_and_store() -> dict:
 
         logger.info(
             f"✅ Mandi fetch done | fetched={len(rows)} "
-            f"snapshot_inserted={len(snapshot)} history_added={history_added} "
-            f"failed_states={len(failed_states)}"
+            f"merged={len(snapshot)} (updated {len(stale_ids)}) "
+            f"history_added={history_added} failed_states={len(failed_states)}"
         )
         status = "partial" if failed_states else "success"
-        detail = f"{len(rows)} rows, {len(snapshot)} snapshot, +{history_added} history"
+        detail = (f"{len(rows)} rows merged into snapshot "
+                  f"({len(stale_ids)} updated), +{history_added} history")
         if failed_states:
             detail += f" — {len(failed_states)} state(s) incomplete"
         record_sync("mandi", status, len(rows), detail, started_at)
         return {"fetched": len(rows), "snapshot": len(snapshot),
-                "history_added": history_added, "failed_states": sorted(failed_states)}
+                "replaced": len(stale_ids), "history_added": history_added,
+                "failed_states": sorted(failed_states)}
 
     except Exception as e:
         db.rollback()
