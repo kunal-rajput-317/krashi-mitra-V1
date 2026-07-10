@@ -357,6 +357,64 @@ async def add_cache_entry(payload: dict, _: str = Depends(require_admin)):
         raise HTTPException(500, str(e))
 
 
+@router.post("/cache/seed")
+async def seed_cache_from_file(_: str = Depends(require_admin)):
+    """
+    Re-seed the semantic cache from cache/seed_qa.json (the curated premium Q&A).
+
+    Render's disk is ephemeral, so seeded entries vanish on every redeploy/restart.
+    This lets an admin re-run the seeding from the panel instead of the CLI script.
+    Safe to run anytime — duplicates are skipped by save_to_cache().
+    """
+    seed_file = Path(__file__).parent.parent.parent / "cache" / "seed_qa.json"
+    if not seed_file.exists():
+        raise HTTPException(404, f"Seed file not found: {seed_file.name}")
+
+    try:
+        topics = json.loads(seed_file.read_text(encoding="utf-8"))
+    except Exception as e:
+        raise HTTPException(500, f"Could not read seed file: {e}")
+
+    # [{topic, questions[], answer}] -> [(question, answer), ...]
+    pairs = [
+        (q, t["answer"])
+        for t in topics
+        for q in t.get("questions", [])
+    ]
+    if not pairs:
+        return {"status": "empty", "topics": len(topics),
+                "saved": 0, "duplicates": 0, "failed": 0, "total_entries": 0}
+
+    from fastapi.concurrency import run_in_threadpool
+    from cache.cache_engine import save_to_cache, get_cache_stats
+
+    def _seed_all():
+        # Embedding each question is blocking CPU work; run off the event loop
+        # so the server stays responsive while all ~90 pairs are processed.
+        saved = dupes = failed = 0
+        for question, answer in pairs:
+            try:
+                if save_to_cache(question, answer, source="claude"):
+                    saved += 1
+                else:
+                    dupes += 1   # already present (or rejected — curated data is valid)
+            except Exception:
+                failed += 1
+        return saved, dupes, failed
+
+    saved, dupes, failed = await run_in_threadpool(_seed_all)
+
+    return {
+        "status":        "seeded",
+        "topics":        len(topics),
+        "phrasings":     len(pairs),
+        "saved":         saved,
+        "duplicates":    dupes,
+        "failed":        failed,
+        "total_entries": get_cache_stats().get("total_entries", 0),
+    }
+
+
 @router.post("/cache/search")
 async def search_cache_test(payload: dict, _: str = Depends(require_admin)):
     """

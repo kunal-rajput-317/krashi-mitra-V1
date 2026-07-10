@@ -268,6 +268,8 @@ body {
   color: #fff;
   box-shadow: 0 4px 12px rgba(45, 106, 79, 0.25);
 }
+.sub-tab-pane { display: none; }
+.sub-tab-pane.active { display: block; animation: pageFade 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 
 /* ── Metric Stats Cards ─────────────────────────────────── */
 .grid-cards {
@@ -1765,6 +1767,7 @@ body {
           </div>
           <div class="page-actions" style="display:flex; gap:10px; align-items:center;">
             <button class="btn btn-secondary" onclick="refreshCachePage()">↻ Refresh Cache</button>
+            <button class="btn btn-secondary" onclick="reseedCache()" id="seed-btn" title="Re-add all curated Q&amp;A from seed_qa.json — run this after a redeploy since Render's disk resets">🌱 Re-seed Cache</button>
             <button class="btn btn-primary" onclick="runFullReindex()" id="reindex-btn">⚡ Run RAG Reindex</button>
           </div>
         </div>
@@ -1839,6 +1842,10 @@ body {
           </div>
 
           <div class="sec-label">Cached Queries Index</div>
+          <div class="inp-row" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <input type="text" id="cache-search" class="inp-text" placeholder="🔍 Search cached questions, answers or source…" oninput="renderCacheList()" style="flex:1;">
+            <span id="cache-search-count" class="text-muted text-mono text-sm" style="white-space:nowrap;"></span>
+          </div>
           <div class="q-list" id="q-list">
             <div class="km-loader"><span class="km-spinner"></span> Loading cache…</div>
           </div>
@@ -2398,6 +2405,7 @@ function refreshCachePage() {
   loadCacheStats();
   loadFilesList();
   loadSettings();
+  showToast('Core Config data refreshed');
 }
 
 function switchSubTab(paneId, el) {
@@ -3448,15 +3456,47 @@ async function loadCacheStats() {
     document.getElementById('c-semantic').textContent = d.semantic_enabled ? 'ON' : 'OFF';
     document.getElementById('c-semantic').className = `stat-value ${d.semantic_enabled ? 'ok' : 'warn'}`;
     
-    const list = document.getElementById('q-list');
-    const qs = d.top_questions || [];
-    
-    if (!qs.length) {
-      list.innerHTML = '<div class="text-muted text-mono text-sm">Cache database is currently empty. Ask queries to populate.</div>';
-      return;
-    }
-    
-    list.innerHTML = qs.map((q, idx) => `
+    _cacheQuestions = d.top_questions || [];
+    renderCacheList();
+  } catch(e) {
+    showToast('Failed to retrieve cache stats', 'error');
+  }
+}
+
+// Full cache list is held here so the search box can filter client-side
+// without re-hitting the server on every keystroke. loadCacheStats() refills it.
+let _cacheQuestions = [];
+
+function renderCacheList() {
+  const list    = document.getElementById('q-list');
+  const countEl = document.getElementById('cache-search-count');
+  const term    = (document.getElementById('cache-search')?.value || '').trim().toLowerCase();
+
+  if (!_cacheQuestions.length) {
+    list.innerHTML = '<div class="text-muted text-mono text-sm">Cache database is currently empty. Ask queries to populate.</div>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  const rows = term
+    ? _cacheQuestions.filter(q =>
+        (q.question || '').toLowerCase().includes(term) ||
+        (q.answer   || '').toLowerCase().includes(term) ||
+        (q.source   || '').toLowerCase().includes(term))
+    : _cacheQuestions;
+
+  if (countEl) {
+    countEl.textContent = term
+      ? `${rows.length} of ${_cacheQuestions.length} match`
+      : `${_cacheQuestions.length} total`;
+  }
+
+  if (!rows.length) {
+    list.innerHTML = `<div class="text-muted text-mono text-sm">No cached entries match “${escapeHtml(term)}”.</div>`;
+    return;
+  }
+
+  list.innerHTML = rows.map((q, idx) => `
       <div class="q-item" id="qitem-${idx}">
         <div style="flex:1; min-width:0;">
           <div class="q-text">${escapeHtml(q.question)}</div>
@@ -3472,9 +3512,6 @@ async function loadCacheStats() {
         </div>
       </div>
     `).join('');
-  } catch(e) {
-    showToast('Failed to retrieve cache stats', 'error');
-  }
 }
 
 function toggleAnswerPane(idx) {
@@ -3598,6 +3635,40 @@ async function deleteCacheRow(idx, question) {
     }
   } catch (e) {
     showToast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+async function reseedCache() {
+  if (!confirm('Re-seed the cache from seed_qa.json?\n\nThis re-adds all curated Claude Q&A pairs (duplicates are skipped). Run this after every redeploy — Render wipes the cache on restart.')) return;
+
+  const btn = document.getElementById('seed-btn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Seeding…';
+  showToast('Seeding cache… may take up to a minute on a cold server.');
+
+  try {
+    const r = await fetch(`${API}/admin/cache/seed`, {
+      method: 'POST',
+      headers: getAuthHeader()
+    });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+
+    if (r.ok && (d.status === 'seeded' || d.status === 'empty')) {
+      showToast(`Seeded ✓  ${d.saved} added, ${d.duplicates} already present → ${d.total_entries} total entries.`);
+      printTerminalLog(`Cache re-seeded from seed_qa.json: ${d.saved} saved, ${d.duplicates} skipped, ${d.failed} failed → ${d.total_entries} total`);
+      loadCacheStats();
+    } else {
+      const msg = d.detail || d.reason || `Seeding failed (HTTP ${r.status})`;
+      showToast(msg, 'error');
+      printTerminalLog(`Cache seeding failed: ${msg}`);
+    }
+  } catch(e) {
+    showToast('Seeding failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
   }
 }
 
