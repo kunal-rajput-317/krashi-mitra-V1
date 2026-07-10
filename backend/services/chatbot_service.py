@@ -1,7 +1,7 @@
 # ============================================================
 # services/chatbot_service.py
 # KrashiMitra — Chatbot Service
-# Flow: Cache → RAG → Gemini (multi-key, async) → Ollama fallback
+# Flow: Cache → RAG → Claude (admin toggle) → Gemini (multi-key, async) → Ollama fallback
 # ============================================================
 
 import json
@@ -255,6 +255,61 @@ QUESTION: {question}
 ANSWER:"""
 
 
+# ── Claude (Anthropic) — admin-only cache seeder (ASYNC) ─────
+async def call_claude(prompt: str) -> str:
+    """
+    Call Claude via the official Anthropic SDK (async).
+    Only runs when claude_enabled=true (admin panel toggle) — the admin
+    turns it on to seed the semantic cache with high-quality answers,
+    then turns it off. Reads ANTHROPIC_API_KEY from the environment.
+    """
+    try:
+        import anthropic
+    except ImportError:
+        raise RuntimeError("anthropic SDK not installed — run: pip install anthropic")
+
+    if not os.getenv("ANTHROPIC_API_KEY", "").strip():
+        raise ValueError("No ANTHROPIC_API_KEY configured in environment")
+
+    model   = get_setting("claude_model",   "claude-opus-4-8")
+    timeout = get_setting("claude_timeout", 30.0)
+
+    # max_retries=1: pipeline has a hard 50s budget — a second retry after a
+    # timeout would blow past it anyway; better to fall through to Gemini.
+    async with anthropic.AsyncAnthropic(timeout=timeout, max_retries=1) as client:
+        try:
+            response = await client.messages.create(
+                model=model,
+                # Answers are ≤5 lines, but adaptive thinking tokens count
+                # toward max_tokens — headroom prevents mid-answer truncation.
+                max_tokens=2000,
+                thinking={"type": "adaptive"},
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except anthropic.AuthenticationError:
+            print("[Claude] ❌ Invalid ANTHROPIC_API_KEY")
+            raise
+        except anthropic.RateLimitError:
+            print("[Claude] Rate limited")
+            raise
+        except anthropic.APIStatusError as e:
+            print(f"[Claude] API error {e.status_code}: {e.message}")
+            raise
+        except anthropic.APIConnectionError:
+            print(f"[Claude] Connection failed / timed out after {timeout}s")
+            raise
+
+    if response.stop_reason == "refusal":
+        raise Exception("Claude refused the request")
+
+    answer = "".join(b.text for b in response.content if b.type == "text").strip()
+    if not answer:
+        raise Exception(f"Claude returned no text (stop_reason={response.stop_reason})")
+
+    print(f"[Claude] ✅ Success ({model}, {response.usage.output_tokens} out-tokens)")
+    return answer
+
+
 # ── Gemini with multi-key rotation (ASYNC) ───────────────────
 async def call_gemini(prompt: str) -> str:
     """
@@ -339,16 +394,28 @@ async def call_ollama(prompt: str) -> str:
         return resp.json()["response"]
 
 
-# ── Smart call: Gemini → Ollama (ASYNC) ───────────────────────
+# ── Smart call: Claude (toggle) → Gemini → Ollama (ASYNC) ─────
 async def call_ai(prompt: str) -> tuple[str, str]:
     """
     Returns: (answer, source)
-    source = "gemini" | "ollama" | "error"
+    source = "claude" | "gemini" | "ollama" | "error"
 
+    Claude runs first ONLY when the admin toggle is on (cache-seeding
+    mode); any Claude failure falls through to the normal Gemini chain.
     If Gemini returns a substantive answer (even if borderline quality),
     we use it rather than discarding it. Only true error/refusal messages
     are discarded and fall through to Ollama.
     """
+    # ── Try Claude (admin cache-seeding toggle) ───────────────
+    if get_setting("claude_enabled", False):
+        try:
+            answer = await call_claude(prompt)
+            if is_good_answer(answer):
+                return answer, "claude"
+            print("[AI] Claude answer too weak to use, trying Gemini")
+        except Exception as e:
+            print(f"[AI] Claude failed: {e}")
+
     # ── Try Gemini ────────────────────────────────────────────
     try:
         answer = await call_gemini(prompt)
