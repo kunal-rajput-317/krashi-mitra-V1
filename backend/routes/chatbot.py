@@ -1,7 +1,7 @@
 # ============================================================
 # routes/chatbot.py
 # KrashiMitra — Chatbot Router
-# Full pipeline: Cache → RAG → Gemini (multi-key) → Ollama
+# Full pipeline: Cache → RAG → Claude (admin toggle) → Gemini (multi-key) → Ollama
 # ============================================================
 
 import asyncio
@@ -199,7 +199,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
     _save_to_db(db, body, body.q, answer)
 
     # ── Step 7: Save to cache if AI gave good answer ──────────
-    if source in ("gemini", "ollama") and _CACHE_AVAILABLE and is_good_answer(answer):
+    if source in ("claude", "gemini", "ollama") and _CACHE_AVAILABLE and is_good_answer(answer):
         try:
             saved = save_to_cache(body.q, answer, source=source)
             if saved:
@@ -215,7 +215,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
         "api_usage_saved": False,
         "rag_chunks":      rag_chunks,
         "rag_context":     rag_context[:300] if rag_context else "",
-        "suggestion":      suggest_feature(body.q, body.language) if source in ("gemini", "ollama", "cache") else None,
+        "suggestion":      suggest_feature(body.q, body.language) if source in ("claude", "gemini", "ollama", "cache") else None,
     }
 
 

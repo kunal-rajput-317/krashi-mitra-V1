@@ -295,6 +295,7 @@ body {
   content: ''; position: absolute; top: 0; left: 0; width: 4px; bottom: 0;
   background: var(--border);
 }
+.stat-card.kpi-link { cursor: pointer; }
 .stat-card.accented::before { background: var(--primary); }
 .stat-card.warning::before { background: var(--accent); }
 .stat-card.danger::before { background: var(--danger); }
@@ -1109,29 +1110,29 @@ body {
 
         <!-- Business KPI Grid -->
         <div class="grid-cards" id="overview-kpi-cards">
-          <div class="stat-card accented">
+          <div class="stat-card accented kpi-link" onclick="openOrdersFromKpi('', 'all orders')" title="Open all orders">
             <span class="stat-icon">📦</span>
             <div class="stat-label">Total Orders</div>
             <div class="stat-value" id="kpi-total">—</div>
-            <div class="stat-sub">All time</div>
+            <div class="stat-sub">All time · tap to view →</div>
           </div>
-          <div class="stat-card info">
+          <div class="stat-card info kpi-link" onclick="openOrdersFromKpi('prebook-pending', 'pending pre-books')" title="Open pending pre-books">
             <span class="stat-icon">⏳</span>
             <div class="stat-label">Pending Pre-books</div>
             <div class="stat-value" id="kpi-pending">—</div>
-            <div class="stat-sub">Awaiting your quote</div>
+            <div class="stat-sub">Awaiting your quote · tap to view →</div>
           </div>
-          <div class="stat-card accented">
+          <div class="stat-card accented kpi-link" onclick="openOrdersFromKpi('quoted', 'quotes sent')" title="Open quoted orders">
             <span class="stat-icon">💰</span>
             <div class="stat-label">Quotes Sent</div>
             <div class="stat-value" id="kpi-quoted">—</div>
-            <div class="stat-sub">Waiting on farmer</div>
+            <div class="stat-sub">Waiting on farmer · tap to view →</div>
           </div>
-          <div class="stat-card info">
+          <div class="stat-card info kpi-link" onclick="openOrdersFromKpi('delivered', 'delivered orders')" title="Open delivered orders">
             <span class="stat-icon">✓</span>
             <div class="stat-label">Delivered</div>
             <div class="stat-value ok" id="kpi-delivered">—</div>
-            <div class="stat-sub">Completed</div>
+            <div class="stat-sub">Completed · tap to view →</div>
           </div>
         </div>
 
@@ -1282,6 +1283,15 @@ body {
               <span class="service-desc">Enable fallback local execution</span>
             </div>
             <button class="sw-track" id="sw-dashboard-ollama" onclick="toggleDashboardSetting('sw-dashboard-ollama', 'set-ollama')">
+              <div class="sw-thumb"></div>
+            </button>
+          </div>
+          <div class="service-control-card">
+            <div class="service-info">
+              <span class="service-name">Claude Cache Seeder</span>
+              <span class="service-desc" id="claude-desc">Premium answers → semantic cache (paid API)</span>
+            </div>
+            <button class="sw-track" id="sw-dashboard-claude" onclick="toggleDashboardSetting('sw-dashboard-claude', 'set-claude')">
               <div class="sw-thumb"></div>
             </button>
           </div>
@@ -1817,7 +1827,7 @@ body {
                 <input type="text" class="inp-text" id="qa-question" placeholder="सवाल लिखें..." oninput="calculateQACharcount()">
               </div>
               <div class="form-group mb-16">
-                <label class="form-label">Answer (जवाब)</label>
+                <label class="form-label">Answer (जवाब) — min 20 characters</label>
                 <textarea class="inp-text" id="qa-answer" rows="3" placeholder="जवाब लिखें..." oninput="calculateQACharcount()" style="resize:vertical;"></textarea>
               </div>
               <div class="flex-row">
@@ -2063,6 +2073,9 @@ function doLogin() {
           current_model: 'gemini-1.5-flash',
           semantic_cache: true,
           ollama_enabled: false,
+          claude_configured: false,
+          claude_enabled: false,
+          claude_model: 'claude-opus-4-8',
           pipeline_timeout: 50,
           gemini_timeout: 15
         });
@@ -2106,6 +2119,9 @@ const defaultMockData = {
   current_model: 'gemini-1.5-flash',
   semantic_cache: true,
   ollama_enabled: false,
+  claude_configured: false,
+  claude_enabled: false,
+  claude_model: 'claude-opus-4-8',
   pipeline_timeout: 50,
   gemini_timeout: 15
 };
@@ -2187,13 +2203,14 @@ function _ovHealth(id, ok) {
 async function loadOverview() {
   try {
     const r = await fetch(`${API}/admin/orders?limit=500`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
     const d = await r.json().catch(() => ({}));
-    if (!r.ok || !d.success) throw new Error('bad');
+    if (!r.ok || !d.success) throw new Error(d.detail || d.message || `orders API returned HTTP ${r.status}`);
     const o = d.orders || [];
     const low = s => String(s || '').toLowerCase();
     _ovSet('kpi-total', o.length);
     _ovSet('kpi-pending', o.filter(x => low(x.source) === 'prebook' && x.quote_total == null && ['pending','prebook','booked'].includes(low(x.status))).length);
-    _ovSet('kpi-quoted', o.filter(x => low(x.status) === 'quoted' || x.quote_total != null).length);
+    _ovSet('kpi-quoted', o.filter(x => low(x.status) === 'quoted').length);
     _ovSet('kpi-delivered', o.filter(x => low(x.status) === 'delivered').length);
     _ovHealth('health-backend', true);
     _ovHealth('health-db', true);
@@ -2213,7 +2230,7 @@ async function loadOverview() {
     _ovHealth('health-backend', false);
     _ovHealth('health-db', false);
     const tb = document.getElementById('overview-recent-orders');
-    if (tb) tb.innerHTML = '<tr><td colspan="5" class="text-muted" style="text-align:center;padding:16px;">Backend offline — deploy the admin API.</td></tr>';
+    if (tb) tb.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center;padding:16px;">Couldn't load orders — ${escapeHtml(e.message)}. Check that the backend is reachable, then hit ↻ Refresh.</td></tr>`;
   }
   try {
     const r = await fetch(`${API}/admin/status`, { headers: getAuthHeader() });
@@ -2349,9 +2366,10 @@ function switchPage(pageId, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
   document.getElementById('page-' + pageId).classList.add('active');
+  if (!el) el = document.querySelector(`.nav-item[onclick*="'${pageId}'"]`);
   if (el) el.classList.add('active');
   closeSidebar();   // dismiss the mobile drawer after navigating
-  
+
   if (pageId === 'dashboard') loadOverview();
   if (pageId === 'chat-test') loadStatus();
   if (pageId === 'cache-rag') {
@@ -2361,7 +2379,19 @@ function switchPage(pageId, el) {
   }
   if (pageId === 'mandi-analysis') fetchMandiPrices();
   if (pageId === 'weather-panel') { loadWeatherStats(); fetchWeatherForecast(); }
-  if (pageId === 'shop-panel') { loadHeatmapData(); loadPreordersTable(); }
+  if (pageId === 'shop-panel') {
+    loadHeatmapData();
+    loadPreordersTable(_kpiOrderFilter || '');
+    _kpiOrderFilter = null;
+  }
+}
+
+// KPI card → Preorders page deep-link (filter applied on arrival)
+let _kpiOrderFilter = null;
+function openOrdersFromKpi(filter, label) {
+  _kpiOrderFilter = filter || '';
+  switchPage('shop-panel');
+  if (filter) showToast(`Showing ${label} — hit ↻ Refresh Preorders to clear the filter.`);
 }
 
 function refreshCachePage() {
@@ -2437,7 +2467,12 @@ function loadStatusData(d) {
   
   document.getElementById('sw-dashboard-semantic').classList.toggle('on', !!d.semantic_cache);
   document.getElementById('sw-dashboard-ollama').classList.toggle('on', !!d.ollama_enabled);
-  
+  document.getElementById('sw-dashboard-claude').classList.toggle('on', !!d.claude_enabled);
+  window.claudeConfigured = !!d.claude_configured;
+  document.getElementById('claude-desc').textContent = d.claude_configured
+    ? `${d.claude_model || 'claude-opus-4-8'} → seeds semantic cache (paid API)`
+    : '⚠ No ANTHROPIC_API_KEY set on server';
+
   printTerminalLog(`System Status Synchronized at ${d.checked_at || new Date().toLocaleTimeString()}. ChromaDB Chunks: ${d.chroma_chunks}, Cache Size: ${d.cache_entries}.`);
 }
 
@@ -2449,7 +2484,17 @@ async function toggleDashboardSetting(swId, settingKey) {
   let payload = {};
   if (settingKey === 'set-semantic') payload.cache_semantic_enabled = nextVal;
   if (settingKey === 'set-ollama') payload.ollama_enabled = nextVal;
-  
+  if (settingKey === 'set-claude') {
+    payload.claude_enabled = nextVal;
+    if (nextVal && window.claudeConfigured === false) {
+      showToast('Warning: ANTHROPIC_API_KEY is not set — Claude will fail and fall back to Gemini.', 'error');
+    }
+    printTerminalLog(nextVal
+      ? 'Claude cache-seeder ENABLED — answers now come from Claude (paid) and are saved to the semantic cache. Turn OFF when done seeding.'
+      : 'Claude cache-seeder disabled — pipeline back to Gemini → Ollama.',
+      nextVal ? 'log-entry-warn' : undefined);
+  }
+
   try {
     const r = await fetch(`${API}/admin/settings`, {
       method: 'POST',
@@ -3328,12 +3373,18 @@ async function loadPreordersTable(filterStatus = '') {
 
     let orders = data.orders || [];
     // Show ALL orders (pre-books + regular shop). Optional status filter still applies.
-    if (filterStatus) {
-      orders = orders.filter(o => (o.status || '').toLowerCase() === filterStatus.toLowerCase());
+    if (filterStatus === 'prebook-pending') {
+      // Same predicate as the dashboard "Pending Pre-books" KPI
+      orders = orders.filter(o => (o.source || '').toLowerCase() === 'prebook'
+        && o.quote_total == null
+        && ['pending','prebook','booked'].includes((o.status || '').toLowerCase()));
+    } else if (filterStatus) {
+      const wanted = filterStatus.toLowerCase().split(',');
+      orders = orders.filter(o => wanted.includes((o.status || '').toLowerCase()));
     }
 
     if (!orders.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-mono" style="text-align:center;">No preorder records found.</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="7" class="text-muted text-mono" style="text-align:center;">${filterStatus ? 'No orders match this filter. Hit ↻ Refresh Preorders to see all orders.' : 'No preorder records found.'}</td></tr>`;
       return;
     }
 
@@ -3478,9 +3529,11 @@ function toggleAccordion(id) {
 function calculateQACharcount() {
   const q = document.getElementById('qa-question').value.trim();
   const a = document.getElementById('qa-answer').value.trim();
-  
-  document.getElementById('qa-charcount').textContent = `Q: ${q.length} | A: ${a.length}`;
-  document.getElementById('add-qa-btn').disabled = !(q.length > 3 && a.length >= 10);
+
+  // Backend rejects answers under 20 chars — mirror that here so Save only enables when it will succeed
+  const aHint = a.length < 20 ? `${a.length}/20 min` : a.length;
+  document.getElementById('qa-charcount').textContent = `Q: ${q.length} | A: ${aHint}`;
+  document.getElementById('add-qa-btn').disabled = !(q.length > 3 && a.length >= 20);
 }
 
 function resetQAForm() {
@@ -3504,15 +3557,20 @@ async function addCustomQA() {
       headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ question, answer, source: 'manual' })
     });
-    const d = await r.json();
-    
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+
     if (d.saved) {
       showToast('Cache pair added successfully.');
       resetQAForm();
       loadCacheStats();
       printTerminalLog(`Custom Q&A pair added: ${question}`);
+    } else if (d.duplicate) {
+      showToast('Not saved — a very similar question is already in the cache.', 'error');
     } else {
-      showToast(d.reason || 'Insert failed', 'error');
+      const msg = d.detail || d.reason || `Insert failed (HTTP ${r.status})`;
+      showToast(msg, 'error');
+      printTerminalLog(`Cache insert rejected: ${msg}`);
     }
   } catch(e) {
     showToast('Failed to insert record: ' + e.message, 'error');

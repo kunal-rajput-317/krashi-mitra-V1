@@ -38,7 +38,7 @@ def admin_db():
 
 @router.get("/status")
 async def system_status(_: str = Depends(require_admin)):
-    from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS
+    from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS, ALLOWED_CLAUDE_MODELS
 
     gemini_keys = [
         os.getenv(name, "").strip()
@@ -91,6 +91,11 @@ async def system_status(_: str = Depends(require_admin)):
         "pipeline_timeout":     settings.get("pipeline_timeout"),
         "gemini_timeout":       settings.get("gemini_timeout"),
         "allowed_models":       ALLOWED_GEMINI_MODELS,
+        # Claude cache-seeder (admin-only, paid API)
+        "claude_configured":    bool(os.getenv("ANTHROPIC_API_KEY", "").strip()),
+        "claude_enabled":       settings.get("claude_enabled"),
+        "claude_model":         settings.get("claude_model"),
+        "allowed_claude_models": ALLOWED_CLAUDE_MODELS,
     }
 
 
@@ -166,10 +171,11 @@ async def trigger_fetch(source: str, _: str = Depends(require_admin)):
 @router.get("/settings")
 async def get_settings(_: str = Depends(require_admin)):
     """Return all runtime-configurable settings."""
-    from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS
+    from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS, ALLOWED_CLAUDE_MODELS
     return {
         "settings": get_all_settings(),
         "allowed_models": ALLOWED_GEMINI_MODELS,
+        "allowed_claude_models": ALLOWED_CLAUDE_MODELS,
     }
 
 
@@ -180,12 +186,17 @@ async def update_settings(payload: dict, _: str = Depends(require_admin)):
     Changes take effect immediately (no restart needed).
     Changes are lost on server restart — set env vars for persistence.
     """
-    from backend.config import update_setting, get_all_settings, ALLOWED_GEMINI_MODELS
+    from backend.config import update_setting, get_all_settings, ALLOWED_GEMINI_MODELS, ALLOWED_CLAUDE_MODELS
 
     if "gemini_model" in payload:
         model = payload["gemini_model"]
         if model not in ALLOWED_GEMINI_MODELS:
             raise HTTPException(400, f"Unknown model. Allowed: {ALLOWED_GEMINI_MODELS}")
+
+    if "claude_model" in payload:
+        model = payload["claude_model"]
+        if model not in ALLOWED_CLAUDE_MODELS:
+            raise HTTPException(400, f"Unknown Claude model. Allowed: {ALLOWED_CLAUDE_MODELS}")
 
     updated = {}
     skipped = []
