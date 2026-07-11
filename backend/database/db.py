@@ -26,7 +26,9 @@ if DATABASE_URL.startswith("postgresql") and "sslmode" not in DATABASE_URL:
     separator = "&" if "?" in DATABASE_URL else "?"
     DATABASE_URL += f"{separator}sslmode=require"
 
-print(f"✅ DB connecting to: {DATABASE_URL[:50]}...")
+# Log host only — never the credentials (they were leaking into Render logs)
+_safe_host = DATABASE_URL.split("@")[-1].split("?")[0] if "@" in DATABASE_URL else "local"
+print(f"✅ DB connecting to: ...@{_safe_host}")
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
