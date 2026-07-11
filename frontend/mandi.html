@@ -77,7 +77,7 @@
 
   <!-- ── Indexing, Canonical & Preconnect ── -->
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-  <link rel="canonical" href="https://krashimitra.in/mandi.html" />
+  <link rel="canonical" href="https://krashimitra.in/mandi" />
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
@@ -117,7 +117,7 @@
   <meta property="og:locale:alternate" content="en_IN" />
   <meta property="og:title" content="आज का मंडी भाव 2026 – UP (यूपी), MP, राजस्थान, कर्नाटक | KrashiMitra" />
   <meta property="og:description" content="UP (यूपी), MP, राजस्थान, कर्नाटक, Maharashtra समेत पूरे भारत की लाइव मंडी कीमतें — गेहूं, धान, सरसों, प्याज, आलू। Free, real-time।" />
-  <meta property="og:url" content="https://krashimitra.in/mandi.html" />
+  <meta property="og:url" content="https://krashimitra.in/mandi" />
   <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
   <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg" />
   <meta property="og:image:secure_url" content="https://krashimitra.in/images/og-banner.jpg" />
@@ -2222,6 +2222,10 @@
       <button class="wa-confirm-btn" style="margin-top:16px;" onclick="shareMandiPrice(window._lastOpenedMandiIdx)">
         💬 WhatsApp पर शेयर करें
       </button>
+      <!-- SEO/share: static server-rendered price page for this crop+district (/bhav) -->
+      <a id="md-bhav-link" href="#" style="display:block;text-align:center;margin-top:10px;padding:9px 14px;border:1.5px solid #1b7a3d;border-radius:10px;color:#1b7a3d;font-weight:700;text-decoration:none;">
+        📄 इस भाव का पेज देखें (रोज़ अपडेट)
+      </a>
     </div>
 
   </div>
@@ -3888,6 +3892,15 @@
     document.getElementById('md-district').textContent    = tMarket(p.district);
     document.getElementById('md-state').textContent       = window._mandiState || '—';
     document.getElementById('md-date').textContent        = p.date;
+
+    // /bhav deep link — same slugify as backend routes/bhav.py (_slugify)
+    const bhavLink = document.getElementById('md-bhav-link');
+    if (bhavLink) {
+      const slug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      const cs = slug(p.commodity), ds = slug(p.district);
+      if (cs && ds) { bhavLink.href = '/bhav/' + cs + '/' + ds; bhavLink.style.display = 'block'; }
+      else          { bhavLink.style.display = 'none'; }
+    }
 
     // Price range bar: show only when min < max
     const min   = parseFloat(p.min_price)   || 0;
