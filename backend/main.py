@@ -211,6 +211,9 @@ app.include_router(bhav_route.router)   # SEO price pages (/bhav/*) + /bhav/site
 from backend.routes import bazar as bazar_route
 app.include_router(bazar_route.router)  # KRASHI BAZAR — social crop marketplace
 
+from backend.routes import crop_calendar as crop_calendar_route
+app.include_router(crop_calendar_route.router)  # मेरी फसल — crop calendar (stage timeline + tasks)
+
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(

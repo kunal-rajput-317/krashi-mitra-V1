@@ -46,6 +46,7 @@
   function mandiUrl()   { return pagePrefix() + "mandi.html"; }
   function weatherUrl() { return pagePrefix() + "weather.html"; }
   function bazarUrl()   { return pagePrefix() + "krashi_bajar.html"; }
+  function fasalUrl()   { return pagePrefix() + "meri_fasal.html"; }
 
   // ── Identity + data (mirrors shop.html) ───────────────────
   function getSessionId() {
@@ -396,6 +397,58 @@
       .catch(function () { cb(null); });
   }
 
+  // ── मेरी फसल (crop calendar) cards ─────────────────────────
+  // Summary is written to localStorage by meri_fasal.html on every
+  // visit (works for guests too); falls back to the API when logged
+  // in on a device that hasn't opened the page yet.
+  function fasalCardHtml(c) {
+    return '<div class="km-book-card km-book-linkcard" data-href="' + fasalUrl() + '">' +
+      '<div class="km-book-card-head">' +
+        '<span class="km-book-product" style="margin:0">' + c.emoji + ' ' + clean(c.name_hi) + '</span>' +
+        '<span class="km-book-chip ok">दिन ' + c.day + '</span>' +
+      '</div>' +
+      (c.stage_hi ? '<div class="km-book-line">🌿 अवस्था: ' + clean(c.stage_hi) + '</div>' : '') +
+      (c.next_task
+        ? '<div class="km-book-line">📌 अगला काम: <b>' + clean(c.next_task) + '</b>' +
+          (c.next_date ? ' (' + new Date(c.next_date + 'T00:00:00').toLocaleDateString('hi-IN', { day: 'numeric', month: 'short' }) + ')' : '') + '</div>'
+        : '<div class="km-book-line">इस हफ्ते कोई खास काम नहीं — नज़र बनाए रखें।</div>') +
+    '</div>';
+  }
+  function loadFasalCards() {
+    var slot = document.getElementById("km-book-fasal-slot");
+    if (!slot) return;
+    function render(items) {
+      var slot2 = document.getElementById("km-book-fasal-slot");
+      if (!slot2 || !items || !items.length) return;
+      var html = '<div class="km-book-section-title">🌱 मेरी फसल — इस हफ्ते</div>';
+      items.slice(0, 3).forEach(function (c) { html += fasalCardHtml(c); });
+      slot2.innerHTML = html;
+      wireActions(slot2);
+    }
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem("km_fasal_summary") || "null"); } catch (e) {}
+    if (cached && cached.length) { render(cached); return; }
+    var token = getToken();
+    if (!token) return;
+    fetch(apiBase() + "/crop-calendar/my", { headers: { "Authorization": "Bearer " + token } })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        var crops = (res && res.data && res.data.crops) || [];
+        render(crops.filter(function (t) { return t.status === "active"; }).map(function (t) {
+          var next = (t.week_tasks && t.week_tasks[0]) || null;
+          return {
+            emoji:     t.emoji,
+            name_hi:   t.name_hi,
+            day:       t.day_number,
+            stage_hi:  t.current_stage ? t.current_stage.name_hi : "",
+            next_task: next ? next.title_hi : "",
+            next_date: next ? next.date : ""
+          };
+        }));
+      })
+      .catch(function () {});
+  }
+
   function renderSuggestions() {
     var list = document.getElementById("km-book-tab-suggest");
     if (!list) return;
@@ -424,14 +477,19 @@
         '</div>';
       }
 
+      // मेरी फसल calendar cards (filled async from localStorage/API)
+      html += '<div id="km-book-fasal-slot"></div>';
+
       // Generic quick links always useful
       var generic =
+        suggestLinkCard("🌱", "मेरी फसल कैलेंडर", "बुवाई की तारीख डालें — सिंचाई, खाद और कीट-निगरानी की याद हर हफ्ते यहीं मिलेगी।", fasalUrl()) +
         suggestLinkCard("🛒", "अपनी फसल बेचें", "Krashi Bazar पर फोटो के साथ पोस्ट करें — खरीदार सीधे संपर्क करेंगे।", bazarUrl()) +
         suggestLinkCard("🏛️", "सरकारी योजनाएं", "PM-Kisan, फसल बीमा और अन्य योजनाओं की जानकारी देखें।", pagePrefix() + "sarkari_yojana.html");
 
       if (!crops.length) {
         el.innerHTML = html + generic;
         wireActions(el);
+        loadFasalCards();
         return;
       }
 
@@ -454,6 +512,7 @@
                 if (priceHtml) priceHtml = '<div class="km-book-section-title">📊 आपकी फसलों के आज के भाव</div>' + priceHtml;
                 el2.innerHTML = html + priceHtml + generic;
                 wireActions(el2);
+                loadFasalCards();
               }
             });
           });

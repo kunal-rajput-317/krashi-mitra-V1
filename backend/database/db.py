@@ -318,6 +318,25 @@ class MandiPriceHistory(Base):
     fetched_at   = Column(DateTime, default=datetime.utcnow)
 
 
+# ── CROP CALENDAR (मेरी फसल) ─────────────────────────────────
+
+class UserCrop(Base):
+    """A crop a farmer is growing this season — crop_key references
+    backend/data/crop_stages.json; the timeline itself is computed
+    from sowing_date, never stored."""
+    __tablename__ = "user_crops"
+
+    id          = Column(Integer,  primary_key=True, index=True)
+    user_id     = Column(Integer,  nullable=False, index=True)   # users.id
+    crop_key    = Column(String,   nullable=False)               # "wheat" | "paddy" | ...
+    sowing_date = Column(Date,     nullable=False)               # day-0 (sowing/transplanting)
+    area        = Column(String,   nullable=True)                # free text, e.g. "2"
+    area_unit   = Column(String,   default="acres")
+    status      = Column(String,   default="active", index=True) # active | done
+    created_at  = Column(DateTime, default=datetime.utcnow)
+    updated_at  = Column(DateTime, default=datetime.utcnow)
+
+
 # ── DATA SYNC LOG ────────────────────────────────────────────
 
 class SyncLog(Base):
@@ -563,6 +582,16 @@ def _ensure_postgres_columns():
             ("group_key", "VARCHAR"),
             ("row_key", "VARCHAR"),
             ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ],
+        "user_crops": [
+            ("user_id", "INTEGER"),
+            ("crop_key", "VARCHAR"),
+            ("sowing_date", "DATE"),
+            ("area", "VARCHAR"),
+            ("area_unit", "VARCHAR DEFAULT 'acres'"),
+            ("status", "VARCHAR DEFAULT 'active'"),
+            ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
         "sync_log": [
             ("source", "VARCHAR"),

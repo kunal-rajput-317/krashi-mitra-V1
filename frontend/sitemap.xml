@@ -18,6 +18,15 @@
   </url>
 
   <url>
+    <loc>https://krashimitra.in/meri_fasal</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/meri_fasal"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/meri_fasal"/>
+    <lastmod>2026-07-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://krashimitra.in/shop.html</loc>
     <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/shop.html?lang=hi"/>
     <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/shop.html?lang=en"/>
