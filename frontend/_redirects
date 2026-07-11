@@ -5,4 +5,9 @@
 /bhav     https://krashi-mitra-v1.onrender.com/bhav/         200
 /bhav/*   https://krashi-mitra-v1.onrender.com/bhav/:splat   200
 
+# Canonical article URLs: 301 old .html forms to extensionless
+# (Netlify already lowercases mixed-case paths with its own 301)
+/articles/index.html   /articles/        301!
+/articles/:slug.html   /articles/:slug   301!
+
 /* /index.html 200
