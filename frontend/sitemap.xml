@@ -32,17 +32,6 @@
   </url>
 
   <url>
-    <loc>https://krashimitra.in/mandi.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html"/>
-    <lastmod>2026-07-03</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://krashimitra.in/krashi_bajar.html</loc>
     <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/krashi_bajar.html?lang=hi"/>
     <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/krashi_bajar.html?lang=en"/>
@@ -501,244 +490,21 @@
   </url>
 
   <!-- ===== PROGRAMMATIC SEO MANDI PAGES ===== -->
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Meerut</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Meerut&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Meerut&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Meerut&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Meerut"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Muzaffarnagar</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Muzaffarnagar&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Muzaffarnagar&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Muzaffarnagar&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Muzaffarnagar"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Indore</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Indore&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Indore&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Indore&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Indore"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Jaipur</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Jaipur&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Jaipur&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Jaipur&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Jaipur"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Kota</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Kota&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Kota&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Kota&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Wheat&amp;district=Kota"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Lucknow</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Lucknow&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Lucknow&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Lucknow&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Lucknow"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Hapur</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Hapur&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Hapur&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Hapur&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Hapur"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Karnal</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Karnal&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Karnal&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Karnal&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Paddy&amp;district=Karnal"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Agra</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Agra&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Agra&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Agra&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Agra"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Lucknow</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Lucknow&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Lucknow&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Lucknow&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Lucknow"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Nashik</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Nashik&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Nashik&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Nashik&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Potato&amp;district=Nashik"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Nashik</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Nashik&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Nashik&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Nashik&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Nashik"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Pune</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Pune&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Pune&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Pune&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Pune"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Indore</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Indore&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Indore&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Indore&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Onion&amp;district=Indore"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Sri Ganganagar</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Sri Ganganagar&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Sri Ganganagar&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Sri Ganganagar&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Sri Ganganagar"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Jaipur</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Jaipur&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Jaipur&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Jaipur&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Jaipur"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Alwar</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Alwar&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Alwar&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Alwar&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Mustard&amp;district=Alwar"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Indore</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Indore&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Indore&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Indore&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Indore"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Ujjain</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Ujjain&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Ujjain&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Ujjain&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Ujjain"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Dewas</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Dewas&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Dewas&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Dewas&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Soybean&amp;district=Dewas"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Bangalore</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Bangalore&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Bangalore&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Bangalore&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Bangalore"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Kolar</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Kolar&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Kolar&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Kolar&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Tomato&amp;district=Kolar"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Kota</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Kota&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Kota&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Kota&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Kota"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Indore</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Indore&amp;lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Indore&amp;lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Indore&amp;lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html?commodity=Garlic&amp;district=Indore"/>
-    <lastmod>2026-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <url><loc>https://krashimitra.in/bhav/wheat/meerut</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/wheat/muzaffarnagar</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/wheat/indore</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/wheat/jaipur</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/wheat/kota</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/potato/agra</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/potato/lucknow</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/potato/nashik</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/onion/nashik</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/onion/pune</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/onion/indore</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/mustard/jaipur</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/mustard/alwar</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/tomato/kolar</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/garlic/kota</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/garlic/indore</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://krashimitra.in/bhav/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
 </urlset>
