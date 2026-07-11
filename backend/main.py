@@ -205,6 +205,9 @@ app.include_router(admin_route.router)
 from backend.routes import share as share_route
 app.include_router(share_route.router)  # OG link previews for shared mandi links
 
+from backend.routes import bhav as bhav_route
+app.include_router(bhav_route.router)   # SEO price pages (/bhav/*) + /bhav/sitemap.xml
+
 from backend.routes import bazar as bazar_route
 app.include_router(bazar_route.router)  # KRASHI BAZAR — social crop marketplace
 

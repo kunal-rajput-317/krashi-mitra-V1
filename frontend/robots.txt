@@ -10,3 +10,4 @@ Disallow: /assets/redirecting-animation.html
 
 # Sitemap location
 Sitemap: https://krashimitra.in/sitemap.xml
+Sitemap: https://krashimitra.in/bhav/sitemap.xml
