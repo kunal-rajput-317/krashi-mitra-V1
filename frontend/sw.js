@@ -1,4 +1,4 @@
-const CACHE_NAME = 'krashimitra-v1';
+const CACHE_NAME = 'krashimitra-v2'; // v2: notification bell replaced by KrashiBook (krashibook.js)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
