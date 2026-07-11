@@ -7,7 +7,37 @@
 
 # Canonical article URLs: 301 old .html forms to extensionless
 # (Netlify already lowercases mixed-case paths with its own 301)
-/articles/index.html   /articles/        301!
-/articles/:slug.html   /articles/:slug   301!
+/articles/index.html   /articles/   301!
+/articles/DAP-guide-up.html   /articles/dap-guide-up   301!
+/articles/MOP-guide.html   /articles/mop-guide   301!
+/articles/PM-kisan-samman-nidhi.html   /articles/pm-kisan-samman-nidhi   301!
+/articles/aam-utpadan-mp.html   /articles/aam-utpadan-mp   301!
+/articles/aam-utpadan-up.html   /articles/aam-utpadan-up   301!
+/articles/anaar-maharastra.html   /articles/anaar-maharastra   301!
+/articles/apple-kashmir.html   /articles/apple-kashmir   301!
+/articles/chilli-guide-karnataka.html   /articles/chilli-guide-karnataka   301!
+/articles/chini-utpadan.html   /articles/chini-utpadan   301!
+/articles/ganna-guide-up.html   /articles/ganna-guide-up   301!
+/articles/ganna-pricing-analytics-up.html   /articles/ganna-pricing-analytics-up   301!
+/articles/ganna-rog.html   /articles/ganna-rog   301!
+/articles/garlic-farming-guide.html   /articles/garlic-farming-guide   301!
+/articles/gehuu-price-analytic-up.html   /articles/gehuu-price-analytic-up   301!
+/articles/grapes-maharastra.html   /articles/grapes-maharastra   301!
+/articles/jaivik-khad.html   /articles/jaivik-khad   301!
+/articles/karnataka-monsoon.html   /articles/karnataka-monsoon   301!
+/articles/keet-niyantran.html   /articles/keet-niyantran   301!
+/articles/land-price-up.html   /articles/land-price-up   301!
+/articles/litchi-guide-bihar.html   /articles/litchi-guide-bihar   301!
+/articles/makka-guide-up.html   /articles/makka-guide-up   301!
+/articles/mausam-guide.html   /articles/mausam-guide   301!
+/articles/moongfali-guide-rajisthan.html   /articles/moongfali-guide-rajisthan   301!
+/articles/online-farming-guide.html   /articles/online-farming-guide   301!
+/articles/paddy-guide-karnataka.html   /articles/paddy-guide-karnataka   301!
+/articles/potato_guide_up.html   /articles/potato_guide_up   301!
+/articles/sarso-guide-up.html   /articles/sarso-guide-up   301!
+/articles/soyabean-MP-guide.html   /articles/soyabean-mp-guide   301!
+/articles/tomato-guide-up.html   /articles/tomato-guide-up   301!
+/articles/up-agriculture-guide.html   /articles/up-agriculture-guide   301!
+/articles/urea-guide-up.html   /articles/urea-guide-up   301!
 
 /* /index.html 200
