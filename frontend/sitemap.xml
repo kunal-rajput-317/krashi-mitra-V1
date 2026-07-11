@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
   <!-- ===== CORE PAGES ===== -->
 
@@ -11,6 +12,9 @@
     <lastmod>2026-07-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://krashimitra.in/assets/hero-section-photo.webp</image:loc>
+    </image:image>
   </url>
 
   <url>
@@ -22,6 +26,9 @@
     <lastmod>2026-07-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/shop-hero.png</image:loc>
+    </image:image>
   </url>
 
   <url>
@@ -148,6 +155,12 @@
     <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/urea-full-guide.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/urea-use-before-irrigation.png</image:loc>
+    </image:image>
   </url>
 
   <!-- DAP Guide — UP -->
@@ -208,6 +221,21 @@
     <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/sugarcane-red-rot-shown-img.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/sugarcane-inner-red-color-image.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/sugarcane-yellow-leaf.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/compare-healthy-diseased-sugarcane.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/step-taken-before-seeding.png</image:loc>
+    </image:image>
   </url>
 
   <!-- Sugarcane Guide — UP (गन्ना गाइड) -->
@@ -218,6 +246,12 @@
     <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/ganne-ke-khet-up.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/diseases/ganna-planting-method.png</image:loc>
+    </image:image>
   </url>
 
   <!-- Sugarcane Price Analytics — UP (गन्ना भाव) -->
@@ -228,6 +262,9 @@
     <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/Ganna/ganna-SAP.png</image:loc>
+    </image:image>
   </url>
 
   <!-- Sugar Production — UP (चीनी उत्पादन) -->
@@ -420,6 +457,15 @@
     <lastmod>2026-06-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/plants/black-chilli-karnataka.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/plants/chilli-drip-irrigation.png</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://krashimitra.in/images/plants/chilli-rog-weak-leaf.png</image:loc>
+    </image:image>
   </url>
 
   <!-- Paddy Guide — Karnataka (ಭತ್ತದ ಬೆಳೆ) -->

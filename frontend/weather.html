@@ -89,9 +89,9 @@
   <meta property="og:description" content="UP के सभी 75 जिलों का लाइव मौसम — तापमान, 7-दिन पूर्वानुमान, वर्षा। छिड़काव-सिंचाई-कटाई की स्मार्ट सलाह किसानों के लिए। Free, real-time।" />
   <meta property="og:url" content="https://krashimitra.in/weather.html" />
   <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
-  <meta property="og:image" content="https://krashimitra.in/images/og-mandi-banner.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg" />
+  <meta property="og:image:width" content="1024" />
+  <meta property="og:image:height" content="556" />
   <meta property="og:image:alt" content="KrashiMitra मौसम — UP जिलेवार लाइव पूर्वानुमान व कृषि सलाह" />
 
   <!-- ── Twitter / X Card ── -->
@@ -99,7 +99,7 @@
   <meta name="twitter:site" content="@KrashiMitra" />
   <meta name="twitter:title" content="आज का मौसम 2026 – जिलेवार पूर्वानुमान व कृषि सलाह | KrashiMitra" />
   <meta name="twitter:description" content="UP के 75 जिलों का लाइव मौसम, 7-दिन पूर्वानुमान और किसानों के लिए छिड़काव-सिंचाई-कटाई सलाह। Free।" />
-  <meta name="twitter:image" content="https://krashimitra.in/images/og-mandi-banner.png" />
+  <meta name="twitter:image" content="https://krashimitra.in/images/og-banner.jpg" />
 
   <!-- ── JSON-LD Structured Data ── -->
   <script type="application/ld+json">
@@ -2304,7 +2304,7 @@
   // dayKey (optional, 'YYYY-MM-DD' IST) → single-day mode: x-axis is fixed to
   // that day 12am→12am IST with 3-hour clock ticks (12am 3am … 9pm).
   function buildTempChart(canvas, points, darkBg, dayKey) {
-    if (!canvas || points.length < 2) return;
+    if (!canvas || points.length < 1) return;
     const dpr  = window.devicePixelRatio || 1;
     const cssW = canvas.clientWidth || canvas.offsetWidth || 400;
     const cssH = 105;
@@ -2355,34 +2355,42 @@
       ms:   times[i],
     }));
 
-    // Gradient fill
-    const fillPath = new Path2D();
-    fillPath.moveTo(pts[0].x, BOT);
-    fillPath.lineTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length; i++) {
-      const cpx = (pts[i-1].x + pts[i].x) / 2;
-      fillPath.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
-    }
-    fillPath.lineTo(pts[pts.length-1].x, BOT);
-    fillPath.closePath();
-    const grad = ctx.createLinearGradient(0, TOP, 0, BOT);
-    grad.addColorStop(0,   'rgba(233,168,37,0.22)');
-    grad.addColorStop(1,   'rgba(233,168,37,0.02)');
-    ctx.fillStyle = grad;
-    ctx.fill(fillPath);
+    if (pts.length < 2) {
+      // Only one reading so far today — draw a single dot instead of a line.
+      ctx.beginPath();
+      ctx.arc(pts[0].x, pts[0].y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#e9a825';
+      ctx.fill();
+    } else {
+      // Gradient fill
+      const fillPath = new Path2D();
+      fillPath.moveTo(pts[0].x, BOT);
+      fillPath.lineTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const cpx = (pts[i-1].x + pts[i].x) / 2;
+        fillPath.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+      }
+      fillPath.lineTo(pts[pts.length-1].x, BOT);
+      fillPath.closePath();
+      const grad = ctx.createLinearGradient(0, TOP, 0, BOT);
+      grad.addColorStop(0,   'rgba(233,168,37,0.22)');
+      grad.addColorStop(1,   'rgba(233,168,37,0.02)');
+      ctx.fillStyle = grad;
+      ctx.fill(fillPath);
 
-    // Line
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length; i++) {
-      const cpx = (pts[i-1].x + pts[i].x) / 2;
-      ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+      // Line
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const cpx = (pts[i-1].x + pts[i].x) / 2;
+        ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+      }
+      ctx.strokeStyle = '#e9a825';
+      ctx.lineWidth   = 2.5;
+      ctx.lineJoin    = 'round';
+      ctx.lineCap     = 'round';
+      ctx.stroke();
     }
-    ctx.strokeStyle = '#e9a825';
-    ctx.lineWidth   = 2.5;
-    ctx.lineJoin    = 'round';
-    ctx.lineCap     = 'round';
-    ctx.stroke();
 
     ctx.font      = `600 ${Math.round(9.5 * dpr) / dpr}px "DM Sans",sans-serif`;
     ctx.textAlign = 'center';
@@ -2533,7 +2541,7 @@
         return;
       }
       const dayPts = dayMap[key] || [];
-      if (dayPts.length < 2) return;       // not enough readings to chart that day
+      if (dayPts.length < 1) return;       // no readings yet for that day
       selectedDay = key;
       cards.forEach(c => c.classList.toggle('selected', c.getAttribute('data-day') === key));
       drawChart(dayPts, key);
@@ -2546,9 +2554,9 @@
       });
     });
 
-    // Default view: today's hourly curve; fall back to full history if today
-    // has too few readings yet (e.g. just after midnight).
-    if ((dayMap[todayKey] || []).length >= 2) selectDay(todayKey);
+    // Default view: today's hourly curve (even a single reading so far);
+    // fall back to full history only if today has no readings at all yet.
+    if ((dayMap[todayKey] || []).length >= 1) selectDay(todayKey);
     else drawChart(points);
   }
 

@@ -128,9 +128,9 @@
   <meta property="og:description" content="UP किसान अभी खरीदें: गेहूं बीज, DAP खाद ₹1350, Urea ₹280, नीम तेल, Kapila पशु आहार – सब एक जगह। Free delivery ₹500+। Cash on Delivery। Meerut, Lucknow, Agra, Kanpur सभी जिलों में डिलीवरी।" />
   <meta property="og:url" content="https://krashimitra.in/shop.html" />
   <meta property="og:site_name" content="KrashiMitra — किसान का साथी" />
-  <meta property="og:image" content="https://krashimitra.in/images/og-shop-banner.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg" />
+  <meta property="og:image:width" content="1024" />
+  <meta property="og:image:height" content="556" />
   <meta property="og:image:alt" content="KrashiMitra Shop – बीज, खाद, कीटनाशक, पशु आहार online खरीदें" />
 
   <!-- ═══════════════════════════════════════
@@ -140,7 +140,7 @@
   <meta name="twitter:site" content="@KrashiMitra" />
   <meta name="twitter:title" content="बीज खाद कीटनाशक Online 2026 – KrashiMitra UP Krishi Dukan" />
   <meta name="twitter:description" content="DAP ₹1350, Urea ₹280, NPK, Vermicompost, Neem Oil, Gehu Beej HD-2967, Drip Kit – UP mandi bhav ke saath sab ek jagah. Free delivery + COD. Meerut, Lucknow, Agra, Kanpur delivery." />
-  <meta name="twitter:image" content="https://krashimitra.in/images/og-shop-banner.png" />
+  <meta name="twitter:image" content="https://krashimitra.in/images/og-banner.jpg" />
   <meta name="twitter:image:alt" content="KrashiMitra – Online Krishi Dukan" />
 
   <!-- ── Extra Trust & Quality Signals ── -->
@@ -189,7 +189,7 @@
         },
         "image": {
           "@type": "ImageObject",
-          "url": "https://krashimitra.in/images/og-shop-banner.png",
+          "url": "https://krashimitra.in/images/og-banner.jpg",
           "width": 1200,
           "height": 630
         },
@@ -2746,7 +2746,6 @@
     <p class="seo-para">खरीदारी से पहले आज के <strong>UP mandi bhav</strong> देखें — Meerut, Lucknow, Kanpur, Agra, Varanasi सहित सभी प्रमुख मंडियों के gehu, dhan, sarson और aalu के live rates। <a href="mandi.html" class="seo-link">Aaj ka Mandi Bhav देखें →</a> &nbsp;|&nbsp; <a href="weather.html" class="seo-link">Kisan Mausam →</a></p>
   </section>
 
-  <div id="footer-sentinel" style="height:1px;"></div>
 </main><!-- /.main-content -->
 
 <!-- ══ ORDER CHOICE MODAL ══ -->
@@ -4764,14 +4763,26 @@ ${tkLine}
     // Pre-warm fertilizer API in background when fertilizer category active
     if (catParam === 'fertilizer') fetchFertData();
 
-    // Show footer only when user scrolls to the bottom
+    // Show footer only when user scrolls to the bottom.
+    // Uses a hysteresis gap (show <30px / hide >180px from bottom) because showing
+    // the footer shrinks .main-content's own scrollport (flex:1 sibling), which — with
+    // a single threshold — re-triggers "not at bottom" and causes an infinite show/hide flicker.
     const footerEl = document.querySelector('.site-footer');
-    const sentinel = document.getElementById('footer-sentinel');
-    if (footerEl && sentinel && window.IntersectionObserver) {
-      const obs = new IntersectionObserver(entries => {
-        footerEl.classList.toggle('footer-visible', entries[0].isIntersecting);
-      }, { threshold: 0 });
-      obs.observe(sentinel);
+    const scrollEl = document.querySelector('.main-content');
+    if (footerEl && scrollEl) {
+      let footerShown = false;
+      const updateFooterVisibility = () => {
+        const distanceFromBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight;
+        if (!footerShown && distanceFromBottom < 30) {
+          footerShown = true;
+          footerEl.classList.add('footer-visible');
+        } else if (footerShown && distanceFromBottom > 180) {
+          footerShown = false;
+          footerEl.classList.remove('footer-visible');
+        }
+      };
+      scrollEl.addEventListener('scroll', updateFooterVisibility, { passive: true });
+      updateFooterVisibility();
     }
   });
 
