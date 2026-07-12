@@ -161,6 +161,92 @@ UP_DISTRICT_CITY_MAP = {
 }
 
 
+# ── DISTRICT → LAT/LON (district HQ) ─────────────────────────
+# Weather is fetched by coordinate, NOT by city name. OWM's name
+# geocoding (q=Gorakhpur,IN) is ambiguous across states and silently
+# returned the wrong town for Gorakhpur (matched Haryana), Pratapgarh
+# (Rajasthan), Kaushambi (Delhi NCR) and Kanpur Dehat (Ambedkar Nagar's
+# Akbarpur) — and had no entry at all for Siddharthnagar.
+# Coordinates always resolve, so every district gets real data.
+UP_DISTRICT_COORDS = {
+    "Agra":            (27.18, 78.02),
+    "Firozabad":       (27.15, 78.42),
+    "Mainpuri":        (27.23, 79.02),
+    "Mathura":         (27.50, 77.68),
+    "Aligarh":         (27.88, 78.08),
+    "Etah":            (27.63, 78.67),
+    "Hathras":         (27.60, 78.05),
+    "Kasganj":         (27.82, 78.65),
+    "Prayagraj":       (25.45, 81.85),
+    "Fatehpur":        (25.93, 80.80),
+    "Kaushambi":       (25.53, 81.38),   # Manjhanpur (HQ) — was matching Delhi NCR
+    "Pratapgarh":      (25.90, 81.95),   # Bela (HQ) — was matching Rajasthan
+    "Ayodhya":         (26.78, 82.13),
+    "Ambedkar Nagar":  (26.42, 82.55),   # Akbarpur (HQ)
+    "Amethi":          (26.15, 81.82),
+    "Barabanki":       (26.93, 81.19),
+    "Sultanpur":       (26.27, 82.07),
+    "Azamgarh":        (26.06, 83.19),
+    "Ballia":          (25.76, 84.15),
+    "Mau":             (25.95, 83.55),
+    "Bareilly":        (28.35, 79.42),
+    "Badaun":          (28.05, 79.12),
+    "Pilibhit":        (28.63, 79.80),
+    "Shahjahanpur":    (27.88, 79.92),
+    "Basti":           (26.80, 82.72),
+    "Sant Kabir Nagar":(26.77, 83.07),   # Khalilabad (HQ)
+    "Siddharthnagar":  (27.28, 83.09),   # Naugarh (HQ) — OWM has no city by this name
+    "Banda":           (25.48, 80.33),
+    "Chitrakoot":      (25.22, 80.92),   # Karwi (HQ)
+    "Hamirpur":        (25.95, 80.15),
+    "Mahoba":          (25.28, 79.87),
+    "Bahraich":        (27.58, 81.60),
+    "Balrampur":       (27.43, 82.18),
+    "Gonda":           (27.13, 81.93),
+    "Shravasti":       (27.72, 81.93),   # Bhinga (HQ)
+    "Gorakhpur":       (26.76, 83.37),   # was matching Gorakhpur, Haryana
+    "Deoria":          (26.50, 83.79),
+    "Kushinagar":      (26.74, 83.92),
+    "Maharajganj":     (27.13, 83.57),
+    "Jhansi":          (25.43, 78.58),
+    "Jalaun":          (25.98, 79.47),   # Orai (HQ)
+    "Lalitpur":        (24.68, 78.42),
+    "Kanpur Nagar":    (26.47, 80.35),
+    "Kanpur Dehat":    (26.43, 79.98),   # Akbarpur/Mati (HQ) — was matching Ambedkar Nagar
+    "Etawah":          (26.78, 79.02),
+    "Farrukhabad":     (27.37, 79.63),   # Fatehgarh (HQ)
+    "Auraiya":         (26.47, 79.52),
+    "Kannauj":         (27.05, 79.92),
+    "Lucknow":         (26.85, 80.92),
+    "Hardoi":          (27.42, 80.12),
+    "Lakhimpur Kheri": (27.95, 80.77),
+    "Raebareli":       (26.22, 81.23),
+    "Sitapur":         (27.57, 80.68),
+    "Unnao":           (26.53, 80.50),
+    "Meerut":          (28.98, 77.70),
+    "Baghpat":         (28.95, 77.22),
+    "Bulandshahr":     (28.40, 77.85),
+    "Ghaziabad":       (28.67, 77.43),
+    "Gautam Buddha Nagar": (28.58, 77.33),
+    "Hapur":           (28.72, 77.78),
+    "Mirzapur":        (25.15, 82.58),
+    "Bhadohi":         (25.42, 82.57),
+    "Sonbhadra":       (24.70, 83.07),   # Robertsganj (HQ)
+    "Moradabad":       (28.83, 78.78),
+    "Amroha":          (28.92, 78.47),
+    "Bijnor":          (29.37, 78.13),
+    "Rampur":          (28.82, 79.03),
+    "Sambhal":         (28.58, 78.55),
+    "Saharanpur":      (29.97, 77.55),
+    "Muzaffarnagar":   (29.47, 77.68),
+    "Shamli":          (29.45, 77.32),
+    "Varanasi":        (25.33, 83.00),
+    "Chandauli":       (25.27, 83.27),
+    "Jaunpur":         (25.73, 82.68),
+    "Ghazipur":        (25.58, 83.57),
+}
+
+
 # ── AUTH MODEL ───────────────────────────────────────────────
 
 class User(Base):

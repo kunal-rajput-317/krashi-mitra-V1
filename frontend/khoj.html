@@ -42,10 +42,10 @@
   <link rel="canonical" href="https://krashimitra.in/khoj" />
   <link rel="dns-prefetch" href="https://krashimitra.in">
 
-  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/khoj.html?lang=hi" />
-  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/khoj.html?lang=en" />
-  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/khoj.html?lang=kn" />
-  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/khoj.html" />
+  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/khoj?lang=hi" />
+  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/khoj?lang=en" />
+  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/khoj?lang=kn" />
+  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/khoj" />
 
   <meta name="geo.region" content="IN" />
   <meta name="geo.placename" content="India" />
@@ -79,8 +79,8 @@
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": "https://krashimitra.in/khoj.html#webpage",
-        "url": "https://krashimitra.in/khoj.html",
+        "@id": "https://krashimitra.in/khoj#webpage",
+        "url": "https://krashimitra.in/khoj",
         "name": "कृषि खोज – फसल रोग, खाद व खेती की जानकारी खोजें | KrashiMitra",
         "description": "खेती की हर जानकारी हिंदी में खोजें — फसल रोग, खाद, बुवाई समय, कीट नियंत्रण। लिखकर या बोलकर।",
         "inLanguage": ["hi", "en-IN", "kn"],
@@ -89,7 +89,7 @@
           "@type": "SearchAction",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "https://krashimitra.in/khoj.html?q={search_term_string}"
+            "urlTemplate": "https://krashimitra.in/khoj?q={search_term_string}"
           },
           "query-input": "required name=search_term_string"
         },
@@ -97,10 +97,10 @@
       },
       {
         "@type": "BreadcrumbList",
-        "@id": "https://krashimitra.in/khoj.html#breadcrumb",
+        "@id": "https://krashimitra.in/khoj#breadcrumb",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "होम", "item": "https://krashimitra.in/" },
-          { "@type": "ListItem", "position": 2, "name": "कृषि खोज — Khoj", "item": "https://krashimitra.in/khoj.html" }
+          { "@type": "ListItem", "position": 2, "name": "कृषि खोज — Khoj", "item": "https://krashimitra.in/khoj" }
         ]
       }
     ]
@@ -972,7 +972,7 @@
       </div>
     </div>
     <!-- <div class="topbar-avatar-btn">👨‍🌾</div> -->
-    <a href="https://krashimitra.in/login.html" class="topbar-avatar-btn">👤</a>
+    <a href="https://krashimitra.in/login" class="topbar-avatar-btn">👤</a>
   </div>
 </div>
 
@@ -1685,6 +1685,17 @@
 
   (function init() {
     setLang(currentLang);
+    // Deep-link support: khoj.html?q=... (e.g. from the homepage search box)
+    const incomingQ = urlParams.get('q');
+    if (incomingQ) {
+      const inp = document.getElementById('search-input');
+      if (inp) {
+        inp.value = incomingQ;
+        const clearBtn = document.getElementById('search-clear');
+        if (clearBtn) clearBtn.classList.add('visible');
+        doSearch();
+      }
+    }
   })();
 </script>
 

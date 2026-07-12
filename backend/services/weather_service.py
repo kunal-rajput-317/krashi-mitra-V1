@@ -25,6 +25,7 @@ from backend.database.db import (
     WeatherCache,
     WeatherHistory,
     UP_DISTRICT_CITY_MAP,
+    UP_DISTRICT_COORDS,
 )
 from backend.services.sync_log_service import record_sync
 
@@ -72,14 +73,24 @@ async def _fetch_and_upsert(
     db: Session,
 ) -> bool:
     """
-    Fetch weather for ONE district from OWM.
+    Fetch weather for ONE district from OWM, by the district HQ's
+    coordinates (see UP_DISTRICT_COORDS). `city` is only the human
+    label stored on the row.
     Upsert result into weather_cache table.
     Returns True on success, False on failure.
     Marks row as stale on failure so old data is still served.
     """
+    coords = UP_DISTRICT_COORDS.get(district)
+    if not coords:
+        logger.error(f"❌ No coordinates for district: {district}")
+        _mark_stale(district, db)
+        return False
+
+    lat, lon = coords
     url = "https://api.openweathermap.org/data/2.5/weather"
     params = {
-        "q":     city,
+        "lat":   lat,
+        "lon":   lon,
         "appid": api_key,
         "units": "metric",
     }
@@ -89,7 +100,10 @@ async def _fetch_and_upsert(
         data = res.json()
 
         if data.get("cod") != 200:
-            logger.warning(f"⚠️  OWM city not found: {city} ({district}) — cod={data.get('cod')}")
+            logger.warning(
+                f"⚠️  OWM rejected {district} ({lat},{lon}) — "
+                f"cod={data.get('cod')} {data.get('message', '')}"
+            )
             # Mark existing row stale if present
             _mark_stale(district, db)
             return False
