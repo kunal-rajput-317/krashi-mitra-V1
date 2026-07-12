@@ -84,10 +84,10 @@
   <link rel="dns-prefetch" href="https://krashimitra.in">
 
   <!-- ── Language Alternates ── -->
-  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi.html?lang=hi" />
-  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi.html?lang=en" />
-  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi.html?lang=kn" />
-  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi.html" />
+  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi?lang=hi" />
+  <link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi?lang=en" />
+  <link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi?lang=kn" />
+  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi" />
 
   <!-- ── Geo / Location Targeting (pan-India) ── -->
   <meta name="geo.region" content="IN" />
@@ -153,8 +153,8 @@
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": "https://krashimitra.in/mandi.html#webpage",
-        "url": "https://krashimitra.in/mandi.html",
+        "@id": "https://krashimitra.in/mandi#webpage",
+        "url": "https://krashimitra.in/mandi",
         "name": "आज का मंडी भाव 2026 – फसल व राज्य अनुसार रेट | KrashiMitra",
         "description": "पूरे भारत की लाइव मंडी कीमतें — गेहूं, धान, प्याज, आलू, टमाटर, मक्का, सोयाबीन। फसल या राज्य चुनकर आज का भाव देखें। KrashiMitra — किसान का डिजिटल साथी।",
         "inLanguage": ["hi", "en-IN", "kn"],
@@ -174,10 +174,10 @@
       },
       {
         "@type": "BreadcrumbList",
-        "@id": "https://krashimitra.in/mandi.html#breadcrumb",
+        "@id": "https://krashimitra.in/mandi#breadcrumb",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "होम", "item": "https://krashimitra.in/" },
-          { "@type": "ListItem", "position": 2, "name": "मंडी भाव — Mandi Bhav", "item": "https://krashimitra.in/mandi.html" }
+          { "@type": "ListItem", "position": 2, "name": "मंडी भाव — Mandi Bhav", "item": "https://krashimitra.in/mandi" }
         ]
       },
       {
@@ -191,17 +191,17 @@
           "@type": "SearchAction",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "https://krashimitra.in/mandi.html?q={search_term_string}"
+            "urlTemplate": "https://krashimitra.in/mandi?q={search_term_string}"
           },
           "query-input": "required name=search_term_string"
         }
       },
       {
         "@type": "Dataset",
-        "@id": "https://krashimitra.in/mandi.html#dataset",
+        "@id": "https://krashimitra.in/mandi#dataset",
         "name": "Mandi Bhav — Live Crop Prices Across India",
         "description": "Daily updated agricultural commodity prices from APMC mandis across all Indian states — wheat, paddy, onion, potato, tomato, maize, soybean and more. Browse by crop or by state.",
-        "url": "https://krashimitra.in/mandi.html",
+        "url": "https://krashimitra.in/mandi",
         "keywords": ["mandi bhav", "मंडी भाव", "UP mandi bhav", "MP mandi bhav", "rajasthan mandi bhav", "karnataka market price", "tamil nadu market price", "crop price india", "wheat price", "soyabean price MP", "sarso price rajasthan", "state wise mandi rate", "apmc price"],
         "temporalCoverage": "2026/..",
         "spatialCoverage": [
@@ -242,7 +242,7 @@
       },
       {
         "@type": "FAQPage",
-        "@id": "https://krashimitra.in/mandi.html#faq",
+        "@id": "https://krashimitra.in/mandi#faq",
         "mainEntity": [
           {
             "@type": "Question",
@@ -1831,7 +1831,7 @@
       </div>
 
       <!-- Profile Avatar -->
-      <a href="https://krashimitra.in/login.html" class="header-avatar-btn">👤</a>
+      <a href="https://krashimitra.in/login" class="header-avatar-btn">👤</a>
     </div>
   </div>
 </header>
@@ -2223,7 +2223,7 @@
         💬 WhatsApp पर शेयर करें
       </button>
       <!-- SEO/share: static server-rendered price page for this crop+district (/bhav) -->
-      <a id="md-bhav-link" href="#" style="display:block;text-align:center;margin-top:10px;padding:9px 14px;border:1.5px solid #1b7a3d;border-radius:10px;color:#1b7a3d;font-weight:700;text-decoration:none;">
+      <a id="md-bhav-link" href="#" style="display:block;text-align:center;margin-top:10px;padding:10px 14px;border:1.5px solid var(--green-mid);border-radius:12px;color:var(--green-mid);font-weight:700;text-decoration:none;">
         📄 इस भाव का पेज देखें (रोज़ अपडेट)
       </a>
     </div>
@@ -3063,15 +3063,15 @@
     { en:'Maize',       hi:'मक्का',    emoji:'🌽', file:'Corncobs.jpg',                             h:'7d', keys:['maize','corn'] },
     { en:'Soybean',     hi:'सोयाबीन', emoji:'🫘', file:'Soybean.USDA.jpg',                         h:'82', keys:['soyabean','soybean'] },
     { en:'Gram',        hi:'चना',      emoji:'🫛', file:'Chickpea.jpg',                             h:'3d', keys:['gram','chana','bengal'] },
-    { en:'Mustard',     hi:'सरसों',    emoji:'🌼', file:'',                                         h:'',   keys:['mustard','rai','sarson'] },
+    { en:'Mustard',     hi:'सरसों',    emoji:'🌼', file:'BrownMustardSeed.JPG',                     h:'ef', keys:['mustard','rai','sarson'] },
     { en:'Garlic',      hi:'लहसुन',    emoji:'🧄', file:'Garlic.jpg',                               h:'22', keys:['garlic'] },
     { en:'Chilli',      hi:'मिर्च',    emoji:'🌶️', file:'Red Chili Pepper.jpg',                     h:'2a', keys:['chilli','chili','mirch'] },
     { en:'Turmeric',    hi:'हल्दी',    emoji:'🟡', file:'Turmeric-powder.jpg',                      h:'0a', keys:['turmeric'] },
     { en:'Groundnut',   hi:'मूंगफली', emoji:'🥜', file:'Groundnut (Arachis hypogaea).jpg',         h:'0e', keys:['groundnut'] },
-    { en:'Bajra',       hi:'बाजरा',    emoji:'🌾', file:'',                                         h:'',   keys:['bajra','pearl millet'] },
+    { en:'Bajra',       hi:'बाजरा',    emoji:'🌾', file:'Bajra.JPG',                                h:'49', keys:['bajra','pearl millet'] },
     { en:'Arhar',       hi:'अरहर',     emoji:'🫘', file:'Toor dal.jpg',                             h:'de', keys:['arhar','tur','red gram'] },
     { en:'Urad',        hi:'उड़द',     emoji:'🫘', file:'Vigna mungo.jpg',                          h:'e2', keys:['urad','black gram'] },
-    { en:'Moong',       hi:'मूंग',     emoji:'🫛', file:'Mung beans.jpg',                           h:'5e', keys:['moong','green gram'] },
+    { en:'Moong',       hi:'मूंग',     emoji:'🫛', file:'Mung beans (Vigna radiata).jpg',           h:'86', keys:['moong','green gram'] },
     { en:'Sugarcane',   hi:'गन्ना',    emoji:'🎋', file:'Sugar cane.jpg',                           h:'cb', keys:['sugarcane'] },
     { en:'Cotton',      hi:'कपास',     emoji:'🧵', file:'CottonPlant.JPG',                          h:'68', keys:['cotton'] },
     { en:'Lentil',      hi:'मसूर',     emoji:'🫘', file:'Lentil.jpg',                               h:'9d', keys:['lentil','masur','masoor'] },
@@ -3170,13 +3170,27 @@
 
   // Tap a tile → open its price list (reuses fetchMandiPrices + detail sheet)
   // Grid tile tap → open by index into the rendered grid
-  function openCommodityPrices(i) {
+  function openCommodityPrices(i, presetDistrict) {
     const tile = window._gridTiles && window._gridTiles[i];
-    if (tile) _openTilePrices(tile);
+    if (tile) _openTilePrices(tile, presetDistrict);
+  }
+
+  // Set (or clear) the district filter's select + visible combo input together
+  function _setDistrictFilter(district) {
+    const dSel = document.getElementById('mandi-district-filter');
+    if (dSel) dSel.value = district || '';
+    const dInp = document.getElementById('mn-district-input');
+    if (dInp) {
+      dInp.value = district || '';
+      document.getElementById('mn-district-clear')
+        .classList.toggle('visible', !!district);
+    }
   }
 
   // Shared core: open a resolved tile's price list (used by grid + blue navbar)
-  function _openTilePrices(tile) {
+  // presetDistrict: a /bhav deep link arrives with its own district — keep it
+  // instead of resetting, so the app opens on the same mandi the farmer was reading.
+  function _openTilePrices(tile, presetDistrict) {
     window._activeTile = tile;
     window._activeNav  = tile.en;
 
@@ -3191,11 +3205,8 @@
       cSel.value = tile.value;
     }
 
-    // Reset district filter for the new commodity
-    const dSel = document.getElementById('mandi-district-filter');
-    if (dSel) dSel.value = '';
-    const dInp = document.getElementById('mn-district-input');
-    if (dInp) { dInp.value = ''; document.getElementById('mn-district-clear').classList.remove('visible'); }
+    // Reset district filter for the new commodity (unless the link carried one)
+    _setDistrictFilter(presetDistrict || '');
 
     // Header
     document.getElementById('cprices-emoji').textContent = tile.emoji;
@@ -3433,6 +3444,8 @@
   // ══════════════════════════════════════
   // FETCH MANDI PRICES
   // ══════════════════════════════════════
+  let _mnPricesReqId = 0;
+
   async function fetchMandiPrices() {
     const state     = document.getElementById('mandi-state').value;
     const commodity = document.getElementById('mandi-commodity').value;
@@ -3449,6 +3462,9 @@
 
     result.innerHTML = `<div class="shop-loading">${t('loading')}</div>`;
 
+    // Filters can change while a request is in flight; only the newest one may render
+    const reqId = ++_mnPricesReqId;
+
     try {
       const params = new URLSearchParams({ state });
       if (commodity) params.set('commodity', commodity);
@@ -3456,6 +3472,8 @@
       const url = `${window.KRASHIMITRA_API_BASE}/shop/mandi?${params.toString()}`;
       const res  = await fetch(url);
       const data = await res.json();
+      if (reqId !== _mnPricesReqId) return;      // a newer fetch already owns the view
+
       window._mandiPrices = data.prices;
       window._mandiState  = state;
 
@@ -3472,6 +3490,7 @@
       renderMandiResult(data.prices);
 
     } catch (err) {
+      if (reqId !== _mnPricesReqId) return;      // stale failure — don't clobber the live view
       result.innerHTML = `<div class="shop-loading">${t('error_server')}</div>`;
     }
   }
@@ -3893,13 +3912,16 @@
     document.getElementById('md-state').textContent       = window._mandiState || '—';
     document.getElementById('md-date').textContent        = p.date;
 
-    // /bhav deep link — same slugify as backend routes/bhav.py (_slugify)
+    // /bhav deep link — same slugify as backend routes/bhav.py (_slugify).
+    // The state is part of the canonical URL: four district names exist in two
+    // states each (pratapgarh, bilaspur, hamirpur, balrampur), so /bhav/{crop}/
+    // {district} alone would resolve to the wrong state's prices.
     const bhavLink = document.getElementById('md-bhav-link');
     if (bhavLink) {
       const slug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-      const cs = slug(p.commodity), ds = slug(p.district);
-      if (cs && ds) { bhavLink.href = '/bhav/' + cs + '/' + ds; bhavLink.style.display = 'block'; }
-      else          { bhavLink.style.display = 'none'; }
+      const cs = slug(p.commodity), ss = slug(p.state || window._mandiState), ds = slug(p.district);
+      if (cs && ss && ds) { bhavLink.href = '/bhav/' + cs + '/' + ss + '/' + ds; bhavLink.style.display = 'block'; }
+      else                { bhavLink.style.display = 'none'; }
     }
 
     // Price range bar: show only when min < max
@@ -4396,8 +4418,11 @@
         t.en.toLowerCase() === uc || t.value.toLowerCase() === uc ||
         t.keys.some(k => uc.includes(k) || k.includes(uc)));
 
+      // The district travels WITH the open call — a second fetch afterwards would
+      // race the first and the unfiltered response could land last (/bhav links
+      // then showed the wrong district's mandis).
       if (idx >= 0) {
-        openCommodityPrices(idx);
+        openCommodityPrices(idx, _urlDistrict || '');
       } else {
         // Not in the curated set — open a generic prices view for it
         const cSel = document.getElementById('mandi-commodity');
@@ -4407,21 +4432,13 @@
           }
           cSel.value = _urlCommodity;
         }
+        _setDistrictFilter(_urlDistrict || '');
         document.getElementById('cprices-emoji').textContent = '🌾';
         document.getElementById('cprices-name').textContent =
           tCommodity(_urlCommodity) + (currentLang === 'hi' ? ' की कीमत' : ' price');
         document.getElementById('cprices-sub').textContent = window._mandiState || '';
         document.getElementById('mandi-grid-view').style.display  = 'none';
         document.getElementById('mandi-prices-view').style.display = 'block';
-        await fetchMandiPrices();
-      }
-
-      // Apply district filter from the URL, if present
-      if (_urlDistrict) {
-        const dSel = document.getElementById('mandi-district-filter');
-        if (dSel) dSel.value = _urlDistrict;
-        const dInp = document.getElementById('mn-district-input');
-        if (dInp) { dInp.value = _urlDistrict; document.getElementById('mn-district-clear').classList.add('visible'); }
         await fetchMandiPrices();
       }
 

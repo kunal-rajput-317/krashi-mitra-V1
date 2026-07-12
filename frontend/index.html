@@ -18,12 +18,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <title>कृषि मित्र – मंडी भाव, मौसम व AI कृषि सलाह | KrashiMitra</title>
+  <title>कृषि मित्र – मंडी भाव, मौसम व कृषि सलाह | KrashiMitra</title>
   <link rel="icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/png">
   <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
-  
+
   <meta name="description"
-    content="KrashiMitra — किसानों का AI कृषि सहायक। आज का मंडी भाव, यूरिया-DAP खाद की सरकारी कीमत, मौसम अपडेट, फसल रोग पहचान और कीट नियंत्रण — सब एक जगह। 50+ फसलें, 500+ जिले। बिल्कुल मुफ्त।">
+    content="KrashiMitra — किसानों का कृषि सहायक। आज का मंडी भाव, यूरिया-DAP खाद की सरकारी कीमत, मौसम अपडेट, फसल जानकारी और कीट नियंत्रण — सब एक जगह। 24 फसलों के भाव, UP के 75 जिले। बिल्कुल मुफ्त।">
   <meta name="keywords" content="kisan app hindi, kheti ki jankari, mandi bhav aaj ka, mausam ki jankari kisan ke liye, sarkari yojana kisan, fasal bechna online, kheti badi app, kisan ka sathi, krashimitra, krashi mitra, krushimitra, krushi mitra, krishimitra, krishi mitra, kisan mitra, kisanmitra, kisaan mitra, कृषि मित्र, कृषिमित्र, krashimitra.in, krashimitra app" />
 
   <meta name="keywords"
@@ -49,9 +49,9 @@
   <meta property="og:locale:alternate" content="kn_IN">
   <meta property="og:locale:alternate" content="en_IN">
   <meta property="og:title"
-    content="KrashiMitra — किसान का डिजिटल साथी | मंडी भाव, मौसम, AI कृषि सहायक">
+    content="KrashiMitra — किसान का डिजिटल साथी | मंडी भाव, मौसम, कृषि सहायक">
   <meta property="og:description"
-    content="आज का मंडी भाव, यूरिया-DAP खाद की सरकारी कीमत, मौसम अपडेट और फसल रोग की AI पहचान — सब मुफ्त, एक जगह। 50+ फसलें, 500+ जिले।">
+    content="आज का मंडी भाव, यूरिया-DAP खाद की सरकारी कीमत, मौसम अपडेट और फसल की जानकारी — सब मुफ्त, एक जगह। 24 फसलों के भाव, UP के 75 जिले।">
   <meta property="og:image"        content="https://krashimitra.in/images/og-banner.jpg">
   <meta property="og:image:width"  content="1024">
   <meta property="og:image:height" content="556">
@@ -61,9 +61,9 @@
   <meta name="twitter:card"        content="summary_large_image">
   <meta name="twitter:site"        content="@krashimitra">
   <meta name="twitter:title"
-    content="KrashiMitra — किसान का डिजिटल साथी | मंडी भाव, मौसम, AI सहायक">
+    content="KrashiMitra — किसान का डिजिटल साथी | मंडी भाव, मौसम, कृषि सहायक">
   <meta name="twitter:description"
-    content="आज का मंडी भाव, खाद की कीमत, मौसम और फसल रोग AI पहचान — 10+ फसलें, 75+ जिले। बिल्कुल मुफ्त।">
+    content="आज का मंडी भाव, खाद की कीमत, मौसम और फसल की जानकारी — 24 फसलों के भाव, UP के 75 जिले। बिल्कुल मुफ्त।">
   <meta name="twitter:image"       content="https://krashimitra.in/images/og-banner.jpg">
   <meta name="twitter:image:alt"   content="KrashiMitra — किसान का डिजिटल साथी">
 
@@ -81,7 +81,7 @@
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://krashimitra.in/chat?q={search_term_string}&tab=search"
+        "urlTemplate": "https://krashimitra.in/khoj?q={search_term_string}"
       },
       "query-input": "required name=search_term_string"
     }
@@ -150,35 +150,44 @@
 
   <!-- ── 7. PWA / MOBILE ── -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1b5e20">
+  <meta name="theme-color" content="#1a3c2e">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KrashiMitra">
   <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&family=Noto+Serif+Devanagari:wght@600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     /* ══════════════════════════════
-       CSS VARIABLES
+       CSS VARIABLES — refined, classy palette
+       (matches mandi.html / krashi_bajar.html design system)
     ══════════════════════════════ */
     :root {
-      --green-dark:   #1b5e20;
-      --green-mid:    #2e7d32;
-      --green-light:  #43a047;
-      --green-soft:   #e8f5e9;
-      --gold:         #f9a825;
-      --gold-soft:    #fff8e1;
-      --cream:        #fafaf7;
+      --green-dark:   #1a3c2e;
+      --green-mid:    #2d6a4f;
+      --green-light:  #52b788;
+      --green-pale:   #d8f3dc;
+      --green-soft:   #d8f3dc;
+      --amber:        #e9a825;
+      --amber-light:  #fef3c7;
+      --gold:         #e9a825; /* legacy alias */
+      --gold-soft:    #fef3c7; /* legacy alias */
+      --cream:        #f5f7f4;
       --white:        #ffffff;
-      --text-dark:    #1a1a1a;
-      --text-mid:     #4a4a4a;
-      --text-soft:    #757575;
-      --border:       #e0e0e0;
-      --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
-      --shadow-md:    0 4px 20px rgba(0,0,0,0.12);
-      --radius-sm:    10px;
-      --radius-md:    16px;
-      --radius-lg:    24px;
+      --text-dark:    #1a2e23;
+      --text-mid:     #4a5a52;
+      --text-soft:    #7c8983;
+      --border:       #e5e9e6;
+      --shadow-sm:    0 2px 10px rgba(26,60,46,0.05);
+      --shadow-md:    0 8px 28px rgba(26,60,46,0.10);
+      --radius-sm:    12px;
+      --radius-md:    18px;
+      --radius-lg:    26px;
+      --font-serif:   'Noto Serif Devanagari', 'Playfair Display', serif;
+      --font-body:    'DM Sans', 'Noto Sans Devanagari', sans-serif;
     }
 
     /* ══════════════════════════════
@@ -189,7 +198,7 @@
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
       background: var(--cream);
       color: var(--text-dark);
       min-height: 100vh;
@@ -197,20 +206,128 @@
     }
 
     /* ══════════════════════════════
-       HEADER
+       TOP HEADER UTILITY BARS
+       (full viewport width; inner content boxed at 1280px)
     ══════════════════════════════ */
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--white);
+    .pre-topbar {
+      background: var(--amber);
+      color: var(--green-dark);
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 7px 16px;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0; text-align: center;
+    }
+    .pre-topbar-helpline {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: inherit; text-decoration: none; opacity: 0.92; white-space: nowrap;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .pre-topbar-helpline:hover { opacity: 1; text-decoration: underline; }
+    .pre-topbar-phone-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 19px; height: 19px; border-radius: 50%; flex-shrink: 0;
+      background: transparent; font-size: 10px; line-height: 1;
+    }
+
+    /* ── Layer 1: Top Utility Bar ── */
+    .top-utility-bar {
+      background: #ffffff;
       border-bottom: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
+      padding: 6px 0;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .top-utility-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
       padding: 0 20px;
-      height: 60px;
+    }
+    .top-utility-left, .top-utility-right {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      gap: 12px;
+    }
+    .top-utility-link {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .top-utility-link:hover {
+      color: var(--green-mid);
+    }
+    .top-utility-divider {
+      color: #cbd5e1;
+      user-select: none;
+    }
+    .top-utility-helpline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--green-dark);
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .top-utility-helpline:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+    .top-utility-social-icon {
+      color: var(--text-mid);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s;
+      margin-left: 2px;
+    }
+    .top-utility-social-icon:hover {
+      color: var(--green-mid);
+    }
+
+    /* ── Layer 2: Main Header — white, sticky, classy ── */
+    .main-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 1px 3px rgba(26,60,46,0.05);
+      flex-shrink: 0;
+    }
+    .main-header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 0 20px;
+    }
+
+    .hamburger-btn {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--green-dark);
+      padding: 4px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .hamburger-btn:hover {
+      background: var(--green-pale);
     }
 
     /* Logo group */
@@ -221,30 +338,28 @@
       text-decoration: none;
     }
     .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 2px 8px rgba(46,125,50,0.3);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
       flex-shrink: 0;
+      box-shadow: 0 0 0 3px var(--green-pale);
     }
     .logo-text { display: flex; flex-direction: column; }
     .logo-title {
-      font-size: 18px;
-      font-weight: 800;
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 700;
       color: var(--green-dark);
       line-height: 1.1;
-      letter-spacing: -0.3px;
+      letter-spacing: 0.2px;
     }
     .logo-tagline {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-soft);
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
       line-height: 2;
+      font-weight: 600;
     }
 
     /* Header right */
@@ -252,261 +367,260 @@
 
     .header-nav {
       display: flex;
-      gap: 4px;
+      gap: 22px;
     }
     .nav-link {
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 14.5px;
+      font-weight: 700;
       color: var(--text-mid);
       text-decoration: none;
-      padding: 6px 10px;
-      border-radius: 8px;
-      transition: background 0.2s, color 0.2s;
+      padding: 6px 2px;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
       white-space: nowrap;
     }
-    .nav-link:hover { background: var(--green-soft); color: var(--green-dark); }
+    .nav-link:hover { color: var(--green-mid); }
+    .nav-link.active { color: var(--green-dark); border-bottom-color: var(--amber); }
 
     .avatar-btn {
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--green-light), var(--gold));
-      border: 2px solid var(--green-soft);
+      background: var(--green-pale);
+      border: 1.5px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 16px;
+      color: var(--green-dark);
       cursor: pointer;
       flex-shrink: 0;
-      transition: box-shadow 0.2s;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.15s;
     }
-    .avatar-btn:hover { box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px var(--green-pale); transform: scale(1.05); }
 
     /* ══════════════════════════════
-       HERO SECTION
+       HERO SECTION — clean, editorial, one photo treatment
     ══════════════════════════════ */
     .hero {
       position: relative;
       overflow: hidden;
-      background: #1b5e20;
+      background: var(--green-dark);
       padding: 0;
-      height: 380px;        /* fixed — portrait ratio stays identical everywhere */
+      min-height: 460px;
+      height: auto;
       display: flex;
-      align-items: stretch;
+      align-items: center;
     }
     @media (max-width: 600px) {
-      .hero { height: 320px; }
+      .hero {
+        min-height: 400px;
+      }
     }
 
     /* Real farm photo background */
     .hero-bg-photo {
       position: absolute;
       inset: 0;
-      background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80');
+      background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=80');
       background-size: cover;
-      background-position: center 60%;
+      background-position: center 55%;
       pointer-events: none;
     }
 
-    /* Dark green gradient overlay so text stays readable */
+    /* Deep green gradient overlay so text stays readable — single, restrained treatment */
     .hero-bg-overlay {
       position: absolute;
       inset: 0;
       background: linear-gradient(
         100deg,
-        rgba(15,50,15,0.88) 0%,
-        rgba(27,94,32,0.80) 50%,
-        rgba(27,94,32,0.30) 100%
+        rgba(20,45,35,0.94) 0%,
+        rgba(26,60,46,0.88) 42%,
+        rgba(26,60,46,0.55) 100%
       );
       pointer-events: none;
     }
 
-    /* Sun glow top-right */
+    /* Warm glow, top-right */
     .hero-glow {
       position: absolute;
-      top: -60px;
-      right: -60px;
-      width: 280px;
-      height: 280px;
-      background: radial-gradient(circle, rgba(249,168,37,0.22) 0%, transparent 70%);
+      top: -80px;
+      right: -80px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(233,168,37,0.20) 0%, transparent 70%);
       pointer-events: none;
-    }
-
-    /* ── HERO PORTRAIT — pinned to right, bottom-anchored ── */
-    .hero-portrait {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      top: 0;
-      width: 45%;
-      max-width: 320px;
-      z-index: 10;
-      pointer-events: none;
-      display: flex;
-      align-items: flex-end;
-      justify-content: flex-end;
-    }
-    .hero-portrait img {
-      display: block;
-      bottom: 0px;
-      height: 100%;
-      width: auto;
-      max-width: 100%;
-      object-fit: contain;
-      object-position: top right;
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
-      mask-image: linear-gradient(to right, transparent 0%, black 25%);
-    }
-    /* hide on very small screens so it doesn't cover the search box */
-    @media (max-width: 420px) {
-      .hero-portrait {
-        width: 38%;
-        opacity: 0.75;
-      }
-    }
-    @media (max-width: 320px) {
-      .hero-portrait { display: none; }
     }
 
     .hero-inner {
       position: relative;
       z-index: 12;
       width: 100%;
-      height: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       justify-content: center;
-      padding: 28px 18px 1px;
-      gap: 0;
+      padding: 40px 20px 36px;
     }
+    .hero-text { max-width: 620px; width: 100%; }
 
-    /* Hero badge */
-    .hero-badge {
+    /* ── Hero Greeting Badge ── */
+    .hero-greeting {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 20px;
-      padding: 5px 14px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.9);
-      font-weight: 500;
-      margin-bottom: 14px;
-      backdrop-filter: blur(4px);
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 28px;
+      padding: 7px 16px;
+      font-size: 14px;
+      color: var(--white);
+      font-weight: 600;
+      margin-bottom: 18px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: var(--font-body);
+    }
+    .hero-text > .hero-greeting {
+      animation: fadeUp 0.5s ease both, floatBadge 3s ease-in-out infinite 0.5s;
+    }
+    .hero-greeting:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.32);
+      transform: scale(1.02);
     }
     .hero-badge-dot {
-      width: 7px; height: 7px;
-      background: var(--gold);
+      width: 7.5px; height: 7.5px;
+      background: var(--green-light);
       border-radius: 50%;
+      box-shadow: 0 0 8px var(--green-light);
       animation: pulse-dot 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .farmer-name {
+      font-weight: 700;
+      color: var(--amber);
     }
 
-    /* Hero headline */
+    /* ── Hero Headline & Subline ── */
     .hero-headline {
-      font-size: 28px;
-      font-weight: 800;
+      font-family: var(--font-serif);
+      font-size: 34px;
+      font-weight: 700;
       color: var(--white);
-      line-height: 1.15;
-      letter-spacing: -0.5px;
-      margin-bottom: 6px;
+      line-height: 1.25;
+      letter-spacing: 0.1px;
+      margin-bottom: 10px;
     }
     .hero-headline span {
-      color: var(--gold);
+      color: var(--amber);
     }
     .hero-subline {
-      font-family: 'Noto Sans Devanagari', sans-serif;
-      font-size: 14px;
-      color: rgba(255,255,255,0.78);
-      margin-bottom: 26px;
-      font-weight: 400;
+      font-size: 15.5px;
+      color: rgba(255, 255, 255, 0.82);
+      margin-bottom: 22px;
+      font-weight: 500;
       line-height: 1.5;
+      font-family: var(--font-body);
     }
 
-    /* ── SEARCH BOX ── */
-    .search-box {
+    /* ── SEARCH CAPSULE ── */
+    .search-capsule {
       width: 100%;
-      height: 100%;
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .search-input-row {
+      background: #ffffff;
+      border-radius: 35px;
+      padding: 6px 6px 6px 22px;
       display: flex;
       align-items: center;
-      padding: 4px 6px 4px 18px;
       gap: 8px;
-      min-height: 58px;
+      box-shadow: 0 10px 34px rgba(15,25,20,0.28);
+      border: 1px solid rgba(255,255,255,0.5);
+      transition: box-shadow 0.3s;
+      margin-bottom: 20px;
     }
-
-    .search-icon {
-      font-size: 20px;
-      flex-shrink: 0;
-      opacity: 0.6;
+    .search-capsule:focus-within {
+      box-shadow: 0 12px 40px rgba(45,106,79,0.35);
     }
-
-    .search-input {
+    .search-capsule-input {
       flex: 1;
       border: none;
       outline: none;
-      font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
-      font-size: 15px;
+      font-size: 16px;
       color: var(--text-dark);
       background: transparent;
+      font-family: var(--font-body);
       min-width: 0;
     }
-    .search-input::placeholder {
-      color: #aaa;
-      font-size: 14px;
+    .search-capsule-input::placeholder {
+      color: var(--text-soft);
+      font-size: 14.5px;
     }
-
-    .search-btn {
-      flex-shrink: 0;
-      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
-      border: none;
-      border-radius: 18px;
-      padding: 12px 20px;
-      color: var(--white);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: box-shadow 0.2s, transform 0.15s;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-      white-space: nowrap;
-    }
-    .search-btn:hover { box-shadow: 0 4px 16px rgba(46,125,50,0.4); transform: translateY(-1px); }
-    .search-btn:active { transform: translateY(0); }
-
-    /* Voice button */
-    .voice-btn {
-      width: 42px; height: 42px;
-      border: none;
-      border-radius: 12px;
-      background: var(--green-soft);
-      color: var(--green-dark);
-      font-size: 18px;
-      cursor: pointer;
+    /* Voice button — outline, secondary */
+    .search-capsule-mic-btn {
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      background: #ffffff;
+      color: var(--text-mid);
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.2s;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
     }
-    .voice-btn:hover { background: #c8e6c9; }
-
-    /* Search divider */
-    .search-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 0 16px;
+    .search-capsule-mic-btn:hover {
+      border-color: var(--green-light);
+      color: var(--green-dark);
+      background: var(--green-pale);
+    }
+    .search-capsule-mic-btn.pulse {
+      animation: pulse-mic 1.6s infinite;
+      background: #e53935;
+      border-color: #e53935;
+      color: #ffffff;
+    }
+    /* Search submit — filled, primary */
+    .search-capsule-search-btn {
+      width: 46px;
+      height: 46px;
+      border: none;
+      border-radius: 50%;
+      background: var(--green-mid);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 4px 12px rgba(45,106,79,0.32);
+    }
+    .search-capsule-search-btn:hover {
+      background: var(--green-dark);
+      transform: scale(1.06);
+    }
+    .search-capsule-search-btn:active {
+      transform: scale(0.95);
+    }
+    @media (max-width: 480px) {
+      .search-capsule {
+        padding: 5px 5px 5px 16px;
+        gap: 6px;
+      }
+      .search-capsule-input {
+        font-size: 14px;
+      }
+      .search-capsule-input::placeholder {
+        font-size: 12.5px;
+      }
+      .search-capsule-mic-btn { width: 38px; height: 38px; }
+      .search-capsule-search-btn { width: 40px; height: 40px; }
     }
 
     /* Quick topics inside search box */
@@ -530,54 +644,44 @@
     .sq-chip {
       font-size: 12px;
       color: var(--green-dark);
-      background: var(--green-soft);
-      border: 1px solid #c8e6c9;
+      background: var(--green-pale);
+      border: 1px solid #c2e8c9;
       border-radius: 20px;
       padding: 5px 12px;
       white-space: nowrap;
       cursor: pointer;
       flex-shrink: 0;
       transition: background 0.2s;
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
     }
-    .sq-chip:hover { background: #c8e6c9; }
+    .sq-chip:hover { background: #c2e8c9; }
 
-    /* Hero image decoration — decorative farmer illustration */
-    .hero-deco {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      font-size: 90px;
-      opacity: 0.12;
-      pointer-events: none;
-      line-height: 1;
-      transform: scaleX(-1);
-    }
-
-    /* Stats row below search */
+    /* ── Hero Stats ── */
     .hero-stats {
       display: flex;
-      gap: 20px;
-      margin-top: 18px;
+      gap: 22px;
       flex-wrap: wrap;
     }
     .hero-stat {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: rgba(255,255,255,0.85);
-      font-size: 12px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 13px;
     }
     .hero-stat strong {
-      color: var(--gold);
-      font-size: 14px;
+      color: var(--amber);
+      font-size: 14.5px;
     }
 
     /* ══════════════════════════════
        SECTION COMMON
     ══════════════════════════════ */
     .section {
-      padding: 28px 20px;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 30px 20px;
     }
     .section-header {
       display: flex;
@@ -586,9 +690,10 @@
       margin-bottom: 16px;
     }
     .section-title {
-      font-size: 17px;
+      font-family: var(--font-serif);
+      font-size: 19px;
       font-weight: 700;
-      color: var(--text-dark);
+      color: var(--green-dark);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -597,61 +702,256 @@
       font-size: 13px;
       color: var(--green-mid);
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 700;
     }
+    .section-link:hover { color: var(--green-dark); }
 
     /* ══════════════════════════════
        QUICK ACTION CARDS
     ══════════════════════════════ */
     .quick-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
+      margin: 16px 0;
+      padding: 0 4px;
+    }
+    @media (min-width: 650px) {
+      .quick-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+    }
+    @media (min-width: 1000px) {
+      .quick-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+    }
+    .section-sub {
+      font-size: 13.5px;
+      color: var(--text-soft);
+      margin-top: -10px;
+      margin-bottom: 4px;
+      font-weight: 500;
     }
 
     .quick-card {
-      background: var(--white);
-      border-radius: var(--radius-md);
-      padding: 16px 10px;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 10px;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      gap: 8px;
-      border: 1px solid var(--border);
+      gap: 10px;
+      border: 1.5px solid #e0e0e0;
       cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       text-decoration: none;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       position: relative;
       overflow: hidden;
-    }
-    .quick-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--card-accent, var(--green-mid));
-      border-radius: 3px 3px 0 0;
+      border-left: 4px solid var(--card-color, var(--green-mid));
+      min-height: 84px;
     }
     .quick-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-      border-color: var(--green-light);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      transform: translateY(-3px);
+      border-color: #d0d0d0;
     }
-    .quick-card:active { transform: translateY(0); }
-
-    .qc-icon {
-      font-size: 28px;
-      line-height: 1;
+    .quick-card:active {
+      transform: translateY(-1px);
+    }
+    .qc-icon-wrapper {
+      width: 60px;
+      height: 60px;
+      min-width: 60px;
+      border-radius: 12px;
+      background: var(--card-bg-light, #f5f5f5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.25s;
+      overflow: hidden;
+      padding: 4px;
+    }
+    .quick-card:hover .qc-icon-wrapper {
+      transform: scale(1.05);
+    }
+    .service-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .qc-text-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      text-align: left;
+      min-width: 0;
+      flex: 1;
+      padding-left: 2px;
     }
     .qc-label {
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 800;
       color: var(--text-dark);
-      text-align: center;
-      line-height: 1.3;
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      line-height: 1.2;
+      font-family: var(--font-body);
+      margin-bottom: 2px;
     }
+    .qc-sublabel {
+      font-size: 9.5px;
+      color: var(--text-soft);
+      line-height: 1.2;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      width: 100%;
+    }
+
+    @media (min-width: 650px) {
+      .quick-card {
+        padding: 12px;
+        min-height: 100px;
+        gap: 12px;
+      }
+      .qc-icon-wrapper {
+        width: 76px;
+        height: 76px;
+        min-width: 76px;
+        padding: 6px;
+      }
+      .qc-text-wrapper {
+        padding-left: 4px;
+      }
+      .qc-label {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      .qc-sublabel {
+        font-size: 10.5px;
+        line-height: 1.3;
+      }
+    }
+
+    /* Voice mic pulsing animation */
+    @keyframes pulse-mic {
+      0% { box-shadow: 0 0 0 0 rgba(229,57,53,0.5); }
+      70% { box-shadow: 0 0 0 10px rgba(229,57,53,0); }
+      100% { box-shadow: 0 0 0 0 rgba(229,57,53,0); }
+    }
+
+    /* ══════════════════════════════
+       FEATURE SHOWCASE — image-led spotlight cards
+    ══════════════════════════════ */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    @media (min-width: 700px) {
+      .showcase-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .showcase-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.2s, border-color 0.2s;
+    }
+    .showcase-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+      border-color: var(--green-light);
+    }
+    .showcase-card:active { transform: translateY(-1px); }
+
+    /* Image area — real reference photo with a graceful emoji fallback behind it */
+    .showcase-imgwrap {
+      position: relative;
+      height: 168px;
+      background: linear-gradient(135deg, var(--green-pale), #eef5f0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .showcase-fallback {
+      position: absolute;
+      font-size: 54px;
+      opacity: 0.55;
+      z-index: 0;
+      user-select: none;
+    }
+    .showcase-img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .showcase-card:hover .showcase-img { transform: scale(1.05); }
+    /* Amber tag chip floating on the image */
+    .showcase-badge {
+      position: absolute;
+      z-index: 2;
+      top: 12px;
+      left: 12px;
+      background: rgba(26,60,46,0.82);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .showcase-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+    .showcase-title {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--green-dark);
+      line-height: 1.3;
+    }
+    .showcase-desc {
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.5;
+      font-family: var(--font-body);
+    }
+    .showcase-cta {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green-mid);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .showcase-card:hover .showcase-cta { gap: 9px; }
 
     /* ══════════════════════════════
        TRENDING SEARCHES
@@ -679,23 +979,57 @@
       cursor: pointer;
       flex-shrink: 0;
       transition: background 0.2s, border-color 0.2s;
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
       box-shadow: var(--shadow-sm);
     }
-    .trend-chip:hover { background: var(--green-soft); border-color: var(--green-light); }
+    .trend-chip:hover { background: var(--green-pale); border-color: var(--green-light); }
     .trend-chip .trend-icon { font-size: 14px; }
 
     /* ══════════════════════════════
        WEATHER SNAPSHOT
     ══════════════════════════════ */
     .weather-card {
-      background: linear-gradient(135deg, #1565c0, #1976d2, #1e88e5);
       border-radius: var(--radius-md);
-      padding: 20px;
+      padding: 22px;
       color: var(--white);
       position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(21,101,192,0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      background: linear-gradient(135deg, var(--green-dark), #1d4e6b);
+      transition: all 0.5s ease;
+    }
+    .weather-card.sky-clear {
+      background: linear-gradient(135deg, #2f8f9d, #8fd4c8);
+      color: #163a2e;
+      box-shadow: 0 8px 24px rgba(47, 143, 157, 0.22);
+    }
+    .weather-card.sky-clear .weather-pill {
+      background: rgba(255,255,255,0.45);
+      border-color: rgba(255,255,255,0.6);
+      color: #163a2e;
+    }
+    .weather-card.sky-clear .weather-unit, .weather-card.sky-clear .weather-loc, .weather-card.sky-clear .weather-cond {
+      color: #163a2e;
+      opacity: 0.9;
+    }
+    .weather-card.sky-cloudy {
+      background: linear-gradient(135deg, #6b7a8f, #b8c4d4);
+      color: #2d3748;
+      box-shadow: 0 8px 24px rgba(107, 122, 143, 0.22);
+    }
+    .weather-card.sky-cloudy .weather-pill {
+      background: rgba(255,255,255,0.45);
+      border-color: rgba(255,255,255,0.6);
+      color: #2d3748;
+    }
+    .weather-card.sky-cloudy .weather-unit, .weather-card.sky-cloudy .weather-loc, .weather-card.sky-cloudy .weather-cond {
+      color: #2d3748;
+      opacity: 0.9;
+    }
+    .weather-card.sky-rainy {
+      background: linear-gradient(135deg, #2c5f7c, #1e3a52);
+      color: var(--white);
+      box-shadow: 0 8px 24px rgba(44, 95, 124, 0.25);
     }
     .weather-card::before {
       content: '☁️';
@@ -752,9 +1086,19 @@
       font-size: 10px;
       opacity: 0.6;
     }
+    .weather-advice {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      font-family: var(--font-body);
+    }
 
     /* ══════════════════════════════
-       MANDI SNAPSHOT
+       MANDI SNAPSHOT — live rows from /shop/mandi (Agmarknet)
     ══════════════════════════════ */
     .mandi-card {
       background: var(--white);
@@ -764,70 +1108,279 @@
       box-shadow: var(--shadow-sm);
     }
     .mandi-header-strip {
-      background: linear-gradient(90deg, var(--green-dark), var(--green-mid));
-      padding: 12px 16px;
+      background: linear-gradient(120deg, var(--green-dark), var(--green-mid));
+      padding: 14px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
     }
-    .mandi-header-strip span {
+    .mandi-place { min-width: 0; }
+    .mandi-place-name {
       color: var(--white);
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .mandi-live-badge {
-      background: var(--gold);
-      color: #5d4037;
-      font-size: 10px;
+      font-family: var(--font-serif);
+      font-size: 17px;
       font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 20px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .mandi-rows { padding: 4px 0; }
-    .mandi-row {
-      display: flex;
+    .mandi-place-sub {
+      color: rgba(255,255,255,0.7);
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .mandi-fresh-pill {
+      display: inline-flex;
       align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid #f0f0f0;
-      gap: 10px;
+      gap: 6px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 20px;
+      white-space: nowrap;
     }
-    .mandi-row:last-child { border-bottom: none; }
-    .mandi-crop-icon { font-size: 22px; flex-shrink: 0; }
-    .mandi-crop-name {
+    .mandi-fresh-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #6ee7a8;
+      animation: mandiPulse 2s infinite;
+    }
+    /* Data older than two days: amber dot, no pulse — never dress stale as live */
+    .mandi-fresh-pill.stale .mandi-fresh-dot { background: var(--amber); animation: none; }
+    @keyframes mandiPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(110,231,168,0.6); }
+      70%  { box-shadow: 0 0 0 6px rgba(110,231,168,0); }
+      100% { box-shadow: 0 0 0 0 rgba(110,231,168,0); }
+    }
+
+    /* Crop cards — same anatomy as the shop's product cards:
+       photo zone → name → price → link row → green action button */
+    /* Column counts divide the 6 crops evenly (3×2, 2×3, 1×6) — auto-fill left
+       an orphan card stranded on its own row. */
+    .mandi-rows {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      padding: 16px;
+      background: #f7faf8;
+    }
+    @media (min-width: 600px)  { .mandi-rows { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1180px) { .mandi-rows { grid-template-columns: repeat(6, 1fr); } }
+    .mandi-item {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .mandi-item:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .mandi-item-main {
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
       flex: 1;
-      font-size: 14px;
-      font-weight: 600;
+    }
+    .mandi-item:hover .mandi-crop-name { color: var(--green-mid); }
+
+    .mandi-item-img {
+      position: relative;
+      height: 130px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      font-size: 52px;
+      line-height: 1;
+      background: var(--green-pale);
+      overflow: hidden;
+    }
+    /* Crop photo covers the emoji placeholder once it has decoded */
+    .mandi-item-img img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .mandi-item-img img.is-on { opacity: 1; }
+
+    .mandi-item-head {
+      padding: 12px 13px 0;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .mandi-crop-name {
+      font-size: 14.5px;
+      font-weight: 700;
       color: var(--text-dark);
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
+      line-height: 1.35;
+      transition: color 0.18s ease;
     }
     .mandi-crop-unit {
       font-size: 11px;
       color: var(--text-soft);
-      margin-top: 1px;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .mandi-price-col { text-align: right; flex-shrink: 0; }
+    .mandi-price-line {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin-top: 9px;
+    }
     .mandi-price {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 21px;
+      font-weight: 800;
       color: var(--green-dark);
+      line-height: 1;
+      letter-spacing: -0.4px;
     }
-    .mandi-change {
+    .mandi-price small {
       font-size: 11px;
       font-weight: 600;
-      margin-top: 1px;
-    }
-    .mandi-change.up   { color: #2e7d32; }
-    .mandi-change.down { color: #c62828; }
-    .mandi-change.flat { color: var(--text-soft); }
-
-    .mandi-footer {
-      padding: 10px 16px;
-      border-top: 1px solid var(--border);
-      text-align: center;
-      font-size: 12px;
       color: var(--text-soft);
     }
-    .mandi-footer a { color: var(--green-mid); text-decoration: none; font-weight: 600; }
+    /* trend chevron — sits beside the price, colour carries the direction */
+    .mandi-trend { flex-shrink: 0; align-self: center; margin-left: auto; }
+    .mandi-trend.up   { color: #1b7a3d; }
+    .mandi-trend.down { color: #c0392b; }
+    .mandi-trend.flat { color: #9aa8a1; }
+    /* Two cards to a phone screen: a 5-digit price + unit wrapped to a second line */
+    @media (max-width: 599px) {
+      .mandi-price { font-size: 18px; }
+      .mandi-price small { font-size: 10px; }
+    }
+
+    /* day-over-day change — badge on the photo, like the shop's product badge */
+    .mandi-change {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+    }
+    .mandi-change.up   { color: #1b7a3d; background: #e6f6ec; }
+    .mandi-change.down { color: #c0392b; background: #fdeceb; }
+    .mandi-change.flat { color: var(--text-mid); background: rgba(255,255,255,0.92); }
+
+    .mandi-item-foot { padding: 0 13px 12px; }
+    .mandi-cta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 10px;
+      padding-top: 9px;
+    }
+    .mandi-cta-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green-mid);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .mandi-cta-link:hover { color: var(--green-dark); text-decoration: underline; }
+    .mandi-buy {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 10px 0;
+      background: var(--green-dark);
+      color: var(--white);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.18s, transform 0.1s;
+    }
+    .mandi-buy:hover  { background: var(--green-mid); }
+    .mandi-buy:active { transform: scale(0.97); }
+
+    .mandi-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 18px;
+      background: #fbfcfb;
+      border-top: 1px solid var(--border);
+      font-size: 11.5px;
+      color: var(--text-soft);
+    }
+    .mandi-footer a {
+      color: var(--green-mid);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+    .mandi-footer a:hover { text-decoration: underline; }
+
+    .mandi-skel {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .mandi-skel-body { padding: 12px 13px; }
+    .skel-box {
+      background: linear-gradient(90deg, #eef1ef 25%, #f7f9f8 50%, #eef1ef 75%);
+      background-size: 200% 100%;
+      animation: skelShine 1.3s linear infinite;
+      border-radius: 8px;
+    }
+    @keyframes skelShine {
+      from { background-position: 200% 0; }
+      to   { background-position: -200% 0; }
+    }
+    .mandi-state {
+      grid-column: 1 / -1;
+      padding: 30px 18px;
+      text-align: center;
+      color: var(--text-soft);
+      font-size: 13px;
+    }
+    .mandi-retry {
+      margin-top: 12px;
+      background: var(--green-mid);
+      color: var(--white);
+      border: none;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-family: var(--font-body);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mandi-retry:hover { background: var(--green-dark); }
 
     /* ══════════════════════════════
        PAGE BOTTOM SPACING
@@ -845,31 +1398,111 @@
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .hero-inner > * {
+    @keyframes floatBadge {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* Classy Vector Service Icons & Micro-animations */
+    .service-icon {
+      width: 32px;
+      height: 32px;
+      display: block;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    /* Hover effects for each specific service icon */
+    .quick-card:hover .icon-search {
+      transform: scale(1.18) rotate(15deg);
+    }
+    .quick-card:hover .icon-weather {
+      transform: translateY(-4px) scale(1.1);
+      animation: shakeWeather 0.8s ease-in-out infinite;
+    }
+    @keyframes shakeWeather {
+      0%, 100% { transform: translateY(-4px) rotate(0deg); }
+      25% { transform: translateY(-4px) rotate(-3deg); }
+      75% { transform: translateY(-4px) rotate(3deg); }
+    }
+    .quick-card:hover .icon-mandi {
+      transform: scale(1.15) translateY(-2px);
+      animation: bounceMandi 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes bounceMandi {
+      0% { transform: scale(1.15) translateY(-2px); }
+      100% { transform: scale(1.15) translateY(-5px); }
+    }
+    .quick-card:hover .icon-crop {
+      transform: scale(1.15);
+      animation: swaySeedling 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes swaySeedling {
+      0% { transform: scale(1.15) rotate(-5deg); }
+      100% { transform: scale(1.15) rotate(5deg); }
+    }
+    .quick-card:hover .icon-market {
+      transform: scale(1.15);
+      animation: rockBasket 0.8s ease-in-out infinite;
+    }
+    @keyframes rockBasket {
+      0%, 100% { transform: scale(1.15) rotate(0deg); }
+      33% { transform: scale(1.15) rotate(-8deg); }
+      66% { transform: scale(1.15) rotate(8deg); }
+    }
+    .quick-card:hover .icon-shop {
+      transform: scale(1.15);
+      animation: rollCart 0.8s ease-in-out infinite;
+    }
+    @keyframes rollCart {
+      0%, 100% { transform: scale(1.15) translateX(0); }
+      50% { transform: scale(1.15) translateX(3px); }
+    }
+    .quick-card:hover .icon-schemes {
+      transform: scale(1.2) rotate(-5deg);
+    }
+    .quick-card:hover .icon-map {
+      transform: scale(1.15);
+      animation: bouncePin 1s ease-in-out infinite;
+    }
+    @keyframes bouncePin {
+      0%, 100% { transform: scale(1.15) translateY(0); }
+      50% { transform: scale(1.15) translateY(-4px); }
+    }
+    .quick-card:hover .icon-articles {
+      transform: scale(1.2);
+    }
+    .quick-card:hover .icon-expert {
+      transform: scale(1.15);
+      animation: nodFarmer 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes nodFarmer {
+      0% { transform: scale(1.15) translateY(0); }
+      100% { transform: scale(1.15) translateY(-3px); }
+    }
+    .hero-text > * {
       animation: fadeUp 0.5s ease both;
     }
-    .hero-inner > *:nth-child(1) { animation-delay: 0.05s; }
-    .hero-inner > *:nth-child(2) { animation-delay: 0.12s; }
-    .hero-inner > *:nth-child(3) { animation-delay: 0.18s; }
-    .hero-inner > *:nth-child(4) { animation-delay: 0.24s; }
-    .hero-inner > *:nth-child(5) { animation-delay: 0.30s; }
+    .hero-text > *:nth-child(1) { animation-delay: 0.05s; }
+    .hero-text > *:nth-child(2) { animation-delay: 0.12s; }
+    .hero-text > *:nth-child(3) { animation-delay: 0.18s; }
+    .hero-text > *:nth-child(4) { animation-delay: 0.24s; }
+    .hero-text > *:nth-child(5) { animation-delay: 0.30s; }
 
     /* ══════════════════════════════
        DESKTOP ADJUSTMENTS
     ══════════════════════════════ */
     @media (min-width: 600px) {
-      .hero-inner { padding: 48px 40px 40px; max-width: 680px; }
-      .hero-headline { font-size: 36px; }
-      .quick-grid { grid-template-columns: repeat(6, 1fr); }
-      .section { padding: 32px 40px; }
-      .header { padding: 0 40px; }
+      .hero-inner { padding: 56px 40px 48px; }
+      .hero-headline { font-size: 38px; }
+      .section { padding: 34px 40px; }
+      .main-header-inner { padding: 0 40px; }
+      .top-utility-inner { padding: 0 40px; }
     }
 
     @media (min-width: 900px) {
-      .hero { min-height: 420px; }
-      .hero-headline { font-size: 42px; }
+      .hero { min-height: 440px; }
+      .hero-headline { font-size: 44px; }
       .hero-subline { font-size: 16px; }
-      .search-input { font-size: 17px; }
     }
 
     /* ══════════════════════════════
@@ -901,7 +1534,7 @@
       position: absolute;
       left: 0; top: 0; bottom: 0;
       width: 4px;
-      background: var(--article-accent, var(--green-mid));
+      background: var(--green-mid);
       border-radius: 4px 0 0 4px;
     }
     .article-card:hover {
@@ -915,12 +1548,18 @@
       width: 62px;
       height: 62px;
       border-radius: 10px;
-      background: var(--green-soft);
+      background: var(--green-pale);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 30px;
       flex-shrink: 0;
+      overflow: hidden;
+    }
+    .article-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .article-body { flex: 1; min-width: 0; }
@@ -930,8 +1569,8 @@
       font-weight: 700;
       letter-spacing: 0.4px;
       text-transform: uppercase;
-      color: var(--article-accent, var(--green-mid));
-      background: var(--green-soft);
+      color: var(--green-dark);
+      background: var(--amber-light);
       border-radius: 20px;
       padding: 2px 8px;
       margin-bottom: 5px;
@@ -942,7 +1581,7 @@
       color: var(--text-dark);
       line-height: 1.35;
       margin-bottom: 4px;
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
     }
     .article-meta {
       font-size: 11px;
@@ -971,215 +1610,130 @@
        SARKARI YOJANA SECTION
     ══════════════════════════════ */
     .yojana-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    @media (min-width: 600px) {
+      .yojana-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+    }
+    @media (min-width: 900px) {
+      .yojana-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
     }
 
     .yojana-card {
       background: var(--white);
-      border-radius: var(--radius-md);
       border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 16px;
-      text-decoration: none;
-      cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
-      position: relative;
       overflow: hidden;
-    }
-    .yojana-card::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 4px;
-      background: var(--yojana-accent, var(--green-mid));
-      border-radius: 4px 0 0 4px;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.2s, border-color 0.2s;
     }
     .yojana-card:hover {
       box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
+      transform: translateY(-4px);
       border-color: var(--green-light);
     }
-    .yojana-card:active { transform: translateY(0); }
+    .yojana-card:active { transform: translateY(-1px); }
 
-    .yojana-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 12px;
-      background: var(--yojana-bg, var(--green-soft));
+    /* Image area — reference photo with a graceful emoji fallback behind it */
+    .yojana-imgwrap {
+      position: relative;
+      height: 150px;
+      background: linear-gradient(135deg, var(--green-pale), #eef5f0);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
-      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .yojana-fallback {
+      position: absolute;
+      font-size: 50px;
+      opacity: 0.55;
+      z-index: 0;
+      user-select: none;
+    }
+    .yojana-img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .yojana-card:hover .yojana-img { transform: scale(1.05); }
+
+    /* Tag chip floating on the image */
+    .yojana-badge {
+      position: absolute;
+      z-index: 2;
+      top: 12px;
+      left: 12px;
+      background: rgba(26,60,46,0.82);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
     }
 
-    .yojana-body { flex: 1; min-width: 0; }
-    .yojana-tag {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      border-radius: 20px;
-      padding: 2px 8px;
-      margin-bottom: 4px;
+    .yojana-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
     }
     .yojana-name {
-      font-size: 14px;
+      font-family: var(--font-serif);
+      font-size: 16px;
       font-weight: 700;
-      color: var(--text-dark);
-      line-height: 1.3;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-      margin-bottom: 2px;
+      color: var(--green-dark);
+      line-height: 1.35;
     }
     .yojana-benefit {
-      font-size: 12px;
-      color: var(--text-soft);
-      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.5;
+      font-family: var(--font-body);
+      flex: 1;
     }
-    .yojana-arrow {
-      font-size: 16px;
-      color: var(--text-soft);
-      flex-shrink: 0;
-      opacity: 0.5;
+    .yojana-cta {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green-mid);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: gap 0.2s;
     }
-
-    @media (min-width: 600px) {
-      .yojana-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-      }
-    }
+    .yojana-card:hover .yojana-cta { gap: 9px; }
 
     /* ══════════════════════════════
        AD SLOTS — UX-safe, labelled
     ══════════════════════════════ */
-
-    /* Wrapper shared by all ad slots */
     .ad-slot {
       width: 100%;
+      max-width: 1280px;
+      margin: 6px auto;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-    }
-
-    /* Tiny "Sponsored" label above every ad */
-    .ad-label {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--text-soft);
-      margin-bottom: 4px;
-      align-self: flex-start;
-      padding-left: 2px;
-    }
-
-    /* ── Banner ad (below hero, full-width) ── */
-    .ad-banner {
-      padding: 12px 20px 0;
-    }
-    .ad-banner .ad-inner {
-      width: 100%;
-      min-height: 60px;         /* standard mobile banner height */
-      background: var(--white);
-      border: 1px dashed var(--border);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    /* ── In-feed native ad (sits between sections, looks like a card) ── */
-    .ad-native {
-      padding: 0 20px;
-      margin: 4px 0;
-    }
-    .ad-native .ad-inner {
-      width: 100%;
-      background: var(--gold-soft);
-      border: 1px solid #ffe082;
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: box-shadow 0.2s;
-      text-decoration: none;
-      min-height: 72px;
-    }
-    .ad-native .ad-inner:hover { box-shadow: var(--shadow-sm); }
-    .ad-native-icon {
-      font-size: 28px;
-      flex-shrink: 0;
-      width: 48px;
-      height: 48px;
-      background: var(--white);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .ad-native-body { flex: 1; min-width: 0; }
-    .ad-native-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-dark);
-      line-height: 1.3;
-      margin-bottom: 2px;
-      font-family: 'Noto Sans Devanagari', sans-serif;
-    }
-    .ad-native-sub {
-      font-size: 11px;
-      color: var(--text-soft);
-      font-family: 'Noto Sans Devanagari', sans-serif;
-    }
-    .ad-native-cta {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--green-dark);
-      background: #c8e6c9;
-      border-radius: 20px;
-      padding: 5px 12px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    /* ── Rectangle ad (between articles & footer) ── */
-    .ad-rect {
-      padding: 0 20px 20px;
-    }
-    .ad-rect .ad-inner {
-      width: 100%;
-      min-height: 100px;
-      background: var(--white);
-      border: 1px dashed var(--border);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    /* ══════════════════════════════
-       AD SLOT SHARED — AdSense ready
-    ══════════════════════════════ */
-    .ad-slot {
-      width: 100%;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 6px 0;
     }
     .ad-slot-label {
       font-size: 9px;
@@ -1235,24 +1789,7 @@
       .ad-slot.ad-slot-rect .ad-slot-inner { max-width: 100%; min-height: 100px; }
     }
 
-    /* ══ Hamburger + Sidebar Drawer Menu ══ */
-    .hamburger-btn {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #1a2e1e;
-      padding: 4px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      transition: background 0.15s;
-    }
-    .hamburger-btn:hover {
-      background: #f7fafc;
-    }
+    /* ══ Sidebar Drawer Menu ══ */
     .sidebar-drawer-overlay {
       display: none;
       position: fixed;
@@ -1288,7 +1825,7 @@
       font-size: 17px;
       font-weight: 800;
       color: #1c2b22;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
     }
     .sidebar-drawer-close {
       background: #f2f5f3;
@@ -1320,7 +1857,7 @@
       min-height: 46px;
       box-sizing: border-box;
       padding: 10px 12px;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
       font-size: 15px;
       font-weight: 700;
       color: #2d3748;
@@ -1351,12 +1888,12 @@
     .sidebar-drawer-lang-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
     .sidebar-drawer-lang-label {
       font-size: 12px; font-weight: 700; color: #8a958f;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-family: var(--font-body);
     }
     .sidebar-lang-btn {
       background: #f2f8f4; border: 1.5px solid #e3ece5; border-radius: 20px;
       padding: 5px 12px; font-size: 12px; font-weight: 700; color: #2d3748;
-      cursor: pointer; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      cursor: pointer; font-family: var(--font-body);
       transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
     .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
@@ -1365,9 +1902,58 @@
       display: flex; align-items: center; gap: 6px;
       font-size: 13px; font-weight: 700; color: #4a5a52;
       text-decoration: none; background: none; border: none; cursor: pointer;
-      padding: 0; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      padding: 0; font-family: var(--font-body);
     }
-    .sidebar-drawer-utility-link:hover { color: #2d6a4f; }
+
+    /* ── MOBILE MEDIA QUERIES & OVERRIDES ── */
+    @media (max-width: 600px) {
+      .top-utility-bar {
+        display: none !important;
+      }
+      .pre-topbar {
+        font-size: 11px;
+        padding: 5px 8px;
+        justify-content: center;
+      }
+      .main-header-inner {
+        padding: 0 14px !important;
+        gap: 10px;
+      }
+      .logo-icon {
+        width: 32px !important;
+        height: 32px !important;
+      }
+      .logo-title {
+        font-size: 16px !important;
+      }
+      .logo-tagline {
+        display: none !important;
+      }
+      .avatar-btn {
+        width: 32px !important;
+        height: 32px !important;
+      }
+      .hero-inner {
+        padding: 20px 14px 24px !important;
+      }
+      .hero-greeting {
+        padding: 5px 12px !important;
+        font-size: 12.5px !important;
+        margin-bottom: 12px !important;
+      }
+      .hero-headline {
+        font-size: 25px !important;
+        line-height: 1.3 !important;
+        margin-bottom: 8px !important;
+      }
+      .hero-subline {
+        font-size: 13.5px !important;
+        margin-bottom: 16px !important;
+      }
+      .search-capsule {
+        margin-bottom: 16px !important;
+      }
+    }
   </style>
 <style id="km-drawer-css">
   /* Canonical sidebar drawer - identical across all pages */
@@ -1419,29 +2005,68 @@
 </head>
 <body>
 
-<!-- ══════════════════════════
-     HEADER
-══════════════════════════ -->
-<header class="header">
-  <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
-  <a class="header-logo" href="#">
-    <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="logo-icon" style="border-radius:50%;object-fit:cover;">
-    <div class="logo-text">
-      <span class="logo-title">कृषि मित्र</span>
-      <span class="logo-tagline"> किसान का डिजिटल साथी</span>
-    </div>
+<!-- ══ ANNOUNCEMENT BAR ══ -->
+<div class="pre-topbar">
+  <a href="tel:+919870951001" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
+    <span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001
   </a>
+</div>
 
-  <div class="header-right">
-    <nav class="header-nav" style="display:none" id="desktop-nav">
-      <a class="nav-link" href="index.html">मुख्य</a>
-      <a class="nav-link" href="weather.html">मौसम</a>
-      <a class="nav-link" href="mandi.html">मंडी</a>
-      <a class="nav-link" href="articles/index.html">लेख</a>
-      <a class="nav-link" href="sarkari_yojana.html">योजनाएं</a>
-      <a class="nav-link" href="chat.html">सहायता</a>
-    </nav>
-    <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
+<!-- ══ Layer 1: Top Utility Bar ══ -->
+<div class="top-utility-bar">
+  <div class="top-utility-inner">
+    <div class="top-utility-left">
+      <a href="khoj.html" class="top-utility-link">कृषि खोज</a>
+      <span class="top-utility-divider">|</span>
+      <a href="weather.html" class="top-utility-link">मौसम व सलाह</a>
+      <span class="top-utility-divider">|</span>
+      <a href="meri_fasal.html" class="top-utility-link">मेरी फसल</a>
+      <span class="top-utility-divider">|</span>
+      <a href="sarkari_yojana.html" class="top-utility-link">सरकारी योजना</a>
+      <span class="top-utility-divider">|</span>
+      <a href="krashi_bajar.html" class="top-utility-link">खरीदें/बेचें</a>
+    </div>
+    <div class="top-utility-right">
+      <a href="tel:+919870951001" class="top-utility-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
+        <span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001
+      </a>
+      <span class="top-utility-divider">|</span>
+      <a href="chat.html" class="top-utility-link">संपर्क</a>
+      <a href="https://facebook.com" target="_blank" class="top-utility-social-icon" title="Facebook">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+      </a>
+      <a href="https://wa.me/919870951001" target="_blank" class="top-utility-social-icon" title="WhatsApp">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     HEADER — white, sticky, classy
+ ══════════════════════════ -->
+<header class="main-header">
+  <div class="main-header-inner">
+    <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
+    <a class="header-logo" href="#">
+      <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="logo-icon">
+      <div class="logo-text">
+        <span class="logo-title">कृषि मित्र</span>
+        <span class="logo-tagline">किसान का डिजिटल साथी</span>
+      </div>
+    </a>
+
+    <div class="header-right">
+      <nav class="header-nav" style="display:none" id="desktop-nav">
+        <a class="nav-link active" href="index.html">मुख्य</a>
+        <a class="nav-link" href="weather.html">मौसम</a>
+        <a class="nav-link" href="mandi.html">मंडी</a>
+        <a class="nav-link" href="articles/index.html">लेख</a>
+        <a class="nav-link" href="sarkari_yojana.html">योजनाएं</a>
+        <a class="nav-link" href="chat.html">सहायता</a>
+      </nav>
+      <div class="avatar-btn" title="My Profile" onclick="avatarBtnClick()">👤</div>
+    </div>
   </div>
 </header>
 
@@ -1458,159 +2083,238 @@
       <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
       <a href="mandi.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
       <a href="meri_fasal.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌱</span><span>मेरी फसल</span></a>
-      <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
+      <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
       <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
       <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
       <a href="map.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span data-t="nav_map">कृषि मानचित्र</span></a>
       <a href="articles/index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
       <a href="sarkari_yojana.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span data-t="nav_schemes">सरकारी योजना</span></a>
-      <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
-      <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
+      <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">कृषि सहायता</span></a>
+      <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
     </div>
     <!-- PWA Install Banner -->
     <div id="pwa-install-banner" style="display:block;margin-top:auto;padding:14px 16px;border-top:1px solid #eef2ef;background:#fff8e1;text-align:center;">
-      <p style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:8px;line-height:1.4;font-family:'Poppins',sans-serif;">📲 KrashiMitra ऐप को होम स्क्रीन पर जोड़ें</p>
+      <p style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:8px;line-height:1.4;font-family:'DM Sans',sans-serif;">📲 KrashiMitra ऐप को होम स्क्रीन पर जोड़ें</p>
       <button id="pwa-install-btn" style="background:#2d6a4f;border:none;border-radius:18px;color:#fff;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;box-shadow:0 2px 6px rgba(45,106,79,0.25);">अभी इंस्टॉल करें</button>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════
-     HERO SEARCH SECTION
+     HERO SECTION — clean, editorial
 ══════════════════════════ -->
 <section class="hero">
   <div class="hero-bg-photo"></div>
   <div class="hero-bg-overlay"></div>
   <div class="hero-glow"></div>
 
-  <!-- Hero illustration — flat, no frame, top-right of hero -->
-
-  <div class="hero-portrait" id="hero-portrait">
-    <img id="hero-photo" src="assets/hero-section-photo.webp"
-      alt="पकी फसल की सुनहरी बालियाँ, खेत में ट्रैक्टर और सूर्यास्त — कृषि मित्र"
-      width="1254" height="1254" decoding="async"
-      onerror="this.style.display='none'">
-  </div>
-
   <div class="hero-inner">
+    <div class="hero-text">
+      <!-- Greeting Badge -->
+      <div class="hero-greeting" id="hero-greeting">
+        <div class="hero-badge-dot"></div>
+        <span id="hero-greeting-text">नमस्ते, किसान भाई! 🧑‍🌾</span>
+      </div>
 
-    <!-- Badge -->
-    <div class="hero-badge">
-      <div class="hero-badge-dot"></div>
-      AI-powered कृषि सहायक
-    </div>
+      <!-- Headline -->
+      <h1 class="hero-headline">
+        कृषि मित्र — आपकी खेती का<br><span>डिजिटल साथी</span>
+      </h1>
 
-    <!-- Headline -->
-    <h1 class="hero-headline">
-      कृषि मित्र — आपकी खेती का<br><span>डिजिटल साथी</span>
-    </h1>
+      <!-- Subline -->
+      <p class="hero-subline">
+        फसल रोग, मंडी भाव, मौसम व कृषि सलाह — सब एक जगह
+      </p>
 
-    <!-- Subline -->
-    <p class="hero-subline">
-      फसल, रोग, मौसम, खाद — सब कुछ एक जगह पर
-    </p>
-
-    <!-- Search Box -->
-    <div class="search-box">
-      <div class="search-input-row">
-        <span class="search-icon">🔍</span>
+      <!-- Search capsule: type to search, or tap the mic to speak -->
+      <div class="search-capsule">
         <input
           type="text"
           id="main-search"
-          class="search-input"
-          placeholder="आज आप क्या जानना चाहते हैं?"
+          class="search-capsule-input"
+          placeholder="अपनी फसल या समस्या के बारे में खोजें..."
           autocomplete="off"
           onkeydown="handleSearchKey(event)"
         >
-        <button class="voice-btn" title="आवाज़ से खोजें" onclick="startVoice()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
-        <button class="search-btn" onclick="doSearch()">
-          खोजें →
+        <button class="search-capsule-mic-btn" title="आवाज़ से खोजें" onclick="startVoice()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="search-capsule-search-btn" title="खोजें" onclick="doSearch()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
       </div>
 
-      <div class="search-divider"></div>
-
-      <div class="search-quick">
-        <span class="sq-label">Popular:</span>
-        <span class="sq-chip" onclick="setSearch('गेहूं में पीलापन')">गेहूं में पीलापन</span>
-        <span class="sq-chip" onclick="setSearch('धान की बुवाई')">धान की बुवाई</span>
-        <span class="sq-chip" onclick="setSearch('यूरिया खाद')">यूरिया खाद</span>
-        <span class="sq-chip" onclick="setSearch('आज का मौसम')">आज का मौसम</span>
+      <!-- Stats -->
+      <div class="hero-stats">
+        <div class="hero-stat">🌾 <strong>24</strong> फसलों के भाव</div>
+        <div class="hero-stat">📍 <strong>75</strong> UP जिले</div>
+        <div class="hero-stat">🆓 <strong>बिल्कुल</strong> मुफ्त</div>
       </div>
     </div>
-
-    <!-- Stats -->
-    <div class="hero-stats">
-      <div class="hero-stat">🌾 <strong>50+</strong> फसलें</div>
-      <div class="hero-stat">📍 <strong>500+</strong> जिले</div>
-      <div class="hero-stat">🤖 <strong>AI</strong> सहायक</div>
-    </div>
-
   </div>
 </section>
-
-<!-- ══════════════════════════
-     AD SLOT 1 — Banner (Below Hero)
-     Responsive leaderboard / smart banner
-══════════════════════════ -->
-<div class="ad-slot ad-slot-banner" aria-label="विज्ञापन">
-  <div class="ad-slot-label">विज्ञापन</div>
-  <div class="ad-slot-inner">
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-2792326360609634"
-         data-ad-slot="7947270796"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-  </div>
-</div>
 
 <!-- ══════════════════════════
      QUICK ACTIONS
 ══════════════════════════ -->
 <section class="section" style="padding-bottom: 0;">
   <div class="section-header">
-    <h2 class="section-title"># त्वरित सेवाएं</h2>
+    <h2 class="section-title">त्वरित सेवाएं</h2>
   </div>
+  <p class="section-sub">आपकी खेती से जुड़ी हर ज़रूरत — एक जगह</p>
 
   <div class="quick-grid">
-    <a class="quick-card" href="khoj.html" style="--card-accent:#c62828">
-      <span class="qc-icon">🌾</span>
-      <span class="qc-label">फसल रोग</span>
+    <a class="quick-card" href="khoj.html" style="--card-color:#b5563f; --card-bg-light:#f7e9e5">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/search.png" alt="कृषि खोज" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">कृषि खोज</span>
+        <span class="qc-sublabel">रोग, खाद, बुवाई — बोलकर खोजें</span>
+      </div>
     </a>
-    <a class="quick-card" href="weather.html" style="--card-accent:#1565c0">
-      <span class="qc-icon">🌦️</span>
-      <span class="qc-label">मौसम</span>
+    <a class="quick-card" href="weather.html" style="--card-color:#3f6291; --card-bg-light:#eaf0f7">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/weather.png" alt="मौसम की जानकारी" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">मौसम की जानकारी</span>
+        <span class="qc-sublabel">आज का पूर्वानुमान</span>
+      </div>
     </a>
-    <a class="quick-card" href="mandi.html" style="--card-accent:#e65100">
-      <span class="qc-icon">💰</span>
-      <span class="qc-label">मंडी भाव</span>
+    <a class="quick-card" href="mandi.html" style="--card-color:#b5850f; --card-bg-light:#fef3c7">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/mandi.png" alt="मंडी भाव" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">मंडी भाव</span>
+        <span class="qc-sublabel">ताज़ा बाज़ार भाव</span>
+      </div>
     </a>
-    <a class="quick-card" href="meri_fasal.html" style="--card-accent:#2e7d32">
-      <span class="qc-icon">🌱</span>
-      <span class="qc-label">मेरी फसल कैलेंडर</span>
+    <a class="quick-card" href="meri_fasal.html" style="--card-color:#2d6a4f; --card-bg-light:#d8f3dc">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/crop.png" alt="फसल प्रबंधन" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">फसल प्रबंधन</span>
+        <span class="qc-sublabel">बुवाई से कटाई तक</span>
+      </div>
     </a>
-    <a class="quick-card" href="mandi.html?tab=fertilizer" style="--card-accent:#558b2f">
-      <span class="qc-icon">🧪</span>
-      <span class="qc-label">खाद की कीमत</span>
+    <a class="quick-card" href="krashi_bajar.html" style="--card-color:#9c4f6b; --card-bg-light:#f6e8ee">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/market.png" alt="कृषि बाज़ार" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">कृषि बाज़ार</span>
+        <span class="qc-sublabel">फसल सीधे बेचें-खरीदें</span>
+      </div>
     </a>
-    <a class="quick-card" href="shop.html" style="--card-accent:#6a1b9a">
-      <span class="qc-icon">$</span>
-      <span class="qc-label">Shop</span>
+    <a class="quick-card" href="shop.html" style="--card-color:#2f7d6f; --card-bg-light:#e3f2ee">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/shop.png" alt="किसान की दुकान" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">किसान की दुकान</span>
+        <span class="qc-sublabel">बीज, खाद, कीटनाशक</span>
+      </div>
     </a>
-    <a class="quick-card" href="chat.html?tab=info" style="--card-accent:#00695c">
-      <span class="qc-icon">📘</span>
-      <span class="qc-label">कृषि जानकारी</span>
+    <a class="quick-card" href="sarkari_yojana.html" style="--card-color:#8a5a2e; --card-bg-light:#f3e6d8">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/schemes.png" alt="सरकारी योजनाएं" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">सरकारी योजनाएं</span>
+        <span class="qc-sublabel">सब्सिडी व योजना लाभ</span>
+      </div>
     </a>
-    <a class="quick-card" href="articles/index.html" style="--card-accent:#f57f17">
-      <span class="qc-icon">📰</span>
-      <span class="qc-label">लेख & टिप्स</span>
+    <a class="quick-card" href="map.html" style="--card-color:#4a4f8a; --card-bg-light:#eaeaf5">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/map.png" alt="कृषि मानचित्र" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">कृषि मानचित्र</span>
+        <span class="qc-sublabel">जिलेवार जानकारी</span>
+      </div>
     </a>
-    <a class="quick-card" href="sarkari_yojana.html" style="--card-accent:#1565c0">
-      <span class="qc-icon">📋</span>
-      <span class="qc-label">सरकारी योजनाएं</span>
+    <a class="quick-card" href="articles/index.html" style="--card-color:#7d7a2e; --card-bg-light:#f2f1d8">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/articles.png" alt="कृषि लेख" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">कृषि लेख</span>
+        <span class="qc-sublabel">खेती के टिप्स पढ़ें</span>
+      </div>
     </a>
+    <a class="quick-card" href="chat.html" style="--card-color:#6d5a82; --card-bg-light:#f0ecf4">
+      <span class="qc-icon-wrapper">
+        <img src="images/services/expert.png" alt="विशेषज्ञ सलाह" class="service-img" loading="lazy">
+      </span>
+      <div class="qc-text-wrapper">
+        <span class="qc-label">विशेषज्ञ सलाह</span>
+        <span class="qc-sublabel">सहायता व सलाह पाएं</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     FEATURE SHOWCASE — image-led spotlight of flagship services
+══════════════════════════ -->
+<section class="section" style="padding-bottom: 0;">
+  <div class="section-header">
+    <h2 class="section-title">✨ आपकी खेती, हमारी मदद</h2>
+  </div>
+
+  <div class="showcase-grid">
+
+    <a class="showcase-card" href="mandi.html">
+      <div class="showcase-imgwrap">
+        <span class="showcase-fallback">💰</span>
+        <span class="showcase-badge">मंडी</span>
+        <img class="showcase-img" loading="lazy" decoding="async"
+             src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=75"
+             alt="मंडी में बिकने के लिए रखी ताज़ा फसलें और सब्ज़ियाँ"
+             onerror="this.remove()">
+      </div>
+      <div class="showcase-body">
+        <div class="showcase-title">आज का मंडी भाव</div>
+        <div class="showcase-desc">हर मंडी के ताज़ा दाम देखें — कब और कहाँ बेचना है, सही फैसला लें।</div>
+        <span class="showcase-cta">भाव देखें →</span>
+      </div>
+    </a>
+
+    <a class="showcase-card" href="krashi_bajar.html">
+      <div class="showcase-imgwrap">
+        <span class="showcase-fallback">🧺</span>
+        <span class="showcase-badge">बाज़ार</span>
+        <img class="showcase-img" loading="lazy" decoding="async"
+             src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=75"
+             alt="खेत में ट्रैक्टर और बैलों के साथ काम करते किसान"
+             onerror="this.remove()">
+      </div>
+      <div class="showcase-body">
+        <div class="showcase-title">कृषि बाज़ार</div>
+        <div class="showcase-desc">अपनी फसल सीधे खरीदार को बेचें — बिचौलिए के बिना, पूरा दाम आपका।</div>
+        <span class="showcase-cta">बेचना शुरू करें →</span>
+      </div>
+    </a>
+
+    <a class="showcase-card" href="meri_fasal.html">
+      <div class="showcase-imgwrap">
+        <span class="showcase-fallback">🌱</span>
+        <span class="showcase-badge">मेरी फसल</span>
+        <img class="showcase-img" loading="lazy" decoding="async"
+             src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=75"
+             alt="खेत में उगती हरी फसल की कतारें"
+             onerror="this.remove()">
+      </div>
+      <div class="showcase-body">
+        <div class="showcase-title">फसल प्रबंधन</div>
+        <div class="showcase-desc">बुवाई से कटाई तक — हर चरण पर सही समय और सही सलाह पाएं।</div>
+        <span class="showcase-cta">फसल कैलेंडर →</span>
+      </div>
+    </a>
+
   </div>
 </section>
 
@@ -1669,11 +2373,12 @@
       <div class="weather-pill" id="w-rain-pill" style="display:none">🌧️ <span id="w-rain">—</span>mm वर्षा</div>
     </div>
     <div class="weather-update" id="w-updated">अपडेट हो रहा है…</div>
+    <div class="weather-advice" id="w-advice">🌾 मौसम अनुकूल है। अपनी फसलों की नियमित देखभाल जारी रखें।</div>
   </div>
 </section>
 
 <!-- ══════════════════════════
-     AD SLOT 2 — In-feed (Between Weather & Mandi)
+     AD SLOT 1 — In-feed (Between Weather & Mandi)
      Native / in-article format
 ══════════════════════════ -->
 <div class="ad-slot ad-slot-infeed" aria-label="विज्ञापन">
@@ -1693,7 +2398,7 @@
 <!-- ══════════════════════════
      MANDI SNAPSHOT
 ══════════════════════════ -->
-<section class="section">
+<section class="section" id="mandi-section">
   <div class="section-header">
     <h2 class="section-title">💰 मंडी भाव</h2>
     <a class="section-link" href="mandi.html">सभी भाव →</a>
@@ -1701,57 +2406,58 @@
 
   <div class="mandi-card">
     <div class="mandi-header-strip">
-      <span>📍 मेरठ मंडी — आज के भाव</span>
-      <span class="mandi-live-badge">LIVE</span>
+      <div class="mandi-place">
+        <div class="mandi-place-name" id="mandi-place">भाव लोड हो रहे हैं…</div>
+        <div class="mandi-place-sub">मॉडल भाव · प्रति क्विंटल</div>
+      </div>
+      <span class="mandi-fresh-pill" id="mandi-fresh" hidden>
+        <span class="mandi-fresh-dot"></span><span id="mandi-fresh-text"></span>
+      </span>
     </div>
-    <div class="mandi-rows">
-      <div class="mandi-row">
-        <span class="mandi-crop-icon">🌾</span>
-        <div>
-          <div class="mandi-crop-name">गेहूं</div>
-          <div class="mandi-crop-unit">प्रति क्विंटल</div>
-        </div>
-        <div class="mandi-price-col">
-          <div class="mandi-price">₹2,200</div>
-          <div class="mandi-change up">▲ +₹30</div>
-        </div>
-      </div>
-      <div class="mandi-row">
-        <span class="mandi-crop-icon">🍚</span>
-        <div>
-          <div class="mandi-crop-name">धान</div>
-          <div class="mandi-crop-unit">प्रति क्विंटल</div>
-        </div>
-        <div class="mandi-price-col">
-          <div class="mandi-price">₹1,950</div>
-          <div class="mandi-change down">▼ −₹15</div>
+
+    <!-- Cards are rendered from the live /shop/mandi feed — never hardcode prices here -->
+    <div class="mandi-rows" id="mandi-rows">
+      <div class="mandi-skel">
+        <div class="skel-box" style="height:130px;border-radius:0"></div>
+        <div class="mandi-skel-body">
+          <div class="skel-box" style="width:60%;height:13px"></div>
+          <div class="skel-box" style="width:85%;height:10px;margin-top:7px"></div>
+          <div class="skel-box" style="width:70%;height:20px;margin-top:10px"></div>
+          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
       </div>
-      <div class="mandi-row">
-        <span class="mandi-crop-icon">🎋</span>
-        <div>
-          <div class="mandi-crop-name">गन्ना</div>
-          <div class="mandi-crop-unit">प्रति क्विंटल</div>
-        </div>
-        <div class="mandi-price-col">
-          <div class="mandi-price">₹350</div>
-          <div class="mandi-change flat">— कोई बदलाव नहीं</div>
+      <div class="mandi-skel">
+        <div class="skel-box" style="height:130px;border-radius:0"></div>
+        <div class="mandi-skel-body">
+          <div class="skel-box" style="width:50%;height:13px"></div>
+          <div class="skel-box" style="width:80%;height:10px;margin-top:7px"></div>
+          <div class="skel-box" style="width:65%;height:20px;margin-top:10px"></div>
+          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
       </div>
-      <div class="mandi-row">
-        <span class="mandi-crop-icon">🌻</span>
-        <div>
-          <div class="mandi-crop-name">सरसों</div>
-          <div class="mandi-crop-unit">प्रति क्विंटल</div>
+      <div class="mandi-skel">
+        <div class="skel-box" style="height:130px;border-radius:0"></div>
+        <div class="mandi-skel-body">
+          <div class="skel-box" style="width:55%;height:13px"></div>
+          <div class="skel-box" style="width:75%;height:10px;margin-top:7px"></div>
+          <div class="skel-box" style="width:72%;height:20px;margin-top:10px"></div>
+          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
-        <div class="mandi-price-col">
-          <div class="mandi-price">₹5,400</div>
-          <div class="mandi-change up">▲ +₹100</div>
+      </div>
+      <div class="mandi-skel">
+        <div class="skel-box" style="height:130px;border-radius:0"></div>
+        <div class="mandi-skel-body">
+          <div class="skel-box" style="width:58%;height:13px"></div>
+          <div class="skel-box" style="width:82%;height:10px;margin-top:7px"></div>
+          <div class="skel-box" style="width:68%;height:20px;margin-top:10px"></div>
+          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
       </div>
     </div>
+
     <div class="mandi-footer">
-      सभी भाव देखें → <a href="mandi.html">मंडी पेज खोलें</a>
+      <span>स्रोत: Agmarknet · data.gov.in</span>
+      <a href="mandi.html">सभी फसलों के भाव देखें →</a>
     </div>
   </div>
 </section>
@@ -1767,51 +2473,71 @@
 
   <div class="yojana-grid">
 
-    <a class="yojana-card" href="sarkari_yojana.html#pmkisan" style="--yojana-accent:#2e7d32;--yojana-bg:#e8f5e9">
-      <div class="yojana-icon">🌾</div>
+    <a class="yojana-card" href="sarkari_yojana.html#pmkisan">
+      <div class="yojana-imgwrap">
+        <span class="yojana-fallback">🏛️</span>
+        <span class="yojana-badge">आय सहायता</span>
+        <img class="yojana-img" loading="lazy" decoding="async"
+             src="https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=800&q=75" alt="PM-KISAN"
+             onerror="this.remove()">
+      </div>
       <div class="yojana-body">
-        <span class="yojana-tag" style="background:#e8f5e9;color:#2e7d32">आय सहायता</span>
         <div class="yojana-name">PM-KISAN सम्मान निधि</div>
         <div class="yojana-benefit">₹6,000/वर्ष — सीधे खाते में</div>
+        <span class="yojana-cta">योजना देखें →</span>
       </div>
-      <span class="yojana-arrow">›</span>
     </a>
 
-    <a class="yojana-card" href="sarkari_yojana.html#pmfby" style="--yojana-accent:#1565c0;--yojana-bg:#e3f2fd">
-      <div class="yojana-icon">🛡️</div>
+    <a class="yojana-card" href="sarkari_yojana.html#pmfby">
+      <div class="yojana-imgwrap">
+        <span class="yojana-fallback">🛡️</span>
+        <span class="yojana-badge">फसल बीमा</span>
+        <img class="yojana-img" loading="lazy" decoding="async"
+             src="https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=75" alt="PMFBY"
+             onerror="this.remove()">
+      </div>
       <div class="yojana-body">
-        <span class="yojana-tag" style="background:#e3f2fd;color:#1565c0">फसल बीमा</span>
         <div class="yojana-name">PM फसल बीमा योजना (PMFBY)</div>
         <div class="yojana-benefit">2% प्रीमियम पर फसल सुरक्षा</div>
+        <span class="yojana-cta">योजना देखें →</span>
       </div>
-      <span class="yojana-arrow">›</span>
     </a>
 
-    <a class="yojana-card" href="sarkari_yojana.html#kcc" style="--yojana-accent:#e65100;--yojana-bg:#fff3e0">
-      <div class="yojana-icon">💳</div>
+    <a class="yojana-card" href="sarkari_yojana.html#kcc">
+      <div class="yojana-imgwrap">
+        <span class="yojana-fallback">💳</span>
+        <span class="yojana-badge">क्रेडिट</span>
+        <img class="yojana-img" loading="lazy" decoding="async"
+             src="https://images.unsplash.com/photo-1589758438368-0ad531db3366?w=800&q=75" alt="KCC"
+             onerror="this.remove()">
+      </div>
       <div class="yojana-body">
-        <span class="yojana-tag" style="background:#fff3e0;color:#e65100">क्रेडिट</span>
         <div class="yojana-name">किसान क्रेडिट कार्ड (KCC)</div>
         <div class="yojana-benefit">₹3 लाख तक — 4% ब्याज दर पर</div>
+        <span class="yojana-cta">योजना देखें →</span>
       </div>
-      <span class="yojana-arrow">›</span>
     </a>
 
-    <a class="yojana-card" href="sarkari_yojana.html#sinchai" style="--yojana-accent:#00695c;--yojana-bg:#e0f2f1">
-      <div class="yojana-icon">💧</div>
+    <a class="yojana-card" href="sarkari_yojana.html#sinchai">
+      <div class="yojana-imgwrap">
+        <span class="yojana-fallback">💧</span>
+        <span class="yojana-badge">सिंचाई</span>
+        <img class="yojana-img" loading="lazy" decoding="async"
+             src="images/yojana/sinchai.png" alt="सिंचाई योजना"
+             onerror="this.remove()">
+      </div>
       <div class="yojana-body">
-        <span class="yojana-tag" style="background:#e0f2f1;color:#00695c">सिंचाई</span>
         <div class="yojana-name">PM कृषि सिंचाई योजना</div>
         <div class="yojana-benefit">ड्रिप/स्प्रिंकलर पर 55–75% सब्सिडी</div>
+        <span class="yojana-cta">योजना देखें →</span>
       </div>
-      <span class="yojana-arrow">›</span>
     </a>
 
   </div>
 </section>
 
 <!-- ══════════════════════════
-     AD SLOT 3 — Responsive Banner (Before Articles)
+     AD SLOT 2 — Responsive Banner (Before Articles)
      Auto-sized, high viewability placement
 ══════════════════════════ -->
 <div class="ad-slot ad-slot-banner" aria-label="विज्ञापन">
@@ -1836,44 +2562,80 @@
     <a class="section-link" href="articles/index.html">सभी लेख →</a>
   </div>
 
+  <!-- Thumbnails are local tracked files (or the same Wikimedia crop photo the
+       mandi cards use) — the earlier Unsplash URLs included a dead photo id that
+       404'd, and a missing asset renders as a broken icon rather than failing loudly. -->
   <div class="articles-grid">
 
-    <a class="article-card" href="articles/potato_guide_up.html" style="--article-accent:#795548">
-      <div class="article-thumb" style="background:#efebe9">🥔</div>
+    <a class="article-card" href="articles/ganna-guide-up.html">
+      <div class="article-thumb">
+        <img src="images/Ganna/ganne-ke-khet.png" alt="गन्ने का खेत" loading="lazy">
+      </div>
       <div class="article-body">
-        <span class="article-tag" style="background:#efebe9;color:#795548">आलू</span>
-        <div class="article-title">आलू की खेती — सम्पूर्ण मार्गदर्शिका | Uttar Pradesh</div>
-        <div class="article-meta">⏱️ 6 मिनट &nbsp;·&nbsp; 📅 आज</div>
+        <span class="article-tag">गन्ना</span>
+        <div class="article-title">गन्ने की खेती UP 2026 — किस्में, बुवाई, खाद-सिंचाई और रोग नियंत्रण</div>
+        <div class="article-meta">⏱️ 7 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="ganna-guide-up" datetime="2026-07-01"></time></div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/paddy-guide-karnataka.html" style="--article-accent:#2e7d32">
-      <div class="article-thumb" style="background:#e8f5e9">🌾</div>
+    <a class="article-card" href="articles/urea-guide-up.html">
+      <div class="article-thumb">
+        <img src="images/fertilizers/Urea.jpg" alt="यूरिया खाद" loading="lazy">
+      </div>
       <div class="article-body">
-        <span class="article-tag" style="background:#e8f5e9;color:#2e7d32">ಭತ್ತ / Paddy</span>
+        <span class="article-tag">यूरिया</span>
+        <div class="article-title">यूरिया कब और कितना डालें? गेहूं-धान में फसलवार मात्रा और सही समय</div>
+        <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="urea-guide-up" datetime="2026-07-07"></time></div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="articles/DAP-guide-up.html">
+      <div class="article-thumb">
+        <img src="images/fertilizers/DAP.jpg" alt="DAP खाद" loading="lazy">
+      </div>
+      <div class="article-body">
+        <span class="article-tag">खाद</span>
+        <div class="article-title">DAP खाद: फसलवार मात्रा प्रति एकड़ और नकली DAP की पहचान</div>
+        <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="DAP-guide-up" datetime="2026-06-05"></time></div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="articles/potato_guide_up.html">
+      <div class="article-thumb">
+        <img src="images/articles/potato.jpg" alt="आलू की खेती" loading="lazy">
+      </div>
+      <div class="article-body">
+        <span class="article-tag">आलू</span>
+        <div class="article-title">आलू की खेती UP 2026 — झुलसा रोग, बीज, खाद और मंडी भाव</div>
+        <div class="article-meta">⏱️ 6 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="potato_guide_up" datetime="2026-07-01"></time></div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="articles/keet-niyantran.html">
+      <div class="article-thumb">
+        <img src="images/Pesticides/neem-oil.png" alt="नीम तेल — कीट नियंत्रण" loading="lazy">
+      </div>
+      <div class="article-body">
+        <span class="article-tag">कीट</span>
+        <div class="article-title">फसल में कीट नियंत्रण — नीम काढ़ा, देसी उपाय और दवाएं</div>
+        <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="keet-niyantran" datetime="2026-07-01"></time></div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="articles/paddy-guide-karnataka.html">
+      <div class="article-thumb">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Rice_grains_%28IRRI%29.jpg/500px-Rice_grains_%28IRRI%29.jpg"
+             alt="ಭತ್ತ / Paddy" loading="lazy">
+      </div>
+      <div class="article-body">
+        <span class="article-tag">ಭತ್ತ / Paddy</span>
         <div class="article-title">ಕರ್ನಾಟಕ ಭತ್ತದ ಬೆಳೆ ಮಾರ್ಗದರ್ಶಿ | Paddy Farming Karnataka</div>
-        <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 कल</div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <a class="article-card" href="articles/urea-guide-up.html" style="--article-accent:#1565c0">
-      <div class="article-thumb" style="background:#e3f2fd">🧪</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#e3f2fd;color:#1565c0">खाद</span>
-        <div class="article-title">यूरिया और DAP का सही उपयोग: कब और कितना दें?</div>
-        <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 2 दिन पहले</div>
-      </div>
-      <span class="article-arrow">›</span>
-    </a>
-
-    <a class="article-card" href="articles/keet-niyantran.html" style="--article-accent:#6a1b9a">
-      <div class="article-thumb" style="background:#f3e5f5">🐛</div>
-      <div class="article-body">
-        <span class="article-tag" style="background:#f3e5f5;color:#6a1b9a">कीट</span>
-        <div class="article-title">फसल में कीट नियंत्रण के देसी उपाय</div>
-        <div class="article-meta">⏱️ 4 मिनट &nbsp;·&nbsp; 📅 3 दिन पहले</div>
+        <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="paddy-guide-karnataka" datetime="2026-07-05"></time></div>
       </div>
       <span class="article-arrow">›</span>
     </a>
@@ -1888,27 +2650,84 @@
      SCRIPTS
 ══════════════════════════ -->
 <script>
-  /* ── Load config from profile.json ── */
+  /* ── Load config from profile.json and live user profile ── */
+  let WEATHER_DISTRICT = 'Meerut';
+
   async function loadProfile() {
+    let name = '';
+    let avatarUrl = '';
+    let district = '';
+
+    const token = localStorage.getItem("krishi_token");
+    if (token) {
+      try {
+        const res = await fetch(`${window.KRASHIMITRA_API_BASE}/bazar/me`, {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const user = json.data;
+          name = user.name || '';
+          avatarUrl = user.avatar_url || '';
+        }
+      } catch (e) {
+        console.error("Failed to fetch live profile:", e);
+      }
+    }
+
+    // Try fallback to local profile.json
     try {
-      const res     = await fetch('profile.json');
+      const res = await fetch('profile.json');
       const profile = await res.json();
-      if (profile.photo) {
-        const hp = document.getElementById('hero-photo');
-        if (hp) { hp.style.display = ''; hp.src = profile.photo; }
+      if (!name && profile.name) name = profile.name;
+      if (!avatarUrl && profile.photo) avatarUrl = profile.photo;
+      if (profile.district) district = profile.district;
+    } catch {
+      // profile.json missing
+    }
+
+    // Update greeting widget
+    const greetingText = document.getElementById('hero-greeting-text');
+    if (greetingText) {
+      if (name) {
+        greetingText.innerHTML = `राम-राम, <strong class="farmer-name">${escapeHtml(name)} जी</strong>! 🧑‍🌾`;
+      } else {
+        greetingText.textContent = "नमस्ते, किसान भाई! 🧑‍🌾";
       }
-      if (profile.district) {
-        const badge = document.getElementById('w-district');
-        if (badge) badge.textContent = profile.district;
+    }
+
+    // Update avatar button
+    if (avatarUrl) {
+      const avatarBtn = document.querySelector('.avatar-btn');
+      if (avatarBtn) {
+        const cleanAvatarUrl = avatarUrl.startsWith('/') ? `${window.KRASHIMITRA_API_BASE}${avatarUrl}` : avatarUrl;
+        avatarBtn.innerHTML = `<img src="${cleanAvatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
       }
-    } catch { /* profile.json missing — photo src stays as set in HTML, portrait stays visible */ }
+    }
+
+    // Update weather district and fetch weather + this district's live mandi prices
+    if (district) {
+      WEATHER_DISTRICT = district;
+    }
+    fetchWeather();
+    fetchMandi(district);
   }
+
+  function escapeHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   loadProfile();
 
   /* ── Show desktop nav on wider screens ── */
   function checkDesktopNav() {
     const nav = document.getElementById('desktop-nav');
-    if (nav) nav.style.display = window.innerWidth >= 600 ? 'flex' : 'none';
+    if (nav) nav.style.display = window.innerWidth >= 900 ? 'flex' : 'none';
   }
   checkDesktopNav();
   window.addEventListener('resize', checkDesktopNav);
@@ -1926,11 +2745,11 @@
   function doSearch() {
     const q = document.getElementById('main-search').value.trim();
     if (!q) return;
-    // Navigate to existing app with query
-    window.location.href = `chat.html?q=${encodeURIComponent(q)}&tab=search`;
+    // Route to Khoj — on-device keyword/voice search over the curated KB
+    window.location.href = `khoj.html?q=${encodeURIComponent(q)}`;
   }
 
-  /* ── Voice search (Web Speech API) ── */
+  /* ── Voice search (Web Speech API with active pulse indicator) ── */
   function startVoice() {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       alert('आपके browser में voice search उपलब्ध नहीं है।');
@@ -1940,23 +2759,46 @@
     const recog = new SpeechRecognition();
     recog.lang = 'hi-IN';
     recog.interimResults = false;
+
+    const voiceBtn = document.querySelector('.search-capsule-mic-btn');
+    if (voiceBtn) voiceBtn.classList.add('pulse');
+
     recog.onresult = (e) => {
       const transcript = e.results[0][0].transcript;
       document.getElementById('main-search').value = transcript;
+      doSearch();
     };
-    recog.onerror = () => alert('आवाज़ नहीं पहचानी। दोबारा try करें।');
+    recog.onerror = () => {
+      alert('आवाज़ नहीं पहचानी। दोबारा try करें।');
+      if (voiceBtn) voiceBtn.classList.remove('pulse');
+    };
+    recog.onend = () => {
+      if (voiceBtn) voiceBtn.classList.remove('pulse');
+    };
     recog.start();
   }
 
-  /* ── Weather snapshot fetch ── */
-  const WEATHER_DISTRICT = 'Meerut';
-
+  /* ── Weather snapshot fetch and farmer recommendations ── */
   async function fetchWeather() {
     try {
       const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/weather?district=${WEATHER_DISTRICT}`);
       const json = await res.json();
       if (!json.success) return;
       const d = json.data;
+
+      // Set background colors dynamically based on sky state
+      const snapEl = document.getElementById('weather-snap');
+      if (snapEl) {
+        snapEl.classList.remove('sky-clear', 'sky-cloudy', 'sky-rainy');
+        const cond = (d.weather_condition || '').toLowerCase();
+        if (cond.includes('rain') || cond.includes('drizzle') || cond.includes('storm') || cond.includes('thunder')) {
+          snapEl.classList.add('sky-rainy');
+        } else if (cond.includes('cloud') || cond.includes('haze') || cond.includes('mist')) {
+          snapEl.classList.add('sky-cloudy');
+        } else if (cond.includes('clear') || cond.includes('sun')) {
+          snapEl.classList.add('sky-clear');
+        }
+      }
 
       document.getElementById('w-district').textContent = d.district || WEATHER_DISTRICT;
       document.getElementById('w-temp').innerHTML     = `${Math.round(d.temperature || 0)}<span class="weather-unit">°C</span>`;
@@ -1969,6 +2811,25 @@
       if (d.rainfall > 0) {
         document.getElementById('w-rain').textContent = d.rainfall;
         document.getElementById('w-rain-pill').style.display = 'flex';
+      }
+
+      // Add context-specific agricultural tips for the farmer based on weather
+      const adviceEl = document.getElementById('w-advice');
+      if (adviceEl) {
+        let adviceText = "🌾 मौसम अनुकूल है। अपनी फसलों की नियमित देखभाल जारी रखें।";
+        const cond = (d.weather_condition || '').toLowerCase();
+        if (cond.includes('rain') || cond.includes('drizzle')) {
+          adviceText = "🌧️ <strong>भारी बारिश की संभावना:</strong> आज खेतों में सिंचाई न करें और कीटनाशकों का छिड़काव रोक दें।";
+        } else if (cond.includes('storm') || cond.includes('thunder')) {
+          adviceText = "⛈️ <strong>तेज आंधी-तूफान की चेतावनी:</strong> फसलों को गिरने से बचाने के लिए सहारा दें और सुरक्षित रहें।";
+        } else if (cond.includes('cloud')) {
+          adviceText = "☁️ <strong>आसमान में बादल छाए हैं:</strong> नई फसलों की बुवाई और निराई-गुड़ाई के लिए बहुत अनुकूल समय है।";
+        } else if (cond.includes('haze') || cond.includes('mist')) {
+          adviceText = "🌫️ <strong>धुंध और कोहरा:</strong> आलू और टमाटर की फसलों में झुलसा रोग (blight) की निगरानी बढ़ाएं।";
+        } else if (cond.includes('clear') || cond.includes('sun')) {
+          adviceText = "☀️ <strong>मौसम साफ और तेज धूप:</strong> फसलों में पर्याप्त नमी बनाए रखने के लिए शाम के समय हल्की सिंचाई करें।";
+        }
+        adviceEl.innerHTML = adviceText;
       }
     } catch {
       document.getElementById('w-cond').textContent  = 'Server से connect नहीं हो सका';
@@ -2000,6 +2861,283 @@
 
   fetchWeather();
 
+  /* ── मंडी भाव — live snapshot from /shop/mandi (Agmarknet via data.gov.in) ──
+     Every row is rendered from the API; no price is ever hardcoded here. The raw
+     feed also carries non-crop entries (Firewood, Molasses…), so only the crops
+     below are shown. Order is both the match order and the display priority —
+     "green gram" must be tested before the generic "gram" to not become चना.
+     Each crop carries a Wikimedia photo (file + h), reusing the files already curated
+     for mandi.html's tiles. The emoji stays as the placeholder while the photo loads,
+     and as the fallback if the photo ever fails. */
+  const MANDI_CROPS = [
+    { keys: ['wheat'],                    hi: 'गेहूं',    emoji: '🌾', file: 'Wheat close-up.JPG',                       h: 'b4' },
+    { keys: ['paddy', 'dhan', 'rice'],    hi: 'धान',      emoji: '🍚', file: 'Rice_grains_(IRRI).jpg',                   h: 'ba' },
+    { keys: ['mustard', 'sarson', 'rai'], hi: 'सरसों',    emoji: '🌼', file: 'BrownMustardSeed.JPG',                     h: 'ef' },
+    { keys: ['sugarcane'],                hi: 'गन्ना',    emoji: '🎋', file: 'Sugar cane.jpg',                           h: 'cb' },
+    { keys: ['potato'],                   hi: 'आलू',      emoji: '🥔', file: 'Patates.jpg',                              h: 'ab' },
+    { keys: ['onion'],                    hi: 'प्याज',    emoji: '🧅', file: 'Onion on White.JPG',                       h: '25' },
+    { keys: ['tomato'],                   hi: 'टमाटर',   emoji: '🍅', file: 'Bright red tomato and cross section02.jpg', h: '88' },
+    { keys: ['maize', 'corn'],            hi: 'मक्का',    emoji: '🌽', file: 'Corncobs.jpg',                             h: '7d' },
+    { keys: ['green gram', 'moong'],      hi: 'मूंग',     emoji: '🫛', file: 'Mung beans (Vigna radiata).jpg',           h: '86' },
+    { keys: ['black gram', 'urad'],       hi: 'उड़द',     emoji: '🫘', file: 'Vigna mungo.jpg',                          h: 'e2' },
+    { keys: ['red gram', 'arhar', 'tur'], hi: 'अरहर',     emoji: '🫘', file: 'Toor dal.jpg',                             h: 'de' },
+    { keys: ['gram', 'chana'],            hi: 'चना',      emoji: '🫛', file: 'Chickpea.jpg',                             h: '3d' },
+    { keys: ['soyabean', 'soybean'],      hi: 'सोयाबीन', emoji: '🫘', file: 'Soybean.USDA.jpg',                         h: '82' },
+    { keys: ['bajra', 'pearl millet'],    hi: 'बाजरा',    emoji: '🌾', file: 'Bajra.JPG',                                h: '49' },
+    { keys: ['barley', 'jau'],            hi: 'जौ',       emoji: '🌾', file: 'Barley.jpg',                               h: 'e0' },
+    { keys: ['groundnut'],                hi: 'मूंगफली', emoji: '🥜', file: 'Groundnut (Arachis hypogaea).jpg',         h: '0e' },
+    { keys: ['lentil', 'masur'],          hi: 'मसूर',     emoji: '🫘', file: 'Lentil.jpg',                               h: '9d' },
+    { keys: ['garlic'],                   hi: 'लहसुन',    emoji: '🧄', file: 'Garlic.jpg',                               h: '22' },
+    { keys: ['chilli', 'chilly'],         hi: 'मिर्च',    emoji: '🌶️', file: 'Red Chili Pepper.jpg',                     h: '2a' },
+    { keys: ['cauliflower'],              hi: 'फूलगोभी', emoji: '🥦', file: 'Cauliflower.jpg',                          h: '7c' },
+    { keys: ['brinjal'],                  hi: 'बैंगन',    emoji: '🍆', file: 'Aubergine.jpg',                            h: 'fb' },
+    { keys: ['peas'],                     hi: 'मटर',      emoji: '🟢', file: 'Green peas.jpg',                           h: 'a7' },
+    { keys: ['ginger'],                   hi: 'अदरक',     emoji: '🫚', file: 'Ginger root.jpg',                          h: 'cf' },
+    { keys: ['lemon'],                    hi: 'नींबू',    emoji: '🍋', file: 'Lemon.jpg',                                h: 'e4' },
+  ];
+  const MANDI_HI_MONTHS = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+                           'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+  const MANDI_STATE_HI  = { 'Uttar Pradesh': 'उत्तर प्रदेश' };
+  const MANDI_MAX_ROWS  = 6;
+
+  let MANDI_DISTRICT = 'Meerut';
+  let MANDI_STATE    = 'Uttar Pradesh';
+  let mandiLastFetch = 0;
+
+  // Same slugify as backend routes/bhav.py (_slugify), so rows deep-link to the real price page
+  const mandiSlug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // Wikimedia thumb path: h is the first two chars of the md5 of the underscored
+  // filename. The width is not free-choice — upload.wikimedia.org serves a fixed set
+  // of buckets and 400s the rest (640 fails; 330, 500, 960 and 1280 all resolve —
+  // verified against every file below, including Chickpea.jpg whose original is only
+  // 350px wide). 500px covers the 190px card photo at 2x DPR at ~60 KB, lazy-loaded;
+  // the old 120px was sized for the 42px icon tile and went blurry once the photos
+  // grew into full card images.
+  const MANDI_THUMB_W = 500;
+  const mandiThumb = (file, h) => {
+    if (!file || !h) return '';
+    const n = encodeURIComponent(file.replace(/ /g, '_'))
+      .replace(/\(/g, '%28').replace(/\)/g, '%29');
+    return `https://upload.wikimedia.org/wikipedia/commons/thumb/${h[0]}/${h}/${n}/${MANDI_THUMB_W}px-${n}`;
+  };
+  const mandiNum  = v => {
+    const n = parseFloat(String(v ?? '').replace(/,/g, ''));
+    return isFinite(n) && n > 0 ? n : null;
+  };
+  const mandiCropOf = commodity => {
+    const c = String(commodity || '').toLowerCase();
+    return MANDI_CROPS.find(crop => crop.keys.some(k => c.includes(k))) || null;
+  };
+
+  // ── Article dates ─────────────────────────────────────────
+  // Labels are computed from each card's <time datetime> at view time, never
+  // hardcoded — a baked-in "आज" silently becomes a lie the next morning.
+  // The datetime values come from the articles' own JSON-LD dateModified;
+  // /articles/meta re-reads those files live, so if an article's date changes
+  // the homepage self-corrects on the next load with nothing to update here.
+  // The baked value is the fallback, so dates stay right if the API is down.
+  function articleDateLabel(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const days = Math.round((today - d) / 86400000);
+    if (days <= 0)  return 'आज';
+    if (days === 1) return 'कल';
+    if (days < 30)  return `${days} दिन पहले`;
+    return `${d.getDate()} ${MANDI_HI_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function renderArticleDates() {
+    document.querySelectorAll('.article-date').forEach(el => {
+      const label = articleDateLabel(el.getAttribute('datetime'));
+      if (label) el.textContent = label;
+    });
+  }
+
+  async function syncArticleDates() {
+    renderArticleDates();                       // paint from the baked dates first
+    try {
+      const res = await fetch(`${window.KRASHIMITRA_API_BASE}/articles/meta`);
+      if (!res.ok) return;
+      const meta = await res.json();
+      document.querySelectorAll('.article-date').forEach(el => {
+        const m = meta[el.dataset.slug];
+        const iso = m && (m.modified || m.published);
+        if (iso) el.setAttribute('datetime', iso);
+      });
+      renderArticleDates();                     // repaint if the articles moved on
+    } catch { /* offline / cold backend — the baked dates already rendered */ }
+  }
+
+  async function mandiFetch(params) {
+    const qs  = new URLSearchParams(params);
+    const res = await fetch(`${window.KRASHIMITRA_API_BASE}/shop/mandi?${qs}`, { cache: 'no-store' });
+    const json = await res.json();
+    return json.prices || [];
+  }
+
+  function mandiPickRows(prices) {
+    const best = new Map();                       // one row per crop
+    for (const p of prices) {
+      const crop  = mandiCropOf(p.commodity);
+      if (!crop) continue;
+      const price = mandiNum(p.modal_price);
+      if (!price) continue;                       // a row without a real price is not shown
+      const row = {
+        crop, price,
+        commodity: p.commodity,
+        market:    p.market,
+        district:  p.district,
+        date:      p.date,
+        prev:      mandiNum(p.prev_modal_price),
+        spark:     (p.spark || []).map(mandiNum).filter(Boolean),
+      };
+      const held = best.get(crop.hi);
+      if (!held || row.spark.length > held.spark.length) best.set(crop.hi, row);
+    }
+    return MANDI_CROPS.map(c => best.get(c.hi)).filter(Boolean).slice(0, MANDI_MAX_ROWS);
+  }
+
+  function mandiFreshness(rows) {
+    const dates = rows
+      .map(r => /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(r.date || '').trim()))
+      .filter(Boolean)
+      .map(m => new Date(+m[3], +m[2] - 1, +m[1]));
+    if (!dates.length) return null;
+
+    const latest = new Date(Math.max(...dates));
+    const today  = new Date();
+    today.setHours(0, 0, 0, 0);
+    const days  = Math.round((today - latest) / 86400000);
+    const label = `${latest.getDate()} ${MANDI_HI_MONTHS[latest.getMonth()]}`;
+    if (days <= 0) return { text: `आज · ${label}`,  stale: false };
+    if (days === 1) return { text: `कल · ${label}`, stale: false };
+    return { text: `${label} का भाव`, stale: days > 2 };
+  }
+
+  // Day-over-day direction as a chevron: ^ green when up, v red when down.
+  // A flat/new price gets a neutral dash so the row never looks empty.
+  function mandiTrendIcon(up) {
+    const cls    = up === null ? 'flat' : up ? 'up' : 'down';
+    const points = up === null ? '4,11 18,11'
+                 : up          ? '4,14 11,7 18,14'
+                               : '4,8 11,15 18,8';
+    return `<svg class="mandi-trend ${cls}" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+              <polyline points="${points}" fill="none" stroke="currentColor" stroke-width="2.6"
+                        stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`;
+  }
+
+  function mandiRender(rows, place, showDistrict) {
+    const fresh = mandiFreshness(rows);
+    document.getElementById('mandi-place').textContent = place;
+
+    const pill = document.getElementById('mandi-fresh');
+    if (fresh) {
+      document.getElementById('mandi-fresh-text').textContent = fresh.text;
+      pill.classList.toggle('stale', fresh.stale);
+      pill.hidden = false;
+    } else {
+      pill.hidden = true;
+    }
+
+    document.getElementById('mandi-rows').innerHTML = rows.map(r => {
+      const delta = r.prev === null ? null : Math.round(r.price - r.prev);
+      const up    = (delta === null || delta === 0) ? null : delta > 0;
+      const chip  = delta === null
+        ? '<span class="mandi-change flat">नया भाव</span>'
+        : delta === 0
+          ? '<span class="mandi-change flat">— स्थिर</span>'
+          : `<span class="mandi-change ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ₹${Math.abs(delta).toLocaleString('en-IN')}</span>`;
+      const sub   = showDistrict ? `${r.market}, ${r.district}` : r.market;
+      const price = Math.round(r.price).toLocaleString('en-IN');
+      const src   = mandiThumb(r.crop.file, r.crop.h);
+      // Emoji sits underneath; the photo fades in over it once decoded, and is
+      // dropped on error so a dead file degrades to the emoji, not a broken icon.
+      const photo = src
+        ? `${r.crop.emoji}<img src="${src}" alt="${escapeHtml(r.crop.hi)}"
+             loading="lazy" decoding="async"
+             onload="this.classList.add('is-on')" onerror="this.remove()">`
+        : r.crop.emoji;
+
+      // /bhav/{crop}/{state}/{district} — the state is part of the canonical URL
+      // because four district names exist in two states each (pratapgarh, bilaspur,
+      // hamirpur, balrampur); without it the page merges both states' prices.
+      const bhavUrl = `/bhav/${mandiSlug(r.commodity)}/${mandiSlug(r.state || MANDI_STATE)}/${mandiSlug(r.district)}`;
+      const appUrl  = 'mandi.html?' + new URLSearchParams({
+        commodity: r.commodity, district: r.district, state: MANDI_STATE,
+      });
+      const waUrl = 'https://wa.me/?text=' + encodeURIComponent(
+        `आज ${r.crop.hi} का भाव — ₹${price}/क्विंटल (${r.market})\n` +
+        `https://krashimitra.in${bhavUrl}`);
+
+      return `
+        <article class="mandi-item">
+          <a class="mandi-item-main" href="${bhavUrl}">
+            <span class="mandi-item-img">${photo}${chip}</span>
+            <span class="mandi-item-head">
+              <span class="mandi-crop-name">${escapeHtml(r.crop.hi)}</span>
+              <span class="mandi-crop-unit">${escapeHtml(sub)}</span>
+              <span class="mandi-price-line">
+                <span class="mandi-price">₹${price}</span>
+                <small>/ क्विंटल</small>
+                ${mandiTrendIcon(up)}
+              </span>
+            </span>
+          </a>
+          <div class="mandi-item-foot">
+            <div class="mandi-cta-row">
+              <a class="mandi-cta-link" href="${bhavUrl}">विवरण देखें →</a>
+              <a class="mandi-cta-link" href="${waUrl}" target="_blank" rel="noopener">शेयर करें</a>
+            </div>
+            <a class="mandi-buy" href="${appUrl}">📊 मंडी में देखें</a>
+          </div>
+        </article>`;
+    }).join('');
+  }
+
+  function mandiFail(msg) {
+    document.getElementById('mandi-place').textContent = 'मंडी भाव';
+    document.getElementById('mandi-fresh').hidden = true;
+    document.getElementById('mandi-rows').innerHTML =
+      `<div class="mandi-state">${escapeHtml(msg)}
+         <br><button class="mandi-retry" onclick="fetchMandi()">फिर कोशिश करें</button>
+       </div>`;
+  }
+
+  async function fetchMandi(district) {
+    if (district) MANDI_DISTRICT = district;
+    mandiLastFetch = Date.now();
+    try {
+      const local = await mandiFetch({ district: MANDI_DISTRICT });
+      if (local.length && local[0].state) MANDI_STATE = local[0].state;
+
+      let rows = mandiPickRows(local);
+      let place = `📍 ${MANDI_DISTRICT} मंडी`;
+      let showDistrict = false;
+
+      // Thin district (a small mandi may list only two or three crops) → widen to the state
+      if (rows.length < 3) {
+        rows = mandiPickRows(await mandiFetch({ state: MANDI_STATE }));
+        place = `📍 ${MANDI_STATE_HI[MANDI_STATE] || MANDI_STATE} की मंडियाँ`;
+        showDistrict = true;
+      }
+
+      if (!rows.length) { mandiFail('अभी भाव उपलब्ध नहीं हैं।'); return; }
+      mandiRender(rows, place, showDistrict);
+    } catch {
+      mandiFail('भाव लोड नहीं हो सके। इंटरनेट जाँचें।');
+    }
+  }
+
+  // Prices refresh once a day at the source; re-pull when the farmer comes back to the tab
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - mandiLastFetch > 10 * 60 * 1000) fetchMandi();
+  });
+
+  syncArticleDates();
+
   function avatarBtnClick() {
     const token = localStorage.getItem("krishi_token");
     if (token) {
@@ -2027,9 +3165,9 @@
 @keyframes ai-fab-label{0%,100%{opacity:0;}8%{opacity:1;}20%{opacity:1;}28%{opacity:0;}}
 @media(min-width:1025px){.ai-chat-fab{bottom:28px;right:28px;width:68px;height:68px;}.ai-fab-icon{width:68px;height:68px;}}
 </style>
-<a href="chat.html" class="ai-chat-fab" title="AI सहायक से पूछें">
-  <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
-  <span class="ai-fab-tip">AI सहायक</span>
+<a href="chat.html" class="ai-chat-fab" title="कृषि सहायक से पूछें">
+  <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="कृषि सहायक"></span>
+  <span class="ai-fab-tip">कृषि सहायक</span>
 </a>
   <script src="fab-autohide.js"></script>
 

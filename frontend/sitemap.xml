@@ -18,6 +18,17 @@
   </url>
 
   <url>
+    <loc>https://krashimitra.in/mandi</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/mandi?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/mandi?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/mandi?lang=kn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/mandi"/>
+    <lastmod>2026-07-12</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
     <loc>https://krashimitra.in/meri_fasal</loc>
     <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/meri_fasal"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/meri_fasal"/>
@@ -27,11 +38,11 @@
   </url>
 
   <url>
-    <loc>https://krashimitra.in/shop.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/shop.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/shop.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/shop.html?lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/shop.html"/>
+    <loc>https://krashimitra.in/shop</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/shop?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/shop?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/shop?lang=kn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/shop"/>
     <lastmod>2026-07-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -41,74 +52,74 @@
   </url>
 
   <url>
-    <loc>https://krashimitra.in/krashi_bajar.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/krashi_bajar.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/krashi_bajar.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/krashi_bajar.html?lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/krashi_bajar.html"/>
+    <loc>https://krashimitra.in/krashi_bajar</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/krashi_bajar?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/krashi_bajar?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/krashi_bajar?lang=kn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/krashi_bajar"/>
     <lastmod>2026-07-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://krashimitra.in/chat.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/chat.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/chat.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/chat.html?lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/chat.html"/>
+    <loc>https://krashimitra.in/chat</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/chat?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/chat?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/chat?lang=kn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/chat"/>
     <lastmod>2026-07-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://krashimitra.in/weather.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/weather.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/weather.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/weather.html?lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/weather.html"/>
+    <loc>https://krashimitra.in/weather</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/weather?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/weather?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/weather?lang=kn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/weather"/>
     <lastmod>2026-07-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://krashimitra.in/sarkari_yojana.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/sarkari_yojana.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/sarkari_yojana.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/sarkari_yojana.html?lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/sarkari_yojana.html"/>
+    <loc>https://krashimitra.in/sarkari_yojana</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/sarkari_yojana?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/sarkari_yojana?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/sarkari_yojana?lang=kn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/sarkari_yojana"/>
     <lastmod>2026-07-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://krashimitra.in/khoj.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/khoj.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/khoj.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/khoj.html?lang=kn"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/khoj.html"/>
+    <loc>https://krashimitra.in/khoj</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/khoj?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/khoj?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://krashimitra.in/khoj?lang=kn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/khoj"/>
     <lastmod>2026-07-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://krashimitra.in/map.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/map.html?lang=hi"/>
-    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/map.html?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/map.html"/>
+    <loc>https://krashimitra.in/map</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/map?lang=hi"/>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://krashimitra.in/map?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/map"/>
     <lastmod>2026-07-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://krashimitra.in/help.html</loc>
-    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/help.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/help.html"/>
+    <loc>https://krashimitra.in/help</loc>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://krashimitra.in/help"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://krashimitra.in/help"/>
     <lastmod>2026-07-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -117,14 +128,14 @@
   <!-- login.html intentionally excluded — page is noindex -->
 
   <url>
-    <loc>https://krashimitra.in/about.html</loc>
+    <loc>https://krashimitra.in/about</loc>
     <lastmod>2026-07-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
 
   <url>
-    <loc>https://krashimitra.in/privacy-policy.html</loc>
+    <loc>https://krashimitra.in/privacy-policy</loc>
     <lastmod>2026-07-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
@@ -498,22 +509,23 @@
     <priority>0.7</priority>
   </url>
 
-  <!-- ===== PROGRAMMATIC SEO MANDI PAGES ===== -->
-  <url><loc>https://krashimitra.in/bhav/wheat/meerut</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/wheat/muzaffarnagar</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/wheat/indore</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/wheat/jaipur</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/wheat/kota</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/potato/agra</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/potato/lucknow</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/potato/nashik</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/onion/nashik</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/onion/pune</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/onion/indore</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/mustard/jaipur</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/mustard/alwar</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/tomato/kolar</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/garlic/kota</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/garlic/indore</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://krashimitra.in/bhav/</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <!-- ===== PROGRAMMATIC SEO MANDI PAGES =====
+       Only the hub is listed here. Every crop / state / district page is
+       generated live from the DB by /bhav/sitemap.xml (declared in robots.txt),
+       which robots.txt already points crawlers at. The hand-written list that
+       used to sit here went stale the moment a mandi stopped reporting — and
+       all of its URLs were the retired two-level /bhav/{crop}/{district} form,
+       which now 301s. Do not re-add individual /bhav URLs here. -->
+  <url><loc>https://krashimitra.in/bhav</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+
+  <!-- ===== PROGRAMMATIC SEO SHOP-PRODUCT PAGES (full list: /product/sitemap.xml) ===== -->
+  <url><loc>https://krashimitra.in/product/wheat-seeds-hd-2967</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/dap-fertilizer</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/urea-fertilizer-46-n</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/npk-fertilizer-10-26-26</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/neem-oil-bio-pesticide</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/drip-irrigation-kit-1-acre</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/kapila-cattle-feed</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/soil-testing-kit</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://krashimitra.in/product/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>

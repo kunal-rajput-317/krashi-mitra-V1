@@ -8,6 +8,7 @@
 # Reached via the Netlify proxy rule /share/* → backend.
 # ============================================================
 
+import re
 from html import escape
 from urllib.parse import quote, urlencode
 
@@ -34,10 +35,12 @@ _TILES = [
     (("maize", "corn"),             "Corncobs.jpg",                              "7d"),
     (("soyabean", "soybean"),       "Soybean.USDA.jpg",                          "82"),
     (("gram", "chana", "bengal"),   "Chickpea.jpg",                              "3d"),
+    (("mustard", "rai", "sarson"),  "BrownMustardSeed.JPG",                      "ef"),
     (("garlic",),                   "Garlic.jpg",                                "22"),
     (("chilli", "chili", "mirch"),  "Red Chili Pepper.jpg",                      "2a"),
     (("turmeric",),                 "Turmeric-powder.jpg",                       "0a"),
     (("groundnut",),                "Groundnut (Arachis hypogaea).jpg",          "0e"),
+    (("bajra", "pearl millet"),     "Bajra.JPG",                                 "49"),
     (("arhar", "tur", "red gram"),  "Toor dal.jpg",                              "de"),
     (("urad", "black gram"),        "Vigna mungo.jpg",                           "e2"),
     (("moong", "green gram"),       "Mung beans.jpg",                            "5e"),
@@ -68,16 +71,25 @@ _MAX_ORIG_WIDTH = {
 
 
 def _crop_image(commodity: str, width: int = 330) -> str:
+    """Photo for a commodity, matched on WHOLE WORDS and by the MOST SPECIFIC
+    keyword. Plain substring matching gave "Turnip" the अरहर photo ("tur") and
+    "Peach"/"Pear" the मटर photo ("pea"); first-tile-wins gave "Green Gram(Moong)"
+    the चना photo, because the generic "gram" tile is listed before "green gram"."""
     cl = (commodity or "").lower()
+    best, best_len = None, 0
     for keys, file, h in _TILES:
-        if any(k in cl for k in keys):
-            cap = min(width, _MAX_ORIG_WIDTH.get(file, 10**6))
-            w = max([a for a in _ALLOWED_WIDTHS if a <= cap] or [330])
-            n = quote(file.replace(" ", "_"))
-            return (
-                "https://upload.wikimedia.org/wikipedia/commons/thumb/"
-                f"{h[0]}/{h}/{n}/{w}px-{n}"
-            )
+        for k in keys:
+            if re.search(rf"\b{re.escape(k)}\b", cl) and len(k) > best_len:
+                best, best_len = (file, h), len(k)
+    if best:
+        file, h = best
+        cap = min(width, _MAX_ORIG_WIDTH.get(file, 10**6))
+        w = max([a for a in _ALLOWED_WIDTHS if a <= cap] or [330])
+        n = quote(file.replace(" ", "_"))
+        return (
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/"
+            f"{h[0]}/{h}/{n}/{w}px-{n}"
+        )
     return _FALLBACK_IMAGE
 
 

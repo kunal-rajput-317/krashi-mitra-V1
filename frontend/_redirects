@@ -5,6 +5,10 @@
 /bhav     https://krashi-mitra-v1.onrender.com/bhav/         200
 /bhav/*   https://krashi-mitra-v1.onrender.com/bhav/:splat   200
 
+# Proxy SEO shop-product pages to the backend (server-rendered product pages)
+/product     https://krashi-mitra-v1.onrender.com/product/         200
+/product/*   https://krashi-mitra-v1.onrender.com/product/:splat   200
+
 # Canonical article URLs: 301 old .html forms to extensionless
 # (Netlify already lowercases mixed-case paths with its own 301)
 /articles/index.html   /articles/   301!

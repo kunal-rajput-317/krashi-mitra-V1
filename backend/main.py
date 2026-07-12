@@ -214,6 +214,12 @@ app.include_router(bazar_route.router)  # KRASHI BAZAR — social crop marketpla
 from backend.routes import crop_calendar as crop_calendar_route
 app.include_router(crop_calendar_route.router)  # मेरी फसल — crop calendar (stage timeline + tasks)
 
+from backend.routes import product as product_route
+app.include_router(product_route.router)  # SEO shop-product pages (/product/*) + /product/sitemap.xml
+
+from backend.routes import articles as articles_route
+app.include_router(articles_route.router)  # /articles/meta — live published/updated dates from article JSON-LD
+
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(
@@ -225,15 +231,16 @@ if __name__ == "__main__":
 
 
 
-# ── Health check ─────────────────────────────────────────────────────
-@app.get("/")
-async def root():
-    return {
-        "app": "KrashiMitra",
-        "status": "API is running! 🌾",
-        "version": "0.1.0",
-        "message": "किसान का डिजिटल साथी",
-    }
+# ── Health check & Frontend mount ───────────────────────────────────
+# Commented out root JSON route so it serves index.html instead
+# @app.get("/")
+# async def root():
+#     return {
+#         "app": "KrashiMitra",
+#         "status": "API is running! 🌾",
+#         "version": "0.1.0",
+#         "message": "किसान का डिजिटल साथी",
+#     }
 
 @app.get("/health")
 async def health():
@@ -246,3 +253,6 @@ app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="
 
 # Bazar post photos/videos (uploads/bazar/*) — dir is created by routes/bazar.py
 app.mount("/uploads", StaticFiles(directory=BASE_DIR / "uploads"), name="uploads")
+
+# Serve the entire frontend directly at root
+app.mount("/", StaticFiles(directory=BASE_DIR / "frontend", html=True), name="frontend")
