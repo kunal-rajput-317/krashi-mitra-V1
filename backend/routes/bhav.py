@@ -367,22 +367,96 @@ body{font-family:var(--font-body);background:var(--cream);color:var(--text-dark)
 img{max-width:100%}
 .wrap{max-width:980px;margin:0 auto;padding:0 20px 30px}
 
-/* ── site header (same white sticky bar as the app) ── */
-.km-header{position:sticky;top:0;z-index:50;background:var(--white);
+/* ── site header — same pre-topbar/topbar/main-header/blue-bar stack as
+   mandi.html, so a page reached from Google reads as the same product as the
+   app instead of a stripped-down doorway ── */
+.pre-topbar{background:var(--amber);color:#1a2e1e;display:flex;align-items:center;justify-content:center;
+gap:10px;padding:7px 16px;font-size:13px;font-weight:600;text-align:center}
+.pre-topbar-helpline{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;opacity:.9}
+.pre-topbar-helpline:hover{opacity:1;text-decoration:underline}
+.pre-topbar-phone-icon{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;font-size:10px}
+
+.top-utility-bar{background:var(--white);border-bottom:1px solid var(--border);padding:6px 0;font-size:12px}
+.top-utility-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 80px}
+.top-utility-left,.top-utility-right{display:flex;align-items:center;gap:12px}
+.top-utility-link{color:var(--text-mid);text-decoration:none;font-weight:600}
+.top-utility-link:hover{color:var(--green-mid)}
+.top-utility-divider{color:var(--border)}
+.top-utility-helpline{display:inline-flex;align-items:center;gap:6px;color:var(--green-dark);font-weight:700;text-decoration:none}
+.top-utility-helpline:hover{opacity:.8;text-decoration:underline}
+
+.main-header{position:sticky;top:0;z-index:100;background:var(--white);
 border-bottom:1px solid var(--border);box-shadow:0 1px 3px rgba(26,60,46,.05)}
-.km-header-inner{max-width:1280px;margin:0 auto;padding:9px 20px;display:flex;align-items:center;gap:14px}
-.km-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
-.km-logo img{width:38px;height:38px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px var(--green-pale)}
-.km-logo-text{display:flex;flex-direction:column}
-.km-logo-title{font-family:var(--font-serif);font-size:19px;font-weight:700;color:var(--green-dark);line-height:1.15}
-.km-logo-tag{font-size:9px;font-weight:600;color:var(--text-soft);line-height:1.6}
-.km-nav{margin-left:auto;display:flex;align-items:center;gap:2px}
-.km-nav a{font-size:13px;font-weight:600;color:var(--text-mid);text-decoration:none;
-padding:7px 11px;border-radius:9px;transition:background .15s,color .15s;white-space:nowrap}
-.km-nav a:hover{background:var(--green-pale);color:var(--green-dark)}
-.km-nav a.on{background:var(--green-pale);color:var(--green-dark)}
-@media(max-width:700px){.km-logo-tag{display:none}.km-nav a{padding:7px 8px;font-size:12.5px}
-.km-nav a.hide-sm{display:none}}
+/* hamburger sits left of the logo (natural DOM order); nav centers itself
+in the space between the logo and the avatar on the right */
+.main-header-inner{max-width:1280px;margin:0 auto;padding:10px 80px;display:grid;
+grid-template-columns:auto auto 1fr auto;column-gap:28px;align-items:center}
+.header-left-group{display:flex;align-items:center;gap:14px}
+.header-logo-link{display:flex;align-items:center;gap:8px;text-decoration:none}
+.header-logo-circle{width:38px;height:38px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px var(--green-pale)}
+.header-logo-text{font-family:var(--font-serif);font-size:19px;font-weight:800;color:var(--green-dark)}
+.hamburger-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-dark);padding:4px;
+display:flex;align-items:center;justify-content:center;border-radius:4px}
+.hamburger-btn:hover{background:var(--cream)}
+.header-nav{display:flex;align-items:center;gap:24px;justify-self:center}
+.header-nav-link{font-size:14px;font-weight:700;color:var(--text-dark);text-decoration:none;
+padding:6px 0;border-bottom:2px solid transparent;white-space:nowrap}
+.header-nav-link:hover{color:var(--green-mid)}
+.header-nav-link.active{color:var(--green-mid);border-bottom-color:var(--green-mid)}
+.header-right-group{display:flex;align-items:center;gap:12px}
+.header-avatar-btn{width:32px;height:32px;border-radius:50%;background:var(--cream);border:1px solid var(--border);
+font-size:14px;display:flex;align-items:center;justify-content:center;text-decoration:none}
+
+/* mobile hamburger drawer */
+.sidebar-drawer-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,20,.5);z-index:4000}
+.sidebar-drawer-overlay.open{display:flex}
+.sidebar-drawer{width:280px;max-width:84vw;background:var(--white);height:100%;box-shadow:6px 0 28px rgba(0,0,0,.18);
+display:flex;flex-direction:column;animation:km-slide-right .2s cubic-bezier(.16,1,.3,1)}
+@keyframes km-slide-right{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+.sidebar-drawer-header{padding:18px 16px 12px 20px;display:flex;align-items:center;justify-content:space-between}
+.sidebar-drawer-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.sidebar-drawer-close{background:var(--cream);border:none;font-size:15px;cursor:pointer;color:var(--text-mid);
+width:32px;height:32px;border-radius:50%}
+.sidebar-drawer-links{flex:1;padding:6px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.sidebar-drawer-link{display:flex;align-items:center;gap:13px;min-height:44px;padding:10px 12px;
+font-size:14px;font-weight:700;color:var(--text-dark);text-decoration:none;border-radius:10px;border-left:3px solid transparent}
+.sidebar-drawer-link-icon{font-size:18px;width:20px;text-align:center}
+.sidebar-drawer-link:hover{background:var(--cream)}
+.sidebar-drawer-link.active{background:var(--green-pale);color:var(--green-dark);border-left-color:var(--green-dark)}
+
+/* full-page nav loading overlay — shown the instant a crop/state/district
+tile or a hub-selector pick is clicked, since that's a real page load, not
+an in-page swap; it needs its own visible "something is happening" moment */
+.km-nav-loading{position:fixed;inset:0;background:rgba(245,247,244,.75);
+z-index:9999;display:none;align-items:center;justify-content:center}
+.km-nav-loading.show{display:flex}
+.km-nav-spinner{width:38px;height:38px;border:4px solid var(--green-pale);
+border-top-color:var(--green-mid);border-radius:50%;animation:km-nav-spin .7s linear infinite}
+@keyframes km-nav-spin{to{transform:rotate(360deg)}}
+
+/* blue commodity quick-nav — real <a href> crop links, not mandi.html's JS
+   buttons, since Googlebot must see them without executing JS */
+.commodity-navbar{background:#17268c;position:sticky;top:59px;z-index:90}
+.cnav-inner{display:flex;align-items:stretch;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+.cnav-inner::-webkit-scrollbar{display:none}
+.cnav-item{color:rgba(255,255,255,.9);font-size:13px;font-weight:600;text-decoration:none;
+padding:11px 14px;white-space:nowrap;display:inline-block}
+.cnav-item:hover{background:rgba(255,255,255,.09);color:#fff}
+
+@media(max-width:1024px){
+.top-utility-bar{display:none}
+/* Same three-slot phone header as mandi.html: hamburger pinned far-left,
+logo centered in the space between, avatar far-right. Without the explicit
+order/flex the grid collapses to a plain flex row and all three bunch up on
+the left with dead space to the right. */
+.main-header-inner{display:flex;gap:14px;padding:10px 12px;align-items:center}
+.main-header-inner>.hamburger-btn{order:1;flex:0 0 auto}
+.main-header-inner>.header-left-group{order:2;flex:1 1 auto;display:flex;justify-content:center}
+.main-header-inner>.header-right-group{order:3;flex:0 0 auto}
+.header-nav{display:none}
+.header-logo-text{font-size:17px}
+.commodity-navbar{position:static}
+}
 
 /* ── breadcrumbs ── */
 .crumbs{max-width:980px;margin:0 auto;padding:12px 20px 0;font-size:12px;color:var(--text-soft)}
@@ -406,7 +480,7 @@ font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px}
 
 /* ── controls: change crop / state / mandi without leaving the page ── */
 .ctl{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}
-.ctl-f{flex:1;min-width:150px;display:flex;flex-direction:column;gap:4px;
+.ctl-f{position:relative;flex:1;min-width:150px;display:flex;flex-direction:column;gap:4px;
 background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);
 padding:8px 12px;box-shadow:var(--shadow-sm)}
 .ctl-f span{font-size:10.5px;font-weight:700;color:var(--text-soft);
@@ -418,6 +492,36 @@ background-image:linear-gradient(45deg,transparent 50%,var(--green-mid) 50%),
 linear-gradient(135deg,var(--green-mid) 50%,transparent 50%);
 background-position:right 6px top 9px,right 1px top 9px;
 background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+/* type-to-filter fields (hub quick-jump) — same look as .ctl-f select above */
+.ctl-f input{border:0;background:transparent;width:100%;min-width:0;
+font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--green-dark);outline:none}
+.ctl-f input::placeholder{color:var(--text-soft);font-weight:600;font-size:13px}
+.ctl-input-row{display:flex;align-items:center;gap:6px}
+/* simple flat 2D mic icon — same look as mandi.html's .mn-mic-btn, no filled
+circle, just an outline glyph that lights up on hover/while listening */
+.ctl-mic{flex-shrink:0;background:none;border:none;padding:4px;cursor:pointer;
+color:var(--text-mid);opacity:.6;border-radius:50%;line-height:1;
+display:flex;align-items:center;justify-content:center;transition:opacity .15s,background .15s}
+.ctl-mic:hover{opacity:1;background:var(--cream)}
+.ctl-mic.listening{opacity:1;color:#e53935;animation:ctl-mic-pulse .7s ease-in-out infinite alternate}
+@keyframes ctl-mic-pulse{from{opacity:.7}to{opacity:1}}
+/* type-then-pick results list — must select a real match to proceed, same
+UX contract as mandi.html's .mn-combo-list (no navigating on free-typed text) */
+.ctl-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);
+border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);
+max-height:220px;overflow-y:auto;z-index:50;display:none;list-style:none;margin:0;padding:4px}
+.ctl-list.open{display:block}
+.ctl-list li{padding:9px 12px;font-size:14px;color:var(--text-dark);cursor:pointer;border-radius:8px}
+.ctl-list li:hover,.ctl-list li.focused{background:var(--green-pale);color:var(--green-dark)}
+.ctl-list .ctl-no-results{color:var(--text-soft);cursor:default}
+.ctl-list .ctl-no-results:hover{background:none}
+/* Phone widths: 3×150px min-width fields don't fit two-plus-a-sliver on one
+line without the third getting clipped at the screen edge — stack one per
+row instead of relying on flex-wrap to break the line cleanly. */
+@media(max-width:640px){
+.ctl{flex-direction:column}
+.ctl-f{min-width:0;width:100%}
+}
 
 /* ── the answer: the number the farmer came for, first ── */
 .answer{position:relative;overflow:hidden;border-radius:var(--radius-md);
@@ -498,6 +602,27 @@ font-weight:700;padding:12px 22px;border-radius:26px;text-decoration:none;transi
 .btn-wa{background:#25d366;color:var(--white);box-shadow:var(--shadow-sm)}
 .btn-wa:hover{background:#1eb958}
 
+/* on-page search — same look as shop.html's search bar: icon inset at the
+left of a rounded input. Still a plain GET form (no JS) so it works and is
+crawlable without the app's JS bundle — the icon doubles as the submit. */
+.hub-filter-row{display:flex;align-items:center;gap:10px;margin:18px 0;flex-wrap:wrap}
+.hub-search{position:relative;flex:1;min-width:220px}
+.hub-search input{width:100%;padding:10px 16px 10px 38px;border-radius:12px;
+border:1.5px solid var(--border);background:var(--white);font-family:var(--font-body);
+font-size:14px;color:var(--text-dark);outline:none;box-shadow:var(--shadow-sm);
+transition:border-color .15s}
+.hub-search input:focus{border-color:var(--green-mid)}
+.hub-search input::placeholder{color:var(--text-soft)}
+.hub-search button{position:absolute;left:12px;top:50%;transform:translateY(-50%);
+background:none;border:0;cursor:pointer;font-size:15px;padding:0;color:var(--text-mid);
+opacity:.6;display:flex;align-items:center}
+.hub-search button:hover{opacity:1}
+.hub-filter-btn{display:inline-flex;align-items:center;gap:5px;background:var(--white);
+border:1.5px solid var(--border);border-radius:20px;padding:8px 16px;font-size:13px;
+font-weight:600;color:var(--text-mid);text-decoration:none;transition:all .18s;
+box-shadow:var(--shadow-sm);white-space:nowrap}
+.hub-filter-btn:hover{border-color:var(--green-light);color:var(--green-mid)}
+
 /* ── headings, chips, FAQ ── */
 h2{font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--green-dark);margin:24px 0 10px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -570,24 +695,121 @@ _FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
 _ICON = f'<link rel="icon" href="{SITE}/assets/krashimitra_logo.png" type="image/png">'
 
 
+_NAV_ITEMS = [("bhav", f"{SITE}/bhav", "मंडी भाव"),
+              ("bazar", f"{SITE}/krashi_bajar", "कृषि बाज़ार"),
+              ("weather", f"{SITE}/weather", "मौसम देखें"),
+              ("shop", f"{SITE}/product/", "कृषि दुकान")]
+
+_DRAWER_ITEMS = [("home", f"{SITE}/", "🏠", "मुख्य"),
+                  ("weather", f"{SITE}/weather", "🌤️", "मौसम"),
+                  ("mandi", f"{SITE}/mandi", "🏪", "मंडी भाव"),
+                  ("bhav", f"{SITE}/bhav", "📈", "सभी भाव सूची"),
+                  ("bazar", f"{SITE}/krashi_bajar", "🧺", "कृषि बाज़ार"),
+                  ("shop", f"{SITE}/shop", "🛒", "दुकान"),
+                  ("khoj", f"{SITE}/khoj", "🔍", "कृषि खोज"),
+                  ("map", f"{SITE}/map", "🗺️", "कृषि मानचित्र"),
+                  ("articles", f"{SITE}/articles/", "📰", "कृषि लेख"),
+                  ("yojana", f"{SITE}/sarkari_yojana", "🏛️", "सरकारी योजना"),
+                  ("chat", f"{SITE}/chat", "💬", "AI सहायता")]
+
+_NAVBAR_CROPS_N = 10  # top N by _TILES rank — same curated set mandi.html shows
+
+
+def _quicknav() -> str:
+    """The blue bar's crop links, built from the live DB index rather than a
+    hardcoded list, so a crop that drops out of the feed never links to a 404 —
+    and every one of the ~10,000 /bhav + /product pages carries this many real
+    <a href> links into the /bhav tree (see the JS-only-link indexation gap
+    this was built to close)."""
+    idx = _get_index()
+    # Several DB commodities can share one _TILES rank (Wheat + Wheat Atta both
+    # land on the wheat tile) — one slot per rank, keeping whichever commodity
+    # is reported across the most states as the canonical, non-niche one.
+    by_rank: dict[int, tuple[str, str, int]] = {}
+    for cs, cn in idx.get("crops", {}).items():
+        if not _is_crop(cn):
+            continue
+        r = _tile_rank(cn)
+        if r >= _NAVBAR_CROPS_N:
+            continue
+        n_states = len(idx.get("states", {}).get(cs, {}))
+        if r not in by_rank or n_states > by_rank[r][2]:
+            by_rank[r] = (cs, cn, n_states)
+    ranked = [by_rank[r][:2] for r in sorted(by_rank)]
+    items = "".join(
+        f'<a class="cnav-item" href="/bhav/{cs}">{escape(_hindi_name(cn))} की कीमत</a>'
+        for cs, cn in ranked)
+    return f"""<div class="commodity-navbar"><div class="cnav-inner">
+<a class="cnav-item" href="{SITE}/bhav">बाज़ार भाव</a>{items}
+</div></div>"""
+
+
 def _header(active: str = "") -> str:
-    """The app's white sticky header, so /bhav reads as the same site."""
-    items = [("home", f"{SITE}/", "मुख्य", ""),
-             ("mandi", f"{SITE}/mandi", "मंडी", ""),
-             ("bhav", f"{SITE}/bhav", "भाव", ""),
-             ("weather", f"{SITE}/weather", "मौसम", " hide-sm"),
-             ("articles", f"{SITE}/articles/", "लेख", " hide-sm"),
-             ("chat", f"{SITE}/chat", "सहायता", " hide-sm")]
+    """Same pre-topbar/topbar/main-header/blue-bar stack as mandi.html, so a
+    page reached from Google reads as the same product as the app, not a
+    stripped-down doorway. Hamburger drawer uses a couple of inline onclick
+    handlers rather than the app's JS bundle — these pages must stay light."""
     nav = "".join(
-        f'<a class="{("on " if key == active else "")}{small.strip()}" href="{href}">{label}</a>'
-        for key, href, label, small in items)
-    return f"""<header class="km-header"><div class="km-header-inner">
-<a class="km-logo" href="{SITE}/">
-<img src="{SITE}/assets/krashimitra_logo.png" alt="कृषि मित्र" width="38" height="38">
-<span class="km-logo-text"><span class="km-logo-title">कृषि मित्र</span>
-<span class="km-logo-tag">किसान का डिजिटल साथी</span></span></a>
-<nav class="km-nav">{nav}</nav>
-</div></header>"""
+        f'<a class="header-nav-link{" active" if key == active else ""}" href="{href}">{label}</a>'
+        for key, href, label in _NAV_ITEMS)
+    drawer = "".join(
+        f'<a href="{href}" class="sidebar-drawer-link{" active" if key == active else ""}">'
+        f'<span class="sidebar-drawer-link-icon">{icon}</span><span>{label}</span></a>'
+        for key, href, icon, label in _DRAWER_ITEMS)
+    return f"""<div class="pre-topbar">
+<a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+</div>
+<div class="top-utility-bar"><div class="top-utility-inner">
+<div class="top-utility-left">
+<a href="{SITE}/" class="top-utility-link">मुख्य</a><span class="top-utility-divider">|</span>
+<a href="{SITE}/map" class="top-utility-link">कृषि मानचित्र</a><span class="top-utility-divider">|</span>
+<a href="{SITE}/articles/" class="top-utility-link">कृषि समाचार</a><span class="top-utility-divider">|</span>
+<a href="{SITE}/sarkari_yojana" class="top-utility-link">सरकारी योजना</a>
+</div>
+<div class="top-utility-right">
+<a href="tel:+919870951001" class="top-utility-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+<span class="top-utility-divider">|</span>
+<a href="{SITE}/chat" class="top-utility-link">संपर्क</a>
+</div>
+</div></div>
+<header class="main-header"><div class="main-header-inner">
+<button class="hamburger-btn" onclick="document.getElementById('km-drawer').classList.add('open')" aria-label="Menu">☰</button>
+<div class="header-left-group">
+<a class="header-logo-link" href="{SITE}/">
+<img src="{SITE}/assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" width="38" height="38">
+<span class="header-logo-text">कृषि मित्र</span></a>
+</div>
+<nav class="header-nav">{nav}</nav>
+<div class="header-right-group"><a href="{SITE}/login" class="header-avatar-btn">👤</a></div>
+</div></header>
+<div class="sidebar-drawer-overlay" id="km-drawer" onclick="this.classList.remove('open')">
+<div class="sidebar-drawer" onclick="event.stopPropagation()">
+<div class="sidebar-drawer-header"><span class="sidebar-drawer-title">मेनु</span>
+<button class="sidebar-drawer-close" onclick="document.getElementById('km-drawer').classList.remove('open')" aria-label="Close menu">✕</button></div>
+<div class="sidebar-drawer-links">{drawer}</div>
+</div></div>
+<div class="km-nav-loading" id="km-nav-loading" aria-hidden="true"><div class="km-nav-spinner"></div></div>
+<script>
+/* Instant feedback on any internal navigation — picking a crop/state/district
+tile, a hub-selector suggestion, or any other same-page link — since the
+click itself only *starts* a real page load; without this the farmer sees
+nothing happen for however long that takes. */
+(function(){{
+var ov=document.getElementById('km-nav-loading');
+window.kmShowLoading=function(){{if(ov)ov.classList.add('show');}};
+document.addEventListener('click',function(e){{
+var a=e.target.closest('a');
+if(!a||!a.href)return;
+if(a.target&&a.target!=='_self')return;
+var url;
+try{{url=new URL(a.href,location.href);}}catch(err){{return;}}
+if(url.origin!==location.origin)return;
+if(url.pathname===location.pathname&&url.hash)return; // in-page anchor jump
+window.kmShowLoading();
+}},true);
+}})();
+</script>
+{_quicknav()}"""
 
 
 def _footer() -> str:
@@ -606,8 +828,15 @@ def _footer() -> str:
 
 
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
-         ld: str = "", og_img: str = "") -> HTMLResponse:
-    """One page shell for all four tiers — head, header, crumbs, body, footer."""
+         ld: str = "", og_img: str = "", active: str = "bhav",
+         extra_css: str = "") -> HTMLResponse:
+    """One page shell for all four tiers — head, header, crumbs, body, footer.
+    `active` defaults to "bhav" for this module's own pages; other SEO routes
+    (e.g. product.py) that reuse this shell pass their own nav key/"" so they
+    don't show up with भाव wrongly highlighted. `extra_css` lets those callers
+    layer on rules of their own without duplicating the tokens/header/footer —
+    _CSS here is this module's own, so a caller's local override of a same-named
+    variable is invisible to this closure; extra_css is the only way in."""
     og = og_img or f"{SITE}/images/og-banner.jpg"
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
@@ -628,10 +857,10 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {_ICON}
 {_FONTS}
 {ld}
-<style>{_CSS}</style>
+<style>{_CSS}{extra_css}</style>
 </head>
 <body>
-{_header("bhav")}
+{_header(active)}
 <nav class="crumbs">{crumbs}</nav>
 <div class="wrap">
 {body}
@@ -749,6 +978,165 @@ def _switchers(c_slug: str, s_slug: str, d_slug: str) -> str:
 </div>"""
 
 
+def _hub_selector(cs: str, ss: str, ds: str, idx: dict,
+                   known_crop: bool = False, known_state: bool = False) -> str:
+    """Same crop/state/district quick-jump as _switchers(), but a type-or-speak
+    <input list=datalist> instead of a plain <select> — the hub's district list
+    can run to 60+ entries, too many to scan by scrolling on a first visit.
+    Kept separate from _switchers() (used on tier-4 pages, where each field is
+    already resolved, not picked from scratch) so that one keeps its plain,
+    no-JS-safe <select> untouched.
+
+    फसल's options go to /bhav/{crop} (tier 2), NOT /bhav/{crop}/{ss}/{ds} — the
+    seed state/district are one crop's, and most other crops aren't reported in
+    that exact district, so combining them would 404 for most choices. राज्य and
+    मंडी/जिला stay scoped to the seed crop (idx only ever holds real combos), so
+    picking those two always lands on a real page.
+
+    known_crop/known_state: on tier-2/3 pages cs/ss are the REAL crop/state the
+    URL is already on (not just a scoring seed like on the hub), so those fields
+    should show it as picked rather than an empty "चुनें" placeholder — this is
+    what tells a visitor the field they're looking at already matches the page."""
+    cur_crop = _hindi_name(idx["crops"].get(cs, "")) if known_crop else ""
+    cur_state = _hindi_state(idx["states"].get(cs, {}).get(ss, "")) if known_state else ""
+
+    crops = sorted(
+        ((c, cn) for c, cn in idx["crops"].items() if _is_crop(cn)),
+        key=lambda x: (_tile_rank(x[1]), _hindi_name(x[1])))
+    states = sorted(idx["states"].get(cs, {}).items(), key=lambda kv: kv[1])
+    dists = sorted(idx["dists"].get(cs, {}).get(ss, {}).items(), key=lambda kv: kv[1])
+
+    crop_map = {_hindi_name(cn): f"/bhav/{c}" for c, cn in crops}
+    state_map = {_hindi_state(sn): f"/bhav/{cs}/{s}" for s, sn in states}
+    dist_map = {dn: f"/bhav/{cs}/{ss}/{d}" for d, dn in dists}
+    # English synonyms, keyed by the same Hindi label used above, purely for
+    # search — so typing "wheat" finds गेहूं just like typing "गेहूं" does.
+    # The Hindi label stays the one thing that's shown, stored and navigated on.
+    crop_alt = {_hindi_name(cn): cn for c, cn in crops}
+    state_alt = {_hindi_state(sn): sn for s, sn in states}
+
+    _MIC_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" '
+                'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '
+                'stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>'
+                '<path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>'
+                '<line x1="8" y1="23" x2="16" y2="23"/></svg>')
+
+    def _field(label: str, list_id: str, placeholder: str, m: dict,
+               alt_var: str = "null", value: str = "") -> str:
+        var = list_id.replace("-", "_")
+        inp_id = f"{list_id}-i"
+        # data-valid marks a prefilled field as a real pick, not free-typed text —
+        # kmComboBlur()/kmComboReject() only wipe fields WITHOUT that flag, so an
+        # already-known crop/state stays shown instead of vanishing on first blur.
+        val_attr = f'value="{escape(value)}" data-valid="1" ' if value else ""
+        return f"""<label class="ctl-f"><span>{label}</span>
+<div class="ctl-input-row">
+<input id="{inp_id}" {val_attr}autocomplete="off" placeholder="{escape(placeholder)}"
+aria-label="{escape(placeholder)}"
+oninput="kmComboFilter('{inp_id}',window.{var},{alt_var})"
+onfocus="kmComboOpen('{inp_id}',window.{var},{alt_var})"
+onkeydown="kmComboKeydown(event,'{inp_id}',window.{var},{alt_var})"
+onblur="kmComboBlur('{inp_id}')">
+<button type="button" class="ctl-mic" onclick="kmVoice('{inp_id}','{var}')" aria-label="आवाज़ से {escape(label)} खोजें">{_MIC_SVG}</button>
+</div>
+<ul class="ctl-list" id="{inp_id}-list" role="listbox"></ul></label>"""
+
+    fields = (_field("फसल", "dl-hub-crop", "फसल चुनें", crop_map, "window.dl_hub_crop_alt", cur_crop)
+              + _field("राज्य", "dl-hub-state", "राज्य चुनें", state_map, "window.dl_hub_state_alt", cur_state)
+              + _field("मंडी / जिला", "dl-hub-dist", "मंडी / जिला चुनें", dist_map))
+
+    maps_js = "".join(
+        f'window.{var}={_json.dumps(m, ensure_ascii=False)};'
+        for var, m in (("dl_hub_crop", crop_map), ("dl_hub_state", state_map),
+                       ("dl_hub_dist", dist_map), ("dl_hub_crop_alt", crop_alt),
+                       ("dl_hub_state_alt", state_alt)))
+
+    return f"""<div class="ctl">{fields}</div>
+<script>
+{maps_js}
+/* Type-then-pick: filtering never navigates by itself — only clicking (or
+Enter-ing) a real suggestion does, so a random typed word just sits there
+instead of silently doing nothing or jumping to a wrong page. */
+function kmComboFilter(id,map,alt){{
+var input=document.getElementById(id),list=document.getElementById(id+'-list');
+if(!input||!list)return;
+delete input.dataset.valid;                 // any typing invalidates the last pick
+var q=input.value.trim().toLowerCase();
+var keys=Object.keys(map||{{}});
+var matches=q?keys.filter(function(k){{
+var hi=k.toLowerCase(),en=((alt&&alt[k])||'').toLowerCase();
+return hi.indexOf(q)!==-1||en.indexOf(q)!==-1;
+}}):keys;
+list.innerHTML=matches.length
+?matches.slice(0,40).map(function(k){{return '<li role="option">'+k+'</li>';}}).join('')
+:'<li class="ctl-no-results">कोई परिणाम नहीं मिला</li>';
+Array.prototype.forEach.call(list.children,function(li){{
+if(li.classList.contains('ctl-no-results'))return;
+li.addEventListener('mousedown',function(e){{e.preventDefault();kmComboSelect(id,li.textContent,map);}});
+}});
+list.classList.add('open');
+}}
+function kmComboOpen(id,map,alt){{
+var list=document.getElementById(id+'-list');
+if(!list)return;
+if(!list.children.length)kmComboFilter(id,map,alt);
+list.classList.add('open');
+}}
+function kmComboSelect(id,label,map){{
+var input=document.getElementById(id),list=document.getElementById(id+'-list');
+if(input){{input.value=label;input.dataset.valid='1';}}
+if(list)list.classList.remove('open');
+if(map&&map[label]){{if(window.kmShowLoading)window.kmShowLoading();location.href=map[label];}}
+}}
+/* Govt-site style: a free-typed word never sticks in the box — only a value
+actually picked from the shown results does. Anything else gets wiped the
+moment the user leaves the field (Enter with nothing highlighted, Escape,
+or clicking away) instead of sitting there looking like a valid answer. */
+function kmComboReject(id){{
+var input=document.getElementById(id);
+if(input&&!input.dataset.valid)input.value='';
+}}
+function kmComboKeydown(e,id,map,alt){{
+var list=document.getElementById(id+'-list');
+if(!list)return;
+if(!list.classList.contains('open')){{kmComboOpen(id,map,alt);return;}}
+var items=Array.prototype.filter.call(list.children,function(li){{return !li.classList.contains('ctl-no-results');}});
+var idx=items.findIndex(function(li){{return li.classList.contains('focused');}});
+if(e.key==='ArrowDown'){{e.preventDefault();if(idx>=0)items[idx].classList.remove('focused');idx=(idx+1)%items.length;if(items[idx])items[idx].classList.add('focused');}}
+else if(e.key==='ArrowUp'){{e.preventDefault();if(idx>=0)items[idx].classList.remove('focused');idx=(idx-1+items.length)%items.length;if(items[idx])items[idx].classList.add('focused');}}
+else if(e.key==='Enter'){{e.preventDefault();var f=items[idx];if(f)kmComboSelect(id,f.textContent,map);else kmComboReject(id);}}
+else if(e.key==='Escape'){{list.classList.remove('open');kmComboReject(id);}}
+}}
+function kmComboBlur(id){{
+var list=document.getElementById(id+'-list');
+setTimeout(function(){{if(list)list.classList.remove('open');kmComboReject(id);}},120);
+}}
+function kmCtlFuzzy(v,map){{
+if(map[v])return map[v];
+var best=null,bestLen=1e9;
+for(var k in map){{if(k.indexOf(v)!==-1&&k.length<bestLen){{best=k;bestLen=k.length;}}}}
+return best?map[best]:null;
+}}
+function kmVoice(inputId,mapVar){{
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){{alert('आपके ब्राउज़र में आवाज़ खोज उपलब्ध नहीं है');return;}}
+var rec=new SR();rec.lang='hi-IN';
+var btn=document.querySelector('[onclick="kmVoice(\\''+inputId+'\\',\\''+mapVar+'\\')"]');
+if(btn)btn.classList.add('listening');
+rec.onresult=function(e){{
+var text=(e.results[0][0].transcript||'').trim();
+var el=document.getElementById(inputId);
+el.value=text;
+kmComboFilter(inputId,window[mapVar]);
+var url=kmCtlFuzzy(text,window[mapVar]);
+if(url){{if(window.kmShowLoading)window.kmShowLoading();location.href=url;}}else el.focus();
+}};
+rec.onend=function(){{if(btn)btn.classList.remove('listening');}};
+rec.start();
+}}
+</script>"""
+
+
 def _chart(vals: list[float]) -> str:
     """Full-width 7-day trend chart. The old page buried this in a 64px table cell —
     it is the one thing a farmer cannot get from a Google snippet, so it leads.
@@ -829,6 +1217,119 @@ def _avg_by(rows: list, key: str) -> dict:
         if k and m:
             buckets.setdefault(k, []).append(m)
     return {k: round(sum(v) / len(v)) for k, v in buckets.items() if v}
+
+
+# ════════════════════════════════════════════════════════════
+# /find — site search across mandi crops + shop products
+#
+# The header search box lives in _header(), so it's on every /bhav AND
+# /product page (both render through that one function) — a plain GET
+# form, works with no JS, crawlable. Deliberately noindex: unbounded ?q=
+# values would otherwise mint endless thin duplicate pages in the index;
+# the real crop/product pages linked from the results are what should rank.
+# ════════════════════════════════════════════════════════════
+_FIND_LIMIT = 24
+
+
+def _find_crop_card(cs: str, cn: str, hi: str) -> str:
+    has_photo = _has_photo(cn)
+    photo = (f'<img src="{escape(_crop_image(cn, 500))}" alt="{escape(hi)}" '
+             f'loading="lazy" width="240" height="120">' if has_photo else "")
+    en = f'<span class="crop-card-en">{escape(cn)}</span>' if hi != cn else ""
+    return f"""<a class="crop-card" href="/bhav/{cs}">
+<div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
+<h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
+<div class="crop-card-body"><span class="lbl">मंडी भाव</span><span class="rate">भाव देखें →</span>
+</div></a>"""
+
+
+def _find_product_card(p: dict) -> str:
+    return f"""<a class="crop-card" href="/product/{p['slug']}">
+<div class="crop-card-photo"><img src="{escape(p['img'])}" alt="{escape(p['name_hi'])}"
+loading="lazy" width="240" height="120">
+<h2 class="crop-card-name">{escape(p['name_hi'])}<span class="crop-card-en">{escape(p['name_en'])}</span></h2></div>
+<div class="crop-card-body"><span class="lbl">{escape(p['unit_hi'])}</span><span class="rate">₹{p['price']}</span>
+</div></a>"""
+
+
+@router.get("/find", response_class=HTMLResponse)
+def find(q: str = ""):
+    from backend.routes.product import _get_products  # lazy: product.py imports bhav at module load, so the reverse import must happen after both modules are ready
+
+    query = q.strip().lower()
+    idx = _get_index()
+
+    crop_hits = []
+    if query:
+        for cs, cn in idx.get("crops", {}).items():
+            if not _is_crop(cn):
+                continue
+            hi = _hindi_name(cn)
+            if query in cn.lower() or query in hi.lower() or query in cs:
+                crop_hits.append((cs, cn, hi))
+        crop_hits.sort(key=lambda x: _tile_rank(x[1]))
+        crop_hits = crop_hits[:_FIND_LIMIT]
+
+    product_hits = []
+    if query:
+        for p in _get_products():
+            if (query in p["name_hi"].lower() or query in p["name_en"].lower()
+                    or query in p["slug"]):
+                product_hits.append(p)
+        product_hits = product_hits[:_FIND_LIMIT]
+
+    sections = []
+    if crop_hits:
+        sections.append(
+            f'<h2>मंडी भाव ({len(crop_hits)})</h2>'
+            f'<div class="crop-grid">{"".join(_find_crop_card(*c) for c in crop_hits)}</div>')
+    if product_hits:
+        sections.append(
+            f'<h2>दुकान के उत्पाद ({len(product_hits)})</h2>'
+            f'<div class="crop-grid">{"".join(_find_product_card(p) for p in product_hits)}</div>')
+
+    if not query:
+        heading = "फसल या उत्पाद खोजें"
+        sub = 'फसल का नाम (जैसे गेहूं, प्याज) या उत्पाद का नाम (जैसे DAP, नीम तेल) लिखकर खोजें।'
+    elif not crop_hits and not product_hits:
+        heading = f'"{escape(q)}" के लिए कोई परिणाम नहीं मिला'
+        sub = ('<div class="cta-row">'
+               f'<a class="btn btn-app" href="{SITE}/bhav">सभी मंडी भाव देखें</a>'
+               f'<a class="btn btn-wa" style="background:var(--green-dark)" href="{SITE}/product/">सभी उत्पाद देखें</a>'
+               '</div>')
+    else:
+        heading = f'"{escape(q)}" के लिए परिणाम'
+        sub = ""
+
+    body = f"""<div class="hero nophoto">
+<div class="hero-body">
+<h1>{heading}</h1>
+<p class="hero-sub">{sub}</p>
+</div>
+</div>
+{"".join(sections)}"""
+
+    title = f'{escape(q)} खोज परिणाम | कृषि मित्र' if query else 'फसल या उत्पाद खोजें | कृषि मित्र'
+    return HTMLResponse(f"""<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title>
+<meta name="robots" content="noindex, follow">
+{_ICON}
+{_FONTS}
+<style>{_CSS}</style>
+</head>
+<body>
+{_header("")}
+<nav class="crumbs"><a href="{SITE}/">कृषि मित्र</a> › खोज</nav>
+<div class="wrap">
+{body}
+</div>
+{_footer()}
+</body>
+</html>""", headers={"Cache-Control": "no-store"})
 
 
 # ════════════════════════════════════════════════════════════
@@ -931,6 +1432,18 @@ def bhav_hub():
     desc = (f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
             f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।")
 
+    # Quick-jump seed for the hub's crop/state/district selector — the widest-covered
+    # crop (same tile already picked for the featured grid above), its most-covered
+    # state, and any real district there. _hub_selector() re-derives every option
+    # list from this triple, so any valid starting point works; there is no "no
+    # selection" state to seed it with since the hub itself isn't scoped to one crop.
+    seed_cs = featured[0][0] if featured else next(iter(crops), "")
+    seed_states = idx["states"].get(seed_cs, {})
+    seed_ss = (max(seed_states, key=lambda s: len(idx["dists"].get(seed_cs, {}).get(s, {})))
+               if seed_states else "")
+    seed_dists = idx["dists"].get(seed_cs, {}).get(seed_ss, {})
+    seed_ds = sorted(seed_dists, key=lambda d: seed_dists[d])[0] if seed_dists else ""
+
     body = f"""<div class="hero nophoto">
 <div class="hero-body">
 <h1>आज का मंडी भाव — अपनी फसल चुनें</h1>
@@ -940,6 +1453,7 @@ def bhav_hub():
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/mandi">📊 मंडी ऐप खोलें — ट्रेंड चार्ट व तुलना</a>
 </div>
+{_hub_selector(seed_cs, seed_ss, seed_ds, idx)}
 <h2>प्रमुख फसलें</h2>
 <div class="crop-grid">{"".join(cards)}</div>
 {rest_html}
@@ -967,23 +1481,24 @@ def bhav_crop(c_slug: str):
 
     rows = _rows_for(commodity)             # national picture
     st = _stats(rows)
-    state_avg = _avg_by(rows, "state")
 
+    # No prices on this tier — only /bhav/{crop}/{state}/{district} shows the
+    # actual rupee figure. A state/district-level number here would answer the
+    # question before the click, so a farmer never reaches the specific page
+    # that's meant to rank and convert. This page is purely "pick your state".
     cards = []
     for ss, sn in sorted(state_map.items(), key=lambda kv: kv[1]):
-        avg = state_avg.get(sn)
         n = len(idx["dists"].get(cs, {}).get(ss, {}))
-        rate = (f'<div class="place-r">₹{avg:,}<small>/क्विंटल</small></div>'
-                if avg else '<div class="place-r">भाव देखें →</div>')
         cards.append(f"""<a class="place" href="/bhav/{cs}/{ss}">
 <div class="place-n">{escape(_hindi_state(sn))}</div>
 <div class="place-en">{escape(sn)}</div>
-{rate}
+<div class="place-r">भाव देखें →</div>
 <div class="place-s">{n} जिले</div>
 </a>""")
 
     # The highest-paying mandi in the country today — the reason to read this page
-    # rather than bounce back to Google.
+    # rather than bounce back to Google. Names the market as a hook but withholds
+    # the number, same reasoning as the cards above.
     best = max((r for r in rows if _num(r.get("modal_price"))),
                key=lambda r: _num(r["modal_price"]), default=None)
     best_html = ""
@@ -996,28 +1511,32 @@ def bhav_crop(c_slug: str):
 <ul><li>
 <span class="place"><a href="/bhav/{cs}/{_slugify(b_state)}/{_slugify(b_dist)}">{escape(best.get('market','-'))}</a>
 <small>{escape(b_dist)}, {escape(_hindi_state(b_state))}</small></span>
-<span class="gain">{_rupee(best.get('modal_price'))}<small>/क्विंटल</small></span>
+<span class="gain">भाव देखें →</span>
 </li></ul></section>"""
 
-    lead = f"₹{st['avg']:,}" if st["avg"] else "—"
     photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
              f'alt="" aria-hidden="true" width="420" height="200">'
              if _has_photo(commodity) else "")
 
     faqs = [
         (f"आज {hi} का भाव क्या है?",
-         (f"{today_hi} को देशभर की मंडियों में {hi} का औसत भाव ₹{st['avg']:,} प्रति क्विंटल है "
-          f"(₹{st['lo']:,} से ₹{st['hi']:,} तक)। नीचे अपना राज्य चुनकर जिले का भाव देखें।"
-          if st["avg"] and st["lo"] and st["hi"]
-          else f"{hi} का राज्यवार भाव नीचे दिया गया है — अपना राज्य चुनें।")),
+         f"{hi} का भाव हर राज्य और मंडी में अलग-अलग होता है। सटीक भाव जानने के लिए नीचे अपना राज्य चुनें, "
+         f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
         (f"{hi} सबसे महंगा किस मंडी में बिक रहा है?",
          (f"आज सबसे ज्यादा भाव {best.get('market','-')} ({best.get('district','-')}, "
-          f"{_hindi_state(best.get('state',''))}) में {_rupee(best.get('modal_price'))} प्रति क्विंटल दर्ज हुआ है।"
+          f"{_hindi_state(best.get('state',''))}) में मिल रहा है — सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
           if best else "मंडीवार भाव देखने के लिए अपना राज्य चुनें।")),
     ]
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
                                 (hi, canon)]))
+
+    # Seed state/district for the quick-jump selector below — same idea as the
+    # hub's own seed, just scoped to this tier's already-known crop.
+    seed_ss = (max(state_map, key=lambda s: len(idx["dists"].get(cs, {}).get(s, {})))
+               if state_map else "")
+    seed_dists = idx["dists"].get(cs, {}).get(seed_ss, {})
+    seed_ds = sorted(seed_dists, key=lambda d: seed_dists[d])[0] if seed_dists else ""
 
     title = f"{hi} का भाव आज — {commodity} Price Today सभी राज्य | कृषि मित्र"
     desc = (f"{today_hi}: {hi} ({commodity}) का ताजा मंडी भाव — "
@@ -1028,17 +1547,14 @@ def bhav_crop(c_slug: str):
 {photo}
 <div class="answer-in">
 <h1>आज का {escape(hi)} भाव — राज्य चुनें</h1>
-<p class="answer-sub">📅 {today_hi} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · पूरे भारत का औसत</p>
-<div class="answer-price">
-<div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
-</div>
+<p class="answer-sub">📅 {today_hi} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · अपना राज्य चुनकर भाव देखें</p>
 <div class="answer-range">
-<div><span>न्यूनतम</span><b>{f"₹{st['lo']:,}" if st['lo'] else '—'}</b></div>
-<div><span>अधिकतम</span><b>{f"₹{st['hi']:,}" if st['hi'] else '—'}</b></div>
 <div><span>राज्य</span><b>{len(state_map)}</b></div>
+<div><span>मंडियां</span><b>{st['n']}</b></div>
 </div>
 </div>
 </section>
+{_hub_selector(cs, seed_ss, seed_ds, idx, known_crop=True)}
 {best_html}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
 <div class="place-grid">{"".join(cards)}</div>
@@ -1087,19 +1603,18 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     rows = _rows_for(commodity, state=state)
     st = _stats(rows)
     dist_map = idx["dists"].get(cs, {}).get(ss, {})
-    dist_avg = _avg_by(rows, "district")
 
+    # No prices on this tier either — same reasoning as bhav_crop above: only
+    # the district-level page (/bhav/{crop}/{state}/{district}) shows a number.
     cards = []
     for ds, dn in sorted(dist_map.items(), key=lambda kv: kv[1]):
-        avg = dist_avg.get(dn)
-        rate = (f'<div class="place-r">₹{avg:,}<small>/क्विंटल</small></div>'
-                if avg else '<div class="place-r">भाव देखें →</div>')
         cards.append(f"""<a class="place" href="/bhav/{cs}/{ss}/{ds}">
 <div class="place-n">{escape(dn)}</div>
-{rate}
+<div class="place-r">भाव देखें →</div>
 </a>""")
 
-    # Top-paying mandis in this state — the money question, answered up front.
+    # Top-paying mandis in this state — names the market as a hook, withholds
+    # the number so the click still has to happen.
     top = sorted((r for r in rows if _num(r.get("modal_price"))),
                  key=lambda r: _num(r["modal_price"]), reverse=True)[:5]
     top_html = ""
@@ -1107,27 +1622,24 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
         items = "".join(
             f'<li><span class="place"><a href="/bhav/{cs}/{ss}/{_slugify(r.get("district",""))}">'
             f'{escape(r.get("market","-"))}</a><small>{escape(r.get("district","-"))}</small></span>'
-            f'<span class="gain">{_rupee(r.get("modal_price"))}<small>/क्विंटल</small></span></li>'
+            f'<span class="gain">भाव देखें →</span></li>'
             for r in top)
         top_html = f"""<section class="better">
 <h2>🏆 {escape(hi_state)} में आज सबसे ज्यादा {escape(hi)} भाव</h2>
 <p class="better-sub">भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>
 <ul>{items}</ul></section>"""
 
-    lead = f"₹{st['avg']:,}" if st["avg"] else "—"
     photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
              f'alt="" aria-hidden="true" width="420" height="200">'
              if _has_photo(commodity) else "")
 
     faqs = [
         (f"आज {hi_state} में {hi} का भाव क्या है?",
-         (f"{today_hi} को {hi_state} की मंडियों में {hi} का औसत भाव ₹{st['avg']:,} प्रति क्विंटल है "
-          f"(₹{st['lo']:,} से ₹{st['hi']:,} तक), {_mandis_gen(st['n'])} की रिपोर्ट के आधार पर।"
-          if st["avg"] and st["lo"] and st["hi"]
-          else f"{hi_state} में {hi} का जिलेवार भाव नीचे दिया गया है।")),
+         f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
+         f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
         (f"{hi_state} में {hi} सबसे महंगा कहां बिक रहा है?",
-         (f"आज {top[0].get('market','-')} ({top[0].get('district','-')}) मंडी में सबसे ज्यादा "
-          f"{_rupee(top[0].get('modal_price'))} प्रति क्विंटल भाव मिल रहा है।"
+         (f"आज {top[0].get('market','-')} ({top[0].get('district','-')}) मंडी में सबसे ज्यादा भाव मिल रहा है — "
+          f"सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
           if top else "जिलेवार भाव के लिए नीचे अपना जिला चुनें।")),
     ]
     faq_html, faq_ld = _faq(faqs)
@@ -1144,17 +1656,14 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 {photo}
 <div class="answer-in">
 <h1>{escape(hi_state)} में {escape(hi)} का भाव आज</h1>
-<p class="answer-sub">📅 {today_hi} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट</p>
-<div class="answer-price">
-<div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
-</div>
+<p class="answer-sub">📅 {today_hi} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · अपना जिला चुनकर भाव देखें</p>
 <div class="answer-range">
-<div><span>न्यूनतम</span><b>{f"₹{st['lo']:,}" if st['lo'] else '—'}</b></div>
-<div><span>अधिकतम</span><b>{f"₹{st['hi']:,}" if st['hi'] else '—'}</b></div>
 <div><span>जिले</span><b>{len(dist_map)}</b></div>
+<div><span>मंडियां</span><b>{st['n']}</b></div>
 </div>
 </div>
 </section>
+{_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {top_html}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
 <div class="place-grid">{"".join(cards)}</div>

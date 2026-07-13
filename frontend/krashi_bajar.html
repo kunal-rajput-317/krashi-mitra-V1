@@ -252,13 +252,11 @@
   }
   .main-header-inner {
     max-width: 1280px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between;
+    display: grid; grid-template-columns: auto auto 1fr auto; column-gap: 28px;
+    align-items: center;
     width: 100%; padding: 0 80px;
   }
-  .main-header-inner > .hamburger-btn { order: 2; }
-  .main-header-inner > .header-left-group { order: 1; }
-  .main-header-inner > .header-nav { order: 3; }
-  .main-header-inner > .header-right-group { order: 4; }
+  .main-header-inner > .header-nav { justify-self: center; }
   .header-left-group { display: flex; align-items: center; gap: 14px; }
   .header-logo-link { display: flex; align-items: center; gap: 8px; text-decoration: none; }
   .header-logo-circle {
@@ -1148,7 +1146,7 @@
     .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
     .top-utility-bar { display: none; }
     .main-header { padding: 8px 0; }
-    .main-header-inner { padding: 0 12px; }
+    .main-header-inner { display: flex; justify-content: space-between; column-gap: 0; padding: 0 12px; }
     .header-nav { display: none; }
     .header-logo-text { font-size: 17px; }
     /* Language switch lives in the hamburger drawer on mobile */
@@ -1229,15 +1227,13 @@
 <div class="top-utility-bar">
   <div class="top-utility-inner">
     <div class="top-utility-left">
-      <a href="khoj.html" class="top-utility-link" data-t="nav_khoj">कृषि खोज</a>
-      <span class="top-utility-divider">|</span>
-      <a href="weather.html" class="top-utility-link" data-t="nav_weather_full">मौसम व सलाह</a>
+      <a href="index.html" class="top-utility-link" data-t="nav_home">मुख्य</a>
       <span class="top-utility-divider">|</span>
       <a href="map.html" class="top-utility-link" data-t="nav_map">कृषि मानचित्र</a>
       <span class="top-utility-divider">|</span>
-      <a href="sarkari_yojana.html" class="top-utility-link" data-t="nav_schemes_short">सरकारी योजना</a>
+      <a href="articles/index.html" class="top-utility-link" data-t="nav_news">कृषि समाचार</a>
       <span class="top-utility-divider">|</span>
-      <a href="krashi_bajar.html" class="top-utility-link" data-t="nav_shop_short">खरीदें/बेचें</a>
+      <a href="sarkari_yojana.html" class="top-utility-link" data-t="nav_schemes_short">सरकारी योजना</a>
     </div>
     <div class="top-utility-right">
       <a href="tel:+919870951001" class="top-utility-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
@@ -1268,9 +1264,10 @@
     </div>
 
     <nav class="header-nav">
-      <a class="header-nav-link" href="mandi.html" data-t="nav_mandi_bhav">कृषि मंडी भाव</a>
+      <a class="header-nav-link" href="/bhav" data-t="nav_mandi_price">मंडी भाव</a>
       <a class="header-nav-link active" href="krashi_bajar.html" data-t="nav_bazar">कृषि बाज़ार</a>
-      <a class="header-nav-link" href="articles/index.html" data-t="nav_news">कृषि समाचार</a>
+      <a class="header-nav-link" href="weather.html" data-t="nav_weather_short">मौसम देखें</a>
+      <a class="header-nav-link" href="/product/" data-t="nav_dukaan">कृषि दुकान</a>
     </nav>
 
     <div class="header-right-group">
@@ -1535,6 +1532,7 @@ const TRANSLATIONS = {
     nav_schemes_short:'सरकारी योजना', nav_shop_short:'खरीदें/बेचें',
     nav_helpline:'कृषिमित्र हेल्पलाइन: +91 9870951001', nav_contact:'संपर्क',
     nav_mandi_bhav:'कृषि मंडी भाव', nav_bazar:'कृषि बाज़ार', nav_news:'कृषि समाचार',
+    nav_mandi_price:'मंडी भाव', nav_weather_short:'मौसम देखें', nav_dukaan:'कृषि दुकान',
     nav_home:'मुख्य', nav_weather:'मौसम', nav_mandi:'मंडी', nav_shop:'दुकान',
     nav_chat:'सहायता', nav_schemes:'सरकारी योजना',
     page_title:'फसल बाज़ार', page_sub:'सीधे खरीदार से जुड़ें — किसान का भरोसेमंद मंच',
@@ -1580,6 +1578,7 @@ const TRANSLATIONS = {
     nav_schemes_short:'Govt Schemes', nav_shop_short:'Buy/Sell',
     nav_helpline:'KrashiMitra Helpline: +91 9870951001', nav_contact:'Contact',
     nav_mandi_bhav:'Mandi Prices', nav_bazar:'Krashi Bazar', nav_news:'Agri News',
+    nav_mandi_price:'Mandi Bhav', nav_weather_short:'See Weather', nav_dukaan:'Krashi Dukaan',
     nav_home:'Home', nav_weather:'Weather', nav_mandi:'Mandi', nav_shop:'Shop',
     nav_chat:'Help', nav_schemes:'Govt Schemes',
     page_title:'Crop Bazar', page_sub:'Connect directly with buyers — the farmer\'s trusted marketplace',
@@ -1625,6 +1624,7 @@ const TRANSLATIONS = {
     nav_schemes_short:'ಸರ್ಕಾರಿ ಯೋಜನೆ', nav_shop_short:'ಖರೀದಿ/ಮಾರಾಟ',
     nav_helpline:'ಕೃಷಿಮಿತ್ರ ಸಹಾಯವಾಣಿ: +91 9870951001', nav_contact:'ಸಂಪರ್ಕ',
     nav_mandi_bhav:'ಮಂಡಿ ಬೆಲೆ', nav_bazar:'ಕೃಷಿ ಬಜಾರ್', nav_news:'ಕೃಷಿ ಸುದ್ದಿ',
+    nav_mandi_price:'ಮಂಡಿ ಬೆಲೆ', nav_weather_short:'ಹವಾಮಾನ ನೋಡಿ', nav_dukaan:'ಕೃಷಿ ದುಕಾನ್',
     nav_home:'ಮುಖಪುಟ', nav_weather:'ಹವಾಮಾನ', nav_mandi:'ಮಂಡಿ', nav_shop:'ಅಂಗಡಿ',
     nav_chat:'ಸಹಾಯ', nav_schemes:'ಸರ್ಕಾರಿ ಯೋಜನೆ',
     page_title:'ಬೆಳೆ ಬಜಾರ್', page_sub:'ಖರೀದಿದಾರರೊಂದಿಗೆ ನೇರ ಸಂಪರ್ಕ — ರೈತರ ನಂಬಿಕೆಯ ವೇದಿಕೆ',

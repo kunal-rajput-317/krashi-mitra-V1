@@ -220,6 +220,9 @@ app.include_router(product_route.router)  # SEO shop-product pages (/product/*) 
 from backend.routes import articles as articles_route
 app.include_router(articles_route.router)  # /articles/meta — live published/updated dates from article JSON-LD
 
+from backend.routes import sitemap as sitemap_route
+app.include_router(sitemap_route.router)  # /sitemap.xml — generated from the pages/articles on disk
+
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(

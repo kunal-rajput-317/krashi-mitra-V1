@@ -449,19 +449,17 @@
     .main-header-inner {
       max-width: 1280px;
       margin: 0 auto;
-      display: flex;
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      column-gap: 28px;
       align-items: center;
-      justify-content: space-between;
       width: 100%;
       padding: 0 80px;
     }
-    /* Desktop source order: hamburger is now first in the DOM (so mobile can
-       pin it far-left independent of the logo) — restore the original visual
-       order (logo, then hamburger) on wider screens via flex `order`. */
-    .main-header-inner > .hamburger-btn { order: 2; }
-    .main-header-inner > .header-left-group { order: 1; }
-    .main-header-inner > .header-nav { order: 3; }
-    .main-header-inner > .header-right-group { order: 4; }
+    /* Desktop: hamburger sits left of the logo (its natural DOM order), the
+       nav block centers itself in the space between logo and the right-side
+       utility icons. Mobile restores flex order below. */
+    .main-header-inner > .header-nav { justify-self: center; }
     .header-left-group {
       display: flex;
       align-items: center;
@@ -1652,7 +1650,7 @@
       .pre-topbar { font-size: 11.5px; padding: 6px 12px; }
       .top-utility-bar { display: none; }
       .main-header { padding: 8px 0; }
-      .main-header-inner { padding: 0 12px; }
+      .main-header-inner { display: flex; justify-content: space-between; column-gap: 0; padding: 0 12px; }
       .header-nav { display: none; }
       .header-logo-text { font-size: 17px; }
       .header-search-btn .search-btn-text { display: none; }
@@ -1761,15 +1759,13 @@
 <div class="top-utility-bar">
   <div class="top-utility-inner">
     <div class="top-utility-left">
-      <a href="khoj.html" class="top-utility-link" data-t="nav_khoj">कृषि खोज</a>
-      <span class="top-utility-divider">|</span>
-      <a href="weather.html" class="top-utility-link" data-t="nav_weather_full">मौसम व सलाह</a>
+      <a href="index.html" class="top-utility-link" data-t="nav_home_short">मुख्य</a>
       <span class="top-utility-divider">|</span>
       <a href="map.html" class="top-utility-link" data-t="nav_map">कृषि मानचित्र</a>
       <span class="top-utility-divider">|</span>
-      <a href="sarkari_yojana.html" class="top-utility-link" data-t="nav_schemes_short">सरकारी योजना</a>
+      <a href="articles/index.html" class="top-utility-link" data-t="nav_news">कृषि समाचार</a>
       <span class="top-utility-divider">|</span>
-      <a href="krashi_bajar.html" class="top-utility-link" data-t="nav_shop_short">खरीदें/बेचें</a>
+      <a href="sarkari_yojana.html" class="top-utility-link" data-t="nav_schemes_short">सरकारी योजना</a>
     </div>
     <div class="top-utility-right">
       <a href="tel:+919870951001" class="top-utility-helpline" id="top-utility-helpline-span" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
@@ -1803,10 +1799,10 @@
 
     <!-- Center: Main Nav Links styled exactly like reference image -->
     <nav class="header-nav">
-      <a class="header-nav-link active" href="mandi.html" data-t="nav_mandi_bhav">कृषि मंडी भाव</a>
-      <a class="header-nav-link" href="krashi_bajar.html" data-t="nav_veg_prices">खरीदें और बेचें</a>
+      <a class="header-nav-link active" href="/bhav" data-t="nav_mandi_price">मंडी भाव</a>
       <a class="header-nav-link" href="krashi_bajar.html" data-t="nav_bazar">कृषि बाज़ार</a>
-      <a class="header-nav-link" href="articles/index.html" data-t="nav_news">कृषि समाचार</a>
+      <a class="header-nav-link" href="weather.html" data-t="nav_weather_short">मौसम देखें</a>
+      <a class="header-nav-link" href="/product/" data-t="nav_dukaan">कृषि दुकान</a>
     </nav>
 
     <!-- Right: Utility Buttons & Search -->
@@ -1848,6 +1844,7 @@
       <a href="index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
       <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
       <a href="mandi.html" class="sidebar-drawer-link active"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
+      <a href="/bhav" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📈</span><span>सभी भाव सूची</span></a>
       <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
       <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
       <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
@@ -2307,6 +2304,10 @@
       nav_bazar:        "कृषि बाज़ार",
       nav_bazar_menu:   "कृषि बाज़ार",
       nav_news:         "कृषि समाचार",
+      nav_home_short:   "मुख्य",
+      nav_mandi_price:  "मंडी भाव",
+      nav_weather_short:"मौसम देखें",
+      nav_dukaan:       "कृषि दुकान",
       search_btn_text:  "खोज",
       my_orders_lbl:    "ऑर्डर",
       menu_title:       "मेनु",
@@ -2370,6 +2371,10 @@
       nav_bazar:        "Krashi Bazar",
       nav_bazar_menu:   "Krashi Bazar",
       nav_news:         "Agri News",
+      nav_home_short:   "Home",
+      nav_mandi_price:  "Mandi Bhav",
+      nav_weather_short:"See Weather",
+      nav_dukaan:       "Krashi Dukaan",
       search_btn_text:  "Search",
       my_orders_lbl:    "Orders",
       menu_title:       "Menu",
@@ -2433,6 +2438,10 @@
       nav_bazar:        "ಕೃಷಿ ಬಜಾರ್",
       nav_bazar_menu:   "ಕೃಷಿ ಬಜಾರ್",
       nav_news:         "ಕೃಷಿ ಸುದ್ದಿ",
+      nav_home_short:   "ಮುಖ್ಯ",
+      nav_mandi_price:  "ಮಂಡಿ ಬೆಲೆ",
+      nav_weather_short:"ಹವಾಮಾನ ನೋಡಿ",
+      nav_dukaan:       "ಕೃಷಿ ದುಕಾನ್",
       search_btn_text:  "ಹುಡುಕು",
       my_orders_lbl:    "ಆರ್ಡರ್‌ಗಳು",
       menu_title:       "ಮೆನು",
