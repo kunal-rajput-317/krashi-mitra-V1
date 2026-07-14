@@ -167,7 +167,7 @@
         "dateModified": "2026-07-03",
         "image": {
           "@type": "ImageObject",
-          "url": "https://krashimitra.in/images/og-banner.jpg",
+          "url": "https://krashimitra.in/images/og-banner.webp",
           "width": 1200,
           "height": 630
         }
@@ -256,13 +256,13 @@
           },
           {
             "@type": "Question",
-            "name": "धान का आज का भाव कितना है?",
-            "acceptedAnswer": { "@type": "Answer", "text": "भारत की मंडियों में धान (Paddy) का ताज़ा भाव KrashiMitra पर देखें। अलग-अलग मंडियों के modal price, min और max रेट यहाँ उपलब्ध हैं।" }
+            "name": "UP में आज गेहूं का मंडी भाव क्या है?",
+            "acceptedAnswer": { "@type": "Answer", "text": "उत्तर प्रदेश की लखनऊ, कानपुर, वाराणसी समेत सभी मंडियों के लाइव गेहूं भाव KrashiMitra पर देखें — राज्य चुनें या गेहूं टाइल पर टैप करें, जिलेवार रेट तुरंत मिलेंगे।" }
           },
           {
             "@type": "Question",
-            "name": "KrashiMitra मंडी भाव कैसे काम करता है?",
-            "acceptedAnswer": { "@type": "Answer", "text": "KrashiMitra रोज़ पूरे भारत की APMC मंडियों से फसल के भाव लाकर एक जगह दिखाता है। फसल चुनें या राज्य चुनें — तुरंत ताज़ा मंडी रेट देखें।" }
+            "name": "धान का आज का भाव कितना है?",
+            "acceptedAnswer": { "@type": "Answer", "text": "भारत की मंडियों में धान (Paddy) का ताज़ा भाव KrashiMitra पर देखें। अलग-अलग मंडियों के modal price, min और max रेट यहाँ उपलब्ध हैं।" }
           },
           {
             "@type": "Question",
@@ -276,28 +276,13 @@
           },
           {
             "@type": "Question",
-            "name": "UP में आज गेहूं का मंडी भाव क्या है?",
-            "acceptedAnswer": { "@type": "Answer", "text": "उत्तर प्रदेश की लखनऊ, कानपुर, वाराणसी समेत सभी मंडियों के लाइव गेहूं भाव KrashiMitra पर देखें — राज्य चुनें या गेहूं टाइल पर टैप करें, जिलेवार रेट तुरंत मिलेंगे।" }
-          },
-          {
-            "@type": "Question",
             "name": "राजस्थान में सरसों और जीरे का भाव कहाँ देखें?",
             "acceptedAnswer": { "@type": "Answer", "text": "राजस्थान की जयपुर, कोटा, अलवर समेत सभी मंडियों में सरसों, जीरा, बाजरा और ग्वार का आज का भाव KrashiMitra मंडी पेज पर मुफ्त देखें।" }
           },
           {
             "@type": "Question",
-            "name": "कर्नाटक में प्याज और रागी का मार्केट रेट क्या है?",
-            "acceptedAnswer": { "@type": "Answer", "text": "कर्नाटक (Bangalore, Hubli, Mysore APMC) की मंडियों में प्याज, रागी, तूर दाल का आज का रेट KrashiMitra पर देखें — ಕನ್ನಡ भाषा में भी उपलब्ध।" }
-          },
-          {
-            "@type": "Question",
-            "name": "Tamil Nadu में धान का market price कितना है?",
-            "acceptedAnswer": { "@type": "Answer", "text": "तमिलनाडु की मंडियों में धान (Paddy), नारियल और हल्दी का ताज़ा market price KrashiMitra पर देखें — राज्य चुनें और सभी फसलों के रेट एक जगह पाएं।" }
-          },
-          {
-            "@type": "Question",
-            "name": "सोयाबीन का भाव कितना है आज?",
-            "acceptedAnswer": { "@type": "Answer", "text": "सोयाबीन का आज का मंडी भाव KrashiMitra पर देखें। देश भर की मंडियों में सोयाबीन का modal price, min-max rate और trend यहाँ मिलेगा।" }
+            "name": "KrashiMitra मंडी भाव कैसे काम करता है?",
+            "acceptedAnswer": { "@type": "Answer", "text": "KrashiMitra रोज़ पूरे भारत की APMC मंडियों से फसल के भाव लाकर एक जगह दिखाता है। फसल चुनें या राज्य चुनें — तुरंत ताज़ा मंडी रेट देखें।" }
           }
         ]
       }
@@ -1588,6 +1573,39 @@
     }
     .seo-link-row a:hover { background: var(--green-pale); border-color: var(--green-light); color: var(--green-dark); }
 
+    /* ── FAQ accordion (visible source of the FAQPage schema — keep in sync) ── */
+    .mandi-faq {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-top: 22px;
+      box-shadow: var(--shadow);
+    }
+    .mandi-faq h2 {
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-size: 14px; font-weight: 800; color: var(--text-dark);
+      margin: 0 0 6px; padding-left: 10px;
+      border-left: 3px solid var(--amber);
+    }
+    .mandi-faq details { border-bottom: 1px solid var(--border); }
+    .mandi-faq details:last-child { border-bottom: none; }
+    .mandi-faq summary {
+      cursor: pointer; list-style: none;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 11px 2px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-size: 13px; font-weight: 700; color: var(--text-dark);
+    }
+    .mandi-faq summary::-webkit-details-marker { display: none; }
+    .mandi-faq summary::after { content: '+'; font-size: 15px; font-weight: 700; color: var(--green-mid); flex-shrink: 0; }
+    .mandi-faq details[open] summary::after { content: '–'; }
+    .mandi-faq .faq-ans {
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-size: 12.5px; color: var(--text-mid); line-height: 1.65;
+      padding: 0 2px 12px;
+    }
+
     /* ── FOOTER META ── */
     .wx-footer-meta {
       text-align: center; font-size: 11px;
@@ -1744,6 +1762,221 @@
     transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
   .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+
+  /* ══ PREMIUM STATE MAP CARDS ══ */
+  #state-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 16px;
+  }
+  @media (max-width: 900px) {
+    #state-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 600px) {
+    #state-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .state-map-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(26,60,46,.04);
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    font-family: inherit;
+    min-height: 120px;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    width: 100%;
+    border-right: 6px solid var(--green-mid);
+  }
+  .state-map-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(26,60,46,.1);
+    border-color: var(--green-light);
+  }
+  /* left — map panel with watercolor radial gradient */
+  .smc-map-panel {
+    flex-shrink: 0;
+    width: 42%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-right: 1.5px dotted #cdd8cd;
+  }
+  .smc-blob {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(139,195,74,0.3) 0%, rgba(205,220,57,0.15) 50%, transparent 75%);
+    pointer-events: none;
+  }
+  .smc-map-img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 100px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.06));
+  }
+  /* right — info panel */
+  .smc-info {
+    flex: 1;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    position: relative;
+    min-width: 0;
+  }
+  .smc-deco-svg {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 50px;
+    height: 50px;
+    pointer-events: none;
+  }
+  .smc-name-hi {
+    font-family: 'Noto Serif Devanagari', 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a3c2e;
+    line-height: 1.1;
+  }
+  /* Divider with Leaf Ornament */
+  .smc-divider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 1px 0;
+  }
+  .smc-line {
+    height: 1.5px;
+    background: var(--green-light);
+    flex: 1;
+    max-width: 35px;
+  }
+  .smc-ornament {
+    font-size: 10px;
+    line-height: 1;
+    color: var(--green-mid);
+  }
+  .smc-name-en {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-top: -2px;
+  }
+  /* District box with custom circle pin */
+  .smc-dist-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f3f9f4;
+    border: 1px solid #e2f0e5;
+    border-radius: 10px;
+    padding: 4px 8px;
+    width: fit-content;
+    margin: 1px 0;
+  }
+  .smc-dist-pin-wrap {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #eaf2ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .smc-dist-pin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .smc-dist-text {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    line-height: 1;
+  }
+  .smc-dist-num {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #1a3c2e;
+  }
+  .smc-dist-lbl {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #4a5a52;
+  }
+  /* Segmented button pill */
+  .smc-btn-pill {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    border: 1.5px solid #d0dfd4;
+    border-radius: 12px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 145px;
+    height: 28px;
+    margin-top: 3px;
+    transition: all 0.2s ease;
+  }
+  .smc-btn-left {
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green-mid);
+    font-size: 11px;
+  }
+  .smc-btn-divider {
+    width: 1px;
+    height: 14px;
+    background: #d0dfd4;
+  }
+  .smc-btn-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #1a3c2e;
+  }
+  .state-map-card:hover .smc-btn-pill {
+    border-color: var(--green-mid);
+    background: #f3f9f4;
+  }
+  .state-map-card:hover .smc-btn-divider {
+    background: var(--green-mid);
+  }
+  .smc-btn-arrow {
+    transition: transform 0.2s;
+  }
+  .state-map-card:hover .smc-btn-arrow {
+    transform: translateX(3px);
+  }
+  @media (max-width: 640px) {
+    #state-grid { grid-template-columns: 1fr; }
+    .smc-map-panel { width: 38%; }
+    .smc-name-hi { font-size: 18px; }
+  }
 </style>
 </head>
 <body>
@@ -2119,6 +2352,43 @@
       <a href="mandi.html?state=Madhya%20Pradesh&commodity=Gram" title="MP चना भाव">चना भाव MP</a>
       <a href="mandi.html?state=Haryana&commodity=Paddy" title="हरियाणा धान रेट">धान भाव हरियाणा</a>
     </div>
+  </section>
+
+  <!-- ══ FAQ — visible source of the FAQPage schema in <head> (keep both in sync) ══ -->
+  <section class="mandi-faq" aria-label="मंडी भाव — अक्सर पूछे जाने वाले सवाल">
+    <h2> मंडी भाव — अक्सर पूछे जाने वाले सवाल (FAQ)</h2>
+    <details>
+      <summary>आज गेहूं का मंडी भाव क्या है?</summary>
+      <div class="faq-ans">KrashiMitra पर पूरे भारत की मंडियों के लाइव गेहूं भाव देखें। कीमतें रोज़ अपडेट होती हैं — अपनी फसल या राज्य चुनकर min, max और modal रेट देखें।</div>
+    </details>
+    <details>
+      <summary>राज्य के अनुसार मंडी भाव कैसे देखें?</summary>
+      <div class="faq-ans">KrashiMitra मंडी पेज पर 'राज्य के आधार पर' टैब चुनें, फिर अपना राज्य चुनें — उस राज्य की सभी फसलों के आज के मंडी भाव एक जगह दिख जाएंगे।</div>
+    </details>
+    <details>
+      <summary>UP में आज गेहूं का मंडी भाव क्या है?</summary>
+      <div class="faq-ans">उत्तर प्रदेश की लखनऊ, कानपुर, वाराणसी समेत सभी मंडियों के लाइव गेहूं भाव KrashiMitra पर देखें — राज्य चुनें या गेहूं टाइल पर टैप करें, जिलेवार रेट तुरंत मिलेंगे।</div>
+    </details>
+    <details>
+      <summary>धान का आज का भाव कितना है?</summary>
+      <div class="faq-ans">भारत की मंडियों में धान (Paddy) का ताज़ा भाव KrashiMitra पर देखें। अलग-अलग मंडियों के modal price, min और max रेट यहाँ उपलब्ध हैं।</div>
+    </details>
+    <details>
+      <summary>प्याज और आलू का मंडी भाव कहाँ देखें?</summary>
+      <div class="faq-ans">प्याज, आलू, टमाटर समेत सभी फसलों का आज का मंडी भाव KrashiMitra पर देखें। फसल की टाइल पर टैप करें और सभी मंडियों के रेट देखें।</div>
+    </details>
+    <details>
+      <summary>MP में सोयाबीन का आज का भाव कितना है?</summary>
+      <div class="faq-ans">मध्य प्रदेश की इंदौर, उज्जैन, देवास समेत सभी मंडियों में सोयाबीन का आज का भाव KrashiMitra पर देखें — modal price, min-max rate और रुझान रोज़ अपडेट होते हैं।</div>
+    </details>
+    <details>
+      <summary>राजस्थान में सरसों और जीरे का भाव कहाँ देखें?</summary>
+      <div class="faq-ans">राजस्थान की जयपुर, कोटा, अलवर समेत सभी मंडियों में सरसों, जीरा, बाजरा और ग्वार का आज का भाव KrashiMitra मंडी पेज पर मुफ्त देखें।</div>
+    </details>
+    <details>
+      <summary>KrashiMitra मंडी भाव कैसे काम करता है?</summary>
+      <div class="faq-ans">KrashiMitra रोज़ पूरे भारत की APMC मंडियों से फसल के भाव लाकर एक जगह दिखाता है। फसल चुनें या राज्य चुनें — तुरंत ताज़ा मंडी रेट देखें।</div>
+    </details>
   </section>
 
   <!-- Data source attribution + legal disclaimer -->
@@ -3080,7 +3350,7 @@
     { en:'Bajra',       hi:'बाजरा',    emoji:'🌾', file:'Bajra.JPG',                                h:'49', keys:['bajra','pearl millet'] },
     { en:'Arhar',       hi:'अरहर',     emoji:'🫘', file:'Toor dal.jpg',                             h:'de', keys:['arhar','tur','red gram'] },
     { en:'Urad',        hi:'उड़द',     emoji:'🫘', file:'Vigna mungo.jpg',                          h:'e2', keys:['urad','black gram'] },
-    { en:'Moong',       hi:'मूंग',     emoji:'🫛', file:'Mung beans (Vigna radiata).jpg',           h:'86', keys:['moong','green gram'] },
+    { en:'Moong',       hi:'मूंग',     emoji:'🫛', file:'Mung_beans.jpg',                           h:'5e', keys:['moong','green gram'] },
     { en:'Sugarcane',   hi:'गन्ना',    emoji:'🎋', file:'Sugar cane.jpg',                           h:'cb', keys:['sugarcane'] },
     { en:'Cotton',      hi:'कपास',     emoji:'🧵', file:'CottonPlant.JPG',                          h:'68', keys:['cotton'] },
     { en:'Lentil',      hi:'मसूर',     emoji:'🫘', file:'Lentil.jpg',                               h:'9d', keys:['lentil','masur','masoor'] },
@@ -3088,6 +3358,40 @@
     { en:'Brinjal',     hi:'बैंगन',    emoji:'🍆', file:'Aubergine.jpg',                            h:'fb', keys:['brinjal'] },
     { en:'Cauliflower', hi:'फूलगोभी', emoji:'🥦', file:'Cauliflower.jpg',                          h:'7c', keys:['cauliflower'] },
     { en:'Ginger',      hi:'अदरक',     emoji:'🫚', file:'Ginger root.jpg',                          h:'cf', keys:['ginger'] },
+
+    // h is the first two hex chars of md5(file with underscores) — the CDN shard
+    // Wikimedia stores the thumb under, not a label. A guessed value 404s.
+    // Keep this list in sync with _TILES in backend/routes/share.py.
+    { en:'Bhindi',      hi:'भिंडी',    emoji:'🫛', file:'Okra.jpg',                                 h:'90', keys:['bhindi','ladies finger','okra'] },
+    { en:'Banana',      hi:'केला',     emoji:'🍌', file:'Bananas.jpg',                              h:'4c', keys:['banana'] },
+    { en:'Bitter Gourd',hi:'करेला',    emoji:'🥒', file:'Bitter_melon.jpg',                         h:'63', keys:['bitter gourd','karela'] },
+    { en:'Cucumber',    hi:'खीरा',     emoji:'🥒', file:'Cucumbers.jpg',                            h:'77', keys:['cucumber','kheera'] },
+    { en:'Bottle Gourd',hi:'लौकी',     emoji:'🥒', file:'Bottle_gourd.jpg',                         h:'08', keys:['bottle gourd','lauki'] },
+    { en:'Cabbage',     hi:'पत्ता गोभी', emoji:'🥬', file:'Cabbage.jpg',                            h:'70', keys:['cabbage','patta gobhi'] },
+    { en:'Pumpkin',     hi:'कद्दू',    emoji:'🎃', file:'Pumpkin.jpg',                              h:'f7', keys:['pumpkin','kaddu'] },
+    { en:'Mango',       hi:'आम',       emoji:'🥭', file:'Mango_fruit.jpg',                          h:'64', keys:['mango','aam'] },
+    { en:'Lemon',       hi:'नींबू',    emoji:'🍋', file:'Lemon.jpg',                                h:'e4', keys:['lemon','nimbu'] },
+    { en:'Carrot',      hi:'गाजर',     emoji:'🥕', file:'Carrots.jpg',                              h:'c8', keys:['carrot','gajar'] },
+    { en:'Ridgeguard',  hi:'तोरई',     emoji:'🥒', file:'Luffa_acutangula.jpg',                     h:'59', keys:['ridgeguard','tori'] },
+    { en:'Coriander',   hi:'धनिया',    emoji:'🌿', file:'Coriander.jpg',                            h:'1b', keys:['coriander','dhaniya'] },
+    { en:'Raddish',     hi:'मूली',     emoji:'🥕', file:'Radish.jpg',                               h:'03', keys:['raddish','radish','mooli'] },
+    { en:'Papaya',      hi:'पपीता',    emoji:'🥭', file:'Papaya_fruit.jpg',                         h:'99', keys:['papaya','papita'] },
+    { en:'Capsicum',    hi:'शिमला मिर्च', emoji:'🫑', file:'Capsicum.jpg',                          h:'73', keys:['capsicum','shimla mirch'] },
+    { en:'Drumstick',   hi:'सहजन',     emoji:'🌿', file:'Moringa_oleifera.jpg',                     h:'f1', keys:['drumstick','moringa','sahjan'] },
+    { en:'Coconut',     hi:'नारियल',   emoji:'🥥', file:'Coconut.jpg',                              h:'26', keys:['coconut','nariyal'] },
+    { en:'Apple',       hi:'सेब',      emoji:'🍎', file:'Apple.jpg',                                h:'2b', keys:['apple','seb'] },
+    { en:'Mint',        hi:'पुदीना',   emoji:'🌿', file:'Mint_leaves.jpg',                          h:'ce', keys:['mint','pudina'] },
+    { en:'Guava',       hi:'अमरूद',    emoji:'🥭', file:'Guava_fruit.jpg',                          h:'d6', keys:['guava','amrood'] },
+    { en:'Jowar',       hi:'ज्वार',    emoji:'🌾', file:'Sorghum seed.jpg',                         h:'2a', keys:['jowar','sorghum'] },
+    { en:'Mousambi',    hi:'मौसंबी',   emoji:'🍋', file:'Sweet limes of Salem.jpg',                 h:'77', keys:['mousambi','sweet lime'] },
+    { en:'Pomegranate', hi:'अनार',     emoji:'🍎', file:'Pomegranate.jpg',                          h:'5d', keys:['pomegranate','anar'] },
+    { en:'Sesamum',     hi:'तिल',      emoji:'🫘', file:'Yonghui preferred white sesame seeds.jpg', h:'65', keys:['sesamum','sesame','til'] },
+    { en:'Watermelon',  hi:'तरबूज',    emoji:'🍉', file:'Watermelon.jpg',                           h:'b9', keys:['watermelon','water melon','tarbooz'] },
+    { en:'Spinach',     hi:'पालक',     emoji:'🥬', file:'Spinach.jpg',                              h:'cd', keys:['spinach','palak'] },
+    { en:'Grapes',      hi:'अंगूर',    emoji:'🍇', file:'Grapes.jpg',                               h:'6b', keys:['grapes','angoor'] },
+    { en:'Barley',      hi:'जौ',       emoji:'🌾', file:'Barley.jpg',                               h:'e0', keys:['barley','jau'] },
+    { en:'Orange',      hi:'संतरा',    emoji:'🍊', file:'Oranges - whole-halved-segment.jpg',       h:'e3', keys:['orange','santra'] },
+    { en:'Cumin',       hi:'जीरा',     emoji:'🫘', file:'Cumin seed.jpg',                           h:'17', keys:['cumin','jeera'] },
   ];
 
   function _wikiImg(file) {
@@ -3308,9 +3612,9 @@
   // ══════════════════════════════════════
   // STATE GRID  (tap a state → all its crop prices)
   // ══════════════════════════════════════
-  // "Uttar Pradesh" → "uttar-pradesh" — matches the image filename a state tile expects
+  // "Uttar Pradesh" → "uttar_pradesh" — matches the SVG filename in state_map_svgs/
   function _stateSlug(name) {
-    return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
   }
 
   function renderStateGrid() {
@@ -3340,15 +3644,51 @@
     // embedded quote either way — the handler ends up invalid JS).
     window._gridStates = filtered;
 
-    const suffix = currentLang === 'hi' ? 'के भाव' : 'rates';
-    grid.innerHTML = filtered.map((s, i) => `
-      <button class="ctile" onclick="openStatePrices(${i})" title="${s} ${suffix}">
-        <div class="ctile-imgwrap">
-          <img class="ctile-img" src="images/states/${_stateSlug(s)}.jpg" alt="${s}" loading="lazy"
-            onerror="this.outerHTML='<span class=&quot;ctile-emoji&quot;>📍</span>'">
+    const suffix   = currentLang === 'hi' ? 'के भाव' : 'rates';
+    const distLbl   = currentLang === 'hi' ? 'जिले' : 'dist.';
+    grid.innerHTML = filtered.map((s, i) => {
+      const slug      = _stateSlug(s);
+      const svgSrc    = `images/state_map_svgs/${slug}.svg`;
+      const nameHi    = STATE_HI[s] || s;
+      const distCount = (INDIA_STATES_DISTRICTS[s] || []).length;
+      return `
+      <button class="state-map-card" onclick="openStatePrices(${i})" title="${s} ${suffix}">
+        <div class="smc-map-panel">
+          <div class="smc-blob"></div>
+          <img class="smc-map-img" src="${svgSrc}" alt="${s} map" loading="lazy"
+            onerror="this.closest('.smc-map-panel').style.display='none'">
         </div>
-        <div class="ctile-body"><div class="ctile-name nowrap" title="${s} ${suffix}"><b>${s}</b> ${suffix}</div></div>
-      </button>`).join('');
+        <div class="smc-info">
+          <svg class="smc-deco-svg" viewBox="0 0 100 100" fill="none" stroke="#2d6a4f" stroke-opacity="0.07" stroke-width="2.5" stroke-linecap="round">
+            <path d="M10,90 Q40,80 70,30 Q80,15 90,10 M35,70 Q20,55 15,60 Q10,65 25,75 M50,53 Q38,38 30,40 Q22,42 40,58 M60,40 Q75,32 80,38 Q85,44 68,50" />
+          </svg>
+          <div class="smc-name-hi">${nameHi}</div>
+          <div class="smc-divider-wrap">
+            <div class="smc-line"></div>
+            <span class="smc-ornament">🌿</span>
+            <div class="smc-line"></div>
+          </div>
+          <div class="smc-name-en">${s}</div>
+          <div class="smc-dist-box">
+            <div class="smc-dist-pin-wrap">
+              <span class="smc-dist-pin">📍</span>
+            </div>
+            <div class="smc-dist-text">
+              <span class="smc-dist-num">${distCount}</span>
+              <span class="smc-dist-lbl">जिले</span>
+            </div>
+          </div>
+          <div class="smc-btn-pill">
+            <div class="smc-btn-left">📈</div>
+            <div class="smc-btn-divider"></div>
+            <div class="smc-btn-right">
+              <span>भाव देखें</span>
+              <span class="smc-btn-arrow">→</span>
+            </div>
+          </div>
+        </div>
+      </button>`;
+    }).join('');
   }
 
   function filterStateGrid() { renderStateGrid(); }
@@ -3824,46 +4164,46 @@
         if (!productImg) {
           const nameLower = o.product_name.toLowerCase();
           if (nameLower.includes('गेहूं') || nameLower.includes('wheat')) {
-            productImg = 'https://krashimitra.in/images/seeds/wheat-seed-HD-2967.png';
+            productImg = 'https://krashimitra.in/images/seeds/wheat-seed-HD-2967.webp';
             productEmoji = '🌾';
           } else if (nameLower.includes('मक्का') || nameLower.includes('maize') || nameLower.includes('corn')) {
-            productImg = 'https://krashimitra.in/images/seeds/makka-hybrid-crop.png';
+            productImg = 'https://krashimitra.in/images/seeds/makka-hybrid-crop.webp';
             productEmoji = '🌽';
           } else if (nameLower.includes('प्याज') || nameLower.includes('onion')) {
-            productImg = 'https://krashimitra.in/images/seeds/onion-seed-nasik-red.png';
+            productImg = 'https://krashimitra.in/images/seeds/onion-seed-nasik-red.webp';
             productEmoji = '🧅';
           } else if (nameLower.includes('सोयाबीन') || nameLower.includes('soybean')) {
-            productImg = 'https://krashimitra.in/images/seeds/soyabean-js-335.png';
+            productImg = 'https://krashimitra.in/images/seeds/soyabean-js-335.webp';
             productEmoji = '🫘';
           } else if (nameLower.includes('dap')) {
-            productImg = 'https://krashimitra.in/images/fertilizers/DAP.jpg';
+            productImg = 'https://krashimitra.in/images/fertilizers/DAP.webp';
             productEmoji = '🧪';
           } else if (nameLower.includes('vermi') || nameLower.includes('वर्मी')) {
-            productImg = 'https://krashimitra.in/images/fertilizers/vermicompost.png';
+            productImg = 'https://krashimitra.in/images/fertilizers/vermicompost.webp';
             productEmoji = '🌿';
           } else if (nameLower.includes('urea') || nameLower.includes('यूरिया')) {
-            productImg = 'https://krashimitra.in/images/fertilizers/urea.jpg';
+            productImg = 'https://krashimitra.in/images/fertilizers/Urea.webp';
             productEmoji = '💧';
           } else if (nameLower.includes('mop')) {
-            productImg = 'https://krashimitra.in/images/fertilizers/MOP.jpg';
+            productImg = 'https://krashimitra.in/images/fertilizers/MOP.webp';
             productEmoji = '🍂';
           } else if (nameLower.includes('ssp')) {
-            productImg = 'https://krashimitra.in/images/fertilizers/SSP.jpg';
+            productImg = 'https://krashimitra.in/images/fertilizers/SSP.webp';
             productEmoji = '🌾';
           } else if (nameLower.includes('npk')) {
-            productImg = 'https://krashimitra.in/images/fertilizers/NPK.jpg';
+            productImg = 'https://krashimitra.in/images/fertilizers/NPK.webp';
             productEmoji = '🌿';
           } else if (nameLower.includes('kapila') || nameLower.includes('कपिला')) {
-            productImg = 'https://krashimitra.in/images/animal_food/kapila.png';
+            productImg = 'https://krashimitra.in/images/animal_food/kapila.webp';
             productEmoji = '🐄';
           } else if (nameLower.includes('spray') || nameLower.includes('स्प्रे')) {
-            productImg = 'https://krashimitra.in/images/tools/battery-sprayer-12V.png';
+            productImg = 'https://krashimitra.in/images/tools/battery-sprayer-12V.webp';
             productEmoji = '🔵';
           } else if (nameLower.includes('khurpa') || nameLower.includes('खुरपी') || nameLower.includes('khurpi')) {
-            productImg = 'https://krashimitra.in/images/tools/khurpa.png';
+            productImg = 'https://krashimitra.in/images/tools/khurpa.webp';
             productEmoji = '🔧';
           } else if (nameLower.includes('drip') || nameLower.includes('ड्रिप')) {
-            productImg = 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.png';
+            productImg = 'https://krashimitra.in/images/tools/drip-irrigation-kit_1_acre.webp';
             productEmoji = '💦';
           }
         }

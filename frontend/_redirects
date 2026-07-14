@@ -40,6 +40,7 @@
 /articles/makka-guide-up.html   /articles/makka-guide-up   301!
 /articles/mausam-guide.html   /articles/mausam-guide   301!
 /articles/moongfali-guide-rajisthan.html   /articles/moongfali-guide-rajisthan   301!
+/articles/motha-ghaas-UP.html   /articles/motha-ghaas-up   301!
 /articles/online-farming-guide.html   /articles/online-farming-guide   301!
 /articles/paddy-guide-karnataka.html   /articles/paddy-guide-karnataka   301!
 /articles/potato_guide_up.html   /articles/potato_guide_up   301!
@@ -48,5 +49,22 @@
 /articles/tomato-guide-up.html   /articles/tomato-guide-up   301!
 /articles/up-agriculture-guide.html   /articles/up-agriculture-guide   301!
 /articles/urea-guide-up.html   /articles/urea-guide-up   301!
+
+# Canonical core-page URLs: 301 the .html forms to extensionless so Google
+# consolidates signals onto the canonical (internal links may still say .html —
+# they keep working locally via the file and in prod via these redirects).
+/index.html            /                  301!
+/mandi.html            /mandi             301!
+/weather.html          /weather           301!
+/chat.html             /chat              301!
+/shop.html             /shop              301!
+/krashi_bajar.html     /krashi_bajar      301!
+/sarkari_yojana.html   /sarkari_yojana    301!
+/khoj.html             /khoj              301!
+/meri_fasal.html       /meri_fasal        301!
+/about.html            /about             301!
+/privacy-policy.html   /privacy-policy    301!
+/map.html              /map               301!
+/help.html             /help              301!
 
 /* /index.html 200

@@ -752,42 +752,57 @@
     }
     .ad-slot ins { display:block; width:100%; }
 
-    /* ── ARTICLE CARDS ── */
-    /* 2 columns by default — matches mandi.html's .commodity-grid mobile layout */
-    .articles-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-    @media (min-width:641px)  { .articles-list { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-    @media (min-width:1025px) { .articles-list { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; } }
+    /* ── ARTICLE CARDS ──
+       Photo-on-top cards, capped at 3 per row (the homepage service cards use
+       the same shape). Each card leads with the article's own hero image; the
+       emoji sits underneath it as the fallback when the image can't load. */
+    .articles-list { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+    @media (min-width:560px)  { .articles-list { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (min-width:900px)  { .articles-list { grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; } }
     .article-card {
       background:var(--white);border-radius:var(--radius-md);border:1px solid var(--border);
-      box-shadow:var(--shadow-xs);display:flex;align-items:flex-start;gap:13px;
-      padding:13px 14px 13px 18px;text-decoration:none;cursor:pointer;
-      transition:all 0.18s;position:relative;overflow:hidden;
+      box-shadow:var(--shadow-xs);display:flex;flex-direction:column;
+      text-decoration:none;cursor:pointer;
+      transition:box-shadow 0.2s,transform 0.18s,border-color 0.18s;
+      position:relative;overflow:hidden;
     }
-    .article-card::before {
-      content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
-      background:var(--accent,var(--green-main));border-radius:4px 0 0 4px;transition:width 0.18s;
-    }
-    .article-card:hover { box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--green-light); }
-    .article-card:hover::before { width:5px; }
+    .article-card:hover { box-shadow:var(--shadow-md);transform:translateY(-3px);border-color:var(--green-light); }
     .article-card:active { transform:translateY(0); }
-    .article-thumb { width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0; }
-    .article-body { flex:1;min-width:0; }
-    .article-tag { display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;border-radius:20px;padding:2px 8px;margin-bottom:5px; }
-    .article-title { font-size:13.5px;font-weight:700;color:var(--text-dark);line-height:1.38;margin-bottom:6px;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif; }
-    .article-footer { display:flex;align-items:center;justify-content:space-between; }
-    .article-meta { font-size:10.5px;color:var(--text-xsoft);display:flex;align-items:center;gap:6px; }
-    .article-views { font-size:10px;color:var(--text-xsoft);display:flex;align-items:center;gap:3px; }
-    .article-arrow { font-size:18px;color:var(--text-xsoft);flex-shrink:0;align-self:center;opacity:0.45;transition:opacity 0.18s,transform 0.18s; }
-    .article-card:hover .article-arrow { opacity:0.8;transform:translateX(2px); }
+
+    /* Media band. The emoji is layered *behind* the <img>, so an image that
+       404s (onerror removes it) reveals the emoji instead of a broken icon. */
+    .article-media {
+      position:relative;width:100%;aspect-ratio:16/10;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;flex-shrink:0;
+    }
+    /* The emoji is the *fallback*, never an overlay: it shows only when the card
+       has no image — either none was rendered, or the one that was 404'd and its
+       onerror flagged the band .noimg. */
+    .article-media-emoji { display:none;position:absolute;z-index:0;font-size:46px;line-height:1;opacity:0.9; }
+    .article-media.noimg .article-media-emoji,
+    .article-media:not(:has(img)) .article-media-emoji { display:block; }
+    .article-media img {
+      position:absolute;inset:0;z-index:1;width:100%;height:100%;
+      object-fit:cover;display:block;
+      transition:transform 0.35s ease;
+    }
+    /* Transparent illustrations (service/yojana art) — show whole, don't crop */
+    .article-media img.contain { object-fit:contain;padding:12px; }
+    .article-card:hover .article-media img { transform:scale(1.045); }
+
+    .article-body { flex:1;min-width:0;display:flex;flex-direction:column;padding:14px 16px 15px; }
+    .article-tag { display:inline-block;align-self:flex-start;font-size:9.5px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin-bottom:8px; }
+    .article-title { font-size:15px;font-weight:700;color:var(--text-dark);line-height:1.4;margin-bottom:12px;font-family:'Noto Sans Devanagari','Noto Sans Kannada',sans-serif; }
+    .article-footer { display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px solid var(--border-soft); }
+    .article-meta { font-size:11px;color:var(--text-xsoft);display:flex;align-items:center;gap:6px; }
+    .article-views { font-size:10.5px;color:var(--text-xsoft);display:flex;align-items:center;gap:3px; }
     .new-badge { display:inline-block;background:#dc2626;color:var(--white);font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:5px;vertical-align:middle; }
     .hot-badge { display:inline-block;background:#f59e0b;color:#451a03;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:5px;vertical-align:middle; }
 
-    /* Narrow 2-col grid on mobile — tighten the card so title/meta stay legible */
-    @media (max-width:640px) {
-      .article-card { flex-direction:column; align-items:flex-start; gap:8px; padding:10px 10px 10px 13px; }
-      .article-thumb { width:38px; height:38px; font-size:19px; border-radius:9px; }
-      .article-footer { flex-direction:column; align-items:flex-start; gap:3px; }
-      .article-arrow { display:none; }
+    @media (max-width:559px) {
+      .article-media { aspect-ratio:16/9; }
+      .article-title { font-size:14.5px; }
     }
 
     /* ── EMPTY STATE ── */
@@ -913,8 +928,9 @@
       <a href="https://wa.me/919870951001" target="_blank" class="top-utility-social-icon" title="WhatsApp">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg>
       </a>
-  </div>
-</div>
+    </div><!-- /.top-utility-right -->
+  </div><!-- /.top-utility-inner -->
+</div><!-- /.top-utility-bar -->
 
 <!-- HEADER -->
 <header class="header">
@@ -1062,7 +1078,7 @@
   </div>
   <a class="featured-card" href="ganna-guide-up.html" data-cat="ganna" data-title="उत्तर प्रदेश में गन्ने की खेती सम्पूर्ण मार्गदर्शिका">
     <div class="featured-banner" style="background:linear-gradient(135deg,#2e1503 0%,#1b4d1c 50%,#f57f17 100%)">
-    <img src="https://krashimitra.in/images/Ganna/ganne-ke-khet.png" alt="उत्तर प्रदेश में गन्ने की खेती — सम्पूर्ण मार्गदर्शिका" width="500" height="150" loading="eager" fetchpriority="high" />
+    <img src="https://krashimitra.in/images/Ganna/ganne-ke-khet.webp" alt="उत्तर प्रदेश में गन्ने की खेती — सम्पूर्ण मार्गदर्शिका" width="500" height="150" loading="eager" fetchpriority="high" />
 
       <span class="featured-badge" data-i18n="featured_badge">✨ FEATURED</span>
     </div>
@@ -1158,7 +1174,10 @@
 
     <!-- खाद -->
     <a class="article-card" href="urea-guide-up.html" data-cat="khad" data-lang="hi" data-title="यूरिया DAP खाद कब कितना" style="--accent:#1d4ed8">
-      <div class="article-thumb" style="background:#dbeafe">🧪</div>
+      <div class="article-media" style="background:#dbeafe">
+        <img src="../images/diseases/urea-full-guide.webp" alt="यूरिया और DAP: कब और कितना दें?" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🧪</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
         <div class="article-title" data-i18n="a1_title">यूरिया और DAP: कब और कितना दें?<span class="hot-badge">HOT</span></div>
@@ -1167,11 +1186,13 @@
           <div class="article-views">👁 1.9k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="jaivik-khad.html" data-cat="khad" data-lang="hi" data-title="जैविक खाद घर पर बनाएं" style="--accent:#1d4ed8">
-      <div class="article-thumb" style="background:#dbeafe">♻️</div>
+      <div class="article-media" style="background:#dbeafe">
+        <img src="../images/fertilizers/vermicompost.webp" alt="घर पर जैविक खाद कैसे बनाएं?" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">♻️</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
         <div class="article-title" data-i18n="a2_title">घर पर जैविक खाद कैसे बनाएं?</div>
@@ -1180,12 +1201,14 @@
           <div class="article-views">👁 845</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- कीट -->
     <a class="article-card" href="keet-niyantran.html" data-cat="keet" data-lang="hi" data-title="कीट नियंत्रण देसी उपाय" style="--accent:#7e22ce">
-      <div class="article-thumb" style="background:#f3e8ff">🐛</div>
+      <div class="article-media" style="background:#f3e8ff">
+        <img src="../images/Pesticides/neem-oil.webp" alt="फसल में कीट नियंत्रण के देसी उपाय" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🐛</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#f3e8ff;color:#7e22ce" data-i18n="cat_keet_plain">कीट</span>
         <div class="article-title" data-i18n="a3_title">फसल में कीट नियंत्रण के देसी उपाय</div>
@@ -1194,12 +1217,29 @@
           <div class="article-views">👁 1.8k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
+    </a>
+
+    <a class="article-card" href="motha-ghaas-UP.html" data-cat="keet" data-lang="hi" data-title="motha ghaas nagarmotha kharpatwar weed control dawa मोथा घास मारने की दवा नागरमोथा खरपतवार नियंत्रण UP" style="--accent:#7e22ce">
+      <div class="article-media" style="background:#f3e8ff">
+        <img src="../images/articles/motha-ghaas-01.webp" alt="मोथा घास मारने की दवा — पहचान और जड़ से खात्मे के उपाय" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌿</span>
+      </div>
+      <div class="article-body">
+        <span class="article-tag" style="background:#f3e8ff;color:#7e22ce">खरपतवार</span>
+        <div class="article-title">मोथा घास मारने की दवा — पहचान और जड़ से खात्मे के उपाय</div>
+        <div class="article-footer">
+          <div class="article-meta">⏱️ <span>6 मिनट</span> <span class="meta-dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;margin:0 2px;"></span> <span>इस सप्ताह</span></div>
+          <div class="article-views">👁 120</div>
+        </div>
+      </div>
     </a>
 
     <!-- मौसम -->
     <a class="article-card" href="mausam-guide.html" data-cat="mausam" data-lang="hi" data-title="मौसम के अनुसार खेती कैसे करें" style="--accent:#0284c7">
-      <div class="article-thumb" style="background:#e0f2fe">🌦️</div>
+      <div class="article-media" style="background:#e0f2fe">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Cumulus%20clouds%20panorama.jpg?width=480" alt="मौसम के अनुसार खेती की योजना कैसे बनाएं?" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌦️</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0f2fe;color:#0284c7" data-i18n="cat_mausam_plain">मौसम</span>
         <div class="article-title" data-i18n="a4_title">मौसम के अनुसार खेती की योजना कैसे बनाएं?</div>
@@ -1208,12 +1248,14 @@
           <div class="article-views">👁 1.1k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- गन्ना -->
     <a class="article-card" href="ganna-rog.html" data-cat="ganna" data-lang="hi" data-title="गन्ने में लाल सड़न रोग पहचान उपचार" style="--accent:#16a34a">
-      <div class="article-thumb" style="background:#dcfce7">🎋</div>
+      <div class="article-media" style="background:#dcfce7">
+        <img src="../images/diseases/sugarcane-red-rot-shown-img.webp" alt="गन्ने में लाल सड़न रोग: पहचान व उपचार" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🎋</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
         <div class="article-title" data-i18n="a5_title">गन्ने में लाल सड़न रोग: पहचान व उपचार</div>
@@ -1222,11 +1264,13 @@
           <div class="article-views">👁 560</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="ganna-guide-up.html" data-cat="ganna" data-lang="hi" data-title="उत्तर प्रदेश गन्ने की खेती सम्पूर्ण मार्गदर्शिका" style="--accent:#16a34a">
-      <div class="article-thumb" style="background:#dcfce7">🎋</div>
+      <div class="article-media" style="background:#dcfce7">
+        <img src="../images/diseases/ganne-ke-khet-up.webp" alt="UP में गन्ने की खेती — सम्पूर्ण मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🎋</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
         <div class="article-title" data-i18n="a6_title">UP में गन्ने की खेती — सम्पूर्ण मार्गदर्शिका<span class="new-badge">NEW</span></div>
@@ -1235,12 +1279,14 @@
           <div class="article-views">👁 1.4k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- सब्जी -->
     <a class="article-card" href="potato_guide_up.html" data-cat="sabji" data-lang="hi" data-title="आलू की खेती उत्तर प्रदेश मार्गदर्शिका" style="--accent:#795548">
-      <div class="article-thumb" style="background:#efebe9">🥔</div>
+      <div class="article-media" style="background:#efebe9">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Patates.jpg?width=480" alt="UP में आलू की खेती — सम्पूर्ण मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🥔</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#efebe9;color:#795548" data-i18n="cat_sabji_plain">सब्जी</span>
         <div class="article-title" data-i18n="a7_title">UP में आलू की खेती — सम्पूर्ण मार्गदर्शिका<span class="new-badge">NEW</span></div>
@@ -1249,11 +1295,13 @@
           <div class="article-views">👁 920</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="tomato-guide-up.html" data-cat="sabji karnataka" data-lang="kn" data-title="टमाटर बेळे कर्नाटक tomato farming guide" style="--accent:#d32f2f">
-      <div class="article-thumb" style="background:#ffebee">🍅</div>
+      <div class="article-media" style="background:#ffebee">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Bright%20red%20tomato%20and%20cross%20section02.jpg?width=480" alt="ಟೊಮೆಟೊ ಬೆಳೆ — कर्नाटक टमाटर गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🍅</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffebee;color:#d32f2f" data-i18n="cat_sabji_plain">सब्जी</span>
         <div class="article-title" data-i18n="a8_title">ಟೊಮೆಟೊ ಬೆಳೆ — कर्नाटक टमाटर गाइड<span class="new-badge">NEW</span></div>
@@ -1262,11 +1310,13 @@
           <div class="article-views">👁 780</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="chilli-guide-karnataka.html" data-cat="sabji karnataka" data-lang="kn" data-title="मिर्ची बेळे कर्नाटक chilli farming guide" style="--accent:#c62828">
-      <div class="article-thumb" style="background:#ffebee">🌶️</div>
+      <div class="article-media" style="background:#ffebee">
+        <img src="../images/plants/black-chilli-karnataka.webp" alt="ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ — कर्नाटक मिर्ची गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌶️</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffebee;color:#c62828" data-i18n="cat_sabji_plain">सब्जी</span>
         <div class="article-title" data-i18n="a9_title">ಮೆಣಸಿನಕಾಯಿ ಬೆಳೆ — कर्नाटक मिर्ची गाइड<span class="new-badge">NEW</span></div>
@@ -1275,12 +1325,14 @@
           <div class="article-views">👁 650</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- कर्नाटक -->
     <a class="article-card" href="paddy-guide-karnataka.html" data-cat="karnataka" data-lang="kn" data-title="ಭತ್ತ ಬೆಳೆ कर्नाटक paddy rice farming" style="--accent:#558b2f">
-      <div class="article-thumb" style="background:#f1f8e9">🌾</div>
+      <div class="article-media" style="background:#f1f8e9">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Paddy%20field.jpg?width=480" alt="ಭತ್ತದ ಬೆಳೆ — कर्नाटक धान गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌾</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#f1f8e9;color:#558b2f" data-i18n="cat_karnataka_plain">कर्नाटक</span>
         <div class="article-title" data-i18n="a10_title">ಭತ್ತದ ಬೆಳೆ — कर्नाटक धान गाइड<span class="new-badge">NEW</span></div>
@@ -1289,11 +1341,13 @@
           <div class="article-views">👁 480</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="karnataka-monsoon.html" data-cat="mausam karnataka" data-lang="en" data-title="कर्नाटक मानसून monsoon farming plan kharif" style="--accent:#00695c">
-      <div class="article-thumb" style="background:#e0f2f1">🌧️</div>
+      <div class="article-media" style="background:#e0f2f1">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Monsoon%20Rain.jpg?width=480" alt="Karnataka Monsoon Farming Plan" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌧️</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0f2f1;color:#00695c" data-i18n="cat_karnataka_plain">कर्नाटक</span>
         <div class="article-title" data-i18n="a11_title">Karnataka Monsoon Farming Plan<span class="hot-badge">HOT</span></div>
@@ -1302,12 +1356,14 @@
           <div class="article-views">👁 2.1k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- खाद (अतिरिक्त) -->
     <a class="article-card" href="DAP-guide-up.html" data-cat="khad" data-lang="hi" data-title="DAP khad ka sahi upyog kab kitna kaise fertilizer guide" style="--accent:#1d4ed8">
-      <div class="article-thumb" style="background:#dbeafe">🧪</div>
+      <div class="article-media" style="background:#dbeafe">
+        <img src="../images/fertilizers/DAP.webp" alt="DAP खाद का सही उपयोग — कब, कितना, कैसे?" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🧪</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
         <div class="article-title" data-i18n="a12_title">DAP खाद का सही उपयोग — कब, कितना, कैसे?</div>
@@ -1316,11 +1372,13 @@
           <div class="article-views">👁 1.2k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="MOP-guide.html" data-cat="khad" data-lang="hi" data-title="MOP potash khad ka sahi upyog muriate of potash guide" style="--accent:#1d4ed8">
-      <div class="article-thumb" style="background:#dbeafe">🧪</div>
+      <div class="article-media" style="background:#dbeafe">
+        <img src="../images/fertilizers/MOP.webp" alt="MOP (पोटाश) का सही उपयोग — सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🧪</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dbeafe;color:#1d4ed8" data-i18n="cat_khad_plain">खाद</span>
         <div class="article-title" data-i18n="a13_title">MOP (पोटाश) का सही उपयोग — सम्पूर्ण गाइड</div>
@@ -1329,12 +1387,14 @@
           <div class="article-views">👁 640</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- गन्ना (अतिरिक्त) -->
     <a class="article-card" href="chini-utpadan.html" data-cat="ganna" data-lang="hi" data-title="UP chini utpadan sugar production sugarcane mill guide" style="--accent:#16a34a">
-      <div class="article-thumb" style="background:#dcfce7">🏭</div>
+      <div class="article-media" style="background:#dcfce7">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Sugar%202xmacro.jpg?width=480" alt="UP में चीनी उत्पादन — सम्पूर्ण मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🏭</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
         <div class="article-title" data-i18n="a14_title">UP में चीनी उत्पादन — सम्पूर्ण मार्गदर्शिका</div>
@@ -1343,11 +1403,13 @@
           <div class="article-views">👁 520</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="ganna-pricing-analytics-up.html" data-cat="ganna jankari" data-lang="hi" data-title="ganna mulya vishleshan SAP FRP mandi bhav sugarcane price analysis" style="--accent:#16a34a">
-      <div class="article-thumb" style="background:#dcfce7">📊</div>
+      <div class="article-media" style="background:#dcfce7">
+        <img src="../images/Ganna/ganna-SAP.webp" alt="गन्ने का मूल्य विश्लेषण 2025–26 — SAP, FRP व मंडी भाव" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">📊</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#dcfce7;color:#16a34a" data-i18n="cat_ganna_plain">गन्ना</span>
         <div class="article-title" data-i18n="a15_title">गन्ने का मूल्य विश्लेषण 2025–26 — SAP, FRP व मंडी भाव<span class="new-badge">NEW</span></div>
@@ -1356,12 +1418,14 @@
           <div class="article-views">👁 410</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- सब्जी (अतिरिक्त) -->
     <a class="article-card" href="garlic-farming-guide.html" data-cat="sabji" data-lang="hi" data-title="lahsun ki kheti garlic farming mandsaur MP guide" style="--accent:#795548">
-      <div class="article-thumb" style="background:#efebe9">🧄</div>
+      <div class="article-media" style="background:#efebe9">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Garlic.jpg?width=480" alt="लहसुन की खेती — मंदसौर/MP सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🧄</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#efebe9;color:#795548" data-i18n="cat_sabji_plain">सब्जी</span>
         <div class="article-title" data-i18n="a16_title">लहसुन की खेती — मंदसौर/MP सम्पूर्ण गाइड</div>
@@ -1370,11 +1434,13 @@
           <div class="article-views">👁 730</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="online-farming-guide.html" data-cat="sabji" data-lang="hi" data-title="pyaz ki kheti onion farming maharashtra MP guide" style="--accent:#795548">
-      <div class="article-thumb" style="background:#efebe9">🧅</div>
+      <div class="article-media" style="background:#efebe9">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Onion%20on%20White.JPG?width=480" alt="प्याज की खेती — महाराष्ट्र/MP सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🧅</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#efebe9;color:#795548" data-i18n="cat_sabji_plain">सब्जी</span>
         <div class="article-title" data-i18n="a17_title">प्याज की खेती — महाराष्ट्र/MP सम्पूर्ण गाइड</div>
@@ -1383,12 +1449,14 @@
           <div class="article-views">👁 690</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- फल -->
     <a class="article-card" href="aam-utpadan-up.html" data-cat="fruit" data-lang="hi" data-title="UP aam ki kheti mango farming uttar pradesh guide" style="--accent:#ea580c">
-      <div class="article-thumb" style="background:#ffedd5">🥭</div>
+      <div class="article-media" style="background:#ffedd5">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Hapus%20Mango.jpg?width=480" alt="UP में आम की खेती — सम्पूर्ण मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🥭</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffedd5;color:#ea580c" data-i18n="cat_fruit_plain">फल</span>
         <div class="article-title" data-i18n="a18_title">UP में आम की खेती — सम्पूर्ण मार्गदर्शिका</div>
@@ -1397,11 +1465,13 @@
           <div class="article-views">👁 880</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="aam-utpadan-mp.html" data-cat="fruit" data-lang="hi" data-title="MP aam ki kheti mango farming madhya pradesh guide" style="--accent:#ea580c">
-      <div class="article-thumb" style="background:#ffedd5">🥭</div>
+      <div class="article-media" style="background:#ffedd5">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Mango%204.jpg?width=480" alt="MP में आम की खेती — सम्पूर्ण मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🥭</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffedd5;color:#ea580c" data-i18n="cat_fruit_plain">फल</span>
         <div class="article-title" data-i18n="a19_title">MP में आम की खेती — सम्पूर्ण मार्गदर्शिका</div>
@@ -1410,11 +1480,13 @@
           <div class="article-views">👁 540</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="anaar-maharastra.html" data-cat="fruit" data-lang="hi" data-title="anaar ki kheti pomegranate farming maharashtra guide" style="--accent:#ea580c">
-      <div class="article-thumb" style="background:#ffedd5">🍒</div>
+      <div class="article-media" style="background:#ffedd5">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Pomegranate%20fruit%20-%20whole%20and%20piece%20with%20arils.jpg?width=480" alt="महाराष्ट्र में अनार की खेती — सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🍒</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffedd5;color:#ea580c" data-i18n="cat_fruit_plain">फल</span>
         <div class="article-title" data-i18n="a20_title">महाराष्ट्र में अनार की खेती — सम्पूर्ण गाइड</div>
@@ -1423,11 +1495,13 @@
           <div class="article-views">👁 460</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="apple-kashmir.html" data-cat="fruit" data-lang="hi" data-title="seb ki kheti apple farming kashmir guide" style="--accent:#ea580c">
-      <div class="article-thumb" style="background:#ffedd5">🍎</div>
+      <div class="article-media" style="background:#ffedd5">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Red%20Apple.jpg?width=480" alt="कश्मीर में सेब की खेती — सम्पूर्ण मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🍎</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffedd5;color:#ea580c" data-i18n="cat_fruit_plain">फल</span>
         <div class="article-title" data-i18n="a21_title">कश्मीर में सेब की खेती — सम्पूर्ण मार्गदर्शिका</div>
@@ -1436,11 +1510,13 @@
           <div class="article-views">👁 720</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="grapes-maharastra.html" data-cat="fruit" data-lang="hi" data-title="angur ki kheti grapes farming maharashtra guide" style="--accent:#ea580c">
-      <div class="article-thumb" style="background:#ffedd5">🍇</div>
+      <div class="article-media" style="background:#ffedd5">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Table%20grapes%20on%20white.jpg?width=480" alt="अंगूर की खेती — महाराष्ट्र सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🍇</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffedd5;color:#ea580c" data-i18n="cat_fruit_plain">फल</span>
         <div class="article-title" data-i18n="a22_title">अंगूर की खेती — महाराष्ट्र सम्पूर्ण गाइड</div>
@@ -1449,11 +1525,13 @@
           <div class="article-views">👁 580</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="litchi-guide-bihar.html" data-cat="fruit" data-lang="hi" data-title="litchi ki kheti farming muzaffarpur bihar guide" style="--accent:#ea580c">
-      <div class="article-thumb" style="background:#ffedd5">🫐</div>
+      <div class="article-media" style="background:#ffedd5">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Litchi%20chinensis%20Luc%20Viatour.jpg?width=480" alt="लीची की खेती — मुजफ्फरपुर/बिहार सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🫐</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#ffedd5;color:#ea580c" data-i18n="cat_fruit_plain">फल</span>
         <div class="article-title" data-i18n="a23_title">लीची की खेती — मुजफ्फरपुर/बिहार सम्पूर्ण गाइड</div>
@@ -1462,12 +1540,14 @@
           <div class="article-views">👁 430</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- अनाज -->
     <a class="article-card" href="gehuu-price-analytic-up.html" data-cat="anaaj jankari" data-lang="hi" data-title="UP gehu bhav vishleshan wheat price analysis mandi MSP" style="--accent:#ca8a04">
-      <div class="article-thumb" style="background:#fef9c3">📈</div>
+      <div class="article-media" style="background:#fef9c3">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Wheat%20close-up.JPG?width=480" alt="UP में गेहूं का भाव विश्लेषण 2025–26 — मंडी दर व MSP" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">📈</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#fef9c3;color:#ca8a04" data-i18n="cat_anaaj_plain">अनाज</span>
         <div class="article-title" data-i18n="a24_title">UP में गेहूं का भाव विश्लेषण 2025–26 — मंडी दर व MSP<span class="new-badge">NEW</span></div>
@@ -1476,11 +1556,13 @@
           <div class="article-views">👁 1.1k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="makka-guide-up.html" data-cat="anaaj" data-lang="hi" data-title="makka ki kheti maize corn farming UP guide" style="--accent:#ca8a04">
-      <div class="article-thumb" style="background:#fef9c3">🌽</div>
+      <div class="article-media" style="background:#fef9c3">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Corncobs.jpg?width=480" alt="मक्का की खेती — UP सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌽</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#fef9c3;color:#ca8a04" data-i18n="cat_anaaj_plain">अनाज</span>
         <div class="article-title" data-i18n="a25_title">मक्का की खेती — UP सम्पूर्ण गाइड</div>
@@ -1489,11 +1571,13 @@
           <div class="article-views">👁 610</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="sarso-guide-up.html" data-cat="anaaj" data-lang="hi" data-title="sarso ki kheti mustard farming rabi UP guide" style="--accent:#ca8a04">
-      <div class="article-thumb" style="background:#fef9c3">🌼</div>
+      <div class="article-media" style="background:#fef9c3">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Mustard%20field.jpg?width=480" alt="सरसों की खेती — सम्पूर्ण रबी मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌼</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#fef9c3;color:#ca8a04" data-i18n="cat_anaaj_plain">अनाज</span>
         <div class="article-title" data-i18n="a26_title">सरसों की खेती — सम्पूर्ण रबी मार्गदर्शिका</div>
@@ -1502,11 +1586,13 @@
           <div class="article-views">👁 560</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="soyabean-MP-guide.html" data-cat="anaaj" data-lang="hi" data-title="soyabean ki kheti soybean farming madhya pradesh MP guide" style="--accent:#ca8a04">
-      <div class="article-thumb" style="background:#fef9c3">🫘</div>
+      <div class="article-media" style="background:#fef9c3">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Soybean.USDA.jpg?width=480" alt="सोयाबीन की खेती — मध्य प्रदेश सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🫘</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#fef9c3;color:#ca8a04" data-i18n="cat_anaaj_plain">अनाज</span>
         <div class="article-title" data-i18n="a27_title">सोयाबीन की खेती — मध्य प्रदेश सम्पूर्ण गाइड</div>
@@ -1515,11 +1601,13 @@
           <div class="article-views">👁 490</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="moongfali-guide-rajisthan.html" data-cat="anaaj" data-lang="hi" data-title="moongfali ki kheti groundnut peanut farming rajasthan guide" style="--accent:#ca8a04">
-      <div class="article-thumb" style="background:#fef9c3">🥜</div>
+      <div class="article-media" style="background:#fef9c3">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Groundnut%20(Arachis%20hypogaea).jpg?width=480" alt="मूंगफली की खेती — राजस्थान सम्पूर्ण गाइड" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🥜</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#fef9c3;color:#ca8a04" data-i18n="cat_anaaj_plain">अनाज</span>
         <div class="article-title" data-i18n="a28_title">मूंगफली की खेती — राजस्थान सम्पूर्ण गाइड</div>
@@ -1528,12 +1616,14 @@
           <div class="article-views">👁 380</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <!-- जानकारी -->
     <a class="article-card" href="PM-kisan-samman-nidhi.html" data-cat="jankari" data-lang="hi" data-title="PM kisan samman nidhi yojana scheme 6000 jankari" style="--accent:#4f46e5">
-      <div class="article-thumb" style="background:#e0e7ff">🏛️</div>
+      <div class="article-media" style="background:#e0e7ff">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Rupee.jpg?width=480" alt="PM किसान सम्मान निधि — सम्पूर्ण जानकारी 2025-26" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🏛️</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0e7ff;color:#4f46e5" data-i18n="cat_jankari_plain">जानकारी</span>
         <div class="article-title" data-i18n="a29_title">PM किसान सम्मान निधि — सम्पूर्ण जानकारी 2025-26<span class="hot-badge">HOT</span></div>
@@ -1542,11 +1632,13 @@
           <div class="article-views">👁 2.4k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="land-price-up.html" data-cat="jankari" data-lang="hi" data-title="UP krishi bhumi ke daam land price district wise jameen bhav" style="--accent:#4f46e5">
-      <div class="article-thumb" style="background:#e0e7ff">🏞️</div>
+      <div class="article-media" style="background:#e0e7ff">
+        <img src="../images/Ganna/ganne-ke-khet.webp" alt="UP में कृषि भूमि के दाम 2025 — जिलेवार भाव" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🏞️</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0e7ff;color:#4f46e5" data-i18n="cat_jankari_plain">जानकारी</span>
         <div class="article-title" data-i18n="a30_title">UP में कृषि भूमि के दाम 2025 — जिलेवार भाव</div>
@@ -1555,11 +1647,13 @@
           <div class="article-views">👁 950</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
     <a class="article-card" href="up-agriculture-guide.html" data-cat="jankari" data-lang="hi" data-title="uttar pradesh ki kheti agriculture guide sampurna margdarshika" style="--accent:#4f46e5">
-      <div class="article-thumb" style="background:#e0e7ff">🌾</div>
+      <div class="article-media" style="background:#e0e7ff">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Indian%20farmer.jpg?width=480" alt="उत्तर प्रदेश की खेती — सम्पूर्ण मार्गदर्शिका" loading="lazy" decoding="async" onerror="this.closest('.article-media').classList.add('noimg');this.remove()">
+        <span class="article-media-emoji">🌾</span>
+      </div>
       <div class="article-body">
         <span class="article-tag" style="background:#e0e7ff;color:#4f46e5" data-i18n="cat_jankari_plain">जानकारी</span>
         <div class="article-title" data-i18n="a31_title">उत्तर प्रदेश की खेती — सम्पूर्ण मार्गदर्शिका</div>
@@ -1568,7 +1662,6 @@
           <div class="article-views">👁 1.3k</div>
         </div>
       </div>
-      <span class="article-arrow">›</span>
     </a>
 
   </div>
@@ -2118,6 +2211,52 @@ document.addEventListener('DOMContentLoaded', function () {
   // Apply saved (or default Hindi) language — this sets everything
   setLang(currentLang);
 });
+
+/* ═══════════════════════════════════════════
+   CARD IMAGES
+   Each card ships with an image baked into its markup so the grid is complete
+   for crawlers and on first paint. But the article's *own* hero image is the
+   real source of truth, so we re-read it live from /articles/meta: give an
+   article a hero image (or change it) and its card follows on the next view —
+   nothing here has to be edited or re-run.
+   The endpoint only reports images that exist on disk, so a card never gets
+   downgraded to a broken path.
+═══════════════════════════════════════════ */
+(async function syncCardImages() {
+  const API = window.KRASHIMITRA_API_BASE ||
+    (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+      ? 'http://' + location.hostname + ':8000'
+      : 'https://krashi-mitra-v1.onrender.com');
+  let meta;
+  try {
+    const res = await fetch(`${API}/articles/meta`);
+    if (!res.ok) return;
+    meta = await res.json();
+  } catch { return; }                       // offline / cold backend → baked images stand
+
+  document.querySelectorAll('#articles-list .article-card').forEach(card => {
+    const slug = (card.getAttribute('href') || '').replace(/^.*\//, '').replace(/\.html$/, '');
+    const own = meta[slug] && meta[slug].image;
+    if (!own) return;                       // article has no image of its own — keep the stand-in
+    const src = '../' + own;
+    const img = card.querySelector('.article-media img');
+    if (img) {
+      if (img.getAttribute('src') !== src) { img.classList.remove('contain'); img.src = src; }
+      return;
+    }
+    // Card fell back to the emoji (or its baked image 404'd) — put the real one in
+    const media = card.querySelector('.article-media');
+    if (!media) return;
+    const el = document.createElement('img');
+    el.loading = 'lazy';
+    el.decoding = 'async';
+    el.alt = (card.querySelector('.article-title')?.textContent || '').trim();
+    el.onerror = () => { media.classList.add('noimg'); el.remove(); };  // back to the emoji
+    el.src = src;
+    media.classList.remove('noimg');
+    media.appendChild(el);
+  });
+})();
 
 /* ═══════════════════════════════════════════
    DESKTOP NAV
