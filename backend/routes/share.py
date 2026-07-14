@@ -43,7 +43,7 @@ _TILES = [
     (("bajra", "pearl millet"),     "Bajra.JPG",                                 "49"),
     (("arhar", "tur", "red gram"),  "Toor dal.jpg",                              "de"),
     (("urad", "black gram"),        "Vigna mungo.jpg",                           "e2"),
-    (("moong", "green gram"),       "Mung beans.jpg",                            "5e"),
+    (("moong", "green gram"),       "Mung_beans.jpg",                            "5e"),
     (("sugarcane",),                "Sugar cane.jpg",                            "cb"),
     (("cotton",),                   "CottonPlant.JPG",                           "68"),
     (("lentil", "masur", "masoor"), "Lentil.jpg",                                "9d"),
@@ -51,9 +51,42 @@ _TILES = [
     (("brinjal",),                  "Aubergine.jpg",                             "fb"),
     (("cauliflower",),              "Cauliflower.jpg",                           "7c"),
     (("ginger",),                   "Ginger root.jpg",                           "cf"),
+
+    # The md5 prefix is the first two hex chars of md5(filename with underscores) —
+    # it is the CDN shard, not a label, so a guessed value 404s every thumb.
+    (("bhindi", "ladies finger", "okra"),      "Okra.jpg",                       "90"),
+    (("banana",),                              "Bananas.jpg",                    "4c"),
+    (("bitter gourd", "karela"),               "Bitter_melon.jpg",               "63"),
+    (("cucumber", "kheera"),                   "Cucumbers.jpg",                  "77"),
+    (("bottle gourd", "lauki"),                "Bottle_gourd.jpg",               "08"),
+    (("cabbage", "patta gobhi"),               "Cabbage.jpg",                    "70"),
+    (("pumpkin", "kaddu"),                     "Pumpkin.jpg",                    "f7"),
+    (("mango", "aam"),                         "Mango_fruit.jpg",                "64"),
+    (("lemon", "nimbu"),                       "Lemon.jpg",                      "e4"),
+    (("carrot", "gajar"),                      "Carrots.jpg",                    "c8"),
+    (("ridgeguard", "tori"),                   "Luffa_acutangula.jpg",           "59"),
+    (("coriander", "dhaniya"),                 "Coriander.jpg",                  "1b"),
+    (("raddish", "radish", "mooli"),           "Radish.jpg",                     "03"),
+    (("papaya", "papita"),                     "Papaya_fruit.jpg",               "99"),
+    (("capsicum", "shimla mirch"),             "Capsicum.jpg",                   "73"),
+    (("drumstick", "moringa", "sahjan"),       "Moringa_oleifera.jpg",           "f1"),
+    (("coconut", "nariyal"),                   "Coconut.jpg",                    "26"),
+    (("apple", "seb"),                         "Apple.jpg",                      "2b"),
+    (("mint", "pudina"),                       "Mint_leaves.jpg",                "ce"),
+    (("guava", "amrood"),                      "Guava_fruit.jpg",                "d6"),
+    (("jowar", "sorghum"),                     "Sorghum seed.jpg",               "2a"),
+    (("mousambi", "sweet lime"),               "Sweet limes of Salem.jpg",       "77"),
+    (("pomegranate", "anar"),                  "Pomegranate.jpg",                "5d"),
+    (("sesamum", "sesame", "til"),             "Yonghui preferred white sesame seeds.jpg", "65"),
+    (("watermelon", "water melon", "tarbooz"), "Watermelon.jpg",                 "b9"),
+    (("spinach", "palak"),                     "Spinach.jpg",                    "cd"),
+    (("grapes", "angoor"),                     "Grapes.jpg",                     "6b"),
+    (("barley", "jau"),                        "Barley.jpg",                     "e0"),
+    (("orange", "santra"),                     "Oranges - whole-halved-segment.jpg", "e3"),
+    (("cumin", "jeera"),                       "Cumin seed.jpg",                 "17"),
 ]
 
-_FALLBACK_IMAGE = f"{SITE}/images/og-banner.jpg"
+_FALLBACK_IMAGE = f"{SITE}/images/og-banner.webp"
 
 
 # Wikimedia only serves whitelisted thumb widths (https://w.wiki/GHai) —
@@ -67,6 +100,10 @@ _MAX_ORIG_WIDTH = {
     "Soybean.USDA.jpg": 640,
     "Aubergine.jpg":    681,
     "Cauliflower.jpg":  909,
+    "Radish.jpg":       579,
+    "Cabbage.jpg":      640,
+    "Barley.jpg":       640,
+    "Coriander.jpg":    800,
 }
 
 
@@ -101,6 +138,38 @@ _HI_CROP_EN = {
     "हल्दी": "turmeric", "मूंगफली": "groundnut", "अरहर": "arhar", "उड़द": "urad",
     "मूंग": "moong", "कपास": "cotton", "मसूर": "masur", "मटर": "peas",
     "बैंगन": "brinjal", "अदरक": "ginger",
+    
+    # ── 30 Additional Highly-Active Crops ──
+    "भिंडी": "bhindi",
+    "केला": "banana",
+    "करेला": "bitter gourd",
+    "खीरा": "cucumber",
+    "लौकी": "bottle gourd",
+    "पत्ता गोभी": "cabbage",
+    "कद्दू": "pumpkin",
+    "आम": "mango",
+    "नींबू": "lemon",
+    "गाजर": "carrot",
+    "तोरई": "ridgeguard",
+    "धनिया": "coriander",
+    "मूली": "raddish",
+    "पपीता": "papaya",
+    "शिमला मिर्च": "capsicum",
+    "सहजन": "drumstick",
+    "नारियल": "coconut",
+    "सेब": "apple",
+    "पुदीना": "mint",
+    "अमरूद": "guava",
+    "ज्वार": "jowar",
+    "मौसंबी": "mousambi",
+    "अनार": "pomegranate",
+    "तिल": "sesamum",
+    "तरबूज": "watermelon",
+    "पालक": "spinach",
+    "अंगूर": "grapes",
+    "जौ": "barley",
+    "संतरा": "orange",
+    "जीरा": "cumin",
 }
 
 

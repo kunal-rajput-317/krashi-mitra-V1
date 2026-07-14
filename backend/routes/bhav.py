@@ -154,6 +154,27 @@ def _slugify(text: str) -> str:
     return s.strip("-")
 
 
+def _state_svg_slug(state: str) -> str:
+    """'Uttar Pradesh' → 'uttar_pradesh' — matches the SVG filename in state_map_svgs/.
+    Handles Agmarknet's non-standard spellings ('Keralam', 'Chattisgarh', etc.)
+    by normalising them to the correct lowercase filename."""
+    _OVERRIDES = {
+        "Keralam":             "kerala",
+        "Kerala":              "kerala",
+        "Uttrakhand":          "uttarakhand",
+        "Uttarakhand":         "uttarakhand",
+        "Chattisgarh":         "chhattisgarh",
+        "Chhattisgarh":        "chhattisgarh",
+        "NCT of Delhi":        "delhi",
+        "Jammu and Kashmir":   "jammu_and_kashmir",
+        "Andaman and Nicobar": "andaman_and_nicobar",
+        "Pondicherry":         "puducherry",
+    }
+    if state in _OVERRIDES:
+        return _OVERRIDES[state]
+    return re.sub(r"[^a-z0-9]+", "_", state.lower()).strip("_")
+
+
 def _hindi_date(d: date) -> str:
     return f"{d.day} {_HI_MONTHS[d.month - 1]} {d.year}"
 
@@ -556,16 +577,64 @@ mask-image:linear-gradient(90deg,transparent,#000 90%)}
 border-radius:var(--radius-md);padding:15px 18px;box-shadow:var(--shadow-sm);margin-top:16px}
 .better h2{margin:0 0 4px}
 .better-sub{font-size:11.5px;color:var(--text-soft);margin-bottom:10px}
-.better ul{list-style:none}
-.better li{display:flex;align-items:center;justify-content:space-between;gap:12px;
-padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
-.better li:last-child{border-bottom:0}
-.better li a{color:var(--green-dark);text-decoration:none;font-weight:700}
-.better li a:hover{text-decoration:underline}
-.better .place small{display:block;font-size:11px;font-weight:600;color:var(--text-soft)}
-.better .gain{font-size:15px;font-weight:700;color:#1b7a3d;white-space:nowrap;text-align:right}
-.better .gain small{display:block;font-size:11px;font-weight:600;color:var(--text-soft)}
+.better ul{list-style:none;margin-top:10px}
+.better li{display:block;padding:0;border:none;margin-bottom:10px}
+.better li:last-child{margin-bottom:0}
+.better-mandi-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(26,60,46,.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  border-right: 5px solid var(--green-mid);
+  width: 100%;
+  max-width: 480px;
+}
+.better-mandi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(26,60,46,.08);
+  border-color: var(--green-light);
+}
+.bmc-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.bmc-market {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bmc-meta {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+.bmc-action {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-mid);
+  white-space: nowrap;
+  margin-left: 12px;
+}
 .better.flat{border-left-color:var(--green-light)}
+.better-message {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin-top: 6px;
+  line-height: 1.5;
+}
 
 /* ── trend chart ── */
 .card-w{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);
@@ -663,17 +732,222 @@ text-transform:uppercase;letter-spacing:.4px}
 background:var(--cream);border:1px solid var(--border);border-radius:14px;padding:3px 10px}
 .dlinks a:hover{background:var(--green-pale);color:var(--green-dark)}
 
-/* ── place cards (states / districts) ── */
-.place-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:12px}
-.place{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);
-padding:13px 15px;box-shadow:var(--shadow-sm);text-decoration:none;color:inherit;display:block;
-transition:transform .15s,box-shadow .15s,border-color .15s}
-.place:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--green-light)}
-.place-n{font-size:14.5px;font-weight:700;color:var(--text-dark)}
-.place-en{font-size:11px;font-weight:600;color:var(--text-soft);margin-top:1px}
-.place-r{font-size:17px;font-weight:700;color:var(--green-dark);margin-top:8px;letter-spacing:-.3px}
-.place-r small{font-size:11px;font-weight:600;color:var(--text-soft);margin-left:2px}
-.place-s{font-size:11px;font-weight:600;color:var(--text-soft);margin-top:2px}
+/* ── state place-cards — premium map card layout ── */
+.place-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+@media (max-width: 900px) {
+  .place-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .place-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.place {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(26,60,46,.04);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+  min-height: 120px;
+  border-right: 6px solid var(--green-mid);
+}
+.place:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(26,60,46,.1);
+  border-color: var(--green-light);
+}
+
+/* Left panel: map + watercolor blob + separator */
+.place-map-panel {
+  flex-shrink: 0;
+  width: 42%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-right: 1.5px dotted #cdd8cd;
+}
+.place-map-blob {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(139,195,74,0.3) 0%, rgba(205,220,57,0.15) 50%, transparent 75%);
+  pointer-events: none;
+}
+.place-map-svg {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 100px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.06));
+}
+
+/* Right panel: info */
+.place-info {
+  flex: 1;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  position: relative;
+  min-width: 0;
+}
+
+/* Leaf Watermark in Background */
+.place-deco-svg {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 50px;
+  height: 50px;
+  pointer-events: none;
+}
+
+.place-n {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a3c2e;
+  line-height: 1.1;
+}
+
+/* Divider with Leaf Ornament */
+.place-divider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 1px 0;
+}
+.place-line {
+  height: 1.5px;
+  background: var(--green-light);
+  flex: 1;
+  max-width: 35px;
+}
+.place-ornament {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--green-mid);
+}
+
+.place-en {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin-top: -2px;
+}
+
+/* District box with custom circle pin */
+.place-dist-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f9f4;
+  border: 1px solid #e2f0e5;
+  border-radius: 10px;
+  padding: 4px 8px;
+  width: fit-content;
+  margin: 1px 0;
+}
+.place-dist-pin-wrap {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #eaf2ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.place-dist-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.place-dist-text {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1;
+}
+.place-dist-num {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #1a3c2e;
+}
+.place-dist-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #4a5a52;
+}
+
+/* Segmented button pill */
+.place-btn-pill {
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  border: 1.5px solid #d0dfd4;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 145px;
+  height: 28px;
+  margin-top: 3px;
+  transition: all 0.2s ease;
+}
+.place-btn-left {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green-mid);
+  font-size: 11px;
+}
+.place-btn-divider {
+  width: 1px;
+  height: 14px;
+  background: #d0dfd4;
+}
+.place-btn-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1a3c2e;
+}
+.place:hover .place-btn-pill {
+  border-color: var(--green-mid);
+  background: #f3f9f4;
+}
+.place:hover .place-btn-divider {
+  background: var(--green-mid);
+}
+.place-btn-arrow {
+  transition: transform 0.2s;
+}
+.place:hover .place-btn-arrow {
+  transform: translateX(3px);
+}
 
 /* ── site footer ── */
 .km-footer{background:var(--green-dark);color:rgba(255,255,255,.7);margin-top:32px;padding:24px 20px}
@@ -837,7 +1111,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     layer on rules of their own without duplicating the tokens/header/footer —
     _CSS here is this module's own, so a caller's local override of a same-named
     variable is invisible to this closure; extra_css is the only way in."""
-    og = og_img or f"{SITE}/images/og-banner.jpg"
+    og = og_img or f"{SITE}/images/og-banner.webp"
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -1489,11 +1763,45 @@ def bhav_crop(c_slug: str):
     cards = []
     for ss, sn in sorted(state_map.items(), key=lambda kv: kv[1]):
         n = len(idx["dists"].get(cs, {}).get(ss, {}))
+        svg_slug = _state_svg_slug(sn)
+        svg_src  = f"/images/state_map_svgs/{svg_slug}.svg"
         cards.append(f"""<a class="place" href="/bhav/{cs}/{ss}">
-<div class="place-n">{escape(_hindi_state(sn))}</div>
-<div class="place-en">{escape(sn)}</div>
-<div class="place-r">भाव देखें →</div>
-<div class="place-s">{n} जिले</div>
+<div class="place-map-panel">
+  <div class="place-map-blob"></div>
+  <img class="place-map-svg" src="{escape(svg_src)}" alt="{escape(sn)} नक्शा" loading="lazy"
+    onerror="this.closest('.place-map-panel').style.display='none'">
+</div>
+<div class="place-info">
+  <svg class="place-deco-svg" viewBox="0 0 100 100" fill="none" stroke="#2d6a4f" stroke-opacity="0.07" stroke-width="2.5" stroke-linecap="round">
+    <path d="M10,90 Q40,80 70,30 Q80,15 90,10 M35,70 Q20,55 15,60 Q10,65 25,75 M50,53 Q38,38 30,40 Q22,42 40,58 M60,40 Q75,32 80,38 Q85,44 68,50" />
+  </svg>
+  <div class="place-n">{escape(_hindi_state(sn))}</div>
+  <div class="place-divider-wrap">
+    <div class="place-line"></div>
+    <span class="place-ornament">🌿</span>
+    <div class="place-line"></div>
+  </div>
+  <div class="place-en">{escape(sn)}</div>
+  <div class="place-dist-box">
+    <div class="place-dist-pin-wrap">
+      <svg class="place-dist-pin" viewBox="0 0 24 24" width="18" height="18" fill="#1a3c2e">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+      </svg>
+    </div>
+    <div class="place-dist-text">
+      <span class="place-dist-num">{n}</span>
+      <span class="place-dist-lbl">जिले</span>
+    </div>
+  </div>
+  <div class="place-btn-pill">
+    <div class="place-btn-left">📈</div>
+    <div class="place-btn-divider"></div>
+    <div class="place-btn-right">
+      <span>भाव देखें</span>
+      <span class="place-btn-arrow">→</span>
+    </div>
+  </div>
+</div>
 </a>""")
 
     # The highest-paying mandi in the country today — the reason to read this page
@@ -1509,10 +1817,13 @@ def bhav_crop(c_slug: str):
 <h2>🏆 आज देश में सबसे ज्यादा {escape(hi)} भाव</h2>
 <p class="better-sub">आज के मॉडल भाव के आधार पर</p>
 <ul><li>
-<span class="place"><a href="/bhav/{cs}/{_slugify(b_state)}/{_slugify(b_dist)}">{escape(best.get('market','-'))}</a>
-<small>{escape(b_dist)}, {escape(_hindi_state(b_state))}</small></span>
-<span class="gain">भाव देखें →</span>
-</li></ul></section>"""
+<a class="better-mandi-card" href="/bhav/{cs}/{_slugify(b_state)}/{_slugify(b_dist)}">
+  <div class="bmc-details">
+    <span class="bmc-market">{escape(best.get('market','-'))}</span>
+    <span class="bmc-meta">{escape(b_dist)}, {escape(_hindi_state(b_state))}</span>
+  </div>
+  <span class="bmc-action">भाव देखें →</span>
+</a></li></ul></section>"""
 
     photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
              f'alt="" aria-hidden="true" width="420" height="200">'
@@ -1620,9 +1931,13 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     top_html = ""
     if top:
         items = "".join(
-            f'<li><span class="place"><a href="/bhav/{cs}/{ss}/{_slugify(r.get("district",""))}">'
-            f'{escape(r.get("market","-"))}</a><small>{escape(r.get("district","-"))}</small></span>'
-            f'<span class="gain">भाव देखें →</span></li>'
+            f'<li><a class="better-mandi-card" href="/bhav/{cs}/{ss}/{_slugify(r.get("district",""))}">'
+            f'  <div class="bmc-details">'
+            f'    <span class="bmc-market">{escape(r.get("market","-"))}</span>'
+            f'    <span class="bmc-meta">{escape(r.get("district","-"))}</span>'
+            f'  </div>'
+            f'  <span class="bmc-action">भाव देखें →</span>'
+            f'</a></li>'
             for r in top)
         top_html = f"""<section class="better">
 <h2>🏆 {escape(hi_state)} में आज सबसे ज्यादा {escape(hi)} भाव</h2>
@@ -1762,10 +2077,13 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                        key=lambda x: x[2], reverse=True)[:5]
         if gains:
             items = "".join(
-                f'<li><span class="place">'
-                f'<a href="/bhav/{cs}/{ss}/{_slugify(dn)}">{escape(dn)}</a>'
-                f'<small>{escape(hi_state)}</small></span>'
-                f'<span class="gain">₹{avg:,}<small>+₹{diff:,} ज्यादा</small></span></li>'
+                f'<li><a class="better-mandi-card" href="/bhav/{cs}/{ss}/{_slugify(dn)}">'
+                f'  <div class="bmc-details">'
+                f'    <span class="bmc-market">{escape(dn)}</span>'
+                f'    <span class="bmc-meta">{escape(hi_state)}</span>'
+                f'  </div>'
+                f'  <span class="bmc-action">₹{avg:,} <small>(+₹{diff:,} ज्यादा)</small></span>'
+                f'</a></li>'
                 for dn, avg, diff in gains)
             better_html = f"""<section class="better">
 <h2>💰 {escape(hi_state)} में इन जिलों में {escape(hi)} का भाव ज्यादा है</h2>
@@ -1776,8 +2094,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
             better_html = f"""<section class="better flat">
 <h2>✅ {escape(district)} में भाव सबसे अच्छा है</h2>
 <p class="better-sub">आज के मॉडल भाव के आधार पर</p>
-<ul><li><span class="place">{escape(hi_state)} के किसी और जिले में {escape(hi)} का
-इससे बेहतर भाव नहीं मिल रहा।</span></li></ul></section>"""
+<p class="better-message">{escape(hi_state)} के किसी और जिले में {escape(hi)} का इससे बेहतर भाव नहीं मिल रहा।</p>
+</section>"""
 
     # ── chart series: the mandi with the longest history speaks for the district ──
     sparks = [[v for v in (_num(x) for x in (p.get("spark") or [])) if v] for p in prices]

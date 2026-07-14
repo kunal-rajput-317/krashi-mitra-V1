@@ -23,13 +23,44 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-_ARTICLES_DIR = Path(__file__).resolve().parents[2] / "frontend" / "articles"
+_FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+_ARTICLES_DIR = _FRONTEND_DIR / "articles"
 
 _PUBLISHED_RE = re.compile(r'"datePublished"\s*:\s*"([^"]+)"')
 _MODIFIED_RE = re.compile(r'"dateModified"\s*:\s*"([^"]+)"')
 
-# slug → {published, modified}, rebuilt when any article file's mtime changes.
+_OG_IMAGE_RE = re.compile(r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"')
+_IMG_SRC_RE = re.compile(r'<img[^>]+src="([^"]+)"')
+
+# Chrome that appears in every article and is never the article's subject.
+_NOT_A_HERO = ("krashimitra_logo", "ai chat icon", "og-banner", "whatsapp_icon", "favicon")
+
+# slug → {published, modified, image}, rebuilt when any article file's mtime changes.
 _cache: dict = {"stamp": None, "meta": {}}
+
+
+def _hero_image(text: str) -> str | None:
+    """The article's own lead image, as a frontend-relative path ("images/…").
+
+    og:image first (that is the article's declared representative image), then
+    the first content <img> in the body. The file must actually exist on disk:
+    several articles point at images that were never committed, and a missing
+    static file is served as the 200-HTML fallback page rather than a 404 — a
+    card would show a broken image and we would never hear about it.
+    """
+    candidates = _OG_IMAGE_RE.findall(text) + _IMG_SRC_RE.findall(text)
+    for raw in candidates:
+        low = raw.lower()
+        if any(skip in low for skip in _NOT_A_HERO):
+            continue
+        # https://krashimitra.in/images/x.png | ../images/x.png | /images/x.png
+        rel = re.sub(r"^https?://[^/]+/", "", raw).lstrip("./").lstrip("/")
+        rel = rel.split("?", 1)[0].split("#", 1)[0]
+        if not rel.startswith("images/"):
+            continue
+        if (_FRONTEND_DIR / rel).is_file():
+            return rel
+    return None
 
 
 def _scan() -> dict:
@@ -51,6 +82,9 @@ def _scan() -> dict:
             "published": published,
             # fall back to published so a card always has something to show
             "modified": modified or published,
+            # None when the article has no usable image of its own — the card
+            # keeps whatever stand-in image is baked into its markup.
+            "image": _hero_image(text),
         }
     return meta
 

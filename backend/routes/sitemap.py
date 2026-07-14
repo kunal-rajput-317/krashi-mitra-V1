@@ -63,7 +63,7 @@ CORE = [
     ("mandi.html",          "/mandi",           1.0, "daily",  ("hi", "en", "kn"), ()),
     ("meri_fasal.html",     "/meri_fasal",      0.9, "weekly", ("hi",), ()),
     ("shop.html",           "/shop",            0.9, "daily",  ("hi", "en", "kn"),
-     ("/images/shop-hero.png",)),
+     ("/images/shop-hero.webp",)),
     ("krashi_bajar.html",   "/krashi_bajar",    0.9, "daily",  ("hi", "en", "kn"), ()),
     ("chat.html",           "/chat",            0.9, "daily",  ("hi", "en", "kn"), ()),
     ("weather.html",        "/weather",         0.8, "daily",  ("hi", "en", "kn"), ()),
