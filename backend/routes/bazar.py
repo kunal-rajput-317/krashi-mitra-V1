@@ -42,6 +42,7 @@ from backend.database.db import (
     User, UserProfile, BazarPost, BazarLike, BazarComment, BazarFollow, get_db
 )
 from backend.utils.auth_utils import get_current_user, decode_access_token
+from backend.utils.security import assert_media_matches
 
 router = APIRouter(prefix="/bazar", tags=["bazar"])
 
@@ -302,12 +303,18 @@ async def _save_media(media: UploadFile) -> tuple:
     fname = f"{uuid.uuid4().hex}{ext}"
     dest  = BAZAR_UPLOAD_DIR / fname
     size  = 0
+    first = True
     try:
         with open(dest, "wb") as f:
             while True:
                 chunk = await media.read(1024 * 1024)
                 if not chunk:
                     break
+                if first:
+                    # The extension only told us what the caller *claims*.
+                    # Check the magic number before a single byte lands on disk.
+                    assert_media_matches(chunk[:16], media_type)
+                    first = False
                 size += len(chunk)
                 if size > max_bytes:
                     raise HTTPException(

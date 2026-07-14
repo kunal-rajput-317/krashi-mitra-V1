@@ -3,6 +3,7 @@
 # KrashiMitra — Farmer Profile Router
 # ============================================================
 
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -14,6 +15,9 @@ from typing import Optional
 
 from backend.database.db import UserProfile, User, BazarPost, BazarFollow, get_db
 from backend.utils.auth_utils import get_current_user
+from backend.utils.security import assert_media_matches
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -524,12 +528,17 @@ async def upload_avatar(
     filename = f"{uuid.uuid4().hex}{ext}"
     dest = PROFILE_UPLOAD_DIR / filename
     size = 0
+    first = True
     try:
         with open(dest, "wb") as f:
             while True:
                 chunk = await file.read(1024 * 1024)
                 if not chunk:
                     break
+                if first:
+                    # Extension says .jpg; the bytes have to agree.
+                    assert_media_matches(chunk[:16], "image")
+                    first = False
                 size += len(chunk)
                 if size > MAX_IMAGE_BYTES:
                     raise HTTPException(
@@ -542,7 +551,8 @@ async def upload_avatar(
         raise e
     except Exception as e:
         dest.unlink(missing_ok=True)
-        raise HTTPException(500, f"Upload error: {str(e)}")
+        logger.exception("[profile] avatar upload failed: %s", e)
+        raise HTTPException(500, "Upload नहीं हो पाया। दोबारा try करें।")
 
     # Save to db
     old_avatar = profile.avatar_url

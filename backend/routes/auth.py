@@ -13,17 +13,16 @@
 #   POST /resend-otp
 #   POST /forgot-password
 #   POST /reset-password
-#   GET  /me
-#   GET  /profile       ← frontend calls this after login
-#   PUT  /profile       ← frontend saveProfile()
-#   POST /profile       ← frontend saveProfile() fallback
-#   POST /user          ← legacy profile CRUD (unchanged)
-#   GET  /user/{id}     ← legacy
-#   PUT  /user/{id}     ← legacy
-#   GET  /users         ← legacy
+#   POST /auth/google
+#
+# Profile endpoints (GET/POST/PUT /profile) live in routes/profile.py.
+# The unauthenticated legacy CRUD (POST /user, GET|PUT /user/{id}, GET /users)
+# was removed — see the note at the bottom of this file.
 # ============================================================
 
+import logging
 import os
+import secrets
 import httpx
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -45,18 +44,86 @@ from backend.utils.auth_utils import (
     create_access_token,
     get_current_user,
 )
+from backend.utils.security import rate_limit
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Per-IP caps. The OTP endpoints each send an email on success, so without a
+# limit anyone can use /signup, /resend-otp or /forgot-password to mailbomb a
+# third party through our Resend account (and burn its quota). The verify
+# endpoints are capped per-IP as well as per-email so a spread-out brute force
+# can't sidestep the per-email counter.
+_LIMIT_SEND   = rate_limit("otp_send",   5,  15 * 60)   # 5 emails / 15 min / IP
+_LIMIT_VERIFY = rate_limit("otp_verify", 20, 15 * 60)   # 20 tries / 15 min / IP
+_LIMIT_LOGIN  = rate_limit("login",      20, 15 * 60)   # 20 logins / 15 min / IP
+
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+
+# Auth handlers used to return `detail=f"Login failed: {e}"`, putting the raw
+# exception — SQLAlchemy errors naming tables/columns, driver messages, file
+# paths — in the HTTP response where an attacker reads it for free. Log the
+# detail where we can see it; tell the caller nothing.
+_GENERIC_500 = "कुछ गड़बड़ हो गई। कृपया थोड़ी देर बाद दोबारा कोशिश करें।"
+
+
+def _log_error(label: str, exc: Exception) -> None:
+    logger.exception("[auth] %s failed: %s", label, exc)
+
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_WINDOW_MINUTES = 15
 _login_attempts = {}
 
+# Wrong-OTP tries allowed per email before the OTP is burned. A 6-digit code is
+# only 1,000,000 possibilities — with no cap, an attacker could call
+# /forgot-password for any known email and brute-force the reset code inside
+# its 10-minute window. Five tries makes that a 1-in-200,000 shot per code.
+MAX_OTP_ATTEMPTS = 5
+_otp_attempts = {}
+
+# Both dicts are keyed by caller-supplied email, so bound them: an attacker
+# posting a million unique addresses would otherwise grow them until the Render
+# instance OOMs. At the cap we drop the oldest half rather than clear outright,
+# so a flood can't wipe an in-progress lockout on a real account.
+_MAX_TRACKED_EMAILS = 10_000
+
 
 def _login_key(email: str) -> str:
     return (email or "").strip().lower()
+
+
+def _bound(store: dict) -> None:
+    if len(store) > _MAX_TRACKED_EMAILS:
+        for key in list(store)[: len(store) // 2]:
+            store.pop(key, None)
+
+
+def _otp_attempts_exceeded(email: str) -> bool:
+    """Count a wrong-OTP try. True once this email is over the cap."""
+    key = _login_key(email)
+    _bound(_otp_attempts)
+    count = _otp_attempts.get(key, 0) + 1
+    _otp_attempts[key] = count
+    return count >= MAX_OTP_ATTEMPTS
+
+
+def _clear_otp_attempts(email: str) -> None:
+    _otp_attempts.pop(_login_key(email), None)
+
+
+def _burn_otp(db: Session, user: User, email: str) -> dict:
+    """Too many wrong guesses — invalidate the code so the window closes."""
+    user.otp        = None
+    user.otp_expiry = None
+    db.commit()
+    _clear_otp_attempts(email)
+    return {
+        "success": False,
+        "message": "बहुत बार गलत OTP डाला गया। नया OTP मांगें।",
+        "data": {"otp_invalidated": True},
+    }
 
 
 def _norm_email(email: str) -> str:
@@ -99,6 +166,7 @@ def _find_user_by_email(db: Session, email: str) -> Optional[User]:
 def _attempt_state(email: str) -> dict:
     key = _login_key(email)
     now = datetime.utcnow()
+    _bound(_login_attempts)
     state = _login_attempts.get(key)
     if not state or state["reset_at"] <= now:
         state = {"count": 0, "reset_at": now + timedelta(minutes=LOGIN_WINDOW_MINUTES)}
@@ -180,21 +248,6 @@ class ProfileUpdateRequest(BaseModel):
     crops_grown:        Optional[str] = None
     preferred_language: Optional[str] = None
 
-# Legacy profile models — unchanged
-class UserProfileCreate(BaseModel):
-    name:         str
-    village:      Optional[str] = None
-    district:     Optional[str] = None
-    primary_crop: str = "Wheat"
-    language:     str = "english"
-
-class UserProfileUpdate(BaseModel):
-    name:         Optional[str] = None
-    village:      Optional[str] = None
-    district:     Optional[str] = None
-    primary_crop: Optional[str] = None
-    language:     Optional[str] = None
-
 
 # (Profile-building helpers were removed along with the duplicate /profile
 #  handlers — the canonical profile logic lives in routes/profile.py.)
@@ -202,7 +255,7 @@ class UserProfileUpdate(BaseModel):
 
 # ── AUTH ENDPOINTS ───────────────────────────────────────────
 
-@router.post("/signup")
+@router.post("/signup", dependencies=[Depends(_LIMIT_SEND)])
 def signup(body: SignupRequest, db: Session = Depends(get_db)):
     try:
         if body.confirm_password is not None and body.password != body.confirm_password:
@@ -222,6 +275,7 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
             existing.otp        = otp
             existing.otp_expiry = otp_expiry_time()
             db.commit()
+            _clear_otp_attempts(body.email)   # fresh code → fresh 5 tries
             email_sent = send_otp_email(body.email, otp, purpose="verification")
             return {
                 "success": True,
@@ -259,10 +313,11 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "OTP sent", "data": {}}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Signup failed: " + str(e))
+        _log_error("Signup", e)
+        raise HTTPException(status_code=500, detail=_GENERIC_500)
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(_LIMIT_LOGIN)])
 def login(body: LoginRequest, db: Session = Depends(get_db)):
     try:
         blocked = _blocked_login_response(body.email)
@@ -284,10 +339,11 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "Login successful", "data": {"token": token}}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Login failed: " + str(e))
+        _log_error("Login", e)
+        raise HTTPException(status_code=500, detail=_GENERIC_500)
 
 
-@router.post("/verify-otp")
+@router.post("/verify-otp", dependencies=[Depends(_LIMIT_VERIFY)])
 def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
     try:
         user = _find_user_by_email(db, body.email)
@@ -299,21 +355,25 @@ def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
             return {"success": False, "message": "OTP नहीं मिला। Signup दोबारा करें।", "data": {}}
         if is_otp_expired(user.otp_expiry):
             return {"success": False, "message": "OTP expire हो गया। Signup दोबारा करें।", "data": {}}
-        if user.otp != body.otp.strip():
+        if not secrets.compare_digest(user.otp, body.otp.strip()):
+            if _otp_attempts_exceeded(body.email):
+                return _burn_otp(db, user, body.email)
             return {"success": False, "message": "OTP गलत है। दोबारा check करें।", "data": {}}
 
         user.is_verified = True
         user.otp         = None
         user.otp_expiry  = None
+        _clear_otp_attempts(body.email)
         _ensure_profile(db, user)   # verified user → profile row exists
         db.commit()
         return {"success": True, "message": "Email verify हो गया। अब login करें।", "data": {}}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail="OTP verification failed: " + str(e))
+        _log_error("OTP verification", e)
+        raise HTTPException(status_code=500, detail=_GENERIC_500)
 
 
-@router.post("/resend-otp")
+@router.post("/resend-otp", dependencies=[Depends(_LIMIT_SEND)])
 def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
     try:
         user = _find_user_by_email(db, body.email)
@@ -326,6 +386,7 @@ def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
         user.otp        = otp
         user.otp_expiry = otp_expiry_time()
         db.commit()
+        _clear_otp_attempts(body.email)   # fresh code → fresh 5 tries
 
         email_sent = send_otp_email(body.email, otp, purpose="verification")
         if not email_sent:
@@ -333,10 +394,11 @@ def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "अगर यह email registered है तो OTP भेज दिया गया है।", "data": {}}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Resend OTP failed: " + str(e))
+        _log_error("Resend OTP", e)
+        raise HTTPException(status_code=500, detail=_GENERIC_500)
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", dependencies=[Depends(_LIMIT_SEND)])
 def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     try:
         user = _find_user_by_email(db, body.email)
@@ -349,6 +411,7 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
         user.otp        = otp
         user.otp_expiry = otp_expiry_time()
         db.commit()
+        _clear_otp_attempts(body.email)   # fresh code → fresh 5 tries
 
         email_sent = send_otp_email(body.email, otp, purpose="reset")
         if not email_sent:
@@ -356,10 +419,11 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "अगर यह email registered है तो OTP भेज दिया गया है।", "data": {}}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Forgot password failed: " + str(e))
+        _log_error("Forgot password", e)
+        raise HTTPException(status_code=500, detail=_GENERIC_500)
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", dependencies=[Depends(_LIMIT_VERIFY)])
 def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
     try:
         if body.confirm_password is not None and body.new_password != body.confirm_password:
@@ -372,7 +436,9 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
             return {"success": False, "message": "Reset OTP नहीं मिला। पहले Forgot Password करें।", "data": {}}
         if is_otp_expired(user.otp_expiry):
             return {"success": False, "message": "OTP expire हो गया। Forgot Password दोबारा करें।", "data": {}}
-        if user.otp != body.otp.strip():
+        if not secrets.compare_digest(user.otp, body.otp.strip()):
+            if _otp_attempts_exceeded(body.email):
+                return _burn_otp(db, user, body.email)
             return {"success": False, "message": "OTP गलत है। दोबारा check करें।", "data": {}}
 
         err = validate_password_strength(body.new_password)
@@ -383,11 +449,13 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
         user.otp             = None
         user.otp_expiry      = None
         db.commit()
+        _clear_otp_attempts(body.email)
         _clear_failed_login(body.email)
         return {"success": True, "message": "Password reset हो गया। अब login करें।", "data": {}}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Reset password failed: " + str(e))
+        _log_error("Reset password", e)
+        raise HTTPException(status_code=500, detail=_GENERIC_500)
 
 
 # ── GOOGLE OAUTH ─────────────────────────────────────────────
@@ -460,7 +528,8 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
     except httpx.TimeoutException:
         return {"success": False, "message": "Google server से response नहीं मिला। दोबारा try करें।", "data": {}}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Google login failed: " + str(e))
+        _log_error("Google login", e)
+        raise HTTPException(status_code=500, detail=_GENERIC_500)
 
 
 # ── /profile and /me ─────────────────────────────────────────
@@ -473,65 +542,13 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
 # that. Do not re-add /profile here.
 
 
-# ── LEGACY PROFILE CRUD (UNCHANGED) ──────────────────────────
-
-@router.post("/user")
-def create_user(body: UserProfileCreate, db: Session = Depends(get_db)):
-    user = UserProfile(
-        name         = body.name,
-        village      = body.village,
-        district     = body.district,
-        primary_crop = body.primary_crop,
-        language     = body.language
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return {"message": "Profile created.", "user": {
-        "id": user.id, "name": user.name, "village": user.village,
-        "district": user.district, "primary_crop": user.primary_crop,
-        "language": user.language, "created_at": str(user.created_at)
-    }}
-
-
-@router.get("/user/{user_id}")
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(UserProfile).filter(UserProfile.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
-    return {
-        "id": user.id, "name": user.name, "village": user.village,
-        "district": user.district, "primary_crop": user.primary_crop,
-        "language": user.language, "created_at": str(user.created_at)
-    }
-
-
-@router.put("/user/{user_id}")
-def update_user(user_id: int, body: UserProfileUpdate, db: Session = Depends(get_db)):
-    user = db.query(UserProfile).filter(UserProfile.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
-    if body.name:         user.name         = body.name
-    if body.village:      user.village      = body.village
-    if body.district:     user.district     = body.district
-    if body.primary_crop: user.primary_crop = body.primary_crop
-    if body.language:     user.language     = body.language
-    user.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(user)
-    return {"message": "Profile updated.", "user": {
-        "id": user.id, "name": user.name, "village": user.village,
-        "district": user.district, "primary_crop": user.primary_crop,
-        "language": user.language
-    }}
-
-
-@router.get("/users")
-def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(UserProfile).all()
-    return {"total": len(users), "users": [
-        {"id": u.id, "name": u.name, "district": u.district, "primary_crop": u.primary_crop}
-        for u in users
-    ]}
+# ── LEGACY PROFILE CRUD — REMOVED ────────────────────────────
+# POST /user, GET /user/{id}, PUT /user/{id} and GET /users used to live here.
+# All four were unauthenticated: GET /users dumped every farmer's name,
+# district and crop to anonymous callers, and PUT /user/{id} let anyone rewrite
+# anyone else's profile by guessing an integer. Nothing in frontend/ or admin/
+# called them — they were dead code with a live IDOR. The authenticated
+# equivalents live in routes/profile.py (prefix="/profile"), which reads the
+# user from the JWT. Do not re-add these.
 
 print("✅ auth.py loaded successfully")

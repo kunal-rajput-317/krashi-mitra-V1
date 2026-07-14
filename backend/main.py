@@ -29,6 +29,15 @@ load_dotenv()
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
 from backend.routes import cart  # ensure CartItem model registered before create_all
+from backend.utils.security import (
+    SecurityHeadersMiddleware,
+    assert_secrets_configured,
+)
+
+# Fail fast in production if JWT_SECRET / ADMIN_PASS are unset or still the
+# public repo defaults. Raises here, before any router is mounted, so a
+# misconfigured deploy never serves a request with a forgeable token.
+assert_secrets_configured()
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
@@ -107,7 +116,10 @@ cors_origins = list(dict.fromkeys(cors_origins))
 # can hit the API; in production only localhost is allowed via regex and the
 # real origins come from the explicit allow_origins list above.
 if IS_PROD:
-    local_origin_regex = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+    # Anchored: without ^...$ this would also be a prefix of hostile origins
+    # like http://localhost.attacker.com (Starlette fullmatch()es today, but
+    # don't leave the pattern depending on that).
+    local_origin_regex = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
 else:
     local_origin_regex = (
         r"^https?://("
@@ -127,6 +139,8 @@ app.add_middleware(
     allow_credentials=True,
     expose_headers=["*"],
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 async def _warm_up_models():

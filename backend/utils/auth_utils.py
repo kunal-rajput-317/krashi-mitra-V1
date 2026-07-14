@@ -10,7 +10,7 @@
 
 import os
 import re
-import random
+import secrets
 import smtplib
 import traceback
 import httpx
@@ -50,16 +50,36 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # ── Password Strength Validation ─────────────────────────────
 
+# Passwords seen constantly in Indian sign-up data — a length+charclass rule
+# alone happily accepts every one of them.
+_COMMON_PASSWORDS = {
+    "password", "password1", "password123", "passw0rd",
+    "12345678", "123456789", "1234567890", "qwerty123", "qwertyui",
+    "abc12345", "admin123", "welcome1", "iloveyou", "letmein1",
+    "india123", "krishna1", "krishna123", "farmer123", "kisan123",
+    "krashimitra", "krashi123",
+}
+
+
 def validate_password_strength(password: str) -> Optional[str]:
     """
     Validate password meets minimum requirements.
-    Rules: min 6 chars, at least 1 letter, at least 1 number.
+    Rules: 8–70 chars, at least one letter and one number, not a common password.
     Returns None if valid, Hindi error string if invalid.
+
+    The old rule was length>=6 only — the docstring claimed it enforced a letter
+    and a number, but no such check existed, so "123456" was a valid password.
     """
     if len(password) > 70:
         return "पासवर्ड 70 characters से छोटा होना चाहिए।"
-    if len(password) < 6:
-        return "Password कम से कम 6 characters का होना चाहिए।"
+    if len(password) < 8:
+        return "Password कम से कम 8 characters का होना चाहिए।"
+    if not re.search(r"[A-Za-z]", password):
+        return "Password में कम से कम एक अक्षर (letter) होना चाहिए।"
+    if not re.search(r"\d", password):
+        return "Password में कम से कम एक अंक (number) होना चाहिए।"
+    if password.lower() in _COMMON_PASSWORDS:
+        return "यह password बहुत आम है। कोई और password चुनें।"
     return None
 
 
@@ -116,8 +136,14 @@ def get_current_user(
 OTP_EXPIRY_MINUTES = 10
 
 def generate_otp() -> str:
-    """Generate a 6-digit numeric OTP."""
-    return str(random.randint(100000, 999999))
+    """Generate a 6-digit numeric OTP.
+
+    Uses `secrets`, not `random`: random.randint draws from a Mersenne Twister
+    whose internal state is recoverable from prior outputs, so an attacker who
+    can trigger and observe a few OTPs (e.g. via their own signups) could
+    predict the next one issued — including a victim's password-reset code.
+    """
+    return f"{secrets.randbelow(1_000_000):06d}"
 
 def otp_expiry_time() -> datetime:
     """Return UTC expiry timestamp (10 min from now)."""

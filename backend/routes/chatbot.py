@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 
 from backend.config import get_setting
 from backend.database.db import ChatHistory, get_db
+from backend.utils.auth_utils import get_current_user
+from backend.utils.security import rate_limit
 from backend.services.chatbot_service import (
     build_context,
     build_prompt,
@@ -80,7 +82,14 @@ def is_weather_question(q: str) -> bool:
 PIPELINE_TIMEOUT = float(os.getenv("PIPELINE_TIMEOUT", "50"))  # seconds
 
 
-@router.post("/ask")
+# /ask is deliberately open to guests (farmers ask before signing up), and every
+# miss costs a paid Gemini call. Without a cap a single shell loop can drain the
+# API quota — and the bill — in an afternoon. 15/min absorbs a real person
+# typing follow-ups while making bulk abuse pointless.
+_LIMIT_ASK = rate_limit("ask", 15, 60)
+
+
+@router.post("/ask", dependencies=[Depends(_LIMIT_ASK)])
 async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
     """
     Full pipeline: Cache → RAG → Gemini (async) → Ollama → error.
@@ -236,8 +245,19 @@ def _save_to_db(db: Session, body: Question, question: str, answer: str):
         db.rollback()
 
 
-@router.get("/chat/history/{user_id}")
-def get_chat_history(user_id: int, db: Session = Depends(get_db)):
+@router.get("/chat/history")
+def get_chat_history(
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    """Your own chat history.
+
+    Was GET /chat/history/{user_id}, which took the id straight from the URL
+    and never checked the token — any caller could enumerate integers and read
+    every farmer's conversations. The id now comes from the JWT only, so
+    there's nothing left to tamper with.
+    """
+    user_id = current_user["user_id"]
     rows = db.query(ChatHistory).filter(
         ChatHistory.user_id == user_id
     ).order_by(ChatHistory.created_at.asc()).all()
