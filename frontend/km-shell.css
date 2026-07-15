@@ -1,0 +1,158 @@
+/* ============================================================
+   KrashiMitra — Universal page shell (chrome)
+   ------------------------------------------------------------
+   ONE source of truth for the header / drawer / blue bar / footer
+   that every page shares. Ported from the /bhav server shell
+   (backend/routes/bhav.py _CSS) so static pages and the ~10,000
+   server-rendered SEO pages look identical.
+
+   - Self-contained: uses its own --km-* tokens with literal fall-
+     back colours, so it renders the same regardless of whatever
+     :root a page defines.
+   - Reuses the existing class names (.main-header, .sidebar-drawer*,
+     .header-avatar-btn, .hamburger-btn, .commodity-navbar) so the
+     shared scripts (drawer-menu.js, bottomnav.js, api-config.js,
+     fab-autohide.js) keep working with no change.
+
+   Include once, high in <head>:
+     <link rel="stylesheet" href="/km-shell.css">   (or ../ from articles/)
+   ============================================================ */
+
+:root{
+  --km-green-dark:#1a3c2e; --km-green-mid:#2d6a4f; --km-green-light:#52b788;
+  --km-green-pale:#d8f3dc; --km-amber:#e9a825; --km-cream:#f5f7f4; --km-white:#fff;
+  --km-text-dark:#1a2e23; --km-text-mid:#4a5a52; --km-text-soft:#7c8983;
+  --km-border:#e5e9e6; --km-blue:#17268c;
+  --km-font-serif:'Noto Serif Devanagari','Playfair Display',serif;
+  --km-font-body:'DM Sans','Noto Sans Devanagari',sans-serif;
+}
+
+/* ── amber helpline strip ── */
+.pre-topbar{background:var(--km-amber);color:#1a2e1e;display:flex;align-items:center;
+  justify-content:center;gap:10px;padding:7px 16px;font-size:13px;font-weight:600;
+  text-align:center;font-family:var(--km-font-body);box-sizing:border-box}
+.pre-topbar-helpline{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;opacity:.9}
+.pre-topbar-helpline:hover{opacity:1;text-decoration:underline}
+.pre-topbar-phone-icon{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;font-size:10px}
+
+/* ── desktop utility bar (hidden on phones) ── */
+.top-utility-bar{background:var(--km-white);border-bottom:1px solid var(--km-border);
+  padding:6px 0;font-size:12px;font-family:var(--km-font-body)}
+.top-utility-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;
+  align-items:center;padding:0 80px}
+.top-utility-left,.top-utility-right{display:flex;align-items:center;gap:12px}
+.top-utility-link{color:var(--km-text-mid);text-decoration:none;font-weight:600}
+.top-utility-link:hover{color:var(--km-green-mid)}
+.top-utility-divider{color:var(--km-border)}
+.top-utility-helpline{display:inline-flex;align-items:center;gap:6px;color:var(--km-green-dark);
+  font-weight:700;text-decoration:none}
+.top-utility-helpline:hover{opacity:.8;text-decoration:underline}
+
+/* ── white sticky main header ── */
+.main-header{position:sticky;top:0;z-index:100;background:var(--km-white);
+  border-bottom:1px solid var(--km-border);box-shadow:0 1px 3px rgba(26,60,46,.05);
+  font-family:var(--km-font-body)}
+.main-header-inner{max-width:1280px;margin:0 auto;padding:10px 80px;display:grid;
+  grid-template-columns:auto auto 1fr auto;column-gap:28px;align-items:center}
+.header-left-group{display:flex;align-items:center;gap:14px}
+.header-logo-link{display:flex;align-items:center;gap:8px;text-decoration:none}
+.header-logo-circle{width:38px;height:38px;border-radius:50%;object-fit:cover;
+  box-shadow:0 0 0 3px var(--km-green-pale)}
+.header-logo-text{font-family:var(--km-font-serif);font-size:19px;font-weight:800;color:var(--km-green-dark)}
+.hamburger-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--km-text-dark);
+  padding:4px;display:flex;align-items:center;justify-content:center;border-radius:4px;line-height:1}
+.hamburger-btn:hover{background:var(--km-cream)}
+/* background/padding reset guards against a page's global `nav{}` rule
+   bleeding into this header nav (e.g. help.html's dark-green nav bar) */
+.main-header .header-nav{display:flex;align-items:center;gap:24px;justify-self:center;
+  background:transparent;padding:0;margin:0;box-shadow:none;border:0;height:auto;position:static}
+.header-nav-link{font-size:14px;font-weight:700;color:var(--km-text-dark);text-decoration:none;
+  padding:6px 0;border-bottom:2px solid transparent;white-space:nowrap}
+.header-nav-link:hover{color:var(--km-green-mid)}
+.header-nav-link.active{color:var(--km-green-mid);border-bottom-color:var(--km-green-mid)}
+.header-right-group{display:flex;align-items:center;gap:12px}
+.header-avatar-btn{width:32px;height:32px;border-radius:50%;background:var(--km-cream);
+  border:1px solid var(--km-border);font-size:14px;display:flex;align-items:center;
+  justify-content:center;text-decoration:none;overflow:hidden;flex-shrink:0;cursor:pointer;color:inherit}
+.header-avatar-btn img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+
+/* ── header language picker ── */
+.km-hlang{position:relative}
+.km-hlang-btn{display:flex;align-items:center;gap:5px;background:var(--km-cream);
+  border:1px solid var(--km-border);border-radius:16px;padding:5px 10px;cursor:pointer;
+  font-family:var(--km-font-body);font-size:12.5px;font-weight:700;color:var(--km-text-dark);line-height:1}
+.km-hlang-btn:hover{border-color:var(--km-green-light)}
+.km-hlang-caret{font-size:9px;color:var(--km-text-soft)}
+.km-hlang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:150px;
+  background:var(--km-white);border:1px solid var(--km-border);border-radius:12px;
+  box-shadow:0 8px 24px rgba(20,40,30,.14);padding:5px;z-index:120;flex-direction:column;gap:2px}
+.km-hlang-menu.open{display:flex}
+.km-hlang-menu button{display:flex;align-items:center;gap:8px;text-align:left;background:none;
+  border:none;border-radius:8px;padding:8px 10px;font-family:var(--km-font-body);font-size:13px;
+  font-weight:600;color:var(--km-text-dark);cursor:pointer}
+.km-hlang-menu button:hover{background:var(--km-cream)}
+.km-hlang-menu button.active{background:var(--km-green-pale);color:var(--km-green-dark);font-weight:800}
+.km-hlang-code{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;
+  padding:0 4px;border-radius:6px;background:var(--km-green-pale);color:var(--km-green-dark);
+  font-size:11px;font-weight:800}
+
+/* ── sidebar drawer (drawer-menu.js regroups the links) ── */
+.sidebar-drawer-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,20,.5);z-index:4000}
+.sidebar-drawer-overlay.open{display:flex}
+.sidebar-drawer{width:288px;max-width:84vw;background:var(--km-white);height:100%;
+  box-shadow:6px 0 28px rgba(0,0,0,.18);display:flex;flex-direction:column;
+  font-family:var(--km-font-body);animation:km-slide-right .2s cubic-bezier(.16,1,.3,1)}
+@keyframes km-slide-right{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+.sidebar-drawer-header{padding:18px 16px 12px 20px;display:flex;align-items:center;justify-content:space-between}
+.sidebar-drawer-title{font-size:17px;font-weight:800;color:var(--km-text-dark)}
+.sidebar-drawer-close{background:var(--km-cream);border:none;font-size:15px;cursor:pointer;
+  color:var(--km-text-mid);width:32px;height:32px;border-radius:50%}
+.sidebar-drawer-links{flex:1;padding:6px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.sidebar-drawer-link{display:flex;align-items:center;gap:13px;min-height:44px;padding:10px 12px;
+  font-size:14px;font-weight:700;color:var(--km-text-dark);text-decoration:none;border-radius:10px;
+  border-left:3px solid transparent}
+.sidebar-drawer-link-icon{font-size:18px;width:20px;text-align:center}
+.sidebar-drawer-link:hover{background:var(--km-cream)}
+.sidebar-drawer-link.active{background:var(--km-green-pale);color:var(--km-green-dark);border-left-color:var(--km-green-dark)}
+
+/* ── blue commodity / quick-nav bar (content differs per page) ── */
+.commodity-navbar{background:var(--km-blue);position:sticky;top:59px;z-index:90}
+.cnav-inner{display:flex;align-items:stretch;padding:0 20px;overflow-x:auto;scrollbar-width:none;
+  max-width:1280px;margin:0 auto}
+.cnav-inner::-webkit-scrollbar{display:none}
+.cnav-item{color:rgba(255,255,255,.9);font-size:13px;font-weight:600;text-decoration:none;
+  padding:11px 14px;white-space:nowrap;display:inline-block;font-family:var(--km-font-body)}
+.cnav-item:hover{background:rgba(255,255,255,.09);color:#fff}
+.cnav-item.active{color:#fff;background:rgba(255,255,255,.14)}
+
+/* ── full-page nav loading overlay ── */
+.km-nav-loading{position:fixed;inset:0;background:rgba(245,247,244,.75);z-index:9999;
+  display:none;align-items:center;justify-content:center}
+.km-nav-loading.show{display:flex}
+.km-nav-spinner{width:38px;height:38px;border:4px solid var(--km-green-pale);
+  border-top-color:var(--km-green-mid);border-radius:50%;animation:km-nav-spin .7s linear infinite}
+@keyframes km-nav-spin{to{transform:rotate(360deg)}}
+
+/* ── canonical footer ── */
+.km-footer{background:var(--km-green-dark);color:rgba(255,255,255,.7);margin-top:32px;
+  padding:24px 20px;font-family:var(--km-font-body)}
+.km-footer-inner{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;
+  justify-content:space-between;align-items:center;font-size:12.5px}
+.km-footer-brand{font-family:var(--km-font-serif);font-size:15px;font-weight:700;color:var(--km-white)}
+.km-footer-nav{display:flex;flex-wrap:wrap;gap:14px}
+.km-footer a{color:rgba(255,255,255,.85);text-decoration:none;font-weight:600}
+.km-footer a:hover{color:var(--km-white);text-decoration:underline}
+.km-footer-note{width:100%;font-size:11.5px;color:rgba(255,255,255,.55);
+  border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+
+/* ── phone layout ── */
+@media(max-width:1024px){
+  .top-utility-bar{display:none}
+  .main-header-inner{display:flex;gap:14px;padding:10px 12px;align-items:center}
+  .main-header-inner>.hamburger-btn{order:1;flex:0 0 auto}
+  .main-header-inner>.header-left-group{order:2;flex:1 1 auto;display:flex;justify-content:center}
+  .main-header-inner>.header-right-group{order:3;flex:0 0 auto}
+  .header-nav{display:none}
+  .header-logo-text{font-size:17px}
+  .commodity-navbar{position:static}
+}

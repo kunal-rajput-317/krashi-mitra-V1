@@ -426,7 +426,24 @@ padding:6px 0;border-bottom:2px solid transparent;white-space:nowrap}
 .header-nav-link.active{color:var(--green-mid);border-bottom-color:var(--green-mid)}
 .header-right-group{display:flex;align-items:center;gap:12px}
 .header-avatar-btn{width:32px;height:32px;border-radius:50%;background:var(--cream);border:1px solid var(--border);
-font-size:14px;display:flex;align-items:center;justify-content:center;text-decoration:none}
+font-size:14px;display:flex;align-items:center;justify-content:center;text-decoration:none;overflow:hidden}
+.header-avatar-btn img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+
+/* header language picker — same control the app pages show */
+.km-hlang{position:relative}
+.km-hlang-btn{display:flex;align-items:center;gap:5px;background:var(--cream);border:1px solid var(--border);
+border-radius:16px;padding:5px 10px;cursor:pointer;font-family:var(--font-body);font-size:12.5px;font-weight:700;color:var(--text-dark);line-height:1}
+.km-hlang-btn:hover{border-color:var(--green-light)}
+.km-hlang-caret{font-size:9px;color:var(--text-soft)}
+.km-hlang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:150px;background:var(--white);
+border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(20,40,30,.14);padding:5px;z-index:120;flex-direction:column;gap:2px}
+.km-hlang-menu.open{display:flex}
+.km-hlang-menu button{display:flex;align-items:center;gap:8px;text-align:left;background:none;border:none;border-radius:8px;
+padding:8px 10px;font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--text-dark);cursor:pointer}
+.km-hlang-menu button:hover{background:var(--cream)}
+.km-hlang-menu button.active{background:var(--green-pale);color:var(--green-dark);font-weight:800}
+.km-hlang-code{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 4px;
+border-radius:6px;background:var(--green-pale);color:var(--green-dark);font-size:11px;font-weight:800}
 
 /* mobile hamburger drawer */
 .sidebar-drawer-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,20,.5);z-index:4000}
@@ -567,6 +584,14 @@ border-top:1px solid rgba(255,255,255,.16);padding-top:14px}
 .answer-range div span{display:block;font-size:10.5px;font-weight:700;
 color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.4px}
 .answer-range div b{font-size:17px;font-weight:700}
+/* WhatsApp share pill inside the price card — mirrors mandi.html's share action */
+.answer-share{display:inline-flex;align-items:center;gap:8px;margin-top:16px;
+background:#25d366;color:#fff;border:none;cursor:pointer;font-family:var(--font-body);
+font-size:14px;font-weight:700;padding:11px 20px;border-radius:24px;
+box-shadow:0 2px 10px rgba(0,0,0,.18);transition:background .15s,transform .15s}
+.answer-share:hover{background:#1eb958;transform:translateY(-1px)}
+.answer-share:active{transform:translateY(0)}
+.answer-share svg{width:18px;height:18px;flex-shrink:0}
 @media(max-width:640px){.answer-photo{opacity:.22;width:100%;
 -webkit-mask-image:linear-gradient(90deg,transparent,#000 90%);
 mask-image:linear-gradient(90deg,transparent,#000 90%)}
@@ -1054,7 +1079,16 @@ def _header(active: str = "") -> str:
 <span class="header-logo-text">कृषि मित्र</span></a>
 </div>
 <nav class="header-nav">{nav}</nav>
-<div class="header-right-group"><a href="{SITE}/login" class="header-avatar-btn">👤</a></div>
+<div class="header-right-group">
+<div class="km-hlang" id="km-hlang">
+<button class="km-hlang-btn" type="button" aria-label="भाषा"><span class="km-hlang-cur">हिं</span><span class="km-hlang-caret">▾</span></button>
+<div class="km-hlang-menu">
+<button data-lang="hi"><span class="km-hlang-code">हिं</span>हिंदी</button>
+<button data-lang="en"><span class="km-hlang-code">EN</span>English</button>
+<button data-lang="kn"><span class="km-hlang-code">ಕ</span>ಕನ್ನಡ</button>
+</div>
+</div>
+<a href="{SITE}/login" class="header-avatar-btn" id="header-avatar-btn">👤</a></div>
 </div></header>
 <div class="sidebar-drawer-overlay" id="km-drawer" onclick="this.classList.remove('open')">
 <div class="sidebar-drawer" onclick="event.stopPropagation()">
@@ -1083,6 +1117,9 @@ window.kmShowLoading();
 }},true);
 }})();
 </script>
+<script src="/api-config.js"></script>
+<script src="/drawer-menu.js" defer></script>
+<script src="/bottomnav.js" defer></script>
 {_quicknav()}"""
 
 
@@ -2131,9 +2168,30 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
              + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
              + f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और 7-दिन का रुझान। रोज़ अपडेट।")
 
-    wa_text = quote(f"आज {district} में {hi} का भाव"
-                    + (f" — औसत ₹{st['avg']:,}/क्विंटल" if st["avg"] else "")
-                    + f" ({today_hi})\n{canon}")
+    # WhatsApp share — same behaviour as mandi.html's shareMandiPrice(): share the
+    # /share/mandi deep link (WhatsApp unfurls it into one rich preview card with the
+    # crop photo + rate as OG tags) via the native share sheet, falling back to wa.me.
+    share_url = f"{SITE}/share/mandi?" + urlencode(
+        [(k, v) for k, v in (("state", state), ("commodity", commodity),
+                             ("district", district)) if v])
+    # Exactly mandi.html's shareMandiPrice() caption format: crop name alone in bold
+    # (district lives in the preview card + URL, not the caption), then rate, delta,
+    # and the same "👉 ताजा भाव देखें 👇" call to action.
+    share_caption = (f"🌾 *{hi}*"
+                     + (f" — 💰 ₹{st['avg']:,}/क्विंटल" if st["avg"] else "")
+                     + ((f" (📈 +{avg_pct:g}%)" if avg_pct > 0 else f" (📉 {avg_pct:g}%)")
+                        if avg_pct else "")
+                     + "\n👉 ताजा भाव देखें 👇")
+    share_cfg = _json.dumps({"caption": share_caption, "url": share_url}, ensure_ascii=False)
+    _WA_GLYPH = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+                 '<path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38'
+                 'c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01'
+                 'A9.816 9.816 0 0 0 12.04 2zm5.52 14.03c-.25.7-1.45 1.34-2.01 1.4-.54.06-1.03.29-3.42-.71'
+                 '-2.9-1.17-4.75-4.14-4.9-4.33-.14-.19-1.16-1.54-1.16-2.94 0-1.4.73-2.09.99-2.37.26-.29'
+                 '.57-.36.76-.36.19 0 .38 0 .55.01.18.01.42-.07.66.5.25.58.83 2 .9 2.15.07.14.12.31.02.5'
+                 '-.09.19-.14.31-.28.47-.14.17-.29.37-.42.5-.14.14-.28.29-.12.57.16.28.72 1.18 1.54 1.91'
+                 '1.06.94 1.95 1.24 2.23 1.38.28.14.44.12.6-.07.16-.19.69-.8.87-1.08.18-.28.36-.23.6-.14'
+                 '.25.09 1.57.74 1.84.88.28.14.46.2.53.32.07.11.07.66-.18 1.36z"/></svg>')
 
     answer_photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
                     f'alt="" aria-hidden="true" width="420" height="200">'
@@ -2154,8 +2212,21 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <div><span>अधिकतम</span><b>{f"₹{st['hi']:,}" if st['hi'] else '—'}</b></div>
 <div><span>{'मंडी' if st['n'] == 1 else 'मंडियां'}</span><b>{st['n']}</b></div>
 </div>
+<button class="answer-share" type="button" onclick="shareBhav()">{_WA_GLYPH} WhatsApp पर भेजें</button>
 </div>
 </section>
+<script>
+(function(){{
+  var CFG={share_cfg};
+  window.shareBhav=async function(){{
+    if(navigator.share){{
+      try{{await navigator.share({{text:CFG.caption,url:CFG.url}});return;}}
+      catch(err){{if(err&&err.name==='AbortError')return;}}
+    }}
+    window.open('https://wa.me/?text='+encodeURIComponent(CFG.caption+'\\n'+CFG.url),'_blank');
+  }};
+}})();
+</script>
 
 {_switchers(cs, ss, ds)}
 
@@ -2173,7 +2244,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 <div class="cta-row">
 <a class="btn btn-app" href="{_app_url(commodity, district, state)}">📊 ऐप में {escape(hi)} की तुलना देखें</a>
-<a class="btn btn-wa" href="https://wa.me/?text={wa_text}">📲 WhatsApp पर भाव भेजें</a>
+<button class="btn btn-wa" type="button" onclick="shareBhav()">📲 WhatsApp पर भाव भेजें</button>
 </div>
 
 <h2>अक्सर पूछे जाने वाले सवाल</h2>

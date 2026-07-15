@@ -314,34 +314,64 @@
   }
   .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
 </style>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Universal page shell -->
+  <link rel="stylesheet" href="km-shell.css">
 </head>
 <body>
 
 <!-- ══ TOPBAR ══ -->
-<div class="topbar">
-  <button class="hamburger-btn" onclick="toggleSidebarMenu()" aria-label="Menu">☰</button>
-  <div class="topbar-left">
-    <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
-      <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="topbar-logo-icon" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-      <div class="topbar-logo-text">
-        <span class="topbar-logo-name">कृषि <span>मित्र</span></span>
-        <span class="topbar-logo-sub">किसान का डिजिटल साथी</span>
-      </div>
-    </a>
-  </div>
-  <nav class="topbar-nav">
-    <a class="tnav-btn" href="index.html">🏠 मुख्य</a>
-    <a class="tnav-btn" href="weather.html">🌤️ मौसम</a>
-    <a class="tnav-btn" href="mandi.html">🏪 मंडी</a>
-    <a class="tnav-btn" href="articles/index.html">📰 लेख</a>
-    <a class="tnav-btn" href="chat.html">💬 AI सहायता</a>
-    <a class="tnav-btn" href="shop.html">🛒 दुकान</a>
-  </nav>
-  <div class="topbar-right">
-    <a href="login.html" class="topbar-avatar-btn">👤</a>
-  </div>
+<!-- ══ CANONICAL HEADER — universal across every page ══ -->
+<div class="pre-topbar">
+  <a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
 </div>
-
+<div class="top-utility-bar"><div class="top-utility-inner">
+  <div class="top-utility-left">
+    <a href="index.html" class="top-utility-link">मुख्य</a><span class="top-utility-divider">|</span>
+    <a href="map.html" class="top-utility-link">कृषि मानचित्र</a><span class="top-utility-divider">|</span>
+    <a href="articles/index.html" class="top-utility-link">कृषि समाचार</a><span class="top-utility-divider">|</span>
+    <a href="sarkari_yojana.html" class="top-utility-link">सरकारी योजना</a>
+  </div>
+  <div class="top-utility-right">
+    <a href="tel:+919870951001" class="top-utility-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+    <span class="top-utility-divider">|</span>
+    <a href="chat.html" class="top-utility-link">संपर्क</a>
+  </div>
+</div></div>
+<header class="main-header"><div class="main-header-inner">
+  <button class="hamburger-btn" onclick="var o=document.querySelector('.sidebar-drawer-overlay');if(o)o.classList.add('open')" aria-label="Menu">☰</button>
+  <div class="header-left-group">
+    <a class="header-logo-link" href="index.html">
+      <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" width="38" height="38">
+      <span class="header-logo-text">कृषि मित्र</span></a>
+  </div>
+  <nav class="header-nav">
+    <a class="header-nav-link" href="/bhav">मंडी भाव</a>
+    <a class="header-nav-link" href="krashi_bajar.html">कृषि बाज़ार</a>
+    <a class="header-nav-link" href="weather.html">मौसम देखें</a>
+    <a class="header-nav-link" href="/product/">कृषि दुकान</a>
+  </nav>
+  <div class="header-right-group">
+    <div class="km-hlang" id="km-hlang">
+      <button class="km-hlang-btn" type="button" aria-label="भाषा"><span class="km-hlang-cur">हिं</span><span class="km-hlang-caret">▾</span></button>
+      <div class="km-hlang-menu">
+        <button data-lang="hi"><span class="km-hlang-code">हिं</span>हिंदी</button>
+        <button data-lang="en"><span class="km-hlang-code">EN</span>English</button>
+        <button data-lang="kn"><span class="km-hlang-code">ಕ</span>ಕನ್ನಡ</button>
+      </div>
+    </div>
+    <a href="login.html" class="header-avatar-btn" id="header-avatar-btn">👤</a>
+  </div>
+</div></header>
+<div class="commodity-navbar"><div class="cnav-inner">
+  <a class="cnav-item" href="/bhav">बाज़ार भाव</a>
+  <a class="cnav-item" href="weather.html">मौसम</a>
+  <a class="cnav-item" href="mandi.html">मंडी भाव</a>
+  <a class="cnav-item" href="/product/">कृषि दुकान</a>
+  <a class="cnav-item" href="articles/index.html">कृषि लेख</a>
+  <a class="cnav-item" href="sarkari_yojana.html">सरकारी योजना</a>
+</div></div>
+<div class="km-nav-loading" id="km-nav-loading" aria-hidden="true"><div class="km-nav-spinner"></div></div>
 <!-- SIDEBAR SLIDE-OUT DRAWER MENU -->
 <!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
 <div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
@@ -646,5 +676,7 @@
   }
 </script>
 
+  <script src="drawer-menu.js"></script>
+  <script src="bottomnav.js" defer></script>
 </body>
 </html>

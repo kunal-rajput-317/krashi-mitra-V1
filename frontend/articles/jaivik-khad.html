@@ -37,6 +37,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Universal page shell (header / drawer / blue bar / footer) -->
+  <link rel="stylesheet" href="../km-shell.css">
 
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
@@ -1166,38 +1169,78 @@
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     TOP ANNOUNCEMENT BAR
-════════════════════════════════════════ -->
-<div class="top-announcement">
-  🌾 किसान कॉल सेंटर:+91 9870951001 — निःशुल्क कृषि सलाह
-  <a href="https://krashimitra.in/chat?tab=chat">AI से पूछें →</a>
+<!-- ══ CANONICAL HEADER — universal across every page ══ -->
+<div class="pre-topbar">
+  <a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
 </div>
-
-<!-- ════════════════════════════════════════
-     SITE HEADER
-════════════════════════════════════════ -->
-<header class="site-header">
-  <a href="https://krashimitra.in" class="logo">
-    <div class="brand"><img src="../assets/krashimitra_logo.png" alt="" style="height:1.1em;width:1.1em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;display:inline-block;"> कृषि <span class="mitra">मित्र</span></div>
-    <div class="tagline">किसान का डिजिटल साथी</div>
-  </a>
-
-  <nav>
-    <a href="https://krashimitra.in">🏠 मुख्य</a>
-    <a href="https://krashimitra.in/chat?tab=weather">🌤️ मौसम</a>
-    <a href="https://krashimitra.in/chat?tab=mandi">💰 मंडी</a>
-    <a href="https://krashimitra.in/articles/" class="active">📰 लेख</a>
-    <a href="https://krashimitra.in/chat?tab=chat">💬 सहायता</a>
-  </nav>
-
-  <div class="header-right">
-    <button class="header-search-btn" onclick="document.querySelector('.ai-input').focus(); document.querySelector('.ask-ai-section').scrollIntoView({behavior:'smooth'})">
-      🔍 <span>खोजें</span>
-    </button>
-    <div class="user-icon">👤</div>
+<div class="top-utility-bar"><div class="top-utility-inner">
+  <div class="top-utility-left">
+    <a href="/" class="top-utility-link">मुख्य</a><span class="top-utility-divider">|</span>
+    <a href="/map" class="top-utility-link">कृषि मानचित्र</a><span class="top-utility-divider">|</span>
+    <a href="/articles/" class="top-utility-link">कृषि समाचार</a><span class="top-utility-divider">|</span>
+    <a href="/sarkari_yojana" class="top-utility-link">सरकारी योजना</a>
   </div>
-</header>
+  <div class="top-utility-right">
+    <a href="tel:+919870951001" class="top-utility-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+    <span class="top-utility-divider">|</span>
+    <a href="/chat" class="top-utility-link">संपर्क</a>
+  </div>
+</div></div>
+<header class="main-header"><div class="main-header-inner">
+  <button class="hamburger-btn" onclick="document.getElementById('km-drawer').classList.add('open')" aria-label="Menu">☰</button>
+  <div class="header-left-group">
+    <a class="header-logo-link" href="/">
+      <img src="/assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" width="38" height="38">
+      <span class="header-logo-text">कृषि मित्र</span></a>
+  </div>
+  <nav class="header-nav">
+    <a class="header-nav-link" href="/bhav">मंडी भाव</a>
+    <a class="header-nav-link" href="/krashi_bajar">कृषि बाज़ार</a>
+    <a class="header-nav-link" href="/weather">मौसम देखें</a>
+    <a class="header-nav-link" href="/product/">कृषि दुकान</a>
+  </nav>
+  <div class="header-right-group">
+    <div class="km-hlang" id="km-hlang">
+      <button class="km-hlang-btn" type="button" aria-label="भाषा"><span class="km-hlang-cur">हिं</span><span class="km-hlang-caret">▾</span></button>
+      <div class="km-hlang-menu">
+        <button data-lang="hi"><span class="km-hlang-code">हिं</span>हिंदी</button>
+        <button data-lang="en"><span class="km-hlang-code">EN</span>English</button>
+        <button data-lang="kn"><span class="km-hlang-code">ಕ</span>ಕನ್ನಡ</button>
+      </div>
+    </div>
+    <a href="/login" class="header-avatar-btn" id="header-avatar-btn">👤</a>
+  </div>
+</div></header>
+<div class="sidebar-drawer-overlay" id="km-drawer" onclick="this.classList.remove('open')">
+  <div class="sidebar-drawer" onclick="event.stopPropagation()">
+    <div class="sidebar-drawer-header"><span class="sidebar-drawer-title">मेनु</span>
+      <button class="sidebar-drawer-close" onclick="document.getElementById('km-drawer').classList.remove('open')" aria-label="Close menu">✕</button></div>
+    <div class="sidebar-drawer-links">
+      <a href="/" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span>मुख्य</span></a>
+      <a href="/weather" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span>मौसम</span></a>
+      <a href="/mandi" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span>मंडी भाव</span></a>
+      <a href="/bhav" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📈</span><span>सभी भाव सूची</span></a>
+      <a href="/meri_fasal" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌱</span><span>मेरी फसल</span></a>
+      <a href="/krashi_bajar" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span>कृषि बाज़ार</span></a>
+      <a href="/shop" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span>दुकान</span></a>
+      <a href="/khoj" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span>कृषि खोज</span></a>
+      <a href="/map" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span>कृषि मानचित्र</span></a>
+      <a href="/articles/" class="sidebar-drawer-link active"><span class="sidebar-drawer-link-icon">📰</span><span>कृषि लेख</span></a>
+      <a href="/sarkari_yojana" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span>सरकारी योजना</span></a>
+      <a href="/chat" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span>AI सहायता</span></a>
+      <a href="/profile" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
+    </div>
+  </div>
+</div>
+<div class="commodity-navbar"><div class="cnav-inner">
+  <a class="cnav-item" href="/bhav">बाज़ार भाव</a>
+  <a class="cnav-item" href="/weather">मौसम</a>
+  <a class="cnav-item" href="/mandi">मंडी भाव</a>
+  <a class="cnav-item" href="/product/">कृषि दुकान</a>
+  <a class="cnav-item active" href="/articles/">कृषि लेख</a>
+  <a class="cnav-item" href="/sarkari_yojana">सरकारी योजना</a>
+</div></div>
+<div class="km-nav-loading" id="km-nav-loading" aria-hidden="true"><div class="km-nav-spinner"></div></div>
 
 <!-- Breadcrumb -->
 <div class="breadcrumb">
@@ -1774,19 +1817,6 @@
 </section>
 
 <!-- ════════════════════════════════════════
-     MOBILE BOTTOM NAV
-════════════════════════════════════════ -->
-<nav class="mobile-nav">
-  <ul>
-    <li><a href="https://krashimitra.in"><span class="nav-icon">🏠</span>मुख्य</a></li>
-    <li><a href="https://krashimitra.in/chat?tab=chat"><span class="nav-icon">💬</span>Chat</a></li>
-    <li><a href="https://krashimitra.in/chat?tab=weather"><span class="nav-icon">🌤️</span>मौसम</a></li>
-    <li><a href="https://krashimitra.in/chat?tab=mandi"><span class="nav-icon">💰</span>मंडी</a></li>
-    <li><a href="https://krashimitra.in/articles/" class="active"><span class="nav-icon">📘</span>लेख</a></li>
-  </ul>
-</nav>
-
-<!-- ════════════════════════════════════════
      FOOTER
 ════════════════════════════════════════ -->
 
@@ -1796,67 +1826,22 @@
   <p style="margin:0 0 12px;line-height:2"><a href="https://krashimitra.in/bhav/wheat/meerut" style="display:inline-block;background:#fff;border:1px solid #cfe3cf;border-radius:16px;padding:4px 12px;margin:3px 6px 3px 0;text-decoration:none;color:#1b7a3d">गेहूं भाव मेरठ</a><a href="https://krashimitra.in/bhav/wheat/agra" style="display:inline-block;background:#fff;border:1px solid #cfe3cf;border-radius:16px;padding:4px 12px;margin:3px 6px 3px 0;text-decoration:none;color:#1b7a3d">गेहूं भाव आगरा</a><a href="https://krashimitra.in/bhav/wheat/lucknow" style="display:inline-block;background:#fff;border:1px solid #cfe3cf;border-radius:16px;padding:4px 12px;margin:3px 6px 3px 0;text-decoration:none;color:#1b7a3d">गेहूं भाव लखनऊ</a><a href="https://krashimitra.in/bhav/" style="display:inline-block;background:#1b7a3d;border-radius:16px;padding:4px 12px;margin:3px 6px 3px 0;text-decoration:none;color:#fff">सभी फसलों के भाव →</a></p>
   <a href="https://wa.me/?text=%E0%A4%9C%E0%A5%88%E0%A4%B5%E0%A4%BF%E0%A4%95%20%E0%A4%96%E0%A4%BE%E0%A4%A6%20%E0%A4%95%E0%A5%88%E0%A4%B8%E0%A5%87%20%E0%A4%AC%E0%A4%A8%E0%A4%BE%E0%A4%8F%E0%A4%82%20%E2%80%94%20%E0%A4%B5%E0%A4%B0%E0%A5%8D%E0%A4%AE%E0%A5%80%E0%A4%95%E0%A4%AE%E0%A5%8D%E0%A4%AA%E0%A5%8B%E0%A4%B8%E0%A5%8D%E0%A4%9F%2C%20%E0%A4%A8%E0%A4%BE%E0%A4%A1%E0%A5%87%E0%A4%AA%2C%20%E0%A4%97%E0%A5%8B%E0%A4%AC%E0%A4%B0%20%E0%A4%96%E0%A4%BE%E0%A4%A6%20%7C%20KrashiMitra.in%0Ahttps%3A//krashimitra.in/articles/jaivik-khad" style="display:inline-block;background:#25d366;color:#fff;font-weight:700;padding:9px 16px;border-radius:22px;text-decoration:none">📲 यह लेख WhatsApp पर भेजें</a>
 </section>
-<footer class="site-footer">
-  <div class="footer-main">
-    <div class="footer-brand">
-      <div class="logo-big">🌾 कृषि <span class="mitra">मित्र</span></div>
-      <p>
-        KrashiMitra.in भारत के किसानों के लिए एक AI-संचालित डिजिटल कृषि सहायक है। फसल रोग, मंडी भाव, मौसम और सरकारी योजनाओं की जानकारी — सब कुछ हिंदी में, मुफ्त.
-      </p>
-      <div class="footer-badges">
-        <span class="footer-badge">🌾 50+ फसलें</span>
-        <span class="footer-badge">📍 500+ जिले</span>
-        <span class="footer-badge">🤖 AI सहायक</span>
-        <span class="footer-badge">🇮🇳 भारत निर्मित</span>
-      </div>
-    </div>
-
-    <div class="footer-col">
-      <h4>त्वरित लिंक</h4>
-      <ul>
-        <li><a href="https://krashimitra.in">🏠 मुख्य पृष्ठ</a></li>
-        <li><a href="https://krashimitra.in/articles/">📰 सभी लेख</a></li>
-        <li><a href="https://krashimitra.in/chat?tab=disease">🌾 फसल रोग</a></li>
-        <li><a href="https://krashimitra.in/chat?tab=mandi">💰 मंडी भाव</a></li>
-        <li><a href="https://krashimitra.in/chat?tab=weather">🌤️ मौसम</a></li>
-        <li><a href="https://krashimitra.in/chat?tab=fertilizer">🧪 खाद सलाह</a></li>
-        <li><a href="https://krashimitra.in/chat?tab=chat">💬 AI सहायक</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <h4>जानकारी</h4>
-      <ul>
-        <li><a href="https://krashimitra.in/about">ℹ️ हमारे बारे में</a></li>
-        <li><a href="https://krashimitra.in/contact">📞 संपर्क करें</a></li>
-        <li><a href="https://krashimitra.in/privacy">🔒 गोपनीयता नीति</a></li>
-        <li><a href="https://krashimitra.in/terms">📜 उपयोग शर्तें</a></li>
-        <li><a href="https://krashimitra.in/disclaimer">⚠️ अस्वीकरण</a></li>
-        <li><a href="https://krashimitra.in/sitemap.xml">🗺️ साइटमैप</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <hr class="footer-divider" />
-
-  <div class="footer-bottom">
-    <div class="footer-copyright">
-      &copy; 2026 <a href="https://krashimitra.in">KrashiMitra.in</a> — सर्वाधिकार सुरक्षित।
-      इस वेबसाइट की सामग्री बिना अनुमति के पुनः प्रकाशित करना वर्जित है।
-    </div>
-
-    <div class="footer-legal-links">
-      <a href="https://krashimitra.in/privacy">गोपनीयता</a>
-      <a href="https://krashimitra.in/terms">शर्तें</a>
-      <a href="https://krashimitra.in/disclaimer">अस्वीकरण</a>
-      <a href="https://krashimitra.in/sitemap.xml">साइटमैप</a>
-    </div>
-
-    <div class="footer-made">
-      <span class="heart">♥</span> भारतीय किसानों के लिए बनाया गया |
-    </div>
-  </div>
-</footer>
+<!-- ══ CANONICAL FOOTER — universal across every page ══ -->
+<footer class="km-footer"><div class="km-footer-inner">
+  <div class="km-footer-brand">🌾 कृषि मित्र</div>
+  <nav class="km-footer-nav">
+    <a href="/">होम</a>
+    <a href="/mandi">मंडी ऐप</a>
+    <a href="/bhav">सभी भाव</a>
+    <a href="/weather">मौसम</a>
+    <a href="/articles/">कृषि लेख</a>
+    <a href="/about">हमारे बारे में</a>
+    <a href="/privacy-policy">गोपनीयता</a>
+    <a href="/chat">AI सहायक</a>
+  </nav>
+  <div class="km-footer-note">© 2026 KrashiMitra.in — भारतीय किसानों के लिए बनाया गया।
+  भाव भारत सरकार के data.gov.in (Agmarknet) से रोज़ अपडेट होते हैं; बेचने से पहले अपनी मंडी में भाव ज़रूर पुष्टि करें।</div>
+</div></footer>
 
 <!-- ── Floating AI Chat Button ── -->
 <style>
@@ -1874,5 +1859,9 @@
   <span class="ai-fab-tip">AI सहायक</span>
 </a>
   <script src="../fab-autohide.js"></script>
+  <!-- Universal shell behaviour -->
+  <script src="../api-config.js"></script>
+  <script src="../drawer-menu.js" defer></script>
+  <script src="../bottomnav.js" defer></script>
 </body>
 </html>

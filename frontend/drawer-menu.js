@@ -1,0 +1,428 @@
+// ============================================================
+// KrashiMitra — Sidebar drawer: categorised accordion + language
+//
+// The drawer grew to ~13 flat links and farmers got lost in it. Rather than
+// hand-editing the (per-page, slightly-different) drawer markup on every page,
+// this component takes whatever flat `.sidebar-drawer-links` a page already
+// ships and regroups it into labelled, collapsible sections at load time.
+//
+// Grouping is keyed off each link's emoji icon (the one thing identical across
+// every page — hrefs are relative on some pages, absolute on others), so the
+// same script produces the same menu everywhere. The original <a>/<button>
+// nodes are MOVED (not cloned), so their href, onclick and `active` class
+// survive. Each emoji is then swapped for a matching cartoonish olive SVG.
+//
+// The whole menu slider is also self-translating: this file owns the labels in
+// hi/en/kn (backend /bhav + /product drawer items carry no data-t, so page-level
+// i18n can't reach them), exposes a language dropdown in the drawer header, and
+// defers to the page's own setLang()/pickLang() to translate the rest of the page.
+// ============================================================
+(function () {
+  var OLIVE = '#6f7f3a', LEAF = '#b3c47f', CREAM = '#eef3e0';
+  var LANGS = ['hi', 'en', 'kn'];
+  var LANG_NAMES = { hi: 'हिंदी', en: 'English', kn: 'ಕನ್ನಡ' };
+  var LANG_SHORT = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
+
+  // Every string the menu slider renders, in all three languages.
+  // Item entries are keyed by the emoji they replace; groups by "g_<key>".
+  var LABELS = {
+    menu:   { hi: 'मेनु',        en: 'Menu',          kn: 'ಮೆನು' },
+    kbook:  { hi: 'कृषि बुक',    en: 'KrashiBook',    kn: 'ಕೃಷಿ ಬುಕ್' },
+    g_tools:    { hi: 'टूल्स',        en: 'Tools',        kn: 'ಟೂಲ್ಸ್' },
+    g_industry: { hi: 'कृषि उद्योग',  en: 'Agri-business', kn: 'ಕೃಷಿ ಉದ್ಯಮ' },
+    g_news:     { hi: 'कृषि समाचार',  en: 'Agri News',    kn: 'ಕೃಷಿ ಸುದ್ದಿ' },
+    g_other:    { hi: 'अन्य सेवाएं',  en: 'More Services', kn: 'ಇತರೆ ಸೇವೆಗಳು' },
+    '🏠':  { hi: 'मुख्य',          en: 'Home',        kn: 'ಮುಖ್ಯ' },
+    '🌤️': { hi: 'मौसम',          en: 'Weather',     kn: 'ಹವಾಮಾನ' },
+    '🌱':  { hi: 'मेरी फसल',      en: 'My Crop',     kn: 'ನನ್ನ ಬೆಳೆ' },
+    '🏪':  { hi: 'मंडी भाव',      en: 'Mandi Rates', kn: 'ಮಂಡಿ ದರ' },
+    '📈':  { hi: 'सभी भाव सूची',   en: 'All Prices',  kn: 'ಎಲ್ಲಾ ದರಗಳು' },
+    '🛒':  { hi: 'दुकान',         en: 'Shop',        kn: 'ಅಂಗಡಿ' },
+    '🔍':  { hi: 'कृषि खोज',      en: 'Search',      kn: 'ಹುಡುಕಿ' },
+    '🗺️': { hi: 'कृषि मानचित्र',  en: 'Map',         kn: 'ನಕ್ಷೆ' },
+    '🧺':  { hi: 'कृषि बाज़ार',    en: 'Bazaar',      kn: 'ಬಜಾರ್' },
+    '📰':  { hi: 'कृषि लेख',      en: 'Articles',    kn: 'ಲೇಖನಗಳು' },
+    '🏛️': { hi: 'सरकारी योजना',   en: 'Govt Schemes', kn: 'ಸರ್ಕಾರಿ ಯೋಜನೆ' },
+    '💬':  { hi: 'सहायता',        en: 'Help',        kn: 'ಸಹಾಯ' },
+    '👤':  { hi: 'प्रोफ़ाइल',      en: 'Profile',     kn: 'ಪ್ರೊಫೈಲ್' }
+  };
+
+  // ---- Cartoonish olive icons, keyed by the emoji they replace ----
+  var ICONS = {
+    '🏠': '<svg viewBox="0 0 24 24"><path d="M11.3 3.5 3.6 10a1 1 0 0 0 .65 1.76H5.5V19A1.5 1.5 0 0 0 7 20.5h3v-4.2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.2h3A1.5 1.5 0 0 0 18.5 19v-7.24h1.25A1 1 0 0 0 20.4 10l-7.7-6.5a1.1 1.1 0 0 0-1.4 0Z" fill="currentColor"/></svg>',
+    '🌤️': '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="' + LEAF + '"/><g stroke="' + LEAF + '" stroke-width="1.6" stroke-linecap="round"><path d="M9 2.5v1.4M9 12.1v1.4M2.9 8h1.4M13.7 8h1.4M4.7 3.7l1 1M12.3 11.3l1 1M13.3 3.7l-1 1M5.7 11.3l-1 1"/></g><path d="M9.2 19a3.4 3.4 0 0 1 .2-6.8 4.4 4.4 0 0 1 8.4 1.3A2.9 2.9 0 0 1 17.4 19H9.2Z" fill="currentColor"/></svg>',
+    '🌱': '<svg viewBox="0 0 24 24"><path d="M12 20.5V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12.3 13.5c0-3 2.4-5.2 5.7-5.2 0 3-2.4 5.2-5.7 5.2Z" fill="' + LEAF + '"/><path d="M11.7 12c0-2.9-2.3-4.8-5.2-4.8 0 2.9 2.3 4.8 5.2 4.8Z" fill="currentColor"/><path d="M9 20.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    '🏪': '<svg viewBox="0 0 24 24"><path d="M4 9h16l-1.1-4.2A1 1 0 0 0 17.94 4H6.06a1 1 0 0 0-.96.8L4 9Z" fill="' + LEAF + '"/><path d="M5.2 9v9.5A1.5 1.5 0 0 0 6.7 20h10.6a1.5 1.5 0 0 0 1.5-1.5V9" fill="currentColor"/><rect x="9" y="13" width="6" height="7" rx="0.6" fill="' + LEAF + '"/></svg>',
+    '📈': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v15a1 1 0 0 0 1 1h15"/><path d="M7.5 14.5 11 11l3 3 5-6"/><path d="M15.5 8H20v4.5"/></svg>',
+    '🛒': '<svg viewBox="0 0 24 24"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.6" fill="currentColor"/><circle cx="16.5" cy="19" r="1.6" fill="currentColor"/></svg>',
+    '🔍': '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="' + LEAF + '" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+    '🗺️': '<svg viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.6"/></svg>',
+    '🧺': '<svg viewBox="0 0 24 24"><path d="M8 10 10.6 5M16 10 13.4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4.3 10.2 5.6 18a1.5 1.5 0 0 0 1.48 1.25h9.84A1.5 1.5 0 0 0 18.4 18l1.3-7.8Z" fill="currentColor"/><path d="M3 10.2h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 13v3.4M12 13v3.4M15 13v3.4" stroke="' + LEAF + '" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    '📰': '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="13.5" height="14" rx="1.5" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6"/><path d="M17.5 8H20v9a2 2 0 0 1-2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 9h5M7 12h7.5M7 15h7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    '🏛️': '<svg viewBox="0 0 24 24"><path d="M12 3 3.5 7.4V9h17V7.4L12 3Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 10.5v6.5M10 10.5v6.5M14 10.5v6.5M18 10.5v6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 19.5h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    '💬': '<svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9.5L5 19.5V16a2 2 0 0 1-1-2V6Z" fill="currentColor"/><path d="M8.5 9h7M8.5 12h4.5" stroke="' + CREAM + '" stroke-width="1.7" stroke-linecap="round"/></svg>',
+    '👤': '<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6" fill="currentColor"/><path d="M4.5 19.4a7.5 7.5 0 0 1 15 0 1 1 0 0 1-1 1.1h-13a1 1 0 0 1-1-1.1Z" fill="' + LEAF + '"/></svg>',
+    'globe': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.4 2.5 14.6 0 17M12 3.5c-2.5 2.4-2.5 14.6 0 17"/></svg>'
+  };
+
+  // Group-header icons
+  var GICON = {
+    tools:    '<svg viewBox="0 0 24 24"><path d="M14.4 6.6a3.6 3.6 0 0 0 4.5 4.5L21 9.1 20 4.8 15.7 3.8 14.4 6.6Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M15.4 9.7 5.9 19.2A2 2 0 1 1 3.1 16.4L12.6 6.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+    industry: '<svg viewBox="0 0 24 24"><path d="M12 21V8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 8c0-2.1 1.5-3.7 3.6-3.7C15.6 6.4 14.1 8 12 8Zm0 0c0-2.1-1.5-3.7-3.6-3.7C8.4 6.4 9.9 8 12 8Z" fill="' + LEAF + '"/><path d="M12 13c0-1.9 1.4-3.3 3.3-3.3C15.3 11.6 13.9 13 12 13Zm0 0c0-1.9-1.4-3.3-3.3-3.3C8.7 11.6 10.1 13 12 13Zm0 4.4c0-1.9 1.4-3.3 3.3-3.3 0 1.9-1.4 3.3-3.3 3.3Zm0 0c0-1.9-1.4-3.3-3.3-3.3 0 1.9 1.4 3.3 3.3 3.3Z" fill="currentColor"/></svg>',
+    news:     '<svg viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l8 4V5L7 9H5a1 1 0 0 0-1 1Z" fill="currentColor"/><path d="M7 15v3.4a1 1 0 0 0 1 1h1.4a1 1 0 0 0 1-1V17" fill="' + LEAF + '"/><path d="M18 9.2a4 4 0 0 1 0 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>',
+    other:    '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6" fill="currentColor"/><rect x="13" y="4" width="7" height="7" rx="1.6" fill="' + LEAF + '"/><rect x="4" y="13" width="7" height="7" rx="1.6" fill="' + LEAF + '"/><rect x="13" y="13" width="7" height="7" rx="1.6" fill="currentColor"/></svg>'
+  };
+
+  var STYLE_ID = 'km-drawer-menu-css';
+  var CSS =
+    '.sidebar-drawer-header{display:flex;align-items:center}' +
+    '.sidebar-drawer-link-icon{color:' + OLIVE + ';width:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}' +
+    '.sidebar-drawer-link-icon svg{width:21px;height:21px;display:block}' +
+    '.km-dg{display:flex;flex-direction:column}' +
+    '.km-dg-head{display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;' +
+    'min-height:44px;padding:9px 12px;margin:0;background:none;border:none;border-radius:10px;' +
+    'cursor:pointer;font-family:inherit;color:#5f7168;text-align:left;transition:background .15s}' +
+    '.km-dg-head:hover{background:#f2f8f4}' +
+    '.km-dg-ico{color:' + OLIVE + ';width:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}' +
+    '.km-dg-ico svg{width:19px;height:19px;display:block}' +
+    '.km-dg-label{flex:1;font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}' +
+    '.km-dg-chev{font-size:11px;color:#9aa8a0;transition:transform .2s;flex-shrink:0}' +
+    '.km-dg.open .km-dg-chev{transform:rotate(90deg)}' +
+    '.km-dg-body{display:none;flex-direction:column;gap:2px;overflow:hidden;padding:2px 0 4px}' +
+    '.km-dg.open .km-dg-body{display:flex}' +
+    '.km-dg-body .sidebar-drawer-link{padding-left:26px}' +
+    // selected item = soft yellow (overrides each page\'s green .active rule)
+    '.sidebar-drawer-links .sidebar-drawer-link.active{background:#fef3c7!important;color:#4a3f1e!important;border-left-color:#eab308!important}' +
+    '.km-drawer-sep{height:1px;background:#eef2ef;margin:6px 8px}' +
+    // the old footer language row is now replaced by the header dropdown
+    '.sidebar-drawer-footer{display:none}' +
+    // header controls sit clustered on the right; the title soaks up the gap
+    '.sidebar-drawer-title{margin-right:auto}' +
+    '.km-kbook-hdr{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;' +
+    'font-size:17px;line-height:1;border-radius:50%;background:#f4f7ea;border:1.5px solid #e3ece5;cursor:pointer;margin-right:8px;flex-shrink:0}' +
+    '.km-kbook-hdr:hover{background:#eaf0d8}' +
+    '.km-kbook-hdr svg{width:18px;height:18px;display:block}' +
+    // language dropdown
+    '.km-lang{position:relative;margin-right:8px}' +
+    '.km-lang-btn{display:flex;align-items:center;gap:5px;background:#f2f8f4;border:1.5px solid #e3ece5;' +
+    'border-radius:16px;padding:5px 9px;font-family:inherit;font-size:12px;font-weight:700;color:#2d3748;cursor:pointer}' +
+    '.km-lang-btn svg{width:14px;height:14px;color:' + OLIVE + '}' +
+    '.km-lang-caret{font-size:9px;color:#8a958f}' +
+    '.km-lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:132px;background:#fff;' +
+    'border:1px solid #e6ece8;border-radius:12px;box-shadow:0 8px 24px rgba(20,40,30,.14);padding:5px;z-index:20;flex-direction:column;gap:2px}' +
+    '.km-lang-menu.open{display:flex}' +
+    '.km-lang-menu button{text-align:left;background:none;border:none;border-radius:8px;padding:8px 10px;' +
+    'font-family:inherit;font-size:13px;font-weight:600;color:#2d3748;cursor:pointer}' +
+    '.km-lang-menu button:hover{background:#f2f8f4}' +
+    '.km-lang-menu button.active{background:#eaf6ed;color:#2d6a4f;font-weight:800}';
+
+  // Canonical order + category for every known drawer item, keyed by its emoji.
+  var HOME = ['🏠'];
+  var FOOTER = ['💬', '👤'];
+  var GROUPS = [
+    { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '🗺️', '🗺'] }, // मौसम · मेरी फसल · कृषि मानचित्र
+    { key: 'industry', ico: 'industry', set: ['🏪', '📈', '🛒'] },
+    { key: 'news',     ico: 'news',     set: ['📰', '🏛️', '🏛'] },
+    { key: 'other',    ico: 'other',    set: ['🔍', '🧺'] } // कृषि खोज · कृषि बाज़ार
+  ];
+
+  function injectCss() {
+    if (document.getElementById(STYLE_ID)) return;
+    var s = document.createElement('style');
+    s.id = STYLE_ID;
+    s.textContent = CSS;
+    (document.head || document.documentElement).appendChild(s);
+  }
+
+  function getLang() {
+    var u;
+    try { u = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+    if (u && /^(hi|en|kn)$/.test(u)) return u;
+    var l;
+    try { l = localStorage.getItem('km_lang'); } catch (e) {}
+    return /^(hi|en|kn)$/.test(l) ? l : 'hi';
+  }
+
+  function iconOf(a) {
+    var s = a.querySelector('.sidebar-drawer-link-icon');
+    return s ? s.textContent.trim() : '';
+  }
+
+  // The text span of a drawer link = its first child span that isn't the icon.
+  function labelSpan(a) {
+    var kids = a.children;
+    for (var i = 0; i < kids.length; i++) {
+      if (!kids[i].classList || !kids[i].classList.contains('sidebar-drawer-link-icon')) return kids[i];
+    }
+    return null;
+  }
+
+  // Take ownership of a link: tag it with its emoji key, drop the page's data-t
+  // (so page-level setLang won't fight us over this label), swap in the SVG.
+  function claim(a, emoji) {
+    a.setAttribute('data-km-key', emoji);
+    var lab = labelSpan(a);
+    if (lab && lab.removeAttribute) lab.removeAttribute('data-t');
+    var ic = a.querySelector('.sidebar-drawer-link-icon');
+    if (ic && ICONS[emoji]) ic.innerHTML = ICONS[emoji];
+  }
+
+  // Close the drawer, then open the KrashiBook modal via its existing button.
+  function openKbook(e) {
+    if (e) e.preventDefault();
+    var open = document.querySelector('.sidebar-drawer-overlay.open');
+    if (open) open.classList.remove('open');
+    var btn = document.getElementById('km-book-btn');
+    if (btn) btn.click();
+  }
+
+  function build(box) {
+    if (box.getAttribute('data-grouped')) return;
+
+    var links = [].slice.call(box.children).filter(function (n) {
+      return n.classList && n.classList.contains('sidebar-drawer-link');
+    });
+    if (links.length < 2) return;
+
+    var byIcon = {};
+    links.forEach(function (a) {
+      var i = iconOf(a);
+      if (i && !byIcon[i]) byIcon[i] = a;
+    });
+
+    var handled = [];
+    function take(i) { var a = byIcon[i]; if (a) handled.push(a); return a; }
+    function isHandled(a) { return handled.indexOf(a) !== -1; }
+
+    var frag = document.createDocumentFragment();
+
+    HOME.forEach(function (i) {
+      var a = take(i);
+      // मुख्य is a pinned shortcut, not a "category" — never show it selected.
+      if (a) { a.classList.remove('active'); claim(a, i); frag.appendChild(a); }
+    });
+
+    var activeGroup = null, firstGroup = null;
+    GROUPS.forEach(function (g) {
+      var present = g.set.filter(function (i) { return byIcon[i]; });
+      if (!present.length) return;
+
+      var wrap = document.createElement('div');
+      wrap.className = 'km-dg';
+      wrap.setAttribute('data-km-g', g.key);
+
+      var head = document.createElement('button');
+      head.type = 'button';
+      head.className = 'km-dg-head';
+      head.setAttribute('aria-expanded', 'false');
+      head.innerHTML =
+        '<span class="km-dg-ico">' + (GICON[g.ico] || '') + '</span>' +
+        '<span class="km-dg-label"></span>' +
+        '<span class="km-dg-chev">▸</span>';
+
+      var body = document.createElement('div');
+      body.className = 'km-dg-body';
+
+      var hasActive = false;
+      present.forEach(function (i) {
+        var a = take(i);
+        claim(a, i);
+        if (a.classList.contains('active')) hasActive = true;
+        body.appendChild(a);
+      });
+
+      // Accordion: only one category open at a time.
+      head.addEventListener('click', function () {
+        var willOpen = !wrap.classList.contains('open');
+        if (willOpen) {
+          [].forEach.call(box.querySelectorAll('.km-dg.open'), function (o) {
+            if (o === wrap) return;
+            o.classList.remove('open');
+            var hh = o.querySelector('.km-dg-head');
+            if (hh) hh.setAttribute('aria-expanded', 'false');
+          });
+        }
+        wrap.classList.toggle('open');
+        head.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+
+      wrap.appendChild(head);
+      wrap.appendChild(body);
+      frag.appendChild(wrap);
+
+      if (!firstGroup) firstGroup = wrap;
+      if (hasActive) activeGroup = wrap;
+    });
+
+    var footSet = {};
+    FOOTER.forEach(function (i) { footSet[i] = 1; });
+    links.forEach(function (a) {
+      if (isHandled(a) || footSet[iconOf(a)]) return;
+      frag.appendChild(a); // unrecognised link — keep it visible
+    });
+
+    var footLinks = FOOTER.map(function (i) {
+      var a = byIcon[i]; if (a) claim(a, i); return a;
+    }).filter(Boolean);
+    if (footLinks.length) {
+      var sep = document.createElement('div');
+      sep.className = 'km-drawer-sep';
+      frag.appendChild(sep);
+      footLinks.forEach(function (a) { frag.appendChild(a); });
+    }
+
+    box.innerHTML = '';
+    box.appendChild(frag);
+    box.setAttribute('data-grouped', '1');
+
+    var toOpen = activeGroup || firstGroup;
+    if (toOpen) {
+      toOpen.classList.add('open');
+      var h = toOpen.querySelector('.km-dg-head');
+      if (h) h.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  // Re-label the whole slider in `lang`. Owns menu title, group headings,
+  // every item, and the KrashiBook entry.
+  function applyMenuLang(lang) {
+    function L(k) { var e = LABELS[k]; return e ? (e[lang] || e.hi) : null; }
+
+    var title = document.querySelector('.sidebar-drawer-title');
+    if (title) { title.removeAttribute('data-t'); var mt = L('menu'); if (mt) title.textContent = mt; }
+
+    [].forEach.call(document.querySelectorAll('.sidebar-drawer-links [data-km-key]'), function (a) {
+      var txt = L(a.getAttribute('data-km-key'));
+      if (!txt) return;
+      var lab = labelSpan(a);
+      if (lab) lab.textContent = txt;
+    });
+
+    [].forEach.call(document.querySelectorAll('.km-dg[data-km-g]'), function (w) {
+      var txt = L('g_' + w.getAttribute('data-km-g'));
+      if (!txt) return;
+      var lb = w.querySelector('.km-dg-label');
+      if (lb) lb.textContent = txt;
+    });
+
+    var kb = document.querySelector('.km-kbook-hdr');
+    if (kb) { var kt = L('kbook'); if (kt) { kb.setAttribute('aria-label', kt); kb.setAttribute('title', kt); } }
+
+    var cur = document.querySelector('.km-lang-cur');
+    if (cur) cur.textContent = LANG_NAMES[lang] || lang;
+    [].forEach.call(document.querySelectorAll('.km-lang-menu [data-lang]'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+    });
+  }
+
+  // Persist + retranslate the menu, then hand off to the page's own i18n so the
+  // rest of the page follows (no-op on pages that don't ship one, e.g. /bhav).
+  function chooseLang(lang) {
+    try { localStorage.setItem('km_lang', lang); } catch (e) {}
+    applyMenuLang(lang);
+    applyHeaderLang(lang);
+    if (typeof window.setLang === 'function') { try { window.setLang(lang); } catch (e) {} }
+    else if (typeof window.pickLang === 'function') { try { window.pickLang(lang); } catch (e) {} }
+  }
+  // Exposed so the canonical header language picker (.km-hlang) works on every
+  // page, including static articles that ship no setLang()/pickLang() of their own.
+  window.KMChooseLang = chooseLang;
+
+  // Reflect the current language in the header picker (short label + active row).
+  function applyHeaderLang(lang) {
+    [].forEach.call(document.querySelectorAll('.km-hlang-cur'), function (el) {
+      el.textContent = LANG_SHORT[lang] || lang;
+    });
+    [].forEach.call(document.querySelectorAll('.km-hlang-menu [data-lang]'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+    });
+  }
+
+  // Wire the header language picker: toggle its dropdown, pick a language, and
+  // close on outside click. Safe to call when no .km-hlang exists on the page.
+  function initHeaderLang() {
+    [].forEach.call(document.querySelectorAll('.km-hlang'), function (wrap) {
+      if (wrap.getAttribute('data-km-wired')) return;
+      wrap.setAttribute('data-km-wired', '1');
+      var btn = wrap.querySelector('.km-hlang-btn');
+      var menu = wrap.querySelector('.km-hlang-menu');
+      if (!btn || !menu) return;
+      btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+      [].forEach.call(menu.querySelectorAll('[data-lang]'), function (o) {
+        o.addEventListener('click', function (e) {
+          e.stopPropagation();
+          menu.classList.remove('open');
+          chooseLang(o.getAttribute('data-lang'));
+        });
+      });
+      document.addEventListener('click', function () { menu.classList.remove('open'); });
+    });
+  }
+
+  function injectHeaderControls() {
+    var header = document.querySelector('.sidebar-drawer-header');
+    if (!header) return;
+    var close = header.querySelector('.sidebar-drawer-close');
+
+    // KrashiBook shortcut, sitting just left of the language button — only on
+    // pages that actually ship the book component.
+    if (document.querySelector('script[src*="krashibook.js"]') && !header.querySelector('.km-kbook-hdr')) {
+      var kb = document.createElement('button');
+      kb.type = 'button';
+      kb.className = 'km-kbook-hdr';
+      kb.setAttribute('aria-label', 'KrashiBook');
+      kb.textContent = '📒'; // the original KrashiBook glyph, same as the floating button
+      kb.addEventListener('click', openKbook);
+      if (close) header.insertBefore(kb, close); else header.appendChild(kb);
+    }
+
+    if (header.querySelector('.km-lang')) return;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'km-lang';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'km-lang-btn';
+    btn.setAttribute('aria-label', 'Language');
+    btn.innerHTML = ICONS.globe + '<span class="km-lang-cur"></span><span class="km-lang-caret">▾</span>';
+
+    var menu = document.createElement('div');
+    menu.className = 'km-lang-menu';
+    LANGS.forEach(function (l) {
+      var o = document.createElement('button');
+      o.type = 'button';
+      o.setAttribute('data-lang', l);
+      o.textContent = LANG_NAMES[l];
+      o.addEventListener('click', function (e) {
+        e.stopPropagation();
+        menu.classList.remove('open');
+        chooseLang(l);
+      });
+      menu.appendChild(o);
+    });
+
+    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+
+    wrap.appendChild(btn);
+    wrap.appendChild(menu);
+    if (close) header.insertBefore(wrap, close); else header.appendChild(wrap);
+  }
+
+  function init() {
+    injectCss();
+    var box = document.querySelector('.sidebar-drawer-links');
+    if (box) build(box);
+    injectHeaderControls();
+    initHeaderLang();
+    applyMenuLang(getLang());
+    applyHeaderLang(getLang());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

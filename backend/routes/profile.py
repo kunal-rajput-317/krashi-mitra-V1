@@ -3,10 +3,13 @@
 # KrashiMitra — Farmer Profile Router
 # ============================================================
 
+import base64
+import io
 import logging
 import os
 import uuid
 from pathlib import Path
+from PIL import Image, ImageOps
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
@@ -525,59 +528,55 @@ async def upload_avatar(
     if ext not in IMAGE_EXTS:
         raise HTTPException(400, "केवल photo (jpg/jpeg/png/webp) upload करें।")
 
-    filename = f"{uuid.uuid4().hex}{ext}"
-    dest = PROFILE_UPLOAD_DIR / filename
-    size = 0
+    # Read the whole upload into memory (bounded), verifying the magic bytes.
+    raw = b""
     first = True
-    try:
-        with open(dest, "wb") as f:
-            while True:
-                chunk = await file.read(1024 * 1024)
-                if not chunk:
-                    break
-                if first:
-                    # Extension says .jpg; the bytes have to agree.
-                    assert_media_matches(chunk[:16], "image")
-                    first = False
-                size += len(chunk)
-                if size > MAX_IMAGE_BYTES:
-                    raise HTTPException(
-                        400,
-                        f"File बहुत बड़ी है — अधिकतम {MAX_IMAGE_BYTES // (1024*1024)} MB।",
-                    )
-                f.write(chunk)
-    except HTTPException as e:
-        dest.unlink(missing_ok=True)
-        raise e
-    except Exception as e:
-        dest.unlink(missing_ok=True)
-        logger.exception("[profile] avatar upload failed: %s", e)
-        raise HTTPException(500, "Upload नहीं हो पाया। दोबारा try करें।")
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        if first:
+            # Extension says image; the bytes have to agree.
+            assert_media_matches(chunk[:16], "image")
+            first = False
+        raw += chunk
+        if len(raw) > MAX_IMAGE_BYTES:
+            raise HTTPException(
+                400,
+                f"File बहुत बड़ी है — अधिकतम {MAX_IMAGE_BYTES // (1024*1024)} MB।",
+            )
 
-    # Save to db
-    old_avatar = profile.avatar_url
-    profile.avatar_url = f"/uploads/avatar/{filename}"
-    
+    # Downscale to a small square and re-encode as WebP, then store the image
+    # itself (as a base64 data URI) in the DB rather than on disk. Render's free
+    # tier has an ephemeral filesystem — anything written to uploads/ is wiped on
+    # every restart/redeploy, which is why avatars kept "disappearing" while the
+    # DB still held a /uploads/avatar/... path pointing at a now-missing file.
+    # A ~256px WebP is only a few KB, so the data URI lives comfortably in the
+    # (unbounded) TEXT column and survives restarts.
+    try:
+        img = Image.open(io.BytesIO(raw))
+        img = ImageOps.exif_transpose(img)          # honour phone rotation
+        img = img.convert("RGB")
+        img = ImageOps.fit(img, (256, 256), Image.LANCZOS)  # center-crop to a square
+        buf = io.BytesIO()
+        img.save(buf, format="WEBP", quality=80, method=6)
+    except Exception as e:
+        logger.exception("[profile] avatar processing failed: %s", e)
+        raise HTTPException(400, "यह image process नहीं हो पाई। दूसरी photo try करें।")
+
+    data_uri = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+    profile.avatar_url = data_uri
     user = db.query(User).filter(User.id == user_id).first()
     if user:
-        user.avatar_url = profile.avatar_url
-
+        user.avatar_url = data_uri
     db.commit()
-
-    # Try to clean up old avatar file
-    if old_avatar and "/uploads/avatar/" in old_avatar:
-        try:
-            old_name = old_avatar.split("/uploads/avatar/")[-1]
-            old_path = PROFILE_UPLOAD_DIR / old_name
-            old_path.unlink(missing_ok=True)
-        except Exception:
-            pass
 
     return {
         "success": True,
         "message": "Profile picture upload हो गया।",
         "data": {
-            "avatar_url": profile.avatar_url
+            "avatar_url": data_uri
         }
     }
 

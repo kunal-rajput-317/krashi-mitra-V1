@@ -249,7 +249,13 @@ def share_mandi(state: str = "", commodity: str = "", district: str = ""):
     params = [("state", state), ("commodity", commodity), ("district", district)]
     target = f"{SITE}/mandi.html?" + urlencode([(k, v) for k, v in params if v])
 
-    title = f"{commodity or 'मंडी भाव'} — आज का मंडी भाव | कृषि मित्र"
+    # Hindi crop name + rounded rupee, so the WhatsApp preview reads "चावल: ₹4,819"
+    # rather than "Rice: ₹6434.67". Imported lazily: bhav.py imports FROM this module
+    # at load time, so a top-level import back into it would be circular.
+    from backend.routes.bhav import _hindi_name, _rupee
+
+    hi_commodity = _hindi_name(commodity) if commodity else "मंडी भाव"
+    title = f"{hi_commodity} — आज का मंडी भाव | कृषि मित्र"
     desc = "ताजा मंडी भाव, रुझान और सरकारी दरें — कृषि मित्र, किसान का डिजिटल साथी"
 
     try:
@@ -259,7 +265,7 @@ def share_mandi(state: str = "", commodity: str = "", district: str = ""):
             p = prices[0]
             modal = p.get("modal_price")
             if modal and modal != "-":
-                title = f"{p.get('commodity', commodity)}: ₹{modal}/क्विंटल"
+                title = f"{_hindi_name(p.get('commodity', commodity))}: {_rupee(modal)}/क्विंटल"
                 try:
                     pct = float(p.get("change_pct"))
                     if pct:
