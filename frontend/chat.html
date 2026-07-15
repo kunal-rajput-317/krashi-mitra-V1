@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-<script src="api-config.js"></script>
 <!-- Khoj shared knowledge base — on-device fallback answers when the AI backend has none -->
 <script src="khoj-kb.js"></script>
 <!-- Google tag (gtag.js) -->
@@ -14,6 +13,20 @@
 </script>
 
 <meta charset="UTF-8">
+  <!-- Sync API-base bootstrap so api-config.js can load deferred
+       (it early-returns when KRASHIMITRA_API_BASE is already set) -->
+  <script>
+    (function () {
+      var h = location.hostname,
+          l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
+              /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+      window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
+        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1.onrender.com');
+      window.KRASHIMITRA_IS_LOCAL = l;
+      window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
+    })();
+  </script>
+  <script src="api-config.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- ═══════════════ SEO ═══════════════ -->

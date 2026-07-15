@@ -67,4 +67,7 @@
 /map.html              /map               301!
 /help.html             /help              301!
 
-/* /index.html 200
+# Anything that reached this point is a URL we don't serve. A 200-homepage
+# catch-all here created soft-404s (index bloat, "Crawled – currently not
+# indexed" in GSC) — serve the real 404 page with a real 404 status instead.
+/* /404.html 404

@@ -31,7 +31,10 @@
   // pages — must use root-absolute links, or a relative "mandi.html" would
   // resolve inside that sub-path (e.g. /articles/mandi.html → 404).
   var path = location.pathname;
-  var SEO = /^\/(bhav|product)(\/|$)/.test(path) || /\/articles\//.test(path);
+  // KM_FORCE_ABS_NAV: set by 404.html, which Netlify serves at whatever
+  // unknown URL was requested — relative links would resolve inside it.
+  var SEO = window.KM_FORCE_ABS_NAV ||
+    /^\/(bhav|product)(\/|$)/.test(path) || /\/articles\//.test(path);
 
   var LABELS = {
     mandi: { hi: 'मंडी भाव', en: 'Mandi Bhav', kn: 'ಮಂಡಿ ದರ' },
