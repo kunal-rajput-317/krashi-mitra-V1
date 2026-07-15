@@ -1252,7 +1252,7 @@ button.sidebar-drawer-link {
 
 <div class="pre-topbar">
   <a href="tel:+919870951001" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
-    <span class="pre-topbar-phone-icon">📞</span> PM-KISAN 20वीं किस्त 2026 — अपना स्टेटस चेक करें
+    <span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001
   </a>
 </div>
 
@@ -2008,6 +2008,9 @@ function quickJumpFilter(tag) {
   measureHeader();
   window.addEventListener('resize', measureHeader);
   window.addEventListener('scroll', onScroll, { passive: true });
+  if (window.ResizeObserver && wrapper) {
+    new ResizeObserver(measureHeader).observe(wrapper);
+  }
 })();
 
 // ── FILTER / SEARCH ──

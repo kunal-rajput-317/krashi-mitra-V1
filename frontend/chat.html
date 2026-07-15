@@ -1792,6 +1792,9 @@ function removeTyping() {
   // For chat page, messages scroll internally — header stays fixed
   measureHeader();
   window.addEventListener('resize', measureHeader);
+  if (window.ResizeObserver && wrapper) {
+    new ResizeObserver(measureHeader).observe(wrapper);
+  }
 })();
 
 // ══════════════════════════════════════

@@ -781,6 +781,7 @@
 
 <!-- Header -->
 <!-- ══ CANONICAL HEADER — universal across every page ══ -->
+<div class="header-wrapper" id="header-wrapper">
 <div class="pre-topbar">
   <a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
 </div>
@@ -830,6 +831,7 @@
   <a class="cnav-item" href="articles/index.html">कृषि लेख</a>
   <a class="cnav-item" href="sarkari_yojana.html">सरकारी योजना</a>
 </div></div>
+</div><!-- /.header-wrapper -->
 <div class="km-nav-loading" id="km-nav-loading" aria-hidden="true"><div class="km-nav-spinner"></div></div>
 
 
@@ -856,6 +858,8 @@
     </div>
   </div>
 </div>
+
+<div class="topbar-spacer" id="topbar-spacer"></div>
 
 <!-- Auth card -->
 <div class="page-wrapper">
@@ -1641,6 +1645,41 @@
   function toggleSidebarMenu() {
     document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
   }
+
+  // ── SCROLL HEADER ──
+  (function initScrollHeader() {
+    const wrapper = document.getElementById('header-wrapper');
+    const spacer  = document.getElementById('topbar-spacer');
+    let lastScrollY = window.scrollY;
+    let announcementH = 0;
+    let ticking = false;
+
+    function measureHeader() {
+      const ann = document.querySelector('.pre-topbar');
+      if (!ann || !wrapper || !spacer) return;
+      announcementH = ann.getBoundingClientRect().height;
+      spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
+    }
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY;
+          wrapper.style.transform = (y > lastScrollY && y > announcementH)
+            ? 'translateY(-' + announcementH + 'px)'
+            : 'translateY(0)';
+          lastScrollY = y;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (window.ResizeObserver && wrapper) {
+      new ResizeObserver(measureHeader).observe(wrapper);
+    }
+  })();
 </script>
 
 <!-- ── Floating AI Chat Button ── -->

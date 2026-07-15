@@ -329,6 +329,18 @@
 
     body { display: flex; flex-direction: column; min-height: 100vh; }
 
+    /* ── FIXED HEADER WRAPPER ── */
+    .header-wrapper {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    /* body is a height:100%/flex column here — without flex-shrink:0 the
+       empty spacer (no content of its own) gets crushed to 0 by flexbox
+       shrink math whenever page content is taller than the viewport */
+    .topbar-spacer { flex-shrink: 0; }
+
     /* ── ANNOUNCEMENT BAR (same as shop.html) ── */
     .pre-topbar {
       background: var(--amber);
@@ -765,11 +777,6 @@
     }
     .sidebar-drawer-utility-link:hover { color: #2d6a4f; }
 
-    /* Override top sticky position of commodity bar to fit new header size */
-    .commodity-navbar {
-      top: 59px !important; /* height of main-header (approx 58-60px) */
-    }
-
     /* Orders Modal */
     .orders-modal-overlay {
       display: none; position: fixed; inset: 0;
@@ -1017,7 +1024,6 @@
     .commodity-navbar {
       background: #17268c;
       box-shadow: 0 2px 10px rgba(0,0,0,0.18);
-      position: sticky; top: 60px; z-index: 90;
     }
     .cnav-inner {
       display: flex; align-items: stretch; gap: 0;
@@ -1981,6 +1987,8 @@
 </head>
 <body>
 
+<div class="header-wrapper" id="header-wrapper">
+
 <!-- ══ ANNOUNCEMENT BAR (same as shop.html) ══ -->
 <div class="pre-topbar">
   <a href="tel:+919870951001" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
@@ -2065,6 +2073,13 @@
   </div>
 </header>
 
+<!-- ══ BLUE COMMODITY QUICK-NAV BAR ══ -->
+<div class="commodity-navbar" id="commodity-navbar">
+  <div class="cnav-inner" id="cnav-inner"></div>
+</div>
+
+</div><!-- /.header-wrapper -->
+
 <!-- ══ SIDEBAR SLIDE-OUT DRAWER MENU ══ -->
 <!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
 <div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
@@ -2103,10 +2118,7 @@
   </div>
 </div>
 
-<!-- ══ BLUE COMMODITY QUICK-NAV BAR ══ -->
-<div class="commodity-navbar" id="commodity-navbar">
-  <div class="cnav-inner" id="cnav-inner"></div>
-</div>
+<div class="topbar-spacer" id="topbar-spacer"></div>
 
 <!-- ══ MAIN CONTENT ══ -->
 <div class="main-content">
@@ -4448,6 +4460,41 @@
       setTimeout(() => input.focus(), 300);
     }
   }
+
+  // ── SCROLL HEADER ──
+  (function initScrollHeader() {
+    const wrapper = document.getElementById('header-wrapper');
+    const spacer  = document.getElementById('topbar-spacer');
+    let lastScrollY = window.scrollY;
+    let announcementH = 0;
+    let ticking = false;
+
+    function measureHeader() {
+      const ann = document.querySelector('.pre-topbar');
+      if (!ann || !wrapper || !spacer) return;
+      announcementH = ann.getBoundingClientRect().height;
+      spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
+    }
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY;
+          wrapper.style.transform = (y > lastScrollY && y > announcementH)
+            ? 'translateY(-' + announcementH + 'px)'
+            : 'translateY(0)';
+          lastScrollY = y;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (window.ResizeObserver && wrapper) {
+      new ResizeObserver(measureHeader).observe(wrapper);
+    }
+  })();
 
   // ══════════════════════════════════════
   // WHATSAPP SHARE — image rate card via Web Share API (files),

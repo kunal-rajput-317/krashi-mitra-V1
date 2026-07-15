@@ -27,6 +27,10 @@
   --km-font-body:'DM Sans','Noto Sans Devanagari',sans-serif;
 }
 
+/* ── fixed header wrapper (hides amber bar on scroll-down, reveals on scroll-up) ── */
+.header-wrapper{position:fixed;top:0;left:0;right:0;z-index:200;
+  transition:transform .28s cubic-bezier(.4,0,.2,1)}
+
 /* ── amber helpline strip ── */
 .pre-topbar{background:var(--km-amber);color:#1a2e1e;display:flex;align-items:center;
   justify-content:center;gap:10px;padding:7px 16px;font-size:13px;font-weight:600;
@@ -116,7 +120,7 @@
 .sidebar-drawer-link.active{background:var(--km-green-pale);color:var(--km-green-dark);border-left-color:var(--km-green-dark)}
 
 /* ── blue commodity / quick-nav bar (content differs per page) ── */
-.commodity-navbar{background:var(--km-blue);position:sticky;top:59px;z-index:90}
+.commodity-navbar{background:var(--km-blue)}
 .cnav-inner{display:flex;align-items:stretch;padding:0 20px;overflow-x:auto;scrollbar-width:none;
   max-width:1280px;margin:0 auto}
 .cnav-inner::-webkit-scrollbar{display:none}
@@ -152,7 +156,7 @@
   .main-header-inner>.hamburger-btn{order:1;flex:0 0 auto}
   .main-header-inner>.header-left-group{order:2;flex:1 1 auto;display:flex;justify-content:center}
   .main-header-inner>.header-right-group{order:3;flex:0 0 auto}
-  .header-nav{display:none}
+  .main-header .header-nav{display:none}
   .header-logo-text{font-size:17px}
   .commodity-navbar{position:static}
 }

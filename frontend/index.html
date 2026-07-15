@@ -206,6 +206,16 @@
     }
 
     /* ══════════════════════════════
+       FIXED HEADER WRAPPER
+    ══════════════════════════════ */
+    .header-wrapper {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ══════════════════════════════
        TOP HEADER UTILITY BARS
        (full viewport width; inner content boxed at 1280px)
     ══════════════════════════════ */
@@ -2005,6 +2015,8 @@
 </head>
 <body>
 
+<div class="header-wrapper" id="header-wrapper">
+
 <!-- ══ ANNOUNCEMENT BAR ══ -->
 <div class="pre-topbar">
   <a href="tel:+919870951001" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
@@ -2070,6 +2082,10 @@
     </div>
   </div>
 </header>
+
+</div><!-- /.header-wrapper -->
+
+<div class="topbar-spacer" id="topbar-spacer"></div>
 
 <!-- ══ SIDEBAR SLIDE-OUT DRAWER MENU ══ -->
 <!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
@@ -3165,6 +3181,41 @@
   function toggleSidebarMenu() {
     document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
   }
+
+  // ── SCROLL HEADER ──
+  (function initScrollHeader() {
+    const wrapper = document.getElementById('header-wrapper');
+    const spacer  = document.getElementById('topbar-spacer');
+    let lastScrollY = window.scrollY;
+    let announcementH = 0;
+    let ticking = false;
+
+    function measureHeader() {
+      const ann = document.querySelector('.pre-topbar');
+      if (!ann || !wrapper || !spacer) return;
+      announcementH = ann.getBoundingClientRect().height;
+      spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
+    }
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY;
+          wrapper.style.transform = (y > lastScrollY && y > announcementH)
+            ? 'translateY(-' + announcementH + 'px)'
+            : 'translateY(0)';
+          lastScrollY = y;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (window.ResizeObserver && wrapper) {
+      new ResizeObserver(measureHeader).observe(wrapper);
+    }
+  })();
 </script>
 
 

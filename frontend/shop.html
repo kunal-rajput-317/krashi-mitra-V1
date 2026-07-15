@@ -2447,6 +2447,17 @@
 
 <!-- ══ HEADER SYSTEM — ported from mandi.html (light, multi-layer) ══ -->
 <style id="km-shop-header-css">
+  /* Fixed header wrapper */
+  .header-wrapper {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  /* body is a height:100%/flex column here — without flex-shrink:0 the
+     empty spacer gets crushed to 0 by flexbox shrink math */
+  .topbar-spacer { flex-shrink: 0; }
+
   /* Layer 0: Announcement bar (amber) */
   .pre-topbar {
     position: static;
@@ -2501,7 +2512,7 @@
   .header-bell-badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; background: #e53935; color: #fff; border-radius: 9px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 0 0 2px #fff; }
 
   /* Blue category quick-nav bar */
-  .commodity-navbar { background: #17268c; box-shadow: 0 2px 10px rgba(0,0,0,0.18); position: sticky; top: 59px; z-index: 90; }
+  .commodity-navbar { background: #17268c; box-shadow: 0 2px 10px rgba(0,0,0,0.18); }
   .cnav-inner { display: flex; align-items: stretch; gap: 0; padding: 0 20px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; max-width: 1280px; margin: 0 auto; }
   .cnav-inner::-webkit-scrollbar { display: none; }
   .cnav-item { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.90); font-size: 13px; font-weight: 600; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif; padding: 11px 14px; white-space: nowrap; line-height: 1.2; border-bottom: 3px solid transparent; transition: background 0.15s, color 0.15s; }
@@ -2523,6 +2534,8 @@
     .commodity-navbar { position: static; }
   }
 </style>
+
+<div class="header-wrapper" id="header-wrapper">
 
 <!-- ══ ANNOUNCEMENT BAR (amber) ══ -->
 <div class="pre-topbar">
@@ -2601,6 +2614,24 @@
   </div>
 </header>
 
+<!-- ══ BLUE CATEGORY QUICK-NAV BAR ══ -->
+<div class="commodity-navbar" id="shop-cat-navbar">
+  <div class="cnav-inner">
+    <button class="cnav-item active" data-cat="all" onclick="setCategory('all', null)" data-t="cat_all">सभी उत्पाद</button>
+    <button class="cnav-item" data-cat="seeds" onclick="setCategory('seeds', null)" data-t="cat_seeds">🌱 बीज</button>
+    <button class="cnav-item" data-cat="fertilizer" onclick="setCategory('fertilizer', null)" data-t="cat_fertilizer">🧪 खाद</button>
+    <button class="cnav-item" data-cat="pesticide" onclick="setCategory('pesticide', null)" data-t="cat_pesticide">🌿 कीटनाशक</button>
+    <button class="cnav-item" data-cat="tools" onclick="setCategory('tools', null)" data-t="cat_tools">🔧 उपकरण</button>
+    <button class="cnav-item" data-cat="pashu_aahaar" onclick="setCategory('pashu_aahaar', null)" data-t="cat_pashu_aahaar">🐄 पशु आहार</button>
+    <button class="cnav-item" data-cat="sprayers" onclick="setCategory('sprayers', null)">🔵 स्प्रेयर</button>
+    <button class="cnav-item" data-cat="irrigation" onclick="setCategory('irrigation', null)">💧 सिंचाई</button>
+    <button class="cnav-item" data-cat="soil" onclick="setCategory('soil', null)">🧪 मिट्टी / ग्रोथ</button>
+    <button class="cnav-item" data-cat="machinery" onclick="setCategory('machinery', null)">⚙️ मशीनरी</button>
+  </div>
+</div>
+
+</div><!-- /.header-wrapper -->
+
 <!-- ══ SIDEBAR SLIDE-OUT DRAWER MENU ══ -->
 <!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
 <div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
@@ -2638,21 +2669,7 @@
   </div>
 </div>
 
-<!-- ══ BLUE CATEGORY QUICK-NAV BAR ══ -->
-<div class="commodity-navbar" id="shop-cat-navbar">
-  <div class="cnav-inner">
-    <button class="cnav-item active" data-cat="all" onclick="setCategory('all', null)" data-t="cat_all">सभी उत्पाद</button>
-    <button class="cnav-item" data-cat="seeds" onclick="setCategory('seeds', null)" data-t="cat_seeds">🌱 बीज</button>
-    <button class="cnav-item" data-cat="fertilizer" onclick="setCategory('fertilizer', null)" data-t="cat_fertilizer">🧪 खाद</button>
-    <button class="cnav-item" data-cat="pesticide" onclick="setCategory('pesticide', null)" data-t="cat_pesticide">🌿 कीटनाशक</button>
-    <button class="cnav-item" data-cat="tools" onclick="setCategory('tools', null)" data-t="cat_tools">🔧 उपकरण</button>
-    <button class="cnav-item" data-cat="pashu_aahaar" onclick="setCategory('pashu_aahaar', null)" data-t="cat_pashu_aahaar">🐄 पशु आहार</button>
-    <button class="cnav-item" data-cat="sprayers" onclick="setCategory('sprayers', null)">🔵 स्प्रेयर</button>
-    <button class="cnav-item" data-cat="irrigation" onclick="setCategory('irrigation', null)">💧 सिंचाई</button>
-    <button class="cnav-item" data-cat="soil" onclick="setCategory('soil', null)">🧪 मिट्टी / ग्रोथ</button>
-    <button class="cnav-item" data-cat="machinery" onclick="setCategory('machinery', null)">⚙️ मशीनरी</button>
-  </div>
-</div>
+<div class="topbar-spacer" id="topbar-spacer"></div>
 
 <!-- ══ MAIN CONTENT ══ -->
 <main class="main-content" id="main-content" itemscope itemtype="https://schema.org/Store">
@@ -3163,6 +3180,41 @@
   function toggleSidebarMenu() {
     document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
   }
+
+  // ── SCROLL HEADER ──
+  (function initScrollHeader() {
+    const wrapper = document.getElementById('header-wrapper');
+    const spacer  = document.getElementById('topbar-spacer');
+    let lastScrollY = window.scrollY;
+    let announcementH = 0;
+    let ticking = false;
+
+    function measureHeader() {
+      const ann = document.querySelector('.pre-topbar');
+      if (!ann || !wrapper || !spacer) return;
+      announcementH = ann.getBoundingClientRect().height;
+      spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
+    }
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY;
+          wrapper.style.transform = (y > lastScrollY && y > announcementH)
+            ? 'translateY(-' + announcementH + 'px)'
+            : 'translateY(0)';
+          lastScrollY = y;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (window.ResizeObserver && wrapper) {
+      new ResizeObserver(measureHeader).observe(wrapper);
+    }
+  })();
 
   // ══════════════════════════════════════
   // PRODUCT CATALOGUE

@@ -391,6 +391,8 @@ img{max-width:100%}
 /* ── site header — same pre-topbar/topbar/main-header/blue-bar stack as
    mandi.html, so a page reached from Google reads as the same product as the
    app instead of a stripped-down doorway ── */
+.header-wrapper{position:fixed;top:0;left:0;right:0;z-index:200;
+transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .pre-topbar{background:var(--amber);color:#1a2e1e;display:flex;align-items:center;justify-content:center;
 gap:10px;padding:7px 16px;font-size:13px;font-weight:600;text-align:center}
 .pre-topbar-helpline{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;opacity:.9}
@@ -474,7 +476,7 @@ border-top-color:var(--green-mid);border-radius:50%;animation:km-nav-spin .7s li
 
 /* blue commodity quick-nav — real <a href> crop links, not mandi.html's JS
    buttons, since Googlebot must see them without executing JS */
-.commodity-navbar{background:#17268c;position:sticky;top:59px;z-index:90}
+.commodity-navbar{background:#17268c}
 .cnav-inner{display:flex;align-items:stretch;padding:0 20px;overflow-x:auto;scrollbar-width:none}
 .cnav-inner::-webkit-scrollbar{display:none}
 .cnav-item{color:rgba(255,255,255,.9);font-size:13px;font-weight:600;text-decoration:none;
@@ -491,7 +493,7 @@ the left with dead space to the right. */
 .main-header-inner>.hamburger-btn{order:1;flex:0 0 auto}
 .main-header-inner>.header-left-group{order:2;flex:1 1 auto;display:flex;justify-content:center}
 .main-header-inner>.header-right-group{order:3;flex:0 0 auto}
-.header-nav{display:none}
+.main-header .header-nav{display:none}
 .header-logo-text{font-size:17px}
 .commodity-navbar{position:static}
 }
@@ -1055,7 +1057,8 @@ def _header(active: str = "") -> str:
         f'<a href="{href}" class="sidebar-drawer-link{" active" if key == active else ""}">'
         f'<span class="sidebar-drawer-link-icon">{icon}</span><span>{label}</span></a>'
         for key, href, icon, label in _DRAWER_ITEMS)
-    return f"""<div class="pre-topbar">
+    return f"""<div class="header-wrapper" id="header-wrapper">
+<div class="pre-topbar">
 <a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
 </div>
 <div class="top-utility-bar"><div class="top-utility-inner">
@@ -1090,6 +1093,8 @@ def _header(active: str = "") -> str:
 </div>
 <a href="{SITE}/login" class="header-avatar-btn" id="header-avatar-btn">👤</a></div>
 </div></header>
+{_quicknav()}
+</div><!-- /.header-wrapper -->
 <div class="sidebar-drawer-overlay" id="km-drawer" onclick="this.classList.remove('open')">
 <div class="sidebar-drawer" onclick="event.stopPropagation()">
 <div class="sidebar-drawer-header"><span class="sidebar-drawer-title">मेनु</span>
@@ -1120,7 +1125,8 @@ window.kmShowLoading();
 <script src="/api-config.js"></script>
 <script src="/drawer-menu.js" defer></script>
 <script src="/bottomnav.js" defer></script>
-{_quicknav()}"""
+<div class="topbar-spacer" id="topbar-spacer"></div>
+<script src="/header-scroll.js"></script>"""
 
 
 def _footer() -> str:

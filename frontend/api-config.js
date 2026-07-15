@@ -81,25 +81,38 @@ document.addEventListener("DOMContentLoaded", function () {
     if (cachedAvatar && cachedAvatar !== "null") {
       const src = cachedAvatar.startsWith("/") ? apiBase + cachedAvatar : cachedAvatar;
       renderHeaderAvatar(btn, src);
-    } else {
-      fetch(`${apiBase}/profile`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      })
-      .then(r => r.json())
-      .catch(() => ({}))
-      .then(res => {
-        if (res.success && res.data) {
-          if (res.data.avatar_url) {
+    }
+
+    // Always revalidate against the server in the background, even when a
+    // cached avatar was just rendered above — a stale localStorage entry
+    // (e.g. an old /uploads/avatar/... path from before avatars moved into
+    // Postgres) would otherwise 404 forever and never get corrected, since
+    // nothing else on non-profile pages ever re-fetches /profile.
+    fetch(`${apiBase}/profile`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .catch(() => ({}))
+    .then(res => {
+      if (res.success && res.data) {
+        if (res.data.avatar_url) {
+          if (res.data.avatar_url !== cachedAvatar) {
             localStorage.setItem("user_avatar_url", res.data.avatar_url);
             const src = res.data.avatar_url.startsWith("/") ? apiBase + res.data.avatar_url : res.data.avatar_url;
             renderHeaderAvatar(btn, src);
           }
-          if (res.data.full_name) {
-            localStorage.setItem("user_name", res.data.full_name);
-          }
+        } else if (cachedAvatar) {
+          // Server has no avatar (removed / never survived the old disk
+          // storage) but we had a stale cache — clear it so we stop
+          // requesting a dead URL and fall back to the 👤 icon.
+          localStorage.removeItem("user_avatar_url");
+          btn.textContent = "👤";
         }
-      });
-    }
+        if (res.data.full_name) {
+          localStorage.setItem("user_name", res.data.full_name);
+        }
+      }
+    });
   } else {
     // Lead to login.html if not logged in
     btn.href = "login.html";

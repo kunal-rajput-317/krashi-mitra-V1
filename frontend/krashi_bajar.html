@@ -203,6 +203,17 @@
   }
   body { display: flex; flex-direction: column; min-height: 100vh; }
 
+  /* ── FIXED HEADER WRAPPER ── */
+  .header-wrapper {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  /* body is a height:100%/flex column here — without flex-shrink:0 the
+     empty spacer gets crushed to 0 by flexbox shrink math */
+  .topbar-spacer { flex-shrink: 0; }
+
   /* ── ANNOUNCEMENT BAR ── */
   .pre-topbar {
     background: var(--amber); color: #1a2e1e;
@@ -1216,6 +1227,8 @@
 </head>
 <body>
 
+<div class="header-wrapper" id="header-wrapper">
+
 <!-- ══ ANNOUNCEMENT BAR ══ -->
 <div class="pre-topbar">
   <a href="tel:+919870951001" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन पर कॉल करें">
@@ -1287,6 +1300,8 @@
   </div>
 </header>
 
+</div><!-- /.header-wrapper -->
+
 <!-- ══ SIDEBAR DRAWER ══ -->
 <!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
 <div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
@@ -1324,11 +1339,13 @@
   </div>
 </div>
 
+<div class="topbar-spacer" id="topbar-spacer"></div>
+
 <!-- ══ MAIN CONTENT ══ -->
 <div class="main-content">
 
   <!-- Page heading (mandi.html style — plain centered text, no hero box) -->
-  <h1 class="bz-page-heading" data-t="page_title">फसल बाज़ार</h1>
+  <h1 class="bz-page-heading" data-t="page_title">कृषि बाज़ार</h1>
   <div class="bz-page-sub" data-t="page_sub">सीधे खरीदार से जुड़ें /</div>
 
   <!-- Toolbar card -->
@@ -1535,7 +1552,7 @@ const TRANSLATIONS = {
     nav_mandi_price:'मंडी भाव', nav_weather_short:'मौसम देखें', nav_dukaan:'कृषि दुकान',
     nav_home:'मुख्य', nav_weather:'मौसम', nav_mandi:'मंडी', nav_shop:'दुकान',
     nav_chat:'सहायता', nav_schemes:'सरकारी योजना',
-    page_title:'फसल बाज़ार', page_sub:'सीधे खरीदार से जुड़ें — किसान का भरोसेमंद मंच',
+    page_title:'कृषि बाज़ार', page_sub:'सीधे खरीदार से जुड़ें — किसान का भरोसेमंद मंच',
     tab_sell:'मेरी फसल बेचें', tab_buy:'खरीदार बनें',
     search_ph:'फसल या मंडी खोजें...', loading:'लोड हो रहा है…', load_more:'और देखें ↓',
     fab_post:'पोस्ट करें', composer_title:'अपनी फसल बेचें',
@@ -1695,6 +1712,41 @@ function setLang(lang) {
 }
 
 function toggleSidebarMenu() { document.getElementById('sidebar-drawer-overlay').classList.toggle('open'); }
+
+// ── SCROLL HEADER ──
+(function initScrollHeader() {
+  const wrapper = document.getElementById('header-wrapper');
+  const spacer  = document.getElementById('topbar-spacer');
+  let lastScrollY = window.scrollY;
+  let announcementH = 0;
+  let ticking = false;
+
+  function measureHeader() {
+    const ann = document.querySelector('.pre-topbar');
+    if (!ann || !wrapper || !spacer) return;
+    announcementH = ann.getBoundingClientRect().height;
+    spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
+  }
+  function onScroll() {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const y = window.scrollY;
+        wrapper.style.transform = (y > lastScrollY && y > announcementH)
+          ? 'translateY(-' + announcementH + 'px)'
+          : 'translateY(0)';
+        lastScrollY = y;
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+  measureHeader();
+  window.addEventListener('resize', measureHeader);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  if (window.ResizeObserver && wrapper) {
+    new ResizeObserver(measureHeader).observe(wrapper);
+  }
+})();
 
 // ── Helpers ─────────────────────────────────────────────────
 function escapeHtml(s) {
