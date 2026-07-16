@@ -1032,6 +1032,7 @@
           <div class="field"><label for="whatsapp_number">WhatsApp नंबर <span class="hint">(अलग हो तो)</span></label><input id="whatsapp_number" name="whatsapp_number" type="tel" placeholder="WhatsApp नंबर" maxlength="10"></div>
           <div class="field"><label for="dob">जन्म तिथि</label><input id="dob" name="dob" type="date"></div>
           <div class="field"><label for="gender">लिंग</label><select id="gender" name="gender"><option value="">चुनें</option><option value="male">पुरुष</option><option value="female">महिला</option><option value="other">अन्य</option></select></div>
+          <div class="field"><label for="occupation">व्यवसाय</label><select id="occupation" name="occupation"><option value="">चुनें</option><option value="farmer">किसान (Farmer)</option><option value="businessman">व्यापारी (Businessman)</option><option value="dealer">डीलर (Dealer)</option><option value="seller">विक्रेता (Seller)</option><option value="buyer">खरीदार (Buyer)</option><option value="agri_trader">कृषि व्यापारी / आढ़ती</option><option value="input_dealer">बीज/खाद/कीटनाशक विक्रेता</option><option value="livestock">पशुपालक / डेयरी</option><option value="agri_advisor">कृषि सलाहकार</option><option value="fpo">FPO / सहकारी समिति</option><option value="student">छात्र (Student)</option><option value="govt">सरकारी कर्मचारी</option><option value="freehand">फ्रीलांसर / फ्री हैंड (Free hand)</option><option value="other">अन्य (Other)</option></select></div>
           <div class="field"><label for="education">शिक्षा</label><select id="education" name="education"><option value="">चुनें</option><option value="illiterate">अनपढ़</option><option value="primary">प्राथमिक (1-5)</option><option value="middle">मिडिल (6-8)</option><option value="high_school">हाई स्कूल (10th)</option><option value="intermediate">इंटरमीडिएट (12th)</option><option value="graduate">स्नातक</option><option value="post_graduate">स्नातकोत्तर</option></select></div>
           <div class="field"><label for="farming_experience">खेती का अनुभव</label><select id="farming_experience" name="farming_experience"><option value="">चुनें</option><option value="0-2">0-2 साल</option><option value="3-5">3-5 साल</option><option value="6-10">6-10 साल</option><option value="11-20">11-20 साल</option><option value="20+">20+ साल</option></select></div>
           <div class="field"><label for="family_size">परिवार के सदस्य</label><input id="family_size" name="family_size" type="number" placeholder="जैसे: 5" min="1" max="30"></div>
@@ -1333,7 +1334,7 @@
     // All form fields sent to/from API
     const TEXT_FIELDS = [
       "full_name","phone_number","whatsapp_number","dob","gender","education",
-      "farming_experience","family_size","state","district","tehsil","village",
+      "occupation","farming_experience","family_size","state","district","tehsil","village",
       "pin_code","nearest_mandi","farm_size","farm_size_unit","land_ownership",
       "soil_type","irrigation_type","khasra_number","primary_crop","farming_season",
       "crops_grown","farming_type","yield_per_acre","crop_problems","bank_name",
@@ -1507,6 +1508,7 @@
       const fields = [
         { id: 'full_name', tab: 'personal' },
         { id: 'phone_number', tab: 'personal' },
+        { id: 'occupation', tab: 'personal' },
         { id: 'farming_experience', tab: 'personal' },
         { id: 'state', tab: 'farm' },
         { id: 'district', tab: 'farm' },

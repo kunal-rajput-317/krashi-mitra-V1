@@ -33,20 +33,39 @@
 import json as _json
 import re
 import time
-from datetime import date
+from datetime import date, timedelta
 from html import escape
 from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from sqlalchemy import func
 
 from backend.database.db import SessionLocal, MandiPrice
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
+from backend.services import district_geo
 from backend.routes.share import _crop_image, _HI_CROP_EN, _TILES
 
 router = APIRouter()
 
 SITE = "https://krashimitra.in"
+
+# ── AdSense (only on /bhav content pages, never the shop/product pages, so ad
+# clicks never cannibalise a quote). One reserved-height unit placed BELOW the
+# content: LCP is the hero at the top, and a bottom-of-page slot keeps any load
+# shift off-screen, so Core Web Vitals stay intact. Reuses the account's
+# existing publisher id + an existing ad unit — swap _ADS_SLOT for a dedicated
+# "/bhav" unit in the AdSense dashboard if you want per-placement reporting. ──
+_ADS_PUB  = "ca-pub-2792326360609634"
+_ADS_SLOT = "7350859053"
+_ADS_LOADER = (f'<script async src="https://pagead2.googlesyndication.com/pagead/js/'
+               f'adsbygoogle.js?client={_ADS_PUB}" crossorigin="anonymous"></script>')
+_ADS_UNIT = (
+    '<div class="km-ad" style="min-height:280px;margin:22px auto 6px;text-align:center;'
+    'overflow:hidden">'
+    f'<ins class="adsbygoogle" style="display:block" data-ad-client="{_ADS_PUB}" '
+    f'data-ad-slot="{_ADS_SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>'
+    '<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>')
 
 # English commodity keyword → Hindi display name (reverse of share.py's
 # _HI_CROP_EN, plus data.gov spellings that differ from the chip names).
@@ -247,15 +266,21 @@ def _mandis_gen(n: int) -> str:
 
 
 # ── Slug index ───────────────────────────────────────────────
-# Built from SELECT DISTINCT on the snapshot; refreshed every 6h (the feed moves
+# Built from a GROUP BY on the snapshot; refreshed every 6h (the feed moves
 # once a day). Powers all four tiers, the sitemap and the legacy 301s.
 #   crops:   c_slug → commodity
 #   states:  c_slug → { s_slug → state }
 #   dists:   c_slug → { s_slug → { d_slug → district } }
 #   legacy:  c_slug → { d_slug → [s_slug, ...] }   — resolves the old 2-level URLs
+#   dates:   c_slug → { s_slug → { d_slug → "YYYY-MM-DD" } } — IST date of the
+#            newest fetched_at for that combo, i.e. the last day this page's
+#            data actually moved. Feeds the sitemap <lastmod>: a district that
+#            stopped reporting keeps its old date instead of claiming "today".
 _index: dict = {}
 _index_ts: float = 0.0
 _INDEX_TTL = 6 * 3600
+
+_IST_OFFSET = timedelta(hours=5, minutes=30)  # fetched_at is naive UTC
 
 
 def _get_index() -> dict:
@@ -264,16 +289,18 @@ def _get_index() -> dict:
         return _index
     db = SessionLocal()
     try:
-        rows = (db.query(MandiPrice.commodity, MandiPrice.state, MandiPrice.district)
+        rows = (db.query(MandiPrice.commodity, MandiPrice.state, MandiPrice.district,
+                         func.max(MandiPrice.fetched_at))
                   .filter(MandiPrice.commodity.isnot(None),
                           MandiPrice.state.isnot(None),
                           MandiPrice.district.isnot(None))
-                  .distinct().all())
+                  .group_by(MandiPrice.commodity, MandiPrice.state, MandiPrice.district)
+                  .all())
     finally:
         db.close()
 
-    crops, states, dists, legacy = {}, {}, {}, {}
-    for commodity, state, district in rows:
+    crops, states, dists, legacy, dates = {}, {}, {}, {}, {}
+    for commodity, state, district, fetched_at in rows:
         cs, ss, ds = _slugify(commodity), _slugify(state), _slugify(district)
         if not (cs and ss and ds):
             continue
@@ -283,9 +310,16 @@ def _get_index() -> dict:
         legacy.setdefault(cs, {}).setdefault(ds, [])
         if ss not in legacy[cs][ds]:
             legacy[cs][ds].append(ss)
+        if fetched_at:
+            d_iso = (fetched_at + _IST_OFFSET).date().isoformat()
+            slot = dates.setdefault(cs, {}).setdefault(ss, {})
+            # slugify can merge two raw combos onto one slug → keep the newest
+            if d_iso > slot.get(ds, ""):
+                slot[ds] = d_iso
 
     if crops:                   # keep the stale index if the DB comes back empty
-        _index = {"crops": crops, "states": states, "dists": dists, "legacy": legacy}
+        _index = {"crops": crops, "states": states, "dists": dists,
+                  "legacy": legacy, "dates": dates}
         _index_ts = time.time()
     return _index
 
@@ -378,7 +412,7 @@ def _related_links(c_slug: str, s_slug: str, d_slug: str,
 # Google on /bhav lands on something that is visibly the same product as the app.
 _CSS = """
 :root{--green-dark:#1a3c2e;--green-mid:#2d6a4f;--green-light:#52b788;--green-pale:#d8f3dc;
---amber:#e9a825;--cream:#f5f7f4;--white:#fff;--text-dark:#1a2e23;--text-mid:#4a5a52;
+--amber:#e9a825;--sky:#2e86de;--cream:#f5f7f4;--white:#fff;--text-dark:#1a2e23;--text-mid:#4a5a52;
 --text-soft:#7c8983;--border:#e5e9e6;--shadow-sm:0 2px 10px rgba(26,60,46,.05);
 --shadow-md:0 8px 28px rgba(26,60,46,.10);--radius-sm:12px;--radius-md:18px;
 --font-serif:'Noto Serif Devanagari','Playfair Display',serif;
@@ -650,10 +684,11 @@ border-radius:var(--radius-md);padding:15px 18px;box-shadow:var(--shadow-sm);mar
 .bmc-action {
   font-size: 13px;
   font-weight: 700;
-  color: var(--green-mid);
+  color: var(--green-dark);
   white-space: nowrap;
   margin-left: 12px;
 }
+.bmc-delta{color:var(--sky)}
 .better.flat{border-left-color:var(--green-light)}
 .better-message {
   font-size: 13.5px;
@@ -662,6 +697,11 @@ border-radius:var(--radius-md);padding:15px 18px;box-shadow:var(--shadow-sm);mar
   margin-top: 6px;
   line-height: 1.5;
 }
+.better-low{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)}
+.better-low-h{font-size:12.5px;font-weight:700;color:#c0392b;margin-bottom:8px}
+.better-mandi-card.low{border-right-color:#c0392b}
+.better-mandi-card.low:hover{border-color:#e88b7d}
+.better-mandi-card.low .bmc-action{color:#c0392b}
 
 /* ── trend chart ── */
 .card-w{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);
@@ -775,6 +815,51 @@ background:var(--cream);border:1px solid var(--border);border-radius:14px;paddin
   .place-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── district picker — compact single-row cards (not the rich map card) ── */
+.dcard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+@media (max-width: 900px) { .dcard-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .dcard-grid { grid-template-columns: 1fr; } }
+.dcard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-right: 5px solid var(--green-mid);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 10px rgba(26,60,46,.04);
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.dcard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(26,60,46,.08);
+  border-color: var(--green-light);
+}
+.dcard-n {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-dark);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dcard-r {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-mid);
+  white-space: nowrap;
 }
 
 .place {
@@ -1110,6 +1195,7 @@ nothing happen for however long that takes. */
 (function(){{
 var ov=document.getElementById('km-nav-loading');
 window.kmShowLoading=function(){{if(ov)ov.classList.add('show');}};
+window.kmHideLoading=function(){{if(ov)ov.classList.remove('show');}};
 document.addEventListener('click',function(e){{
 var a=e.target.closest('a');
 if(!a||!a.href)return;
@@ -1120,11 +1206,19 @@ if(url.origin!==location.origin)return;
 if(url.pathname===location.pathname&&url.hash)return; // in-page anchor jump
 window.kmShowLoading();
 }},true);
+/* Clear the spinner whenever the page is (re)shown. On a Back/Forward
+navigation the browser restores this page from its bfcache with the DOM
+exactly as we left it — mid-navigation, so the overlay is still .show and
+the spinner is stuck on. pageshow fires for both fresh loads and bfcache
+restores, so the returning page always comes back clean. */
+window.addEventListener('pageshow',window.kmHideLoading);
 }})();
 </script>
 <script src="/api-config.js"></script>
 <script src="/drawer-menu.js" defer></script>
 <script src="/bottomnav.js" defer></script>
+<script src="/location.js" defer></script>
+<script src="/bhav-nearest.js" defer></script>
 <div class="topbar-spacer" id="topbar-spacer"></div>
 <script src="/header-scroll.js"></script>"""
 
@@ -1155,6 +1249,8 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     _CSS here is this module's own, so a caller's local override of a same-named
     variable is invisible to this closure; extra_css is the only way in."""
     og = og_img or f"{SITE}/images/og-banner.webp"
+    ads_head = _ADS_LOADER if active == "bhav" else ""
+    ads_unit = _ADS_UNIT if active == "bhav" else ""
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -1173,6 +1269,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <meta name="twitter:card" content="summary_large_image">
 {_ICON}
 {_FONTS}
+{ads_head}
 {ld}
 <style>{_CSS}{extra_css}</style>
 </head>
@@ -1181,6 +1278,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <nav class="crumbs">{crumbs}</nav>
 <div class="wrap">
 {body}
+{ads_unit}
 </div>
 {_footer()}
 </body>
@@ -1654,20 +1752,42 @@ def find(q: str = ""):
 # ════════════════════════════════════════════════════════════
 @router.get("/bhav/sitemap.xml")
 def bhav_sitemap():
+    # <lastmod> is the newest fetched_at for the URL's slice of the snapshot
+    # (idx["dates"]), NOT date.today(): stamping every URL "today" on every
+    # request taught Google to distrust the whole field — 100% of pages
+    # claiming daily change is indistinguishable from noise, and it wastes
+    # recrawl budget on districts that stopped reporting weeks ago. Rollups:
+    # a state page is as fresh as its newest district, a crop as its newest
+    # state. A combo with no date (pre-migration rows) omits <lastmod> —
+    # a missing lastmod costs nothing, a false one costs trust in all of them.
     idx = _get_index()
-    today = date.today().isoformat()
-    urls = [f"{SITE}/bhav"]
+    dates = idx.get("dates", {})
+    urls = []          # (url, lastmod-or-"")
+    site_last = ""
     for cs, cn in sorted(idx.get("crops", {}).items()):
         if not _is_crop(cn):
             continue
-        urls.append(f"{SITE}/bhav/{cs}")
+        crop_last = ""
+        crop_urls = []
         for ss in sorted(idx["states"].get(cs, {})):
-            urls.append(f"{SITE}/bhav/{cs}/{ss}")
+            d_dates = dates.get(cs, {}).get(ss, {})
+            state_last = ""
+            state_urls = []
             for ds in sorted(idx["dists"].get(cs, {}).get(ss, {})):
-                urls.append(f"{SITE}/bhav/{cs}/{ss}/{ds}")
+                d_last = d_dates.get(ds, "")
+                state_last = max(state_last, d_last)
+                state_urls.append((f"{SITE}/bhav/{cs}/{ss}/{ds}", d_last))
+            crop_last = max(crop_last, state_last)
+            crop_urls.append((f"{SITE}/bhav/{cs}/{ss}", state_last))
+            crop_urls.extend(state_urls)
+        site_last = max(site_last, crop_last)
+        urls.append((f"{SITE}/bhav/{cs}", crop_last))
+        urls.extend(crop_urls)
+    urls.insert(0, (f"{SITE}/bhav", site_last))
     body = "\n".join(
-        f"  <url><loc>{u}</loc><lastmod>{today}</lastmod>"
-        f"<changefreq>daily</changefreq></url>" for u in urls)
+        f"  <url><loc>{u}</loc>"
+        + (f"<lastmod>{lm}</lastmod>" if lm else "")
+        + "<changefreq>daily</changefreq></url>" for u, lm in urls)
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
            f'{body}\n</urlset>')
@@ -1781,6 +1901,66 @@ def bhav_hub():
 
 
 # ════════════════════════════════════════════════════════════
+# NEAREST-MANDI personalisation (client-side swap on tier 2 & 3)
+#
+# The /bhav pages are one cached HTML shared by every visitor, so the server
+# can't know a farmer's location at render time — it always ships the
+# highest-price "best rate" panel as the no-JS fallback. bhav-nearest.js reads
+# the device location (localStorage km_geo) and calls this to replace that
+# panel with the NEAREST mandi instead. state="" → nationwide (tier 2);
+# state=<slug> → within that state (tier 3). Registered ABOVE /bhav/{c_slug}
+# so "nearest" isn't swallowed as a crop slug.
+# ════════════════════════════════════════════════════════════
+def _fmt_km(km: float) -> str:
+    return "1 किमी से कम" if km < 1 else f"{round(km):,} किमी"
+
+
+def _nearest_panel_html(cs: str, hi: str, row: dict, dist_km: float) -> str:
+    """Inner markup for the .better panel when a nearest mandi is found —
+    mirrors the highest-price card so the swapped-in panel looks native."""
+    ss, ds = _slugify(row.get("state", "")), _slugify(row.get("district", ""))
+    dist = _fmt_km(dist_km)
+    return (
+        f'<h2>📍 आपके सबसे नज़दीकी {escape(hi)} मंडी</h2>'
+        f'<p class="better-sub">आपके स्थान से करीब {dist} · भेजने से पहले भाड़ा ज़रूर जोड़ें</p>'
+        f'<ul><li>'
+        f'<a class="better-mandi-card" href="/bhav/{cs}/{ss}/{ds}">'
+        f'<div class="bmc-details">'
+        f'<span class="bmc-market">{escape(row.get("market", "-"))}</span>'
+        f'<span class="bmc-meta">{escape(row.get("district", "-"))}, '
+        f'{escape(_hindi_state(row.get("state", "")))} · {dist}</span>'
+        f'</div>'
+        f'<span class="bmc-action">भाव देखें →</span>'
+        f'</a></li></ul>'
+    )
+
+
+@router.get("/bhav/nearest")
+def bhav_nearest(crop: str, lat: float, lon: float, state: str = ""):
+    idx = _get_index()
+    cs = (crop or "").lower()
+    commodity = idx.get("crops", {}).get(cs)
+    if not commodity or not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        return JSONResponse({"ok": False}, headers={"Cache-Control": "no-store"})
+
+    state_name = ""
+    if state:                                   # tier 3 — scope to this state
+        state_name = idx.get("states", {}).get(cs, {}).get(state.lower(), "")
+        if not state_name:
+            return JSONResponse({"ok": False}, headers={"Cache-Control": "no-store"})
+
+    rows = [r for r in _rows_for(commodity, state=state_name)
+            if _num(r.get("modal_price"))]
+    res = district_geo.nearest(rows, lat, lon, lambda r: _num(r.get("modal_price")))
+    if not res:
+        return JSONResponse({"ok": False}, headers={"Cache-Control": "no-store"})
+
+    row, dist_km = res
+    html = _nearest_panel_html(cs, _hindi_name(commodity), row, dist_km)
+    return JSONResponse({"ok": True, "html": html}, headers={"Cache-Control": "no-store"})
+
+
+# ════════════════════════════════════════════════════════════
 # TIER 2 — /bhav/{crop} : pick a state
 # ════════════════════════════════════════════════════════════
 @router.get("/bhav/{c_slug}", response_class=HTMLResponse)
@@ -1856,7 +2036,7 @@ def bhav_crop(c_slug: str):
     if best:
         b_state = best.get("state", "")
         b_dist = best.get("district", "")
-        best_html = f"""<section class="better">
+        best_html = f"""<section class="better" id="km-near-panel" data-crop="{cs}">
 <h2>🏆 आज देश में सबसे ज्यादा {escape(hi)} भाव</h2>
 <p class="better-sub">आज के मॉडल भाव के आधार पर</p>
 <ul><li>
@@ -1962,15 +2142,15 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     # the district-level page (/bhav/{crop}/{state}/{district}) shows a number.
     cards = []
     for ds, dn in sorted(dist_map.items(), key=lambda kv: kv[1]):
-        cards.append(f"""<a class="place" href="/bhav/{cs}/{ss}/{ds}">
-<div class="place-n">{escape(dn)}</div>
-<div class="place-r">भाव देखें →</div>
+        cards.append(f"""<a class="dcard" href="/bhav/{cs}/{ss}/{ds}">
+<span class="dcard-n">{escape(dn)}</span>
+<span class="dcard-r">भाव देखें →</span>
 </a>""")
 
     # Top-paying mandis in this state — names the market as a hook, withholds
     # the number so the click still has to happen.
-    top = sorted((r for r in rows if _num(r.get("modal_price"))),
-                 key=lambda r: _num(r["modal_price"]), reverse=True)[:5]
+    priced = [r for r in rows if _num(r.get("modal_price"))]
+    top = sorted(priced, key=lambda r: _num(r["modal_price"]), reverse=True)[:5]
     top_html = ""
     if top:
         items = "".join(
@@ -1982,10 +2162,30 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
             f'  <span class="bmc-action">भाव देखें →</span>'
             f'</a></li>'
             for r in top)
-        top_html = f"""<section class="better">
+
+        # Cheapest mandi in the state — sits under the highest list so a farmer sees
+        # the spread and how much the mandi choice is worth. Shown only when it's
+        # genuinely lower than the top; the number is withheld (like the top cards)
+        # so the click still has to happen.
+        low = min(priced, key=lambda r: _num(r["modal_price"]))
+        low_html = ""
+        if _num(low["modal_price"]) < _num(top[0]["modal_price"]):
+            low_html = (
+                '<div class="better-low">'
+                f'<p class="better-low-h">📉 आज सबसे कम {escape(hi)} भाव इस मंडी में</p>'
+                f'<a class="better-mandi-card low" href="/bhav/{cs}/{ss}/{_slugify(low.get("district",""))}">'
+                '<div class="bmc-details">'
+                f'<span class="bmc-market">{escape(low.get("market","-"))}</span>'
+                f'<span class="bmc-meta">{escape(low.get("district","-"))}</span>'
+                '</div>'
+                '<span class="bmc-action">भाव देखें →</span>'
+                '</a></div>'
+            )
+
+        top_html = f"""<section class="better" id="km-near-panel" data-crop="{cs}" data-state="{ss}">
 <h2>🏆 {escape(hi_state)} में आज सबसे ज्यादा {escape(hi)} भाव</h2>
 <p class="better-sub">भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>
-<ul>{items}</ul></section>"""
+<ul>{items}</ul>{low_html}</section>"""
 
     photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
              f'alt="" aria-hidden="true" width="420" height="200">'
@@ -2024,7 +2224,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {top_html}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
-<div class="place-grid">{"".join(cards)}</div>
+<div class="dcard-grid">{"".join(cards)}</div>
 <div class="cta-row">
 <a class="btn btn-app" href="{_app_url(commodity, state=state)}">📊 ऐप में तुलना देखें</a>
 </div>
@@ -2125,7 +2325,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                 f'    <span class="bmc-market">{escape(dn)}</span>'
                 f'    <span class="bmc-meta">{escape(hi_state)}</span>'
                 f'  </div>'
-                f'  <span class="bmc-action">₹{avg:,} <small>(+₹{diff:,} ज्यादा)</small></span>'
+                # Show the DELTA (+₹X ज्यादा) — it's the curiosity hook ("this mandi
+                # pays ₹100 more!") that drives the click; bare "ज्यादा" is flat. But
+                # withhold the ABSOLUTE rate so the exact number still only lives on
+                # the target district's own page.
+                f'  <span class="bmc-action"><span class="bmc-delta">+₹{diff:,} ज्यादा</span> <small>भाव देखें →</small></span>'
                 f'</a></li>'
                 for dn, avg, diff in gains)
             better_html = f"""<section class="better">
@@ -2135,9 +2339,9 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <ul>{items}</ul></section>"""
         else:
             better_html = f"""<section class="better flat">
-<h2>✅ {escape(district)} में भाव सबसे अच्छा है</h2>
-<p class="better-sub">आज के मॉडल भाव के आधार पर</p>
-<p class="better-message">{escape(hi_state)} के किसी और जिले में {escape(hi)} का इससे बेहतर भाव नहीं मिल रहा।</p>
+<h2>🏆 {escape(district)} में {escape(hi)} का भाव सबसे ज्यादा है</h2>
+<p class="better-sub">आज के मॉडल भाव के आधार पर · बेचने वालों के लिए फायदेमंद</p>
+<p class="better-message">{escape(hi_state)} के किसी और जिले में {escape(hi)} का इससे ज्यादा भाव नहीं मिल रहा।</p>
 </section>"""
 
     # ── chart series: the mandi with the longest history speaks for the district ──
@@ -2174,12 +2378,13 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
              + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
              + f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और 7-दिन का रुझान। रोज़ अपडेट।")
 
-    # WhatsApp share — same behaviour as mandi.html's shareMandiPrice(): share the
-    # /share/mandi deep link (WhatsApp unfurls it into one rich preview card with the
-    # crop photo + rate as OG tags) via the native share sheet, falling back to wa.me.
-    share_url = f"{SITE}/share/mandi?" + urlencode(
-        [(k, v) for k, v in (("state", state), ("commodity", commodity),
-                             ("district", district)) if v])
+    # WhatsApp share — share THIS bhav page's own URL, not the /share/mandi deep
+    # link (which unfurls the same preview but bounces the recipient into the mandi
+    # app, away from the page the sender was actually looking at). This page already
+    # carries the rich OG tags — the crop photo (og:image, set in the _doc call below)
+    # plus a price-in-the-title — so WhatsApp still unfurls one rich preview card, and
+    # the tap lands right back on this bhav page. Native share sheet, wa.me fallback.
+    share_url = canon
     # Exactly mandi.html's shareMandiPrice() caption format: crop name alone in bold
     # (district lives in the preview card + URL, not the caption), then rate, delta,
     # and the same "👉 ताजा भाव देखें 👇" call to action.

@@ -237,6 +237,9 @@ app.include_router(articles_route.router)  # /articles/meta — live published/u
 from backend.routes import sitemap as sitemap_route
 app.include_router(sitemap_route.router)  # /sitemap.xml — generated from the pages/articles on disk
 
+from backend.routes import llms as llms_route
+app.include_router(llms_route.router)   # /llms.txt — AI-agent site guide, generated like the sitemap
+
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(

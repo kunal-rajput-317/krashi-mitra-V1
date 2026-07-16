@@ -41,10 +41,18 @@ def hash_password(plain_password: str) -> str:
     return _bcrypt.hashpw(_password_bytes(plain_password), _bcrypt.gensalt()).decode("utf-8")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against a bcrypt hash."""
+    """Verify password against a bcrypt hash.
+
+    Returns False (never raises) for a missing/blank/non-bcrypt hash. Legacy or
+    re-imported rows can have a NULL hashed_password, and the old code did
+    None.encode() → AttributeError, which escaped the `except ValueError` and
+    surfaced as a 500 on /login. A passwordless account must fail closed, not crash.
+    """
+    if not hashed_password:
+        return False
     try:
         return _bcrypt.checkpw(_password_bytes(plain_password), hashed_password.encode("utf-8"))
-    except ValueError:
+    except (ValueError, TypeError):
         return False
 
 

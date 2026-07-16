@@ -2361,21 +2361,27 @@
     </div>
 
     <h2> लोकप्रिय फसल भाव — राज्य अनुसार</h2>
+    <!-- These point at the server-rendered /bhav tree, NOT mandi.html?state=…
+         (the query-param form is a JS shell Googlebot sees empty — the exact
+         problem /bhav exists to solve). /bhav pages exist only for combos in
+         the snapshot: verify a combo resolves before adding, and link the crop
+         tier (/bhav/{crop}) for seasonal combos that drop out (e.g. Punjab
+         wheat has no July arrivals). Slugs = slugified data.gov names. -->
     <div class="seo-link-row">
-      <a href="mandi.html?state=Uttar%20Pradesh&commodity=Wheat" title="UP में गेहूं का भाव आज">गेहूं भाव UP</a>
-      <a href="mandi.html?state=Madhya%20Pradesh&commodity=Soybean" title="MP में सोयाबीन का भाव आज">सोयाबीन भाव MP</a>
-      <a href="mandi.html?state=Rajasthan&commodity=Mustard" title="राजस्थान में सरसों का भाव आज">सरसों भाव राजस्थान</a>
-      <a href="mandi.html?state=Rajasthan&commodity=Bajra" title="राजस्थान में बाजरा भाव">बाजरा भाव राजस्थान</a>
-      <a href="mandi.html?state=Maharashtra&commodity=Onion" title="नासिक/लासलगांव प्याज रेट">प्याज रेट महाराष्ट्र</a>
-      <a href="mandi.html?state=Karnataka&commodity=Onion" title="Karnataka onion price today">प्याज रेट कर्नाटक</a>
-      <a href="mandi.html?state=Karnataka&commodity=Arhar" title="Karnataka tur dal rate">तूर दाल कर्नाटक</a>
-      <a href="mandi.html?state=Tamil%20Nadu&commodity=Paddy" title="Tamil Nadu paddy price">धान रेट तमिलनाडु</a>
-      <a href="mandi.html?state=Punjab&commodity=Wheat" title="पंजाब गेहूं रेट">गेहूं भाव पंजाब</a>
-      <a href="mandi.html?state=Gujarat&commodity=Cotton" title="गुजरात कपास भाव">कपास भाव गुजरात</a>
-      <a href="mandi.html?state=Bihar&commodity=Maize" title="बिहार मक्का भाव">मक्का भाव बिहार</a>
-      <a href="mandi.html?state=Uttar%20Pradesh&commodity=Potato" title="UP आलू मंडी भाव">आलू भाव UP</a>
-      <a href="mandi.html?state=Madhya%20Pradesh&commodity=Gram" title="MP चना भाव">चना भाव MP</a>
-      <a href="mandi.html?state=Haryana&commodity=Paddy" title="हरियाणा धान रेट">धान भाव हरियाणा</a>
+      <a href="/bhav/wheat/uttar-pradesh" title="UP में गेहूं का भाव आज">गेहूं भाव UP</a>
+      <a href="/bhav/soyabean/madhya-pradesh" title="MP में सोयाबीन का भाव आज">सोयाबीन भाव MP</a>
+      <a href="/bhav/mustard/rajasthan" title="राजस्थान में सरसों का भाव आज">सरसों भाव राजस्थान</a>
+      <a href="/bhav/bajra-pearl-millet-cumbu/rajasthan" title="राजस्थान में बाजरा भाव">बाजरा भाव राजस्थान</a>
+      <a href="/bhav/onion/maharashtra" title="नासिक/लासलगांव प्याज रेट">प्याज रेट महाराष्ट्र</a>
+      <a href="/bhav/onion/karnataka" title="Karnataka onion price today">प्याज रेट कर्नाटक</a>
+      <a href="/bhav/red-gram-arhar-tur-whole/karnataka" title="Karnataka tur dal rate">तूर दाल कर्नाटक</a>
+      <a href="/bhav/paddy-common/tamil-nadu" title="Tamil Nadu paddy price">धान रेट तमिलनाडु</a>
+      <a href="/bhav/wheat" title="पंजाब गेहूं रेट">गेहूं भाव पंजाब</a>
+      <a href="/bhav/cotton/gujarat" title="गुजरात कपास भाव">कपास भाव गुजरात</a>
+      <a href="/bhav/maize" title="बिहार मक्का भाव">मक्का भाव बिहार</a>
+      <a href="/bhav/potato/uttar-pradesh" title="UP आलू मंडी भाव">आलू भाव UP</a>
+      <a href="/bhav/bengal-gram-gram-whole/madhya-pradesh" title="MP चना भाव">चना भाव MP</a>
+      <a href="/bhav/paddy-common" title="हरियाणा धान रेट">धान भाव हरियाणा</a>
     </div>
   </section>
 
@@ -4919,5 +4925,6 @@
   <script src="krashibook.js"></script>
   <script src="drawer-menu.js"></script>
   <script src="bottomnav.js" defer></script>
+  <script src="location.js" defer></script>
 </body>
 </html>

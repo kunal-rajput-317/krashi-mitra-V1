@@ -265,7 +265,8 @@ class User(Base):
     village            = Column(String,   nullable=True)
     district           = Column(String,   nullable=True)
     primary_crop       = Column(String,   nullable=True)  # NULL until the user actually picks a crop
-    avatar_url         = Column(String,   nullable=True)
+    # avatar_url lives ONLY on user_profiles — the users mirror was dropped
+    # (see the DROP COLUMN migration in _ensure_postgres_columns)
     # Blue-tick for Krashi Bazar sellers — toggled manually by admin in DB
     seller_verified    = Column(Boolean,  default=False, nullable=True)
     created_at         = Column(DateTime, default=datetime.utcnow)
@@ -287,17 +288,26 @@ class UserProfile(Base):
     dob                  = Column(Date,     nullable=True)   # live column is DATE; input "YYYY-MM-DD"
     gender               = Column(String,   nullable=True)
     education            = Column(String,   nullable=True)
+    occupation           = Column(String,   nullable=True)   # व्यवसाय — who the customer is (farmer/trader/dealer/…)
     farming_experience   = Column(String,   nullable=True)
     family_size          = Column(Integer,  nullable=True)
     avatar_url           = Column(String,   nullable=True)
 
-    # Location
+    # Location (manually entered address)
     state                = Column(String,   nullable=True)
     district             = Column(String,   nullable=True)
     tehsil               = Column(String,   nullable=True)
     village              = Column(String,   nullable=True)
     pin_code             = Column(String,   nullable=True)
     nearest_mandi        = Column(String,   nullable=True)
+
+    # Auto-detected device location (browser Geolocation API → reverse-geocoded).
+    # Kept SEPARATE from the address fields above: this is "where the phone is
+    # right now", not "where the farm is registered".
+    geo_lat              = Column(Float,    nullable=True)
+    geo_lon              = Column(Float,    nullable=True)
+    geo_location         = Column(String,   nullable=True)   # readable "जिला, राज्य"
+    geo_updated_at       = Column(DateTime, nullable=True)   # last time the device shared it
 
     # Farm
     farm_size            = Column(String,   nullable=True)
@@ -551,7 +561,8 @@ def _ensure_postgres_columns():
             ("village", "VARCHAR"),
             ("district", "VARCHAR"),
             ("primary_crop", "VARCHAR DEFAULT 'Sugarcane'"),
-            ("avatar_url", "VARCHAR"),
+            # avatar_url intentionally omitted — profile pic lives only on
+            # user_profiles now; the old users.avatar_url column is dropped below
             ("seller_verified", "BOOLEAN DEFAULT FALSE"),
             ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
@@ -563,6 +574,7 @@ def _ensure_postgres_columns():
             ("dob",                  "VARCHAR"),
             ("gender",               "VARCHAR"),
             ("education",            "VARCHAR"),
+            ("occupation",           "VARCHAR"),
             ("farming_experience",   "VARCHAR"),
             ("family_size",          "INTEGER"),
             ("avatar_url",           "VARCHAR"),
@@ -573,6 +585,11 @@ def _ensure_postgres_columns():
             ("village",              "VARCHAR"),
             ("pin_code",             "VARCHAR"),
             ("nearest_mandi",        "VARCHAR"),
+            # Auto-detected device location (see UserProfile model)
+            ("geo_lat",              "FLOAT"),
+            ("geo_lon",              "FLOAT"),
+            ("geo_location",         "VARCHAR"),
+            ("geo_updated_at",       "TIMESTAMP"),
             # Farm
             ("farm_size",            "VARCHAR"),
             ("farm_size_unit",       "VARCHAR DEFAULT 'acres'"),
@@ -782,6 +799,66 @@ def _ensure_postgres_columns():
         conn.execute(text("""
             CREATE INDEX IF NOT EXISTS mandi_history_group_dt_idx
             ON mandi_price_history(group_key, arrival_dt DESC);
+        """))
+
+        # ── users ↔ user_profiles 1:1 guarantee ──────────────────
+        # The app-level _ensure_profile() (auth.py) only runs on the OTP-verify
+        # and Google-login flows. Flipping is_verified = TRUE by hand in the DB
+        # GUI — or any future code path — bypassed it, leaving verified users
+        # with no user_profiles row. This DB trigger closes that gap: a profile
+        # is created automatically no matter HOW is_verified becomes true.
+        conn.execute(text("""
+            CREATE OR REPLACE FUNCTION ensure_user_profile() RETURNS trigger AS $$
+            BEGIN
+                INSERT INTO user_profiles (user_id, name, language)
+                SELECT NEW.id, NEW.name, COALESCE(NEW.preferred_language, 'hindi')
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM user_profiles WHERE user_id = NEW.id
+                );
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        """))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_ensure_user_profile ON users;"))
+        conn.execute(text("""
+            CREATE TRIGGER trg_ensure_user_profile
+                AFTER INSERT OR UPDATE OF is_verified ON users
+                FOR EACH ROW
+                WHEN (NEW.is_verified)
+                EXECUTE FUNCTION ensure_user_profile();
+        """))
+        # One-time backfill for accounts that were verified before this trigger
+        # existed (e.g. users 5, 6, 7, 13 verified manually in the GUI).
+        conn.execute(text("""
+            INSERT INTO user_profiles (user_id, name, language)
+            SELECT u.id, u.name, COALESCE(u.preferred_language, 'hindi')
+            FROM users u
+            LEFT JOIN user_profiles p ON p.user_id = u.id
+            WHERE u.is_verified AND p.id IS NULL;
+        """))
+
+        # ── Profile pic lives ONLY on user_profiles ──────────────
+        # users.avatar_url was a duplicated mirror (double storage). Preserve
+        # any avatar that somehow exists only on users, then drop the column.
+        # Self-guarding: the branch only runs while the column still exists, so
+        # it's a safe no-op on every startup after the first.
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'avatar_url'
+                ) THEN
+                    UPDATE user_profiles p
+                    SET avatar_url = u.avatar_url
+                    FROM users u
+                    WHERE p.user_id = u.id
+                      AND (p.avatar_url IS NULL OR p.avatar_url = '')
+                      AND u.avatar_url IS NOT NULL AND u.avatar_url <> '';
+
+                    ALTER TABLE users DROP COLUMN avatar_url;
+                END IF;
+            END $$;
         """))
 
 

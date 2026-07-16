@@ -1183,11 +1183,11 @@
 
     /* Crop cards — same anatomy as the shop's product cards:
        photo zone → name → price → link row → green action button */
-    /* Column counts divide the 6 crops evenly (3×2, 2×3, 1×6) — auto-fill left
-       an orphan card stranded on its own row. */
+    /* Mobile stacks one crop per row (n×1, like the shop catalog); wider
+       screens divide the 6 crops evenly (3-up, then 6-up). */
     .mandi-rows {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       gap: 14px;
       padding: 16px;
       background: #f7faf8;
@@ -1285,12 +1285,6 @@
     .mandi-trend.up   { color: #1b7a3d; }
     .mandi-trend.down { color: #c0392b; }
     .mandi-trend.flat { color: #9aa8a1; }
-    /* Two cards to a phone screen: a 5-digit price + unit wrapped to a second line */
-    @media (max-width: 599px) {
-      .mandi-price { font-size: 18px; }
-      .mandi-price small { font-size: 10px; }
-    }
-
     /* day-over-day change — badge on the photo, like the shop's product badge */
     .mandi-change {
       position: absolute;
@@ -1364,6 +1358,26 @@
       font-size: 12.5px;
     }
     .mandi-footer a:hover { text-decoration: underline; }
+
+    /* Static deep links into /bhav (SEO): depth-1 crawl paths to the crop tier */
+    .bhav-quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .bhav-quick-links a {
+      background: var(--green-pale);
+      color: var(--green-dark);
+      padding: 7px 14px;
+      border-radius: 18px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .bhav-quick-links a:hover { background: #c4ecce; }
+    .bhav-quick-links a.all { background: var(--green-mid); color: var(--white); }
 
     .mandi-skel {
       background: var(--white);
@@ -2489,6 +2503,27 @@
       <a href="mandi.html">सभी फसलों के भाव देखें →</a>
     </div>
   </div>
+
+  <!-- Static deep links into the /bhav tree (SEO). Before this row every entry
+       link on the site pointed at the bare /bhav hub, leaving district pages
+       4 clicks deep. Slugs must match the live index (slugified data.gov
+       commodity names) — e.g. धान is paddy-common, चना is
+       bengal-gram-gram-whole. Verify a slug resolves before adding it here. -->
+  <nav class="bhav-quick-links" aria-label="लोकप्रिय फसलों के आज के भाव">
+    <a href="/bhav/wheat">गेहूं का भाव</a>
+    <a href="/bhav/paddy-common">धान का भाव</a>
+    <a href="/bhav/potato">आलू का भाव</a>
+    <a href="/bhav/onion">प्याज का भाव</a>
+    <a href="/bhav/tomato">टमाटर का भाव</a>
+    <a href="/bhav/mustard">सरसों का भाव</a>
+    <a href="/bhav/soyabean">सोयाबीन का भाव</a>
+    <a href="/bhav/maize">मक्का का भाव</a>
+    <a href="/bhav/bengal-gram-gram-whole">चना का भाव</a>
+    <a href="/bhav/red-gram-arhar-tur-whole">अरहर का भाव</a>
+    <a href="/bhav/garlic">लहसुन का भाव</a>
+    <a href="/bhav/cotton">कपास का भाव</a>
+    <a class="all" href="/bhav">सभी फसलों के भाव →</a>
+  </nav>
 </section>
 
 <!-- ══════════════════════════
@@ -3288,5 +3323,6 @@
   </script>
   <script src="drawer-menu.js"></script>
   <script src="bottomnav.js" defer></script>
+  <script src="location.js" defer></script>
 </body>
 </html>

@@ -42,6 +42,7 @@ class ProfileCreateRequest(BaseModel):
     dob:                  Optional[str]  = None
     gender:               Optional[str]  = None
     education:            Optional[str]  = None
+    occupation:           Optional[str]  = None
     farming_experience:   Optional[str]  = None
     family_size:          Optional[int]  = None
 
@@ -116,6 +117,7 @@ class ProfileUpdateRequest(BaseModel):
     dob:                  Optional[str]  = None
     gender:               Optional[str]  = None
     education:            Optional[str]  = None
+    occupation:           Optional[str]  = None
     farming_experience:   Optional[str]  = None
     family_size:          Optional[int]  = None
 
@@ -175,6 +177,28 @@ class ProfileUpdateRequest(BaseModel):
         return v
 
 
+class LocationUpdateRequest(BaseModel):
+    """Auto-detected device location from the browser Geolocation API,
+    reverse-geocoded client-side. `location` is a readable 'जिला, राज्य'."""
+    lat:      float
+    lon:      float
+    location: Optional[str] = None
+
+    @field_validator("lat")
+    @classmethod
+    def _valid_lat(cls, v):
+        if v is None or not (-90.0 <= v <= 90.0):
+            raise ValueError("lat out of range")
+        return v
+
+    @field_validator("lon")
+    @classmethod
+    def _valid_lon(cls, v):
+        if v is None or not (-180.0 <= v <= 180.0):
+            raise ValueError("lon out of range")
+        return v
+
+
 # ── Helper ───────────────────────────────────────────────────
 
 def _profile_to_dict(p: UserProfile) -> dict:
@@ -188,6 +212,7 @@ def _profile_to_dict(p: UserProfile) -> dict:
         "dob":                  p.dob,
         "gender":               p.gender,
         "education":            p.education,
+        "occupation":           p.occupation,
         "farming_experience":   p.farming_experience,
         "family_size":          p.family_size,
         "avatar_url":           p.avatar_url,
@@ -198,6 +223,11 @@ def _profile_to_dict(p: UserProfile) -> dict:
         "village":              p.village,
         "pin_code":             p.pin_code,
         "nearest_mandi":        p.nearest_mandi,
+        # Auto-detected device location (separate from the address above)
+        "geo_lat":              p.geo_lat,
+        "geo_lon":              p.geo_lon,
+        "geo_location":         p.geo_location,
+        "geo_updated_at":       p.geo_updated_at,
         # Farm
         "farm_size":            p.farm_size,
         "farm_size_unit":       p.farm_size_unit,
@@ -253,12 +283,12 @@ def _derive_primary_crop(body_primary_crop: Optional[str], crops_grown: Optional
 
 
 def _sync_user(user: User, profile: UserProfile, db: Session):
-    """Keep the basic fields on the users table in sync with user_profiles."""
+    """Keep the basic fields on the users table in sync with user_profiles.
+    Avatar is deliberately NOT mirrored — user_profiles is its sole home."""
     user.preferred_language = profile.language or user.preferred_language
     user.village            = profile.village  or user.village
     user.district           = profile.district or user.district
     user.primary_crop       = profile.primary_crop or user.primary_crop
-    user.avatar_url         = profile.avatar_url   or user.avatar_url
     db.add(user)
 
 
@@ -289,6 +319,7 @@ def create_profile(
         dob                 = body.dob,
         gender              = body.gender,
         education           = body.education,
+        occupation          = body.occupation,
         farming_experience  = body.farming_experience,
         family_size         = body.family_size,
         # Location
@@ -381,6 +412,7 @@ def update_profile(
         "dob":                "dob",
         "gender":             "gender",
         "education":          "education",
+        "occupation":         "occupation",
         "farming_experience": "farming_experience",
         "state":              "state",
         "district":           "district",
@@ -508,6 +540,50 @@ def get_profile(
     }
 
 
+# ── POST /profile/location — save auto-detected device location ──
+# Called by frontend/location.js after the farmer grants the browser
+# location permission. Guests (no token) never reach here — they keep
+# their location only in localStorage. Auth'd users get it persisted on
+# their user_profiles row (alongside the address fields) so weather/mandi
+# can personalise across devices.
+
+@router.post("/location")
+def update_location(
+    body:         LocationUpdateRequest,
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    user_id = current_user["user_id"]
+
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    if not profile:
+        # Verified users always have a profile (DB trigger), but stay defensive:
+        # mint a bare one from the account name so the location never gets lost.
+        acct = db.query(User).filter(User.id == user_id).first()
+        if not acct:
+            raise HTTPException(status_code=404, detail="User नहीं मिला।")
+        profile = UserProfile(user_id=user_id, name=acct.name,
+                              language=acct.preferred_language or "hindi")
+        db.add(profile)
+
+    profile.geo_lat        = body.lat
+    profile.geo_lon        = body.lon
+    profile.geo_location   = (body.location or "").strip() or None
+    profile.geo_updated_at = datetime.utcnow()
+    profile.updated_at     = datetime.utcnow()
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "स्थान सेव हो गया।",
+        "data": {
+            "geo_lat":      profile.geo_lat,
+            "geo_lon":      profile.geo_lon,
+            "geo_location": profile.geo_location,
+        },
+    }
+
+
 # ── POST /profile/avatar — upload profile picture ────────────
 
 @router.post("/avatar")
@@ -567,9 +643,6 @@ async def upload_avatar(
     data_uri = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
     profile.avatar_url = data_uri
-    user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        user.avatar_url = data_uri
     db.commit()
 
     return {
@@ -595,11 +668,6 @@ def delete_avatar(
 
     old_avatar = profile.avatar_url
     profile.avatar_url = None
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        user.avatar_url = None
-
     db.commit()
 
     # Remove the file from disk (only our own uploads, never external URLs)

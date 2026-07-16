@@ -215,7 +215,12 @@ class SignupRequest(BaseModel):
     confirm_password: Optional[str] = None
 
 class LoginRequest(BaseModel):
-    email:    EmailStr
+    # Plain str, not EmailStr, on purpose: a strict EmailStr rejects addresses the
+    # client-side regex lets through (e.g. "a..b@gmail.com") with a 422, and the
+    # login form then shows a misleading "check your password". Login only needs to
+    # look the email up — a bad/unknown address falls through to the normal
+    # "email or password wrong" message. Signup/forgot keep EmailStr (OTP delivery).
+    email:    str
     password: str
 
 class VerifyOtpRequest(BaseModel):
@@ -330,6 +335,13 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
             return {"success": False, "message": "Email या password गलत है। Forgot password use कर सकते हैं।", "data": data}
         if not user.is_verified:
             return {"success": False, "message": "कृपया पहले अपना email verify करें।", "data": {}}
+        # Account has no usable password — NULL hash (legacy/re-imported row) or a
+        # Google-only account (GOOGLE_OAUTH sentinel). "wrong password" would be
+        # misleading; point the farmer at the flow that actually works.
+        if not user.hashed_password or user.hashed_password == "GOOGLE_OAUTH":
+            return {"success": False,
+                    "message": "इस account का password set नहीं है। 'Password भूल गए?' से नया password बनाएं, या Google से login करें।",
+                    "data": {"needs_password_reset": True}}
         if not verify_password(body.password, user.hashed_password):
             data = _record_failed_login(body.email)
             return {"success": False, "message": "Email या password गलत है। Forgot password use कर सकते हैं।", "data": data}
@@ -516,7 +528,10 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
                 user.google_id = google_id
             if not user.is_verified:
                 user.is_verified = True
-            if user.auth_provider != "google" and not user.hashed_password.startswith("$2"):
+            # `or ""` guards legacy rows whose hashed_password is NULL — the old
+            # Neon migration added the column as a nullable VARCHAR, so pre-existing
+            # accounts can have None here, and None.startswith() would 500.
+            if user.auth_provider != "google" and not (user.hashed_password or "").startswith("$2"):
                 user.auth_provider = "google"
             _ensure_profile(db, user)   # verified user → profile row exists
             db.commit()

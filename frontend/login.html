@@ -76,196 +76,6 @@
       overflow-x: hidden;
     }
 
-    /* ── Header ── */
-    .header {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    }
-    .header-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-    }
-    .logo-img {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1.5px solid var(--green-pale);
-    }
-    .logo-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-    }
-    .logo-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--green-dark);
-      letter-spacing: -0.3px;
-    }
-    .logo-title span {
-      color: var(--amber);
-    }
-    .logo-tagline {
-      font-size: 10px;
-      color: var(--text-light);
-      font-weight: 600;
-    }
-    .home-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--cream);
-      border: 1px solid var(--border);
-      color: var(--text-dark);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 20px;
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-    .home-btn:hover {
-      background: var(--green-pale);
-      color: var(--green-dark);
-      border-color: var(--green-light);
-      transform: translateY(-1px);
-    }
-    .home-btn:active {
-      transform: translateY(0);
-    }
-
-    /* ── Hamburger Menu Button ── */
-    .hamburger-btn {
-      display: none; /* Hidden on desktop */
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: var(--green-dark);
-      padding: 6px;
-      line-height: 1;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      transition: background 0.15s;
-    }
-    .hamburger-btn:hover {
-      background: var(--green-pale);
-    }
-
-    /* ══ Sidebar Slide-Out Drawer Menu ══ */
-    .sidebar-drawer-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,20,0.5);
-      backdrop-filter: blur(3px);
-      z-index: 4000;
-      justify-content: flex-start;
-    }
-    .sidebar-drawer-overlay.open { display: flex; }
-    .sidebar-drawer {
-      width: 288px;
-      max-width: 84vw;
-      background: #ffffff;
-      height: 100%;
-      box-shadow: 6px 0 28px rgba(0,0,0,0.18);
-      display: flex;
-      flex-direction: column;
-      animation: slide-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes slide-right {
-      from { transform: translateX(-100%); }
-      to { transform: translateX(0); }
-    }
-    .sidebar-drawer-header {
-      padding: 18px 16px 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .sidebar-drawer-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: #1c2b22;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-    }
-    .sidebar-drawer-close {
-      background: #f2f5f3;
-      border: none;
-      font-size: 15px;
-      cursor: pointer;
-      color: #5b675f;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      transition: background 0.15s, color 0.15s;
-    }
-    .sidebar-drawer-close:hover { background: #e6ebe8; color: #1c2b22; }
-    .sidebar-drawer-links {
-      flex: 1;
-      padding: 6px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow-y: auto;
-    }
-    .sidebar-drawer-link {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      min-height: 46px;
-      box-sizing: border-box;
-      padding: 10px 12px;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: #2d3748;
-      text-decoration: none;
-      border-radius: 10px;
-      border-left: 3px solid transparent;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-    }
-    .sidebar-drawer-link-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
-    .sidebar-drawer-link:hover { background: #f2f8f4; }
-    .sidebar-drawer-link.active {
-      background: #eaf6ed;
-      color: #2d6a4f;
-      border-left-color: #2d6a4f;
-    }
-    .sidebar-drawer-footer {
-      flex-shrink: 0;
-      border-top: 1px solid #eef2ef;
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .sidebar-drawer-utility-row { display: flex; align-items: center; gap: 16px; }
-    .sidebar-drawer-utility-link {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 13px; font-weight: 700; color: #4a5a52;
-      text-decoration: none; background: none; border: none; cursor: pointer;
-      padding: 0; font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-    }
-    .sidebar-drawer-utility-link:hover { color: #2d6a4f; }
-
     /* ── Page wrapper — centers the auth card ── */
     .page-wrapper {
       flex: 1;
@@ -682,43 +492,6 @@
 
     /* Mobile adjustments */
     @media screen and (max-width: 480px) {
-      .header {
-        display: grid;
-        grid-template-columns: 44px 1fr 44px;
-        align-items: center;
-        justify-items: center;
-        padding: 0 12px;
-      }
-      .hamburger-btn {
-        display: flex;
-        grid-column: 1;
-        justify-self: start;
-      }
-      .header-logo {
-        grid-column: 2;
-        justify-self: center;
-        margin-left: 0;
-        gap: 6px;
-      }
-      .logo-img {
-        width: 30px;
-        height: 30px;
-      }
-      .logo-tagline {
-        display: none;
-      }
-      .header-right {
-        grid-column: 3;
-        justify-self: end;
-        margin-left: 0;
-      }
-      .home-btn {
-        padding: 6px 10px;
-      }
-      .home-btn span {
-        display: none;
-      }
-
       .page-wrapper {
         align-items: flex-start;
         padding: 16px 16px 36px;
@@ -739,140 +512,57 @@
       }
     }
   </style>
-<style id="km-drawer-css">
-  /* Canonical sidebar drawer - identical across all pages */
-  .sidebar-drawer-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(15,23,20,0.5); backdrop-filter: blur(3px);
-    z-index: 4000; justify-content: flex-start;
-  }
-  .sidebar-drawer-overlay.open { display: flex; }
-  .sidebar-drawer {
-    width: 288px; max-width: 84vw; background: #ffffff; height: 100%;
-    box-shadow: 6px 0 28px rgba(0,0,0,0.18);
-    display: flex; flex-direction: column;
-    animation: km-slide-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  @keyframes km-slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-  .sidebar-drawer-header {
-    padding: 18px 16px 12px 20px; display: flex; align-items: center;
-    justify-content: space-between; flex-shrink: 0;
-  }
-  .sidebar-drawer-title { font-size: 17px; font-weight: 800; color: #1c2b22; }
-  .sidebar-drawer-close {
-    background: #f2f5f3; border: none; font-size: 15px; cursor: pointer; color: #5b675f;
-    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; transition: background 0.15s, color 0.15s;
-  }
-  .sidebar-drawer-close:hover { background: #e6ebe8; color: #1c2b22; }
-  .sidebar-drawer-links { flex: 1; padding: 6px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
-  .sidebar-drawer-link {
-    display: flex; align-items: center; gap: 13px; min-height: 46px;
-    padding: 10px 12px; font-size: 15px; font-weight: 700; color: #2d3748;
-    text-decoration: none; border-radius: 10px; border-left: 3px solid transparent;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .sidebar-drawer-link-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
-  .sidebar-drawer-link:hover { background: #f2f8f4; }
-  .sidebar-drawer-link.active { background: #eaf6ed; color: #2d6a4f; border-left-color: #2d6a4f; }
-  .sidebar-drawer-footer { flex-shrink: 0; border-top: 1px solid #eef2ef; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .sidebar-drawer-lang-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-  .sidebar-drawer-lang-label { font-size: 12px; font-weight: 700; color: #8a958f; }
-  .sidebar-lang-btn {
-    background: #f2f8f4; border: 1.5px solid #e3ece5; border-radius: 20px;
-    padding: 5px 12px; font-size: 12px; font-weight: 700; color: #2d3748;
-    cursor: pointer; font-family: inherit;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-  }
-  .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
-</style>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Universal page shell -->
+  <!-- Minimal chrome only: amber helpline strip + a slim menu/home bar (NOT the full site header) -->
   <link rel="stylesheet" href="km-shell.css">
+  <style>
+    /* slim action bar under the amber pre-topbar: menu (left) · home (right) */
+    .login-actionbar{display:flex;align-items:center;justify-content:space-between;
+      gap:12px;padding:10px 16px}
+    .login-menu-btn{background:none;border:none;font-size:24px;line-height:1;cursor:pointer;
+      color:var(--green-dark);padding:6px;border-radius:8px;display:flex;align-items:center;
+      justify-content:center;transition:background .15s}
+    .login-menu-btn:hover{background:var(--green-pale)}
+    .login-home-btn{display:inline-flex;align-items:center;gap:6px;background:var(--white);
+      border:1px solid var(--border);color:var(--text-dark);font-size:13px;font-weight:700;
+      padding:8px 14px;border-radius:20px;text-decoration:none;transition:all .2s ease}
+    .login-home-btn:hover{background:var(--green-pale);color:var(--green-dark);
+      border-color:var(--green-light);transform:translateY(-1px)}
+  </style>
 </head>
 <body>
 
-<!-- Header -->
-<!-- ══ CANONICAL HEADER — universal across every page ══ -->
-<div class="header-wrapper" id="header-wrapper">
+<!-- Minimal chrome: amber helpline strip + a slim menu/home bar (no full site header) -->
 <div class="pre-topbar">
   <a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
 </div>
-<div class="top-utility-bar"><div class="top-utility-inner">
-  <div class="top-utility-left">
-    <a href="index.html" class="top-utility-link">मुख्य</a><span class="top-utility-divider">|</span>
-    <a href="map.html" class="top-utility-link">कृषि मानचित्र</a><span class="top-utility-divider">|</span>
-    <a href="articles/index.html" class="top-utility-link">कृषि समाचार</a><span class="top-utility-divider">|</span>
-    <a href="sarkari_yojana.html" class="top-utility-link">सरकारी योजना</a>
-  </div>
-  <div class="top-utility-right">
-    <a href="tel:+919870951001" class="top-utility-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
-    <span class="top-utility-divider">|</span>
-    <a href="chat.html" class="top-utility-link">संपर्क</a>
-  </div>
-</div></div>
-<header class="main-header"><div class="main-header-inner">
-  <button class="hamburger-btn" onclick="var o=document.querySelector('.sidebar-drawer-overlay');if(o)o.classList.add('open')" aria-label="Menu">☰</button>
-  <div class="header-left-group">
-    <a class="header-logo-link" href="index.html">
-      <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" width="38" height="38">
-      <span class="header-logo-text">कृषि मित्र</span></a>
-  </div>
-  <nav class="header-nav">
-    <a class="header-nav-link" href="/bhav">मंडी भाव</a>
-    <a class="header-nav-link" href="krashi_bajar.html">कृषि बाज़ार</a>
-    <a class="header-nav-link" href="weather.html">मौसम देखें</a>
-    <a class="header-nav-link" href="/product/">कृषि दुकान</a>
-  </nav>
-  <div class="header-right-group">
-    <div class="km-hlang" id="km-hlang">
-      <button class="km-hlang-btn" type="button" aria-label="भाषा"><span class="km-hlang-cur">हिं</span><span class="km-hlang-caret">▾</span></button>
-      <div class="km-hlang-menu">
-        <button data-lang="hi"><span class="km-hlang-code">हिं</span>हिंदी</button>
-        <button data-lang="en"><span class="km-hlang-code">EN</span>English</button>
-        <button data-lang="kn"><span class="km-hlang-code">ಕ</span>ಕನ್ನಡ</button>
-      </div>
-    </div>
-    <a href="login.html" class="header-avatar-btn" id="header-avatar-btn">👤</a>
-  </div>
-</div></header>
-<div class="commodity-navbar"><div class="cnav-inner">
-  <a class="cnav-item" href="/bhav">बाज़ार भाव</a>
-  <a class="cnav-item" href="weather.html">मौसम</a>
-  <a class="cnav-item" href="mandi.html">मंडी भाव</a>
-  <a class="cnav-item" href="/product/">कृषि दुकान</a>
-  <a class="cnav-item" href="articles/index.html">कृषि लेख</a>
-  <a class="cnav-item" href="sarkari_yojana.html">सरकारी योजना</a>
-</div></div>
-</div><!-- /.header-wrapper -->
-<div class="km-nav-loading" id="km-nav-loading" aria-hidden="true"><div class="km-nav-spinner"></div></div>
+<div class="login-actionbar">
+  <button class="login-menu-btn" aria-label="मेनु" onclick="var o=document.querySelector('.sidebar-drawer-overlay');if(o)o.classList.add('open')">☰</button>
+  <a class="login-home-btn" href="index.html"><span aria-hidden="true">🏠</span> होम</a>
+</div>
 
-
-<!-- Sidebar Slide-Out Drawer Menu -->
-<!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
-<div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
+<!-- Sidebar drawer — the menu button opens it; drawer-menu.js regroups the links -->
+<div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="this.classList.remove('open')">
   <div class="sidebar-drawer" onclick="event.stopPropagation()">
     <div class="sidebar-drawer-header">
       <span class="sidebar-drawer-title" data-t="menu_title">मेनु</span>
-      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()" aria-label="Close menu">✕</button>
+      <button class="sidebar-drawer-close" onclick="document.getElementById('sidebar-drawer-overlay').classList.remove('open')" aria-label="Close menu">✕</button>
     </div>
     <div class="sidebar-drawer-links">
       <a href="index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
       <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
       <a href="mandi.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
-      <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
+      <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
       <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
       <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
       <a href="map.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span data-t="nav_map">कृषि मानचित्र</span></a>
       <a href="articles/index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
       <a href="sarkari_yojana.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span data-t="nav_schemes">सरकारी योजना</span></a>
       <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
-      <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
+      <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
     </div>
   </div>
 </div>
-
-<div class="topbar-spacer" id="topbar-spacer"></div>
 
 <!-- Auth card -->
 <div class="page-wrapper">
@@ -1308,6 +998,19 @@
         setTimeout(() => {
           window.location.href = "profile.html";
         }, 800);
+      } else if (!res.ok) {
+        // Server REJECTED the request itself (422 bad email format, 5xx crash) —
+        // this is NOT a wrong-password result, so don't blame the password, don't
+        // count it as a failed attempt, and don't start a cooldown.
+        let msg;
+        if (res.status === 422) {
+          msg = "Email का format सही नहीं लग रहा — कृपया दोबारा जांचें।";
+        } else if (res.status >= 500) {
+          msg = "⚠️ Server में समस्या है। थोड़ी देर बाद दोबारा try करें।";
+        } else {
+          msg = data.message || "Login नहीं हो पाया। दोबारा try करें।";
+        }
+        authErr("login-error", msg);
       } else {
         const info = data.data || {};
         loginAttempts += 1;
@@ -1655,61 +1358,8 @@
 
   localStorage.setItem('km_just_logged_in', '1');
 
-  function toggleSidebarMenu() {
-    document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
-  }
-
-  // ── SCROLL HEADER ──
-  (function initScrollHeader() {
-    const wrapper = document.getElementById('header-wrapper');
-    const spacer  = document.getElementById('topbar-spacer');
-    let lastScrollY = window.scrollY;
-    let announcementH = 0;
-    let ticking = false;
-
-    function measureHeader() {
-      const ann = document.querySelector('.pre-topbar');
-      if (!ann || !wrapper || !spacer) return;
-      announcementH = ann.getBoundingClientRect().height;
-      spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
-    }
-    function onScroll() {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const y = window.scrollY;
-          wrapper.style.transform = (y > lastScrollY && y > announcementH)
-            ? 'translateY(-' + announcementH + 'px)'
-            : 'translateY(0)';
-          lastScrollY = y;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }
-    measureHeader();
-    window.addEventListener('resize', measureHeader);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    if (window.ResizeObserver && wrapper) {
-      new ResizeObserver(measureHeader).observe(wrapper);
-    }
-  })();
 </script>
 
-<!-- ── Floating AI Chat Button ── -->
-<style>
-.ai-chat-fab{position:fixed;bottom:80px;right:18px;width:62px;height:62px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 18px rgba(45,106,45,.45),0 0 0 2.5px #7a9c2e;z-index:9999;transition:transform .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;overflow:visible;padding:0;}
-.ai-chat-fab:hover{transform:scale(1.1);box-shadow:0 6px 26px rgba(45,106,45,.6),0 0 0 2.5px #5a8c1e;}
-.ai-chat-fab:active{transform:scale(.95);}
-.ai-fab-icon{width:62px;height:62px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ai-fab-icon img{width:88%;height:88%;object-fit:contain;}
-.ai-fab-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1a3c2e;color:#fff;font-size:12px;font-weight:600;font-family:sans-serif;padding:5px 13px;border-radius:20px;white-space:nowrap;pointer-events:none;opacity:0;animation:ai-fab-label 35s ease-in-out 3s infinite;}
-@keyframes ai-fab-label{0%,100%{opacity:0;}8%{opacity:1;}20%{opacity:1;}28%{opacity:0;}}
-@media(min-width:1025px){.ai-chat-fab{bottom:28px;right:28px;width:68px;height:68px;}.ai-fab-icon{width:68px;height:68px;}}
-</style>
-<a href="chat.html" class="ai-chat-fab" title="AI सहायक से पूछें">
-  <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="AI सहायक"></span>
-  <span class="ai-fab-tip">AI सहायक</span>
-</a>
 <!-- Minimal Loading Popup -->
 <div class="loading-popup-overlay" id="loading-popup">
   <div class="loading-popup-card">
@@ -1718,8 +1368,6 @@
   </div>
 </div>
 
-  <script src="fab-autohide.js"></script>
-  <script src="drawer-menu.js"></script>
-  <script src="bottomnav.js" defer></script>
+  <script src="drawer-menu.js" defer></script>
 </body>
 </html>

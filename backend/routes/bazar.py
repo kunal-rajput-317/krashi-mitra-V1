@@ -107,7 +107,7 @@ def _author_info(user: Optional[User], profile: Optional[UserProfile]) -> dict:
     village  = (profile.village  if profile else None) or (user.village  if user else None)
     district = (profile.district if profile else None) or (user.district if user else None)
     location = ", ".join([p for p in [village, district] if p])
-    avatar_url = (profile.avatar_url if profile else None) or (user.avatar_url if user else None)
+    avatar_url = profile.avatar_url if profile else None
     return {
         "user_id":  user.id if user else None,
         "name":     name,
@@ -171,7 +171,7 @@ def bazar_me(
             "name":        (profile.name if profile and profile.name else user.name),
             "has_profile": profile is not None,
             "has_phone":   _has_phone(profile),
-            "avatar_url":  profile.avatar_url if profile else user.avatar_url,
+            "avatar_url":  profile.avatar_url if profile else None,
             "verified":    bool(user.seller_verified),
         },
     }

@@ -33,10 +33,14 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!btn.id) btn.id = "header-avatar-btn";
 
   // Decide destination at CLICK time (robust to pages that hardcode the href):
-  //   logged in  → profile.html   |   logged out → login.html (sign in)
+  //   logged in  → /profile.html   |   logged out → /login.html (sign in)
+  // Root-absolute paths, NOT bare "profile.html": the bhav/product SEO pages live
+  // at nested, extensionless URLs (/bhav/wheat-atta/rajasthan/jaipur), where a
+  // relative "profile.html" resolves to /bhav/wheat-atta/.../profile.html — a dead
+  // page. Both files sit at the site root, so "/profile.html" is right everywhere.
   function avatarTarget() {
     const t = localStorage.getItem("krishi_token");
-    return (t && t !== "null" && t !== "undefined") ? "profile.html" : "login.html";
+    return (t && t !== "null" && t !== "undefined") ? "/profile.html" : "/login.html";
   }
   btn.addEventListener("click", function (e) {
     e.preventDefault();
@@ -74,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const token = localStorage.getItem("krishi_token");
   if (token) {
     // Keep href in sync for hover/middle-click/right-click UX
-    btn.href = "profile.html";
+    btn.href = "/profile.html";
 
     const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
     const cachedAvatar = localStorage.getItem("user_avatar_url");
@@ -114,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   } else {
-    // Lead to login.html if not logged in
-    btn.href = "login.html";
+    // Lead to /login.html if not logged in
+    btn.href = "/login.html";
   }
 });
