@@ -79,6 +79,45 @@ def _refresh_if_stale():
         return False
 
 
+def _fetch_and_notify():
+    """fetch_and_store + IndexNow ping. When a fetch actually stored rows,
+    every /bhav page's content changed — tell Bing/Yandex/etc. so the 1300+
+    price pages recrawl within hours instead of weeks (Google doesn't do
+    IndexNow; it gets the same freshness via /bhav/sitemap.xml lastmod).
+    The ping is best-effort and must never fail the fetch itself."""
+    from backend.services.mandi_fetch_service import fetch_and_store
+
+    summary = fetch_and_store()
+    try:
+        if summary.get("fetched"):
+            from backend.utils.indexnow import ping_bhav
+            ping_bhav()
+    except Exception as e:
+        logger.error(f"IndexNow ping failed (non-fatal): {e}")
+
+    # Keep the /bhav "nearest mandi" centroids complete as new districts appear
+    # in the feed. Best-effort and bounded; must never fail the fetch itself.
+    try:
+        from backend.services.district_geo import backfill_missing
+        backfill_missing()
+    except Exception as e:
+        logger.error(f"district centroid backfill failed (non-fatal): {e}")
+
+    return summary
+
+
+def _archive_daily():
+    """Export the previous day's mandi rows from the DB into repo2 as CSV.
+    Best-effort and idempotent (self-heals missed days); must never raise —
+    the archive is downstream of, and must not endanger, the price fetch."""
+    try:
+        from backend.services.mandi_archive_service import run_archive
+        return run_archive()
+    except Exception as e:
+        logger.error(f"Mandi daily archive failed (non-fatal): {e}")
+        return None
+
+
 def _register_job():
     """
     Register the mandi refresh job. data.gov wipes the daily feed overnight
@@ -93,11 +132,12 @@ def _register_job():
     All runs are idempotent AND safe at any feed level: the snapshot is
     MERGED per market identity (never wholesale-deleted), history dedupes by
     row_key, and the sparse guard rejects near-empty results.
+    Every successful fetch also pings IndexNow (see _fetch_and_notify);
+    _refresh_if_stale routes through this same job, so the watchdog path
+    pings too.
     """
-    from backend.services.mandi_fetch_service import fetch_and_store
-
     scheduler.add_job(
-        func               = fetch_and_store,
+        func               = _fetch_and_notify,
         trigger            = CronTrigger(hour="8,10,13,16,20", minute=0, timezone=IST),
         id                 = "mandi_price_refresh",
         name               = "Nationwide Mandi Prices — Daily 08/10/13/16/20h IST",
@@ -119,7 +159,22 @@ def _register_job():
         max_instances      = 1,
         coalesce           = True,
     )
-    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h IST + 30-min staleness watchdog")
+    # Daily archive: at 04:00 IST data.gov has been wiped for the new day and
+    # yesterday's 20:00 sweep is the complete final record, so "yesterday" is
+    # safe & complete to export to repo2. Self-healing, so misfires just catch
+    # up. misfire_grace_time=None: run whenever noticed if the host was asleep.
+    scheduler.add_job(
+        func               = _archive_daily,
+        trigger            = CronTrigger(hour=4, minute=0, timezone=IST),
+        id                 = "mandi_daily_archive",
+        name               = "Mandi Daily Archive → repo2 CSV — 04:00 IST",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
+        misfire_grace_time = None,
+    )
+
+    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h IST + 30-min staleness watchdog + archive @ 04h IST")
 
 
 async def start_scheduler():
@@ -140,6 +195,20 @@ async def start_scheduler():
 
     if not _refresh_if_stale():
         logger.info("Mandi snapshot fresh — next scheduled fetch at 08/10/13/16/20h IST")
+
+    # Boot catch-up for the archive. The 04:00 cron is routinely missed on a
+    # spun-down free-tier instance (a process restart forgets the misfire), so
+    # a one-off run ~30s after boot exports any DB day not yet in repo2. Runs
+    # off the startup path (non-blocking) and self-heals within the 30-day window.
+    from datetime import timedelta as _td
+    scheduler.add_job(
+        func         = _archive_daily,
+        trigger      = "date",
+        run_date     = datetime.now(IST) + _td(seconds=30),
+        id           = "mandi_archive_catchup",
+        name         = "Mandi Archive — boot catch-up",
+        replace_existing = True,
+    )
 
 
 async def stop_scheduler():

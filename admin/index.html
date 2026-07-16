@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KrashiMitra — Control Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Leaflet.js — powers the Farmer Locator map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 /* ── Theme Tokens & Spacing Systems ────────────────────── */
 :root {
@@ -1077,6 +1080,10 @@ body {
         <span class="nav-icon">🤖</span>
         <span>AI Chatbot Page</span>
       </div>
+      <div class="nav-item" onclick="switchPage('locator', this)">
+        <span class="nav-icon">📍</span>
+        <span>Farmer Locator</span>
+      </div>
     </nav>
 
     <div class="sidebar-theme">
@@ -1197,6 +1204,12 @@ body {
             <div class="stat-value" id="sync-weather-age" style="font-size:16px; margin-top:12px;">—</div>
             <div class="stat-sub" id="sync-weather-detail">OpenWeather · 75 districts</div>
           </div>
+          <div class="stat-card">
+            <span class="stat-icon">📦</span>
+            <div class="stat-label">Archive — Health</div>
+            <div class="stat-value" id="archive-health-status" style="font-size:16px; margin-top:12px;">—</div>
+            <div class="stat-sub" id="archive-health-detail">mandi-bhav data repo</div>
+          </div>
         </div>
 
         <div class="dashboard-panel" style="margin-top:16px;">
@@ -1210,8 +1223,9 @@ body {
           </div>
           <div class="panel-body">
             <p class="text-muted" style="font-size:12px; margin-bottom:14px;">
-              History of automatic mandi &amp; weather fetches — each scheduled run records its status,
-              row count and time here so you can confirm the pipelines stay healthy.
+              History of automatic mandi &amp; weather fetches, plus the daily archive push to
+              the mandi-bhav data repo — each scheduled run records its status, row count and
+              time here so you can confirm the pipelines stay healthy.
             </p>
             <div class="table-responsive">
               <table class="data-table">
@@ -1923,6 +1937,151 @@ body {
         </div>
       </div>
 
+      <!-- ─────────────── PAGE: FARMER LOCATOR ─────────────── -->
+      <style id="fl-style">
+        #farmer-map {
+          width: 100%; height: 520px; border-radius: 14px;
+          border: 1px solid var(--border-hl); background: #0a0f0c; z-index: 1;
+        }
+        .fl-workspace {
+          display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-top: 6px;
+        }
+        @media (max-width: 1100px) { .fl-workspace { grid-template-columns: 1fr; } }
+        .fl-search-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .fl-search-row .inp-text { flex: 1; min-width: 220px; }
+        .fl-legend { display: flex; gap: 16px; align-items: center; margin-top: 12px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; }
+        .fl-legend .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+        .fl-dot-device { background: #22c55e; box-shadow: 0 0 0 2px #16a34a; }
+        .fl-dot-approx { background: #facc15; box-shadow: 0 0 0 2px #eab308; }
+        .fl-cluster-list { display: flex; flex-direction: column; gap: 8px; max-height: 470px; overflow-y: auto; padding-right: 4px; }
+        .fl-cluster {
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: border-color .15s, transform .1s;
+        }
+        .fl-cluster:hover { border-color: var(--primary); transform: translateY(-1px); }
+        .fl-cluster-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .fl-cluster-name { font-weight: 700; font-size: 14px; color: var(--text); }
+        .fl-cluster-count { font-weight: 800; font-size: 15px; color: var(--primary); font-family: var(--font-mono); }
+        .fl-cluster-count small { color: var(--text-dim); font-weight: 500; font-size: 10px; }
+        .fl-crop-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        .fl-crop-chip {
+          background: rgba(34,197,94,.10); border: 1px solid rgba(34,197,94,.25);
+          color: #86efac; border-radius: 20px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+        }
+        .fl-badge {
+          display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px;
+          border-radius: 20px; letter-spacing: .3px;
+        }
+        .fl-badge-device { background: rgba(34,197,94,.15); color: #4ade80; }
+        .fl-badge-approx { background: rgba(234,179,8,.15); color: #fbbf24; }
+        .fl-row-link { cursor: pointer; }
+        .fl-row-link:hover { background: var(--surface-hl); }
+        .fl-pop-name { font-weight: 800; font-size: 14px; margin-bottom: 2px; color: #14351f; }
+        .leaflet-popup-content { margin: 12px 14px; font-family: var(--font-sans); line-height: 1.5; }
+        .leaflet-popup-content b { color: #14351f; }
+        .fl-pop-row { font-size: 12.5px; color: #33513f; }
+        .fl-pop-actions { margin-top: 8px; display: flex; gap: 8px; }
+        .fl-pop-actions a {
+          font-size: 12px; font-weight: 700; text-decoration: none; padding: 5px 11px;
+          border-radius: 8px; color: #fff;
+        }
+        .fl-pop-call { background: #2563eb; }
+        .fl-pop-wa { background: #16a34a; }
+      </style>
+      <div class="page" id="page-locator">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Farmer Locator</h2>
+            <p>Where our farmers are • search by ID / name / phone / place, and find demand clusters to serve • किसान कहाँ से हैं</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadFarmerLocator('')" id="fl-refresh-btn">↻ Refresh</button>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="fl-search-row">
+          <input type="text" class="inp-text" id="fl-search"
+                 placeholder="🔎 Farmer ID, name, phone, गाँव / जिला / राज्य, PIN, or crop…"
+                 onkeydown="if(event.key==='Enter') loadFarmerLocator()">
+          <button class="btn btn-primary" onclick="loadFarmerLocator()">Search</button>
+          <button class="btn btn-secondary" onclick="clearFarmerSearch()">Clear</button>
+        </div>
+
+        <!-- KPI row -->
+        <div class="grid-cards" id="fl-kpi-cards">
+          <div class="stat-card accented">
+            <span class="stat-icon">👨‍🌾</span>
+            <div class="stat-label">Farmers Shown</div>
+            <div class="stat-value" id="fl-kpi-total">—</div>
+            <div class="stat-sub">matching current view</div>
+          </div>
+          <div class="stat-card info">
+            <span class="stat-icon">📍</span>
+            <div class="stat-label">On the Map</div>
+            <div class="stat-value ok" id="fl-kpi-located">—</div>
+            <div class="stat-sub">have a plottable location</div>
+          </div>
+          <div class="stat-card accented">
+            <span class="stat-icon">🛰️</span>
+            <div class="stat-label">Exact GPS Pins</div>
+            <div class="stat-value" id="fl-kpi-device">—</div>
+            <div class="stat-sub">device-shared location</div>
+          </div>
+          <div class="stat-card info">
+            <span class="stat-icon">🔥</span>
+            <div class="stat-label">Top Demand Region</div>
+            <div class="stat-value" id="fl-kpi-topregion" style="font-size:20px;">—</div>
+            <div class="stat-sub" id="fl-kpi-topregion-sub">most farmers</div>
+          </div>
+        </div>
+
+        <!-- Map + Demand clusters -->
+        <div class="fl-workspace">
+          <div class="dashboard-panel" style="padding:16px;">
+            <div class="panel-header" style="padding:0 0 10px 0; border:none;">
+              <span class="panel-title">🗺️ Farmer Map</span>
+              <span style="font-size:12px;color:var(--text-dim);">Tap a pin for contact &amp; details</span>
+            </div>
+            <div id="farmer-map"></div>
+            <div class="fl-legend">
+              <span><span class="dot fl-dot-device"></span>Exact GPS (device)</span>
+              <span><span class="dot fl-dot-approx"></span>Approx. (from address / PIN)</span>
+              <span id="fl-map-empty" style="color:var(--accent);display:none;">⚠️ No farmers to plot for this search.</span>
+            </div>
+          </div>
+
+          <div class="dashboard-panel" style="padding:16px;">
+            <div class="panel-header" style="padding:0 0 10px 0; border:none;">
+              <span class="panel-title">📊 Demand Clusters</span>
+            </div>
+            <p style="font-size:12px;color:var(--text-dim);margin:-4px 0 12px;">
+              Regions ranked by farmer count — where to focus supply &amp; service. Tap to zoom.
+            </p>
+            <div class="fl-cluster-list" id="fl-cluster-list">
+              <div class="km-loader"><span class="km-spinner"></span> Loading…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Farmer list -->
+        <div class="dashboard-panel" style="margin-top:16px;">
+          <div class="panel-header">
+            <span class="panel-title">🧾 Farmers <span id="fl-list-count" style="color:var(--text-dim);font-weight:500;font-size:12px;"></span></span>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead><tr><th>Farmer</th><th>व्यवसाय</th><th>Location</th><th>Crop</th><th>Contact</th><th>Pin</th></tr></thead>
+                <tbody id="fl-list-body">
+                  <tr><td colspan="6"><div class="km-loader"><span class="km-spinner"></span> Loading…</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <!-- ══════════ COLLAPSIBLE TERMINAL DRAWER ══════════ -->
@@ -2272,7 +2431,54 @@ function _syncSummaryCard(ageId, detailId, run, fallback) {
   if (detEl) detEl.textContent = run ? `${(run.status || '').toUpperCase()} · ${run.detail || ''}` : fallback;
 }
 
+async function loadArchiveHealth() {
+  const statusEl = document.getElementById('archive-health-status');
+  const detEl    = document.getElementById('archive-health-detail');
+  if (!statusEl) return;
+  try {
+    const r = await fetch(`${API}/admin/archive-health`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error('bad');
+
+    if (!d.configured) {
+      statusEl.textContent = 'Not configured';
+      statusEl.className = 'stat-value warn';
+      detEl && (detEl.textContent = 'Set MANDI_ARCHIVE_REPO + token to enable');
+      return;
+    }
+    if (!d.checked_ok) {
+      statusEl.textContent = 'Can’t reach repo';
+      statusEl.className = 'stat-value warn';
+      detEl && (detEl.textContent = 'Could not list the data repo — check token/repo');
+      return;
+    }
+    if (d.db_days === 0) {
+      statusEl.textContent = 'No data yet';
+      statusEl.className = 'stat-value';
+      detEl && (detEl.textContent = 'No mandi history in DB to archive');
+      return;
+    }
+    const miss = d.missing_count || 0;
+    if (miss === 0) {
+      statusEl.textContent = 'Up to date';
+      statusEl.className = 'stat-value ok';
+      detEl && (detEl.textContent = `${d.archived}/${d.db_days} days archived · last ${d.last_archived_date}`);
+    } else {
+      statusEl.textContent = `${miss} day${miss > 1 ? 's' : ''} missing`;
+      statusEl.className = 'stat-value err';
+      const list = (d.missing || []).slice(0, 5).join(', ');
+      detEl && (detEl.textContent = `${d.archived}/${d.db_days} archived · missing: ${list}${(d.missing || []).length > 5 ? '…' : ''}`);
+    }
+  } catch (e) {
+    statusEl.textContent = 'Unavailable';
+    statusEl.className = 'stat-value';
+    detEl && (detEl.textContent = 'Backend offline');
+  }
+}
+
 async function loadSyncLog() {
+  loadArchiveHealth();               // refresh the archive-health card alongside the log
   const tb = document.getElementById('sync-log-body');
   try {
     const r = await fetch(`${API}/admin/sync-log?limit=40`, { headers: getAuthHeader() });
@@ -2287,7 +2493,7 @@ async function loadSyncLog() {
     const runs = d.runs || [];
     if (tb) {
       tb.innerHTML = runs.length ? runs.map(x => `<tr>
-        <td>${x.source === 'weather' ? '⛅ Weather' : '🌾 Mandi'}</td>
+        <td>${x.source === 'weather' ? '⛅ Weather' : x.source === 'archive' ? '📦 Archive' : '🌾 Mandi'}</td>
         <td><span class="status-pill ${syncStatusClass(x.status)}">${escapeHtml(x.status || '—')}</span></td>
         <td class="text-mono">${x.rows ?? 0}</td>
         <td class="text-muted" style="font-size:12px;">${escapeHtml(x.detail || '—')}</td>
@@ -2391,6 +2597,7 @@ function switchPage(pageId, el) {
     loadPreordersTable(_kpiOrderFilter || '');
     _kpiOrderFilter = null;
   }
+  if (pageId === 'locator') loadFarmerLocator();
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)
@@ -4093,6 +4300,222 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+// ══════════════════════════════════════════════════════════════
+// FARMER LOCATOR — map of where our farmers are + demand clusters
+// ══════════════════════════════════════════════════════════════
+let _flMap = null;
+let _flMarkers = null;              // L.layerGroup of farmer pins
+let _flMarkerById = {};            // user_id → marker (for list → map focus)
+let _flData = [];
+
+function ensureFarmerMap() {
+  if (_flMap) return true;
+  if (typeof L === 'undefined') return false;   // Leaflet CDN blocked
+  _flMap = L.map('farmer-map', { scrollWheelZoom: true, zoomControl: true })
+            .setView([25.5, 80.9], 5);           // centred on the Indo-Gangetic plain
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 14
+  }).addTo(_flMap);
+  _flMarkers = L.layerGroup().addTo(_flMap);
+  return true;
+}
+
+async function loadFarmerLocator(q) {
+  const searchEl = document.getElementById('fl-search');
+  if (q !== undefined && searchEl) searchEl.value = q;   // programmatic reset (Refresh/Clear)
+  const query = (searchEl ? searchEl.value : '').trim();
+
+  const ready = ensureFarmerMap();
+  if (_flMap) setTimeout(() => _flMap.invalidateSize(), 80);  // container was hidden until now
+
+  const listBody = document.getElementById('fl-list-body');
+  const clusterList = document.getElementById('fl-cluster-list');
+  listBody.innerHTML = '<tr><td colspan="5"><div class="km-loader"><span class="km-spinner"></span> Loading…</div></td></tr>';
+  clusterList.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> Loading…</div>';
+
+  try {
+    const url = `${API}/admin/farmers/locations?limit=2000` + (query ? `&q=${encodeURIComponent(query)}` : '');
+    const r = await fetch(url, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); throw new Error('Unauth'); }
+    if (!r.ok) throw new Error('server ' + r.status);
+    const d = await r.json();
+
+    _flData = d.farmers || [];
+    renderFarmerKpis(d);
+    if (ready) renderFarmerMarkers(_flData);
+    renderFarmerClusters(d.clusters || []);
+    renderFarmerList(_flData);
+
+    if (!ready) {
+      document.getElementById('farmer-map').innerHTML =
+        '<div style="padding:40px;text-align:center;color:var(--accent);">⚠️ Map library blocked — check the network / ad-blocker. The list and clusters below still work.</div>';
+    }
+    printTerminalLog(`Farmer Locator: ${d.total} farmer(s) shown, ${d.located} on the map (${d.device_pins} exact GPS).`);
+  } catch (e) {
+    if (e.message !== 'Unauth') {
+      showToast('Farmer locations could not be loaded: ' + e.message, 'error');
+      listBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:18px;">⚠️ Load failed</td></tr>';
+      clusterList.innerHTML = '<div style="color:var(--danger);font-size:12px;">⚠️ Load failed</div>';
+    }
+  }
+}
+
+function clearFarmerSearch() { loadFarmerLocator(''); }
+
+function renderFarmerKpis(d) {
+  document.getElementById('fl-kpi-total').textContent   = d.total ?? '—';
+  document.getElementById('fl-kpi-located').textContent = d.located ?? '—';
+  document.getElementById('fl-kpi-device').textContent  = d.device_pins ?? '—';
+  const top = (d.clusters && d.clusters[0]) || null;
+  document.getElementById('fl-kpi-topregion').textContent = top ? top.region : '—';
+  document.getElementById('fl-kpi-topregion-sub').textContent =
+    top ? `${top.count} farmer${top.count === 1 ? '' : 's'}` : 'no data';
+}
+
+function renderFarmerMarkers(farmers) {
+  _flMarkers.clearLayers();
+  _flMarkerById = {};
+  const pts = [];
+  farmers.forEach(f => {
+    if (f.lat == null || f.lon == null) return;
+    const exact = f.accuracy === 'device';
+    const m = L.circleMarker([f.lat, f.lon], {
+      radius: exact ? 7 : 6,
+      color:  exact ? '#16a34a' : '#eab308',
+      weight: 2,
+      fillColor: exact ? '#22c55e' : '#facc15',
+      fillOpacity: 0.8,
+    });
+    m.bindPopup(farmerPopupHtml(f), { maxWidth: 260 });
+    m.addTo(_flMarkers);
+    _flMarkerById[f.user_id] = m;
+    pts.push([f.lat, f.lon]);
+  });
+
+  const emptyEl = document.getElementById('fl-map-empty');
+  if (emptyEl) emptyEl.style.display = pts.length ? 'none' : 'inline';
+
+  if (pts.length === 1) {
+    _flMap.setView(pts[0], 10);
+  } else if (pts.length > 1) {
+    try { _flMap.fitBounds(pts, { padding: [40, 40], maxZoom: 9 }); } catch (e) {}
+  }
+}
+
+function farmerPopupHtml(f) {
+  const digits = (f.phone || '').replace(/\D/g, '');
+  const wa = digits.length >= 10 ? digits.slice(-10) : '';
+  const acc = f.accuracy === 'device'
+    ? '<span class="fl-badge fl-badge-device">🛰️ Exact GPS</span>'
+    : '<span class="fl-badge fl-badge-approx">≈ Approx</span>';
+  let actions = '';
+  if (wa) {
+    actions =
+      `<div class="fl-pop-actions">` +
+      `<a class="fl-pop-call" href="tel:+91${wa}">📞 Call</a>` +
+      `<a class="fl-pop-wa" href="https://wa.me/91${wa}" target="_blank" rel="noopener">💬 WhatsApp</a>` +
+      `</div>`;
+  }
+  return (
+    `<div class="fl-pop-name">${escapeHtml(f.name)} ${acc}</div>` +
+    `<div class="fl-pop-row">🆔 ID ${f.user_id}${f.verified ? ' · ✔ verified' : ''}</div>` +
+    (f.occupation ? `<div class="fl-pop-row">💼 ${escapeHtml(occupationLabel(f.occupation))}</div>` : '') +
+    (f.location ? `<div class="fl-pop-row">📍 ${escapeHtml(f.location)}</div>` : '') +
+    (f.crop ? `<div class="fl-pop-row">🌾 ${escapeHtml(f.crop)}</div>` : '') +
+    (f.phone ? `<div class="fl-pop-row">📱 ${escapeHtml(f.phone)}</div>` : '') +
+    (f.email ? `<div class="fl-pop-row">✉️ ${escapeHtml(f.email)}</div>` : '') +
+    actions
+  );
+}
+
+function renderFarmerClusters(clusters) {
+  const el = document.getElementById('fl-cluster-list');
+  if (!clusters.length) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:12.5px;padding:8px 2px;">No located farmers yet — clusters appear once farmers share a location or fill their address.</div>';
+    return;
+  }
+  el.innerHTML = clusters.map(c => {
+    const chips = (c.crops || []).map(cr =>
+      `<span class="fl-crop-chip">${escapeHtml(cr.name)} · ${cr.count}</span>`).join('');
+    return (
+      `<div class="fl-cluster" onclick="zoomToCluster(${c.lat}, ${c.lon})">` +
+        `<div class="fl-cluster-top">` +
+          `<span class="fl-cluster-name">📍 ${escapeHtml(c.region)}</span>` +
+          `<span class="fl-cluster-count">${c.count}<small> किसान</small></span>` +
+        `</div>` +
+        (chips ? `<div class="fl-crop-chips">${chips}</div>` : '') +
+      `</div>`
+    );
+  }).join('');
+}
+
+function zoomToCluster(lat, lon) {
+  if (!_flMap) return;
+  _flMap.setView([lat, lon], 9, { animate: true });
+  document.getElementById('farmer-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// व्यवसाय codes (stored by profile.html) → Hindi labels for the admin table
+const OCCUPATION_LABELS = {
+  farmer:       'किसान',
+  businessman:  'व्यापारी',
+  dealer:       'डीलर',
+  seller:       'विक्रेता',
+  buyer:        'खरीदार',
+  agri_trader:  'कृषि व्यापारी / आढ़ती',
+  input_dealer: 'बीज/खाद विक्रेता',
+  livestock:    'पशुपालक / डेयरी',
+  agri_advisor: 'कृषि सलाहकार',
+  fpo:          'FPO / सहकारी',
+  student:      'छात्र',
+  govt:         'सरकारी कर्मचारी',
+  freehand:     'फ्रीलांसर',
+  other:        'अन्य',
+};
+function occupationLabel(code) { return OCCUPATION_LABELS[code] || code; }
+
+function renderFarmerList(farmers) {
+  const body = document.getElementById('fl-list-body');
+  const countEl = document.getElementById('fl-list-count');
+  if (countEl) countEl.textContent = `(${farmers.length})`;
+  if (!farmers.length) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:18px;">No farmers match this search.</td></tr>';
+    return;
+  }
+  body.innerHTML = farmers.map(f => {
+    const digits = (f.phone || '').replace(/\D/g, '');
+    const wa = digits.length >= 10 ? digits.slice(-10) : '';
+    const contact = f.phone
+      ? (wa ? `<a href="https://wa.me/91${wa}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;">${escapeHtml(f.phone)}</a>` : escapeHtml(f.phone))
+      : '<span style="color:var(--muted);">—</span>';
+    const locBadge = f.lat == null
+      ? '<span class="fl-badge fl-badge-approx" style="opacity:.6;">no location</span>'
+      : (f.accuracy === 'device'
+          ? '<span class="fl-badge fl-badge-device">🛰️</span>'
+          : '<span class="fl-badge fl-badge-approx">≈</span>');
+    const clickable = f.lat != null ? `class="fl-row-link" onclick="focusFarmer(${f.user_id})"` : '';
+    return (
+      `<tr ${clickable}>` +
+        `<td><strong>${escapeHtml(f.name)}</strong><br><span style="color:var(--muted);font-size:11px;font-family:var(--font-mono);">ID ${f.user_id}</span></td>` +
+        `<td>${f.occupation ? escapeHtml(occupationLabel(f.occupation)) : '<span style="color:var(--muted);">—</span>'}</td>` +
+        `<td>${locBadge} ${f.location ? escapeHtml(f.location) : '<span style="color:var(--muted);">—</span>'}</td>` +
+        `<td>${f.crop ? escapeHtml(f.crop) : '<span style="color:var(--muted);">—</span>'}</td>` +
+        `<td>${contact}</td>` +
+        `<td style="font-family:var(--font-mono);">${f.pincode ? escapeHtml(f.pincode) : '—'}</td>` +
+      `</tr>`
+    );
+  }).join('');
+}
+
+function focusFarmer(userId) {
+  const m = _flMarkerById[userId];
+  if (!m || !_flMap) return;
+  const ll = m.getLatLng();
+  _flMap.setView(ll, 11, { animate: true });
+  m.openPopup();
+  document.getElementById('farmer-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 </script>
 </body>

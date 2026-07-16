@@ -119,6 +119,15 @@ async def sync_log(
     }
 
 
+@router.get("/archive-health")
+async def archive_health(_: str = Depends(require_admin)):
+    """Health of the daily mandi→repo2 CSV archive: which DB days are present
+    vs missing in the data repo, and the last day actually archived. Makes a
+    silently-stopped archive visible in the admin panel (task 0.6)."""
+    from backend.services.mandi_archive_service import archive_health as _health
+    return {"success": True, **_health()}
+
+
 # ── Manual data-fetch trigger ─────────────────────────────────
 
 # Each source's registered APScheduler job (module, job_id). Triggering runs
@@ -669,6 +678,308 @@ async def get_admin_heatmap(
             "state_demand": list(state_demand.values()),
             "monthly_grid": grid,
             "orders_count": len(orders),
+        }
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+# ── Farmer Locator ─────────────────────────────────────────────
+#
+# Powers the admin "Farmer Locator" map: where each registered farmer is,
+# searchable by id / name / phone / place, plus demand clusters (which
+# regions to focus service on and what those farmers grow).
+#
+# A farmer is plotted at, in priority order:
+#   1. their device location  (user_profiles.geo_lat/geo_lon) → "device" (exact)
+#   2. their district centroid (registered address)           → "approx"
+#   3. their state centroid                                    → "approx"
+#   4. a state guessed from their PIN code's first digit       → "approx"
+# Centroids are coarse on purpose — enough to cluster demand, never shown
+# as an exact pin (the UI colours "approx" markers differently).
+
+# State / UT centroids (lat, lon) — covers every place a farmer might register.
+_STATE_CENTROIDS = {
+    "andhra pradesh":   (15.91, 79.74),
+    "arunachal pradesh":(28.22, 94.73),
+    "assam":            (26.20, 92.94),
+    "bihar":            (25.68, 85.56),
+    "chhattisgarh":     (21.28, 81.87),
+    "goa":              (15.36, 74.06),
+    "gujarat":          (22.66, 71.72),
+    "haryana":          (29.06, 76.09),
+    "himachal pradesh": (31.90, 77.17),
+    "jharkhand":        (23.61, 85.28),
+    "karnataka":        (15.32, 75.71),
+    "kerala":           (10.50, 76.27),
+    "madhya pradesh":   (23.47, 77.95),
+    "maharashtra":      (19.75, 75.71),
+    "manipur":          (24.66, 93.91),
+    "meghalaya":        (25.47, 91.37),
+    "mizoram":          (23.16, 92.94),
+    "nagaland":         (26.16, 94.56),
+    "odisha":           (20.95, 85.10),
+    "punjab":           (31.15, 75.34),
+    "rajasthan":        (26.57, 73.84),
+    "sikkim":           (27.53, 88.51),
+    "tamil nadu":       (11.13, 78.66),
+    "telangana":        (17.90, 79.27),
+    "tripura":          (23.75, 91.72),
+    "uttar pradesh":    (26.85, 80.95),
+    "uttarakhand":      (30.07, 79.15),
+    "west bengal":      (23.50, 87.32),
+    "delhi":            (28.65, 77.10),
+    "jammu and kashmir":(33.78, 76.58),
+    "ladakh":           (34.15, 77.58),
+    "chandigarh":       (30.73, 76.78),
+    "puducherry":       (11.94, 79.83),
+}
+
+# Major UP district centroids (the audience is overwhelmingly UP). Keys are
+# lowercased; a few historical names are aliased to their live district.
+_UP_DISTRICT_CENTROIDS = {
+    "meerut":       (28.98, 77.71),
+    "lucknow":      (26.85, 80.95),
+    "varanasi":     (25.32, 82.97),
+    "aligarh":      (27.88, 78.08),
+    "bareilly":     (28.37, 79.43),
+    "gorakhpur":    (26.76, 83.37),
+    "kanpur":       (26.45, 80.33),
+    "kanpur nagar": (26.45, 80.33),
+    "agra":         (27.18, 78.01),
+    "prayagraj":    (25.44, 81.85),
+    "allahabad":    (25.44, 81.85),
+    "ghaziabad":    (28.67, 77.45),
+    "gautam buddh nagar": (28.57, 77.32),
+    "noida":        (28.57, 77.32),
+    "moradabad":    (28.84, 78.77),
+    "saharanpur":   (29.97, 77.55),
+    "muzaffarnagar":(29.47, 77.70),
+    "mathura":      (27.49, 77.67),
+    "firozabad":    (27.16, 78.40),
+    "jhansi":       (25.45, 78.57),
+    "ayodhya":      (26.79, 82.15),
+    "faizabad":     (26.79, 82.15),
+    "sultanpur":    (26.26, 82.07),
+    "azamgarh":     (26.07, 83.18),
+    "jaunpur":      (25.75, 82.68),
+    "ballia":       (25.76, 84.15),
+    "deoria":       (26.50, 83.78),
+    "basti":        (26.79, 82.73),
+    "sitapur":      (27.57, 80.68),
+    "hardoi":       (27.40, 80.13),
+    "unnao":        (26.55, 80.49),
+    "rae bareli":   (26.23, 81.24),
+    "barabanki":    (26.93, 81.19),
+    "bijnor":       (29.37, 78.14),
+    "bulandshahr":  (28.40, 77.85),
+    "etawah":       (26.78, 79.02),
+    "mainpuri":     (27.23, 79.03),
+    "budaun":       (28.03, 79.12),
+    "rampur":       (28.79, 79.02),
+    "shahjahanpur": (27.88, 79.91),
+    "pilibhit":     (28.63, 79.80),
+    "lakhimpur kheri": (27.95, 80.78),
+    "kheri":        (27.95, 80.78),
+    "gonda":        (27.13, 81.96),
+    "bahraich":     (27.57, 81.60),
+    "mirzapur":     (25.15, 82.57),
+    "banda":        (25.48, 80.33),
+    "fatehpur":     (25.93, 80.81),
+    "pratapgarh":   (25.90, 81.95),
+    "ghazipur":     (25.58, 83.58),
+    "mau":          (25.94, 83.56),
+    "sonbhadra":    (24.69, 83.07),
+    "chandauli":    (25.26, 83.27),
+    "hapur":        (28.73, 77.78),
+    "amroha":       (28.90, 78.47),
+    "sambhal":      (28.58, 78.55),
+    "farrukhabad":  (27.39, 79.58),
+    "etah":         (27.63, 78.66),
+    "hathras":      (27.60, 78.05),
+    "kaushambi":    (25.53, 81.38),
+    "amethi":       (26.16, 81.81),
+}
+
+# PIN-code first digit → a representative state (very coarse; last-resort only).
+_PIN_REGION = {
+    "1": "delhi",         "2": "uttar pradesh", "3": "rajasthan",
+    "4": "maharashtra",   "5": "telangana",     "6": "tamil nadu",
+    "7": "west bengal",   "8": "bihar",
+}
+
+
+def _norm(s):
+    return (s or "").strip().lower()
+
+
+def _resolve_coords(profile, user):
+    """(lat, lon, accuracy) for a farmer, or (None, None, None) if unplottable."""
+    # 1 · exact device location
+    if profile is not None and profile.geo_lat is not None and profile.geo_lon is not None:
+        return profile.geo_lat, profile.geo_lon, "device"
+
+    district = _norm(getattr(profile, "district", None)) or _norm(getattr(user, "district", None))
+    if district:
+        if district in _UP_DISTRICT_CENTROIDS:
+            lat, lon = _UP_DISTRICT_CENTROIDS[district]
+            return lat, lon, "approx"
+        # relaxed contains-match (e.g. "meerut city")
+        for key, (lat, lon) in _UP_DISTRICT_CENTROIDS.items():
+            if key in district or district in key:
+                return lat, lon, "approx"
+
+    state = _norm(getattr(profile, "state", None))
+    if state:
+        if state in _STATE_CENTROIDS:
+            lat, lon = _STATE_CENTROIDS[state]
+            return lat, lon, "approx"
+        for key, (lat, lon) in _STATE_CENTROIDS.items():
+            if key in state or state in key:
+                return lat, lon, "approx"
+
+    pincode = "".join(ch for ch in str(getattr(profile, "pin_code", "") or "") if ch.isdigit())
+    if pincode:
+        st = _PIN_REGION.get(pincode[0])
+        if st and st in _STATE_CENTROIDS:
+            lat, lon = _STATE_CENTROIDS[st]
+            return lat, lon, "approx"
+
+    return None, None, None
+
+
+def _primary_crop(profile, user):
+    for val in (
+        getattr(profile, "primary_crop", None),
+        getattr(user, "primary_crop", None),
+        getattr(profile, "crops_grown", None),
+    ):
+        val = (val or "").strip()
+        if val:
+            return val.split(",")[0].strip()
+    return None
+
+
+def _readable_place(profile, user, geo_lat_used):
+    """A short human label for the farmer's location."""
+    if profile is not None and geo_lat_used and (profile.geo_location or "").strip():
+        return profile.geo_location.strip()
+    parts = [
+        (getattr(profile, "village", None) or getattr(user, "village", None)),
+        (getattr(profile, "district", None) or getattr(user, "district", None)),
+        getattr(profile, "state", None),
+    ]
+    return ", ".join(p.strip() for p in parts if p and str(p).strip()) or None
+
+
+@router.get("/farmers/locations")
+async def farmer_locations(
+    q: str | None = Query(None, description="filter by id / name / phone / place / crop"),
+    limit: int = Query(1000, ge=1, le=5000),
+    _: str = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.database.db import User, UserProfile
+
+    try:
+        profiles = {p.user_id: p for p in db.query(UserProfile).all() if p.user_id is not None}
+        users = db.query(User).all()
+
+        needle = _norm(q)
+        needle_id = None
+        if needle and needle.isdigit():
+            needle_id = int(needle)
+
+        farmers = []
+        for user in users:
+            profile = profiles.get(user.id)
+            lat, lon, accuracy = _resolve_coords(profile, user)
+            crop = _primary_crop(profile, user)
+            place = _readable_place(profile, user, accuracy == "device")
+
+            phone = None
+            if profile is not None:
+                phone = (profile.phone_number or profile.whatsapp_number or "").strip() or None
+
+            district = (getattr(profile, "district", None) or user.district or None)
+            state = getattr(profile, "state", None)
+            village = (getattr(profile, "village", None) or user.village or None)
+            pincode = getattr(profile, "pin_code", None)
+
+            geo_updated = getattr(profile, "geo_updated_at", None)
+
+            rec = {
+                "user_id":  user.id,
+                "name":     user.name or (getattr(profile, "name", None)) or f"किसान #{user.id}",
+                "email":    user.email,
+                "phone":    phone,
+                "occupation": getattr(profile, "occupation", None),   # व्यवसाय — who the customer is
+                "crop":     crop,
+                "state":    state,
+                "district": district,
+                "village":  village,
+                "pincode":  pincode,
+                "lat":      lat,
+                "lon":      lon,
+                "accuracy": accuracy,       # "device" | "approx" | None
+                "location": place,
+                "verified": bool(getattr(user, "seller_verified", False)),
+                "updated_at": geo_updated.isoformat() if geo_updated else None,
+            }
+
+            if needle:
+                if needle_id is not None and user.id == needle_id:
+                    pass  # exact id match always passes
+                else:
+                    hay = " ".join(str(v or "") for v in (
+                        user.id, rec["name"], rec["email"], rec["phone"],
+                        rec["district"], rec["village"], rec["state"],
+                        rec["pincode"], rec["crop"], rec["location"],
+                    )).lower()
+                    if needle not in hay:
+                        continue
+
+            farmers.append(rec)
+
+        farmers = farmers[:limit]
+        located = [f for f in farmers if f["lat"] is not None]
+
+        # ── demand clusters — group located farmers by district (else state) ──
+        clusters = {}
+        for f in located:
+            key = (f["district"] or f["state"] or "अन्य").strip()
+            c = clusters.setdefault(key, {
+                "region": key, "count": 0, "lat": 0.0, "lon": 0.0,
+                "crops": {}, "_n": 0,
+            })
+            c["count"] += 1
+            c["lat"] += f["lat"]
+            c["lon"] += f["lon"]
+            c["_n"] += 1
+            if f["crop"]:
+                c["crops"][f["crop"]] = c["crops"].get(f["crop"], 0) + 1
+
+        cluster_list = []
+        for c in clusters.values():
+            n = max(c["_n"], 1)
+            top_crops = sorted(c["crops"].items(), key=lambda kv: kv[1], reverse=True)[:4]
+            cluster_list.append({
+                "region": c["region"],
+                "count":  c["count"],
+                "lat":    round(c["lat"] / n, 5),
+                "lon":    round(c["lon"] / n, 5),
+                "crops":  [{"name": name, "count": cnt} for name, cnt in top_crops],
+            })
+        cluster_list.sort(key=lambda x: x["count"], reverse=True)
+
+        return {
+            "success":       True,
+            "total":         len(farmers),
+            "located":       len(located),
+            "device_pins":   sum(1 for f in located if f["accuracy"] == "device"),
+            "approx_pins":   sum(1 for f in located if f["accuracy"] == "approx"),
+            "farmers":       farmers,
+            "clusters":      cluster_list[:20],
+            "query":         q or "",
         }
     except Exception as e:
         raise HTTPException(500, str(e))
