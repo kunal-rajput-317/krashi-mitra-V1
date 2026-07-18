@@ -1,0 +1,30 @@
+name: keep-alive
+
+# Render's free instance spins down after ~15 idle minutes; a sleeping dyno
+# 504s Googlebot on edge-cache misses and skips APScheduler mandi fetches.
+# Pinging /health (DB-free) keeps it awake. Retries cover the ~50s cold start.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping backend /health
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 \
+              https://krashi-mitra-v1.onrender.com/health || true)
+            if [ "$code" = "200" ]; then
+              echo "ok (attempt $i)"
+              exit 0
+            fi
+            echo "attempt $i got '$code', retrying in 30s"
+            sleep 30
+          done
+          echo "backend unreachable after 3 attempts"
+          exit 1
