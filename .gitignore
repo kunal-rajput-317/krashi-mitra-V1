@@ -6,3 +6,6 @@ chroma_db
 
 # internal strategy/decision docs — kept out of the public repo on purpose
 docs/
+
+# throwaway experiments / local verify artifacts
+scratch/
