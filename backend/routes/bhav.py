@@ -25,9 +25,12 @@
 # own is ambiguous. Legacy two-level URLs 301 to the canonical four-level one
 # (see bhav_crop_or_state), so every link already out in the wild still works.
 #
-# Pages exist ONLY for combos present in the mandi_prices snapshot, so we never
-# publish thin/empty doorway pages, and every hub carries real derived content
-# (ranges, top-paying mandis) rather than being a bare grid of links.
+# Pages exist ONLY for combos that reported within the mandi_price_history
+# window (~30 days), so we never publish thin/empty doorway pages, and every
+# hub carries real derived content (ranges, top-paying mandis) rather than
+# being a bare grid of links. A district that ages out of the ~7-day snapshot
+# keeps serving its last reported day from history — a URL Google indexed
+# must not start 404ing just because a market skipped a week.
 # ============================================================
 
 import json as _json
@@ -41,7 +44,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy import func
 
-from backend.database.db import SessionLocal, MandiPrice
+from backend.database.db import SessionLocal, MandiPrice, MandiPriceHistory
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import district_geo
 from backend.routes.share import _crop_image, _HI_CROP_EN, _TILES
@@ -266,16 +269,22 @@ def _mandis_gen(n: int) -> str:
 
 
 # ── Slug index ───────────────────────────────────────────────
-# Built from a GROUP BY on the snapshot; refreshed every 6h (the feed moves
-# once a day). Powers all four tiers, the sitemap and the legacy 301s.
-#   crops:   c_slug → commodity
+# Built from a GROUP BY on the ~30-day history (snapshot only as a fresh-deploy
+# fallback); refreshed every 6h (the feed moves once a day). Powers all four
+# tiers, the sitemap and the legacy 301s. History rather than the snapshot on
+# purpose: the snapshot ages a market out after ~7 unrefreshed days, which made
+# URLs flap out of the sitemap — and 404 — while Google still had them indexed.
+#   crops:   c_slug → commodity (LAST raw spelling seen — see raws)
+#   raws:    c_slug → { every raw commodity spelling that maps to this slug };
+#            crops[cs] alone loses all but one, which is how row lookups used
+#            to miss and 404 pages the sitemap itself advertised
 #   states:  c_slug → { s_slug → state }
 #   dists:   c_slug → { s_slug → { d_slug → district } }
 #   legacy:  c_slug → { d_slug → [s_slug, ...] }   — resolves the old 2-level URLs
-#   dates:   c_slug → { s_slug → { d_slug → "YYYY-MM-DD" } } — IST date of the
-#            newest fetched_at for that combo, i.e. the last day this page's
-#            data actually moved. Feeds the sitemap <lastmod>: a district that
-#            stopped reporting keeps its old date instead of claiming "today".
+#   dates:   c_slug → { s_slug → { d_slug → "YYYY-MM-DD" } } — newest arrival_dt
+#            for that combo, i.e. the last day this page's data actually moved.
+#            Feeds the sitemap <lastmod>: a district that stopped reporting
+#            keeps its old date instead of claiming "today".
 _index: dict = {}
 _index_ts: float = 0.0
 _INDEX_TTL = 6 * 3600
@@ -289,29 +298,44 @@ def _get_index() -> dict:
         return _index
     db = SessionLocal()
     try:
-        rows = (db.query(MandiPrice.commodity, MandiPrice.state, MandiPrice.district,
-                         func.max(MandiPrice.fetched_at))
-                  .filter(MandiPrice.commodity.isnot(None),
-                          MandiPrice.state.isnot(None),
-                          MandiPrice.district.isnot(None))
-                  .group_by(MandiPrice.commodity, MandiPrice.state, MandiPrice.district)
-                  .all())
+        rows = [(c, s, d, dt.isoformat() if dt else "")
+                for c, s, d, dt in
+                (db.query(MandiPriceHistory.commodity, MandiPriceHistory.state,
+                          MandiPriceHistory.district,
+                          func.max(MandiPriceHistory.arrival_dt))
+                   .filter(MandiPriceHistory.commodity.isnot(None),
+                           MandiPriceHistory.state.isnot(None),
+                           MandiPriceHistory.district.isnot(None))
+                   .group_by(MandiPriceHistory.commodity, MandiPriceHistory.state,
+                             MandiPriceHistory.district)
+                   .all())]
+        if not rows:            # fresh deploy before the first fetch has run
+            rows = [(c, s, d, (f + _IST_OFFSET).date().isoformat() if f else "")
+                    for c, s, d, f in
+                    (db.query(MandiPrice.commodity, MandiPrice.state,
+                              MandiPrice.district, func.max(MandiPrice.fetched_at))
+                       .filter(MandiPrice.commodity.isnot(None),
+                               MandiPrice.state.isnot(None),
+                               MandiPrice.district.isnot(None))
+                       .group_by(MandiPrice.commodity, MandiPrice.state,
+                                 MandiPrice.district)
+                       .all())]
     finally:
         db.close()
 
-    crops, states, dists, legacy, dates = {}, {}, {}, {}, {}
-    for commodity, state, district, fetched_at in rows:
+    crops, states, dists, legacy, dates, raws = {}, {}, {}, {}, {}, {}
+    for commodity, state, district, d_iso in rows:
         cs, ss, ds = _slugify(commodity), _slugify(state), _slugify(district)
         if not (cs and ss and ds):
             continue
         crops[cs] = commodity
+        raws.setdefault(cs, set()).add(commodity)
         states.setdefault(cs, {})[ss] = state
         dists.setdefault(cs, {}).setdefault(ss, {})[ds] = district
         legacy.setdefault(cs, {}).setdefault(ds, [])
         if ss not in legacy[cs][ds]:
             legacy[cs][ds].append(ss)
-        if fetched_at:
-            d_iso = (fetched_at + _IST_OFFSET).date().isoformat()
+        if d_iso:
             slot = dates.setdefault(cs, {}).setdefault(ss, {})
             # slugify can merge two raw combos onto one slug → keep the newest
             if d_iso > slot.get(ds, ""):
@@ -319,7 +343,7 @@ def _get_index() -> dict:
 
     if crops:                   # keep the stale index if the DB comes back empty
         _index = {"crops": crops, "states": states, "dists": dists,
-                  "legacy": legacy, "dates": dates}
+                  "legacy": legacy, "dates": dates, "raws": raws}
         _index_ts = time.time()
     return _index
 
@@ -349,6 +373,65 @@ def _rows_for(commodity: str, state: str = "", district: str = "") -> list:
     # DB empty (fresh deploy) → fall back to the service's JSON seed path
     data = get_mandi_prices(commodity, district, state)
     return (data or {}).get("prices") or []
+
+
+def _hist_to_dict(h: MandiPriceHistory) -> dict:
+    """History rows carry no delta/spark — the page simply skips the arrow and
+    sparkline for them, everything else renders the same."""
+    return {
+        "market":           h.market or "-",
+        "district":         h.district or "-",
+        "state":            h.state or "-",
+        "commodity":        h.commodity or "-",
+        "variety":          h.variety or "-",
+        "grade":            h.grade or "-",
+        "min_price":        str(h.min_price or "-"),
+        "max_price":        str(h.max_price or "-"),
+        "modal_price":      str(h.modal_price or "-"),
+        "prev_modal_price": None,
+        "change_pct":       None,
+        "spark":            [],
+        "date":             h.arrival_date or "-",
+    }
+
+
+def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
+    """Slug-space rescue for the tier-3 page, tried when _rows_for() comes back
+    empty for a combo the index says exists.
+
+    _rows_for compares raw strings, but the index keeps only the LAST raw
+    spelling per slug — when Agmarknet ships two spellings that collapse onto
+    one slug, the stored triple matches zero rows and a URL the sitemap itself
+    advertises used to 404. So: query the snapshot by EVERY raw spelling of
+    the crop and compare state/district as slugs — the same space the sitemap
+    is built in. If the combo has aged out of the snapshot entirely, serve the
+    newest day still in mandi_price_history under its real arrival date: an
+    indexed URL keeps answering for the ~30-day history window instead of
+    bouncing Google (or a farmer) off a 404."""
+    names = sorted(idx.get("raws", {}).get(cs) or {idx["crops"][cs]})
+    db = SessionLocal()
+    try:
+        snap = db.query(MandiPrice).filter(MandiPrice.commodity.in_(names)).all()
+        snap = [r for r in snap
+                if _slugify(r.state) == ss and _slugify(r.district) == ds]
+        if snap:
+            return [_row_to_dict(r) for r in snap]
+
+        hist = (db.query(MandiPriceHistory)
+                  .filter(MandiPriceHistory.commodity.in_(names),
+                          MandiPriceHistory.state.ilike(idx["states"][cs][ss]),
+                          MandiPriceHistory.district.ilike(idx["dists"][cs][ss][ds]))
+                  .order_by(MandiPriceHistory.arrival_dt.desc())
+                  .limit(500)
+                  .all())
+        hist = [h for h in hist if h.arrival_dt
+                and _slugify(h.state) == ss and _slugify(h.district) == ds]
+        if not hist:
+            return []
+        newest = max(h.arrival_dt for h in hist)
+        return [_hist_to_dict(h) for h in hist if h.arrival_dt == newest]
+    finally:
+        db.close()
 
 
 def _stats(prices: list) -> dict:
@@ -1752,7 +1835,7 @@ def find(q: str = ""):
 # ════════════════════════════════════════════════════════════
 @router.get("/bhav/sitemap.xml")
 def bhav_sitemap():
-    # <lastmod> is the newest fetched_at for the URL's slice of the snapshot
+    # <lastmod> is the newest arrival date for the URL's slice of the history
     # (idx["dates"]), NOT date.today(): stamping every URL "today" on every
     # request taught Google to distrust the whole field — 100% of pages
     # claiming daily change is indistinguishable from noise, and it wastes
@@ -2253,7 +2336,9 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # names shared by two states (pratapgarh, bilaspur, hamirpur, balrampur)
     # pulled both states' mandis onto one page under a single district heading.
     prices = _rows_for(commodity, state=state, district=district)
-    if not prices:                      # snapshot aged out since the index was built
+    if not prices:                      # raw-name miss or aged-out snapshot
+        prices = _rows_for_district(idx, cs, ss, ds)
+    if not prices:                      # never reported within the history window
         return _not_found()
 
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
