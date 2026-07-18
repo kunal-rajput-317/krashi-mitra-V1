@@ -1307,6 +1307,26 @@ window.addEventListener('pageshow',window.kmHideLoading);
 
 
 def _footer() -> str:
+    # Second nav row: the widest-covered crop hubs, derived from the live
+    # index. Every one of the ~14k server pages carries these links, so the
+    # long tail of district pages continuously votes for the head-term pages
+    # ("प्याज का भाव") that need the authority. Deduped by Hindi name — bajra
+    # alone arrives under two Agmarknet spellings.
+    idx = _get_index()
+    tops = sorted(((len(idx["states"].get(cs, {})), cs, cn)
+                   for cs, cn in idx.get("crops", {}).items() if _is_crop(cn)),
+                  key=lambda t: -t[0])
+    seen, crop_links = set(), []
+    for _, cs, cn in tops:
+        hi = _hindi_name(cn)
+        if hi in seen:
+            continue
+        seen.add(hi)
+        crop_links.append(f'<a href="{SITE}/bhav/{cs}">{escape(hi)} का भाव</a>')
+        if len(crop_links) == 8:
+            break
+    crops_nav = ("<nav class=\"km-footer-nav km-footer-crops\">\n"
+                 + "\n".join(crop_links) + "\n</nav>") if crop_links else ""
     return f"""<footer class="km-footer"><div class="km-footer-inner">
 <div class="km-footer-brand">🌾 कृषि मित्र</div>
 <nav class="km-footer-nav">
@@ -1316,9 +1336,23 @@ def _footer() -> str:
 <a href="{SITE}/weather">मौसम</a>
 <a href="{SITE}/chat">AI सहायक</a>
 </nav>
+{crops_nav}
 <div class="km-footer-note">भाव भारत सरकार के data.gov.in (Agmarknet) से रोज़ अपडेट होते हैं।
 बेचने से पहले अपनी मंडी में भाव ज़रूर पुष्टि करें।</div>
 </div></footer>"""
+
+
+# Netlify proxies /bhav/* and /product/* to Render but only caches a proxied
+# response when the origin opts in via Netlify-CDN-Cache-Control. 30 min at
+# the edge (prices move ~5x/day) plus a day of stale-while-revalidate keeps
+# Googlebot crawling 14k URLs off Render's cold-start latency — crawl speed
+# caps how fast the tree gets indexed. Browsers get 5 min so a farmer
+# refreshing still sees fresh numbers quickly.
+_CACHE_HEADERS = {
+    "Cache-Control": "public, max-age=300",
+    "Netlify-CDN-Cache-Control":
+        "public, durable, max-age=1800, stale-while-revalidate=86400",
+}
 
 
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
@@ -1365,7 +1399,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 </div>
 {_footer()}
 </body>
-</html>""", headers={"Cache-Control": "public, max-age=3600"})
+</html>""", headers=_CACHE_HEADERS)
 
 
 def _faq(faqs: list[tuple[str, str]]) -> tuple[str, dict]:
@@ -1875,7 +1909,10 @@ def bhav_sitemap():
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
            f'{body}\n</urlset>')
     return Response(content=xml, media_type="application/xml",
-                    headers={"Cache-Control": "public, max-age=3600"})
+                    headers={"Cache-Control": "public, max-age=3600",
+                             "Netlify-CDN-Cache-Control":
+                                 "public, durable, max-age=3600, "
+                                 "stale-while-revalidate=86400"})
 
 
 # ════════════════════════════════════════════════════════════

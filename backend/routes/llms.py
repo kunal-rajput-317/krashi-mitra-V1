@@ -68,6 +68,24 @@ def _article_line(f: Path) -> str:
     return f"- [{title}]({SITE}/articles/{f.stem.lower()}){desc}"
 
 
+def _top_crop_lines(n: int = 10) -> list:
+    """Deep links for the widest-covered crops, derived from the live /bhav
+    index (imported lazily, same cycle-avoidance as utils/indexnow.py). An
+    agent that reads only llms.txt gets straight to the highest-value price
+    hubs instead of having to walk a 14k-URL sitemap."""
+    try:
+        from backend.routes.bhav import _get_index, _hindi_name, _is_crop
+        idx = _get_index()
+        crops = [(len(idx["states"].get(cs, {})), cs, cn)
+                 for cs, cn in idx.get("crops", {}).items() if _is_crop(cn)]
+        crops.sort(key=lambda t: -t[0])
+        return [f"- [{_hindi_name(cn)} ({cn})]({SITE}/bhav/{cs}): "
+                "state-wise daily mandi prices"
+                for _, cs, cn in crops[:n]]
+    except Exception:
+        return []
+
+
 def _build() -> str:
     lines = [
         "# KrashiMitra (कृषि मित्र)",
@@ -91,6 +109,7 @@ def _build() -> str:
         "## Daily price pages (programmatic)",
         "",
         f"- [Crop price hub]({SITE}/bhav): tap-through to every crop / state / district price page",
+        *_top_crop_lines(),
         f"- [Full price-page URL list]({SITE}/bhav/sitemap.xml)",
         f"- [Product page URL list]({SITE}/product/sitemap.xml)",
         "",
