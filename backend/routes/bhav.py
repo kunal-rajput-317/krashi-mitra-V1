@@ -690,6 +690,7 @@ mask-image:linear-gradient(90deg,transparent,#000 65%)}
 .answer-in{position:relative;z-index:1;max-width:640px}
 .answer h1{font-size:23px}
 .answer-sub{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:5px;font-weight:500}
+.answer-lead{font-size:13.5px;color:rgba(255,255,255,.92);margin-top:12px;line-height:1.65;max-width:600px}
 .answer-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px;margin-top:16px}
 .answer-rupee{font-size:46px;font-weight:700;letter-spacing:-1.5px;line-height:1}
 .answer-rupee small{font-size:15px;font-weight:600;letter-spacing:0;
@@ -2174,8 +2175,12 @@ def bhav_crop(c_slug: str):
 
     faqs = [
         (f"आज {hi} का भाव क्या है?",
-         f"{hi} का भाव हर राज्य और मंडी में अलग-अलग होता है। सटीक भाव जानने के लिए नीचे अपना राज्य चुनें, "
-         f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
+         (f"{today_hi} को {hi} का देशभर औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल है — "
+          f"{_mandis_gen(st['n'])} की सरकारी रिपोर्ट (Agmarknet) पर आधारित। हर राज्य और मंडी में "
+          f"रेट अलग होता है — नीचे अपना राज्य चुनें, फिर जिला चुनें।"
+          if st["avg"] else
+          f"{hi} का भाव हर राज्य और मंडी में अलग-अलग होता है। सटीक भाव जानने के लिए नीचे अपना राज्य चुनें, "
+          f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।")),
         (f"{hi} सबसे महंगा किस मंडी में बिक रहा है?",
          (f"आज सबसे ज्यादा भाव {best.get('market','-')} ({best.get('district','-')}, "
           f"{_hindi_state(best.get('state',''))}) में मिल रहा है — सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
@@ -2197,6 +2202,18 @@ def bhav_crop(c_slug: str):
             + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
             + f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।")
 
+    # AI-citable lead: one self-contained, dated, source-attributed sentence in the
+    # first screen (AI extractors weight the top of the page; the FAQ sits too low).
+    # Same disclosure rules as elsewhere on the tier: country average is already in
+    # the meta description, the best mandi is named without its price (teaser rule).
+    lead_avg = f" — देशभर का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
+    lead_best = (f" आज सबसे ऊंचा भाव {escape(best.get('market', '-'))} "
+                 f"({escape(best.get('district', '-'))}, {escape(_hindi_state(best.get('state', '')))}) "
+                 f"मंडी में दर्ज हुआ।" if best else "")
+    answer_lead = (f'<p class="answer-lead">{today_hi} को {escape(hi)} ({escape(commodity)}) का भाव देश के '
+                   f'{len(state_map)} राज्यों की {_mandis_gen(st["n"])} से भारत सरकार के Agmarknet '
+                   f'(data.gov.in) पोर्टल पर दर्ज हुआ{lead_avg}।{lead_best}</p>')
+
     body = f"""<section class="answer">
 {photo}
 <div class="answer-in">
@@ -2206,6 +2223,7 @@ def bhav_crop(c_slug: str):
 <div><span>राज्य</span><b>{len(state_map)}</b></div>
 <div><span>मंडियां</span><b>{st['n']}</b></div>
 </div>
+{answer_lead}
 </div>
 </section>
 {_hub_selector(cs, seed_ss, seed_ds, idx, known_crop=True)}
@@ -2313,8 +2331,12 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 
     faqs = [
         (f"आज {hi_state} में {hi} का भाव क्या है?",
-         f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
-         f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
+         (f"{today_hi} को {hi_state} में {hi} का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल है — "
+          f"{_mandis_gen(st['n'])} की सरकारी रिपोर्ट (Agmarknet) पर आधारित। जिले के अनुसार रेट "
+          f"अलग-अलग है — नीचे अपना जिला चुनें।"
+          if st["avg"] else
+          f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
+          f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।")),
         (f"{hi_state} में {hi} सबसे महंगा कहां बिक रहा है?",
          (f"आज {top[0].get('market','-')} ({top[0].get('district','-')}) मंडी में सबसे ज्यादा भाव मिल रहा है — "
           f"सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
@@ -2330,6 +2352,12 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
             + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
             + f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
 
+    # AI-citable lead — see the crop-hub twin for the reasoning + disclosure rules.
+    lead_avg = f" — राज्य का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
+    answer_lead = (f'<p class="answer-lead">{today_hi} को {escape(hi_state)} के {len(dist_map)} जिलों की '
+                   f'{_mandis_gen(st["n"])} में {escape(hi)} का भाव सरकारी रिपोर्ट (भारत सरकार का Agmarknet '
+                   f'पोर्टल) में दर्ज हुआ{lead_avg}। नीचे अपना जिला चुनकर मंडीवार पूरा भाव देखें।</p>')
+
     body = f"""<section class="answer">
 {photo}
 <div class="answer-in">
@@ -2339,6 +2367,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 <div><span>जिले</span><b>{len(dist_map)}</b></div>
 <div><span>मंडियां</span><b>{st['n']}</b></div>
 </div>
+{answer_lead}
 </div>
 </section>
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
@@ -2531,6 +2560,16 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                     if _has_photo(commodity) else "")
     lead = f"₹{st['avg']:,}" if st["avg"] else "—"
 
+    # AI-citable lead — this tier already shows every number, so the sentence can
+    # carry them all: date, place, average, range, source. One quotable passage.
+    lead_range = (f" (न्यूनतम ₹{st['lo']:,} — अधिकतम ₹{st['hi']:,})"
+                  if st["lo"] and st["hi"] else "")
+    answer_lead = ((f'<p class="answer-lead">{today_hi} को {escape(district)} ({escape(hi_state)}) की '
+                    f'{_mandis_gen(st["n"])} में {escape(hi)} का औसत मॉडल भाव ₹{st["avg"]:,} प्रति क्विंटल '
+                    f'दर्ज हुआ{lead_range}। स्रोत: भारत सरकार का Agmarknet (data.gov.in) पोर्टल, '
+                    f'{escape(_hindi_data_date(data_date))} तक।</p>')
+                   if st["avg"] else "")
+
     body = f"""<section class="answer">
 {answer_photo}
 <div class="answer-in">
@@ -2545,6 +2584,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <div><span>अधिकतम</span><b>{f"₹{st['hi']:,}" if st['hi'] else '—'}</b></div>
 <div><span>{'मंडी' if st['n'] == 1 else 'मंडियां'}</span><b>{st['n']}</b></div>
 </div>
+{answer_lead}
 <button class="answer-share" type="button" onclick="shareBhav()">{_WA_GLYPH} WhatsApp पर भेजें</button>
 </div>
 </section>

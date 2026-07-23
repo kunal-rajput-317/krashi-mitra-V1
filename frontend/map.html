@@ -117,15 +117,15 @@
   </script>
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&family=Noto+Serif+Devanagari:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&display=swap">
 
   <!-- Leaflet.js for map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&display=swap');
 
     /* ══════════════════════════════════════
        CSS VARIABLES & RESET
@@ -706,7 +706,7 @@
   }
   .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
 </style>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  
   <!-- Universal page shell -->
   <link rel="stylesheet" href="km-shell.css">
 </head>
@@ -816,6 +816,13 @@
 
 <!-- ══ MAIN CONTENT ══ -->
 <div class="main-content" id="main-content">
+
+  <!-- ── Hero: page's only H1 — styled block already existed in CSS, was never inserted ── -->
+  <div class="map-hero-intro">
+    <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
+    <h1 class="map-hero-title" data-t="map_title">UP जिला नक्शा</h1>
+    <p class="map-hero-sub" data-t="map_sub">उत्तर प्रदेश के सभी जिले — hover करें, ज़ूम करें और जानकारी पाएं</p>
+  </div>
 
   <!-- ── Map Area ── -->
   <div class="map-wrapper">
