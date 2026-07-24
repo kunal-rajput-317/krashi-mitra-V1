@@ -1,0 +1,40 @@
+{
+  "_note": "Lead-gen / affiliate placements shown as a 'किसान सेवाएं' card on the /bhav pages (the high-traffic surface). An offer renders ONLY when active:true AND url is non-empty, so nothing bogus ever shows. TO EARN: sign up for an agri affiliate/referral program (KCC/loan, crop insurance, PM-KUSUM solar), paste its tracked URL into 'url', keep active:true. All clicks pass through /go/<id> so you can (a) swap the URL in one place and (b) measure demand — every click fires a GA4 'lead_click' event and logs a server line. TRUST RULE: do NOT collect a farmer's phone number here unless a real partner will actually call back — redirect to the partner's own form instead. The two gov links below are honest, useful defaults so the surface is live today; swap them for paid affiliate offers as you get them. partner: 'gov' = informational (rel nofollow), anything else = paid (rel nofollow sponsored).",
+  "heading": "किसान सेवाएं",
+  "sub": "खेती से जुड़ी लोन, बीमा और सब्सिडी योजनाओं की जानकारी।",
+  "offers": [
+    {
+      "id": "kcc-loan",
+      "active": true,
+      "category": "loan",
+      "icon": "🏦",
+      "title": "किसान क्रेडिट कार्ड (KCC)",
+      "desc": "कम ब्याज पर खेती के लिए लोन — पात्रता और आवेदन की जानकारी।",
+      "cta": "जानकारी देखें",
+      "url": "https://www.myscheme.gov.in/schemes/kcc",
+      "partner": "gov"
+    },
+    {
+      "id": "fasal-bima",
+      "active": true,
+      "category": "insurance",
+      "icon": "🌾",
+      "title": "प्रधानमंत्री फसल बीमा योजना",
+      "desc": "प्राकृतिक आपदा से फसल नुकसान पर मुआवज़ा — PMFBY की जानकारी।",
+      "cta": "जानकारी देखें",
+      "url": "https://pmfby.gov.in/",
+      "partner": "gov"
+    },
+    {
+      "id": "solar-pump",
+      "active": false,
+      "category": "solar",
+      "icon": "☀️",
+      "title": "सोलर सिंचाई पंप (PM-KUSUM)",
+      "desc": "सब्सिडी पर सोलर पंप — आवेदन और सब्सिडी की जानकारी।",
+      "cta": "जानकारी देखें",
+      "url": "",
+      "partner": ""
+    }
+  ]
+}

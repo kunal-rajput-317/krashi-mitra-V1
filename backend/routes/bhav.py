@@ -34,6 +34,7 @@
 # ============================================================
 
 import json as _json
+import os
 import re
 import time
 from datetime import date, timedelta
@@ -46,8 +47,26 @@ from sqlalchemy import func
 
 from backend.database.db import SessionLocal, MandiPrice, MandiPriceHistory
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
-from backend.services import district_geo
+from backend.services import district_geo, freight, leads
 from backend.routes.share import _crop_image, _HI_CROP_EN, _TILES
+
+import logging
+logger = logging.getLogger("krishi.bhav")
+
+_FRONTEND_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "frontend")
+
+
+def _asset(name: str) -> str:
+    """'/name?v=<mtime>' — the file's modified-time busts the browser cache the
+    instant the asset changes, so a shipped JS/CSS update never runs against a
+    stale cached copy (the classic 'new HTML calls a param the old script ignores'
+    bug). Automatic — no version string to bump by hand. Bare path if unstattable."""
+    rel = name.lstrip("/")
+    try:
+        return f"/{rel}?v={int(os.path.getmtime(os.path.join(_FRONTEND_DIR, rel)))}"
+    except OSError:
+        return f"/{rel}"
 
 router = APIRouter()
 
@@ -63,10 +82,14 @@ _ADS_PUB  = "ca-pub-2792326360609634"
 _ADS_SLOT = "7350859053"
 _ADS_LOADER = (f'<script async src="https://pagead2.googlesyndication.com/pagead/js/'
                f'adsbygoogle.js?client={_ADS_PUB}" crossorigin="anonymous"></script>')
+# The min-height sits on the <ins> (not the box) so it reserves space WHILE the
+# ad loads (no CLS), but collapses to nothing when AdSense returns no ad
+# (data-ad-status="unfilled") — otherwise every unfilled slot, and every page on
+# localhost, leaves a ~280px blank gap above the footer.
 _ADS_UNIT = (
-    '<div class="km-ad" style="min-height:280px;margin:22px auto 6px;text-align:center;'
-    'overflow:hidden">'
-    f'<ins class="adsbygoogle" style="display:block" data-ad-client="{_ADS_PUB}" '
+    '<style>.km-ad ins[data-ad-status="unfilled"]{display:none!important}</style>'
+    '<div class="km-ad" style="margin:22px auto 6px;text-align:center;overflow:hidden">'
+    f'<ins class="adsbygoogle" style="display:block;min-height:280px" data-ad-client="{_ADS_PUB}" '
     f'data-ad-slot="{_ADS_SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>'
     '<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>')
 
@@ -449,6 +472,41 @@ def _stats(prices: list) -> dict:
     }
 
 
+def _sell_signal(series: list, today_avg, avg_pct) -> str:
+    """A compact 'sell today or wait?' strip that sits INSIDE the green price
+    panel, right by the rate.
+
+    Compares today's average modal against this district's own recent (up to
+    7-day) daily average and its day-on-day move. It is a *read of the past*, not
+    a forecast — the copy states the fact and gives a gentle, non-speculative
+    nudge, never a price prediction. Renders nothing when the history is too thin
+    (<3 days) to say anything honest. Pure compute on data already in memory.
+    """
+    hist = [v for v in series if v]
+    if len(hist) < 3 or not today_avg:
+        return ""                       # too little history to be honest
+    n_days   = len(hist)
+    week_avg = round(sum(hist) / n_days)
+    diff_pct = ((today_avg - week_avg) / week_avg * 100) if week_avg else 0
+
+    move = (f" · कल से {'+' if avg_pct > 0 else ''}{avg_pct:g}%") if avg_pct else ""
+
+    if diff_pct >= 2.5:
+        lvl, emoji, head = "good", "🟢", "बेचने के लिए अच्छा दिन"
+        sub = f"{n_days}-दिन औसत ₹{week_avg:,} से ऊपर{move}"
+    elif diff_pct <= -2.5:
+        lvl, emoji, head = "wait", "🔵", "भाव औसत से नीचे"
+        sub = f"{n_days}-दिन औसत ₹{week_avg:,} से नीचे · नीचे ऊँचे भाव वाली मंडी देखें"
+    else:
+        lvl, emoji, head = "hold", "🟡", "भाव सामान्य के आसपास"
+        sub = f"{n_days}-दिन औसत ₹{week_avg:,} के करीब · जल्दी न हो तो नज़र रखें"
+
+    return (f'<div class="answer-signal {lvl}">'
+            f'<span class="as-dot">{emoji}</span>'
+            f'<span class="as-txt"><b>{head}</b><span class="as-sub">{sub}</span></span>'
+            f'</div>')
+
+
 def _crop_chip(href: str, label: str, commodity: str) -> str:
     """Link chip carrying the crop's photo — a farmer scanning the page can find
     his crop by sight, without reading every label."""
@@ -690,6 +748,7 @@ mask-image:linear-gradient(90deg,transparent,#000 65%)}
 .answer-in{position:relative;z-index:1;max-width:640px}
 .answer h1{font-size:23px}
 .answer-sub{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:5px;font-weight:500}
+.answer-lead{font-size:13.5px;color:rgba(255,255,255,.92);margin-top:12px;line-height:1.65;max-width:600px}
 .answer-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px;margin-top:16px}
 .answer-rupee{font-size:46px;font-weight:700;letter-spacing:-1.5px;line-height:1}
 .answer-rupee small{font-size:15px;font-weight:600;letter-spacing:0;
@@ -717,6 +776,38 @@ mask-image:linear-gradient(90deg,transparent,#000 90%)}
 .answer-rupee{font-size:38px}h1{font-size:20px}.answer h1{font-size:20px}}
 
 /* ── "sell here instead": the one thing a price table never tells you ── */
+/* sell-or-wait strip — lives INSIDE the green answer panel, by the rate */
+.answer-signal{display:flex;gap:10px;align-items:center;margin-top:14px;max-width:600px;
+padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.10);
+border:1px solid rgba(255,255,255,.20);border-left:4px solid rgba(255,255,255,.6)}
+.answer-signal.good{border-left-color:#87cefa;background:rgba(135,206,250,.22)}
+.answer-signal.hold{border-left-color:var(--amber);background:rgba(233,168,37,.20)}
+.answer-signal.wait{border-left-color:#7fc4f5;background:rgba(46,134,222,.22)}
+.as-dot{font-size:17px;line-height:1;flex-shrink:0}
+.as-txt{display:flex;flex-direction:column;min-width:0}
+.as-txt b{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.as-sub{font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px;line-height:1.45}
+/* net-price calculator button — sits beside the WhatsApp share / in a cta-row.
+   Amber so it reads on BOTH the dark green answer panel and light action rows. */
+.answer-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.answer-actions .answer-share{margin-top:0}
+.btn-np{background:var(--amber);color:#3a2c00;box-shadow:var(--shadow-sm)}
+.btn-np:hover{background:#d69a1f}
+/* किसान सेवाएं — lead-gen / affiliate service links (loan/insurance/solar) */
+.lead-gen{margin:26px 0 8px;border:1px solid var(--border);border-radius:var(--radius-md);
+background:var(--white);box-shadow:var(--shadow-sm);padding:16px 16px 14px}
+.lead-gen>h2{margin:0 0 3px;font-size:17px}
+.lead-sub{font-size:12.5px;color:var(--text-mid);margin:0 0 12px;line-height:1.5}
+.lead-list{display:flex;flex-direction:column;gap:9px}
+.lead-card{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
+background:var(--cream);border:1px solid var(--border);border-radius:13px;padding:11px 13px}
+.lead-card:active{background:var(--green-pale)}
+.lead-ic{font-size:22px;line-height:1;flex:0 0 auto}
+.lead-tx{display:flex;flex-direction:column;min-width:0;flex:1}
+.lead-tx b{font-size:14px;color:var(--text-dark);line-height:1.35}
+.lead-tx small{font-size:11.5px;color:var(--text-mid);margin-top:2px;line-height:1.45}
+.lead-cta{font-size:12px;font-weight:700;color:var(--green-mid);white-space:nowrap;flex:0 0 auto}
+.lead-fine{font-size:11px;color:var(--text-soft);line-height:1.5;margin:11px 0 0}
 .better{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--amber);
 border-radius:var(--radius-md);padding:15px 18px;box-shadow:var(--shadow-sm);margin-top:16px}
 .better h2{margin:0 0 4px}
@@ -810,6 +901,10 @@ border-top:1px solid var(--border);padding-top:8px}
 .dn{color:#c0392b;font-size:11.5px;font-weight:700}
 svg.spark{vertical-align:middle;flex-shrink:0}
 .note{font-size:11.5px;color:var(--text-soft);margin-top:10px}
+/* AI-citable lead paragraph — sits on the cream page below the trend chart */
+.lead-out{font-size:14px;color:var(--text-mid);line-height:1.7;max-width:680px;margin-top:20px;
+padding:14px 18px;background:var(--white);border:1px solid var(--border);
+border-left:4px solid var(--sky);border-radius:var(--radius-sm)}
 
 /* ── CTAs ── */
 .cta-row{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
@@ -1297,13 +1392,13 @@ restores, so the returning page always comes back clean. */
 window.addEventListener('pageshow',window.kmHideLoading);
 }})();
 </script>
-<script src="/api-config.js"></script>
-<script src="/drawer-menu.js" defer></script>
-<script src="/bottomnav.js" defer></script>
-<script src="/location.js" defer></script>
-<script src="/bhav-nearest.js" defer></script>
+<script src="{_asset('api-config.js')}"></script>
+<script src="{_asset('drawer-menu.js')}" defer></script>
+<script src="{_asset('bottomnav.js')}" defer></script>
+<script src="{_asset('location.js')}" defer></script>
+<script src="{_asset('bhav-nearest.js')}" defer></script>
 <div class="topbar-spacer" id="topbar-spacer"></div>
-<script src="/header-scroll.js"></script>"""
+<script src="{_asset('header-scroll.js')}"></script>"""
 
 
 def _footer() -> str:
@@ -1900,6 +1995,7 @@ def bhav_sitemap():
         site_last = max(site_last, crop_last)
         urls.append((f"{SITE}/bhav/{cs}", crop_last))
         urls.extend(crop_urls)
+    urls.insert(0, (f"{SITE}/bhav/net-price", ""))   # net-price calculator hub
     urls.insert(0, (f"{SITE}/bhav", site_last))
     body = "\n".join(
         f"  <url><loc>{u}</loc>"
@@ -2035,6 +2131,74 @@ def _fmt_km(km: float) -> str:
     return "1 किमी से कम" if km < 1 else f"{round(km):,} किमी"
 
 
+def _lead_gen_html() -> str:
+    """A tasteful 'किसान सेवाएं' card of relevant service links (loan / insurance /
+    solar). Renders nothing until an offer is switched on with a real URL, so it
+    can ship dormant and light up the moment an affiliate partner exists. Each
+    link routes through /go/<id> for one-place URL swaps + click measurement.
+    Placed low on the page (below the answer) so it never competes with the
+    price or hurts LCP — a service lead is worth far more than the ad it sits by."""
+    offers = leads.active_offers()
+    if not offers:
+        return ""
+    cards = []
+    for o in offers:
+        # 'gov' = informational (nofollow); a paid partner link is 'sponsored'.
+        rel = "nofollow" if o.get("partner") == "gov" else "nofollow sponsored"
+        cards.append(
+            f'<a class="lead-card" href="/go/{escape(o.get("id",""))}" '
+            f'data-lead="{escape(o.get("id",""))}" rel="{rel}" target="_blank">'
+            f'<span class="lead-ic">{escape(o.get("icon","•"))}</span>'
+            f'<span class="lead-tx"><b>{escape(o.get("title",""))}</b>'
+            f'<small>{escape(o.get("desc",""))}</small></span>'
+            f'<span class="lead-cta">{escape(o.get("cta","देखें"))} →</span></a>')
+    # Fire a GA4 event on click (GA is loaded site-wide); guarded so a page
+    # without gtag never errors. Bound once — this block renders once per page.
+    script = ("<script>document.querySelectorAll('.lead-card').forEach(function(a){"
+              "a.addEventListener('click',function(){try{gtag('event','lead_click',"
+              "{offer_id:a.getAttribute('data-lead')});}catch(e){}});});</script>")
+    sub = escape(leads.sub())
+    return (f'<section class="lead-gen"><h2>🧑‍🌾 {escape(leads.heading())}</h2>'
+            + (f'<p class="lead-sub">{sub}</p>' if sub else "")
+            + f'<div class="lead-list">{"".join(cards)}</div>'
+            '<p class="lead-fine">यह जानकारी सुविधा के लिए दी गई है। योजना की पात्रता और '
+            'शर्तें संबंधित पोर्टल पर देखें।</p>'
+            + script + '</section>')
+
+
+@router.get("/go/{offer_id}")
+def lead_redirect(offer_id: str):
+    """Tracked outbound hop for a किसान-सेवा offer → the partner/scheme URL.
+    Logs the click (durable server trail) on top of the client GA event, then
+    302s. Unknown/inactive id falls back to /bhav rather than erroring."""
+    o = leads.offer_by_id(offer_id)
+    if o:
+        logger.info("lead_click offer=%s cat=%s", offer_id, o.get("category", "-"))
+        return RedirectResponse(o["url"], status_code=302)
+    return RedirectResponse("/bhav", status_code=302)
+
+
+def _net_price_cta(hi: str, cs: str = "", state: str = "", district: str = "") -> str:
+    """Compact button linking into the net-price calculator — sits beside the
+    WhatsApp share button (answer panel) or in a cta-row. No rupee figures, so
+    it's safe in the cached SEO HTML and passes link equity to the hub that owns
+    the 'कौन सी मंडी में बेचें / नेट भाव' query space.
+
+    Carries the crop the farmer is viewing as a query param so the calculator
+    opens pre-selected. On a district page we also pass that district's centroid
+    (state/district → lat,lon) so the page can seed the location and rank nearby
+    mandis without waiting for a GPS grant. The params are read client-side
+    (bhav-netprice.js), so the cached /bhav/net-price HTML stays identical for
+    every visitor — cache-safe."""
+    q = f"?crop={quote(cs)}" if cs else ""
+    if cs and state and district:
+        c = district_geo.coord_for(state, district)
+        if c:
+            q += f"&lat={c[0]}&lon={c[1]}&place={quote(district)}"
+    return (f'<a class="btn btn-np" href="/bhav/net-price{q}">'
+            f'🚜 {escape(hi)} — भाड़ा जोड़कर नेट भाव</a>')
+
+
 def _nearest_panel_html(cs: str, hi: str, row: dict, dist_km: float) -> str:
     """Inner markup for the .better panel when a nearest mandi is found —
     mirrors the highest-price card so the swapped-in panel looks native."""
@@ -2078,6 +2242,368 @@ def bhav_nearest(crop: str, lat: float, lon: float, state: str = ""):
     row, dist_km = res
     html = _nearest_panel_html(cs, _hindi_name(commodity), row, dist_km)
     return JSONResponse({"ok": True, "html": html}, headers={"Cache-Control": "no-store"})
+
+
+# ════════════════════════════════════════════════════════════
+# NET PRICE AFTER TRANSPORT — "आपके पास सबसे अच्छा दाम"
+#
+# A price table shows the mandi RATE; it never shows what a farmer actually
+# pockets after paying to cart the crop there. A farther mandi quoting a higher
+# rate can net LESS than the one next door. This ranks the nearby mandis for a
+# crop by NET भाव = modal − freight(distance, vehicle, quantity), using the same
+# district centroids as the nearest-mandi panel and the freight estimates in
+# freight_rates.json. Personalised + no-store, so it never enters the cached
+# SEO HTML; the crawlable /bhav/net-price page hosts the explainer that ranks.
+# ════════════════════════════════════════════════════════════
+def _net_rank(commodity: str, lat: float, lon: float, qty: float,
+              tier: str, limit: int = 6) -> list:
+    """Best-net mandi per nearby district for a crop, ranked by net ₹/quintal.
+
+    One entry per district (its highest-modal market), so the list spreads
+    across places instead of filling up with same-district markets that share a
+    centroid. Only districts with a known centroid within the freight radius are
+    considered — the rest are silently skipped (the page degrades to a prompt)."""
+    radius = freight.max_radius_km()
+    best_by_dist: dict = {}          # (state, district) → row with max modal
+    for r in _rows_for(commodity):
+        modal = _num(r.get("modal_price"))
+        if not modal:
+            continue
+        key = (r.get("state", ""), r.get("district", ""))
+        cur = best_by_dist.get(key)
+        if cur is None or modal > _num(cur.get("modal_price")):
+            best_by_dist[key] = r
+
+    ranked = []
+    for (state, district), r in best_by_dist.items():
+        c = district_geo.coord_for(state, district)
+        if not c:
+            continue
+        dist_km = district_geo.haversine_km(lat, lon, c[0], c[1])
+        if dist_km > radius:
+            continue
+        br = freight.net_price(_num(r.get("modal_price")), dist_km, tier, qty)
+        ranked.append({
+            "market":   r.get("market", "-"),
+            "district": district,
+            "state":    state,
+            "ss":       _slugify(state),
+            "ds":       _slugify(district),
+            **br,
+        })
+    ranked.sort(key=lambda x: (x["net_per_q"], -x["distance_km"]), reverse=True)
+    return ranked[:limit]
+
+
+def _money(n) -> str:
+    """Compact ₹ for possibly-large totals — Indian लाख/करोड़ so a big number
+    reads as '₹4.91 करोड़', not a wall of digits. Small values keep plain
+    grouping (₹9,780)."""
+    n = round(n)
+    if abs(n) >= 10_000_000:
+        return "₹" + f"{n / 10_000_000:.2f}".rstrip("0").rstrip(".") + " करोड़"
+    if abs(n) >= 100_000:
+        return "₹" + f"{n / 100_000:.2f}".rstrip("0").rstrip(".") + " लाख"
+    return f"₹{n:,}"
+
+
+def _net_price_html(cs: str, hi: str, ranked: list, qty: float, tier: str) -> str:
+    """Results list for the net-price calculator. Highest net first; the nearest
+    mandi is tagged so the farmer sees when 'closest' and 'best net' differ."""
+    if not ranked:
+        return ('<p class="np-empty">आपके स्थान के '
+                f'{round(freight.max_radius_km())} किमी के भीतर इस फसल की कोई मंडी '
+                'नहीं मिली जिसकी लोकेशन हमारे पास हो। थोड़ी देर बाद फिर देखें।</p>')
+
+    nearest_ds = min(ranked, key=lambda x: x["distance_km"])["ds"]
+    best = ranked[0]
+    cards = []
+    for i, m in enumerate(ranked):
+        top = " best" if i == 0 else ""
+        near = ('<span class="np-tag near">📍 सबसे पास</span>'
+                if m["ds"] == nearest_ds else "")
+        rank = "🥇" if i == 0 else f"{i + 1}"
+        net_cls = "pos" if m["net_per_q"] >= 0 else "neg"
+        cards.append(
+            f'<a class="np-card{top}" href="/bhav/{cs}/{m["ss"]}/{m["ds"]}">'
+            f'<span class="np-rank">{rank}</span>'
+            f'<span class="np-body">'
+            f'<span class="np-mkt">{escape(m["market"])}{near}</span>'
+            f'<span class="np-sub">{escape(m["district"])}, {escape(_hindi_state(m["state"]))}'
+            f' · {_fmt_km(m["distance_km"])} · भाड़ा ~₹{m["freight_per_q"]:,}/क्विं.</span>'
+            f'</span>'
+            f'<span class="np-net {net_cls}"><b>₹{m["net_per_q"]:,}</b>'
+            f'<small>नेट/क्विं.</small><s>₹{m["modal"]:,}</s></span>'
+            f'</a>')
+
+    # One honest takeaway: does the best-net mandi beat the closest one? Plus the
+    # concrete money — the total across the farmer's quantity, not just ₹/quintal.
+    nearest = next(m for m in ranked if m["ds"] == nearest_ds)
+    qn = int(qty) if float(qty).is_integer() else round(qty, 1)
+    # The net भाव — the answer — pulled out as a big figure on the right.
+    net_fig = (f'<div class="np-take-fig"><b>₹{best["net_per_q"]:,}</b>'
+               '<small>नेट भाव/क्विंटल</small></div>')
+    if best["ds"] == nearest_ds:
+        total = round(best["net_per_q"] * qty)
+        main = (f'✅ आपके सबसे पास वाली मंडी <b>{escape(best["market"])}</b> '
+                f'({escape(best["district"])}) ही भाड़ा जोड़ने के बाद सबसे अच्छा नेट भाव दे रही है।')
+        chips = f'<span>{qn} क्विंटल पर ≈ <b>{_money(total)}</b></span>'
+    else:
+        gain = best["net_per_q"] - nearest["net_per_q"]
+        total_gain = round(gain * qty)
+        main = (f'💡 भाड़ा जोड़ने के बाद <b>{escape(best["market"])}</b> '
+                f'({escape(best["district"])}) में सबसे ज्यादा पैसा मिलेगा।')
+        chips = (f'<span>सबसे पास वाली मंडी से <b>₹{gain:,}/क्विंटल</b> ज्यादा</span>'
+                 f'<span>आपकी {qn} क्विंटल उपज पर करीब <b>{_money(total_gain)}</b> ज्यादा</span>')
+    take = (f'<div class="np-take"><div class="np-take-body">'
+            f'<div class="np-take-main">{main}</div>'
+            f'<div class="np-take-info">{chips}</div></div>'
+            f'{net_fig}</div>')
+
+    return (f'{take}'
+            f'<div class="np-list">{"".join(cards)}</div>'
+            '<p class="np-fine">भाड़ा सिर्फ अनुमान है — असली खर्च डीज़ल, रास्ते और '
+            'ट्रांसपोर्टर पर निर्भर करता है। भाव सरकारी Agmarknet रिपोर्ट से।</p>')
+
+
+@router.get("/bhav/net-price-calc")
+def bhav_net_price(crop: str, lat: float, lon: float,
+                   qty: float = 20.0, tier: str = ""):
+    """JSON for the net-price calculator — ranked nearby mandis by net ₹/quintal.
+    Personalised, no-store; the crawlable page is /bhav/net-price."""
+    idx = _get_index()
+    commodity = idx.get("crops", {}).get((crop or "").lower())
+    if not commodity or not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        return JSONResponse({"ok": False}, headers={"Cache-Control": "no-store"})
+    tier = tier if tier in freight.tiers() else freight.default_tier()
+    qty = min(max(float(qty or 1), 1.0), 100000.0)     # clamp to sane range
+    ranked = _net_rank(commodity, lat, lon, qty, tier)
+    html = _net_price_html((crop or "").lower(), _hindi_name(commodity),
+                           ranked, qty, tier)
+    return JSONResponse({"ok": True, "html": html, "count": len(ranked)},
+                        headers={"Cache-Control": "no-store"})
+
+
+# ── crawlable calculator page: owns the "कौन सी मंडी में बेचें / नेट भाव" query ──
+_NP_CSS = """
+.np-hero{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:#fff;
+border-radius:var(--radius-md);padding:26px 20px 24px;margin:8px 0 18px}
+.np-hero h1{color:#fff;margin:0 0 10px;font-size:23px;line-height:1.3}
+.np-lede{color:rgba(255,255,255,.92);font-size:14.5px;line-height:1.6;margin:0;max-width:640px}
+.np-more{display:none;background:none;border:0;font:inherit;font-weight:700;font-size:13px;
+text-decoration:underline;cursor:pointer;padding:2px 0}
+.np-lede-wrap .np-more{margin-top:8px;color:#fff}
+.np-ex-more{margin-top:6px;color:var(--green-mid)}
+.np-calc{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);
+box-shadow:var(--shadow-sm);padding:18px 16px;margin:0 0 22px}
+.np-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* mobile: shrink the hero, collapse the lede to 1 line behind "और देखें",
+   stack the quantity/vehicle controls so the long vehicle label has room */
+@media(max-width:640px){
+.np-hero{padding:20px 16px 18px;border-radius:14px}
+.np-hero h1{font-size:20px}
+.np-lede{font-size:14px}
+.np-lede-wrap.clamp:not(.open) .np-lede{display:-webkit-box;-webkit-line-clamp:1;
+-webkit-box-orient:vertical;overflow:hidden}
+.np-lede-wrap.clamp .np-more{display:inline-block}
+.np-controls{grid-template-columns:1fr;gap:11px}
+.np-calc{padding:15px 13px}
+}
+.np-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.np-field.wide{grid-column:1/-1}
+.np-field label{font-size:12.5px;font-weight:700;color:var(--text-soft)}
+.np-field select,.np-field input{width:100%;font:inherit;font-size:15px;padding:11px 12px;
+border:1.5px solid var(--border);border-radius:12px;background:var(--white);color:var(--text-dark);
+-webkit-appearance:none;appearance:none}
+.np-field select:focus,.np-field input:focus{outline:none;border-color:var(--green-mid)}
+.np-locrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.np-locbtn{border:0;background:var(--green-dark);color:#fff;font:inherit;font-weight:700;
+font-size:14px;padding:11px 16px;border-radius:12px;cursor:pointer}
+.np-locbtn:active{background:var(--green-mid)}
+.np-locstatus{font-size:13px;color:var(--text-soft);flex:1;min-width:140px}
+.np-results{margin-top:6px;position:relative;min-height:64px}
+/* "calculating…" overlay while a recalculation is in flight (aria-busy) */
+.np-results[aria-busy="true"]::before{content:"";position:absolute;inset:0;z-index:2;
+background:rgba(245,247,244,.66);border-radius:12px;backdrop-filter:blur(1px)}
+.np-results[aria-busy="true"]::after{content:"";position:absolute;left:50%;top:24px;
+width:30px;height:30px;margin-left:-15px;z-index:3;border-radius:50%;
+border:3px solid #cfe6d5;border-top-color:var(--green-mid);
+animation:np-spin .7s linear infinite}
+@keyframes np-spin{to{transform:rotate(360deg)}}
+.np-take{display:flex;gap:14px;align-items:center;background:#e7f2fc;
+border-left:4px solid var(--sky);border-radius:14px;padding:16px 18px;margin:16px 0 14px}
+.np-take-body{flex:1;min-width:0}
+.np-take-main{font-size:15px;line-height:1.6;color:#114b7d}
+.np-take-info{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.np-take-info span{background:rgba(255,255,255,.82);border:1px solid #bcdcf6;border-radius:22px;
+padding:7px 13px;font-size:13px;color:#114b7d;line-height:1.3}
+.np-take-info b{font-weight:800}
+.np-take-fig{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;text-align:right;
+padding-left:14px;border-left:1px solid #bcdcf6}
+.np-take-fig b{font-size:28px;font-weight:800;color:#114b7d;line-height:1.05;white-space:nowrap}
+.np-take-fig small{font-size:11px;color:var(--sky);margin-top:3px;white-space:nowrap}
+/* mobile: stack the takeaway — net price as a headline row on top, then the
+   message and chips full-width, so nothing gets squeezed into a narrow column */
+@media(max-width:560px){
+.np-take{flex-direction:column;align-items:stretch;gap:11px;padding:14px 15px}
+.np-take-fig{order:-1;flex-direction:row;align-items:baseline;justify-content:flex-start;
+gap:8px;text-align:left;padding:0 0 11px;border-left:0;border-bottom:1px solid #bcdcf6}
+.np-take-fig b{font-size:25px}
+.np-take-fig small{margin-top:0}
+.np-take-main{font-size:14px}
+.np-take-info{margin-top:0}
+}
+.np-list{display:flex;flex-direction:column;gap:9px}
+.np-card{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
+background:var(--white);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+.np-card.best{border-color:var(--green-mid);box-shadow:0 0 0 2px rgba(45,106,79,.14)}
+.np-rank{font-size:17px;font-weight:800;color:var(--green-mid);flex:0 0 22px;text-align:center}
+.np-body{display:flex;flex-direction:column;min-width:0;flex:1}
+.np-mkt{font-weight:800;font-size:15px;color:var(--text-dark);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.np-sub{font-size:12px;color:var(--text-soft);margin-top:2px;line-height:1.45}
+.np-tag{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.np-tag.near{background:#e7f0ff;color:#1a5bb8}
+.np-net{display:flex;flex-direction:column;align-items:flex-end;text-align:right;flex:0 0 auto}
+.np-net b{font-size:18px;font-weight:800;color:var(--green-dark);line-height:1.1}
+.np-net.neg b{color:#b3341f}
+.np-net small{font-size:10px;color:var(--text-soft)}
+.np-net s{font-size:11px;color:var(--text-soft);opacity:.75}
+.np-fine{font-size:11.5px;color:var(--text-soft);line-height:1.5;margin:12px 0 0}
+.np-empty{font-size:14px;color:var(--text-soft);line-height:1.6;padding:14px 4px}
+.np-hint{font-size:13.5px;color:var(--text-soft);line-height:1.6;padding:8px 4px}
+.np-ex{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);
+padding:6px 16px 10px;margin:8px 0}
+.np-ex h2{font-size:16px;margin:12px 0 6px}
+.np-ex p{font-size:13.5px;line-height:1.7;color:var(--text-mid)}
+.np-steps{list-style:none;counter-reset:s;margin:6px 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.np-steps li{counter-increment:s;position:relative;padding-left:34px;font-size:13.5px;
+line-height:1.55;color:var(--text-dark)}
+.np-steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:24px;height:24px;
+border-radius:50%;background:var(--green-pale);color:var(--green-dark);font-weight:800;font-size:12.5px;
+display:flex;align-items:center;justify-content:center}
+@media(max-width:420px){.np-net b{font-size:16px}.np-mkt{font-size:14px}}
+@media(max-width:640px){
+.np-ex{padding:4px 14px 10px}
+.np-ex h2{font-size:15px}
+.np-ex-body{position:relative;max-height:118px;overflow:hidden}
+.np-ex-body.open{max-height:none}
+.np-ex-body:not(.open)::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44px;
+background:linear-gradient(rgba(255,255,255,0),var(--white))}
+.np-ex .np-ex-more{display:inline-block}
+}
+"""
+
+
+@router.get("/bhav/net-price", response_class=HTMLResponse)
+def bhav_net_price_page():
+    idx = _get_index()
+    today_hi = _hindi_date(date.today())
+    canon = f"{SITE}/bhav/net-price"
+
+    # Crop dropdown — staples (app tile order) first, then the rest alphabetical.
+    crops = {cs: cn for cs, cn in idx.get("crops", {}).items() if _is_crop(cn)}
+    ordered = sorted(crops.items(), key=lambda kv: (_tile_rank(kv[1]), _hindi_name(kv[1])))
+    default_cs = "wheat" if "wheat" in crops else (ordered[0][0] if ordered else "")
+    opts = []
+    for cs, cn in ordered:
+        hi = _hindi_name(cn)
+        label = hi if hi == cn else f"{hi} ({cn})"
+        sel = " selected" if cs == default_cs else ""
+        opts.append(f'<option value="{escape(cs)}"{sel}>{escape(label)}</option>')
+    crop_options = "".join(opts)
+
+    tier_opts = "".join(
+        f'<option value="{escape(k)}"{" selected" if k == freight.default_tier() else ""}>'
+        f'{escape(t.get("label", k))} — {escape(t.get("hint", ""))}</option>'
+        for k, t in freight.tiers().items())
+
+    faqs = [
+        ("नेट भाव (net price) क्या होता है?",
+         "नेट भाव वह रकम है जो मंडी का भाव पाने के बाद, फसल वहाँ तक ले जाने का भाड़ा घटाकर, "
+         "असल में आपकी जेब में आती है। नेट भाव = मंडी का मॉडल भाव − प्रति क्विंटल भाड़ा। "
+         "दूर की एक मंडी ऊँचा रेट दिखाकर भी, भाड़ा जोड़ने के बाद पास की मंडी से कम दे सकती है।"),
+        ("कौन सी मंडी में बेचना फायदेमंद है — पास वाली या ऊँचे भाव वाली?",
+         "हमेशा नेट भाव देखिए, सिर्फ रेट नहीं। यह कैलकुलेटर आपके स्थान के आस-पास की मंडियों को "
+         "भाड़ा घटाकर मिलने वाले नेट भाव के हिसाब से क्रम में लगाता है, ताकि आप देख सकें कि "
+         "असल में सबसे ज्यादा पैसा कहाँ मिलेगा।"),
+        ("भाड़ा कैसे जोड़ा जाता है?",
+         "भाड़ा दूरी, वाहन (ट्रैक्टर-ट्रॉली / मिनी-ट्रक / ट्रक) और मात्रा पर निर्भर करता है — "
+         "ज्यादा माल भरने पर प्रति क्विंटल भाड़ा कम पड़ता है, इसलिए दूर की ऊँचे भाव वाली मंडी भी "
+         "फायदेमंद हो सकती है। यहाँ दिखाया भाड़ा एक अनुमान है; असली खर्च डीज़ल और ट्रांसपोर्टर पर निर्भर है।"),
+        ("भाव का स्रोत क्या है?",
+         "सभी मंडी भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल की रोज़ाना रिपोर्ट से लिए जाते हैं। "
+         "भाड़ा हमारा अनुमान है, मंडी भाव सरकारी आँकड़ा है।"),
+    ]
+    faq_html, faq_ld = _faq(faqs)
+    crumb_ld = _crumb_ld([("कृषि मित्र", f"{SITE}/"),
+                          ("मंडी भाव", f"{SITE}/bhav"),
+                          ("नेट भाव कैलकुलेटर", canon)])
+    ld = _ld(faq_ld, crumb_ld)
+
+    body = f"""<section class="np-hero">
+<h1>भाड़ा जोड़कर सबसे अच्छा दाम — कौन सी मंडी में बेचें?</h1>
+<div class="np-lede-wrap" id="np-lede-wrap">
+<p class="np-lede">मंडी का ऊँचा रेट देखकर मत चलिए — जो <b>नेट भाव</b> (भाड़ा घटाकर) आपकी जेब में आए, वही असली है।
+अपनी फसल, मात्रा और वाहन चुनिए; यह कैलकुलेटर आपके आस-पास की मंडियों को भाड़ा जोड़ने के बाद
+मिलने वाले नेट भाव के हिसाब से क्रम में लगा देगा।</p>
+<button type="button" class="np-more" id="np-lede-more" aria-expanded="false" hidden>और देखें</button>
+</div>
+</section>
+
+<section class="np-calc">
+<div class="np-controls">
+<div class="np-field wide">
+<label for="np-crop">फसल</label>
+<select id="np-crop">{crop_options}</select>
+</div>
+<div class="np-field">
+<label for="np-qty">मात्रा (क्विंटल)</label>
+<input id="np-qty" type="number" inputmode="numeric" min="1" step="1" value="20">
+</div>
+<div class="np-field">
+<label for="np-tier">वाहन</label>
+<select id="np-tier">{tier_opts}</select>
+</div>
+</div>
+<div class="np-locrow">
+<button type="button" class="np-locbtn" id="np-loc-btn">📍 मेरी लोकेशन इस्तेमाल करें</button>
+<span class="np-locstatus" id="np-loc-status">नज़दीकी मंडियाँ दिखाने के लिए अपनी लोकेशन चालू करें।</span>
+</div>
+<div class="np-results" id="np-results">
+<p class="np-hint">ऊपर 📍 दबाकर अपनी लोकेशन चालू करते ही, आपके आस-पास की मंडियाँ नेट भाव के हिसाब से यहाँ दिखेंगी।</p>
+</div>
+</section>
+
+<section class="np-ex">
+<div class="np-ex-body" id="np-ex-body">
+<h2>नेट भाव क्यों मायने रखता है</h2>
+<p>मान लीजिए आपके जिले की मंडी गेहूँ का भाव ₹2,400/क्विंटल दे रही है, और 60 किमी दूर की एक मंडी
+₹2,520 दिखा रही है। रेट देखकर लगेगा दूर वाली बेहतर है — पर वहाँ तक 20 क्विंटल ले जाने का भाड़ा
+यदि ₹90/क्विंटल पड़े, तो नेट भाव सिर्फ ₹2,430 बचता है। बड़ा माल भरने पर वही भाड़ा घटकर प्रति
+क्विंटल कम हो जाता है और दूर की मंडी फायदेमंद हो जाती है। इसीलिए <b>बेचने से पहले हमेशा भाड़ा
+जोड़कर नेट भाव देखना चाहिए</b> — यही यह कैलकुलेटर करता है।</p>
+<h2>इसका इस्तेमाल कैसे करें</h2>
+<ol class="np-steps">
+<li>अपनी <b>फसल</b> चुनिए।</li>
+<li>कितने <b>क्विंटल</b> बेचने हैं, वह भरिए।</li>
+<li><b>वाहन</b> चुनिए — पास के लिए ट्रैक्टर-ट्रॉली, दूर के लिए ट्रक।</li>
+<li>📍 <b>लोकेशन</b> चालू कीजिए — आपके {round(freight.max_radius_km())} किमी के दायरे की मंडियाँ
+नेट भाव के क्रम में दिख जाएँगी, सबसे ऊपर वह जहाँ सबसे ज्यादा पैसा मिलेगा।</li>
+</ol>
+</div>
+<button type="button" class="np-more np-ex-more" id="np-ex-more" aria-expanded="false" hidden>और देखें</button>
+</section>
+
+<h2>अक्सर पूछे जाने वाले सवाल</h2>
+{faq_html}
+<script src="{_asset('bhav-netprice.js')}" defer></script>"""
+
+    crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › '
+              f'<a href="{SITE}/bhav">मंडी भाव</a> › नेट भाव कैलकुलेटर')
+    desc = ("भाड़ा जोड़कर कौन सी मंडी में बेचना फायदेमंद है? अपनी फसल, मात्रा और वाहन चुनिए — "
+            "आपके आस-पास की मंडियों का नेट भाव (मॉडल भाव − भाड़ा) एक जगह देखिए। स्रोत: Agmarknet।")
+    return _doc("नेट भाव कैलकुलेटर — भाड़ा जोड़कर कौन सी मंडी में बेचें? | कृषि मित्र",
+                desc, canon, crumbs, body, ld, extra_css=_NP_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -2174,8 +2700,12 @@ def bhav_crop(c_slug: str):
 
     faqs = [
         (f"आज {hi} का भाव क्या है?",
-         f"{hi} का भाव हर राज्य और मंडी में अलग-अलग होता है। सटीक भाव जानने के लिए नीचे अपना राज्य चुनें, "
-         f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
+         (f"{today_hi} को {hi} का देशभर औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल है — "
+          f"{_mandis_gen(st['n'])} की सरकारी रिपोर्ट (Agmarknet) पर आधारित। हर राज्य और मंडी में "
+          f"रेट अलग होता है — नीचे अपना राज्य चुनें, फिर जिला चुनें।"
+          if st["avg"] else
+          f"{hi} का भाव हर राज्य और मंडी में अलग-अलग होता है। सटीक भाव जानने के लिए नीचे अपना राज्य चुनें, "
+          f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।")),
         (f"{hi} सबसे महंगा किस मंडी में बिक रहा है?",
          (f"आज सबसे ज्यादा भाव {best.get('market','-')} ({best.get('district','-')}, "
           f"{_hindi_state(best.get('state',''))}) में मिल रहा है — सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
@@ -2197,6 +2727,18 @@ def bhav_crop(c_slug: str):
             + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
             + f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।")
 
+    # AI-citable lead: one self-contained, dated, source-attributed sentence in the
+    # first screen (AI extractors weight the top of the page; the FAQ sits too low).
+    # Same disclosure rules as elsewhere on the tier: country average is already in
+    # the meta description, the best mandi is named without its price (teaser rule).
+    lead_avg = f" — देशभर का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
+    lead_best = (f" आज सबसे ऊंचा भाव {escape(best.get('market', '-'))} "
+                 f"({escape(best.get('district', '-'))}, {escape(_hindi_state(best.get('state', '')))}) "
+                 f"मंडी में दर्ज हुआ।" if best else "")
+    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi)} ({escape(commodity)}) का भाव देश के '
+                   f'{len(state_map)} राज्यों की {_mandis_gen(st["n"])} से भारत सरकार के Agmarknet '
+                   f'(data.gov.in) पोर्टल पर दर्ज हुआ{lead_avg}।{lead_best}</p>')
+
     body = f"""<section class="answer">
 {photo}
 <div class="answer-in">
@@ -2212,8 +2754,10 @@ def bhav_crop(c_slug: str):
 {best_html}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
 <div class="place-grid">{"".join(cards)}</div>
+{answer_lead}
 <div class="cta-row">
 <a class="btn btn-app" href="{_app_url(commodity)}">📊 ऐप में {escape(hi)} की तुलना देखें</a>
+{_net_price_cta(hi, cs)}
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}"""
@@ -2313,8 +2857,12 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 
     faqs = [
         (f"आज {hi_state} में {hi} का भाव क्या है?",
-         f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
-         f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
+         (f"{today_hi} को {hi_state} में {hi} का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल है — "
+          f"{_mandis_gen(st['n'])} की सरकारी रिपोर्ट (Agmarknet) पर आधारित। जिले के अनुसार रेट "
+          f"अलग-अलग है — नीचे अपना जिला चुनें।"
+          if st["avg"] else
+          f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
+          f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।")),
         (f"{hi_state} में {hi} सबसे महंगा कहां बिक रहा है?",
          (f"आज {top[0].get('market','-')} ({top[0].get('district','-')}) मंडी में सबसे ज्यादा भाव मिल रहा है — "
           f"सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
@@ -2329,6 +2877,12 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     desc = (f"{today_hi}: {hi_state} की मंडियों में {hi} का ताजा भाव — "
             + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
             + f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
+
+    # AI-citable lead — see the crop-hub twin for the reasoning + disclosure rules.
+    lead_avg = f" — राज्य का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
+    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi_state)} के {len(dist_map)} जिलों की '
+                   f'{_mandis_gen(st["n"])} में {escape(hi)} का भाव सरकारी रिपोर्ट (भारत सरकार का Agmarknet '
+                   f'पोर्टल) में दर्ज हुआ{lead_avg}। नीचे अपना जिला चुनकर मंडीवार पूरा भाव देखें।</p>')
 
     body = f"""<section class="answer">
 {photo}
@@ -2345,8 +2899,10 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 {top_html}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
 <div class="dcard-grid">{"".join(cards)}</div>
+{answer_lead}
 <div class="cta-row">
 <a class="btn btn-app" href="{_app_url(commodity, state=state)}">📊 ऐप में तुलना देखें</a>
+{_net_price_cta(hi, cs)}
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}"""
@@ -2469,6 +3025,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # ── chart series: the mandi with the longest history speaks for the district ──
     sparks = [[v for v in (_num(x) for x in (p.get("spark") or [])) if v] for p in prices]
     series = max(sparks, key=len) if sparks else []
+    # sell-or-wait read, from the same history the chart draws (no forecast made)
+    signal_html = _sell_signal(series, st["avg"], avg_pct)
     chart_svg = _chart(series)
     chart_html = (f"""<section class="card-w">
 <div class="card-w-h"><h2>{escape(hi)} का {len(series)}-दिन रुझान</h2><em>{escape(district)} · ₹/क्विंटल</em></div>
@@ -2531,6 +3089,16 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                     if _has_photo(commodity) else "")
     lead = f"₹{st['avg']:,}" if st["avg"] else "—"
 
+    # AI-citable lead — this tier already shows every number, so the sentence can
+    # carry them all: date, place, average, range, source. One quotable passage.
+    lead_range = (f" (न्यूनतम ₹{st['lo']:,} — अधिकतम ₹{st['hi']:,})"
+                  if st["lo"] and st["hi"] else "")
+    answer_lead = ((f'<p class="lead-out">{today_hi} को {escape(district)} ({escape(hi_state)}) की '
+                    f'{_mandis_gen(st["n"])} में {escape(hi)} का औसत मॉडल भाव ₹{st["avg"]:,} प्रति क्विंटल '
+                    f'दर्ज हुआ{lead_range}। स्रोत: भारत सरकार का Agmarknet (data.gov.in) पोर्टल, '
+                    f'{escape(_hindi_data_date(data_date))} तक।</p>')
+                   if st["avg"] else "")
+
     body = f"""<section class="answer">
 {answer_photo}
 <div class="answer-in">
@@ -2545,7 +3113,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <div><span>अधिकतम</span><b>{f"₹{st['hi']:,}" if st['hi'] else '—'}</b></div>
 <div><span>{'मंडी' if st['n'] == 1 else 'मंडियां'}</span><b>{st['n']}</b></div>
 </div>
+{signal_html}
+<div class="answer-actions">
 <button class="answer-share" type="button" onclick="shareBhav()">{_WA_GLYPH} WhatsApp पर भेजें</button>
+{_net_price_cta(hi, cs, state, district)}
+</div>
 </div>
 </section>
 <script>
@@ -2567,6 +3139,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 {chart_html}
 
+{answer_lead}
+
 <section class="card-w">
 <div class="card-w-h"><h2>मंडीवार भाव</h2><em>▲▼ = कल के मुकाबले</em></div>
 <div class="mkts">
@@ -2582,6 +3156,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
+{_lead_gen_html()}
 {_related_links(cs, ss, ds, commodity, district)}"""
 
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '

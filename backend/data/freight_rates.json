@@ -1,0 +1,28 @@
+{
+  "_note": "Honest, approximate freight estimates for hauling produce to a mandi. NOT a quote — real cost depends on the day's diesel, the route, and what the transporter charges. Tuned so per-quintal cost is in a believable range for Indian mandi logistics (~₹0.4–1.5 per quintal per km once the vehicle is loaded). Edit these freely; the calculator reads this file live (cached by mtime).",
+  "default_tier": "trolley",
+  "max_radius_km": 150,
+  "tiers": {
+    "trolley": {
+      "label": "ट्रैक्टर-ट्रॉली",
+      "hint": "पास की मंडी · ~25 क्विंटल तक",
+      "fixed_inr": 200,
+      "per_km_inr": 15,
+      "capacity_q": 25
+    },
+    "mini": {
+      "label": "छोटा टेम्पो / मिनी-ट्रक",
+      "hint": "मध्यम दूरी · ~40 क्विंटल तक",
+      "fixed_inr": 400,
+      "per_km_inr": 22,
+      "capacity_q": 40
+    },
+    "truck": {
+      "label": "ट्रक",
+      "hint": "दूर की मंडी · ~120 क्विंटल तक",
+      "fixed_inr": 1200,
+      "per_km_inr": 40,
+      "capacity_q": 120
+    }
+  }
+}
