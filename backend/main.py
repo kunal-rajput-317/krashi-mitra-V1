@@ -267,6 +267,17 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/health/data")
+async def health_data(stale_after_hours: float = 30.0):
+    """Public data-freshness probe for the external `monitor` workflow.
+    Reports only how fresh the mandi feed is (nothing sensitive — the data
+    date already shows on every /bhav page). `stale` flips true when no
+    row-delivering mandi sync has run within stale_after_hours, so a silently
+    stopped feed pages us even while nobody is watching."""
+    from backend.services.sync_log_service import mandi_freshness
+    return mandi_freshness(stale_after_hours)
+
+
 
 # Add this AFTER all app.include_router() lines, at the bottom
 app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")

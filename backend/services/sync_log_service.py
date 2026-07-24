@@ -139,3 +139,58 @@ def get_summary() -> dict:
         return summary
     finally:
         db.close()
+
+
+# ── Public freshness probe (external monitoring) ──────────────
+# Consumed by the /health/data endpoint and the `monitor` GitHub Action so a
+# silently-stalled mandi feed is machine-detectable. Exposes only *how fresh*
+# the feed is — no sensitive data; the price date is already public on /bhav.
+
+def mandi_freshness(stale_after_hours: float = 30.0) -> dict:
+    """Is the mandi price feed still updating?
+
+    Anchors on the last run that actually delivered rows — status "success"
+    OR "partial" (a partial run still merged fresh rows; only some states were
+    incomplete). A run is "failed" only when *no* rows arrived, so if nothing
+    but failures land for `stale_after_hours`, the feed is genuinely broken and
+    `stale` flips true. Scheduled fetches run ~5x/day, so 30h spans a full day
+    of chances and won't cry wolf over one bad night."""
+    db = SessionLocal()
+    try:
+        def _last(*statuses: str):
+            q = db.query(SyncLog).filter(SyncLog.source == "mandi")
+            if statuses:
+                q = q.filter(SyncLog.status.in_(statuses))
+            return q.order_by(SyncLog.finished_at.desc()).first()
+
+        last       = _last()
+        last_fresh = _last("success", "partial")
+        last_ok    = _last("success")
+        now = datetime.utcnow()
+
+        def _age_h(r):
+            if not r or not r.finished_at:
+                return None
+            return round((now - r.finished_at).total_seconds() / 3600, 1)
+
+        fresh_age = _age_h(last_fresh)
+        stale = fresh_age is None or fresh_age > stale_after_hours
+        return {
+            "source":               "mandi",
+            "stale":                stale,
+            "stale_after_hours":    stale_after_hours,
+            "last_fresh_age_hours": fresh_age,
+            "last_fresh_at":        _fmt_ist(last_fresh.finished_at) if last_fresh else None,
+            "last_fresh_rows":      last_fresh.rows if last_fresh else None,
+            "last_success_at":      _fmt_ist(last_ok.finished_at) if last_ok else None,
+            "last_run_status":      last.status if last else None,
+            "last_run_at":          _fmt_ist(last.finished_at) if last else None,
+            "checked_at":           _fmt_ist(now),
+        }
+    except Exception as e:
+        # Never let a probe error masquerade as "feed broken" — a transient DB
+        # hiccup shouldn't page. Hard outages are caught by /health + keepalive.
+        logger.error(f"mandi_freshness check failed: {e}")
+        return {"source": "mandi", "stale": False, "error": "freshness check failed"}
+    finally:
+        db.close()

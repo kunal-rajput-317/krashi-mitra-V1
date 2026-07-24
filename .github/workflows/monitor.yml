@@ -1,0 +1,63 @@
+name: monitor
+
+# External uptime + mandi-data-freshness watch. Runs independently of the app
+# a few times a day, so a DOWN site OR a silently-stale price feed is caught
+# even when nobody is looking. On a problem it (1) pings Telegram if configured
+# and (2) fails the job, so GitHub emails the repo owner as a zero-setup
+# backstop. Optional Telegram = instant phone push; add two repo secrets:
+#   TELEGRAM_BOT_TOKEN  (from @BotFather)
+#   TELEGRAM_CHAT_ID    (your chat id, e.g. via @userinfobot)
+# Without them you still get GitHub's Actions-failure email. Fully automatic.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"     # every 6 hours (keepalive already covers fast downtime)
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check health + mandi freshness
+        env:
+          BASE: https://krashi-mitra-v1.onrender.com
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT:  ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -uo pipefail
+
+          alert() {
+            echo "::error::$1"
+            if [ -n "${TG_TOKEN:-}" ] && [ -n "${TG_CHAT:-}" ]; then
+              curl -s --max-time 20 \
+                "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                --data-urlencode "chat_id=${TG_CHAT}" \
+                --data-urlencode "text=🚨 KrashiMitra: $1" >/dev/null || true
+            fi
+          }
+
+          # 1) Liveness — retry to ride out Render's ~50s cold start.
+          code=""
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$BASE/health" || true)
+            [ "$code" = "200" ] && break
+            echo "health attempt $i => '$code', retry in 30s"; sleep 30
+          done
+          if [ "$code" != "200" ]; then
+            alert "site DOWN — /health returned '$code' after 3 tries"
+            exit 1
+          fi
+          echo "liveness ok"
+
+          # 2) Data freshness — is the mandi feed still updating?
+          body=$(curl -s --max-time 60 "$BASE/health/data" || true)
+          echo "freshness: $body"
+          if printf '%s' "$body" | grep -Eq '"stale"[[:space:]]*:[[:space:]]*true'; then
+            age=$(printf '%s' "$body" | grep -Eo '"last_fresh_age_hours"[^,}]*' || true)
+            last=$(printf '%s' "$body" | grep -Eo '"last_run_status"[^,}]*' || true)
+            alert "mandi prices STALE — no fresh sync recently (${age}; ${last}). Feed/scheduler may be stuck."
+            exit 1
+          fi
+
+          echo "all good ✅ — site up, feed fresh"
