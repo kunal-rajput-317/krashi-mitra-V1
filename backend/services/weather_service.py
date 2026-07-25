@@ -3,7 +3,7 @@
 # KrashiMitra — Weather Service
 # ============================================================
 # CHANGED IN THIS STEP:
-#   + refresh_all_districts()  — called by scheduler every 8h
+#   + refresh_all_districts()  — called by scheduler every 2h
 #   + _fetch_and_upsert()      — fetches ONE district from OWM
 #                                and upserts into weather_cache
 #   + get_farming_tip()        — unchanged, kept here
@@ -222,7 +222,7 @@ def purge_old_history(db: Session) -> int:
 
 async def refresh_all_districts():
     """
-    Called by APScheduler every 8 hours.
+    Called by APScheduler every 2 hours.
     Fetches weather for ALL 75 UP districts in batches.
     Uses ONE shared httpx.AsyncClient for connection pooling.
 

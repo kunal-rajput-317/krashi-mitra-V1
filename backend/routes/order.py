@@ -189,7 +189,7 @@ def get_order_history(
 # ── PUT /order/status — Admin updates order status ───────────
 
 VALID_STATUSES = ["Pending", "Booked", "Quoted", "Purchased",
-                  "Dispatched", "Delivered", "Cancelled", "Unavailable"]
+                  "Dispatched", "Delivered", "Cancelled", "Unavailable", "Out of Order"]
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "krashimitra_admin_2026")
 
 

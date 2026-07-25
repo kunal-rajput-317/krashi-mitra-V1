@@ -36,6 +36,7 @@
 import json as _json
 import os
 import re
+import statistics
 import time
 from datetime import date, timedelta
 from html import escape
@@ -507,12 +508,147 @@ def _sell_signal(series: list, today_avg, avg_pct) -> str:
             f'</div>')
 
 
+# ── 🔔 mandi price alert toggle (web push) ───────────────────
+# Kept as a plain (non-f) string so the JS braces need no escaping.
+_BELL_JS = """
+var b=document.getElementById('bhav-bell');
+if(!b||!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return;
+var txt=b.querySelector('.bb-txt'),busy=false,KEY='';
+function key(s){var p='='.repeat((4-s.length%4)%4),x=(s+p).replace(/-/g,'+').replace(/_/g,'/'),
+ r=atob(x),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+function paint(on){b.classList.toggle('on',!!on);if(!on)b.classList.remove('ringing');
+ b.setAttribute('aria-pressed',on?'true':'false');
+ if(txt)txt.textContent=on?'अलर्ट चालू':'भाव अलर्ट';
+ b.title=on?'इस मंडी की सूचना बंद करें':'इस मंडी के भाव की सूचना पाएं';}
+function ring(){b.classList.remove('ringing');void b.offsetWidth;b.classList.add('ringing');}
+function qs(ep){return '?endpoint='+encodeURIComponent(ep)+'&commodity='+encodeURIComponent(T.commodity)
+ +'&state='+encodeURIComponent(T.state)+'&district='+encodeURIComponent(T.district);}
+/* Reveal the bell only when the server actually has VAPID configured, then
+   hydrate its state from THIS device (the HTML itself is edge-cached). */
+fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
+ if(!j||!j.data||!j.data.enabled)return;
+ KEY=j.data.key;b.hidden=false;
+ /* Pre-register the SW now (SEO visitors land here without one) so a click
+    doesn't pay install+activate latency before it can subscribe. */
+ navigator.serviceWorker.register('/sw.js').catch(function(){});
+ return navigator.serviceWorker.getRegistration().then(function(reg){
+  if(!reg||!reg.pushManager)return;
+  return reg.pushManager.getSubscription().then(function(s){
+   if(!s)return;
+   return fetch('/alerts/mandi/status'+qs(s.endpoint)).then(function(r){return r.json();})
+    .then(function(d){paint(d&&d.data&&d.data.subscribed);});
+  });
+ });
+}).catch(function(){});
+function go(){
+ return Promise.resolve(Notification.requestPermission()).then(function(p){
+  if(p!=='granted')throw new Error('सूचना की अनुमति नहीं मिली — ब्राउज़र सेटिंग में चालू करें।');
+  return navigator.serviceWorker.register('/sw.js');
+ }).then(function(){return navigator.serviceWorker.ready;}).then(function(reg){
+  return reg.pushManager.getSubscription().then(function(s){
+   return s||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key(KEY)});
+  });
+ }).then(function(s){
+  var j=s.toJSON();
+  return fetch('/alerts/mandi',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({subscription:{endpoint:j.endpoint,keys:j.keys},commodity:T.commodity,
+   state:T.state,district:T.district,user_agent:navigator.userAgent})});
+ }).then(function(r){if(!r.ok)throw new Error('सूचना चालू नहीं हो सकी।');paint(true);ring();});
+}
+function off(){
+ return navigator.serviceWorker.getRegistration().then(function(reg){
+  return reg&&reg.pushManager?reg.pushManager.getSubscription():null;
+ }).then(function(s){
+  if(!s){paint(false);return;}
+  return fetch('/alerts/mandi/off',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({endpoint:s.endpoint,commodity:T.commodity,state:T.state,
+   district:T.district})}).then(function(){paint(false);});
+ });
+}
+window.toggleBhavAlert=function(){
+ if(busy||!KEY)return;busy=true;b.classList.add('loading');
+ var on=b.classList.contains('on');
+ (on?off():go()).catch(function(e){alert((e&&e.message)||'सूचना चालू नहीं हो सकी।');})
+  .then(function(){busy=false;b.classList.remove('loading');});
+};
+"""
+
+_BELL_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+             'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+             '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>'
+             '<path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>')
+
+
+def _alert_bell(commodity: str, state: str = "", district: str = "") -> str:
+    """🔔 "notify me when this mandi's bhav changes" toggle for the answer panel.
+
+    /bhav HTML is edge-cached and served to everyone alike, so the on/off state
+    is never rendered server-side — the client hydrates it from this device's own
+    push subscription. The button ships hidden and is revealed only after the
+    browser proves it supports push AND /alerts/vapid-key says the server can
+    send: a toggle that silently delivers nothing is worse than no toggle."""
+    target = _json.dumps({"commodity": commodity or "",
+                          "state":     state or "",
+                          "district":  district or ""}, ensure_ascii=False)
+    return ('<button class="bhav-bell" id="bhav-bell" type="button" hidden aria-pressed="false" '
+            'onclick="toggleBhavAlert()" title="इस मंडी के भाव की सूचना पाएं">'
+            f'{_BELL_SVG}<span class="bb-txt">भाव अलर्ट</span></button>'
+            f'<script>(function(){{var T={target};{_BELL_JS}}})();</script>')
+
+
 def _crop_chip(href: str, label: str, commodity: str) -> str:
     """Link chip carrying the crop's photo — a farmer scanning the page can find
     his crop by sight, without reading every label."""
     thumb = (f'<img src="{escape(_crop_image(commodity, 330))}" alt="" loading="lazy" width="28" height="28">'
              if _has_photo(commodity) else '<span class="ico">🌾</span>')
     return f'<a class="chip" href="{href}">{thumb}{escape(label)}</a>'
+
+
+def _state_card(href: str, state: str, count: int, count_lbl: str) -> str:
+    """One state tile — SVG map panel + Hindi/English name + a count pill. Used
+    for the states-of-a-crop grid on /bhav/{crop} (count = जिले) and the
+    'राज्य के आधार पर' tab on the /bhav hub (count = फसलें)."""
+    svg_slug = _state_svg_slug(state)
+    svg_src  = f"/images/state_map_svgs/{svg_slug}.svg"
+    dname = escape(f"{_hindi_state(state)} {state}".lower())
+    return f"""<a class="place" href="{href}" data-name="{dname}">
+<div class="place-map-panel">
+  <div class="place-map-blob"></div>
+  <img class="place-map-svg" src="{escape(svg_src)}" alt="{escape(state)} नक्शा" loading="lazy"
+    onerror="this.closest('.place-map-panel').style.display='none'">
+</div>
+<div class="place-info">
+  <svg class="place-deco-svg" viewBox="0 0 100 100" fill="none" stroke="#2d6a4f" stroke-opacity="0.07" stroke-width="2.5" stroke-linecap="round">
+    <path d="M10,90 Q40,80 70,30 Q80,15 90,10 M35,70 Q20,55 15,60 Q10,65 25,75 M50,53 Q38,38 30,40 Q22,42 40,58 M60,40 Q75,32 80,38 Q85,44 68,50" />
+  </svg>
+  <div class="place-n">{escape(_hindi_state(state))}</div>
+  <div class="place-divider-wrap">
+    <div class="place-line"></div>
+    <span class="place-ornament">🌿</span>
+    <div class="place-line"></div>
+  </div>
+  <div class="place-en">{escape(state)}</div>
+  <div class="place-dist-box">
+    <div class="place-dist-pin-wrap">
+      <svg class="place-dist-pin" viewBox="0 0 24 24" width="18" height="18" fill="#1a3c2e">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+      </svg>
+    </div>
+    <div class="place-dist-text">
+      <span class="place-dist-num">{count}</span>
+      <span class="place-dist-lbl">{count_lbl}</span>
+    </div>
+  </div>
+  <div class="place-btn-pill">
+    <div class="place-btn-left">📈</div>
+    <div class="place-btn-divider"></div>
+    <div class="place-btn-right">
+      <span>भाव देखें</span>
+      <span class="place-btn-arrow">→</span>
+    </div>
+  </div>
+</div>
+</a>"""
 
 
 def _related_links(c_slug: str, s_slug: str, d_slug: str,
@@ -561,7 +697,10 @@ _CSS = """
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-body);background:var(--cream);color:var(--text-dark);line-height:1.6}
 img{max-width:100%}
-.wrap{max-width:980px;margin:0 auto;padding:0 20px 30px}
+/* content column aligns to the header/utility-bar grid (max-width:1280px + 80px
+   side padding), so the heading, tabs, search and tiles line up with the logo/nav
+   above instead of sitting indented in a narrower 980px box */
+.wrap{max-width:1280px;margin:0 auto;padding:18px 80px 30px}
 
 /* ── site header — same pre-topbar/topbar/main-header/blue-bar stack as
    mandi.html, so a page reached from Google reads as the same product as the
@@ -671,10 +810,13 @@ the left with dead space to the right. */
 .main-header .header-nav{display:none}
 .header-logo-text{font-size:17px}
 .commodity-navbar{position:static}
+/* keep content flush with the header, which drops to 12px side padding here */
+.wrap{padding:14px 12px 30px}
+.crumbs{padding:12px 12px 0}
 }
 
 /* ── breadcrumbs ── */
-.crumbs{max-width:980px;margin:0 auto;padding:12px 20px 0;font-size:12px;color:var(--text-soft)}
+.crumbs{max-width:1280px;margin:0 auto;padding:12px 80px 0;font-size:12px;color:var(--text-soft)}
 .crumbs a{color:var(--green-mid);text-decoration:none;font-weight:600}
 .crumbs a:hover{text-decoration:underline}
 
@@ -783,6 +925,33 @@ border:1px solid rgba(255,255,255,.20);border-left:4px solid rgba(255,255,255,.6
 .answer-signal.good{border-left-color:#87cefa;background:rgba(135,206,250,.22)}
 .answer-signal.hold{border-left-color:var(--amber);background:rgba(233,168,37,.20)}
 .answer-signal.wait{border-left-color:#7fc4f5;background:rgba(46,134,222,.22)}
+/* 🔔 "notify me about this mandi" toggle — pinned top-right of the green panel,
+   above the crop photo. Starts hidden; only revealed once the client confirms
+   push is usable, so we never show a switch that cannot deliver. */
+.bhav-bell{position:absolute;top:14px;right:14px;z-index:3;display:inline-flex;align-items:center;
+gap:7px;padding:8px 13px;border-radius:999px;border:1.5px solid rgba(255,255,255,.34);
+background:rgba(0,0,0,.24);color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;
+cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+transition:background .15s,border-color .15s,color .15s}
+.bhav-bell:hover{background:rgba(0,0,0,.38)}
+.bhav-bell svg{width:16px;height:16px;flex-shrink:0;transform-origin:50% 3px}
+.bhav-bell.on{background:var(--amber);border-color:var(--amber);color:#3a2c05}
+/* immediate feedback while the subscribe round-trip is in flight */
+.bhav-bell.loading{cursor:progress}
+.bhav-bell.loading svg{animation:bhav-bell-pulse .7s ease-in-out infinite}
+/* one-shot swing when the alert is confirmed on */
+.bhav-bell.ringing svg{animation:bhav-bell-ring .7s ease}
+/* keep nudging — a periodic ring every few seconds — until it's switched on */
+.bhav-bell:not(.on):not(.loading) svg{animation:bhav-bell-idle 3.2s ease-in-out infinite}
+.bhav-bell[hidden]{display:none}
+@keyframes bhav-bell-pulse{0%,100%{transform:scale(1);opacity:.65}50%{transform:scale(1.22);opacity:1}}
+@keyframes bhav-bell-ring{0%,100%{transform:rotate(0)}12%{transform:rotate(17deg)}24%{transform:rotate(-14deg)}
+36%{transform:rotate(10deg)}48%{transform:rotate(-7deg)}60%{transform:rotate(4deg)}72%{transform:rotate(-2deg)}}
+@keyframes bhav-bell-idle{0%{transform:rotate(0)}4%{transform:rotate(14deg)}8%{transform:rotate(-12deg)}
+12%{transform:rotate(9deg)}16%{transform:rotate(-6deg)}20%{transform:rotate(3deg)}24%,100%{transform:rotate(0)}}
+@media(prefers-reduced-motion:reduce){.bhav-bell.loading svg,.bhav-bell.ringing svg,
+.bhav-bell:not(.on):not(.loading) svg{animation:none}}
+@media(max-width:560px){.bhav-bell{padding:9px;top:10px;right:10px}.bhav-bell .bb-txt{display:none}}
 .as-dot{font-size:17px;line-height:1;flex-shrink:0}
 .as-txt{display:flex;flex-direction:column;min-width:0}
 .as-txt b{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.2px}
@@ -863,6 +1032,9 @@ border-radius:var(--radius-md);padding:15px 18px;box-shadow:var(--shadow-sm);mar
   margin-left: 12px;
 }
 .bmc-delta{color:var(--sky)}
+.bmc-delta.up,.bmc-delta.dn{font-size:13.5px;font-weight:800}
+.bmc-delta.up{color:#1b7a3d}
+.bmc-delta.dn{color:#c0392b}
 .better.flat{border-left-color:var(--green-light)}
 .better-message {
   font-size: 13.5px;
@@ -951,6 +1123,60 @@ display:grid;place-items:center;font-size:13px;flex-shrink:0}
 padding:14px 16px;margin:8px 0;box-shadow:var(--shadow-sm)}
 .faq h3{font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:4px}
 .faq p{font-size:13px;color:var(--text-mid)}
+
+/* ── simple centered page heading (matches mandi.html's .mandi-page-heading) ── */
+.mandi-page-heading{text-align:center;font-family:var(--font-body);font-size:22px;
+font-weight:800;color:#1a56db;padding:10px 16px 4px}
+.mandi-page-sub{text-align:center;font-size:12.5px;color:var(--text-soft);font-weight:500;margin:0 auto 14px}
+@media(max-width:640px){.mandi-page-heading{font-size:18px;padding:8px 12px 4px}}
+
+/* ── फसल / राज्य tab switcher + commodity grid — ported 1:1 from mandi.html
+   (.shop-tabs / .ctile-search-row / .shop-section-title / .commodity-grid /
+   .ctile) so the /bhav hub reads pixel-for-pixel like the app landing ── */
+.bhav-tabs{display:flex;gap:0;background:#e6efe9;border-radius:12px;padding:4px;margin:16px 0 20px}
+.bhav-tab-btn{flex:1;padding:10px 16px;border:none;border-radius:9px;background:transparent;
+font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer;font-family:var(--font-body);
+transition:all .2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px}
+.bhav-tab-btn.active{background:var(--white);color:var(--green-dark);box-shadow:0 2px 8px rgba(26,60,46,.12);font-weight:700}
+.bhav-pane[hidden]{display:none}
+@media(max-width:640px){.bhav-tab-btn{font-size:13px;padding:10px 8px;min-height:44px}}
+
+.mandi-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.ctile-search-row{display:flex;align-items:center;gap:8px;background:var(--cream);
+border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;
+min-height:42px;flex:1;min-width:190px;transition:border-color .2s,background .2s}
+.ctile-search-row:focus-within{border-color:var(--green-light);background:#fff}
+.ctile-search-row>.cs-icon{font-size:14px;opacity:.7;flex-shrink:0}
+.ctile-search-row input{flex:1;border:none;outline:none;background:transparent;
+font-size:13px;color:var(--text-dark);min-width:0;font-family:var(--font-body)}
+.ctile-search-row input::placeholder{color:var(--text-soft)}
+.mn-mic-btn{background:none;border:none;padding:2px 3px;cursor:pointer;font-size:14px;
+flex-shrink:0;opacity:.55;line-height:1;border-radius:50%;color:var(--text-mid);
+transition:opacity .15s,background .15s}
+.mn-mic-btn:hover{opacity:1;background:#e8ede9}
+.mn-mic-btn.listening{opacity:1;animation:mn-mic-pulse .7s ease-in-out infinite alternate}
+@keyframes mn-mic-pulse{from{opacity:.7}to{opacity:1;color:#e53935}}
+
+.shop-section-title{font-family:var(--font-serif);font-size:19px;color:var(--text-dark);
+margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-left:12px;
+border-left:3px solid var(--amber)}
+
+.commodity-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 18px}
+@media(max-width:640px){.commodity-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ctile{position:relative;display:flex;flex-direction:row;align-items:center;gap:12px;
+background:transparent;border:none;border-radius:12px;padding:7px 8px;cursor:pointer;
+text-align:left;text-decoration:none;color:inherit;font-family:var(--font-body);
+transition:background .15s;-webkit-tap-highlight-color:transparent}
+.ctile:hover{background:#f1f8f3}
+.ctile:active{background:#e6efe9}
+.ctile-imgwrap{position:relative;width:70px;height:54px;flex-shrink:0;border-radius:9px;
+overflow:hidden;background:linear-gradient(135deg,#eef6f0,#dcede2);
+display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(26,60,46,.12)}
+.ctile-img{width:100%;height:100%;object-fit:cover;display:block}
+.ctile-emoji{font-size:30px;line-height:1}
+.ctile-body{min-width:0;flex:1}
+.ctile-name{font-size:14px;font-weight:600;color:var(--text-dark);line-height:1.3;word-break:break-word}
+.ctile-name b{font-weight:800}
 
 /* ── crop cards (hub) ── */
 .crop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:16px}
@@ -1254,7 +1480,9 @@ border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
 _FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
           '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
           '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
-          'family=DM+Sans:wght@400;500;700&family=Noto+Serif+Devanagari:wght@600;700&display=swap">')
+          'family=DM+Sans:wght@400;500;700'
+          '&family=Noto+Serif+Devanagari:wght@600;700'
+          '&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">')
 
 _ICON = f'<link rel="icon" href="{SITE}/assets/krashimitra_logo.png" type="image/png">'
 
@@ -1463,6 +1691,11 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     og = og_img or f"{SITE}/images/og-banner.webp"
     ads_head = _ADS_LOADER if active == "bhav" else ""
     ads_unit = _ADS_UNIT if active == "bhav" else ""
+    # /bhav pages (active=="bhav") ship NO visible breadcrumb — the trail lives
+    # only as BreadcrumbList JSON-LD in `ld` (still feeds SERP breadcrumbs).
+    # Reused callers (e.g. product.py, active=="shop") keep their visible one.
+    crumbs_nav = (f'<nav class="crumbs">{crumbs}</nav>'
+                  if (crumbs and active != "bhav") else "")
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -1487,7 +1720,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 </head>
 <body>
 {_header(active)}
-<nav class="crumbs">{crumbs}</nav>
+{crumbs_nav}
 <div class="wrap">
 {body}
 {ads_unit}
@@ -1547,7 +1780,6 @@ def _not_found() -> HTMLResponse:
 </div>
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav">सभी मंडी भाव देखें</a>
-<a class="btn btn-wa" href="{SITE}/mandi" style="background:var(--green-dark)">📊 मंडी ऐप खोलें</a>
 </div>
 </div>
 {_footer()}
@@ -1846,6 +2078,20 @@ def _avg_by(rows: list, key: str) -> dict:
     return {k: round(sum(v) / len(v)) for k, v in buckets.items() if v}
 
 
+def _median_by(rows: list, key: str) -> dict:
+    """{state|district → MEDIAN modal price}. Median, not mean, so one Agmarknet
+    unit-error row (an occasional ₹40k 'wheat' line) can't skew a district's
+    representative price — the mean version once produced a phantom cross-district
+    delta of '+₹5,242 ज्यादा' on a ₹2,449 crop. Used by the district page's
+    'other districts' comparison, where outlier immunity matters most."""
+    buckets: dict[str, list] = {}
+    for r in rows:
+        k, m = r.get(key), _num(r.get("modal_price"))
+        if k and m:
+            buckets.setdefault(k, []).append(m)
+    return {k: round(statistics.median(v)) for k, v in buckets.items() if v}
+
+
 # ════════════════════════════════════════════════════════════
 # /find — site search across mandi crops + shop products
 #
@@ -1995,6 +2241,20 @@ def bhav_sitemap():
         site_last = max(site_last, crop_last)
         urls.append((f"{SITE}/bhav/{cs}", crop_last))
         urls.extend(crop_urls)
+    # State hubs (/bhav/rajya/{state}) — the hub's "राज्य के आधार पर" destinations.
+    # lastmod = newest arrival across EVERY crop reported in that state; a state
+    # with only dateless rows still ships (lastmod omitted) so its link is found.
+    state_last, all_state_slugs = {}, set()
+    for cs, cn in idx.get("crops", {}).items():
+        if not _is_crop(cn):
+            continue
+        all_state_slugs |= set(idx["states"].get(cs, {}))
+        for ss, d_map in dates.get(cs, {}).items():
+            for d_last in d_map.values():
+                if d_last and d_last > state_last.get(ss, ""):
+                    state_last[ss] = d_last
+    for ss in sorted(all_state_slugs):
+        urls.append((f"{SITE}/bhav/rajya/{ss}", state_last.get(ss, "")))
     urls.insert(0, (f"{SITE}/bhav/net-price", ""))   # net-price calculator hub
     urls.insert(0, (f"{SITE}/bhav", site_last))
     body = "\n".join(
@@ -2009,6 +2269,120 @@ def bhav_sitemap():
                              "Netlify-CDN-Cache-Control":
                                  "public, durable, max-age=3600, "
                                  "stale-while-revalidate=86400"})
+
+
+# Progressive-enhancement toggle for the फसल/राज्य tabs on the hub. Both panes
+# are in the DOM (state pane ships [hidden]); this only flips visibility, so with
+# JS off both grids stay visible and every link crawlable. No braces-in-f-string
+# headaches — kept out of the body f-string as its own constant.
+_HUB_TAB_JS = """<script>
+(function(){
+  var tabs=document.querySelectorAll('.bhav-tab-btn');
+  // Keep the address bar in step with the active tab so the by-state view is
+  // shareable/bookmarkable: by-crop → clean /bhav, by-state → /bhav?tab=state.
+  // replaceState (like the app) = no back-button spam; canonical stays /bhav.
+  function syncUrl(n){
+    history.replaceState(null,'', window.location.pathname + (n==='state'?'?tab=state':''));
+  }
+  function sel(n,skipUrl){
+    document.querySelectorAll('.bhav-pane').forEach(function(p){p.hidden=(p.dataset.pane!==n);});
+    tabs.forEach(function(b){b.classList.toggle('active', b.dataset.pane===n);});
+    if(!skipUrl){syncUrl(n);}
+  }
+  tabs.forEach(function(b){b.addEventListener('click',function(){sel(b.dataset.pane);});});
+  // deep-link: /bhav?tab=state opens the by-state tab on load (URL untouched)
+  try{
+    if(new URLSearchParams(window.location.search).get('tab')==='state'){sel('state',true);}
+  }catch(_){}
+})();
+function bhavFilterTiles(){
+  var i=document.getElementById('bhav-tile-search');
+  var q=(i&&i.value||'').trim().toLowerCase();
+  document.querySelectorAll('#bhav-commodity-grid .ctile').forEach(function(t){
+    t.style.display=(!q||(t.dataset.name||'').indexOf(q)>=0)?'':'none';
+  });
+  document.querySelectorAll('#bhav-crop-tail .chip').forEach(function(c){
+    c.style.display=(!q||c.textContent.toLowerCase().indexOf(q)>=0)?'':'none';
+  });
+}
+function bhavFilterStates(){
+  var i=document.getElementById('bhav-state-search');
+  var q=(i&&i.value||'').trim().toLowerCase();
+  document.querySelectorAll('#bhav-state-grid .place').forEach(function(t){
+    t.style.display=(!q||(t.dataset.name||'').indexOf(q)>=0)?'':'none';
+  });
+}
+function _bhavVoice(inputId,micId,after){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){return;}
+  var mic=document.getElementById(micId);
+  var r=new SR();r.lang='hi-IN';r.interimResults=false;r.maxAlternatives=1;
+  if(mic){mic.classList.add('listening');}
+  r.onresult=function(e){
+    var i=document.getElementById(inputId);
+    if(i){i.value=e.results[0][0].transcript;after();}
+  };
+  r.onend=function(){if(mic){mic.classList.remove('listening');}};
+  r.onerror=function(){if(mic){mic.classList.remove('listening');}};
+  try{r.start();}catch(_){}
+}
+function bhavTileVoice(){_bhavVoice('bhav-tile-search','bhav-tile-mic',bhavFilterTiles);}
+function bhavStateVoice(){_bhavVoice('bhav-state-search','bhav-state-mic',bhavFilterStates);}
+</script>"""
+
+
+# Reusable mic icon — same glyph the app's search boxes use.
+_MIC_SVG_HTML = ('<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" '
+                 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '
+                 'stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>'
+                 '<path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>'
+                 '<line x1="8" y1="23" x2="16" y2="23"/></svg>')
+
+
+def _tier_head(h1: str, sub: str) -> str:
+    """Clean blue centered heading + a dated freshness line — the SAME top the
+    /bhav hub uses, so the tier-2/3 picker pages continue that layout instead of
+    the old green hero/answer box. `h1`/`sub` are already escaped by the caller."""
+    return (f'<h1 class="mandi-page-heading">{h1}</h1>\n'
+            f'<p class="mandi-page-sub">{sub}</p>')
+
+
+def _tier_search(grid_id: str, placeholder: str) -> str:
+    """The app's 🔍+mic search box that live-filters the picker grid with id
+    `grid_id`. Every item in that grid must carry data-name (Hindi + English)."""
+    return f"""<div class="mandi-toolbar">
+<div class="ctile-search-row">
+<span class="cs-icon">🔍</span>
+<input id="{grid_id}-search" type="text" autocomplete="off" placeholder="{escape(placeholder)}" oninput="bhavGridFilter('{grid_id}')" />
+<button class="mn-mic-btn" id="{grid_id}-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavGridVoice('{grid_id}')" title="बोलकर खोजें">{_MIC_SVG_HTML}</button>
+</div>
+</div>"""
+
+
+# Generic grid filter + voice for the tier picker pages (one filterable grid each).
+_TIER_SEARCH_JS = """<script>
+function bhavGridFilter(gid){
+  var box=document.getElementById(gid+'-search');
+  var q=(box&&box.value||'').trim().toLowerCase();
+  document.querySelectorAll('#'+gid+' [data-name]').forEach(function(el){
+    el.style.display=(!q||(el.dataset.name||'').indexOf(q)>=0)?'':'none';
+  });
+}
+function bhavGridVoice(gid){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){return;}
+  var mic=document.getElementById(gid+'-mic');
+  var r=new SR();r.lang='hi-IN';r.interimResults=false;r.maxAlternatives=1;
+  if(mic){mic.classList.add('listening');}
+  r.onresult=function(e){
+    var i=document.getElementById(gid+'-search');
+    if(i){i.value=e.results[0][0].transcript;bhavGridFilter(gid);}
+  };
+  r.onend=function(){if(mic){mic.classList.remove('listening');}};
+  r.onerror=function(){if(mic){mic.classList.remove('listening');}};
+  try{r.start();}catch(_){}
+}
+</script>"""
 
 
 # ════════════════════════════════════════════════════════════
@@ -2047,19 +2421,22 @@ def bhav_hub():
     featured = [seen_tiles[r] for r in sorted(seen_tiles)]
     featured_slugs = {cs for cs, _, _ in featured}
 
-    cards = []
-    for cs, cn, n_states in featured:
+    # Photo-left "फ़सल की कीमत" tiles — the exact commodity-grid look of the app's
+    # mandi.html landing, but each tile is a real crawlable <a href="/bhav/{crop}">
+    # (the app uses a JS-only <button>), so this keeps the server-rendered link
+    # that the whole /bhav tree exists to give Google. data-name feeds the client
+    # search filter (matches the Hindi label OR the English commodity name).
+    tiles = []
+    for cs, cn, _n_states in featured:
         hi = _hindi_name(cn)
-        has_photo = _has_photo(cn)
-        photo = (f'<img src="{escape(_crop_image(cn, 500))}" alt="{escape(hi)}" '
-                 f'loading="lazy" width="240" height="120">' if has_photo else "")
-        en = f'<span class="crop-card-en">{escape(cn)}</span>' if hi != cn else ""
-        cards.append(f"""<a class="crop-card" href="/bhav/{cs}">
-<div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
-<h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
-<div class="crop-card-body">
-<span class="lbl">{n_states} राज्य</span><span class="rate">भाव देखें →</span>
-</div></a>""")
+        img = (f'<img class="ctile-img" src="{escape(_crop_image(cn, 200))}" '
+               f'alt="{escape(hi)}" loading="lazy" width="70" height="54">'
+               if _has_photo(cn) else '<span class="ctile-emoji">🌾</span>')
+        dname = escape(f"{hi} {cn}".lower())
+        tiles.append(f"""<a class="ctile" href="/bhav/{cs}" data-name="{dname}" title="{escape(hi)} की कीमत">
+<div class="ctile-imgwrap">{img}</div>
+<div class="ctile-body"><div class="ctile-name"><b>{escape(hi)}</b> की कीमत</div></div>
+</a>""")
 
     # Long tail — every other crop, still one crawlable link each.
     rest = sorted(((cs, cn) for cs, cn in crops.items() if cs not in featured_slugs),
@@ -2077,6 +2454,9 @@ def bhav_hub():
         ("अपनी मंडी का भाव कैसे देखें?",
          "पहले अपनी फसल चुनें, फिर राज्य, फिर जिला — उस जिले की सभी मंडियों का न्यूनतम, "
          "अधिकतम और मॉडल भाव प्रति क्विंटल दिख जाएगा।"),
+        ("राज्य के हिसाब से सभी फसलों का भाव कैसे देखें?",
+         "ऊपर 'राज्य के आधार पर' टैब चुनें, फिर अपना राज्य चुनें — उस राज्य की मंडियों में "
+         "मिलने वाली सभी फसलों के आज के भाव एक जगह दिख जाएंगे।"),
     ]
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav")]))
@@ -2085,35 +2465,153 @@ def bhav_hub():
     desc = (f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
             f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।")
 
-    # Quick-jump seed for the hub's crop/state/district selector — the widest-covered
-    # crop (same tile already picked for the featured grid above), its most-covered
-    # state, and any real district there. _hub_selector() re-derives every option
-    # list from this triple, so any valid starting point works; there is no "no
-    # selection" state to seed it with since the hub itself isn't scoped to one crop.
-    seed_cs = featured[0][0] if featured else next(iter(crops), "")
-    seed_states = idx["states"].get(seed_cs, {})
-    seed_ss = (max(seed_states, key=lambda s: len(idx["dists"].get(seed_cs, {}).get(s, {})))
-               if seed_states else "")
-    seed_dists = idx["dists"].get(seed_cs, {}).get(seed_ss, {})
+    # "राज्य के आधार पर" tab — every state that reports ANY crop, unioned across
+    # the whole index, each linking to its own all-crops hub (/bhav/rajya/{ss}).
+    # Both panes ship in the HTML (the state pane starts [hidden]); the tab JS
+    # only toggles visibility, so every state link stays crawlable with JS off.
+    state_names, state_crops = {}, {}
+    for c, smap in idx["states"].items():
+        if not _is_crop(idx["crops"].get(c, "")):
+            continue
+        for s, sname in smap.items():
+            state_names.setdefault(s, sname)
+            state_crops.setdefault(s, set()).add(c)
+    state_cards = "".join(
+        _state_card(f"/bhav/rajya/{s}", state_names[s], len(state_crops[s]), "फसलें")
+        for s in sorted(state_names, key=lambda s: state_names[s]))
+
+    body = f"""<h1 class="mandi-page-heading">कृषि मंडी भाव</h1>
+<div class="bhav-tabs" role="tablist">
+<button class="bhav-tab-btn active" type="button" data-pane="crop" role="tab">फसल के आधार पर</button>
+<button class="bhav-tab-btn" type="button" data-pane="state" role="tab">राज्य के आधार पर</button>
+</div>
+<div class="bhav-pane" data-pane="crop">
+<div class="mandi-toolbar">
+<div class="ctile-search-row">
+<span class="cs-icon">🔍</span>
+<input id="bhav-tile-search" type="text" autocomplete="off" placeholder="फसल खोजें... (गेहूं, प्याज, आलू)" oninput="bhavFilterTiles()" />
+<button class="mn-mic-btn" id="bhav-tile-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavTileVoice()" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+</div>
+</div>
+<div class="shop-section-title"><span>आज के भाव — अपनी फसल चुनें</span></div>
+<div class="commodity-grid" id="bhav-commodity-grid">{"".join(tiles)}</div>
+<div id="bhav-crop-tail">{rest_html}</div>
+</div>
+<div class="bhav-pane" data-pane="state" hidden>
+<div class="mandi-toolbar">
+<div class="ctile-search-row">
+<span class="cs-icon">🔍</span>
+<input id="bhav-state-search" type="text" autocomplete="off" placeholder="राज्य खोजें... (उत्तर प्रदेश, बिहार)" oninput="bhavFilterStates()" />
+<button class="mn-mic-btn" id="bhav-state-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavStateVoice()" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+</div>
+</div>
+<div class="shop-section-title"><span>राज्य चुनें — सभी फसलों के भाव देखें</span></div>
+<div class="place-grid" id="bhav-state-grid">{state_cards}</div>
+</div>
+<h2>अक्सर पूछे जाने वाले सवाल</h2>
+{faq_html}
+{_HUB_TAB_JS}"""
+    return _doc(title, desc, f"{SITE}/bhav", "", body, ld)
+
+
+# ════════════════════════════════════════════════════════════
+# STATE HUB — /bhav/rajya/{state} : all crops reported in ONE state
+#
+# The destination for the hub's "राज्य के आधार पर" tab. The crop-scoped tree
+# (/bhav/{crop}/{state}) never had an "all crops in this state" page, so this
+# fills that gap with real server-rendered, crawlable crop cards that link into
+# the existing crop×state pages. Registered ABOVE /bhav/{c_slug}/{x_slug} (TIER 3)
+# so "rajya" isn't swallowed as a crop slug.
+# ════════════════════════════════════════════════════════════
+@router.get("/bhav/rajya/{state}", response_class=HTMLResponse)
+def bhav_state_hub(state: str):
+    idx = _get_index()
+    ss = state.lower()
+
+    crops_here = {}
+    for c, smap in idx["states"].items():
+        if ss not in smap:
+            continue
+        cn = idx["crops"].get(c, "")
+        if _is_crop(cn):
+            crops_here[c] = cn
+    if not crops_here:
+        return _not_found()
+
+    # Canonical display spelling of the state (from any crop that reports it).
+    sn = next(idx["states"][c][ss] for c in crops_here)
+    hi_state = _hindi_state(sn)
+    today_hi = _hindi_date(date.today())
+    canon = f"{SITE}/bhav/rajya/{ss}"
+
+    # Distinct districts reporting anything in this state — an honest size cue
+    # (no per-crop DB round-trips, so cheap enough for a shared cached page).
+    dist_set = set()
+    for c in crops_here:
+        dist_set |= set(idx["dists"].get(c, {}).get(ss, {}))
+    n_dist = len(dist_set)
+
+    # Staples first (same ranking as the hub grid), long tail after — one
+    # crawlable crop card each, linking into the existing crop×state page.
+    ordered = sorted(crops_here.items(),
+                     key=lambda kv: (_tile_rank(kv[1]), _hindi_name(kv[1])))
+    cards = []
+    for c, cn in ordered:
+        hi = _hindi_name(cn)
+        c_dist = len(idx["dists"].get(c, {}).get(ss, {}))
+        has_photo = _has_photo(cn)
+        photo = (f'<img src="{escape(_crop_image(cn, 500))}" alt="{escape(hi)}" '
+                 f'loading="lazy" width="240" height="120">' if has_photo else "")
+        en = f'<span class="crop-card-en">{escape(cn)}</span>' if hi != cn else ""
+        cards.append(f"""<a class="crop-card" href="/bhav/{c}/{ss}" data-name="{escape(f'{hi} {cn}'.lower())}">
+<div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
+<h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
+<div class="crop-card-body">
+<span class="lbl">{c_dist} जिले</span><span class="rate">भाव देखें →</span>
+</div></a>""")
+
+    # Seed the quick-jump selector with the widest-covered crop in this state,
+    # and mark राज्य as already picked (this page IS that state).
+    seed_cs = max(crops_here, key=lambda c: len(idx["dists"].get(c, {}).get(ss, {})))
+    seed_dists = idx["dists"].get(seed_cs, {}).get(ss, {})
     seed_ds = sorted(seed_dists, key=lambda d: seed_dists[d])[0] if seed_dists else ""
 
-    body = f"""<div class="hero nophoto">
-<div class="hero-body">
-<h1>आज का मंडी भाव — अपनी फसल चुनें</h1>
-<p class="hero-sub">📅 {today_hi} · {len(crops)} फसलें · रोज़ सुबह अपडेट · स्रोत: data.gov.in (Agmarknet)</p>
-</div>
-</div>
+    faqs = [
+        (f"{hi_state} में आज कौन-कौन सी फसलों का भाव मिलता है?",
+         f"{today_hi} को {hi_state} की मंडियों में {len(crops_here)} फसलों के ताजा भाव सरकारी "
+         f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। नीचे अपनी फसल चुनकर जिलेवार भाव देखें।"),
+        (f"{hi_state} में अपनी फसल का भाव कैसे देखें?",
+         f"नीचे अपनी फसल चुनें — फिर {hi_state} के सभी जिलों की मंडियों का न्यूनतम, अधिकतम और "
+         f"मॉडल भाव प्रति क्विंटल दिख जाएगा।"),
+    ]
+    faq_html, faq_ld = _faq(faqs)
+    ld = _ld(faq_ld, _crumb_ld([
+        ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"), (hi_state, canon)]))
+
+    title = f"{hi_state} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year} | कृषि मित्र"
+    desc = (f"{today_hi}: {hi_state} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
+            f"गेहूं, धान, प्याज समेत। फसल चुनकर अपने जिले का रेट देखें। रोज़ अपडेट (data.gov.in)।")
+
+    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi_state)} के {n_dist} जिलों की मंडियों में '
+                   f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
+                   f'दर्ज हुआ। नीचे अपनी फसल चुनकर जिलेवार पूरा भाव देखें।</p>')
+
+    head_h1 = f"{escape(hi_state)} में आज के मंडी भाव — फसल चुनें"
+    head_sub = f"📅 {today_hi} · {len(crops_here)} फसलें · {n_dist} जिले · स्रोत: data.gov.in (Agmarknet)"
+    body = f"""{_tier_head(head_h1, head_sub)}
 <div class="cta-row">
-<a class="btn btn-app" href="{SITE}/mandi">📊 मंडी ऐप खोलें — ट्रेंड चार्ट व तुलना</a>
+<a class="btn btn-app" href="{SITE}/bhav">← सभी राज्य</a>
 </div>
-{_hub_selector(seed_cs, seed_ss, seed_ds, idx)}
-<h2>प्रमुख फसलें</h2>
-<div class="crop-grid">{"".join(cards)}</div>
-{rest_html}
+{_hub_selector(seed_cs, ss, seed_ds, idx, known_state=True)}
+<h2>{escape(hi_state)} में फसल चुनें</h2>
+{_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)')}
+<div class="crop-grid" id="tier-grid">{"".join(cards)}</div>
+{answer_lead}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
-{faq_html}"""
-    return _doc(title, desc, f"{SITE}/bhav",
-                f'<a href="{SITE}/">कृषि मित्र</a> › मंडी भाव', body, ld)
+{faq_html}
+{_TIER_SEARCH_JS}"""
+    crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi_state)}')
+    return _doc(title, desc, canon, crumbs, body, ld)
 
 
 # ════════════════════════════════════════════════════════════
@@ -2196,7 +2694,7 @@ def _net_price_cta(hi: str, cs: str = "", state: str = "", district: str = "") -
         if c:
             q += f"&lat={c[0]}&lon={c[1]}&place={quote(district)}"
     return (f'<a class="btn btn-np" href="/bhav/net-price{q}">'
-            f'🚜 {escape(hi)} — भाड़ा जोड़कर नेट भाव</a>')
+            f'🚜 {escape(hi)} — भाड़ा जोड़कर नेट भाव देखें</a>')
 
 
 def _nearest_panel_html(cs: str, hi: str, row: dict, dist_km: float) -> str:
@@ -2632,46 +3130,7 @@ def bhav_crop(c_slug: str):
     cards = []
     for ss, sn in sorted(state_map.items(), key=lambda kv: kv[1]):
         n = len(idx["dists"].get(cs, {}).get(ss, {}))
-        svg_slug = _state_svg_slug(sn)
-        svg_src  = f"/images/state_map_svgs/{svg_slug}.svg"
-        cards.append(f"""<a class="place" href="/bhav/{cs}/{ss}">
-<div class="place-map-panel">
-  <div class="place-map-blob"></div>
-  <img class="place-map-svg" src="{escape(svg_src)}" alt="{escape(sn)} नक्शा" loading="lazy"
-    onerror="this.closest('.place-map-panel').style.display='none'">
-</div>
-<div class="place-info">
-  <svg class="place-deco-svg" viewBox="0 0 100 100" fill="none" stroke="#2d6a4f" stroke-opacity="0.07" stroke-width="2.5" stroke-linecap="round">
-    <path d="M10,90 Q40,80 70,30 Q80,15 90,10 M35,70 Q20,55 15,60 Q10,65 25,75 M50,53 Q38,38 30,40 Q22,42 40,58 M60,40 Q75,32 80,38 Q85,44 68,50" />
-  </svg>
-  <div class="place-n">{escape(_hindi_state(sn))}</div>
-  <div class="place-divider-wrap">
-    <div class="place-line"></div>
-    <span class="place-ornament">🌿</span>
-    <div class="place-line"></div>
-  </div>
-  <div class="place-en">{escape(sn)}</div>
-  <div class="place-dist-box">
-    <div class="place-dist-pin-wrap">
-      <svg class="place-dist-pin" viewBox="0 0 24 24" width="18" height="18" fill="#1a3c2e">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-      </svg>
-    </div>
-    <div class="place-dist-text">
-      <span class="place-dist-num">{n}</span>
-      <span class="place-dist-lbl">जिले</span>
-    </div>
-  </div>
-  <div class="place-btn-pill">
-    <div class="place-btn-left">📈</div>
-    <div class="place-btn-divider"></div>
-    <div class="place-btn-right">
-      <span>भाव देखें</span>
-      <span class="place-btn-arrow">→</span>
-    </div>
-  </div>
-</div>
-</a>""")
+        cards.append(_state_card(f"/bhav/{cs}/{ss}", sn, n, "जिले"))
 
     # The highest-paying mandi in the country today — the reason to read this page
     # rather than bounce back to Google. Names the market as a hook but withholds
@@ -2693,10 +3152,6 @@ def bhav_crop(c_slug: str):
   </div>
   <span class="bmc-action">भाव देखें →</span>
 </a></li></ul></section>"""
-
-    photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
-             f'alt="" aria-hidden="true" width="420" height="200">'
-             if _has_photo(commodity) else "")
 
     faqs = [
         (f"आज {hi} का भाव क्या है?",
@@ -2739,28 +3194,21 @@ def bhav_crop(c_slug: str):
                    f'{len(state_map)} राज्यों की {_mandis_gen(st["n"])} से भारत सरकार के Agmarknet '
                    f'(data.gov.in) पोर्टल पर दर्ज हुआ{lead_avg}।{lead_best}</p>')
 
-    body = f"""<section class="answer">
-{photo}
-<div class="answer-in">
-<h1>आज का {escape(hi)} भाव — राज्य चुनें</h1>
-<p class="answer-sub">📅 {today_hi} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · अपना राज्य चुनकर भाव देखें</p>
-<div class="answer-range">
-<div><span>राज्य</span><b>{len(state_map)}</b></div>
-<div><span>मंडियां</span><b>{st['n']}</b></div>
-</div>
-</div>
-</section>
+    head_h1 = f"आज का {escape(hi)} भाव — राज्य चुनें"
+    head_sub = f"📅 {today_hi} · {len(state_map)} राज्य · {_mandis_gen(st['n'])} · स्रोत: data.gov.in (Agmarknet)"
+    body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, seed_ss, seed_ds, idx, known_crop=True)}
 {best_html}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
-<div class="place-grid">{"".join(cards)}</div>
+{_tier_search('tier-grid', 'राज्य खोजें... (उत्तर प्रदेश, बिहार)')}
+<div class="place-grid" id="tier-grid">{"".join(cards)}</div>
 {answer_lead}
 <div class="cta-row">
-<a class="btn btn-app" href="{_app_url(commodity)}">📊 ऐप में {escape(hi)} की तुलना देखें</a>
 {_net_price_cta(hi, cs)}
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
-{faq_html}"""
+{faq_html}
+{_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960))
 
@@ -2806,7 +3254,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     # the district-level page (/bhav/{crop}/{state}/{district}) shows a number.
     cards = []
     for ds, dn in sorted(dist_map.items(), key=lambda kv: kv[1]):
-        cards.append(f"""<a class="dcard" href="/bhav/{cs}/{ss}/{ds}">
+        cards.append(f"""<a class="dcard" href="/bhav/{cs}/{ss}/{ds}" data-name="{escape(dn.lower())}">
 <span class="dcard-n">{escape(dn)}</span>
 <span class="dcard-r">भाव देखें →</span>
 </a>""")
@@ -2851,10 +3299,6 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 <p class="better-sub">भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>
 <ul>{items}</ul>{low_html}</section>"""
 
-    photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
-             f'alt="" aria-hidden="true" width="420" height="200">'
-             if _has_photo(commodity) else "")
-
     faqs = [
         (f"आज {hi_state} में {hi} का भाव क्या है?",
          (f"{today_hi} को {hi_state} में {hi} का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल है — "
@@ -2884,28 +3328,21 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
                    f'{_mandis_gen(st["n"])} में {escape(hi)} का भाव सरकारी रिपोर्ट (भारत सरकार का Agmarknet '
                    f'पोर्टल) में दर्ज हुआ{lead_avg}। नीचे अपना जिला चुनकर मंडीवार पूरा भाव देखें।</p>')
 
-    body = f"""<section class="answer">
-{photo}
-<div class="answer-in">
-<h1>{escape(hi_state)} में {escape(hi)} का भाव आज</h1>
-<p class="answer-sub">📅 {today_hi} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · अपना जिला चुनकर भाव देखें</p>
-<div class="answer-range">
-<div><span>जिले</span><b>{len(dist_map)}</b></div>
-<div><span>मंडियां</span><b>{st['n']}</b></div>
-</div>
-</div>
-</section>
+    head_h1 = f"{escape(hi_state)} में {escape(hi)} का भाव आज"
+    head_sub = f"📅 {today_hi} · {len(dist_map)} जिले · {_mandis_gen(st['n'])} · स्रोत: data.gov.in (Agmarknet)"
+    body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {top_html}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
-<div class="dcard-grid">{"".join(cards)}</div>
+{_tier_search('tier-grid', 'जिला खोजें...')}
+<div class="dcard-grid" id="tier-grid">{"".join(cards)}</div>
 {answer_lead}
 <div class="cta-row">
-<a class="btn btn-app" href="{_app_url(commodity, state=state)}">📊 ऐप में तुलना देखें</a>
 {_net_price_cta(hi, cs)}
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
-{faq_html}"""
+{faq_html}
+{_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › {escape(hi_state)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960))
@@ -2986,41 +3423,53 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
     # ── THE DECISION LAYER ──────────────────────────────────
     # A price table says what today's rate is; it never says whether to sell here.
-    # These are the districts in the SAME state paying more for this crop today.
-    # There is no lat/long in the feed, so this is deliberately "same state, better
-    # price" — an honest claim — rather than a fabricated distance in km.
+    # Compare THIS district against every other district in the state and show a
+    # neat signed delta — ▲ +₹X where the crop sells higher, ▼ −₹X where lower.
+    # The delta is the curiosity hook that drives the click; the ABSOLUTE rate
+    # still lives only on each district's own page. No lat/long in the feed, so
+    # this is honestly "other districts in the state", never a fabricated km distance.
+    #
+    # MEDIAN, not mean: Agmarknet intermittently ships a unit-error row (a ₹40k
+    # "wheat" line) that drags a district's *mean* to ₹7k+ and once rendered a
+    # phantom "+₹5,242 ज्यादा" on a ₹2,449 crop. The median ignores such outliers
+    # so every delta stays real (see _median_by).
     better_html = ""
-    if st["avg"]:
-        state_rows = _rows_for(commodity, state=state)
-        d_avg = _avg_by(state_rows, "district")
-        gains = sorted(((dn, avg, avg - st["avg"]) for dn, avg in d_avg.items()
-                        if dn != district and avg > st["avg"]),
-                       key=lambda x: x[2], reverse=True)[:5]
-        if gains:
-            items = "".join(
-                f'<li><a class="better-mandi-card" href="/bhav/{cs}/{ss}/{_slugify(dn)}">'
-                f'  <div class="bmc-details">'
-                f'    <span class="bmc-market">{escape(dn)}</span>'
-                f'    <span class="bmc-meta">{escape(hi_state)}</span>'
-                f'  </div>'
-                # Show the DELTA (+₹X ज्यादा) — it's the curiosity hook ("this mandi
-                # pays ₹100 more!") that drives the click; bare "ज्यादा" is flat. But
-                # withhold the ABSOLUTE rate so the exact number still only lives on
-                # the target district's own page.
-                f'  <span class="bmc-action"><span class="bmc-delta">+₹{diff:,} ज्यादा</span> <small>भाव देखें →</small></span>'
+    med  = _median_by(_rows_for(commodity, state=state), "district")
+    here = med.get(district) or st["avg"]
+    if here:
+        others  = sorted(((dn, m - here) for dn, m in med.items() if dn != district),
+                         key=lambda x: x[1], reverse=True)
+        highers = [(dn, d) for dn, d in others if d > 0][:5]
+        lowers  = [(dn, d) for dn, d in others if d < 0][-3:][::-1]  # 3 lowest, biggest drop first
+
+        def _cmp_card(dn: str, diff: int, low: bool = False) -> str:
+            arrow, sign, cls = ("▼", "−", "dn") if low else ("▲", "+", "up")
+            return (
+                f'<li><a class="better-mandi-card{" low" if low else ""}" '
+                f'href="/bhav/{cs}/{ss}/{_slugify(dn)}">'
+                f'<div class="bmc-details">'
+                f'<span class="bmc-market">{escape(dn)}</span>'
+                f'<span class="bmc-meta">{escape(hi_state)}</span>'
+                f'</div>'
+                f'<span class="bmc-action">'
+                f'<span class="bmc-delta {cls}">{arrow} {sign}₹{abs(diff):,}</span> '
+                f'<small>देखें →</small></span>'
                 f'</a></li>'
-                for dn, avg, diff in gains)
+            )
+
+        if highers or lowers:
+            hi_block = (f'<ul>{"".join(_cmp_card(dn, d) for dn, d in highers)}</ul>' if highers
+                        else f'<p class="better-message">🏆 {escape(hi_state)} के किसी और जिले में '
+                             f'{escape(hi)} का इससे ज्यादा भाव नहीं मिल रहा — यहां भाव सबसे ऊंचा है।</p>')
+            lo_block = (f'<div class="better-low"><p class="better-low-h">'
+                        f'📉 इन जिलों में {escape(hi)} का भाव कम है</p>'
+                        f'<ul>{"".join(_cmp_card(dn, d, low=True) for dn, d in lowers)}</ul></div>'
+                        if lowers else "")
             better_html = f"""<section class="better">
-<h2>💰 {escape(hi_state)} में इन जिलों में {escape(hi)} का भाव ज्यादा है</h2>
-<p class="better-sub">{escape(district)} के औसत ₹{st['avg']:,}/क्विंटल से तुलना ·
+<h2>📊 {escape(hi_state)} के अन्य जिलों में {escape(hi)} का भाव — तुलना</h2>
+<p class="better-sub">{escape(district)} के भाव ₹{here:,}/क्विंटल से तुलना ·
 भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>
-<ul>{items}</ul></section>"""
-        else:
-            better_html = f"""<section class="better flat">
-<h2>🏆 {escape(district)} में {escape(hi)} का भाव सबसे ज्यादा है</h2>
-<p class="better-sub">आज के मॉडल भाव के आधार पर · बेचने वालों के लिए फायदेमंद</p>
-<p class="better-message">{escape(hi_state)} के किसी और जिले में {escape(hi)} का इससे ज्यादा भाव नहीं मिल रहा।</p>
-</section>"""
+{hi_block}{lo_block}</section>"""
 
     # ── chart series: the mandi with the longest history speaks for the district ──
     sparks = [[v for v in (_num(x) for x in (p.get("spark") or [])) if v] for p in prices]
@@ -3101,6 +3550,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
     body = f"""<section class="answer">
 {answer_photo}
+{_alert_bell(commodity, state, district)}
 <div class="answer-in">
 <h1>आज का {escape(hi)} भाव — {escape(district)} मंडी</h1>
 <p class="answer-sub">📅 {today_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · {escape(_hindi_data_date(data_date))} तक</p>
@@ -3150,7 +3600,6 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <p class="note">सभी भाव ₹ प्रति क्विंटल · मॉडल भाव (सबसे ज़्यादा कारोबार वाला रेट)।</p>
 
 <div class="cta-row">
-<a class="btn btn-app" href="{_app_url(commodity, district, state)}">📊 ऐप में {escape(hi)} की तुलना देखें</a>
 <button class="btn btn-wa" type="button" onclick="shareBhav()">📲 WhatsApp पर भाव भेजें</button>
 </div>
 

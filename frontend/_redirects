@@ -1,5 +1,6 @@
 # Proxy share-preview pages to the backend (crop-specific OG tags for WhatsApp)
 /share/*  https://krashi-mitra-v1.onrender.com/share/:splat  200
+/alerts/*  https://krashi-mitra-v1.onrender.com/alerts/:splat  200
 
 # Proxy SEO price pages to the backend (server-rendered "aaj ka bhav" pages)
 /bhav     https://krashi-mitra-v1.onrender.com/bhav/         200

@@ -1,7 +1,7 @@
 # ============================================================
 # backend/services/weather_scheduler.py
 # KrashiMitra — Weather Cache Scheduler
-# APScheduler — runs every 8 hours (225 OWM calls/day ✅)
+# APScheduler — runs every 2 hours (900 OWM calls/day ✅)
 # ============================================================
 # FIX IN THIS VERSION:
 #   + Immediate first-run uses clean datetime import (no hack)
@@ -50,16 +50,16 @@ def _register_job():
 
     scheduler.add_job(
         func               = refresh_all_districts,
-        trigger            = IntervalTrigger(hours=8, timezone=IST),
+        trigger            = IntervalTrigger(hours=2, timezone=IST),
         id                 = "weather_cache_refresh",
-        name               = "UP Weather Cache — 8h Refresh",
+        name               = "UP Weather Cache — 2h Refresh",
         replace_existing   = True,
         max_instances      = 1,
         misfire_grace_time = 60 * 15,
     )
     logger.info(
-        "📅 Weather job registered | interval=8h | districts=75 | "
-        "budget=225 calls/day | max_instances=1"
+        "📅 Weather job registered | interval=2h | districts=75 | "
+        "budget=900 calls/day | max_instances=1"
     )
 
 

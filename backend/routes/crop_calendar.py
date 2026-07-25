@@ -98,6 +98,68 @@ def my_crops(
     return {"success": True, "message": "", "data": {"crops": crops}}
 
 
+# ── GET /crop-calendar/nudges — "due now / this week" tasks ──
+# Flattens every active crop's week_tasks (already computed by
+# build_timeline as now/soon) + a near-harvest mandi nudge into one
+# sorted list for KrashiBook (and, later, web-push/WhatsApp).
+# Parse-on-request: no scheduler, always live off today's date.
+
+@router.get("/nudges")
+def crop_nudges(
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    rows = (
+        db.query(UserCrop)
+        .filter(UserCrop.user_id == current_user["user_id"], UserCrop.status == "active")
+        .order_by(UserCrop.created_at.asc())
+        .all()
+    )
+    nudges = []
+    for r in rows:
+        tl = build_timeline(r.crop_key, r.sowing_date)
+        if tl is None:
+            continue  # crop removed from crop_stages.json — skip silently
+        for t in tl["week_tasks"]:            # already state now/soon, active crops only
+            nudges.append({
+                "crop_key":  tl["crop_key"],
+                "crop_hi":   tl["name_hi"],
+                "emoji":     tl["emoji"],
+                "kind":      "task",
+                "urgency":   t["state"],       # "now" | "soon"
+                "type":      t["type"],
+                "title_hi":  t["title_hi"],
+                "detail_hi": t["detail_hi"],
+                "day":       t["day"],
+                "date":      t["date"],
+                "stage_hi":  t.get("stage_hi"),
+            })
+        if tl["near_harvest"]:                # sell-planning nudge as harvest approaches
+            nudges.append({
+                "crop_key":  tl["crop_key"],
+                "crop_hi":   tl["name_hi"],
+                "emoji":     tl["emoji"],
+                "kind":      "harvest",
+                "urgency":   "soon",
+                "type":      "mandi",
+                "title_hi":  "कटाई नज़दीक — मंडी भाव देखें",
+                "detail_hi": f"{tl['name_hi']} की कटाई लगभग {tl['days_to_harvest']} दिन में। "
+                             f"अभी से मंडी भाव देखकर बेचने की योजना बनाएं।",
+                "day":       None,
+                "date":      tl["harvest_eta"],
+                "stage_hi":  None,
+            })
+
+    _rank = {"now": 0, "soon": 1}
+    nudges.sort(key=lambda n: (_rank.get(n["urgency"], 2), n.get("date") or ""))
+    now_count = sum(1 for n in nudges if n["urgency"] == "now")
+    return {
+        "success": True,
+        "message": "",
+        "data": {"nudges": nudges, "count": len(nudges), "now_count": now_count},
+    }
+
+
 # ── POST /crop-calendar/my — add a crop ──────────────────────
 
 @router.post("/my")

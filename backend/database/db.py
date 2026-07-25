@@ -433,6 +433,48 @@ class UserCrop(Base):
     updated_at  = Column(DateTime, default=datetime.utcnow)
 
 
+# ── PRICE ALERTS (Web Push) ──────────────────────────────────
+
+class PushSubscription(Base):
+    """One browser/device Web Push endpoint. /bhav pages are anonymous and
+    edge-cached, so a bhav alert is keyed on this endpoint rather than on a
+    login; user_id is filled in only when the visitor happens to be signed in."""
+    __tablename__ = "push_subscriptions"
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    endpoint   = Column(Text,     nullable=False, unique=True, index=True)
+    p256dh     = Column(String,   nullable=False)              # client public key
+    auth       = Column(String,   nullable=False)              # client auth secret
+    user_id    = Column(Integer,  nullable=True, index=True)   # users.id, when logged in
+    user_agent = Column(String,   nullable=True)
+    active     = Column(Boolean,  default=True, index=True)    # false once push service 404/410s
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class MandiAlert(Base):
+    """A "notify me about this mandi bhav" subscription — one row per
+    (device, commodity, state, district). Evaluated after each mandi fetch run;
+    last_notified_on + last_price dedupe so the same price is never pushed twice."""
+    __tablename__ = "mandi_alerts"
+
+    id               = Column(Integer,  primary_key=True, index=True)
+    subscription_id  = Column(Integer,  nullable=False, index=True)  # push_subscriptions.id
+    commodity        = Column(String,   nullable=False, index=True)
+    state            = Column(String,   nullable=True,  index=True)
+    district         = Column(String,   nullable=True,  index=True)
+    active           = Column(Boolean,  default=True, index=True)
+    last_notified_on = Column(Date,     nullable=True)   # dedupe key: one push per new price
+    last_price       = Column(String,   nullable=True)
+    created_at       = Column(DateTime, default=datetime.utcnow)
+    updated_at       = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("subscription_id", "commodity", "state", "district",
+                         name="uq_mandi_alert_target"),
+    )
+
+
 # ── DATA SYNC LOG ────────────────────────────────────────────
 
 class SyncLog(Base):

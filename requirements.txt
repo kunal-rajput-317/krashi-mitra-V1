@@ -25,3 +25,4 @@ python-dotenv
 requests
 numpy
 Pillow
+pywebpush==2.0.0

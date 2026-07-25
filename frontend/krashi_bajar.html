@@ -26,7 +26,7 @@
     })();
   </script>
   <script src="api-config.js" defer></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>कृषि बाज़ार — किसान से सीधे फसल खरीदें व बेचें | KrashiMitra</title>
   <meta name="description" content="कृषि बाज़ार — किसानों का सोशल मार्केटप्लेस। अपनी फसल की फोटो/वीडियो पोस्ट करें, सीधे खरीदार से जुड़ें, ऑफर पाएं — सीधे खरीदार से जुड़ें। गेहूं, धान, प्याज, सोयाबीन, टमाटर व सभी फसलें। KrashiMitra पर आसान व भरोसेमंद।" />
@@ -1324,6 +1324,7 @@
     </div>
     <div class="sidebar-drawer-links">
       <a href="index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
+      <a href="meri_fasal.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌱</span><span>मेरी फसल</span></a>
       <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
       <a href="mandi.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
       <a href="krashi_bajar.html" class="sidebar-drawer-link active"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
@@ -3000,7 +3001,9 @@ async function toggleFollowInList(userId) {
 }
 
 // ── Photo zoom (lightbox): focal pinch / drag / double-tap ──
-// The page sets user-scalable=no, so native pinch is off — we run our own.
+// The lightbox image sets touch-action:none and preventDefault()s its pointer
+// events, so native page zoom (now enabled for accessibility) never fires here —
+// we run our own focal zoom inside the overlay.
 // transform-origin is 0 0, so screen(L) = origin + (tx,ty) + scale·L. That lets
 // us zoom about ANY focal point the user picks (fingers / cursor / tap), not the centre.
 const LB = { scale:1, tx:0, ty:0, pointers:new Map(),

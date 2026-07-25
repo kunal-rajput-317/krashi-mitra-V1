@@ -1,4 +1,4 @@
-const CACHE_NAME = 'krashimitra-v2'; // v2: notification bell replaced by KrashiBook (krashibook.js)
+const CACHE_NAME = 'krashimitra-v3'; // v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -101,4 +101,39 @@ self.addEventListener('fetch', (event) => {
       })
     );
   }
+});
+
+// ══════════════════════════════════════════════════════════
+// WEB PUSH — mandi bhav alerts (🔔 toggle on /bhav pages)
+// The server sends {title, body, url, tag}; we render it and, on click,
+// focus an already-open tab for that URL instead of opening a duplicate.
+// ══════════════════════════════════════════════════════════
+self.addEventListener('push', (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; }
+  catch (e) { d = { body: event.data ? event.data.text() : '' }; }
+
+  event.waitUntil(
+    self.registration.showNotification(d.title || 'कृषि मित्र — मंडी भाव', {
+      body:     d.body || '',
+      icon:     d.icon  || '/assets/logo-192.png',
+      badge:    d.badge || '/assets/logo-192.png',
+      tag:      d.tag   || 'mandi-bhav',
+      renotify: true,
+      data:     { url: d.url || '/' }
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if (w.url === url && 'focus' in w) return w.focus();
+      }
+      return self.clients.openWindow ? self.clients.openWindow(url) : null;
+    })
+  );
 });

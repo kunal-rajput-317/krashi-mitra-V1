@@ -12,6 +12,7 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron      import CronTrigger
 from apscheduler.triggers.interval  import IntervalTrigger
+from apscheduler.triggers.combining import OrTrigger
 from apscheduler.events             import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
 logger = logging.getLogger("krishi.mandi_scheduler")
@@ -103,6 +104,15 @@ def _fetch_and_notify():
     except Exception as e:
         logger.error(f"district centroid backfill failed (non-fatal): {e}")
 
+    # 🔔 Push today's bhav to farmers who turned the bell on for a crop+mandi.
+    # Prices have just been merged, so this is the moment the alert is true.
+    # Best-effort and bounded; a push outage must never fail the fetch.
+    try:
+        from backend.services.push_service import run_mandi_alerts
+        run_mandi_alerts()
+    except Exception as e:
+        logger.error(f"mandi push alerts failed (non-fatal): {e}")
+
     return summary
 
 
@@ -122,13 +132,16 @@ def _register_job():
     """
     Register the mandi refresh job. data.gov wipes the daily feed overnight
     and refills it as mandis report through the day (2 rows at 06:30 IST,
-    ~half by ~09:30, ~10k by 11:30, full ~18k by evening). Five runs/day:
+    ~half by ~09:30, ~10k by 11:30, full ~18k by evening). Six runs/day:
       08:00 IST — today's early reporters start flowing in
       10:00 IST — late-morning top-up
       13:00 IST — feed mostly full
       16:00 IST — afternoon top-up
-      20:00 IST — end-of-day sweep before the overnight wipe, so pre-dawn
+      20:00 IST — evening sweep — most mandis have reported by now
+      23:11 IST — final end-of-day sweep before the overnight wipe, so pre-dawn
                   users always see yesterday's complete final prices
+    (23:11 fires at :11, so it can't share the :00 cron above — the two
+    schedules are OR-combined into this one job.)
     All runs are idempotent AND safe at any feed level: the snapshot is
     MERGED per market identity (never wholesale-deleted), history dedupes by
     row_key, and the sparse guard rejects near-empty results.
@@ -138,9 +151,12 @@ def _register_job():
     """
     scheduler.add_job(
         func               = _fetch_and_notify,
-        trigger            = CronTrigger(hour="8,10,13,16,20", minute=0, timezone=IST),
+        trigger            = OrTrigger([
+            CronTrigger(hour="8,10,13,16,20", minute=0,  timezone=IST),
+            CronTrigger(hour=23,              minute=11, timezone=IST),
+        ]),
         id                 = "mandi_price_refresh",
-        name               = "Nationwide Mandi Prices — Daily 08/10/13/16/20h IST",
+        name               = "Nationwide Mandi Prices — Daily 08/10/13/16/20h + 23:11 IST",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,
@@ -174,7 +190,7 @@ def _register_job():
         misfire_grace_time = None,
     )
 
-    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h IST + 30-min staleness watchdog + archive @ 04h IST")
+    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 30-min staleness watchdog + archive @ 04h IST")
 
 
 async def start_scheduler():

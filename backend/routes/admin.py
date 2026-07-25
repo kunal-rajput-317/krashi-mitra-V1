@@ -565,7 +565,7 @@ async def update_admin_order_status(
 
     valid_statuses = {
         "Pending", "Booked", "Quoted", "Purchased",
-        "Dispatched", "Delivered", "Cancelled", "Unavailable",
+        "Dispatched", "Delivered", "Cancelled", "Unavailable", "Out of Order",
     }
     next_status = (payload.get("status") or "").strip()
     if next_status not in valid_statuses:
@@ -665,7 +665,7 @@ async def get_admin_heatmap(
             status_lower = (order.status or "").lower()
             if status_lower == "delivered":
                 state_demand[state_key]["delivered"] += qty
-            elif status_lower in {"unavailable", "cancelled"} or "not" in status_lower or "reject" in status_lower:
+            elif status_lower in {"unavailable", "cancelled", "out of order"} or "not" in status_lower or "reject" in status_lower:
                 state_demand[state_key]["not_available"] += qty
 
             month_idx = 6

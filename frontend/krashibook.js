@@ -240,7 +240,7 @@
     var orders = state.orders;
     var html = "";
     if (!orders.length) {
-      html = '<div class="km-book-empty"><span class="emoji">🔕</span>' +
+      html = '<div id="km-book-alerts-empty" class="km-book-empty"><span class="emoji">🔕</span>' +
         'अभी कोई सूचना नहीं।<br><span style="font-size:12px">प्री-बुक करें — हर अपडेट यहाँ दिखेगा।</span></div>';
     } else {
       var sorted = orders.slice().sort(function (a, b) {
@@ -254,11 +254,70 @@
         html += isQuoted(o) ? quoteCard(o, isNew) : statusCard(o, isNew);
       });
     }
+    html += '<div id="km-book-crop-nudges"></div>';
     html += '<div id="km-book-weather-alert"></div>';
     html += '<button class="km-book-ghost-btn" data-href="' + shopUrl() + '">📋 सभी ऑर्डर देखें</button>';
     list.innerHTML = html;
     wireActions(list);
+    loadCropNudges();
     loadWeatherAlert();
+  }
+
+  // Crop-task nudges from the farmer's saved crops (मेरी फसल). Parse-on-request:
+  // /crop-calendar/nudges recomputes "due now / this week" live from crop_stages.json,
+  // so no scheduler and no stale state. Logged-in only — guests keep their crops in
+  // localStorage and see the calendar directly on the मेरी फसल page.
+  function loadCropNudges() {
+    var slot = document.getElementById("km-book-crop-nudges");
+    if (!slot) return;
+    var token = getToken();
+    if (!token) {
+      // Guest — reminders need a server-saved crop, so invite them to log in.
+      slot.innerHTML =
+        '<div class="km-book-card warn">' +
+          '<div class="km-book-card-head">' +
+            '<span class="km-book-tracking">🌱 फसल की याद</span>' +
+            '<span class="km-book-chip ok">📅 मेरी फसल</span>' +
+          '</div>' +
+          '<div class="km-book-product">🔑 लॉगिन करें — फसल के काम की याद पाएं</div>' +
+          '<div class="km-book-line">अपनी फसल और बुवाई तारीख जोड़ें, फिर लॉगिन करें — सिंचाई, खाद और यूरिया टॉप-ड्रेसिंग की याद ठीक समय पर यहाँ मिलेगी।</div>' +
+          '<button class="km-book-ghost-btn" data-href="' + loginUrl() + '" style="margin-top:8px">लॉगिन / साइनअप करें</button>' +
+        '</div>';
+      wireActions(slot);
+      return;
+    }
+    fetch(apiBase() + "/crop-calendar/nudges", { headers: { "Authorization": "Bearer " + token } })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.success || !res.data) return;
+        var nudges = res.data.nudges || [];
+        var slot2 = document.getElementById("km-book-crop-nudges");
+        if (!slot2 || !nudges.length) return;
+        var html = "";
+        nudges.forEach(function (n) {
+          var isNow     = n.urgency === "now";
+          var isHarvest = n.kind === "harvest";
+          var chip = isHarvest ? "🌾 कटाई नज़दीक" : (isNow ? "⏰ आज का काम" : "📅 इस हफ्ते");
+          var href = isHarvest ? mandiUrl() : fasalUrl();
+          var btn  = isHarvest ? "💰 मंडी भाव देखें" : "📅 मेरी फसल खोलें";
+          html +=
+            '<div class="km-book-card ' + (isNow ? "warn" : "") + '">' +
+              '<div class="km-book-card-head">' +
+                '<span class="km-book-tracking">' + clean(n.emoji) + ' ' + clean(n.crop_hi) + '</span>' +
+                '<span class="km-book-chip ' + (isNow ? "warnchip" : "ok") + '">' + chip + '</span>' +
+              '</div>' +
+              '<div class="km-book-product">' + clean(n.title_hi) + '</div>' +
+              (n.detail_hi ? '<div class="km-book-line">🌱 ' + clean(n.detail_hi) + '</div>' : "") +
+              '<button class="km-book-ghost-btn" data-href="' + href + '" style="margin-top:8px">' + btn + '</button>' +
+            '</div>';
+        });
+        slot2.innerHTML = html;
+        // A due crop task IS a notification — drop the "कोई सूचना नहीं" empty card.
+        var emptyEl = document.getElementById("km-book-alerts-empty");
+        if (emptyEl) emptyEl.style.display = "none";
+        wireActions(slot2);
+      })
+      .catch(function () {});
   }
 
   // Weather alert card for the farmer's own district (needs profile).
@@ -597,14 +656,27 @@
     var overlay = document.getElementById("km-book-modal");
     if (overlay) overlay.classList.remove("open");
   }
+  // Crops with a task due *today* (now_count) — lets the 📒 badge nag the farmer
+  // to open KrashiBook even when there are no order updates. 0 for guests.
+  function fetchCropNowCount(cb) {
+    var token = getToken();
+    if (!token) { cb(0); return; }
+    fetch(apiBase() + "/crop-calendar/nudges", { headers: { "Authorization": "Bearer " + token } })
+      .then(function (r) { return r.json(); })
+      .then(function (res) { cb((res && res.success && res.data && res.data.now_count) || 0); })
+      .catch(function () { cb(0); });
+  }
   function updateBadge() {
     var badge = document.getElementById("km-book-badge");
     if (!badge) return;
     fetchOrderHistory(function (orders) {
       var seen = seenMap();
       var fresh = orders.filter(function (o) { return seen[o.tracking_code] !== lc(o); });
-      if (fresh.length) { badge.textContent = fresh.length; badge.style.display = ""; }
-      else { badge.style.display = "none"; }
+      fetchCropNowCount(function (nowCount) {
+        var total = fresh.length + nowCount;
+        if (total) { badge.textContent = total; badge.style.display = ""; }
+        else { badge.style.display = "none"; }
+      });
     });
   }
 
