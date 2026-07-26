@@ -14,7 +14,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from backend.config import get_setting
-from backend.database.db import ChatHistory, get_db
+from backend.database.db import ChatHistory, User, get_db
 from backend.utils.auth_utils import get_current_user
 from backend.utils.security import rate_limit
 from backend.services.chatbot_service import (
@@ -230,17 +230,25 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
 
 def _save_to_db(db: Session, body: Question, question: str, answer: str):
     """Save user message + assistant reply to DB."""
+    # user_id arrives in the request body, unauthenticated, so it can name an
+    # account that never existed or has since been deleted. chat_history.user_id
+    # is a real foreign key now, so a stale id would abort the whole insert —
+    # keep the conversation, drop only the dangling link.
+    uid = body.user_id
+    if uid is not None and not db.query(User.id).filter(User.id == uid).first():
+        uid = None
     try:
         db.add(ChatHistory(
-            user_id=body.user_id, crop=body.crop, district=body.district,
+            user_id=uid, crop=body.crop, district=body.district,
             role="user", message=question, language=body.language
         ))
         db.add(ChatHistory(
-            user_id=body.user_id, crop=body.crop, district=body.district,
+            user_id=uid, crop=body.crop, district=body.district,
             role="assistant", message=answer, language=body.language
         ))
         db.commit()
     except Exception as e:
+        db.rollback()   # leave the session usable — a failed tx poisons every later query
         print(f"[DB] Save failed: {e}")
         db.rollback()
 

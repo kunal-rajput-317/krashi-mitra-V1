@@ -79,6 +79,23 @@ def send_push(db, sub: PushSubscription, payload: dict) -> bool:
         return False
 
 
+def _devices_for(db, alert: MandiAlert):
+    """Every live push endpoint an alert should be delivered to.
+
+    Account alerts fan out across all of the farmer's signed-in devices, which
+    is what makes a 🔔 survive a new phone. Alerts predating the login gate have
+    no account, so they stay pinned to the endpoint that created them."""
+    if alert.user_id is not None:
+        return (db.query(PushSubscription)
+                  .filter(PushSubscription.user_id == alert.user_id,
+                          PushSubscription.active.is_(True))
+                  .all())
+    return (db.query(PushSubscription)
+              .filter(PushSubscription.id == alert.subscription_id,
+                      PushSubscription.active.is_(True))
+              .all())
+
+
 def _price_for(db, commodity: str, state, district):
     """Average modal price + day-on-day move for a crop in one district —
     the same figure the /bhav page leads with."""
@@ -109,13 +126,21 @@ def run_mandi_alerts() -> dict:
     sent = skipped = failed = 0
     db = SessionLocal()
     try:
-        pairs = (db.query(MandiAlert, PushSubscription)
-                   .join(PushSubscription, PushSubscription.id == MandiAlert.subscription_id)
-                   .filter(MandiAlert.active.is_(True), PushSubscription.active.is_(True))
-                   .all())
+        alerts = (db.query(MandiAlert)
+                    .filter(MandiAlert.active.is_(True))
+                    .all())
 
-        for alert, sub in pairs:
+        for alert in alerts:
             if alert.last_notified_on == today:      # at most one push a day
+                skipped += 1
+                continue
+
+            # Where to send. An account alert goes to every phone the farmer has
+            # signed in on — that is the whole point of tying alerts to a login
+            # rather than a browser. Legacy alerts (user_id NULL, created before
+            # the gate) still go to the single device that created them.
+            devices = _devices_for(db, alert)
+            if not devices:
                 skipped += 1
                 continue
 
@@ -138,12 +163,19 @@ def run_mandi_alerts() -> dict:
                 if alert.district:
                     url += f"/{_slugify(alert.district)}"
 
-            ok = send_push(db, sub, {
+            payload = {
                 "title": f"{hi} भाव — {where}".strip(" —"),
                 "body":  f"₹{avg:,}/क्विंटल{move}",
                 "url":   url,
                 "tag":   f"bhav-{alert.id}",
-            })
+            }
+            # One device accepting is enough to call the alert delivered — a
+            # farmer's old tablet being unreachable must not make him miss the
+            # price on the phone in his hand tomorrow.
+            ok = False
+            for device in devices:
+                if send_push(db, device, payload):
+                    ok = True
             if ok:
                 alert.last_notified_on = today
                 alert.last_price = price_str

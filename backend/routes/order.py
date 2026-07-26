@@ -1,9 +1,14 @@
 # ============================================================
 # backend/routes/order.py
-# KrashiMitra — Order Router (Guest + Logged-in Users)
+# KrashiMitra — Order Router
 # ============================================================
-# POST /order/log      → create a new order (returns tracking code)
-# GET  /order/history  → fetch order history (JWT or session_id)
+# POST /order/log      → create a new order — LOGIN REQUIRED
+# GET  /order/history  → fetch order history (JWT or legacy session_id)
+#
+# Placing an order requires a login. A pre-book is answered later with a quote,
+# and a guest order was reachable only through a localStorage session_id — clear
+# the browser and the farmer never saw the price he asked for. History still
+# honours session_id so orders placed before the gate remain visible.
 # ============================================================
 
 import os
@@ -12,7 +17,7 @@ import random
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -86,6 +91,8 @@ def create_order(
     authorization: Optional[str] = Header(None),
 ):
     user = _get_token_optional(authorization)
+    if not user:
+        raise HTTPException(401, "ऑर्डर करने के लिए पहले लॉगिन करें।")
 
     # Generate unique tracking code
     for _ in range(10):
@@ -97,19 +104,18 @@ def create_order(
     # Look up user name/email from users table for logged-in users
     user_email = None
     user_name  = None
-    if user:
-        db_user = db.query(User).filter(User.id == user["user_id"]).first()
-        if db_user:
-            user_email = db_user.email
-            user_name  = db_user.name
+    db_user = db.query(User).filter(User.id == user["user_id"]).first()
+    if db_user:
+        user_email = db_user.email
+        user_name  = db_user.name
 
     order = Order(
         tracking_code = tracking_code,
-        user_id       = user["user_id"] if user else None,
+        user_id       = user["user_id"],
         user_email    = user_email,
         user_name     = user_name,
-        session_id    = body.session_id if not user else None,
-        is_guest      = user is None,
+        session_id    = None,
+        is_guest      = False,
         product_name  = body.product_name,
         product_id    = body.product_id,
         quantity      = body.quantity,

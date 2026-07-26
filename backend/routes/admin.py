@@ -514,6 +514,84 @@ async def list_admin_orders(
     }
 
 
+# ── 🔔 Mandi price alerts ─────────────────────────────────────
+
+@router.get("/alerts")
+async def list_admin_alerts(
+    limit:  int  = Query(200, ge=1, le=500),
+    active: bool = Query(True, description="False also lists switched-off alerts"),
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Who is watching which mandi.
+
+    The farmer's name, email and phone are read live through user_id rather than
+    copied onto mandi_alerts: an alert is a standing subscription, so the answer
+    to "who is this?" should be whoever the account is *today*. A name frozen at
+    subscribe time would drift the moment he corrects his profile, and there
+    would be no rule for which copy wins. (orders denormalises the opposite way
+    on purpose — an order is a historical record of who bought at that moment.)
+
+    Alerts created before the login gate have no account at all; they are
+    reported with user_id null rather than hidden, since they still receive
+    pushes and are part of what is going out."""
+    from backend.database.db import MandiAlert, PushSubscription, User, UserProfile
+
+    q = db.query(MandiAlert, User, UserProfile) \
+          .outerjoin(User,        User.id        == MandiAlert.user_id) \
+          .outerjoin(UserProfile, UserProfile.user_id == MandiAlert.user_id)
+    if active:
+        q = q.filter(MandiAlert.active.is_(True))
+
+    rows = q.order_by(MandiAlert.updated_at.desc().nullslast(),
+                      MandiAlert.id.desc()).limit(limit).all()
+
+    # How many devices each account can actually be reached on — an alert with
+    # zero live endpoints is silently undeliverable, which is worth seeing.
+    uids    = {a.user_id for a, _u, _p in rows if a.user_id}
+    devices = {}
+    if uids:
+        for uid, in db.query(PushSubscription.user_id).filter(
+                PushSubscription.user_id.in_(uids),
+                PushSubscription.active.is_(True)):
+            devices[uid] = devices.get(uid, 0) + 1
+
+    def _name(user, profile):
+        """Same precedence as alerts.display_name: the name the farmer filled in
+        on his profile wins over the signup name, which for a Google login is
+        whatever Google supplied."""
+        if profile and (profile.name or "").strip():
+            return profile.name.strip()
+        if user and (user.name or "").strip():
+            return user.name.strip()
+        return None
+
+    out = []
+    for a, user, profile in rows:
+        out.append({
+            "id":               a.id,
+            "commodity":        a.commodity,
+            "state":            a.state,
+            "district":         a.district,
+            "active":           a.active,
+            "last_notified_on": a.last_notified_on.isoformat() if a.last_notified_on else None,
+            "last_price":       a.last_price,
+            "created_at":       a.created_at.isoformat() if a.created_at else "",
+            "user_id":          a.user_id,
+            "user_name":        _name(user, profile),
+            "user_email":       user.email if user else None,
+            "phone":            (profile.phone_number or profile.whatsapp_number) if profile else None,
+            "user_place":       ", ".join(x for x in [(profile.district if profile else None),
+                                                      (profile.state if profile else None)] if x) or None,
+            "devices":          devices.get(a.user_id, 0) if a.user_id else (1 if a.active else 0),
+            "pre_gate":         a.user_id is None,
+        })
+
+    return {"success": True, "total": len(out),
+            "with_account": sum(1 for r in out if not r["pre_gate"]),
+            "alerts": out}
+
+
 @router.put("/orders/{tracking_code}/quote")
 async def quote_admin_order(
     tracking_code: str,

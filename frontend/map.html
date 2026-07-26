@@ -513,9 +513,18 @@
     ══════════════════════════════════════ */
     .map-hero-intro {
       background: linear-gradient(150deg, var(--green-dark) 0%, #2d6a4f 60%, #3a7d5e 100%);
-      padding: 36px 40px 32px;
+      padding: 36px 0 32px;
       position: relative;
       overflow: hidden;
+    }
+    /* The band stays full-bleed; the words inside line up with the map card
+       and the नक्शा card below it. */
+    .map-hero-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 14px;
+      position: relative;
+      z-index: 1;
     }
     .map-hero-intro::before {
       content: '';
@@ -582,30 +591,58 @@
 
     /* ══════════════════════════════════════
        MAP CONTAINER
+       Boxed to the same 960px as the नक्शा card below so the two maps line up
+       and the page reads as one column. It used to run full-bleed, which was
+       the actual UI problem: a ~square state fitted into a 1280x420 letterbox
+       filled a third of the frame and the rest was Pakistan and Bangladesh.
     ══════════════════════════════════════ */
     .map-wrapper {
-      flex: 1;
+      max-width: 960px;
+      margin: 20px auto 0;
+      padding: 0 14px;
+      width: 100%;
+    }
+    .map-card {
+      background: var(--white);
+      border: 1px solid #d8e8dc;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 14px rgba(26,60,46,.06);
+    }
+    /* toolbar: state switcher lives in the card header instead of floating
+       above it with nothing to belong to */
+    .map-toolbar {
       display: flex;
-      flex-direction: column;
-      min-height: 0;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .map-toolbar-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-light);
+      letter-spacing: .3px;
+      margin-right: 2px;
     }
 
     #map {
-      flex: 1;
       width: 100%;
-      min-height: 420px;
+      /* near-square frame: UP is ~746km x 726km, so a wide strip wastes most
+         of the width. This lets the state actually fill the box. */
+      height: min(68vh, 620px);
     }
 
     .map-footer {
-      padding: 10px 24px;
-      background: var(--white);
+      padding: 10px 16px;
+      background: #f4faf6;
       border-top: 1px solid var(--border);
       font-size: 12px;
       color: var(--text-light);
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-shrink: 0;
     }
 
     /* ══════════════════════════════════════
@@ -645,16 +682,22 @@
       .breadcrumb { padding: 8px 14px; font-size: 11px; }
 
       /* Hero intro — compact on mobile */
-      .map-hero-intro { padding: 22px 16px 20px; }
+      .map-hero-intro { padding: 22px 0 20px; }
+      .map-hero-inner { padding: 0 14px; }
       .map-hero-intro::after { font-size: 56px; right: 16px; bottom: 10px; }
       .map-hero-title { font-size: 22px; }
       .map-hero-sub   { font-size: 12.5px; }
       .hero-badges    { margin-top: 14px; gap: 7px; }
       .hero-badge     { font-size: 11px; padding: 4px 11px; }
 
-      /* Map — extend to fill most of the screen now that the hero intro is gone */
-      #map { min-height: 65vh; }
-      .map-footer { padding: 10px 16px; font-size: 12px; }
+      /* Portrait phone: the frame is already narrower than the state is wide,
+         so height only needs to be enough to keep it near-square. */
+      /* 14px, matching .naksha-static — the two cards must share one edge */
+      .map-wrapper { padding: 0 14px; }
+      .map-toolbar { padding: 10px 12px; gap: 8px; }
+      .map-toolbar-label { width: 100%; margin-bottom: 2px; }
+      #map { height: min(56vh, 440px); }
+      .map-footer { padding: 10px 12px; font-size: 11.5px; }
 
       .site-footer { display: none; }
     }
@@ -760,6 +803,11 @@
   <a class="cnav-item" href="/bhav">बाज़ार भाव</a>
   <a class="cnav-item" href="weather.html">मौसम</a>
   <a class="cnav-item" href="mandi.html">मंडी भाव</a>
+  <!-- Map pages only: the two state नक्शा pages, current one .active. The bar
+       scrolls (.cnav-inner overflow-x:auto), so these are added to the shared
+       six rather than replacing any. -->
+  <a class="cnav-item active" href="map.html">UP नक्शा</a>
+  <a class="cnav-item" href="rajasthan-ka-naksha.html">राजस्थान नक्शा</a>
   <a class="cnav-item" href="/product/">कृषि दुकान</a>
   <a class="cnav-item" href="articles/index.html">कृषि लेख</a>
   <a class="cnav-item" href="sarkari_yojana.html">सरकारी योजना</a>
@@ -820,16 +868,44 @@
 
   <!-- ── Hero: page's only H1 — styled block already existed in CSS, was never inserted ── -->
   <div class="map-hero-intro">
-    <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
-    <h1 class="map-hero-title" data-t="map_title">UP जिला नक्शा</h1>
-    <p class="map-hero-sub" data-t="map_sub">उत्तर प्रदेश के सभी जिले — hover करें, ज़ूम करें और जानकारी पाएं</p>
+    <div class="map-hero-inner">
+      <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
+      <h1 class="map-hero-title" id="map-hero-title" data-t="map_title">UP जिला नक्शा</h1>
+      <p class="map-hero-sub" id="map-hero-sub" data-t="map_sub">उत्तर प्रदेश के सभी जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं</p>
+    </div>
   </div>
 
-  <!-- ── Map Area ── -->
+  <!-- ── State switcher ──
+       Buttons, not links, and the URL never changes: /map must stay a single
+       UP-targeted URL. Rajasthan's crawlable home is /rajasthan-ka-naksha —
+       every Rajasthan string below is injected by JS so this page's indexed
+       HTML contains no duplicate of that page's content. -->
+  <style>
+    .map-state-btn{padding:8px 16px;border-radius:999px;border:1.5px solid #d8e8dc;background:#fff;
+      color:#2d6a4f;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;
+      transition:background .15s,border-color .15s,color .15s}
+    .map-state-btn:hover{border-color:#52b788}
+    .map-state-btn.active{background:#2d6a4f;border-color:#2d6a4f;color:#fff}
+    .map-state-more{margin-left:auto;align-self:center;font-size:.85rem;font-weight:600;
+      color:#2d6a4f;text-decoration:underline}
+  </style>
+
+  <!-- ── Map Area — switcher, map and caption are one card ── -->
   <div class="map-wrapper">
-    <div id="map"></div>
-    <div class="map-footer">
-      🗺️ Uttar Pradesh — Hover over districts to see names. Zoom in to explore regions.
+    <div class="map-card">
+      <div class="map-toolbar">
+        <span class="map-toolbar-label">राज्य चुनें</span>
+        <button type="button" class="map-state-btn active" id="map-state-up"
+                onclick="switchMapState('up')">उत्तर प्रदेश</button>
+        <button type="button" class="map-state-btn" id="map-state-rajasthan"
+                onclick="switchMapState('rajasthan')">राजस्थान</button>
+        <a class="map-state-more" id="map-state-more" href="rajasthan-ka-naksha.html"
+           style="display:none">राजस्थान का पूरा नक्शा पेज →</a>
+      </div>
+      <div id="map"></div>
+      <div class="map-footer" id="map-footer-note">
+        🗺️ उत्तर प्रदेश — जिले पर टैप करके नाम देखें, ज़ूम करके पास से देखें।
+      </div>
     </div>
   </div>
 
@@ -846,19 +922,24 @@
       text-decoration:none;font-size:.95rem}
     .naksha-btn.dl{background:#e9a825;color:#1a3c2e}
     .naksha-btn.bhav{background:#2d6a4f;color:#fff}
+    .naksha-btn.state{background:#fff;color:#2d6a4f;border:1.5px solid #2d6a4f}
   </style>
   <section class="naksha-static">
-    <h2>उत्तर प्रदेश का नक्शा — 75 जिलों का मानचित्र (HD डाउनलोड)</h2>
-    <p class="naksha-sub">हिंदी में UP का जिलेवार नक्शा — मुफ्त डाउनलोड करें, और नक्शे के किसी भी जिले का
+    <h2 id="naksha-h2">उत्तर प्रदेश का नक्शा — 75 जिलों का मानचित्र (HD डाउनलोड)</h2>
+    <p class="naksha-sub" id="naksha-sub">हिंदी में UP का जिलेवार नक्शा — मुफ्त डाउनलोड करें, और नक्शे के किसी भी जिले का
       आज का मंडी भाव भी देखें।</p>
     <figure>
-      <img src="images/up-ka-naksha-district-map.webp" width="1440" height="1493" loading="lazy"
+      <img id="naksha-img" src="images/up-ka-naksha-district-map.webp" width="1440" height="1493" loading="lazy"
            alt="उत्तर प्रदेश का नक्शा — UP के 75 जिलों का हिंदी जिलेवार मानचित्र (सहारनपुर से सोनभद्र तक)">
-      <figcaption>उत्तर प्रदेश के सभी 75 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in</figcaption>
+      <figcaption id="naksha-cap">उत्तर प्रदेश के सभी 75 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in</figcaption>
     </figure>
     <div class="naksha-actions">
-      <a class="naksha-btn dl" href="images/up-ka-naksha-district-map.png" download="up-ka-naksha-75-jile.png">⬇️ नक्शा डाउनलोड करें (HD, मुफ्त)</a>
+      <a class="naksha-btn dl" id="naksha-dl" href="images/up-ka-naksha-district-map.png" download="up-ka-naksha-75-jile.png">⬇️ नक्शा डाउनलोड करें (HD, मुफ्त)</a>
       <a class="naksha-btn bhav" href="/bhav">🌾 अपने जिले का आज का मंडी भाव →</a>
+      <!-- Real, always-visible link — the state switcher above is a <button>,
+           so this is the only crawlable path from /map into the Rajasthan
+           page. Sitemap discovery alone was not enough for /bhav. -->
+      <a class="naksha-btn state" href="rajasthan-ka-naksha.html">🗺️ राजस्थान का नक्शा देखें →</a>
     </div>
   </section>
 
@@ -897,7 +978,11 @@
       nav_map:     "नक्शा",
       map_label:   "🗺️ KRASHIMITRA MAP",
       map_title:   "UP जिला नक्शा",
-      map_sub:     "उत्तर प्रदेश के सभी जिले — hover करें, ज़ूम करें और जानकारी पाएं",
+      map_sub:     "उत्तर प्रदेश के सभी जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं",
+      // Pristine UP copies — map_title/map_sub above are rewritten in place by
+      // switchMapState(), so switching back needs the originals per language.
+      _map_title_up: "UP जिला नक्शा",
+      _map_sub_up:   "उत्तर प्रदेश के सभी जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं",
     },
     en: {
       nav_chat:    "AI Advisor",
@@ -908,7 +993,9 @@
       nav_map:     "Map",
       map_label:   "🗺️ KRASHIMITRA MAP",
       map_title:   "UP District Map",
-      map_sub:     "All districts of Uttar Pradesh — hover, zoom and explore",
+      map_sub:     "All districts of Uttar Pradesh — tap a district, zoom and explore",
+      _map_title_up: "UP District Map",
+      _map_sub_up:   "All districts of Uttar Pradesh — tap a district, zoom and explore",
     },
     kn: {
       nav_chat:    "AI ಕೇಳಿ",
@@ -919,7 +1006,9 @@
       nav_map:     "ನಕ್ಷೆ",
       map_label:   "🗺️ KRASHIMITRA ನಕ್ಷೆ",
       map_title:   "UP ಜಿಲ್ಲಾ ನಕ್ಷೆ",
-      map_sub:     "ಉತ್ತರ ಪ್ರದೇಶದ ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳು — hover ಮಾಡಿ, zoom ಮಾಡಿ",
+      map_sub:     "ಉತ್ತರ ಪ್ರದೇಶದ ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳು — ಜಿಲ್ಲೆಯನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ, zoom ಮಾಡಿ",
+      _map_title_up: "UP ಜಿಲ್ಲಾ ನಕ್ಷೆ",
+      _map_sub_up:   "ಉತ್ತರ ಪ್ರದೇಶದ ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳು — ಜಿಲ್ಲೆಯನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ, zoom ಮಾಡಿ",
     }
   };
 
@@ -969,29 +1058,127 @@
   // MAP
   // ══════════════════════════════════════
   let mapInitialized = false;
+  let _map = null, _districtLayer = null, _mapState = 'up';
+  const _geojsonCache = {};
+
+  // UP is also the page's static HTML (see the naksha section above). Rajasthan
+  // lives here in JS only, so /map stays one UP-targeted URL and does not
+  // compete with /rajasthan-ka-naksha for राजस्थान queries.
+  const MAP_STATES = {
+    up: {
+      geojson: "/data/up-districts.geojson",
+      footer:  "🗺️ उत्तर प्रदेश — जिले पर टैप करके नाम देखें, ज़ूम करके पास से देखें।",
+      h1:      "UP जिला नक्शा",
+      sub:     "उत्तर प्रदेश के सभी जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं",
+      h2:      "उत्तर प्रदेश का नक्शा — 75 जिलों का मानचित्र (HD डाउनलोड)",
+      nsub:    "हिंदी में UP का जिलेवार नक्शा — मुफ्त डाउनलोड करें, और नक्शे के किसी भी जिले का आज का मंडी भाव भी देखें।",
+      img:     "images/up-ka-naksha-district-map.webp",
+      w: 1440, h: 1493,
+      alt:     "उत्तर प्रदेश का नक्शा — UP के 75 जिलों का हिंदी जिलेवार मानचित्र (सहारनपुर से सोनभद्र तक)",
+      cap:     "उत्तर प्रदेश के सभी 75 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in",
+      png:     "images/up-ka-naksha-district-map.png",
+      dl:      "up-ka-naksha-75-jile.png"
+    },
+    rajasthan: {
+      geojson: "/data/rajasthan-districts.geojson",
+      footer:  "🗺️ राजस्थान — जिले पर टैप करके नाम देखें, ज़ूम करके पास से देखें।",
+      h1:      "राजस्थान जिला नक्शा",
+      sub:     "राजस्थान के सभी 33 जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं",
+      h2:      "राजस्थान का नक्शा — 33 जिलों का मानचित्र (HD डाउनलोड)",
+      nsub:    "हिंदी में राजस्थान का जिलेवार नक्शा — मुफ्त डाउनलोड करें, और नक्शे के किसी भी जिले का आज का मंडी भाव भी देखें।",
+      img:     "images/rajasthan-ka-naksha-district-map.webp",
+      w: 1440, h: 1407,
+      alt:     "राजस्थान का नक्शा — राजस्थान के 33 जिलों का हिंदी जिलेवार मानचित्र (श्रीगंगानगर से बांसवाड़ा तक)",
+      cap:     "राजस्थान के सभी 33 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in",
+      png:     "images/rajasthan-ka-naksha-district-map.png",
+      dl:      "rajasthan-ka-naksha-33-jile.png"
+    }
+  };
+
+  function _drawDistricts(geojson) {
+    if (_districtLayer) _map.removeLayer(_districtLayer);
+    _districtLayer = L.geoJSON(geojson, {
+      style: { color: "#2d6a4f", weight: 1.5, fillColor: "#52b788", fillOpacity: 0.3 },
+      onEachFeature: (feature, layer) => {
+        const name = feature.properties.district_hi || feature.properties.district || "District";
+        layer.bindTooltip(name, { sticky: true });
+        layer.on("mouseover", () => layer.setStyle({ fillColor: "#e9a825", fillOpacity: 0.6 }));
+        layer.on("mouseout",  () => layer.setStyle({ fillColor: "#52b788", fillOpacity: 0.3 }));
+      }
+    }).addTo(_map);
+    _fitState();
+  }
+
+  // Frame from the data — the two states have very different shapes, so one
+  // hard-coded zoom cannot suit both. Padding scales with the box: a flat 18px
+  // is ~10% of a phone's width and costs a whole zoom step there.
+  function _fitState() {
+    if (!_map || !_districtLayer) return;
+    const pad = _map.getSize().x < 500 ? 6 : 18;
+    _map.fitBounds(_districtLayer.getBounds(), { padding: [pad, pad] });
+  }
+
+  function switchMapState(key) {
+    const cfg = MAP_STATES[key];
+    if (!cfg || key === _mapState) return;
+    _mapState = key;
+
+    ['up', 'rajasthan'].forEach(k => {
+      const btn = document.getElementById('map-state-' + k);
+      if (btn) btn.classList.toggle('active', k === key);
+    });
+    const more = document.getElementById('map-state-more');
+    if (more) more.style.display = key === 'rajasthan' ? '' : 'none';
+
+    const set = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+    set('map-footer-note', 'textContent', cfg.footer);
+    set('naksha-h2',       'textContent', cfg.h2);
+    set('naksha-sub',      'textContent', cfg.nsub);
+    set('naksha-cap',      'textContent', cfg.cap);
+    const img = document.getElementById('naksha-img');
+    if (img) { img.src = cfg.img; img.width = cfg.w; img.height = cfg.h; img.alt = cfg.alt; }
+    const dl = document.getElementById('naksha-dl');
+    if (dl) { dl.href = cfg.png; dl.setAttribute('download', cfg.dl); }
+
+    // The hero H1/sub carry data-t, so setLang() would otherwise reset them to
+    // the UP strings on the next language switch — keep the table in sync.
+    ['hi', 'en', 'kn'].forEach(l => {
+      if (!TRANSLATIONS[l]) return;
+      TRANSLATIONS[l].map_title = key === 'up' ? TRANSLATIONS[l]._map_title_up : cfg.h1;
+      TRANSLATIONS[l].map_sub   = key === 'up' ? TRANSLATIONS[l]._map_sub_up   : cfg.sub;
+    });
+    set('map-hero-title', 'textContent', key === 'up' ? TRANSLATIONS[currentLang]._map_title_up : cfg.h1);
+    set('map-hero-sub',   'textContent', key === 'up' ? TRANSLATIONS[currentLang]._map_sub_up   : cfg.sub);
+
+    if (_geojsonCache[key]) { _drawDistricts(_geojsonCache[key]); return; }
+    fetch(cfg.geojson)
+      .then(r => r.json())
+      .then(g => { _geojsonCache[key] = g; if (_mapState === key) _drawDistricts(g); });
+  }
 
   function initMap() {
     mapInitialized = true;
-    const map = L.map("map").setView([26.8, 80.9], 7);
+    // zoomSnap 0.25: Rajasthan is roughly square while the map strip is wide,
+    // so whole-number zoom overshoots — fractional snapping lets fitBounds
+    // land in between for both states.
+    _map = L.map("map", { zoomSnap: 0.25 }).setView([26.8, 80.9], 7);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
       maxZoom: 14
-    }).addTo(map);
+    }).addTo(_map);
 
-    fetch("/data/up-districts.geojson")
+    fetch(MAP_STATES.up.geojson)
       .then(r => r.json())
-      .then(geojson => {
-        L.geoJSON(geojson, {
-          style: { color: "#2d6a4f", weight: 1.5, fillColor: "#52b788", fillOpacity: 0.3 },
-          onEachFeature: (feature, layer) => {
-            const name = feature.properties.district_hi || feature.properties.district || "District";
-            layer.bindTooltip(name, { sticky: true });
-            layer.on("mouseover", () => layer.setStyle({ fillColor: "#e9a825", fillOpacity: 0.6 }));
-            layer.on("mouseout",  () => layer.setStyle({ fillColor: "#52b788", fillOpacity: 0.3 }));
-          }
-        }).addTo(map);
-      });
+      .then(g => { _geojsonCache.up = g; if (_mapState === 'up') _drawDistricts(g); });
+
+    // Re-frame after a rotate/resize: Leaflet keeps the old zoom, which leaves
+    // the state cropped or adrift once the box changes shape.
+    let refit;
+    window.addEventListener('resize', () => {
+      clearTimeout(refit);
+      refit = setTimeout(_fitState, 200);
+    });
   }
 
   // ══════════════════════════════════════

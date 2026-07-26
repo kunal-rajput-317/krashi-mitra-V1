@@ -11,7 +11,7 @@
 from fastapi import APIRouter, Depends, Query, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from datetime import datetime
 from typing import Optional
 
@@ -27,7 +27,11 @@ class CartItem(Base):
     __tablename__ = "carts"
 
     id         = Column(Integer,  primary_key=True, autoincrement=True)  # surrogate PK
-    user_id    = Column(Integer,  nullable=True)   # NULL for guests
+    # A cart is throwaway state — it goes with the account (see _FOREIGN_KEYS in db.py)
+    user_id    = Column(Integer,
+                        ForeignKey("users.id", ondelete="CASCADE",
+                                   name="fk_carts_user_id"),
+                        nullable=True)             # NULL for guests
     session_id = Column(String,   nullable=True)   # NULL for logged-in users
     product_id = Column(Integer,  nullable=False)
     quantity   = Column(Integer,  nullable=False, default=1)

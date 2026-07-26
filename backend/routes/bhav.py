@@ -49,7 +49,8 @@ from sqlalchemy import func
 from backend.database.db import SessionLocal, MandiPrice, MandiPriceHistory
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import district_geo, freight, leads
-from backend.routes.share import _crop_image, _HI_CROP_EN, _TILES
+from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
+                                  _STAPLE_TILES_N)
 
 import logging
 logger = logging.getLogger("krishi.bhav")
@@ -73,26 +74,13 @@ router = APIRouter()
 
 SITE = "https://krashimitra.in"
 
-# ── AdSense (only on /bhav content pages, never the shop/product pages, so ad
-# clicks never cannibalise a quote). One reserved-height unit placed BELOW the
-# content: LCP is the hero at the top, and a bottom-of-page slot keeps any load
-# shift off-screen, so Core Web Vitals stay intact. Reuses the account's
-# existing publisher id + an existing ad unit — swap _ADS_SLOT for a dedicated
-# "/bhav" unit in the AdSense dashboard if you want per-placement reporting. ──
-_ADS_PUB  = "ca-pub-2792326360609634"
-_ADS_SLOT = "7350859053"
-_ADS_LOADER = (f'<script async src="https://pagead2.googlesyndication.com/pagead/js/'
-               f'adsbygoogle.js?client={_ADS_PUB}" crossorigin="anonymous"></script>')
-# The min-height sits on the <ins> (not the box) so it reserves space WHILE the
-# ad loads (no CLS), but collapses to nothing when AdSense returns no ad
-# (data-ad-status="unfilled") — otherwise every unfilled slot, and every page on
-# localhost, leaves a ~280px blank gap above the footer.
-_ADS_UNIT = (
-    '<style>.km-ad ins[data-ad-status="unfilled"]{display:none!important}</style>'
-    '<div class="km-ad" style="margin:22px auto 6px;text-align:center;overflow:hidden">'
-    f'<ins class="adsbygoogle" style="display:block;min-height:280px" data-ad-client="{_ADS_PUB}" '
-    f'data-ad-slot="{_ADS_SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>'
-    '<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>')
+# ── AdSense placement lives in frontend/ads.js, not here. This module renders
+# ~14k pages and product.py reuses the same shell, so a hard-coded unit could
+# only ever be "one slot, same spot, every page" — which is exactly what it was
+# (a single unit below the content, the lowest-earning position on the site's
+# highest-traffic pages). ads.js reads the rendered page instead and places
+# units by content rules: below the fold, below the CTA, spaced, capped, lazy,
+# and self-collapsing when unfilled. Loaded from _header() below. ──
 
 # English commodity keyword → Hindi display name (reverse of share.py's
 # _HI_CROP_EN, plus data.gov spellings that differ from the chip names).
@@ -521,10 +509,16 @@ function paint(on){b.classList.toggle('on',!!on);if(!on)b.classList.remove('ring
  if(txt)txt.textContent=on?'अलर्ट चालू':'भाव अलर्ट';
  b.title=on?'इस मंडी की सूचना बंद करें':'इस मंडी के भाव की सूचना पाएं';}
 function ring(){b.classList.remove('ringing');void b.offsetWidth;b.classList.add('ringing');}
-function qs(ep){return '?endpoint='+encodeURIComponent(ep)+'&commodity='+encodeURIComponent(T.commodity)
+function qs(ep){return '?endpoint='+encodeURIComponent(ep||'')+'&commodity='+encodeURIComponent(T.commodity)
  +'&state='+encodeURIComponent(T.state)+'&district='+encodeURIComponent(T.district);}
+/* An alert belongs to an account, so every call carries the token — that is what
+   lets a farmer see his अलर्ट चालू on a phone he has never subscribed from. */
+function tok(){var t=localStorage.getItem('krishi_token');
+ return (t&&t!=='null'&&t!=='undefined')?t:null;}
+function hdr(json){var h=json?{'Content-Type':'application/json'}:{},t=tok();
+ if(t)h['Authorization']='Bearer '+t;return h;}
 /* Reveal the bell only when the server actually has VAPID configured, then
-   hydrate its state from THIS device (the HTML itself is edge-cached). */
+   hydrate its state (the HTML itself is edge-cached, so it can't be baked in). */
 fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
  if(!j||!j.data||!j.data.enabled)return;
  KEY=j.data.key;b.hidden=false;
@@ -532,14 +526,42 @@ fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
     doesn't pay install+activate latency before it can subscribe. */
  navigator.serviceWorker.register('/sw.js').catch(function(){});
  return navigator.serviceWorker.getRegistration().then(function(reg){
-  if(!reg||!reg.pushManager)return;
-  return reg.pushManager.getSubscription().then(function(s){
-   if(!s)return;
-   return fetch('/alerts/mandi/status'+qs(s.endpoint)).then(function(r){return r.json();})
-    .then(function(d){paint(d&&d.data&&d.data.subscribed);});
-  });
+  return (reg&&reg.pushManager)?reg.pushManager.getSubscription():null;
+ }).then(function(s){
+  /* Ask even with no local subscription: a signed-in farmer's alert lives on
+     his account, and this may be a device he has never turned it on from. */
+  if(!s&&!tok())return;
+  return fetch('/alerts/mandi/status'+qs(s&&s.endpoint),{headers:hdr(false)})
+   .then(function(r){return r.json();})
+   .then(function(d){paint(d&&d.data&&d.data.subscribed);})
+   .then(resume);
  });
 }).catch(function(){});
+/* Turning the bell ON needs a login — checked before Notification.requestPermission()
+   so a logged-out visitor never faces the browser's permission dialog for an
+   alert the server would refuse anyway. */
+function gate(){
+ if(tok())return true;
+ if(window.KMRequireLogin)window.KMRequireLogin({
+  title:'भाव अलर्ट के लिए लॉगिन करें',
+  text:'लॉगिन करने पर यह अलर्ट आपके खाते से जुड़ जाएगा — फ़ोन बदलने या ब्राउज़र साफ़ करने पर भी भाव की सूचना आती रहेगी।',
+  resume:'bhav-alert'});
+ else location.href='/login.html';
+ return false;
+}
+/* Came back from login with ?do=bhav-alert — finish what he originally tapped,
+   instead of making him find the bell again. */
+function resume(){
+ if(!window.KMTakeResume)return;
+ if(window.KMTakeResume()!=='bhav-alert'||b.classList.contains('on'))return;
+ /* Safari refuses Notification.requestPermission() outside a user gesture, and
+    this runs on load after a redirect. Complete silently only when permission
+    was already granted; otherwise put the bell on screen and shake it, so the
+    one tap that is still required is obvious. */
+ if(Notification.permission==='granted'){window.toggleBhavAlert();return;}
+ try{b.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}
+ ring();
+}
 function go(){
  return Promise.resolve(Notification.requestPermission()).then(function(p){
   if(p!=='granted')throw new Error('सूचना की अनुमति नहीं मिली — ब्राउज़र सेटिंग में चालू करें।');
@@ -550,25 +572,32 @@ function go(){
   });
  }).then(function(s){
   var j=s.toJSON();
-  return fetch('/alerts/mandi',{method:'POST',headers:{'Content-Type':'application/json'},
+  return fetch('/alerts/mandi',{method:'POST',headers:hdr(true),
    body:JSON.stringify({subscription:{endpoint:j.endpoint,keys:j.keys},commodity:T.commodity,
    state:T.state,district:T.district,user_agent:navigator.userAgent})});
- }).then(function(r){if(!r.ok)throw new Error('सूचना चालू नहीं हो सकी।');paint(true);ring();});
+ }).then(function(r){
+  /* Token expired between page load and click — re-ask rather than blaming push.
+     Flagged quiet: the login popup is already on screen, an alert on top of it
+     would just be noise. */
+  if(r.status===401){gate();var q=new Error('login');q.quiet=true;throw q;}
+  if(!r.ok)throw new Error('सूचना चालू नहीं हो सकी।');
+  paint(true);ring();});
 }
 function off(){
  return navigator.serviceWorker.getRegistration().then(function(reg){
   return reg&&reg.pushManager?reg.pushManager.getSubscription():null;
  }).then(function(s){
-  if(!s){paint(false);return;}
-  return fetch('/alerts/mandi/off',{method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({endpoint:s.endpoint,commodity:T.commodity,state:T.state,
+  return fetch('/alerts/mandi/off',{method:'POST',headers:hdr(true),
+   body:JSON.stringify({endpoint:(s&&s.endpoint)||'',commodity:T.commodity,state:T.state,
    district:T.district})}).then(function(){paint(false);});
  });
 }
 window.toggleBhavAlert=function(){
- if(busy||!KEY)return;busy=true;b.classList.add('loading');
+ if(busy||!KEY)return;
  var on=b.classList.contains('on');
- (on?off():go()).catch(function(e){alert((e&&e.message)||'सूचना चालू नहीं हो सकी।');})
+ if(!on&&!gate())return;
+ busy=true;b.classList.add('loading');
+ (on?off():go()).catch(function(e){if(!(e&&e.quiet))alert((e&&e.message)||'सूचना चालू नहीं हो सकी।');})
   .then(function(){busy=false;b.classList.remove('loading');});
 };
 """
@@ -1625,6 +1654,7 @@ window.addEventListener('pageshow',window.kmHideLoading);
 <script src="{_asset('bottomnav.js')}" defer></script>
 <script src="{_asset('location.js')}" defer></script>
 <script src="{_asset('bhav-nearest.js')}" defer></script>
+<script src="{_asset('ads.js')}" defer></script>
 <div class="topbar-spacer" id="topbar-spacer"></div>
 <script src="{_asset('header-scroll.js')}"></script>"""
 
@@ -1689,8 +1719,6 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     _CSS here is this module's own, so a caller's local override of a same-named
     variable is invisible to this closure; extra_css is the only way in."""
     og = og_img or f"{SITE}/images/og-banner.webp"
-    ads_head = _ADS_LOADER if active == "bhav" else ""
-    ads_unit = _ADS_UNIT if active == "bhav" else ""
     # /bhav pages (active=="bhav") ship NO visible breadcrumb — the trail lives
     # only as BreadcrumbList JSON-LD in `ld` (still feeds SERP breadcrumbs).
     # Reused callers (e.g. product.py, active=="shop") keep their visible one.
@@ -1714,7 +1742,6 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <meta name="twitter:card" content="summary_large_image">
 {_ICON}
 {_FONTS}
-{ads_head}
 {ld}
 <style>{_CSS}{extra_css}</style>
 </head>
@@ -1723,7 +1750,6 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {crumbs_nav}
 <div class="wrap">
 {body}
-{ads_unit}
 </div>
 {_footer()}
 </body>
@@ -2410,10 +2436,14 @@ def bhav_hub():
     # Hindi label, so the grid opened with five near-identical cards in a row. The
     # variant with the widest coverage represents the tile; the rest stay crawlable in
     # the chip list below and keep their own pages.
+    # Staples only. This gate is _STAPLE_TILES_N, not len(_TILES): the long-tail
+    # photo rows exist so niche crops get a picture on their own page and in the
+    # chip list below — promoting all ~230 of them into this grid would bury the
+    # crops the farmer actually came for under four screens of cards.
     featured, seen_tiles = [], {}
     for cs, cn in crops.items():
         rank = _tile_rank(cn)
-        if rank >= len(_TILES):
+        if rank >= _STAPLE_TILES_N:
             continue
         n = len(idx["states"].get(cs, {}))
         if rank not in seen_tiles or n > seen_tiles[rank][2]:

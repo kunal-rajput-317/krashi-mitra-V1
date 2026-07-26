@@ -18,7 +18,36 @@
 // defers to the page's own setLang()/pickLang() to translate the rest of the page.
 // ============================================================
 (function () {
+  // ---- Shell bootstrap: ads.js ----------------------------------------
+  // Ads are part of the page shell, and this file is the one script every page
+  // on the site already loads — the 37 static articles, /bhav's ~14k server
+  // pages and /product all pull it in. Bootstrapping ads.js from here means a
+  // new article inherits ad placement by shipping the standard shell, with no
+  // <script> tag to remember. ads.js self-guards, so a page that loads it
+  // explicitly (bhav.py's _doc does, for mtime cache-busting) never double-runs.
+  (function bootAds() {
+    if (document.querySelector('script[src*="/ads.js"]')) return;
+    var me = document.currentScript ||
+             document.querySelector('script[src*="drawer-menu.js"]');
+    if (!me || !me.src) return;
+    var s = document.createElement('script');
+    s.src = new URL('ads.js', me.src).href;   // resolves ../drawer-menu.js too
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  })();
+
   var OLIVE = '#6f7f3a', LEAF = '#b3c47f', CREAM = '#eef3e0';
+
+  // Menu tiers are colour-coded so depth is readable at a glance: forest green
+  // for anything at the top level (category headers + the pinned मुख्य/सहायता
+  // shortcuts), sky blue for the links nested inside a category.
+  //
+  // FOREST is the shell's --km-green-dark. SKY is deliberately NOT the shell's
+  // --sky (#2e86de): at 14px that only reaches 3.8:1 on white, under the 4.5:1
+  // WCAG AA needs for text this size. #1b6ec2 is the nearest sky blue that
+  // passes (5.2:1 on white, 4.8:1 on the cream hover).
+  var FOREST = '#1a3c2e', SKY = '#1b6ec2';
+  var FOREST_SOFT = '#f0f6f2', SKY_SOFT = '#eef5fd';   // hover tints
   var LANGS = ['hi', 'en', 'kn'];
   var LANG_NAMES = { hi: 'हिंदी', en: 'English', kn: 'ಕನ್ನಡ' };
   var LANG_SHORT = { hi: 'हिं', en: 'EN', kn: 'ಕ' };
@@ -81,18 +110,37 @@
     '.km-dg{display:flex;flex-direction:column}' +
     '.km-dg-head{display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;' +
     'min-height:44px;padding:9px 12px;margin:0;background:none;border:none;border-radius:10px;' +
-    'cursor:pointer;font-family:inherit;color:#5f7168;text-align:left;transition:background .15s}' +
-    '.km-dg-head:hover{background:#f2f8f4}' +
-    '.km-dg-ico{color:' + OLIVE + ';width:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}' +
+    'cursor:pointer;font-family:inherit;color:' + FOREST + ';text-align:left;transition:background .15s}' +
+    '.km-dg-head:hover{background:' + FOREST_SOFT + '}' +
+    '.km-dg-ico{color:' + FOREST + ';width:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}' +
     '.km-dg-ico svg{width:19px;height:19px;display:block}' +
     '.km-dg-label{flex:1;font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}' +
-    '.km-dg-chev{font-size:11px;color:#9aa8a0;transition:transform .2s;flex-shrink:0}' +
+    '.km-dg-chev{font-size:11px;color:' + FOREST + ';opacity:.55;transition:transform .2s;flex-shrink:0}' +
     '.km-dg.open .km-dg-chev{transform:rotate(90deg)}' +
     '.km-dg-body{display:none;flex-direction:column;gap:2px;overflow:hidden;padding:2px 0 4px}' +
     '.km-dg.open .km-dg-body{display:flex}' +
     '.km-dg-body .sidebar-drawer-link{padding-left:26px}' +
-    // selected item = soft yellow (overrides each page\'s green .active rule)
+
+    // ── Tier colours ────────────────────────────────────────
+    // Two-selector specificity (0,2,0) beats the (0,1,0) `.sidebar-drawer-link`
+    // colour that km-shell.css and 15 pages each declare, so no !important is
+    // needed — and the .active rule below, at (0,3,0) + !important, still wins.
+    //
+    // Top level = the pinned मुख्य / सहायता / प्रोफ़ाइल shortcuts, which are
+    // direct children of the list; anything the accordion nested sits in a
+    // .km-dg-body instead. `>` is what keeps the two apart.
+    '.sidebar-drawer-links > .sidebar-drawer-link{color:' + FOREST + '}' +
+    '.sidebar-drawer-links > .sidebar-drawer-link .sidebar-drawer-link-icon{color:' + FOREST + '}' +
+    '.sidebar-drawer-links > .sidebar-drawer-link:hover{background:' + FOREST_SOFT + '}' +
+
+    '.km-dg-body .sidebar-drawer-link{color:' + SKY + '}' +
+    '.km-dg-body .sidebar-drawer-link .sidebar-drawer-link-icon{color:' + SKY + '}' +
+    '.km-dg-body .sidebar-drawer-link:hover{background:' + SKY_SOFT + '}' +
+
+    // selected item = soft yellow (overrides each page\'s green .active rule,
+    // and both tier colours above — "you are here" must outrank depth)
     '.sidebar-drawer-links .sidebar-drawer-link.active{background:#fef3c7!important;color:#4a3f1e!important;border-left-color:#eab308!important}' +
+    '.sidebar-drawer-links .sidebar-drawer-link.active .sidebar-drawer-link-icon{color:#8a6d1f!important}' +
     '.km-drawer-sep{height:1px;background:#eef2ef;margin:6px 8px}' +
     // the old footer language row is now replaced by the header dropdown
     '.sidebar-drawer-footer{display:none}' +

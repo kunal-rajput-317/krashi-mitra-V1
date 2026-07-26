@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
@@ -279,7 +279,11 @@ class UserProfile(Base):
 
     # Core
     id                   = Column(Integer,  primary_key=True, index=True)
-    user_id              = Column(Integer,  nullable=True, index=True)
+    # Owned by the account: deleting the user deletes the profile (see _FOREIGN_KEYS)
+    user_id              = Column(Integer,
+                                  ForeignKey("users.id", ondelete="CASCADE",
+                                             name="fk_user_profiles_user_id"),
+                                  nullable=True, index=True)
 
     # Personal
     name                 = Column(String,   nullable=False)
@@ -361,7 +365,12 @@ class UserProfile(Base):
 class ChatHistory(Base):
     __tablename__ = "chat_history"
     id         = Column(Integer,  primary_key=True, index=True)
-    user_id    = Column(Integer,  nullable=True)
+    # A log worth keeping — deleting the account detaches the rows, not deletes
+    # them. NULL also means "anonymous visitor", which this table always allowed.
+    user_id    = Column(Integer,
+                        ForeignKey("users.id", ondelete="SET NULL",
+                                   name="fk_chat_history_user_id"),
+                        nullable=True)
     crop       = Column(String,   nullable=True)
     district   = Column(String,   nullable=True)
     role       = Column(String,   nullable=False)
@@ -423,7 +432,10 @@ class UserCrop(Base):
     __tablename__ = "user_crops"
 
     id          = Column(Integer,  primary_key=True, index=True)
-    user_id     = Column(Integer,  nullable=False, index=True)   # users.id
+    user_id     = Column(Integer,
+                         ForeignKey("users.id", ondelete="CASCADE",
+                                    name="fk_user_crops_user_id"),
+                         nullable=False, index=True)             # users.id
     crop_key    = Column(String,   nullable=False)               # "wheat" | "paddy" | ...
     sowing_date = Column(Date,     nullable=False)               # day-0 (sowing/transplanting)
     area        = Column(String,   nullable=True)                # free text, e.g. "2"
@@ -436,16 +448,23 @@ class UserCrop(Base):
 # ── PRICE ALERTS (Web Push) ──────────────────────────────────
 
 class PushSubscription(Base):
-    """One browser/device Web Push endpoint. /bhav pages are anonymous and
-    edge-cached, so a bhav alert is keyed on this endpoint rather than on a
-    login; user_id is filled in only when the visitor happens to be signed in."""
+    """One browser/device Web Push endpoint. A row is the *device*; the account
+    it belongs to is user_id, which is set the moment a signed-in visitor
+    subscribes (and back-filled by /auth/claim-guest for endpoints created
+    before the login gate existed). A user with three phones has three rows —
+    that is how an alert reaches every device they own."""
     __tablename__ = "push_subscriptions"
 
     id         = Column(Integer,  primary_key=True, index=True)
     endpoint   = Column(Text,     nullable=False, unique=True, index=True)
     p256dh     = Column(String,   nullable=False)              # client public key
     auth       = Column(String,   nullable=False)              # client auth secret
-    user_id    = Column(Integer,  nullable=True, index=True)   # users.id, when logged in
+    # The browser endpoint outlives the account — deleting the user unlinks the
+    # device (back to anonymous) rather than throwing the subscription away.
+    user_id    = Column(Integer,
+                        ForeignKey("users.id", ondelete="SET NULL",
+                                   name="fk_push_subscriptions_user_id"),
+                        nullable=True, index=True)             # users.id, when logged in
     user_agent = Column(String,   nullable=True)
     active     = Column(Boolean,  default=True, index=True)    # false once push service 404/410s
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -453,13 +472,37 @@ class PushSubscription(Base):
 
 
 class MandiAlert(Base):
-    """A "notify me about this mandi bhav" subscription — one row per
-    (device, commodity, state, district). Evaluated after each mandi fetch run;
-    last_notified_on + last_price dedupe so the same price is never pushed twice."""
+    """A "notify me about this mandi bhav" subscription.
+
+    Turning the bell on now requires a login, so a new row belongs to an
+    *account* (user_id) and is delivered to every active device that account
+    owns — a farmer who clears his browser or buys a new phone keeps his alert.
+    subscription_id records the device the alert was created from; it stays the
+    delivery target only for legacy rows created before the gate, which have
+    user_id NULL and are still honoured so nobody silently loses an alert they
+    opted into.
+
+    Evaluated after each mandi fetch run; last_notified_on + last_price dedupe
+    so the same price is never pushed twice."""
     __tablename__ = "mandi_alerts"
 
     id               = Column(Integer,  primary_key=True, index=True)
-    subscription_id  = Column(Integer,  nullable=False, index=True)  # push_subscriptions.id
+    subscription_id  = Column(Integer,
+                              ForeignKey("push_subscriptions.id", ondelete="CASCADE",
+                                         name="fk_mandi_alerts_subscription_id"),
+                              nullable=False, index=True)  # push_subscriptions.id
+    # CASCADE, not SET NULL: a NULL user_id means "legacy device-only alert" and
+    # keeps firing forever, so a deleted account must take its alerts with it.
+    user_id          = Column(Integer,
+                              ForeignKey("users.id", ondelete="CASCADE",
+                                         name="fk_mandi_alerts_user_id"),
+                              nullable=True,  index=True)  # users.id; NULL = legacy device-only alert
+    # Farmer's display name, copied from user_profiles.name so the raw table is
+    # readable in a DB GUI without joining. A convenience copy, NOT the source of
+    # truth — it is rewritten on every subscribe/claim, but a profile rename in
+    # between leaves it stale. For a guaranteed-current name use GET /admin/alerts,
+    # which joins user_profiles live.
+    user_name        = Column(String,   nullable=True)
     commodity        = Column(String,   nullable=False, index=True)
     state            = Column(String,   nullable=True,  index=True)
     district         = Column(String,   nullable=True,  index=True)
@@ -502,7 +545,10 @@ class BazarPost(Base):
     __tablename__ = "bazar_posts"
 
     id             = Column(Integer,  primary_key=True, index=True)
-    user_id        = Column(Integer,  nullable=False, index=True)   # users.id
+    user_id        = Column(Integer,
+                            ForeignKey("users.id", ondelete="CASCADE",
+                                       name="fk_bazar_posts_user_id"),
+                            nullable=False, index=True)             # users.id
     post_type      = Column(String,   default="sell", nullable=False)  # "sell" | "buy"
     crop           = Column(String,   nullable=True, index=True)
     text           = Column(Text,     nullable=True)
@@ -524,8 +570,14 @@ class BazarLike(Base):
     __table_args__ = (UniqueConstraint("post_id", "user_id", name="bazar_like_uidx"),)
 
     id         = Column(Integer,  primary_key=True, index=True)
-    post_id    = Column(Integer,  nullable=False, index=True)
-    user_id    = Column(Integer,  nullable=False, index=True)
+    post_id    = Column(Integer,
+                        ForeignKey("bazar_posts.id", ondelete="CASCADE",
+                                   name="fk_bazar_likes_post_id"),
+                        nullable=False, index=True)
+    user_id    = Column(Integer,
+                        ForeignKey("users.id", ondelete="CASCADE",
+                                   name="fk_bazar_likes_user_id"),
+                        nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -534,8 +586,14 @@ class BazarComment(Base):
     __tablename__ = "bazar_comments"
 
     id           = Column(Integer,  primary_key=True, index=True)
-    post_id      = Column(Integer,  nullable=False, index=True)
-    user_id      = Column(Integer,  nullable=False, index=True)
+    post_id      = Column(Integer,
+                          ForeignKey("bazar_posts.id", ondelete="CASCADE",
+                                     name="fk_bazar_comments_post_id"),
+                          nullable=False, index=True)
+    user_id      = Column(Integer,
+                          ForeignKey("users.id", ondelete="CASCADE",
+                                     name="fk_bazar_comments_user_id"),
+                          nullable=False, index=True)
     kind         = Column(String,   default="comment")  # "comment" | "offer"
     text         = Column(Text,     nullable=True)
     offer_amount = Column(Float,    nullable=True)      # set when kind == "offer"
@@ -547,8 +605,14 @@ class BazarFollow(Base):
     __table_args__ = (UniqueConstraint("follower_id", "following_id", name="bazar_follow_uidx"),)
 
     id           = Column(Integer,  primary_key=True, index=True)
-    follower_id  = Column(Integer,  nullable=False, index=True)
-    following_id = Column(Integer,  nullable=False, index=True)
+    follower_id  = Column(Integer,
+                          ForeignKey("users.id", ondelete="CASCADE",
+                                     name="fk_bazar_follows_follower_id"),
+                          nullable=False, index=True)
+    following_id = Column(Integer,
+                          ForeignKey("users.id", ondelete="CASCADE",
+                                     name="fk_bazar_follows_following_id"),
+                          nullable=False, index=True)
     created_at   = Column(DateTime, default=datetime.utcnow)
 
 
@@ -558,7 +622,12 @@ class Order(Base):
 
     id            = Column(Integer,  primary_key=True, autoincrement=True)
     tracking_code = Column(String,   nullable=False, unique=True, index=True)
-    user_id       = Column(Integer,  nullable=True, index=True)   # links to users.id (NULL for guests)
+    # SET NULL, never CASCADE — a real transaction stays in the books even if the
+    # account goes away; user_email/user_name below keep the row readable.
+    user_id       = Column(Integer,
+                           ForeignKey("users.id", ondelete="SET NULL",
+                                      name="fk_orders_user_id"),
+                           nullable=True, index=True)   # links to users.id (NULL for guests)
     user_email    = Column(String,   nullable=True)                # stored for easy lookup
     user_name     = Column(String,   nullable=True)                # stored for easy lookup
     session_id    = Column(String,   nullable=True, index=True)   # guest identifier
@@ -779,6 +848,16 @@ def _ensure_postgres_columns():
             ("quote_note", "VARCHAR"),
             ("quoted_at", "TIMESTAMP"),
         ],
+        # 🔔 mandi alerts moved from device-scoped to account-scoped when the
+        # login gate went in — existing rows keep user_id NULL and are still
+        # delivered to their original device.
+        "push_subscriptions": [
+            ("user_id", "INTEGER"),
+        ],
+        "mandi_alerts": [
+            ("user_id", "INTEGER"),
+            ("user_name", "VARCHAR"),
+        ],
     }
 
     with engine.begin() as conn:
@@ -843,6 +922,18 @@ def _ensure_postgres_columns():
             ON mandi_price_history(group_key, arrival_dt DESC);
         """))
 
+        # 🔔 alerts are now looked up by account, not just by device — both on
+        # subscribe (find this user's existing alert for the crop) and on the
+        # push pass (fan an alert out to every device the account owns).
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS mandi_alerts_user_idx
+            ON mandi_alerts(user_id) WHERE user_id IS NOT NULL;
+        """))
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS push_subs_user_active_idx
+            ON push_subscriptions(user_id) WHERE user_id IS NOT NULL;
+        """))
+
         # ── users ↔ user_profiles 1:1 guarantee ──────────────────
         # The app-level _ensure_profile() (auth.py) only runs on the OTP-verify
         # and Google-login flows. Flipping is_verified = TRUE by hand in the DB
@@ -904,10 +995,126 @@ def _ensure_postgres_columns():
         """))
 
 
+# ── REFERENTIAL INTEGRITY ────────────────────────────────────
+# (child_table, child_column, parent_table, parent_column, ON DELETE rule)
+#
+# Every one of these columns is documented as "users.id" / "push_subscriptions.id"
+# in the models above, but until now not one of them was actually declared as a
+# foreign key — the schema had zero. Postgres therefore never checked that the id
+# resolved, and never cleaned up when the parent row went away, so deleting an
+# account by hand in the Neon GUI left its profile, crops, alerts, cart and posts
+# behind pointing at an id that no longer exists. (That is how user_profiles ended
+# up with a "Gate Probe" row for a users.id 2 that isn't there.) Worse, the debris
+# is *claimable*: reset or roll back the users id sequence and the next signup
+# silently inherits the previous owner's profile, alerts and order history.
+#
+# CASCADE where the row is meaningless without its owner; SET NULL where the row
+# is a record worth keeping (orders, chat log) or a device that outlives the
+# account (push endpoint). Deliberately NOT deleting orders — a real transaction
+# stays in the books, just detached; user_email/user_name on the row keep it
+# readable.
+#
+# Order matters: a parent is cleaned before the children that hang off it, so a
+# bazar_post removed with its owner takes its likes and comments with it.
+_FOREIGN_KEYS = [
+    ("user_profiles",      "user_id",         "users",              "id", "CASCADE"),
+    ("user_crops",         "user_id",         "users",              "id", "CASCADE"),
+    ("carts",              "user_id",         "users",              "id", "CASCADE"),
+    ("chat_history",       "user_id",         "users",              "id", "SET NULL"),
+    ("orders",             "user_id",         "users",              "id", "SET NULL"),
+    ("push_subscriptions", "user_id",         "users",              "id", "SET NULL"),
+    ("mandi_alerts",       "user_id",         "users",              "id", "CASCADE"),
+    ("mandi_alerts",       "subscription_id", "push_subscriptions", "id", "CASCADE"),
+    ("bazar_posts",        "user_id",         "users",              "id", "CASCADE"),
+    ("bazar_likes",        "user_id",         "users",              "id", "CASCADE"),
+    ("bazar_likes",        "post_id",         "bazar_posts",        "id", "CASCADE"),
+    ("bazar_comments",     "user_id",         "users",              "id", "CASCADE"),
+    ("bazar_comments",     "post_id",         "bazar_posts",        "id", "CASCADE"),
+    ("bazar_follows",      "follower_id",     "users",              "id", "CASCADE"),
+    ("bazar_follows",      "following_id",    "users",              "id", "CASCADE"),
+]
+
+
+def _has_column(conn, table: str, column: str) -> bool:
+    return bool(conn.execute(text("""
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = :t AND column_name = :c
+    """), {"t": table, "c": column}).scalar())
+
+
+def _ensure_foreign_keys():
+    """Install the FKs in _FOREIGN_KEYS, sweeping pre-existing orphans first.
+
+    ADD CONSTRAINT refuses to run while a single violating row exists, so each
+    pass applies its own ON DELETE rule by hand to rows that are already
+    orphaned — exactly what Postgres would have done had the constraint been
+    there — and only then installs it.
+
+    Idempotent and self-guarding: missing tables/columns are skipped, so are
+    constraints already present, which makes this a no-op on every startup after
+    the first. Each FK runs in its own transaction so one unexpected failure
+    can't roll back the others.
+    """
+    if engine.dialect.name != "postgresql":
+        return
+
+    for child, col, parent, pcol, on_delete in _FOREIGN_KEYS:
+        name = f"fk_{child}_{col}"
+        try:
+            with engine.begin() as conn:
+                if not (_has_column(conn, child, col) and _has_column(conn, parent, pcol)):
+                    continue
+                # Matched by (child column → parent table), not by name: on a
+                # brand-new DB create_all() has already emitted the constraint
+                # from the model, and Postgres would happily accept a second,
+                # identical one under a different name.
+                exists = conn.execute(text("""
+                    SELECT 1
+                    FROM pg_constraint c
+                    JOIN pg_attribute a
+                      ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+                    WHERE c.contype  = 'f'
+                      AND c.conrelid  = to_regclass('public.' || :child)
+                      AND c.confrelid = to_regclass('public.' || :parent)
+                      AND array_length(c.conkey, 1) = 1
+                      AND a.attname   = :col
+                """), {"child": child, "parent": parent, "col": col}).scalar()
+                if exists:
+                    continue
+
+                orphan_filter = (
+                    f'WHERE c."{col}" IS NOT NULL '
+                    f'AND NOT EXISTS (SELECT 1 FROM "{parent}" p WHERE p."{pcol}" = c."{col}")'
+                )
+                if on_delete == "CASCADE":
+                    swept = conn.execute(text(
+                        f'DELETE FROM "{child}" AS c {orphan_filter}'
+                    )).rowcount
+                    action = "deleted"
+                else:
+                    swept = conn.execute(text(
+                        f'UPDATE "{child}" AS c SET "{col}" = NULL {orphan_filter}'
+                    )).rowcount
+                    action = "detached"
+                if swept:
+                    print(f"🧹 {child}.{col}: {action} {swept} orphan row(s) "
+                          f"pointing at a missing {parent}.{pcol}")
+
+                conn.execute(text(
+                    f'ALTER TABLE "{child}" ADD CONSTRAINT "{name}" '
+                    f'FOREIGN KEY ("{col}") REFERENCES "{parent}"("{pcol}") '
+                    f'ON DELETE {on_delete}'
+                ))
+                print(f"🔗 {name} → {parent}.{pcol} ON DELETE {on_delete}")
+        except Exception as e:
+            print(f"⚠️  Foreign key {name} skipped: {e}")
+
+
 def init_db():
     try:
         Base.metadata.create_all(bind=engine)
         _ensure_postgres_columns()
+        _ensure_foreign_keys()
         print("✅ Database tables created successfully!")
     except Exception as e:
         print(f"⚠️  Database error: {e}")

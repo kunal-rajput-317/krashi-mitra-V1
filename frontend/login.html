@@ -963,6 +963,52 @@
   function setToken(t) { localStorage.setItem("krishi_token", t); }
 
   // ══════════════════════════════════════
+  // RETURN-TO-ACTION  (?next= / ?do=)
+  // ══════════════════════════════════════
+  // Ordering and 🔔 भाव अलर्ट send people here mid-task. Landing them on
+  // profile.html afterwards would make them navigate back and find the button
+  // again, which is where most of them would give up — so login returns to the
+  // page they came from, carrying ?do= so it can finish the job itself.
+
+  /** The ?next= destination, or profile.html. */
+  function nextTarget() {
+    const params = new URLSearchParams(location.search);
+    const next   = params.get("next") || "";
+    // Same-origin paths only. "//evil.com" and "https://evil.com" are both
+    // valid values of a redirect param and both leave our site — a login page
+    // that forwards anywhere on request is a phishing tool.
+    if (!next.startsWith("/") || next.startsWith("//")) return "profile.html";
+    const todo = params.get("do") || "";
+    if (!todo) return next;
+    return next + (next.includes("?") ? "&" : "?") + "do=" + encodeURIComponent(todo);
+  }
+
+  /** Hand this browser's guest work (orders, alerts) to the account just signed
+   *  into, then go wherever we were headed. Never blocks the redirect — a failed
+   *  claim costs some history, a hang costs the login. */
+  async function finishLogin() {
+    const dest = nextTarget();
+    try {
+      const body = { session_id: localStorage.getItem("km_session_id") || null };
+      const reg  = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+      const sub  = reg && reg.pushManager && await reg.pushManager.getSubscription();
+      if (sub) body.endpoint = sub.endpoint;
+
+      if (body.session_id || body.endpoint) {
+        await fetch(`${API}/auth/claim-guest`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json",
+                     "Authorization": `Bearer ${getToken()}` },
+          body:    JSON.stringify(body),
+        });
+      }
+    } catch (e) {
+      console.warn("guest claim skipped:", e);
+    }
+    window.location.href = dest;
+  }
+
+  // ══════════════════════════════════════
   // LOGIN
   // ══════════════════════════════════════
   async function doLogin() {
@@ -997,9 +1043,7 @@
         localStorage.removeItem('km_cooldown_until');
         localStorage.removeItem('km_cooldown_reason');
         authOk("login-success", "✅ Login हो गया! Redirecting...");
-        setTimeout(() => {
-          window.location.href = "profile.html";
-        }, 800);
+        setTimeout(finishLogin, 800);
       } else if (!res.ok) {
         // Server REJECTED the request itself (422 bad email format, 5xx crash) —
         // this is NOT a wrong-password result, so don't blame the password, don't
@@ -1279,7 +1323,7 @@
       if (data.success && data.data?.token) {
         setToken(data.data.token);
         authOk("login-success", "✅ Google से Login हो गया! Redirecting...");
-        setTimeout(() => { window.location.href = "profile.html"; }, 800);
+        setTimeout(finishLogin, 800);
       } else {
         authErr("login-error", data.message || "Google login failed। दोबारा try करें।");
         setBtnLoading("login-btn", false, "Login करें →");
@@ -1326,7 +1370,10 @@
   // ══════════════════════════════════════
   window.addEventListener("load", () => {
     if (getToken()) {
-      window.location.href = "profile.html";
+      // Already signed in and sent here by a gate anyway (expired-token race, or
+      // a second tab that logged in) — honour ?next= rather than dead-ending on
+      // profile.html with the original task abandoned.
+      window.location.href = nextTarget();
     }
     // Restore cooldown if it was active before refresh
     const savedCooldownUntil = parseInt(localStorage.getItem('km_cooldown_until') || '0', 10);

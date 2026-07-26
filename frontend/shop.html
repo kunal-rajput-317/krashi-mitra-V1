@@ -4288,29 +4288,33 @@
   const API_BASE = window.KRASHIMITRA_API_BASE;
 
   // Log order to NeonDB via backend API (zero CORS issues)
+  // callback(trackingCode, error) — error is 'auth' when the server rejected the
+  // order for want of a login, so the caller can re-open the gate instead of
+  // telling the farmer his pre-book went through when nothing was saved.
   function logOrderToBackend(orderData, callback) {
     const token = localStorage.getItem('krishi_token');
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
+    let status = 0;
     fetch(`${API_BASE}/order/log`, {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(orderData)
     })
-    .then(r => r.json())
+    .then(r => { status = r.status; return r.json().catch(() => ({})); })
     .then(data => {
       if (data.success) {
         console.log('Order saved ✓ Tracking:', data.tracking_code);
-        if (callback) callback(data.tracking_code);
+        if (callback) callback(data.tracking_code, null);
       } else {
-        console.error('Order save failed:', data);
-        if (callback) callback(null);
+        console.error('Order save failed:', status, data);
+        if (callback) callback(null, status === 401 ? 'auth' : 'failed');
       }
     })
     .catch(err => {
       console.error('Order API error:', err);
-      if (callback) callback(null);
+      if (callback) callback(null, 'network');
     });
   }
 
@@ -4617,7 +4621,43 @@
     if (pid !== null) openWAOrder(pid);
   }
 
+  // Placing a pre-book needs an account — the quote comes back hours later, and
+  // a guest order was findable only through a localStorage session_id. Gated
+  // here rather than at the two callers, and before the form opens rather than
+  // after: nobody should type name, phone and pincode only to be sent to login.
+  // Amazon/Flipkart stay open — those are affiliate hand-offs that create no
+  // order for us to answer.
+  const PENDING_ORDER_KEY = 'km_pending_order';
+
+  function requireLoginForOrder(productId) {
+    if (!window.KMRequireLogin) return true;   // gate script unavailable — don't block a sale
+    const ok = window.KMRequireLogin({
+      title: 'ऑर्डर के लिए लॉगिन करें',
+      text:  'दाम तैयार होते ही सूचना आपके खाते पर आएगी — फ़ोन बदलने या ब्राउज़र साफ़ करने पर भी आपका ऑर्डर सुरक्षित रहेगा।',
+      resume: 'shop-order'
+    });
+    // Which product he was buying isn't in the URL, so ?next= alone would drop
+    // him on a shop full of tiles with no idea which one he'd tapped.
+    if (!ok && productId != null) {
+      try { localStorage.setItem(PENDING_ORDER_KEY, String(productId)); } catch (e) {}
+    }
+    return ok;
+  }
+
+  // Back from login with ?do=shop-order — re-open the form for the product he
+  // was actually on. Consumed once; a stale id is simply ignored.
+  function resumePendingOrder() {
+    if (!window.KMTakeResume || window.KMTakeResume() !== 'shop-order') return;
+    let pid = null;
+    try {
+      pid = parseInt(localStorage.getItem(PENDING_ORDER_KEY), 10);
+      localStorage.removeItem(PENDING_ORDER_KEY);
+    } catch (e) { return; }
+    if (!isNaN(pid) && PRODUCTS.find(x => x.id === pid)) openWAOrder(pid);
+  }
+
   function openWAOrder(productId) {
+    if (!requireLoginForOrder(productId)) return;
     _waProductId = productId;
     _waQty = 1;
     const p = PRODUCTS.find(x => x.id === productId);
@@ -4740,15 +4780,25 @@ ${tkLine}
       village_district: village || null,
       source:           'prebook',
       session_id:       isGuest ? userId : undefined
-    }, (trackingCode) => {
+    }, (trackingCode, err) => {
       document.getElementById('wa-loading-overlay').classList.remove('active');
+
+      // Token expired while the form was open. Nothing was saved, so don't hand
+      // him a WhatsApp draft that implies it was — ask for the login again.
+      if (err === 'auth') {
+        requireLoginForOrder();
+        return;
+      }
+
       const msg = buildMsg(trackingCode);
       const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, '_blank');
       if (trackingCode) {
         showToast(`✅ प्री-बुक हो गई! दाम तैयार होते ही 🔔 पर आएगा · ${trackingCode}`, 4500);
       } else {
-        showToast('✅ प्री-बुक अनुरोध भेज दिया गया', 2500);
+        // The WhatsApp message still reaches us, but it has no tracking code and
+        // won't show up in 🔔 — say that plainly instead of a green tick.
+        showToast('⚠️ ऑर्डर सेव नहीं हुआ — WhatsApp पर भेज दिया है, वहीं बात करें', 4500);
       }
     });
   }
@@ -5035,6 +5085,9 @@ ${tkLine}
     if (urlParams.get('orders')) {
       setTimeout(openOrdersModal, 300);
     }
+
+    // Handle ?do=shop-order — just logged in mid-purchase, pick the form back up
+    setTimeout(resumePendingOrder, 300);
 
     // Pre-warm fertilizer API in background when fertilizer category active
     if (catParam === 'fertilizer') fetchFertData();

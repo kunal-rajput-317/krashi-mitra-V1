@@ -71,6 +71,8 @@ CORE = [
     ("khoj.html",           "/khoj",            0.7, "weekly", ("hi", "en", "kn"), ()),
     ("map.html",            "/map",             0.7, "weekly", ("hi", "en"),
      ("/images/up-ka-naksha-district-map.png",)),
+    ("rajasthan-ka-naksha.html", "/rajasthan-ka-naksha", 0.7, "weekly", ("hi", "en"),
+     ("/images/rajasthan-ka-naksha-district-map.png",)),
     ("help.html",           "/help",            0.6, "weekly", ("hi",), ()),
     ("about.html",          "/about",           0.4, "yearly", (), ()),
     ("privacy-policy.html", "/privacy-policy",  0.3, "yearly", (), ()),

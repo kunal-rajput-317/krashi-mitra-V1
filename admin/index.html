@@ -1553,6 +1553,42 @@ body {
           </div>
         </div>
 
+        <!-- 🔔 Who is subscribed to which mandi. Names/phones are joined live
+             from user_profiles, so a farmer who renames himself shows correctly
+             here even though mandi_alerts.user_name still holds the old copy. -->
+        <div class="table-container" style="margin-top:20px;">
+          <div class="panel-header" style="flex-wrap:wrap; gap:10px;">
+            <span class="panel-title">🔔 Bhav Alert Subscribers</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <label class="text-muted text-mono" style="font-size:12px; display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="alerts-show-off" onchange="loadAlerts()"> show switched-off
+              </label>
+              <button class="btn btn-secondary" onclick="loadAlerts()">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="alerts-summary" class="text-muted text-mono" style="font-size:12px; margin-bottom:10px;">—</div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>User ID</th>
+                    <th>Name (किसान)</th>
+                    <th>Contact</th>
+                    <th>Commodity (फसल)</th>
+                    <th>Mandi</th>
+                    <th>Devices</th>
+                    <th>Last Pushed</th>
+                  </tr>
+                </thead>
+                <tbody id="alerts-table-body">
+                  <tr><td colspan="7" class="text-muted text-mono" style="text-align:center;">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ─────────────── PAGE: WEATHER PAGE ─────────────── -->
@@ -2590,7 +2626,7 @@ function switchPage(pageId, el) {
     loadFilesList();
     loadSettings();
   }
-  if (pageId === 'mandi-analysis') fetchMandiPrices();
+  if (pageId === 'mandi-analysis') { fetchMandiPrices(); loadAlerts(); }
   if (pageId === 'weather-panel') { loadWeatherStats(); fetchWeatherForecast(); }
   if (pageId === 'shop-panel') {
     loadHeatmapData();
@@ -3573,6 +3609,68 @@ function handleOrderAction(trackingCode, value, quotePayload, el) {
 }
 
 // ── Preorders Table Loader ──────────────────────────────────
+// ── 🔔 Bhav alert subscribers ────────────────────────────────
+// Name/phone come from the live join in GET /admin/alerts, not from the
+// mandi_alerts.user_name copy — so this table is right even if a farmer renamed
+// himself after subscribing.
+async function loadAlerts() {
+  const tbody = document.getElementById('alerts-table-body');
+  const summary = document.getElementById('alerts-summary');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7"><div class="km-loader"><span class="km-spinner"></span> Loading alerts…</div></td></tr>';
+
+  const showOff = document.getElementById('alerts-show-off')?.checked;
+  try {
+    const r = await fetch(`${API}/admin/alerts?limit=300&active=${showOff ? 'false' : 'true'}`,
+                          { headers: getAuthHeader() });
+    const data = await r.json();
+    if (!data.success) {
+      tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);text-align:center;">${escapeHtml(data.message || 'Load failed')}</td></tr>`;
+      return;
+    }
+
+    const rows = data.alerts || [];
+    const preGate = rows.length - data.with_account;
+    summary.textContent = `${rows.length} alert${rows.length === 1 ? '' : 's'} · `
+      + `${data.with_account} with an account`
+      + (preGate ? ` · ${preGate} from before the login gate (no account — device only)` : '');
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-mono" style="text-align:center;">No bhav alerts yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(a => {
+      const mandi = [a.district, a.state].filter(Boolean).join(', ') || '—';
+      const pushed = a.last_notified_on
+        ? new Date(a.last_notified_on).toLocaleDateString('en-IN', {day:'2-digit', month:'short'})
+          + (a.last_price ? ` · ₹${escapeHtml(a.last_price)}` : '')
+        : 'never';
+      // A subscriber with zero live endpoints gets nothing — surface it rather
+      // than let it look like a healthy alert.
+      const devices = a.devices
+        ? `${a.devices}`
+        : '<span style="color:var(--danger);">0 — unreachable</span>';
+      const who = a.pre_gate
+        ? '<span class="text-muted">— pre-gate, no account</span>'
+        : escapeHtml(a.user_name || '(no name on profile)');
+      const contact = a.pre_gate ? '—'
+        : escapeHtml([a.phone, a.user_email].filter(Boolean).join(' · ') || '—');
+      return `<tr${a.active ? '' : ' style="opacity:.5;"'}>
+        <td class="text-mono">${a.user_id ?? '—'}</td>
+        <td>${who}${a.user_place ? `<div class="text-muted text-mono" style="font-size:11px;">${escapeHtml(a.user_place)}</div>` : ''}</td>
+        <td class="text-mono" style="font-size:12px;">${contact}</td>
+        <td>${escapeHtml(a.commodity || '—')}</td>
+        <td>${escapeHtml(mandi)}</td>
+        <td class="text-mono">${devices}</td>
+        <td class="text-mono" style="font-size:12px;">${pushed}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);text-align:center;">${escapeHtml(String(e))}</td></tr>`;
+  }
+}
+
 async function loadPreordersTable(filterStatus = '') {
   const tbody = document.getElementById('preorders-table-body');
   if (!tbody) return;

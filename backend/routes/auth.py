@@ -32,7 +32,9 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
 
-from backend.database.db import User, UserProfile, get_db
+from backend.database.db import (
+    MandiAlert, Order, PushSubscription, User, UserProfile, get_db,
+)
 from backend.utils.auth_utils import (
     hash_password,
     verify_password,
@@ -44,6 +46,7 @@ from backend.utils.auth_utils import (
     create_access_token,
     get_current_user,
 )
+from backend.routes.alerts import display_name
 from backend.utils.security import rate_limit
 
 logger = logging.getLogger(__name__)
@@ -545,6 +548,83 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
     except Exception as e:
         _log_error("Google login", e)
         raise HTTPException(status_code=500, detail=_GENERIC_500)
+
+
+# ── POST /auth/claim-guest ───────────────────────────────────
+
+class ClaimGuestRequest(BaseModel):
+    endpoint:   Optional[str] = None   # this browser's Web Push endpoint
+    session_id: Optional[str] = None   # this browser's guest order id
+
+
+@router.post("/auth/claim-guest")
+def claim_guest(
+    body:         ClaimGuestRequest,
+    db:           Session = Depends(get_db),
+    current_user: dict    = Depends(get_current_user),
+):
+    """Adopt the work this browser did before it had an account.
+
+    Orders and 🔔 alerts both require a login now, but plenty of farmers already
+    pre-booked or turned a bell on as a guest. Those rows are reachable only via
+    a localStorage session_id or a push endpoint — one cache-clear from being
+    orphaned forever. Called right after a successful login, this walks them
+    over to the account so history and alerts survive.
+
+    Only rows that belong to nobody (user_id IS NULL) are claimed, so this can
+    never take an order or an alert away from another user."""
+    uid = current_user["user_id"]
+    claimed = {"orders": 0, "alerts": 0, "devices": 0}
+
+    session_id = (body.session_id or "").strip()
+    if session_id:
+        user = db.query(User).filter(User.id == uid).first()
+        claimed["orders"] = (
+            db.query(Order)
+              .filter(Order.session_id == session_id, Order.user_id.is_(None))
+              .update({"user_id":    uid,
+                       "is_guest":   False,
+                       "session_id": None,
+                       "user_email": user.email if user else None,
+                       "user_name":  user.name  if user else None},
+                      synchronize_session=False)
+        )
+
+    endpoint = (body.endpoint or "").strip()
+    if endpoint:
+        sub = (db.query(PushSubscription)
+                 .filter(PushSubscription.endpoint == endpoint)
+                 .first())
+        if sub and sub.user_id is None:
+            sub.user_id    = uid
+            sub.updated_at = datetime.utcnow()
+            claimed["devices"] = 1
+        if sub:
+            # Targets the account already watches from another phone. Claiming
+            # blindly would leave two active rows for one crop+mandi and push
+            # the same price twice, so a duplicate is retired instead of moved.
+            owned = {
+                (a.commodity, a.state, a.district)
+                for a in db.query(MandiAlert).filter(MandiAlert.user_id == uid,
+                                                     MandiAlert.active.is_(True))
+            }
+            now  = datetime.utcnow()
+            name = display_name(db, uid)
+            for alert in db.query(MandiAlert).filter(
+                    MandiAlert.subscription_id == sub.id,
+                    MandiAlert.user_id.is_(None)):
+                target = (alert.commodity, alert.state, alert.district)
+                if target in owned:
+                    alert.active = False
+                else:
+                    alert.user_id   = uid
+                    alert.user_name = name
+                    owned.add(target)
+                    claimed["alerts"] += 1
+                alert.updated_at = now
+
+    db.commit()
+    return {"success": True, "message": "", "data": claimed}
 
 
 # ── /profile and /me ─────────────────────────────────────────

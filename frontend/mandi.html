@@ -1534,6 +1534,90 @@
     }
 
     /* ══════════════════════════════════════
+       /bhav CROSS-SELL POPUP
+       Same bottom-sheet-on-mobile / centred-card-on-desktop
+       shape as the detail sheet above, so it reads as the
+       same product rather than an ad.
+    ══════════════════════════════════════ */
+    .bhav-promo-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      z-index: 3600; align-items: flex-end; justify-content: center;
+    }
+    .bhav-promo-overlay.open { display: flex; }
+    .bhav-promo-sheet {
+      background: var(--white); border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 540px; position: relative;
+      max-height: 92vh; overflow-y: auto;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.22);
+      animation: sheet-up 0.32s cubic-bezier(0.34,1.1,0.64,1);
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    .bhav-promo-close {
+      position: absolute; top: 12px; right: 14px;
+      background: rgba(255,255,255,0.22); border: none; border-radius: 50%;
+      width: 32px; height: 32px; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; transition: background 0.15s; z-index: 2;
+    }
+    .bhav-promo-close:hover { background: rgba(255,255,255,0.36); }
+    .bhav-promo-hero {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+      color: #fff; padding: 26px 22px 22px; text-align: center;
+      border-radius: 24px 24px 0 0;
+    }
+    .bhav-promo-badge {
+      display: inline-block; background: var(--amber); color: var(--green-dark);
+      font-size: 10.5px; font-weight: 800; letter-spacing: 0.4px;
+      padding: 4px 11px; border-radius: 20px; margin-bottom: 11px;
+    }
+    .bhav-promo-title {
+      font-family: 'Noto Serif Devanagari', 'DM Sans', serif;
+      font-size: 21px; font-weight: 800; line-height: 1.35; margin-bottom: 7px;
+    }
+    .bhav-promo-sub {
+      font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.86);
+      max-width: 400px; margin: 0 auto;
+    }
+    .bhav-promo-body { padding: 18px 22px 22px; }
+    .bhav-promo-list { list-style: none; margin: 0 0 18px; padding: 0; }
+    .bhav-promo-list li {
+      display: flex; align-items: flex-start; gap: 11px;
+      font-size: 13.5px; line-height: 1.55; color: var(--text-mid);
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .bhav-promo-list li:last-child { border-bottom: none; }
+    .bhav-promo-list .bp-ico {
+      flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+      background: var(--green-pale); display: flex;
+      align-items: center; justify-content: center; font-size: 15px;
+    }
+    .bhav-promo-list b { color: var(--text-dark); font-weight: 700; }
+    .bhav-promo-cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px 18px; border-radius: var(--radius);
+      background: var(--green-mid); color: #fff; text-decoration: none;
+      font-family: inherit; font-size: 15px; font-weight: 800;
+      border: none; cursor: pointer; transition: background 0.15s, transform 0.12s;
+    }
+    .bhav-promo-cta:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .bhav-promo-dismiss {
+      display: block; width: 100%; margin-top: 10px; padding: 11px;
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 700; color: var(--text-light);
+    }
+    .bhav-promo-dismiss:hover { color: var(--text-mid); }
+
+    @media (min-width: 1025px) {
+      .bhav-promo-overlay { align-items: center; }
+      .bhav-promo-sheet {
+        border-radius: 20px; max-width: 460px; padding-bottom: 0;
+        animation: wa-pop 0.28s cubic-bezier(0.34,1.4,0.64,1);
+      }
+      .bhav-promo-hero { border-radius: 20px 20px 0 0; }
+    }
+
+    /* ══════════════════════════════════════
        EMPTY / LOADING STATES
     ══════════════════════════════════════ */
     .shop-empty {
@@ -2450,6 +2534,46 @@
   </div>
 </div>
 
+<!-- ══ /bhav CROSS-SELL POPUP ══
+     Shown on every load (see BHAV_PROMO_DELAY_MS). mandi.html is the app
+     view; /bhav is the deeper district-level tree — this is the bridge. -->
+<div class="bhav-promo-overlay" id="bhav-promo-modal" role="dialog" aria-modal="true"
+     aria-labelledby="bhav-promo-title" onclick="if(event.target===this)closeBhavPromo()">
+  <div class="bhav-promo-sheet">
+    <button class="bhav-promo-close" onclick="closeBhavPromo()" aria-label="बंद करें">✕</button>
+    <div class="bhav-promo-hero">
+      <span class="bhav-promo-badge" data-t="bhav_promo_badge">आज का भाव</span>
+      <div class="bhav-promo-title" id="bhav-promo-title" data-t="bhav_promo_title">मंडी के भाव देखें — पूरी जानकारी</div>
+      <div class="bhav-promo-sub" data-t="bhav_promo_sub">अपनी फसल का जिलेवार भाव, भाव का रुझान और पास की सबसे ज्यादा भाव वाली मंडी — सब एक जगह।</div>
+    </div>
+    <div class="bhav-promo-body">
+      <ul class="bhav-promo-list">
+        <li>
+          <span class="bp-ico" aria-hidden="true">🏪</span>
+          <span><b data-t="bhav_promo_f1_t">जिलेवार भाव</b><br>
+                <span data-t="bhav_promo_f1_d">हर राज्य और जिले की मंडी का अलग-अलग भाव</span></span>
+        </li>
+        <li>
+          <span class="bp-ico" aria-hidden="true">🧮</span>
+          <span><b data-t="bhav_promo_f2_t">नेट भाव कैलकुलेटर</b><br>
+                <span data-t="bhav_promo_f2_d">भाड़ा घटाकर देखें कौन सी मंडी में असल में ज्यादा मिलेगा</span></span>
+        </li>
+        <li>
+          <span class="bp-ico" aria-hidden="true">📈</span>
+          <span><b data-t="bhav_promo_f3_t">रुझान और बेहतर मंडी</b><br>
+                <span data-t="bhav_promo_f3_d">पिछले दिनों का रुझान और पास की ज्यादा भाव वाली मंडी</span></span>
+        </li>
+      </ul>
+      <a class="bhav-promo-cta" id="bhav-promo-cta" href="/bhav">
+        <span data-t="bhav_promo_cta">सभी मंडी भाव देखें</span> <span aria-hidden="true">→</span>
+      </a>
+      <button class="bhav-promo-dismiss" data-t="bhav_promo_dismiss" onclick="closeBhavPromo()">
+        अभी नहीं, यहीं देखता हूँ
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MANDI DETAIL BOTTOM SHEET ══ -->
 <div class="mandi-detail-overlay" id="mandi-detail-modal" onclick="if(event.target===this)closeMandiDetail()">
   <div class="mandi-detail-sheet">
@@ -2581,6 +2705,17 @@
       share_btn:        " WhatsApp पर शेयर करें",
       modal_price_lbl:  "Modal भाव",
       per_quintal_long: "प्रति क्विंटल",
+      bhav_promo_badge:   "आज का भाव",
+      bhav_promo_title:   "मंडी के भाव देखें — पूरी जानकारी",
+      bhav_promo_sub:     "अपनी फसल का जिलेवार भाव, भाव का रुझान और पास की सबसे ज्यादा भाव वाली मंडी — सब एक जगह।",
+      bhav_promo_f1_t:    "जिलेवार भाव",
+      bhav_promo_f1_d:    "हर राज्य और जिले की मंडी का अलग-अलग भाव",
+      bhav_promo_f2_t:    "नेट भाव कैलकुलेटर",
+      bhav_promo_f2_d:    "भाड़ा घटाकर देखें कौन सी मंडी में असल में ज्यादा मिलेगा",
+      bhav_promo_f3_t:    "रुझान और बेहतर मंडी",
+      bhav_promo_f3_d:    "पिछले दिनों का रुझान और पास की ज्यादा भाव वाली मंडी",
+      bhav_promo_cta:     "सभी मंडी भाव देखें",
+      bhav_promo_dismiss: "अभी नहीं, यहीं देखता हूँ",
       price_trend:      "मूल्य रुझान",
       trend_loading:    "रुझान लोड हो रहा है...",
       trend_none:       "अभी पिछला डेटा उपलब्ध नहीं। रुझान कुछ दिनों में दिखेगा।",
@@ -2648,6 +2783,17 @@
       share_btn:        "💬 Share on WhatsApp",
       modal_price_lbl:  "Modal Price",
       per_quintal_long: "per quintal",
+      bhav_promo_badge:   "Today's rates",
+      bhav_promo_title:   "See mandi bhav — full details",
+      bhav_promo_sub:     "District-wise rates for your crop, price trends and the nearby mandi paying the most — all in one place.",
+      bhav_promo_f1_t:    "District-wise rates",
+      bhav_promo_f1_d:    "Separate prices for every state and district mandi",
+      bhav_promo_f2_t:    "Net price calculator",
+      bhav_promo_f2_d:    "Subtract transport cost to see which mandi actually pays more",
+      bhav_promo_f3_t:    "Trends & better mandis",
+      bhav_promo_f3_d:    "Recent price trend plus nearby mandis paying higher",
+      bhav_promo_cta:     "See all mandi prices",
+      bhav_promo_dismiss: "Not now, I'll browse here",
       price_trend:      "Price Trend",
       trend_loading:    "Loading trend...",
       trend_none:       "No previous data yet. The trend will appear over the next few days.",
@@ -2715,6 +2861,17 @@
       share_btn:        " WhatsApp ನಲ್ಲಿ ಹಂಚಿ",
       modal_price_lbl:  "Modal ಬೆಲೆ",
       per_quintal_long: "ಪ್ರತಿ ಕ್ವಿಂಟಲ್",
+      bhav_promo_badge:   "ಇಂದಿನ ಬೆಲೆ",
+      bhav_promo_title:   "ಮಂಡಿ ಬೆಲೆ ನೋಡಿ — ಪೂರ್ಣ ಮಾಹಿತಿ",
+      bhav_promo_sub:     "ನಿಮ್ಮ ಬೆಳೆಯ ಜಿಲ್ಲಾವಾರು ಬೆಲೆ, ಬೆಲೆ ಪ್ರವೃತ್ತಿ ಮತ್ತು ಹತ್ತಿರದ ಅತಿ ಹೆಚ್ಚು ಬೆಲೆ ಕೊಡುವ ಮಂಡಿ — ಎಲ್ಲವೂ ಒಂದೇ ಕಡೆ.",
+      bhav_promo_f1_t:    "ಜಿಲ್ಲಾವಾರು ಬೆಲೆ",
+      bhav_promo_f1_d:    "ಪ್ರತಿ ರಾಜ್ಯ ಮತ್ತು ಜಿಲ್ಲೆಯ ಮಂಡಿಗೆ ಪ್ರತ್ಯೇಕ ಬೆಲೆ",
+      bhav_promo_f2_t:    "ನಿವ್ವಳ ಬೆಲೆ ಕ್ಯಾಲ್ಕುಲೇಟರ್",
+      bhav_promo_f2_d:    "ಸಾಗಾಣಿಕೆ ವೆಚ್ಚ ಕಳೆದು ಯಾವ ಮಂಡಿ ನಿಜವಾಗಿ ಹೆಚ್ಚು ಕೊಡುತ್ತದೆ ನೋಡಿ",
+      bhav_promo_f3_t:    "ಪ್ರವೃತ್ತಿ ಮತ್ತು ಉತ್ತಮ ಮಂಡಿ",
+      bhav_promo_f3_d:    "ಇತ್ತೀಚಿನ ಬೆಲೆ ಪ್ರವೃತ್ತಿ ಮತ್ತು ಹತ್ತಿರದ ಹೆಚ್ಚು ಬೆಲೆಯ ಮಂಡಿಗಳು",
+      bhav_promo_cta:     "ಎಲ್ಲಾ ಮಂಡಿ ಬೆಲೆ ನೋಡಿ",
+      bhav_promo_dismiss: "ಈಗ ಬೇಡ, ಇಲ್ಲೇ ನೋಡುತ್ತೇನೆ",
       price_trend:      "ಬೆಲೆ ಪ್ರವೃತ್ತಿ",
       trend_loading:    "ಪ್ರವೃತ್ತಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
       trend_none:       "ಹಿಂದಿನ ಡೇಟಾ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ. ಕೆಲವು ದಿನಗಳಲ್ಲಿ ಪ್ರವೃತ್ತಿ ಕಾಣಿಸುತ್ತದೆ.",
@@ -4464,6 +4621,66 @@
     document.body.style.overflow = '';
   }
 
+  // ══ /bhav CROSS-SELL POPUP ══
+  // Fires on every page load — mandi.html is the browsing app, /bhav is the
+  // deeper per-district tree, and nothing else on this page pushes users there
+  // except passive link farms. The delay lets the page paint first so it reads
+  // as a prompt rather than an interstitial, and it deliberately clears
+  // location.js's ~1500ms opt-in card so we can see whether that card claimed
+  // this load (see the km-loc-card check in openBhavPromo).
+  const BHAV_PROMO_DELAY_MS = 2200;
+
+  function openBhavPromo() {
+    const modal = document.getElementById('bhav-promo-modal');
+    if (!modal) return;
+    // Never stack on top of a sheet the user opened themselves.
+    const detail = document.getElementById('mandi-detail-modal');
+    const orders = document.getElementById('orders-modal');
+    if ((detail && detail.classList.contains('open')) ||
+        (orders && orders.classList.contains('open'))) return;
+
+    // Yield to location.js's opt-in card. It fires at ~1500ms with
+    // z-index 99998, so it would otherwise land on top of this sheet and
+    // cover the CTA. That card is a once-ever ask (localStorage km_geo)
+    // while this popup runs on every load, so waiting costs us nothing —
+    // location.js removes the node on answer/dismiss, which is our cue.
+    const locCard = document.getElementById('km-loc-card');
+    if (locCard) {
+      const obs = new MutationObserver(() => {
+        if (document.getElementById('km-loc-card')) return;
+        obs.disconnect();
+        setTimeout(openBhavPromo, 500);
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+      return;
+    }
+
+    // CTA stays a plain /bhav link — that tree ignores ?lang= (no query-param
+    // handling in routes/bhav.py), so adding one would only mint a dead URL
+    // variant on a page set that is heavily canonical-tuned.
+    const cta = document.getElementById('bhav-promo-cta');
+
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('km-popup-open');  // hides bottom nav + FABs
+    if (cta) cta.focus({ preventScroll: true });
+  }
+
+  function closeBhavPromo() {
+    const modal = document.getElementById('bhav-promo-modal');
+    if (!modal || !modal.classList.contains('open')) return;
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    document.body.classList.remove('km-popup-open');
+  }
+
+  // Its own listener rather than a tail call inside the main init handler —
+  // that one returns early on the ?tab=state and ?commodity= deep-link paths,
+  // which would silently skip the popup for exactly those visitors.
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(openBhavPromo, BHAV_PROMO_DELAY_MS);
+  });
+
   // Header redesign helpers
   function toggleSidebarMenu() {
     const drawer = document.getElementById('sidebar-drawer-overlay');
@@ -4796,7 +5013,9 @@
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeMandiDetail();
+    if (e.key !== 'Escape') return;
+    closeBhavPromo();
+    closeMandiDetail();
   });
 
   // ══ INIT ══
