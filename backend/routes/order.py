@@ -101,13 +101,17 @@ def create_order(
         if not existing:
             break
 
-    # Look up user name/email from users table for logged-in users
-    user_email = None
-    user_name  = None
+    # A JWT carries a user_id, not a promise that the account still exists.
+    # Deleting an account leaves every token already issued to it valid and
+    # sitting in a browser, and orders.user_id has a foreign key to users — so
+    # the row below used to be built with a dangling id and die at commit with a
+    # 500, after the farmer had filled in the whole form. Stop at the lookup and
+    # tell him to sign in again, which is the one thing that actually fixes it.
     db_user = db.query(User).filter(User.id == user["user_id"]).first()
-    if db_user:
-        user_email = db_user.email
-        user_name  = db_user.name
+    if not db_user:
+        raise HTTPException(401, "आपका खाता अब मौजूद नहीं है — कृपया दोबारा लॉगिन करें।")
+    user_email = db_user.email
+    user_name  = db_user.name
 
     order = Order(
         tracking_code = tracking_code,

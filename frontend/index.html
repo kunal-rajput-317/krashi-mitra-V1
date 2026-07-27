@@ -1379,6 +1379,67 @@
     .mandi-footer a:hover { text-decoration: underline; }
 
     /* Static deep links into /bhav (SEO): depth-1 crawl paths to the crop tier */
+    /* ── नेट भाव promo — the one tool no competitor has ──
+       Sits directly under the live price cards on purpose: a farmer who has
+       just read a mandi rate is exactly the person whose next question is
+       "so where do I actually sell?". Deliberately unlike the price cards
+       (dark green, full width) so it reads as an answer, not another row. */
+    .np-promo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 14px;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      color: var(--white);
+      text-decoration: none;
+    }
+    .np-promo-icon {
+      flex: none;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: rgba(255,255,255,0.13);
+      border-radius: 14px;
+    }
+    .np-promo-text { flex: 1; min-width: 0; }
+    .np-promo-title {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .np-promo-sub {
+      display: block;
+      margin-top: 3px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.82);
+    }
+    .np-promo-cta {
+      flex: none;
+      padding: 9px 16px;
+      background: var(--amber);
+      color: #3a2c05;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    @media (max-width: 560px) {
+      .np-promo { flex-wrap: wrap; gap: 12px; padding: 15px; }
+      /* Zero basis, not auto: on `auto` the text block claims its content width
+         and shoves itself onto a second row, stranding the icon alone. */
+      .np-promo-text { flex: 1 1 0; }
+      .np-promo-icon { width: 40px; height: 40px; font-size: 21px; }
+      .np-promo-cta { flex: 1 0 100%; text-align: center; }
+    }
+
     .bhav-quick-links {
       display: flex;
       flex-wrap: wrap;
@@ -2519,6 +2580,15 @@
       <a href="mandi.html">सभी फसलों के भाव देखें →</a>
     </div>
   </div>
+
+  <a class="np-promo" href="/bhav/net-price">
+    <span class="np-promo-icon" aria-hidden="true">🚜</span>
+    <span class="np-promo-text">
+      <span class="np-promo-title">ऊँचा भाव हमेशा ज़्यादा कमाई नहीं देता</span>
+      <span class="np-promo-sub">दूर की मंडी का रेट ज़्यादा दिखे, पर भाड़ा घटाने के बाद पास वाली मंडी ज़्यादा दे सकती है। अपने आस-पास की मंडियों का <b>नेट भाव</b> देखिए।</span>
+    </span>
+    <span class="np-promo-cta">नेट भाव देखें →</span>
+  </a>
 
   <!-- Static deep links into the /bhav tree (SEO). Before this row every entry
        link on the site pointed at the bare /bhav hub, leaving district pages

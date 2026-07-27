@@ -542,8 +542,13 @@
       // मेरी फसल calendar cards (filled async from localStorage/API)
       html += '<div id="km-book-fasal-slot"></div>';
 
-      // Generic quick links always useful
+      // Generic quick links always useful.
+      // नेट भाव goes first: it renders directly beneath the farmer's own crop
+      // prices above, which is the moment the "ऊँचा रेट = ज़्यादा पैसा?" doubt
+      // is live. Absolute href — the book opens on article pages a directory
+      // down, where pagePrefix()-style relative links would not reach /bhav.
       var generic =
+        suggestLinkCard("🚜", "नेट भाव — भाड़ा घटाकर देखें", "ऊँचा रेट देने वाली दूर की मंडी भाड़े के बाद कम दे सकती है। आस-पास की मंडियों का असली नेट भाव देखिए।", "/bhav/net-price") +
         suggestLinkCard("🌱", "मेरी फसल कैलेंडर", "बुवाई की तारीख डालें — सिंचाई, खाद और कीट-निगरानी की याद हर हफ्ते यहीं मिलेगी।", fasalUrl()) +
         suggestLinkCard("🛒", "अपनी फसल बेचें", "Krashi Bazar पर फोटो के साथ पोस्ट करें — खरीदार सीधे संपर्क करेंगे।", bazarUrl()) +
         suggestLinkCard("🏛️", "सरकारी योजनाएं", "PM-Kisan, फसल बीमा और अन्य योजनाओं की जानकारी देखें।", pagePrefix() + "sarkari_yojana.html");

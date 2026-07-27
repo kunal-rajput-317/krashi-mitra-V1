@@ -525,7 +525,35 @@
       padding: 0 14px;
       position: relative;
       z-index: 1;
+      /* copy left, download CTA right — the right half of the band was empty */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 26px;
+      flex-wrap: wrap;
     }
+    .map-hero-copy { flex: 1 1 320px; min-width: 0; }
+
+    /* Download CTA — a real <a download> pointing at this page's own map, so a
+       JS-blocked browser still gets a file; map-download.js intercepts the
+       click to ask which state instead. */
+    .map-hero-dl {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      flex-shrink: 0;
+      text-decoration: none;
+      background: var(--amber);
+      color: var(--green-dark);
+      border-radius: 12px;
+      padding: 11px 18px;
+      box-shadow: 0 6px 20px rgba(233,168,37,0.28);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .map-hero-dl:hover { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(233,168,37,0.38); }
+    .map-hero-dl-ic { font-size: 20px; line-height: 1; }
+    .map-hero-dl b { display: block; font-size: 14px; font-weight: 800; line-height: 1.25; }
+    .map-hero-dl small { display: block; font-size: 11px; font-weight: 600; opacity: 0.72; margin-top: 2px; }
     .map-hero-intro::before {
       content: '';
       position: absolute;
@@ -683,7 +711,9 @@
 
       /* Hero intro — compact on mobile */
       .map-hero-intro { padding: 22px 0 20px; }
-      .map-hero-inner { padding: 0 14px; }
+      .map-hero-inner { padding: 0 14px; gap: 16px; }
+      /* CTA drops to its own full-width row under the copy */
+      .map-hero-dl { width: 100%; justify-content: center; }
       .map-hero-intro::after { font-size: 56px; right: 16px; bottom: 10px; }
       .map-hero-title { font-size: 22px; }
       .map-hero-sub   { font-size: 12.5px; }
@@ -869,9 +899,16 @@
   <!-- ── Hero: page's only H1 — styled block already existed in CSS, was never inserted ── -->
   <div class="map-hero-intro">
     <div class="map-hero-inner">
-      <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
-      <h1 class="map-hero-title" id="map-hero-title" data-t="map_title">UP जिला नक्शा</h1>
-      <p class="map-hero-sub" id="map-hero-sub" data-t="map_sub">उत्तर प्रदेश के सभी जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं</p>
+      <div class="map-hero-copy">
+        <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
+        <h1 class="map-hero-title" id="map-hero-title" data-t="map_title">UP जिला नक्शा</h1>
+        <p class="map-hero-sub" id="map-hero-sub" data-t="map_sub">उत्तर प्रदेश के सभी जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं</p>
+      </div>
+      <a class="map-hero-dl" data-km-map-picker
+         href="images/up-ka-naksha-district-map.png" download="up-ka-naksha-75-jile.png">
+        <span class="map-hero-dl-ic">⬇️</span>
+        <span><b data-t="map_dl">नक्शा डाउनलोड करें</b><small data-t="map_dl_sub">राज्य चुनें · HD · मुफ्त</small></span>
+      </a>
     </div>
   </div>
 
@@ -979,6 +1016,8 @@
       map_label:   "🗺️ KRASHIMITRA MAP",
       map_title:   "UP जिला नक्शा",
       map_sub:     "उत्तर प्रदेश के सभी जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं",
+      map_dl:      "नक्शा डाउनलोड करें",
+      map_dl_sub:  "राज्य चुनें · HD · मुफ्त",
       // Pristine UP copies — map_title/map_sub above are rewritten in place by
       // switchMapState(), so switching back needs the originals per language.
       _map_title_up: "UP जिला नक्शा",
@@ -994,6 +1033,8 @@
       map_label:   "🗺️ KRASHIMITRA MAP",
       map_title:   "UP District Map",
       map_sub:     "All districts of Uttar Pradesh — tap a district, zoom and explore",
+      map_dl:      "Download the map",
+      map_dl_sub:  "Pick a state · HD · Free",
       _map_title_up: "UP District Map",
       _map_sub_up:   "All districts of Uttar Pradesh — tap a district, zoom and explore",
     },
@@ -1007,6 +1048,8 @@
       map_label:   "🗺️ KRASHIMITRA ನಕ್ಷೆ",
       map_title:   "UP ಜಿಲ್ಲಾ ನಕ್ಷೆ",
       map_sub:     "ಉತ್ತರ ಪ್ರದೇಶದ ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳು — ಜಿಲ್ಲೆಯನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ, zoom ಮಾಡಿ",
+      map_dl:      "ನಕ್ಷೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+      map_dl_sub:  "ರಾಜ್ಯ ಆಯ್ಕೆಮಾಡಿ · HD · ಉಚಿತ",
       _map_title_up: "UP ಜಿಲ್ಲಾ ನಕ್ಷೆ",
       _map_sub_up:   "ಉತ್ತರ ಪ್ರದೇಶದ ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳು — ಜಿಲ್ಲೆಯನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ, zoom ಮಾಡಿ",
     }
@@ -1064,6 +1107,10 @@
   // UP is also the page's static HTML (see the naksha section above). Rajasthan
   // lives here in JS only, so /map stays one UP-targeted URL and does not
   // compete with /rajasthan-ka-naksha for राजस्थान queries.
+  //
+  // Download paths deliberately are NOT here — map-download.js's KM_STATE_MAPS
+  // is the single declaration of a state's downloadable assets, and the picker
+  // and this page's ⬇️ button must never drift apart.
   const MAP_STATES = {
     up: {
       geojson: "/data/up-districts.geojson",
@@ -1075,9 +1122,7 @@
       img:     "images/up-ka-naksha-district-map.webp",
       w: 1440, h: 1493,
       alt:     "उत्तर प्रदेश का नक्शा — UP के 75 जिलों का हिंदी जिलेवार मानचित्र (सहारनपुर से सोनभद्र तक)",
-      cap:     "उत्तर प्रदेश के सभी 75 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in",
-      png:     "images/up-ka-naksha-district-map.png",
-      dl:      "up-ka-naksha-75-jile.png"
+      cap:     "उत्तर प्रदेश के सभी 75 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in"
     },
     rajasthan: {
       geojson: "/data/rajasthan-districts.geojson",
@@ -1089,9 +1134,7 @@
       img:     "images/rajasthan-ka-naksha-district-map.webp",
       w: 1440, h: 1407,
       alt:     "राजस्थान का नक्शा — राजस्थान के 33 जिलों का हिंदी जिलेवार मानचित्र (श्रीगंगानगर से बांसवाड़ा तक)",
-      cap:     "राजस्थान के सभी 33 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in",
-      png:     "images/rajasthan-ka-naksha-district-map.png",
-      dl:      "rajasthan-ka-naksha-33-jile.png"
+      cap:     "राजस्थान के सभी 33 जिले, हिंदी नामों के साथ। सीमा-डेटा: Census of India — KrashiMitra.in"
     }
   };
 
@@ -1137,8 +1180,14 @@
     set('naksha-cap',      'textContent', cfg.cap);
     const img = document.getElementById('naksha-img');
     if (img) { img.src = cfg.img; img.width = cfg.w; img.height = cfg.h; img.alt = cfg.alt; }
+    // Download assets come from map-download.js's manifest. If that script were
+    // missing the button keeps whatever it last pointed at rather than lying
+    // about which state it hands over.
+    const asset = (window.KM_STATE_MAPS || {})[key];
     const dl = document.getElementById('naksha-dl');
-    if (dl) { dl.href = cfg.png; dl.setAttribute('download', cfg.dl); }
+    if (dl && asset) { dl.href = asset.png; dl.setAttribute('download', asset.file); }
+    const heroDl = document.querySelector('.map-hero-dl');
+    if (heroDl && asset) { heroDl.href = asset.png; heroDl.setAttribute('download', asset.file); }
 
     // The hero H1/sub carry data-t, so setLang() would otherwise reset them to
     // the UP strings on the next language switch — keep the table in sync.
@@ -1284,5 +1333,6 @@
   </script>
   <script src="drawer-menu.js"></script>
   <script src="bottomnav.js" defer></script>
+  <script src="map-download.js" defer></script>
 </body>
 </html>
