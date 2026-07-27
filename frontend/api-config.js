@@ -14,9 +14,10 @@
     /^10\./.test(host) ||
     /^172\.(1[6-9]|2\d|3[01])\./.test(host);
 
+  var defaultPort = location.port || '8000';
   window.KRASHIMITRA_API_BASE = isLocal
-    ? 'http://' + (host || 'localhost') + ':8000'
-    : 'https://krashi-mitra-v1.onrender.com';
+    ? location.protocol + '//' + (host || 'localhost') + ':' + defaultPort
+    : (location.origin || 'https://krashi-mitra-v1.onrender.com');
   window.KRASHIMITRA_IS_LOCAL = isLocal;
 
   console.log('[KrashiMitra] API base =', window.KRASHIMITRA_API_BASE);

@@ -32,7 +32,14 @@ print(f"✅ DB connecting to: ...@{_safe_host}")
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
-engine       = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine       = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=10,           # concurrent connections (default was 5 — too few for 14k-page crawl traffic)
+    max_overflow=15,        # burst headroom
+    pool_timeout=20,        # seconds to wait for a free slot before erroring (default 30)
+    pool_recycle=300,       # recycle connections every 5 min — Neon's pooler can drop idle ones
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base         = declarative_base()
 
@@ -920,6 +927,20 @@ def _ensure_postgres_columns():
         conn.execute(text("""
             CREATE INDEX IF NOT EXISTS mandi_history_group_dt_idx
             ON mandi_price_history(group_key, arrival_dt DESC);
+        """))
+        # ── bhav page performance: covering indexes for the two heaviest queries ──
+        # _rows_for() filters by commodity+state+district with lower(); this
+        # composite expression index turns a full table scan into an index lookup.
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS mandi_prices_csd_lower_idx
+            ON mandi_prices(lower(commodity), lower(state), lower(district));
+        """))
+        # _get_index() does GROUP BY (commodity, state, district) + max(arrival_dt)
+        # on the history table. Without a covering index, Postgres has to scan the
+        # entire 30-day table (hundreds of thousands of rows) on cold start.
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS mandi_history_csd_dt_idx
+            ON mandi_price_history(commodity, state, district, arrival_dt DESC);
         """))
 
         # 🔔 alerts are now looked up by account, not just by device — both on
