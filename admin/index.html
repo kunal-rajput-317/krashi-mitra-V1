@@ -3548,7 +3548,7 @@ const STAGE_META = {
   delivered:   { cls: 'online',  label: '📦 Delivered' },
   cancelled:   { cls: 'offline', label: '❌ Cancelled' },
   unavailable: { cls: 'offline', label: '🚫 Unavailable' },
-  'out of order': { cls: 'offline', label: '🛠 Out of Order' },
+  'out of stock': { cls: 'offline', label: '🚫 Out of Stock' },
 };
 const NEXT_STEP = {
   pending:    { label: 'Mark Booked',     status: 'Booked' },
@@ -3557,9 +3557,11 @@ const NEXT_STEP = {
   purchased:  { label: 'Mark Dispatched', status: 'Dispatched' },
   dispatched: { label: 'Mark Delivered',  status: 'Delivered' },
 };
-const TERMINAL_STAGES = new Set(['delivered', 'cancelled', 'unavailable', 'out of order']);
-// Legacy DB rows predating the Booked/Verified rename — normalize so old orders still get actions.
-const LEGACY_STAGE_ALIAS = { prebook: 'booked', verified: 'quoted' };
+const TERMINAL_STAGES = new Set(['delivered', 'cancelled', 'unavailable', 'out of stock']);
+// Legacy DB rows predating a rename — normalize so old orders still get actions.
+// 'out of order' described a broken machine, not an empty shelf; rows written
+// before the rename still carry it, so fold it onto the replacement.
+const LEGACY_STAGE_ALIAS = { prebook: 'booked', verified: 'quoted', 'out of order': 'out of stock' };
 function normalizeStage(status) {
   const key = (status || 'Pending').toLowerCase().trim();
   return LEGACY_STAGE_ALIAS[key] || key;
@@ -3601,7 +3603,7 @@ function handleOrderAction(trackingCode, value, quotePayload, el) {
     el.value = '';
     return;
   }
-  if (value === 'Cancelled' || value === 'Unavailable' || value === 'Out of Order' || value === 'Pending') {
+  if (value === 'Cancelled' || value === 'Unavailable' || value === 'Out of Stock' || value === 'Pending') {
     confirmOrderStatus(trackingCode, value, el);
     return;
   }
@@ -3717,7 +3719,12 @@ async function loadPreordersTable(filterStatus = '') {
       const stage = STAGE_META[stageKey] || { cls: 'offline', label: o.status || 'Pending' };
       const step  = NEXT_STEP[stageKey];
 
-      const currentLabel = stageKey.charAt(0).toUpperCase() + stageKey.slice(1);
+      // Take the wording from STAGE_META (emoji stripped — the pill next to it
+      // already carries one). Capitalising the raw key only ever worked for
+      // single-word stages: it rendered the new one as "Out of stock".
+      const currentLabel = STAGE_META[stageKey]
+        ? STAGE_META[stageKey].label.replace(/^\S+\s+/, '')
+        : stageKey.charAt(0).toUpperCase() + stageKey.slice(1);
       let opts = `<option value="" disabled selected>${currentLabel}</option>`;
       if (TERMINAL_STAGES.has(stageKey)) {
         opts += `<option value="Pending">Reopen Order</option>`;
@@ -3729,7 +3736,7 @@ async function loadPreordersTable(filterStatus = '') {
         }
         if (stageKey === 'quoted') opts += `<option value="quote">Edit Quote</option>`;
         opts += `<option value="Unavailable">Mark Unavailable</option>`;
-        opts += `<option value="Out of Order">Out of Order</option>`;
+        opts += `<option value="Out of Stock">Out of Stock</option>`;
         opts += `<option value="Cancelled">Cancel Order</option>`;
       }
       const actionCell = `<select class="status-select-min ${stage.cls}" onchange="handleOrderAction('${escapeHtml(o.tracking_code)}', this.value, '${quotePayload}', this)">${opts}</select>`;

@@ -165,12 +165,20 @@ def _register_job():
 
     # Watchdog: the 06:30 cron is routinely missed when the host is asleep at
     # that moment, and a startup-only catch-up leaves data stale for days when
-    # the process stays alive. Re-check staleness every 30 min instead.
+    # the process stays alive. Re-check staleness periodically instead.
+    #
+    # Interval is 3h, not 30 min, because this check is the app's ONLY
+    # round-the-clock database traffic: at 30 min it kept Neon's compute awake
+    # 24/7 (~730 compute-hours/month against a ~192h free allowance), which
+    # quota-blocked the database late every month and took the whole site down
+    # with it. At 3h the DB idles between the six scheduled fetches instead.
+    # Detection stays well inside STALE_AFTER_HOURS (20h), so a genuinely stale
+    # snapshot is still caught long before a user could notice it.
     scheduler.add_job(
         func               = _refresh_if_stale,
-        trigger            = IntervalTrigger(minutes=30),
+        trigger            = IntervalTrigger(hours=3),
         id                 = "mandi_stale_watchdog",
-        name               = "Mandi Snapshot Staleness Watchdog — every 30 min",
+        name               = "Mandi Snapshot Staleness Watchdog — every 3 hours",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,
@@ -190,13 +198,13 @@ def _register_job():
         misfire_grace_time = None,
     )
 
-    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 30-min staleness watchdog + archive @ 04h IST")
+    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + archive @ 04h IST")
 
 
 async def start_scheduler():
     """
     Start the scheduler and run an immediate staleness catch-up. The
-    watchdog job repeats that check every 30 min so a missed 06:30 cron
+    watchdog job repeats that check every 3 hours so a missed cron
     (sleeping laptop, spun-down free-tier instance) can't leave the
     snapshot days old. Called from FastAPI startup.
     """

@@ -4342,7 +4342,8 @@
   function _lc(o) { return String(o.status || '').toLowerCase(); }
 
   // Full order lifecycle → farmer-facing notification for every status
-  const _NOTIF_ALIAS = { prebook: 'pending', verified: 'quoted', canceled: 'cancelled' };
+  const _NOTIF_ALIAS = { prebook: 'pending', verified: 'quoted', canceled: 'cancelled',
+                         'out of order': 'out of stock' };
   function _stageKey(o) {
     const k = String(o.status || 'pending').toLowerCase().trim();
     return _NOTIF_ALIAS[k] || k;
@@ -4355,6 +4356,8 @@
     delivered:   { chip: '📦 डिलीवर हो गया', cls: 'ok',      msg: () => 'ऑर्डर डिलीवर हो गया — धन्यवाद! 🙏' },
     cancelled:   { chip: '❌ रद्द',          cls: 'cancel',  msg: () => 'यह ऑर्डर रद्द कर दिया गया है।' },
     unavailable: { chip: '🚫 उपलब्ध नहीं',   cls: 'cancel',  msg: () => 'यह उत्पाद अभी उपलब्ध नहीं है।' },
+    // Distinct from unavailable: the dealer has simply run out, the product itself is fine.
+    'out of stock': { chip: '📦 स्टॉक खत्म', cls: 'cancel',  msg: () => 'यह उत्पाद अभी स्टॉक में नहीं है।' },
   };
   function _seenMap() { try { return JSON.parse(localStorage.getItem('km_seen_status') || '{}'); } catch (e) { return {}; } }
   function _markAllSeen(orders) {
@@ -4500,7 +4503,9 @@
           canceled:     { cls: 'cancelled',    label: '❌ Cancelled' },
           unavailable:  { cls: 'unavailable',  label: '🚫 Unavailable' },
           notavailable: { cls: 'notavailable', label: '🚫 Not Available' },
-          outofstock:   { cls: 'unavailable',  label: '🚫 Out of Stock' },
+          outofstock:   { cls: 'unavailable',  label: '📦 स्टॉक खत्म' },
+          // Rows written before the "Out of Order" → "Out of Stock" rename.
+          outoforder:   { cls: 'unavailable',  label: '📦 स्टॉक खत्म' },
         };
         const meta        = STATUS_META[statusKey] || { cls: statusKey, label: statusRaw };
         const statusClass = meta.cls;
