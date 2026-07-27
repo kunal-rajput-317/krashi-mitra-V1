@@ -660,6 +660,54 @@ class Order(Base):
     quoted_at     = Column(DateTime, nullable=True)   # when the quote was sent (drives the 🔔 badge)
 
 
+# ── CROP APPEAL (बेचना/खरीदना है — intent captured on /bhav) ──
+
+class CropAppeal(Base):
+    """A "मुझे यह फसल बेचनी/खरीदनी है" appeal raised from a /bhav district page.
+
+    The price pages answer *what is the rate* and then dead-end. This row is the
+    farmer's (or trader's) next sentence — "I have 40 quintals of wheat in Hardoi,
+    who will buy it?" — captured at the exact moment the intent exists.
+
+    Login-gated (decided 2026-07-28; the first cut was open). An appeal is only
+    worth acting on if we can get back to whoever raised it, and the reply lands
+    in KrashiBook, which needs an account to exist. So every new row carries a
+    user_id; routes/appeal.py enforces it with a 401, not just the UI.
+
+    name + description are the required pair. Everything else is context copied
+    off the page the appeal was raised from (crop, state, district), so a row is
+    actionable on its own without reconstructing where it came from.
+
+    phone is optional on purpose: making it mandatory would cost more appeals
+    than the missing numbers are worth at this stage. For a signed-in farmer the
+    client pre-fills it from his profile, so the common case still carries one.
+    """
+    __tablename__ = "crop_appeals"
+
+    id          = Column(Integer,  primary_key=True, index=True)
+    kind        = Column(String,   nullable=False, index=True)   # "sell" (बेचना है) | "buy" (खरीदना है)
+    # The required pair.
+    name        = Column(String,   nullable=False)
+    description = Column(String,   nullable=False)               # pre-written in the panel, farmer edits
+    phone       = Column(String,   nullable=True)                # optional; how the buyer/seller is reached
+    # SET NULL, not CASCADE — same reasoning as Order: a lead we may have already
+    # acted on stays in the books even if the account is deleted. `name` and
+    # `phone` are stored on the row, so it stays readable without the account.
+    user_id     = Column(Integer,
+                         ForeignKey("users.id", ondelete="SET NULL",
+                                    name="fk_crop_appeals_user_id"),
+                         nullable=True, index=True)              # NULL only after the account is deleted
+    # Context, copied from the page. Indexed on the two axes the buyer/dealer
+    # directory will query by: "who wants to sell wheat in Hardoi".
+    commodity   = Column(String,   nullable=False, index=True)
+    state       = Column(String,   nullable=True)
+    district    = Column(String,   nullable=True,  index=True)
+    quantity    = Column(String,   nullable=True)                # free text ("40 क्विंटल") — farmers don't think in one unit
+    page_url    = Column(String,   nullable=True)                # exact page the appeal came from
+    status      = Column(String,   default="new", index=True)    # new / contacted / matched / closed
+    created_at  = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 # ── DB Helpers ───────────────────────────────────────────────
 
 def _ensure_postgres_columns():

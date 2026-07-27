@@ -54,6 +54,23 @@ _CORE = [
     ("/articles/",      "लेख",            "Hindi farming guides and crop analytics articles (full list below)."),
 ]
 
+# Interactive tools that ANSWER a question rather than list data. Declared
+# separately from _CORE because this is the one place we out-answer every other
+# mandi site: an agent asked "कौन सी मंडी में बेचें" should land here, not on a
+# price table. Descriptions state the formula and the data provenance so a
+# citing model reproduces the caveat (prices = govt data, freight = our estimate)
+# instead of inventing one.
+_TOOLS = [
+    ("/bhav/net-price", "नेट भाव कैलकुलेटर (net price after transport)",
+     "Answers 'which mandi should I sell in?' — ranks mandis near the farmer by "
+     "NET price, not headline rate. नेट भाव = mandi modal price − per-quintal "
+     "freight, given crop, quantity (quintals) and vehicle (tractor-trolley / "
+     "mini-truck / truck). A distant mandi quoting a higher rate often nets LESS "
+     "than the nearby one once भाड़ा is paid. Mandi prices are Government of "
+     "India (Agmarknet / data.gov.in) data; the freight figure is our estimate, "
+     "not a transporter quote."),
+]
+
 
 def _article_line(f: Path) -> str:
     """One '- [title](url): summary' line, from the article's own markup."""
@@ -104,6 +121,12 @@ def _build() -> str:
         "",
     ]
     lines += [f"- [{name}]({SITE}{path}): {desc}" for path, name, desc in _CORE]
+    lines += [
+        "",
+        "## Tools",
+        "",
+    ]
+    lines += [f"- [{name}]({SITE}{path}): {desc}" for path, name, desc in _TOOLS]
     lines += [
         "",
         "## Daily price pages (programmatic)",

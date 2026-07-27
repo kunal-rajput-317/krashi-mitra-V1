@@ -525,7 +525,35 @@
       padding: 0 14px;
       position: relative;
       z-index: 1;
+      /* copy left, download CTA right — the right half of the band was empty */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 26px;
+      flex-wrap: wrap;
     }
+    .map-hero-copy { flex: 1 1 320px; min-width: 0; }
+
+    /* Download CTA — a real <a download> pointing at this page's own map, so a
+       JS-blocked browser still gets a file; map-download.js intercepts the
+       click to ask which state instead. */
+    .map-hero-dl {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      flex-shrink: 0;
+      text-decoration: none;
+      background: var(--amber);
+      color: var(--green-dark);
+      border-radius: 12px;
+      padding: 11px 18px;
+      box-shadow: 0 6px 20px rgba(233,168,37,0.28);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .map-hero-dl:hover { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(233,168,37,0.38); }
+    .map-hero-dl-ic { font-size: 20px; line-height: 1; }
+    .map-hero-dl b { display: block; font-size: 14px; font-weight: 800; line-height: 1.25; }
+    .map-hero-dl small { display: block; font-size: 11px; font-weight: 600; opacity: 0.72; margin-top: 2px; }
     .map-hero-intro::before {
       content: '';
       position: absolute;
@@ -663,7 +691,9 @@
 
       /* Hero intro — compact on mobile */
       .map-hero-intro { padding: 22px 0 20px; }
-      .map-hero-inner { padding: 0 14px; }
+      .map-hero-inner { padding: 0 14px; gap: 16px; }
+      /* CTA drops to its own full-width row under the copy */
+      .map-hero-dl { width: 100%; justify-content: center; }
       .map-hero-intro::after { font-size: 56px; right: 16px; bottom: 10px; }
       .map-hero-title { font-size: 22px; }
       .map-hero-sub   { font-size: 12.5px; }
@@ -848,9 +878,16 @@
   <!-- ── Hero: page's only H1 — styled block already existed in CSS, was never inserted ── -->
   <div class="map-hero-intro">
     <div class="map-hero-inner">
-      <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
-      <h1 class="map-hero-title" data-t="map_title">राजस्थान जिला नक्शा</h1>
-      <p class="map-hero-sub" data-t="map_sub">राजस्थान के सभी 33 जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं</p>
+      <div class="map-hero-copy">
+        <div class="map-hero-label" data-t="map_label">🗺️ KRASHIMITRA MAP</div>
+        <h1 class="map-hero-title" data-t="map_title">राजस्थान जिला नक्शा</h1>
+        <p class="map-hero-sub" data-t="map_sub">राजस्थान के सभी 33 जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं</p>
+      </div>
+      <a class="map-hero-dl" data-km-map-picker
+         href="images/rajasthan-ka-naksha-district-map.png" download="rajasthan-ka-naksha-33-jile.png">
+        <span class="map-hero-dl-ic">⬇️</span>
+        <span><b data-t="map_dl">नक्शा डाउनलोड करें</b><small data-t="map_dl_sub">राज्य चुनें · HD · मुफ्त</small></span>
+      </a>
     </div>
   </div>
 
@@ -934,6 +971,8 @@
       map_label:   "🗺️ KRASHIMITRA MAP",
       map_title:   "राजस्थान जिला नक्शा",
       map_sub:     "राजस्थान के सभी 33 जिले — जिले पर टैप करें, ज़ूम करें और जानकारी पाएं",
+      map_dl:      "नक्शा डाउनलोड करें",
+      map_dl_sub:  "राज्य चुनें · HD · मुफ्त",
     },
     en: {
       nav_chat:    "AI Advisor",
@@ -945,6 +984,8 @@
       map_label:   "🗺️ KRASHIMITRA MAP",
       map_title:   "Rajasthan District Map",
       map_sub:     "All 33 districts of Rajasthan — tap a district, zoom and explore",
+      map_dl:      "Download the map",
+      map_dl_sub:  "Pick a state · HD · Free",
     },
     kn: {
       nav_chat:    "AI ಕೇಳಿ",
@@ -956,6 +997,8 @@
       map_label:   "🗺️ KRASHIMITRA ನಕ್ಷೆ",
       map_title:   "ರಾಜಸ್ಥಾನ ಜಿಲ್ಲಾ ನಕ್ಷೆ",
       map_sub:     "ರಾಜಸ್ಥಾನದ ಎಲ್ಲಾ 33 ಜಿಲ್ಲೆಗಳು — ಜಿಲ್ಲೆಯನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ, zoom ಮಾಡಿ",
+      map_dl:      "ನಕ್ಷೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+      map_dl_sub:  "ರಾಜ್ಯ ಆಯ್ಕೆಮಾಡಿ · HD · ಉಚಿತ",
     }
   };
 
@@ -1140,5 +1183,6 @@
   </script>
   <script src="drawer-menu.js"></script>
   <script src="bottomnav.js" defer></script>
+  <script src="map-download.js" defer></script>
 </body>
 </html>

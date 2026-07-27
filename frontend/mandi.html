@@ -895,6 +895,32 @@
       background: #e6efe9; border-radius: 12px;
       padding: 4px; margin-bottom: 20px;
     }
+
+    /* ── नेट भाव strip ──
+       Sits outside both tabs (crop-wise and state-wise), because "which mandi
+       nets me the most after भाड़ा" is the same question either way. Kept to a
+       single row so it never pushes the crop grid — the page's actual job —
+       below the fold on a phone. */
+    .np-strip {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 18px; padding: 12px 15px;
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+      border-radius: 12px; box-shadow: var(--shadow);
+      color: var(--white); text-decoration: none;
+    }
+    .np-strip-icon { flex: none; font-size: 21px; line-height: 1; }
+    .np-strip-text { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.45; }
+    .np-strip-text b { font-weight: 700; }
+    .np-strip-cta {
+      flex: none; padding: 7px 14px; border-radius: 18px;
+      background: var(--amber); color: #3a2c05;
+      font-size: 12.5px; font-weight: 700; white-space: nowrap;
+    }
+    @media (max-width: 560px) {
+      .np-strip { flex-wrap: wrap; gap: 10px; padding: 12px; }
+      .np-strip-text { flex: 1 1 0; font-size: 13px; }
+      .np-strip-cta { flex: 1 0 100%; text-align: center; }
+    }
     .shop-tab-btn {
       flex: 1; padding: 10px 16px;
       border: none; border-radius: 9px;
@@ -2230,6 +2256,12 @@
     <button class="shop-tab-btn" id="shop-btn-state"
             onclick="switchShopTab('state')" data-t="tab_state"> राज्य के आधार पर</button>
   </div>
+
+  <a class="np-strip" href="/bhav/net-price">
+    <span class="np-strip-icon" aria-hidden="true">🚜</span>
+    <span class="np-strip-text">भाड़ा घटाने के बाद कौन सी मंडी सबसे ज़्यादा देगी? आस-पास की मंडियों का <b>नेट भाव</b> देखिए।</span>
+    <span class="np-strip-cta">नेट भाव कैलकुलेटर →</span>
+  </a>
 
   <!-- ── MANDI RATES ── -->
   <div id="shop-mandi">

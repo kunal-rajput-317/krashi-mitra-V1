@@ -231,6 +231,9 @@ app.include_router(crop_calendar_route.router)  # मेरी फसल — cro
 from backend.routes import alerts as alerts_route
 app.include_router(alerts_route.router)  # 🔔 mandi bhav price alerts (web push)
 
+from backend.routes import appeal as appeal_route
+app.include_router(appeal_route.router)  # बेचना/खरीदना है — sell/buy appeals raised on /bhav pages
+
 from backend.routes import product as product_route
 app.include_router(product_route.router)  # SEO shop-product pages (/product/*) + /product/sitemap.xml
 

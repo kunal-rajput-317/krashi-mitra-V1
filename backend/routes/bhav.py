@@ -555,13 +555,26 @@ function hdr(json){var h=json?{'Content-Type':'application/json'}:{},t=tok();
 /* The VAPID key is fetched, never baked in — this HTML is edge-cached and served
    to everyone alike. Memoised, and retried on click rather than once at load: a
    page that opened against a cold (or suspended) backend must not leave the bell
-   permanently dead until the farmer reloads. */
+   permanently dead until the farmer reloads.
+
+   One silent retry after a pause, not zero: Render's free tier sleeps when idle
+   and can take longer to wake than the first request waits around for, so a tap
+   that lands on a cold instance used to fail outright with "अभी उपलब्ध नहीं है"
+   even though the backend was merely slow, not actually down — the very next
+   tap would have worked. Waiting once turns that into no error at all for the
+   common case, at the cost of a few extra seconds only when it truly is down. */
+function fetchKey(){
+ return fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
+  return (j&&j.data&&j.data.enabled)?j.data.key:'';
+ }).catch(function(){return '';});
+}
 function ensureKey(){
  if(KEY)return Promise.resolve(KEY);
  if(keyReq)return keyReq;
- keyReq=fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
-  KEY=(j&&j.data&&j.data.enabled)?j.data.key:'';return KEY;
- }).catch(function(){return '';}).then(function(k){if(!k)keyReq=null;return k;});
+ keyReq=fetchKey().then(function(k){
+  if(k)return k;
+  return new Promise(function(res){setTimeout(res,5000);}).then(fetchKey);
+ }).then(function(k){KEY=k;if(!k)keyReq=null;return k;});
  return keyReq;
 }
 /* Hydrate the on/off state: the button is rendered identically for everyone, so
@@ -1056,6 +1069,18 @@ transition:background .15s,border-color .15s,color .15s}
 .answer-actions .answer-share{margin-top:0}
 .btn-np{background:var(--amber);color:#3a2c00;box-shadow:var(--shadow-sm)}
 .btn-np:hover{background:#d69a1f}
+/* "खरीदें/बेचें" — the third action on the green panel. WhatsApp owns green and
+   the net-price button owns amber, so this takes sea blue: the one hue that
+   separates cleanly from both against the dark green. Deliberately NOT the
+   palette's --sky (#2e86de) — white on that is 3.4:1, under the 4.5:1 AA needs
+   at 14px. #0077b6 is the nearest sea blue that passes (4.9:1). Geometry mirrors
+   .answer-share exactly (11px/20px, no border) so the two pills sit level. */
+.answer-appeal{display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+font-family:var(--font-body);font-size:14px;font-weight:700;color:#fff;border:none;
+padding:11px 20px;border-radius:24px;background:#0077b6;
+box-shadow:0 2px 10px rgba(0,0,0,.18);transition:background .15s,transform .15s}
+.answer-appeal:hover{background:#01659c;transform:translateY(-1px)}
+.answer-appeal:active{transform:translateY(0)}
 /* किसान सेवाएं — lead-gen / affiliate service links (loan/insurance/solar) */
 .lead-gen{margin:26px 0 8px;border:1px solid var(--border);border-radius:var(--radius-md);
 background:var(--white);box-shadow:var(--shadow-sm);padding:16px 16px 14px}
@@ -2768,6 +2793,351 @@ def _net_price_cta(hi: str, cs: str = "", state: str = "", district: str = "") -
             f'🚜 {escape(hi)} — भाड़ा जोड़कर नेट भाव देखें</a>')
 
 
+# ── "बेचना है / खरीदना है" appeal (tier 4) ───────────────────
+
+_APPEAL_CSS = """
+.btn-appeal{background:var(--green-dark);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-appeal:hover{background:var(--green-mid)}
+.ap-ov{position:fixed;inset:0;z-index:10000;background:rgba(16,32,25,.55);
+display:flex;align-items:flex-end;justify-content:center;padding:0;
+-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.ap-ov[hidden]{display:none}
+.ap-box{position:relative;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
+background:var(--white);border-radius:20px 20px 0 0;padding:22px 18px 20px;
+box-shadow:var(--shadow-md);animation:ap-up .22s ease}
+@keyframes ap-up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media(min-width:600px){.ap-ov{align-items:center;padding:20px}
+.ap-box{border-radius:var(--radius-md)}}
+.ap-box h2{margin:0 0 4px;font-size:19px;line-height:1.35;color:var(--green-dark);padding-right:34px}
+.ap-sub{margin:0 0 15px;font-size:13px;color:var(--text-soft);line-height:1.5}
+.ap-x{position:absolute;top:12px;right:12px;width:34px;height:34px;border:0;border-radius:50%;
+background:var(--cream);color:var(--text-mid);font-size:21px;line-height:1;cursor:pointer}
+.ap-x:hover{background:var(--border)}
+.ap-seg{display:flex;gap:8px;margin-bottom:15px}
+.ap-seg button{flex:1;font:inherit;font-size:14px;font-weight:700;padding:11px 8px;cursor:pointer;
+border:1.5px solid var(--border);border-radius:12px;background:var(--white);color:var(--text-mid)}
+.ap-seg button.on{background:var(--green-pale);border-color:var(--green-mid);color:var(--green-dark)}
+.ap-f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;min-width:0}
+.ap-f label{font-size:12.5px;font-weight:700;color:var(--text-soft)}
+.ap-f input,.ap-f textarea{width:100%;font:inherit;font-size:15px;padding:11px 12px;
+border:1.5px solid var(--border);border-radius:12px;background:var(--white);
+color:var(--text-dark);-webkit-appearance:none;appearance:none;resize:vertical}
+.ap-f input:focus,.ap-f textarea:focus{outline:none;border-color:var(--green-mid)}
+.ap-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:420px){.ap-row{grid-template-columns:1fr;gap:0}}
+/* Phone: the country code is furniture, not something to type. The field took
+   20 free-form characters before this and collected pasted junk; a fixed +91
+   welded to a 10-digit box says what is wanted without a line of instruction. */
+.ap-tel{display:flex;align-items:stretch;border:1.5px solid var(--border);
+border-radius:12px;background:var(--white);overflow:hidden}
+.ap-tel:focus-within{border-color:var(--green-mid)}
+.ap-cc{display:flex;align-items:center;padding:0 11px;font-size:15px;font-weight:700;
+color:var(--text-mid);background:var(--cream);border-right:1.5px solid var(--border);
+white-space:nowrap;-webkit-user-select:none;user-select:none}
+.ap-f .ap-tel input{border:0;border-radius:0;flex:1;min-width:0;letter-spacing:.5px}
+.ap-f .ap-tel input:focus{border-color:transparent}
+/* …and the way out of it. A landline with an STD code, a second number, a
+   border-district Nepal code — all real, none of them ten Indian digits. The
+   strict box stays the default because it suits almost everyone; this is the
+   door for the rest, rather than a field that silently eats what they typed. */
+.ap-tel.free .ap-cc{display:none}
+.ap-free{align-self:flex-start;margin-top:3px;background:none;border:0;padding:0;
+font:inherit;font-size:11.5px;font-weight:700;color:var(--green-mid);cursor:pointer;
+text-decoration:underline;text-align:left}
+.ap-free:hover{color:var(--green-dark)}
+.ap-note{margin:2px 0 14px;font-size:12px;color:var(--text-soft);line-height:1.5}
+.ap-send{width:100%;border:0;border-radius:12px;background:var(--green-dark);color:#fff;
+font:inherit;font-size:16px;font-weight:800;padding:14px;cursor:pointer}
+.ap-send:hover{background:var(--green-mid)}
+.ap-send[disabled]{opacity:.6;cursor:default}
+.ap-out{margin:12px 0 0;font-size:14px;line-height:1.55;text-align:center;font-weight:700}
+.ap-out.ok{color:var(--green-mid)}
+.ap-out.bad{color:#b3261e}
+/* Success state — its own panel, above everything, not a strip appended under
+   the form. A filled-in appeal form is close to two phone screens tall inside a
+   scrolling box, so the one line the farmer actually needs ("आपकी बात पहुँचा दी
+   गई है") was landing below the fold of what he had just been typing into. It
+   sits at a z-index above the form overlay (10000) and the page's own floating
+   furniture, and it never auto-closes: there is a next step here now, and an
+   overlay that vanishes on a timer would take it away mid-read. */
+.ap-ok-ov{position:fixed;inset:0;z-index:100000;background:rgba(16,32,25,.62);
+display:flex;align-items:center;justify-content:center;padding:18px;
+-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.ap-ok-ov[hidden]{display:none}
+.ap-ok{position:relative;width:100%;max-width:400px;background:var(--white);
+border-radius:20px;padding:26px 20px 20px;text-align:center;box-shadow:var(--shadow-md);
+animation:ap-pop .24s cubic-bezier(.16,1,.3,1)}
+@keyframes ap-pop{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.ap-ok-ic{width:58px;height:58px;margin:0 auto 14px;border-radius:50%;
+background:var(--green-pale);display:flex;align-items:center;justify-content:center;
+font-size:29px;line-height:1}
+.ap-ok h2{margin:0 0 8px;font-size:18px;line-height:1.4;color:var(--green-dark);padding:0 18px}
+.ap-ok-sub{margin:0 0 18px;font-size:13.5px;line-height:1.6;color:var(--text-mid)}
+.ap-book{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+border:0;border-radius:12px;background:#0077b6;color:#fff;font:inherit;font-size:15px;
+font-weight:800;padding:13px;cursor:pointer}
+.ap-book[hidden]{display:none}
+.ap-book:hover{background:#01659c}
+.ap-ok-done{width:100%;margin-top:10px;border:0;border-radius:12px;background:var(--cream);
+color:var(--text-mid);font:inherit;font-size:14.5px;font-weight:700;padding:12px;cursor:pointer}
+.ap-ok-done:hover{background:var(--border)}
+"""
+
+# Plain string, not an f-string — the JS braces would need doubling otherwise.
+# `T` (page context + the two pre-written messages) is injected by the wrapper.
+_APPEAL_JS = """
+var ov=document.getElementById('ap-ov');
+if(!ov)return;
+var segs=ov.querySelectorAll('.ap-seg button'),
+    fName=document.getElementById('ap-name'),fQty=document.getElementById('ap-qty'),
+    fPh=document.getElementById('ap-ph'),fMsg=document.getElementById('ap-msg'),
+    btn=document.getElementById('ap-send'),out=document.getElementById('ap-out'),
+    okOv=document.getElementById('ap-ok-ov'),okMsg='',
+    kind='sell',dirty=false,sent=false,busy=false,filled=false;
+function tok(){var t=localStorage.getItem('krishi_token');
+ return (t&&t!=='null'&&t!=='undefined')?t:null;}
+function say(txt,cls){out.textContent=txt||'';out.className='ap-out'+(cls?' '+cls:'');}
+/* Ten digits, nothing else — the +91 next to the box is ours to supply. Autofill
+   and pasted numbers arrive as +91…, 91…, 0… or with spaces, so the country code
+   and trunk zero are peeled off rather than the subscriber digits: truncating
+   the front of "+919876543210" would store a number that dials nobody. */
+function normPhone(raw){
+ var v=(raw||'').replace(/[^0-9]/g,'');
+ if(v.length>10&&v.slice(0,2)==='91')v=v.slice(2);
+ if(v.length>10&&v.charAt(0)==='0')v=v.slice(1);
+ return v.slice(0,10);
+}
+/* The +91 box is the default because it is right for almost every farmer here.
+   This is the escape hatch for the rest — an STD landline, two numbers, a
+   border-district code — so an unusual number gets typed as it is instead of
+   being quietly trimmed to ten digits that reach nobody. */
+var tel=document.getElementById('ap-tel'),freeBtn=document.getElementById('ap-free'),freePh=false;
+window.toggleFreePhone=function(){
+ freePh=!freePh;
+ if(tel)tel.classList.toggle('free',freePh);
+ fPh.maxLength=freePh?20:15;
+ fPh.inputMode=freePh?'tel':'numeric';
+ fPh.placeholder=freePh?'जैसे 05522-234567':'10 अंकों का नंबर';
+ if(freePh)fPh.removeAttribute('pattern');else fPh.setAttribute('pattern','[0-9]{10}');
+ if(freeBtn)freeBtn.textContent=freePh?'↩ +91 वाला 10 अंकों का डिब्बा':'दूसरा फ़ॉर्मैट — नंबर खुद लिखें';
+ /* Coming back to the strict box has to leave a value it would accept. */
+ if(!freePh)fPh.value=normPhone(fPh.value);
+ try{fPh.focus();}catch(e){}
+};
+fPh.addEventListener('input',function(){
+ if(freePh)return;
+ var p=this.selectionStart,before=this.value,after=normPhone(before);
+ if(after===before)return;
+ this.value=after;
+ /* Keep the caret where the farmer was typing instead of jumping to the end
+    when a stripped character shortens the value. */
+ try{var d=before.length-after.length;this.setSelectionRange(Math.max(0,p-d),Math.max(0,p-d));}catch(e){}
+});
+/* The pre-written message is a starting point, not a template to defend: once
+   the farmer edits it we stop overwriting it, even if he flips sell↔buy. */
+function paintMsg(){if(!dirty)fMsg.value=T.msg[kind];}
+function setKind(k){kind=k;
+ for(var i=0;i<segs.length;i++)segs[i].classList.toggle('on',segs[i].getAttribute('data-kind')===k);
+ paintMsg();}
+fMsg.addEventListener('input',function(){dirty=true;});
+for(var i=0;i<segs.length;i++)(function(b){
+ b.addEventListener('click',function(){setKind(b.getAttribute('data-kind'));});
+})(segs[i]);
+/* Signed-in farmer shouldn't retype what we already know. Fetched on open, not
+   on load: this page is edge-cached SEO traffic, most of which is logged out. */
+function prefill(){
+ if(filled)return;filled=true;
+ var t=tok();if(!t)return;
+ fetch('/profile',{headers:{'Authorization':'Bearer '+t}})
+  .then(function(r){return r.json();})
+  .then(function(j){
+   var d=j&&j.data;if(!d)return;
+   if(!fName.value&&d.full_name)fName.value=d.full_name;
+   if(!fPh.value)fPh.value=normPhone(d.phone_number||d.whatsapp_number||'');
+  }).catch(function(){});
+}
+/* Login gate. The server refuses a guest appeal outright (401), so asking here
+   saves the farmer typing a whole form before being told. Checked at open, not
+   at send, for the same reason. */
+function gateAppeal(){
+ if(tok())return true;
+ if(window.KMRequireLogin)window.KMRequireLogin({
+  title:'बेचने/खरीदने के लिए लॉगिन करें',
+  text:'लॉगिन करने पर आपकी बात आपके खाते से जुड़ जाती है — खरीदार या बेचने वाला मिलते ही उसका अपडेट आपकी कृषि बुक में दिखेगा।',
+  resume:'crop-appeal'});
+ else location.href='/login.html';
+ return false;
+}
+window.openCropAppeal=function(){
+ /* Already filed on this page view — show the receipt again, not an empty form
+    he cannot send twice anyway. */
+ if(sent){showAppealOk();return;}
+ if(!gateAppeal())return;
+ ov.hidden=false;document.body.style.overflow='hidden';
+ paintMsg();prefill();
+ try{fName.focus({preventScroll:true});}catch(e){fName.focus();}
+};
+/* ── Confirmation panel ──
+   Its own overlay rather than a block inside .ap-box: the form it confirms is
+   taller than a phone screen, so appended-at-the-bottom meant the farmer had to
+   scroll back through his own answers to find out whether they went through. */
+function showAppealOk(){
+ if(!okOv)return;
+ var sub=document.getElementById('ap-done-sub'),book=document.getElementById('ap-book');
+ if(sub)sub.textContent=okMsg;
+ /* Never offer a button that goes nowhere: if krashibook.js somehow didn't load
+    on this page, the message stands on its own without it. */
+ if(book)book.hidden=!document.getElementById('km-book-btn');
+ ov.hidden=true;okOv.hidden=false;document.body.style.overflow='hidden';
+ var f=okOv.querySelector('.ap-book:not([hidden]),.ap-ok-done');
+ if(f)try{f.focus({preventScroll:true});}catch(e){}
+}
+window.closeAppealOk=function(){
+ if(!okOv)return;
+ okOv.hidden=true;document.body.style.overflow='';
+};
+if(okOv){
+ okOv.addEventListener('click',function(e){if(e.target===okOv)window.closeAppealOk();});
+}
+/* Back from login with ?do=crop-appeal — reopen the form he originally tapped.
+   Peek at the URL rather than calling KMTakeResume() outright: that helper
+   consumes the parameter for whoever reads it first, and the 🔔 bell on this
+   same page reads it too. Only claim it when it is ours. */
+(function(){
+ var todo='';
+ try{todo=new URLSearchParams(location.search).get('do')||'';}catch(e){}
+ if(todo!=='crop-appeal')return;
+ if(window.KMTakeResume)window.KMTakeResume();
+ setTimeout(function(){window.openCropAppeal();},250);
+})();
+/* KrashiBook is a modal owned by krashibook.js (bootstrapped for every page by
+   drawer-menu.js), so "open it" means firing its own floating button. */
+window.openAppealBook=function(){
+ var b=document.getElementById('km-book-btn');
+ window.closeAppealOk();window.closeCropAppeal();
+ if(b)b.click();
+};
+window.closeCropAppeal=function(){
+ ov.hidden=true;document.body.style.overflow='';
+};
+ov.addEventListener('click',function(e){if(e.target===ov)window.closeCropAppeal();});
+document.addEventListener('keydown',function(e){
+ if(e.key!=='Escape')return;
+ /* Topmost panel first — the confirmation sits above the form. */
+ if(okOv&&!okOv.hidden){window.closeAppealOk();return;}
+ if(!ov.hidden)window.closeCropAppeal();});
+window.sendCropAppeal=function(){
+ if(busy)return;
+ /* One appeal per page view. Without this a double-tap on a slow rural
+    connection files the same request twice and the follow-up call is wasted. */
+ if(sent){showAppealOk();return;}
+ var name=(fName.value||'').trim(),msg=(fMsg.value||'').trim(),
+     ph=freePh?(fPh.value||'').trim():normPhone(fPh.value);
+ if(name.length<2){say('कृपया अपना नाम लिखें।','bad');fName.focus();return;}
+ if(msg.length<5){say('कृपया अपना संदेश लिखें।','bad');fMsg.focus();return;}
+ /* The number stays optional — but half a number is worse than none: it looks
+    like a way to reach him and isn't. */
+ if(!freePh&&ph&&ph.length<10){say('फ़ोन नंबर पूरे 10 अंकों का लिखें, या खाली छोड़ दें।','bad');
+  fPh.focus();return;}
+ busy=true;btn.disabled=true;say('भेजा जा रहा है…','');
+ var h={'Content-Type':'application/json'},t=tok();
+ if(t)h['Authorization']='Bearer '+t;
+ fetch('/appeal/crop',{method:'POST',headers:h,body:JSON.stringify({
+  kind:kind,name:name,description:msg,
+  phone:ph,quantity:(fQty.value||'').trim(),
+  commodity:T.commodity,state:T.state,district:T.district,
+  page_url:location.pathname
+ })}).then(function(r){
+  return r.json().then(function(j){return {ok:r.ok,status:r.status,body:j};});
+ }).then(function(res){
+  if(res.ok&&res.body&&res.body.success){
+   sent=true;btn.hidden=true;say('');
+   okMsg=(res.body.message||'')+' आगे का अपडेट आप कृषि बुक में देख सकते हैं।';
+   showAppealOk();
+   return;
+  }
+  btn.disabled=false;
+  var d=res.body&&res.body.detail;
+  say(res.status===429
+      ? 'बहुत सारे अनुरोध — कुछ देर बाद कोशिश करें।'
+      : res.status===401
+      ? 'भेजने के लिए पहले लॉगिन करें।'
+      : (typeof d==='string'&&d?d:'अभी नहीं भेजा जा सका — दोबारा कोशिश करें।'),'bad');
+ }).catch(function(){
+  btn.disabled=false;say('नेटवर्क की समस्या — दोबारा कोशिश करें।','bad');
+ }).then(function(){busy=false;});
+};
+"""
+
+
+def _appeal_block(hi: str, commodity: str, state: str, district: str) -> str:
+    """🤝 "बेचना है / खरीदना है" button + its panel, for tier-4 district pages.
+
+    A district page is where intent is at its sharpest: the farmer has just read
+    what his crop fetches in *his* mandi. Until now the page ended there. This
+    captures the next sentence — who wants to sell, what, where — into
+    crop_appeals, and it is the supply side of the buyer/dealer directory.
+
+    Deliberately not login-gated (see routes/appeal.py): a wall here would cost
+    more appeals than the account linkage is worth. Name is the only thing a
+    farmer must type; the message is pre-written and the profile fields fill
+    themselves in for anyone signed in.
+
+    All markup is identical for every visitor — /bhav HTML is edge-cached, so
+    nothing user-specific may be rendered server-side. The panel hydrates
+    client-side, same contract as _alert_bell."""
+    place = f"{district} के आस-पास"
+    cfg = _json.dumps({
+        "commodity": commodity or "",
+        "state":     state or "",
+        "district":  district or "",
+        "msg": {
+            "sell": (f"मेरे पास बिक्री के लिए {hi} है। {place} अच्छा भाव देने वाले "
+                     f"खरीदार से मेरी बात कराएं।"),
+            "buy":  (f"मुझे {hi} खरीदना है। {place} बेचने वाले किसान या व्यापारी से "
+                     f"मेरी बात कराएं।"),
+        },
+    }, ensure_ascii=False)
+    return f"""<div class="ap-ov" id="ap-ov" hidden>
+<div class="ap-box" role="dialog" aria-modal="true" aria-labelledby="ap-t">
+<button class="ap-x" type="button" onclick="closeCropAppeal()" aria-label="बंद करें">&times;</button>
+<h2 id="ap-t">{escape(hi)} बेचना है या खरीदना है?</h2>
+<p class="ap-sub">📍 {escape(district)}, {escape(_hindi_state(state))} · अपनी बात यहाँ लिखिए — सही खरीदार या बेचने वाले से जोड़ने की कोशिश की जाएगी।</p>
+<div class="ap-seg" role="group" aria-label="बेचना है या खरीदना है">
+<button type="button" class="on" data-kind="sell">🌾 बेचना है</button>
+<button type="button" data-kind="buy">🛒 खरीदना है</button>
+</div>
+<div class="ap-f"><label for="ap-name">आपका नाम *</label>
+<input id="ap-name" type="text" maxlength="80" autocomplete="name" placeholder="जैसे रामकिशोर यादव"></div>
+<div class="ap-row">
+<div class="ap-f"><label for="ap-qty">मात्रा</label>
+<input id="ap-qty" type="text" maxlength="40" placeholder="जैसे 40 क्विंटल"></div>
+<div class="ap-f"><label for="ap-ph">फ़ोन नंबर</label>
+<div class="ap-tel" id="ap-tel"><span class="ap-cc" id="ap-cc" aria-hidden="true">+91</span>
+<input id="ap-ph" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel"
+pattern="[0-9]{{10}}" placeholder="10 अंकों का नंबर" aria-describedby="ap-note"></div>
+<button class="ap-free" id="ap-free" type="button" onclick="toggleFreePhone()">दूसरा फ़ॉर्मैट — नंबर खुद लिखें</button></div>
+</div>
+<div class="ap-f"><label for="ap-msg">आपका संदेश *</label>
+<textarea id="ap-msg" rows="4" maxlength="1000"></textarea></div>
+<p class="ap-note" id="ap-note">फ़ोन नंबर देना ज़रूरी नहीं है, लेकिन नंबर होने पर खरीदार से जोड़ना आसान हो जाता है। आपका नंबर पेज पर कहीं नहीं दिखाया जाता।</p>
+<button class="ap-send" id="ap-send" type="button" onclick="sendCropAppeal()">भेजें</button>
+<p class="ap-out" id="ap-out" role="status" aria-live="polite"></p>
+</div>
+</div>
+<div class="ap-ok-ov" id="ap-ok-ov" hidden>
+<div class="ap-ok" role="dialog" aria-modal="true" aria-labelledby="ap-ok-t">
+<button class="ap-x" type="button" onclick="closeAppealOk()" aria-label="बंद करें">&times;</button>
+<div class="ap-ok-ic" aria-hidden="true">✅</div>
+<h2 id="ap-ok-t">भाई! आपकी बात कृषि मित्र तक पहुँचा दी गई है</h2>
+<p class="ap-ok-sub" id="ap-done-sub"></p>
+<button class="ap-book" id="ap-book" type="button" onclick="openAppealBook()">📒 कृषि बुक खोलें</button>
+<button class="ap-ok-done" type="button" onclick="closeAppealOk()">ठीक है</button>
+</div>
+</div>
+<script>(function(){{var T={cfg};{_APPEAL_JS}}})();</script>"""
+
+
 def _nearest_panel_html(cs: str, hi: str, row: dict, dist_km: float) -> str:
     """Inner markup for the .better panel when a nearest mandi is found —
     mirrors the highest-price card so the swapped-in panel looks native."""
@@ -3734,6 +4104,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {signal_html}
 <div class="answer-actions">
 <button class="answer-share" type="button" onclick="shareBhav()">{_WA_GLYPH} WhatsApp पर भेजें</button>
+<button class="answer-appeal" type="button" onclick="openCropAppeal()">🤝 खरीदें/बेचें</button>
 {_net_price_cta(hi, cs, state, district)}
 </div>
 </div>
@@ -3769,7 +4140,9 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 <div class="cta-row">
 <button class="btn btn-wa" type="button" onclick="shareBhav()">📲 WhatsApp पर भाव भेजें</button>
+<button class="btn btn-appeal" type="button" onclick="openCropAppeal()">🤝 {escape(hi)} बेचना/खरीदना है?</button>
 </div>
+{_appeal_block(hi, commodity, state, district)}
 
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
@@ -3781,4 +4154,4 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS)
+                extra_css=_LAZY_CSS + _APPEAL_CSS)

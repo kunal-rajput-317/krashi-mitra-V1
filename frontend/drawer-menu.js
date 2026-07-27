@@ -36,6 +36,29 @@
     (document.head || document.documentElement).appendChild(s);
   })();
 
+  // ---- Shell bootstrap: krashibook.js ---------------------------------
+  // The drawer header shows the 📒 KrashiBook button only on pages that ship
+  // the component, so it appeared on 6 pages and was missing everywhere else —
+  // the same header behaving differently depending on where the farmer was.
+  // Bootstrapping it here, exactly as ads.js is bootstrapped above, hands every
+  // page the same header from one edit: the 17 static pages, the 60 articles,
+  // and /bhav + /product's server-rendered pages alike.
+  //
+  // krashibook.js guards itself — it no-ops on shop.html (which ships its own
+  // native bell) and against being included twice — so this is safe to fire
+  // unconditionally. openKbook() below handles the shop.html case by falling
+  // back to that native bell.
+  (function bootKbook() {
+    if (document.querySelector('script[src*="krashibook.js"]')) return;
+    var me = document.currentScript ||
+             document.querySelector('script[src*="drawer-menu.js"]');
+    if (!me || !me.src) return;
+    var s = document.createElement('script');
+    s.src = new URL('krashibook.js', me.src).href;   // resolves ../drawer-menu.js too
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  })();
+
   var OLIVE = '#6f7f3a', LEAF = '#b3c47f', CREAM = '#eef3e0';
 
   // Menu tiers are colour-coded so depth is readable at a glance: forest green
@@ -65,7 +88,9 @@
     '🌤️': { hi: 'मौसम',          en: 'Weather',     kn: 'ಹವಾಮಾನ' },
     '🌱':  { hi: 'मेरी फसल',      en: 'My Crop',     kn: 'ನನ್ನ ಬೆಳೆ' },
     '🏪':  { hi: 'मंडी भाव',      en: 'Mandi Rates', kn: 'ಮಂಡಿ ದರ' },
-    '📈':  { hi: 'सभी भाव सूची',   en: 'All Prices',  kn: 'ಎಲ್ಲಾ ದರಗಳು' },
+    // '📈' सभी भाव सूची is retired — see DROP below. No label/icon needed: a
+    // dropped link never reaches claim() or applyMenuLang().
+    '🚜':  { hi: 'नेट भाव कैलकुलेटर', en: 'Net Price Tool', kn: 'ನೆಟ್ ದರ ಟೂಲ್' },
     '🛒':  { hi: 'दुकान',         en: 'Shop',        kn: 'ಅಂಗಡಿ' },
     '🔍':  { hi: 'कृषि खोज',      en: 'Search',      kn: 'ಹುಡುಕಿ' },
     '🗺️': { hi: 'कृषि मानचित्र',  en: 'Map',         kn: 'ನಕ್ಷೆ' },
@@ -82,7 +107,7 @@
     '🌤️': '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="' + LEAF + '"/><g stroke="' + LEAF + '" stroke-width="1.6" stroke-linecap="round"><path d="M9 2.5v1.4M9 12.1v1.4M2.9 8h1.4M13.7 8h1.4M4.7 3.7l1 1M12.3 11.3l1 1M13.3 3.7l-1 1M5.7 11.3l-1 1"/></g><path d="M9.2 19a3.4 3.4 0 0 1 .2-6.8 4.4 4.4 0 0 1 8.4 1.3A2.9 2.9 0 0 1 17.4 19H9.2Z" fill="currentColor"/></svg>',
     '🌱': '<svg viewBox="0 0 24 24"><path d="M12 20.5V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12.3 13.5c0-3 2.4-5.2 5.7-5.2 0 3-2.4 5.2-5.7 5.2Z" fill="' + LEAF + '"/><path d="M11.7 12c0-2.9-2.3-4.8-5.2-4.8 0 2.9 2.3 4.8 5.2 4.8Z" fill="currentColor"/><path d="M9 20.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     '🏪': '<svg viewBox="0 0 24 24"><path d="M4 9h16l-1.1-4.2A1 1 0 0 0 17.94 4H6.06a1 1 0 0 0-.96.8L4 9Z" fill="' + LEAF + '"/><path d="M5.2 9v9.5A1.5 1.5 0 0 0 6.7 20h10.6a1.5 1.5 0 0 0 1.5-1.5V9" fill="currentColor"/><rect x="9" y="13" width="6" height="7" rx="0.6" fill="' + LEAF + '"/></svg>',
-    '📈': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v15a1 1 0 0 0 1 1h15"/><path d="M7.5 14.5 11 11l3 3 5-6"/><path d="M15.5 8H20v4.5"/></svg>',
+    '🚜': '<svg viewBox="0 0 24 24"><path d="M5 7.5h4.2a1 1 0 0 1 .95.68L11.6 12H5a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1Z" fill="' + LEAF + '"/><path d="M12.4 12l-1-3h4.3a1 1 0 0 1 .94.66L17.7 12Z" fill="currentColor"/><path d="M3 13.2h16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="17" r="3.9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.2" cy="18" r="2.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
     '🛒': '<svg viewBox="0 0 24 24"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.6" fill="currentColor"/><circle cx="16.5" cy="19" r="1.6" fill="currentColor"/></svg>',
     '🔍': '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="' + LEAF + '" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
     '🗺️': '<svg viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.6"/></svg>',
@@ -169,10 +194,23 @@
   var FOOTER = ['💬', '👤'];
   var GROUPS = [
     { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '🗺️', '🗺'] }, // मौसम · मेरी फसल · कृषि मानचित्र
-    { key: 'industry', ico: 'industry', set: ['🏪', '📈', '🛒'] },
+    { key: 'industry', ico: 'industry', set: ['🏪', '🚜', '🛒'] },
     { key: 'news',     ico: 'news',     set: ['📰', '🏛️', '🏛'] },
     { key: 'other',    ico: 'other',    set: ['🔍', '🧺'] } // कृषि खोज · कृषि बाज़ार
   ];
+
+  // Items retired from the menu, mapped to the item that inherits their
+  // "you are here" highlight. मंडी भाव (🏪 → mandi.html) and सभी भाव सूची
+  // (📈 → /bhav) were two doors onto the same question and the farmer had to
+  // guess which one he wanted; the menu now carries one, pointed at the fuller
+  // /bhav tree. mandi.html keeps its own entry in the bottom nav.
+  var DROP = { '📈': '🏪' };
+
+  // Hrefs this file owns outright, whatever a page shipped. Root-absolute for
+  // the same reason ensureNetPrice() is: drawer markup lives at several
+  // directory depths and /bhav is served by the backend, so a relative path
+  // would resolve wrong from /articles/ or from inside the /bhav tree.
+  var HREF = { '🏪': '/bhav' };
 
   function injectCss() {
     if (document.getElementById(STYLE_ID)) return;
@@ -216,12 +254,80 @@
   }
 
   // Close the drawer, then open the KrashiBook modal via its existing button.
+  // shop.html ships its own native bell instead of the book (krashibook.js
+  // deliberately no-ops there), so fall back to that — otherwise the header
+  // button we now inject on every page would be dead on exactly one of them.
   function openKbook(e) {
     if (e) e.preventDefault();
     var open = document.querySelector('.sidebar-drawer-overlay.open');
     if (open) open.classList.remove('open');
-    var btn = document.getElementById('km-book-btn');
+    var btn = document.getElementById('km-book-btn') ||
+              document.getElementById('header-bell-btn');
     if (btn) btn.click();
+  }
+
+  // The net-price calculator is the one farmer-facing feature no competitor has,
+  // and until now it was reachable only from inside the /bhav tree — no static
+  // page linked it at all. Synthesising the link here instead of hand-adding it
+  // to ~44 static pages plus bhav.py's server-rendered drawer means every page
+  // on the site gains the entry point from one edit, and pages written later
+  // inherit it by shipping the standard shell. Absolute href: drawer markup
+  // lives at several directory depths (articles/ is one down) and /bhav pages
+  // are served by the backend, so a relative path would break somewhere.
+  // Returns true when it actually injected, so build() can group what it added.
+  function ensureNetPrice(box) {
+    var have = [].slice.call(box.children).some(function (n) {
+      return n.classList && n.classList.contains('sidebar-drawer-link') &&
+             iconOf(n) === '🚜';
+    });
+    if (have) return false;
+    var a = document.createElement('a');
+    a.href = '/bhav/net-price';
+    a.className = 'sidebar-drawer-link';
+    // On the calculator page itself the server-rendered drawer has already
+    // highlighted its भाव entry (bhav.py renders every page in this module with
+    // active="bhav", and fixupLinks has since passed that highlight to मंडी
+    // भाव), so hand it over rather than showing two.
+    if (/^\/bhav\/net-price/.test(location.pathname)) {
+      [].forEach.call(box.querySelectorAll('.sidebar-drawer-link.active'),
+                      function (n) { n.classList.remove('active'); });
+      a.className += ' active';
+    }
+    a.innerHTML = '<span class="sidebar-drawer-link-icon">🚜</span>' +
+                  '<span>' + LABELS['🚜'].hi + '</span>';
+    box.appendChild(a);   // position comes from GROUPS, not document order
+    return true;
+  }
+
+  // Retire DROP'd links and repoint the HREF'd ones. Done here rather than in
+  // ~44 static pages plus bhav.py's server-rendered drawer, for the same reason
+  // the grouping itself lives in this file: one edit, one source of truth, and
+  // pages written later inherit it by shipping the standard shell.
+  // Mutates `links` so the caller's list stays accurate.
+  function fixupLinks(links) {
+    var byIcon = {};
+    links.forEach(function (a) {
+      var i = iconOf(a);
+      if (i && !byIcon[i]) byIcon[i] = a;
+    });
+
+    Object.keys(DROP).forEach(function (gone) {
+      var a = byIcon[gone];
+      if (!a) return;
+      // Hand the highlight over before removing the node — bhav.py marks 📈
+      // active on all ~14k of its pages, so dropping it silently would leave
+      // the whole /bhav tree with no "you are here" at all.
+      var heir = byIcon[DROP[gone]];
+      if (heir && a.classList.contains('active')) heir.classList.add('active');
+      if (a.parentNode) a.parentNode.removeChild(a);
+      var at = links.indexOf(a);
+      if (at !== -1) links.splice(at, 1);
+      delete byIcon[gone];
+    });
+
+    Object.keys(HREF).forEach(function (i) {
+      if (byIcon[i]) byIcon[i].setAttribute('href', HREF[i]);
+    });
   }
 
   function build(box) {
@@ -230,7 +336,12 @@
     var links = [].slice.call(box.children).filter(function (n) {
       return n.classList && n.classList.contains('sidebar-drawer-link');
     });
+    fixupLinks(links);
+    // Bail before injecting: on a page too sparse to group, an appended link
+    // would be left sitting there with a raw emoji and no category. Counted
+    // after the fixup, so a dropped link can't leave a one-item menu grouped.
     if (links.length < 2) return;
+    if (ensureNetPrice(box)) links.push(box.lastChild);
 
     var byIcon = {};
     links.forEach(function (a) {
