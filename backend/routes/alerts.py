@@ -149,7 +149,16 @@ def mandi_status(
 
     uid = _user_id(authorization)
     if uid is not None and base.filter(MandiAlert.user_id == uid).first():
-        return {"success": True, "message": "", "data": {"subscribed": True}}
+        # The row says active, but a device that changed hands (shared phone,
+        # new owner) or got pruned as dead (404/410) leaves it undeliverable —
+        # match _devices_for()'s own definition of "reachable" rather than
+        # trusting the row alone, or the bell would say ON forever with
+        # nothing ever arriving again.
+        has_device = db.query(PushSubscription).filter(
+            PushSubscription.user_id == uid,
+            PushSubscription.active.is_(True),
+        ).first() is not None
+        return {"success": True, "message": "", "data": {"subscribed": has_device}}
 
     sub = db.query(PushSubscription).filter(PushSubscription.endpoint == endpoint).first()
     on = bool(sub) and base.filter(
@@ -210,13 +219,16 @@ def mandi_alert_on(
     # farmer gets the same price pushed to him twice.
     alert = db.query(MandiAlert).filter(MandiAlert.user_id == uid, *target).first()
     if alert is None:
-        # Otherwise adopt the anonymous alert this very device created before the
-        # login gate, so logging in doesn't strand a duplicate. Falls back to a
-        # fresh row. Either way the (subscription_id, crop, mandi) unique
-        # constraint is respected.
+        # Otherwise adopt whatever row already occupies this (device, crop, mandi)
+        # slot — a legacy pre-login alert (user_id NULL), or one left behind by
+        # whoever subscribed from this device before. Not scoped to NULL only:
+        # the Push API allows exactly one subscriber per endpoint, so a shared
+        # device that changes hands genuinely can't go on alerting its previous
+        # owner from here, and scoping to NULL would instead try to INSERT a
+        # second row and 500 on the (subscription_id, crop, mandi) unique
+        # constraint the first owner's row already holds.
         alert = db.query(MandiAlert).filter(
             MandiAlert.subscription_id == sub.id,
-            MandiAlert.user_id.is_(None),
             *target,
         ).first()
 

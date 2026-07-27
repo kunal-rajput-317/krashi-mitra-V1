@@ -13,6 +13,8 @@ import json
 import os
 import logging
 
+from sqlalchemy import func
+
 from backend.database.db import SessionLocal, MandiPrice, MandiPriceHistory
 
 logger = logging.getLogger("krishi.mandi_service")
@@ -80,12 +82,18 @@ def get_mandi_prices(commodity: str, district: str, state: str) -> dict:
     db = SessionLocal()
     try:
         q = db.query(MandiPrice)
+        # func.lower(col) == value.lower(), NOT .ilike(value) — this is the query
+        # mandi_prices_csd_lower_idx (db.py) exists to serve, and Postgres only
+        # matches a lower()-expression index against a literal `lower(col) = ...`
+        # clause, never against ILIKE (even with no wildcards). Written as .ilike(),
+        # this ran a full table scan on mandi.html's live price lookups regardless
+        # of the index. See the identical fix + writeup in routes/bhav.py _rows_for().
         if commodity:
-            q = q.filter(MandiPrice.commodity.ilike(commodity))
+            q = q.filter(func.lower(MandiPrice.commodity) == commodity.lower())
         if state:
-            q = q.filter(MandiPrice.state.ilike(state))
+            q = q.filter(func.lower(MandiPrice.state) == state.lower())
         if district:
-            q = q.filter(MandiPrice.district.ilike(district))
+            q = q.filter(func.lower(MandiPrice.district) == district.lower())
 
         limit = 50 if commodity else 150
         rows  = q.limit(limit).all()

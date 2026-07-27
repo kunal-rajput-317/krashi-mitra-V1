@@ -15,9 +15,18 @@
     /^172\.(1[6-9]|2\d|3[01])\./.test(host);
 
   var defaultPort = location.port || '8000';
+  // Production is served two ways: krashimitra.in (Netlify static + a handful
+  // of proxied paths in _redirects — bhav/product/share/alerts/sitemap/llms
+  // ONLY) and krashi-mitra-v1.onrender.com (the FastAPI app serving its own
+  // frontend, same origin as the API). `location.origin` would be right on
+  // the Render domain but silently 404s everything else (login, signup,
+  // /auth/*, /profile, ...) on krashimitra.in since Netlify doesn't proxy
+  // those paths. Always hitting the Render URL directly works on both —
+  // it's a cross-origin call from krashimitra.in, but that origin is already
+  // in the backend's CORS allowlist.
   window.KRASHIMITRA_API_BASE = isLocal
     ? location.protocol + '//' + (host || 'localhost') + ':' + defaultPort
-    : (location.origin || 'https://krashi-mitra-v1.onrender.com');
+    : 'https://krashi-mitra-v1.onrender.com';
   window.KRASHIMITRA_IS_LOCAL = isLocal;
 
   console.log('[KrashiMitra] API base =', window.KRASHIMITRA_API_BASE);
