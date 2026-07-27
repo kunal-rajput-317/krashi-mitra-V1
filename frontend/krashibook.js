@@ -94,7 +94,8 @@
     return o.quote_total != null || String(o.status || "").toLowerCase() === "quoted";
   }
 
-  var NOTIF_ALIAS = { prebook: "pending", verified: "quoted", canceled: "cancelled" };
+  var NOTIF_ALIAS = { prebook: "pending", verified: "quoted", canceled: "cancelled",
+                      "out of order": "out of stock" };
   function stageKey(o) {
     var k = String(o.status || "pending").toLowerCase().trim();
     return NOTIF_ALIAS[k] || k;
@@ -107,6 +108,8 @@
     delivered:   { chip: "📦 डिलीवर हो गया", cls: "ok",      msg: function () { return "ऑर्डर डिलीवर हो गया — धन्यवाद! 🙏"; } },
     cancelled:   { chip: "❌ रद्द",          cls: "cancel",  msg: function () { return "यह ऑर्डर रद्द कर दिया गया है।"; } },
     unavailable: { chip: "🚫 उपलब्ध नहीं",   cls: "cancel",  msg: function () { return "यह उत्पाद अभी उपलब्ध नहीं है।"; } },
+    // Distinct from unavailable: the dealer has simply run out, the product itself is fine.
+    "out of stock": { chip: "📦 स्टॉक खत्म", cls: "cancel",  msg: function () { return "यह उत्पाद अभी स्टॉक में नहीं है।"; } },
   };
 
   function seenMap() {

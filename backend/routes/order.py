@@ -195,8 +195,22 @@ def get_order_history(
 # ── PUT /order/status — Admin updates order status ───────────
 
 VALID_STATUSES = ["Pending", "Booked", "Quoted", "Purchased",
-                  "Dispatched", "Delivered", "Cancelled", "Unavailable", "Out of Order"]
+                  "Dispatched", "Delivered", "Cancelled", "Unavailable", "Out of Stock"]
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "krashimitra_admin_2026")
+
+# "Out of Order" was the wrong phrase — in English that describes a broken
+# machine, not a product the dealer has run out of. Renamed to "Out of Stock".
+# orders.status stores the label itself, so rows written before the rename still
+# say "Out of Order"; this maps them (and any stale admin tab still posting the
+# old value) onto the new one instead of 400-ing or leaving a farmer looking at
+# a status nothing recognises. Keyed lowercase — matching is case-insensitive.
+LEGACY_STATUS_ALIAS = {"out of order": "Out of Stock"}
+
+
+def canonical_status(status: str) -> str:
+    """Trim, then fold a retired status label onto its replacement."""
+    s = (status or "").strip()
+    return LEGACY_STATUS_ALIAS.get(s.lower(), s)
 
 
 class StatusUpdateRequest(BaseModel):
@@ -214,7 +228,8 @@ def update_order_status(
     if body.admin_key != ADMIN_SECRET:
         return {"success": False, "message": "❌ Invalid admin key"}
 
-    if body.status not in VALID_STATUSES:
+    next_status = canonical_status(body.status)
+    if next_status not in VALID_STATUSES:
         return {"success": False, "message": f"❌ Invalid status. Use: {', '.join(VALID_STATUSES)}"}
 
     order = db.query(Order).filter(Order.tracking_code == body.tracking_code).first()
@@ -222,7 +237,7 @@ def update_order_status(
         return {"success": False, "message": f"❌ Order {body.tracking_code} not found"}
 
     old_status = order.status
-    order.status = body.status
+    order.status = next_status
     db.commit()
 
     return {

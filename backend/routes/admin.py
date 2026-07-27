@@ -640,14 +640,13 @@ async def update_admin_order_status(
     db: Session = Depends(admin_db),
 ):
     from backend.database.db import Order
+    # Single source of truth — this endpoint and PUT /order/status must never
+    # disagree about which labels exist.
+    from backend.routes.order import VALID_STATUSES, canonical_status
 
-    valid_statuses = {
-        "Pending", "Booked", "Quoted", "Purchased",
-        "Dispatched", "Delivered", "Cancelled", "Unavailable", "Out of Order",
-    }
-    next_status = (payload.get("status") or "").strip()
-    if next_status not in valid_statuses:
-        raise HTTPException(400, f"Invalid status. Use: {', '.join(sorted(valid_statuses))}")
+    next_status = canonical_status(payload.get("status") or "")
+    if next_status not in VALID_STATUSES:
+        raise HTTPException(400, f"Invalid status. Use: {', '.join(sorted(VALID_STATUSES))}")
 
     order = db.query(Order).filter(Order.tracking_code == tracking_code).first()
     if not order:
@@ -743,7 +742,8 @@ async def get_admin_heatmap(
             status_lower = (order.status or "").lower()
             if status_lower == "delivered":
                 state_demand[state_key]["delivered"] += qty
-            elif status_lower in {"unavailable", "cancelled", "out of order"} or "not" in status_lower or "reject" in status_lower:
+            elif status_lower in {"unavailable", "cancelled", "out of stock",
+                                  "out of order"} or "not" in status_lower or "reject" in status_lower:
                 state_demand[state_key]["not_available"] += qty
 
             month_idx = 6

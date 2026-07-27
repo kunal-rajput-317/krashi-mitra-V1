@@ -500,8 +500,12 @@ def _sell_signal(series: list, today_avg, avg_pct) -> str:
 # Kept as a plain (non-f) string so the JS braces need no escaping.
 _BELL_JS = """
 var b=document.getElementById('bhav-bell');
-if(!b||!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return;
-var txt=b.querySelector('.bb-txt'),busy=false,KEY='';
+if(!b)return;
+var txt=b.querySelector('.bb-txt'),busy=false,KEY='',keyReq=null;
+/* Web push needs all three. The bell is shown either way — a farmer should always
+   be able to SEE that bhav alerts exist, which is the whole point of putting it on
+   a page SEO traffic lands on. This flag only decides what a tap can do. */
+var PUSH_OK=('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
 function key(s){var p='='.repeat((4-s.length%4)%4),x=(s+p).replace(/-/g,'+').replace(/_/g,'/'),
  r=atob(x),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
 function paint(on){b.classList.toggle('on',!!on);if(!on)b.classList.remove('ringing');
@@ -517,15 +521,26 @@ function tok(){var t=localStorage.getItem('krishi_token');
  return (t&&t!=='null'&&t!=='undefined')?t:null;}
 function hdr(json){var h=json?{'Content-Type':'application/json'}:{},t=tok();
  if(t)h['Authorization']='Bearer '+t;return h;}
-/* Reveal the bell only when the server actually has VAPID configured, then
-   hydrate its state (the HTML itself is edge-cached, so it can't be baked in). */
-fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
- if(!j||!j.data||!j.data.enabled)return;
- KEY=j.data.key;b.hidden=false;
+/* The VAPID key is fetched, never baked in — this HTML is edge-cached and served
+   to everyone alike. Memoised, and retried on click rather than once at load: a
+   page that opened against a cold (or suspended) backend must not leave the bell
+   permanently dead until the farmer reloads. */
+function ensureKey(){
+ if(KEY)return Promise.resolve(KEY);
+ if(keyReq)return keyReq;
+ keyReq=fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
+  KEY=(j&&j.data&&j.data.enabled)?j.data.key:'';return KEY;
+ }).catch(function(){return '';}).then(function(k){if(!k)keyReq=null;return k;});
+ return keyReq;
+}
+/* Hydrate the on/off state: the button is rendered identically for everyone, so
+   only the client can know whether this account already has the alert on. */
+if(PUSH_OK){
  /* Pre-register the SW now (SEO visitors land here without one) so a click
     doesn't pay install+activate latency before it can subscribe. */
  navigator.serviceWorker.register('/sw.js').catch(function(){});
- return navigator.serviceWorker.getRegistration().then(function(reg){
+ ensureKey();
+ navigator.serviceWorker.getRegistration().then(function(reg){
   return (reg&&reg.pushManager)?reg.pushManager.getSubscription():null;
  }).then(function(s){
   /* Ask even with no local subscription: a signed-in farmer's alert lives on
@@ -535,8 +550,8 @@ fetch('/alerts/vapid-key').then(function(r){return r.json();}).then(function(j){
    .then(function(r){return r.json();})
    .then(function(d){paint(d&&d.data&&d.data.subscribed);})
    .then(resume);
- });
-}).catch(function(){});
+ }).catch(function(){});
+}
 /* Turning the bell ON needs a login — checked before Notification.requestPermission()
    so a logged-out visitor never faces the browser's permission dialog for an
    alert the server would refuse anyway. */
@@ -552,7 +567,7 @@ function gate(){
 /* Came back from login with ?do=bhav-alert — finish what he originally tapped,
    instead of making him find the bell again. */
 function resume(){
- if(!window.KMTakeResume)return;
+ if(!PUSH_OK||!window.KMTakeResume)return;
  if(window.KMTakeResume()!=='bhav-alert'||b.classList.contains('on'))return;
  /* Safari refuses Notification.requestPermission() outside a user gesture, and
     this runs on load after a redirect. Complete silently only when permission
@@ -592,13 +607,28 @@ function off(){
    district:T.district})}).then(function(){paint(false);});
  });
 }
+/* The bell is always on screen, so every reason a tap can fail has to answer back
+   in words. Silence was acceptable while the button hid itself; it isn't now. */
 window.toggleBhavAlert=function(){
- if(busy||!KEY)return;
- var on=b.classList.contains('on');
- if(!on&&!gate())return;
+ if(busy)return;
+ function done(e){if(e&&!e.quiet)alert(e.message||'सूचना चालू नहीं हो सकी।');
+  busy=false;b.classList.remove('loading');}
+ if(b.classList.contains('on')){
+  busy=true;b.classList.add('loading');
+  off().then(function(){done();},done);return;
+ }
+ /* Browser can't do push at all — say so instead of pushing him through a login
+    that would dead-end anyway. */
+ if(!PUSH_OK){alert('इस ब्राउज़र में सूचना की सुविधा नहीं है — Chrome में यह पेज खोलें।');return;}
+ /* Login is the gate, checked before Notification.requestPermission() so a
+    logged-out visitor never faces the browser's permission dialog for an alert
+    the server would refuse anyway. */
+ if(!gate())return;
  busy=true;b.classList.add('loading');
- (on?off():go()).catch(function(e){if(!(e&&e.quiet))alert((e&&e.message)||'सूचना चालू नहीं हो सकी।');})
-  .then(function(){busy=false;b.classList.remove('loading');});
+ ensureKey().then(function(k){
+  if(!k)throw new Error('भाव अलर्ट अभी उपलब्ध नहीं है — थोड़ी देर बाद फिर कोशिश करें।');
+  return go();
+ }).then(function(){done();},done);
 };
 """
 
@@ -611,15 +641,19 @@ _BELL_SVG = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 def _alert_bell(commodity: str, state: str = "", district: str = "") -> str:
     """🔔 "notify me when this mandi's bhav changes" toggle for the answer panel.
 
-    /bhav HTML is edge-cached and served to everyone alike, so the on/off state
-    is never rendered server-side — the client hydrates it from this device's own
-    push subscription. The button ships hidden and is revealed only after the
-    browser proves it supports push AND /alerts/vapid-key says the server can
-    send: a toggle that silently delivers nothing is worse than no toggle."""
+    Always rendered visible. The feature only earns signups if a farmer can see it
+    exists, and these pages are where SEO traffic lands — so the bell advertises
+    itself to logged-out visitors too, and LOGIN is the gate on switching it on
+    (an alert has to belong to an account, not to a clearable browser).
+
+    /bhav HTML is edge-cached and served to everyone alike, so the on/off state is
+    never rendered server-side — the client hydrates it after load. Because the
+    button no longer hides itself when push is unavailable, every failure path in
+    _BELL_JS now has to explain itself in words."""
     target = _json.dumps({"commodity": commodity or "",
                           "state":     state or "",
                           "district":  district or ""}, ensure_ascii=False)
-    return ('<button class="bhav-bell" id="bhav-bell" type="button" hidden aria-pressed="false" '
+    return ('<button class="bhav-bell" id="bhav-bell" type="button" aria-pressed="false" '
             'onclick="toggleBhavAlert()" title="इस मंडी के भाव की सूचना पाएं">'
             f'{_BELL_SVG}<span class="bb-txt">भाव अलर्ट</span></button>'
             f'<script>(function(){{var T={target};{_BELL_JS}}})();</script>')
@@ -955,8 +989,8 @@ border:1px solid rgba(255,255,255,.20);border-left:4px solid rgba(255,255,255,.6
 .answer-signal.hold{border-left-color:var(--amber);background:rgba(233,168,37,.20)}
 .answer-signal.wait{border-left-color:#7fc4f5;background:rgba(46,134,222,.22)}
 /* 🔔 "notify me about this mandi" toggle — pinned top-right of the green panel,
-   above the crop photo. Starts hidden; only revealed once the client confirms
-   push is usable, so we never show a switch that cannot deliver. */
+   above the crop photo. Always visible, including to logged-out visitors: the
+   tap is what asks for a login. */
 .bhav-bell{position:absolute;top:14px;right:14px;z-index:3;display:inline-flex;align-items:center;
 gap:7px;padding:8px 13px;border-radius:999px;border:1.5px solid rgba(255,255,255,.34);
 background:rgba(0,0,0,.24);color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;
