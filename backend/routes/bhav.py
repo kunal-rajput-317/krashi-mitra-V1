@@ -2483,7 +2483,6 @@ def bhav_hub():
         if rank not in seen_tiles or n > seen_tiles[rank][2]:
             seen_tiles[rank] = (cs, cn, n)
     featured = [seen_tiles[r] for r in sorted(seen_tiles)]
-    featured_slugs = {cs for cs, _, _ in featured}
 
     # Photo-left "फ़सल की कीमत" tiles — the exact commodity-grid look of the app's
     # mandi.html landing, but each tile is a real crawlable <a href="/bhav/{crop}">
@@ -2501,15 +2500,6 @@ def bhav_hub():
 <div class="ctile-imgwrap">{img}</div>
 <div class="ctile-body"><div class="ctile-name"><b>{escape(hi)}</b> की कीमत</div></div>
 </a>""")
-
-    # Long tail — every other crop, still one crawlable link each.
-    rest = sorted(((cs, cn) for cs, cn in crops.items() if cs not in featured_slugs),
-                  key=lambda kv: _hindi_name(kv[1]))
-    rest_html = ""
-    if rest:
-        chips = "".join(_crop_chip(f"/bhav/{cs}", _hindi_name(cn), cn) for cs, cn in rest)
-        rest_html = (f'<h2>अन्य फसलें ({len(rest)})</h2>'
-                     f'<div class="chips">{chips}</div>')
 
     faqs = [
         ("मंडी भाव रोज़ कब अपडेट होता है?",
@@ -2529,21 +2519,6 @@ def bhav_hub():
     desc = (f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
             f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।")
 
-    # "राज्य के आधार पर" tab — every state that reports ANY crop, unioned across
-    # the whole index, each linking to its own all-crops hub (/bhav/rajya/{ss}).
-    # Both panes ship in the HTML (the state pane starts [hidden]); the tab JS
-    # only toggles visibility, so every state link stays crawlable with JS off.
-    state_names, state_crops = {}, {}
-    for c, smap in idx["states"].items():
-        if not _is_crop(idx["crops"].get(c, "")):
-            continue
-        for s, sname in smap.items():
-            state_names.setdefault(s, sname)
-            state_crops.setdefault(s, set()).add(c)
-    state_cards = "".join(
-        _state_card(f"/bhav/rajya/{s}", state_names[s], len(state_crops[s]), "फसलें")
-        for s in sorted(state_names, key=lambda s: state_names[s]))
-
     body = f"""<h1 class="mandi-page-heading">कृषि मंडी भाव</h1>
 <div class="bhav-tabs" role="tablist">
 <button class="bhav-tab-btn active" type="button" data-pane="crop" role="tab">फसल के आधार पर</button>
@@ -2559,7 +2534,7 @@ def bhav_hub():
 </div>
 <div class="shop-section-title"><span>आज के भाव — अपनी फसल चुनें</span></div>
 <div class="commodity-grid" id="bhav-commodity-grid">{"".join(tiles)}</div>
-<div id="bhav-crop-tail">{rest_html}</div>
+{_lazy_div('bhav-crop-tail')}
 </div>
 <div class="bhav-pane" data-pane="state" hidden>
 <div class="mandi-toolbar">
@@ -2570,12 +2545,13 @@ def bhav_hub():
 </div>
 </div>
 <div class="shop-section-title"><span>राज्य चुनें — सभी फसलों के भाव देखें</span></div>
-<div class="place-grid" id="bhav-state-grid">{state_cards}</div>
+<div class="place-grid" id="bhav-state-grid">{_LAZY_SKEL}</div>
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
-{_HUB_TAB_JS}"""
-    return _doc(title, desc, f"{SITE}/bhav", "", body, ld)
+{_HUB_TAB_JS}
+{_lazy_script([('/bhav/api/hub-rest', 'bhav-crop-tail'), ('/bhav/api/hub-states', 'bhav-state-grid')])}"""
+    return _doc(title, desc, f"{SITE}/bhav", "", body, ld, extra_css=_LAZY_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -3169,7 +3145,248 @@ def bhav_net_price_page():
 
 
 # ════════════════════════════════════════════════════════════
+# LAZY-LOAD API — serve heavy sections as JSON + HTML fragments
+#
+# The page renders instantly with the structure the farmer needs
+# (cards, selectors). Heavy DB queries (national aggregates,
+# full-state comparison) are fetched client-side AFTER the page
+# is visible — eliminating the 504 timeout on Render/Netlify.
+# ════════════════════════════════════════════════════════════
+_LAZY_SKEL = ('<div class="lazy-skel"><div class="skel-bar"></div>'
+              '<div class="skel-bar short"></div></div>')
+_LAZY_CSS = """
+.lazy-skel{padding:18px 16px;opacity:.55}
+.skel-bar{height:14px;border-radius:7px;background:linear-gradient(90deg,#e8e8e8 25%,#f4f4f4 50%,#e8e8e8 75%);
+background-size:200% 100%;animation:skel-sh 1.2s ease infinite;margin-bottom:10px}
+.skel-bar.short{width:60%}
+@keyframes skel-sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+"""
+
+
+def _lazy_div(div_id: str) -> str:
+    """Placeholder div with skeleton that JS will fill from the lazy API."""
+    return f'<div id="{div_id}">{_LAZY_SKEL}</div>'
+
+
+def _lazy_script(pairs: list) -> str:
+    """Emit a tiny <script> that fetches each (url, target_div_id) pair after
+    DOMContentLoaded and swaps in the returned HTML. Fires all fetches in
+    parallel so they appear as fast as the DB can answer."""
+    fetches = "".join(
+        f"fetch('{url}').then(r=>r.json()).then(d=>{{if(d.ok){{var e=document.getElementById('{did}');if(e)e.outerHTML=d.html;}}}}).catch(()=>{{}});"
+        for url, did in pairs
+    )
+    return f'<script>document.addEventListener("DOMContentLoaded",function(){{{fetches}}});</script>'
+
+
+@router.get("/bhav/api/hub-rest")
+def _api_hub_rest():
+    """Lazy: long-tail crop chips for the main /bhav page."""
+    idx = _get_index()
+    crops = {cs: cn for cs, cn in idx.get("crops", {}).items() if _is_crop(cn)}
+    featured, seen_tiles = [], {}
+    for cs, cn in crops.items():
+        rank = _tile_rank(cn)
+        if rank >= _STAPLE_TILES_N:
+            continue
+        n = len(idx["states"].get(cs, {}))
+        if rank not in seen_tiles or n > seen_tiles[rank][2]:
+            seen_tiles[rank] = (cs, cn, n)
+    featured_slugs = {cs for cs, _, _ in [seen_tiles[r] for r in sorted(seen_tiles)]}
+    rest = sorted(((cs, cn) for cs, cn in crops.items() if cs not in featured_slugs),
+                  key=lambda kv: _hindi_name(kv[1]))
+    if not rest:
+        return JSONResponse({"ok": True, "html": '<div id="bhav-crop-tail"></div>'})
+    chips = "".join(_crop_chip(f"/bhav/{cs}", _hindi_name(cn), cn) for cs, cn in rest)
+    html = f'<div id="bhav-crop-tail"><h2>अन्य फसलें ({len(rest)})</h2><div class="chips">{chips}</div></div>'
+    return JSONResponse({"ok": True, "html": html},
+                        headers={"Cache-Control": "public, max-age=3600",
+                                 "Netlify-CDN-Cache-Control": "public, max-age=86400"})
+
+
+@router.get("/bhav/api/hub-states")
+def _api_hub_states():
+    """Lazy: state map cards for the main /bhav page."""
+    idx = _get_index()
+    state_names, state_crops = {}, {}
+    for c, smap in idx["states"].items():
+        if not _is_crop(idx["crops"].get(c, "")):
+            continue
+        for s, sname in smap.items():
+            state_names.setdefault(s, sname)
+            state_crops.setdefault(s, set()).add(c)
+    state_cards = "".join(
+        _state_card(f"/bhav/rajya/{s}", state_names[s], len(state_crops[s]), "फसलें")
+        for s in sorted(state_names, key=lambda s: state_names[s]))
+    html = f'<div class="place-grid" id="bhav-state-grid">{state_cards}</div>'
+    return JSONResponse({"ok": True, "html": html},
+                        headers={"Cache-Control": "public, max-age=3600",
+                                 "Netlify-CDN-Cache-Control": "public, max-age=86400"})
+
+
+@router.get("/bhav/api/tier2-extras/{c_slug}")
+def _api_tier2_extras(c_slug: str):
+    """Lazy: best mandi nationwide + stats + answer_lead for tier 2."""
+    idx = _get_index()
+    cs = c_slug.lower()
+    commodity = idx.get("crops", {}).get(cs)
+    if not commodity:
+        return JSONResponse({"ok": False})
+
+    hi = _hindi_name(commodity)
+    today_hi = _hindi_date(date.today())
+    state_map = idx["states"].get(cs, {})
+
+    rows = _rows_for(commodity)
+    st = _stats(rows)
+
+    # Best mandi nationwide
+    best = max((r for r in rows if _num(r.get("modal_price"))),
+               key=lambda r: _num(r["modal_price"]), default=None)
+    best_html = ""
+    if best:
+        b_state = best.get("state", "")
+        b_dist = best.get("district", "")
+        best_html = (f'<section class="better" id="km-near-panel" data-crop="{cs}">'
+            f'<h2>🏆 आज देश में सबसे ज्यादा {escape(hi)} भाव</h2>'
+            f'<p class="better-sub">आज के मॉडल भाव के आधार पर</p>'
+            f'<ul><li><a class="better-mandi-card" href="/bhav/{cs}/{_slugify(b_state)}/{_slugify(b_dist)}">'
+            f'<div class="bmc-details"><span class="bmc-market">{escape(best.get("market","-"))}</span>'
+            f'<span class="bmc-meta">{escape(b_dist)}, {escape(_hindi_state(b_state))}</span></div>'
+            f'<span class="bmc-action">भाव देखें →</span></a></li></ul></section>')
+
+    # Answer lead
+    lead_avg = f" — देशभर का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
+    lead_best = (f" आज सबसे ऊंचा भाव {escape(best.get('market', '-'))} "
+                 f"({escape(best.get('district', '-'))}, {escape(_hindi_state(best.get('state', '')))}) "
+                 f"मंडी में दर्ज हुआ।" if best else "")
+    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi)} ({escape(commodity)}) का भाव देश के '
+                   f'{len(state_map)} राज्यों की {_mandis_gen(st["n"])} से भारत सरकार के Agmarknet '
+                   f'(data.gov.in) पोर्टल पर दर्ज हुआ{lead_avg}।{lead_best}</p>')
+
+    html = best_html + answer_lead
+    return JSONResponse({"ok": True, "html": html},
+                        headers={"Cache-Control": "public, max-age=300",
+                                 "Netlify-CDN-Cache-Control": "public, max-age=600"})
+
+
+@router.get("/bhav/api/tier3-extras/{c_slug}/{s_slug}")
+def _api_tier3_extras(c_slug: str, s_slug: str):
+    """Lazy: top mandis + stats + answer_lead for tier 3."""
+    idx = _get_index()
+    cs, ss = c_slug.lower(), s_slug.lower()
+    commodity = idx.get("crops", {}).get(cs)
+    state = idx.get("states", {}).get(cs, {}).get(ss)
+    if not (commodity and state):
+        return JSONResponse({"ok": False})
+
+    hi, hi_state = _hindi_name(commodity), _hindi_state(state)
+    today_hi = _hindi_date(date.today())
+    dist_map = idx["dists"].get(cs, {}).get(ss, {})
+
+    rows = _rows_for(commodity, state=state)
+    st = _stats(rows)
+
+    # Top-paying mandis
+    priced = [r for r in rows if _num(r.get("modal_price"))]
+    top = sorted(priced, key=lambda r: _num(r["modal_price"]), reverse=True)[:5]
+    top_html = ""
+    if top:
+        items = "".join(
+            f'<li><a class="better-mandi-card" href="/bhav/{cs}/{ss}/{_slugify(r.get("district",""))}">'
+            f'<div class="bmc-details"><span class="bmc-market">{escape(r.get("market","-"))}</span>'
+            f'<span class="bmc-meta">{escape(r.get("district","-"))}</span></div>'
+            f'<span class="bmc-action">भाव देखें →</span></a></li>'
+            for r in top)
+        low = min(priced, key=lambda r: _num(r["modal_price"]))
+        low_html = ""
+        if _num(low["modal_price"]) < _num(top[0]["modal_price"]):
+            low_html = (
+                '<div class="better-low">'
+                f'<p class="better-low-h">📉 आज सबसे कम {escape(hi)} भाव इस मंडी में</p>'
+                f'<a class="better-mandi-card low" href="/bhav/{cs}/{ss}/{_slugify(low.get("district",""))}">'
+                '<div class="bmc-details">'
+                f'<span class="bmc-market">{escape(low.get("market","-"))}</span>'
+                f'<span class="bmc-meta">{escape(low.get("district","-"))}</span>'
+                '</div><span class="bmc-action">भाव देखें →</span></a></div>')
+        top_html = (f'<section class="better" id="km-near-panel" data-crop="{cs}" data-state="{ss}">'
+                    f'<h2>🏆 {escape(hi_state)} में आज सबसे ज्यादा {escape(hi)} भाव</h2>'
+                    f'<p class="better-sub">भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>'
+                    f'<ul>{items}</ul>{low_html}</section>')
+
+    # Answer lead
+    lead_avg = f" — राज्य का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
+    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi_state)} के {len(dist_map)} जिलों की '
+                   f'{_mandis_gen(st["n"])} में {escape(hi)} का भाव सरकारी रिपोर्ट (भारत सरकार का Agmarknet '
+                   f'पोर्टल) में दर्ज हुआ{lead_avg}। नीचे अपना जिला चुनकर मंडीवार पूरा भाव देखें।</p>')
+
+    html = top_html + answer_lead
+    return JSONResponse({"ok": True, "html": html},
+                        headers={"Cache-Control": "public, max-age=300",
+                                 "Netlify-CDN-Cache-Control": "public, max-age=600"})
+
+
+@router.get("/bhav/api/tier4-extras/{c_slug}/{s_slug}/{d_slug}")
+def _api_tier4_extras(c_slug: str, s_slug: str, d_slug: str):
+    """Lazy: comparison panel for tier 4 (the #1 cause of 504s)."""
+    idx = _get_index()
+    cs, ss, ds = c_slug.lower(), s_slug.lower(), d_slug.lower()
+    commodity = idx.get("crops", {}).get(cs)
+    state = idx.get("states", {}).get(cs, {}).get(ss)
+    district = idx.get("dists", {}).get(cs, {}).get(ss, {}).get(ds)
+    if not (commodity and state and district):
+        return JSONResponse({"ok": False})
+
+    hi, hi_state = _hindi_name(commodity), _hindi_state(state)
+
+    rows = _rows_for(commodity, state=state)
+    st = _stats(rows)
+    med = _median_by(rows, "district")
+    here = med.get(district) or st["avg"]
+    better_html = ""
+    if here:
+        others = sorted(((dn, m - here) for dn, m in med.items() if dn != district),
+                        key=lambda x: x[1], reverse=True)
+        highers = [(dn, d) for dn, d in others if d > 0][:5]
+        lowers = [(dn, d) for dn, d in others if d < 0][-3:][::-1]
+
+        def _cmp_card(dn: str, diff: int, low: bool = False) -> str:
+            arrow, sign, cls = ("▼", "−", "dn") if low else ("▲", "+", "up")
+            return (
+                f'<li><a class="better-mandi-card{" low" if low else ""}" '
+                f'href="/bhav/{cs}/{ss}/{_slugify(dn)}">'
+                f'<div class="bmc-details">'
+                f'<span class="bmc-market">{escape(dn)}</span>'
+                f'<span class="bmc-meta">{escape(hi_state)}</span>'
+                f'</div><span class="bmc-action">'
+                f'<span class="bmc-delta {cls}">{arrow} {sign}₹{abs(diff):,}</span> '
+                f'<small>देखें →</small></span></a></li>')
+
+        if highers or lowers:
+            hi_block = (f'<ul>{"".join(_cmp_card(dn, d) for dn, d in highers)}</ul>' if highers
+                        else f'<p class="better-message">🏆 {escape(hi_state)} के किसी और जिले में '
+                             f'{escape(hi)} का इससे ज्यादा भाव नहीं मिल रहा — यहां भाव सबसे ऊंचा है।</p>')
+            lo_block = (f'<div class="better-low"><p class="better-low-h">'
+                        f'📉 इन जिलों में {escape(hi)} का भाव कम है</p>'
+                        f'<ul>{"".join(_cmp_card(dn, d, low=True) for dn, d in lowers)}</ul></div>'
+                        if lowers else "")
+            better_html = (f'<section class="better">'
+                f'<h2>📊 {escape(hi_state)} के अन्य जिलों में {escape(hi)} का भाव — तुलना</h2>'
+                f'<p class="better-sub">{escape(district)} के भाव ₹{here:,}/क्विंटल से तुलना · '
+                f'भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>'
+                f'{hi_block}{lo_block}</section>')
+
+    return JSONResponse({"ok": True, "html": better_html or ""},
+                        headers={"Cache-Control": "public, max-age=300",
+                                 "Netlify-CDN-Cache-Control": "public, max-age=600"})
+
+
+# ════════════════════════════════════════════════════════════
 # TIER 2 — /bhav/{crop} : pick a state
+#
+# FAST PATH: state cards come from the cached _get_index() —
+# no DB query at all. Heavy content (best mandi nationwide,
+# stats, answer_lead) is lazy-loaded via /bhav/api/tier2-extras.
 # ════════════════════════════════════════════════════════════
 @router.get("/bhav/{c_slug}", response_class=HTMLResponse)
 def bhav_crop(c_slug: str):
@@ -3184,58 +3401,23 @@ def bhav_crop(c_slug: str):
     canon = f"{SITE}/bhav/{cs}"
     state_map = idx["states"].get(cs, {})
 
-    rows = _rows_for(commodity)             # national picture
-    st = _stats(rows)
-
-    # No prices on this tier — only /bhav/{crop}/{state}/{district} shows the
-    # actual rupee figure. A state/district-level number here would answer the
-    # question before the click, so a farmer never reaches the specific page
-    # that's meant to rank and convert. This page is purely "pick your state".
+    # State cards — purely from the cached index, no DB hit.
     cards = []
     for ss, sn in sorted(state_map.items(), key=lambda kv: kv[1]):
         n = len(idx["dists"].get(cs, {}).get(ss, {}))
         cards.append(_state_card(f"/bhav/{cs}/{ss}", sn, n, "जिले"))
 
-    # The highest-paying mandi in the country today — the reason to read this page
-    # rather than bounce back to Google. Names the market as a hook but withholds
-    # the number, same reasoning as the cards above.
-    best = max((r for r in rows if _num(r.get("modal_price"))),
-               key=lambda r: _num(r["modal_price"]), default=None)
-    best_html = ""
-    if best:
-        b_state = best.get("state", "")
-        b_dist = best.get("district", "")
-        best_html = f"""<section class="better" id="km-near-panel" data-crop="{cs}">
-<h2>🏆 आज देश में सबसे ज्यादा {escape(hi)} भाव</h2>
-<p class="better-sub">आज के मॉडल भाव के आधार पर</p>
-<ul><li>
-<a class="better-mandi-card" href="/bhav/{cs}/{_slugify(b_state)}/{_slugify(b_dist)}">
-  <div class="bmc-details">
-    <span class="bmc-market">{escape(best.get('market','-'))}</span>
-    <span class="bmc-meta">{escape(b_dist)}, {escape(_hindi_state(b_state))}</span>
-  </div>
-  <span class="bmc-action">भाव देखें →</span>
-</a></li></ul></section>"""
-
     faqs = [
         (f"आज {hi} का भाव क्या है?",
-         (f"{today_hi} को {hi} का देशभर औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल है — "
-          f"{_mandis_gen(st['n'])} की सरकारी रिपोर्ट (Agmarknet) पर आधारित। हर राज्य और मंडी में "
-          f"रेट अलग होता है — नीचे अपना राज्य चुनें, फिर जिला चुनें।"
-          if st["avg"] else
-          f"{hi} का भाव हर राज्य और मंडी में अलग-अलग होता है। सटीक भाव जानने के लिए नीचे अपना राज्य चुनें, "
-          f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।")),
+         f"{hi} का भाव हर राज्य और मंडी में अलग-अलग होता है। सटीक भाव जानने के लिए नीचे अपना राज्य चुनें, "
+         f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
         (f"{hi} सबसे महंगा किस मंडी में बिक रहा है?",
-         (f"आज सबसे ज्यादा भाव {best.get('market','-')} ({best.get('district','-')}, "
-          f"{_hindi_state(best.get('state',''))}) में मिल रहा है — सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
-          if best else "मंडीवार भाव देखने के लिए अपना राज्य चुनें।")),
+         "मंडीवार भाव देखने के लिए अपना राज्य चुनें।"),
     ]
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
                                 (hi, canon)]))
 
-    # Seed state/district for the quick-jump selector below — same idea as the
-    # hub's own seed, just scoped to this tier's already-known crop.
     seed_ss = (max(state_map, key=lambda s: len(idx["dists"].get(cs, {}).get(s, {})))
                if state_map else "")
     seed_dists = idx["dists"].get(cs, {}).get(seed_ss, {})
@@ -3243,38 +3425,26 @@ def bhav_crop(c_slug: str):
 
     title = f"{hi} का भाव आज — {commodity} Price Today सभी राज्य | कृषि मित्र"
     desc = (f"{today_hi}: {hi} ({commodity}) का ताजा मंडी भाव — "
-            + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
-            + f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।")
-
-    # AI-citable lead: one self-contained, dated, source-attributed sentence in the
-    # first screen (AI extractors weight the top of the page; the FAQ sits too low).
-    # Same disclosure rules as elsewhere on the tier: country average is already in
-    # the meta description, the best mandi is named without its price (teaser rule).
-    lead_avg = f" — देशभर का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
-    lead_best = (f" आज सबसे ऊंचा भाव {escape(best.get('market', '-'))} "
-                 f"({escape(best.get('district', '-'))}, {escape(_hindi_state(best.get('state', '')))}) "
-                 f"मंडी में दर्ज हुआ।" if best else "")
-    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi)} ({escape(commodity)}) का भाव देश के '
-                   f'{len(state_map)} राज्यों की {_mandis_gen(st["n"])} से भारत सरकार के Agmarknet '
-                   f'(data.gov.in) पोर्टल पर दर्ज हुआ{lead_avg}।{lead_best}</p>')
+            f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।")
 
     head_h1 = f"आज का {escape(hi)} भाव — राज्य चुनें"
-    head_sub = f"📅 {today_hi} · {len(state_map)} राज्य · {_mandis_gen(st['n'])} · स्रोत: data.gov.in (Agmarknet)"
+    head_sub = f"📅 {today_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, seed_ss, seed_ds, idx, known_crop=True)}
-{best_html}
+{_lazy_div('bhav-lazy-t2')}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'राज्य खोजें... (उत्तर प्रदेश, बिहार)')}
 <div class="place-grid" id="tier-grid">{"".join(cards)}</div>
-{answer_lead}
 <div class="cta-row">
 {_net_price_cta(hi, cs)}
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
-{_TIER_SEARCH_JS}"""
+{_TIER_SEARCH_JS}
+{_lazy_script([('/bhav/api/tier2-extras/{cs}'.format(cs=cs), 'bhav-lazy-t2')])}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi)}')
-    return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960))
+    return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
+                extra_css=_LAZY_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -3305,17 +3475,15 @@ def bhav_crop_or_state(c_slug: str, x_slug: str):
 
 
 def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
+    """Tier 3 — pick a district. FAST PATH: district cards come from the
+    cached index. Heavy content (top mandis, stats) is lazy-loaded."""
     state = idx["states"][cs][ss]
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
     today_hi = _hindi_date(date.today())
     canon = f"{SITE}/bhav/{cs}/{ss}"
-
-    rows = _rows_for(commodity, state=state)
-    st = _stats(rows)
     dist_map = idx["dists"].get(cs, {}).get(ss, {})
 
-    # No prices on this tier either — same reasoning as bhav_crop above: only
-    # the district-level page (/bhav/{crop}/{state}/{district}) shows a number.
+    # District cards — purely from the cached index, no DB hit.
     cards = []
     for ds, dn in sorted(dist_map.items(), key=lambda kv: kv[1]):
         cards.append(f"""<a class="dcard" href="/bhav/{cs}/{ss}/{ds}" data-name="{escape(dn.lower())}">
@@ -3323,58 +3491,12 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 <span class="dcard-r">भाव देखें →</span>
 </a>""")
 
-    # Top-paying mandis in this state — names the market as a hook, withholds
-    # the number so the click still has to happen.
-    priced = [r for r in rows if _num(r.get("modal_price"))]
-    top = sorted(priced, key=lambda r: _num(r["modal_price"]), reverse=True)[:5]
-    top_html = ""
-    if top:
-        items = "".join(
-            f'<li><a class="better-mandi-card" href="/bhav/{cs}/{ss}/{_slugify(r.get("district",""))}">'
-            f'  <div class="bmc-details">'
-            f'    <span class="bmc-market">{escape(r.get("market","-"))}</span>'
-            f'    <span class="bmc-meta">{escape(r.get("district","-"))}</span>'
-            f'  </div>'
-            f'  <span class="bmc-action">भाव देखें →</span>'
-            f'</a></li>'
-            for r in top)
-
-        # Cheapest mandi in the state — sits under the highest list so a farmer sees
-        # the spread and how much the mandi choice is worth. Shown only when it's
-        # genuinely lower than the top; the number is withheld (like the top cards)
-        # so the click still has to happen.
-        low = min(priced, key=lambda r: _num(r["modal_price"]))
-        low_html = ""
-        if _num(low["modal_price"]) < _num(top[0]["modal_price"]):
-            low_html = (
-                '<div class="better-low">'
-                f'<p class="better-low-h">📉 आज सबसे कम {escape(hi)} भाव इस मंडी में</p>'
-                f'<a class="better-mandi-card low" href="/bhav/{cs}/{ss}/{_slugify(low.get("district",""))}">'
-                '<div class="bmc-details">'
-                f'<span class="bmc-market">{escape(low.get("market","-"))}</span>'
-                f'<span class="bmc-meta">{escape(low.get("district","-"))}</span>'
-                '</div>'
-                '<span class="bmc-action">भाव देखें →</span>'
-                '</a></div>'
-            )
-
-        top_html = f"""<section class="better" id="km-near-panel" data-crop="{cs}" data-state="{ss}">
-<h2>🏆 {escape(hi_state)} में आज सबसे ज्यादा {escape(hi)} भाव</h2>
-<p class="better-sub">भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>
-<ul>{items}</ul>{low_html}</section>"""
-
     faqs = [
         (f"आज {hi_state} में {hi} का भाव क्या है?",
-         (f"{today_hi} को {hi_state} में {hi} का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल है — "
-          f"{_mandis_gen(st['n'])} की सरकारी रिपोर्ट (Agmarknet) पर आधारित। जिले के अनुसार रेट "
-          f"अलग-अलग है — नीचे अपना जिला चुनें।"
-          if st["avg"] else
-          f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
-          f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।")),
+         f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
+         f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
         (f"{hi_state} में {hi} सबसे महंगा कहां बिक रहा है?",
-         (f"आज {top[0].get('market','-')} ({top[0].get('district','-')}) मंडी में सबसे ज्यादा भाव मिल रहा है — "
-          f"सटीक भाव देखने के लिए उस जिले का पेज खोलें।"
-          if top else "जिलेवार भाव के लिए नीचे अपना जिला चुनें।")),
+         "जिलेवार भाव के लिए नीचे अपना जिला चुनें।"),
     ]
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
@@ -3383,33 +3505,27 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 
     title = f"{hi_state} में {hi} का भाव आज — {commodity} Price {state} | कृषि मित्र"
     desc = (f"{today_hi}: {hi_state} की मंडियों में {hi} का ताजा भाव — "
-            + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
-            + f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
-
-    # AI-citable lead — see the crop-hub twin for the reasoning + disclosure rules.
-    lead_avg = f" — राज्य का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
-    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi_state)} के {len(dist_map)} जिलों की '
-                   f'{_mandis_gen(st["n"])} में {escape(hi)} का भाव सरकारी रिपोर्ट (भारत सरकार का Agmarknet '
-                   f'पोर्टल) में दर्ज हुआ{lead_avg}। नीचे अपना जिला चुनकर मंडीवार पूरा भाव देखें।</p>')
+            f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
 
     head_h1 = f"{escape(hi_state)} में {escape(hi)} का भाव आज"
-    head_sub = f"📅 {today_hi} · {len(dist_map)} जिले · {_mandis_gen(st['n'])} · स्रोत: data.gov.in (Agmarknet)"
+    head_sub = f"📅 {today_hi} · {len(dist_map)} जिले · स्रोत: data.gov.in (Agmarknet)"
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
-{top_html}
+{_lazy_div('bhav-lazy-t3')}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'जिला खोजें...')}
 <div class="dcard-grid" id="tier-grid">{"".join(cards)}</div>
-{answer_lead}
 <div class="cta-row">
 {_net_price_cta(hi, cs)}
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
-{_TIER_SEARCH_JS}"""
+{_TIER_SEARCH_JS}
+{_lazy_script([('/bhav/api/tier3-extras/{cs}/{ss}'.format(cs=cs, ss=ss), 'bhav-lazy-t3')])}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › {escape(hi_state)}')
-    return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960))
+    return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
+                extra_css=_LAZY_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -3486,54 +3602,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         delta_html = '<div class="answer-delta">— कल जैसा</div>'
 
     # ── THE DECISION LAYER ──────────────────────────────────
-    # A price table says what today's rate is; it never says whether to sell here.
-    # Compare THIS district against every other district in the state and show a
-    # neat signed delta — ▲ +₹X where the crop sells higher, ▼ −₹X where lower.
-    # The delta is the curiosity hook that drives the click; the ABSOLUTE rate
-    # still lives only on each district's own page. No lat/long in the feed, so
-    # this is honestly "other districts in the state", never a fabricated km distance.
-    #
-    # MEDIAN, not mean: Agmarknet intermittently ships a unit-error row (a ₹40k
-    # "wheat" line) that drags a district's *mean* to ₹7k+ and once rendered a
-    # phantom "+₹5,242 ज्यादा" on a ₹2,449 crop. The median ignores such outliers
-    # so every delta stays real (see _median_by).
-    better_html = ""
-    med  = _median_by(_rows_for(commodity, state=state), "district")
-    here = med.get(district) or st["avg"]
-    if here:
-        others  = sorted(((dn, m - here) for dn, m in med.items() if dn != district),
-                         key=lambda x: x[1], reverse=True)
-        highers = [(dn, d) for dn, d in others if d > 0][:5]
-        lowers  = [(dn, d) for dn, d in others if d < 0][-3:][::-1]  # 3 lowest, biggest drop first
-
-        def _cmp_card(dn: str, diff: int, low: bool = False) -> str:
-            arrow, sign, cls = ("▼", "−", "dn") if low else ("▲", "+", "up")
-            return (
-                f'<li><a class="better-mandi-card{" low" if low else ""}" '
-                f'href="/bhav/{cs}/{ss}/{_slugify(dn)}">'
-                f'<div class="bmc-details">'
-                f'<span class="bmc-market">{escape(dn)}</span>'
-                f'<span class="bmc-meta">{escape(hi_state)}</span>'
-                f'</div>'
-                f'<span class="bmc-action">'
-                f'<span class="bmc-delta {cls}">{arrow} {sign}₹{abs(diff):,}</span> '
-                f'<small>देखें →</small></span>'
-                f'</a></li>'
-            )
-
-        if highers or lowers:
-            hi_block = (f'<ul>{"".join(_cmp_card(dn, d) for dn, d in highers)}</ul>' if highers
-                        else f'<p class="better-message">🏆 {escape(hi_state)} के किसी और जिले में '
-                             f'{escape(hi)} का इससे ज्यादा भाव नहीं मिल रहा — यहां भाव सबसे ऊंचा है।</p>')
-            lo_block = (f'<div class="better-low"><p class="better-low-h">'
-                        f'📉 इन जिलों में {escape(hi)} का भाव कम है</p>'
-                        f'<ul>{"".join(_cmp_card(dn, d, low=True) for dn, d in lowers)}</ul></div>'
-                        if lowers else "")
-            better_html = f"""<section class="better">
-<h2>📊 {escape(hi_state)} के अन्य जिलों में {escape(hi)} का भाव — तुलना</h2>
-<p class="better-sub">{escape(district)} के भाव ₹{here:,}/क्विंटल से तुलना ·
-भेजने से पहले मंडी की दूरी और भाड़ा ज़रूर जोड़ें</p>
-{hi_block}{lo_block}</section>"""
+    # Comparison against other districts is LAZY-LOADED via
+    # /bhav/api/tier4-extras — this was the #1 cause of 504s because it
+    # re-fetched the entire state's rows on every district page load.
+    # Now the price panel renders instantly; the comparison appears shortly after.
+    better_html = _lazy_div('bhav-lazy-t4')
 
     # ── chart series: the mandi with the longest history speaks for the district ──
     sparks = [[v for v in (_num(x) for x in (p.get("spark") or [])) if v] for p in prices]
@@ -3670,9 +3743,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_lead_gen_html()}
-{_related_links(cs, ss, ds, commodity, district)}"""
+{_related_links(cs, ss, ds, commodity, district)}
+{_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4')])}"""
 
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
-    return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960))
+    return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
+                extra_css=_LAZY_CSS)

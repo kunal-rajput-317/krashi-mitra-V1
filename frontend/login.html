@@ -21,8 +21,9 @@
       var h = location.hostname,
           l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
               /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+      var p = location.port || '8000';
       window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
-        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1.onrender.com');
+        (l ? location.protocol + '//' + (h || 'localhost') + ':' + p : (location.origin || 'https://krashi-mitra-v1.onrender.com'));
       window.KRASHIMITRA_IS_LOCAL = l;
       window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
     })();
@@ -839,7 +840,26 @@
   // ══════════════════════════════════════
   // CONFIG
   // ══════════════════════════════════════
-  const API = window.KRASHIMITRA_API_BASE;
+  function getAPI() {
+    if (window.KRASHIMITRA_API_BASE) return window.KRASHIMITRA_API_BASE;
+    var h = location.hostname;
+    var l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
+        /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+    var p = location.port || '8000';
+    return l ? location.protocol + '//' + (h || 'localhost') + ':' + p : (location.origin || 'https://krashi-mitra-v1.onrender.com');
+  }
+
+  async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      return res;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   let pendingEmail = "";
   let pendingResetEmail = "";
   let loginCooldownTimer = null;
@@ -849,9 +869,9 @@
   // Progressive delay schedule: triggered after 2 wrong attempts
   // attempt 2 → 15s, attempt 4 → 30s, attempt 6+ → 60s
   function getClientCooldownSeconds(attempts) {
-    if (attempts >= 6) return 10060;
-    if (attempts >= 4) return 300;
-    if (attempts >= 2) return 30;
+    if (attempts >= 6) return 60;
+    if (attempts >= 4) return 30;
+    if (attempts >= 2) return 15;
     return 0;
   }
 
@@ -995,12 +1015,12 @@
       if (sub) body.endpoint = sub.endpoint;
 
       if (body.session_id || body.endpoint) {
-        await fetch(`${API}/auth/claim-guest`, {
+        await fetchWithTimeout(`${getAPI()}/auth/claim-guest`, {
           method:  "POST",
           headers: { "Content-Type": "application/json",
                      "Authorization": `Bearer ${getToken()}` },
           body:    JSON.stringify(body),
-        });
+        }, 8000);
       }
     } catch (e) {
       console.warn("guest claim skipped:", e);
@@ -1013,7 +1033,6 @@
   // ══════════════════════════════════════
   async function doLogin() {
     clearAuthMsg("login-error", "login-success");
-    // Reset forgot-link visibility only if no prior failed attempts
     if (loginAttempts === 0) document.getElementById("forgot-link").style.display = "none";
     const email    = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
@@ -1029,25 +1048,21 @@
 
     setBtnLoading("login-btn", true, "Login करें →");
     try {
-      const res  = await fetch(`${API}/login`, {
+      const res  = await fetchWithTimeout(`${getAPI()}/login`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email, password })
-      });
-      const data = await res.json();
+      }, 12000);
+      const data = await res.json().catch(() => ({}));
 
       if (data.success && data.data && data.data.token) {
         setToken(data.data.token);
-        // Clear persisted attempts on successful login
         localStorage.removeItem('km_login_attempts');
         localStorage.removeItem('km_cooldown_until');
         localStorage.removeItem('km_cooldown_reason');
         authOk("login-success", "✅ Login हो गया! Redirecting...");
         setTimeout(finishLogin, 800);
       } else if (!res.ok) {
-        // Server REJECTED the request itself (422 bad email format, 5xx crash) —
-        // this is NOT a wrong-password result, so don't blame the password, don't
-        // count it as a failed attempt, and don't start a cooldown.
         let msg;
         if (res.status === 422) {
           msg = "Email का format सही नहीं लग रहा — कृपया दोबारा जांचें।";
@@ -1062,7 +1077,6 @@
         loginAttempts += 1;
         localStorage.setItem('km_login_attempts', String(loginAttempts));
 
-        // Show forgot-password after 1st wrong attempt
         if (loginAttempts >= 1 || info.forgot_available) {
           document.getElementById("forgot-link").style.display = "block";
         }
@@ -1072,7 +1086,6 @@
           : "";
         authErr("login-error", (data.message || "Login failed. Email या password check करें।") + attemptsLeft);
 
-        // Client-side progressive delay: kicks in at attempt 2, 4, 6+
         const clientDelay = getClientCooldownSeconds(loginAttempts);
         if (info.locked) {
           setLoginCooldown(info.retry_after_seconds || 60, "Account temporarily locked");
@@ -1121,11 +1134,11 @@
 
     setBtnLoading("signup-btn", true, "Account बनाएं →");
     try {
-      const res  = await fetch(`${API}/signup`, {
+      const res  = await fetchWithTimeout(`${getAPI()}/signup`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ name, email, password, confirm_password: confirmPassword })
-      });
+      }, 12000);
       const data = await res.json().catch(() => ({}));
 
       if (data.success) {
@@ -1140,6 +1153,8 @@
     } catch (err) {
       authErr("signup-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
+      const popup = document.getElementById("loading-popup");
+      if (popup) popup.classList.remove("show");
       setBtnLoading("signup-btn", false, "Account बनाएं →");
     }
   }
@@ -1158,11 +1173,11 @@
 
     setBtnLoading("forgot-btn", true, "Send reset OTP →");
     try {
-      const res = await fetch(`${API}/forgot-password`, {
+      const res = await fetchWithTimeout(`${getAPI()}/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
-      });
+      }, 12000);
       const data = await res.json().catch(() => ({}));
       if (data.success) {
         pendingResetEmail = email;
@@ -1178,6 +1193,8 @@
     } catch (err) {
       authErr("forgot-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
+      const popup = document.getElementById("loading-popup");
+      if (popup) popup.classList.remove("show");
       setBtnLoading("forgot-btn", false, "Send reset OTP →");
     }
   }
@@ -1205,7 +1222,7 @@
 
     setBtnLoading("reset-btn", true, "Reset password →");
     try {
-      const res = await fetch(`${API}/reset-password`, {
+      const res = await fetchWithTimeout(`${getAPI()}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1214,7 +1231,7 @@
           new_password: newPassword,
           confirm_password: confirmPassword
         })
-      });
+      }, 12000);
       const data = await res.json().catch(() => ({}));
       if (data.success) {
         pendingResetEmail = "";
@@ -1229,6 +1246,8 @@
     } catch (err) {
       authErr("reset-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
+      const popup = document.getElementById("loading-popup");
+      if (popup) popup.classList.remove("show");
       setBtnLoading("reset-btn", false, "Reset password →");
     }
   }
@@ -1259,11 +1278,11 @@
 
     setBtnLoading("otp-btn", true, "Verify करें ✓");
     try {
-      const res  = await fetch(`${API}/verify-otp`, {
+      const res  = await fetchWithTimeout(`${getAPI()}/verify-otp`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: pendingEmail, otp })
-      });
+      }, 12000);
       const data = await res.json().catch(() => ({}));
 
       if (data.success) {
@@ -1275,6 +1294,8 @@
     } catch (err) {
       authErr("otp-error", "⚠️ Server से connect नहीं हो पाया।");
     } finally {
+      const popup = document.getElementById("loading-popup");
+      if (popup) popup.classList.remove("show");
       setBtnLoading("otp-btn", false, "Verify करें ✓");
     }
   }
@@ -1283,12 +1304,12 @@
     if (!pendingEmail) return;
     clearAuthMsg("otp-error", "otp-success");
     try {
-      const res  = await fetch(`${API}/resend-otp`, {
+      const res  = await fetchWithTimeout(`${getAPI()}/resend-otp`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: pendingEmail })
-      });
-      const data = await res.json();
+      }, 12000);
+      const data = await res.json().catch(() => ({}));
       if (data.success) {
         authOk("otp-success", "✅ नया OTP भेज दिया गया।");
         ["otp-d1","otp-d2","otp-d3","otp-d4","otp-d5","otp-d6"]
@@ -1309,27 +1330,28 @@
 
   async function handleGoogleCredential(response) {
     const idToken = response.credential;
-    // Show login step to display errors/success there
     showStep("login");
     clearAuthMsg("login-error", "login-success");
     setBtnLoading("login-btn", true, "Login करें →");
     try {
-      const res  = await fetch(`${API}/auth/google`, {
+      const res  = await fetchWithTimeout(`${getAPI()}/auth/google`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ id_token: idToken }),
-      });
-      const data = await res.json();
+      }, 12000);
+      const data = await res.json().catch(() => ({}));
       if (data.success && data.data?.token) {
         setToken(data.data.token);
         authOk("login-success", "✅ Google से Login हो गया! Redirecting...");
         setTimeout(finishLogin, 800);
       } else {
         authErr("login-error", data.message || "Google login failed। दोबारा try करें।");
-        setBtnLoading("login-btn", false, "Login करें →");
       }
     } catch (err) {
       authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
+    } finally {
+      const popup = document.getElementById("loading-popup");
+      if (popup) popup.classList.remove("show");
       setBtnLoading("login-btn", false, "Login करें →");
     }
   }
@@ -1370,19 +1392,19 @@
   // ══════════════════════════════════════
   window.addEventListener("load", () => {
     if (getToken()) {
-      // Already signed in and sent here by a gate anyway (expired-token race, or
-      // a second tab that logged in) — honour ?next= rather than dead-ending on
-      // profile.html with the original task abandoned.
       window.location.href = nextTarget();
     }
-    // Restore cooldown if it was active before refresh
+    // Restore cooldown if active before refresh; clear stale multi-hour locks
     const savedCooldownUntil = parseInt(localStorage.getItem('km_cooldown_until') || '0', 10);
     const savedReason = localStorage.getItem('km_cooldown_reason') || '';
     const remainingMs = savedCooldownUntil - Date.now();
-    if (remainingMs > 1000) {
+    if (remainingMs > 120000) {
+      localStorage.removeItem('km_cooldown_until');
+      localStorage.removeItem('km_cooldown_reason');
+      localStorage.removeItem('km_login_attempts');
+    } else if (remainingMs > 1000) {
       setLoginCooldown(Math.ceil(remainingMs / 1000), savedReason || 'गलत प्रयास');
     } else {
-      // No active cooldown, clear stale values
       localStorage.removeItem('km_cooldown_until');
       localStorage.removeItem('km_cooldown_reason');
     }
