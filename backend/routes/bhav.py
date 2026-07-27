@@ -39,6 +39,7 @@ import re
 import statistics
 import time
 from datetime import date, timedelta
+from functools import lru_cache
 from html import escape
 from urllib.parse import quote, urlencode
 
@@ -167,8 +168,17 @@ def _kw_in(text: str, keyword: str) -> bool:
     return re.search(rf"\b{re.escape(keyword)}\b", text) is not None
 
 
+@lru_cache(maxsize=2048)
 def _hindi_name(commodity: str) -> str:
-    """Best-effort Hindi display name; falls back to the English name."""
+    """Best-effort Hindi display name; falls back to the English name.
+
+    Cached — the fallback path below is a full scan of _EN_HI (115 entries)
+    with a regex search per entry, and ~3/4 of the ~320 distinct commodities in
+    the index miss the fast exact-match branch and hit it. It's called once per
+    crop inside a sort key on every tier-2/3/4 page render, so uncached this
+    was measured at ~200ms/page even on a fast dev machine — the domain here
+    is a few hundred fixed strings, so a cache turns every repeat call after
+    the first (i.e. almost all of them) into a dict lookup."""
     cl = (commodity or "").lower()
     if cl in _EN_HI:                        # exact name (incl. the variants above)
         return _EN_HI[cl]
@@ -243,10 +253,12 @@ def _hindi_data_date(s: str) -> str:
 _NON_CROP = {"firewood", "wood", "coconut coir", "cock", "hen"}
 
 
+@lru_cache(maxsize=2048)
 def _is_crop(commodity: str) -> bool:
     return (commodity or "").strip().lower() not in _NON_CROP
 
 
+@lru_cache(maxsize=2048)
 def _tile_rank(commodity: str) -> int:
     """Position in _TILES — the same crop order as the app's mandi grid, so the hub
     opens on गेहूं/धान rather than whatever sorts first alphabetically.
@@ -256,7 +268,17 @@ def _tile_rank(commodity: str) -> int:
     "green gram" (मूंग) tile; first-match handed मूंग and उड़द to the चना tile, where
     they lost to Bengal Gram and dropped off the hub entirely. Likewise "Red
     gram/Arhar/Tur(whole)" landed on चना, leaving the अरहर tile to be won by
-    "Pegeon Pea(Arhar Fali)" — a 2-state vegetable standing in for a major pulse."""
+    "Pegeon Pea(Arhar Fali)" — a 2-state vegetable standing in for a major pulse.
+
+    Cached — this is the single most expensive call in the whole module: an
+    UNCONDITIONAL scan of all 233 tiles × ~300 total keywords, one regex search
+    each, every single time (it can't short-circuit — it wants the longest,
+    not the first, match). It's called once per crop inside a sort key on
+    every tier-2/3/4 page render (~320 distinct commodities), which alone
+    measured at ~190ms/page on a fast dev machine — enough on its own to
+    explain multi-second page loads on Render's constrained free-tier CPU.
+    Safe to cache: pure function of a string over the fixed, static _TILES
+    table, same reasoning as _hindi_name() above."""
     cl = (commodity or "").lower()
     best_rank, best_len = len(_TILES), 0
     for i, (keys, _file, _h) in enumerate(_TILES):
@@ -266,6 +288,7 @@ def _tile_rank(commodity: str) -> int:
     return best_rank
 
 
+@lru_cache(maxsize=2048)
 def _has_photo(commodity: str) -> bool:
     cl = (commodity or "").lower()
     return any(any(_kw_in(cl, k) for k in keys) for keys, _file, _h in _TILES)
@@ -366,16 +389,24 @@ def _rows_for(commodity: str, state: str = "", district: str = "") -> list:
     truncates these pages: Uttar Pradesh alone has 68 wheat districts, so a 50-row
     sample left most district tiles priceless, skewed the state average, and — worst
     — computed "the highest-paying mandi" from an arbitrary subset, which could miss
-    the actual best mandi. The aggregates here must see the whole state/country."""
+    the actual best mandi. The aggregates here must see the whole state/country.
+
+    func.lower(col) == value.lower(), NOT .ilike(value) — this is THE query every
+    tier-4 page load (and every tier2/3/4-extras lazy fetch) depends on, and it's
+    exactly what mandi_prices_csd_lower_idx (db.py) exists to serve. Postgres will
+    NOT match a `lower(col)` expression index against an ILIKE predicate — even a
+    plain literal with no wildcards — only against a literal `lower(col) = ...`
+    clause. Written as .ilike(), this was a full table scan on every request no
+    matter how the index was defined."""
     db = SessionLocal()
     try:
         q = db.query(MandiPrice)
         if commodity:
-            q = q.filter(MandiPrice.commodity.ilike(commodity))
+            q = q.filter(func.lower(MandiPrice.commodity) == commodity.lower())
         if state:
-            q = q.filter(MandiPrice.state.ilike(state))
+            q = q.filter(func.lower(MandiPrice.state) == state.lower())
         if district:
-            q = q.filter(MandiPrice.district.ilike(district))
+            q = q.filter(func.lower(MandiPrice.district) == district.lower())
         rows = q.all()
     finally:
         db.close()
