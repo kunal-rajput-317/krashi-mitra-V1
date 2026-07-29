@@ -36,7 +36,7 @@
   <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
 
   <meta name="description"
-    content="KrashiMitra — किसानों का कृषि सहायक। आज का मंडी भाव, यूरिया-DAP खाद की सरकारी कीमत, मौसम अपडेट, फसल जानकारी और कीट नियंत्रण — सब एक जगह। पूरे भारत की मंडियों के भाव, UP के 75 जिलों का मौसम। बिल्कुल मुफ्त।">
+    content="KrashiMitra — किसानों का कृषि सहायक। आज का मंडी भाव, यूरिया-DAP खाद की सरकारी कीमत, मौसम अपडेट, फसल जानकारी और कीट नियंत्रण — सब एक जगह, बिल्कुल मुफ्त।">
   <meta name="keywords" content="kisan app hindi, mandi bhav aaj ka, kheti ki jankari, mausam ki jankari kisan ke liye, sarkari yojana kisan, कृषि मित्र, krashimitra, krashi mitra, krishi mitra, kisan mitra" />
 
 
@@ -2176,7 +2176,7 @@
         <a class="nav-link" href="weather.html">मौसम</a>
         <a class="nav-link" href="mandi.html">मंडी</a>
         <a class="nav-link" href="/bhav">सभी भाव</a>
-        <a class="nav-link" href="articles/index.html">लेख</a>
+        <a class="nav-link" href="articles/">लेख</a>
         <a class="nav-link" href="sarkari_yojana.html">योजनाएं</a>
         <a class="nav-link" href="chat.html">सहायता</a>
       </nav>
@@ -2207,7 +2207,7 @@
       <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
       <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
       <a href="map.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span data-t="nav_map">कृषि मानचित्र</span></a>
-      <a href="articles/index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
+      <a href="articles/" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
       <a href="sarkari_yojana.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span data-t="nav_schemes">सरकारी योजना</span></a>
       <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">कृषि सहायता</span></a>
       <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
@@ -2347,16 +2347,19 @@
         <span class="qc-sublabel">सब्सिडी व योजना लाभ</span>
       </div>
     </a>
-    <a class="quick-card" href="map.html" style="--card-color:#4a4f8a; --card-bg-light:#eaeaf5">
+    <!-- Points at the नक्शा hub, not /map: the hub covers every state and links
+         on to /map, so one homepage card now reaches the whole cluster. /map
+         still has the site-wide "कृषि मानचित्र" link in the utility bar. -->
+    <a class="quick-card" href="/naksha" style="--card-color:#4a4f8a; --card-bg-light:#eaeaf5">
       <span class="qc-icon-wrapper">
-        <img src="images/services/map.webp" alt="कृषि मानचित्र" class="service-img" loading="lazy">
+        <img src="images/services/map.webp" alt="राज्यों के नक्शे" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
-        <span class="qc-label">कृषि मानचित्र</span>
-        <span class="qc-sublabel">जिलेवार जानकारी</span>
+        <span class="qc-label">राज्यों के नक्शे</span>
+        <span class="qc-sublabel">जिलेवार नक्शा, मुफ्त HD</span>
       </div>
     </a>
-    <a class="quick-card" href="articles/index.html" style="--card-color:#7d7a2e; --card-bg-light:#f2f1d8">
+    <a class="quick-card" href="articles/" style="--card-color:#7d7a2e; --card-bg-light:#f2f1d8">
       <span class="qc-icon-wrapper">
         <img src="images/services/articles.webp" alt="कृषि लेख" class="service-img" loading="lazy">
       </span>
@@ -2709,7 +2712,7 @@
 <section class="section" style="padding-bottom: 0;">
   <div class="section-header">
     <h2 class="section-title">📰 लेख & कृषि टिप्स</h2>
-    <a class="section-link" href="articles/index.html">सभी लेख →</a>
+    <a class="section-link" href="articles/">सभी लेख →</a>
   </div>
 
   <!-- Thumbnails are local tracked files (or the same Wikimedia crop photo the
@@ -2717,19 +2720,19 @@
        404'd, and a missing asset renders as a broken icon rather than failing loudly. -->
   <div class="articles-grid">
 
-    <a class="article-card" href="articles/motha-ghaas-UP.html">
+    <a class="article-card" href="articles/motha-ghaas-up">
       <div class="article-thumb">
         <img src="images/articles/motha-ghaas-01.webp" alt="मोथा घास (नागरमोथा) — फसल के बीच उगी खरपतवार" loading="lazy">
       </div>
       <div class="article-body">
         <span class="article-tag">खरपतवार</span>
         <div class="article-title">मोथा घास मारने की दवा — पहचान और जड़ से खात्मे के उपाय</div>
-        <div class="article-meta">⏱️ 6 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="motha-ghaas-UP" datetime="2026-07-14"></time></div>
+        <div class="article-meta">⏱️ 6 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="motha-ghaas-up" datetime="2026-07-14"></time></div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/ganna-guide-up.html">
+    <a class="article-card" href="articles/ganna-guide-up">
       <div class="article-thumb">
         <img src="images/Ganna/ganne-ke-khet.webp" alt="गन्ने का खेत" loading="lazy">
       </div>
@@ -2741,7 +2744,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/urea-guide-up.html">
+    <a class="article-card" href="articles/urea-guide-up">
       <div class="article-thumb">
         <img src="images/fertilizers/Urea.webp" alt="यूरिया खाद" loading="lazy">
       </div>
@@ -2753,19 +2756,19 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/DAP-guide-up.html">
+    <a class="article-card" href="articles/dap-guide-up">
       <div class="article-thumb">
         <img src="images/fertilizers/DAP.webp" alt="DAP खाद" loading="lazy">
       </div>
       <div class="article-body">
         <span class="article-tag">खाद</span>
         <div class="article-title">DAP खाद: फसलवार मात्रा प्रति एकड़ और नकली DAP की पहचान</div>
-        <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="DAP-guide-up" datetime="2026-06-05"></time></div>
+        <div class="article-meta">⏱️ 5 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="dap-guide-up" datetime="2026-06-05"></time></div>
       </div>
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/potato_guide_up.html">
+    <a class="article-card" href="articles/potato_guide_up">
       <div class="article-thumb">
         <img src="images/articles/potato.webp" alt="आलू की खेती" loading="lazy">
       </div>
@@ -2777,7 +2780,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/keet-niyantran.html">
+    <a class="article-card" href="articles/keet-niyantran">
       <div class="article-thumb">
         <img src="images/Pesticides/neem-oil.webp" alt="नीम तेल — कीट नियंत्रण" loading="lazy">
       </div>
@@ -2789,7 +2792,7 @@
       <span class="article-arrow">›</span>
     </a>
 
-    <a class="article-card" href="articles/paddy-guide-karnataka.html">
+    <a class="article-card" href="articles/paddy-guide-karnataka">
       <div class="article-thumb">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Rice_grains_%28IRRI%29.jpg/500px-Rice_grains_%28IRRI%29.jpg"
              alt="ಭತ್ತ / Paddy" loading="lazy">
@@ -2837,7 +2840,7 @@
     </details>
     <details class="faq-item">
       <summary>यूरिया और DAP खाद की सरकारी कीमत क्या है?</summary>
-      <div class="faq-ans">यूरिया की सरकारी कीमत ₹266.50 प्रति बोरी (45 किग्रा) और DAP ₹1,350 प्रति बोरी (50 किग्रा) है (2025-26) — सहकारी समिति या सरकारी दुकान पर। खुले बाजार में DAP ₹2,400–2,600 तक मिलती है। फसलवार मात्रा और सही समय की जानकारी <a href="articles/urea-guide-up.html">यूरिया गाइड</a> व <a href="articles/DAP-guide-up.html">DAP गाइड</a> में है।</div>
+      <div class="faq-ans">यूरिया की सरकारी कीमत ₹266.50 प्रति बोरी (45 किग्रा) और DAP ₹1,350 प्रति बोरी (50 किग्रा) है (2025-26) — सहकारी समिति या सरकारी दुकान पर। खुले बाजार में DAP ₹2,400–2,600 तक मिलती है। फसलवार मात्रा और सही समय की जानकारी <a href="articles/urea-guide-up">यूरिया गाइड</a> व <a href="articles/dap-guide-up">DAP गाइड</a> में है।</div>
     </details>
     <details class="faq-item">
       <summary>फसल में रोग की पहचान कैसे करें?</summary>
@@ -2860,7 +2863,7 @@
     <a href="/bhav">मंडी भाव</a>
     <a href="weather.html">मौसम</a>
     <a href="chat.html">AI सहायक</a>
-    <a href="articles/index.html">लेख</a>
+    <a href="articles/">लेख</a>
     <a href="about.html">हमारे बारे में</a>
     <a href="privacy-policy.html">गोपनीयता नीति</a>
     <a href="help.html">सहायता</a>

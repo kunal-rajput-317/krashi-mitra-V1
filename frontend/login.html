@@ -36,12 +36,21 @@
   <script src="api-config.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>🌾 कृषि मित्र — Login/Profile | KrashiMitra</title>
+  <title>लॉगिन करें — कृषि मित्र | KrashiMitra</title>
   <link rel="icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/png">
   <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
 
-  <meta name="description" content="KrashiMitra पर login करें — अपनी फसल, जमीन और सलाह सेव करें।" />
-  <meta name="robots" content="noindex" />
+  <meta name="description" content="KrashiMitra पर लॉगिन करें — अपनी फसल, जमीन और भाषा की जानकारी सेव करें, मंडी भाव अलर्ट और ऑर्डर एक ही जगह देखें।" />
+  <meta name="robots" content="noindex, follow" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="KrashiMitra" />
+  <meta property="og:title" content="लॉगिन करें — कृषि मित्र | KrashiMitra" />
+  <meta property="og:description" content="KrashiMitra पर लॉगिन करें — अपनी फसल, जमीन और भाषा की जानकारी सेव करें, मंडी भाव अलर्ट और ऑर्डर एक ही जगह देखें।" />
+  <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="लॉगिन करें — कृषि मित्र | KrashiMitra" />
+  <meta name="twitter:description" content="अपनी फसल, जमीन और भाषा की जानकारी सेव करें — मंडी भाव अलर्ट और ऑर्डर एक जगह।" />
+  <meta name="twitter:image" content="https://krashimitra.in/images/og-banner.jpg" />
 
 
   <!-- Google Identity Services -->
@@ -540,6 +549,8 @@
 </head>
 <body>
 
+<h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">कृषि मित्र में लॉगिन करें</h1>
+
 <!-- Minimal chrome: amber helpline strip + a slim menu/home bar (no full site header) -->
 <div class="pre-topbar">
   <a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
@@ -564,7 +575,7 @@
       <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
       <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
       <a href="map.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span data-t="nav_map">कृषि मानचित्र</span></a>
-      <a href="articles/index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
+      <a href="articles/" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
       <a href="sarkari_yojana.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span data-t="nav_schemes">सरकारी योजना</span></a>
       <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
       <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
@@ -1071,6 +1082,9 @@
         let msg;
         if (res.status === 422) {
           msg = "Email का format सही नहीं लग रहा — कृपया दोबारा जांचें।";
+        } else if (res.status === 503) {
+          // Server is up but refusing writes — say so rather than blaming the login.
+          msg = data.detail || "सेवा अभी कुछ देर के लिए उपलब्ध नहीं है। कृपया थोड़ी देर बाद दोबारा कोशिश करें।";
         } else if (res.status >= 500) {
           msg = "⚠️ Server में समस्या है। थोड़ी देर बाद दोबारा try करें।";
         } else {
@@ -1294,7 +1308,9 @@
         authOk("otp-success", "✅ Email verify हो गया! अब login करें।");
         setTimeout(() => showStep("login"), 1500);
       } else {
-        authErr("otp-error", data.message || "OTP गलत है। दोबारा try करें।");
+        // data.detail carries server-side failures (503 read-only, 500). Without
+        // it a correct OTP was reported as "OTP गलत है" whenever the write failed.
+        authErr("otp-error", data.message || data.detail || "OTP गलत है। दोबारा try करें।");
       }
     } catch (err) {
       authErr("otp-error", "⚠️ Server से connect नहीं हो पाया।");
@@ -1321,7 +1337,7 @@
           .forEach(id => document.getElementById(id).value = "");
         document.getElementById("otp-d1").focus();
       } else {
-        authErr("otp-error", data.message || "OTP दोबारा नहीं भेजा जा सका।");
+        authErr("otp-error", data.message || data.detail || "OTP दोबारा नहीं भेजा जा सका।");
       }
     } catch (err) {
       authErr("otp-error", "⚠️ Server से connect नहीं हो पाया।");
@@ -1350,7 +1366,7 @@
         authOk("login-success", "✅ Google से Login हो गया! Redirecting...");
         setTimeout(finishLogin, 800);
       } else {
-        authErr("login-error", data.message || "Google login failed। दोबारा try करें।");
+        authErr("login-error", data.message || data.detail || "Google login failed। दोबारा try करें।");
       }
     } catch (err) {
       authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");

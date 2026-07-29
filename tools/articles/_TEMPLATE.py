@@ -224,8 +224,10 @@ ARTICLE = {
 
     # TITLE: put the searcher's literal question in it, and the numeric answer
     # in the description. Position 6-7 with a vague title yields ~1% CTR here.
-    "title": "TODO — प्रश्न + (साल) | KrashiMitra",           # 30-160 chars
-    "description": "TODO — जवाब की संख्या पहले वाक्य में।",     # 70-350 chars
+    # NO "| KrashiMitra" suffix — Google shows the site name separately, and
+    # the brand chars push the keywords past the ~60-char SERP truncation.
+    "title": "TODO — प्रश्न + (साल)",                          # 30-68 chars
+    "description": "TODO — जवाब की संख्या पहले वाक्य में।",     # 70-162 chars
     "keywords": "TODO, comma separated, हिंदी + romanised + English variants",
 
     "og_title": "TODO | KrashiMitra.in",
