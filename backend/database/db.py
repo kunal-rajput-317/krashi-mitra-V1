@@ -318,11 +318,15 @@ class UserProfile(Base):
 
     # Core
     id                   = Column(Integer,  primary_key=True, index=True)
-    # Owned by the account: deleting the user deletes the profile (see _FOREIGN_KEYS)
+    # Owned by the account: deleting the user deletes the profile (see _FOREIGN_KEYS).
+    # UNIQUE + NOT NULL: exactly one profile row per account, and only for an
+    # account whose is_verified is true — both enforced in the DB itself
+    # (user_profiles_user_id_uidx + trg_profile_requires_verified_user), because
+    # app-level "insert if not exists" checks had already let a duplicate through.
     user_id              = Column(Integer,
                                   ForeignKey("users.id", ondelete="CASCADE",
                                              name="fk_user_profiles_user_id"),
-                                  nullable=True, index=True)
+                                  nullable=False, unique=True, index=True)
 
     # Personal
     name                 = Column(String,   nullable=False)
@@ -1331,6 +1335,20 @@ def _ensure_postgres_columns():
         conn.execute(text("""
             CREATE UNIQUE INDEX IF NOT EXISTS users_user_id_uidx ON users(user_id);
         """))
+        # Fresh-start numbering: an empty users table means the next signup is
+        # account #1, not #5. A Postgres sequence never rewinds on its own, so
+        # after a wipe the ids would otherwise resume from wherever the deleted
+        # rows left off. Safe precisely because the table is empty — there is no
+        # row left for a recycled id to collide with, and no child row left
+        # pointing at one (every FK below is CASCADE or SET NULL).
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM users) THEN
+                    PERFORM setval(pg_get_serial_sequence('users', 'id'), 1, false);
+                END IF;
+            END $$;
+        """))
 
         # ── users ↔ user_profiles 1:1 guarantee ──────────────────
         # The app-level _ensure_profile() (auth.py) only runs on the OTP-verify
@@ -1366,6 +1384,183 @@ def _ensure_postgres_columns():
             FROM users u
             LEFT JOIN user_profiles p ON p.user_id = u.id
             WHERE u.is_verified AND p.id IS NULL;
+        """))
+
+        # ── EXACTLY ONE profile row, and only for a VERIFIED account ──
+        # The 1:1 above was only ever half-enforced: the trigger and the app's
+        # _ensure_profile() both guard with "insert if not exists", but nothing
+        # stopped BOTH from firing inside the same transaction. On OTP verify the
+        # app sets is_verified = TRUE and queues its own profile INSERT; SQLAlchemy
+        # flushes the users UPDATE first, the trigger inserts a profile, and the
+        # app's INSERT then lands a SECOND one. That is how user 1 ended up with
+        # profile rows 3 and 4. auth._ensure_profile() now flushes before it looks,
+        # and the unique index below makes the double-write impossible regardless
+        # of which code path (or GUI edit) tries it next.
+
+        # 1. Debris first — an owner-less profile, or one whose account is not
+        #    verified, is not a customer record. (Unverified = a signup attempt
+        #    that cannot even log in; see users.user_id above.)
+        conn.execute(text("""
+            DELETE FROM user_profiles p
+             WHERE p.user_id IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM users u
+                     WHERE u.id = p.user_id AND u.is_verified
+                );
+        """))
+
+        # 2. Fold duplicates into one row instead of just deleting the extras:
+        #    the richest row (most filled-in columns) wins every field it has,
+        #    and its twins only fill the holes it left, so nothing the farmer
+        #    ever typed is thrown away. jsonb keeps this column-list-free, so it
+        #    keeps working when user_profiles grows new columns.
+        conn.execute(text("""
+            DO $$
+            DECLARE
+                dup    record;
+                row_j  jsonb;
+                merged jsonb;
+            BEGIN
+                FOR dup IN
+                    SELECT user_id FROM user_profiles
+                     WHERE user_id IS NOT NULL
+                     GROUP BY user_id HAVING count(*) > 1
+                LOOP
+                    merged := NULL;
+                    FOR row_j IN
+                        SELECT to_jsonb(p) FROM user_profiles p
+                         WHERE p.user_id = dup.user_id
+                         ORDER BY (SELECT count(*) FROM jsonb_each(to_jsonb(p)) e
+                                    WHERE e.value <> 'null'::jsonb) DESC, p.id ASC
+                    LOOP
+                        IF merged IS NULL THEN
+                            merged := row_j;
+                        ELSE
+                            merged := row_j || jsonb_strip_nulls(merged);
+                        END IF;
+                    END LOOP;
+
+                    DELETE FROM user_profiles WHERE user_id = dup.user_id;
+                    INSERT INTO user_profiles
+                    SELECT * FROM jsonb_populate_record(NULL::user_profiles, merged);
+                END LOOP;
+            END $$;
+        """))
+
+        # 3. Now the invariant can be declared, not just hoped for.
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS user_profiles_user_id_uidx
+            ON user_profiles(user_id);
+        """))
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM user_profiles WHERE user_id IS NULL) THEN
+                    ALTER TABLE user_profiles ALTER COLUMN user_id SET NOT NULL;
+                END IF;
+            END $$;
+        """))
+
+        # 4. Guard the gap the other way round: no INSERT, and no re-pointing of
+        #    an existing row, may attach a profile to an unverified account.
+        #
+        #    It also names the duplicate for what it is. The bare unique-index
+        #    violation says nothing about the cause, which here is always the
+        #    same one: SessionLocal runs with autoflush=False, so a caller's
+        #    "does a row exist?" SELECT can run BEFORE its own pending
+        #    `is_verified = TRUE` UPDATE is emitted — it cannot see the row
+        #    trg_ensure_user_profile is about to create, and inserts a second.
+        #    (That is how user 1 got rows 3 and 4.) The cure is db.flush() before
+        #    the check, which auth._ensure_profile() now does. Silently dropping
+        #    the second INSERT instead is not an option: SQLAlchemy needs the
+        #    RETURNING row back, so a skipped insert only trades this error for a
+        #    more cryptic FlushError.
+        conn.execute(text("""
+            CREATE OR REPLACE FUNCTION profile_requires_verified_user() RETURNS trigger AS $$
+            BEGIN
+                IF NEW.user_id IS NULL THEN
+                    RAISE EXCEPTION
+                        'user_profiles.user_id cannot be NULL — a profile must belong to an account';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM users u WHERE u.id = NEW.user_id AND u.is_verified
+                ) THEN
+                    RAISE EXCEPTION
+                        'users.id % is not verified — user_profiles rows exist only for verified accounts',
+                        NEW.user_id;
+                END IF;
+
+                IF TG_OP = 'INSERT'
+                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = NEW.user_id) THEN
+                    RAISE EXCEPTION
+                        'users.id % already has a user_profiles row — UPDATE it instead of inserting a second (caller must db.flush() before it checks; SessionLocal has autoflush=False)',
+                        NEW.user_id;
+                END IF;
+
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        """))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_profile_requires_verified_user ON user_profiles;"))
+        conn.execute(text("""
+            CREATE TRIGGER trg_profile_requires_verified_user
+                BEFORE INSERT OR UPDATE OF user_id ON user_profiles
+                FOR EACH ROW
+                EXECUTE FUNCTION profile_requires_verified_user();
+        """))
+
+        # 5. And the last hole: un-verifying an account in the Neon GUI would
+        #    strand its profile row on an unverified user. Blocked, not
+        #    auto-deleted — a mis-click in a table editor must never silently
+        #    wipe a farmer's phone, farm and location data. Delete the profile
+        #    row (or the whole account, which CASCADEs) first, deliberately.
+        conn.execute(text("""
+            CREATE OR REPLACE FUNCTION block_unverify_with_profile() RETURNS trigger AS $$
+            BEGIN
+                IF OLD.is_verified AND NOT NEW.is_verified
+                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = OLD.id) THEN
+                    RAISE EXCEPTION
+                        'users.id % has a user_profiles row — delete that row (or the account) before un-verifying',
+                        OLD.id;
+                END IF;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        """))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_block_unverify_with_profile ON users;"))
+        conn.execute(text("""
+            CREATE TRIGGER trg_block_unverify_with_profile
+                BEFORE UPDATE OF is_verified ON users
+                FOR EACH ROW
+                EXECUTE FUNCTION block_unverify_with_profile();
+        """))
+
+        # 6. Keep the serial readable: ids ran 3, 4 because two orphan rows were
+        #    deleted long ago and a Postgres sequence never rewinds. Renumber to
+        #    1..N whenever a gap shows up and re-point the sequence at N+1.
+        #    Safe to do on live rows: nothing in the schema or the app keys off
+        #    user_profiles.id — every consumer looks the row up by user_id.
+        #    Two passes because a single renumbering UPDATE can transiently
+        #    collide with an id it has not moved yet.
+        conn.execute(text("""
+            DO $$
+            DECLARE n bigint;
+            BEGIN
+                SELECT count(*) INTO n FROM user_profiles;
+                IF n > 0
+                   AND (SELECT max(id) FROM user_profiles) <> n
+                   AND (SELECT max(id) FROM user_profiles) < 1000000 THEN
+                    UPDATE user_profiles SET id = id + 1000000;
+                    UPDATE user_profiles p
+                       SET id = s.rn
+                      FROM (SELECT id, row_number() OVER (ORDER BY id) AS rn
+                              FROM user_profiles) s
+                     WHERE p.id = s.id;
+                    RAISE NOTICE 'user_profiles ids compacted to 1..%', n;
+                END IF;
+                PERFORM setval(pg_get_serial_sequence('user_profiles', 'id'),
+                               GREATEST(n, 1), n > 0);
+            END $$;
         """))
 
         # ── Profile pic lives ONLY on user_profiles ──────────────
