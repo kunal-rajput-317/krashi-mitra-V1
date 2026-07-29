@@ -47,9 +47,11 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy import func
 
-from backend.database.db import SessionLocal, MandiPrice, MandiPriceHistory
+from backend.database.db import (SessionLocal, MandiPrice, MandiPriceHistory,
+                                 User, UserProfile)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
-from backend.services import district_geo, freight, leads
+from backend.services import buyers, district_geo, freight, leads, msp
+from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
                                   _STAPLE_TILES_N)
 
@@ -159,6 +161,12 @@ _HI_STATES = {
 _HI_MONTHS = ["जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई",
               "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"]
 
+# Axis labels for the 12-month seasonality chart. Written out rather than
+# sliced from _HI_MONTHS: Devanagari is not one grapheme per character, so
+# "अप्रैल"[:3] cuts mid-cluster and renders as the broken "अप्".
+_HI_MON_SHORT = ["जन", "फर", "मार्च", "अप्रैल", "मई", "जून", "जुला",
+                 "अग", "सित", "अक्टू", "नव", "दिस"]
+
 
 def _kw_in(text: str, keyword: str) -> bool:
     """Whole-word keyword match. A plain `keyword in text` is what made "Turnip"
@@ -190,6 +198,62 @@ def _hindi_name(commodity: str) -> str:
 
 def _hindi_state(state: str) -> str:
     return _HI_STATES.get(state, state)
+
+
+def _en_short(commodity: str) -> str:
+    """The English display name for a <title>, kept short enough to survive the SERP.
+
+    Agmarknet ships slash-joined synonym lists — "Red Gram Split/Arhar Dal/Tur
+    Dal" is one commodity, not three. Dropped verbatim into a title that already
+    carries the Hindi name, a state and a district, it pushed the longest titles
+    past 120 characters, so Google cut them mid-word. The first variant is the
+    portal's primary name, so it is the one worth keeping.
+
+    Only top-level slashes split: "Ridge Gourd(Permal/Hybrid Gourd)" is one name
+    whose slash sits inside the bracket, and cutting there leaves the unbalanced
+    "Ridge Gourd(Permal". The English name has to survive intact because it is
+    what separates the 13 commodity groups that share a Hindi name (Pumpkin,
+    Sweet Pumpkin and White Pumpkin are all कद्दू) — drop it and those pages
+    would collide on one title."""
+    name, depth = (commodity or "").strip(), 0
+    for i, ch in enumerate(name):
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        elif ch == "/" and depth == 0:
+            return name[:i].strip()
+    return name
+
+
+def _title_names(commodity: str) -> tuple[str, str, bool]:
+    """(Hindi name, English name, they-are-the-same) for a <title>/description.
+
+    _hindi_name falls back to the English string for a crop it has no entry for,
+    so the bilingual templates printed one long name twice — "Other green and
+    fresh vegetables का भाव — Other green and fresh vegetables Price" was 80
+    characters of which half was a repeat. When there is no real translation,
+    both slots collapse to the short English name and the caller's last _fit
+    variant drops the now-redundant English clause."""
+    en = _en_short(commodity)
+    hi = _hindi_name(commodity)
+    return (en, en, True) if hi == commodity else (hi, en, False)
+
+
+def _fit(*variants: str, limit: int = 68) -> str:
+    """The first variant that survives Google's SERP window (68 title, 162 desc).
+
+    Crop, state and district names vary hugely in length ("आम" vs "बिनौला (कपास
+    बीज)", "गोवा" vs "जम्मू और कश्मीर", "Bah" vs "Khairagarh Chhuikhadan
+    Gandai"), so no single template fits all ~14k pages. Order the variants
+    richest first: the connective words are dropped for the long combinations,
+    while the crop, the place and the English name — the parts that actually
+    rank — are present in every variant. Choosing a whole shorter sentence beats
+    slicing the long one, which cuts mid-word."""
+    for v in variants:
+        if len(v) <= limit:
+            return v
+    return min(variants, key=len)
 
 
 def _slugify(text: str) -> str:
@@ -1096,6 +1160,34 @@ background:var(--cream);border:1px solid var(--border);border-radius:13px;paddin
 .lead-tx small{font-size:11.5px;color:var(--text-mid);margin-top:2px;line-height:1.45}
 .lead-cta{font-size:12px;font-weight:700;color:var(--green-mid);white-space:nowrap;flex:0 0 auto}
 .lead-fine{font-size:11px;color:var(--text-soft);line-height:1.5;margin:11px 0 0}
+/* ── MSP — the government floor, read against today's mandi price. Deliberately
+   a calm white card, not a green/red alarm: below-MSP is common and normal, and
+   shouting it would make the block noise a farmer learns to skip. The left rule
+   carries the verdict; amber (not red) marks "below". ── */
+.msp-box{margin:16px 0;background:var(--white);border:1px solid var(--border);
+border-left:4px solid var(--text-soft);border-radius:var(--radius-md);
+padding:14px 16px;box-shadow:var(--shadow-sm)}
+.msp-box.above{border-left-color:var(--green-mid)}
+.msp-box.below{border-left-color:var(--amber)}
+.msp-box.at{border-left-color:var(--sky)}
+.msp-top{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.msp-ic{font-size:21px;line-height:1;flex:0 0 auto}
+.msp-lbl{display:flex;flex-direction:column;min-width:0;flex:1}
+.msp-lbl b{font-size:14.5px;font-weight:800;color:var(--text-dark);line-height:1.35}
+.msp-lbl em{font-style:normal;font-size:11.5px;color:var(--text-soft);margin-top:2px}
+.msp-val{font-size:22px;font-weight:800;color:var(--green-dark);letter-spacing:-.5px;
+white-space:nowrap;flex:0 0 auto}
+.msp-val small{font-size:11px;font-weight:600;color:var(--text-soft);margin-left:2px}
+.msp-cmp{font-size:13.5px;color:var(--text-mid);line-height:1.55;margin-top:10px;
+padding-top:10px;border-top:1px dashed var(--border)}
+.msp-cmp b{color:var(--text-dark);font-weight:800}
+.msp-box.above .msp-cmp b{color:var(--green-mid)}
+/* --amber on white is 2.1:1 — unreadable as text. This is the darkened amber
+   that keeps the "below" cue while passing AA (4.6:1). */
+.msp-box.below .msp-cmp b{color:#9a6407}
+.msp-fine{font-size:11px;color:var(--text-soft);line-height:1.5;margin-top:8px}
+.msp-fine a{color:var(--text-soft);text-decoration:underline}
+@media(max-width:560px){.msp-val{font-size:20px}}
 .better{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--amber);
 border-radius:var(--radius-md);padding:15px 18px;box-shadow:var(--shadow-sm);margin-top:16px}
 .better h2{margin:0 0 4px}
@@ -1176,6 +1268,25 @@ padding:16px 18px;box-shadow:var(--shadow-sm);margin-top:16px}
 .card-w-h em{font-style:normal;font-size:11.5px;font-weight:600;color:var(--text-soft)}
 svg.chart{display:block;width:100%;height:auto}
 
+/* ── multi-year seasonality panel (पिछले साल इसी समय) ── */
+.season-facts{list-style:none;margin:12px 0 0;padding:0}
+.season-facts li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
+.season-facts li:last-child{border-bottom:none}
+.sl-k{color:var(--text-soft);font-size:12.5px}
+.sl-v{font-weight:700;color:var(--text-mid);white-space:nowrap}
+.sl-v.up{color:#1b7a3d}
+.sl-v.dn{color:#c0392b}
+.sl-d{font-style:normal;font-size:11.5px;font-weight:600;margin-left:6px}
+.sl-d.up{color:#1b7a3d}
+.sl-d.dn{color:#c0392b}
+.sl-d.flat{color:var(--text-soft)}
+.season-note{font-size:11.5px;color:var(--text-soft);margin-top:10px;line-height:1.6}
+@media(max-width:420px){
+.season-facts li{flex-direction:column;gap:2px}
+.sl-v{white-space:normal}
+}
+
 /* ── mandi-wise cards ── */
 .mkts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .mkt{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);
@@ -1206,6 +1317,11 @@ font-weight:700;padding:12px 22px;border-radius:26px;text-decoration:none;transi
 .btn-app:hover{background:var(--green-dark)}
 .btn-wa{background:#25d366;color:var(--white);box-shadow:var(--shadow-sm)}
 .btn-wa:hover{background:#1eb958}
+/* "कौन खरीदेगा" — outlined, because it sits beside two filled buttons in the
+   same row and a third solid colour would turn the row into a traffic light. */
+.btn-kh{background:var(--white);color:var(--green-dark);
+border:1.5px solid var(--green-light);box-shadow:var(--shadow-sm)}
+.btn-kh:hover{background:var(--green-pale);border-color:var(--green-mid)}
 
 /* on-page search — same look as shop.html's search bar: icon inset at the
 left of a rounded input. Still a plain GET form (no JS) so it works and is
@@ -1800,14 +1916,20 @@ _CACHE_HEADERS = {
 
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
-         extra_css: str = "") -> HTMLResponse:
+         extra_css: str = "", robots: str = "", head_extra: str = "") -> HTMLResponse:
     """One page shell for all four tiers — head, header, crumbs, body, footer.
     `active` defaults to "bhav" for this module's own pages; other SEO routes
     (e.g. product.py) that reuse this shell pass their own nav key/"" so they
     don't show up with भाव wrongly highlighted. `extra_css` lets those callers
     layer on rules of their own without duplicating the tokens/header/footer —
     _CSS here is this module's own, so a caller's local override of a same-named
-    variable is invisible to this closure; extra_css is the only way in."""
+    variable is invisible to this closure; extra_css is the only way in.
+    `robots` is for pages that must not be indexed *in some states* — the buyer
+    directory with no listings yet. Empty (the default) emits no tag at all, so
+    every existing caller keeps the current indexable behaviour.
+    `head_extra` is raw <head> markup for a caller that needs more than CSS —
+    naksha.py's map pages pull in the Leaflet stylesheet, which cannot ride in
+    extra_css because @import is only valid at the top of a sheet."""
     og = og_img or f"{SITE}/images/og-banner.webp"
     # /bhav pages (active=="bhav") ship NO visible breadcrumb — the trail lives
     # only as BreadcrumbList JSON-LD in `ld` (still feeds SERP breadcrumbs).
@@ -1822,6 +1944,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
 <link rel="canonical" href="{canon}">
+{f'<meta name="robots" content="{escape(robots)}">' if robots else ''}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
 <meta property="og:title" content="{escape(title)}">
@@ -1832,6 +1955,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <meta name="twitter:card" content="summary_large_image">
 {_ICON}
 {_FONTS}
+{head_extra}
 {ld}
 <style>{_CSS}{extra_css}</style>
 </head>
@@ -2338,6 +2462,11 @@ def bhav_sitemap():
     dates = idx.get("dates", {})
     urls = []          # (url, lastmod-or-"")
     site_last = ""
+    # Buyer-directory URLs join the sitemap ONLY where listings exist. Empty
+    # ones render noindex, so submitting them would just spend crawl budget on
+    # pages we have already told Google to ignore. Skipped entirely while the
+    # directory is unseeded (the common case today).
+    has_buyers = bool(buyers.live_places()) or bool(_kharidar_places())
     for cs, cn in sorted(idx.get("crops", {}).items()):
         if not _is_crop(cn):
             continue
@@ -2345,12 +2474,17 @@ def bhav_sitemap():
         crop_urls = []
         for ss in sorted(idx["states"].get(cs, {})):
             d_dates = dates.get(cs, {}).get(ss, {})
+            state_name = idx["states"][cs][ss]
             state_last = ""
             state_urls = []
             for ds in sorted(idx["dists"].get(cs, {}).get(ss, {})):
                 d_last = d_dates.get(ds, "")
                 state_last = max(state_last, d_last)
                 state_urls.append((f"{SITE}/bhav/{cs}/{ss}/{ds}", d_last))
+                if has_buyers and _has_kharidar(
+                        cs, state_name, idx["dists"][cs][ss][ds]):
+                    state_urls.append(
+                        (f"{SITE}/bhav/{cs}/{ss}/{ds}/kharidar", d_last))
             crop_last = max(crop_last, state_last)
             crop_urls.append((f"{SITE}/bhav/{cs}/{ss}", state_last))
             crop_urls.extend(state_urls)
@@ -2571,7 +2705,7 @@ def bhav_hub():
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav")]))
 
-    title = f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट | कृषि मित्र"
+    title = f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट"
     desc = (f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
             f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।")
 
@@ -2684,7 +2818,7 @@ def bhav_state_hub(state: str):
     ld = _ld(faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"), (hi_state, canon)]))
 
-    title = f"{hi_state} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year} | कृषि मित्र"
+    title = f"{hi_state} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}"
     desc = (f"{today_hi}: {hi_state} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
             f"गेहूं, धान, प्याज समेत। फसल चुनकर अपने जिले का रेट देखें। रोज़ अपडेट (data.gov.in)।")
 
@@ -2793,6 +2927,79 @@ def _net_price_cta(hi: str, cs: str = "", state: str = "", district: str = "") -
             f'🚜 {escape(hi)} — भाड़ा जोड़कर नेट भाव देखें</a>')
 
 
+# ── MSP — the floor the price table never shows ──────────────
+# "गेहूं ₹2,410" is only half an answer; the half that decides what a farmer
+# does is that MSP is ₹2,585. Tier 4 has a real district average, so it gets
+# the comparison; tiers 2/3 show the figure alone (which is what "गेहूं का MSP
+# कितना है" actually asks for). Renders nothing when services/msp.py has no
+# confirmed, in-season number — see the two guards documented there.
+
+def _msp_html(commodity: str, avg=None) -> str:
+    m = msp.msp_for(commodity)
+    if not m:
+        return ""
+    cmp_ = msp.compare(avg, m["msp"]) if avg else None
+
+    if not cmp_:
+        tone, line = "flat", ""
+    elif cmp_["side"] == "above":
+        tone = "above"
+        line = (f'आज का औसत मंडी भाव MSP से <b>₹{cmp_["abs_diff"]:,} '
+                f'({cmp_["pct"]:g}%) ऊपर</b> है — मंडी में समर्थन मूल्य से बेहतर दाम मिल रहा है।')
+    elif cmp_["side"] == "below":
+        tone = "below"
+        line = (f'आज का औसत मंडी भाव MSP से <b>₹{cmp_["abs_diff"]:,} '
+                f'({abs(cmp_["pct"]):g}%) नीचे</b> है — आपकी फसल की सरकारी खरीद चल रही हो तो '
+                f'क्रय केंद्र पर MSP का विकल्प भी देख लें।')
+    else:
+        tone = "at"
+        line = 'आज का औसत मंडी भाव MSP के लगभग बराबर है।'
+
+    note = f' {escape(m["note"])}' if m.get("note") else ""
+    src = (f'<a href="{escape(m["source_url"])}" rel="nofollow" target="_blank">'
+           f'{escape(m["source_label"])}</a>' if m.get("source_url")
+           else escape(m.get("source_label", "")))
+    return (f'<section class="msp-box {tone}">'
+            f'<div class="msp-top">'
+            f'<span class="msp-ic">🏛️</span>'
+            f'<span class="msp-lbl"><b>MSP — {escape(m["hi"])} का न्यूनतम समर्थन मूल्य</b>'
+            f'<em>{escape(m["season_label"])}</em></span>'
+            f'<span class="msp-val">₹{m["msp"]:,}<small>/क्विंटल</small></span>'
+            f'</div>'
+            + (f'<p class="msp-cmp">{line}</p>' if line else "")
+            + f'<p class="msp-fine">MSP वह न्यूनतम दाम है जिस पर सरकार यह फसल खरीदती है।{note} '
+              f'स्रोत: {src}</p>'
+              '</section>')
+
+
+def _msp_faqs(commodity: str, avg=None, place: str = "") -> list:
+    """FAQ pairs for the MSP block. Fed into the SAME `faqs` list the page
+    renders from, so the visible Q&A and the FAQPage JSON-LD cannot drift."""
+    m = msp.msp_for(commodity)
+    if not m:
+        return []
+    hi = m["hi"]
+    out = [(f"{hi} का MSP (न्यूनतम समर्थन मूल्य) कितना है?",
+            f"{m['season_label']} के लिए {hi} का न्यूनतम समर्थन मूल्य "
+            f"₹{m['msp']:,} प्रति क्विंटल है। "
+            + (m["note"] + " " if m.get("note") else "")
+            + f"यह भारत सरकार (CACP) द्वारा घोषित दर है।")]
+    cmp_ = msp.compare(avg, m["msp"]) if avg else None
+    if cmp_ and place:
+        if cmp_["side"] == "above":
+            ans = (f"{place} में {hi} का आज का औसत मंडी भाव ₹{int(avg):,} प्रति क्विंटल है, "
+                   f"जो MSP ₹{m['msp']:,} से ₹{cmp_['abs_diff']:,} अधिक है।")
+        elif cmp_["side"] == "below":
+            ans = (f"{place} में {hi} का आज का औसत मंडी भाव ₹{int(avg):,} प्रति क्विंटल है, "
+                   f"जो MSP ₹{m['msp']:,} से ₹{cmp_['abs_diff']:,} कम है। "
+                   f"सरकारी खरीद चालू होने पर क्रय केंद्र पर MSP पर बेचा जा सकता है।")
+        else:
+            ans = (f"{place} में {hi} का आज का औसत मंडी भाव ₹{int(avg):,} प्रति क्विंटल है, "
+                   f"जो MSP ₹{m['msp']:,} के लगभग बराबर है।")
+        out.append((f"{place} में {hi} का भाव MSP से ऊपर है या नीचे?", ans))
+    return out
+
+
 # ── "बेचना है / खरीदना है" appeal (tier 4) ───────────────────
 
 _APPEAL_CSS = """
@@ -2813,10 +3020,41 @@ box-shadow:var(--shadow-md);animation:ap-up .22s ease}
 .ap-x{position:absolute;top:12px;right:12px;width:34px;height:34px;border:0;border-radius:50%;
 background:var(--cream);color:var(--text-mid);font-size:21px;line-height:1;cursor:pointer}
 .ap-x:hover{background:var(--border)}
-.ap-seg{display:flex;gap:8px;margin-bottom:15px}
-.ap-seg button{flex:1;font:inherit;font-size:14px;font-weight:700;padding:11px 8px;cursor:pointer;
-border:1.5px solid var(--border);border-radius:12px;background:var(--white);color:var(--text-mid)}
-.ap-seg button.on{background:var(--green-pale);border-color:var(--green-mid);color:var(--green-dark)}
+/* ── Three screens in one box: pick → (sell | buy). The old segmented
+   sell/buy toggle is gone: the two answers now lead to genuinely different
+   things (a public Bazar listing vs. browsing what is already for sale), and a
+   toggle above a shared form implied they were the same form with a flag. ── */
+.ap-scr[hidden]{display:none}
+.ap-pick{display:flex;flex-direction:column;gap:11px;margin-bottom:4px}
+.ap-pick button{display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+font:inherit;padding:15px 16px;cursor:pointer;border:1.5px solid var(--border);
+border-radius:14px;background:var(--white);transition:border-color .15s,background .15s}
+.ap-pick button:hover{border-color:var(--green-mid);background:var(--green-pale)}
+.ap-pick .ap-pi{font-size:26px;line-height:1;flex:0 0 auto}
+.ap-pick .ap-pt{display:flex;flex-direction:column;min-width:0}
+.ap-pick b{font-size:16px;font-weight:800;color:var(--green-dark)}
+.ap-pick small{font-size:12px;color:var(--text-soft);margin-top:2px;line-height:1.45}
+.ap-back{background:none;border:0;padding:0 0 12px;font:inherit;font-size:13px;
+font-weight:700;color:var(--green-mid);cursor:pointer}
+.ap-back:hover{color:var(--green-dark)}
+/* Blocked-by-a-missing-prerequisite state (no profile / no phone). It is not an
+   error — it is the next step — so it reads as a prompt, not a red warning. */
+.ap-gate{background:var(--green-pale);border:1px solid #bfe3c8;border-radius:14px;
+padding:15px 16px;font-size:13.5px;line-height:1.6;color:var(--green-dark)}
+.ap-gate a{display:inline-block;margin-top:10px;background:var(--green-dark);color:#fff;
+text-decoration:none;font-size:14px;font-weight:800;padding:10px 18px;border-radius:11px}
+.ap-gate a:hover{background:var(--green-mid)}
+.ap-file{font-size:13px;padding:9px 0}
+/* Listings shown to someone who tapped खरीदना है. */
+.ap-bl{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.ap-bcard{display:block;text-decoration:none;color:inherit;background:var(--cream);
+border:1px solid var(--border);border-radius:13px;padding:12px 14px}
+.ap-bcard:hover{border-color:var(--green-light);background:var(--green-pale)}
+.ap-bn{font-size:14.5px;font-weight:800;color:var(--text-dark)}
+.ap-bm{font-size:13px;font-weight:800;color:var(--green-dark);margin-top:3px}
+.ap-bx{font-size:12.5px;color:var(--text-mid);margin-top:4px;line-height:1.5}
+.ap-bnone{font-size:13.5px;color:var(--text-mid);line-height:1.6;margin-bottom:14px}
+.ap-load{font-size:13.5px;color:var(--text-soft);text-align:center;padding:18px 0}
 .ap-f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;min-width:0}
 .ap-f label{font-size:12.5px;font-weight:700;color:var(--text-soft)}
 .ap-f input,.ap-f textarea{width:100%;font:inherit;font-size:15px;padding:11px 12px;
@@ -2873,6 +3111,11 @@ background:var(--green-pale);display:flex;align-items:center;justify-content:cen
 font-size:29px;line-height:1}
 .ap-ok h2{margin:0 0 8px;font-size:18px;line-height:1.4;color:var(--green-dark);padding:0 18px}
 .ap-ok-sub{margin:0 0 18px;font-size:13.5px;line-height:1.6;color:var(--text-mid)}
+.ap-kh{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+border-radius:12px;background:var(--green-dark);color:#fff;text-decoration:none;
+font-size:15px;font-weight:800;padding:13px;margin-bottom:10px}
+.ap-kh[hidden]{display:none}
+.ap-kh:hover{background:var(--green-mid)}
 .ap-book{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
 border:0;border-radius:12px;background:#0077b6;color:#fff;font:inherit;font-size:15px;
 font-weight:800;padding:13px;cursor:pointer}
@@ -2888,12 +3131,14 @@ color:var(--text-mid);font:inherit;font-size:14.5px;font-weight:700;padding:12px
 _APPEAL_JS = """
 var ov=document.getElementById('ap-ov');
 if(!ov)return;
-var segs=ov.querySelectorAll('.ap-seg button'),
-    fName=document.getElementById('ap-name'),fQty=document.getElementById('ap-qty'),
+var fName=document.getElementById('ap-name'),fQty=document.getElementById('ap-qty'),
     fPh=document.getElementById('ap-ph'),fMsg=document.getElementById('ap-msg'),
     btn=document.getElementById('ap-send'),out=document.getElementById('ap-out'),
     okOv=document.getElementById('ap-ok-ov'),okMsg='',
-    kind='sell',dirty=false,sent=false,busy=false,filled=false;
+    /* The appeal form is now reached ONLY from the खरीदना है branch, and only
+       when nothing is for sale here — selling posts to Krashi Bazar instead. */
+    kind='buy',dirty=false,sent=false,busy=false,filled=false,
+    sBusy=false,sSent=false,bLoaded=false;
 function tok(){var t=localStorage.getItem('krishi_token');
  return (t&&t!=='null'&&t!=='undefined')?t:null;}
 function say(txt,cls){out.textContent=txt||'';out.className='ap-out'+(cls?' '+cls:'');}
@@ -2934,15 +3179,127 @@ fPh.addEventListener('input',function(){
  try{var d=before.length-after.length;this.setSelectionRange(Math.max(0,p-d),Math.max(0,p-d));}catch(e){}
 });
 /* The pre-written message is a starting point, not a template to defend: once
-   the farmer edits it we stop overwriting it, even if he flips sell↔buy. */
+   the farmer edits it we stop overwriting it. */
 function paintMsg(){if(!dirty)fMsg.value=T.msg[kind];}
-function setKind(k){kind=k;
- for(var i=0;i<segs.length;i++)segs[i].classList.toggle('on',segs[i].getAttribute('data-kind')===k);
- paintMsg();}
 fMsg.addEventListener('input',function(){dirty=true;});
-for(var i=0;i<segs.length;i++)(function(b){
- b.addEventListener('click',function(){setKind(b.getAttribute('data-kind'));});
-})(segs[i]);
+
+/* ── Screens ──────────────────────────────────────────────
+   बेचना है  → post a real listing to Krashi Bazar, then send him to the
+              खरीदार page for his district (which is a filtered view of that
+              same feed, so his post and its buyers live in one place).
+   खरीदना है → show what is already for sale here; only if there is nothing
+              does the old "मुझे खरीदना है" appeal form appear. */
+var scrPick=document.getElementById('ap-pick'),scrSell=document.getElementById('ap-sell'),
+    scrBuy=document.getElementById('ap-buy'),elSub=document.getElementById('ap-sub'),
+    elTitle=document.getElementById('ap-t');
+function apShow(name){
+ scrPick.hidden=name!=='pick';scrSell.hidden=name!=='sell';scrBuy.hidden=name!=='buy';
+ elTitle.textContent=name==='sell'?T.tSell:(name==='buy'?T.tBuy:T.tPick);
+ elSub.textContent=name==='sell'?T.sSell:(name==='buy'?T.sBuy:T.sPick);
+ try{ov.querySelector('.ap-box').scrollTop=0;}catch(e){}
+}
+window.apBack=function(){apShow('pick');};
+
+/* Posting a public listing needs a profile AND a reachable number — same rule
+   as krashi_bajar, checked here so the farmer isn't told after typing. */
+function apGate(j){
+ var g=document.getElementById('ap-gate'),f=document.getElementById('ap-sellform');
+ if(j&&j.has_profile&&j.has_phone){g.hidden=true;f.hidden=false;return true;}
+ f.hidden=true;g.hidden=false;
+ g.innerHTML=j&&!j.has_profile
+  ? 'फसल बेचने के लिए पहले अपनी प्रोफ़ाइल बनाएं — खरीदार को पता चलना चाहिए कि '
+    +'फसल किसकी है और कहाँ है।<a href="/profile.html">प्रोफ़ाइल बनाएं →</a>'
+  : 'आपकी प्रोफ़ाइल में फ़ोन नंबर नहीं है। बिना नंबर के खरीदार आप तक नहीं पहुँच '
+    +'पाएगा, इसलिए नंबर जोड़ना ज़रूरी है।<a href="/profile.html">नंबर जोड़ें →</a>';
+ return false;
+}
+window.apGoSell=function(){
+ if(!gateAppeal('crop-sell'))return;
+ apShow('sell');
+ var g=document.getElementById('ap-gate'),f=document.getElementById('ap-sellform');
+ g.hidden=false;f.hidden=true;g.textContent='देख रहे हैं…';
+ fetch('/bazar/me',{headers:{'Authorization':'Bearer '+tok()}})
+  .then(function(r){return r.json();})
+  .then(function(j){apGate(j&&j.data);})
+  .catch(function(){g.innerHTML='अभी जानकारी नहीं मिल पाई — दोबारा कोशिश करें।';});
+};
+window.apSendSell=function(){
+ if(sBusy)return;
+ var txt=(document.getElementById('ap-stext').value||'').trim(),
+     qty=document.getElementById('ap-sqty').value,
+     pr=document.getElementById('ap-sprice').value,
+     media=document.getElementById('ap-smedia').files[0],
+     sOut=document.getElementById('ap-sout'),sBtn=document.getElementById('ap-ssend');
+ function sSay(t,c){sOut.textContent=t||'';sOut.className='ap-out'+(c?' '+c:'');}
+ if(txt.length<5&&!media){sSay('फसल के बारे में कुछ लिखें या फोटो जोड़ें।','bad');return;}
+ sBusy=true;sBtn.disabled=true;sSay('भेजा जा रहा है…','');
+ var fd=new FormData();
+ fd.append('post_type','sell');fd.append('crop',T.hi);fd.append('text',txt);
+ fd.append('crop_slug',T.crop_slug);fd.append('state',T.state);
+ fd.append('district',T.district);fd.append('source','bhav');
+ fd.append('unit','क्विंटल');
+ if(qty)fd.append('quantity',qty);
+ if(pr)fd.append('price',pr);
+ if(media)fd.append('media',media);
+ fetch('/bazar/posts',{method:'POST',headers:{'Authorization':'Bearer '+tok()},body:fd})
+  .then(function(r){return r.json().then(function(j){return {ok:r.ok,status:r.status,body:j};});})
+  .then(function(res){
+   if(res.ok&&res.body&&res.body.success){
+    sSent=true;sBtn.hidden=true;sSay('');
+    okMsg='आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है। '
+         +T.district+' के खरीदार नीचे दिए पेज पर देखें।';
+    showAppealOk(true);
+    return;
+   }
+   sBtn.disabled=false;
+   var d=res.body&&res.body.detail;
+   sSay(d==='PROFILE_REQUIRED'?'पहले अपनी प्रोफ़ाइल बनाएं।'
+       :d==='PHONE_REQUIRED'?'पहले प्रोफ़ाइल में फ़ोन नंबर जोड़ें।'
+       :res.status===401?'भेजने के लिए पहले लॉगिन करें।'
+       :(typeof d==='string'&&d?d:'अभी नहीं भेजा जा सका — दोबारा कोशिश करें।'),'bad');
+  }).catch(function(){
+   sBtn.disabled=false;sSay('नेटवर्क की समस्या — दोबारा कोशिश करें।','bad');
+  }).then(function(){sBusy=false;});
+};
+/* खरीदना है — what is already for sale in this district, before we offer to
+   file yet another request nobody can answer today. */
+window.apGoBuy=function(){
+ apShow('buy');
+ if(bLoaded)return;
+ bLoaded=true;
+ var list=document.getElementById('ap-bl'),form=document.getElementById('ap-form');
+ list.innerHTML='<p class="ap-load">देख रहे हैं…</p>';
+ fetch('/bazar/feed?post_type=sell&page_size=8&crop_slug='+encodeURIComponent(T.crop_slug)
+      +'&state='+encodeURIComponent(T.state)+'&district='+encodeURIComponent(T.district))
+  .then(function(r){return r.json();})
+  .then(function(j){
+   var ps=(j&&j.data&&j.data.posts)||[];
+   if(!ps.length){
+    /* Nothing for sale here — fall through to the appeal form, which is what
+       that form was always for: an intent we cannot satisfy yet. */
+    list.innerHTML='<p class="ap-bnone">'+T.noSell+'</p>';
+    form.hidden=false;paintMsg();prefill();
+    return;
+   }
+   var h='';
+   for(var i=0;i<ps.length;i++){
+    var p=ps[i],bits=[];
+    if(p.quantity)bits.push(Math.round(p.quantity).toLocaleString('en-IN')+' '+(p.unit||'क्विंटल'));
+    if(p.price)bits.push('₹'+Math.round(p.price).toLocaleString('en-IN')+'/क्विंटल');
+    h+='<a class="ap-bcard" href="/krashi_bajar.html?post='+p.id+'">'
+      +'<span class="ap-bn">'+esc((p.author&&p.author.name)||'किसान')+'</span>'
+      +(bits.length?'<span class="ap-bm">'+esc(bits.join(' · '))+'</span>':'')
+      +(p.text?'<span class="ap-bx">'+esc(p.text.slice(0,110))+'</span>':'')
+      +'</a>';
+   }
+   list.innerHTML=h;
+   form.hidden=true;
+  }).catch(function(){
+   list.innerHTML='<p class="ap-bnone">'+T.noSell+'</p>';
+   form.hidden=false;paintMsg();prefill();
+  });
+};
+function esc(s){var d=document.createElement('span');d.textContent=s==null?'':s;return d.innerHTML;}
 /* Signed-in farmer shouldn't retype what we already know. Fetched on open, not
    on load: this page is edge-cached SEO traffic, most of which is logged out. */
 function prefill(){
@@ -2959,32 +3316,43 @@ function prefill(){
 /* Login gate. The server refuses a guest appeal outright (401), so asking here
    saves the farmer typing a whole form before being told. Checked at open, not
    at send, for the same reason. */
-function gateAppeal(){
+function gateAppeal(resume){
  if(tok())return true;
  if(window.KMRequireLogin)window.KMRequireLogin({
   title:'बेचने/खरीदने के लिए लॉगिन करें',
   text:'लॉगिन करने पर आपकी बात आपके खाते से जुड़ जाती है — खरीदार या बेचने वाला मिलते ही उसका अपडेट आपकी कृषि बुक में दिखेगा।',
-  resume:'crop-appeal'});
+  resume:resume||'crop-appeal'});
  else location.href='/login.html';
  return false;
 }
+/* Opens on the CHOICE, not on a form, and with no login wall: what the farmer
+   taps next decides which gate (if any) he meets. Browsing what is already for
+   sale needs no account at all — only posting does. */
 window.openCropAppeal=function(){
  /* Already filed on this page view — show the receipt again, not an empty form
     he cannot send twice anyway. */
- if(sent){showAppealOk();return;}
- if(!gateAppeal())return;
+ if(sent||sSent){showAppealOk(sSent);return;}
  ov.hidden=false;document.body.style.overflow='hidden';
- paintMsg();prefill();
- try{fName.focus({preventScroll:true});}catch(e){fName.focus();}
+ apShow('pick');
 };
 /* ── Confirmation panel ──
    Its own overlay rather than a block inside .ap-box: the form it confirms is
    taller than a phone screen, so appended-at-the-bottom meant the farmer had to
    scroll back through his own answers to find out whether they went through. */
-function showAppealOk(){
+function showAppealOk(isSell){
  if(!okOv)return;
- var sub=document.getElementById('ap-done-sub'),book=document.getElementById('ap-book');
+ var sub=document.getElementById('ap-done-sub'),book=document.getElementById('ap-book'),
+     kh=document.getElementById('ap-kh'),ttl=document.getElementById('ap-ok-t');
  if(sub)sub.textContent=okMsg;
+ /* A sell listing has a real next destination — the खरीदार page for this
+    district, which is the same feed filtered to where his crop actually is.
+    Offered as a button rather than an automatic redirect: the existing rule for
+    this panel is that the confirmation never moves on its own, because the
+    farmer is still reading what just happened to his listing. */
+ if(kh)kh.hidden=!isSell;
+ if(ttl)ttl.textContent=isSell
+  ? 'आपकी फसल कृषि बाज़ार पर डाल दी गई है ✅'
+  : 'भाई! आपकी बात कृषि मित्र तक पहुँचा दी गई है';
  /* Never offer a button that goes nowhere: if krashibook.js somehow didn't load
     on this page, the message stands on its own without it. */
  if(book)book.hidden=!document.getElementById('km-book-btn');
@@ -3006,9 +3374,14 @@ if(okOv){
 (function(){
  var todo='';
  try{todo=new URLSearchParams(location.search).get('do')||'';}catch(e){}
- if(todo!=='crop-appeal')return;
+ if(todo!=='crop-appeal'&&todo!=='crop-sell')return;
  if(window.KMTakeResume)window.KMTakeResume();
- setTimeout(function(){window.openCropAppeal();},250);
+ setTimeout(function(){
+  window.openCropAppeal();
+  /* Came back from login specifically to sell — skip the chooser he already
+     answered once and take him straight to the listing form. */
+  if(todo==='crop-sell'&&window.apGoSell)window.apGoSell();
+ },250);
 })();
 /* KrashiBook is a modal owned by krashibook.js (bootstrapped for every page by
    drawer-menu.js), so "open it" means firing its own floating button. */
@@ -3070,7 +3443,8 @@ window.sendCropAppeal=function(){
 """
 
 
-def _appeal_block(hi: str, commodity: str, state: str, district: str) -> str:
+def _appeal_block(hi: str, commodity: str, state: str, district: str,
+                  c_slug: str = "", s_slug: str = "", d_slug: str = "") -> str:
     """🤝 "बेचना है / खरीदना है" button + its panel, for tier-4 district pages.
 
     A district page is where intent is at its sharpest: the farmer has just read
@@ -3087,10 +3461,23 @@ def _appeal_block(hi: str, commodity: str, state: str, district: str) -> str:
     nothing user-specific may be rendered server-side. The panel hydrates
     client-side, same contract as _alert_bell."""
     place = f"{district} के आस-पास"
+    kh_url = f"/bhav/{c_slug}/{s_slug}/{d_slug}/kharidar"
     cfg = _json.dumps({
         "commodity": commodity or "",
         "state":     state or "",
         "district":  district or "",
+        "crop_slug": c_slug or "",
+        "hi":        hi or "",
+        "kh":        kh_url,
+        "tPick": f"{hi} बेचना है या खरीदना है?",
+        "sPick": f"📍 {district}, {_hindi_state(state)} · नीचे से चुनें।",
+        "tSell": f"अपना {hi} बेचने के लिए डालें",
+        "sSell": ("यह जानकारी कृषि बाज़ार पर सबको दिखेगी, और आपके जिले के "
+                  "खरीदार पेज पर भी।"),
+        "tBuy":  f"{district} में {hi} कौन बेच रहा है?",
+        "sBuy":  "अभी बिकने के लिए रखी फसलें नीचे दी गई हैं।",
+        "noSell": (f"अभी {district} में {hi} बेचने के लिए किसी ने नहीं डाला है। "
+                   f"नीचे अपनी जरूरत लिख दें — कोई बेचने वाला आते ही आपको बताया जाएगा।"),
         "msg": {
             "sell": (f"मेरे पास बिक्री के लिए {hi} है। {place} अच्छा भाव देने वाले "
                      f"खरीदार से मेरी बात कराएं।"),
@@ -3102,11 +3489,42 @@ def _appeal_block(hi: str, commodity: str, state: str, district: str) -> str:
 <div class="ap-box" role="dialog" aria-modal="true" aria-labelledby="ap-t">
 <button class="ap-x" type="button" onclick="closeCropAppeal()" aria-label="बंद करें">&times;</button>
 <h2 id="ap-t">{escape(hi)} बेचना है या खरीदना है?</h2>
-<p class="ap-sub">📍 {escape(district)}, {escape(_hindi_state(state))} · अपनी बात यहाँ लिखिए — सही खरीदार या बेचने वाले से जोड़ने की कोशिश की जाएगी।</p>
-<div class="ap-seg" role="group" aria-label="बेचना है या खरीदना है">
-<button type="button" class="on" data-kind="sell">🌾 बेचना है</button>
-<button type="button" data-kind="buy">🛒 खरीदना है</button>
+<p class="ap-sub" id="ap-sub">📍 {escape(district)}, {escape(_hindi_state(state))} · नीचे से चुनें।</p>
+
+<div class="ap-scr" id="ap-pick">
+<div class="ap-pick">
+<button type="button" onclick="apGoSell()">
+<span class="ap-pi" aria-hidden="true">🌾</span>
+<span class="ap-pt"><b>बेचना है</b><small>अपनी फसल की जानकारी डालें — खरीदार तक पहुंचेगी</small></span></button>
+<button type="button" onclick="apGoBuy()">
+<span class="ap-pi" aria-hidden="true">🛒</span>
+<span class="ap-pt"><b>खरीदना है</b><small>इस जिले में बिकने के लिए रखी फसल देखें</small></span></button>
 </div>
+</div>
+
+<div class="ap-scr" id="ap-sell" hidden>
+<button class="ap-back" type="button" onclick="apBack()">← वापस</button>
+<div class="ap-gate" id="ap-gate" hidden></div>
+<div id="ap-sellform" hidden>
+<div class="ap-row">
+<div class="ap-f"><label for="ap-sqty">मात्रा (क्विंटल)</label>
+<input id="ap-sqty" type="number" min="0" step="any" inputmode="decimal" placeholder="जैसे 40"></div>
+<div class="ap-f"><label for="ap-sprice">भाव ₹/क्विंटल</label>
+<input id="ap-sprice" type="number" min="0" step="any" inputmode="decimal" placeholder="जैसे 2450"></div>
+</div>
+<div class="ap-f"><label for="ap-stext">फसल के बारे में *</label>
+<textarea id="ap-stext" rows="3" maxlength="1000" placeholder="किस्म, कब कटी, कहाँ रखी है — जितना लिखेंगे, खरीदार उतनी जल्दी बात करेगा।"></textarea></div>
+<div class="ap-f"><label for="ap-smedia">फोटो या वीडियो (ज़रूरी नहीं)</label>
+<input class="ap-file" id="ap-smedia" type="file" accept="image/*,video/*"></div>
+<button class="ap-send" id="ap-ssend" type="button" onclick="apSendSell()">कृषि बाज़ार पर डालें</button>
+<p class="ap-out" id="ap-sout" role="status" aria-live="polite"></p>
+</div>
+</div>
+
+<div class="ap-scr" id="ap-buy" hidden>
+<button class="ap-back" type="button" onclick="apBack()">← वापस</button>
+<div class="ap-bl" id="ap-bl"></div>
+<div id="ap-form" hidden>
 <div class="ap-f"><label for="ap-name">आपका नाम *</label>
 <input id="ap-name" type="text" maxlength="80" autocomplete="name" placeholder="जैसे रामकिशोर यादव"></div>
 <div class="ap-row">
@@ -3125,12 +3543,15 @@ pattern="[0-9]{{10}}" placeholder="10 अंकों का नंबर" aria-
 <p class="ap-out" id="ap-out" role="status" aria-live="polite"></p>
 </div>
 </div>
+</div>
+</div>
 <div class="ap-ok-ov" id="ap-ok-ov" hidden>
 <div class="ap-ok" role="dialog" aria-modal="true" aria-labelledby="ap-ok-t">
 <button class="ap-x" type="button" onclick="closeAppealOk()" aria-label="बंद करें">&times;</button>
 <div class="ap-ok-ic" aria-hidden="true">✅</div>
 <h2 id="ap-ok-t">भाई! आपकी बात कृषि मित्र तक पहुँचा दी गई है</h2>
 <p class="ap-ok-sub" id="ap-done-sub"></p>
+<a class="ap-kh" id="ap-kh" href="{kh_url}" hidden>🧾 {escape(district)} के खरीदार देखें →</a>
 <button class="ap-book" id="ap-book" type="button" onclick="openAppealBook()">📒 कृषि बुक खोलें</button>
 <button class="ap-ok-done" type="button" onclick="closeAppealOk()">ठीक है</button>
 </div>
@@ -3540,8 +3961,8 @@ def bhav_net_price_page():
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › '
               f'<a href="{SITE}/bhav">मंडी भाव</a> › नेट भाव कैलकुलेटर')
     desc = ("भाड़ा जोड़कर कौन सी मंडी में बेचना फायदेमंद है? अपनी फसल, मात्रा और वाहन चुनिए — "
-            "आपके आस-पास की मंडियों का नेट भाव (मॉडल भाव − भाड़ा) एक जगह देखिए। स्रोत: Agmarknet।")
-    return _doc("नेट भाव कैलकुलेटर — भाड़ा जोड़कर कौन सी मंडी में बेचें? | कृषि मित्र",
+            "आस-पास की मंडियों का नेट भाव (मॉडल भाव − भाड़ा) एक जगह देखिए।")
+    return _doc("नेट भाव कैलकुलेटर — भाड़ा जोड़कर कौन सी मंडी में बेचें?",
                 desc, canon, crumbs, body, ld, extra_css=_NP_CSS)
 
 
@@ -3782,6 +4203,154 @@ def _api_tier4_extras(c_slug: str, s_slug: str, d_slug: str):
                                  "Netlify-CDN-Cache-Control": "public, max-age=600"})
 
 
+# ── seasonality (पिछले साल इसी समय / कब बेचें) ────────────────
+
+def _season_chart(by_month: dict, now_m: int, best_m: int, worst_m: int) -> str:
+    """12-bar calendar of the multi-year median, current month highlighted.
+
+    A line chart would imply a continuous series; this is twelve independent
+    medians, so bars are the honest form. Values are labelled only on the
+    peak, the trough and the current month — labelling all twelve turns the
+    chart into a wall of numbers on a 390px screen.
+    """
+    if len(by_month) < 6:
+        return ""
+    w, h = 600, 190
+    pad_l, pad_r, pad_t, pad_b = 10, 10, 26, 34
+    plot_h = h - pad_t - pad_b
+    hi = max(by_month.values())
+    lo = min(by_month.values())
+    # Baseline at 80% of the trough so short bars still read as bars, not slivers.
+    base = lo * 0.8 or 1
+    span = (hi - base) or 1
+    slot = (w - pad_l - pad_r) / 12
+    bw   = slot * 0.62
+
+    bars = []
+    for m in range(1, 13):
+        v = by_month.get(m)
+        cx = pad_l + (m - 0.5) * slot
+        if not v:
+            bars.append(f'<text x="{cx:.1f}" y="{pad_t + plot_h - 4:.1f}" font-size="9" '
+                        f'fill="#c9d0cb" text-anchor="middle">·</text>')
+            continue
+        bh = max(3.0, (v - base) / span * plot_h)
+        by = pad_t + plot_h - bh
+        if m == now_m:
+            col, op = "#b8860b", "1"          # this month — amber, the reader's anchor
+        elif m == best_m:
+            col, op = "#1b7a3d", "1"          # seasonal peak — green
+        elif m == worst_m:
+            col, op = "#c0392b", ".85"        # seasonal trough — red
+        else:
+            col, op = "#8fae9c", ".65"
+        bars.append(f'<rect x="{cx - bw / 2:.1f}" y="{by:.1f}" width="{bw:.1f}" '
+                    f'height="{bh:.1f}" rx="3" fill="{col}" opacity="{op}"/>')
+        if m in (now_m, best_m, worst_m):
+            bars.append(f'<text x="{cx:.1f}" y="{by - 5:.1f}" font-size="10.5" '
+                        f'fill="{col}" text-anchor="middle" font-weight="600">'
+                        f'₹{v:,}</text>')
+        bars.append(f'<text x="{cx:.1f}" y="{h - 12:.1f}" font-size="10" '
+                    f'fill="{"#2c3e35" if m == now_m else "#7c8983"}" '
+                    f'text-anchor="middle">{escape(_HI_MON_SHORT[m - 1])}</text>')
+
+    return (f'<svg class="chart season-chart" viewBox="0 0 {w} {h}" role="img" '
+            f'aria-label="महीने के हिसाब से भाव का रुझान">'
+            f'<line x1="{pad_l}" y1="{pad_t + plot_h:.1f}" x2="{w - pad_r}" '
+            f'y2="{pad_t + plot_h:.1f}" stroke="#e5e9e6" stroke-width="1"/>'
+            f'{"".join(bars)}</svg>')
+
+
+@router.get("/bhav/api/season/{c_slug}/{s_slug}/{d_slug}")
+def _api_season(c_slug: str, s_slug: str, d_slug: str):
+    """Lazy: the multi-year seasonality panel for tier 4.
+
+    Reads ONLY our own mandi_price_monthly summary — never data.gov. On a
+    miss it queues the slice for the background drain and renders nothing,
+    so a page view can never wait on (or spend quota at) an external API.
+    """
+    from backend.services.mandi_season_service import get_summary, enqueue
+
+    idx = _get_index()
+    cs, ss, ds = c_slug.lower(), s_slug.lower(), d_slug.lower()
+    commodity = idx.get("crops", {}).get(cs)
+    state = idx.get("states", {}).get(cs, {}).get(ss)
+    district = idx.get("dists", {}).get(cs, {}).get(ss, {}).get(ds)
+    if not (commodity and state and district):
+        return JSONResponse({"ok": False})
+
+    try:
+        summary = get_summary(state, district, commodity)
+    except Exception:
+        summary = None                       # DB hiccup must not break the page
+
+    if not summary:
+        try:
+            enqueue(state, district, commodity)
+        except Exception:
+            pass
+        # ok:True + empty html so the skeleton clears instead of shimmering forever
+        return JSONResponse({"ok": True, "html": ""},
+                            headers={"Cache-Control": "public, max-age=120"})
+
+    hi = _hindi_name(commodity)
+    today = date.today()
+    by_month = summary["by_month"]
+    best, worst = summary["best"], summary["worst"]
+    years = summary["years"]
+
+    chart = _season_chart(by_month, today.month,
+                          best[0] if best else 0, worst[0] if worst else 0)
+
+    # "पिछले साल इसी महीने" — the single most concrete line on the page
+    ly_html = ""
+    if summary["last_year"]:
+        ly = summary["last_year"]["median"]
+        rows_now = _rows_for(commodity, state=state, district=district)
+        now_avg = _stats(rows_now)["avg"]
+        if now_avg and ly:
+            diff = (now_avg - ly) / ly * 100
+            if abs(diff) < 1:
+                cls, note = "flat", "आज लगभग उतना ही"
+            elif diff > 0:
+                cls, note = "up", f"▲ आज {abs(diff):.0f}% ज्यादा"
+            else:
+                cls, note = "dn", f"▼ आज {abs(diff):.0f}% कम"
+            ly_html = (f'<li class="season-ly"><span class="sl-k">पिछले साल '
+                       f'{escape(_HI_MONTHS[today.month - 1])} में</span>'
+                       f'<span class="sl-v">₹{ly:,} '
+                       f'<em class="sl-d {cls}">{note}</em></span></li>')
+        elif ly:
+            ly_html = (f'<li class="season-ly"><span class="sl-k">पिछले साल '
+                       f'{escape(_HI_MONTHS[today.month - 1])} में</span>'
+                       f'<span class="sl-v">₹{ly:,}</span></li>')
+
+    peak_html = trough_html = ""
+    if best and worst and best[0] != worst[0]:
+        peak_html = (f'<li><span class="sl-k">सबसे ऊंचा भाव आमतौर पर</span>'
+                     f'<span class="sl-v up">{escape(_HI_MONTHS[best[0] - 1])} — ₹{best[1]:,}</span></li>')
+        trough_html = (f'<li><span class="sl-k">सबसे कम भाव आमतौर पर</span>'
+                       f'<span class="sl-v dn">{escape(_HI_MONTHS[worst[0] - 1])} — ₹{worst[1]:,}</span></li>')
+
+    if not (ly_html or peak_html):
+        return JSONResponse({"ok": True, "html": ""})
+
+    html = (f'<section class="card-w season">'
+            f'<div class="card-w-h"><h2>📅 {escape(district)} में {escape(hi)} — '
+            f'पिछले {years} साल का रुझान</h2>'
+            f'<em>महीनेवार औसत · ₹/क्विंटल</em></div>'
+            f'{chart}'
+            f'<ul class="season-facts">{ly_html}{peak_html}{trough_html}</ul>'
+            f'<p class="season-note">यह पिछले {years} साल के सरकारी रिकॉर्ड '
+            f'(Agmarknet) का औसत है — आगे के भाव का अनुमान नहीं। हर साल मौसम, '
+            f'आवक और मांग से भाव बदलता है।</p>'
+            f'</section>')
+
+    return JSONResponse({"ok": True, "html": html},
+                        headers={"Cache-Control": "public, max-age=3600",
+                                 "Netlify-CDN-Cache-Control": "public, max-age=21600"})
+
+
 # ════════════════════════════════════════════════════════════
 # TIER 2 — /bhav/{crop} : pick a state
 #
@@ -3814,7 +4383,7 @@ def bhav_crop(c_slug: str):
          f"फिर जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
         (f"{hi} सबसे महंगा किस मंडी में बिक रहा है?",
          "मंडीवार भाव देखने के लिए अपना राज्य चुनें।"),
-    ]
+    ] + _msp_faqs(commodity)
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
                                 (hi, canon)]))
@@ -3824,14 +4393,23 @@ def bhav_crop(c_slug: str):
     seed_dists = idx["dists"].get(cs, {}).get(seed_ss, {})
     seed_ds = sorted(seed_dists, key=lambda d: seed_dists[d])[0] if seed_dists else ""
 
-    title = f"{hi} का भाव आज — {commodity} Price Today सभी राज्य | कृषि मित्र"
-    desc = (f"{today_hi}: {hi} ({commodity}) का ताजा मंडी भाव — "
-            f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।")
+    t_hi, t_en, _same = _title_names(commodity)
+    title = _fit(
+        f"{t_hi} का भाव आज — {t_en} Price Today सभी राज्य",
+        f"{t_hi} का भाव आज — {t_en} Price Today",
+        f"{t_hi} का भाव आज — सभी राज्य")
+    desc = _fit(
+        f"{today_hi}: {t_hi} ({t_en}) का ताजा मंडी भाव — "
+        f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
+        f"{today_hi}: {t_hi} का ताजा मंडी भाव — "
+        f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
+        limit=162)
 
     head_h1 = f"आज का {escape(hi)} भाव — राज्य चुनें"
     head_sub = f"📅 {today_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, seed_ss, seed_ds, idx, known_crop=True)}
+{_msp_html(commodity)}
 {_lazy_div('bhav-lazy-t2')}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'राज्य खोजें... (उत्तर प्रदेश, बिहार)')}
@@ -3898,13 +4476,17 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
          f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
         (f"{hi_state} में {hi} सबसे महंगा कहां बिक रहा है?",
          "जिलेवार भाव के लिए नीचे अपना जिला चुनें।"),
-    ]
+    ] + _msp_faqs(commodity)
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
         (hi, f"{SITE}/bhav/{cs}"), (hi_state, canon)]))
 
-    title = f"{hi_state} में {hi} का भाव आज — {commodity} Price {state} | कृषि मित्र"
+    t_hi, t_en, _same = _title_names(commodity)
+    title = _fit(
+        f"{hi_state} में {t_hi} का भाव आज — {t_en} Price {state}",
+        f"{hi_state} में {t_hi} का भाव आज — {t_en} Price",
+        f"{hi_state} में {t_hi} का भाव आज")
     desc = (f"{today_hi}: {hi_state} की मंडियों में {hi} का ताजा भाव — "
             f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
 
@@ -3912,6 +4494,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     head_sub = f"📅 {today_hi} · {len(dist_map)} जिले · स्रोत: data.gov.in (Agmarknet)"
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
+{_msp_html(commodity)}
 {_lazy_div('bhav-lazy-t3')}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'जिला खोजें...')}
@@ -4009,6 +4592,13 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # Now the price panel renders instantly; the comparison appears shortly after.
     better_html = _lazy_div('bhav-lazy-t4')
 
+    # ── multi-year seasonality (पिछले साल इसी समय / कब बेचें) ──
+    # Also lazy, and for a second reason beyond speed: on the first ever view
+    # of a district+crop the summary does not exist yet, so the endpoint
+    # queues it for the background drain and returns nothing. The page must
+    # never wait on that.
+    season_html = _lazy_div('bhav-lazy-season')
+
     # ── chart series: the mandi with the longest history speaks for the district ──
     sparks = [[v for v in (_num(x) for x in (p.get("spark") or [])) if v] for p in prices]
     series = max(sparks, key=len) if sparks else []
@@ -4033,17 +4623,27 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         ("यह भाव कब और कहां से अपडेट होता है?",
          "भाव रोज़ सुबह भारत सरकार के data.gov.in (Agmarknet) से अपडेट होते हैं। "
          "जिन मंडियों की रिपोर्ट आज नहीं आई, उनका पिछला भाव दिखता है।"),
-    ]
+    ] + _msp_faqs(commodity, st["avg"], district)
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
         (hi, f"{SITE}/bhav/{cs}"), (hi_state, f"{SITE}/bhav/{cs}/{ss}"),
         (district, canon)]))
 
-    title = f"{hi} का भाव आज {district} मंडी में — {commodity} Price {district} | कृषि मित्र"
-    desc  = (f"{today_hi}: {district} ({hi_state}) में {hi} का ताजा मंडी भाव — "
-             + (f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else "")
-             + f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और 7-दिन का रुझान। रोज़ अपडेट।")
+    # The district name is Latin in both halves, so printing it twice was the same
+    # token repeated — it only ate the character budget. Once is enough to rank.
+    t_hi, t_en, _same = _title_names(commodity)
+    title = _fit(
+        f"{t_hi} का भाव आज {district} मंडी में — {t_en} Price Today",
+        f"{t_hi} का भाव आज {district} मंडी में — {t_en} Price",
+        f"{district} में {t_hi} का भाव आज")
+    _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
+    desc  = _fit(
+        f"{today_hi}: {district} ({hi_state}) में {hi} का ताजा भाव — {_avg}"
+        f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और 7-दिन का रुझान।",
+        f"{today_hi}: {district} में {hi} का ताजा भाव — {_avg}"
+        f"{_mandis_gen(st['n'])} के रेट और 7-दिन का रुझान।",
+        limit=162)
 
     # WhatsApp share — share THIS bhav page's own URL, not the /share/mandi deep
     # link (which unfurls the same preview but bounces the recipient into the mandi
@@ -4086,6 +4686,14 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                     f'{escape(_hindi_data_date(data_date))} तक।</p>')
                    if st["avg"] else "")
 
+    # Only link the buyer directory when that district actually has live
+    # listings — an empty directory page is a dead end for the farmer and a
+    # thin-content liability for the whole /bhav tree.
+    kharidar_cta = (
+        f'<a class="btn btn-kh" href="/bhav/{cs}/{ss}/{ds}/kharidar">'
+        f'🧾 {escape(district)} में {escape(hi)} कौन खरीदेगा?</a>'
+        if _has_kharidar(cs, state, district) else "")
+
     body = f"""<section class="answer">
 {answer_photo}
 {_alert_bell(commodity, state, district)}
@@ -4124,9 +4732,13 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 {_switchers(cs, ss, ds)}
 
+{_msp_html(commodity, st["avg"])}
+
 {better_html}
 
 {chart_html}
+
+{season_html}
 
 {answer_lead}
 
@@ -4141,17 +4753,394 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <div class="cta-row">
 <button class="btn btn-wa" type="button" onclick="shareBhav()">📲 WhatsApp पर भाव भेजें</button>
 <button class="btn btn-appeal" type="button" onclick="openCropAppeal()">🤝 {escape(hi)} बेचना/खरीदना है?</button>
+{kharidar_cta}
 </div>
-{_appeal_block(hi, commodity, state, district)}
+{_appeal_block(hi, commodity, state, district, cs, ss, ds)}
 
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_lead_gen_html()}
 {_related_links(cs, ss, ds, commodity, district)}
-{_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4')])}"""
+{_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4'),
+               ('/bhav/api/season/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-season')])}"""
 
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 extra_css=_LAZY_CSS + _APPEAL_CSS)
+
+
+# ════════════════════════════════════════════════════════════
+# TIER 4b — /bhav/{crop}/{state}/{district}/kharidar : who will buy it
+#
+# The price pages answer "कितने का है"; this one answers the question that
+# actually moves money — "अब बेचूं किसे?". It is deliberately a TEMPLATE with a
+# hand-seeded JSON behind it (services/buyers.py), not a marketplace: we never
+# touch the produce, hold payment, or take counterparty risk. We match, and the
+# listing/featured slot is what a trader or dealer pays for.
+#
+# The empty state is the important one, because every district starts empty:
+# the page still renders (a dealer who lands on it can ask to be listed) but it
+# ships noindex, so ~14k thin directory pages can never enter the index and drag
+# the /bhav tree down with them. It joins the sitemap only once it has listings.
+#
+# Four segments, so it can never collide with the three-segment tier-4 route.
+# ════════════════════════════════════════════════════════════
+
+_KH_CSS = """
+.kh-note{background:var(--green-pale);border:1px solid #bfe3c8;border-radius:var(--radius-md);
+padding:13px 16px;font-size:13.5px;color:var(--green-dark);line-height:1.6;margin:16px 0}
+.kh-note b{font-weight:800}
+.kh-h{font-size:15px;margin:22px 0 0;color:var(--text-mid);font-weight:800}
+.kh-list{display:flex;flex-direction:column;gap:12px;margin:12px 0 0}
+/* Krashi Bazar rows read as a quieter second tier than the verified dealers
+   above them — same card, amber-free, no call button. */
+.kh-bz{border-left-color:var(--sky)}
+.kh-meta{font-size:13px;font-weight:800;color:var(--green-dark);margin-top:9px}
+.kh-bzbtn{background:var(--cream);color:var(--green-dark);
+border:1.5px solid var(--border)}
+.kh-bzbtn:hover{background:var(--green-pale);border-color:var(--green-light)}
+.kh-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);
+box-shadow:var(--shadow-sm);padding:15px 17px;border-left:4px solid var(--green-light)}
+.kh-card.feat{border-left-color:var(--amber);background:#fffdf6}
+.kh-head{display:flex;align-items:flex-start;gap:11px;flex-wrap:wrap}
+.kh-ic{font-size:22px;line-height:1.2;flex:0 0 auto}
+.kh-id{display:flex;flex-direction:column;min-width:0;flex:1}
+.kh-name{font-size:16px;font-weight:800;color:var(--text-dark);line-height:1.35;
+display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.kh-kind{font-size:12px;color:var(--text-soft);margin-top:3px}
+.kh-tick{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;
+color:var(--green-mid);background:var(--green-pale);border-radius:999px;padding:2px 8px}
+.kh-feat-tag{font-size:10.5px;font-weight:800;color:#7a5200;background:rgba(233,168,37,.25);
+border-radius:999px;padding:2px 8px;letter-spacing:.2px}
+.kh-crops{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.kh-crop{font-size:11.5px;font-weight:700;color:var(--green-dark);background:var(--cream);
+border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+.kh-desc{font-size:13px;color:var(--text-mid);line-height:1.55;margin-top:9px}
+.kh-acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.kh-btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:22px;
+transition:transform .15s,background .15s}
+.kh-btn:hover{transform:translateY(-1px)}
+.kh-call{background:var(--green-dark);color:#fff}
+.kh-call:hover{background:var(--green-mid)}
+.kh-wa{background:#25d366;color:#fff}
+.kh-wa:hover{background:#1eb958}
+.kh-empty{background:var(--white);border:1px dashed var(--border);border-radius:var(--radius-md);
+padding:22px 18px;text-align:center;margin:16px 0;box-shadow:var(--shadow-sm)}
+.kh-empty h2{font-size:17px;margin:0 0 7px}
+.kh-empty p{font-size:13.5px;color:var(--text-mid);line-height:1.6;margin:0 auto;max-width:520px}
+.kh-join{margin-top:22px;background:var(--green-dark);color:#fff;border-radius:var(--radius-md);
+padding:18px 20px;box-shadow:var(--shadow-md)}
+.kh-join h2{font-size:17px;margin:0 0 6px;color:#fff}
+.kh-join p{font-size:13px;line-height:1.6;color:rgba(255,255,255,.86);margin:0 0 13px}
+.kh-join a{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#3a2c00;
+text-decoration:none;font-size:14px;font-weight:800;padding:11px 20px;border-radius:24px}
+.kh-fine{font-size:11px;color:var(--text-soft);line-height:1.55;margin-top:14px}
+"""
+
+
+# Which places have a live Krashi Bazar buy post, cached briefly. The tier-4
+# page and the sitemap both need this ~14,000 times per render pass; one query
+# every few minutes answers all of them. Short TTL, not the index's 6h: a new
+# buy post should surface the खरीदार link on price pages the same session, not
+# tomorrow. The kharidar page itself always queries live, so what a farmer sees
+# once he lands there is never stale.
+_KH_PLACES_TTL = 300
+_kh_places: set | None = None
+_kh_places_at: float = 0.0
+
+
+def _kharidar_places() -> set:
+    global _kh_places, _kh_places_at
+    now = time.time()
+    if _kh_places is not None and now - _kh_places_at < _KH_PLACES_TTL:
+        return _kh_places
+    db = SessionLocal()
+    try:
+        _kh_places = bazar.place_keys(db, "buy")
+    except Exception as e:
+        logger.warning("kharidar place keys failed: %s", e)
+        _kh_places = _kh_places or set()
+    finally:
+        db.close()
+    _kh_places_at = now
+    return _kh_places
+
+
+def _has_kharidar(cs: str, state: str, district: str) -> bool:
+    """True when /bhav/{crop}/{state}/{district}/kharidar has something on it —
+    a seeded dealer or a Bazar buy post. Gates both the price-page link and the
+    sitemap entry, so neither can point at a page we render noindex."""
+    if buyers.has_any(cs, state, district):
+        return True
+    key = (cs.strip().lower(),
+           " ".join((state or "").split()).lower(),
+           " ".join((district or "").split()).lower())
+    return key in _kharidar_places()
+
+
+def _bazar_slice(post_type: str, cs: str, state: str, district: str,
+                 limit: int = 20) -> list:
+    """This district's slice of the Krashi Bazar feed, as plain dicts.
+
+    The kharidar page is a SUBSET of /krashi_bajar — same rows, narrowed to one
+    crop and one district — so it goes through bazar.place_posts rather than
+    writing a second query that could drift from the feed's own definition of
+    "active". Dicts, not ORM objects: the session closes before the template
+    renders and detached instances would raise on attribute access.
+    """
+    db = SessionLocal()
+    try:
+        rows = bazar.place_posts(db, post_type, cs, state, district, limit)
+        out = []
+        for p in rows:
+            author = bazar._author_info(
+                db.query(User).filter(User.id == p.user_id).first(),
+                db.query(UserProfile).filter(UserProfile.user_id == p.user_id).first())
+            out.append({
+                "id": p.id, "text": p.text or "", "price": p.price,
+                "quantity": p.quantity, "unit": p.unit or "क्विंटल",
+                "created_at": p.created_at, "name": author.get("name") or "किसान",
+                "verified": author.get("verified"), "location": p.location or "",
+            })
+        return out
+    except Exception as e:
+        # A price page must never 500 because the social feed had a bad day.
+        logger.warning("bazar slice failed (%s/%s/%s): %s", cs, state, district, e)
+        return []
+    finally:
+        db.close()
+
+
+def _bazar_card(p: dict, hi: str) -> str:
+    """One Krashi Bazar 'खरीदना है' post rendered as a buyer card.
+
+    No phone number and no direct call button: unlike a seeded dealer, this
+    person never agreed to have their number published on an indexable page.
+    The contact route is their Bazar post, where our existing offer/comment flow
+    already gates contact behind a login."""
+    bits = []
+    if p.get("quantity"):
+        bits.append(f'{int(p["quantity"]):,} {escape(p.get("unit") or "क्विंटल")}')
+    if p.get("price"):
+        bits.append(f'₹{int(p["price"]):,} तक')
+    meta = " · ".join(bits)
+    when = _hindi_date(p["created_at"].date()) if p.get("created_at") else ""
+    tick = '<span class="kh-tick">✓ सत्यापित</span>' if p.get("verified") else ""
+    return (f'<article class="kh-card kh-bz">'
+            f'<div class="kh-head"><span class="kh-ic">🛒</span>'
+            f'<span class="kh-id">'
+            f'<span class="kh-name">{escape(p.get("name",""))}{tick}</span>'
+            f'<span class="kh-kind">खरीदना है'
+            + (f' · {escape(p["location"])}' if p.get("location") else "")
+            + (f' · {escape(when)}' if when else "")
+            + '</span></span></div>'
+            + (f'<div class="kh-meta">{meta}</div>' if meta else "")
+            + (f'<p class="kh-desc">{escape(p["text"][:240])}</p>' if p.get("text") else "")
+            + f'<div class="kh-acts">'
+              f'<a class="kh-btn kh-bzbtn" href="/krashi_bajar.html?post={p["id"]}">'
+              f'कृषि बाज़ार में देखें →</a></div>'
+              '</article>')
+
+
+def _buyer_card(b: dict, c_slug: str) -> str:
+    """One listing. Phone is a plain tel: (a redirect can't help a dialler);
+    WhatsApp routes through /kharidar/go/<id> so the click is measurable — the
+    number we'd have to quote before charging anyone per lead."""
+    label, emoji = buyers.kind_label(b.get("kind"))
+    tel, wa = buyers.phone_of(b), buyers.wa_of(b)
+    bid = escape(b.get("id", ""))
+
+    tick = ('<span class="kh-tick">✓ सत्यापित</span>' if b.get("verified") else "")
+    feat = ('<span class="kh-feat-tag">प्रमुख</span>' if b.get("featured") else "")
+    where = " · ".join(x for x in [escape(b.get("market") or ""),
+                                   escape(b.get("district") or "")] if x)
+    since = (f" · {escape(str(b.get('since')))} से" if b.get("since") else "")
+
+    crops = "".join(f'<span class="kh-crop">{escape(_hindi_name(c))}</span>'
+                    for c in (b.get("commodities") or [])[:6])
+    if not b.get("commodities"):
+        crops = '<span class="kh-crop">सभी फसलें</span>'
+
+    acts = []
+    if tel:
+        acts.append(f'<a class="kh-btn kh-call" href="tel:{escape(tel)}" '
+                    f'data-kh="{bid}" data-kh-ch="call">📞 कॉल करें</a>')
+    if wa:
+        acts.append(f'<a class="kh-btn kh-wa" href="/kharidar/go/{bid}" '
+                    f'data-kh="{bid}" data-kh-ch="wa" rel="nofollow" target="_blank">'
+                    f'WhatsApp पर बात करें</a>')
+
+    return (f'<article class="kh-card{" feat" if b.get("featured") else ""}">'
+            f'<div class="kh-head"><span class="kh-ic">{emoji}</span>'
+            f'<span class="kh-id">'
+            f'<span class="kh-name">{escape(b.get("name",""))}{tick}{feat}</span>'
+            f'<span class="kh-kind">{escape(label)}{" · " + where if where else ""}{since}</span>'
+            f'</span></div>'
+            f'<div class="kh-crops">{crops}</div>'
+            + (f'<p class="kh-desc">{escape(b.get("note"))}</p>' if b.get("note") else "")
+            + f'<div class="kh-acts">{"".join(acts)}</div>'
+            '</article>')
+
+
+_KH_JS = ("<script>document.querySelectorAll('[data-kh]').forEach(function(a){"
+          "a.addEventListener('click',function(){try{gtag('event','buyer_click',"
+          "{buyer_id:a.getAttribute('data-kh'),channel:a.getAttribute('data-kh-ch')});}"
+          "catch(e){}});});</script>")
+
+
+@router.get("/kharidar/go/{buyer_id}")
+def kharidar_redirect(buyer_id: str):
+    """Tracked hop to a listing's WhatsApp. Server-side log on top of the GA
+    event, so lead volume is provable from our own data when it comes time to
+    price a listing. Unknown id falls back to /bhav rather than erroring."""
+    b = buyers.by_id(buyer_id)
+    if not b:
+        return RedirectResponse("/bhav", status_code=302)
+    num = re.sub(r"\D", "", buyers.wa_of(b))
+    logger.info("buyer_click id=%s district=%s", buyer_id, b.get("district", "-"))
+    if not num:
+        return RedirectResponse("/bhav", status_code=302)
+    return RedirectResponse(f"https://wa.me/{num}", status_code=302)
+
+
+@router.get("/bhav/{c_slug}/{s_slug}/{d_slug}/kharidar", response_class=HTMLResponse)
+def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
+    idx = _get_index()
+    cs, ss, ds = c_slug.lower(), s_slug.lower(), d_slug.lower()
+
+    commodity = idx.get("crops", {}).get(cs)
+    state     = idx.get("states", {}).get(cs, {}).get(ss)
+    district  = idx.get("dists", {}).get(cs, {}).get(ss, {}).get(ds)
+    if not (commodity and state and district):
+        return _not_found()
+
+    hi, hi_state = _hindi_name(commodity), _hindi_state(state)
+    today_hi = _hindi_date(date.today())
+    canon = f"{SITE}/bhav/{cs}/{ss}/{ds}/kharidar"
+    price_url = f"/bhav/{cs}/{ss}/{ds}"
+
+    # Today's price is the context the whole page hangs on — a buyer list means
+    # nothing without the number the farmer should be holding out for.
+    prices = _rows_for(commodity, state=state, district=district) \
+        or _rows_for_district(idx, cs, ss, ds)
+    st = _stats(prices) if prices else {"avg": None, "lo": None, "hi": None, "n": 0}
+
+    # Two sources, one page: hand-verified dealers we sell listings to, and the
+    # district's slice of Krashi Bazar. Dealers pin above because they are the
+    # paid slot AND the only entries someone has actually spoken to.
+    rows = buyers.for_place(cs, state, district)
+    bz = _bazar_slice("buy", cs, state, district)
+
+    price_note = (
+        f'<div class="kh-note">📊 आज {escape(district)} में <b>{escape(hi)}</b> का औसत मंडी भाव '
+        f'<b>₹{st["avg"]:,}/क्विंटल</b> है — सौदा करने से पहले यही दाम ध्यान में रखें। '
+        f'<a href="{price_url}">मंडीवार भाव देखें →</a></div>'
+        if st["avg"] else
+        f'<div class="kh-note">📊 <a href="{price_url}">{escape(district)} में {escape(hi)} '
+        f'का आज का भाव देखें →</a></div>')
+
+    # Supply-side acquisition: this page IS the pitch to a trader/dealer, and
+    # WhatsApp is the only channel they will actually use. The prefilled message
+    # names the district and crop so we know which slot they want.
+    join_msg = quote(f"नमस्ते, मुझे कृषि मित्र पर {district} ({state}) में "
+                     f"{hi} खरीदार के रूप में अपना नाम जोड़वाना है।")
+    join = (f'<section class="kh-join"><h2>🧾 आप {escape(hi)} खरीदते हैं?</h2>'
+            f'<p>अपने जिले के किसानों तक सीधे पहुंचें। कृषि मित्र पर अपनी फर्म का नाम, '
+            f'नंबर और फसलें जुड़वाएं — किसान सीधे आपको कॉल करेंगे।</p>'
+            f'<a href="https://wa.me/919870951001?text={join_msg}" rel="nofollow" '
+            f'target="_blank">WhatsApp पर नाम जुड़वाएं</a></section>')
+
+    total = len(rows) + len(bz)
+    if total:
+        parts = []
+        if rows:
+            parts.append('<h2 class="kh-h">सत्यापित खरीदार / डीलर</h2>'
+                         f'<div class="kh-list">'
+                         f'{"".join(_buyer_card(b, cs) for b in rows)}</div>')
+        if bz:
+            parts.append('<h2 class="kh-h">कृषि बाज़ार से — इसी जिले की मांग</h2>'
+                         f'<div class="kh-list">'
+                         f'{"".join(_bazar_card(p, hi) for p in bz)}</div>')
+        listing = "".join(parts)
+        robots = ""
+        n_txt = f"{total} खरीदार"
+        item_ld = {"@context": "https://schema.org", "@type": "ItemList",
+                   "name": f"{hi} खरीदार — {district} ({state})",
+                   "numberOfItems": total,
+                   "itemListElement": [
+                       {"@type": "ListItem", "position": i + 1, "name": n}
+                       for i, n in enumerate([b.get("name", "") for b in rows]
+                                             + [p.get("name", "") for p in bz])]}
+    else:
+        listing = ('<div class="kh-empty"><h2>अभी इस जिले में कोई खरीदार नहीं जुड़ा</h2>'
+                   '<p>हम व्यापारियों और डीलरों से बात करके ही उन्हें यहां जोड़ते हैं — '
+                   'बिना जांचे कोई नंबर नहीं दिखाते। कृषि बाज़ार पर इस जिले में अभी कोई '
+                   'खरीद की मांग भी नहीं आई है। नीचे अपनी फसल की जानकारी डालें — '
+                   'खरीदार आने पर वहीं दिखेगी।</p></div>')
+        # Not indexable until it has something to say. This is the guard that
+        # keeps a 14k-page programmatic surface from becoming 14k thin pages.
+        robots = "noindex,follow"
+        n_txt = "खरीदार सूची"
+        item_ld = None
+
+    faqs = [
+        (f"{district} में {hi} कौन खरीदता है?",
+         (f"{district} ({hi_state}) में {hi} खरीदने वाले {total} खरीदार कृषि मित्र पर "
+          f"सूचीबद्ध हैं — सत्यापित व्यापारी/डीलर और कृषि बाज़ार पर आई खरीद की मांग।"
+          if total else
+          f"{district} में {hi} आमतौर पर स्थानीय मंडी के आढ़तिया और व्यापारी खरीदते हैं। "
+          f"कृषि मित्र इस जिले के सत्यापित खरीदारों की सूची तैयार कर रहा है।")),
+        (f"बेचने से पहले {hi} का सही भाव कैसे पता करें?",
+         (f"आज {district} में {hi} का औसत मंडी भाव ₹{st['avg']:,} प्रति क्विंटल है "
+          if st["avg"] else "")
+         + "किसी भी सौदे से पहले उस दिन का सरकारी मंडी भाव देख लें, और भाड़ा घटाकर "
+           "नेट भाव निकालें — दूर की ऊंचे भाव वाली मंडी भाड़े के बाद कम बैठ सकती है।"),
+        ("क्या कृषि मित्र खुद फसल खरीदता है?",
+         "नहीं। कृषि मित्र सिर्फ किसान और खरीदार को जोड़ता है — न फसल खरीदता है, "
+         "न पैसे का लेन-देन करता है। सौदा, तौल और भुगतान की शर्तें आपस में तय करें।"),
+    ]
+    faq_html, faq_ld = _faq(faqs)
+    ld_blocks = [faq_ld, _crumb_ld([
+        ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
+        (hi, f"{SITE}/bhav/{cs}"), (hi_state, f"{SITE}/bhav/{cs}/{ss}"),
+        (district, f"{SITE}{price_url}"), (f"{hi} खरीदार", canon)])]
+    if item_ld:
+        ld_blocks.insert(0, item_ld)
+    ld = _ld(*ld_blocks)
+
+    t_hi, _t_en, _same = _title_names(commodity)
+    title = _fit(
+        f"{district} मंडी में {t_hi} कौन खरीदेगा — खरीदार और भाव",
+        f"{district} में {t_hi} कौन खरीदेगा")
+    desc = _fit(
+        f"{district} ({hi_state}) में {t_hi} खरीदने वाले सत्यापित व्यापारी और डीलर — "
+        f"नाम, फसल और सीधा संपर्क। आज का मंडी भाव भी साथ में।",
+        f"{district} में {t_hi} खरीदने वाले सत्यापित व्यापारी और डीलर — "
+        f"नाम, फसल और सीधा संपर्क। आज का मंडी भाव भी साथ में।",
+        limit=162)
+
+    body = f"""{_tier_head(f"{escape(district)} में {escape(hi)} कौन खरीदेगा?",
+                           f"📅 {today_hi} · {escape(hi_state)} · {n_txt}")}
+{price_note}
+{listing}
+<div class="cta-row">
+<a class="btn btn-app" href="{price_url}">📊 {escape(district)} का {escape(hi)} भाव</a>
+{_net_price_cta(hi, cs, state, district)}
+</div>
+{join}
+<h2>अक्सर पूछे जाने वाले सवाल</h2>
+{faq_html}
+<p class="kh-fine">कृषि मित्र यहां दी गई फर्मों का प्रतिनिधि नहीं है और किसी सौदे, तौल,
+गुणवत्ता या भुगतान की गारंटी नहीं देता। सौदा करने से पहले खुद संतुष्ट हो लें।</p>
+{_lead_gen_html()}
+{_KH_JS}"""
+
+    crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
+              f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
+              f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › '
+              f'<a href="{SITE}{price_url}">{escape(district)}</a> › खरीदार')
+    return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
+                extra_css=_KH_CSS, robots=robots)

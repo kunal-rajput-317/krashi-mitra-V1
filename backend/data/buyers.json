@@ -1,0 +1,38 @@
+{
+  "_note": "Verified खरीदार (buyers/traders) and इनपुट डीलर shown on /bhav/{crop}/{state}/{district}/kharidar — the page that answers the question every price page leaves hanging: 'भाव तो पता चल गया, अब बेचूं किसे?'. SEED THIS BY HAND, a few districts at a time; it needs no farmers to be useful. An entry renders ONLY when active:true AND it has a name, district and at least one contact number, so a half-filled row can never reach a farmer. A district with zero live entries renders a noindex page — we do not publish empty directory pages (thin/doorway content is exactly how a programmatic surface gets an entire site demoted). Read live by mtime: adding a dealer needs no deploy. commodities:[] means 'buys everything' — otherwise list /bhav crop slugs (wheat, paddy, mustard...). state/district must match the Agmarknet spelling the mandi feed sends, which is what the /bhav URL is built from; matching is case- and space-insensitive. verified:true is a claim WE make — only set it after actually speaking to the person, because the blue-tick promise is the whole product. TRUST RULE, same as lead_offers.json: never publish a number that will not be answered.",
+  "_schema_example": {
+    "id": "unique-slug-used-in-the-tracked-link",
+    "active": "true only when the listing is real and paid/confirmed",
+    "name": "व्यापारी या फर्म का नाम",
+    "kind": "trader | dealer | fpo | processor",
+    "state": "Uttar Pradesh",
+    "district": "Hardoi",
+    "market": "मंडी का नाम (optional)",
+    "commodities": ["wheat", "paddy"],
+    "phone": "+91XXXXXXXXXX",
+    "whatsapp": "+91XXXXXXXXXX (optional; falls back to phone)",
+    "verified": "true only after a real call",
+    "since": "2026 (optional — 'X साल से' trust line)",
+    "note": "एक लाइन में क्या खरीदते हैं / कितना (optional)",
+    "featured": "true = pinned to the top (this is the paid slot)"
+  },
+
+  "buyers": [
+    {
+      "id": "example-trader",
+      "active": false,
+      "name": "उदाहरण — यहाँ व्यापारी का नाम आएगा",
+      "kind": "trader",
+      "state": "Uttar Pradesh",
+      "district": "Hardoi",
+      "market": "",
+      "commodities": ["wheat"],
+      "phone": "",
+      "whatsapp": "",
+      "verified": false,
+      "since": "",
+      "note": "यह सिर्फ ढांचा दिखाने के लिए है — active:false होने से यह कभी नहीं दिखेगा।",
+      "featured": false
+    }
+  ]
+}

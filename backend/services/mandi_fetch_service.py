@@ -7,15 +7,22 @@
 # to an append-only history table (mandi_price_history).
 # History is never auto-purged, enabling previous-price trends.
 #
+# Two data.gov resources are used:
+#   RESOURCE_ID          — the live "today only" feed, wiped and refilled daily
+#   ARCHIVE_RESOURCE_ID  — the same feed archived back to 2001, never wiped,
+#                          trailing by ~a day. Only consulted when the live
+#                          feed is too sparse to serve (see MIN_ROWS).
+#
 # Designed to be called by the APScheduler job (daily) and also
 # runnable manually:  python -m backend.services.mandi_fetch_service
+#   ... --archive-probe [YYYY-MM-DD]   fetch-only check of the archive path
 # ============================================================
 
 import os
 import time
 import hashlib
 import logging
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 
 import requests
 from dotenv import load_dotenv
@@ -74,7 +81,11 @@ STATES = [
     "Karnataka", "Kerala", "Keralam", "Madhya Pradesh", "Maharashtra", "Manipur",
     "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
     "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
-    "Uttrakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+    "Uttrakhand", "West Bengal",
+    # Both resources store this UT as "Andaman and Nicobar" — the "… Islands"
+    # spelling matches 0 rows, so this UT was silently absent from every fetch
+    # until 2026-07-29. Keeping both costs one empty request.
+    "Andaman and Nicobar", "Andaman and Nicobar Islands", "Chandigarh",
     "Dadra and Nagar Haveli", "NCT of Delhi", "Delhi", "Jammu and Kashmir",
     "Ladakh", "Lakshadweep", "Puducherry", "Pondicherry", "Daman and Diu",
 ]
@@ -97,6 +108,42 @@ HEADERS = {
     ),
     "Accept": "application/json",
 }
+
+# ── Archive fallback ─────────────────────────────────────────
+# "Variety-wise Daily Market Prices Data of Commodity" (DMI) is the SAME
+# Agmarknet feed as RESOURCE_ID above — but it is never wiped: ~80M rows going
+# back to 2001, trailing the live resource by about a day. We use it purely as
+# a fallback: when the live feed is still filling (see MIN_ROWS), a pre-dawn or
+# post-outage visitor would otherwise get an empty or days-old snapshot. The
+# archive gives us yesterday's COMPLETE prices instead.
+#
+# Verified against the live API on 2026-07-29:
+#   • Field names are Capitalised here ("State"/"Arrival_Date") where the live
+#     resource uses lowercase ("state"/"arrival_date") — _archive_to_feed()
+#     translates, so nothing downstream changes.
+#   • filters[State] and filters[Arrival_Date] are EXACT matches: "Uttar
+#     Pradesh" returned only Uttar Pradesh (no "* Pradesh" token bleed), and
+#     all 18,877 rows of a day carried exactly the requested date. NOTE the
+#     ".keyword" sub-field the live resource needs does NOT exist here — using
+#     it returns 0 rows.
+#   • One day nationwide ≈ 18.9k rows; the largest single state ≈ 1.7k. So one
+#     request per state fits in a single page and we never rely on deep offset
+#     paging, which returns overlapping rows on this resource.
+ARCHIVE_RESOURCE_ID = "35985678-0d79-46b4-9ed6-6f13308a1d24"
+ARCHIVE_ENDPOINT    = f"https://api.data.gov.in/resource/{ARCHIVE_RESOURCE_ID}"
+ARCHIVE_STATE_FIELD = "filters[State]"
+ARCHIVE_DATE_FIELD  = "filters[Arrival_Date]"
+
+# The archive trails the live feed by ~a day, and a given day can be thin
+# (holidays, mandi closures), so walk back until we find a complete-looking day.
+ARCHIVE_LOOKBACK_DAYS = int(os.getenv("MANDI_ARCHIVE_LOOKBACK_DAYS", "3"))
+
+# Kill switch — set MANDI_ARCHIVE_FALLBACK=0 to go back to live-feed-only.
+ARCHIVE_FALLBACK = os.getenv("MANDI_ARCHIVE_FALLBACK", "1").strip().lower() \
+    not in ("0", "false", "no", "off")
+
+# Mandi days are IST days; the process may run in UTC.
+IST_TZ = timezone(timedelta(hours=5, minutes=30))
 
 
 # ── Helpers ──────────────────────────────────────────────────
@@ -132,15 +179,16 @@ def _group_key(r: dict) -> str:
 
 # ── Fetch ────────────────────────────────────────────────────
 
-def _get_page(params: dict, label: str) -> list | None:
+def _get_page(params: dict, label: str, endpoint: str = ENDPOINT) -> list | None:
     """
     GET one page with retry+backoff on transient (5xx / network) errors.
     Returns the list of records, or None if the page ultimately failed
     (so the caller can distinguish "empty" from "error").
+    `endpoint` lets the same retry/backoff path serve the archive resource.
     """
     for attempt in range(MAX_RETRIES):
         try:
-            res = requests.get(ENDPOINT, params=params, headers=HEADERS, timeout=TIMEOUT)
+            res = requests.get(endpoint, params=params, headers=HEADERS, timeout=TIMEOUT)
         except requests.RequestException as e:
             wait = 2 ** attempt
             logger.warning(f"{label} attempt {attempt + 1}/{MAX_RETRIES} "
@@ -254,6 +302,110 @@ def _fetch_all_records() -> tuple[list, set]:
     return all_records, failed_states
 
 
+# ── Archive fallback fetch ───────────────────────────────────
+
+def _archive_to_feed(r: dict) -> dict:
+    """Translate one archive row into the live feed's lowercase field shape,
+    so _group_key / normalisation / storage all work unchanged."""
+    return {
+        "state":        r.get("State"),
+        "district":     r.get("District"),
+        "market":       r.get("Market"),
+        "commodity":    r.get("Commodity"),
+        "variety":      r.get("Variety"),
+        "grade":        r.get("Grade"),
+        "arrival_date": r.get("Arrival_Date"),
+        "min_price":    r.get("Min_Price"),
+        "max_price":    r.get("Max_Price"),
+        "modal_price":  r.get("Modal_Price"),
+    }
+
+
+def _fetch_archive_day(day: date) -> list:
+    """
+    Every archive row for one calendar day, partitioned per state (one request
+    each — a state's day is ~1-2k rows, well inside a single page). Returns
+    live-feed-shaped dicts, deduplicated by market identity + date.
+    """
+    stamp = day.strftime("%d/%m/%Y")
+    records, seen = [], set()
+    for state in STATES:
+        offset = 0
+        for _page in range(MAX_PAGES):
+            params = {
+                "api-key": API_KEY,
+                "format":  "json",
+                "limit":   PAGE_LIMIT,
+                "offset":  offset,
+                ARCHIVE_STATE_FIELD: state,
+                ARCHIVE_DATE_FIELD:  stamp,
+            }
+            recs = _get_page(params, f"[archive {stamp} {state}] offset={offset}",
+                             endpoint=ARCHIVE_ENDPOINT)
+            if not recs:      # hard error or no (more) rows — move to next state
+                break
+            for raw in recs:
+                r  = _archive_to_feed(raw)
+                rk = _group_key(r) + "|" + _norm(r.get("arrival_date"))
+                if rk in seen:
+                    continue
+                seen.add(rk)
+                records.append(r)
+            if len(recs) < PAGE_LIMIT:
+                break
+            offset += PAGE_LIMIT
+        time.sleep(STATE_DELAY)   # pace requests to avoid data.gov 429 throttling
+    return records
+
+
+def merge_archive_rows(live: list, archive: list) -> tuple[list, int]:
+    """
+    Combine a sparse live fetch with archived rows, returning (rows, n_added).
+
+    Live rows ALWAYS win per market identity: the archive only fills markets
+    that have not reported yet today. Without this rule a market that appears
+    in both would land in the snapshot twice — the same /bhav page showing one
+    market at two different prices.
+    """
+    live_keys = {_group_key(r) for r in live}
+    rows, added = list(live), 0
+    for r in archive:
+        if _group_key(r) in live_keys:
+            continue
+        rows.append(r)
+        added += 1
+    return rows, added
+
+
+def fetch_archive_fallback() -> tuple[list, date | None]:
+    """
+    Best-effort: the most recent archived day that looks complete, as
+    (records, day) — or ([], None) if the archive can't help. Never raises;
+    a fallback failure must leave the live fetch exactly as it was.
+    """
+    if not ARCHIVE_FALLBACK:
+        logger.info("🗄️ Archive fallback disabled (MANDI_ARCHIVE_FALLBACK=0).")
+        return [], None
+    if not API_KEY:
+        return [], None
+
+    today_ist = datetime.now(IST_TZ).date()
+    try:
+        for back in range(1, ARCHIVE_LOOKBACK_DAYS + 1):
+            day  = today_ist - timedelta(days=back)
+            recs = _fetch_archive_day(day)
+            logger.info(f"🗄️ Archive {day:%d/%m/%Y}: {len(recs)} rows")
+            if len(recs) >= MIN_ROWS:
+                return recs, day
+    except Exception as e:
+        logger.error(f"🗄️ Archive fallback failed (non-fatal): {e}")
+        return [], None
+
+    logger.warning(f"🗄️ Archive fallback found no day with ≥{MIN_ROWS} rows in "
+                   f"the last {ARCHIVE_LOOKBACK_DAYS} days — leaving snapshot as-is.")
+    return [], None
+
+
 # ── Store ────────────────────────────────────────────────────
 
 def _prev_modal_map(db, group_keys: set, before_dt) -> dict:
@@ -353,6 +505,27 @@ def fetch_and_store() -> dict:
     init_db()
     records, failed_states = _fetch_all_records()
 
+    # SPARSE-FEED FALLBACK — data.gov wipes the live resource overnight and
+    # refills it as mandis report, so an early run sees only a handful of rows
+    # and (by the MIN_ROWS guard below) would leave the snapshot untouched:
+    # empty on a cold start, days old after an outage. Top up from the archive
+    # resource, which already holds yesterday complete.
+    #
+    # Live rows always win per market identity — the archive only fills markets
+    # that have not reported yet today, so a market is never shown yesterday's
+    # price when today's is already known, and the snapshot can never end up
+    # with two rows for the same market.
+    archive_day, archive_added, live_count = None, 0, len(records)
+    if len(records) < MIN_ROWS:
+        logger.warning(f"⚠️ Live feed sparse ({live_count} rows < MANDI_MIN_ROWS="
+                       f"{MIN_ROWS}) — falling back to the archive resource.")
+        arch, archive_day = fetch_archive_fallback()
+        if arch:
+            records, archive_added = merge_archive_rows(records, arch)
+            logger.info(f"🗄️ Archive fallback: +{archive_added} rows from "
+                        f"{archive_day:%d/%m/%Y} on top of {live_count} live "
+                        f"rows → {len(records)} total.")
+
     db = SessionLocal()
     try:
         if not records:
@@ -391,6 +564,10 @@ def fetch_and_store() -> dict:
                 "row_key":      rk,
             })
 
+        # min(), not max(): on an archive-topped-up run the batch spans two
+        # dates, and min() keeps the "previous price" strictly older than the
+        # archive rows. With max() a yesterday row would find *itself* in
+        # history and report a 0% change.
         before_dt = min(dts) if dts else None
         prev_map  = _prev_modal_map(db, group_keys, before_dt)
 
@@ -427,17 +604,20 @@ def fetch_and_store() -> dict:
         if len(rows) < MIN_ROWS:
             existing = db.query(MandiPrice).count()
             logger.warning(
-                f"⚠️ Feed sparse: only {len(rows)} rows (< MANDI_MIN_ROWS={MIN_ROWS}) — "
-                f"keeping existing snapshot ({existing} rows), history +{history_added}."
+                f"⚠️ Feed sparse: only {len(rows)} rows (< MANDI_MIN_ROWS={MIN_ROWS}), "
+                f"archive fallback added {archive_added} — keeping existing snapshot "
+                f"({existing} rows), history +{history_added}."
             )
             record_sync(
                 "mandi", "partial", len(rows),
-                f"feed sparse ({len(rows)} rows < {MIN_ROWS}) — kept snapshot "
-                f"({existing} rows), +{history_added} history; will refetch when feed fills",
+                f"feed sparse ({len(rows)} rows < {MIN_ROWS}, archive added "
+                f"{archive_added}) — kept snapshot ({existing} rows), "
+                f"+{history_added} history; will refetch when feed fills",
                 started_at,
             )
             return {"fetched": len(rows), "snapshot": existing,
-                    "history_added": history_added, "sparse": True}
+                    "history_added": history_added, "sparse": True,
+                    "archive_added": archive_added}
 
         # Recent price series per group (includes the day we just inserted)
         spark_map = _spark_map(db, group_keys)
@@ -501,18 +681,29 @@ def fetch_and_store() -> dict:
 
         logger.info(
             f"✅ Mandi fetch done | fetched={len(rows)} "
+            f"(live={live_count} archive={archive_added}) "
             f"merged={len(snapshot)} (updated {len(stale_ids)}) "
             f"history_added={history_added} failed_states={len(failed_states)}"
         )
-        status = "partial" if failed_states else "success"
+        # An archive-topped-up run is reported as "partial": the snapshot is
+        # complete and correct, but it is carrying yesterday's prices for the
+        # markets that had not reported yet, and that should be visible in the
+        # admin sync log rather than looking like a clean live fetch.
+        status = "partial" if (failed_states or archive_added) else "success"
         detail = (f"{len(rows)} rows merged into snapshot "
                   f"({len(stale_ids)} updated), +{history_added} history")
+        if archive_added:
+            detail += (f" — live feed sparse ({live_count} rows), "
+                       f"+{archive_added} from archive "
+                       f"{archive_day:%d/%m/%Y}")
         if failed_states:
             detail += f" — {len(failed_states)} state(s) incomplete"
         record_sync("mandi", status, len(rows), detail, started_at)
         return {"fetched": len(rows), "snapshot": len(snapshot),
                 "replaced": len(stale_ids), "history_added": history_added,
-                "failed_states": sorted(failed_states)}
+                "failed_states": sorted(failed_states),
+                "live": live_count, "archive_added": archive_added,
+                "archive_day": archive_day.isoformat() if archive_day else None}
 
     except Exception as e:
         db.rollback()
@@ -524,5 +715,28 @@ def fetch_and_store() -> dict:
 
 
 if __name__ == "__main__":
+    import sys
+
     logging.basicConfig(level=logging.INFO)
+
+    # `--archive-probe [YYYY-MM-DD]` exercises the archive path ONLY: it fetches
+    # and reports, and never touches the database. Use it to confirm the
+    # fallback still works after a data.gov schema change, without waiting for
+    # a real sparse morning.
+    if "--archive-probe" in sys.argv:
+        args = [a for a in sys.argv[1:] if not a.startswith("-")]
+        if args:                                  # explicit day
+            day  = date.fromisoformat(args[0])
+            recs = _fetch_archive_day(day)
+        else:                                     # whatever the fallback would pick
+            recs, day = fetch_archive_fallback()
+        states = sorted({_norm(r.get("state")) for r in recs})
+        print(f"\narchive day : {day}")
+        print(f"rows        : {len(recs)}")
+        print(f"states      : {len(states)}")
+        print(f"usable      : {len(recs) >= MIN_ROWS} (MIN_ROWS={MIN_ROWS})")
+        if recs:
+            print(f"sample      : {recs[0]}")
+        sys.exit(0)
+
     print(fetch_and_store())

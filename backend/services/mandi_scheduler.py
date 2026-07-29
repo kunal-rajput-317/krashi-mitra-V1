@@ -113,6 +113,27 @@ def _fetch_and_notify():
     except Exception as e:
         logger.error(f"mandi push alerts failed (non-fatal): {e}")
 
+    # 📅 Build a few of the seasonality summaries that /bhav pages asked for.
+    # Deliberately ridden along here rather than given its own timer: this
+    # job already has the DB awake, and an independent schedule would add
+    # exactly the round-the-clock Neon traffic the staleness watchdog was
+    # widened to 3h to avoid. Best-effort and bounded (DRAIN_BATCH slices).
+    try:
+        from backend.services.mandi_season_service import drain_queue
+        drain_queue()
+    except Exception as e:
+        logger.error(f"season summary drain failed (non-fatal): {e}")
+
+    # 🌾 Harvest a couple of crops' किसान कॉल सेंटर Q&A for /sawal. Rides here
+    # for the same reason as the seasonality drain: the DB is already awake.
+    # The crop list is fixed and small, so this finishes within a day or two
+    # and then does nothing but a single cheap status query per run.
+    try:
+        from backend.services.kcc_service import drain_queue as kcc_drain
+        kcc_drain()
+    except Exception as e:
+        logger.error(f"KCC Q&A drain failed (non-fatal): {e}")
+
     return summary
 
 

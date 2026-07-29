@@ -1,0 +1,110 @@
+{
+  "_note": "Minimum Support Price (न्यूनतम समर्थन मूल्य) per crop, ₹/quintal — the same unit Agmarknet reports modal_price in, so the two compare directly with no conversion. Updated TWICE A YEAR (Kharif ~June, Rabi ~October) by CACP/Cabinet; this file is the single source of truth and is read live by mtime, so a correction needs no deploy. TWO SAFETY RULES ARE ENFORCED IN CODE, not by discipline: (1) a crop renders ONLY when verified:true — an unconfirmed number stays invisible instead of misleading a farmer into selling below MSP; (2) a season stops rendering after its valid_until date, so a stale MSP can never quietly outlive its marketing season. Matching is EXACT on the aliases list (normalised lowercase), never keyword-fuzzy: a keyword match would put wheat's MSP on 'Wheat Atta' and mustard's on 'Mustard Oil'. Basmati paddy is deliberately absent — it is not procured at MSP. Sugarcane is absent too: it has an FRP, not an MSP, and mislabelling the two is exactly the kind of error this file exists to avoid.",
+  "_verify_before_deploy": "Rabi RMS 2026-27 barley/gram/masur/safflower ship as verified:false because their exact announced figures were not confirmable here. Paste the CACP number, flip verified to true, and the block lights up on every page for that crop.",
+  "source_label": "CACP / कृषि एवं किसान कल्याण मंत्रालय, भारत सरकार",
+  "source_url": "https://cacp.dacnet.nic.in/",
+
+  "seasons": {
+    "kharif-2025-26": {
+      "label": "खरीफ विपणन सीजन 2025-26",
+      "short": "खरीफ 2025-26",
+      "valid_until": "2026-09-30"
+    },
+    "rabi-2026-27": {
+      "label": "रबी विपणन सीजन (RMS) 2026-27",
+      "short": "रबी 2026-27",
+      "valid_until": "2027-03-31"
+    }
+  },
+
+  "crops": {
+    "wheat": {
+      "hi": "गेहूं", "msp": 2585, "season": "rabi-2026-27", "verified": true,
+      "aliases": ["wheat"]
+    },
+    "mustard": {
+      "hi": "सरसों", "msp": 6200, "season": "rabi-2026-27", "verified": true,
+      "aliases": ["mustard", "rape seed", "rapeseed", "mustard seed", "sarson",
+                  "rapeseed & mustard", "rape seed & mustard"]
+    },
+    "barley": {
+      "hi": "जौ", "msp": 0, "season": "rabi-2026-27", "verified": false,
+      "aliases": ["barley", "barley (jau)", "jau"]
+    },
+    "gram": {
+      "hi": "चना", "msp": 0, "season": "rabi-2026-27", "verified": false,
+      "aliases": ["bengal gram(gram)(whole)", "bengal gram", "gram", "chana"]
+    },
+    "masur": {
+      "hi": "मसूर", "msp": 0, "season": "rabi-2026-27", "verified": false,
+      "aliases": ["lentil(masur)(whole)", "lentil", "masur", "masoor"]
+    },
+    "safflower": {
+      "hi": "कुसुम", "msp": 0, "season": "rabi-2026-27", "verified": false,
+      "aliases": ["safflower", "safflower seed"]
+    },
+
+    "paddy": {
+      "hi": "धान", "msp": 2369, "season": "kharif-2025-26", "verified": true,
+      "note": "ग्रेड-A धान का MSP ₹2,389/क्विंटल है।",
+      "aliases": ["paddy(common)", "paddy", "dhan", "paddy common"]
+    },
+    "maize": {
+      "hi": "मक्का", "msp": 2400, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["maize", "corn"]
+    },
+    "bajra": {
+      "hi": "बाजरा", "msp": 2775, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["bajra(pearl millet/cumbu)", "bajra", "pearl millet"]
+    },
+    "jowar": {
+      "hi": "ज्वार", "msp": 3699, "season": "kharif-2025-26", "verified": true,
+      "note": "मालदंडी ज्वार का MSP ₹3,749/क्विंटल है।",
+      "aliases": ["jowar(sorghum)", "jowar", "sorghum"]
+    },
+    "ragi": {
+      "hi": "रागी", "msp": 4886, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["ragi (finger millet)", "ragi", "finger millet", "mandua"]
+    },
+    "tur": {
+      "hi": "अरहर", "msp": 8000, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["arhar (tur/red gram)(whole)", "red gram/arhar/tur(whole)",
+                  "arhar", "tur", "red gram"]
+    },
+    "moong": {
+      "hi": "मूंग", "msp": 8768, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["green gram (moong)(whole)", "green gram(moong)(whole)",
+                  "green gram", "moong"]
+    },
+    "urad": {
+      "hi": "उड़द", "msp": 7800, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["black gram (urd beans)(whole)", "black gram(urd beans)(whole)",
+                  "black gram", "urad", "urd"]
+    },
+    "groundnut": {
+      "hi": "मूंगफली", "msp": 7263, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["groundnut", "groundnut pods(raw)"]
+    },
+    "soybean": {
+      "hi": "सोयाबीन", "msp": 5328, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["soyabean", "soybean", "soyabean(yellow)"]
+    },
+    "sunflower": {
+      "hi": "सूरजमुखी", "msp": 7721, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["sunflower", "sunflower seed"]
+    },
+    "sesamum": {
+      "hi": "तिल", "msp": 9846, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["sesamum(sesame,gingelly,til)", "sesamum", "til", "sesame"]
+    },
+    "niger": {
+      "hi": "रामतिल", "msp": 9537, "season": "kharif-2025-26", "verified": true,
+      "aliases": ["niger seed (ramtil)", "niger seed", "nigerseed", "ramtil"]
+    },
+    "cotton": {
+      "hi": "कपास", "msp": 7710, "season": "kharif-2025-26", "verified": true,
+      "note": "यह मध्यम रेशा (medium staple) कपास का MSP है; लंबा रेशा ₹8,110/क्विंटल।",
+      "aliases": ["cotton", "kapas"]
+    }
+  }
+}
