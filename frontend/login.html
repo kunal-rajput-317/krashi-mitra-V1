@@ -237,6 +237,39 @@
       opacity: 0.8;
     }
 
+    /* Show/hide password — the wrapper and button are injected by initPasswordEyes()
+       at load, so every password field on this page gets one and any field added
+       later is covered without touching markup. */
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 52px; }
+    .pw-eye {
+      position: absolute;
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+      width: 44px;              /* full 44px tap target, thumb-friendly on mobile */
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      padding: 0;
+      background: none;
+      cursor: pointer;
+      color: var(--text-light);
+      border-radius: var(--radius-sm);
+      transition: color 0.2s ease, background 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pw-eye:hover  { color: var(--green-mid); background: rgba(45, 106, 79, 0.07); }
+    .pw-eye:active { background: rgba(45, 106, 79, 0.14); }
+    .pw-eye:focus-visible { outline: 2px solid var(--green-mid); outline-offset: 2px; }
+    .pw-eye svg { width: 20px; height: 20px; display: block; }
+    .pw-eye .eye-off { display: none; }
+    .pw-eye.is-on { color: var(--green-mid); }
+    .pw-eye.is-on .eye-on  { display: none; }
+    .pw-eye.is-on .eye-off { display: block; }
+
     /* Buttons */
     .auth-btn {
       width: 100%;
@@ -897,6 +930,7 @@
   function showStep(name) {
     document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
     document.getElementById("step-" + name).classList.add("active");
+    resetPasswordEyes();   // never carry a revealed password across steps
     // Scroll window back to the top so new steps open from the top of the screen
     window.scrollTo(0, 0);
     // Focus first input in the step (except for signup to highlight Google option first)
@@ -904,6 +938,75 @@
       const first = document.querySelector("#step-" + name + " input");
       if (first) setTimeout(() => first.focus(), 150);
     }
+  }
+
+  // ══════════════════════════════════════
+  // SHOW / HIDE PASSWORD
+  // ══════════════════════════════════════
+  // Built in JS rather than repeated in the markup: there are five password
+  // fields across login, signup and reset, and hand-writing two inline SVGs per
+  // field five times is how they drift apart. Anything typed into a phone with
+  // a numeric-ish password is easy to fat-finger, and the farmer has no way to
+  // check it before submitting — that is the whole point of the eye.
+  const EYE_ON = '<svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  function togglePw(btn) {
+    const input = btn.parentElement.querySelector('input');
+    if (!input) return;
+    const reveal = input.type === 'password';
+    input.type = reveal ? 'text' : 'password';
+    btn.classList.toggle('is-on', reveal);
+    btn.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+    btn.setAttribute('aria-label', reveal ? 'Password छिपाएं' : 'Password देखें');
+    btn.title = reveal ? 'Password छिपाएं' : 'Password देखें';
+    // Keep the caret where it was — tapping the eye must not cost the farmer
+    // their place in a half-typed password.
+    const pos = input.value.length;
+    input.focus({ preventScroll: true });
+    try { input.setSelectionRange(pos, pos); } catch (e) { /* type=text only */ }
+  }
+
+  function initPasswordEyes() {
+    document.querySelectorAll('.auth-field input[type="password"]').forEach(input => {
+      if (input.parentElement.classList.contains('pw-wrap')) return;  // already done
+      const wrap = document.createElement('div');
+      wrap.className = 'pw-wrap';
+      input.parentElement.insertBefore(wrap, input);
+      wrap.appendChild(input);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';          // never submits the form
+      btn.className = 'pw-eye';
+      btn.setAttribute('aria-label', 'Password देखें');
+      btn.setAttribute('aria-pressed', 'false');
+      btn.title = 'Password देखें';
+      btn.innerHTML = EYE_ON + EYE_OFF;
+      btn.addEventListener('click', () => togglePw(btn));
+      wrap.appendChild(btn);
+    });
+  }
+
+  // Re-hide every password whenever the user moves between login / signup /
+  // reset: a password left visible on a step the farmer walked away from is
+  // shoulder-surfing bait, and the eye should always start closed.
+  // Not via togglePw(): that deliberately refocuses the input, which would yank
+  // focus away from the step the farmer just moved to.
+  function resetPasswordEyes() {
+    document.querySelectorAll('.pw-eye.is-on').forEach(btn => {
+      const input = btn.parentElement.querySelector('input');
+      if (input) input.type = 'password';
+      btn.classList.remove('is-on');
+      btn.setAttribute('aria-pressed', 'false');
+      btn.setAttribute('aria-label', 'Password देखें');
+      btn.title = 'Password देखें';
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPasswordEyes);
+  } else {
+    initPasswordEyes();
   }
 
   // ══════════════════════════════════════
