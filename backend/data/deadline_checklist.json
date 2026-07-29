@@ -1,0 +1,226 @@
+{
+  "_note": "The 31-Aug-2026 checklist shown in the admin panel (Farmer Locator page, bottom). Source of truth for the SEEDED tasks — edit this file to add/reword/remove one and the panel picks it up on the next load, no deploy and no migration (read live by mtime, same rule as lead_offers.json / buyers.json). The database stores only STATE: which task is ticked, plus any task the owner adds himself. That split is deliberate — tick state is keyed by the stable `id`, so rewording a title here never loses a tick, and deleting a task here never deletes the owner's own tasks. Ordering is the order in this file. `owner` is 'you' (only the owner can do it — a phone call, a decision, a signup) or 'code' (Claude can do it unattended); the point of the split is that at this stage almost every blocker is 'you', and no amount of building moves them. `critical:true` marks the handful that actually decide the 31 Aug test in docs/MARKET-AND-MONEY.md §8 — everything else is support. Progress % counts every task equally; the ring is a nudge, not a metric to optimise.",
+  "deadline": "2026-08-31",
+  "deadline_label": "31 अगस्त 2026",
+  "ref": "docs/MARKET-AND-MONEY.md §8",
+
+  "sections": [
+    {
+      "key": "test",
+      "icon": "⭐",
+      "title": "The Test — one paying counterparty",
+      "sub": "Nothing else on this page decides 31 Aug. ₹500 counts; ₹0 does not.",
+      "tasks": [
+        {
+          "id": "pitch-script",
+          "title": "Write the 60-second Hindi phone pitch",
+          "note": "Who we are, how many farmers see the district page, what the listing gets him, ₹500/month. Write it once — you will say it 20 times.",
+          "owner": "you"
+        },
+        {
+          "id": "pick-district",
+          "title": "Pick the seed district for the खरीदार directory",
+          "note": "Needs both traffic and a personal contact. Data can tell us the first half; only you know the second. Open question §7.2.",
+          "owner": "you",
+          "critical": true
+        },
+        {
+          "id": "list-20-dealers",
+          "title": "Build a list of 20 traders / input dealers in that district",
+          "note": "Name, mandi, phone. Mandi lists, local contacts, walking the market — anything. Supply side needs no farmers.",
+          "owner": "you"
+        },
+        {
+          "id": "call-10",
+          "title": "Actually call at least 10 of them — log who answered",
+          "note": "This is the single step most likely to be skipped, and skipping it makes a failed test unreadable (§8.4).",
+          "owner": "you",
+          "critical": true
+        },
+        {
+          "id": "three-free-listings",
+          "title": "Get 3 to accept a free verified listing",
+          "note": "Free first. A live page with real numbers on it is what you sell the fourth one with.",
+          "owner": "you"
+        },
+        {
+          "id": "fill-buyers-json",
+          "title": "Enter the verified dealers in buyers.json",
+          "note": "active:true only after a real call — the blue tick is a claim we make. Today the file holds one active:false example, so the directory renders in zero districts.",
+          "owner": "you"
+        },
+        {
+          "id": "payment-rail",
+          "title": "Have a way to actually receive ₹500",
+          "note": "UPI or bank account + whatever passes for a receipt. Sounds trivial; it is the thing that stalls the close.",
+          "owner": "you"
+        },
+        {
+          "id": "entity-decision",
+          "title": "Decide: registered entity before taking dealer money?",
+          "note": "Affects invoicing and which affiliate networks will onboard us. Open question §7.3. A decision either way unblocks; indecision blocks both.",
+          "owner": "you"
+        },
+        {
+          "id": "first-paid",
+          "title": "★ ONE counterparty has paid real money",
+          "note": "The test. One dealer at ₹500/month, or one solar/loan/insurance partner paying per lead. Tick this and the model is proven.",
+          "owner": "you",
+          "critical": true
+        }
+      ]
+    },
+
+    {
+      "key": "leads",
+      "icon": "💰",
+      "title": "Lead slots — turn ₹0 placeholders into revenue",
+      "sub": "leads.py is built and rendering. It points at government pages, so it earns nothing by construction.",
+      "tasks": [
+        {
+          "id": "ga4-lead-baseline",
+          "title": "Read the GA4 `lead_click` count for the last 30 days",
+          "note": "Do this BEFORE negotiating. You cannot price a lead you have never counted, and 'X farmers clicked this last month' is the entire pitch.",
+          "owner": "you"
+        },
+        {
+          "id": "solar-partner",
+          "title": "Find 1 local solar / PM-KUSUM installer and agree a per-lead price",
+          "note": "Highest ₹ per lead of the three — ₹1–5 lakh ticket. Direct deal, no network approval, no fulfilment on our side.",
+          "owner": "you"
+        },
+        {
+          "id": "solar-switch-on",
+          "title": "Switch the solar offer on in lead_offers.json",
+          "note": "Currently active:false with no URL. One config change once a partner exists — no deploy needed.",
+          "owner": "you"
+        },
+        {
+          "id": "loan-partner",
+          "title": "Replace the KCC-loan link with a real partner",
+          "note": "Today it points at myscheme.gov.in. Agri-NBFC or affiliate network (Jai Kisan / Samunnati / Agriwise class).",
+          "owner": "you"
+        },
+        {
+          "id": "insurance-partner",
+          "title": "Replace the फसल बीमा link with a real partner",
+          "note": "Today it points at pmfby.gov.in. Same shape as the loan slot.",
+          "owner": "you"
+        },
+        {
+          "id": "lead-log-durable",
+          "title": "Persist /go/<id> clicks to the database",
+          "note": "Right now a click is a logger.info line plus a GA4 event. Render rotates logs, so the negotiating number lives in one place only.",
+          "owner": "code"
+        },
+        {
+          "id": "lead-report-admin",
+          "title": "Show leads-this-month in the admin panel",
+          "note": "So the number is in front of you every time you open this page, instead of behind a GA4 report you have to remember to run.",
+          "owner": "code"
+        }
+      ]
+    },
+
+    {
+      "key": "build",
+      "icon": "🔧",
+      "title": "Build — the missing connective tissue",
+      "sub": "Small and mine to do. None of it substitutes for the calls above.",
+      "tasks": [
+        {
+          "id": "dealer-signup-page",
+          "title": "Public \"अपनी दुकान लिस्ट करें\" page + form",
+          "note": "Dealer supply that arrives without a phone call. Does not replace the first 10 calls — nobody finds the form until the directory exists.",
+          "owner": "code"
+        },
+        {
+          "id": "kharidar-intent-form",
+          "title": "Wire the sell/buy appeal into the खरीदार page",
+          "note": "CropAppeal already captures 'I have 40 quintals of wheat in Hardoi'. On the kharidar page that intent IS the product we sell to a dealer.",
+          "owner": "code"
+        },
+        {
+          "id": "buyers-admin-ui",
+          "title": "Add / edit dealers from admin instead of hand-editing buyers.json",
+          "note": "Matters the day you are sitting in a mandi with a dealer saying yes, and hand-editing JSON is not an option.",
+          "owner": "code"
+        },
+        {
+          "id": "kharidar-sitemap",
+          "title": "Confirm a kharidar page enters the sitemap once its district has a live dealer",
+          "note": "Empty districts render noindex on purpose. Verify the reverse also happens — a seeded district must become discoverable.",
+          "owner": "code"
+        }
+      ]
+    },
+
+    {
+      "key": "traffic",
+      "icon": "📈",
+      "title": "Traffic — the 4× multiplier",
+      "sub": "0.5% CTR on ~4,000 impressions/day wastes 3,980 of them daily. Every revenue model is traffic × rate.",
+      "tasks": [
+        {
+          "id": "gsc-export",
+          "title": "Export GSC pages + queries, last 28 days, and hand it over",
+          "note": "The API is still blocked, so this is manual. Everything else in this section is blocked on it.",
+          "owner": "you",
+          "critical": true
+        },
+        {
+          "id": "ctr-titles",
+          "title": "Rewrite titles + descriptions on the top-20 impression / low-CTR pages",
+          "note": "Pages that already rank. Pure snippet work — no new content, and it keeps paying while you are hands-off.",
+          "owner": "code"
+        },
+        {
+          "id": "ctr-recheck",
+          "title": "Re-check CTR 14 days after the rewrite",
+          "note": "Without the re-check this is a guess, not a change. Compare against the 0.5% baseline of 2026-07-23.",
+          "owner": "you"
+        },
+        {
+          "id": "gsc-api",
+          "title": "Unblock GSC API access",
+          "note": "So CTR tracking stops being a manual export and can run unattended, per the everything-must-be-automatic rule.",
+          "owner": "you"
+        }
+      ]
+    },
+
+    {
+      "key": "alive",
+      "icon": "🛡️",
+      "title": "Keep it alive — the silent killers",
+      "sub": "Failures here are invisible from the outside: the site looks perfectly healthy while nothing works.",
+      "tasks": [
+        {
+          "id": "neon-decision",
+          "title": "Settle the Neon migration / upgrade",
+          "note": "A read-only compute serves every page fine and fails every write with a 500 — including ticking these boxes, dealer rows and lead logs. Every task on this page stores something.",
+          "owner": "you",
+          "critical": true
+        },
+        {
+          "id": "verify-daily-fetch",
+          "title": "Confirm the daily mandi fetch + archive fallback ran in the last 24h",
+          "note": "The price tree is the traffic engine. Stale prices lose the ranking that everything else is built on.",
+          "owner": "you"
+        },
+        {
+          "id": "uptime-alert",
+          "title": "Confirm the uptime / freshness alert actually reaches you",
+          "note": "An alert nobody receives is worse than no alert — it buys false confidence during the hands-off weeks.",
+          "owner": "you"
+        },
+        {
+          "id": "weekly-number",
+          "title": "Every Monday: write down clicks/day, lead clicks, calls made",
+          "note": "Three numbers, one line. On 31 Aug this is what tells you whether the test failed because the market said no, or because the calls never happened (§8.4).",
+          "owner": "you"
+        }
+      ]
+    }
+  ]
+}

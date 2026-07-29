@@ -907,6 +907,43 @@ class CropAppeal(Base):
     created_at  = Column(DateTime, default=datetime.utcnow, index=True)
 
 
+class AdminTask(Base):
+    """One line of the owner's 31-Aug-2026 checklist (admin panel → Farmer Locator).
+
+    Two kinds of row live here, told apart by `custom`:
+
+    * **seeded** — the curated checklist in `data/deadline_checklist.json`. The
+      JSON owns the wording, section, order and notes; this table owns nothing
+      but `done`/`done_at`. So a row exists only once the task has been touched,
+      and rewording a task in the JSON can never lose a tick, because the tick
+      is keyed on the stable `slug`, not on the text.
+    * **custom** — tasks the owner adds from the panel. These have no JSON
+      counterpart, so the row carries its own title/section and is the only
+      copy; deleting it is the only way it disappears.
+
+    That asymmetry is the whole design: the file is the plan, the table is the
+    progress, and neither can clobber the other.
+
+    Writes here are the first thing to fail if the Neon compute flips read-only
+    — see is_read_only_error(); routes/admin.py surfaces that as its own message
+    rather than a generic 500, because "my checkbox won't tick" is otherwise an
+    impossible symptom to diagnose.
+    """
+    __tablename__ = "admin_tasks"
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    slug       = Column(String,   nullable=False, unique=True, index=True)  # JSON task id, or "mine-<n>" for custom
+    done       = Column(Boolean,  default=False, nullable=False)
+    done_at    = Column(DateTime, nullable=True)
+    # Only meaningful for custom rows — seeded rows read these from the JSON.
+    custom     = Column(Boolean,  default=False, nullable=False, index=True)
+    title      = Column(String,   nullable=True)
+    section    = Column(String,   nullable=True)   # section key the task belongs to
+    note       = Column(String,   nullable=True)
+    sort       = Column(Integer,  default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 # ── DB Helpers ───────────────────────────────────────────────
 
 _TABLE_RENAMES = [
