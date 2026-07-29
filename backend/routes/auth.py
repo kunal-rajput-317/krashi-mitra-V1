@@ -34,6 +34,7 @@ from typing import Optional
 
 from backend.database.db import (
     MandiAlert, Order, PushSubscription, User, UserProfile, get_db,
+    is_read_only_error,
 )
 from backend.utils.auth_utils import (
     hash_password,
@@ -70,9 +71,34 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 # detail where we can see it; tell the caller nothing.
 _GENERIC_500 = "कुछ गड़बड़ हो गई। कृपया थोड़ी देर बाद दोबारा कोशिश करें।"
 
+# A database that refuses writes is not an application fault, and reporting it
+# as one costs hours: signup and verify-otp both 500 with the message above
+# while every read still succeeds, so the site looks healthy and the bug looks
+# like ours. Separate it out — the caller gets an honest "try again shortly"
+# and the log says exactly what happened.
+_READ_ONLY_503 = "सेवा अभी कुछ देर के लिए उपलब्ध नहीं है। कृपया थोड़ी देर बाद दोबारा कोशिश करें।"
+
 
 def _log_error(label: str, exc: Exception) -> None:
     logger.exception("[auth] %s failed: %s", label, exc)
+
+
+def _fail(label: str, exc: Exception) -> HTTPException:
+    """Map a handler exception to the response it deserves. Always raised, never returned bare."""
+    if is_read_only_error(exc):
+        # Not logger.exception: the traceback is noise here, the cause is known.
+        logger.error(
+            "[auth] %s blocked — DATABASE IS READ-ONLY (SQLSTATE 25006). "
+            "Writes are being refused by the server; check the database plan/quota.",
+            label,
+        )
+        return HTTPException(
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail      = _READ_ONLY_503,
+            headers     = {"Retry-After": "120"},
+        )
+    _log_error(label, exc)
+    return HTTPException(status_code=500, detail=_GENERIC_500)
 
 
 MAX_LOGIN_ATTEMPTS = 5
@@ -321,8 +347,7 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "OTP sent", "data": {}}
 
     except Exception as e:
-        _log_error("Signup", e)
-        raise HTTPException(status_code=500, detail=_GENERIC_500)
+        raise _fail("Signup", e)
 
 
 @router.post("/login", dependencies=[Depends(_LIMIT_LOGIN)])
@@ -354,8 +379,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "Login successful", "data": {"token": token}}
 
     except Exception as e:
-        _log_error("Login", e)
-        raise HTTPException(status_code=500, detail=_GENERIC_500)
+        raise _fail("Login", e)
 
 
 @router.post("/verify-otp", dependencies=[Depends(_LIMIT_VERIFY)])
@@ -384,8 +408,7 @@ def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "Email verify हो गया। अब login करें।", "data": {}}
 
     except Exception as e:
-        _log_error("OTP verification", e)
-        raise HTTPException(status_code=500, detail=_GENERIC_500)
+        raise _fail("OTP verification", e)
 
 
 @router.post("/resend-otp", dependencies=[Depends(_LIMIT_SEND)])
@@ -409,8 +432,7 @@ def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "अगर यह email registered है तो OTP भेज दिया गया है।", "data": {}}
 
     except Exception as e:
-        _log_error("Resend OTP", e)
-        raise HTTPException(status_code=500, detail=_GENERIC_500)
+        raise _fail("Resend OTP", e)
 
 
 @router.post("/forgot-password", dependencies=[Depends(_LIMIT_SEND)])
@@ -434,8 +456,7 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "अगर यह email registered है तो OTP भेज दिया गया है।", "data": {}}
 
     except Exception as e:
-        _log_error("Forgot password", e)
-        raise HTTPException(status_code=500, detail=_GENERIC_500)
+        raise _fail("Forgot password", e)
 
 
 @router.post("/reset-password", dependencies=[Depends(_LIMIT_VERIFY)])
@@ -469,8 +490,7 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
         return {"success": True, "message": "Password reset हो गया। अब login करें।", "data": {}}
 
     except Exception as e:
-        _log_error("Reset password", e)
-        raise HTTPException(status_code=500, detail=_GENERIC_500)
+        raise _fail("Reset password", e)
 
 
 # ── GOOGLE OAUTH ─────────────────────────────────────────────
@@ -546,8 +566,7 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
     except httpx.TimeoutException:
         return {"success": False, "message": "Google server से response नहीं मिला। दोबारा try करें।", "data": {}}
     except Exception as e:
-        _log_error("Google login", e)
-        raise HTTPException(status_code=500, detail=_GENERIC_500)
+        raise _fail("Google login", e)
 
 
 # ── POST /auth/claim-guest ───────────────────────────────────
