@@ -3,9 +3,11 @@
 # KrashiMitra — Mandi Price Auto-Fetcher
 # ------------------------------------------------------------
 # Pulls the full nationwide Agmarknet dataset from data.gov.in,
-# rebuilds the "latest snapshot" table (mandi_prices) and appends
-# to an append-only history table (mandi_price_history).
-# History is never auto-purged, enabling previous-price trends.
+# rebuilds the "latest snapshot" table (mandi_prices), appends to a
+# short-window history table (mandi_price_history, trimmed to
+# MANDI_HISTORY_DAYS) and upserts mandi_last_seen — the permanent
+# one-row-per-(mandi × crop) record that lets the trim stay short
+# without any /bhav URL losing its data.
 #
 # Two data.gov resources are used:
 #   RESOURCE_ID          — the live "today only" feed, wiped and refilled daily
@@ -30,7 +32,7 @@ from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from backend.database.db import (
-    SessionLocal, init_db, MandiPrice, MandiPriceHistory,
+    SessionLocal, init_db, MandiPrice, MandiPriceHistory, MandiLastSeen,
 )
 
 load_dotenv()
@@ -49,11 +51,15 @@ PAGE_LIMIT = 5000      # rows per request
 MAX_PAGES  = 20        # safety cap on pages per state
 
 # History retention: trim mandi_price_history to the last N days after each
-# fetch so it doesn't grow unbounded (~8 MB/day at full ~18k-row capture).
-# 30d ≈ ~400 MB — fits Neon's free tier; 90d (~1 GB+) does not. Everything
-# downstream needs far less: deltas 1 day, sparklines ~8, trend chart a few
-# weeks. 0 = keep forever.
-HISTORY_DAYS = int(os.getenv("MANDI_HISTORY_DAYS", "30"))
+# fetch. Measured 2026-07-29 at ~9 MB/day (11 days = 101 MB), so 30d would be
+# ~275 MB of a 512 MB cap — and the cap counts change history too, which is why
+# it was already tripping. 0 = keep forever (do not use on the Free plan).
+# 15 days is what the detail-sheet trend chart and the day-over-day delta
+# need. Nothing else reads this table: "which pages exist" and "last known
+# price for a quiet district" moved to mandi_last_seen, and the multi-year
+# view is mandi_price_monthly. Kept low because history is ~9MB/day and the
+# Free-plan branch cap (512MB) turns the whole database read-only when hit.
+HISTORY_DAYS = int(os.getenv("MANDI_HISTORY_DAYS", "15"))
 
 # Sparse-feed floor: data.gov wipes this resource overnight and refills it
 # through the day (seen 2026-07-09/10: 2 rows at 06:30 IST, ~5.7k by 09:40,
@@ -582,6 +588,57 @@ def fetch_and_store() -> dict:
             res = db.execute(stmt)
             history_added += (res.rowcount or 0)
         db.commit()
+
+        # 1a) Last-seen — one permanent row per (mandi × crop), updated only when
+        # the incoming row is at least as new. This is what makes the trim below
+        # safe: the page index and the stale-district rescue read from here, so
+        # a district that stops reporting keeps its URL and its last known price
+        # no matter how short retention gets. See MandiLastSeen in database/db.
+        last_seen_n = 0
+        _ls = MandiLastSeen.__table__.c
+        for i in range(0, len(rows), CHUNK):
+            chunk = [{k: v for k, v in x.items() if k != "row_key"}
+                     for x in rows[i:i + CHUNK] if x.get("group_key")]
+            if not chunk:
+                continue
+            stmt = pg_insert(MandiLastSeen.__table__).values(
+                [{**x, "updated_at": now} for x in chunk])
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["group_key"],
+                set_={
+                    "state":        stmt.excluded.state,
+                    "district":     stmt.excluded.district,
+                    "market":       stmt.excluded.market,
+                    "commodity":    stmt.excluded.commodity,
+                    "variety":      stmt.excluded.variety,
+                    "grade":        stmt.excluded.grade,
+                    "min_price":    stmt.excluded.min_price,
+                    "max_price":    stmt.excluded.max_price,
+                    "modal_price":  stmt.excluded.modal_price,
+                    "arrival_date": stmt.excluded.arrival_date,
+                    "arrival_dt":   stmt.excluded.arrival_dt,
+                    "updated_at":   stmt.excluded.updated_at,
+                },
+                # Two jobs for this predicate:
+                #  • never let a late-arriving OLD row overwrite a newer price;
+                #  • never rewrite a row that has not changed. The fetch runs
+                #    6×/day and mostly re-reads the same rows, so a plain
+                #    `>=` would rewrite all ~31k rows six times a day. Each
+                #    rewrite is a new row version the storage cap counts, which
+                #    is the whole problem we are here to fix. Same-day updates
+                #    still land — but only when a price actually moved.
+                where=(_ls.arrival_dt.is_(None)) |
+                      (stmt.excluded.arrival_dt > _ls.arrival_dt) |
+                      ((stmt.excluded.arrival_dt == _ls.arrival_dt) &
+                       (stmt.excluded.modal_price.is_distinct_from(_ls.modal_price) |
+                        stmt.excluded.min_price.is_distinct_from(_ls.min_price) |
+                        stmt.excluded.max_price.is_distinct_from(_ls.max_price))),
+            )
+            res = db.execute(stmt)
+            last_seen_n += (res.rowcount or 0)
+        db.commit()
+        if last_seen_n:
+            logger.info(f"📌 last-seen rows touched: {last_seen_n}")
 
         # 1b) Retention — drop history older than HISTORY_DAYS (keeps table flat).
         if HISTORY_DAYS > 0:

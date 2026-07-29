@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey, Index
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
@@ -440,10 +440,60 @@ class MandiPrice(Base):
     fetched_at       = Column(DateTime, default=datetime.utcnow)
 
 
+class MandiLastSeen(Base):
+    """The last price we ever saw for each (mandi × crop) — one row, forever.
+
+    Exists so that trimming mandi_price_history is safe. Two things used to
+    read the whole history table and would silently degrade as retention got
+    shorter:
+
+    1. **The page index** (routes/bhav._get_index) — every crop×state×district
+       we have ever had data for, plus the date it last moved. That set decides
+       which /bhav URLs exist and what <lastmod> the sitemap claims. Built from
+       a trimmed history, districts that went quiet would drop out and URLs the
+       sitemap advertises would start 404-ing — the exact regression fixed on
+       18 Jul 2026.
+    2. **The stale-district rescue** (routes/bhav._rows_for_district) — a
+       district that stops reporting still shows its last known prices instead
+       of an empty page.
+
+    Neither needs *history*; both need only the latest row per combination.
+    That is ~31k rows and, unlike history, it does not grow with time — only
+    when a genuinely new mandi/crop/variety appears. So retention can now be
+    set by what the 15-day chart needs, not by what SEO needs.
+
+    Keyed by group_key (the same md5 the snapshot and history use), so a row
+    here is shaped exactly like a snapshot row and renders through the same
+    _row_to_dict path. Deliberately NO index=True on the primary key: that is
+    what produced the duplicate id indexes on the older mandi tables.
+    """
+    __tablename__ = "mandi_last_seen"
+    id           = Column(Integer,  primary_key=True)
+    group_key    = Column(String,   nullable=False, unique=True)  # md5(state|district|market|commodity|variety|grade)
+    state        = Column(String,   nullable=True)
+    district     = Column(String,   nullable=True)
+    market       = Column(String,   nullable=True)
+    commodity    = Column(String,   nullable=False)
+    variety      = Column(String,   nullable=True)
+    grade        = Column(String,   nullable=True)
+    min_price    = Column(String,   nullable=True)
+    max_price    = Column(String,   nullable=True)
+    modal_price  = Column(String,   nullable=True)
+    arrival_date = Column(String,   nullable=True)   # original DD/MM/YYYY
+    arrival_dt   = Column(Date,     nullable=True)   # parsed — "when this page last moved"
+    updated_at   = Column(DateTime, default=datetime.utcnow)
+
+    # One composite index serves both readers (index build + district rescue).
+    __table_args__ = (
+        Index("mandi_last_seen_csd_idx", "commodity", "state", "district"),
+    )
+
+
 class MandiPriceHistory(Base):
     """Append-only daily history, deduped by row_key. Trimmed after each
-    fetch to the last MANDI_HISTORY_DAYS days (default 30; 0 = keep forever)
-    — powers prev-price deltas, sparklines and the trend chart."""
+    fetch to the last MANDI_HISTORY_DAYS days (default 15) — powers prev-price
+    deltas, sparklines and the trend chart, and nothing else. Anything that
+    needs "has this page ever had data" reads MandiLastSeen instead."""
     __tablename__ = "mandi_price_history"
     id           = Column(Integer,  primary_key=True, index=True)
     state        = Column(String,   nullable=True, index=True)
@@ -1529,6 +1579,98 @@ def _ensure_foreign_keys():
             print(f"⚠️  Foreign key {name} skipped: {e}")
 
 
+# Indexes that cost storage and buy nothing. Each is either an exact duplicate
+# of another index on the same column, or measured at near-zero scans against
+# hundreds of thousands on its twin (checked 2026-07-29 via pg_stat_user_indexes).
+# On the Free plan they were 64% of mandi_price_history's size — 65MB of index
+# on 36MB of data — and every one of them also multiplies write-time change
+# history, which is what the 512MB branch cap actually measures.
+#
+#   mandi_history_row_key_uidx      13MB, 3 scans      — UNIQUE dup of ix_..._row_key
+#   mandi_history_group_dt_idx      13MB, 3 scans      — superseded by csd_dt
+#   ix_mandi_price_history_id      3.9MB, 5 scans      — dup of the primary key
+#   ix_mandi_price_history_district 1.6MB, 3 scans     — covered by csd_dt
+#   ix_mandi_price_history_state   1.2MB, 5 scans      — covered by csd_dt
+#   ix_mandi_prices_id             4.7MB, 277 scans    — dup of the primary key
+#   ix_mandi_prices_state          1.2MB, 4 scans      — covered by csd_lower
+#
+# NOTE row_key: the ON CONFLICT dedup needs a unique index on row_key, so the
+# UNIQUE one is what we keep — ix_mandi_price_history_row_key (non-unique) is
+# the redundant twin, even though the planner had been picking it. A unique
+# index answers the same lookups.
+_DEAD_INDEXES = [
+    "ix_mandi_price_history_row_key",
+    "mandi_history_group_dt_idx",
+    "ix_mandi_price_history_id",
+    "ix_mandi_price_history_district",
+    "ix_mandi_price_history_state",
+    "ix_mandi_prices_id",
+    "ix_mandi_prices_state",
+]
+
+
+def _drop_dead_indexes():
+    """Drop the redundant mandi indexes. Idempotent — IF EXISTS, so this is a
+    no-op on every startup after the first and on a fresh database."""
+    if engine.dialect.name != "postgresql":
+        return
+    dropped = []
+    for name in _DEAD_INDEXES:
+        try:
+            with engine.begin() as conn:
+                exists = conn.execute(text("SELECT to_regclass(:n)"),
+                                      {"n": f"public.{name}"}).scalar()
+                if not exists:
+                    continue
+                # CONCURRENTLY would need autocommit; these are small enough
+                # that a plain DROP is a sub-second exclusive lock.
+                conn.execute(text(f'DROP INDEX IF EXISTS "{name}"'))
+                dropped.append(name)
+        except Exception as e:
+            print(f"⚠️  could not drop index {name}: {e}")
+    if dropped:
+        print(f"🗑️  dropped {len(dropped)} redundant mandi index(es): {', '.join(dropped)}")
+
+
+def _backfill_last_seen():
+    """Seed mandi_last_seen from the history still on disk.
+
+    Runs once (skipped as soon as the table has rows) and must happen BEFORE
+    the first trim at the new retention, or pages whose only record is an old
+    history row would lose it. DISTINCT ON keeps the newest row per group_key.
+
+    Only mandi_price_history is read: it is the superset (every fetched row is
+    appended to it, and the snapshot is built from the same rows), and it is
+    the only one of the two that carries group_key — mandi_prices does not.
+    """
+    if engine.dialect.name != "postgresql":
+        return
+    try:
+        with engine.begin() as conn:
+            if not conn.execute(text("SELECT to_regclass('public.mandi_price_history')")).scalar():
+                return
+            if conn.execute(text("SELECT 1 FROM mandi_last_seen LIMIT 1")).scalar():
+                return                      # already seeded
+            res = conn.execute(text("""
+                INSERT INTO mandi_last_seen
+                    (group_key, state, district, market, commodity, variety,
+                     grade, min_price, max_price, modal_price, arrival_date,
+                     arrival_dt, updated_at)
+                SELECT DISTINCT ON (group_key)
+                    group_key, state, district, market, commodity, variety,
+                    grade, min_price, max_price, modal_price, arrival_date,
+                    arrival_dt, now()
+                FROM mandi_price_history
+                WHERE group_key IS NOT NULL AND commodity IS NOT NULL
+                ORDER BY group_key, arrival_dt DESC NULLS LAST
+                ON CONFLICT (group_key) DO NOTHING
+            """))
+            if res.rowcount:
+                print(f"🌱 mandi_last_seen seeded with {res.rowcount:,} rows")
+    except Exception as e:
+        print(f"⚠️  mandi_last_seen backfill skipped: {e}")
+
+
 def init_db():
     try:
         _ensure_table_renames()
@@ -1536,6 +1678,8 @@ def init_db():
         _ensure_postgres_columns()
         _ensure_users_column_order()
         _ensure_foreign_keys()
+        _backfill_last_seen()
+        _drop_dead_indexes()
         print("✅ Database tables created successfully!")
     except Exception as e:
         print(f"⚠️  Database error: {e}")
