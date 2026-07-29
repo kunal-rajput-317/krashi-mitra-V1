@@ -41,7 +41,7 @@ from sqlalchemy.orm import Session
 from backend.database.db import (
     User, UserProfile, BazarPost, BazarLike, BazarComment, BazarFollow, get_db
 )
-from backend.utils.auth_utils import get_current_user, decode_access_token
+from backend.utils.auth_utils import get_current_user, resolve_token_user
 from backend.utils.security import assert_media_matches
 
 router = APIRouter(prefix="/bazar", tags=["bazar"])
@@ -61,18 +61,16 @@ MAX_VIDEO_BYTES = 120 * 1024 * 1024   # 120 MB (~5 min at phone-camera bitrate)
 
 # ── Auth helpers ─────────────────────────────────────────────
 
-def get_optional_user(request: Request) -> Optional[dict]:
-    """Like get_current_user but returns None instead of 401 for guests."""
+def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Optional[dict]:
+    """Like get_current_user but returns None instead of 401 for guests.
+
+    Same validation as the strict dependency (live, verified, non-recycled
+    account) — only the failure mode differs: guest instead of 401."""
     auth = request.headers.get("Authorization", "")
     if not auth.lower().startswith("bearer "):
         return None
-    payload = decode_access_token(auth[7:].strip())
-    if not payload:
-        return None
-    try:
-        return {"user_id": int(payload["sub"]), "email": payload.get("email")}
-    except (KeyError, ValueError):
-        return None
+    user = resolve_token_user(db, auth[7:].strip())
+    return {"user_id": user.id, "email": user.email} if user else None
 
 
 def require_profile(user_id: int, db: Session) -> UserProfile:

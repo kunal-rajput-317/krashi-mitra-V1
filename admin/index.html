@@ -1084,6 +1084,10 @@ body {
         <span class="nav-icon">📍</span>
         <span>Farmer Locator</span>
       </div>
+      <div class="nav-item" onclick="switchPage('checklist', this)">
+        <span class="nav-icon">🎯</span>
+        <span>Deadline Checklist</span>
+      </div>
     </nav>
 
     <div class="sidebar-theme">
@@ -1205,10 +1209,10 @@ body {
             <div class="stat-sub" id="sync-weather-detail">OpenWeather · 75 districts</div>
           </div>
           <div class="stat-card">
-            <span class="stat-icon">📦</span>
-            <div class="stat-label">Archive — Health</div>
-            <div class="stat-value" id="archive-health-status" style="font-size:16px; margin-top:12px;">—</div>
-            <div class="stat-sub" id="archive-health-detail">mandi-bhav data repo</div>
+            <span class="stat-icon">💾</span>
+            <div class="stat-label">Database — Writes</div>
+            <div class="stat-value" id="db-write-status" style="font-size:16px; margin-top:12px;">—</div>
+            <div class="stat-sub" id="db-write-detail">read-only check + storage used</div>
           </div>
         </div>
 
@@ -2116,6 +2120,133 @@ body {
             </div>
           </div>
         </div>
+
+      </div>
+
+      <style>
+        /* ── Deadline checklist ─────────────────────────── */
+        .ck-top {
+          display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+          padding-bottom: 14px; margin-bottom: 12px;
+          border-bottom: 1px solid var(--border);
+        }
+        .ck-ring { position: relative; width: 92px; height: 92px; flex: none; }
+        .ck-ring svg { transform: rotate(-90deg); }
+        .ck-ring .ck-track { stroke: var(--border); }
+        .ck-ring .ck-fill  {
+          stroke: var(--primary); stroke-linecap: round;
+          transition: stroke-dashoffset .6s cubic-bezier(.25,.8,.25,1);
+        }
+        .ck-ring-label {
+          position: absolute; inset: 0; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 1px;
+        }
+        .ck-ring-pct { font-size: 21px; font-weight: 800; line-height: 1; }
+        .ck-ring-sub { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); }
+        .ck-top-meta { display: flex; flex-direction: column; gap: 5px; min-width: 200px; }
+        .ck-top-line { font-size: 12.5px; color: var(--text-dim); }
+        .ck-top-line b { color: var(--text); font-weight: 700; }
+        .ck-days { color: var(--accent); font-weight: 700; }
+        .ck-days.ck-over { color: var(--danger); }
+
+        .ck-add { display: flex; gap: 8px; margin-bottom: 14px; }
+        .ck-add input {
+          flex: 1; min-width: 0; padding: 9px 12px; font-size: 13px;
+          font-family: var(--font-hindi), var(--font-sans);
+          background: var(--surface-hl); color: var(--text);
+          border: 1px solid var(--border); border-radius: var(--radius-sm);
+        }
+        .ck-add input:focus { outline: none; border-color: var(--primary); }
+
+        .ck-sec { margin-bottom: 16px; }
+        .ck-sec-head {
+          display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+          margin-bottom: 2px;
+        }
+        .ck-sec-title { font-size: 13.5px; font-weight: 700; }
+        .ck-sec-count { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+        .ck-sec-sub { font-size: 11.5px; color: var(--text-dim); margin: 0 0 8px; }
+
+        .ck-item {
+          display: flex; align-items: flex-start; gap: 10px;
+          padding: 9px 10px; border-radius: var(--radius-sm);
+          border: 1px solid transparent; transition: var(--transition);
+        }
+        .ck-item:hover { background: var(--surface-hl); border-color: var(--border); }
+        .ck-item.ck-done .ck-title { text-decoration: line-through; color: var(--muted); }
+        .ck-item.ck-done .ck-note  { opacity: .5; }
+        .ck-box {
+          flex: none; width: 17px; height: 17px; margin-top: 2px; cursor: pointer;
+          accent-color: var(--primary);
+        }
+        .ck-body { flex: 1; min-width: 0; }
+        .ck-title { font-size: 13px; font-weight: 600; line-height: 1.45; }
+        .ck-note  { font-size: 11.5px; color: var(--text-dim); line-height: 1.5; margin-top: 3px; }
+        .ck-tag {
+          display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
+          text-transform: uppercase; padding: 2px 6px; border-radius: 5px;
+          margin-left: 7px; vertical-align: 1.5px; font-family: var(--font-mono);
+        }
+        .ck-tag-you  { background: rgba(234,179,8,.14);  color: var(--accent); }
+        .ck-tag-code { background: rgba(56,189,248,.14); color: var(--info); }
+        .ck-star { color: var(--accent); margin-right: 4px; }
+        .ck-del {
+          flex: none; background: none; border: none; cursor: pointer; padding: 2px 5px;
+          color: var(--muted); font-size: 15px; line-height: 1; border-radius: 5px;
+        }
+        .ck-del:hover { color: var(--danger); background: rgba(239,68,68,.1); }
+      </style>
+      <!-- ─────────────── PAGE: DEADLINE CHECKLIST ───────────────
+           The run-up to the 31-Aug-2026 revenue test (docs/MARKET-AND-MONEY.md §8).
+           Plan lives in backend/data/deadline_checklist.json — edit that file to
+           change the tasks. Tick state lives in the admin_tasks table. -->
+      <div class="page" id="page-checklist">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Deadline Checklist</h2>
+            <p>The run-up to <span id="ck-deadline">the deadline</span> • one paying counterparty or the plan changes • <span id="ck-ref" style="font-family:var(--font-mono);font-size:12px;"></span></p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadChecklist()" id="ck-refresh-btn">↻ Refresh</button>
+          </div>
+        </div>
+
+        <div class="dashboard-panel">
+          <div class="panel-body">
+
+            <!-- progress ring + summary -->
+            <div class="ck-top">
+              <div class="ck-ring">
+                <svg width="92" height="92" viewBox="0 0 92 92">
+                  <circle class="ck-track" cx="46" cy="46" r="38" fill="none" stroke-width="9"></circle>
+                  <circle class="ck-fill"  cx="46" cy="46" r="38" fill="none" stroke-width="9"
+                          stroke-dasharray="238.76" stroke-dashoffset="238.76" id="ck-ring-fill"></circle>
+                </svg>
+                <div class="ck-ring-label">
+                  <span class="ck-ring-pct" id="ck-pct">—</span>
+                  <span class="ck-ring-sub" id="ck-frac">0/0</span>
+                </div>
+              </div>
+              <div class="ck-top-meta">
+                <div class="ck-top-line" id="ck-days">—</div>
+                <div class="ck-top-line" id="ck-critical">—</div>
+                <div class="ck-top-line" id="ck-owner-split">—</div>
+              </div>
+            </div>
+
+            <!-- add your own -->
+            <div class="ck-add">
+              <input type="text" id="ck-new" maxlength="300"
+                     placeholder="अपना काम जोड़ें… (e.g. 'हरदोई मंडी जाकर 5 व्यापारियों से मिलना')"
+                     onkeydown="if(event.key==='Enter') addChecklistTask()">
+              <button class="btn btn-primary" onclick="addChecklistTask()">+ Add</button>
+            </div>
+
+            <div id="ck-sections">
+              <div class="km-loader"><span class="km-spinner"></span> Loading…</div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -2467,54 +2598,37 @@ function _syncSummaryCard(ageId, detailId, run, fallback) {
   if (detEl) detEl.textContent = run ? `${(run.status || '').toUpperCase()} · ${run.detail || ''}` : fallback;
 }
 
-async function loadArchiveHealth() {
-  const statusEl = document.getElementById('archive-health-status');
-  const detEl    = document.getElementById('archive-health-detail');
+async function loadDbWriteHealth() {
+  // The canary: can the database still accept writes? Neon flips a compute
+  // read-only on a plan limit and every page keeps serving, so this card is
+  // the only place that failure is visible before a user hits it.
+  const statusEl = document.getElementById('db-write-status');
+  const detEl    = document.getElementById('db-write-detail');
   if (!statusEl) return;
   try {
-    const r = await fetch(`${API}/admin/archive-health`, { headers: getAuthHeader() });
+    const r = await fetch(`${API}/admin/db-write-health`, { headers: getAuthHeader() });
     if (r.status === 401) { logout(); return; }
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.success) throw new Error('bad');
 
-    if (!d.configured) {
-      statusEl.textContent = 'Not configured';
-      statusEl.className = 'stat-value warn';
-      detEl && (detEl.textContent = 'Set MANDI_ARCHIVE_REPO + token to enable');
-      return;
-    }
-    if (!d.checked_ok) {
-      statusEl.textContent = 'Can’t reach repo';
-      statusEl.className = 'stat-value warn';
-      detEl && (detEl.textContent = 'Could not list the data repo — check token/repo');
-      return;
-    }
-    if (d.db_days === 0) {
-      statusEl.textContent = 'No data yet';
-      statusEl.className = 'stat-value';
-      detEl && (detEl.textContent = 'No mandi history in DB to archive');
-      return;
-    }
-    const miss = d.missing_count || 0;
-    if (miss === 0) {
-      statusEl.textContent = 'Up to date';
-      statusEl.className = 'stat-value ok';
-      detEl && (detEl.textContent = `${d.archived}/${d.db_days} days archived · last ${d.last_archived_date}`);
+    if (d.writable) {
+      statusEl.textContent = 'Writable';
+      statusEl.className   = 'stat-value ok';
+      detEl && (detEl.textContent = `${d.size_pretty} used of ${d.limit_pretty} · ${d.pct_used}%`);
     } else {
-      statusEl.textContent = `${miss} day${miss > 1 ? 's' : ''} missing`;
-      statusEl.className = 'stat-value err';
-      const list = (d.missing || []).slice(0, 5).join(', ');
-      detEl && (detEl.textContent = `${d.archived}/${d.db_days} archived · missing: ${list}${(d.missing || []).length > 5 ? '…' : ''}`);
+      statusEl.textContent = 'READ-ONLY';
+      statusEl.className   = 'stat-value err';
+      detEl && (detEl.textContent = d.reason || 'Writes are being refused — check the Neon plan limit');
     }
   } catch (e) {
     statusEl.textContent = 'Unavailable';
-    statusEl.className = 'stat-value';
+    statusEl.className   = 'stat-value';
     detEl && (detEl.textContent = 'Backend offline');
   }
 }
 
 async function loadSyncLog() {
-  loadArchiveHealth();               // refresh the archive-health card alongside the log
+  loadDbWriteHealth();               // refresh the write-health card alongside the log
   const tb = document.getElementById('sync-log-body');
   try {
     const r = await fetch(`${API}/admin/sync-log?limit=40`, { headers: getAuthHeader() });
@@ -2634,6 +2748,7 @@ function switchPage(pageId, el) {
     _kpiOrderFilter = null;
   }
   if (pageId === 'locator') loadFarmerLocator();
+  if (pageId === 'checklist') loadChecklist();
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)
@@ -4470,6 +4585,171 @@ async function loadFarmerLocator(q) {
 }
 
 function clearFarmerSearch() { loadFarmerLocator(''); }
+
+// ══════════════════════════════════════════════════════════════
+// DEADLINE CHECKLIST — the run-up to the 31-Aug-2026 revenue test
+// Plan: backend/data/deadline_checklist.json (edit the file, no deploy).
+// State: admin_tasks table. See docs/MARKET-AND-MONEY.md §8.
+// ══════════════════════════════════════════════════════════════
+const CK_CIRC = 2 * Math.PI * 38;   // r=38 in the SVG above
+
+function ckSetProgress(p) {
+  const pct = p && typeof p.pct === 'number' ? p.pct : 0;
+  document.getElementById('ck-ring-fill').style.strokeDashoffset =
+    CK_CIRC * (1 - pct / 100);
+  document.getElementById('ck-pct').textContent  = pct + '%';
+  document.getElementById('ck-frac').textContent = `${p.done}/${p.total}`;
+}
+
+// A bare spinner cannot tell "waking up" from "never coming back" — and a cold
+// Render dyno plus a suspended Neon compute can genuinely take ~30s. So: say so
+// after 6s, give up at 30s, and name the two likely causes instead of hanging.
+async function loadChecklist() {
+  const box = document.getElementById('ck-sections');
+  if (!box) return;
+  box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> Loading…</div>';
+
+  const slow = setTimeout(() => {
+    box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> ' +
+      'Still waiting — the backend or the database may be waking up…</div>';
+  }, 6000);
+  const ctl   = new AbortController();
+  const abort = setTimeout(() => ctl.abort(), 30000);
+
+  try {
+    const r = await fetch(`${API}/admin/tasks`, { headers: getAuthHeader(), signal: ctl.signal });
+    if (r.status === 404) throw new Error('endpoint missing — restart the backend so /admin/tasks is registered');
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    renderChecklist(await r.json());
+  } catch (e) {
+    const msg = e.name === 'AbortError'
+      ? 'Timed out after 30s — is the backend running on ' + (API || 'this origin') + '?'
+      : e.message;
+    box.innerHTML = `<p style="font-size:12.5px;color:var(--danger);line-height:1.6;">
+        Could not load the checklist — ${escapeHtml(msg)}.<br>
+        <span style="color:var(--text-dim);">If the backend was restarted just now, hit ↻ Refresh.
+        A read-only database (Neon plan limit) also fails here.</span></p>`;
+  } finally {
+    clearTimeout(slow); clearTimeout(abort);
+  }
+}
+
+function renderChecklist(d) {
+  ckSetProgress(d.progress);
+
+  document.getElementById('ck-ref').textContent = d.ref || '';
+  document.getElementById('ck-deadline').textContent = d.deadline_label || 'the deadline';
+
+  // Days left — the number that should be uncomfortable.
+  const dl = document.getElementById('ck-days');
+  if (typeof d.days_left === 'number') {
+    dl.innerHTML = d.days_left >= 0
+      ? `<span class="ck-days">${d.days_left} days left</span> until the test is decided`
+      : `<span class="ck-days ck-over">Deadline passed ${-d.days_left} days ago</span> — read §8.3`;
+  } else { dl.textContent = ''; }
+
+  // Flatten once for the two summary lines.
+  const all = d.sections.flatMap(s => s.tasks);
+  const critOpen = all.filter(t => t.critical && !t.done).length;
+  const youOpen  = all.filter(t => t.owner === 'you'  && !t.done).length;
+  const codeOpen = all.filter(t => t.owner === 'code' && !t.done).length;
+
+  document.getElementById('ck-critical').innerHTML = critOpen
+    ? `<b>${critOpen}</b> critical task${critOpen > 1 ? 's' : ''} still open — these decide the test`
+    : `<b>All critical tasks done.</b>`;
+  document.getElementById('ck-owner-split').innerHTML =
+    `<b>${youOpen}</b> need you · <b>${codeOpen}</b> are mine to build`;
+
+  document.getElementById('ck-sections').innerHTML = d.sections.map(s => {
+    const done = s.tasks.filter(t => t.done).length;
+    return `
+      <div class="ck-sec">
+        <div class="ck-sec-head">
+          <span class="ck-sec-title">${s.icon} ${escapeHtml(s.title)}</span>
+          <span class="ck-sec-count">${done}/${s.tasks.length}</span>
+        </div>
+        ${s.sub ? `<p class="ck-sec-sub">${escapeHtml(s.sub)}</p>` : ''}
+        ${s.tasks.map(ckItem).join('')}
+      </div>`;
+  }).join('');
+}
+
+function ckItem(t) {
+  const id = escapeHtml(t.id);
+  return `
+    <div class="ck-item ${t.done ? 'ck-done' : ''}" id="ck-row-${id}">
+      <input type="checkbox" class="ck-box" ${t.done ? 'checked' : ''}
+             onchange="toggleChecklistTask('${id}', this)">
+      <div class="ck-body">
+        <div class="ck-title">
+          ${t.critical ? '<span class="ck-star">★</span>' : ''}${escapeHtml(t.title)}
+          <span class="ck-tag ck-tag-${t.owner === 'code' ? 'code' : 'you'}">${t.owner === 'code' ? 'claude' : 'you'}</span>
+        </div>
+        ${t.note ? `<div class="ck-note">${escapeHtml(t.note)}</div>` : ''}
+      </div>
+      ${t.custom ? `<button class="ck-del" title="Delete this task"
+                            onclick="deleteChecklistTask('${id}')">×</button>` : ''}
+    </div>`;
+}
+
+async function toggleChecklistTask(slug, el) {
+  const row  = document.getElementById(`ck-row-${slug}`);
+  const done = el.checked;
+  row.classList.toggle('ck-done', done);          // optimistic — reverted on failure
+  try {
+    const r = await fetch(`${API}/admin/tasks/${encodeURIComponent(slug)}`, {
+      method: 'PATCH',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    ckSetProgress(d.progress);
+    loadChecklist();                              // section counts + summary lines
+  } catch (e) {
+    el.checked = !done;                           // put the UI back where the DB is
+    row.classList.toggle('ck-done', !done);
+    showToast(e.message, 'error');
+    printTerminalLog(`Checklist: could not save "${slug}" — ${e.message}`, 'log-entry-err');
+  }
+}
+
+async function addChecklistTask() {
+  const inp   = document.getElementById('ck-new');
+  const title = inp.value.trim();
+  if (!title) return;
+  try {
+    const r = await fetch(`${API}/admin/tasks`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    inp.value = '';
+    loadChecklist();
+    showToast('Task added');
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function deleteChecklistTask(slug) {
+  if (!confirm('Delete this task?')) return;
+  try {
+    const r = await fetch(`${API}/admin/tasks/${encodeURIComponent(slug)}`, {
+      method: 'DELETE', headers: getAuthHeader()
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    loadChecklist();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
 
 function renderFarmerKpis(d) {
   document.getElementById('fl-kpi-total').textContent   = d.total ?? '—';

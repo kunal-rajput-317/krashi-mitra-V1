@@ -165,6 +165,15 @@ def _ensure_profile(db: Session, user: User):
     prefilled from signup data). Farm fields stay NULL until the farmer fills
     them — this just guarantees the users ↔ user_profiles 1:1 for verified
     accounts. Caller commits."""
+    # Flush the caller's pending `is_verified = TRUE` write FIRST — this is not
+    # optional. SessionLocal is built with autoflush=False, so the SELECT below
+    # does NOT trigger a flush of its own: it ran while the users UPDATE was
+    # still sitting in the session, i.e. before the DB trigger
+    # trg_ensure_user_profile had a chance to create the row. The check came back
+    # empty, this function inserted profile #2, and the account ended up with two
+    # (user 1 → rows 3 and 4). Flushing emits the UPDATE, lets the trigger run,
+    # and makes its row visible here — so this stays the no-op it was meant to be.
+    db.flush()
     exists = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
     if exists:
         return

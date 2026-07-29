@@ -26,7 +26,7 @@ log = logging.getLogger("krishi.push")
 
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
 VAPID_PUBLIC_KEY  = os.getenv("VAPID_PUBLIC_KEY", "").strip()
-VAPID_SUBJECT     = os.getenv("VAPID_SUBJECT", "mailto:krdhmp13@gmail.com").strip()
+VAPID_SUBJECT     = os.getenv("VAPID_SUBJECT", "mailto:krashimitra038@gmail.com").strip()
 
 SITE = "https://krashimitra.in"
 

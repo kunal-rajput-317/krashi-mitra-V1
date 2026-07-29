@@ -119,13 +119,16 @@ async def sync_log(
     }
 
 
-@router.get("/archive-health")
-async def archive_health(_: str = Depends(require_admin)):
-    """Health of the daily mandi→repo2 CSV archive: which DB days are present
-    vs missing in the data repo, and the last day actually archived. Makes a
-    silently-stopped archive visible in the admin panel (task 0.6)."""
-    from backend.services.mandi_archive_service import archive_health as _health
-    return {"success": True, **_health()}
+@router.get("/db-write-health")
+async def db_write_health(_: str = Depends(require_admin)):
+    """Can the database still accept writes, and how full is it?
+
+    Neon turns a compute read-only on its storage cap: every page keeps
+    serving while nothing can be saved. That failure is invisible from the
+    outside, so this card is where it becomes visible.
+    """
+    from backend.services.db_health_service import check
+    return {"success": True, **check()}
 
 
 # ── Manual data-fetch trigger ─────────────────────────────────
@@ -1061,3 +1064,81 @@ async def farmer_locations(
         }
     except Exception as e:
         raise HTTPException(500, str(e))
+
+
+# ── Deadline Checklist ────────────────────────────────────────
+# The owner's run-up to the 31-Aug-2026 revenue test (docs/MARKET-AND-MONEY.md
+# §8). The plan is a JSON file, the tick state is the admin_tasks table, and
+# services/checklist.py is the join — see AdminTask for why they are separate.
+
+def _checklist_write(fn, *args):
+    """Run a checklist write, naming a read-only database instead of 500-ing.
+
+    Neon flips the compute read-only on a plan limit: every page still serves,
+    so the only symptom is a checkbox that silently refuses to tick. Worth its
+    own message — it is otherwise indistinguishable from a bug in this file.
+    """
+    from backend.database.db import is_read_only_error
+    try:
+        return fn(*args)
+    except Exception as e:
+        if is_read_only_error(e):
+            raise HTTPException(
+                503,
+                "Database is read-only (Neon plan limit) — the tick was not saved. "
+                "See the 'Settle the Neon migration' task."
+            )
+        raise HTTPException(500, str(e))
+
+
+@router.get("/tasks")
+async def get_tasks(
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import checklist
+    try:
+        return {"success": True, **checklist.board(db)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@router.patch("/tasks/{slug}")
+async def toggle_task(
+    slug:    str,
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import checklist
+    ok = _checklist_write(checklist.set_done, db, slug, bool(payload.get("done")))
+    if not ok:
+        raise HTTPException(404, "Unknown task")
+    return {"success": True, "progress": checklist.board(db)["progress"]}
+
+
+@router.post("/tasks")
+async def create_task(
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import checklist
+    task = _checklist_write(checklist.add_custom, db,
+                            payload.get("title", ""), payload.get("note", ""))
+    if not task:
+        raise HTTPException(400, "Task needs a title")
+    return {"success": True, "task": task, "progress": checklist.board(db)["progress"]}
+
+
+@router.delete("/tasks/{slug}")
+async def delete_task(
+    slug: str,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import checklist
+    ok = _checklist_write(checklist.delete_custom, db, slug)
+    if not ok:
+        raise HTTPException(404, "Not one of your own tasks")
+    return {"success": True, "progress": checklist.board(db)["progress"]}

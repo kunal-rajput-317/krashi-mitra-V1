@@ -47,7 +47,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy import func
 
-from backend.database.db import (SessionLocal, MandiPrice, MandiPriceHistory,
+from backend.database.db import (SessionLocal, MandiPrice, MandiLastSeen,
                                  User, UserProfile)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import buyers, district_geo, freight, leads, msp
@@ -397,16 +397,21 @@ def _get_index() -> dict:
         return _index
     db = SessionLocal()
     try:
+        # Read from mandi_last_seen, NOT from history: history is trimmed to
+        # MANDI_HISTORY_DAYS, so a district that went quiet longer ago than that
+        # would vanish from this index — and with it the /bhav URLs the sitemap
+        # advertises. last_seen keeps one permanent row per combination, so the
+        # URL set only ever grows. (~12k groups vs a group-by over 179k rows.)
         rows = [(c, s, d, dt.isoformat() if dt else "")
                 for c, s, d, dt in
-                (db.query(MandiPriceHistory.commodity, MandiPriceHistory.state,
-                          MandiPriceHistory.district,
-                          func.max(MandiPriceHistory.arrival_dt))
-                   .filter(MandiPriceHistory.commodity.isnot(None),
-                           MandiPriceHistory.state.isnot(None),
-                           MandiPriceHistory.district.isnot(None))
-                   .group_by(MandiPriceHistory.commodity, MandiPriceHistory.state,
-                             MandiPriceHistory.district)
+                (db.query(MandiLastSeen.commodity, MandiLastSeen.state,
+                          MandiLastSeen.district,
+                          func.max(MandiLastSeen.arrival_dt))
+                   .filter(MandiLastSeen.commodity.isnot(None),
+                           MandiLastSeen.state.isnot(None),
+                           MandiLastSeen.district.isnot(None))
+                   .group_by(MandiLastSeen.commodity, MandiLastSeen.state,
+                             MandiLastSeen.district)
                    .all())]
         if not rows:            # fresh deploy before the first fetch has run
             rows = [(c, s, d, (f + _IST_OFFSET).date().isoformat() if f else "")
@@ -482,9 +487,10 @@ def _rows_for(commodity: str, state: str = "", district: str = "") -> list:
     return (data or {}).get("prices") or []
 
 
-def _hist_to_dict(h: MandiPriceHistory) -> dict:
-    """History rows carry no delta/spark — the page simply skips the arrow and
-    sparkline for them, everything else renders the same."""
+def _hist_to_dict(h) -> dict:
+    """Render a history OR last-seen row. Both carry the same columns; neither
+    carries a delta/spark, so the page simply skips the arrow and sparkline,
+    and everything else renders the same."""
     return {
         "market":           h.market or "-",
         "district":         h.district or "-",
@@ -512,9 +518,10 @@ def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
     advertises used to 404. So: query the snapshot by EVERY raw spelling of
     the crop and compare state/district as slugs — the same space the sitemap
     is built in. If the combo has aged out of the snapshot entirely, serve the
-    newest day still in mandi_price_history under its real arrival date: an
-    indexed URL keeps answering for the ~30-day history window instead of
-    bouncing Google (or a farmer) off a 404."""
+    last price we ever saw (mandi_last_seen) under its real arrival date, so an
+    indexed URL keeps answering FOREVER instead of bouncing Google (or a
+    farmer) off a 404. This used to read mandi_price_history and so only held
+    for the retention window; last_seen has no window."""
     names = sorted(idx.get("raws", {}).get(cs) or {idx["crops"][cs]})
     db = SessionLocal()
     try:
@@ -524,19 +531,24 @@ def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
         if snap:
             return [_row_to_dict(r) for r in snap]
 
-        hist = (db.query(MandiPriceHistory)
-                  .filter(MandiPriceHistory.commodity.in_(names),
-                          MandiPriceHistory.state.ilike(idx["states"][cs][ss]),
-                          MandiPriceHistory.district.ilike(idx["dists"][cs][ss][ds]))
-                  .order_by(MandiPriceHistory.arrival_dt.desc())
+        seen = (db.query(MandiLastSeen)
+                  .filter(MandiLastSeen.commodity.in_(names),
+                          MandiLastSeen.state.ilike(idx["states"][cs][ss]),
+                          MandiLastSeen.district.ilike(idx["dists"][cs][ss][ds]))
+                  .order_by(MandiLastSeen.arrival_dt.desc())
                   .limit(500)
                   .all())
-        hist = [h for h in hist if h.arrival_dt
-                and _slugify(h.state) == ss and _slugify(h.district) == ds]
-        if not hist:
+        seen = [h for h in seen
+                if _slugify(h.state) == ss and _slugify(h.district) == ds]
+        if not seen:
             return []
-        newest = max(h.arrival_dt for h in hist)
-        return [_hist_to_dict(h) for h in hist if h.arrival_dt == newest]
+        # Serve one day's worth — the newest this district ever reported — so
+        # the page shows a coherent set of mandis rather than a mix of dates.
+        dated = [h for h in seen if h.arrival_dt]
+        if not dated:
+            return [_hist_to_dict(h) for h in seen]
+        newest = max(h.arrival_dt for h in dated)
+        return [_hist_to_dict(h) for h in dated if h.arrival_dt == newest]
     finally:
         db.close()
 

@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey, Index
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
@@ -318,11 +318,15 @@ class UserProfile(Base):
 
     # Core
     id                   = Column(Integer,  primary_key=True, index=True)
-    # Owned by the account: deleting the user deletes the profile (see _FOREIGN_KEYS)
+    # Owned by the account: deleting the user deletes the profile (see _FOREIGN_KEYS).
+    # UNIQUE + NOT NULL: exactly one profile row per account, and only for an
+    # account whose is_verified is true — both enforced in the DB itself
+    # (user_profiles_user_id_uidx + trg_profile_requires_verified_user), because
+    # app-level "insert if not exists" checks had already let a duplicate through.
     user_id              = Column(Integer,
                                   ForeignKey("users.id", ondelete="CASCADE",
                                              name="fk_user_profiles_user_id"),
-                                  nullable=True, index=True)
+                                  nullable=False, unique=True, index=True)
 
     # Personal
     name                 = Column(String,   nullable=False)
@@ -440,10 +444,60 @@ class MandiPrice(Base):
     fetched_at       = Column(DateTime, default=datetime.utcnow)
 
 
+class MandiLastSeen(Base):
+    """The last price we ever saw for each (mandi × crop) — one row, forever.
+
+    Exists so that trimming mandi_price_history is safe. Two things used to
+    read the whole history table and would silently degrade as retention got
+    shorter:
+
+    1. **The page index** (routes/bhav._get_index) — every crop×state×district
+       we have ever had data for, plus the date it last moved. That set decides
+       which /bhav URLs exist and what <lastmod> the sitemap claims. Built from
+       a trimmed history, districts that went quiet would drop out and URLs the
+       sitemap advertises would start 404-ing — the exact regression fixed on
+       18 Jul 2026.
+    2. **The stale-district rescue** (routes/bhav._rows_for_district) — a
+       district that stops reporting still shows its last known prices instead
+       of an empty page.
+
+    Neither needs *history*; both need only the latest row per combination.
+    That is ~31k rows and, unlike history, it does not grow with time — only
+    when a genuinely new mandi/crop/variety appears. So retention can now be
+    set by what the 15-day chart needs, not by what SEO needs.
+
+    Keyed by group_key (the same md5 the snapshot and history use), so a row
+    here is shaped exactly like a snapshot row and renders through the same
+    _row_to_dict path. Deliberately NO index=True on the primary key: that is
+    what produced the duplicate id indexes on the older mandi tables.
+    """
+    __tablename__ = "mandi_last_seen"
+    id           = Column(Integer,  primary_key=True)
+    group_key    = Column(String,   nullable=False, unique=True)  # md5(state|district|market|commodity|variety|grade)
+    state        = Column(String,   nullable=True)
+    district     = Column(String,   nullable=True)
+    market       = Column(String,   nullable=True)
+    commodity    = Column(String,   nullable=False)
+    variety      = Column(String,   nullable=True)
+    grade        = Column(String,   nullable=True)
+    min_price    = Column(String,   nullable=True)
+    max_price    = Column(String,   nullable=True)
+    modal_price  = Column(String,   nullable=True)
+    arrival_date = Column(String,   nullable=True)   # original DD/MM/YYYY
+    arrival_dt   = Column(Date,     nullable=True)   # parsed — "when this page last moved"
+    updated_at   = Column(DateTime, default=datetime.utcnow)
+
+    # One composite index serves both readers (index build + district rescue).
+    __table_args__ = (
+        Index("mandi_last_seen_csd_idx", "commodity", "state", "district"),
+    )
+
+
 class MandiPriceHistory(Base):
     """Append-only daily history, deduped by row_key. Trimmed after each
-    fetch to the last MANDI_HISTORY_DAYS days (default 30; 0 = keep forever)
-    — powers prev-price deltas, sparklines and the trend chart."""
+    fetch to the last MANDI_HISTORY_DAYS days (default 15) — powers prev-price
+    deltas, sparklines and the trend chart, and nothing else. Anything that
+    needs "has this page ever had data" reads MandiLastSeen instead."""
     __tablename__ = "mandi_price_history"
     id           = Column(Integer,  primary_key=True, index=True)
     state        = Column(String,   nullable=True, index=True)
@@ -857,6 +911,43 @@ class CropAppeal(Base):
     created_at  = Column(DateTime, default=datetime.utcnow, index=True)
 
 
+class AdminTask(Base):
+    """One line of the owner's 31-Aug-2026 checklist (admin panel → Farmer Locator).
+
+    Two kinds of row live here, told apart by `custom`:
+
+    * **seeded** — the curated checklist in `data/deadline_checklist.json`. The
+      JSON owns the wording, section, order and notes; this table owns nothing
+      but `done`/`done_at`. So a row exists only once the task has been touched,
+      and rewording a task in the JSON can never lose a tick, because the tick
+      is keyed on the stable `slug`, not on the text.
+    * **custom** — tasks the owner adds from the panel. These have no JSON
+      counterpart, so the row carries its own title/section and is the only
+      copy; deleting it is the only way it disappears.
+
+    That asymmetry is the whole design: the file is the plan, the table is the
+    progress, and neither can clobber the other.
+
+    Writes here are the first thing to fail if the Neon compute flips read-only
+    — see is_read_only_error(); routes/admin.py surfaces that as its own message
+    rather than a generic 500, because "my checkbox won't tick" is otherwise an
+    impossible symptom to diagnose.
+    """
+    __tablename__ = "admin_tasks"
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    slug       = Column(String,   nullable=False, unique=True, index=True)  # JSON task id, or "mine-<n>" for custom
+    done       = Column(Boolean,  default=False, nullable=False)
+    done_at    = Column(DateTime, nullable=True)
+    # Only meaningful for custom rows — seeded rows read these from the JSON.
+    custom     = Column(Boolean,  default=False, nullable=False, index=True)
+    title      = Column(String,   nullable=True)
+    section    = Column(String,   nullable=True)   # section key the task belongs to
+    note       = Column(String,   nullable=True)
+    sort       = Column(Integer,  default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 # ── DB Helpers ───────────────────────────────────────────────
 
 _TABLE_RENAMES = [
@@ -1244,6 +1335,20 @@ def _ensure_postgres_columns():
         conn.execute(text("""
             CREATE UNIQUE INDEX IF NOT EXISTS users_user_id_uidx ON users(user_id);
         """))
+        # Fresh-start numbering: an empty users table means the next signup is
+        # account #1, not #5. A Postgres sequence never rewinds on its own, so
+        # after a wipe the ids would otherwise resume from wherever the deleted
+        # rows left off. Safe precisely because the table is empty — there is no
+        # row left for a recycled id to collide with, and no child row left
+        # pointing at one (every FK below is CASCADE or SET NULL).
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM users) THEN
+                    PERFORM setval(pg_get_serial_sequence('users', 'id'), 1, false);
+                END IF;
+            END $$;
+        """))
 
         # ── users ↔ user_profiles 1:1 guarantee ──────────────────
         # The app-level _ensure_profile() (auth.py) only runs on the OTP-verify
@@ -1279,6 +1384,183 @@ def _ensure_postgres_columns():
             FROM users u
             LEFT JOIN user_profiles p ON p.user_id = u.id
             WHERE u.is_verified AND p.id IS NULL;
+        """))
+
+        # ── EXACTLY ONE profile row, and only for a VERIFIED account ──
+        # The 1:1 above was only ever half-enforced: the trigger and the app's
+        # _ensure_profile() both guard with "insert if not exists", but nothing
+        # stopped BOTH from firing inside the same transaction. On OTP verify the
+        # app sets is_verified = TRUE and queues its own profile INSERT; SQLAlchemy
+        # flushes the users UPDATE first, the trigger inserts a profile, and the
+        # app's INSERT then lands a SECOND one. That is how user 1 ended up with
+        # profile rows 3 and 4. auth._ensure_profile() now flushes before it looks,
+        # and the unique index below makes the double-write impossible regardless
+        # of which code path (or GUI edit) tries it next.
+
+        # 1. Debris first — an owner-less profile, or one whose account is not
+        #    verified, is not a customer record. (Unverified = a signup attempt
+        #    that cannot even log in; see users.user_id above.)
+        conn.execute(text("""
+            DELETE FROM user_profiles p
+             WHERE p.user_id IS NULL
+                OR NOT EXISTS (
+                    SELECT 1 FROM users u
+                     WHERE u.id = p.user_id AND u.is_verified
+                );
+        """))
+
+        # 2. Fold duplicates into one row instead of just deleting the extras:
+        #    the richest row (most filled-in columns) wins every field it has,
+        #    and its twins only fill the holes it left, so nothing the farmer
+        #    ever typed is thrown away. jsonb keeps this column-list-free, so it
+        #    keeps working when user_profiles grows new columns.
+        conn.execute(text("""
+            DO $$
+            DECLARE
+                dup    record;
+                row_j  jsonb;
+                merged jsonb;
+            BEGIN
+                FOR dup IN
+                    SELECT user_id FROM user_profiles
+                     WHERE user_id IS NOT NULL
+                     GROUP BY user_id HAVING count(*) > 1
+                LOOP
+                    merged := NULL;
+                    FOR row_j IN
+                        SELECT to_jsonb(p) FROM user_profiles p
+                         WHERE p.user_id = dup.user_id
+                         ORDER BY (SELECT count(*) FROM jsonb_each(to_jsonb(p)) e
+                                    WHERE e.value <> 'null'::jsonb) DESC, p.id ASC
+                    LOOP
+                        IF merged IS NULL THEN
+                            merged := row_j;
+                        ELSE
+                            merged := row_j || jsonb_strip_nulls(merged);
+                        END IF;
+                    END LOOP;
+
+                    DELETE FROM user_profiles WHERE user_id = dup.user_id;
+                    INSERT INTO user_profiles
+                    SELECT * FROM jsonb_populate_record(NULL::user_profiles, merged);
+                END LOOP;
+            END $$;
+        """))
+
+        # 3. Now the invariant can be declared, not just hoped for.
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS user_profiles_user_id_uidx
+            ON user_profiles(user_id);
+        """))
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM user_profiles WHERE user_id IS NULL) THEN
+                    ALTER TABLE user_profiles ALTER COLUMN user_id SET NOT NULL;
+                END IF;
+            END $$;
+        """))
+
+        # 4. Guard the gap the other way round: no INSERT, and no re-pointing of
+        #    an existing row, may attach a profile to an unverified account.
+        #
+        #    It also names the duplicate for what it is. The bare unique-index
+        #    violation says nothing about the cause, which here is always the
+        #    same one: SessionLocal runs with autoflush=False, so a caller's
+        #    "does a row exist?" SELECT can run BEFORE its own pending
+        #    `is_verified = TRUE` UPDATE is emitted — it cannot see the row
+        #    trg_ensure_user_profile is about to create, and inserts a second.
+        #    (That is how user 1 got rows 3 and 4.) The cure is db.flush() before
+        #    the check, which auth._ensure_profile() now does. Silently dropping
+        #    the second INSERT instead is not an option: SQLAlchemy needs the
+        #    RETURNING row back, so a skipped insert only trades this error for a
+        #    more cryptic FlushError.
+        conn.execute(text("""
+            CREATE OR REPLACE FUNCTION profile_requires_verified_user() RETURNS trigger AS $$
+            BEGIN
+                IF NEW.user_id IS NULL THEN
+                    RAISE EXCEPTION
+                        'user_profiles.user_id cannot be NULL — a profile must belong to an account';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM users u WHERE u.id = NEW.user_id AND u.is_verified
+                ) THEN
+                    RAISE EXCEPTION
+                        'users.id % is not verified — user_profiles rows exist only for verified accounts',
+                        NEW.user_id;
+                END IF;
+
+                IF TG_OP = 'INSERT'
+                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = NEW.user_id) THEN
+                    RAISE EXCEPTION
+                        'users.id % already has a user_profiles row — UPDATE it instead of inserting a second (caller must db.flush() before it checks; SessionLocal has autoflush=False)',
+                        NEW.user_id;
+                END IF;
+
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        """))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_profile_requires_verified_user ON user_profiles;"))
+        conn.execute(text("""
+            CREATE TRIGGER trg_profile_requires_verified_user
+                BEFORE INSERT OR UPDATE OF user_id ON user_profiles
+                FOR EACH ROW
+                EXECUTE FUNCTION profile_requires_verified_user();
+        """))
+
+        # 5. And the last hole: un-verifying an account in the Neon GUI would
+        #    strand its profile row on an unverified user. Blocked, not
+        #    auto-deleted — a mis-click in a table editor must never silently
+        #    wipe a farmer's phone, farm and location data. Delete the profile
+        #    row (or the whole account, which CASCADEs) first, deliberately.
+        conn.execute(text("""
+            CREATE OR REPLACE FUNCTION block_unverify_with_profile() RETURNS trigger AS $$
+            BEGIN
+                IF OLD.is_verified AND NOT NEW.is_verified
+                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = OLD.id) THEN
+                    RAISE EXCEPTION
+                        'users.id % has a user_profiles row — delete that row (or the account) before un-verifying',
+                        OLD.id;
+                END IF;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        """))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_block_unverify_with_profile ON users;"))
+        conn.execute(text("""
+            CREATE TRIGGER trg_block_unverify_with_profile
+                BEFORE UPDATE OF is_verified ON users
+                FOR EACH ROW
+                EXECUTE FUNCTION block_unverify_with_profile();
+        """))
+
+        # 6. Keep the serial readable: ids ran 3, 4 because two orphan rows were
+        #    deleted long ago and a Postgres sequence never rewinds. Renumber to
+        #    1..N whenever a gap shows up and re-point the sequence at N+1.
+        #    Safe to do on live rows: nothing in the schema or the app keys off
+        #    user_profiles.id — every consumer looks the row up by user_id.
+        #    Two passes because a single renumbering UPDATE can transiently
+        #    collide with an id it has not moved yet.
+        conn.execute(text("""
+            DO $$
+            DECLARE n bigint;
+            BEGIN
+                SELECT count(*) INTO n FROM user_profiles;
+                IF n > 0
+                   AND (SELECT max(id) FROM user_profiles) <> n
+                   AND (SELECT max(id) FROM user_profiles) < 1000000 THEN
+                    UPDATE user_profiles SET id = id + 1000000;
+                    UPDATE user_profiles p
+                       SET id = s.rn
+                      FROM (SELECT id, row_number() OVER (ORDER BY id) AS rn
+                              FROM user_profiles) s
+                     WHERE p.id = s.id;
+                    RAISE NOTICE 'user_profiles ids compacted to 1..%', n;
+                END IF;
+                PERFORM setval(pg_get_serial_sequence('user_profiles', 'id'),
+                               GREATEST(n, 1), n > 0);
+            END $$;
         """))
 
         # ── Profile pic lives ONLY on user_profiles ──────────────
@@ -1529,6 +1811,98 @@ def _ensure_foreign_keys():
             print(f"⚠️  Foreign key {name} skipped: {e}")
 
 
+# Indexes that cost storage and buy nothing. Each is either an exact duplicate
+# of another index on the same column, or measured at near-zero scans against
+# hundreds of thousands on its twin (checked 2026-07-29 via pg_stat_user_indexes).
+# On the Free plan they were 64% of mandi_price_history's size — 65MB of index
+# on 36MB of data — and every one of them also multiplies write-time change
+# history, which is what the 512MB branch cap actually measures.
+#
+#   mandi_history_row_key_uidx      13MB, 3 scans      — UNIQUE dup of ix_..._row_key
+#   mandi_history_group_dt_idx      13MB, 3 scans      — superseded by csd_dt
+#   ix_mandi_price_history_id      3.9MB, 5 scans      — dup of the primary key
+#   ix_mandi_price_history_district 1.6MB, 3 scans     — covered by csd_dt
+#   ix_mandi_price_history_state   1.2MB, 5 scans      — covered by csd_dt
+#   ix_mandi_prices_id             4.7MB, 277 scans    — dup of the primary key
+#   ix_mandi_prices_state          1.2MB, 4 scans      — covered by csd_lower
+#
+# NOTE row_key: the ON CONFLICT dedup needs a unique index on row_key, so the
+# UNIQUE one is what we keep — ix_mandi_price_history_row_key (non-unique) is
+# the redundant twin, even though the planner had been picking it. A unique
+# index answers the same lookups.
+_DEAD_INDEXES = [
+    "ix_mandi_price_history_row_key",
+    "mandi_history_group_dt_idx",
+    "ix_mandi_price_history_id",
+    "ix_mandi_price_history_district",
+    "ix_mandi_price_history_state",
+    "ix_mandi_prices_id",
+    "ix_mandi_prices_state",
+]
+
+
+def _drop_dead_indexes():
+    """Drop the redundant mandi indexes. Idempotent — IF EXISTS, so this is a
+    no-op on every startup after the first and on a fresh database."""
+    if engine.dialect.name != "postgresql":
+        return
+    dropped = []
+    for name in _DEAD_INDEXES:
+        try:
+            with engine.begin() as conn:
+                exists = conn.execute(text("SELECT to_regclass(:n)"),
+                                      {"n": f"public.{name}"}).scalar()
+                if not exists:
+                    continue
+                # CONCURRENTLY would need autocommit; these are small enough
+                # that a plain DROP is a sub-second exclusive lock.
+                conn.execute(text(f'DROP INDEX IF EXISTS "{name}"'))
+                dropped.append(name)
+        except Exception as e:
+            print(f"⚠️  could not drop index {name}: {e}")
+    if dropped:
+        print(f"🗑️  dropped {len(dropped)} redundant mandi index(es): {', '.join(dropped)}")
+
+
+def _backfill_last_seen():
+    """Seed mandi_last_seen from the history still on disk.
+
+    Runs once (skipped as soon as the table has rows) and must happen BEFORE
+    the first trim at the new retention, or pages whose only record is an old
+    history row would lose it. DISTINCT ON keeps the newest row per group_key.
+
+    Only mandi_price_history is read: it is the superset (every fetched row is
+    appended to it, and the snapshot is built from the same rows), and it is
+    the only one of the two that carries group_key — mandi_prices does not.
+    """
+    if engine.dialect.name != "postgresql":
+        return
+    try:
+        with engine.begin() as conn:
+            if not conn.execute(text("SELECT to_regclass('public.mandi_price_history')")).scalar():
+                return
+            if conn.execute(text("SELECT 1 FROM mandi_last_seen LIMIT 1")).scalar():
+                return                      # already seeded
+            res = conn.execute(text("""
+                INSERT INTO mandi_last_seen
+                    (group_key, state, district, market, commodity, variety,
+                     grade, min_price, max_price, modal_price, arrival_date,
+                     arrival_dt, updated_at)
+                SELECT DISTINCT ON (group_key)
+                    group_key, state, district, market, commodity, variety,
+                    grade, min_price, max_price, modal_price, arrival_date,
+                    arrival_dt, now()
+                FROM mandi_price_history
+                WHERE group_key IS NOT NULL AND commodity IS NOT NULL
+                ORDER BY group_key, arrival_dt DESC NULLS LAST
+                ON CONFLICT (group_key) DO NOTHING
+            """))
+            if res.rowcount:
+                print(f"🌱 mandi_last_seen seeded with {res.rowcount:,} rows")
+    except Exception as e:
+        print(f"⚠️  mandi_last_seen backfill skipped: {e}")
+
+
 def init_db():
     try:
         _ensure_table_renames()
@@ -1536,6 +1910,8 @@ def init_db():
         _ensure_postgres_columns()
         _ensure_users_column_order()
         _ensure_foreign_keys()
+        _backfill_last_seen()
+        _drop_dead_indexes()
         print("✅ Database tables created successfully!")
     except Exception as e:
         print(f"⚠️  Database error: {e}")

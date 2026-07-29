@@ -58,18 +58,16 @@ class CartMergeRequest(BaseModel):
 # ── Helpers ──────────────────────────────────────────────────
 
 def _get_token_optional(authorization: str = None):
-    """Try to parse JWT from Authorization header. Returns user dict or None."""
+    """Try to parse JWT from Authorization header. Returns user dict or None.
+
+    resolve_token_user_id() does the real work: the signature alone does not
+    prove the account still exists, is verified, or that its id was not
+    recycled — a stale token must not inherit somebody else's cart."""
     try:
-        from backend.utils.auth_utils import decode_access_token
+        from backend.utils.auth_utils import resolve_token_user_id
         if authorization and authorization.startswith("Bearer "):
-            token = authorization.split(" ")[1]
-            payload = decode_access_token(token)
-            if not payload:
-                return None
-            return {
-                "user_id": int(payload.get("user_id") or payload.get("sub")),
-                "email": payload.get("email"),
-            }
+            uid = resolve_token_user_id(authorization.split(" ")[1])
+            return {"user_id": uid} if uid else None
     except Exception:
         pass
     return None
