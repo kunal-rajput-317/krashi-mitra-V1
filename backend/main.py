@@ -193,6 +193,19 @@ async def startup():
         await start_mandi_scheduler()  # MANDI — daily fetch + immediate fetch if snapshot empty
     except Exception as e:
         print(f"⚠️ Mandi scheduler startup error (non-fatal): {e}")
+    # MSP hides any crop it can't vouch for (unconfirmed figure, or a marketing
+    # season past its valid_until). That silence is correct but invisible, so say
+    # it out loud once at boot — otherwise a lapsed season is discovered by a
+    # farmer seeing a missing block, not by us.
+    try:
+        from backend.services import msp as _msp
+        _p = _msp.pending()
+        if _p["unverified"] or _p["expired"]:
+            print(f"ℹ️ MSP block hidden for — unverified: {_p['unverified'] or '—'}; "
+                  f"season expired: {_p['expired'] or '—'} "
+                  f"(fix in backend/data/msp_rates.json)")
+    except Exception as e:
+        print(f"⚠️ MSP config check skipped (non-fatal): {e}")
 
 # @app.post("/ask")
 # async def ask(data: dict):
@@ -239,6 +252,12 @@ app.include_router(product_route.router)  # SEO shop-product pages (/product/*) 
 
 from backend.routes import articles as articles_route
 app.include_router(articles_route.router)  # /articles/meta — live published/updated dates from article JSON-LD
+
+from backend.routes import naksha as naksha_route
+app.include_router(naksha_route.router)  # /naksha, /naksha/{state}[/jile] + /map — state district maps
+
+from backend.routes import sawal as sawal_route
+app.include_router(sawal_route.router)  # /sawal — real Kisan Call Centre Q&A, per crop
 
 from backend.routes import sitemap as sitemap_route
 app.include_router(sitemap_route.router)  # /sitemap.xml — generated from the pages/articles on disk

@@ -78,7 +78,9 @@ def _scan() -> dict:
             continue
         published = pub.group(1)[:10] if pub else None
         modified = mod.group(1)[:10] if mod else None
-        meta[path.stem] = {
+        # Lowercased stem: the canonical URL, the sitemap and the _redirects
+        # targets all use it, so callers keying off a link's slug match here.
+        meta[path.stem.lower()] = {
             "published": published,
             # fall back to published so a card always has something to show
             "modified": modified or published,

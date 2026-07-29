@@ -215,8 +215,26 @@
   }
 
   // ── boot ────────────────────────────────────────────────────
+  /* A page can set window.KM_LOC_AFTER_SCROLL to hold the card back until the
+     reader has scrolled past its main content. The नक्शा pages ask for this:
+     they are a full-bleed map, and a bottom sheet parked over it hides the one
+     thing the page exists for. The offer still happens — just not on top of
+     the map. Every other page is unchanged. */
+  function whenWelcome(fn) {
+    if (!window.KM_LOC_AFTER_SCROLL) return fn();
+    var fired = false;
+    function onScroll() {
+      if (fired || window.scrollY < 500) return;
+      fired = true;
+      window.removeEventListener("scroll", onScroll);
+      fn();
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+
   function boot() {
     if (!secureEnough() || !navigator.geolocation) return;
+    var later = function () { setTimeout(showCard, 1500); };
 
     var s = readStore();
     if (s && s.status) {
@@ -231,10 +249,10 @@
       navigator.permissions.query({ name: "geolocation" }).then(function (p) {
         if (p.state === "granted")      silentRefresh();
         else if (p.state === "denied")  writeStore({ status: "denied", ts: Date.now() });
-        else                            setTimeout(showCard, 1500);   // 'prompt'
-      }).catch(function () { setTimeout(showCard, 1500); });
+        else                            whenWelcome(later);           // 'prompt'
+      }).catch(function () { whenWelcome(later); });
     } else {
-      setTimeout(showCard, 1500);
+      whenWelcome(later);
     }
   }
 

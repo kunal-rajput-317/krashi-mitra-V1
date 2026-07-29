@@ -35,7 +35,7 @@ from fastapi import (
     APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 )
 from pydantic import BaseModel
-from sqlalchemy import or_, desc
+from sqlalchemy import func, or_, desc
 from sqlalchemy.orm import Session
 
 from backend.database.db import (
@@ -117,6 +117,53 @@ def _author_info(user: Optional[User], profile: Optional[UserProfile]) -> dict:
     }
 
 
+def _norm_place(s: Optional[str]) -> str:
+    """Case/space-insensitive key for state & district matching. The /bhav tree
+    and a farmer's profile spell the same district differently often enough
+    ("Hardoi" / "hardoi " / "HARDOI") that an exact column compare would silently
+    drop rows from the district page."""
+    return " ".join((s or "").split()).lower()
+
+
+def place_posts(db: Session, post_type: str, crop_slug: str,
+                state: str, district: str, limit: int = 20) -> list:
+    """Active posts of one kind for one crop in one district, newest first.
+
+    The shared query behind BOTH the /bhav district page and the खरीदें panel,
+    so the two can never disagree about what "this district's listings" means.
+    Matches on the structured columns only — a row posted before those existed
+    (state/district NULL) is invisible here by design rather than guessed at.
+    """
+    if not (crop_slug and district):
+        return []
+    q = (db.query(BazarPost)
+           .filter(BazarPost.status == "active",
+                   BazarPost.post_type == post_type,
+                   func.lower(BazarPost.crop_slug) == _norm_place(crop_slug),
+                   func.lower(BazarPost.district) == _norm_place(district)))
+    if state:
+        q = q.filter(func.lower(BazarPost.state) == _norm_place(state))
+    return q.order_by(desc(BazarPost.created_at)).limit(max(1, min(limit, 50))).all()
+
+
+def place_keys(db: Session, post_type: str = "buy") -> set:
+    """{(crop_slug, state, district)} — all lowercased — that currently have at
+    least one active post of this kind.
+
+    ONE query for the whole set, because the callers ask ~14,000 times: the /bhav
+    sitemap walks every crop×state×district, and every district page needs to
+    know whether to show the खरीदार link. Asking per district would be 14k round
+    trips; asking once and caching the answer is the same information.
+    """
+    rows = (db.query(BazarPost.crop_slug, BazarPost.state, BazarPost.district)
+              .filter(BazarPost.status == "active",
+                      BazarPost.post_type == post_type,
+                      BazarPost.crop_slug.isnot(None),
+                      BazarPost.district.isnot(None))
+              .distinct().all())
+    return {(_norm_place(c), _norm_place(s), _norm_place(d)) for c, s, d in rows}
+
+
 def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool) -> dict:
     return {
         "id":             p.id,
@@ -130,6 +177,9 @@ def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool) -> dic
         "quantity":       p.quantity,
         "unit":           p.unit,
         "location":       p.location or author.get("location") or "",
+        "crop_slug":      p.crop_slug,
+        "state":          p.state,
+        "district":       p.district,
         "status":         p.status,
         "likes_count":    p.likes_count or 0,
         "comments_count": p.comments_count or 0,
@@ -187,6 +237,11 @@ def get_feed(
     page:      int = 1,
     page_size: int = 10,
     user:      Optional[int] = None,     # filter: posts by one user
+    # Structured filters — how /bhav asks for "this district's listings".
+    # Omitted by krashi_bajar.html, which wants the whole feed.
+    crop_slug: Optional[str] = None,
+    state:     Optional[str] = None,
+    district:  Optional[str] = None,
     request:   Request = None,
     db:        Session = Depends(get_db),
 ):
@@ -198,6 +253,12 @@ def get_feed(
         query = query.filter(BazarPost.post_type == post_type)
     if crop:
         query = query.filter(BazarPost.crop.ilike(f"%{crop.strip()}%"))
+    if crop_slug:
+        query = query.filter(func.lower(BazarPost.crop_slug) == _norm_place(crop_slug))
+    if state:
+        query = query.filter(func.lower(BazarPost.state) == _norm_place(state))
+    if district:
+        query = query.filter(func.lower(BazarPost.district) == _norm_place(district))
     if user:
         query = query.filter(BazarPost.user_id == user)
     if q and q.strip():
@@ -340,6 +401,13 @@ async def create_post(
     old_price:    Optional[float]      = Form(None),
     quantity:     Optional[float]      = Form(None),
     unit:         Optional[str]        = Form("क्विंटल"),
+    # Set by the /bhav panel, which knows exactly which crop and district the
+    # farmer was looking at. krashi_bajar.html omits them and falls back to the
+    # profile below, so the existing composer is unaffected.
+    crop_slug:    Optional[str]        = Form(None),
+    state:        Optional[str]        = Form(None),
+    district:     Optional[str]        = Form(None),
+    source:       Optional[str]        = Form(None),
     media:        Optional[UploadFile] = File(None),
     current_user: dict                 = Depends(get_current_user),
     db:           Session              = Depends(get_db),
@@ -359,6 +427,9 @@ async def create_post(
 
     location = ", ".join([p for p in [profile.village, profile.district] if p])
 
+    # The page the farmer posted from wins over the profile: he may be selling a
+    # crop lying in a different district from the one he registered with, and
+    # the /bhav page is the district he was actually looking at.
     post = BazarPost(
         user_id    = user_id,
         post_type  = post_type,
@@ -371,6 +442,10 @@ async def create_post(
         quantity   = quantity,
         unit       = (unit or "क्विंटल").strip(),
         location   = location,
+        crop_slug  = (crop_slug or "").strip() or None,
+        state      = (state or "").strip() or (profile.state or None),
+        district   = (district or "").strip() or (profile.district or None),
+        source     = (source or "").strip() or "bazar",
     )
     db.add(post)
     db.commit()
@@ -717,4 +792,4 @@ def toggle_follow(
     }
 
 
-print("✅ bazar.py loaded successfully")
+print("[bazar.py] loaded successfully")

@@ -97,7 +97,36 @@
 /about.html            /about             301!
 /privacy-policy.html   /privacy-policy    301!
 /map.html              /map               301!
-/rajasthan-ka-naksha.html  /rajasthan-ka-naksha  301!
+/naksha.html           /naksha            301!
+
+# The नक्शा cluster is server-rendered (backend/routes/naksha.py), like /bhav —
+# there are no per-state HTML files any more. One rule covers all 36 states and
+# both page types.
+/naksha      https://krashi-mitra-v1.onrender.com/naksha         200
+/naksha/*    https://krashi-mitra-v1.onrender.com/naksha/:splat  200
+/map         https://krashi-mitra-v1.onrender.com/map            200
+
+# The flat URLs the static build used, before /naksha/<state> replaced them.
+# Only rajasthan ever shipped; the rest are here because a short form is the
+# kind of URL people type or link by hand.
+/rajasthan-ka-naksha        /naksha/rajasthan        301!
+/mp-ka-naksha               /naksha/madhya-pradesh   301!
+/madhya-pradesh-ka-naksha   /naksha/madhya-pradesh   301!
+/bihar-ka-naksha            /naksha/bihar            301!
+/maharashtra-ka-naksha      /naksha/maharashtra      301!
+/punjab-ka-naksha           /naksha/punjab           301!
+/haryana-ka-naksha          /naksha/haryana          301!
+/up-ka-naksha               /map                     301!
+/uttar-pradesh-ka-naksha    /map                     301!
+/up-ke-jile                 /naksha/uttar-pradesh/jile      301!
+/uttar-pradesh-ke-jile      /naksha/uttar-pradesh/jile      301!
+/rajasthan-ke-jile          /naksha/rajasthan/jile          301!
+/mp-ke-jile                 /naksha/madhya-pradesh/jile     301!
+/madhya-pradesh-ke-jile     /naksha/madhya-pradesh/jile     301!
+/bihar-ke-jile              /naksha/bihar/jile              301!
+/maharashtra-ke-jile        /naksha/maharashtra/jile        301!
+/punjab-ke-jile             /naksha/punjab/jile             301!
+/haryana-ke-jile            /naksha/haryana/jile            301!
 /help.html             /help              301!
 
 # Anything that reached this point is a URL we don't serve. A 200-homepage

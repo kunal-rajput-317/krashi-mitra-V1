@@ -49,6 +49,9 @@ _MODIFIED_RE = re.compile(r'"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})')
 _PUBLISHED_RE = re.compile(r'"datePublished"\s*:\s*"(\d{4}-\d{2}-\d{2})')
 _OG_IMAGE_RE = re.compile(
     r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', re.I)
+# A नक्शा page's ImageObject — the full district map, which is the asset that
+# has to reach Google Images, not the social card in og:image.
+_MAP_IMAGE_RE = re.compile(r'"contentUrl"\s*:\s*"([^"]+district-map\.png)"')
 
 # hreflang code → the value Google expects
 _HREFLANG = {"hi": "hi", "en": "en-IN", "kn": "kn"}
@@ -69,10 +72,9 @@ CORE = [
     ("weather.html",        "/weather",         0.8, "daily",  ("hi", "en", "kn"), ()),
     ("sarkari_yojana.html", "/sarkari_yojana",  0.8, "weekly", ("hi", "en", "kn"), ()),
     ("khoj.html",           "/khoj",            0.7, "weekly", ("hi", "en", "kn"), ()),
-    ("map.html",            "/map",             0.7, "weekly", ("hi", "en"),
-     ("/images/up-ka-naksha-district-map.png",)),
-    ("rajasthan-ka-naksha.html", "/rajasthan-ka-naksha", 0.7, "weekly", ("hi", "en"),
-     ("/images/rajasthan-ka-naksha-district-map.png",)),
+    # /map and the rest of the नक्शा cluster are not listed here: they are
+    # server-rendered from backend/data/naksha_states.json and emitted by
+    # _naksha_entries() below, so the manifest stays the single list.
     ("help.html",           "/help",            0.6, "weekly", ("hi",), ()),
     ("about.html",          "/about",           0.4, "yearly", (), ()),
     ("privacy-policy.html", "/privacy-policy",  0.3, "yearly", (), ()),
@@ -80,8 +82,10 @@ CORE = [
     ("articles/index.html", "/articles/",       0.9, "daily",  ("hi", "en", "kn"), ()),
 ]
 
-# Hubs only. The full lists live in /bhav/sitemap.xml and /product/sitemap.xml.
-HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly")]
+# Hubs only. The full lists live in /bhav/sitemap.xml, /product/sitemap.xml
+# and /sawal/sitemap.xml.
+HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
+        ("/sawal", 0.7, "monthly")]
 
 _ARTICLE_PRIORITY = 0.8
 _ARTICLE_CHANGEFREQ = "weekly"
@@ -120,6 +124,11 @@ def _abs(url: str) -> str:
 
 def _entry(loc: str, lastmod: str, changefreq: str, priority: float,
            langs: tuple = (), images: tuple = ()) -> str:
+    # Absolutised here, not at every call site. The sitemap protocol requires a
+    # fully-qualified <loc>, and callers that passed a site-relative path (the
+    # whole नक्शा cluster did — _url()/_jile_url() return hrefs, which is what
+    # they are for) were emitting entries Google discards silently.
+    loc = _abs(loc)
     out = [f"  <url>", f"    <loc>{escape(loc)}</loc>"]
     if langs:
         for code in langs:
@@ -139,6 +148,65 @@ def _entry(loc: str, lastmod: str, changefreq: str, priority: float,
     return "\n".join(out)
 
 
+def _naksha_entries() -> list:
+    """The नक्शा hub, every state's map page, its district list, and every
+    district's own map page.
+
+    District pages (~780) go in unconditionally — they are server-rendered from
+    the same manifest, so every one of them exists the moment the state does.
+    गांव pages do NOT: those are listed in /naksha/gaon-sitemap.xml, and only
+    for districts whose village data has actually been fetched (see
+    _gaon_entries) — a sitemap entry for a page we serve as noindex is a
+    contradiction, and the same rule already governs 1–2 district UTs below.
+
+    Imported lazily: naksha.py imports bhav.py for the shared page shell, and
+    bhav.py is heavy (DB index) — this module must stay importable on its own.
+    """
+    from backend.routes.naksha import (
+        _d_url, _jile_url, _states, _updated, _url, slugify)
+
+    states = _states()
+    when = _updated()
+    out = [_entry(f"{SITE}/naksha", when, "weekly", 0.8, ("hi", "en"))]
+    for key, s in states.items():
+        img = f"{SITE}/images/{s['prefix']}-district-map.png"
+        # _url() already knows UP lives at /map.
+        out.append(_entry(_url(key), when, "weekly", 0.7, ("hi", "en"), (img,)))
+        # A 1–2 district UT's list page is noindex (see naksha.py) — a sitemap
+        # entry for a page we ask Google not to index is a contradiction.
+        if s["n"] >= 3:
+            out.append(_entry(_jile_url(key), when, "weekly", 0.6, ("hi", "en")))
+        for d in s["districts"]:
+            out.append(_entry(_d_url(key, slugify(d["en"])), when, "monthly", 0.6))
+    return out
+
+
+def _gaon_entries() -> list:
+    """Village directory + village pages, for districts that have real data.
+
+    Kept out of sitemap.xml and given their own file: this list grows with
+    traffic (each district is fetched on first view), it is by far the biggest
+    tier, and mixing a slow-growing 40k-URL set into the 14k-URL main sitemap
+    makes the main one's lastmod churn for no reason.
+    """
+    from backend.routes.naksha import _gaon_url, _states, _updated, _v_url
+    from backend.services import village_service
+
+    states = _states()
+    when = _updated()
+    out = []
+    for key, dslug in village_service.cached_districts():
+        if key not in states:
+            continue
+        villages = village_service.load(key, dslug) or []
+        if not villages:
+            continue
+        out.append(_entry(_gaon_url(key, dslug), when, "monthly", 0.5))
+        for v in villages:
+            out.append(_entry(_v_url(key, dslug, v["slug"]), when, "monthly", 0.4))
+    return out
+
+
 def _build() -> str:
     urls = []
 
@@ -146,6 +214,12 @@ def _build() -> str:
         f = _FRONTEND / fname
         urls.append(_entry(f"{SITE}{path_}", _page_date(f), changefreq, priority,
                            langs, images))
+
+    # The नक्शा cluster. These are server-rendered (routes/naksha.py) from
+    # backend/data/naksha_states.json, so there are no files to glob — the
+    # manifest is the list, and a state added to it appears here on its own.
+    # /map is in CORE above: it is UP's page under its original URL.
+    urls.extend(_naksha_entries())
 
     # Every article actually on disk — not a list anyone has to remember to update.
     # The URL is the lowercased stem: files like DAP-guide-up.html are served at
@@ -175,3 +249,14 @@ def _build() -> str:
 def sitemap():
     return Response(_build(), media_type="application/xml",
                     headers={"Cache-Control": "public, max-age=3600"})
+
+
+def build_gaon_sitemap() -> str:
+    """Serialized village sitemap. The *route* lives in naksha.py, which is
+    included before this module — /naksha/{state} would otherwise match
+    /naksha/gaon-sitemap.xml and serve it the "state not found" page. The
+    builder stays here with its siblings so all sitemap shapes are one file."""
+    body = "\n".join(_gaon_entries())
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"{body}\n</urlset>")

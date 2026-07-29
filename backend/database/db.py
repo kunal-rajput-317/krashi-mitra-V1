@@ -28,7 +28,7 @@ if DATABASE_URL.startswith("postgresql") and "sslmode" not in DATABASE_URL:
 
 # Log host only — never the credentials (they were leaking into Render logs)
 _safe_host = DATABASE_URL.split("@")[-1].split("?")[0] if "@" in DATABASE_URL else "local"
-print(f"✅ DB connecting to: ...@{_safe_host}")
+print(f"[DB] connecting to: ...@{_safe_host}")
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
@@ -42,6 +42,29 @@ engine       = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base         = declarative_base()
+
+
+# ── Read-only database detection ─────────────────────────────
+# Neon flips a compute to read-only when the project trips a plan limit. Reads
+# keep working perfectly, so the site looks healthy — /bhav, /mandi, articles
+# all serve fine — while every write fails with SQLSTATE 25006. Handlers that
+# turn this into a generic 500 make it indistinguishable from an application
+# bug: the schema, sequences and triggers all inspect clean and the hunt goes
+# nowhere. Name it explicitly so it is one glance in the logs instead.
+_READ_ONLY_SQLSTATE = "25006"   # read_only_sql_transaction
+
+
+def is_read_only_error(exc: BaseException) -> bool:
+    """True when a write failed because the database refused writes.
+
+    Checks the SQLSTATE off the wrapped DBAPI error (SQLAlchemy stores it on
+    `.orig`), falling back to the message so a driver that does not surface
+    pgcode still matches.
+    """
+    orig = getattr(exc, "orig", None) or exc
+    if getattr(orig, "pgcode", None) == _READ_ONLY_SQLSTATE:
+        return True
+    return "read-only transaction" in str(exc).lower()
 
 
 # ── WEATHER CACHE MODEL ──────────────────────────────────────
@@ -260,6 +283,15 @@ class User(Base):
     __tablename__ = "users"
 
     id                 = Column(Integer,  primary_key=True, index=True)
+    # Mirrors `id` — kept as its own column (not just an alias) so other
+    # tables/tools can key off "user_id" the same way they do on every other
+    # table in this schema. Kept in sync automatically by a DB trigger, see
+    # _ensure_postgres_columns() — never set this by hand.
+    #
+    # NULL until the account is verified: an unverified row is a signup
+    # attempt that cannot log in, so it holds no account number. The trigger
+    # fills it in the moment is_verified flips true.
+    user_id            = Column(Integer,  unique=True, index=True)
     name               = Column(String,   nullable=False)
     email              = Column(String,   unique=True, nullable=False, index=True)
     hashed_password    = Column(String,   nullable=False)
@@ -430,18 +462,122 @@ class MandiPriceHistory(Base):
     fetched_at   = Column(DateTime, default=datetime.utcnow)
 
 
+class MandiPriceMonthly(Base):
+    """Multi-year monthly SUMMARY per (state, district, commodity) — the
+    seasonality / "पिछले साल इसी समय" layer.
+
+    Deliberately stores only the aggregate, never the raw daily rows. There
+    are ~10k (district × crop) pairs nationwide; keeping their raw history
+    would be ~150M rows, which is exactly why MandiPriceHistory is capped at
+    MANDI_HISTORY_DAYS. One row per month per pair is ~60 rows/pair for 5
+    years — the whole country fits in tens of MB.
+
+    Built from data.gov's never-wiped archive resource by
+    backend/services/mandi_season_service.py. Old months never change, so
+    rows are written once and simply kept.
+    """
+    __tablename__ = "mandi_price_monthly"
+    id           = Column(Integer,  primary_key=True, index=True)
+    state        = Column(String,   nullable=True)
+    district     = Column(String,   nullable=True)
+    commodity    = Column(String,   nullable=False)
+    ym           = Column(String,   nullable=False)          # "2025-03"
+    year         = Column(Integer,  nullable=True)
+    # Deliberately unindexed: every read is "WHERE slice_key = :k ORDER BY ym"
+    # and the seasonal shape is pivoted in Python. On a table this narrow an
+    # extra index costs about as much as the data it indexes.
+    month        = Column(Integer,  nullable=True)
+    median_modal = Column(Integer,  nullable=True)           # ₹/quintal
+    min_modal    = Column(Integer,  nullable=True)
+    max_modal    = Column(Integer,  nullable=True)
+    n_rows       = Column(Integer,  nullable=True)           # daily rows behind the median
+    slice_key    = Column(String,   nullable=True, index=True)  # md5(state|district|commodity)
+    row_key      = Column(String,   nullable=True, unique=True, index=True)  # slice_key|ym — dedup
+    built_at     = Column(DateTime, default=datetime.utcnow)
+
+
+class MandiSeasonSlice(Base):
+    """Work log for the seasonality backfill: one row per (state, district,
+    commodity) pair we have been asked for.
+
+    A /bhav page view enqueues its own pair and renders without the block;
+    the scheduler drains the queue afterwards. That keeps data.gov calls out
+    of the request path entirely — user traffic can never burn the API quota
+    the daily price fetch depends on.
+    """
+    __tablename__ = "mandi_season_slices"
+    id           = Column(Integer,  primary_key=True, index=True)
+    slice_key    = Column(String,   nullable=False, unique=True, index=True)
+    state        = Column(String,   nullable=True)
+    district     = Column(String,   nullable=True)
+    commodity    = Column(String,   nullable=True)
+    status       = Column(String,   default="queued", index=True)  # queued|done|empty|error
+    months       = Column(Integer,  default=0)      # months of summary stored
+    rows_seen    = Column(Integer,  default=0)      # archive rows aggregated
+    hits         = Column(Integer,  default=1)      # times a page asked for it
+    attempts     = Column(Integer,  default=0)
+    note         = Column(String,   nullable=True)
+    requested_at = Column(DateTime, default=datetime.utcnow)
+    built_at     = Column(DateTime, nullable=True)
+
+
+# ── किसान कॉल सेंटर सवाल-जवाब (KCC) ──────────────────────────
+
+class KccQA(Base):
+    """Curated question/answer pairs from the Government of India's Kisan Call
+    Centre transcripts (data.gov resource cef25fe2-…, ~48M rows).
+
+    ONLY vetted rows land here — see backend/services/kcc_service.py. The
+    source is genuinely messy: ~50% of it is throwaway weather chatter, the
+    questions are staff-typed English/Hinglish shorthand, and about 2% of
+    answers give advice for a DIFFERENT crop than the one the row is filed
+    under (paddy answers under wheat, etc.). Since these answers carry
+    pesticide names and doses, publishing them unfiltered could put wrong-crop
+    spray advice in front of a farmer. The service therefore keeps only
+    answers that name their own crop in Hindi, and this table is the
+    already-safe subset.
+    """
+    __tablename__ = "kcc_qa"
+    id         = Column(Integer,  primary_key=True, index=True)
+    crop_key   = Column(String,   nullable=False, index=True)   # our slug: "wheat"
+    crop       = Column(String,   nullable=True)                # KCC's own label
+    topic      = Column(String,   nullable=True)                # normalised QueryType
+    question   = Column(Text,     nullable=True)                # original (English/Hinglish)
+    answer     = Column(Text,     nullable=False)               # Hindi, crop-verified
+    district   = Column(String,   nullable=True)
+    state      = Column(String,   nullable=True)
+    year       = Column(Integer,  nullable=True)
+    month      = Column(Integer,  nullable=True)
+    ans_key    = Column(String,   nullable=True, unique=True, index=True)  # dedup hash
+    built_at   = Column(DateTime, default=datetime.utcnow)
+
+
+class KccCropBuild(Base):
+    """Per-crop build log for the KCC harvest, so a crop with no usable rows
+    is not re-fetched on every scheduler pass."""
+    __tablename__ = "kcc_crop_builds"
+    id         = Column(Integer,  primary_key=True, index=True)
+    crop_key   = Column(String,   nullable=False, unique=True, index=True)
+    status     = Column(String,   default="queued", index=True)  # queued|done|empty|error
+    n_qa       = Column(Integer,  default=0)      # rows kept
+    n_seen     = Column(Integer,  default=0)      # rows examined
+    attempts   = Column(Integer,  default=0)
+    note       = Column(String,   nullable=True)
+    built_at   = Column(DateTime, nullable=True)
+
+
 # ── CROP CALENDAR (मेरी फसल) ─────────────────────────────────
 
 class UserCrop(Base):
     """A crop a farmer is growing this season — crop_key references
     backend/data/crop_stages.json; the timeline itself is computed
     from sowing_date, never stored."""
-    __tablename__ = "user_crops"
+    __tablename__ = "crop_calendar"
 
     id          = Column(Integer,  primary_key=True, index=True)
     user_id     = Column(Integer,
                          ForeignKey("users.id", ondelete="CASCADE",
-                                    name="fk_user_crops_user_id"),
+                                    name="fk_crop_calendar_user_id"),
                          nullable=False, index=True)             # users.id
     crop_key    = Column(String,   nullable=False)               # "wheat" | "paddy" | ...
     sowing_date = Column(Date,     nullable=False)               # day-0 (sowing/transplanting)
@@ -566,6 +702,19 @@ class BazarPost(Base):
     quantity       = Column(Float,    nullable=True)
     unit           = Column(String,   default="क्विंटल")
     location       = Column(String,   nullable=True)   # denormalized "village, district"
+    # ── Structured place/crop, added 2026-07-28 so /bhav can serve a district
+    # slice of this feed at /bhav/{crop}/{state}/{district}/kharidar.
+    # `location` cannot do that job: it is one free-text "village, district"
+    # string, so filtering on it means a substring match that (a) mis-hits when a
+    # village name contains a district name and (b) merges the four district
+    # names that exist in two states each — bilaspur, hamirpur, pratapgarh,
+    # balrampur — the exact collision the /bhav URL scheme was restructured to
+    # fix. crop_slug is the /bhav slug ("wheat"), not the typed `crop` ("गेहूं"),
+    # so the join is exact instead of an ilike on whatever the farmer wrote.
+    state          = Column(String,   nullable=True, index=True)
+    district       = Column(String,   nullable=True, index=True)
+    crop_slug      = Column(String,   nullable=True, index=True)
+    source         = Column(String,   nullable=True)   # "bazar" | "bhav" — which surface posted it
     status         = Column(String,   default="active", index=True)  # active | sold | closed
     likes_count    = Column(Integer,  default=0)
     comments_count = Column(Integer,  default=0)
@@ -710,6 +859,42 @@ class CropAppeal(Base):
 
 # ── DB Helpers ───────────────────────────────────────────────
 
+_TABLE_RENAMES = [
+    ("user_crops", "crop_calendar"),
+]
+
+
+def _ensure_table_renames():
+    """Pick up table renames on an existing Neon DB without losing data.
+
+    Must run before create_all(): if the old name still exists and the new
+    one doesn't, RENAME *is* the migration — it carries over every row,
+    index and constraint. No-op on every startup after the first, and a
+    no-op on a brand-new DB (create_all() just creates the new name).
+    """
+    if engine.dialect.name != "postgresql":
+        return
+    with engine.begin() as conn:
+        for old, new in _TABLE_RENAMES:
+            old_exists = conn.execute(text("SELECT to_regclass(:t)"), {"t": f"public.{old}"}).scalar()
+            new_exists = conn.execute(text("SELECT to_regclass(:t)"), {"t": f"public.{new}"}).scalar()
+            if old_exists and not new_exists:
+                conn.execute(text(f'ALTER TABLE "{old}" RENAME TO "{new}"'))
+                print(f"🔤 renamed table {old} → {new}")
+            elif old_exists and new_exists:
+                # A reload can race this: create_all() sees the model's new
+                # __tablename__ and creates it fresh before this function ever
+                # runs, leaving the old table stranded alongside it. Only safe
+                # to clean up automatically when the leftover is empty — a
+                # non-empty one needs a human to decide how to merge it.
+                old_count = conn.execute(text(f'SELECT count(*) FROM "{old}"')).scalar()
+                if old_count == 0:
+                    conn.execute(text(f'DROP TABLE "{old}"'))
+                    print(f"🧹 dropped empty leftover table {old} (already renamed to {new})")
+                else:
+                    print(f"⚠️  both {old} and {new} exist and {old} has {old_count} row(s) — needs manual merge")
+
+
 def _ensure_postgres_columns():
     """Add columns that older Neon tables may be missing."""
     if engine.dialect.name != "postgresql":
@@ -717,6 +902,7 @@ def _ensure_postgres_columns():
 
     schema_patches = {
         "users": [
+            ("user_id", "INTEGER"),
             ("hashed_password", "VARCHAR"),
             ("is_verified", "BOOLEAN DEFAULT FALSE"),
             ("otp", "VARCHAR"),
@@ -852,7 +1038,7 @@ def _ensure_postgres_columns():
             ("row_key", "VARCHAR"),
             ("fetched_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ],
-        "user_crops": [
+        "crop_calendar": [
             ("user_id", "INTEGER"),
             ("crop_key", "VARCHAR"),
             ("sowing_date", "DATE"),
@@ -913,6 +1099,16 @@ def _ensure_postgres_columns():
             ("user_id", "INTEGER"),
             ("user_name", "VARCHAR"),
         ],
+        # Structured place/crop so /bhav can serve a district slice of the Bazar
+        # feed. Nullable on purpose: every row written before 2026-07-28 has only
+        # the free-text `location`, and backfilling it would mean guessing which
+        # comma-separated part was the district.
+        "bazar_posts": [
+            ("state", "VARCHAR"),
+            ("district", "VARCHAR"),
+            ("crop_slug", "VARCHAR"),
+            ("source", "VARCHAR"),
+        ],
     }
 
     with engine.begin() as conn:
@@ -922,6 +1118,14 @@ def _ensure_postgres_columns():
                     f'ALTER TABLE "{table_name}" '
                     f'ADD COLUMN IF NOT EXISTS "{column_name}" {column_type}'
                 ))
+
+        # ADD COLUMN brings no index with it, and the kharidar page filters on
+        # all three at once on a server-rendered request — one composite index
+        # rather than three single-column ones, in the order the query narrows.
+        conn.execute(text(
+            'CREATE INDEX IF NOT EXISTS ix_bazar_posts_place '
+            'ON bazar_posts (crop_slug, state, district, status)'
+        ))
 
         conn.execute(text("""
             CREATE SEQUENCE IF NOT EXISTS carts_id_seq OWNED BY carts.id;
@@ -1003,6 +1207,44 @@ def _ensure_postgres_columns():
             ON push_subscriptions(user_id) WHERE user_id IS NOT NULL;
         """))
 
+        # ── users.user_id mirrors users.id, but only once verified ───
+        # Requested as a standalone column (not just `id` reused) so every
+        # table in this schema can be keyed off "user_id" consistently. Kept
+        # in sync automatically — no manual backfill/re-run ever needed.
+        #
+        # An unverified row is a signup attempt, not an account: it cannot log
+        # in (auth.py rejects is_verified = false), so it gets no account
+        # number and user_id stays NULL until verification flips it true.
+        # That is why UPDATE OF lists is_verified as well as id — verification
+        # lands long after the INSERT, and the number has to appear then.
+        # Any number of unverified rows can coexist under users_user_id_uidx:
+        # Postgres treats NULLs as distinct in a unique index.
+        conn.execute(text("""
+            CREATE OR REPLACE FUNCTION sync_users_user_id() RETURNS trigger AS $$
+            BEGIN
+                NEW.user_id := CASE WHEN NEW.is_verified THEN NEW.id ELSE NULL END;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        """))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_sync_users_user_id ON users;"))
+        conn.execute(text("""
+            CREATE TRIGGER trg_sync_users_user_id
+                BEFORE INSERT OR UPDATE OF id, is_verified ON users
+                FOR EACH ROW
+                EXECUTE FUNCTION sync_users_user_id();
+        """))
+        # Re-align rows that predate this rule, plus any row whose is_verified
+        # was flipped by hand in the DB GUI while the trigger still ignored it.
+        conn.execute(text("""
+            UPDATE users
+               SET user_id = CASE WHEN is_verified THEN id ELSE NULL END
+             WHERE user_id IS DISTINCT FROM CASE WHEN is_verified THEN id ELSE NULL END;
+        """))
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS users_user_id_uidx ON users(user_id);
+        """))
+
         # ── users ↔ user_profiles 1:1 guarantee ──────────────────
         # The app-level _ensure_profile() (auth.py) only runs on the OTP-verify
         # and Google-login flows. Flipping is_verified = TRUE by hand in the DB
@@ -1064,6 +1306,114 @@ def _ensure_postgres_columns():
         """))
 
 
+def _ensure_users_column_order():
+    """Physically move users.user_id to sit right after users.id.
+
+    Postgres has no ALTER TABLE ... position-column form — the only way to
+    actually reorder a column on disk is to rebuild the table: drop every FK
+    pointing at users, recreate users with the new column order, copy the
+    rows back, reinstall its own indexes/triggers, then let
+    _ensure_foreign_keys() (called right after this in init_db()) reinstall
+    the FKs it already knows how to build.
+
+    Self-guarding: skipped once user_id is already column 2, so this is a
+    no-op on every startup after the first — and a no-op on a brand-new DB,
+    where create_all() already emits the model's declared order.
+    """
+    if engine.dialect.name != "postgresql":
+        return
+
+    with engine.begin() as conn:
+        pos = conn.execute(text("""
+            SELECT ordinal_position FROM information_schema.columns
+            WHERE table_name = 'users' AND column_name = 'user_id'
+        """)).scalar()
+        if pos is None or pos == 2:
+            return  # column not created yet, or already in place
+
+        fks = conn.execute(text("""
+            SELECT conname, conrelid::regclass::text
+            FROM pg_constraint
+            WHERE confrelid = 'users'::regclass AND contype = 'f'
+        """)).fetchall()
+        for conname, child in fks:
+            conn.execute(text(f'ALTER TABLE "{child}" DROP CONSTRAINT "{conname}"'))
+
+        conn.execute(text("ALTER TABLE users RENAME TO users_old"))
+        conn.execute(text("""
+            CREATE TABLE users (
+                id                  INTEGER PRIMARY KEY DEFAULT nextval('users_id_seq'),
+                user_id             INTEGER,
+                name                VARCHAR NOT NULL,
+                email               VARCHAR NOT NULL,
+                hashed_password     VARCHAR NOT NULL,
+                is_verified         BOOLEAN NOT NULL,
+                otp                 VARCHAR,
+                otp_expiry          TIMESTAMP,
+                preferred_language  VARCHAR,
+                auth_provider       VARCHAR,
+                google_id           VARCHAR,
+                village             VARCHAR,
+                district            VARCHAR,
+                primary_crop        VARCHAR,
+                seller_verified     BOOLEAN,
+                created_at          TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            INSERT INTO users (id, user_id, name, email, hashed_password, is_verified,
+                                otp, otp_expiry, preferred_language, auth_provider,
+                                google_id, village, district, primary_crop,
+                                seller_verified, created_at)
+            SELECT id, user_id, name, email, hashed_password, is_verified,
+                   otp, otp_expiry, preferred_language, auth_provider,
+                   google_id, village, district, primary_crop,
+                   seller_verified, created_at
+            FROM users_old
+        """))
+        # Reassign the sequence to the new id column BEFORE dropping
+        # users_old — it's still OWNED BY the old column, and an owned
+        # sequence is dropped along with its owner, which would otherwise
+        # rip out the new table's DEFAULT too.
+        conn.execute(text("ALTER SEQUENCE users_id_seq OWNED BY users.id"))
+        # users_old still holds the OLD copies of these index names (a table
+        # RENAME does not rename its indexes) — drop it so the names are
+        # free for the new table to reclaim.
+        conn.execute(text("DROP TABLE users_old"))
+        # users_old also held the OLD "users_pkey" constraint name, so
+        # CREATE TABLE above had to auto-suffix the new one (e.g.
+        # "users_pkey1") — now that the name is free, reclaim it.
+        conn.execute(text("""
+            DO $$
+            DECLARE pk text;
+            BEGIN
+                SELECT conname INTO pk FROM pg_constraint
+                WHERE conrelid = 'users'::regclass AND contype = 'p';
+                IF pk <> 'users_pkey' THEN
+                    EXECUTE format('ALTER TABLE users RENAME CONSTRAINT %I TO users_pkey', pk);
+                END IF;
+            END $$;
+        """))
+        conn.execute(text("CREATE INDEX ix_users_google_id ON users(google_id)"))
+        conn.execute(text("CREATE INDEX ix_users_id ON users(id)"))
+        conn.execute(text("CREATE UNIQUE INDEX ix_users_email ON users(email)"))
+        conn.execute(text("CREATE UNIQUE INDEX users_user_id_uidx ON users(user_id)"))
+        conn.execute(text("""
+            CREATE TRIGGER trg_sync_users_user_id
+                BEFORE INSERT OR UPDATE OF id ON users
+                FOR EACH ROW
+                EXECUTE FUNCTION sync_users_user_id()
+        """))
+        conn.execute(text("""
+            CREATE TRIGGER trg_ensure_user_profile
+                AFTER INSERT OR UPDATE OF is_verified ON users
+                FOR EACH ROW
+                WHEN (NEW.is_verified)
+                EXECUTE FUNCTION ensure_user_profile()
+        """))
+        print("🔀 rebuilt users table with user_id as column 2")
+
+
 # ── REFERENTIAL INTEGRITY ────────────────────────────────────
 # (child_table, child_column, parent_table, parent_column, ON DELETE rule)
 #
@@ -1087,7 +1437,7 @@ def _ensure_postgres_columns():
 # bazar_post removed with its owner takes its likes and comments with it.
 _FOREIGN_KEYS = [
     ("user_profiles",      "user_id",         "users",              "id", "CASCADE"),
-    ("user_crops",         "user_id",         "users",              "id", "CASCADE"),
+    ("crop_calendar",      "user_id",         "users",              "id", "CASCADE"),
     ("carts",              "user_id",         "users",              "id", "CASCADE"),
     ("chat_history",       "user_id",         "users",              "id", "SET NULL"),
     ("orders",             "user_id",         "users",              "id", "SET NULL"),
@@ -1181,8 +1531,10 @@ def _ensure_foreign_keys():
 
 def init_db():
     try:
+        _ensure_table_renames()
         Base.metadata.create_all(bind=engine)
         _ensure_postgres_columns()
+        _ensure_users_column_order()
         _ensure_foreign_keys()
         print("✅ Database tables created successfully!")
     except Exception as e:

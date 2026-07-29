@@ -396,7 +396,7 @@ def sync_index_card(a: dict) -> str:
     c, slug = a["card"], a["slug"]
     card = (
         f'    <!-- {c["title"]} -->\n'
-        f'    <a class="article-card" href="{slug}.html" data-cat="{c["cats"]}" '
+        f'    <a class="article-card" href="{slug}" data-cat="{c["cats"]}" '
         f'data-lang="{a.get("lang", "hi")}" data-title="{c["keywords"]}" '
         f'style="--accent:{c["accent"]}">\n'
         f'      <div class="article-media noimg" style="background:{c["bg"]}">\n'
@@ -417,8 +417,11 @@ def sync_index_card(a: dict) -> str:
     )
 
     doc = INDEX.read_text(encoding="utf-8")
+    # Match the canonical extensionless href and the legacy "<slug>.html" one,
+    # so a card written before the switch is replaced rather than duplicated.
     existing = re.search(
-        rf'[ \t]*<!--[^\n]*-->\n[ \t]*<a class="article-card" href="{re.escape(slug)}\.html".*?</a>\n',
+        rf'[ \t]*<!--[^\n]*-->\n[ \t]*<a class="article-card" '
+        rf'href="{re.escape(slug)}(?:\.html)?".*?</a>\n',
         doc, re.S)
     if existing:
         doc = doc[:existing.start()] + card + doc[existing.end():]
@@ -428,8 +431,21 @@ def sync_index_card(a: dict) -> str:
         i = doc.index(anchor) + len(anchor)
         doc = doc[:i] + "\n" + card + doc[i:]
         action = "inserted"
+    doc = _sync_index_count(doc)
     INDEX.write_text(doc, encoding="utf-8")
     return action
+
+
+def _sync_index_count(doc: str) -> str:
+    """Keep the "N+ विशेषज्ञ कृषि लेख" claim in the index metadata truthful.
+
+    It was hand-written, so it still said 31+ at 59 articles. Rounding down to
+    the nearest 5 keeps the claim true for the next few articles instead of
+    going stale the moment one is added.
+    """
+    n = sum(1 for f in ARTICLES.glob("*.html") if f.name not in {"index.html"})
+    claim = f"{n // 5 * 5}+"
+    return re.sub(r"\d+\+(?= विशेषज्ञ कृषि लेख)", claim, doc)
 
 
 def sync_redirects() -> list[str]:
@@ -548,8 +564,10 @@ def validate(path: Path) -> list[str]:
 
     t = re.search(r"<title>(.*?)</title>", doc, re.S)
     d = re.search(r'<meta name="description" content="([^"]+)"', doc)
-    check(t and 30 < len(t.group(1)) < 160, "title length outside 30-160")
-    check(d and 70 < len(d.group(1)) < 350, "description length outside 70-350")
+    # Google truncates titles ~60 chars and descriptions ~160 — longer copy
+    # shows chopped in the SERP and kills CTR.
+    check(t and 30 < len(t.group(1)) <= 68, "title length outside 30-68")
+    check(d and 70 < len(d.group(1)) <= 162, "description length outside 70-162")
 
     check(len(vis.split()) >= 1200, f"only {len(vis.split())} words (want 2000+)")
     check("{{" not in doc, "unrendered template placeholder")
