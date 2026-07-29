@@ -1,0 +1,3744 @@
+{
+ "states": {
+  "uttar-pradesh": {
+   "key": "uttar-pradesh",
+   "hi": "उत्तर प्रदेश",
+   "en": "Uttar Pradesh",
+   "kn": "ಉತ್ತರ ಪ್ರದೇಶ",
+   "iso": "IN-UP",
+   "lat": 26.8467,
+   "lon": 80.9462,
+   "region": "उत्तर भारत",
+   "prefix": "up-ka-naksha",
+   "geojson": "up-districts.geojson",
+   "note": "",
+   "n": 75,
+   "north": "सहारनपुर",
+   "south": "सोनभद्र",
+   "big": "लखीमपुर खीरी",
+   "small": "गाज़ियाबाद",
+   "w": 1440,
+   "h": 1493,
+   "districts": [
+    {
+     "hi": "अंबेडकर नगर",
+     "en": "Ambedkar Nagar"
+    },
+    {
+     "hi": "अमरोहा",
+     "en": "Amroha"
+    },
+    {
+     "hi": "अमेठी",
+     "en": "Amethi"
+    },
+    {
+     "hi": "अयोध्या",
+     "en": "Ayodhya"
+    },
+    {
+     "hi": "अलीगढ़",
+     "en": "Aligarh"
+    },
+    {
+     "hi": "आगरा",
+     "en": "Agra"
+    },
+    {
+     "hi": "आज़मगढ़",
+     "en": "Azamgarh"
+    },
+    {
+     "hi": "इटावा",
+     "en": "Etawah"
+    },
+    {
+     "hi": "उन्नाव",
+     "en": "Unnao"
+    },
+    {
+     "hi": "एटा",
+     "en": "Etah"
+    },
+    {
+     "hi": "औरैया",
+     "en": "Auraiya"
+    },
+    {
+     "hi": "कन्नौज",
+     "en": "Kannauj"
+    },
+    {
+     "hi": "कानपुर देहात",
+     "en": "Kanpur Dehat"
+    },
+    {
+     "hi": "कानपुर नगर",
+     "en": "Kanpur Nagar"
+    },
+    {
+     "hi": "कासगंज",
+     "en": "Kasganj"
+    },
+    {
+     "hi": "कुशीनगर",
+     "en": "Kushinagar"
+    },
+    {
+     "hi": "कौशांबी",
+     "en": "Kaushambi"
+    },
+    {
+     "hi": "गाज़ियाबाद",
+     "en": "Ghaziabad"
+    },
+    {
+     "hi": "गाज़ीपुर",
+     "en": "Ghazipur"
+    },
+    {
+     "hi": "गोंडा",
+     "en": "Gonda"
+    },
+    {
+     "hi": "गोरखपुर",
+     "en": "Gorakhpur"
+    },
+    {
+     "hi": "गौतम बुद्ध नगर",
+     "en": "Gautam Buddha Nagar"
+    },
+    {
+     "hi": "चंदौली",
+     "en": "Chandauli"
+    },
+    {
+     "hi": "चित्रकूट",
+     "en": "Chitrakoot"
+    },
+    {
+     "hi": "जालौन",
+     "en": "Jalaun"
+    },
+    {
+     "hi": "जौनपुर",
+     "en": "Jaunpur"
+    },
+    {
+     "hi": "झांसी",
+     "en": "Jhansi"
+    },
+    {
+     "hi": "देवरिया",
+     "en": "Deoria"
+    },
+    {
+     "hi": "पीलीभीत",
+     "en": "Pilibhit"
+    },
+    {
+     "hi": "प्रतापगढ़",
+     "en": "Pratapgarh"
+    },
+    {
+     "hi": "प्रयागराज",
+     "en": "Prayagraj"
+    },
+    {
+     "hi": "फतेहपुर",
+     "en": "Fatehpur"
+    },
+    {
+     "hi": "फर्रुखाबाद",
+     "en": "Farrukhabad"
+    },
+    {
+     "hi": "फिरोज़ाबाद",
+     "en": "Firozabad"
+    },
+    {
+     "hi": "बदायूं",
+     "en": "Budaun"
+    },
+    {
+     "hi": "बरेली",
+     "en": "Bareilly"
+    },
+    {
+     "hi": "बलरामपुर",
+     "en": "Balrampur"
+    },
+    {
+     "hi": "बलिया",
+     "en": "Ballia"
+    },
+    {
+     "hi": "बस्ती",
+     "en": "Basti"
+    },
+    {
+     "hi": "बहराइच",
+     "en": "Bahraich"
+    },
+    {
+     "hi": "बांदा",
+     "en": "Banda"
+    },
+    {
+     "hi": "बागपत",
+     "en": "Baghpat"
+    },
+    {
+     "hi": "बाराबंकी",
+     "en": "Barabanki"
+    },
+    {
+     "hi": "बिजनौर",
+     "en": "Bijnor"
+    },
+    {
+     "hi": "बुलंदशहर",
+     "en": "Bulandshahr"
+    },
+    {
+     "hi": "भदोही",
+     "en": "Bhadohi"
+    },
+    {
+     "hi": "मऊ",
+     "en": "Mau"
+    },
+    {
+     "hi": "मथुरा",
+     "en": "Mathura"
+    },
+    {
+     "hi": "महाराजगंज",
+     "en": "Maharajganj"
+    },
+    {
+     "hi": "महोबा",
+     "en": "Mahoba"
+    },
+    {
+     "hi": "मिर्ज़ापुर",
+     "en": "Mirzapur"
+    },
+    {
+     "hi": "मुज़फ्फरनगर",
+     "en": "Muzaffarnagar"
+    },
+    {
+     "hi": "मुरादाबाद",
+     "en": "Moradabad"
+    },
+    {
+     "hi": "मेरठ",
+     "en": "Meerut"
+    },
+    {
+     "hi": "मैनपुरी",
+     "en": "Mainpuri"
+    },
+    {
+     "hi": "रामपुर",
+     "en": "Rampur"
+    },
+    {
+     "hi": "रायबरेली",
+     "en": "Rae Bareli"
+    },
+    {
+     "hi": "लखनऊ",
+     "en": "Lucknow"
+    },
+    {
+     "hi": "लखीमपुर खीरी",
+     "en": "Lakhimpur Kheri"
+    },
+    {
+     "hi": "ललितपुर",
+     "en": "Lalitpur"
+    },
+    {
+     "hi": "वाराणसी",
+     "en": "Varanasi"
+    },
+    {
+     "hi": "शामली",
+     "en": "Shamli"
+    },
+    {
+     "hi": "शाहजहांपुर",
+     "en": "Shahjahanpur"
+    },
+    {
+     "hi": "श्रावस्ती",
+     "en": "Shrawasti"
+    },
+    {
+     "hi": "संत कबीर नगर",
+     "en": "Sant Kabir Nagar"
+    },
+    {
+     "hi": "संभल",
+     "en": "Sambhal"
+    },
+    {
+     "hi": "सहारनपुर",
+     "en": "Saharanpur"
+    },
+    {
+     "hi": "सिद्धार्थनगर",
+     "en": "Siddharthnagar"
+    },
+    {
+     "hi": "सीतापुर",
+     "en": "Sitapur"
+    },
+    {
+     "hi": "सुल्तानपुर",
+     "en": "Sultanpur"
+    },
+    {
+     "hi": "सोनभद्र",
+     "en": "Sonbhadra"
+    },
+    {
+     "hi": "हमीरपुर",
+     "en": "Hamirpur"
+    },
+    {
+     "hi": "हरदोई",
+     "en": "Hardoi"
+    },
+    {
+     "hi": "हाथरस",
+     "en": "Hathras"
+    },
+    {
+     "hi": "हापुड़",
+     "en": "Hapur"
+    }
+   ]
+  },
+  "rajasthan": {
+   "key": "rajasthan",
+   "hi": "राजस्थान",
+   "en": "Rajasthan",
+   "kn": "ರಾಜಸ್ಥಾನ",
+   "iso": "IN-RJ",
+   "lat": 26.9124,
+   "lon": 75.7873,
+   "region": "उत्तर भारत",
+   "prefix": "rajasthan-ka-naksha",
+   "geojson": "rajasthan-districts.geojson",
+   "note": "यह नक्शा Census of India की जिला-सीमाओं पर आधारित है, इसलिए 2023 में बने नए जिले (ब्यावर, डीग, डीडवाना-कुचामन आदि) अलग से नहीं दिखते — वे अपने मूल जिले के भीतर हैं।",
+   "n": 33,
+   "north": "श्रीगंगानगर",
+   "south": "बांसवाड़ा",
+   "big": "जैसलमेर",
+   "small": "धौलपुर",
+   "w": 1440,
+   "h": 1407,
+   "districts": [
+    {
+     "hi": "अजमेर",
+     "en": "Ajmer"
+    },
+    {
+     "hi": "अलवर",
+     "en": "Alwar"
+    },
+    {
+     "hi": "उदयपुर",
+     "en": "Udaipur"
+    },
+    {
+     "hi": "करौली",
+     "en": "Karauli"
+    },
+    {
+     "hi": "कोटा",
+     "en": "Kota"
+    },
+    {
+     "hi": "चित्तौड़गढ़",
+     "en": "Chittorgarh"
+    },
+    {
+     "hi": "चूरू",
+     "en": "Churu"
+    },
+    {
+     "hi": "जयपुर",
+     "en": "Jaipur"
+    },
+    {
+     "hi": "जालोर",
+     "en": "Jalore"
+    },
+    {
+     "hi": "जैसलमेर",
+     "en": "Jaisalmer"
+    },
+    {
+     "hi": "जोधपुर",
+     "en": "Jodhpur"
+    },
+    {
+     "hi": "झालावाड़",
+     "en": "Jhalawar"
+    },
+    {
+     "hi": "झुंझुनूं",
+     "en": "Jhunjhunu"
+    },
+    {
+     "hi": "टोंक",
+     "en": "Tonk"
+    },
+    {
+     "hi": "डूंगरपुर",
+     "en": "Dungarpur"
+    },
+    {
+     "hi": "दौसा",
+     "en": "Dausa"
+    },
+    {
+     "hi": "धौलपुर",
+     "en": "Dholpur"
+    },
+    {
+     "hi": "नागौर",
+     "en": "Nagaur"
+    },
+    {
+     "hi": "पाली",
+     "en": "Pali"
+    },
+    {
+     "hi": "प्रतापगढ़",
+     "en": "Pratapgarh"
+    },
+    {
+     "hi": "बांसवाड़ा",
+     "en": "Banswara"
+    },
+    {
+     "hi": "बाड़मेर",
+     "en": "Barmer"
+    },
+    {
+     "hi": "बारां",
+     "en": "Baran"
+    },
+    {
+     "hi": "बीकानेर",
+     "en": "Bikaner"
+    },
+    {
+     "hi": "बूंदी",
+     "en": "Bundi"
+    },
+    {
+     "hi": "भरतपुर",
+     "en": "Bharatpur"
+    },
+    {
+     "hi": "भीलवाड़ा",
+     "en": "Bhilwara"
+    },
+    {
+     "hi": "राजसमंद",
+     "en": "Rajsamand"
+    },
+    {
+     "hi": "श्रीगंगानगर",
+     "en": "Ganganagar"
+    },
+    {
+     "hi": "सवाई माधोपुर",
+     "en": "Sawai Madhopur"
+    },
+    {
+     "hi": "सिरोही",
+     "en": "Sirohi"
+    },
+    {
+     "hi": "सीकर",
+     "en": "Sikar"
+    },
+    {
+     "hi": "हनुमानगढ़",
+     "en": "Hanumangarh"
+    }
+   ]
+  },
+  "madhya-pradesh": {
+   "key": "madhya-pradesh",
+   "hi": "मध्य प्रदेश",
+   "en": "Madhya Pradesh",
+   "kn": "ಮಧ್ಯ ಪ್ರದೇಶ",
+   "iso": "IN-MP",
+   "lat": 23.2599,
+   "lon": 77.4126,
+   "region": "मध्य भारत",
+   "prefix": "madhya-pradesh-ka-naksha",
+   "geojson": "madhya-pradesh-districts.geojson",
+   "note": "होशंगाबाद अब नर्मदापुरम कहलाता है — नक्शे में नया नाम ही लिखा है। सीमाएँ Census of India की हैं, इसलिए मऊगंज व पांढुर्ना जैसे नए जिले अपने मूल जिले के भीतर हैं।",
+   "n": 52,
+   "north": "भिंड",
+   "south": "बुरहानपुर",
+   "big": "छिंदवाड़ा",
+   "small": "निवाड़ी",
+   "w": 1440,
+   "h": 1158,
+   "districts": [
+    {
+     "hi": "अनूपपुर",
+     "en": "Anuppur"
+    },
+    {
+     "hi": "अलीराजपुर",
+     "en": "Alirajpur"
+    },
+    {
+     "hi": "अशोकनगर",
+     "en": "Ashoknagar"
+    },
+    {
+     "hi": "आगर मालवा",
+     "en": "Agar Malwa"
+    },
+    {
+     "hi": "इंदौर",
+     "en": "Indore"
+    },
+    {
+     "hi": "उज्जैन",
+     "en": "Ujjain"
+    },
+    {
+     "hi": "उमरिया",
+     "en": "Umaria"
+    },
+    {
+     "hi": "कटनी",
+     "en": "Katni"
+    },
+    {
+     "hi": "खंडवा",
+     "en": "Khandwa"
+    },
+    {
+     "hi": "खरगोन",
+     "en": "Khargone"
+    },
+    {
+     "hi": "गुना",
+     "en": "Guna"
+    },
+    {
+     "hi": "ग्वालियर",
+     "en": "Gwalior"
+    },
+    {
+     "hi": "छतरपुर",
+     "en": "Chhatarpur"
+    },
+    {
+     "hi": "छिंदवाड़ा",
+     "en": "Chhindwara"
+    },
+    {
+     "hi": "जबलपुर",
+     "en": "Jabalpur"
+    },
+    {
+     "hi": "झाबुआ",
+     "en": "Jhabua"
+    },
+    {
+     "hi": "टीकमगढ़",
+     "en": "Tikamgarh"
+    },
+    {
+     "hi": "डिंडोरी",
+     "en": "Dindori"
+    },
+    {
+     "hi": "दतिया",
+     "en": "Datia"
+    },
+    {
+     "hi": "दमोह",
+     "en": "Damoh"
+    },
+    {
+     "hi": "देवास",
+     "en": "Dewas"
+    },
+    {
+     "hi": "धार",
+     "en": "Dhar"
+    },
+    {
+     "hi": "नरसिंहपुर",
+     "en": "Narsinghpur"
+    },
+    {
+     "hi": "नर्मदापुरम",
+     "en": "Hoshangabad"
+    },
+    {
+     "hi": "निवाड़ी",
+     "en": "Niwari"
+    },
+    {
+     "hi": "नीमच",
+     "en": "Neemuch"
+    },
+    {
+     "hi": "पन्ना",
+     "en": "Panna"
+    },
+    {
+     "hi": "बड़वानी",
+     "en": "Barwani"
+    },
+    {
+     "hi": "बालाघाट",
+     "en": "Balaghat"
+    },
+    {
+     "hi": "बुरहानपुर",
+     "en": "Burhanpur"
+    },
+    {
+     "hi": "बैतूल",
+     "en": "Betul"
+    },
+    {
+     "hi": "भिंड",
+     "en": "Bhind"
+    },
+    {
+     "hi": "भोपाल",
+     "en": "Bhopal"
+    },
+    {
+     "hi": "मंडला",
+     "en": "Mandla"
+    },
+    {
+     "hi": "मंदसौर",
+     "en": "Mandsaur"
+    },
+    {
+     "hi": "मुरैना",
+     "en": "Morena"
+    },
+    {
+     "hi": "रतलाम",
+     "en": "Ratlam"
+    },
+    {
+     "hi": "राजगढ़",
+     "en": "Rajgarh"
+    },
+    {
+     "hi": "रायसेन",
+     "en": "Raisen"
+    },
+    {
+     "hi": "रीवा",
+     "en": "Rewa"
+    },
+    {
+     "hi": "विदिशा",
+     "en": "Vidisha"
+    },
+    {
+     "hi": "शहडोल",
+     "en": "Shahdol"
+    },
+    {
+     "hi": "शाजापुर",
+     "en": "Shajapur"
+    },
+    {
+     "hi": "शिवपुरी",
+     "en": "Shivpuri"
+    },
+    {
+     "hi": "श्योपुर",
+     "en": "Sheopur"
+    },
+    {
+     "hi": "सतना",
+     "en": "Satna"
+    },
+    {
+     "hi": "सागर",
+     "en": "Sagar"
+    },
+    {
+     "hi": "सिंगरौली",
+     "en": "Singrauli"
+    },
+    {
+     "hi": "सिवनी",
+     "en": "Seoni"
+    },
+    {
+     "hi": "सीधी",
+     "en": "Sidhi"
+    },
+    {
+     "hi": "सीहोर",
+     "en": "Sehore"
+    },
+    {
+     "hi": "हरदा",
+     "en": "Harda"
+    }
+   ]
+  },
+  "bihar": {
+   "key": "bihar",
+   "hi": "बिहार",
+   "en": "Bihar",
+   "kn": "ಬಿಹಾರ",
+   "iso": "IN-BR",
+   "lat": 25.5941,
+   "lon": 85.1376,
+   "region": "पूर्वी भारत",
+   "prefix": "bihar-ka-naksha",
+   "geojson": "bihar-districts.geojson",
+   "note": "",
+   "n": 38,
+   "north": "पश्चिमी चंपारण",
+   "south": "गया",
+   "big": "पश्चिमी चंपारण",
+   "small": "शिवहर",
+   "w": 1440,
+   "h": 1157,
+   "districts": [
+    {
+     "hi": "अररिया",
+     "en": "Araria"
+    },
+    {
+     "hi": "अरवल",
+     "en": "Arwal"
+    },
+    {
+     "hi": "औरंगाबाद",
+     "en": "Aurangabad"
+    },
+    {
+     "hi": "कटिहार",
+     "en": "Katihar"
+    },
+    {
+     "hi": "किशनगंज",
+     "en": "Kishanganj"
+    },
+    {
+     "hi": "कैमूर",
+     "en": "Kaimur"
+    },
+    {
+     "hi": "खगड़िया",
+     "en": "Khagaria"
+    },
+    {
+     "hi": "गया",
+     "en": "Gaya"
+    },
+    {
+     "hi": "गोपालगंज",
+     "en": "Gopalganj"
+    },
+    {
+     "hi": "जमुई",
+     "en": "Jamui"
+    },
+    {
+     "hi": "जहानाबाद",
+     "en": "Jehanabad"
+    },
+    {
+     "hi": "दरभंगा",
+     "en": "Darbhanga"
+    },
+    {
+     "hi": "नवादा",
+     "en": "Nawada"
+    },
+    {
+     "hi": "नालंदा",
+     "en": "Nalanda"
+    },
+    {
+     "hi": "पटना",
+     "en": "Patna"
+    },
+    {
+     "hi": "पश्चिमी चंपारण",
+     "en": "West Champaran"
+    },
+    {
+     "hi": "पूर्णिया",
+     "en": "Purnia"
+    },
+    {
+     "hi": "पूर्वी चंपारण",
+     "en": "East Champaran"
+    },
+    {
+     "hi": "बक्सर",
+     "en": "Buxar"
+    },
+    {
+     "hi": "बांका",
+     "en": "Banka"
+    },
+    {
+     "hi": "बेगूसराय",
+     "en": "Begusarai"
+    },
+    {
+     "hi": "भागलपुर",
+     "en": "Bhagalpur"
+    },
+    {
+     "hi": "भोजपुर",
+     "en": "Bhojpur"
+    },
+    {
+     "hi": "मधुबनी",
+     "en": "Madhubani"
+    },
+    {
+     "hi": "मधेपुरा",
+     "en": "Madhepura"
+    },
+    {
+     "hi": "मुंगेर",
+     "en": "Munger"
+    },
+    {
+     "hi": "मुजफ्फरपुर",
+     "en": "Muzaffarpur"
+    },
+    {
+     "hi": "रोहतास",
+     "en": "Rohtas"
+    },
+    {
+     "hi": "लखीसराय",
+     "en": "Lakhisarai"
+    },
+    {
+     "hi": "वैशाली",
+     "en": "Vaishali"
+    },
+    {
+     "hi": "शिवहर",
+     "en": "Sheohar"
+    },
+    {
+     "hi": "शेखपुरा",
+     "en": "Sheikhpura"
+    },
+    {
+     "hi": "समस्तीपुर",
+     "en": "Samastipur"
+    },
+    {
+     "hi": "सहरसा",
+     "en": "Saharsa"
+    },
+    {
+     "hi": "सारण",
+     "en": "Saran"
+    },
+    {
+     "hi": "सीतामढ़ी",
+     "en": "Sitamarhi"
+    },
+    {
+     "hi": "सीवान",
+     "en": "Siwan"
+    },
+    {
+     "hi": "सुपौल",
+     "en": "Supaul"
+    }
+   ]
+  },
+  "maharashtra": {
+   "key": "maharashtra",
+   "hi": "महाराष्ट्र",
+   "en": "Maharashtra",
+   "kn": "ಮಹಾರಾಷ್ಟ್ರ",
+   "iso": "IN-MH",
+   "lat": 19.7515,
+   "lon": 75.7139,
+   "region": "पश्चिमी भारत",
+   "prefix": "maharashtra-ka-naksha",
+   "geojson": "maharashtra-districts.geojson",
+   "note": "औरंगाबाद अब छत्रपति संभाजीनगर और उस्मानाबाद अब धाराशिव है — नक्शे में नए नाम लिखे हैं। मुंबई उपनगर Census सीमाओं में मुंबई के भीतर ही है।",
+   "n": 35,
+   "north": "नंदुरबार",
+   "south": "सिंधुदुर्ग",
+   "big": "अहमदनगर",
+   "small": "मुंबई",
+   "w": 1440,
+   "h": 1293,
+   "districts": [
+    {
+     "hi": "अकोला",
+     "en": "Akola"
+    },
+    {
+     "hi": "अमरावती",
+     "en": "Amravati"
+    },
+    {
+     "hi": "अहमदनगर",
+     "en": "Ahmednagar"
+    },
+    {
+     "hi": "कोल्हापुर",
+     "en": "Kolhapur"
+    },
+    {
+     "hi": "गड़चिरोली",
+     "en": "Gadchiroli"
+    },
+    {
+     "hi": "गोंदिया",
+     "en": "Gondia"
+    },
+    {
+     "hi": "चंद्रपुर",
+     "en": "Chandrapur"
+    },
+    {
+     "hi": "छत्रपति संभाजीनगर",
+     "en": "Aurangabad"
+    },
+    {
+     "hi": "जलगांव",
+     "en": "Jalgaon"
+    },
+    {
+     "hi": "जालना",
+     "en": "Jalna"
+    },
+    {
+     "hi": "ठाणे",
+     "en": "Thane"
+    },
+    {
+     "hi": "धाराशिव",
+     "en": "Osmanabad"
+    },
+    {
+     "hi": "धुले",
+     "en": "Dhule"
+    },
+    {
+     "hi": "नंदुरबार",
+     "en": "Nandurbar"
+    },
+    {
+     "hi": "नांदेड़",
+     "en": "Nanded"
+    },
+    {
+     "hi": "नागपुर",
+     "en": "Nagpur"
+    },
+    {
+     "hi": "नासिक",
+     "en": "Nashik"
+    },
+    {
+     "hi": "परभणी",
+     "en": "Parbhani"
+    },
+    {
+     "hi": "पालघर",
+     "en": "Palghar"
+    },
+    {
+     "hi": "पुणे",
+     "en": "Pune"
+    },
+    {
+     "hi": "बीड",
+     "en": "Beed"
+    },
+    {
+     "hi": "बुलढाणा",
+     "en": "Buldhana"
+    },
+    {
+     "hi": "भंडारा",
+     "en": "Bhandara"
+    },
+    {
+     "hi": "मुंबई",
+     "en": "Mumbai"
+    },
+    {
+     "hi": "यवतमाल",
+     "en": "Yavatmal"
+    },
+    {
+     "hi": "रत्नागिरी",
+     "en": "Ratnagiri"
+    },
+    {
+     "hi": "रायगढ़",
+     "en": "Raigad"
+    },
+    {
+     "hi": "लातूर",
+     "en": "Latur"
+    },
+    {
+     "hi": "वर्धा",
+     "en": "Wardha"
+    },
+    {
+     "hi": "वाशिम",
+     "en": "Washim"
+    },
+    {
+     "hi": "सांगली",
+     "en": "Sangli"
+    },
+    {
+     "hi": "सातारा",
+     "en": "Satara"
+    },
+    {
+     "hi": "सिंधुदुर्ग",
+     "en": "Sindhudurg"
+    },
+    {
+     "hi": "सोलापुर",
+     "en": "Solapur"
+    },
+    {
+     "hi": "हिंगोली",
+     "en": "Hingoli"
+    }
+   ]
+  },
+  "punjab": {
+   "key": "punjab",
+   "hi": "पंजाब",
+   "en": "Punjab",
+   "kn": "ಪಂಜಾಬ್",
+   "iso": "IN-PB",
+   "lat": 30.7333,
+   "lon": 76.7794,
+   "region": "उत्तर भारत",
+   "prefix": "punjab-ka-naksha",
+   "geojson": "punjab-districts.geojson",
+   "note": "मोहाली (S.A.S. नगर) और नवांशहर (शहीद भगत सिंह नगर) दोनों नामों से जाने जाते हैं — नक्शे में आम बोलचाल का नाम लिखा है। सीमा-डेटा Census of India का है।",
+   "n": 22,
+   "north": "पठानकोट",
+   "south": "मानसा",
+   "big": "लुधियाना",
+   "small": "पठानकोट",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "अमृतसर",
+     "en": "Amritsar"
+    },
+    {
+     "hi": "कपूरथला",
+     "en": "Kapurthala"
+    },
+    {
+     "hi": "गुरदासपुर",
+     "en": "Gurdaspur"
+    },
+    {
+     "hi": "जालंधर",
+     "en": "Jalandhar"
+    },
+    {
+     "hi": "तरनतारन",
+     "en": "Tarn Taran"
+    },
+    {
+     "hi": "नवांशहर",
+     "en": "Shahid Bhagat Singh Nagar"
+    },
+    {
+     "hi": "पटियाला",
+     "en": "Patiala"
+    },
+    {
+     "hi": "पठानकोट",
+     "en": "Pathankot"
+    },
+    {
+     "hi": "फतेहगढ़ साहिब",
+     "en": "Fatehgarh Sahib"
+    },
+    {
+     "hi": "फरीदकोट",
+     "en": "Faridkot"
+    },
+    {
+     "hi": "फाजिल्का",
+     "en": "Fazilka"
+    },
+    {
+     "hi": "फिरोजपुर",
+     "en": "Ferozepur"
+    },
+    {
+     "hi": "बठिंडा",
+     "en": "Bathinda"
+    },
+    {
+     "hi": "बरनाला",
+     "en": "Barnala"
+    },
+    {
+     "hi": "मानसा",
+     "en": "Mansa"
+    },
+    {
+     "hi": "मुक्तसर",
+     "en": "Sri Muktsar Sahib"
+    },
+    {
+     "hi": "मोगा",
+     "en": "Moga"
+    },
+    {
+     "hi": "मोहाली",
+     "en": "S.A.S. Nagar"
+    },
+    {
+     "hi": "रूपनगर",
+     "en": "Rupnagar"
+    },
+    {
+     "hi": "लुधियाना",
+     "en": "Ludhiana"
+    },
+    {
+     "hi": "संगरूर",
+     "en": "Sangrur"
+    },
+    {
+     "hi": "होशियारपुर",
+     "en": "Hoshiarpur"
+    }
+   ]
+  },
+  "haryana": {
+   "key": "haryana",
+   "hi": "हरियाणा",
+   "en": "Haryana",
+   "kn": "ಹರಿಯಾಣ",
+   "iso": "IN-HR",
+   "lat": 29.0588,
+   "lon": 76.0856,
+   "region": "उत्तर भारत",
+   "prefix": "haryana-ka-naksha",
+   "geojson": "haryana-districts.geojson",
+   "note": "",
+   "n": 22,
+   "north": "पंचकूला",
+   "south": "नूंह",
+   "big": "सिरसा",
+   "small": "फरीदाबाद",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "अंबाला",
+     "en": "Ambala"
+    },
+    {
+     "hi": "करनाल",
+     "en": "Karnal"
+    },
+    {
+     "hi": "कुरुक्षेत्र",
+     "en": "Kurukshetra"
+    },
+    {
+     "hi": "कैथल",
+     "en": "Kaithal"
+    },
+    {
+     "hi": "गुरुग्राम",
+     "en": "Gurugram"
+    },
+    {
+     "hi": "चरखी दादरी",
+     "en": "Charkhi Dadri"
+    },
+    {
+     "hi": "जींद",
+     "en": "Jind"
+    },
+    {
+     "hi": "झज्जर",
+     "en": "Jhajjar"
+    },
+    {
+     "hi": "नूंह",
+     "en": "Nuh"
+    },
+    {
+     "hi": "पंचकूला",
+     "en": "Panchkula"
+    },
+    {
+     "hi": "पलवल",
+     "en": "Palwal"
+    },
+    {
+     "hi": "पानीपत",
+     "en": "Panipat"
+    },
+    {
+     "hi": "फतेहाबाद",
+     "en": "Fatehabad"
+    },
+    {
+     "hi": "फरीदाबाद",
+     "en": "Faridabad"
+    },
+    {
+     "hi": "भिवानी",
+     "en": "Bhiwani"
+    },
+    {
+     "hi": "महेंद्रगढ़",
+     "en": "Mahendragarh"
+    },
+    {
+     "hi": "यमुनानगर",
+     "en": "Yamunanagar"
+    },
+    {
+     "hi": "रेवाड़ी",
+     "en": "Rewari"
+    },
+    {
+     "hi": "रोहतक",
+     "en": "Rohtak"
+    },
+    {
+     "hi": "सिरसा",
+     "en": "Sirsa"
+    },
+    {
+     "hi": "सोनीपत",
+     "en": "Sonipat"
+    },
+    {
+     "hi": "हिसार",
+     "en": "Hisar"
+    }
+   ]
+  },
+  "chhattisgarh": {
+   "key": "chhattisgarh",
+   "hi": "छत्तीसगढ़",
+   "en": "Chhattisgarh",
+   "kn": "ಛತ್ತೀಸ್‌ಗಢ",
+   "iso": "IN-CT",
+   "lat": 21.2787,
+   "lon": 81.8661,
+   "region": "मध्य भारत",
+   "prefix": "chhattisgarh-ka-naksha",
+   "geojson": "chhattisgarh-districts.geojson",
+   "note": "",
+   "n": 27,
+   "north": "बलरामपुर",
+   "south": "सुकमा",
+   "big": "बीजापुर",
+   "small": "दुर्ग",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "उत्तर बस्तर कांकेर",
+     "en": "Uttar Bastar Kanker"
+    },
+    {
+     "hi": "कबीरधाम",
+     "en": "Kabeerdham"
+    },
+    {
+     "hi": "कोंडागांव",
+     "en": "Kondagaon"
+    },
+    {
+     "hi": "कोरबा",
+     "en": "Korba"
+    },
+    {
+     "hi": "कोरिया",
+     "en": "Koriya"
+    },
+    {
+     "hi": "गरियाबंद",
+     "en": "Gariaband"
+    },
+    {
+     "hi": "जशपुर",
+     "en": "Jashpur"
+    },
+    {
+     "hi": "जांजगीर-चांपा",
+     "en": "Janjgir Champa"
+    },
+    {
+     "hi": "दक्षिण बस्तर दंतेवाड़ा",
+     "en": "Dakshin Bastar Dantewada"
+    },
+    {
+     "hi": "दुर्ग",
+     "en": "Durg"
+    },
+    {
+     "hi": "धमतरी",
+     "en": "Dhamtari"
+    },
+    {
+     "hi": "नारायणपुर",
+     "en": "Narayanpur"
+    },
+    {
+     "hi": "बलरामपुर",
+     "en": "Balrampur"
+    },
+    {
+     "hi": "बलौदा बाज़ार",
+     "en": "Baloda Bazar"
+    },
+    {
+     "hi": "बस्तर",
+     "en": "Bastar"
+    },
+    {
+     "hi": "बालोद",
+     "en": "Balod"
+    },
+    {
+     "hi": "बिलासपुर",
+     "en": "Bilaspur"
+    },
+    {
+     "hi": "बीजापुर",
+     "en": "Bijapur"
+    },
+    {
+     "hi": "बेमेतरा",
+     "en": "Bametara"
+    },
+    {
+     "hi": "महासमुंद",
+     "en": "Mahasamund"
+    },
+    {
+     "hi": "मुंगेली",
+     "en": "Mungeli"
+    },
+    {
+     "hi": "राजनांदगांव",
+     "en": "Rajnandgaon"
+    },
+    {
+     "hi": "रायगढ़",
+     "en": "Raigarh"
+    },
+    {
+     "hi": "रायपुर",
+     "en": "Raipur"
+    },
+    {
+     "hi": "सरगुजा",
+     "en": "Surguja"
+    },
+    {
+     "hi": "सुकमा",
+     "en": "Sukma"
+    },
+    {
+     "hi": "सूरजपुर",
+     "en": "Surajpur"
+    }
+   ]
+  },
+  "gujarat": {
+   "key": "gujarat",
+   "hi": "गुजरात",
+   "en": "Gujarat",
+   "kn": "ಗುಜರಾತ್",
+   "iso": "IN-GJ",
+   "lat": 23.2156,
+   "lon": 72.6369,
+   "region": "पश्चिमी भारत",
+   "prefix": "gujarat-ka-naksha",
+   "geojson": "gujarat-districts.geojson",
+   "note": "",
+   "n": 34,
+   "north": "वाव-थराद",
+   "south": "वलसाड",
+   "big": "कच्छ",
+   "small": "डांग",
+   "w": 1440,
+   "h": 1233,
+   "districts": [
+    {
+     "hi": "अमरेली",
+     "en": "Amreli"
+    },
+    {
+     "hi": "अरवल्ली",
+     "en": "Aravalli"
+    },
+    {
+     "hi": "अहमदाबाद",
+     "en": "Ahmedabad"
+    },
+    {
+     "hi": "आणंद",
+     "en": "Anand"
+    },
+    {
+     "hi": "कच्छ",
+     "en": "Kutch"
+    },
+    {
+     "hi": "खेड़ा",
+     "en": "Kheda"
+    },
+    {
+     "hi": "गांधीनगर",
+     "en": "Gandhinagar"
+    },
+    {
+     "hi": "गिर सोमनाथ",
+     "en": "Gir Somnath"
+    },
+    {
+     "hi": "छोटा उदयपुर",
+     "en": "Chhota Udaipur"
+    },
+    {
+     "hi": "जामनगर",
+     "en": "Jamnagar"
+    },
+    {
+     "hi": "जूनागढ़",
+     "en": "Junagadh"
+    },
+    {
+     "hi": "डांग",
+     "en": "Dang"
+    },
+    {
+     "hi": "तापी",
+     "en": "Tapi"
+    },
+    {
+     "hi": "दाहोद",
+     "en": "Dahod"
+    },
+    {
+     "hi": "देवभूमि द्वारका",
+     "en": "Devbhumi Dwarka"
+    },
+    {
+     "hi": "नर्मदा",
+     "en": "Narmada"
+    },
+    {
+     "hi": "नवसारी",
+     "en": "Navsari"
+    },
+    {
+     "hi": "पंचमहाल",
+     "en": "Panchmahal"
+    },
+    {
+     "hi": "पाटन",
+     "en": "Patan"
+    },
+    {
+     "hi": "पोरबंदर",
+     "en": "Porbandar"
+    },
+    {
+     "hi": "बनासकांठा",
+     "en": "Banaskantha"
+    },
+    {
+     "hi": "बोताद",
+     "en": "Botad"
+    },
+    {
+     "hi": "भरूच",
+     "en": "Bharuch"
+    },
+    {
+     "hi": "भावनगर",
+     "en": "Bhavnagar"
+    },
+    {
+     "hi": "महसाणा",
+     "en": "Mehsana"
+    },
+    {
+     "hi": "महीसागर",
+     "en": "Mahisagar"
+    },
+    {
+     "hi": "मोरबी",
+     "en": "Morbi"
+    },
+    {
+     "hi": "राजकोट",
+     "en": "Rajkot"
+    },
+    {
+     "hi": "वडोदरा",
+     "en": "Vadodara"
+    },
+    {
+     "hi": "वलसाड",
+     "en": "Valsad"
+    },
+    {
+     "hi": "वाव-थराद",
+     "en": "Vav-Tharad"
+    },
+    {
+     "hi": "साबरकांठा",
+     "en": "Sabarkantha"
+    },
+    {
+     "hi": "सुरेंद्रनगर",
+     "en": "Surendranagar"
+    },
+    {
+     "hi": "सूरत",
+     "en": "Surat"
+    }
+   ]
+  },
+  "jharkhand": {
+   "key": "jharkhand",
+   "hi": "झारखंड",
+   "en": "Jharkhand",
+   "kn": "ಜಾರ್ಖಂಡ್",
+   "iso": "IN-JH",
+   "lat": 23.3441,
+   "lon": 85.3096,
+   "region": "पूर्वी भारत",
+   "prefix": "jharkhand-ka-naksha",
+   "geojson": "jharkhand-districts.geojson",
+   "note": "",
+   "n": 24,
+   "north": "साहिबगंज",
+   "south": "पश्चिमी सिंहभूम",
+   "big": "पश्चिमी सिंहभूम",
+   "small": "रामगढ़",
+   "w": 1440,
+   "h": 1256,
+   "districts": [
+    {
+     "hi": "कोडरमा",
+     "en": "Koderma"
+    },
+    {
+     "hi": "खूंटी",
+     "en": "Khunti"
+    },
+    {
+     "hi": "गढ़वा",
+     "en": "Garhwa"
+    },
+    {
+     "hi": "गिरिडीह",
+     "en": "Giridih"
+    },
+    {
+     "hi": "गुमला",
+     "en": "Gumla"
+    },
+    {
+     "hi": "गोड्डा",
+     "en": "Godda"
+    },
+    {
+     "hi": "चतरा",
+     "en": "Chatra"
+    },
+    {
+     "hi": "जामताड़ा",
+     "en": "Jamtara"
+    },
+    {
+     "hi": "दुमका",
+     "en": "Dumka"
+    },
+    {
+     "hi": "देवघर",
+     "en": "Deoghar"
+    },
+    {
+     "hi": "धनबाद",
+     "en": "Dhanbad"
+    },
+    {
+     "hi": "पलामू",
+     "en": "Palamu"
+    },
+    {
+     "hi": "पश्चिमी सिंहभूम",
+     "en": "West Singhbhum"
+    },
+    {
+     "hi": "पाकुड़",
+     "en": "Pakur"
+    },
+    {
+     "hi": "पूर्वी सिंहभूम",
+     "en": "East Singhbhum"
+    },
+    {
+     "hi": "बोकारो",
+     "en": "Bokaro"
+    },
+    {
+     "hi": "रांची",
+     "en": "Ranchi"
+    },
+    {
+     "hi": "रामगढ़",
+     "en": "Ramgarh"
+    },
+    {
+     "hi": "लातेहार",
+     "en": "Latehar"
+    },
+    {
+     "hi": "लोहरदगा",
+     "en": "Lohardaga"
+    },
+    {
+     "hi": "सरायकेला-खरसावां",
+     "en": "Saraikela-Kharsawan"
+    },
+    {
+     "hi": "साहिबगंज",
+     "en": "Sahibganj"
+    },
+    {
+     "hi": "सिमडेगा",
+     "en": "Simdega"
+    },
+    {
+     "hi": "हजारीबाग",
+     "en": "Hazaribagh"
+    }
+   ]
+  },
+  "uttarakhand": {
+   "key": "uttarakhand",
+   "hi": "उत्तराखंड",
+   "en": "Uttarakhand",
+   "kn": "ಉತ್ತರಾಖಂಡ",
+   "iso": "IN-UT",
+   "lat": 30.3165,
+   "lon": 78.0322,
+   "region": "उत्तर भारत",
+   "prefix": "uttarakhand-ka-naksha",
+   "geojson": "uttarakhand-districts.geojson",
+   "note": "",
+   "n": 13,
+   "north": "उत्तरकाशी",
+   "south": "उधम सिंह नगर",
+   "big": "उत्तरकाशी",
+   "small": "चंपावत",
+   "w": 1440,
+   "h": 1409,
+   "districts": [
+    {
+     "hi": "अल्मोड़ा",
+     "en": "Almora"
+    },
+    {
+     "hi": "उत्तरकाशी",
+     "en": "Uttarkashi"
+    },
+    {
+     "hi": "उधम सिंह नगर",
+     "en": "Udham Singh Nagar"
+    },
+    {
+     "hi": "चंपावत",
+     "en": "Champawat"
+    },
+    {
+     "hi": "चमोली",
+     "en": "Chamoli"
+    },
+    {
+     "hi": "टिहरी गढ़वाल",
+     "en": "Tehri Garhwal"
+    },
+    {
+     "hi": "देहरादून",
+     "en": "Dehradun"
+    },
+    {
+     "hi": "नैनीताल",
+     "en": "Nainital"
+    },
+    {
+     "hi": "पिथौरागढ़",
+     "en": "Pithoragarh"
+    },
+    {
+     "hi": "पौड़ी गढ़वाल",
+     "en": "Pauri Garhwal"
+    },
+    {
+     "hi": "बागेश्वर",
+     "en": "Bageshwar"
+    },
+    {
+     "hi": "रुद्रप्रयाग",
+     "en": "Rudraprayag"
+    },
+    {
+     "hi": "हरिद्वार",
+     "en": "Haridwar"
+    }
+   ]
+  },
+  "himachal-pradesh": {
+   "key": "himachal-pradesh",
+   "hi": "हिमाचल प्रदेश",
+   "en": "Himachal Pradesh",
+   "kn": "ಹಿಮಾಚಲ ಪ್ರದೇಶ",
+   "iso": "IN-HP",
+   "lat": 31.1048,
+   "lon": 77.1734,
+   "region": "उत्तर भारत",
+   "prefix": "himachal-pradesh-ka-naksha",
+   "geojson": "himachal-pradesh-districts.geojson",
+   "note": "",
+   "n": 12,
+   "north": "चंबा",
+   "south": "सिरमौर",
+   "big": "लाहुल और स्पीति",
+   "small": "हमीरपुर",
+   "w": 1440,
+   "h": 1519,
+   "districts": [
+    {
+     "hi": "ऊना",
+     "en": "Una"
+    },
+    {
+     "hi": "कांगड़ा",
+     "en": "Kangra"
+    },
+    {
+     "hi": "किन्नौर",
+     "en": "Kinnaur"
+    },
+    {
+     "hi": "कुल्लू",
+     "en": "Kullu"
+    },
+    {
+     "hi": "चंबा",
+     "en": "Chamba"
+    },
+    {
+     "hi": "बिलासपुर",
+     "en": "Bilaspur"
+    },
+    {
+     "hi": "मंडी",
+     "en": "Mandi"
+    },
+    {
+     "hi": "लाहुल और स्पीति",
+     "en": "Lahaul and Spiti"
+    },
+    {
+     "hi": "शिमला",
+     "en": "Shimla"
+    },
+    {
+     "hi": "सिरमौर",
+     "en": "Sirmaur"
+    },
+    {
+     "hi": "सोलन",
+     "en": "Solan"
+    },
+    {
+     "hi": "हमीरपुर",
+     "en": "Hamirpur"
+    }
+   ]
+  },
+  "karnataka": {
+   "key": "karnataka",
+   "hi": "कर्नाटक",
+   "en": "Karnataka",
+   "kn": "ಕರ್ನಾಟಕ",
+   "iso": "IN-KA",
+   "lat": 12.9716,
+   "lon": 77.5946,
+   "region": "दक्षिण भारत",
+   "prefix": "karnataka-ka-naksha",
+   "geojson": "karnataka-districts.geojson",
+   "note": "",
+   "n": 30,
+   "north": "बीदर",
+   "south": "चामराजनगर",
+   "big": "बेलगावी",
+   "small": "बेंगलुरु शहरी",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "उडुपी",
+     "en": "Udupi"
+    },
+    {
+     "hi": "उत्तर कन्नड़",
+     "en": "Uttara Kannada"
+    },
+    {
+     "hi": "कलबुर्गी",
+     "en": "Kalaburagi"
+    },
+    {
+     "hi": "कोडागु",
+     "en": "Kodagu"
+    },
+    {
+     "hi": "कोप्पल",
+     "en": "Koppal"
+    },
+    {
+     "hi": "कोलार",
+     "en": "Kolar"
+    },
+    {
+     "hi": "गदग",
+     "en": "Gadag"
+    },
+    {
+     "hi": "चामराजनगर",
+     "en": "Chamarajanagara"
+    },
+    {
+     "hi": "चिक्कबल्लापुर",
+     "en": "Chikkaballapura"
+    },
+    {
+     "hi": "चिक्कमगलुरु",
+     "en": "Chikkamagaluru"
+    },
+    {
+     "hi": "चित्रदुर्ग",
+     "en": "Chitradurga"
+    },
+    {
+     "hi": "तुमकुरु",
+     "en": "Tumakuru"
+    },
+    {
+     "hi": "दक्षिण कन्नड़",
+     "en": "Dakshina Kannada"
+    },
+    {
+     "hi": "दावणगेरे",
+     "en": "Davanagere"
+    },
+    {
+     "hi": "धारवाड़",
+     "en": "Dharwad"
+    },
+    {
+     "hi": "बल्लारी",
+     "en": "Ballari"
+    },
+    {
+     "hi": "बागलकोट",
+     "en": "Bagalkote"
+    },
+    {
+     "hi": "बीदर",
+     "en": "Bidar"
+    },
+    {
+     "hi": "बेंगलुरु ग्रामीण",
+     "en": "Bengaluru Rural"
+    },
+    {
+     "hi": "बेंगलुरु शहरी",
+     "en": "Bengaluru Urban"
+    },
+    {
+     "hi": "बेलगावी",
+     "en": "Belagavi"
+    },
+    {
+     "hi": "मंड्या",
+     "en": "Mandya"
+    },
+    {
+     "hi": "मैसूरु",
+     "en": "Mysuru"
+    },
+    {
+     "hi": "यादगीर",
+     "en": "Yadgir"
+    },
+    {
+     "hi": "रामनगर",
+     "en": "Ramanagara"
+    },
+    {
+     "hi": "रायचूर",
+     "en": "Raichur"
+    },
+    {
+     "hi": "विजयपुर",
+     "en": "Vijayapura"
+    },
+    {
+     "hi": "शिवमोग्गा",
+     "en": "Shivamogga"
+    },
+    {
+     "hi": "हावेरी",
+     "en": "Haveri"
+    },
+    {
+     "hi": "हासन",
+     "en": "Hassan"
+    }
+   ]
+  },
+  "west-bengal": {
+   "key": "west-bengal",
+   "hi": "पश्चिम बंगाल",
+   "en": "West Bengal",
+   "kn": "ಪಶ್ಚಿಮ ಬಂಗಾಳ",
+   "iso": "IN-WB",
+   "lat": 22.5726,
+   "lon": 88.3639,
+   "region": "पूर्वी भारत",
+   "prefix": "west-bengal-ka-naksha",
+   "geojson": "west-bengal-districts.geojson",
+   "note": "",
+   "n": 23,
+   "north": "कालिम्पोंग",
+   "south": "पूर्व मेदिनीपुर",
+   "big": "दक्षिण 24 परगना",
+   "small": "कोलकाता",
+   "w": 1440,
+   "h": 1688,
+   "districts": [
+    {
+     "hi": "अलीपुरद्वार",
+     "en": "Alipurduar"
+    },
+    {
+     "hi": "उत्तर 24 परगना",
+     "en": "North 24 Parganas"
+    },
+    {
+     "hi": "उत्तर दिनाजपुर",
+     "en": "Uttar Dinajpur"
+    },
+    {
+     "hi": "कालिम्पोंग",
+     "en": "Kalimpong"
+    },
+    {
+     "hi": "कोच बिहार",
+     "en": "Cooch Behar"
+    },
+    {
+     "hi": "कोलकाता",
+     "en": "Kolkata"
+    },
+    {
+     "hi": "जलपाईगुड़ी",
+     "en": "Jalpaiguri"
+    },
+    {
+     "hi": "झारग्राम",
+     "en": "Jhargram"
+    },
+    {
+     "hi": "दक्षिण 24 परगना",
+     "en": "South 24 Parganas"
+    },
+    {
+     "hi": "दक्षिण दिनाजपुर",
+     "en": "Dakshin Dinajpur"
+    },
+    {
+     "hi": "दार्जिलिंग",
+     "en": "Darjeeling"
+    },
+    {
+     "hi": "नदिया",
+     "en": "Nadia"
+    },
+    {
+     "hi": "पश्चिम बर्धमान",
+     "en": "Paschim Bardhaman"
+    },
+    {
+     "hi": "पश्चिम मेदिनीपुर",
+     "en": "Paschim Medinipur"
+    },
+    {
+     "hi": "पुरुलिया",
+     "en": "Purulia"
+    },
+    {
+     "hi": "पूर्व बर्धमान",
+     "en": "Purba Bardhaman"
+    },
+    {
+     "hi": "पूर्व मेदिनीपुर",
+     "en": "Purba Medinipur"
+    },
+    {
+     "hi": "बांकुड़ा",
+     "en": "Bankura"
+    },
+    {
+     "hi": "बीरभूम",
+     "en": "Birbhum"
+    },
+    {
+     "hi": "मालदा",
+     "en": "Malda"
+    },
+    {
+     "hi": "मुलशिदाबाद",
+     "en": "Murshidabad"
+    },
+    {
+     "hi": "हावड़ा",
+     "en": "Howrah"
+    },
+    {
+     "hi": "हुगली",
+     "en": "Hooghly"
+    }
+   ]
+  },
+  "odisha": {
+   "key": "odisha",
+   "hi": "ओडिशा",
+   "en": "Odisha",
+   "kn": "ಒಡಿಶಾ",
+   "iso": "IN-OR",
+   "lat": 20.2961,
+   "lon": 85.8245,
+   "region": "पूर्वी भारत",
+   "prefix": "odisha-ka-naksha",
+   "geojson": "odisha-districts.geojson",
+   "note": "",
+   "n": 30,
+   "north": "सुंदरगढ़",
+   "south": "मलकानगिरी",
+   "big": "मयूरभंज",
+   "small": "जगतसिंहपुर",
+   "w": 1440,
+   "h": 1303,
+   "districts": [
+    {
+     "hi": "अनुगुल",
+     "en": "Angul"
+    },
+    {
+     "hi": "कंधमाल",
+     "en": "Kandhamal"
+    },
+    {
+     "hi": "कटक",
+     "en": "Cuttack"
+    },
+    {
+     "hi": "कालाहांडी",
+     "en": "Kalahandi"
+    },
+    {
+     "hi": "केंद्रपाड़ा",
+     "en": "Kendrapara"
+    },
+    {
+     "hi": "केन्दूझर",
+     "en": "Kendujhar"
+    },
+    {
+     "hi": "कोरापुट",
+     "en": "Koraput"
+    },
+    {
+     "hi": "खोर्धा",
+     "en": "Khordha"
+    },
+    {
+     "hi": "गंजाम",
+     "en": "Ganjam"
+    },
+    {
+     "hi": "गजपति",
+     "en": "Gajapati"
+    },
+    {
+     "hi": "जगतसिंहपुर",
+     "en": "Jagatsinghpur"
+    },
+    {
+     "hi": "जाजपुर",
+     "en": "Jajpur"
+    },
+    {
+     "hi": "झारसुगुड़ा",
+     "en": "Jharsuguda"
+    },
+    {
+     "hi": "ढेंकानाल",
+     "en": "Dhenkanal"
+    },
+    {
+     "hi": "देवगढ़",
+     "en": "Deogarh"
+    },
+    {
+     "hi": "नबरंगपुर",
+     "en": "Nabarangapur"
+    },
+    {
+     "hi": "नयागढ़",
+     "en": "Nayagarh"
+    },
+    {
+     "hi": "नुआपाड़ा",
+     "en": "Nuapada"
+    },
+    {
+     "hi": "पुरी",
+     "en": "Puri"
+    },
+    {
+     "hi": "बरगढ़",
+     "en": "Bargarh"
+    },
+    {
+     "hi": "बलांगिर",
+     "en": "Balangir"
+    },
+    {
+     "hi": "बालेश्वर",
+     "en": "Balasore"
+    },
+    {
+     "hi": "बौध",
+     "en": "Boudh"
+    },
+    {
+     "hi": "भद्रक",
+     "en": "Bhadrak"
+    },
+    {
+     "hi": "मयूरभंज",
+     "en": "Mayurbhanj"
+    },
+    {
+     "hi": "मलकानगिरी",
+     "en": "Malkangiri"
+    },
+    {
+     "hi": "रायगड़ा",
+     "en": "Rayagada"
+    },
+    {
+     "hi": "संबलपुर",
+     "en": "Sambalpur"
+    },
+    {
+     "hi": "सुंदरगढ़",
+     "en": "Sundargarh"
+    },
+    {
+     "hi": "सुवर्णपुर",
+     "en": "Subarnapur"
+    }
+   ]
+  },
+  "andhra-pradesh": {
+   "key": "andhra-pradesh",
+   "hi": "आंध्र प्रदेश",
+   "en": "Andhra Pradesh",
+   "kn": "ಆಂಧ್ರ ಪ್ರದೇಶ",
+   "iso": "IN-AP",
+   "lat": 16.5062,
+   "lon": 80.648,
+   "region": "दक्षिण भारत",
+   "prefix": "andhra-pradesh-ka-naksha",
+   "geojson": "andhra-pradesh-districts.geojson",
+   "note": "",
+   "n": 26,
+   "north": "पार्वतीपुरम मान्यम",
+   "south": "चित्तूर",
+   "big": "प्रकाशम",
+   "small": "विशाखापट्टनम",
+   "w": 1440,
+   "h": 1329,
+   "districts": [
+    {
+     "hi": "अनंतपुरम",
+     "en": "Anantapuramu"
+    },
+    {
+     "hi": "अनकापल्ली",
+     "en": "Anakapalli"
+    },
+    {
+     "hi": "अन्नमय्या",
+     "en": "Annamayya"
+    },
+    {
+     "hi": "अल्लूरी सीतारामाराजू",
+     "en": "Alluri Sitharama Raju"
+    },
+    {
+     "hi": "एनटीआर",
+     "en": "NTR"
+    },
+    {
+     "hi": "एलुरु",
+     "en": "Eluru"
+    },
+    {
+     "hi": "कर्नूल",
+     "en": "Kurnool"
+    },
+    {
+     "hi": "काकीनाडा",
+     "en": "Kakinada"
+    },
+    {
+     "hi": "कृष्णा",
+     "en": "Krishna"
+    },
+    {
+     "hi": "कोनसीमा",
+     "en": "Konaseema"
+    },
+    {
+     "hi": "गुंटूर",
+     "en": "Guntur"
+    },
+    {
+     "hi": "चित्तूर",
+     "en": "Chittoor"
+    },
+    {
+     "hi": "तिरुपति",
+     "en": "Tirupati"
+    },
+    {
+     "hi": "नंद्याल",
+     "en": "Nandyal"
+    },
+    {
+     "hi": "नेल्लौर",
+     "en": "Sri Potti Sriramulu Nellore"
+    },
+    {
+     "hi": "पलनाडु",
+     "en": "Palnadu"
+    },
+    {
+     "hi": "पश्चिमी गोदावरी",
+     "en": "West Godavari"
+    },
+    {
+     "hi": "पार्वतीपुरम मान्यम",
+     "en": "Parvathipuram Manyam"
+    },
+    {
+     "hi": "पूर्वी गोदावरी",
+     "en": "East Godavari"
+    },
+    {
+     "hi": "प्रकाशम",
+     "en": "Prakasam"
+    },
+    {
+     "hi": "बापटला",
+     "en": "Bapatla"
+    },
+    {
+     "hi": "वाईएसआर कडपा",
+     "en": "YSR"
+    },
+    {
+     "hi": "विज़ियानगरम",
+     "en": "Vizianagaram"
+    },
+    {
+     "hi": "विशाखापट्टनम",
+     "en": "Visakhapatnam"
+    },
+    {
+     "hi": "श्री सत्य साई",
+     "en": "Sri Sathya Sai"
+    },
+    {
+     "hi": "श्रीकाकुलम",
+     "en": "Srikakulam"
+    }
+   ]
+  },
+  "telangana": {
+   "key": "telangana",
+   "hi": "तेलंगाना",
+   "en": "Telangana",
+   "kn": "ತೆಲಂಗಾಣ",
+   "iso": "IN-TG",
+   "lat": 17.385,
+   "lon": 78.4867,
+   "region": "दक्षिण भारत",
+   "prefix": "telangana-ka-naksha",
+   "geojson": "telangana-districts.geojson",
+   "note": "",
+   "n": 33,
+   "north": "आदिलाबाद",
+   "south": "जोगुलाम्बा गद्वाल",
+   "big": "नलगोंडा",
+   "small": "हैदराबाद",
+   "w": 1440,
+   "h": 1595,
+   "districts": [
+    {
+     "hi": "आदिलाबाद",
+     "en": "Adilabad"
+    },
+    {
+     "hi": "करीमनगर",
+     "en": "Karimnagar"
+    },
+    {
+     "hi": "कामारेड्डी",
+     "en": "Kamareddy"
+    },
+    {
+     "hi": "कोमाराम भीम",
+     "en": "Komaram Bheem"
+    },
+    {
+     "hi": "खम्मम",
+     "en": "Khammam"
+    },
+    {
+     "hi": "जगतियाल",
+     "en": "Jagtial"
+    },
+    {
+     "hi": "जनगांव",
+     "en": "Jangaon"
+    },
+    {
+     "hi": "जयशंकर भूपालपल्ली",
+     "en": "Jayashankar Bhupalapally"
+    },
+    {
+     "hi": "जोगुलाम्बा गद्वाल",
+     "en": "Jogulamba Gadwal"
+    },
+    {
+     "hi": "नलगोंडा",
+     "en": "Nalgonda"
+    },
+    {
+     "hi": "नागरकर्नूल",
+     "en": "Nagarkurnool"
+    },
+    {
+     "hi": "नारायणपेट",
+     "en": "Narayanpet"
+    },
+    {
+     "hi": "निज़ामाबाद",
+     "en": "Nizamabad"
+    },
+    {
+     "hi": "निर्माला",
+     "en": "Nirmal"
+    },
+    {
+     "hi": "पेद्दापल्ली",
+     "en": "Peddapalli"
+    },
+    {
+     "hi": "भद्राद्री कोठागुडेम",
+     "en": "Bhadradri Kothagudem"
+    },
+    {
+     "hi": "मंचेरियल",
+     "en": "Mancherial"
+    },
+    {
+     "hi": "महबूबनगर",
+     "en": "Mahabubnagar"
+    },
+    {
+     "hi": "महबूबाबाद",
+     "en": "Mahabubabad"
+    },
+    {
+     "hi": "मुलुगु",
+     "en": "Mulugu"
+    },
+    {
+     "hi": "मेडक",
+     "en": "Medak"
+    },
+    {
+     "hi": "मेडचल मलकाजगिरि",
+     "en": "Medchal Malkajgiri"
+    },
+    {
+     "hi": "यादाद्री भुवनगिरि",
+     "en": "Yadadri Bhuvanagiri"
+    },
+    {
+     "hi": "रंगा रेड्डी",
+     "en": "Ranga Reddy"
+    },
+    {
+     "hi": "राजन्ना सिरसिल्ला",
+     "en": "Rajanna Sircilla"
+    },
+    {
+     "hi": "वनपर्ति",
+     "en": "Wanaparthy"
+    },
+    {
+     "hi": "वारंगल ग्रामीण",
+     "en": "Warangal Rural"
+    },
+    {
+     "hi": "वारंगल शहरी",
+     "en": "Warangal Urban"
+    },
+    {
+     "hi": "विकाराबाद",
+     "en": "Vikarabad"
+    },
+    {
+     "hi": "संगारेड्डी",
+     "en": "Sangareddy"
+    },
+    {
+     "hi": "सिद्दिपेट",
+     "en": "Siddipet"
+    },
+    {
+     "hi": "सूर्यापेट",
+     "en": "Suryapet"
+    },
+    {
+     "hi": "हैदराबाद",
+     "en": "Hyderabad"
+    }
+   ]
+  },
+  "tamil-nadu": {
+   "key": "tamil-nadu",
+   "hi": "तमिलनाडु",
+   "en": "Tamil Nadu",
+   "kn": "ತಮಿಳುನಾಡು",
+   "iso": "IN-TN",
+   "lat": 13.0827,
+   "lon": 80.2707,
+   "region": "दक्षिण भारत",
+   "prefix": "tamil-nadu-ka-naksha",
+   "geojson": "tamil-nadu-districts.geojson",
+   "note": "",
+   "n": 37,
+   "north": "तिरुवल्लूर",
+   "south": "कन्याकुमारी",
+   "big": "तिरुवन्नमलाई",
+   "small": "चेन्नई",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "अरियालूर",
+     "en": "Ariyalur"
+    },
+    {
+     "hi": "इरोड",
+     "en": "Erode"
+    },
+    {
+     "hi": "कडलूर",
+     "en": "Cuddalore"
+    },
+    {
+     "hi": "कन्याकुमारी",
+     "en": "Kanyakumari"
+    },
+    {
+     "hi": "करूर",
+     "en": "Karur"
+    },
+    {
+     "hi": "कल्लाकुरुचि",
+     "en": "Kallakurichi"
+    },
+    {
+     "hi": "कांचीपुरम",
+     "en": "Kancheepuram"
+    },
+    {
+     "hi": "कृष्णगिरि",
+     "en": "Krishnagiri"
+    },
+    {
+     "hi": "कोयंबटूर",
+     "en": "Coimbatore"
+    },
+    {
+     "hi": "चेंगलपट्टू",
+     "en": "Chengalpattu"
+    },
+    {
+     "hi": "चेन्नई",
+     "en": "Chennai"
+    },
+    {
+     "hi": "डिंडीगुल",
+     "en": "Dindigul"
+    },
+    {
+     "hi": "तंजावुर",
+     "en": "Thanjavur"
+    },
+    {
+     "hi": "तिरुचिरापल्ली",
+     "en": "Tiruchirappalli"
+    },
+    {
+     "hi": "तिरुनेलवेली",
+     "en": "Tirunelveli"
+    },
+    {
+     "hi": "तिरुपात्तूर",
+     "en": "Tirupathur"
+    },
+    {
+     "hi": "तिरुपुर",
+     "en": "Tiruppur"
+    },
+    {
+     "hi": "तिरुवन्नमलाई",
+     "en": "Tiruvannamalai"
+    },
+    {
+     "hi": "तिरुवल्लूर",
+     "en": "Thiruvallur"
+    },
+    {
+     "hi": "तिरुवारूर",
+     "en": "Thiruvarur"
+    },
+    {
+     "hi": "तेनकासी",
+     "en": "Tenkasi"
+    },
+    {
+     "hi": "थूथुकुडी",
+     "en": "Thoothukkudi"
+    },
+    {
+     "hi": "थेनी",
+     "en": "Theni"
+    },
+    {
+     "hi": "धर्मपुरी",
+     "en": "Dharmapuri"
+    },
+    {
+     "hi": "नागपट्टिनम",
+     "en": "Nagapattinam"
+    },
+    {
+     "hi": "नामक्कल",
+     "en": "Namakkal"
+    },
+    {
+     "hi": "नीलगिरि",
+     "en": "Nilgiris"
+    },
+    {
+     "hi": "पुदुक्कोट्टै",
+     "en": "Pudukkottai"
+    },
+    {
+     "hi": "पेरम्बलूर",
+     "en": "Perambalur"
+    },
+    {
+     "hi": "मदुरै",
+     "en": "Madurai"
+    },
+    {
+     "hi": "राणीपेट",
+     "en": "Ranipet"
+    },
+    {
+     "hi": "रामनाथपुरम",
+     "en": "Ramanathapuram"
+    },
+    {
+     "hi": "विरुधुनगर",
+     "en": "Virudhunagar"
+    },
+    {
+     "hi": "विल्लुपुरम",
+     "en": "Viluppuram"
+    },
+    {
+     "hi": "वेल्लूर",
+     "en": "Vellore"
+    },
+    {
+     "hi": "शिवगंगा",
+     "en": "Sivaganga"
+    },
+    {
+     "hi": "सेलम",
+     "en": "Salem"
+    }
+   ]
+  },
+  "kerala": {
+   "key": "kerala",
+   "hi": "केरल",
+   "en": "Kerala",
+   "kn": "ಕೇರಳ",
+   "iso": "IN-KL",
+   "lat": 8.5241,
+   "lon": 76.9366,
+   "region": "दक्षिण भारत",
+   "prefix": "kerala-ka-naksha",
+   "geojson": "kerala-districts.geojson",
+   "note": "",
+   "n": 14,
+   "north": "कासरगोड",
+   "south": "तिरुवनंतपुरम",
+   "big": "पालक्काड",
+   "small": "आलेप्पी (अलप्पुझा)",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "आलेप्पी (अलप्पुझा)",
+     "en": "Alappuzha"
+    },
+    {
+     "hi": "इडुक्की",
+     "en": "Idukki"
+    },
+    {
+     "hi": "एर्नाकुलम",
+     "en": "Ernakulam"
+    },
+    {
+     "hi": "कन्नूर",
+     "en": "Kannur"
+    },
+    {
+     "hi": "कासरगोड",
+     "en": "Kasaragod"
+    },
+    {
+     "hi": "कोट्टायम",
+     "en": "Kottayam"
+    },
+    {
+     "hi": "कोड़िकोड",
+     "en": "Kozhikode"
+    },
+    {
+     "hi": "कोल्लम",
+     "en": "Kollam"
+    },
+    {
+     "hi": "तिरुवनंतपुरम",
+     "en": "Thiruvananthapuram"
+    },
+    {
+     "hi": "त्रिशूर",
+     "en": "Thrissur"
+    },
+    {
+     "hi": "पथानमतिट्टा",
+     "en": "Pathanamthitta"
+    },
+    {
+     "hi": "पालक्काड",
+     "en": "Palakkad"
+    },
+    {
+     "hi": "मलप्पुरम",
+     "en": "Malappuram"
+    },
+    {
+     "hi": "वायनाड",
+     "en": "Wayanad"
+    }
+   ]
+  },
+  "assam": {
+   "key": "assam",
+   "hi": "असम",
+   "en": "Assam",
+   "kn": "ಅಸ್ಸಾಂ",
+   "iso": "IN-AS",
+   "lat": 26.1433,
+   "lon": 91.7898,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "assam-ka-naksha",
+   "geojson": "assam-districts.geojson",
+   "note": "",
+   "n": 33,
+   "north": "धेमाजी",
+   "south": "हैलाकांडी",
+   "big": "कारबी आंगलोंग",
+   "small": "दक्षिण सलमारा-मनकाचर",
+   "w": 1440,
+   "h": 1095,
+   "districts": [
+    {
+     "hi": "उदालगुड़ी",
+     "en": "Udalguri"
+    },
+    {
+     "hi": "कछार",
+     "en": "Cachar"
+    },
+    {
+     "hi": "करीमगंज",
+     "en": "Karimganj"
+    },
+    {
+     "hi": "कामरूप",
+     "en": "Kamrup"
+    },
+    {
+     "hi": "कामरूप मेट्रो",
+     "en": "Kamrup Metropolitan"
+    },
+    {
+     "hi": "कारबी आंगलोंग",
+     "en": "Karbi Anglong"
+    },
+    {
+     "hi": "कोकराझार",
+     "en": "Kokrajhar"
+    },
+    {
+     "hi": "गोलाघाट",
+     "en": "Golaghat"
+    },
+    {
+     "hi": "ग्वालपारा",
+     "en": "Goalpara"
+    },
+    {
+     "hi": "चराइदेव",
+     "en": "Charaideo"
+    },
+    {
+     "hi": "चिरांग",
+     "en": "Chirang"
+    },
+    {
+     "hi": "जोरहाट",
+     "en": "Jorhat"
+    },
+    {
+     "hi": "डिब्रूगढ़",
+     "en": "Dibrugarh"
+    },
+    {
+     "hi": "डिमा हसाओ",
+     "en": "Dima Hasao"
+    },
+    {
+     "hi": "तिनसुकिया",
+     "en": "Tinsukia"
+    },
+    {
+     "hi": "दक्षिण सलमारा-मनकाचर",
+     "en": "South Salmara Mankachar"
+    },
+    {
+     "hi": "दरंग",
+     "en": "Darrang"
+    },
+    {
+     "hi": "धुबरी",
+     "en": "Dhubri"
+    },
+    {
+     "hi": "धेमाजी",
+     "en": "Dhemaji"
+    },
+    {
+     "hi": "नगांव",
+     "en": "Nagaon"
+    },
+    {
+     "hi": "नलबाड़ी",
+     "en": "Nalbari"
+    },
+    {
+     "hi": "पश्चिम कारबी आंगलोंग",
+     "en": "West Karbi Anglong"
+    },
+    {
+     "hi": "बक्सा",
+     "en": "Baksa"
+    },
+    {
+     "hi": "बरपेटा",
+     "en": "Barpeta"
+    },
+    {
+     "hi": "बोंगाईगांव",
+     "en": "Bongaigaon"
+    },
+    {
+     "hi": "माजुली",
+     "en": "Majuli"
+    },
+    {
+     "hi": "मोरीगांव",
+     "en": "Morigaon"
+    },
+    {
+     "hi": "लखीमपुर",
+     "en": "Lakhimpur"
+    },
+    {
+     "hi": "विश्वनाथ",
+     "en": "Biswanath"
+    },
+    {
+     "hi": "शिवसागर",
+     "en": "Sivasagar"
+    },
+    {
+     "hi": "शोणितपुर",
+     "en": "Sonitpur"
+    },
+    {
+     "hi": "हैलाकांडी",
+     "en": "Hailakandi"
+    },
+    {
+     "hi": "होजाई",
+     "en": "Hojai"
+    }
+   ]
+  },
+  "jammu-and-kashmir": {
+   "key": "jammu-and-kashmir",
+   "hi": "जम्मू और कश्मीर",
+   "en": "Jammu and Kashmir",
+   "kn": "ಜಮ್ಮು ಮತ್ತು ಕಾಶ್ಮೀರ",
+   "iso": "IN-JK",
+   "lat": 34.0837,
+   "lon": 74.7973,
+   "region": "उत्तर भारत",
+   "prefix": "jammu-and-kashmir-ka-naksha",
+   "geojson": "jammu-and-kashmir-districts.geojson",
+   "note": "",
+   "n": 22,
+   "north": "मुजफ्फराबाद",
+   "south": "कठुआ",
+   "big": "किश्तवाड़",
+   "small": "श्रीनगर",
+   "w": 1440,
+   "h": 1539,
+   "districts": [
+    {
+     "hi": "अनंतनाग",
+     "en": "Anantnag"
+    },
+    {
+     "hi": "उधमपुर",
+     "en": "Udhampur"
+    },
+    {
+     "hi": "कठुआ",
+     "en": "Kathua"
+    },
+    {
+     "hi": "किश्तवाड़",
+     "en": "Kishtwar"
+    },
+    {
+     "hi": "कुपवाड़ा",
+     "en": "Kupwara"
+    },
+    {
+     "hi": "कुलगाम",
+     "en": "Kulgam"
+    },
+    {
+     "hi": "गांदरबल",
+     "en": "Ganderbal"
+    },
+    {
+     "hi": "जम्मू",
+     "en": "Jammu"
+    },
+    {
+     "hi": "डोडा",
+     "en": "Doda"
+    },
+    {
+     "hi": "पुंछ",
+     "en": "Punch"
+    },
+    {
+     "hi": "पुलवामा",
+     "en": "Pulwama"
+    },
+    {
+     "hi": "बड़गाम",
+     "en": "Budgam"
+    },
+    {
+     "hi": "बांदीपोरा",
+     "en": "Bandipora"
+    },
+    {
+     "hi": "बारामूला",
+     "en": "Baramulla"
+    },
+    {
+     "hi": "मीरपुर",
+     "en": "Mirpur"
+    },
+    {
+     "hi": "मुजफ्फराबाद",
+     "en": "Muzaffarabad"
+    },
+    {
+     "hi": "राजौरी",
+     "en": "Rajouri"
+    },
+    {
+     "hi": "रामबन",
+     "en": "Ramban"
+    },
+    {
+     "hi": "रियासी",
+     "en": "Reasi"
+    },
+    {
+     "hi": "शोपियां",
+     "en": "Shopiyan"
+    },
+    {
+     "hi": "श्रीनगर",
+     "en": "Srinagar"
+    },
+    {
+     "hi": "सांभा",
+     "en": "Samba"
+    }
+   ]
+  },
+  "ladakh": {
+   "key": "ladakh",
+   "hi": "लद्दाख",
+   "en": "Ladakh",
+   "kn": "ಲಡಾಖ್",
+   "iso": "IN-LA",
+   "lat": 34.1526,
+   "lon": 77.5771,
+   "region": "उत्तर भारत",
+   "prefix": "ladakh-ka-naksha",
+   "geojson": "ladakh-districts.geojson",
+   "note": "",
+   "n": 2,
+   "north": "लेह",
+   "south": "कारगिल",
+   "big": "लेह",
+   "small": "कारगिल",
+   "w": 1440,
+   "h": 1180,
+   "districts": [
+    {
+     "hi": "कारगिल",
+     "en": "Kargil"
+    },
+    {
+     "hi": "लेह",
+     "en": "Leh"
+    }
+   ]
+  },
+  "delhi": {
+   "key": "delhi",
+   "hi": "दिल्ली",
+   "en": "Delhi",
+   "kn": "ದೆಹಲಿ",
+   "iso": "IN-DL",
+   "lat": 28.6139,
+   "lon": 77.209,
+   "region": "उत्तर भारत",
+   "prefix": "delhi-ka-naksha",
+   "geojson": "delhi-districts.geojson",
+   "note": "",
+   "n": 1,
+   "north": "दिल्ली",
+   "south": "दिल्ली",
+   "big": "दिल्ली",
+   "small": "दिल्ली",
+   "w": 1440,
+   "h": 1629,
+   "districts": [
+    {
+     "hi": "दिल्ली",
+     "en": "Delhi"
+    }
+   ]
+  },
+  "arunachal-pradesh": {
+   "key": "arunachal-pradesh",
+   "hi": "अरुणाचल प्रदेश",
+   "en": "Arunachal Pradesh",
+   "kn": "ಅರುಣಾಚಲ ಪ್ರದೇಶ",
+   "iso": "IN-AR",
+   "lat": 27.0844,
+   "lon": 93.6053,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "arunachal-pradesh-ka-naksha",
+   "geojson": "arunachal-pradesh-districts.geojson",
+   "note": "",
+   "n": 25,
+   "north": "ऊपरी दिबांग घाटी",
+   "south": "लोंगडिंग",
+   "big": "ऊपरी दिबांग घाटी",
+   "small": "लेपा राडा",
+   "w": 1440,
+   "h": 917,
+   "districts": [
+    {
+     "hi": "अंजाव",
+     "en": "Anjaw"
+    },
+    {
+     "hi": "ऊपरी दिबांग घाटी",
+     "en": "Upper Dibang Valley"
+    },
+    {
+     "hi": "ऊपरी सियांग",
+     "en": "Upper Siang"
+    },
+    {
+     "hi": "ऊपरी सुबनसिरी",
+     "en": "Upper Subansiri"
+    },
+    {
+     "hi": "कमले",
+     "en": "Kamle"
+    },
+    {
+     "hi": "करा दादी",
+     "en": "Kra Daadi"
+    },
+    {
+     "hi": "कुरुंग कुमे",
+     "en": "Kurung Kumey"
+    },
+    {
+     "hi": "चांगलांग",
+     "en": "Changlang"
+    },
+    {
+     "hi": "तवांग",
+     "en": "Tawang"
+    },
+    {
+     "hi": "तिराप",
+     "en": "Tirap"
+    },
+    {
+     "hi": "नामसाई",
+     "en": "Namsai"
+    },
+    {
+     "hi": "निचली दिबांग घाटी",
+     "en": "Lower Dibang Valley"
+    },
+    {
+     "hi": "निचली सियांग",
+     "en": "Lower Siang"
+    },
+    {
+     "hi": "निचली सुबनसिरी",
+     "en": "Lower Subansiri"
+    },
+    {
+     "hi": "पक्के केसांग",
+     "en": "Pakke Kessang"
+    },
+    {
+     "hi": "पश्चिम कामेंग",
+     "en": "West Kameng"
+    },
+    {
+     "hi": "पश्चिम सियांग",
+     "en": "West Siang"
+    },
+    {
+     "hi": "पापम पारे",
+     "en": "Papum Pare"
+    },
+    {
+     "hi": "पूर्वी कामेंग",
+     "en": "East Kameng"
+    },
+    {
+     "hi": "पूर्वी सियांग",
+     "en": "East Siang"
+    },
+    {
+     "hi": "लेपा राडा",
+     "en": "Lepa Rada"
+    },
+    {
+     "hi": "लोंगडिंग",
+     "en": "Longding"
+    },
+    {
+     "hi": "लोहित",
+     "en": "Lohit"
+    },
+    {
+     "hi": "शी योमी",
+     "en": "Shi Yomi"
+    },
+    {
+     "hi": "सियांग",
+     "en": "Siang"
+    }
+   ]
+  },
+  "goa": {
+   "key": "goa",
+   "hi": "गोवा",
+   "en": "Goa",
+   "kn": "ಗೋವಾ",
+   "iso": "IN-GA",
+   "lat": 15.4909,
+   "lon": 73.8278,
+   "region": "पश्चिमी भारत",
+   "prefix": "goa-ka-naksha",
+   "geojson": "goa-districts.geojson",
+   "note": "",
+   "n": 2,
+   "north": "उत्तर गोवा",
+   "south": "दक्षिण गोवा",
+   "big": "दक्षिण गोवा",
+   "small": "उत्तर गोवा",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "उत्तर गोवा",
+     "en": "North Goa"
+    },
+    {
+     "hi": "दक्षिण गोवा",
+     "en": "South Goa"
+    }
+   ]
+  },
+  "manipur": {
+   "key": "manipur",
+   "hi": "मणिपुर",
+   "en": "Manipur",
+   "kn": "ಮಣಿಪುರ",
+   "iso": "IN-MN",
+   "lat": 24.817,
+   "lon": 93.9368,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "manipur-ka-naksha",
+   "geojson": "manipur-districts.geojson",
+   "note": "",
+   "n": 16,
+   "north": "सेनापति",
+   "south": "चंदेल",
+   "big": "तमेंगलोंग",
+   "small": "थौबल",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "इम्फाल पश्चिम",
+     "en": "Imphal West"
+    },
+    {
+     "hi": "इम्फाल पूर्व",
+     "en": "Imphal East"
+    },
+    {
+     "hi": "उख्रुल",
+     "en": "Ukhrul"
+    },
+    {
+     "hi": "कांगपोकपी",
+     "en": "Kangpokpi"
+    },
+    {
+     "hi": "काकचिंग",
+     "en": "Kakching"
+    },
+    {
+     "hi": "कामजोंग",
+     "en": "Kamjong"
+    },
+    {
+     "hi": "चंदेल",
+     "en": "Chandel"
+    },
+    {
+     "hi": "चुराचांदपुर",
+     "en": "Churachandpur"
+    },
+    {
+     "hi": "जिरीबाम",
+     "en": "Jiribam"
+    },
+    {
+     "hi": "तमेंगलोंग",
+     "en": "Tamenglong"
+    },
+    {
+     "hi": "तेंगनौपाल",
+     "en": "Tengnoupal"
+    },
+    {
+     "hi": "थौबल",
+     "en": "Thoubal"
+    },
+    {
+     "hi": "नोनी",
+     "en": "Noney"
+    },
+    {
+     "hi": "फेर्जावल",
+     "en": "Pherzawl"
+    },
+    {
+     "hi": "बिष्णुपुर",
+     "en": "Bishnupur"
+    },
+    {
+     "hi": "सेनापति",
+     "en": "Senapati"
+    }
+   ]
+  },
+  "meghalaya": {
+   "key": "meghalaya",
+   "hi": "मेघालय",
+   "en": "Meghalaya",
+   "kn": "ಮೇಘಾಲಯ",
+   "iso": "IN-ML",
+   "lat": 25.5788,
+   "lon": 91.8933,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "meghalaya-ka-naksha",
+   "geojson": "meghalaya-districts.geojson",
+   "note": "",
+   "n": 11,
+   "north": "री-भोई",
+   "south": "पूर्वी जयंतिया हिल्स",
+   "big": "पश्चिम खासी हिल्स",
+   "small": "दक्षिण पश्चिम गारो हिल्स",
+   "w": 1440,
+   "h": 732,
+   "districts": [
+    {
+     "hi": "उत्तरी गारो हिल्स",
+     "en": "North Garo Hills"
+    },
+    {
+     "hi": "दक्षिण पश्चिम खासी हिल्स",
+     "en": "South West Khasi Hills"
+    },
+    {
+     "hi": "दक्षिण पश्चिम गारो हिल्स",
+     "en": "South West Garo Hills"
+    },
+    {
+     "hi": "दक्षिणी गारो हिल्स",
+     "en": "South Garo Hills"
+    },
+    {
+     "hi": "पश्चिम खासी हिल्स",
+     "en": "West Khasi Hills"
+    },
+    {
+     "hi": "पश्चिम गारो हिल्स",
+     "en": "West Garo Hills"
+    },
+    {
+     "hi": "पश्चिम जयंतिया हिल्स",
+     "en": "West Jaintia Hills"
+    },
+    {
+     "hi": "पूर्वी खासी हिल्स",
+     "en": "East Khasi Hills"
+    },
+    {
+     "hi": "पूर्वी गारो हिल्स",
+     "en": "East Garo Hills"
+    },
+    {
+     "hi": "पूर्वी जयंतिया हिल्स",
+     "en": "East Jaintia Hills"
+    },
+    {
+     "hi": "री-भोई",
+     "en": "Ribhoi"
+    }
+   ]
+  },
+  "mizoram": {
+   "key": "mizoram",
+   "hi": "मिजोरम",
+   "en": "Mizoram",
+   "kn": "ಮಿಜೋರಾಂ",
+   "iso": "IN-MZ",
+   "lat": 23.7271,
+   "lon": 92.7176,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "mizoram-ka-naksha",
+   "geojson": "mizoram-districts.geojson",
+   "note": "",
+   "n": 10,
+   "north": "कोलासिब",
+   "south": "सैहा",
+   "big": "आइजोल",
+   "small": "हनाहथियाल",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "आइजोल",
+     "en": "Aizawl"
+    },
+    {
+     "hi": "कोलासिब",
+     "en": "Kolasib"
+    },
+    {
+     "hi": "खौजोल",
+     "en": "Khawzawl"
+    },
+    {
+     "hi": "चम्पाई",
+     "en": "Champhai"
+    },
+    {
+     "hi": "ममित",
+     "en": "Mamit"
+    },
+    {
+     "hi": "लुंगलेई",
+     "en": "Lunglei"
+    },
+    {
+     "hi": "लॉंगत्लाई",
+     "en": "Lawngtlai"
+    },
+    {
+     "hi": "सरछिप",
+     "en": "Serchhip"
+    },
+    {
+     "hi": "सैहा",
+     "en": "Saiha"
+    },
+    {
+     "hi": "हनाहथियाल",
+     "en": "Hnahthial"
+    }
+   ]
+  },
+  "nagaland": {
+   "key": "nagaland",
+   "hi": "नागालैंड",
+   "en": "Nagaland",
+   "kn": "ನಾಗಾಲ್ಯಾಂಡ್",
+   "iso": "IN-NL",
+   "lat": 25.6751,
+   "lon": 94.1086,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "nagaland-ka-naksha",
+   "geojson": "nagaland-districts.geojson",
+   "note": "",
+   "n": 11,
+   "north": "मोन",
+   "south": "पेरेन",
+   "big": "तुएनसांग",
+   "small": "लोंगलेंग",
+   "w": 1440,
+   "h": 1622,
+   "districts": [
+    {
+     "hi": "किफिरे",
+     "en": "Kiphire"
+    },
+    {
+     "hi": "कोहिमा",
+     "en": "Kohima"
+    },
+    {
+     "hi": "जुन्हेबोटो",
+     "en": "Zunheboto"
+    },
+    {
+     "hi": "तुएनसांग",
+     "en": "Tuensang"
+    },
+    {
+     "hi": "दीमापुर",
+     "en": "Dimapur"
+    },
+    {
+     "hi": "पेरेन",
+     "en": "Peren"
+    },
+    {
+     "hi": "फेक",
+     "en": "Phek"
+    },
+    {
+     "hi": "मोकोकचुंग",
+     "en": "Mokokchung"
+    },
+    {
+     "hi": "मोन",
+     "en": "Mon"
+    },
+    {
+     "hi": "लोंगलेंग",
+     "en": "Longleng"
+    },
+    {
+     "hi": "वोखा",
+     "en": "Wokha"
+    }
+   ]
+  },
+  "sikkim": {
+   "key": "sikkim",
+   "hi": "सिक्किम",
+   "en": "Sikkim",
+   "kn": "ಸಿಕ್ಕಿಂ",
+   "iso": "IN-SK",
+   "lat": 27.3389,
+   "lon": 88.6065,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "sikkim-ka-naksha",
+   "geojson": "sikkim-districts.geojson",
+   "note": "",
+   "n": 4,
+   "north": "उत्तरी सिक्किम",
+   "south": "दक्षिणी सिक्किम",
+   "big": "उत्तरी सिक्किम",
+   "small": "दक्षिणी सिक्किम",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "उत्तरी सिक्किम",
+     "en": "North Sikkim"
+    },
+    {
+     "hi": "दक्षिणी सिक्किम",
+     "en": "South Sikkim"
+    },
+    {
+     "hi": "पश्चिमी सिक्किम",
+     "en": "West Sikkim"
+    },
+    {
+     "hi": "पूर्वी सिक्किम",
+     "en": "East Sikkim"
+    }
+   ]
+  },
+  "tripura": {
+   "key": "tripura",
+   "hi": "त्रिपुरा",
+   "en": "Tripura",
+   "kn": "ತ್ರಿಪುರಾ",
+   "iso": "IN-TR",
+   "lat": 23.8315,
+   "lon": 91.2868,
+   "region": "पूर्वोत्तर भारत",
+   "prefix": "tripura-ka-naksha",
+   "geojson": "tripura-districts.geojson",
+   "note": "",
+   "n": 8,
+   "north": "ऊनाकोटी",
+   "south": "दक्षिणी त्रिपुरा",
+   "big": "धलाई",
+   "small": "ऊनाकोटी",
+   "w": 1440,
+   "h": 1688,
+   "districts": [
+    {
+     "hi": "उत्तरी त्रिपुरा",
+     "en": "North Tripura"
+    },
+    {
+     "hi": "ऊनाकोटी",
+     "en": "Unokoti"
+    },
+    {
+     "hi": "खोवाई",
+     "en": "Khowai"
+    },
+    {
+     "hi": "गोमती",
+     "en": "Gomati"
+    },
+    {
+     "hi": "दक्षिणी त्रिपुरा",
+     "en": "South Tripura"
+    },
+    {
+     "hi": "धलाई",
+     "en": "Dhalai"
+    },
+    {
+     "hi": "पश्चिमी त्रिपुरा",
+     "en": "West Tripura"
+    },
+    {
+     "hi": "सिपाहीजला",
+     "en": "Sipahijala"
+    }
+   ]
+  },
+  "andaman-and-nicobar-islands": {
+   "key": "andaman-and-nicobar-islands",
+   "hi": "अंडमान और निकोबार",
+   "en": "Andaman and Nicobar",
+   "kn": "ಅಂಡಮಾನ್ ಮತ್ತು ನಿಕೋಬಾರ್",
+   "iso": "IN-AN",
+   "lat": 11.6234,
+   "lon": 92.7265,
+   "region": "दक्षिण भारत",
+   "prefix": "andaman-and-nicobar-islands-ka-naksha",
+   "geojson": "andaman-and-nicobar-islands-districts.geojson",
+   "note": "",
+   "n": 3,
+   "north": "उत्तर और मध्य अंडमान",
+   "south": "निकोबार",
+   "big": "उत्तर और मध्य अंडमान",
+   "small": "निकोबार",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "उत्तर और मध्य अंडमान",
+     "en": "North and Middle Andaman"
+    },
+    {
+     "hi": "दक्षिण अंडमान",
+     "en": "South Andaman"
+    },
+    {
+     "hi": "निकोबार",
+     "en": "Nicobars"
+    }
+   ]
+  },
+  "chandigarh": {
+   "key": "chandigarh",
+   "hi": "चंडीगढ़",
+   "en": "Chandigarh",
+   "kn": "ಚಂಡೀಗಢ",
+   "iso": "IN-CH",
+   "lat": 30.7333,
+   "lon": 76.7794,
+   "region": "उत्तर भारत",
+   "prefix": "chandigarh-ka-naksha",
+   "geojson": "chandigarh-districts.geojson",
+   "note": "",
+   "n": 1,
+   "north": "चंडीगढ़",
+   "south": "चंडीगढ़",
+   "big": "चंडीगढ़",
+   "small": "चंडीगढ़",
+   "w": 1440,
+   "h": 1582,
+   "districts": [
+    {
+     "hi": "चंडीगढ़",
+     "en": "Chandigarh"
+    }
+   ]
+  },
+  "dnh-and-dd": {
+   "key": "dnh-and-dd",
+   "hi": "दादरा और नगर हवेली एवं दमन और दीव",
+   "en": "Dadra and Nagar Haveli and Daman and Diu",
+   "kn": "ದಾದ್ರಾ ಮತ್ತು ನಗರ ಹವೇಲಿ",
+   "iso": "IN-DH",
+   "lat": 20.4283,
+   "lon": 72.8397,
+   "region": "पश्चिमी भारत",
+   "prefix": "dnh-and-dd-ka-naksha",
+   "geojson": "dnh-and-dd-districts.geojson",
+   "note": "",
+   "n": 3,
+   "north": "दीव",
+   "south": "दादरा और नगर हवेली",
+   "big": "दादरा और नगर हवेली",
+   "small": "दीव",
+   "w": 1440,
+   "h": 1000,
+   "districts": [
+    {
+     "hi": "दमन",
+     "en": "Daman"
+    },
+    {
+     "hi": "दादरा और नगर हवेली",
+     "en": "Dadra and Nagar Haveli"
+    },
+    {
+     "hi": "दीव",
+     "en": "Diu"
+    }
+   ]
+  },
+  "lakshadweep": {
+   "key": "lakshadweep",
+   "hi": "लक्षद्वीप",
+   "en": "Lakshadweep",
+   "kn": "ಲಕ್ಷದ್ವೀಪ",
+   "iso": "IN-LD",
+   "lat": 10.5667,
+   "lon": 72.6417,
+   "region": "दक्षिण भारत",
+   "prefix": "lakshadweep-ka-naksha",
+   "geojson": "lakshadweep-districts.geojson",
+   "note": "",
+   "n": 1,
+   "north": "लक्षद्वीप",
+   "south": "लक्षद्वीप",
+   "big": "लक्षद्वीप",
+   "small": "लक्षद्वीप",
+   "w": 1440,
+   "h": 1689,
+   "districts": [
+    {
+     "hi": "लक्षद्वीप",
+     "en": "Lakshadweep"
+    }
+   ]
+  },
+  "puducherry": {
+   "key": "puducherry",
+   "hi": "पुडुचेरी",
+   "en": "Puducherry",
+   "kn": "ಪುದುಚೇರಿ",
+   "iso": "IN-PY",
+   "lat": 11.9416,
+   "lon": 79.8083,
+   "region": "दक्षिण भारत",
+   "prefix": "puducherry-ka-naksha",
+   "geojson": "puducherry-districts.geojson",
+   "note": "",
+   "n": 4,
+   "north": "यानम",
+   "south": "कराईकल",
+   "big": "पुडुचेरी",
+   "small": "माहे",
+   "w": 1440,
+   "h": 1396,
+   "districts": [
+    {
+     "hi": "कराईकल",
+     "en": "Karaikal"
+    },
+    {
+     "hi": "पुडुचेरी",
+     "en": "Puducherry"
+    },
+    {
+     "hi": "माहे",
+     "en": "Mahe"
+    },
+    {
+     "hi": "यानम",
+     "en": "Yanam"
+    }
+   ]
+  }
+ }
+}

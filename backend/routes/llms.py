@@ -30,7 +30,7 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 # Reuse the sitemap's single source of truth for what exists.
-from backend.routes.sitemap import _ARTICLES, _SKIP, SITE
+from backend.routes.sitemap import _ARTICLES, _FRONTEND, _SKIP, SITE
 
 router = APIRouter()
 
@@ -85,6 +85,27 @@ def _article_line(f: Path) -> str:
     return f"- [{title}]({SITE}/articles/{f.stem.lower()}){desc}"
 
 
+def _naksha_lines() -> list:
+    """One line per state, from the same manifest the pages render from.
+
+    Same rule as the article list: nothing editorial to keep in step. Imported
+    lazily — naksha.py pulls in bhav.py's shell, which is heavy.
+    """
+    from backend.routes.naksha import _jile_url, _states, _url
+
+    out = []
+    for key, s in _states().items():
+        out.append(f"- [{s['hi']} का नक्शा ({s['en']} district map)]({_url(key)}): "
+                   f"free HD Hindi map of all {s['n']} districts, downloadable, "
+                   f"with links on to each district's mandi prices.")
+        out.append(f"- [{s['hi']} के जिले ({s['en']} district list)]({_jile_url(key)}): "
+                   f"all {s['n']} districts in Hindi and English, largest "
+                   f"{s['big']}, smallest {s['small']} by area. Each district has "
+                   f"its own map at /naksha/{key}/<district-slug> and a village "
+                   f"directory at /naksha/{key}/<district-slug>/gaon.")
+    return out
+
+
 def _top_crop_lines(n: int = 10) -> list:
     """Deep links for the widest-covered crops, derived from the live /bhav
     index (imported lazily, same cycle-avoidance as utils/indexnow.py). An
@@ -128,6 +149,19 @@ def _build() -> str:
     ]
     lines += [f"- [{name}]({SITE}{path}): {desc}" for path, name, desc in _TOOLS]
     lines += [
+        "",
+        "## राज्यों के नक्शे (district maps)",
+        "",
+        f"- [राज्यों के नक्शे]({SITE}/naksha): hub — every state's district map and "
+        "district list in one place, all free HD downloads.",
+        f"- [कृषि मानचित्र]({SITE}/map): उत्तर प्रदेश's district map — the same page as "
+        "the state entries below, kept at this URL.",
+        *_naksha_lines(),
+        "",
+        f"- [Village page URL list]({SITE}/naksha/gaon-sitemap.xml): every "
+        "district village directory and individual village map. Village names and "
+        "coordinates are OpenStreetMap (ODbL), clipped to the district's Census "
+        "boundary — a village is only listed where it falls inside that boundary.",
         "",
         "## Daily price pages (programmatic)",
         "",
