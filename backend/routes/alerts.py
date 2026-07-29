@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 from backend.database.db import (
     MandiAlert, PushSubscription, User, UserProfile, get_db,
 )
-from backend.utils.auth_utils import decode_access_token
+from backend.utils.auth_utils import resolve_token_user_id
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -71,16 +71,14 @@ def _norm(v: Optional[str]) -> Optional[str]:
 
 def _user_id(authorization: Optional[str]) -> Optional[int]:
     """user_id from a Bearer token, or None. Never raises — callers decide
-    whether anonymous is acceptable for their endpoint."""
+    whether anonymous is acceptable for their endpoint.
+
+    Goes through resolve_token_user_id() rather than decoding the JWT here: a
+    valid signature does not prove the account still exists, is still verified,
+    or that the id was not recycled to somebody else."""
     if not authorization or not authorization.startswith("Bearer "):
         return None
-    payload = decode_access_token(authorization.split(" ", 1)[1].strip())
-    if not payload:
-        return None
-    try:
-        return int(payload.get("sub") or payload.get("user_id"))
-    except (TypeError, ValueError):
-        return None
+    return resolve_token_user_id(authorization.split(" ", 1)[1].strip())
 
 
 def _require_user(authorization: Optional[str]) -> int:

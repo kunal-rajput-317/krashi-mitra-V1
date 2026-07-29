@@ -8,6 +8,7 @@
 #   Optional[X] works on Python 3.8, 3.9, 3.10, 3.11, 3.12
 # ============================================================
 
+import calendar
 import os
 import re
 import secrets
@@ -25,7 +26,13 @@ import bcrypt as _bcrypt
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
+
+# Safe at module level: db.py imports nothing from this package, so there is no
+# cycle. Model imports stay local to the functions that need them, to keep this
+# module importable by tooling that only wants the password/OTP helpers.
+from backend.database.db import get_db
 
 load_dotenv()
 
@@ -98,11 +105,22 @@ JWT_ALGORITHM    = "HS256"
 JWT_EXPIRY_HOURS = 24
 
 def create_access_token(user_id: int, email: str) -> str:
-    """Create a signed JWT. Payload: sub (user_id), email, exp."""
+    """Create a signed JWT. Payload: sub (user_id), email, iat, exp.
+
+    `iat` is not decoration: `sub` is a users.id, and ids get recycled. Wipe the
+    table (or roll the sequence back) and the next signup takes id 1 — a token
+    minted for the PREVIOUS id 1 would still be inside its 24h window and would
+    authenticate as the new account. iat is what lets resolve_token_user() tell
+    those apart: a token issued before its account existed is not its token.
+    """
+    now = datetime.utcnow()
     payload = {
         "sub":   str(user_id),
         "email": email,
-        "exp":   datetime.utcnow() + timedelta(hours=JWT_EXPIRY_HOURS),
+        # timegm, not .timestamp(): `now` is naive UTC and .timestamp() would
+        # read it as local time (IST here) — a 5.5h-wrong iat.
+        "iat":   calendar.timegm(now.utctimetuple()),
+        "exp":   now + timedelta(hours=JWT_EXPIRY_HOURS),
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -118,25 +136,94 @@ def decode_access_token(token: str) -> Optional[dict]:
 
 bearer_scheme = HTTPBearer()
 
+# iat is whole seconds while users.created_at carries microseconds, and the
+# Google-signup path mints a token in the same second it writes the row — a
+# strict comparison would reject a perfectly good token. This slack is safe
+# because a recycled-id token is stale by hours or days, never by seconds.
+TOKEN_AGE_SKEW_SECONDS = 120
+
+
+def resolve_token_user(db, token: str) -> Optional["User"]:
+    """The account a Bearer token really belongs to, or None.
+
+    Decoding the JWT is not enough on its own. The signature only proves the
+    token was issued by us; it says nothing about whether that account still
+    exists, is still verified, or is even the same account it was issued for
+    (users.id gets recycled — see create_access_token). Every check that used to
+    be skipped lives here, so the strict and the guest-tolerant paths cannot
+    drift apart:
+
+      • token decodes and is unexpired  (jose checks exp)
+      • it carries an iat              (tokens minted before this existed are dead)
+      • the account still exists
+      • the account is still verified  (un-verified by admin → token stops working)
+      • it was issued AFTER that account was created (not a recycled id)
+    """
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+    try:
+        user_id = int(payload.get("sub") or payload.get("user_id"))
+    except (TypeError, ValueError):
+        return None
+
+    iat = payload.get("iat")
+    if iat is None:
+        return None
+
+    from backend.database.db import User   # local import: db.py must stay importable on its own
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None or not user.is_verified:
+        return None
+    if user.created_at and datetime.utcfromtimestamp(iat) < (
+        user.created_at - timedelta(seconds=TOKEN_AGE_SKEW_SECONDS)
+    ):
+        return None                       # issued before this account existed
+    return user
+
+
+def resolve_token_user_id(token: str, db=None) -> Optional[int]:
+    """resolve_token_user() for the guest-tolerant helpers, which hold an
+    Authorization header but not always a Session. Opens its own session only
+    when a token is actually present, so guest traffic pays nothing."""
+    if not token:
+        return None
+    if db is not None:
+        user = resolve_token_user(db, token)
+        return user.id if user else None
+    from backend.database.db import SessionLocal
+    own = SessionLocal()
+    try:
+        user = resolve_token_user(own, token)
+        return user.id if user else None
+    finally:
+        own.close()
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
 ) -> dict:
     """
     Reusable FastAPI dependency for protected routes.
     Usage: current_user: dict = Depends(get_current_user)
-    Raises HTTP 401 if token is missing, invalid, or expired.
+    Raises HTTP 401 if the token is missing, invalid, expired, or no longer
+    matches a live verified account (see resolve_token_user).
+
+    The Session comes from Depends(get_db) — the same one the endpoint itself
+    receives — so the check costs one indexed primary-key lookup and no extra
+    connection. It must be a real dependency and not a plain default argument:
+    FastAPI reads this signature, and a bare `db=None` would show up as an
+    optional QUERY PARAMETER named "db" on every protected route.
     """
-    payload = decode_access_token(credentials.credentials)
-    if payload is None:
+    user = resolve_token_user(db, credentials.credentials)
+    if user is None:
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED,
             detail      = "Token invalid या expire हो गया है। दोबारा login करें।",
             headers     = {"WWW-Authenticate": "Bearer"},
         )
-    return {
-        "user_id": int(payload["sub"]),
-        "email":   payload["email"],
-    }
+    return {"user_id": user.id, "email": user.email}
 
 
 # ── OTP Utilities ────────────────────────────────────────────
