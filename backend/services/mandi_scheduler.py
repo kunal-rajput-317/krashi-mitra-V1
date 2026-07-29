@@ -137,15 +137,15 @@ def _fetch_and_notify():
     return summary
 
 
-def _archive_daily():
-    """Export the previous day's mandi rows from the DB into repo2 as CSV.
-    Best-effort and idempotent (self-heals missed days); must never raise —
-    the archive is downstream of, and must not endanger, the price fetch."""
+def _db_write_check():
+    """Probe that the database still accepts writes. Its own job, not a step
+    inside the price fetch — when writes are refused the fetch is exactly what
+    fails, so a canary living inside it would go down with the ship."""
     try:
-        from backend.services.mandi_archive_service import run_archive
-        return run_archive()
+        from backend.services.db_health_service import run_check
+        return run_check()
     except Exception as e:
-        logger.error(f"Mandi daily archive failed (non-fatal): {e}")
+        logger.error(f"DB write check failed (non-fatal): {e}")
         return None
 
 
@@ -204,22 +204,21 @@ def _register_job():
         max_instances      = 1,
         coalesce           = True,
     )
-    # Daily archive: at 04:00 IST data.gov has been wiped for the new day and
-    # yesterday's 20:00 sweep is the complete final record, so "yesterday" is
-    # safe & complete to export to repo2. Self-healing, so misfires just catch
-    # up. misfire_grace_time=None: run whenever noticed if the host was asleep.
+    # Write canary every 3 hours. A read-only database is invisible from
+    # outside — reads all succeed — so without this the first symptom is a
+    # farmer telling us signup failed, or nobody telling us at all.
     scheduler.add_job(
-        func               = _archive_daily,
-        trigger            = CronTrigger(hour=4, minute=0, timezone=IST),
-        id                 = "mandi_daily_archive",
-        name               = "Mandi Daily Archive → repo2 CSV — 04:00 IST",
+        func               = _db_write_check,
+        trigger            = CronTrigger(hour="*/3", timezone=IST),
+        id                 = "db_write_canary",
+        name               = "Database write canary — every 3h",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,
         misfire_grace_time = None,
     )
 
-    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + archive @ 04h IST")
+    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + 3-hourly DB write canary")
 
 
 async def start_scheduler():
@@ -240,20 +239,6 @@ async def start_scheduler():
 
     if not _refresh_if_stale():
         logger.info("Mandi snapshot fresh — next scheduled fetch at 08/10/13/16/20h IST")
-
-    # Boot catch-up for the archive. The 04:00 cron is routinely missed on a
-    # spun-down free-tier instance (a process restart forgets the misfire), so
-    # a one-off run ~30s after boot exports any DB day not yet in repo2. Runs
-    # off the startup path (non-blocking) and self-heals within the 30-day window.
-    from datetime import timedelta as _td
-    scheduler.add_job(
-        func         = _archive_daily,
-        trigger      = "date",
-        run_date     = datetime.now(IST) + _td(seconds=30),
-        id           = "mandi_archive_catchup",
-        name         = "Mandi Archive — boot catch-up",
-        replace_existing = True,
-    )
 
 
 async def stop_scheduler():

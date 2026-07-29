@@ -119,13 +119,16 @@ async def sync_log(
     }
 
 
-@router.get("/archive-health")
-async def archive_health(_: str = Depends(require_admin)):
-    """Health of the daily mandi→repo2 CSV archive: which DB days are present
-    vs missing in the data repo, and the last day actually archived. Makes a
-    silently-stopped archive visible in the admin panel (task 0.6)."""
-    from backend.services.mandi_archive_service import archive_health as _health
-    return {"success": True, **_health()}
+@router.get("/db-write-health")
+async def db_write_health(_: str = Depends(require_admin)):
+    """Can the database still accept writes, and how full is it?
+
+    Neon turns a compute read-only on its storage cap: every page keeps
+    serving while nothing can be saved. That failure is invisible from the
+    outside, so this card is where it becomes visible.
+    """
+    from backend.services.db_health_service import check
+    return {"success": True, **check()}
 
 
 # ── Manual data-fetch trigger ─────────────────────────────────
