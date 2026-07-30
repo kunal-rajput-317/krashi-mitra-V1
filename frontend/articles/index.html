@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+  <!-- Analytics: GA4 + Clarity -->
+  <script src="../analytics.js"></script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="page_title">कृषि लेख 2026 – गन्ना, गेहूं, खाद व कीट गाइड | KrashiMitra</title>
@@ -2635,7 +2638,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const API = window.KRASHIMITRA_API_BASE ||
     (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)
       ? 'http://' + location.hostname + ':8000'
-      : 'https://krashi-mitra-v1.onrender.com');
+      : 'https://krashi-mitra-v1-oxdc.onrender.com');
   let meta;
   try {
     const res = await fetch(`${API}/articles/meta`);

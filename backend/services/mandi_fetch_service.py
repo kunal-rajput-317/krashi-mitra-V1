@@ -788,12 +788,12 @@ if __name__ == "__main__":
         else:                                     # whatever the fallback would pick
             recs, day = fetch_archive_fallback()
         states = sorted({_norm(r.get("state")) for r in recs})
-        print(f"\narchive day : {day}")
-        print(f"rows        : {len(recs)}")
-        print(f"states      : {len(states)}")
-        print(f"usable      : {len(recs) >= MIN_ROWS} (MIN_ROWS={MIN_ROWS})")
+        logger.info(f"\narchive day : {day}")
+        logger.info(f"rows        : {len(recs)}")
+        logger.info(f"states      : {len(states)}")
+        logger.info(f"usable      : {len(recs) >= MIN_ROWS} (MIN_ROWS={MIN_ROWS})")
         if recs:
-            print(f"sample      : {recs[0]}")
+            logger.info(f"sample      : {recs[0]}")
         sys.exit(0)
 
-    print(fetch_and_store())
+    logger.info(fetch_and_store())

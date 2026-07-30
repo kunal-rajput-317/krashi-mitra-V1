@@ -22,7 +22,7 @@ from backend.database.db import BazarPost, User, UserProfile, get_db
 router = APIRouter()
 
 SITE = "https://krashimitra.in"
-BACKEND = "https://krashi-mitra-v1.onrender.com"
+BACKEND = "https://krashi-mitra-v1-oxdc.onrender.com"
 
 # commodity keyword → (Wikimedia file, md5 prefix)
 # mirrors COMMODITY_TILES in frontend/mandi.html

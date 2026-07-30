@@ -3,14 +3,8 @@
 <head>
 <!-- Khoj shared knowledge base — on-device fallback answers when the AI backend has none -->
 <script src="khoj-kb.js"></script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-493H1PDP64');
-</script>
+  <!-- Analytics: GA4 + Clarity -->
+  <script src="analytics.js"></script>
 
 <meta charset="UTF-8">
   <!-- Sync API-base bootstrap so api-config.js can load deferred
@@ -21,7 +15,7 @@
           l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
               /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
       window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
-        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1.onrender.com');
+        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1-oxdc.onrender.com');
       window.KRASHIMITRA_IS_LOCAL = l;
       window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
     })();
@@ -1576,6 +1570,7 @@ function handleChatKey(e) {
 function handleImageUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
+  if (window.kmTrack) kmTrack('chat_image_upload', {});
   const reader = new FileReader();
   reader.onload = (ev) => {
     pendingImage = ev.target.result;
@@ -1648,6 +1643,14 @@ async function sendChatMessage() {
   if (!text && !pendingImage) return;
   if (isBotTyping) return;
   hideKhojFallback();
+
+  // What farmers actually ask, and how much they lean on photo diagnosis.
+  // Fires before removeImagePreview() clears pendingImage.
+  if (window.kmTrack) kmTrack('chat_question', {
+    has_image: pendingImage ? 'yes' : 'no',
+    crop:      (text && typeof detectCropKey === 'function' ? detectCropKey(text) : '') || 'unknown',
+    language:  typeof getChatLanguage === 'function' ? getChatLanguage() : ''
+  });
 
   const chips = document.getElementById('chat-suggestions');
   if (chips) chips.style.display = 'none';

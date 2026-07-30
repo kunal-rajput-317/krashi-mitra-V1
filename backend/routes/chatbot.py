@@ -5,6 +5,7 @@
 # ============================================================
 
 import asyncio
+import logging
 import os
 import sys
 
@@ -28,6 +29,8 @@ from backend.services.chatbot_service import (
     feature_suggestion,
 )
 
+log = logging.getLogger(__name__)
+
 # ── Resolve project root once at module level (not inside handler) ──
 _PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,18 +42,18 @@ if _PROJECT_ROOT not in sys.path:
 try:
     from cache.cache_engine import search_cache, save_to_cache
     _CACHE_AVAILABLE = True
-    print("[Cache] ✅ Cache engine loaded")
+    log.info("[Cache] ✅ Cache engine loaded")
 except Exception as e:
     _CACHE_AVAILABLE = False
-    print(f"[Cache] ❌ Cache unavailable: {e}")
+    log.error(f"[Cache] ❌ Cache unavailable: {e}")
 
 try:
     from rag.retriever import retrieve_with_context
     _RAG_AVAILABLE = True
-    print("[RAG] ✅ RAG retriever loaded")
+    log.info("[RAG] ✅ RAG retriever loaded")
 except Exception as e:
     _RAG_AVAILABLE = False
-    print(f"[RAG] ❌ RAG unavailable: {e}")
+    log.error(f"[RAG] ❌ RAG unavailable: {e}")
 
 router = APIRouter()
 
@@ -102,7 +105,7 @@ async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
             timeout=PIPELINE_TIMEOUT,
         )
     except asyncio.TimeoutError:
-        print(f"[ASK] ⏰ Pipeline timed out after {PIPELINE_TIMEOUT}s for: {body.q[:50]}")
+        log.info(f"[ASK] ⏰ Pipeline timed out after {PIPELINE_TIMEOUT}s for: {body.q[:50]}")
         return {
             "question": body.q,
             "answer":   "⏰ सर्वर अभी व्यस्त है। कृपया 30 सेकंड बाद दोबारा पूछें।",
@@ -111,7 +114,7 @@ async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
             "rag_chunks": 0,
         }
     except Exception as e:
-        print(f"[ASK] ❌ Unexpected error: {e}")
+        log.error(f"[ASK] ❌ Unexpected error: {e}")
         return {
             "question": body.q,
             "answer":   "क्षमा करें, कुछ गड़बड़ हो गई। कृपया दोबारा कोशिश करें।",
@@ -140,7 +143,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
         try:
             cached = search_cache(body.q)
             if cached:
-                print(f"[Cache] HIT score={cached['score']} q={body.q[:50]}")
+                log.info(f"[Cache] HIT score={cached['score']} q={body.q[:50]}")
                 _save_to_db(db, body, body.q, cached["answer"])
                 return {
                     "question": body.q,
@@ -152,7 +155,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
                     "suggestion": suggest_feature(body.q, body.language),
                 }
         except Exception as e:
-            print(f"[Cache] Search failed: {e}")
+            log.info(f"[Cache] Search failed: {e}")
 
     # ── Step 2: Crop JSON context ─────────────────────────────
     crop_context = build_context(body.crop, question=body.q)
@@ -168,9 +171,9 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
                 retrieve_with_context, body.q, body.crop
             )
             rag_chunks = len(chunks)
-            print(f"[RAG] {rag_chunks} chunks retrieved for: {body.q[:50]}")
+            log.info(f"[RAG] {rag_chunks} chunks retrieved for: {body.q[:50]}")
         except Exception as e:
-            print(f"[RAG] Retrieval failed: {e}")
+            log.info(f"[RAG] Retrieval failed: {e}")
 
     # ── Combine contexts — RAG first (more specific), crop JSON second ──
     if rag_context and crop_context:
@@ -192,7 +195,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
                 f"{row.role.upper()}: {row.message}" for row in history_rows
             ])
         except Exception as e:
-            print(f"[History] Failed: {e}")
+            log.info(f"[History] Failed: {e}")
 
     # ── Step 5: Build prompt + call AI (awaited) ──────────────
     if get_setting("ai_enabled", True):
@@ -212,9 +215,9 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
         try:
             saved = save_to_cache(body.q, answer, source=source)
             if saved:
-                print(f"[Cache] Saved from {source}: {body.q[:50]}")
+                log.info(f"[Cache] Saved from {source}: {body.q[:50]}")
         except Exception as e:
-            print(f"[Cache] Save failed: {e}")
+            log.info(f"[Cache] Save failed: {e}")
 
     return {
         "question":        body.q,
@@ -249,7 +252,7 @@ def _save_to_db(db: Session, body: Question, question: str, answer: str):
         db.commit()
     except Exception as e:
         db.rollback()   # leave the session usable — a failed tx poisons every later query
-        print(f"[DB] Save failed: {e}")
+        log.info(f"[DB] Save failed: {e}")
         db.rollback()
 
 

@@ -1,0 +1,98 @@
+# ============================================================
+# render.yaml — KrashiMitra backend (Infrastructure as Code)
+#
+# Until now the build and start commands lived only in Render's dashboard:
+# undocumented, unversioned, and impossible to review. This file makes the
+# deploy reproducible and diffable. Render picks it up automatically from the
+# repo root ("Blueprint"); an existing service keeps running and adopts these
+# settings on the next sync.
+#
+# SECRETS ARE NOT IN THIS FILE. Every sensitive var is declared with
+# `sync: false`, which tells Render "this exists, but read the value from the
+# dashboard" — so the names are documented in the repo while the values stay
+# out of it.
+# ============================================================
+
+services:
+  - type: web
+    name: krashi-mitra-v1
+    runtime: python
+    plan: free
+    region: singapore          # closest Render region to the user base
+    branch: main
+
+    buildCommand: pip install -r requirements.txt
+
+    # main.py at the repo root re-exports backend.main:app for exactly this.
+    # $PORT is injected by Render and must be honoured or the deploy is
+    # marked unhealthy.
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    # DB-free liveness probe. Must stay DB-free: a Neon cold start would
+    # otherwise make a healthy dyno look down.
+    healthCheckPath: /health
+
+    autoDeploy: true
+
+    envVars:
+      # ── Runtime behaviour ───────────────────────────────────
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DEBUG
+        value: "false"          # disables uvicorn --reload in __main__
+      - key: LOG_LEVEL
+        value: INFO
+      - key: HF_HUB_DISABLE_TELEMETRY
+        value: "1"
+
+      # ── AI pipeline toggles ─────────────────────────────────
+      # The embedding model (sentence-transformers) plus ChromaDB is the
+      # single largest memory consumer on a 512 MB free dyno. Flip these to
+      # "false" to drop the whole torch stack and fall back to fuzzy text
+      # cache matching — see backend/main.py::_warm_up_models.
+      - key: CACHE_SEMANTIC_ENABLED
+        value: "true"
+      - key: RAG_ENABLED
+        value: "true"
+      - key: AI_RESPONSE_ENABLED
+        value: "true"
+
+      # ── Secrets — values set in the Render dashboard ────────
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASS
+        sync: false
+      - key: ADMIN_SECRET_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: DATA_GOV_API_KEY
+        sync: false
+      - key: SMTP_EMAIL
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
+      - key: DB_ALERT_EMAIL
+        sync: false
+      - key: MANDI_ARCHIVE_REPO
+        sync: false
+      - key: MANDI_ARCHIVE_TOKEN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

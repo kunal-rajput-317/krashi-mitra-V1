@@ -43,6 +43,9 @@ from backend.database.db import (
 )
 from backend.utils.auth_utils import get_current_user, resolve_token_user
 from backend.utils.security import assert_media_matches
+import logging
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/bazar", tags=["bazar"])
 
@@ -790,4 +793,4 @@ def toggle_follow(
     }
 
 
-print("[bazar.py] loaded successfully")
+log.info("[bazar.py] loaded successfully")

@@ -33,6 +33,9 @@ from dotenv import load_dotenv
 # cycle. Model imports stay local to the functions that need them, to keep this
 # module importable by tooling that only wants the password/OTP helpers.
 from backend.database.db import get_db
+import logging
+
+log = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -244,8 +247,21 @@ def otp_expiry_time() -> datetime:
     """Return UTC expiry timestamp (10 min from now)."""
     return datetime.utcnow() + timedelta(minutes=OTP_EXPIRY_MINUTES)
 
-def is_otp_expired(otp_expiry: datetime) -> bool:
-    """Return True if OTP has expired."""
+def is_otp_expired(otp_expiry: Optional[datetime]) -> bool:
+    """Return True if the OTP has expired — and True when we can't tell.
+
+    users.otp_expiry is nullable, and rows reach that state routinely: a
+    Google-auth signup never sets one, and an account whose OTP was already
+    consumed has it cleared. Both call sites (routes/auth.py verify-otp and
+    reset-password) passed the column straight in, so a NULL turned
+    `datetime.utcnow() > None` into a TypeError and surfaced as a 500 on OTP
+    verification rather than "code expired, request a new one".
+
+    Fails closed, matching verify_password above: no expiry on record means
+    no valid OTP, never an open door.
+    """
+    if otp_expiry is None:
+        return True
     return datetime.utcnow() > otp_expiry
 
 
@@ -298,10 +314,10 @@ def _send_with_resend(to_email: str, subject: str, body: str) -> bool:
         if response.status_code < 400:
             return True
 
-        print(f"⚠️  Resend email error {response.status_code}: {response.text[:500]}")
+        log.warning(f"⚠️  Resend email error {response.status_code}: {response.text[:500]}")
         return False
     except Exception as e:
-        print(f"⚠️  Resend network error to {to_email}: {e}")
+        log.warning(f"⚠️  Resend network error to {to_email}: {e}")
         return False
 
 def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bool:
@@ -334,8 +350,8 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
 
     # Guard — if SMTP not configured, print OTP to terminal (dev mode)
     if not SMTP_EMAIL or not SMTP_PASSWORD:
-        print(f"⚠️  SMTP not configured. DEV OTP for {to_email}: {otp}")
-        print("    Add RESEND_API_KEY + RESEND_FROM_EMAIL, or SMTP_EMAIL + SMTP_PASSWORD.")
+        log.warning(f"⚠️  SMTP not configured. DEV OTP for {to_email}: {otp}")
+        log.info("    Add RESEND_API_KEY + RESEND_FROM_EMAIL, or SMTP_EMAIL + SMTP_PASSWORD.")
         return False
 
     try:
@@ -354,19 +370,19 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
         return True
 
     except smtplib.SMTPAuthenticationError:
-        print(
+        log.info(
             "⚠️  SMTP auth failed — check SMTP_EMAIL and Gmail app password. "
             "Use a 16-character app password, not your normal Gmail password."
         )
         return False
     except smtplib.SMTPException as e:
-        print(f"⚠️  SMTP error to {to_email}: {e}")
+        log.warning(f"⚠️  SMTP error to {to_email}: {e}")
         return False
     except OSError as e:
-        print(f"⚠️  Network error sending email to {to_email}: {e}")
+        log.warning(f"⚠️  Network error sending email to {to_email}: {e}")
         return False
     except Exception as e:
-        print(f"⚠️  Unexpected email error to {to_email}: {e}")
+        log.warning(f"⚠️  Unexpected email error to {to_email}: {e}")
         return False
     
-    print("✅ auth_utils.py loaded successfully")
+    log.info("✅ auth_utils.py loaded successfully")

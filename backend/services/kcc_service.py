@@ -448,13 +448,13 @@ if __name__ == "__main__":
         for r in recs:
             ok, why = is_publishable(r, slug)
             tally[why or "KEPT"] = tally.get(why or "KEPT", 0) + 1
-        print(f"{slug}: {len(recs)} rows -> {_json.dumps(tally, ensure_ascii=False)}")
+        logger.info(f"{slug}: {len(recs)} rows -> {_json.dumps(tally, ensure_ascii=False)}")
     elif "--build" in argv:
-        print(harvest(argv[argv.index("--build") + 1]))
+        logger.info(harvest(argv[argv.index("--build") + 1]))
     else:
         n = DRAIN_BATCH
         if "--drain" in argv:
             j = argv.index("--drain")
             if len(argv) > j + 1 and argv[j + 1].isdigit():
                 n = int(argv[j + 1])
-        print(drain_queue(n))
+        logger.info(drain_queue(n))

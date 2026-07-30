@@ -3,6 +3,7 @@
 # KrashiMitra — Boot guards, rate limiting, security headers
 # ============================================================
 
+import logging
 import os
 import time
 import threading
@@ -14,6 +15,8 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 IS_PROD = bool(os.getenv("RENDER"))
+
+_access_log = logging.getLogger("krashimitra.access")
 
 # Values that ship in the repo as fallbacks — safe locally, fatal in production.
 _INSECURE_DEFAULTS = {
@@ -193,3 +196,64 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
             )
         return response
+
+
+class RequestContextMiddleware(BaseHTTPMiddleware):
+    """Tags each request with an id and logs one line when it completes.
+
+    Replaces uvicorn.access (disabled in logging_config) so the access line
+    carries the same request id as every application log emitted while
+    handling it — which is what makes a traceback traceable back to the call
+    that produced it. Honours an inbound X-Request-ID so a proxy-assigned id
+    survives, and echoes it back on the response.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        import time
+
+        from backend.utils.logging_config import new_request_id, request_id_var
+
+        rid = (request.headers.get("X-Request-ID") or "").strip()[:64] or new_request_id()
+        token = request_id_var.set(rid)
+        started = time.perf_counter()
+        # Everything that logs must stay inside this try: resetting the context
+        # var before emitting the access line would strip the id off the one
+        # record whose whole job is to carry it.
+        try:
+            response = await call_next(request)
+
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            # Static assets and the keep-alive ping are the bulk of traffic and
+            # say nothing when they succeed; keep them at DEBUG so INFO reads.
+            if response.status_code >= 500:
+                level = logging.ERROR
+            elif response.status_code >= 400:
+                level = logging.WARNING
+            elif request.url.path == "/health" or "." in request.url.path.rsplit("/", 1)[-1]:
+                level = logging.DEBUG
+            else:
+                level = logging.INFO
+
+            _access_log.log(
+                level,
+                "%s %s -> %d (%.0fms)",
+                request.method,
+                request.url.path,
+                response.status_code,
+                elapsed_ms,
+            )
+            response.headers.setdefault("X-Request-ID", rid)
+            return response
+        except Exception:
+            # The handler in main.py turns this into a 500 and logs the
+            # traceback; here we only add the timing, then re-raise so that
+            # handler still runs.
+            _access_log.exception(
+                "%s %s -> unhandled exception after %.0fms",
+                request.method,
+                request.url.path,
+                (time.perf_counter() - started) * 1000,
+            )
+            raise
+        finally:
+            request_id_var.reset(token)

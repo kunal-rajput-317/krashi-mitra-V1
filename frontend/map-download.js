@@ -437,7 +437,7 @@
     document.body.appendChild(a);
     a.click();
     a.parentNode.removeChild(a);
-    if (window.gtag) gtag('event', 'map_download_landed', { page: bare(location.pathname) });
+    if (window.kmTrack) kmTrack('map_download_landed', { page: bare(location.pathname) });
 
     injectCSS();
     var t = T[lang()];
@@ -528,7 +528,7 @@
     ov.querySelector('.km-mapdl-x').addEventListener('click', close);
     ov.querySelectorAll('.km-mapdl-row').forEach(function (a) {
       a.addEventListener('click', function () {
-        if (window.gtag) gtag('event', 'map_download', { state: a.dataset.state });
+        if (window.kmTrack) kmTrack('map_download', { state: a.dataset.state });
         close();      // the <a> does the rest: download here, navigate elsewhere
       });
     });

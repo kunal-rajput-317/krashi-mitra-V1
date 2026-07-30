@@ -326,4 +326,4 @@ def run_mandi_alerts() -> dict:
 
 if __name__ == "__main__":       # manual run: python -m backend.services.push_service
     logging.basicConfig(level=logging.INFO)
-    print(run_mandi_alerts())
+    log.info(run_mandi_alerts())

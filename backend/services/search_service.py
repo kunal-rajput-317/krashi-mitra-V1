@@ -15,6 +15,9 @@ import json
 import os
 import re
 from typing import List, Dict
+import logging
+
+log = logging.getLogger(__name__)
 
 # ── Path to crop data directory ──────────────────────────────
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "crops")
@@ -87,7 +90,7 @@ def _load_all_crops() -> List[dict]:
                 _CROP_CACHE[key] = data
                 crops.append(data)
         except Exception as e:
-            print(f"[search_service] Could not load {fname}: {e}")
+            log.info(f"[search_service] Could not load {fname}: {e}")
 
     return crops
 

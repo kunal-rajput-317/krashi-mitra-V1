@@ -362,15 +362,15 @@ if __name__ == "__main__":
     if "--build" in argv:
         i = argv.index("--build")
         state, district, commodity = argv[i + 1], argv[i + 2], argv[i + 3]
-        print(build_slice(state, district, commodity))
-        print(get_summary(state, district, commodity))
+        logger.info(build_slice(state, district, commodity))
+        logger.info(get_summary(state, district, commodity))
     elif "--summary" in argv:
         i = argv.index("--summary")
-        print(get_summary(argv[i + 1], argv[i + 2], argv[i + 3]))
+        logger.info(get_summary(argv[i + 1], argv[i + 2], argv[i + 3]))
     else:
         n = 5
         if "--drain" in argv:
             j = argv.index("--drain")
             if len(argv) > j + 1 and argv[j + 1].isdigit():
                 n = int(argv[j + 1])
-        print(drain_queue(n))
+        logger.info(drain_queue(n))

@@ -4,6 +4,15 @@ __pycache__
 rag/chroma_db
 chroma_db
 
+# local virtualenvs
+.venv/
+venv/
+
+# pytest / coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
 # internal strategy/decision docs — kept out of the public repo on purpose
 docs/
 

@@ -34,7 +34,7 @@
 
   var WA_NUMBER = "919870951001"; // KrashiMitra WhatsApp
   function apiBase() {
-    return window.KRASHIMITRA_API_BASE || "https://krashi-mitra-v1.onrender.com";
+    return window.KRASHIMITRA_API_BASE || "https://krashi-mitra-v1-oxdc.onrender.com";
   }
   // Location-aware path prefix (pages under /articles/ need to go up one level).
   function pagePrefix() {

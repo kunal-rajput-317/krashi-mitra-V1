@@ -24,9 +24,12 @@
   // those paths. Always hitting the Render URL directly works on both —
   // it's a cross-origin call from krashimitra.in, but that origin is already
   // in the backend's CORS allowlist.
+  // Render reassigned the subdomain when this service was recreated — the
+  // plain name was already taken, so it now lives at the -oxdc URL below.
+  // (old host, no longer live: https://krashi-mitra-v1.onrender.com)
   window.KRASHIMITRA_API_BASE = isLocal
     ? location.protocol + '//' + (host || 'localhost') + ':' + defaultPort
-    : 'https://krashi-mitra-v1.onrender.com';
+    : 'https://krashi-mitra-v1-oxdc.onrender.com';
   window.KRASHIMITRA_IS_LOCAL = isLocal;
 
   console.log('[KrashiMitra] API base =', window.KRASHIMITRA_API_BASE);
@@ -215,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Keep href in sync for hover/middle-click/right-click UX
     btn.href = "/profile.html";
 
-    const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1.onrender.com';
+    const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1-oxdc.onrender.com';
     const cachedAvatar = localStorage.getItem("user_avatar_url");
     if (cachedAvatar && cachedAvatar !== "null") {
       const src = cachedAvatar.startsWith("/") ? apiBase + cachedAvatar : cachedAvatar;

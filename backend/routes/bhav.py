@@ -38,19 +38,19 @@ import os
 import re
 import statistics
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from functools import lru_cache
 from html import escape
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlparse
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy import func
 
-from backend.database.db import (SessionLocal, MandiPrice, MandiLastSeen,
+from backend.database.db import (SessionLocal, CropAppeal, MandiPrice, MandiLastSeen,
                                  User, UserProfile)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
-from backend.services import buyers, district_geo, freight, leads, msp
+from backend.services import buyers, district_geo, freight, lead_clicks, leads, msp
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
                                   _STAPLE_TILES_N)
@@ -238,6 +238,22 @@ def _title_names(commodity: str) -> tuple[str, str, bool]:
     en = _en_short(commodity)
     hi = _hindi_name(commodity)
     return (en, en, True) if hi == commodity else (hi, en, False)
+
+
+def _ambiguous_district(idx: dict, c_slug: str, d_slug: str) -> bool:
+    """True when this district name also exists in another state for this crop.
+
+    Balrampur is in both UP and Chhattisgarh; Bilaspur in HP and Chhattisgarh;
+    Hamirpur in UP and HP; Pratapgarh in UP and Rajasthan. A district-only
+    <title> makes those two pages byte-identical, which is the one snippet
+    defect that needs no traffic data to call a bug: Google folds duplicate
+    titles together, and a farmer who does see both cannot tell which is his.
+
+    Reads the index's own legacy map (district slug → states it appears in),
+    which is already built for the tier-3 redirects, so this costs a dict
+    lookup rather than a second pass over 14k combinations.
+    """
+    return len(idx.get("legacy", {}).get(c_slug, {}).get(d_slug, ())) > 1
 
 
 def _fit(*variants: str, limit: int = 68) -> str:
@@ -1733,6 +1749,11 @@ _FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
 
 _ICON = f'<link rel="icon" href="{SITE}/assets/krashimitra_logo.png" type="image/png">'
 
+# GA4 + Clarity. The server-rendered clusters (/bhav, /product, /naksha) are
+# proxied under krashimitra.in, so the root-relative path resolves there; the
+# backend also mounts frontend/ at "/", so it works on the origin domain too.
+_ANALYTICS = '<script src="/analytics.js"></script>'
+
 
 _NAV_ITEMS = [("bhav", f"{SITE}/bhav", "मंडी भाव"),
               ("bazar", f"{SITE}/krashi_bajar", "कृषि बाज़ार"),
@@ -1951,6 +1972,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
+{_ANALYTICS}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{escape(title)}</title>
@@ -2013,6 +2035,7 @@ def _not_found() -> HTMLResponse:
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
+{_ANALYTICS}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>यह भाव पेज उपलब्ध नहीं है | कृषि मित्र</title>
@@ -2438,6 +2461,7 @@ def find(q: str = ""):
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
+{_ANALYTICS}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title>
@@ -2906,14 +2930,43 @@ def _lead_gen_html() -> str:
             + script + '</section>')
 
 
+def _district_from_referer(ref: str) -> str | None:
+    """Pull the district slug out of the /bhav page a click came from.
+
+    Offers render on /bhav/<crop>/<state>/<district>[/...], so the page URL is
+    the only thing that knows where the farmer was — the offer config is
+    national. Best-effort by design: a missing or odd Referer just means the
+    row carries no district, never that the click is lost.
+    """
+    if not ref:
+        return None
+    try:
+        parts = [p for p in urlparse(ref).path.strip("/").split("/") if p]
+    except Exception:
+        return None
+    return parts[3] if len(parts) >= 4 and parts[0] == "bhav" else None
+
+
 @router.get("/go/{offer_id}")
-def lead_redirect(offer_id: str):
+def lead_redirect(offer_id: str, request: Request, background: BackgroundTasks):
     """Tracked outbound hop for a किसान-सेवा offer → the partner/scheme URL.
-    Logs the click (durable server trail) on top of the client GA event, then
-    302s. Unknown/inactive id falls back to /bhav rather than erroring."""
+
+    The click is persisted (services/lead_clicks.py) on top of the client GA
+    event, but *after* the 302 — a background task, so a sleeping Neon compute
+    can never sit between a farmer and the scheme page. Unknown/inactive id
+    falls back to /bhav rather than erroring."""
     o = leads.offer_by_id(offer_id)
     if o:
+        ref = request.headers.get("referer", "")
         logger.info("lead_click offer=%s cat=%s", offer_id, o.get("category", "-"))
+        background.add_task(
+            lead_clicks.record, "offer", offer_id,
+            label      = o.get("title"),
+            category   = o.get("category"),
+            district   = _district_from_referer(ref),
+            referer    = ref,
+            user_agent = request.headers.get("user-agent"),
+        )
         return RedirectResponse(o["url"], status_code=302)
     return RedirectResponse("/bhav", status_code=302)
 
@@ -3258,8 +3311,7 @@ window.apSendSell=function(){
   .then(function(res){
    if(res.ok&&res.body&&res.body.success){
     sSent=true;sBtn.hidden=true;sSay('');
-    okMsg='आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है। '
-         +T.district+' के खरीदार नीचे दिए पेज पर देखें।';
+    okMsg=T.okSell;
     showAppealOk(true);
     return;
    }
@@ -3360,8 +3412,10 @@ function showAppealOk(isSell){
     district, which is the same feed filtered to where his crop actually is.
     Offered as a button rather than an automatic redirect: the existing rule for
     this panel is that the confirmation never moves on its own, because the
-    farmer is still reading what just happened to his listing. */
- if(kh)kh.hidden=!isSell;
+    farmer is still reading what just happened to his listing.
+    T.here is set when the panel is opened ON that page: a button offering to
+    take him where he already is reads as a broken link. */
+ if(kh)kh.hidden=!isSell||!!T.here;
  if(ttl)ttl.textContent=isSell
   ? 'आपकी फसल कृषि बाज़ार पर डाल दी गई है ✅'
   : 'भाई! आपकी बात कृषि मित्र तक पहुँचा दी गई है';
@@ -3456,13 +3510,20 @@ window.sendCropAppeal=function(){
 
 
 def _appeal_block(hi: str, commodity: str, state: str, district: str,
-                  c_slug: str = "", s_slug: str = "", d_slug: str = "") -> str:
+                  c_slug: str = "", s_slug: str = "", d_slug: str = "",
+                  here: bool = False, ok_sell: str = "") -> str:
     """🤝 "बेचना है / खरीदना है" button + its panel, for tier-4 district pages.
 
     A district page is where intent is at its sharpest: the farmer has just read
     what his crop fetches in *his* mandi. Until now the page ended there. This
     captures the next sentence — who wants to sell, what, where — into
     crop_appeals, and it is the supply side of the buyer/dealer directory.
+
+    `here=True` renders the same panel on the खरीदार page itself, where the only
+    difference is what happens afterwards: the confirmation stops offering a link
+    to the buyer page the farmer is already standing on. `ok_sell` lets that
+    caller write the confirmation line, because whether the page has any buyers
+    on it to promise him is something only the caller knows.
 
     Deliberately not login-gated (see routes/appeal.py): a wall here would cost
     more appeals than the account linkage is worth. Name is the only thing a
@@ -3481,10 +3542,16 @@ def _appeal_block(hi: str, commodity: str, state: str, district: str,
         "crop_slug": c_slug or "",
         "hi":        hi or "",
         "kh":        kh_url,
+        "here":      bool(here),
+        "okSell": (ok_sell or
+                   f"आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है। "
+                   f"{district} के खरीदार नीचे दिए पेज पर देखें।"),
         "tPick": f"{hi} बेचना है या खरीदना है?",
         "sPick": f"📍 {district}, {_hindi_state(state)} · नीचे से चुनें।",
         "tSell": f"अपना {hi} बेचने के लिए डालें",
-        "sSell": ("यह जानकारी कृषि बाज़ार पर सबको दिखेगी, और आपके जिले के "
+        "sSell": ("यह जानकारी कृषि बाज़ार पर सबको दिखेगी, और इसी पेज पर भी।"
+                  if here else
+                  "यह जानकारी कृषि बाज़ार पर सबको दिखेगी, और आपके जिले के "
                   "खरीदार पेज पर भी।"),
         "tBuy":  f"{district} में {hi} कौन बेच रहा है?",
         "sBuy":  "अभी बिकने के लिए रखी फसलें नीचे दी गई हैं।",
@@ -4644,11 +4711,29 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
     # The district name is Latin in both halves, so printing it twice was the same
     # token repeated — it only ate the character budget. Once is enough to rank.
-    t_hi, t_en, _same = _title_names(commodity)
-    title = _fit(
-        f"{t_hi} का भाव आज {district} मंडी में — {t_en} Price Today",
-        f"{t_hi} का भाव आज {district} मंडी में — {t_en} Price",
-        f"{district} में {t_hi} का भाव आज")
+    t_hi, t_en, same = _title_names(commodity)
+    # The state joins the title ONLY where the district name is shared with
+    # another state — see _ambiguous_district. The other ~98% keep the shorter,
+    # punchier version, because a title that spends 14 characters disambiguating
+    # something that was never ambiguous is just a worse title.
+    place = f"{district}, {hi_state}" if _ambiguous_district(idx, cs, ds) else district
+    title = _fit(*(
+        # No real Hindi name for this commodity: t_hi IS t_en, so a bilingual
+        # template would print one long string twice.
+        (f"{t_hi} का भाव आज {place} मंडी में",
+         f"{place} में {t_hi} का भाव आज",
+         f"{t_hi} भाव — {place}",
+         f"{t_hi} भाव — {district}")
+        if same else
+        # The English name owns the "<crop> price today" query space, so it is
+        # the last thing to go, not the first: every variant that still fits
+        # keeps it, and only the final fallbacks give it up.
+        (f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price Today",
+         f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price",
+         f"{t_hi} का भाव आज {place} — {t_en} Price",
+         f"{place} में {t_hi} भाव — {t_en}",
+         f"{place} में {t_hi} का भाव आज",
+         f"{t_hi} का भाव — {district}")))
     _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
     desc  = _fit(
         f"{today_hi}: {district} ({hi_state}) में {hi} का ताजा भाव — {_avg}"
@@ -4843,6 +4928,21 @@ transition:transform .15s,background .15s}
 padding:22px 18px;text-align:center;margin:16px 0;box-shadow:var(--shadow-sm)}
 .kh-empty h2{font-size:17px;margin:0 0 7px}
 .kh-empty p{font-size:13.5px;color:var(--text-mid);line-height:1.6;margin:0 auto;max-width:520px}
+/* The supply side. Deliberately a quieter card than .kh-join (which is the
+   pitch to a dealer, in full green): this one sits mid-page and must not read
+   as an ad — it is the farmer's own next step. */
+.kh-sell{margin-top:22px;background:var(--white);border:1px solid var(--border);
+border-left:4px solid var(--amber);border-radius:var(--radius-md);
+padding:18px 20px;box-shadow:var(--shadow-sm)}
+.kh-sell h2{font-size:17px;margin:0 0 6px;color:var(--green-dark)}
+.kh-sell p{font-size:13.5px;line-height:1.6;color:var(--text-mid);margin:0 0 13px}
+.kh-sell-n{font-size:13px;color:var(--green-dark);background:var(--green-pale);
+border-radius:var(--radius-sm);padding:9px 12px;margin:0 0 13px!important}
+.kh-sell-n b{font-weight:800}
+.kh-sell-btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;
+background:var(--green-dark);color:#fff;font:inherit;font-size:14px;font-weight:800;
+padding:11px 20px;border-radius:24px;transition:background .15s,transform .15s}
+.kh-sell-btn:hover{background:var(--green-mid);transform:translateY(-1px)}
 .kh-join{margin-top:22px;background:var(--green-dark);color:#fff;border-radius:var(--radius-md);
 padding:18px 20px;box-shadow:var(--shadow-md)}
 .kh-join h2{font-size:17px;margin:0 0 6px;color:#fff}
@@ -4926,6 +5026,39 @@ def _bazar_slice(post_type: str, cs: str, state: str, district: str,
         db.close()
 
 
+def _sell_intent(commodity: str, district: str, days: int = 60) -> int:
+    """How many farmers have asked to SELL this crop in this district lately.
+
+    This is the number the खरीदार page is actually selling. A dealer does not
+    pay ₹500 for a listing on a directory; he pays because "इस जिले में 14
+    किसानों ने गेहूं बेचने के लिए कहा है" is a queue with his name on it. The
+    click that follows is what lead_clicks counts — this is the supply behind it.
+
+    A count, never the rows: names and phone numbers in crop_appeals belong to
+    the farmers who typed them, and a public page listing who has grain sitting
+    at home is not something we would want done to us. 60 days because a farmer
+    who wrote in last month is still holding the crop; a harvest does not move
+    on a 30-day boundary.
+    """
+    if not (commodity and district):
+        return 0
+    db = SessionLocal()
+    try:
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        return (db.query(func.count(CropAppeal.id))
+                  .filter(CropAppeal.kind == "sell",
+                          CropAppeal.commodity == commodity,
+                          CropAppeal.district == district,
+                          CropAppeal.created_at >= cutoff)
+                  .scalar() or 0)
+    except Exception as e:
+        # Same rule as the bazar slice: the page must not 500 over a side panel.
+        logger.warning("sell intent failed (%s/%s): %s", commodity, district, e)
+        return 0
+    finally:
+        db.close()
+
+
 def _bazar_card(p: dict, hi: str) -> str:
     """One Krashi Bazar 'खरीदना है' post rendered as a buyer card.
 
@@ -5004,10 +5137,11 @@ _KH_JS = ("<script>document.querySelectorAll('[data-kh]').forEach(function(a){"
 
 
 @router.get("/kharidar/go/{buyer_id}")
-def kharidar_redirect(buyer_id: str):
-    """Tracked hop to a listing's WhatsApp. Server-side log on top of the GA
-    event, so lead volume is provable from our own data when it comes time to
-    price a listing. Unknown id falls back to /bhav rather than erroring."""
+def kharidar_redirect(buyer_id: str, request: Request, background: BackgroundTasks):
+    """Tracked hop to a listing's WhatsApp. The click is persisted to lead_clicks
+    on top of the GA event, so lead volume is provable from our own data when it
+    comes time to price a listing — that number is the whole pitch. Recorded in
+    the background, after the redirect. Unknown id falls back to /bhav."""
     b = buyers.by_id(buyer_id)
     if not b:
         return RedirectResponse("/bhav", status_code=302)
@@ -5015,6 +5149,14 @@ def kharidar_redirect(buyer_id: str):
     logger.info("buyer_click id=%s district=%s", buyer_id, b.get("district", "-"))
     if not num:
         return RedirectResponse("/bhav", status_code=302)
+    background.add_task(
+        lead_clicks.record, "buyer", buyer_id,
+        label      = b.get("name"),
+        category   = b.get("kind"),
+        district   = b.get("district"),
+        referer    = request.headers.get("referer", ""),
+        user_agent = request.headers.get("user-agent"),
+    )
     return RedirectResponse(f"https://wa.me/{num}", status_code=302)
 
 
@@ -5045,6 +5187,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     # paid slot AND the only entries someone has actually spoken to.
     rows = buyers.for_place(cs, state, district)
     bz = _bazar_slice("buy", cs, state, district)
+    total = len(rows) + len(bz)
 
     price_note = (
         f'<div class="kh-note">📊 आज {escape(district)} में <b>{escape(hi)}</b> का औसत मंडी भाव '
@@ -5059,13 +5202,39 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     # names the district and crop so we know which slot they want.
     join_msg = quote(f"नमस्ते, मुझे कृषि मित्र पर {district} ({state}) में "
                      f"{hi} खरीदार के रूप में अपना नाम जोड़वाना है।")
+    # The other half of the page. Everything above answers "who will buy it";
+    # this captures "I have it" — the same crop_appeals / Krashi Bazar flow the
+    # price page uses, opened right where the farmer is looking at buyers. Until
+    # now the empty state promised a form here that did not exist.
+    n_sell = _sell_intent(commodity, district)
+    intent_line = (
+        f'<p class="kh-sell-n">🌾 पिछले दो महीनों में <b>{n_sell} किसानों</b> ने '
+        f'{escape(district)} में {escape(hi)} बेचने के लिए कहा है।</p>'
+        if n_sell else "")
+    # An empty district must not be told his crop is going in front of buyers
+    # that are not there. Both wordings are the same promise, honestly sized.
+    sell_sub = (f'यह ऊपर दिए {escape(district)} के खरीदारों और कृषि बाज़ार, '
+                f'दोनों तक पहुंचेगी।' if total else
+                f'यह कृषि बाज़ार पर दिख जाएगी, और {escape(district)} में खरीदार '
+                f'जुड़ते ही सबसे पहले यही सूची उन्हें दिखाई जाएगी।')
+    ok_sell = (f"आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है — ऊपर दिए "
+               f"{district} के खरीदारों को भी।" if total else
+               f"आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है। {district} में "
+               f"खरीदार जुड़ते ही आपको बताया जाएगा।")
+    sell_cta = (
+        f'<section class="kh-sell"><h2>🌾 आपको {escape(hi)} बेचना है?</h2>'
+        f'<p>अपनी फसल की जानकारी यहीं डालें — मात्रा, भाव और फोटो। {sell_sub}</p>'
+        f'{intent_line}'
+        f'<button class="kh-sell-btn" type="button" onclick="openCropAppeal()">'
+        f'फसल की जानकारी डालें →</button></section>'
+        f'{_appeal_block(hi, commodity, state, district, cs, ss, ds, here=True, ok_sell=ok_sell)}')
+
     join = (f'<section class="kh-join"><h2>🧾 आप {escape(hi)} खरीदते हैं?</h2>'
             f'<p>अपने जिले के किसानों तक सीधे पहुंचें। कृषि मित्र पर अपनी फर्म का नाम, '
             f'नंबर और फसलें जुड़वाएं — किसान सीधे आपको कॉल करेंगे।</p>'
             f'<a href="https://wa.me/919870951001?text={join_msg}" rel="nofollow" '
             f'target="_blank">WhatsApp पर नाम जुड़वाएं</a></section>')
 
-    total = len(rows) + len(bz)
     if total:
         parts = []
         if rows:
@@ -5124,9 +5293,16 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     ld = _ld(*ld_blocks)
 
     t_hi, _t_en, _same = _title_names(commodity)
+    # Same shared-district-name collision as the price page above it.
+    kh_place = f"{district}, {hi_state}" if _ambiguous_district(idx, cs, ds) else district
     title = _fit(
-        f"{district} मंडी में {t_hi} कौन खरीदेगा — खरीदार और भाव",
-        f"{district} में {t_hi} कौन खरीदेगा")
+        f"{kh_place} मंडी में {t_hi} कौन खरीदेगा — खरीदार और भाव",
+        f"{kh_place} में {t_hi} कौन खरीदेगा — खरीदार",
+        f"{kh_place} में {t_hi} कौन खरीदेगा",
+        f"{district} में {t_hi} कौन खरीदेगा",
+        # Last resort for the commodities with no Hindi name, where t_hi is a
+        # 30-character English phrase and the sentence form cannot fit at all.
+        f"{t_hi} खरीदार — {district}")
     desc = _fit(
         f"{district} ({hi_state}) में {t_hi} खरीदने वाले सत्यापित व्यापारी और डीलर — "
         f"नाम, फसल और सीधा संपर्क। आज का मंडी भाव भी साथ में।",
@@ -5138,6 +5314,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
                            f"📅 {today_hi} · {escape(hi_state)} · {n_txt}")}
 {price_note}
 {listing}
+{sell_cta}
 <div class="cta-row">
 <a class="btn btn-app" href="{price_url}">📊 {escape(district)} का {escape(hi)} भाव</a>
 {_net_price_cta(hi, cs, state, district)}
@@ -5155,4 +5332,4 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › '
               f'<a href="{SITE}{price_url}">{escape(district)}</a> › खरीदार')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_KH_CSS, robots=robots)
+                extra_css=_KH_CSS + _APPEAL_CSS, robots=robots)

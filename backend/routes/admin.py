@@ -1066,6 +1066,24 @@ async def farmer_locations(
         raise HTTPException(500, str(e))
 
 
+# ── Lead clicks ───────────────────────────────────────────────
+# The one number that decides the 31-Aug test is "how many enquiries did this
+# listing get". It sits on the checklist page on purpose: the panel is opened to
+# tick tasks, so the count is in front of the owner without anyone remembering
+# to run a GA4 report. Source: lead_clicks, written by the /go/<id> redirects.
+
+@router.get("/leads")
+async def lead_report(
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import lead_clicks
+    try:
+        return {"success": True, **lead_clicks.report(db)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
 # ── Deadline Checklist ────────────────────────────────────────
 # The owner's run-up to the 31-Aug-2026 revenue test (docs/MARKET-AND-MONEY.md
 # §8). The plan is a JSON file, the tick state is the admin_tasks table, and

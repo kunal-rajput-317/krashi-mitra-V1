@@ -8,6 +8,9 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import logging
+
+log = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -28,7 +31,7 @@ if DATABASE_URL.startswith("postgresql") and "sslmode" not in DATABASE_URL:
 
 # Log host only — never the credentials (they were leaking into Render logs)
 _safe_host = DATABASE_URL.split("@")[-1].split("?")[0] if "@" in DATABASE_URL else "local"
-print(f"[DB] connecting to: ...@{_safe_host}")
+log.info(f"[DB] connecting to: ...@{_safe_host}")
 
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
@@ -948,6 +951,41 @@ class AdminTask(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class LeadClick(Base):
+    """One outbound click on a link we could charge for.
+
+    Two surfaces feed this table, told apart by `kind`: the किसान-सेवा offers on
+    /bhav (`/go/<id>`, services/leads.py) and the खरीदार WhatsApp hops
+    (`/kharidar/go/<id>`, services/buyers.py). Both were logger.info lines plus a
+    GA4 event — Render rotates its logs and GA4 is a report someone has to
+    remember to run, so the one number a dealer will actually be quoted ("this
+    district sent you N enquiries last month") lived nowhere durable.
+
+    The row is a snapshot, not a join: `label`, `category` and `district` are
+    copied from the JSON config at click time. Offers and buyers are file-backed
+    and hand-edited, so an id can be reworded or dropped entirely — history has
+    to keep reading correctly after that, which a foreign key could not promise.
+
+    Written from a background task that swallows every error (see
+    services/lead_clicks.py). A farmer's redirect must never wait on Neon waking
+    up, and must never break because the compute went read-only.
+    """
+    __tablename__ = "lead_clicks"
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    kind       = Column(String,   nullable=False, index=True)   # "offer" | "buyer"
+    target_id  = Column(String,   nullable=False, index=True)   # offer id / buyer id at click time
+    label      = Column(String,   nullable=True)                # its title then, so a rename can't orphan the row
+    category   = Column(String,   nullable=True,  index=True)   # offer category / buyer kind
+    district   = Column(String,   nullable=True,  index=True)   # the unit a listing is sold by
+    referer    = Column(String,   nullable=True)                # page the click came from
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    # The report is always "this kind, this month" — one index instead of an
+    # index scan plus a filter on every admin panel load.
+    __table_args__ = (Index("ix_lead_clicks_kind_created", "kind", "created_at"),)
+
+
 # ── DB Helpers ───────────────────────────────────────────────
 
 _TABLE_RENAMES = [
@@ -971,7 +1009,7 @@ def _ensure_table_renames():
             new_exists = conn.execute(text("SELECT to_regclass(:t)"), {"t": f"public.{new}"}).scalar()
             if old_exists and not new_exists:
                 conn.execute(text(f'ALTER TABLE "{old}" RENAME TO "{new}"'))
-                print(f"🔤 renamed table {old} → {new}")
+                log.info(f"🔤 renamed table {old} → {new}")
             elif old_exists and new_exists:
                 # A reload can race this: create_all() sees the model's new
                 # __tablename__ and creates it fresh before this function ever
@@ -981,9 +1019,9 @@ def _ensure_table_renames():
                 old_count = conn.execute(text(f'SELECT count(*) FROM "{old}"')).scalar()
                 if old_count == 0:
                     conn.execute(text(f'DROP TABLE "{old}"'))
-                    print(f"🧹 dropped empty leftover table {old} (already renamed to {new})")
+                    log.info(f"🧹 dropped empty leftover table {old} (already renamed to {new})")
                 else:
-                    print(f"⚠️  both {old} and {new} exist and {old} has {old_count} row(s) — needs manual merge")
+                    log.warning(f"⚠️  both {old} and {new} exist and {old} has {old_count} row(s) — needs manual merge")
 
 
 def _ensure_postgres_columns():
@@ -1693,7 +1731,7 @@ def _ensure_users_column_order():
                 WHEN (NEW.is_verified)
                 EXECUTE FUNCTION ensure_user_profile()
         """))
-        print("🔀 rebuilt users table with user_id as column 2")
+        log.info("🔀 rebuilt users table with user_id as column 2")
 
 
 # ── REFERENTIAL INTEGRITY ────────────────────────────────────
@@ -1798,7 +1836,7 @@ def _ensure_foreign_keys():
                     )).rowcount
                     action = "detached"
                 if swept:
-                    print(f"🧹 {child}.{col}: {action} {swept} orphan row(s) "
+                    log.info(f"🧹 {child}.{col}: {action} {swept} orphan row(s) "
                           f"pointing at a missing {parent}.{pcol}")
 
                 conn.execute(text(
@@ -1806,9 +1844,9 @@ def _ensure_foreign_keys():
                     f'FOREIGN KEY ("{col}") REFERENCES "{parent}"("{pcol}") '
                     f'ON DELETE {on_delete}'
                 ))
-                print(f"🔗 {name} → {parent}.{pcol} ON DELETE {on_delete}")
+                log.info(f"🔗 {name} → {parent}.{pcol} ON DELETE {on_delete}")
         except Exception as e:
-            print(f"⚠️  Foreign key {name} skipped: {e}")
+            log.warning(f"⚠️  Foreign key {name} skipped: {e}")
 
 
 # Indexes that cost storage and buy nothing. Each is either an exact duplicate
@@ -1859,9 +1897,9 @@ def _drop_dead_indexes():
                 conn.execute(text(f'DROP INDEX IF EXISTS "{name}"'))
                 dropped.append(name)
         except Exception as e:
-            print(f"⚠️  could not drop index {name}: {e}")
+            log.warning(f"⚠️  could not drop index {name}: {e}")
     if dropped:
-        print(f"🗑️  dropped {len(dropped)} redundant mandi index(es): {', '.join(dropped)}")
+        log.info(f"🗑️  dropped {len(dropped)} redundant mandi index(es): {', '.join(dropped)}")
 
 
 def _backfill_last_seen():
@@ -1898,9 +1936,9 @@ def _backfill_last_seen():
                 ON CONFLICT (group_key) DO NOTHING
             """))
             if res.rowcount:
-                print(f"🌱 mandi_last_seen seeded with {res.rowcount:,} rows")
+                log.info(f"🌱 mandi_last_seen seeded with {res.rowcount:,} rows")
     except Exception as e:
-        print(f"⚠️  mandi_last_seen backfill skipped: {e}")
+        log.warning(f"⚠️  mandi_last_seen backfill skipped: {e}")
 
 
 def init_db():
@@ -1912,9 +1950,9 @@ def init_db():
         _ensure_foreign_keys()
         _backfill_last_seen()
         _drop_dead_indexes()
-        print("✅ Database tables created successfully!")
+        log.info("✅ Database tables created successfully!")
     except Exception as e:
-        print(f"⚠️  Database error: {e}")
+        log.warning(f"⚠️  Database error: {e}")
 
 def get_db():
     db = SessionLocal()

@@ -5,10 +5,22 @@
 # ============================================================
 
 import json
+import logging
 import os
+from urllib.parse import urlparse
+
 import httpx
 
 from backend.config import get_setting
+
+log = logging.getLogger(__name__)
+
+# Single source for the user-facing "AI is down" reply. It was duplicated at
+# three exit points and is also matched by BAD_ANSWER_PHRASES below, so the two
+# must not drift — a reworded copy would start getting cached as a real answer.
+AI_UNAVAILABLE_MSG = (
+    "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।"
+)
 
 # ── Bad answer phrases — never cache these ────────────────────
 BAD_ANSWER_PHRASES = [
@@ -176,14 +188,14 @@ def _load_all_crops() -> dict:
     )
     crops_dir = os.path.join(project_root, "crops")
     if not os.path.exists(crops_dir):
-        print(f"[crops] Warning: crops/ folder not found at {crops_dir}")
+        log.info(f"[crops] Warning: crops/ folder not found at {crops_dir}")
         return crops
     for filename in os.listdir(crops_dir):
         if filename.endswith(".json"):
             name = filename.replace(".json", "")
             with open(os.path.join(crops_dir, filename), "r", encoding="utf-8") as f:
                 crops[name] = json.load(f)
-    print(f"[crops] Loaded {len(crops)} crop files: {list(crops.keys())}")
+    log.info(f"[crops] Loaded {len(crops)} crop files: {list(crops.keys())}")
     return crops
 
 all_crops = _load_all_crops()
@@ -287,16 +299,16 @@ async def call_claude(prompt: str) -> str:
                 messages=[{"role": "user", "content": prompt}],
             )
         except anthropic.AuthenticationError:
-            print("[Claude] ❌ Invalid ANTHROPIC_API_KEY")
+            log.error("[Claude] ❌ Invalid ANTHROPIC_API_KEY")
             raise
         except anthropic.RateLimitError:
-            print("[Claude] Rate limited")
+            log.info("[Claude] Rate limited")
             raise
         except anthropic.APIStatusError as e:
-            print(f"[Claude] API error {e.status_code}: {e.message}")
+            log.info(f"[Claude] API error {e.status_code}: {e.message}")
             raise
         except anthropic.APIConnectionError:
-            print(f"[Claude] Connection failed / timed out after {timeout}s")
+            log.info(f"[Claude] Connection failed / timed out after {timeout}s")
             raise
 
     if response.stop_reason == "refusal":
@@ -306,7 +318,7 @@ async def call_claude(prompt: str) -> str:
     if not answer:
         raise Exception(f"Claude returned no text (stop_reason={response.stop_reason})")
 
-    print(f"[Claude] ✅ Success ({model}, {response.usage.output_tokens} out-tokens)")
+    log.info(f"[Claude] ✅ Success ({model}, {response.usage.output_tokens} out-tokens)")
     return answer
 
 
@@ -317,7 +329,10 @@ async def call_gemini(prompt: str) -> str:
     Reads model/timeout from runtime config (admin-controllable).
     Disables thinking tokens to protect quota.
     """
-    model   = get_setting("gemini_model",   "gemini-1.5-flash")
+    # Default must match config.get_setting's own fallback — they disagreed
+    # ("gemini-2.5-flash" there, "gemini-1.5-flash" here), so which model
+    # answered depended on whether the setting resolved. Keep them in sync.
+    model   = get_setting("gemini_model",   "gemini-2.5-flash")
     timeout = get_setting("gemini_timeout", 15.0)
 
     # Collect all configured keys (dedup, preserve order)
@@ -359,20 +374,20 @@ async def call_gemini(prompt: str) -> str:
             try:
                 resp = await client.post(url, json=payload)
                 if resp.status_code == 429:
-                    print(f"[Gemini] {key_name} quota exceeded, trying next key...")
+                    log.info(f"[Gemini] {key_name} quota exceeded, trying next key...")
                     last_error = f"{key_name}: 429 quota exceeded"
                     continue
                 resp.raise_for_status()
                 data = resp.json()
                 answer = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                print(f"[Gemini] ✅ Success with {key_name} ({model})")
+                log.info(f"[Gemini] ✅ Success with {key_name} ({model})")
                 return answer
             except httpx.TimeoutException:
-                print(f"[Gemini] {key_name} timed out after {timeout}s")
+                log.info(f"[Gemini] {key_name} timed out after {timeout}s")
                 last_error = f"{key_name}: timeout"
                 continue
             except Exception as e:
-                print(f"[Gemini] {key_name} failed: {e}")
+                log.info(f"[Gemini] {key_name} failed: {e}")
                 last_error = str(e)
                 continue
 
@@ -380,10 +395,33 @@ async def call_gemini(prompt: str) -> str:
 
 
 # ── Ollama local fallback (ASYNC) ─────────────────────────────
+_LOCAL_HOSTS = ("localhost", "127.0.0.1", "0.0.0.0", "::1", "host.docker.internal")
+
+
+def ollama_base_url() -> str:
+    return os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+
+
+def ollama_is_reachable() -> bool:
+    """False when the configured Ollama host can't exist from where we run.
+
+    OLLAMA_BASE_URL defaults to localhost, which is right on a dev laptop and
+    meaningless on Render — nothing listens on the dyno's 11434. Without this
+    check, flipping ollama_enabled=true in admin settings on production makes
+    every AI failure sit through a 60s connect timeout before returning the
+    same error it would have returned instantly. Gate on the host, not on the
+    toggle, so the local dev path keeps working untouched.
+    """
+    if not os.getenv("RENDER"):
+        return True  # dev box: localhost is exactly what we want
+    host = (urlparse(ollama_base_url()).hostname or "").lower()
+    return host not in _LOCAL_HOSTS
+
+
 async def call_ollama(prompt: str) -> str:
     """Call local Ollama — only when ollama_enabled=true in settings."""
     model    = get_setting("ollama_model",   "gemma3:4b")
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    base_url = ollama_base_url()
     hindi_prefix = "You must respond ONLY in Hindi. हिंदी में उत्तर दें।\n\n"
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
@@ -412,9 +450,9 @@ async def call_ai(prompt: str) -> tuple[str, str]:
             answer = await call_claude(prompt)
             if is_good_answer(answer):
                 return answer, "claude"
-            print("[AI] Claude answer too weak to use, trying Gemini")
+            log.info("[AI] Claude answer too weak to use, trying Gemini")
         except Exception as e:
-            print(f"[AI] Claude failed: {e}")
+            log.info(f"[AI] Claude failed: {e}")
 
     # ── Try Gemini ────────────────────────────────────────────
     try:
@@ -425,29 +463,31 @@ async def call_ai(prompt: str) -> tuple[str, str]:
         # Only fall through if it looks like a refusal — not just short.
         is_refusal = any(p.lower() in answer.lower() for p in BAD_ANSWER_PHRASES)
         if not is_refusal and len(answer.strip()) >= 10:
-            print(f"[AI] Gemini short answer (len={len(answer)}), using anyway")
+            log.info(f"[AI] Gemini short answer (len={len(answer)}), using anyway")
             return answer, "gemini"
-        print("[AI] Gemini returned a refusal/error message, trying Ollama")
+        log.info("[AI] Gemini returned a refusal/error message, trying Ollama")
     except Exception as e:
-        print(f"[AI] Gemini failed: {e}")
+        log.info(f"[AI] Gemini failed: {e}")
 
     # ── Try Ollama fallback ───────────────────────────────────
     if not get_setting("ollama_enabled", False):
-        print("[AI] Ollama fallback disabled (ollama_enabled=false in settings)")
-        return (
-            "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
-            "error",
+        log.info("Ollama fallback disabled (ollama_enabled=false in settings)")
+        return AI_UNAVAILABLE_MSG, "error"
+
+    if not ollama_is_reachable():
+        log.warning(
+            "Ollama enabled but OLLAMA_BASE_URL=%s is loopback on a Render dyno "
+            "— skipping the tier rather than waiting out a 60s connect timeout",
+            ollama_base_url(),
         )
+        return AI_UNAVAILABLE_MSG, "error"
 
     try:
         answer = await call_ollama(prompt)
         if is_good_answer(answer):
             return answer, "ollama"
-        print("[AI] Ollama returned bad answer")
+        log.warning("Ollama returned an answer that failed the quality check")
     except Exception as e:
-        print(f"[AI] Ollama failed: {e}")
+        log.warning("Ollama failed: %s", e)
 
-    return (
-        "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
-        "error",
-    )
+    return AI_UNAVAILABLE_MSG, "error"

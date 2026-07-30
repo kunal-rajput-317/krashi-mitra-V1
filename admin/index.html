@@ -2195,6 +2195,43 @@ body {
           color: var(--muted); font-size: 15px; line-height: 1; border-radius: 5px;
         }
         .ck-del:hover { color: var(--danger); background: rgba(239,68,68,.1); }
+
+        /* ── Leads this month ────────────────────────────
+           The revenue number, above the progress ring on purpose: the panel is
+           opened to tick tasks, and this is what the ticks are supposed to move. */
+        .ld-grid {
+          display: grid; gap: 14px; margin-bottom: 16px;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+        .ld-big { font-size: 34px; font-weight: 800; line-height: 1; }
+        .ld-big.zero { color: var(--muted); }
+        .ld-delta { font-size: 11.5px; font-family: var(--font-mono); margin-top: 6px; }
+        .ld-delta.up   { color: var(--primary); }
+        .ld-delta.down { color: var(--danger); }
+        .ld-delta.flat { color: var(--muted); }
+
+        .ld-cols { display: grid; gap: 18px; grid-template-columns: 1fr; }
+        @media (min-width: 900px) { .ld-cols { grid-template-columns: 1fr 1fr; } }
+        .ld-col h4 {
+          font-size: 11px; font-weight: 700; color: var(--muted); margin: 0 0 8px;
+          text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono);
+        }
+        .ld-row {
+          display: flex; align-items: center; gap: 8px;
+          padding: 7px 0; border-bottom: 1px solid var(--border);
+          font-size: 12.5px;
+        }
+        .ld-row:last-child { border-bottom: none; }
+        .ld-row .ld-nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ld-row .ld-n  { font-family: var(--font-mono); font-weight: 700; }
+        .ld-sub { font-size: 11px; color: var(--text-dim); }
+        .ld-kind {
+          font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+          font-family: var(--font-mono); text-transform: uppercase; flex: none;
+        }
+        .ld-kind-buyer { background: rgba(34,197,94,.14); color: var(--primary); }
+        .ld-kind-offer { background: rgba(59,130,246,.14); color: var(--info); }
+        .ld-empty { font-size: 12.5px; color: var(--text-dim); line-height: 1.65; }
       </style>
       <!-- ─────────────── PAGE: DEADLINE CHECKLIST ───────────────
            The run-up to the 31-Aug-2026 revenue test (docs/MARKET-AND-MONEY.md §8).
@@ -2207,7 +2244,48 @@ body {
             <p>The run-up to <span id="ck-deadline">the deadline</span> • one paying counterparty or the plan changes • <span id="ck-ref" style="font-family:var(--font-mono);font-size:12px;"></span></p>
           </div>
           <div class="page-actions">
-            <button class="btn btn-secondary" onclick="loadChecklist()" id="ck-refresh-btn">↻ Refresh</button>
+            <button class="btn btn-secondary" onclick="loadChecklist(); loadLeads();" id="ck-refresh-btn">↻ Refresh</button>
+          </div>
+        </div>
+
+        <!-- ─────────────── LEADS THIS MONTH ───────────────
+             Every click on a किसान-सेवा offer (/go/<id>) or a खरीदार WhatsApp
+             button (/kharidar/go/<id>), from our own lead_clicks table — not
+             GA4. This is the number a dealer is quoted before he pays. -->
+        <div class="dashboard-panel" style="margin-bottom:18px;">
+          <div class="panel-header">
+            <div class="panel-title">💰 Leads — <span id="ld-month">this month</span></div>
+            <div class="ld-sub" id="ld-since">outbound clicks on listings and service offers</div>
+          </div>
+          <div class="panel-body">
+            <div class="ld-grid">
+              <div class="stat-card accented">
+                <span class="stat-icon">📲</span>
+                <div class="stat-label">This month</div>
+                <div class="stat-value ld-big" id="ld-total">—</div>
+                <div class="ld-delta" id="ld-delta">vs last month</div>
+              </div>
+              <div class="stat-card info">
+                <span class="stat-icon">🧑‍🌾</span>
+                <div class="stat-label">खरीदार WhatsApp</div>
+                <div class="stat-value ld-big" id="ld-buyer">—</div>
+                <div class="stat-sub">the ones a dealer pays for</div>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">🏦</span>
+                <div class="stat-label">Service offers</div>
+                <div class="stat-value ld-big" id="ld-offer">—</div>
+                <div class="stat-sub">loan / insurance / solar links</div>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">📅</span>
+                <div class="stat-label">Today</div>
+                <div class="stat-value ld-big" id="ld-today">—</div>
+                <div class="stat-sub" id="ld-alltime">all-time —</div>
+              </div>
+            </div>
+
+            <div class="ld-cols" id="ld-breakdown"></div>
           </div>
         </div>
 
@@ -2748,7 +2826,7 @@ function switchPage(pageId, el) {
     _kpiOrderFilter = null;
   }
   if (pageId === 'locator') loadFarmerLocator();
-  if (pageId === 'checklist') loadChecklist();
+  if (pageId === 'checklist') { loadChecklist(); loadLeads(); }
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)
@@ -4599,6 +4677,80 @@ function ckSetProgress(p) {
     CK_CIRC * (1 - pct / 100);
   document.getElementById('ck-pct').textContent  = pct + '%';
   document.getElementById('ck-frac').textContent = `${p.done}/${p.total}`;
+}
+
+// ── Leads this month ──────────────────────────────────────────
+// Reads /admin/leads (our lead_clicks table, not GA4). Loaded alongside the
+// checklist so the revenue number is on screen whenever the panel is open.
+async function loadLeads() {
+  const box = document.getElementById('ld-breakdown');
+  if (!box) return;
+  try {
+    const r = await fetch(`${API}/admin/leads`, { headers: getAuthHeader() });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    renderLeads(await r.json());
+  } catch (e) {
+    box.innerHTML = `<p class="ld-empty" style="color:var(--danger);">
+        Could not load leads — ${escapeHtml(e.message)}.</p>`;
+  }
+}
+
+function renderLeads(d) {
+  const t = d.this_month || {}, l = d.last_month || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+  set('ld-month',  d.month_label || 'this month');
+  set('ld-total',  t.total ?? 0);
+  set('ld-buyer',  t.buyer ?? 0);
+  set('ld-offer',  t.offer ?? 0);
+  set('ld-today',  (d.today || {}).total ?? 0);
+  set('ld-alltime', `all-time ${d.all_time ?? 0}`);
+  set('ld-since',  d.since
+    ? `outbound clicks on listings and service offers · tracking since ${d.since}`
+    : 'outbound clicks on listings and service offers · no clicks recorded yet');
+
+  // Grey the headline at zero — ₹0 should not look like a result.
+  document.getElementById('ld-total').classList.toggle('zero', !(t.total > 0));
+
+  const delta = d.delta || 0;
+  const dEl = document.getElementById('ld-delta');
+  dEl.className = 'ld-delta ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat');
+  dEl.textContent = `${delta > 0 ? '+' : ''}${delta} vs ${d.last_month_label || 'last month'} (${l.total ?? 0})`;
+
+  const kindTag = k => `<span class="ld-kind ld-kind-${k === 'buyer' ? 'buyer' : 'offer'}">${k === 'buyer' ? 'खरीदार' : 'offer'}</span>`;
+
+  const topRows = (d.top || []).map(x => `
+    <div class="ld-row">${kindTag(x.kind)}
+      <span class="ld-nm">${escapeHtml(x.label || x.target_id)}</span>
+      <span class="ld-n">${x.count}</span>
+    </div>`).join('');
+
+  const distRows = (d.districts || []).map(x => `
+    <div class="ld-row">
+      <span class="ld-nm">${escapeHtml(x.district)}</span>
+      <span class="ld-n">${x.count}</span>
+    </div>`).join('');
+
+  const recentRows = (d.recent || []).slice(0, 6).map(x => `
+    <div class="ld-row">${kindTag(x.kind)}
+      <span class="ld-nm">${escapeHtml(x.label || x.target_id)}${x.district ? ' · ' + escapeHtml(x.district) : ''}</span>
+      <span class="ld-sub">${escapeHtml(x.at || '')}</span>
+    </div>`).join('');
+
+  // Nothing yet is the normal state before the first dealer is live — say what
+  // would make it non-zero instead of showing an empty box.
+  const empty = `<p class="ld-empty">No clicks recorded yet. This fills up once a
+    खरीदार listing is live in a district with traffic, or a service offer is switched
+    on in <code>backend/data/lead_offers.json</code>.</p>`;
+
+  document.getElementById('ld-breakdown').innerHTML = (t.total > 0 || (d.recent || []).length)
+    ? `<div class="ld-col"><h4>Top this month</h4>${topRows || empty}</div>
+       <div class="ld-col"><h4>By district</h4>${distRows || '<p class="ld-empty">No district recorded yet.</p>'}</div>
+       <div class="ld-col" style="grid-column:1/-1;"><h4>Latest clicks</h4>${recentRows}</div>`
+    : `<div class="ld-col" style="grid-column:1/-1;">${empty}</div>`;
 }
 
 // A bare spinner cannot tell "waking up" from "never coming back" — and a cold

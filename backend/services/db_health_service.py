@@ -153,4 +153,4 @@ def run_check(alert: bool = True) -> dict:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     import json
-    print(json.dumps(run_check(alert=False), indent=2))
+    logger.info(json.dumps(run_check(alert=False), indent=2))

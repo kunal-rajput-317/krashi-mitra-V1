@@ -29,7 +29,8 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, Response
 
 from backend.routes.bhav import (
-    _CSS as _BASE_CSS, _FONTS, _ICON, _header, _footer, _doc, _faq, _crumb_ld, _ld,
+    _CSS as _BASE_CSS, _FONTS, _ICON, _ANALYTICS, _header, _footer, _doc, _faq,
+    _crumb_ld, _ld,
 )
 
 router = APIRouter()
@@ -316,6 +317,7 @@ def _not_found() -> HTMLResponse:
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
+{_ANALYTICS}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>यह उत्पाद उपलब्ध नहीं है | कृषि मित्र</title>

@@ -674,4 +674,4 @@ def claim_guest(
 # equivalents live in routes/profile.py (prefix="/profile"), which reads the
 # user from the JWT. Do not re-add these.
 
-print("✅ auth.py loaded successfully")
+logger.info("✅ auth.py loaded successfully")

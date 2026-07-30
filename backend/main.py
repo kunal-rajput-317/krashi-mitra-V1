@@ -15,11 +15,13 @@
 # ============================================================
 
 import asyncio
+import logging
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
@@ -28,8 +30,17 @@ load_dotenv()
 # Quieter HuggingFace loads (skip telemetry round-trips on model init)
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 
+# Configure logging BEFORE importing any router: modules that call
+# logging.getLogger() at import time must inherit our handler, not the root
+# default that prints unformatted WARNING+ only.
+from backend.utils.logging_config import setup_logging
+
+setup_logging()
+log = logging.getLogger(__name__)
+
 from backend.routes import cart  # ensure CartItem model registered before create_all
 from backend.utils.security import (
+    RequestContextMiddleware,
     SecurityHeadersMiddleware,
     assert_secrets_configured,
 )
@@ -77,7 +88,7 @@ raw_origins = os.getenv(
     ",".join([
         "https://krashimitra.in",
         "https://www.krashimitra.in",
-        "https://krashi-mitra-v1.onrender.com",
+        "https://krashi-mitra-v1-oxdc.onrender.com",
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
@@ -142,6 +153,33 @@ app.add_middleware(
 
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Added last => outermost. The request id must be set before anything else
+# runs, so every log line from CORS handling inward carries it.
+app.add_middleware(RequestContextMiddleware)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Log the full traceback, return the house-format error envelope.
+
+    Starlette's default turns an unhandled exception into a bare 500 with the
+    traceback on stderr in a shape nothing else here uses. Farmers get the
+    Hindi message; we get a request-id-tagged traceback to grep for. The
+    exception detail is deliberately NOT echoed to the client — it leaks
+    table names and file paths.
+    """
+    log.exception(
+        "unhandled exception on %s %s", request.method, request.url.path
+    )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "message": "सर्वर में कुछ गड़बड़ हुई। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+            "data": {},
+        },
+    )
+
 
 async def _warm_up_models():
     """
@@ -158,21 +196,21 @@ async def _warm_up_models():
                 from cache.cache_engine import _get_model
                 _get_model()  # loads cache embedding model
             except Exception as e:
-                print(f"⚠️ Cache model warm-up failed (non-fatal): {e}")
+                log.warning(f"⚠️ Cache model warm-up failed (non-fatal): {e}")
         else:
-            print("[Cache] semantic disabled via CACHE_SEMANTIC_ENABLED=false — "
+            log.info("[Cache] semantic disabled via CACHE_SEMANTIC_ENABLED=false — "
                   "skipping model warm-up (fuzzy text match only)")
         if not get_setting("rag_enabled", True):
-            print("[RAG] disabled via RAG_ENABLED=false — skipping warm-up")
+            log.info("[RAG] disabled via RAG_ENABLED=false — skipping warm-up")
             return
         try:
             from rag.indexer import get_collection
             get_collection()  # loads ChromaDB (reuses cache's embedding model)
         except Exception as e:
-            print(f"⚠️ RAG model warm-up failed (non-fatal): {e}")
+            log.warning(f"⚠️ RAG model warm-up failed (non-fatal): {e}")
 
     await asyncio.to_thread(_load)
-    print("🔥 Embedding models warmed up — first /ask will be fast.")
+    log.info("🔥 Embedding models warmed up — first /ask will be fast.")
 
 
 @app.on_event("startup")
@@ -180,19 +218,19 @@ async def startup():
     try:
         Base.metadata.create_all(bind=engine)   # ← create tables (cart, etc.)
         init_db()
-        print("✅ Krishi Mitra database initialized.")
+        log.info("✅ Krishi Mitra database initialized.")
     except Exception as e:
-        print(f"⚠️ DB startup error (non-fatal): {e}")
+        log.warning(f"⚠️ DB startup error (non-fatal): {e}")
     # Warm up embedding models in the background so the first question is fast
     asyncio.create_task(_warm_up_models())
     try:
         await start_scheduler()  # WEATHER CACHE — starts scheduler + immediate first fetch
     except Exception as e:
-        print(f"⚠️ Scheduler startup error (non-fatal): {e}")
+        log.warning(f"⚠️ Scheduler startup error (non-fatal): {e}")
     try:
         await start_mandi_scheduler()  # MANDI — daily fetch + immediate fetch if snapshot empty
     except Exception as e:
-        print(f"⚠️ Mandi scheduler startup error (non-fatal): {e}")
+        log.warning(f"⚠️ Mandi scheduler startup error (non-fatal): {e}")
     # MSP hides any crop it can't vouch for (unconfirmed figure, or a marketing
     # season past its valid_until). That silence is correct but invisible, so say
     # it out loud once at boot — otherwise a lapsed season is discovered by a
@@ -201,11 +239,11 @@ async def startup():
         from backend.services import msp as _msp
         _p = _msp.pending()
         if _p["unverified"] or _p["expired"]:
-            print(f"ℹ️ MSP block hidden for — unverified: {_p['unverified'] or '—'}; "
+            log.info(f"ℹ️ MSP block hidden for — unverified: {_p['unverified'] or '—'}; "
                   f"season expired: {_p['expired'] or '—'} "
                   f"(fix in backend/data/msp_rates.json)")
     except Exception as e:
-        print(f"⚠️ MSP config check skipped (non-fatal): {e}")
+        log.warning(f"⚠️ MSP config check skipped (non-fatal): {e}")
 
 # @app.post("/ask")
 # async def ask(data: dict):

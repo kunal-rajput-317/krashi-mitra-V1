@@ -1,0 +1,63 @@
+name: tests
+
+# Runs the pytest suite on every push and pull request. Until now nothing
+# verified a change before it reached Render — the first signal that a deploy
+# was broken was the site being broken.
+#
+# The suite deliberately avoids the heavy AI stack (torch / chromadb /
+# sentence-transformers): those are several hundred MB to install and none of
+# the assertions need them. Everything runs against a throwaway SQLite file,
+# so no database service is required either.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # matches PYTHON_VERSION in render.yaml
+          cache: pip
+
+      - name: Install test dependencies
+        # Not `-r requirements.txt`: that pulls torch and chromadb, which turn
+        # a 30-second job into a multi-minute one for no added coverage.
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            fastapi 'uvicorn[standard]' sqlalchemy alembic httpx \
+            'bcrypt>=4,<6' 'python-jose[cryptography]' python-multipart \
+            email-validator apscheduler pytz pydantic python-dotenv \
+            requests numpy Pillow pytest pytest-asyncio
+
+      - name: Run tests
+        env:
+          # conftest.py points DATABASE_URL at a temp SQLite file, but the
+          # secret guards read these before any fixture runs.
+          JWT_SECRET: ci-test-secret-not-the-repo-default
+          ADMIN_USER: ci-admin
+          ADMIN_PASS: ci-test-admin-pass
+        run: pytest
+
+      - name: Check migrations match the models
+        # Catches the case where someone edits a model and forgets the
+        # migration: autogenerate against an empty DB should produce exactly
+        # the tables the models declare, and `upgrade head` must apply cleanly.
+        env:
+          DATABASE_URL: sqlite:///./ci-migration-check.db
+          JWT_SECRET: ci-test-secret-not-the-repo-default
+          ADMIN_PASS: ci-test-admin-pass
+          CACHE_SEMANTIC_ENABLED: "false"
+          RAG_ENABLED: "false"
+        run: |
+          alembic upgrade head
+          alembic current

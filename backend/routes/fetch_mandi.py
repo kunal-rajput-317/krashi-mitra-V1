@@ -11,7 +11,10 @@
 # ============================================================
 
 from backend.services.mandi_fetch_service import fetch_and_store
+import logging
+
+log = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     summary = fetch_and_store()
-    print(f"\n✅ Done: {summary}")
+    log.info(f"\n✅ Done: {summary}")

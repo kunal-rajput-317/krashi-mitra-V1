@@ -1,28 +1,46 @@
+# ── Web framework ────────────────────────────────────────────
 fastapi
 uvicorn[standard]
+python-multipart
+
+# ── Database ─────────────────────────────────────────────────
 sqlalchemy
 psycopg2-binary
 alembic
-httpx
-aiofiles
+
+# ── Auth / email ─────────────────────────────────────────────
+# Mail goes out through stdlib smtplib (utils/auth_utils.py), not an SDK.
 bcrypt>=4,<6
 python-jose[cryptography]
-python-multipart
 email-validator
+
+# ── Scheduling ───────────────────────────────────────────────
 apscheduler
 pytz
-pydantic
-pdfplumber
+
+# ── HTTP clients ─────────────────────────────────────────────
+# httpx: async calls to Claude / Gemini / OpenWeather / Ollama.
+# requests: sync calls from scheduler jobs and one-off scripts.
+httpx
+requests
+
+# ── AI pipeline ──────────────────────────────────────────────
+# Claude is the only provider with an SDK here; Gemini and Ollama are plain
+# HTTP over httpx, so no google-generativeai / ollama packages are needed.
+anthropic
 chromadb>=0.5.0
 sentence-transformers
-google-generativeai
-anthropic
-ollama
-asyncpg
-pgvector
-resend
+pdfplumber
+
+# ── Push notifications ───────────────────────────────────────
+pywebpush==2.0.0
+
+# ── Utilities ────────────────────────────────────────────────
+pydantic
 python-dotenv
-requests
 numpy
 Pillow
-pywebpush==2.0.0
+
+# ── Tests ────────────────────────────────────────────────────
+pytest
+pytest-asyncio

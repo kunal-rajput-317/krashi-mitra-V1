@@ -1,15 +1,8 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-493H1PDP64');
-</script>
+  <!-- Analytics: GA4 + Clarity -->
+  <script src="analytics.js"></script>
 
 
 
@@ -22,7 +15,7 @@
           l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
               /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
       window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
-        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1.onrender.com');
+        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1-oxdc.onrender.com');
       window.KRASHIMITRA_IS_LOCAL = l;
       window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
     })();

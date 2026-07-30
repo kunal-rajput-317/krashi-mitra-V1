@@ -1,15 +1,8 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-493H1PDP64"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-493H1PDP64');
-</script>
+  <!-- Analytics: GA4 + Clarity -->
+  <script src="analytics.js"></script>
 
 
 
@@ -28,7 +21,7 @@
       // instead of reaching the backend. Cross-origin to Render is fine; that
       // origin is already in the backend's CORS allowlist.
       window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
-        (l ? location.protocol + '//' + (h || 'localhost') + ':' + p : 'https://krashi-mitra-v1.onrender.com');
+        (l ? location.protocol + '//' + (h || 'localhost') + ':' + p : 'https://krashi-mitra-v1-oxdc.onrender.com');
       window.KRASHIMITRA_IS_LOCAL = l;
       window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
     })();
@@ -895,7 +888,7 @@
     var l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
         /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
     var p = location.port || '8000';
-    return l ? location.protocol + '//' + (h || 'localhost') + ':' + p : 'https://krashi-mitra-v1.onrender.com';
+    return l ? location.protocol + '//' + (h || 'localhost') + ':' + p : 'https://krashi-mitra-v1-oxdc.onrender.com';
   }
 
   async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
@@ -1180,6 +1173,7 @@
         localStorage.removeItem('km_cooldown_until');
         localStorage.removeItem('km_cooldown_reason');
         authOk("login-success", "✅ Login हो गया! Redirecting...");
+        if (window.kmTrack) kmTrack('login', { method: 'email' });
         setTimeout(finishLogin, 800);
       } else if (!res.ok) {
         let msg;
@@ -1265,6 +1259,7 @@
 
       if (data.success) {
         pendingEmail = email;
+        if (window.kmTrack) kmTrack('sign_up_otp_sent', { method: 'email' });
         document.getElementById("otp-sub").innerText = `OTP भेजा गया: ${email}`;
         ["otp-d1","otp-d2","otp-d3","otp-d4","otp-d5","otp-d6"]
           .forEach(id => document.getElementById(id).value = "");
@@ -1409,6 +1404,8 @@
 
       if (data.success) {
         authOk("otp-success", "✅ Email verify हो गया! अब login करें।");
+        // Completed signups only — pair with sign_up_otp_sent to see OTP drop-off
+        if (window.kmTrack) kmTrack('sign_up', { method: 'email' });
         setTimeout(() => showStep("login"), 1500);
       } else {
         // data.detail carries server-side failures (503 read-only, 500). Without
@@ -1467,6 +1464,7 @@
       if (data.success && data.data?.token) {
         setToken(data.data.token);
         authOk("login-success", "✅ Google से Login हो गया! Redirecting...");
+        if (window.kmTrack) kmTrack('login', { method: 'google' });
         setTimeout(finishLogin, 800);
       } else {
         authErr("login-error", data.message || data.detail || "Google login failed। दोबारा try करें।");
