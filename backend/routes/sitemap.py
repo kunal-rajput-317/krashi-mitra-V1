@@ -75,6 +75,9 @@ CORE = [
     # /map and the rest of the नक्शा cluster are not listed here: they are
     # server-rendered from backend/data/naksha_states.json and emitted by
     # _naksha_entries() below, so the manifest stays the single list.
+    # Supply-side acquisition for the खरीदार directory. Hindi-only: the audience
+    # is Indian traders and डीलर, and there is no ?lang= switcher on the page.
+    ("dukan.html",          "/dukan",           0.7, "monthly", ("hi",), ()),
     ("help.html",           "/help",            0.6, "weekly", ("hi",), ()),
     ("about.html",          "/about",           0.4, "yearly", (), ()),
     ("privacy-policy.html", "/privacy-policy",  0.3, "yearly", (), ()),

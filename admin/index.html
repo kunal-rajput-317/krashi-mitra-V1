@@ -1084,6 +1084,11 @@ body {
         <span class="nav-icon">📍</span>
         <span>Farmer Locator</span>
       </div>
+      <div class="nav-item" onclick="switchPage('buyers', this)">
+        <span class="nav-icon">🧾</span>
+        <span>खरीदार / Dealers</span>
+        <span class="nav-badge" id="by-nav-badge" hidden>0</span>
+      </div>
       <div class="nav-item" onclick="switchPage('checklist', this)">
         <span class="nav-icon">🎯</span>
         <span>Deadline Checklist</span>
@@ -2149,6 +2154,61 @@ body {
         .ck-days { color: var(--accent); font-weight: 700; }
         .ck-days.ck-over { color: var(--danger); }
 
+        /* ── खरीदार / Dealers ── */
+        .nav-badge {
+          margin-left: auto; min-width: 18px; padding: 1px 6px; border-radius: 9px;
+          background: var(--accent); color: #1a1a1a; font-size: 10.5px; font-weight: 800;
+          font-family: var(--font-mono); text-align: center;
+        }
+        .by-form {
+          display: grid; gap: 8px;
+          grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+        }
+        .by-form input, .by-form select {
+          min-width: 0; padding: 9px 12px; font-size: 13px;
+          font-family: var(--font-hindi), var(--font-sans);
+          background: var(--surface-hl); color: var(--text);
+          border: 1px solid var(--border); border-radius: var(--radius-sm);
+        }
+        .by-form input:focus, .by-form select:focus { outline: none; border-color: var(--primary); }
+        .by-form input.by-bad { border-color: var(--danger); }
+        .by-hint { font-size: 11.5px; color: var(--text-dim); line-height: 1.6; margin-top: 10px; }
+        .by-filters { display: flex; gap: 6px; }
+        .by-fbtn {
+          padding: 4px 11px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+          background: transparent; color: var(--text-dim);
+          border: 1px solid var(--border); border-radius: 20px; font-family: inherit;
+        }
+        .by-fbtn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .by-row {
+          display: flex; align-items: flex-start; gap: 12px; padding: 12px 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .by-row:last-child { border-bottom: none; }
+        .by-row.by-off { opacity: 0.62; }
+        .by-main { flex: 1; min-width: 0; }
+        .by-name { font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+        .by-meta { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.6; }
+        .by-meta code { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+        .by-tag {
+          font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 10px;
+          text-transform: uppercase; letter-spacing: .03em;
+        }
+        .by-tag.live    { background: rgba(46,160,67,.16);  color: #3fb950; }
+        .by-tag.pending { background: rgba(210,153,34,.16); color: #d29922; }
+        .by-tag.tick    { background: rgba(47,129,247,.16); color: #58a6ff; }
+        .by-tag.feat    { background: rgba(163,113,247,.16); color: #a371f7; }
+        .by-acts { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        .by-btn {
+          padding: 5px 11px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+          border-radius: var(--radius-sm); border: 1px solid var(--border);
+          background: var(--surface-hl); color: var(--text); font-family: inherit;
+        }
+        .by-btn:hover { border-color: var(--primary); }
+        .by-btn.ok   { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .by-btn.warn { color: var(--danger); }
+        .by-empty { font-size: 12.5px; color: var(--text-dim); line-height: 1.7; padding: 6px 0; }
+
         .ck-add { display: flex; gap: 8px; margin-bottom: 14px; }
         .ck-add input {
           flex: 1; min-width: 0; padding: 9px 12px; font-size: 13px;
@@ -2321,6 +2381,98 @@ body {
             </div>
 
             <div id="ck-sections">
+              <div class="km-loader"><span class="km-spinner"></span> Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ खरीदार / DEALERS ══════════
+           CRUD for the buyer directory behind /bhav/.../kharidar. Rows live in
+           the `buyers` table, NOT in data/buyers.json — Render's free plan has
+           no persistent disk, so a dealer written to the file would vanish on
+           the next restart (see database/db.py::Buyer).
+
+           The reason this page exists: "sitting in a mandi with a dealer saying
+           yes, and hand-editing JSON is not an option." So the add form is the
+           first thing on the page and needs four fields.
+
+           Two kinds of row: `signup` (arrived through /dukan, never live until
+           approved) and `admin` (typed here, live immediately). The blue tick
+           costs a real phone call — the backend will not let a signup set it. -->
+      <div class="page" id="page-buyers">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>खरीदार / Dealers</h2>
+            <p>The directory behind <span style="font-family:var(--font-mono);font-size:12px;">/bhav/&lt;crop&gt;/&lt;state&gt;/&lt;district&gt;/kharidar</span> • a district with no live dealer renders noindex</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadBuyers()" id="by-refresh-btn">↻ Refresh</button>
+          </div>
+        </div>
+
+        <div class="ld-grid" style="margin-bottom:18px;">
+          <div class="stat-card accented">
+            <span class="stat-icon">✅</span>
+            <div class="stat-label">Live on the site</div>
+            <div class="stat-value ld-big" id="by-live">—</div>
+            <div class="stat-sub">visible to farmers right now</div>
+          </div>
+          <div class="stat-card info">
+            <span class="stat-icon">📞</span>
+            <div class="stat-label">Waiting on a call</div>
+            <div class="stat-value ld-big" id="by-pending">—</div>
+            <div class="stat-sub">signed up via /dukan, not yet verified</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🧾</span>
+            <div class="stat-label">Total rows</div>
+            <div class="stat-value ld-big" id="by-total">—</div>
+            <div class="stat-sub">excludes the buyers.json seed</div>
+          </div>
+        </div>
+
+        <!-- ADD — deliberately the top of the page, and short -->
+        <div class="dashboard-panel" style="margin-bottom:18px;">
+          <div class="panel-header">
+            <div class="panel-title">➕ Add a dealer</div>
+            <div class="ld-sub">Goes live immediately — you are adding it because you just spoke to him</div>
+          </div>
+          <div class="panel-body">
+            <div class="by-form">
+              <input type="text" id="by-name" placeholder="फर्म का नाम *" maxlength="120">
+              <input type="text" id="by-district" placeholder="जिला * (जैसे Hardoi)" maxlength="80">
+              <input type="text" id="by-state" placeholder="राज्य (जैसे Uttar Pradesh)" maxlength="80">
+              <input type="tel" id="by-phone" placeholder="मोबाइल *" maxlength="15">
+              <select id="by-kind">
+                <option value="trader">व्यापारी / आढ़तिया</option>
+                <option value="dealer">खाद-बीज डीलर</option>
+                <option value="fpo">FPO</option>
+                <option value="processor">प्रोसेसर / मिल</option>
+              </select>
+              <input type="text" id="by-commodities" placeholder="crop slugs, comma-separated (खाली = सब फसल)" maxlength="200">
+              <button class="btn btn-primary" onclick="addBuyer()" id="by-add-btn">+ Add dealer</button>
+            </div>
+            <div class="by-hint">
+              जिला/राज्य वैसे ही लिखें जैसे मंडी भाव पेज पर दिखते हैं — मिलान case-insensitive है,
+              पर spelling वही होनी चाहिए, वरना listing किसी जिले से नहीं जुड़ेगी।
+              Crop slugs are the <span style="font-family:var(--font-mono)">/bhav/&lt;slug&gt;</span> part of the URL, e.g. <span style="font-family:var(--font-mono)">wheat, mustard</span>.
+            </div>
+          </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div class="panel-title">📋 All listings</div>
+            <div class="by-filters">
+              <button class="by-fbtn active" data-f="" onclick="filterBuyers('', this)">All</button>
+              <button class="by-fbtn" data-f="signup" onclick="filterBuyers('signup', this)">Signups</button>
+              <button class="by-fbtn" data-f="admin" onclick="filterBuyers('admin', this)">Added by me</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="by-list">
               <div class="km-loader"><span class="km-spinner"></span> Loading…</div>
             </div>
           </div>
@@ -2826,6 +2978,7 @@ function switchPage(pageId, el) {
     _kpiOrderFilter = null;
   }
   if (pageId === 'locator') loadFarmerLocator();
+  if (pageId === 'buyers') loadBuyers();
   if (pageId === 'checklist') { loadChecklist(); loadLeads(); }
 }
 
@@ -4900,6 +5053,222 @@ async function deleteChecklistTask(slug) {
     loadChecklist();
   } catch (e) {
     showToast(e.message, 'error');
+  }
+}
+
+/* ══════════ खरीदार / DEALERS ══════════
+   CRUD over /admin/buyers. Same shape as the checklist above: load → render,
+   writes are optimistic where they are reversible and re-fetch where they are
+   not. Rows come from the `buyers` table only; the data/buyers.json seed is
+   committed to the repo and is not editable from here.                        */
+
+let _byFilter = '';
+
+const BY_KINDS = { trader: 'व्यापारी', dealer: 'डीलर', fpo: 'FPO', processor: 'मिल' };
+
+async function loadBuyers() {
+  const box = document.getElementById('by-list');
+  if (!box) return;
+  box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> Loading…</div>';
+
+  // Same two timers as loadChecklist(): Neon cold-starts routinely take longer
+  // than a user will sit through without being told something is happening.
+  const slow = setTimeout(() => {
+    box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> ' +
+      'Still waiting — the backend or the database may be waking up…</div>';
+  }, 6000);
+  const ctl   = new AbortController();
+  const abort = setTimeout(() => ctl.abort(), 30000);
+
+  try {
+    const q = _byFilter ? `?source=${encodeURIComponent(_byFilter)}` : '';
+    const r = await fetch(`${API}/admin/buyers${q}`, { headers: getAuthHeader(), signal: ctl.signal });
+    if (r.status === 404) throw new Error('endpoint missing — restart the backend so /admin/buyers is registered');
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    renderBuyers(await r.json());
+  } catch (e) {
+    const msg = e.name === 'AbortError'
+      ? 'Timed out after 30s — is the backend running on ' + (API || 'this origin') + '?'
+      : e.message;
+    box.innerHTML = `<p style="font-size:12.5px;color:var(--danger);line-height:1.6;">
+        Could not load dealers — ${escapeHtml(msg)}.<br>
+        <span style="color:var(--text-dim);">If the backend was restarted just now, hit ↻ Refresh.
+        A read-only database (Neon plan limit) also fails here.</span></p>`;
+  } finally {
+    clearTimeout(slow); clearTimeout(abort);
+  }
+}
+
+function bySetCounts(c) {
+  if (!c) return;
+  document.getElementById('by-live').textContent    = c.live ?? '—';
+  document.getElementById('by-pending').textContent = c.pending ?? '—';
+  document.getElementById('by-total').textContent   = c.total ?? '—';
+  // The badge is the point of the queue: a dealer who filled the form and was
+  // never rung is worse than one who never found it.
+  const badge = document.getElementById('by-nav-badge');
+  if (badge) {
+    badge.textContent = c.pending || 0;
+    badge.hidden = !c.pending;
+  }
+}
+
+function renderBuyers(d) {
+  bySetCounts(d.counts);
+  const box  = document.getElementById('by-list');
+  const rows = d.buyers || [];
+
+  if (!rows.length) {
+    box.innerHTML = `<div class="by-empty">
+      ${_byFilter === 'signup'
+        ? 'No signups yet. The /dukan form fills this — but nobody finds it until the directory ranks, so the first listings come from calls.'
+        : 'No dealers yet. Add one above, or seed the district you picked — until a district has a live dealer its खरीदार page renders <code>noindex</code> and stays out of the sitemap.'}
+    </div>`;
+    return;
+  }
+
+  box.innerHTML = rows.map(b => {
+    const live    = b.active;
+    const crops   = (b.commodities || []).length
+      ? (b.commodities || []).join(', ') : 'सब फसल';
+    const tags = [
+      live ? '<span class="by-tag live">live</span>'
+           : '<span class="by-tag pending">not live</span>',
+      b.verified ? '<span class="by-tag tick">verified</span>' : '',
+      b.featured ? '<span class="by-tag feat">featured</span>' : '',
+    ].filter(Boolean).join(' ');
+
+    const phone = b.phone || b.whatsapp || '';
+    return `<div class="by-row ${live ? '' : 'by-off'}" id="by-row-${escapeHtml(b.slug)}">
+      <div class="by-main">
+        <div class="by-name">${escapeHtml(b.name || '—')} ${tags}</div>
+        <div class="by-meta">
+          ${escapeHtml(BY_KINDS[b.kind] || b.kind || '')} ·
+          ${escapeHtml(b.district || '—')}${b.state ? ', ' + escapeHtml(b.state) : ''}
+          ${b.market ? ' · ' + escapeHtml(b.market) : ''}<br>
+          ${phone ? `📞 <a href="tel:${escapeHtml(phone)}" style="color:var(--primary)">${escapeHtml(phone)}</a> · ` : ''}
+          फसल: ${escapeHtml(crops)} ·
+          <code>${escapeHtml(b.slug)}</code> ·
+          ${b.source === 'signup' ? 'via /dukan' : 'added here'}
+          ${b.note ? '<br>' + escapeHtml(b.note) : ''}
+        </div>
+      </div>
+      <div class="by-acts">
+        ${live
+          ? `<button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','active',false)">Hide</button>`
+          : `<button class="by-btn ok" onclick="approveBuyer('${escapeHtml(b.slug)}')">✓ Called — list it</button>`}
+        <button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','featured',${!b.featured})">
+          ${b.featured ? 'Unfeature' : 'Feature'}</button>
+        <button class="by-btn warn" onclick="deleteBuyer('${escapeHtml(b.slug)}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterBuyers(source, el) {
+  _byFilter = source;
+  document.querySelectorAll('.by-fbtn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  loadBuyers();
+}
+
+async function byPatch(slug, body, okMsg) {
+  const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(slug)}`, {
+    method: 'PATCH',
+    headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+  bySetCounts(d.counts);
+  if (okMsg) showToast(okMsg);
+  return d;
+}
+
+async function approveBuyer(slug) {
+  // Both flags together, because they mean the same thing here: somebody rang
+  // this number and a human answered. Nothing else sets `verified`.
+  if (!confirm('Have you actually spoken to this dealer on the phone?\n\n' +
+               'Listing him also puts a "verified" tick next to his number for farmers.')) return;
+  try {
+    await byPatch(slug, { active: true, verified: true, status: 'listed' }, 'Listed — live on his district page');
+    loadBuyers();
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Dealers: could not list "${slug}" — ${e.message}`, 'log-entry-err');
+  }
+}
+
+async function setBuyerFlag(slug, flag, value) {
+  const row = document.getElementById(`by-row-${slug}`);
+  if (row && flag === 'active') row.classList.toggle('by-off', !value);   // optimistic
+  try {
+    await byPatch(slug, { [flag]: value });
+    loadBuyers();
+  } catch (e) {
+    if (row && flag === 'active') row.classList.toggle('by-off', value);  // put it back
+    showToast(e.message, 'error');
+    printTerminalLog(`Dealers: could not update "${slug}" — ${e.message}`, 'log-entry-err');
+  }
+}
+
+async function deleteBuyer(slug) {
+  if (!confirm(`Delete "${slug}"?\n\nHis lead_clicks history is kept — it is stored by slug, not by a foreign key.`)) return;
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(slug)}`, {
+      method: 'DELETE', headers: getAuthHeader()
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    bySetCounts(d.counts);
+    loadBuyers();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function addBuyer() {
+  const f = id => document.getElementById(id);
+  const name = f('by-name'), district = f('by-district'), phone = f('by-phone');
+  [name, district, phone].forEach(el => el.classList.remove('by-bad'));
+
+  // Mirrors services/dealers.py::validate — the server is still the authority.
+  const bad = (el, msg) => { el.classList.add('by-bad'); el.focus(); showToast(msg, 'error'); };
+  if (name.value.trim().length < 2)  return bad(name, 'फर्म का नाम डालें');
+  if (!district.value.trim())        return bad(district, 'जिला डालें');
+  if (phone.value.replace(/\D+/g, '').length < 10) return bad(phone, 'सही 10 अंकों का नंबर डालें');
+
+  const btn = f('by-add-btn');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/admin/buyers`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name.value.trim(),
+        district: district.value.trim(),
+        state: f('by-state').value.trim(),
+        phone: phone.value.trim(),
+        kind: f('by-kind').value,
+        commodities: f('by-commodities').value.trim(),
+        active: true, verified: true
+      })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    ['by-name', 'by-district', 'by-phone', 'by-commodities'].forEach(i => f(i).value = '');
+    // state is deliberately NOT cleared — you add several dealers in one state.
+    bySetCounts(d.counts);
+    loadBuyers();
+    showToast('Dealer added — live on his district page now');
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Dealers: could not add — ${e.message}`, 'log-entry-err');
+  } finally {
+    btn.disabled = false;
   }
 }
 

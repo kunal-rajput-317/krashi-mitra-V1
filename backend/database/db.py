@@ -951,6 +951,65 @@ class AdminTask(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class Buyer(Base):
+    """One खरीदार / डीलर listing behind /bhav/.../kharidar.
+
+    **Why this is a table and not just data/buyers.json.** The JSON came first
+    and still ships as the committed seed — services/buyers.py reads both and
+    merges them. But the file cannot be the place new dealers land: Render's
+    free plan has no persistent disk (see render.yaml — no `disk:` block), so
+    anything written to data/buyers.json survives until the next deploy or
+    dyno sleep and then silently reverts. A dealer signed up in a mandi on
+    Tuesday would be gone by Thursday, and the failure looks like nothing at
+    all — the page still renders, just without him.
+
+    Same split as AdminTask, for the same reason: the file is the curated plan,
+    the table is what changes at runtime, and neither clobbers the other. A row
+    here whose `slug` matches a JSON id overrides it, so a seeded listing can be
+    corrected from the admin panel without a deploy.
+
+    **`slug`, not `id`, is the public identity.** /kharidar/go/<slug> and
+    LeadClick.target_id both quote it, and LeadClick deliberately keeps no
+    foreign key here (a listing may be dropped; its click history still has to
+    read correctly). Stable across edits — renaming a firm keeps its stats.
+
+    **active/verified are ours to set, never the dealer's.** Both default False
+    and routes/dukan.py cannot raise them: a public signup is a request to be
+    listed, not a listing. `verified` is a claim we make to a farmer about a
+    stranger's phone number, so it costs one real phone call — the rule
+    data/buyers.json states in its own note, enforced here in the schema rather
+    than in a convention someone has to remember.
+    """
+    __tablename__ = "buyers"
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    slug       = Column(String,   nullable=False, unique=True, index=True)  # public id; JSON id for overrides
+    # The gate. services/buyers.py::_usable() renders nothing without active +
+    # name + district + a number, so a pending signup is invisible by default.
+    active     = Column(Boolean,  default=False, nullable=False, index=True)
+    verified   = Column(Boolean,  default=False, nullable=False)   # the blue tick — only after a call
+    featured   = Column(Boolean,  default=False, nullable=False)   # the paid slot; sorts first
+    name       = Column(String,   nullable=False)
+    kind       = Column(String,   default="trader", nullable=False)  # trader|dealer|fpo|processor
+    state      = Column(String,   nullable=True)
+    district   = Column(String,   nullable=True,  index=True)      # the unit a listing is sold by
+    market     = Column(String,   nullable=True)                   # mandi name, shown under the firm
+    # Comma-separated crop slugs. Empty means "buys everything" — the common
+    # case for an आढ़तिया — and services/buyers.py treats it as matching every
+    # crop rather than none.
+    commodities = Column(String,  nullable=True)
+    phone      = Column(String,   nullable=True)
+    whatsapp   = Column(String,   nullable=True)
+    note       = Column(String,   nullable=True)
+    # "admin" — the owner added it. "signup" — it arrived through the public
+    # form and nobody has called yet. The admin panel queues on this.
+    source     = Column(String,   default="admin", nullable=False, index=True)
+    status     = Column(String,   default="new", index=True)   # new / called / listed / rejected
+    since      = Column(String,   nullable=True)               # free text ("2019 से") — dealers don't think in dates
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class LeadClick(Base):
     """One outbound click on a link we could charge for.
 
@@ -1299,16 +1358,14 @@ def _ensure_postgres_columns():
             ON carts(session_id, product_id)
             WHERE session_id IS NOT NULL AND user_id IS NULL;
         """))
-        # Mandi history: dedup one row per group per arrival_date, fast group lookups
-        conn.execute(text("""
-            CREATE UNIQUE INDEX IF NOT EXISTS mandi_history_row_key_uidx
-            ON mandi_price_history(row_key)
-            WHERE row_key IS NOT NULL;
-        """))
-        conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS mandi_history_group_dt_idx
-            ON mandi_price_history(group_key, arrival_dt DESC);
-        """))
+        # mandi_history_row_key_uidx used to be created here. It moved to
+        # _ensure_conflict_arbiters(), which runs in its own transaction: this
+        # whole function is ONE transaction, so any statement above failing
+        # would silently skip it and leave the mandi fetch with no arbiter.
+        # mandi_history_group_dt_idx used to be created here. It is superseded
+        # by mandi_history_csd_dt_idx below and is now in _DEAD_INDEXES, so
+        # creating it here only had it rebuilt and re-dropped on every single
+        # startup — 13MB of write churn per boot against the storage cap.
         # ── bhav page performance: covering indexes for the two heaviest queries ──
         # _rows_for() filters by commodity+state+district with lower(); this
         # composite expression index turns a full table scan into an index lookup.
@@ -1774,6 +1831,87 @@ _FOREIGN_KEYS = [
 ]
 
 
+# ── ON CONFLICT arbiters ─────────────────────────────────────
+# An "upsert" is only as reliable as the unique index Postgres can infer as its
+# arbiter. Drop that index and the INSERT does not fall back to a plain insert —
+# it raises InvalidColumnReference and takes the whole job down. That is exactly
+# what happened on 30 Jul 2026: an index-storage cleanup dropped the full unique
+# index on mandi_price_history.row_key, and every mandi fetch failed for two days
+# because the only survivor was PARTIAL and the INSERT did not repeat its
+# predicate.
+#
+# So each arbiter is declared here, once, as (table, column, index name,
+# predicate). Two invariants are enforced from this list at startup:
+#   1. _ensure_conflict_arbiters() creates the index if it is missing, in its
+#      own transaction so no unrelated DDL failure can skip it.
+#   2. _drop_dead_indexes() refuses to drop an index that would leave one of
+#      these columns with no unique index at all.
+# The writer must repeat `predicate` in its ON CONFLICT ... WHERE clause; a
+# partial index is not inferable without it. See _append_history in
+# backend/services/mandi_fetch_service.py.
+_CONFLICT_ARBITERS = [
+    ("mandi_price_history", "row_key", "mandi_history_row_key_uidx",
+     "row_key IS NOT NULL"),
+]
+
+
+def _unique_indexes_on(conn, table: str, column: str) -> set:
+    """Names of every UNIQUE index whose sole key column is `column`."""
+    return {r[0] for r in conn.execute(text("""
+        SELECT c.relname
+        FROM pg_index i
+        JOIN pg_class c ON c.oid = i.indexrelid
+        JOIN pg_attribute a
+          ON a.attrelid = i.indrelid AND a.attnum = i.indkey[0]
+        WHERE i.indrelid = to_regclass('public.' || :t)
+          AND i.indisunique
+          AND i.indnatts = 1
+          AND a.attname = :c
+    """), {"t": table, "c": column})}
+
+
+def _sole_arbiter_for(name: str, lookup):
+    """"table(column)" if dropping index `name` would leave a declared arbiter
+    with no unique index at all — otherwise None.
+
+    `lookup(table, column)` returns the set of unique index names currently on
+    that column. Split out from _drop_dead_indexes so the decision can be
+    tested without a live Postgres.
+
+    Note the `name in found` test comes first: an EMPTY set means the arbiter
+    is already missing, which is not something this drop is about to cause. A
+    plain "is found a subset of {name}" would treat that as a block and refuse
+    to drop every unrelated index on the list.
+    """
+    for table, column, _index, _predicate in _CONFLICT_ARBITERS:
+        found = lookup(table, column)
+        if name in found and len(found) == 1:
+            return f"{table}({column})"
+    return None
+
+
+def _ensure_conflict_arbiters():
+    """Guarantee every _CONFLICT_ARBITERS index exists. Idempotent, and each
+    one runs in its own transaction so a failure on one cannot skip the rest."""
+    if engine.dialect.name != "postgresql":
+        return
+    for table, column, index, predicate in _CONFLICT_ARBITERS:
+        try:
+            with engine.begin() as conn:
+                if not conn.execute(text("SELECT to_regclass('public.' || :t)"),
+                                    {"t": table}).scalar():
+                    continue                      # table not created yet
+                conn.execute(text(
+                    f'CREATE UNIQUE INDEX IF NOT EXISTS "{index}" '
+                    f'ON {table}({column}) WHERE {predicate}'
+                ))
+        except Exception as e:
+            # Loud: an upsert with no arbiter fails every run, and the symptom
+            # (InvalidColumnReference deep in a fetch) points nowhere near here.
+            log.error(f"❌ ON CONFLICT arbiter {index} on {table}({column}) "
+                      f"could not be ensured — upserts into {table} will fail: {e}")
+
+
 def _has_column(conn, table: str, column: str) -> bool:
     return bool(conn.execute(text("""
         SELECT 1 FROM information_schema.columns
@@ -1865,9 +2003,16 @@ def _ensure_foreign_keys():
 #   ix_mandi_prices_state          1.2MB, 4 scans      — covered by csd_lower
 #
 # NOTE row_key: the ON CONFLICT dedup needs a unique index on row_key, so the
-# UNIQUE one is what we keep — ix_mandi_price_history_row_key (non-unique) is
-# the redundant twin, even though the planner had been picking it. A unique
-# index answers the same lookups.
+# UNIQUE one is what we keep — ix_mandi_price_history_row_key is the redundant
+# twin, even though the planner had been picking it. A unique index answers the
+# same lookups.
+# The two are NOT interchangeable for ON CONFLICT, though: the survivor,
+# mandi_history_row_key_uidx, is PARTIAL (WHERE row_key IS NOT NULL), and
+# Postgres only infers a partial index as the arbiter when the INSERT repeats
+# that predicate. Dropping the full index here without repeating it in the
+# insert is what broke every mandi fetch on 30 Jul 2026 with
+# InvalidColumnReference. mandi_fetch_service now passes the matching
+# index_where — keep the two in step if either side ever changes.
 _DEAD_INDEXES = [
     "ix_mandi_price_history_row_key",
     "mandi_history_group_dt_idx",
@@ -1881,7 +2026,12 @@ _DEAD_INDEXES = [
 
 def _drop_dead_indexes():
     """Drop the redundant mandi indexes. Idempotent — IF EXISTS, so this is a
-    no-op on every startup after the first and on a fresh database."""
+    no-op on every startup after the first and on a fresh database.
+
+    Never drops the last unique index backing an ON CONFLICT arbiter: judging
+    an index "a redundant duplicate" by its columns alone is what broke the
+    mandi fetch on 30 Jul 2026. See _CONFLICT_ARBITERS.
+    """
     if engine.dialect.name != "postgresql":
         return
     dropped = []
@@ -1892,6 +2042,16 @@ def _drop_dead_indexes():
                                       {"n": f"public.{name}"}).scalar()
                 if not exists:
                     continue
+
+                keep = _sole_arbiter_for(
+                    name, lambda t, c: _unique_indexes_on(conn, t, c))
+                if keep:
+                    log.warning(
+                        f"🛑 refusing to drop {name}: it is the only unique "
+                        f"index left on {keep}, and dropping it would make "
+                        f"every ON CONFLICT upsert there fail.")
+                    continue
+
                 # CONCURRENTLY would need autocommit; these are small enough
                 # that a plain DROP is a sub-second exclusive lock.
                 conn.execute(text(f'DROP INDEX IF EXISTS "{name}"'))
@@ -1946,6 +2106,7 @@ def init_db():
         _ensure_table_renames()
         Base.metadata.create_all(bind=engine)
         _ensure_postgres_columns()
+        _ensure_conflict_arbiters()
         _ensure_users_column_order()
         _ensure_foreign_keys()
         _backfill_last_seen()

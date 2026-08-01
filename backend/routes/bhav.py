@@ -4949,6 +4949,11 @@ padding:18px 20px;box-shadow:var(--shadow-md)}
 .kh-join p{font-size:13px;line-height:1.6;color:rgba(255,255,255,.86);margin:0 0 13px}
 .kh-join a{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#3a2c00;
 text-decoration:none;font-size:14px;font-weight:800;padding:11px 20px;border-radius:24px}
+/* The WhatsApp hop is the fallback, so it reads as secondary next to the form. */
+.kh-join-wa{background:transparent!important;color:rgba(255,255,255,.9)!important;
+border:1.5px solid rgba(255,255,255,.35);font-weight:700!important;margin-left:8px}
+@media(max-width:480px){.kh-join a{display:flex;justify-content:center}
+.kh-join-wa{margin:9px 0 0}}
 .kh-fine{font-size:11px;color:var(--text-soft);line-height:1.55;margin-top:14px}
 """
 
@@ -5229,11 +5234,17 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
         f'फसल की जानकारी डालें →</button></section>'
         f'{_appeal_block(hi, commodity, state, district, cs, ss, ds, here=True, ok_sell=ok_sell)}')
 
+    # Two doors, because a trader browsing at 11pm will not wait for a reply and
+    # a trader standing in a mandi will not fill a form. The form is primary: it
+    # lands in the admin queue as a row (database/db.py::Buyer) instead of a
+    # message someone has to transcribe before it can be acted on.
     join = (f'<section class="kh-join"><h2>🧾 आप {escape(hi)} खरीदते हैं?</h2>'
             f'<p>अपने जिले के किसानों तक सीधे पहुंचें। कृषि मित्र पर अपनी फर्म का नाम, '
-            f'नंबर और फसलें जुड़वाएं — किसान सीधे आपको कॉल करेंगे।</p>'
-            f'<a href="https://wa.me/919870951001?text={join_msg}" rel="nofollow" '
-            f'target="_blank">WhatsApp पर नाम जुड़वाएं</a></section>')
+            f'नंबर और फसलें जुड़वाएं — किसान सीधे आपको कॉल करेंगे। लिस्टिंग मुफ्त है; '
+            f'हम कॉल करके पुष्टि के बाद ही नाम दिखाते हैं।</p>'
+            f'<a href="{SITE}/dukan">अपनी दुकान लिस्ट करें →</a>'
+            f'<a class="kh-join-wa" href="https://wa.me/919870951001?text={join_msg}" '
+            f'rel="nofollow" target="_blank">या WhatsApp पर बात करें</a></section>')
 
     if total:
         parts = []

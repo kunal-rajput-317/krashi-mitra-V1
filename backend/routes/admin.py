@@ -1160,3 +1160,90 @@ async def delete_task(
     if not ok:
         raise HTTPException(404, "Not one of your own tasks")
     return {"success": True, "progress": checklist.board(db)["progress"]}
+
+
+# ── खरीदार / डीलर directory ───────────────────────────────────
+# CRUD behind /bhav/.../kharidar. Two kinds of row arrive here: ones the owner
+# types in (source="admin") and ones from the public अपनी दुकान form
+# (source="signup", never live until approved). services/dealers.py owns the
+# writes and the trust rule; this file is just the HTTP surface.
+#
+# Reads go through the same _checklist_write() wrapper as the checklist: the
+# symptom of a read-only Neon compute is identical here — the form submits, the
+# panel says nothing, and the dealer is not saved.
+
+def _dealer_write(fn, *args, **kwargs):
+    from backend.database.db import is_read_only_error
+    try:
+        return fn(*args, **kwargs)
+    except HTTPException:
+        raise
+    except Exception as e:
+        if is_read_only_error(e):
+            raise HTTPException(
+                503,
+                "Database is read-only (Neon plan limit) — the dealer was NOT saved. "
+                "Write the number down and re-enter it once the DB accepts writes. "
+                "See the 'Settle the Neon migration' task."
+            )
+        raise HTTPException(500, str(e))
+
+
+@router.get("/buyers")
+async def list_buyers(
+    source: str = "",
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Every listing, live or not. The seeded data/buyers.json rows are NOT
+    included — they are committed to the repo and not editable from here; a
+    DB row sharing their slug overrides them (see database/db.py::Buyer)."""
+    from backend.services import dealers
+    try:
+        return {"success": True, "buyers": dealers.listing(db, source=source),
+                "counts": dealers.counts(db)}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@router.post("/buyers")
+async def create_buyer(
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import dealers
+    problem = dealers.validate(payload)
+    if problem:
+        raise HTTPException(400, problem)
+    row = _dealer_write(dealers.create, db, payload)
+    return {"success": True, "buyer": dealers.listing(db, source="")[0] if row else None,
+            "counts": dealers.counts(db)}
+
+
+@router.patch("/buyers/{slug}")
+async def update_buyer(
+    slug:    str,
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Also the approve path: {"active": true, "verified": true}. Both flags are
+    settable only from here — the public form has no route to them."""
+    from backend.services import dealers
+    row = _dealer_write(dealers.update, db, slug, payload)
+    if not row:
+        raise HTTPException(404, "Unknown dealer")
+    return {"success": True, "counts": dealers.counts(db)}
+
+
+@router.delete("/buyers/{slug}")
+async def delete_buyer(
+    slug: str,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import dealers
+    if not _dealer_write(dealers.delete, db, slug):
+        raise HTTPException(404, "Unknown dealer")
+    return {"success": True, "counts": dealers.counts(db)}

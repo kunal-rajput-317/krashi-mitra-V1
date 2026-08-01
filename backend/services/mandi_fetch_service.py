@@ -18,6 +18,7 @@
 # Designed to be called by the APScheduler job (daily) and also
 # runnable manually:  python -m backend.services.mandi_fetch_service
 #   ... --archive-probe [YYYY-MM-DD]   fetch-only check of the archive path
+#   ... --backfill YYYY-MM-DD [...]    repair missing day(s) of history
 # ============================================================
 
 import os
@@ -33,6 +34,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from backend.database.db import (
     SessionLocal, init_db, MandiPrice, MandiPriceHistory, MandiLastSeen,
+    _ensure_conflict_arbiters,
 )
 
 load_dotenv()
@@ -477,6 +479,161 @@ def _change_pct(modal: str, prev: str):
 # kept on fetch failure that then never reappear in the feed.
 SNAPSHOT_KEEP_DAYS = 7
 
+CHUNK = 1000   # rows per INSERT — keeps statement size and lock time sane
+
+
+def _history_rows(records: list) -> tuple[list, set, list]:
+    """Normalise raw feed rows into MandiPriceHistory column dicts.
+
+    Returns (rows, group_keys, arrival_dts). Shared by the live fetch and the
+    archive backfill so both derive row_key exactly the same way — a backfill
+    that hashed differently would re-insert rows the live fetch already has.
+    """
+    rows, group_keys, dts = [], set(), []
+    for r in records:
+        adate = _norm(r.get("arrival_date"))
+        adt   = _parse_dt(adate)
+        gk    = _group_key(r)
+        rk    = hashlib.md5(f"{gk}|{adate}".encode("utf-8")).hexdigest()
+        if adt:
+            dts.append(adt)
+        group_keys.add(gk)
+        rows.append({
+            "state":        _norm(r.get("state")),
+            "district":     _norm(r.get("district")),
+            "market":       _norm(r.get("market")),
+            "commodity":    _norm(r.get("commodity")),
+            "variety":      _norm(r.get("variety")),
+            "grade":        _norm(r.get("grade")),
+            "min_price":    _norm(r.get("min_price")),
+            "max_price":    _norm(r.get("max_price")),
+            "modal_price":  _norm(r.get("modal_price")),
+            "arrival_date": adate,
+            "arrival_dt":   adt,
+            "group_key":    gk,
+            "row_key":      rk,
+        })
+    return rows, group_keys, dts
+
+
+def _append_history(db, rows: list, now: datetime) -> int:
+    """The ONLY writer of mandi_price_history. Idempotent — a row already
+    stored for that (mandi × crop × date) is skipped.
+
+    Keep it the only writer. The ON CONFLICT below has a hard dependency on the
+    shape of the arbiter index (see _CONFLICT_ARBITERS in database/db.py), and
+    a second copy of this statement is a second chance to get that wrong —
+    which is exactly how every fetch broke on 30 Jul 2026.
+    """
+    added = 0
+    for i in range(0, len(rows), CHUNK):
+        chunk = [{**x, "fetched_at": now} for x in rows[i:i + CHUNK]]
+        stmt = pg_insert(MandiPriceHistory.__table__).values(chunk)
+        # The WHERE is not optional. The only unique index on row_key is
+        # mandi_history_row_key_uidx, which is PARTIAL (WHERE row_key IS NOT
+        # NULL). Postgres refuses to infer a partial index as the ON CONFLICT
+        # arbiter unless the statement repeats its predicate, so a bare
+        # ON CONFLICT (row_key) fails the whole fetch with
+        # InvalidColumnReference. A non-partial unique index, if one is ever
+        # added back, still matches this form.
+        stmt = stmt.on_conflict_do_nothing(
+            index_elements=["row_key"],
+            index_where=MandiPriceHistory.__table__.c.row_key.isnot(None),
+        )
+        added += (db.execute(stmt).rowcount or 0)
+    db.commit()
+    return added
+
+
+def _upsert_last_seen(db, rows: list, now: datetime) -> int:
+    """Last-seen — one permanent row per (mandi × crop), updated only when the
+    incoming row is at least as new. This is what makes the history trim safe:
+    the page index and the stale-district rescue read from here, so a district
+    that stops reporting keeps its URL and its last known price no matter how
+    short retention gets. See MandiLastSeen in database/db.
+    """
+    touched = 0
+    _ls = MandiLastSeen.__table__.c
+    for i in range(0, len(rows), CHUNK):
+        chunk = [{k: v for k, v in x.items() if k != "row_key"}
+                 for x in rows[i:i + CHUNK] if x.get("group_key")]
+        if not chunk:
+            continue
+        stmt = pg_insert(MandiLastSeen.__table__).values(
+            [{**x, "updated_at": now} for x in chunk])
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["group_key"],
+            set_={
+                "state":        stmt.excluded.state,
+                "district":     stmt.excluded.district,
+                "market":       stmt.excluded.market,
+                "commodity":    stmt.excluded.commodity,
+                "variety":      stmt.excluded.variety,
+                "grade":        stmt.excluded.grade,
+                "min_price":    stmt.excluded.min_price,
+                "max_price":    stmt.excluded.max_price,
+                "modal_price":  stmt.excluded.modal_price,
+                "arrival_date": stmt.excluded.arrival_date,
+                "arrival_dt":   stmt.excluded.arrival_dt,
+                "updated_at":   stmt.excluded.updated_at,
+            },
+            # Two jobs for this predicate:
+            #  • never let a late-arriving OLD row overwrite a newer price;
+            #  • never rewrite a row that has not changed. The fetch runs
+            #    6×/day and mostly re-reads the same rows, so a plain
+            #    `>=` would rewrite all ~31k rows six times a day. Each
+            #    rewrite is a new row version the storage cap counts, which
+            #    is the whole problem we are here to fix. Same-day updates
+            #    still land — but only when a price actually moved.
+            where=(_ls.arrival_dt.is_(None)) |
+                  (stmt.excluded.arrival_dt > _ls.arrival_dt) |
+                  ((stmt.excluded.arrival_dt == _ls.arrival_dt) &
+                   (stmt.excluded.modal_price.is_distinct_from(_ls.modal_price) |
+                    stmt.excluded.min_price.is_distinct_from(_ls.min_price) |
+                    stmt.excluded.max_price.is_distinct_from(_ls.max_price))),
+        )
+        touched += (db.execute(stmt).rowcount or 0)
+    db.commit()
+    return touched
+
+
+def backfill_day(day: date) -> dict:
+    """Repair a missing day of history from the never-wiped archive resource.
+
+    Deliberately narrow: it writes history and last-seen and nothing else. The
+    snapshot (mandi_prices) always reflects the newest live fetch, so a
+    backfill of an older day must not touch it, and retention is left to the
+    live run. Safe to re-run — _append_history dedups on row_key.
+
+    Ensures the ON CONFLICT arbiter rather than calling init_db(): a repair
+    tool run by hand against production should touch the schema as little as
+    it can, and the arbiter is the one thing _append_history cannot work
+    without.
+    """
+    _ensure_conflict_arbiters()
+    recs = _fetch_archive_day(day)
+    logger.info(f"🗄️ Archive {day:%d/%m/%Y}: {len(recs)} rows")
+    if not recs:
+        return {"day": day.isoformat(), "fetched": 0,
+                "history_added": 0, "last_seen": 0}
+
+    rows, _keys, _dts = _history_rows(recs)
+    db  = SessionLocal()
+    now = datetime.utcnow()
+    try:
+        added   = _append_history(db, rows, now)
+        touched = _upsert_last_seen(db, rows, now)
+        logger.info(f"✅ Backfilled {day:%d/%m/%Y}: history +{added}, "
+                    f"last-seen touched {touched} (of {len(rows)} fetched)")
+        return {"day": day.isoformat(), "fetched": len(rows),
+                "history_added": added, "last_seen": touched}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ backfill_day({day}) failed: {e}")
+        raise
+    finally:
+        db.close()
+
 
 def check_api_key() -> bool:
     """One-row probe logged on startup so every deploy shows immediately whether
@@ -545,30 +702,7 @@ def fetch_and_store() -> dict:
             return {"fetched": 0, "snapshot": existing, "history_added": 0}
 
         # Normalise + enrich every record
-        rows, group_keys, dts = [], set(), []
-        for r in records:
-            adate = _norm(r.get("arrival_date"))
-            adt   = _parse_dt(adate)
-            gk    = _group_key(r)
-            rk    = hashlib.md5(f"{gk}|{adate}".encode("utf-8")).hexdigest()
-            if adt:
-                dts.append(adt)
-            group_keys.add(gk)
-            rows.append({
-                "state":        _norm(r.get("state")),
-                "district":     _norm(r.get("district")),
-                "market":       _norm(r.get("market")),
-                "commodity":    _norm(r.get("commodity")),
-                "variety":      _norm(r.get("variety")),
-                "grade":        _norm(r.get("grade")),
-                "min_price":    _norm(r.get("min_price")),
-                "max_price":    _norm(r.get("max_price")),
-                "modal_price":  _norm(r.get("modal_price")),
-                "arrival_date": adate,
-                "arrival_dt":   adt,
-                "group_key":    gk,
-                "row_key":      rk,
-            })
+        rows, group_keys, dts = _history_rows(records)
 
         # min(), not max(): on an archive-topped-up run the batch spans two
         # dates, and min() keeps the "previous price" strictly older than the
@@ -579,64 +713,10 @@ def fetch_and_store() -> dict:
 
         # 1) Append to history (idempotent — skip rows already stored for that date)
         now = datetime.utcnow()
-        history_added = 0
-        CHUNK = 1000
-        for i in range(0, len(rows), CHUNK):
-            chunk = [{**x, "fetched_at": now} for x in rows[i:i + CHUNK]]
-            stmt = pg_insert(MandiPriceHistory.__table__).values(chunk)
-            stmt = stmt.on_conflict_do_nothing(index_elements=["row_key"])
-            res = db.execute(stmt)
-            history_added += (res.rowcount or 0)
-        db.commit()
+        history_added = _append_history(db, rows, now)
 
-        # 1a) Last-seen — one permanent row per (mandi × crop), updated only when
-        # the incoming row is at least as new. This is what makes the trim below
-        # safe: the page index and the stale-district rescue read from here, so
-        # a district that stops reporting keeps its URL and its last known price
-        # no matter how short retention gets. See MandiLastSeen in database/db.
-        last_seen_n = 0
-        _ls = MandiLastSeen.__table__.c
-        for i in range(0, len(rows), CHUNK):
-            chunk = [{k: v for k, v in x.items() if k != "row_key"}
-                     for x in rows[i:i + CHUNK] if x.get("group_key")]
-            if not chunk:
-                continue
-            stmt = pg_insert(MandiLastSeen.__table__).values(
-                [{**x, "updated_at": now} for x in chunk])
-            stmt = stmt.on_conflict_do_update(
-                index_elements=["group_key"],
-                set_={
-                    "state":        stmt.excluded.state,
-                    "district":     stmt.excluded.district,
-                    "market":       stmt.excluded.market,
-                    "commodity":    stmt.excluded.commodity,
-                    "variety":      stmt.excluded.variety,
-                    "grade":        stmt.excluded.grade,
-                    "min_price":    stmt.excluded.min_price,
-                    "max_price":    stmt.excluded.max_price,
-                    "modal_price":  stmt.excluded.modal_price,
-                    "arrival_date": stmt.excluded.arrival_date,
-                    "arrival_dt":   stmt.excluded.arrival_dt,
-                    "updated_at":   stmt.excluded.updated_at,
-                },
-                # Two jobs for this predicate:
-                #  • never let a late-arriving OLD row overwrite a newer price;
-                #  • never rewrite a row that has not changed. The fetch runs
-                #    6×/day and mostly re-reads the same rows, so a plain
-                #    `>=` would rewrite all ~31k rows six times a day. Each
-                #    rewrite is a new row version the storage cap counts, which
-                #    is the whole problem we are here to fix. Same-day updates
-                #    still land — but only when a price actually moved.
-                where=(_ls.arrival_dt.is_(None)) |
-                      (stmt.excluded.arrival_dt > _ls.arrival_dt) |
-                      ((stmt.excluded.arrival_dt == _ls.arrival_dt) &
-                       (stmt.excluded.modal_price.is_distinct_from(_ls.modal_price) |
-                        stmt.excluded.min_price.is_distinct_from(_ls.min_price) |
-                        stmt.excluded.max_price.is_distinct_from(_ls.max_price))),
-            )
-            res = db.execute(stmt)
-            last_seen_n += (res.rowcount or 0)
-        db.commit()
+        # 1a) Last-seen — see _upsert_last_seen for why this table exists.
+        last_seen_n = _upsert_last_seen(db, rows, now)
         if last_seen_n:
             logger.info(f"📌 last-seen rows touched: {last_seen_n}")
 
@@ -794,6 +874,19 @@ if __name__ == "__main__":
         logger.info(f"usable      : {len(recs) >= MIN_ROWS} (MIN_ROWS={MIN_ROWS})")
         if recs:
             logger.info(f"sample      : {recs[0]}")
+        sys.exit(0)
+
+    # `--backfill YYYY-MM-DD [YYYY-MM-DD ...]` repairs missing days of history
+    # from the archive. The live resource only ever holds today, so a day lost
+    # to an outage is unrecoverable from it — the archive is the only source.
+    # Writes history + last-seen only, never the snapshot. Safe to re-run.
+    if "--backfill" in sys.argv:
+        days = [date.fromisoformat(a) for a in sys.argv[1:] if not a.startswith("-")]
+        if not days:
+            logger.error("usage: --backfill YYYY-MM-DD [YYYY-MM-DD ...]")
+            sys.exit(2)
+        for d in days:
+            logger.info(backfill_day(d))
         sys.exit(0)
 
     logger.info(fetch_and_store())

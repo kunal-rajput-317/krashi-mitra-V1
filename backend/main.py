@@ -285,6 +285,9 @@ app.include_router(alerts_route.router)  # 🔔 mandi bhav price alerts (web pus
 from backend.routes import appeal as appeal_route
 app.include_router(appeal_route.router)  # बेचना/खरीदना है — sell/buy appeals raised on /bhav pages
 
+from backend.routes import dukan as dukan_route
+app.include_router(dukan_route.router)   # अपनी दुकान लिस्ट करें — dealer self-signup into the खरीदार queue
+
 from backend.routes import product as product_route
 app.include_router(product_route.router)  # SEO shop-product pages (/product/*) + /product/sitemap.xml
 

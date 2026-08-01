@@ -9,22 +9,50 @@
 # featured slot). This module is only the supply side of that: load a
 # hand-seeded list, index it by place, hand it back.
 #
-# Pure functions, no FastAPI/DB import. Data lives in data/buyers.json, read
-# live and cached by mtime — signing a dealer is a JSON edit, not a deploy.
+# TWO SOURCES, ONE INDEX. data/buyers.json is the committed seed, read live and
+# cached by mtime. The `buyers` table is everything added since — from the admin
+# panel or the public अपनी दुकान form — and it exists because Render's free plan
+# has no persistent disk, so a dealer written back into the JSON at runtime
+# would vanish on the next restart (see database/db.py::Buyer). A DB row whose
+# slug matches a JSON id overrides it, so a seeded listing can be fixed from the
+# panel without a deploy.
+#
+# The DB read is TTL-cached and fails soft: a kharidar page must render, and the
+# sitemap must stay honest, even while Neon is asleep or read-only. Falling back
+# to the JSON seed shows fewer dealers; falling over shows a farmer a 500.
 #
 # A listing must EARN its way onto the page: active, named, placed, and
 # reachable. Anything less is filtered here rather than in the template, so no
-# caller can accidentally render a dead phone number to a farmer.
+# caller can accidentally render a dead phone number to a farmer — and a public
+# signup, which arrives active=False, is invisible until someone calls it.
 # ============================================================
 import json
+import logging
 import re
+import time
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 _PATH = Path(__file__).resolve().parents[1] / "data" / "buyers.json"
 
 _cache: dict | None = None
 _mtime: float = -1.0
 _place_idx: dict[tuple[str, str], list] = {}   # (state, district) → [buyer]
+
+# Short enough that a dealer added in a mandi appears while you are still
+# standing there; long enough that a crawl of 1,300 /bhav pages is not 1,300
+# queries. Admin writes call invalidate() anyway, so this is only the ceiling
+# on how stale a *missed* invalidation can get.
+_DB_TTL = 60.0
+_db_rows_cache: list | None = None
+_db_at: float = -1.0
+# Identity of the row list the current _place_idx was built from. _db_rows()
+# hands back the same object until it actually refetches, so an `is not` check
+# rebuilds the index exactly when the data changed — no clock, no version
+# counter to keep in sync. Boxed in a list so _load() can assign without a
+# `global` for it.
+_last_db_rows: list = [None]
 
 _KIND_HI = {
     "trader":    ("व्यापारी", "🧾"),
@@ -47,23 +75,88 @@ def _usable(b: dict) -> bool:
                 and ((b.get("phone") or "").strip() or (b.get("whatsapp") or "").strip()))
 
 
+def as_dict(row) -> dict:
+    """A `Buyer` row in the JSON row's shape, so nothing downstream has to know
+    which source a listing came from."""
+    return {
+        "id":          row.slug,
+        "active":      bool(row.active),
+        "verified":    bool(row.verified),
+        "featured":    bool(row.featured),
+        "name":        row.name or "",
+        "kind":        row.kind or "trader",
+        "state":       row.state or "",
+        "district":    row.district or "",
+        "market":      row.market or "",
+        "commodities": [c for c in (row.commodities or "").split(",") if c.strip()],
+        "phone":       row.phone or "",
+        "whatsapp":    row.whatsapp or "",
+        "note":        row.note or "",
+        "since":       row.since or "",
+    }
+
+
+def _db_rows() -> list:
+    """Live listings from the `buyers` table, TTL-cached.
+
+    Swallows every error on purpose. This runs inside page renders and the
+    sitemap; if Neon is asleep, cold-starting, or read-only, the correct
+    outcome is the JSON seed and a warning line — not a 500 on the SEO surface.
+    """
+    global _db_rows_cache, _db_at
+    now = time.time()
+    if _db_rows_cache is not None and now - _db_at < _DB_TTL:
+        return _db_rows_cache
+    rows = []
+    try:
+        from backend.database.db import Buyer, SessionLocal
+        db = SessionLocal()
+        try:
+            rows = [as_dict(r) for r in db.query(Buyer).filter(Buyer.active.is_(True)).all()]
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning("buyer table read failed, using JSON seed only: %s", e)
+        rows = _db_rows_cache or []
+    _db_rows_cache, _db_at = rows, now
+    return rows
+
+
+def invalidate() -> None:
+    """Drop the DB cache so an admin edit shows on the next page load.
+
+    The panel's whole reason to exist is adding a dealer while sitting in front
+    of him; waiting out a TTL to confirm it worked would defeat that."""
+    global _db_rows_cache, _db_at
+    _db_rows_cache, _db_at = None, -1.0
+
+
 def _load() -> dict:
     global _cache, _mtime, _place_idx
     try:
         m = _PATH.stat().st_mtime
     except OSError:
-        return {"buyers": []}
-    if _cache is None or m != _mtime:
-        try:
-            _cache = json.loads(_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            _cache = {"buyers": []}
+        m = -1.0                       # no seed file is fine; the table may still have rows
+    db_rows = _db_rows()
+    if _cache is None or m != _mtime or db_rows is not _last_db_rows[0]:
+        if _cache is None or m != _mtime:
+            try:
+                _cache = json.loads(_PATH.read_text(encoding="utf-8"))
+            except Exception:
+                _cache = {"buyers": []}
+            _mtime = m
+        # DB last so a row overrides the seed entry it shares a slug with —
+        # that is what makes a committed listing correctable from the panel.
+        merged: dict[str, dict] = {}
+        for b in list(_cache.get("buyers") or []) + db_rows:
+            key = b.get("id") or f"anon-{len(merged)}"
+            merged[key] = b
         idx: dict[tuple[str, str], list] = {}
-        for b in (_cache.get("buyers") or []):
+        for b in merged.values():
             if _usable(b):
                 idx.setdefault((_norm(b.get("state")), _norm(b.get("district"))), []).append(b)
         _place_idx = idx
-        _mtime = m
+        _last_db_rows[0] = db_rows
     return _cache
 
 
