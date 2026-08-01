@@ -306,6 +306,9 @@ app.include_router(sitemap_route.router)  # /sitemap.xml — generated from the 
 from backend.routes import llms as llms_route
 app.include_router(llms_route.router)   # /llms.txt — AI-agent site guide, generated like the sitemap
 
+from backend.routes import health as health_route
+app.include_router(health_route.router)  # /health (page + liveness), /health/checks, /health/data
+
 # ── Run locally ──────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(
@@ -317,7 +320,7 @@ if __name__ == "__main__":
 
 
 
-# ── Health check & Frontend mount ───────────────────────────────────
+# ── Frontend mount ──────────────────────────────────────────────────
 # Commented out root JSON route so it serves index.html instead
 # @app.get("/")
 # async def root():
@@ -327,23 +330,10 @@ if __name__ == "__main__":
 #         "version": "0.1.0",
 #         "message": "किसान का डिजिटल साथी",
 #     }
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-
-
-@app.get("/health/data")
-async def health_data(stale_after_hours: float = 30.0):
-    """Public data-freshness probe for the external `monitor` workflow.
-    Reports only how fresh the mandi feed is (nothing sensitive — the data
-    date already shows on every /bhav page). `stale` flips true when no
-    row-delivering mandi sync has run within stale_after_hours, so a silently
-    stopped feed pages us even while nobody is watching."""
-    from backend.services.sync_log_service import mandi_freshness
-    return mandi_freshness(stale_after_hours)
-
-
+#
+# /health, /health/checks and /health/data now live in routes/health.py —
+# see the header there for why /health stays database-free for the keep-alive
+# ping while the same URL serves a full status page to a browser.
 
 # Add this AFTER all app.include_router() lines, at the bottom
 app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")

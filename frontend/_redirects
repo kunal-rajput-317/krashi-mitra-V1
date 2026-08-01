@@ -19,6 +19,13 @@
 # (routes/llms.py) — no static file exists, so proxy it or it hits the 404.
 /llms.txt  https://krashi-mitra-v1-oxdc.onrender.com/llms.txt  200!
 
+# Feature-by-feature status page (routes/health.py) — so the answer to "is
+# anything broken?" lives on the main domain too, not only on the Render URL.
+# Sends noindex itself. The keep-alive/monitor workflows still ping Render
+# directly, so a Netlify outage can never look like a backend outage.
+/health    https://krashi-mitra-v1.onrender.com/health         200!
+/health/*  https://krashi-mitra-v1.onrender.com/health/:splat  200!
+
 # Canonical article URLs: 301 old .html forms to extensionless
 # (Netlify already lowercases mixed-case paths with its own 301)
 /articles/index.html   /articles/   301!

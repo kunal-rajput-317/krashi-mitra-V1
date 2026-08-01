@@ -60,4 +60,21 @@ jobs:
             exit 1
           fi
 
-          echo "all good ✅ — site up, feed fresh"
+          # 3) Every other feature — weather cache, write-ability, schedulers,
+          # KCC, seasonality, mail, push. Same checks the /health page shows a
+          # human; here they page us instead. Only "down" alerts — a "warn" is
+          # something to look at, not something to wake up for.
+          # jq, not grep: group labels and check labels share a key name, so a
+          # regex would happily blame "डेटा फ़ीड" for a broken card inside it.
+          checks=$(curl -s --max-time 90 "$BASE/health/checks" || true)
+          overall=$(printf '%s' "$checks" | jq -r '.status // "unknown"' 2>/dev/null || echo unknown)
+          echo "features: $overall"
+          if [ "$overall" = "down" ]; then
+            broken=$(printf '%s' "$checks" | jq -r \
+              '[.groups[].checks[] | select(.status=="down") | .label + " (" + .detail + ")"]
+               | join("; ")' 2>/dev/null || true)
+            alert "feature DOWN — ${broken:-see /health}. Full page: $BASE/health"
+            exit 1
+          fi
+
+          echo "all good ✅ — site up, feed fresh, every feature healthy"
