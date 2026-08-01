@@ -18,7 +18,7 @@ jobs:
         run: |
           for i in 1 2 3; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 \
-              https://krashi-mitra-v1.onrender.com/health || true)
+              https://krashi-mitra-v1-oxdc.onrender.com/health || true)
             if [ "$code" = "200" ]; then
               echo "ok (attempt $i)"
               exit 0

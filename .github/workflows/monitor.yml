@@ -21,7 +21,11 @@ jobs:
     steps:
       - name: Check health + mandi freshness
         env:
-          BASE: https://krashi-mitra-v1.onrender.com
+          # The service was renamed; krashi-mitra-v1.onrender.com now 404s, so
+          # this job spent days alerting "site DOWN" and exiting before it ever
+          # reached the freshness check — which is how a stalled mandi feed went
+          # unnoticed from 29 Jul. Keep this in step with frontend/_redirects.
+          BASE: https://krashi-mitra-v1-oxdc.onrender.com
           TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TG_CHAT:  ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |

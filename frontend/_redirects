@@ -23,8 +23,8 @@
 # anything broken?" lives on the main domain too, not only on the Render URL.
 # Sends noindex itself. The keep-alive/monitor workflows still ping Render
 # directly, so a Netlify outage can never look like a backend outage.
-/health    https://krashi-mitra-v1.onrender.com/health         200!
-/health/*  https://krashi-mitra-v1.onrender.com/health/:splat  200!
+/health    https://krashi-mitra-v1-oxdc.onrender.com/health         200!
+/health/*  https://krashi-mitra-v1-oxdc.onrender.com/health/:splat  200!
 
 # Canonical article URLs: 301 old .html forms to extensionless
 # (Netlify already lowercases mixed-case paths with its own 301)
