@@ -33,12 +33,14 @@
 # must not start 404ing just because a market skipped a week.
 # ============================================================
 
+import calendar
 import json as _json
 import os
 import re
 import statistics
 import time
 from datetime import date, datetime, timedelta
+from email.utils import formatdate
 from functools import lru_cache
 from html import escape
 from urllib.parse import quote, urlencode, urlparse
@@ -325,6 +327,13 @@ def _hindi_data_date(s: str) -> str:
         return s or "-"
     day, month = int(m.group(1)), int(m.group(2))
     return f"{day} {_HI_MONTHS[month - 1]}" if 1 <= month <= 12 else s
+
+
+def _fresh_iso(idx: dict, cs: str, ss: str, ds: str) -> str:
+    """The same 'YYYY-MM-DD' idx["dates"] already gives /bhav/sitemap.xml's
+    <lastmod> for this exact URL — reused here (not reparsed from `prices`) so
+    a page's dateModified can never disagree with its own sitemap entry."""
+    return idx.get("dates", {}).get(cs, {}).get(ss, {}).get(ds, "")
 
 
 # Agmarknet's commodity list carries a few non-crop items (livestock, fuel).
@@ -1949,7 +1958,8 @@ _CACHE_HEADERS = {
 
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
-         extra_css: str = "", robots: str = "", head_extra: str = "") -> HTMLResponse:
+         extra_css: str = "", robots: str = "", head_extra: str = "",
+         updated: str = "") -> HTMLResponse:
     """One page shell for all four tiers — head, header, crumbs, body, footer.
     `active` defaults to "bhav" for this module's own pages; other SEO routes
     (e.g. product.py) that reuse this shell pass their own nav key/"" so they
@@ -1962,13 +1972,29 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     every existing caller keeps the current indexable behaviour.
     `head_extra` is raw <head> markup for a caller that needs more than CSS —
     naksha.py's map pages pull in the Leaflet stylesheet, which cannot ride in
-    extra_css because @import is only valid at the top of a sheet."""
+    extra_css because @import is only valid at the top of a sheet.
+    `updated` is the real "YYYY-MM-DD" the page's numbers were last reported —
+    NEVER today's date, NEVER server-render time. A page whose FAQ states a
+    specific "आज का भाव ₹X" only stays honest as long as Google's cached copy
+    is recent; without a dateModified/Last-Modified signal Google has nothing
+    to judge that by and can serve a weeks-old snippet as if it were today's
+    (see docs — the "13 Jul" Bareilly wheat snippet still live on 2 Aug). Pass
+    "" (the default) for pages with no per-page number to go stale — omitting
+    the signal costs nothing; a wrong one costs trust in every date after it."""
     og = og_img or f"{SITE}/images/og-banner.webp"
     # /bhav pages (active=="bhav") ship NO visible breadcrumb — the trail lives
     # only as BreadcrumbList JSON-LD in `ld` (still feeds SERP breadcrumbs).
     # Reused callers (e.g. product.py, active=="shop") keep their visible one.
     crumbs_nav = (f'<nav class="crumbs">{crumbs}</nav>'
                   if (crumbs and active != "bhav") else "")
+    date_ld, headers = "", _CACHE_HEADERS
+    if updated:
+        date_ld = _ld({"@context": "https://schema.org", "@type": "WebPage",
+                        "@id": canon, "url": canon, "dateModified": updated})
+        y, m, d = (int(x) for x in updated.split("-"))
+        headers = {**_CACHE_HEADERS,
+                   "Last-Modified": formatdate(
+                       calendar.timegm(date(y, m, d).timetuple()), usegmt=True)}
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -1991,6 +2017,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {_FONTS}
 {head_extra}
 {ld}
+{date_ld}
 <style>{_CSS}{extra_css}</style>
 </head>
 <body>
@@ -2001,7 +2028,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 </div>
 {_footer()}
 </body>
-</html>""", headers=_CACHE_HEADERS)
+</html>""", headers=headers)
 
 
 def _faq(faqs: list[tuple[str, str]]) -> tuple[str, dict]:
@@ -4617,6 +4644,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
     today_hi  = _hindi_date(date.today())
     data_date = prices[0].get("date", "-")
+    fresh_iso = _fresh_iso(idx, cs, ss, ds)
     canon     = f"{SITE}/bhav/{cs}/{ss}/{ds}"
     st = _stats(prices)
 
@@ -4865,7 +4893,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS + _APPEAL_CSS)
+                extra_css=_LAZY_CSS + _APPEAL_CSS, updated=fresh_iso)
 
 
 # ════════════════════════════════════════════════════════════
@@ -5186,6 +5214,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     prices = _rows_for(commodity, state=state, district=district) \
         or _rows_for_district(idx, cs, ss, ds)
     st = _stats(prices) if prices else {"avg": None, "lo": None, "hi": None, "n": 0}
+    fresh_iso = _fresh_iso(idx, cs, ss, ds)
 
     # Two sources, one page: hand-verified dealers we sell listings to, and the
     # district's slice of Krashi Bazar. Dealers pin above because they are the
@@ -5343,4 +5372,5 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › '
               f'<a href="{SITE}{price_url}">{escape(district)}</a> › खरीदार')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_KH_CSS + _APPEAL_CSS, robots=robots)
+                extra_css=_KH_CSS + _APPEAL_CSS, robots=robots,
+                updated=fresh_iso if st["avg"] else "")

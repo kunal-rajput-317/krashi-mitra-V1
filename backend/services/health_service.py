@@ -322,6 +322,32 @@ def _chk_mandi_history(db, detailed):
     return {"status": "ok", "detail": label, "facts": facts}
 
 
+def _chk_gsc(db, detailed):
+    """Daily Search Console staleness sweep for /bhav (see gsc_service.py) —
+    the fix for a Google snippet showing a stale 'today's price' weeks after
+    the real one moved on. This check NEVER calls Google itself; it only
+    reads what the last scheduled sweep left in sync_log, same as the mandi
+    feed check above."""
+    from backend.services.gsc_service import configured
+    if not configured():
+        return {"status": "off", "detail": "GSC क्रेडेंशियल कॉन्फ़िगर नहीं (GOOGLE_SEARCH_CONSOLE_CREDENTIALS_B64 खाली)",
+                "facts": []}
+    from backend.database.db import SyncLog
+    r = (db.query(SyncLog).filter(SyncLog.source == "gsc_recrawl")
+           .order_by(SyncLog.finished_at.desc()).first())
+    if not r:
+        return {"status": "warn", "detail": "कॉन्फ़िगर है पर अभी तक एक भी स्वीप नहीं चली", "facts": []}
+    facts = [["आख़िरी स्वीप", f"{_ist(r.finished_at)} · {_ago(r.finished_at)}"],
+             ["नतीजा", r.detail or "—"]]
+    hrs = _hours_since(r.finished_at)
+    if hrs is not None and hrs > 48:
+        return {"status": "warn", "detail": f"स्वीप {_ago(r.finished_at)} से नहीं चली", "facts": facts}
+    if r.status == "failed":
+        return {"status": "warn", "detail": "आख़िरी स्वीप में एक भी पेज नहीं जांचा जा सका — token/अनुमति जांचें",
+                "facts": facts}
+    return {"status": "ok", "detail": f"{r.rows} पेज जांचे गए · {_ago(r.finished_at)}", "facts": facts}
+
+
 def _chk_weather(db, detailed):
     if not os.getenv("OPENWEATHER_API_KEY", "").strip():
         return {"status": "down", "detail": "OPENWEATHER_API_KEY सेट नहीं — मौसम रिफ़्रेश नहीं हो सकता",
@@ -580,6 +606,7 @@ _GROUPS = [
         ("weather",        "मौसम",            "🌦️", _chk_weather,        False),
         ("seasonality",    "मौसमी रुझान",     "📅", _chk_seasonality,    False),
         ("kcc",            "किसान कॉल सेंटर", "☎️", _chk_kcc,            False),
+        ("gsc",            "Google री-इंडेक्स", "📡", _chk_gsc,          False),
     ]),
     ("features", "सुविधाएँ", "किसान जो पेज रोज़ खोलते हैं", [
         ("ai_chat",  "AI सवाल-जवाब",   "🤖", _chk_ai_chat,  False),
