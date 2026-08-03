@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -9,6 +10,8 @@ from sqlalchemy.orm import Session
 
 router   = APIRouter(prefix="/admin")
 security = HTTPBasic()
+
+SITE = "https://krashimitra.in"
 
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASS = os.getenv("ADMIN_PASS", "krashi2025")
@@ -1198,10 +1201,16 @@ async def list_buyers(
     """Every listing, live or not. The seeded data/buyers.json rows are NOT
     included — they are committed to the repo and not editable from here; a
     DB row sharing their slug overrides them (see database/db.py::Buyer)."""
-    from backend.services import dealers
+    from backend.services import dealers, upi
     try:
         return {"success": True, "buyers": dealers.listing(db, source=source),
-                "counts": dealers.counts(db)}
+                "counts": dealers.counts(db),
+                "funnel": dealers.funnel(db),
+                # So the panel can grey out the collect button and say why,
+                # instead of generating a QR that points nowhere.
+                "upi": {"configured": upi.configured(),
+                        "vpa": upi.vpa(),
+                        "amount": upi.DEFAULT_AMOUNT}}
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -1247,3 +1256,176 @@ async def delete_buyer(
     if not _dealer_write(dealers.delete, db, slug):
         raise HTTPException(404, "Unknown dealer")
     return {"success": True, "counts": dealers.counts(db)}
+
+
+# ── Outreach: the call log and the ₹500 ───────────────────────
+# These three endpoints ARE the 31-Aug test, in the order it happens: ring him,
+# show him a QR, write down that the money landed.
+
+@router.post("/buyers/{slug}/call")
+async def log_dealer_call(
+    slug:    str,
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Log one phone call. `result` must be one of dealers.CALL_RESULTS."""
+    from backend.services import dealers
+    result = (payload.get("result") or "").strip().lower()
+    if result not in dealers.CALL_RESULTS:
+        raise HTTPException(400, f"result must be one of: {', '.join(dealers.CALL_RESULTS)}")
+    row = _dealer_write(dealers.log_call, db, slug, result,
+                        (payload.get("note") or ""))
+    if not row:
+        raise HTTPException(404, "Unknown dealer")
+    return {"success": True, "counts": dealers.counts(db), "funnel": dealers.funnel(db)}
+
+
+# The default answer to "what is this ₹500 for" — shown in the panel and in
+# the WhatsApp message, editable per-request via `purpose=`. Not persisted:
+# every collect call regenerates it fresh, so there is no schema to migrate
+# and no stale copy to fall out of date.
+_DEFAULT_PURPOSE = "मंडी भाव पेज पर वेरिफाइड लिस्टिंग — 30 दिन के लिए"
+
+
+@router.get("/buyers/{slug}/collect")
+async def dealer_collect(
+    slug:    str,
+    amount:  str = "",
+    purpose: str = "",
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """The UPI QR + deep link + a ready-to-send WhatsApp message for one dealer.
+
+    A request to pay, never a record of one — see services/upi.py. The payment
+    is only real once someone sees it in the bank app and posts it back to
+    /payment below.
+
+    `amount` and `purpose` are both editable from the panel per request — the
+    fee is not one fixed number (a featured slot or a first-time discount is a
+    real negotiation), and "what is this for" is copy the owner should be able
+    to word for a specific dealer, not a string baked into the code.
+    """
+    from backend.database.db import Buyer
+    from backend.services import upi
+    row = db.query(Buyer).filter(Buyer.slug == slug).first()
+    if not row:
+        raise HTTPException(404, "Unknown dealer")
+    if not upi.configured():
+        raise HTTPException(
+            503,
+            "UPI is not configured — set KM_UPI_ID (your UPI id, e.g. name@okhdfcbank) "
+            "and KM_UPI_NAME in the environment, then restart. Nothing is hardcoded "
+            "on purpose: a wrong VPA sends a dealer's money to a stranger."
+        )
+    pack = upi.collect(row.name or "", row.district or "",
+                       amount=amount or None, ref=slug)
+    pack["purpose"]  = (purpose or "").strip()[:200] or _DEFAULT_PURPOSE
+    pack["pay_url"]  = _pay_page_url(slug)
+    pack["whatsapp"] = _collect_message(row, pack["amount"], pack["pay_url"], pack["purpose"])
+    # So the panel can show a receipt button (or not) without a second round
+    # trip — this is the same row's payment history, already on hand.
+    pack["paid_at"]     = row.paid_at.isoformat() if row.paid_at else None
+    pack["paid_amount"] = row.paid_amount or 0
+    pack["paid_until"]  = row.paid_until.isoformat() if row.paid_until else None
+    pack["payment_ref"] = row.payment_ref or ""
+    return {"success": True, **pack}
+
+
+def _pay_page_url(slug: str) -> str:
+    """Absolute URL of the public /pay page — it gets pasted into WhatsApp, so a
+    site-relative path would arrive as unclickable text."""
+    return f"{SITE}/pay?d={quote(slug, safe='')}"
+
+
+def _collect_message(row, amount: int, pay_url: str, purpose: str = "") -> str:
+    """What the owner sends the dealer. Plain Hindi, no marketing — this goes to
+    someone who has already said yes on the phone and just needs the link."""
+    name = (row.name or "").strip()
+    for_line = f" — {purpose}" if purpose else ""
+    return (
+        f"नमस्ते{' ' + name if name else ''} जी,\n"
+        f"कृषि मित्र पर आपकी लिस्टिंग के लिए ₹{amount}{for_line}।\n\n"
+        f"नीचे लिंक से किसी भी UPI ऐप से पे कर सकते हैं:\n{pay_url}\n\n"
+        f"पेमेंट के बाद स्क्रीनशॉट भेज दीजिए, आपकी लिस्टिंग पर ✓ वेरिफाइड लग जाएगा।"
+    )
+
+
+@router.get("/buyers/{slug}/receipt")
+async def dealer_receipt(
+    slug: str,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """The WhatsApp-ready receipt for a dealer who has actually paid.
+
+    Built only from fields record_payment() itself wrote — paid_amount,
+    payment_ref, paid_at, paid_until. That is the same guarantee as the rest of
+    this file: a receipt can only describe a payment a human already confirmed,
+    never one this endpoint invented.
+    """
+    from backend.database.db import Buyer
+    row = db.query(Buyer).filter(Buyer.slug == slug).first()
+    if not row:
+        raise HTTPException(404, "Unknown dealer")
+    if not row.paid_at:
+        raise HTTPException(400, "This dealer has no recorded payment yet")
+    return {
+        "success":     True,
+        "receipt":     _receipt_message(row),
+        "paid_amount": row.paid_amount or 0,
+        "paid_at":     row.paid_at.isoformat(),
+        "paid_until":  row.paid_until.isoformat() if row.paid_until else None,
+        "payment_ref": row.payment_ref or "",
+    }
+
+
+def _fmt_date(dt) -> str:
+    return dt.strftime("%d %b %Y") if dt else "—"
+
+
+def _receipt_message(row) -> str:
+    """Plain-text receipt, not a GST invoice — no entity is registered yet
+    (deadline_checklist.json → entity-decision), so this is proof for the
+    dealer's own records, not a tax document."""
+    name = (row.name or "").strip()
+    ref_line = f"UPI रेफरेंस: {row.payment_ref}\n" if row.payment_ref else ""
+    return (
+        f"🧾 कृषि मित्र — भुगतान रसीद\n\n"
+        f"दुकान: {name or '—'}\n"
+        f"जिला: {row.district or '—'}\n\n"
+        f"राशि: ₹{row.paid_amount or 0}\n"
+        f"{ref_line}"
+        f"भुगतान तारीख: {_fmt_date(row.paid_at)}\n\n"
+        f"लिस्टिंग यहाँ तक लाइव रहेगी: {_fmt_date(row.paid_until)}\n\n"
+        f"धन्यवाद — कृषि मित्र टीम"
+    )
+
+
+@router.post("/buyers/{slug}/payment")
+async def record_dealer_payment(
+    slug:    str,
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Mark a dealer paid. Hand-entered from the bank app, by design.
+
+    There is no callback that could do this — a upi:// link hands off to the
+    dealer's own app and tells us nothing. So this endpoint is the only thing
+    that sets `paid_at`, and it requires a human who saw the credit.
+    """
+    from backend.services import dealers, upi
+    amount = upi.clean_amount(payload.get("amount"), default=0)
+    if amount < upi.MIN_AMOUNT:
+        raise HTTPException(400, f"Enter the amount actually received (₹{upi.MIN_AMOUNT}–₹{upi.MAX_AMOUNT})")
+    try:
+        months = max(1, min(12, int(payload.get("months") or 1)))
+    except (TypeError, ValueError):
+        months = 1
+    row = _dealer_write(dealers.record_payment, db, slug, amount,
+                        (payload.get("ref") or ""), months)
+    if not row:
+        raise HTTPException(404, "Unknown dealer")
+    return {"success": True, "counts": dealers.counts(db), "funnel": dealers.funnel(db)}

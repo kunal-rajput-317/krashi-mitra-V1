@@ -1009,6 +1009,32 @@ class Buyer(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # ── Outreach, i.e. the 31-Aug test itself ──
+    # The dealer row IS the call-tracking row. A separate tracker (a sheet, a
+    # second table) would need every name, number and district kept in sync with
+    # this one, and the two would disagree on the day it mattered — mid-call.
+    #
+    # These columns answer the question deadline_checklist.json says decides a
+    # failed test: did the market say no, or were the calls never made? That is
+    # unreadable from `status` alone, because a listing that was never rung and
+    # one that was rung and refused both sit at "not live".
+    # Unindexed on purpose, unlike `district`/`active` above: those are filtered
+    # on a farmer-facing render path, these are read only by the admin panel,
+    # which loads every row anyway. It also keeps a freshly created table and an
+    # ALTER-patched one identical — ADD COLUMN brings no index with it.
+    called_at    = Column(DateTime, nullable=True)              # last call; NULL = never rung
+    call_result  = Column(String,   nullable=True)              # see dealers.CALL_RESULTS
+    call_count   = Column(Integer,  default=0, nullable=False)  # a no-answer is worth retrying, not forgetting
+    # ── Money ──
+    # Written by hand from the owner's bank app, never by a payment callback: a
+    # upi:// link hands off to the dealer's own app and reports nothing back
+    # (see services/upi.py). `paid_at` set is the only definition of paid we
+    # have, and it means a human saw the money arrive.
+    paid_at      = Column(DateTime, nullable=True)
+    paid_amount  = Column(Integer,  nullable=True)              # whole rupees
+    payment_ref  = Column(String,   nullable=True)              # UPI txn reference, typed from the statement
+    paid_until   = Column(DateTime, nullable=True)              # end of the paid month — what "still paying" means
+
 
 class LeadClick(Base):
     """One outbound click on a link we could charge for.
@@ -1296,6 +1322,20 @@ def _ensure_postgres_columns():
             ("district", "VARCHAR"),
             ("crop_slug", "VARCHAR"),
             ("source", "VARCHAR"),
+        ],
+        # Outreach + payment tracking, added 2026-08-03. The `buyers` table
+        # itself predates this by days, so create_all() already made it without
+        # these — and create_all() never alters an existing table. Nullable on
+        # purpose: a row written before today was genuinely never rung, and
+        # NULL says that honestly where a 0/false would claim a call happened.
+        "buyers": [
+            ("called_at",   "TIMESTAMP"),
+            ("call_result", "VARCHAR"),
+            ("call_count",  "INTEGER DEFAULT 0"),
+            ("paid_at",     "TIMESTAMP"),
+            ("paid_amount", "INTEGER"),
+            ("payment_ref", "VARCHAR"),
+            ("paid_until",  "TIMESTAMP"),
         ],
     }
 

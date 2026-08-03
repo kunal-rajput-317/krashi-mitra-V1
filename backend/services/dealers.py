@@ -19,10 +19,11 @@
 # front of him is live on the next page load rather than up to a minute later.
 # ============================================================
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from backend.database.db import Buyer
 from backend.services import buyers as buyers_read
+from backend.utils.hindi_translit import slug_chars
 
 # The four listing types the directory renders (services/buyers.py::_KIND_HI).
 # Anything else is stored as "trader", which is how kind_label() reads unknown
@@ -30,6 +31,13 @@ from backend.services import buyers as buyers_read
 KINDS = ("trader", "dealer", "fpo", "processor")
 
 STATUSES = ("new", "called", "listed", "rejected")
+
+# What happened on the phone. `status` cannot carry this: a listing that was
+# never rung and one that was rung and refused both sit at "not live", and
+# deadline_checklist.json §8.4 says telling those two apart is the difference
+# between "the market said no" and "the calls never happened" — the only
+# reading of a failed 31-Aug test that is worth anything.
+CALL_RESULTS = ("no_answer", "callback", "interested", "not_interested", "pitched")
 
 _PHONE_RE = re.compile(r"\D+")
 
@@ -56,31 +64,12 @@ def clean_phone(raw: str) -> str:
 # renaming a firm must not orphan its click history), so it is worth getting
 # readable at creation time rather than never.
 #
-# Not a transliteration standard and not trying to be: the output is a URL
-# component, never shown to a farmer, so "sharma-tredars" is a complete success.
-_DEVA = {
-    "अ": "a", "आ": "aa", "इ": "i", "ई": "ee", "उ": "u", "ऊ": "oo", "ऋ": "ri",
-    "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au", "अं": "an",
-    "क": "k", "ख": "kh", "ग": "g", "घ": "gh", "ङ": "n",
-    "च": "ch", "छ": "chh", "ज": "j", "झ": "jh", "ञ": "n",
-    "ट": "t", "ठ": "th", "ड": "d", "ढ": "dh", "ण": "n",
-    "त": "t", "थ": "th", "द": "d", "ध": "dh", "न": "n",
-    "प": "p", "फ": "ph", "ब": "b", "भ": "bh", "म": "m",
-    "य": "y", "र": "r", "ल": "l", "व": "v", "ळ": "l",
-    "श": "sh", "ष": "sh", "स": "s", "ह": "h",
-    "क़": "q", "ख़": "kh", "ग़": "gh", "ज़": "z", "ड़": "r", "ढ़": "rh", "फ़": "f",
-    # Vowel signs (मात्रा).
-    "ा": "a", "ि": "i", "ी": "i", "ु": "u", "ू": "u", "ृ": "ri",
-    "े": "e", "ै": "ai", "ो": "o", "ौ": "au",
-    # Silent/among-consonant marks: drop rather than guess.
-    "्": "", "ं": "n", "ः": "", "ँ": "n", "़": "",
-    "०": "0", "१": "1", "२": "2", "३": "3", "४": "4",
-    "५": "5", "६": "6", "७": "7", "८": "8", "९": "9",
-}
-
-
-def _translit(text: str) -> str:
-    return "".join(_DEVA.get(ch, ch) for ch in (text or ""))
+# Character-for-character, no inserted vowels — see utils/hindi_translit.py's
+# module docstring for why this stays deliberately different from the
+# human-facing readable() used for the UPI payment note. Not a transliteration
+# standard and not trying to be: the output is a URL component, never shown to
+# a farmer, so "sharma-tredars" is a complete success.
+_translit = slug_chars
 
 
 def _slugify(text: str) -> str:
@@ -200,6 +189,99 @@ def approve(db, slug: str) -> Buyer | None:
     return update(db, slug, {"active": True, "verified": True, "status": "listed"})
 
 
+def log_call(db, slug: str, result: str, note: str = "") -> Buyer | None:
+    """Record that the phone actually rang.
+
+    Appends to `note` rather than replacing it: the second call is the one that
+    closes, and losing what he said on the first defeats the point of logging.
+
+    Only `pitched` moves `status` to "called" — the rest leave it alone, because
+    a no-answer is not progress and marking it as such is how a funnel starts
+    lying to the person reading it.
+    """
+    row = db.query(Buyer).filter(Buyer.slug == slug).first()
+    if not row:
+        return None
+    result = (result or "").strip().lower()
+    if result not in CALL_RESULTS:
+        return None
+    now = datetime.utcnow()
+    row.called_at = now
+    row.call_result = result
+    row.call_count = (row.call_count or 0) + 1
+    note = (note or "").strip()[:200]
+    if note:
+        stamp = now.strftime("%d %b")
+        row.note = f"{row.note}\n[{stamp}] {note}"[:400] if row.note else f"[{stamp}] {note}"[:400]
+    if result in ("interested", "pitched") and row.status == "new":
+        row.status = "called"
+    elif result == "not_interested":
+        row.status = "rejected"
+    row.updated_at = now
+    db.commit()
+    db.refresh(row)
+    buyers_read.invalidate()
+    return row
+
+
+def record_payment(db, slug: str, amount: int, ref: str = "",
+                   months: int = 1) -> Buyer | None:
+    """Money actually arrived. Typed in by hand, and that is the design.
+
+    A upi:// link hands off to the dealer's own app and reports nothing back
+    (services/upi.py), so `paid_at` means one thing only: a human saw the credit
+    in the bank app. Nothing automated may ever set it — an auto-ticked "paid"
+    on an unconfirmed payment is a fabricated receipt.
+
+    Paying also lists him: he is not paying to stay invisible.
+    """
+    row = db.query(Buyer).filter(Buyer.slug == slug).first()
+    if not row:
+        return None
+    now = datetime.utcnow()
+    row.paid_at = now
+    row.paid_amount = int(amount)
+    row.payment_ref = (ref or "").strip()[:80] or None
+    # Renewals extend from whichever is later: paying early should add a month,
+    # not throw away the days already bought, and a lapsed dealer's new month
+    # starts today rather than backdated into a gap he was not listed for.
+    base = row.paid_until if (row.paid_until and row.paid_until > now) else now
+    row.paid_until = base + timedelta(days=30 * max(1, int(months)))
+    row.status = "listed"
+    row.active = True
+    row.updated_at = now
+    db.commit()
+    db.refresh(row)
+    buyers_read.invalidate()
+    return row
+
+
+def funnel(db) -> dict:
+    """The 31-Aug test as five numbers, in the order they must happen.
+
+    Targets come straight from deadline_checklist.json: 20 listed, 10 called,
+    3 free listings live, 1 paid. Shown next to the counts so the panel reads
+    as "7 of 20" rather than a bare number with no sense of enough.
+    """
+    rows = db.query(Buyer).all()
+    now = datetime.utcnow()
+    paying = [r for r in rows if r.paid_at]
+    return {
+        "added":      len(rows),
+        "called":     sum(1 for r in rows if r.called_at),
+        "interested": sum(1 for r in rows if r.call_result in ("interested", "pitched")),
+        "refused":    sum(1 for r in rows if r.call_result == "not_interested"),
+        "no_answer":  sum(1 for r in rows if r.call_result == "no_answer" and (r.call_count or 0) <= 2),
+        # A live listing nobody has paid for is the free listing the plan trades
+        # for a reference — worth counting separately from a paid one.
+        "free_live":  sum(1 for r in rows if r.active and not r.paid_at),
+        "paid":       len(paying),
+        "paid_live":  sum(1 for r in paying if r.paid_until and r.paid_until > now),
+        "revenue":    sum(r.paid_amount or 0 for r in paying),
+        "targets":    {"added": 20, "called": 10, "free_live": 3, "paid": 1},
+    }
+
+
 def delete(db, slug: str) -> bool:
     row = db.query(Buyer).filter(Buyer.slug == slug).first()
     if not row:
@@ -217,11 +299,24 @@ def listing(db, *, source: str = "") -> list[dict]:
     if source:
         q = q.filter(Buyer.source == source)
     rows = q.order_by(Buyer.created_at.desc()).all()
+    now = datetime.utcnow()
     out = []
     for r in rows:
         d = buyers_read.as_dict(r)
-        d.update({"slug": r.slug, "source": r.source, "status": r.status,
-                  "created_at": r.created_at.isoformat() if r.created_at else ""})
+        d.update({
+            "slug": r.slug, "source": r.source, "status": r.status,
+            "created_at": r.created_at.isoformat() if r.created_at else "",
+            "called_at":   r.called_at.isoformat() if r.called_at else "",
+            "call_result": r.call_result or "",
+            "call_count":  r.call_count or 0,
+            "paid_at":     r.paid_at.isoformat() if r.paid_at else "",
+            "paid_amount": r.paid_amount or 0,
+            "payment_ref": r.payment_ref or "",
+            "paid_until":  r.paid_until.isoformat() if r.paid_until else "",
+            # Derived here so the panel never has to re-implement the date
+            # comparison and drift from the funnel counts next to it.
+            "paying":      bool(r.paid_until and r.paid_until > now),
+        })
         out.append(d)
     return out
 

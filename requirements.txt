@@ -40,6 +40,9 @@ pydantic
 python-dotenv
 numpy
 Pillow
+# QR codes for the UPI collect flow. Pure Python, zero dependencies, renders
+# straight to inline SVG — no image files and nothing to compile on Render.
+segno
 
 # ── Tests ────────────────────────────────────────────────────
 pytest

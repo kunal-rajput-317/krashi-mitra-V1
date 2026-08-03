@@ -2209,6 +2209,111 @@ body {
         .by-btn.warn { color: var(--danger); }
         .by-empty { font-size: 12.5px; color: var(--text-dim); line-height: 1.7; padding: 6px 0; }
 
+        /* ── Outreach funnel ──
+           The 31-Aug test as five steps in the order they happen. Each shows
+           count-of-target so a number reads as progress, not trivia. */
+        .fn-bar {
+          display: grid; gap: 8px; margin-bottom: 18px;
+          grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+        }
+        .fn-step {
+          padding: 12px 14px; background: var(--surface-hl);
+          border: 1px solid var(--border); border-radius: var(--radius-sm);
+          position: relative; overflow: hidden;
+        }
+        .fn-step.hit { border-color: var(--primary); }
+        .fn-step.hit::after {
+          content: '✓'; position: absolute; top: 8px; right: 10px;
+          font-size: 11px; font-weight: 800; color: var(--primary);
+        }
+        .fn-n { font-size: 22px; font-weight: 800; font-family: var(--font-mono); line-height: 1.1; }
+        .fn-of { font-size: 12px; color: var(--muted); font-weight: 600; }
+        .fn-label { font-size: 11px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
+        .fn-money { color: var(--primary); }
+
+        /* ── Call log + collect ── */
+        .by-callbar { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+        .by-cbtn {
+          padding: 3px 9px; font-size: 10.5px; font-weight: 700; cursor: pointer;
+          border-radius: 20px; border: 1px dashed var(--border);
+          background: transparent; color: var(--text-dim); font-family: inherit;
+        }
+        .by-cbtn:hover { border-style: solid; border-color: var(--primary); color: var(--primary); }
+        .by-callnote { font-size: 11px; color: var(--muted); margin-top: 5px; font-style: italic; }
+        .by-tag.paid { background: rgba(46,160,67,.22); color: #3fb950; }
+        .by-tag.lapsed { background: rgba(248,81,73,.16); color: #f85149; }
+        .by-tag.called { background: rgba(139,148,158,.18); color: #8b949e; }
+
+        .pay-modal {
+          position: fixed; inset: 0; z-index: 400; display: flex;
+          align-items: center; justify-content: center; padding: 20px;
+          background: rgba(0,0,0,.66);
+        }
+        .pay-modal[hidden] { display: none; }
+        .pay-box {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius-md); padding: 22px; width: 100%; max-width: 400px;
+          max-height: 90vh; overflow-y: auto; text-align: center;
+        }
+        .pay-box h3 { font-size: 15px; margin: 0 0 2px; }
+        .pay-box .pm-sub { font-size: 11.5px; color: var(--text-dim); margin: 0 0 16px; }
+        .pm-req {
+          text-align: left; padding: 12px; margin-bottom: 14px;
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+        }
+        .pm-req-label { display: block; font-size: 10.5px; color: var(--text-dim); margin: 0 0 3px; }
+        .pm-req-label:not(:first-child) { margin-top: 9px; }
+        .pm-req input, .pm-req textarea {
+          width: 100%; box-sizing: border-box; padding: 8px 10px; font-size: 12.5px;
+          font-family: inherit; background: var(--surface); color: var(--text);
+          border: 1px solid var(--border); border-radius: var(--radius-sm); resize: vertical;
+        }
+        .pm-req input:focus, .pm-req textarea:focus { outline: none; border-color: var(--primary); }
+        .pm-req-go {
+          margin-top: 9px; width: 100%; padding: 8px; font-size: 12px; font-weight: 700;
+          cursor: pointer; border-radius: var(--radius-sm); border: 1px solid var(--border);
+          background: var(--surface); color: var(--text); font-family: inherit;
+        }
+        .pm-req-go:hover { border-color: var(--primary); color: var(--primary); }
+        .pm-qr { display: inline-block; padding: 12px; background: #fff; border-radius: var(--radius-sm); line-height: 0; }
+        .pm-qr svg { width: 170px; height: 170px; display: block; }
+        .pm-amt { font-size: 26px; font-weight: 800; font-family: var(--font-mono); margin: 12px 0 2px; }
+        .pm-vpa { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); word-break: break-all; margin-bottom: 14px; }
+        .pm-acts { display: grid; gap: 7px; }
+        .pm-acts button {
+          padding: 9px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+          border-radius: var(--radius-sm); border: 1px solid var(--border);
+          background: var(--surface-hl); color: var(--text); font-family: inherit;
+        }
+        .pm-acts button:hover { border-color: var(--primary); }
+        .pm-acts button.pm-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .pm-rec {
+          margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); text-align: left;
+        }
+        .pm-rec-t { font-size: 11.5px; font-weight: 700; margin-bottom: 3px; }
+        .pm-rec-h { font-size: 10.5px; color: var(--muted); line-height: 1.6; margin-bottom: 9px; }
+        .pm-rec-row { display: flex; gap: 6px; }
+        .pm-rec-row input {
+          min-width: 0; padding: 8px 10px; font-size: 12px; font-family: inherit;
+          background: var(--surface-hl); color: var(--text);
+          border: 1px solid var(--border); border-radius: var(--radius-sm);
+        }
+        .pm-rec-row input:focus { outline: none; border-color: var(--primary); }
+        #pm-amt-in { width: 78px; flex-shrink: 0; }
+        #pm-ref-in { flex: 1; }
+        .pm-warn { font-size: 10.5px; color: var(--text-dim); line-height: 1.6; margin-top: 9px; }
+        .pm-receipt {
+          margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); text-align: left;
+        }
+        .pm-receipt-info { font-size: 10.5px; color: var(--muted); line-height: 1.7; margin-bottom: 9px; }
+        .pm-receipt-btn {
+          width: 100%; padding: 9px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+          border-radius: var(--radius-sm); border: 1px solid var(--primary);
+          background: var(--surface-hl); color: var(--primary); font-family: inherit;
+        }
+        .pm-receipt-btn:hover { background: var(--primary); color: #fff; }
+
         .ck-add { display: flex; gap: 8px; margin-bottom: 14px; }
         .ck-add input {
           flex: 1; min-width: 0; padding: 9px 12px; font-size: 13px;
@@ -2411,6 +2516,12 @@ body {
           </div>
         </div>
 
+        <!-- OUTREACH FUNNEL — the 31-Aug test, in the order it happens.
+             This replaced docs/dealer-outreach-tracker.csv: a sheet would hold
+             a second copy of every name, number and district, and the two would
+             disagree mid-call. The dealer row IS the tracker row. -->
+        <div class="fn-bar" id="by-funnel"></div>
+
         <div class="ld-grid" style="margin-bottom:18px;">
           <div class="stat-card accented">
             <span class="stat-icon">✅</span>
@@ -2480,6 +2591,70 @@ body {
       </div>
 
     </main>
+
+    <!-- ══════════ UPI COLLECT ══════════
+         A QR + deep link + a ready-to-send WhatsApp message for one dealer.
+         Everything above the divider is a REQUEST to pay; only the field below
+         it records money, and only because a human saw it land in the bank app.
+         A upi:// hand-off reports nothing back, so nothing here may ever tick
+         "paid" on its own — that would be inventing a receipt. -->
+    <div class="pay-modal" id="pay-modal" hidden onclick="if(event.target===this)closePayModal()">
+      <div class="pay-box">
+        <h3 id="pm-name">—</h3>
+        <p class="pm-sub" id="pm-place"></p>
+
+        <!-- What's being asked for — editable before it's sent. Backend
+             already accepts amount/purpose overrides per request; this is
+             just the panel exposing that instead of always using the
+             KM_LISTING_FEE default. -->
+        <div class="pm-req">
+          <label class="pm-req-label">राशि (₹)</label>
+          <input type="number" id="pm-req-amt" min="1" step="1">
+          <label class="pm-req-label">यह किसलिए है? (WhatsApp मैसेज में जाएगा)</label>
+          <textarea id="pm-req-purpose" rows="2" maxlength="200"></textarea>
+          <button class="pm-req-go" type="button" onclick="pmRegenerate()">↻ अपडेट करें</button>
+        </div>
+
+        <div id="pm-qr-wrap"></div>
+        <div class="pm-amt" id="pm-amt">₹—</div>
+        <div class="pm-vpa" id="pm-vpa"></div>
+        <div class="pm-acts">
+          <button class="pm-primary" onclick="pmWhatsApp()">📱 WhatsApp पर भेजें</button>
+          <button onclick="pmCopy('link')">🔗 Copy payment page link</button>
+          <button onclick="pmCopy('upi')">Copy upi:// link</button>
+        </div>
+        <div class="pm-rec">
+          <div class="pm-rec-t" id="pm-rec-title">पैसा आ गया? Record it</div>
+          <div class="pm-rec-h">
+            Only after you have SEEN the credit in your bank app. There is no
+            callback that can confirm this for you — recording it also lists him
+            and starts his 30 days.
+          </div>
+          <div class="pm-rec-row">
+            <input type="number" id="pm-amt-in" placeholder="₹" min="1">
+            <input type="text" id="pm-ref-in" placeholder="UPI reference (optional)" maxlength="80">
+            <button class="by-btn ok" onclick="pmRecordPaid()" id="pm-rec-btn">✓ मिल गया</button>
+          </div>
+          <div class="pm-warn">
+            एक महीने के लिए · renewal will extend from the current end date.
+          </div>
+        </div>
+
+        <!-- Shown only once this dealer has a recorded payment — resend any
+             time, not just right after recording one. -->
+        <div class="pm-receipt" id="pm-receipt-box" hidden>
+          <div class="pm-rec-t">🧾 रसीद</div>
+          <div class="pm-receipt-info" id="pm-receipt-info"></div>
+          <button class="pm-receipt-btn" type="button" onclick="pmSendReceipt()">
+            🧾 रसीद WhatsApp पर भेजें
+          </button>
+        </div>
+
+        <div class="pm-acts" style="margin-top:14px;">
+          <button onclick="closePayModal()">बंद करें</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ══════════ COLLAPSIBLE TERMINAL DRAWER ══════════ -->
     <div class="terminal-drawer" id="terminal-drawer">
@@ -5063,8 +5238,19 @@ async function deleteChecklistTask(slug) {
    committed to the repo and is not editable from here.                        */
 
 let _byFilter = '';
+let _byUpi    = null;   // {configured, vpa, amount} — from /admin/buyers
 
 const BY_KINDS = { trader: 'व्यापारी', dealer: 'डीलर', fpo: 'FPO', processor: 'मिल' };
+
+/* Must stay in sync with dealers.CALL_RESULTS — the server rejects anything
+   else, so a typo here is a 400 rather than a silently mis-filed call. */
+const BY_CALL = {
+  no_answer:      'नहीं उठाया',
+  callback:       'बाद में',
+  interested:     'दिलचस्पी है',
+  pitched:        '₹500 माँगा',
+  not_interested: 'मना कर दिया',
+};
 
 async function loadBuyers() {
   const box = document.getElementById('by-list');
@@ -5102,6 +5288,33 @@ async function loadBuyers() {
   }
 }
 
+/* The funnel targets come from deadline_checklist.json: 20 listed, 10 called,
+   3 free live, 1 paid. Rendering count-of-target rather than a bare number is
+   the whole point — "7" means nothing, "7 / 20" means keep dialling. */
+function byRenderFunnel(f) {
+  const box = document.getElementById('by-funnel');
+  if (!box || !f) return;
+  const t = f.targets || {};
+  const steps = [
+    { n: f.added,      of: t.added,     label: 'डीलर जोड़े' },
+    { n: f.called,     of: t.called,    label: 'कॉल किए' },
+    { n: f.interested, of: 0,           label: 'दिलचस्पी दिखाई' },
+    { n: f.free_live,  of: t.free_live, label: 'फ्री लिस्टिंग लाइव' },
+    { n: f.paid_live,  of: t.paid,      label: 'पैसे दे रहे हैं', money: true },
+  ];
+  box.innerHTML = steps.map(s => {
+    const hit = s.of > 0 && (s.n || 0) >= s.of;
+    return `<div class="fn-step ${hit ? 'hit' : ''}">
+      <div class="fn-n ${s.money ? 'fn-money' : ''}">${s.n || 0}${
+        s.of ? `<span class="fn-of"> / ${s.of}</span>` : ''}</div>
+      <div class="fn-label">${s.label}</div>
+    </div>`;
+  }).join('') + (f.revenue
+    ? `<div class="fn-step hit"><div class="fn-n fn-money">₹${f.revenue}</div>
+         <div class="fn-label">कुल कमाई</div></div>`
+    : '');
+}
+
 function bySetCounts(c) {
   if (!c) return;
   document.getElementById('by-live').textContent    = c.live ?? '—';
@@ -5118,8 +5331,12 @@ function bySetCounts(c) {
 
 function renderBuyers(d) {
   bySetCounts(d.counts);
+  byRenderFunnel(d.funnel);
+  if (d.upi) _byUpi = d.upi;
   const box  = document.getElementById('by-list');
   const rows = d.buyers || [];
+  // Kept so the collect modal can show the firm name without a second fetch.
+  window._byRows = rows;
 
   if (!rows.length) {
     box.innerHTML = `<div class="by-empty">
@@ -5139,9 +5356,23 @@ function renderBuyers(d) {
            : '<span class="by-tag pending">not live</span>',
       b.verified ? '<span class="by-tag tick">verified</span>' : '',
       b.featured ? '<span class="by-tag feat">featured</span>' : '',
+      // Paying vs paid-once-and-lapsed is the difference between revenue and a
+      // renewal call that nobody remembered to make.
+      b.paying ? '<span class="by-tag paid">₹ paying</span>'
+               : (b.paid_at ? '<span class="by-tag lapsed">lapsed</span>' : ''),
+      (b.called_at && !b.paid_at)
+        ? `<span class="by-tag called">${BY_CALL[b.call_result] || 'called'}</span>` : '',
     ].filter(Boolean).join(' ');
 
     const phone = b.phone || b.whatsapp || '';
+    // Never called is the state the whole test hinges on, so it is stated
+    // outright rather than inferred from a missing tag.
+    const callLine = b.called_at
+      ? `📞 ${b.call_count} call${b.call_count > 1 ? 's' : ''}, last ${byDate(b.called_at)}${
+          b.paid_at ? ` · ₹${b.paid_amount} on ${byDate(b.paid_at)}${
+            b.paid_until ? `, till ${byDate(b.paid_until)}` : ''}` : ''}`
+      : '☎️ अभी तक कॉल नहीं किया';
+
     return `<div class="by-row ${live ? '' : 'by-off'}" id="by-row-${escapeHtml(b.slug)}">
       <div class="by-main">
         <div class="by-name">${escapeHtml(b.name || '—')} ${tags}</div>
@@ -5152,11 +5383,19 @@ function renderBuyers(d) {
           ${phone ? `📞 <a href="tel:${escapeHtml(phone)}" style="color:var(--primary)">${escapeHtml(phone)}</a> · ` : ''}
           फसल: ${escapeHtml(crops)} ·
           <code>${escapeHtml(b.slug)}</code> ·
-          ${b.source === 'signup' ? 'via /dukan' : 'added here'}
+          ${b.source === 'signup' ? 'via /dukan' : 'added here'}<br>
+          <span class="by-callnote">${escapeHtml(callLine)}</span>
           ${b.note ? '<br>' + escapeHtml(b.note) : ''}
+        </div>
+        <div class="by-callbar">
+          <span style="font-size:10.5px;color:var(--muted);align-self:center;">कॉल के बाद:</span>
+          ${Object.keys(BY_CALL).map(k =>
+            `<button class="by-cbtn" onclick="logCall('${escapeHtml(b.slug)}','${k}')">${BY_CALL[k]}</button>`
+          ).join('')}
         </div>
       </div>
       <div class="by-acts">
+        <button class="by-btn ok" onclick="openPayModal('${escapeHtml(b.slug)}')">Payment</button>
         ${live
           ? `<button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','active',false)">Hide</button>`
           : `<button class="by-btn ok" onclick="approveBuyer('${escapeHtml(b.slug)}')">✓ Called — list it</button>`}
@@ -5166,6 +5405,37 @@ function renderBuyers(d) {
       </div>
     </div>`;
   }).join('');
+}
+
+function byDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+/* Log one call. `pitched` is deliberately its own button: "asked him for ₹500"
+   is the step most likely to be skipped, and a funnel that cannot see it cannot
+   tell a market that said no from a pitch that never happened. */
+async function logCall(slug, result) {
+  let note = '';
+  if (result === 'interested' || result === 'pitched' || result === 'callback') {
+    note = prompt('उसने क्या कहा? (optional — one line, saved against his name)') || '';
+  }
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(slug)}/call`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result, note })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    bySetCounts(d.counts); byRenderFunnel(d.funnel);
+    loadBuyers();
+    showToast('Call logged');
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Dealers: could not log call for "${slug}" — ${e.message}`, 'log-entry-err');
+  }
 }
 
 function filterBuyers(source, el) {
@@ -5269,6 +5539,168 @@ async function addBuyer() {
     printTerminalLog(`Dealers: could not add — ${e.message}`, 'log-entry-err');
   } finally {
     btn.disabled = false;
+  }
+}
+
+/* ══════════ UPI COLLECT ══════════
+   Everything the modal shows is a REQUEST to pay. A upi:// link hands off to
+   the dealer's own app and reports nothing back, so the panel cannot know
+   whether money moved — only pmRecordPaid(), driven by a human looking at a
+   bank app, ever writes paid_at. See services/upi.py.                        */
+
+let _pmSlug = null, _pmPack = null;
+
+async function openPayModal(slug) {
+  if (_byUpi && !_byUpi.configured) {
+    showToast('UPI not configured — set KM_UPI_ID in the environment first', 'error');
+    return;
+  }
+  _pmSlug = slug;
+  const modal = document.getElementById('pay-modal');
+  document.getElementById('pm-name').textContent  = 'लोड हो रहा है…';
+  document.getElementById('pm-place').textContent = '';
+  document.getElementById('pm-qr-wrap').innerHTML = '';
+  document.getElementById('pm-receipt-box').hidden = true;
+  modal.hidden = false;
+  await pmFetchCollect();
+}
+
+/* Shared by the initial open and by "↻ अपडेट करें" — same request, only the
+   amount/purpose query params differ. Re-fetching (rather than editing the
+   displayed QR in place) keeps the QR, the deep link and the WhatsApp message
+   always built from the one values the server actually used. */
+async function pmFetchCollect(amount, purpose) {
+  if (!_pmSlug) return;
+  const params = new URLSearchParams();
+  if (amount)  params.set('amount', amount);
+  if (purpose) params.set('purpose', purpose);
+  const qs = params.toString() ? `?${params}` : '';
+
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_pmSlug)}/collect${qs}`,
+                          { headers: getAuthHeader() });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    _pmPack = d;
+
+    const row = (window._byRows || []).find(b => b.slug === _pmSlug) || {};
+    document.getElementById('pm-name').textContent  = row.name || _pmSlug;
+    document.getElementById('pm-place').textContent = row.district || '';
+    // The QR is server-built SVG from our own /admin endpoint, not user input.
+    document.getElementById('pm-qr-wrap').innerHTML =
+      d.qr_svg ? `<div class="pm-qr">${d.qr_svg}</div>` : '';
+    document.getElementById('pm-amt').textContent  = `₹${d.amount}`;
+    document.getElementById('pm-vpa').textContent  = d.vpa;
+    document.getElementById('pm-req-amt').value     = d.amount;
+    document.getElementById('pm-req-purpose').value = d.purpose || '';
+    document.getElementById('pm-amt-in').value      = d.amount;
+    document.getElementById('pm-ref-in').value      = '';
+
+    document.getElementById('pm-rec-title').textContent =
+      d.paid_at ? 'फिर से पैसा आया? Renew' : 'पैसा आ गया? Record it';
+
+    const box = document.getElementById('pm-receipt-box');
+    if (d.paid_at) {
+      box.hidden = false;
+      document.getElementById('pm-receipt-info').textContent =
+        `आखिरी बार ₹${d.paid_amount} मिला — ${pmDate(d.paid_at)} को, ` +
+        `${pmDate(d.paid_until)} तक लिस्टिंग लाइव रहेगी।`;
+    } else {
+      box.hidden = true;
+    }
+  } catch (e) {
+    document.getElementById('pm-name').textContent = 'नहीं खुला';
+    document.getElementById('pm-place').textContent = e.message;
+    printTerminalLog(`Collect: ${_pmSlug} — ${e.message}`, 'log-entry-err');
+  }
+}
+
+function pmDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function pmRegenerate() {
+  const amt = document.getElementById('pm-req-amt').value.trim();
+  const purpose = document.getElementById('pm-req-purpose').value.trim();
+  pmFetchCollect(amt, purpose);
+}
+
+function closePayModal() {
+  document.getElementById('pay-modal').hidden = true;
+  _pmSlug = null; _pmPack = null;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('pay-modal')?.hidden) closePayModal();
+});
+
+function pmWhatsApp() {
+  if (!_pmPack) return;
+  // wa.me with no number: opens the contact picker, so it works whether or not
+  // the dealer's number is on this device already.
+  window.open('https://wa.me/?text=' + encodeURIComponent(_pmPack.whatsapp), '_blank');
+}
+
+function pmCopy(which) {
+  if (!_pmPack) return;
+  const text = which === 'upi' ? _pmPack.link : _pmPack.pay_url;
+  navigator.clipboard?.writeText(text)
+    .then(() => showToast('Copied'))
+    .catch(() => showToast(text, 'error'));
+}
+
+async function pmRecordPaid() {
+  if (!_pmSlug) return;
+  const amt = parseInt(document.getElementById('pm-amt-in').value, 10);
+  const ref = document.getElementById('pm-ref-in').value.trim();
+  if (!amt || amt < 1) { showToast('Enter the amount you actually received', 'error'); return; }
+  if (!confirm(`Have you SEEN ₹${amt} in your bank app?\n\n` +
+               'This is the only thing that marks him paid — nothing confirms it automatically. ' +
+               'It also lists him and starts his 30 days.')) return;
+
+  const btn = document.getElementById('pm-rec-btn');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_pmSlug)}/payment`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amt, ref, months: 1 })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    bySetCounts(d.counts); byRenderFunnel(d.funnel);
+    loadBuyers();
+    // Left open rather than closed — refetching now pulls paid_at/paid_until
+    // back from the server, which reveals the receipt section below so it can
+    // be sent in the same motion as recording the payment.
+    await pmFetchCollect();
+    showToast(`₹${amt} recorded — he is live and paid`);
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Payment: ${_pmSlug} — ${e.message}`, 'log-entry-err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* Resend any time a dealer has a recorded payment, not just right after
+   recording one — the receipt box stays visible on every reopen while
+   paid_at is set (see pmFetchCollect). Built fresh from the server's own
+   payment fields each time, never cached, so an edited amount can never be
+   receipted by accident. */
+async function pmSendReceipt() {
+  if (!_pmSlug) return;
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_pmSlug)}/receipt`,
+                          { headers: getAuthHeader() });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    window.open('https://wa.me/?text=' + encodeURIComponent(d.receipt), '_blank');
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Receipt: ${_pmSlug} — ${e.message}`, 'log-entry-err');
   }
 }
 

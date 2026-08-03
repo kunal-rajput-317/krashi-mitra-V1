@@ -293,6 +293,9 @@ app.include_router(appeal_route.router)  # बेचना/खरीदना �
 from backend.routes import dukan as dukan_route
 app.include_router(dukan_route.router)   # अपनी दुकान लिस्ट करें — dealer self-signup into the खरीदार queue
 
+from backend.routes import pay as pay_route
+app.include_router(pay_route.router)     # /pay — UPI listing-fee page sent to a dealer over WhatsApp (noindex)
+
 from backend.routes import product as product_route
 app.include_router(product_route.router)  # SEO shop-product pages (/product/*) + /product/sitemap.xml
 

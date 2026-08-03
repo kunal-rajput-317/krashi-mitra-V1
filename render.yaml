@@ -96,3 +96,16 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      # UPI listing-fee collection (services/upi.py). KM_UPI_ID is the
+      # destination of real money, so it is never committed — an out-of-date or
+      # mistyped VPA in git would silently route a dealer's ₹500 to a stranger.
+      # Unset, every payment surface says "not configured" rather than guess.
+      # KM_UPI_NAME must match the name on the receiving account closely enough
+      # that a trader recognises it on his confirmation screen.
+      - key: KM_UPI_ID
+        sync: false
+      - key: KM_UPI_NAME
+        sync: false
+      # Listing fee in whole rupees. Optional — services/upi.py defaults to 500.
+      - key: KM_LISTING_FEE
+        sync: false
