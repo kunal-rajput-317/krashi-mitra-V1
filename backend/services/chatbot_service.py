@@ -46,7 +46,7 @@ def is_good_answer(answer: str) -> bool:
 FEATURE_RULES = [
     {
         "id": "mandi",
-        "url": "mandi.html",
+        "url": "/bhav",
         "keywords": [
             "भाव", "कीमत", "रेट", "मंडी", "दाम", "मूल्य", "क्विंटल",
             "बेच", "बेचना", "बेचूं", "बेचूँ", "बेचनी",

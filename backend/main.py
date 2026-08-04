@@ -291,7 +291,7 @@ from backend.routes import appeal as appeal_route
 app.include_router(appeal_route.router)  # बेचना/खरीदना है — sell/buy appeals raised on /bhav pages
 
 from backend.routes import dukan as dukan_route
-app.include_router(dukan_route.router)   # अपनी दुकान लिस्ट करें — dealer self-signup into the खरीदार queue
+app.include_router(dukan_route.router)   # अपनी दुकान लिस्ट करें — login-gated, paid dealer subscriptions (/dukan/product)
 
 from backend.routes import pay as pay_route
 app.include_router(pay_route.router)     # /pay — UPI listing-fee page sent to a dealer over WhatsApp (noindex)

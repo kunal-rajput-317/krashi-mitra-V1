@@ -1,9 +1,8 @@
-const CACHE_NAME = 'krashimitra-v4'; // v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
+const CACHE_NAME = 'krashimitra-v5'; // v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './analytics.js',
   './index.html',
-  './mandi.html',
   './weather.html',
   './shop.html',
   './chat.html',

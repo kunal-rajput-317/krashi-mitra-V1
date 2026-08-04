@@ -30,6 +30,7 @@ import json
 import logging
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -66,9 +67,32 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip().lower())
 
 
+def _is_paid(b: dict) -> bool:
+    """paid_until (an isoformat string or "") is still in the future."""
+    raw = b.get("paid_until")
+    if not raw:
+        return False
+    try:
+        return datetime.fromisoformat(raw) > datetime.utcnow()
+    except ValueError:
+        return False
+
+
 def _usable(b: dict) -> bool:
     """A listing a farmer can actually act on. The phone check is the point:
-    an unreachable number is worse than an empty page."""
+    an unreachable number is worse than an empty page.
+
+    /dukan/product rows (owner_user_id set) have one more requirement: a
+    currently paid subscription. This is the paid model replacing the old
+    free anonymous signup — a self-serve account that lets its subscription
+    lapse disappears from every farmer-facing surface (this directory, the
+    Tier-3 bhav panel, the krashi_bajar post) without needing active/verified
+    to be touched, so it comes straight back the moment it renews. Rows with
+    no owner_user_id (admin-added, or the committed JSON seed) are untouched
+    by this — that is still the free, admin-curated model it always was.
+    """
+    if b.get("owner_user_id") and not _is_paid(b):
+        return False
     return bool(b.get("active")
                 and (b.get("name") or "").strip()
                 and (b.get("district") or "").strip()
@@ -91,8 +115,22 @@ def as_dict(row) -> dict:
         "commodities": [c for c in (row.commodities or "").split(",") if c.strip()],
         "phone":       row.phone or "",
         "whatsapp":    row.whatsapp or "",
-        "note":        row.note or "",
+        # The dealer's own public blurb. NOT `note` — that is the private call
+        # log (dealers.py::log_call appends to it) and was being rendered on the
+        # public kharidar card, publishing internal remarks about a dealer's
+        # haggling to farmers under his own name. `note` is not in this dict at
+        # all any more, so no render path can reach it.
+        "description": row.description or "",
         "since":       row.since or "",
+        # /dukan/product: which Tier-3 bhav-panel slot this row holds (admin-set,
+        # see dealers.py::set_bhav_rank), whether its subscription is current, and
+        # which account it belongs to (gates _usable() above). All three are only
+        # ever non-empty for rows that came through the paid signup — the
+        # committed JSON seed and admin-added rows have none of them, so they
+        # keep working exactly as they always have.
+        "owner_user_id": row.owner_user_id,
+        "bhav_rank":      row.bhav_rank,
+        "paid_until":     row.paid_until.isoformat() if row.paid_until else "",
     }
 
 
@@ -110,9 +148,19 @@ def _db_rows() -> list:
     rows = []
     try:
         from backend.database.db import Buyer, SessionLocal
+        from backend.services import dealer_products
         db = SessionLocal()
         try:
             rows = [as_dict(r) for r in db.query(Buyer).filter(Buyer.active.is_(True)).all()]
+            # Catalogues in ONE query for the whole set, attached here rather
+            # than fetched per dealer per render — a /bhav page can show three
+            # dealers and the sitemap walks thousands of pages. Card dicts
+            # only; the image blobs stay deferred in the DB.
+            by_key = dealer_products.all_by_key(db)
+            for b in rows:
+                key = (("u", b["owner_user_id"]) if b.get("owner_user_id")
+                       else ("s", b["id"]))
+                b["products"] = by_key.get(key, [])
         finally:
             db.close()
     except Exception as e:
@@ -150,6 +198,12 @@ def _load() -> dict:
         merged: dict[str, dict] = {}
         for b in list(_cache.get("buyers") or []) + db_rows:
             key = b.get("id") or f"anon-{len(merged)}"
+            # The committed seed predates the note/description split and calls
+            # the public blurb "note". Normalised here rather than by rewriting
+            # the file, so a hand-edited seed row keeps working either way and
+            # only one key reaches a template.
+            if not b.get("description") and b.get("note"):
+                b = {**b, "description": b["note"]}
             merged[key] = b
         idx: dict[tuple[str, str], list] = {}
         for b in merged.values():
@@ -194,6 +248,40 @@ def for_place(c_slug: str, state: str, district: str) -> list:
 def has_any(c_slug: str, state: str, district: str) -> bool:
     """Cheap gate for callers that must not link to an empty directory page."""
     return bool(for_place(c_slug, state, district))
+
+
+def for_bhav_panel(state: str, c_slug: str) -> list:
+    """Up to 3 dealers for one state's Tier-3 bhav page (/bhav/{crop}/{state}) —
+    admin-ranked (bhav_rank 1-3), verified, and a currently paid subscription.
+
+    Grouped by STATE, not district: a dealer whose interested districts all sit
+    in one state only needs bhav_rank set on one of those rows to earn the slot
+    once, not once per district. If (implausibly) two of a dealer's own rows in
+    the same state both carry a rank, the better (lower) one wins — set_bhav_rank
+    already stops that happening across *different* dealers by clearing whoever
+    else held the rank, but it does not stop one dealer holding it twice.
+    """
+    # _is_paid() is already implied for every row here — _usable() (which built
+    # _place_idx) rejects an unpaid /dukan/product row before it ever arrives —
+    # but it costs nothing to state the panel's own requirement explicitly
+    # rather than lean on that as an invisible precondition.
+    _load()
+    st, cs = _norm(state), _norm(c_slug)
+
+    seen: dict[str, dict] = {}
+    for (s, _d), rows in _place_idx.items():
+        if s != st:
+            continue
+        for b in rows:
+            rank = b.get("bhav_rank")
+            if not rank or not b.get("verified") or not _is_paid(b):
+                continue
+            if b.get("commodities") and cs not in {_norm(x) for x in b["commodities"]}:
+                continue
+            bid = b.get("id")
+            if bid not in seen or rank < seen[bid]["bhav_rank"]:
+                seen[bid] = b
+    return sorted(seen.values(), key=lambda b: b["bhav_rank"])[:3]
 
 
 def by_id(buyer_id: str) -> dict | None:

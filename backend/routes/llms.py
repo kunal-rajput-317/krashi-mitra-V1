@@ -42,8 +42,7 @@ _DESC_RE = re.compile(
 # sitemap.py CORE when a page is added or removed.
 _CORE = [
     ("/",               "होम",            "Hindi-first agriculture platform for Indian farmers: mandi prices, weather, crop guidance, agri inputs."),
-    ("/mandi",          "मंडी भाव",        "Live mandi (wholesale market) prices for crops across India, updated daily from data.gov.in."),
-    ("/bhav",           "आज का भाव",       "SEO price pages: daily crop prices by crop → state → district. Full URL list in /bhav/sitemap.xml."),
+    ("/bhav",           "आज का भाव",       "Live mandi (wholesale market) prices for crops across India, updated daily from data.gov.in. Daily crop prices by crop → state → district. Full URL list in /bhav/sitemap.xml."),
     ("/weather",        "मौसम",           "Farm weather forecasts for Indian districts."),
     ("/meri_fasal",     "मेरी फसल",        "Crop calendar: sowing-date → growth-stage timeline with stage-specific tasks."),
     ("/shop",           "कृषि दुकान",      "Agri-input marketplace: farmers request quotes for seeds, fertilizer, pesticides, tools. Product pages listed in /product/sitemap.xml."),

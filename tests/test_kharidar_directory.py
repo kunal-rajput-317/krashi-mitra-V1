@@ -186,19 +186,58 @@ class TestDealerAcquisitionRoute:
         assert "/dukan" in client.get(_url(SEEDED)).text
 
     def test_dukan_page_exists_and_is_wired_into_the_sitemap(self, client, repo_root):
-        """Guards the whole chain: file present, redirect rule, sitemap entry.
-        A link to a page Netlify does not serve is worse than no link."""
-        assert (repo_root / "frontend" / "dukan.html").is_file()
+        """Guards the whole chain: file present, redirect rules, sitemap entry.
+        A link to a page the host does not serve is worse than no link.
+
+        /dukan/product is a real DIRECTORY, not a flat file plus a rewrite. That
+        is the whole point: a rewrite lives in _redirects, which only Netlify
+        reads, so the page 404'd on the FastAPI static mount in local dev. A
+        directory index resolves natively on both."""
+        assert (repo_root / "frontend" / "dukan" / "product" / "index.html").is_file()
+        assert not (repo_root / "frontend" / "dukan.html").exists(), (
+            "the free anonymous /dukan page is gone — /dukan/product replaced it")
         redirects = (repo_root / "frontend" / "_redirects").read_text(encoding="utf-8")
-        assert "/dukan.html" in redirects, "no .html→/dukan canonical redirect"
-        assert f"{bhav.SITE}/dukan</loc>" in client.get("/sitemap.xml").text
+        assert "/dukan.html            /dukan/product" in redirects
+        assert "/dukan                 /dukan/product" in redirects
+        assert f"{bhav.SITE}/dukan/product</loc>" in client.get("/sitemap.xml").text
+
+    def test_dukan_page_is_served_at_its_own_url(self, client):
+        """The regression this exists to prevent: the page rendered a 404 at
+        /dukan/product locally because the only thing routing it was a Netlify
+        rewrite. Asserted through the app itself, not the filesystem.
+
+        One 307 hop to the trailing-slash form is expected and fine — that is
+        Starlette's directory handling, and the client follows it."""
+        response = client.get("/dukan/product")
+        assert response.status_code == 200, response.text
+        assert response.headers["content-type"].startswith("text/html")
+        assert "अपनी दुकान लिस्ट करें" in response.text
+        assert "/dukan/listings" in response.text, "the form lost its endpoint"
+
+    def test_dukan_page_assets_are_root_absolute(self, repo_root):
+        """Served from /dukan/product/, a relative "km-shell.css" would resolve
+        to /dukan/product/km-shell.css and silently 404 — and per the repo's
+        own note, a missing static file returns 200 + HTML rather than a 404,
+        so this breaks invisibly."""
+        import re
+
+        page = (repo_root / "frontend" / "dukan" / "product" / "index.html").read_text(
+            encoding="utf-8")
+        # Static markup only. Script bodies build URLs by concatenation
+        # (`'<img src="' + API + '/dukan/...'`), which this regex reads as a
+        # relative ref even though it resolves absolute at runtime.
+        markup = re.sub(r"<script\b.*?</script>", "", page, flags=re.S | re.I)
+        relative = re.findall(
+            r'(?:src|href)="(?!/|https?:|tel:|mailto:|#)([^"]+)"', markup)
+        assert relative == [], f"relative refs break from a nested path: {relative}"
 
     def test_dukan_form_posts_to_a_route_that_exists(self, repo_root, client):
         """The form's endpoint is a string in HTML — nothing else type-checks it."""
-        page = (repo_root / "frontend" / "dukan.html").read_text(encoding="utf-8")
-        assert "/dukan/signup" in page
-        # 422 (bad body), not 404 (no such route). Either proves it is registered.
-        assert client.post("/dukan/signup", json={}).status_code != 404
+        page = (repo_root / "frontend" / "dukan" / "product" / "index.html").read_text(
+            encoding="utf-8")
+        assert "/dukan/listings" in page
+        # 401/422, not 404: proves the route is registered AND login-gated.
+        assert client.post("/dukan/listings", json={}).status_code in (401, 403, 422)
 
 
 class TestUnseededRepoDefault:

@@ -834,6 +834,17 @@ button.sidebar-drawer-link {
 }
 .btn-wa:hover { background: #e0f7e9; }
 
+.card-readmore {
+  display: block;
+  margin: 0 18px 4px;
+  padding-top: 10px;
+  border-top: 1px dashed #dfe8df;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--green-dark);
+  text-decoration: none;
+}
+.card-readmore:hover { text-decoration: underline; }
+
 /* ══════════════════════════════════════
    NO RESULTS
 ══════════════════════════════════════ */
@@ -1271,7 +1282,7 @@ button.sidebar-drawer-link {
     <div class="top-utility-left">
       <a href="khoj.html" class="top-utility-link">कृषि खोज</a>
       <span class="top-utility-divider">|</span>
-      <a href="mandi.html" class="top-utility-link">मंडी भाव</a>
+      <a href="/bhav" class="top-utility-link">मंडी भाव</a>
       <span class="top-utility-divider">|</span>
       <a href="weather.html" class="top-utility-link">मौसम व सलाह</a>
       <span class="top-utility-divider">|</span>
@@ -1309,7 +1320,7 @@ button.sidebar-drawer-link {
 
     <nav class="header-nav">
       <a class="header-nav-link active" href="sarkari_yojana.html">सरकारी योजनाएं</a>
-      <a class="header-nav-link" href="mandi.html">कृषि मंडी भाव</a>
+      <a class="header-nav-link" href="/bhav">कृषि मंडी भाव</a>
       <a class="header-nav-link" href="weather.html">मौसम व सलाह</a>
       <a class="header-nav-link" href="articles/">कृषि समाचार</a>
     </nav>
@@ -1364,7 +1375,7 @@ button.sidebar-drawer-link {
       <a href="index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
       <a href="meri_fasal.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌱</span><span>मेरी फसल</span></a>
       <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
-      <a href="mandi.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
+      <a href="/bhav" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
       <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
       <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
       <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
@@ -1508,6 +1519,7 @@ button.sidebar-drawer-link {
           <div><div class="detail-label">दस्तावेज</div><div class="detail-value">आधार + जमीन कागज</div></div>
           <div><div class="detail-label">स्थिति</div><div class="detail-value ok">✓ चालू है</div></div>
         </div>
+        <a class="card-readmore" href="/articles/pm-kisan-samman-nidhi">📖 पूरी जानकारी, किस्त स्टेटस कैसे देखें →</a>
         <div class="card-footer">
           <button class="btn-apply" onclick="applyNow('https://pmkisan.gov.in')">अभी आवेदन करें →</button>
           <button class="btn-wa" onclick="whatsappHelp('PM-KISAN सम्मान निधि 2026')">🟢 मदद</button>
@@ -1531,6 +1543,7 @@ button.sidebar-drawer-link {
           <div><div class="detail-label">ब्याज दर</div><div class="detail-value">मात्र 4% / वर्ष</div></div>
           <div><div class="detail-label">बैंक</div><div class="detail-value">SBI, PNB, BoB</div></div>
         </div>
+        <a class="card-readmore" href="/articles/kisan-credit-card">📖 पूरी जानकारी, आवेदन प्रक्रिया →</a>
         <div class="card-footer">
           <button class="btn-apply" onclick="applyNow('https://www.sbi.co.in/web/agri-rural/agriculture-banking/crop-loan/kisan-credit-card')">अभी आवेदन करें →</button>
           <button class="btn-wa" onclick="whatsappHelp('KCC किसान क्रेडिट कार्ड 2026')">🟢 मदद</button>
@@ -1554,6 +1567,7 @@ button.sidebar-drawer-link {
           <div><div class="detail-label">आखिरी तारीख</div><div class="detail-value">खरीफ: 31 जुलाई 2026</div></div>
           <div><div class="detail-label">स्थिति</div><div class="detail-value ok">✓ चालू है</div></div>
         </div>
+        <a class="card-readmore" href="/articles/pm-fasal-bima-yojana-2026">📖 पूरी जानकारी, क्लेम कैसे करें →</a>
         <div class="card-footer">
           <button class="btn-apply" onclick="applyNow('https://pmfby.gov.in')">अभी आवेदन करें →</button>
           <button class="btn-wa" onclick="whatsappHelp('PM फसल बीमा PMFBY 2026')">🟢 मदद</button>
@@ -1577,6 +1591,7 @@ button.sidebar-drawer-link {
           <div><div class="detail-label">लाभ</div><div class="detail-value">ड्रिप / स्प्रिंकलर</div></div>
           <div><div class="detail-label">आवेदन</div><div class="detail-value">जिला कृषि कार्यालय</div></div>
         </div>
+        <a class="card-readmore" href="/articles/pmksy-drip-sinchai-subsidy">📖 पूरी जानकारी, सब्सिडी गणना →</a>
         <div class="card-footer">
           <button class="btn-apply" onclick="applyNow('https://upagripardarshi.gov.in')">अभी आवेदन करें →</button>
           <button class="btn-wa" onclick="whatsappHelp('PM कृषि सिंचाई ड्रिप Subsidy UP')">🟢 मदद</button>
@@ -1600,6 +1615,7 @@ button.sidebar-drawer-link {
           <div><div class="detail-label">कहाँ</div><div class="detail-value">नजदीकी कृषि केंद्र</div></div>
           <div><div class="detail-label">रिपोर्ट</div><div class="detail-value">7–14 दिन में</div></div>
         </div>
+        <a class="card-readmore" href="/articles/mitti-jaanch-soil-health-card">📖 पूरी जानकारी, आवेदन कैसे करें →</a>
         <div class="card-footer">
           <button class="btn-apply" onclick="applyNow('https://soilhealth.dac.gov.in')">अभी आवेदन करें →</button>
           <button class="btn-wa" onclick="whatsappHelp('मृदा स्वास्थ्य कार्ड')">🟢 मदद</button>
@@ -1623,6 +1639,7 @@ button.sidebar-drawer-link {
           <div><div class="detail-label">मंडियां</div><div class="detail-value">1,000+ जुड़ी हैं</div></div>
           <div><div class="detail-label">फसलें</div><div class="detail-value">200+ फसलें</div></div>
         </div>
+        <a class="card-readmore" href="/articles/enam-online-fasal-bechna">📖 पूरी जानकारी, रजिस्ट्रेशन कैसे करें →</a>
         <div class="card-footer">
           <button class="btn-apply" onclick="applyNow('https://www.enam.gov.in')">अभी आवेदन करें →</button>
           <button class="btn-wa" onclick="whatsappHelp('e-NAM राष्ट्रीय कृषि बाजार')">🟢 मदद</button>
@@ -1692,6 +1709,7 @@ button.sidebar-drawer-link {
           <div><div class="detail-label">क्षमता</div><div class="detail-value">2 – 7.5 HP पंप</div></div>
           <div><div class="detail-label">आवेदन</div><div class="detail-value">mnre.gov.in</div></div>
         </div>
+        <a class="card-readmore" href="/articles/pm-kusum-solar-pump-yojana">📖 पूरी जानकारी, सब्सिडी कैलकुलेशन →</a>
         <div class="card-footer">
           <button class="btn-apply" onclick="applyNow('https://mnre.gov.in/solar/schemes/')">अभी आवेदन करें →</button>
           <button class="btn-wa" onclick="whatsappHelp('PM-KUSUM सौर पंप योजना')">🟢 मदद</button>
@@ -1883,7 +1901,7 @@ button.sidebar-drawer-link {
     <section style="margin-top:28px;background:var(--green-pale);border-radius:var(--radius);padding:20px 22px;">
       <h2 style="font-size:15px;font-weight:700;color:var(--green-dark);margin-bottom:14px;">🌾 किसान के लिए और जानकारी — KrashiMitra पर</h2>
       <div style="display:flex;flex-wrap:wrap;gap:10px;">
-        <a href="mandi.html" style="display:flex;align-items:center;gap:8px;background:var(--white);border:1.5px solid var(--border-card);border-radius:10px;padding:10px 14px;text-decoration:none;color:var(--text-dark);font-size:13px;font-weight:600;flex:1;min-width:160px;">
+        <a href="/bhav" style="display:flex;align-items:center;gap:8px;background:var(--white);border:1.5px solid var(--border-card);border-radius:10px;padding:10px 14px;text-decoration:none;color:var(--text-dark);font-size:13px;font-weight:600;flex:1;min-width:160px;">
           <span style="font-size:20px;">🏪</span>
           <div>
             <div>आज का मंडी भाव</div>
@@ -1918,7 +1936,7 @@ button.sidebar-drawer-link {
     <a href="index.html">Home</a>
     <a href="chat.html">AI Fasal Rog Pahchan</a>
     <a href="weather.html">Kisan Mausam UP</a>
-    <a href="mandi.html">Aaj Mandi Bhav UP</a>
+    <a href="/bhav">Aaj Mandi Bhav UP</a>
     <a href="shop.html">Krishi Dukan</a>
     <a href="khoj.html">Khoj</a>
     <a href="yojana.html">UP Kisan Sarkari Yojana 2026</a>

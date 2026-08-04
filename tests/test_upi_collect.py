@@ -258,14 +258,28 @@ class TestPayPage:
         assert upi.vpa() in body
         assert 'id="pay-vpa-text"' in body
 
-    def test_unknown_dealer_still_renders_a_payable_page(self, upi, client):
-        """A mistyped link must not 404 in front of someone ready to pay."""
-        r = client.get("/pay?d=does-not-exist")
-        assert r.status_code == 200
-        assert "upi://pay?" in r.text
+    def test_unknown_dealer_gets_no_payable_page(self, upi, client):
+        """Reversed 2026-08-04 at the user's call. A mistyped slug used to
+        render a generic fee + QR; it now renders a dead end.
 
-    def test_no_dealer_at_all_still_renders(self, upi, client):
-        assert client.get("/pay").status_code == 200
+        Money that arrives with no dealer attached cannot be matched to a
+        listing — nobody can be marked paid for it, and the payer has to be
+        chased for a screenshot just to establish who they were."""
+        r = client.get("/pay?d=does-not-exist")
+        assert r.status_code == 200          # still not a 404 in someone's face
+        assert "upi://pay?" not in r.text, "an unattributable payment was offered"
+        assert "<svg" not in r.text, "a scannable QR was offered with no dealer"
+        assert "अधूरा" in r.text
+
+    def test_bare_pay_gets_no_payable_page(self, upi, client):
+        r = client.get("/pay")
+        assert r.status_code == 200
+        assert "upi://pay?" not in r.text
+        assert "<svg" not in r.text
+
+    def test_the_vpa_is_not_leaked_without_a_dealer(self, upi, client):
+        """The dead end must not become a copy-the-VPA-and-pay-anyway page."""
+        assert upi.vpa() not in client.get("/pay").text
 
     def test_says_so_when_upi_is_unconfigured(self, monkeypatch, dealer, client):
         monkeypatch.setenv("KM_UPI_ID", "")
@@ -335,6 +349,136 @@ class TestEditableAmountAndPurpose:
         assert after["paid_at"] is not None
         assert after["paid_amount"] == 500
         assert after["payment_ref"] == "abc123"
+
+
+class TestQrIsActuallyScannable:
+    """A QR that renders but does not scan is the worst failure mode here: it
+    looks finished on every screen and fails only in the dealer's hand, where
+    nobody can see the error.
+
+    segno's default output is `<svg width="245" height="245">` with no viewBox,
+    while both surfaces size the QR in CSS (.pay-qr svg 190px, .pm-qr svg
+    170px). Without a viewBox the SVG coordinate system is pinned to the
+    intrinsic size, so CSS shrinks the viewport WITHOUT scaling the artwork —
+    the browser paints the top-left 190x190 of a 245x245 QR and crops off a
+    finder pattern, part of the data and the quiet zone. Verified by decoding:
+    the cropped bitmap is undecodable, the scaled one round-trips exactly.
+    """
+
+    def test_svg_carries_a_viewbox(self, upi):
+        svg = upi.qr_svg(upi.link(500, note="test", ref="test"))
+        root = svg[:svg.index(">") + 1]
+        assert "viewBox" in root, (
+            "no viewBox — CSS sizing will crop this QR instead of scaling it, "
+            f"and it will not scan: {root}")
+
+    def test_svg_has_no_fixed_size_to_fight_the_css(self, upi):
+        """width/height attributes alongside a CSS override are what pinned the
+        coordinate system in the first place."""
+        root = upi.qr_svg(upi.link(500))[:80]
+        assert 'width="' not in root and 'height="' not in root, root
+
+    def test_qr_round_trips_at_the_size_it_is_displayed(self, upi):
+        """Decodes the artwork scaled into the CSS box, which is what a phone
+        camera is pointed at. Skipped where opencv is absent (it is not a
+        declared dependency) — the viewBox assertions above are the hard gate."""
+        cv2 = pytest.importorskip("cv2")
+        np = pytest.importorskip("numpy")
+        Image = pytest.importorskip("PIL.Image")
+        import io
+
+        import segno
+
+        data = upi.link(500, note="KrashiMitra listing Sharma Tredars Hardoi",
+                        ref="sharma-traders-hardoi")
+        buf = io.BytesIO()
+        segno.make(data, error="m").save(buf, kind="png", scale=5, border=4)
+        native = Image.open(buf).convert("RGB")
+
+        for box in (190, 170):        # .pay-qr and .pm-qr
+            scaled = native.resize((box, box), Image.LANCZOS)
+            arr = cv2.cvtColor(np.array(scaled), cv2.COLOR_RGB2BGR)
+            decoded = cv2.QRCodeDetector().detectAndDecode(arr)[0]
+            assert decoded == data, f"unscannable at {box}px (got {decoded!r})"
+
+
+class TestQuotedAmountReachesTheDealer:
+    """The figure in the WhatsApp message and the figure on the page the dealer
+    opens have to be the same number.
+
+    They were not: _pay_page_url() built `/pay?d=<slug>` with no amount, so the
+    page fell back to the flat KM_LISTING_FEE. The owner would quote ₹249 in
+    chat and the dealer would open a ₹500 QR — a mismatch that costs the
+    payment and the trust in one go, and that neither side can debug.
+    """
+
+    def _page_amount(self, client, pay_url):
+        body = client.get(pay_url.replace("https://krashimitra.in", "")).text
+        import re
+        return re.search(r'class="pay-amt">₹([\d,]+)<', body).group(1).replace(",", "")
+
+    def test_pay_url_carries_the_amount(self, upi, dealer, client):
+        d = client.get(f"/admin/buyers/{dealer.slug}/collect", auth=ADMIN,
+                       params={"amount": "249"}).json()
+        assert "amount=249" in d["pay_url"]
+
+    def test_page_charges_what_the_message_quoted(self, upi, dealer, client):
+        d = client.get(f"/admin/buyers/{dealer.slug}/collect", auth=ADMIN,
+                       params={"amount": "1"}).json()
+        assert "₹1" in d["whatsapp"]
+        assert self._page_amount(client, d["pay_url"]) == "1", (
+            "the dealer opened a different amount than the one he was quoted")
+
+    def test_negotiated_rate_survives_the_round_trip(self, upi, dealer, client):
+        d = client.get(f"/admin/buyers/{dealer.slug}/collect", auth=ADMIN,
+                       params={"amount": "750"}).json()
+        assert self._page_amount(client, d["pay_url"]) == "750"
+
+    def test_a_hand_edited_url_is_still_clamped(self, upi, dealer, client):
+        """The link is public and trivially editable; /pay re-clamps it so a
+        ₹0 or ₹9,00,000 QR cannot be conjured from the address bar."""
+        assert self._page_amount(client, "/pay?d=%s&amount=0" % dealer.slug) == "500"
+        assert self._page_amount(client, "/pay?d=%s&amount=9999999" % dealer.slug) == "500"
+
+
+class TestSubscriptionPricingOnTheRail:
+    """A /dukan/product account owes ₹199 + ₹50 per extra district, not the flat
+    KM_LISTING_FEE — the default only makes sense for a row with no account
+    behind it."""
+
+    @pytest.fixture()
+    def account(self, clean):
+        for dist in ("Hardoi", "Sitapur", "Unnao"):
+            dealers.create(clean, {
+                "name": "Thakur Ji", "district": dist, "state": "Uttar Pradesh",
+                "phone": "9876543210", "owner_user_id": 7}, source="signup")
+        return dealers.for_owner(clean, 7)
+
+    def _page_amount(self, client, url):
+        import re
+        body = client.get(url).text
+        return re.search(r'class="pay-amt">₹([\d,]+)<', body).group(1).replace(",", "")
+
+    def test_collect_prefills_the_account_price(self, upi, account, client):
+        d = client.get(f"/admin/buyers/{account[0].slug}/collect", auth=ADMIN).json()
+        assert d["amount"] == 299, "3 districts is 199 + 2 x 50"
+
+    def test_bare_pay_page_quotes_the_account_price(self, upi, account, client):
+        """A dealer who opens his link with no ?amount= must not be shown the
+        ₹500 default that has nothing to do with his subscription."""
+        assert self._page_amount(client, f"/pay?d={account[0].slug}") == "299"
+
+    def test_an_explicit_amount_still_wins(self, upi, account, client):
+        """A renewal or negotiated rate overrides the computed price."""
+        assert self._page_amount(client, f"/pay?d={account[0].slug}&amount=150") == "150"
+
+    def test_legacy_row_keeps_the_flat_fee(self, upi, dealer, client):
+        assert self._page_amount(client, f"/pay?d={dealer.slug}") == "500"
+
+    def test_price_follows_the_district_count(self, upi, account, clean, client):
+        dealers.delete(clean, account[0].slug)
+        d = client.get(f"/admin/buyers/{account[1].slug}/collect", auth=ADMIN).json()
+        assert d["amount"] == 249, "2 districts is 199 + 50"
 
 
 class TestReceipt:

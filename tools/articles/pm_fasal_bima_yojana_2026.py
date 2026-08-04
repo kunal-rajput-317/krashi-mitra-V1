@@ -301,12 +301,12 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pmksy-drip-sinchai-subsidy", "#0284c7", "💧", "सरकारी योजना",
+         "PMKSY ड्रिप सिंचाई सब्सिडी — 55% अनुदान, आवेदन कैसे करें"),
         (f"{SITE}/articles/kisan-credit-card", "#4f46e5", "💳", "सरकारी योजना",
          "किसान क्रेडिट कार्ड (KCC) 2026 — ब्याज सिर्फ 4%, ₹5 लाख तक लोन"),
         (f"{SITE}/articles/pm-kisan-samman-nidhi", "#0369a1", "💰", "सरकारी योजना",
          "पीएम किसान सम्मान निधि — ₹6,000 सालाना, स्थिति कैसे देखें"),
-        (f"{SITE}/articles/mausam-guide", "#0891b2", "🌦️", "मौसम · जानकारी",
-         "मौसम की जानकारी और खेती की योजना"),
         (f"{SITE}/bhav/paddy-common", "#1b7a3d", "💰", "मंडी · आज के भाव",
          "धान का आज का मंडी भाव — राज्यवार LIVE रेट"),
         (f"{SITE}/articles/dhan-bhura-fudka-up", "#1b7a3d", "🐛", "धान · कीट",

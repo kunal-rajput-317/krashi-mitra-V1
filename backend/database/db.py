@@ -4,7 +4,7 @@
 # ============================================================
 
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey, Index
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, deferred
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -1034,6 +1034,106 @@ class Buyer(Base):
     paid_amount  = Column(Integer,  nullable=True)              # whole rupees
     payment_ref  = Column(String,   nullable=True)              # UPI txn reference, typed from the statement
     paid_until   = Column(DateTime, nullable=True)              # end of the paid month — what "still paying" means
+    # ── /dukan/product: paid, login-gated, multi-district listings ──
+    # NULL for every row created before this — the old anonymous /dukan/signup
+    # and every admin-typed row have no account behind them. Set once, from the
+    # authenticated user's id, never from client input (routes/dukan.py stamps
+    # it; _apply() copies whatever the route already decided, same as any other
+    # field — there is nothing here for a dealer to forge).
+    #
+    # Rows sharing the same owner_user_id are one dealer's account: the district
+    # picker can create several, one payment (services/dealers.py::record_payment)
+    # renews all of them together, and services/buyers.py::for_bhav_panel groups
+    # them by state to decide who gets a state-level Tier-3 slot.
+    owner_user_id = Column(Integer,  nullable=True, index=True)
+    # Which of the ≤3 Tier-3 bhav-panel slots this row holds for its state — 1/2/3
+    # or NULL. Admin-only (see the `trusted` gate in _apply()), and deliberately
+    # not automatic: dealers.py::set_bhav_rank() enforces one holder per
+    # (state, rank) so two paying dealers never collide on the same slot.
+    bhav_rank     = Column(Integer,  nullable=True)
+
+    # ── Firm credentials ──
+    # ADMIN-ONLY, every one of them. services/dealers.py::listing() hands these
+    # to the panel; services/buyers.py::as_dict() deliberately does NOT carry
+    # them, so nothing on a farmer-facing page can render one by accident.
+    #
+    # They exist to make `verified` mean something specific rather than "we rang
+    # a number once". A khad-beej dealer is legally required to hold a fertilizer
+    # /seed licence, so `license_no` is the single strongest thing we can check
+    # about that kind — and the blue tick is a claim we make to a farmer about a
+    # stranger, which is exactly the claim these back up.
+    #
+    # Nullable and unvalidated on purpose: a trader reading his GST number off a
+    # certificate over a bad phone line is not a form-validation problem, and
+    # refusing the row would lose the listing rather than improve the data.
+    gstin       = Column(String, nullable=True)   # 15-char GSTIN, as read out
+    license_no  = Column(String, nullable=True)   # fertilizer / seed / mandi licence
+    email       = Column(String, nullable=True)   # receipts; rarely given
+    address     = Column(String, nullable=True)   # shop address for the receipt
+
+    # The dealer's own words about what he deals in — written by him on
+    # /dukan/product and shown to farmers on the kharidar page.
+    #
+    # This is NOT `note`, and the split is the point. `note` is the private call
+    # log: services/dealers.py::log_call appends "[04 Aug] wants a discount" to
+    # it after every call. `note` was also the field the public kharidar card
+    # rendered, so every internal remark about a dealer's haggling was being
+    # published to farmers under his own name. Separating them is what stops
+    # that; the card now renders this column and `note` never leaves the panel.
+    description = Column(String, nullable=True)
+
+
+
+class DealerProduct(Base):
+    """One item a paying dealer sells, rendered as a product card on /bhav.
+
+    This is what /dukan/product is named after. A `Buyer` row answers "who buys
+    here and how do I reach him"; this answers "what is he selling, and at what
+    price" — the thing a farmer is actually scanning a listing for, and the
+    reason a dealer pays to be on the page at all.
+
+    SHAPE MATCHES THE SHOP ON PURPOSE. name_hi / name_en / price / mrp / unit_hi
+    are the same fields backend/routes/product.py renders in `_hub_card()`, so a
+    dealer's card and a KrashiMitra catalogue card are the same object to a
+    farmer's eye — one design language, one discount calculation, no second
+    visual vocabulary to maintain. `mrp` is what makes "20% off" possible and is
+    optional: a trader quoting a loose rate has no MRP to strike through.
+
+    ATTACHED TO THE ACCOUNT, NOT ONE DISTRICT. `owner_user_id` is copied from
+    the Buyer at creation, so a dealer who pays for three districts types his
+    catalogue once and it shows in all three. `buyer_slug` is kept as the
+    fallback for admin-created rows, which have no account behind them.
+
+    THE IMAGE LIVES HERE, not on the dealer. It is a picture of a 5kg seed bag,
+    not of a firm. Stored in Postgres as a base64 WebP for the reason
+    routes/profile.py already learned with avatars — Render's free tier wipes
+    uploads/ on restart — and deferred() so the ~15KB blob never loads on a
+    /bhav render; the card points at /dukan/product-image/<id>.webp instead.
+    """
+    __tablename__ = "dealer_products"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    buyer_slug = Column(String, nullable=False, index=True)
+    # NULL for an admin-typed dealer; set for every /dukan/product account.
+    owner_user_id = Column(Integer, nullable=True, index=True)
+
+    name_hi = Column(String, nullable=False)            # "गेहूं बीज HD-2967"
+    name_en = Column(String, nullable=True)             # "Wheat Seeds HD-2967"
+    price   = Column(Integer, nullable=False)           # whole rupees, ₹280
+    mrp     = Column(Integer, nullable=True)            # struck through, ₹350
+    unit_hi = Column(String, nullable=True)             # "5 kg बैग"
+    # Free text, e.g. "बीज" / "खाद" — shown as the pill on the photo.
+    badge   = Column(String, nullable=True)
+
+    image_data = deferred(Column(Text, nullable=True))  # base64 WebP
+    image_mime = Column(String, nullable=True)          # cheap presence flag
+
+    # Dealers may list a product before we have called them; `active` is what
+    # the render path checks, and it follows the parent listing's own gating.
+    active     = Column(Boolean, default=True, nullable=False)
+    sort_order = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class LeadClick(Base):
@@ -1336,6 +1436,13 @@ def _ensure_postgres_columns():
             ("paid_amount", "INTEGER"),
             ("payment_ref", "VARCHAR"),
             ("paid_until",  "TIMESTAMP"),
+            ("owner_user_id", "INTEGER"),
+            ("bhav_rank",     "INTEGER"),
+            ("gstin",         "VARCHAR"),
+            ("license_no",    "VARCHAR"),
+            ("email",         "VARCHAR"),
+            ("address",       "VARCHAR"),
+            ("description",   "VARCHAR"),
         ],
     }
 
@@ -1353,6 +1460,13 @@ def _ensure_postgres_columns():
         conn.execute(text(
             'CREATE INDEX IF NOT EXISTS ix_bazar_posts_place '
             'ON bazar_posts (crop_slug, state, district, status)'
+        ))
+
+        # Same reason: dealers.for_owner() and the admin panel's per-account
+        # grouping both filter buyers by owner_user_id.
+        conn.execute(text(
+            'CREATE INDEX IF NOT EXISTS ix_buyers_owner_user_id '
+            'ON buyers (owner_user_id)'
         ))
 
         conn.execute(text("""

@@ -92,6 +92,7 @@
     // dropped link never reaches claim() or applyMenuLang().
     '🚜':  { hi: 'नेट भाव कैलकुलेटर', en: 'Net Price Tool', kn: 'ನೆಟ್ ದರ ಟೂಲ್' },
     '🛒':  { hi: 'दुकान',         en: 'Shop',        kn: 'ಅಂಗಡಿ' },
+    '🤝':  { hi: 'व्यापारी लिस्टिंग', en: 'List Your Business', kn: 'ವ್ಯಾಪಾರಿ ನೋಂದಣಿ' },
     '🔍':  { hi: 'कृषि खोज',      en: 'Search',      kn: 'ಹುಡುಕಿ' },
     '🗺️': { hi: 'कृषि मानचित्र',  en: 'Map',         kn: 'ನಕ್ಷೆ' },
     '🧺':  { hi: 'कृषि बाज़ार',    en: 'Bazaar',      kn: 'ಬಜಾರ್' },
@@ -109,6 +110,7 @@
     '🏪': '<svg viewBox="0 0 24 24"><path d="M4 9h16l-1.1-4.2A1 1 0 0 0 17.94 4H6.06a1 1 0 0 0-.96.8L4 9Z" fill="' + LEAF + '"/><path d="M5.2 9v9.5A1.5 1.5 0 0 0 6.7 20h10.6a1.5 1.5 0 0 0 1.5-1.5V9" fill="currentColor"/><rect x="9" y="13" width="6" height="7" rx="0.6" fill="' + LEAF + '"/></svg>',
     '🚜': '<svg viewBox="0 0 24 24"><path d="M5 7.5h4.2a1 1 0 0 1 .95.68L11.6 12H5a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1Z" fill="' + LEAF + '"/><path d="M12.4 12l-1-3h4.3a1 1 0 0 1 .94.66L17.7 12Z" fill="currentColor"/><path d="M3 13.2h16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="17" r="3.9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.2" cy="18" r="2.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
     '🛒': '<svg viewBox="0 0 24 24"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.6" fill="currentColor"/><circle cx="16.5" cy="19" r="1.6" fill="currentColor"/></svg>',
+    '🤝': '<svg viewBox="0 0 24 24"><path d="M12.6 3.4 20 10.8a2 2 0 0 1 0 2.8l-6.4 6.4a2 2 0 0 1-2.8 0L4.4 13.6A2 2 0 0 1 3.8 12V5.4A2 2 0 0 1 5.8 3.4H12a2 2 0 0 1 .6 0Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="8.3" cy="8.3" r="1.6" fill="currentColor"/></svg>',
     '🔍': '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="' + LEAF + '" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
     '🗺️': '<svg viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.6"/></svg>',
     '🧺': '<svg viewBox="0 0 24 24"><path d="M8 10 10.6 5M16 10 13.4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4.3 10.2 5.6 18a1.5 1.5 0 0 0 1.48 1.25h9.84A1.5 1.5 0 0 0 18.4 18l1.3-7.8Z" fill="currentColor"/><path d="M3 10.2h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 13v3.4M12 13v3.4M15 13v3.4" stroke="' + LEAF + '" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -194,16 +196,16 @@
   var FOOTER = ['💬', '👤'];
   var GROUPS = [
     { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '🗺️', '🗺'] }, // मौसम · मेरी फसल · कृषि मानचित्र
-    { key: 'industry', ico: 'industry', set: ['🏪', '🚜', '🛒'] },
+    { key: 'industry', ico: 'industry', set: ['🏪', '🚜', '🛒', '🤝'] },
     { key: 'news',     ico: 'news',     set: ['📰', '🏛️', '🏛'] },
     { key: 'other',    ico: 'other',    set: ['🔍', '🧺'] } // कृषि खोज · कृषि बाज़ार
   ];
 
   // Items retired from the menu, mapped to the item that inherits their
-  // "you are here" highlight. मंडी भाव (🏪 → mandi.html) and सभी भाव सूची
-  // (📈 → /bhav) were two doors onto the same question and the farmer had to
-  // guess which one he wanted; the menu now carries one, pointed at the fuller
-  // /bhav tree. mandi.html keeps its own entry in the bottom nav.
+  // "you are here" highlight. मंडी भाव (🏪) and सभी भाव सूची (📈 → /bhav) were
+  // two doors onto the same question and the farmer had to guess which one he
+  // wanted; the menu now carries one, pointed at the fuller /bhav tree — which
+  // is also the only mandi surface left now that mandi.html is retired.
   var DROP = { '📈': '🏪' };
 
   // Hrefs this file owns outright, whatever a page shipped. Root-absolute for
@@ -299,6 +301,31 @@
     return true;
   }
 
+  // /dukan/product (अपनी दुकान लिस्ट करें — paid dealer listings) has the same distribution
+  // problem net-price had: it is real and it is live, but the only static links
+  // to it sit on /bhav/.../kharidar pages, and today zero districts have a live
+  // listing for one of those pages to show — so a trader can only reach it by
+  // guessing the URL or finding it in search. Synthesising it into the drawer
+  // here, exactly like ensureNetPrice() above, means every page on the site
+  // (44 static pages, the /bhav and /product trees, every article) carries a
+  // path to it from one edit, instead of it staying an island only the kharidar
+  // pages point to.
+  function ensureDukan(box) {
+    var have = [].slice.call(box.children).some(function (n) {
+      return n.classList && n.classList.contains('sidebar-drawer-link') &&
+             iconOf(n) === '🤝';
+    });
+    if (have) return false;
+    var a = document.createElement('a');
+    a.href = '/dukan/product';
+    a.className = 'sidebar-drawer-link';
+    if (/^\/dukan/.test(location.pathname)) a.className += ' active';
+    a.innerHTML = '<span class="sidebar-drawer-link-icon">🤝</span>' +
+                  '<span>' + LABELS['🤝'].hi + '</span>';
+    box.appendChild(a);
+    return true;
+  }
+
   // Retire DROP'd links and repoint the HREF'd ones. Done here rather than in
   // ~44 static pages plus bhav.py's server-rendered drawer, for the same reason
   // the grouping itself lives in this file: one edit, one source of truth, and
@@ -342,6 +369,7 @@
     // after the fixup, so a dropped link can't leave a one-item menu grouped.
     if (links.length < 2) return;
     if (ensureNetPrice(box)) links.push(box.lastChild);
+    if (ensureDukan(box)) links.push(box.lastChild);
 
     var byIcon = {};
     links.forEach(function (a) {

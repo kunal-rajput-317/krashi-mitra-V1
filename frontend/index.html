@@ -2167,7 +2167,7 @@
       <nav class="header-nav" style="display:none" id="desktop-nav">
         <a class="nav-link active" href="index.html">मुख्य</a>
         <a class="nav-link" href="weather.html">मौसम</a>
-        <a class="nav-link" href="mandi.html">मंडी</a>
+        <a class="nav-link" href="/bhav">मंडी</a>
         <a class="nav-link" href="/bhav">सभी भाव</a>
         <a class="nav-link" href="articles/">लेख</a>
         <a class="nav-link" href="sarkari_yojana.html">योजनाएं</a>
@@ -2193,7 +2193,7 @@
     <div class="sidebar-drawer-links">
       <a href="index.html" class="sidebar-drawer-link active"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
       <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
-      <a href="mandi.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
+      <a href="/bhav" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
       <a href="/bhav" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📈</span><span>सभी भाव सूची</span></a>
       <a href="meri_fasal.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌱</span><span>मेरी फसल</span></a>
       <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
@@ -2295,7 +2295,7 @@
         <span class="qc-sublabel">आज का पूर्वानुमान</span>
       </div>
     </a>
-    <a class="quick-card" href="mandi.html" style="--card-color:#b5850f; --card-bg-light:#fef3c7">
+    <a class="quick-card" href="/bhav" style="--card-color:#b5850f; --card-bg-light:#fef3c7">
       <span class="qc-icon-wrapper">
         <img src="images/services/mandi.webp" alt="मंडी भाव" class="service-img" loading="lazy">
       </span>
@@ -2383,7 +2383,7 @@
 
   <div class="showcase-grid">
 
-    <a class="showcase-card" href="mandi.html">
+    <a class="showcase-card" href="/bhav">
       <div class="showcase-imgwrap">
         <span class="showcase-fallback">💰</span>
         <span class="showcase-badge">मंडी</span>
@@ -2517,7 +2517,7 @@
 <section class="section" id="mandi-section">
   <div class="section-header">
     <h2 class="section-title">💰 मंडी भाव</h2>
-    <a class="section-link" href="mandi.html">सभी भाव →</a>
+    <a class="section-link" href="/bhav">सभी भाव →</a>
   </div>
 
   <div class="mandi-card">
@@ -2573,7 +2573,7 @@
 
     <div class="mandi-footer">
       <span>स्रोत: Agmarknet · data.gov.in</span>
-      <a href="mandi.html">सभी फसलों के भाव देखें →</a>
+      <a href="/bhav">सभी फसलों के भाव देखें →</a>
     </div>
   </div>
 
@@ -2815,6 +2815,27 @@
   .faq-item[open] summary::after{content:'–';}
   .faq-ans{padding:0 18px 16px;color:#3d4f44;font-size:14px;line-height:1.75;}
   .faq-ans a{color:var(--green-mid);font-weight:600;}
+  /* ── दुकान promo — supply-side acquisition for the खरीदार directory ──
+     Sits last, right before the footer: the farmer journey (hero → mandi
+     prices → net-price → schemes → articles) owns everything above it, and
+     this is the one card on the homepage not addressed to a farmer. Amber,
+     not the net-price card's green, so it reads as a distinct audience
+     rather than another farmer tool. */
+  .dukan-promo{display:flex;align-items:center;gap:14px;max-width:820px;margin:22px auto 0;
+    padding:16px 18px;background:var(--amber-light);border:1px solid #f3dfa0;
+    border-radius:var(--radius-md);text-decoration:none;}
+  .dukan-promo-icon{flex:none;width:46px;height:46px;display:grid;place-items:center;
+    font-size:22px;background:#fff;border-radius:14px;box-shadow:var(--shadow-sm);}
+  .dukan-promo-text{flex:1;min-width:0;}
+  .dukan-promo-title{display:block;font-family:var(--font-serif);font-size:15.5px;
+    font-weight:700;color:var(--green-dark);line-height:1.35;}
+  .dukan-promo-sub{display:block;margin-top:3px;font-size:12.5px;line-height:1.5;color:#5b4a1e;}
+  .dukan-promo-cta{flex:none;font-size:13px;font-weight:800;color:var(--green-dark);
+    white-space:nowrap;}
+  @media (max-width:560px){
+    .dukan-promo{flex-wrap:wrap;}
+    .dukan-promo-cta{margin-left:60px;}
+  }
   .site-footer{background:var(--green-dark);color:#cfe3d6;margin-top:34px;padding:26px 16px 30px;text-align:center;font-size:13px;}
   .site-footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;margin-bottom:14px;}
   .site-footer-links a{color:#fff;text-decoration:none;font-weight:600;}
@@ -2845,6 +2866,15 @@
     </details>
   </div>
 </section>
+
+<a class="dukan-promo" href="/dukan/product">
+  <span class="dukan-promo-icon" aria-hidden="true">🤝</span>
+  <span class="dukan-promo-text">
+    <span class="dukan-promo-title">अनाज व्यापारी, आढ़तिया या खाद-बीज डीलर हैं?</span>
+    <span class="dukan-promo-sub">₹199/महीना से अपनी दुकान लिस्ट करें — आपके जिले के किसान सीधे आपको कॉल करेंगे।</span>
+  </span>
+  <span class="dukan-promo-cta">अपनी दुकान लिस्ट करें →</span>
+</a>
 
 <!-- ══════════════════════════
      FOOTER — universal shell links (about/privacy were unreachable from
@@ -3100,7 +3130,7 @@
      below are shown. Order is both the match order and the display priority —
      "green gram" must be tested before the generic "gram" to not become चना.
      Each crop carries a Wikimedia photo (file + h), reusing the files already curated
-     for mandi.html's tiles. The emoji stays as the placeholder while the photo loads,
+     for /bhav's tiles. The emoji stays as the placeholder while the photo loads,
      and as the fallback if the photo ever fails. */
   const MANDI_CROPS = [
     { keys: ['wheat'],                    hi: 'गेहूं',    emoji: '🌾', file: 'Wheat close-up.JPG',                       h: 'b4' },
@@ -3298,9 +3328,6 @@
       // because four district names exist in two states each (pratapgarh, bilaspur,
       // hamirpur, balrampur); without it the page merges both states' prices.
       const bhavUrl = `/bhav/${mandiSlug(r.commodity)}/${mandiSlug(r.state || MANDI_STATE)}/${mandiSlug(r.district)}`;
-      const appUrl  = 'mandi.html?' + new URLSearchParams({
-        commodity: r.commodity, district: r.district, state: MANDI_STATE,
-      });
       const waUrl = 'https://wa.me/?text=' + encodeURIComponent(
         `आज ${r.crop.hi} का भाव — ₹${price}/क्विंटल (${r.market})\n` +
         `https://krashimitra.in${bhavUrl}`);
@@ -3324,7 +3351,7 @@
               <a class="mandi-cta-link" href="${bhavUrl}">विवरण देखें →</a>
               <a class="mandi-cta-link" href="${waUrl}" target="_blank" rel="noopener">शेयर करें</a>
             </div>
-            <a class="mandi-buy" href="${appUrl}">📊 मंडी में देखें</a>
+            <a class="mandi-buy" href="${bhavUrl}">📊 मंडी में देखें</a>
           </div>
         </article>`;
     }).join('');

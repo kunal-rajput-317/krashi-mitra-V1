@@ -6,6 +6,12 @@
 /bhav     https://krashi-mitra-v1-oxdc.onrender.com/bhav/         200
 /bhav/*   https://krashi-mitra-v1-oxdc.onrender.com/bhav/:splat   200
 
+# frontend/mandi.html (the old JS-only mandi app) is retired — all mandi data
+# now lives on the server-rendered /bhav tree above. Old bookmarks/backlinks/
+# indexed URLs get a real 301 instead of a 404.
+/mandi.html   /bhav   301!
+/mandi        /bhav   301!
+
 # Proxy SEO shop-product pages to the backend (server-rendered product pages)
 /product     https://krashi-mitra-v1-oxdc.onrender.com/product/         200
 /product/*   https://krashi-mitra-v1-oxdc.onrender.com/product/:splat   200
@@ -101,7 +107,6 @@
 # consolidates signals onto the canonical (internal links may still say .html —
 # they keep working locally via the file and in prod via these redirects).
 /index.html            /                  301!
-/mandi.html            /mandi             301!
 /weather.html          /weather           301!
 /chat.html             /chat              301!
 /shop.html             /shop              301!
@@ -109,11 +114,34 @@
 /sarkari_yojana.html   /sarkari_yojana    301!
 /khoj.html             /khoj              301!
 /meri_fasal.html       /meri_fasal        301!
-/dukan.html            /dukan             301!
+# /dukan/product replaced the free/anonymous /dukan entirely (login + paid
+# subscription now). The page itself needs NO rule: it is a real directory
+# (frontend/dukan/product/index.html), so Netlify, the FastAPI static mount and
+# any other static host all resolve it natively — a flat file plus a rewrite
+# would have worked only on Netlify and 404'd on the backend in local dev.
+# These two only retire the old entry points. `!` forces them, because
+# /dukan is now a real directory that would otherwise be matched first.
+/dukan.html            /dukan/product     301!
+/dukan                 /dukan/product     301!
 /about.html            /about             301!
 /privacy-policy.html   /privacy-policy    301!
 /map.html              /map               301!
 /naksha.html           /naksha            301!
+
+# Proxy lead-click redirects to the backend (routes/bhav.py /go and
+# /kharidar/go — the dealer-contact/WhatsApp buttons on /bhav and kharidar
+# pages link here with a root-relative href, so these were 404ing in prod
+# instead of redirecting; this is the monetized click path, not cosmetic)
+/go/*            https://krashi-mitra-v1-oxdc.onrender.com/go/:splat            200
+/kharidar/go/*   https://krashi-mitra-v1-oxdc.onrender.com/kharidar/go/:splat   200
+
+# Proxy site search to the backend (routes/bhav.py /find — the search form on
+# product hub pages posts here; it was missing and 404ing in prod)
+/find   https://krashi-mitra-v1-oxdc.onrender.com/find   200
+
+# Proxy the Kisan Call Centre Q&A pages to the backend (routes/sawal.py)
+/sawal      https://krashi-mitra-v1-oxdc.onrender.com/sawal         200
+/sawal/*    https://krashi-mitra-v1-oxdc.onrender.com/sawal/:splat  200
 
 # The नक्शा cluster is server-rendered (backend/routes/naksha.py), like /bhav —
 # there are no per-state HTML files any more. One rule covers all 36 states and

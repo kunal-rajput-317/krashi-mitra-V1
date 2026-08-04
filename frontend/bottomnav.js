@@ -11,12 +11,15 @@
 // a popup is open, piggybacking on fab-autohide's body.km-popup-open.
 //
 // Works on both kinds of pages:
-//   - static frontend pages (index/mandi/shop/weather…): relative
-//     "mandi.html"-style links so Live Server dev keeps working
-//     (deployed, those 301 to the extensionless URL);
+//   - static frontend pages (index/shop/weather…): relative "shop.html"-style
+//     links so Live Server dev keeps working (deployed, those 301 to the
+//     extensionless URL);
 //   - backend-rendered /bhav + /product pages: root-absolute links,
 //     since a relative link from /bhav/wheat/up would resolve inside
 //     the /bhav tree.
+// मंडी भाव always uses the root-absolute /bhav link (below): the mandi data
+// now lives only on that backend-rendered tree, so there is no relative
+// "mandi.html" file to link to any more.
 //
 // Usage: include once per page —
 //   <script src="bottomnav.js" defer></script>    (static pages)
@@ -25,11 +28,11 @@
 (function () {
   var GREEN = '#2d6a4f', GREY = '#6b7a72';
 
-  // Root-level static pages (index/mandi/shop/weather) can use relative
-  // "mandi.html" links so Live Server dev works. But pages served from a
+  // Root-level static pages (index/shop/weather) can use relative
+  // "shop.html" links so Live Server dev works. But pages served from a
   // sub-path — the backend /bhav + /product trees, and the static /articles/
-  // pages — must use root-absolute links, or a relative "mandi.html" would
-  // resolve inside that sub-path (e.g. /articles/mandi.html → 404).
+  // pages — must use root-absolute links, or a relative "shop.html" would
+  // resolve inside that sub-path (e.g. /articles/shop.html → 404).
   var path = location.pathname;
   // KM_FORCE_ABS_NAV: set by 404.html, which Netlify serves at whatever
   // unknown URL was requested — relative links would resolve inside it.
@@ -51,7 +54,7 @@
   };
 
   var TABS = [
-    { key: 'mandi', rel: 'mandi.html',          abs: '/mandi',     match: /^\/(bhav|mandi)(\/|$)|\/mandi\.html$/ },
+    { key: 'mandi', rel: '/bhav',               abs: '/bhav',      match: /^\/bhav(\/|$)/ },
     { key: 'shop',  rel: 'shop.html',           abs: '/product/',  match: /^\/(product|shop)(\/|$)|\/shop\.html$/ },
     { key: 'news',  rel: 'articles/index.html', abs: '/articles/', match: /\/articles(\/|$)/ },
     { key: 'more' } // button — opens the sidebar drawer

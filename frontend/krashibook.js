@@ -43,7 +43,9 @@
   function shopUrl()    { return pagePrefix() + "shop.html?orders=1"; }
   function loginUrl()   { return pagePrefix() + "login.html"; }
   function profileUrl() { return pagePrefix() + "profile.html"; }
-  function mandiUrl()   { return pagePrefix() + "mandi.html"; }
+  // Root-absolute, unlike its siblings: /bhav is backend-rendered, not a
+  // static file next to this page, so pagePrefix()'s "../" would be wrong.
+  function mandiUrl()   { return "/bhav"; }
   function weatherUrl() { return pagePrefix() + "weather.html"; }
   function bazarUrl()   { return pagePrefix() + "krashi_bajar.html"; }
   function fasalUrl()   { return pagePrefix() + "meri_fasal.html"; }

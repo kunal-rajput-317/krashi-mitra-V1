@@ -105,14 +105,25 @@ def _apply(row: Buyer, data: dict, *, trusted: bool) -> None:
     `trusted` is the whole security boundary of this module: False for anything
     that arrived over the public form, and it gates exactly the three flags a
     dealer must not be able to set about himself.
+
+    `owner_user_id` sits outside that gate on purpose — it is not a trust flag,
+    it is bookkeeping of *which account* a row belongs to. The only caller that
+    ever passes it is routes/dukan.py, which stamps it from the authenticated
+    token itself; there is no request field a client could forge it through.
+
+    `bhav_rank` is deliberately NOT settable here at all, trusted or not — it
+    has cross-row side effects (clearing whoever else held that rank in the
+    same state) that only set_bhav_rank() below knows how to do safely.
     """
     if "name" in data:
         row.name = (data.get("name") or "").strip()[:120]
     if "kind" in data:
         kind = (data.get("kind") or "trader").strip().lower()
         row.kind = kind if kind in KINDS else "trader"
+    # `description` is the dealer's own public blurb and IS settable from the
+    # signup form; `note` is the private call log and is not (see below).
     for field, limit in (("state", 80), ("district", 80), ("market", 120),
-                         ("note", 400), ("since", 40)):
+                         ("since", 40), ("description", 400)):
         if field in data:
             setattr(row, field, (data.get(field) or "").strip()[:limit] or None)
     for field in ("phone", "whatsapp"):
@@ -120,6 +131,8 @@ def _apply(row: Buyer, data: dict, *, trusted: bool) -> None:
             setattr(row, field, clean_phone(data.get(field)) or None)
     if "commodities" in data:
         row.commodities = _commodities(data.get("commodities")) or None
+    if "owner_user_id" in data:
+        row.owner_user_id = data.get("owner_user_id")
     if trusted:
         for flag in ("active", "verified", "featured"):
             if flag in data:
@@ -127,6 +140,18 @@ def _apply(row: Buyer, data: dict, *, trusted: bool) -> None:
         if "status" in data:
             status = (data.get("status") or "new").strip().lower()
             row.status = status if status in STATUSES else "new"
+        # Admin-only, all of them.
+        #
+        # `note` is the private call log — log_call() appends to it and the
+        # public card must never render it, so a dealer cannot write into it
+        # from the signup form either; his own words go to `description`.
+        #
+        # The credentials are what make `verified` checkable rather than a
+        # feeling, so they can only ever be typed by whoever made the call.
+        for field, limit in (("note", 400), ("gstin", 20), ("license_no", 60),
+                             ("email", 120), ("address", 200)):
+            if field in data:
+                setattr(row, field, (data.get(field) or "").strip()[:limit] or None)
 
 
 def validate(data: dict) -> str:
@@ -180,6 +205,10 @@ def update(db, slug: str, data: dict) -> Buyer | None:
     db.commit()
     db.refresh(row)
     buyers_read.invalidate()
+    # Covers approve() (active/verified flip here, not in record_payment) and
+    # any other admin edit that could change a self-serve account's eligibility
+    # — e.g. rejecting one already-paid district. No-op for owner_user_id=None.
+    _sync_bazar_post(db, row.owner_user_id)
     return row
 
 
@@ -233,27 +262,168 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     in the bank app. Nothing automated may ever set it — an auto-ticked "paid"
     on an unconfirmed payment is a fabricated receipt.
 
-    Paying also lists him: he is not paying to stay invisible.
+    For a legacy/admin row (no owner_user_id) paying also lists him, same as
+    always: he is not paying to stay invisible, and the admin is the one who
+    just clicked collect after deciding to trust him.
+
+    For a /dukan/product self-serve account (owner_user_id set), paying does
+    NOT flip active/verified — the phone-verification call stays a hard gate
+    for those (see approve()); the payment only buys the subscription window.
+    It renews every row that shares the same owner_user_id at once, since one
+    payment covers the whole account's districts, not just the row the admin
+    happened to click collect on.
     """
     row = db.query(Buyer).filter(Buyer.slug == slug).first()
     if not row:
         return None
     now = datetime.utcnow()
-    row.paid_at = now
-    row.paid_amount = int(amount)
-    row.payment_ref = (ref or "").strip()[:80] or None
+    targets = for_owner(db, row.owner_user_id) if row.owner_user_id else [row]
     # Renewals extend from whichever is later: paying early should add a month,
     # not throw away the days already bought, and a lapsed dealer's new month
     # starts today rather than backdated into a gap he was not listed for.
     base = row.paid_until if (row.paid_until and row.paid_until > now) else now
-    row.paid_until = base + timedelta(days=30 * max(1, int(months)))
-    row.status = "listed"
-    row.active = True
-    row.updated_at = now
+    paid_until = base + timedelta(days=30 * max(1, int(months)))
+    for r in targets:
+        r.paid_at = now
+        r.paid_amount = int(amount)
+        r.payment_ref = (ref or "").strip()[:80] or None
+        r.paid_until = paid_until
+        if not r.owner_user_id:
+            r.status = "listed"
+            r.active = True
+        r.updated_at = now
+    db.commit()
+    db.refresh(row)
+    buyers_read.invalidate()
+    _sync_bazar_post(db, row.owner_user_id)
+    return row
+
+
+def quote(n_districts: int) -> int:
+    """₹199/month for the first interested district, +₹50/month for each
+    additional one — the one place this formula lives, so the signup form's
+    live price readout and the admin collect modal's prefilled amount can
+    never quietly disagree."""
+    return 199 + 50 * (max(1, int(n_districts)) - 1)
+
+
+def for_owner(db, owner_user_id: int) -> list[Buyer]:
+    """Every row one /dukan/product account owns. Powers the admin panel's
+    per-account grouping and the dealer's own "my listings" view — and is how
+    record_payment() finds every district a single payment has to renew."""
+    if not owner_user_id:
+        return []
+    return (db.query(Buyer).filter(Buyer.owner_user_id == owner_user_id)
+              .order_by(Buyer.created_at.asc()).all())
+
+
+def account_price(db, owner_user_id: int) -> int:
+    """quote() for however many districts this account currently has —
+    what the admin's collect modal should prefill instead of the flat
+    KM_LISTING_FEE default once a row has an owner_user_id."""
+    return quote(len(for_owner(db, owner_user_id)))
+
+
+def set_bhav_rank(db, slug: str, rank) -> Buyer | None:
+    """Assign (or clear, if `rank` is falsy) one of the <=3 Tier-3 bhav-panel
+    slots to this row's state. At most one dealer holds a given rank in a
+    given state: assigning it here clears whoever else in that same state held
+    it, so two paying dealers can never collide on the same slot. Admin-only —
+    called directly from the admin route, never through the generic update().
+    """
+    row = db.query(Buyer).filter(Buyer.slug == slug).first()
+    if not row:
+        return None
+    # A falsy rank ("" / 0 / None, i.e. the panel's "—" option) clears the slot.
+    # Anything else has to parse as one of the three real slots — int() on junk
+    # raises, and letting that reach the route would answer a typo with a 500.
+    if not rank:
+        rank = None
+    else:
+        try:
+            rank = int(rank)
+        except (TypeError, ValueError):
+            return None
+        if rank not in (1, 2, 3):
+            return None
+    if rank is not None and row.state:
+        state_key = _norm_state(row.state)
+        for other in db.query(Buyer).filter(Buyer.bhav_rank == rank,
+                                             Buyer.slug != slug).all():
+            if _norm_state(other.state or "") == state_key:
+                other.bhav_rank = None
+    row.bhav_rank = rank
+    row.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(row)
     buyers_read.invalidate()
     return row
+
+
+def _norm_state(s: str) -> str:
+    return re.sub(r"\s+", " ", (s or "").strip().lower())
+
+
+def _sync_bazar_post(db, owner_user_id) -> None:
+    """Keep one krashi_bajar feed post in sync with a /dukan/product account's
+    eligibility (active + verified + a currently paid subscription) — created,
+    refreshed, or closed automatically as a side effect of approve()/
+    record_payment()/update(), the same way every other consequence on this
+    table already is (see the module docstring on invalidate()-on-write).
+
+    Never touches admin-created/legacy rows (owner_user_id is None) — there is
+    no users.id to author a post as, since nobody logged in to create them.
+    """
+    if not owner_user_id:
+        return
+    from backend.database.db import BazarPost
+
+    now = datetime.utcnow()
+    rows = for_owner(db, owner_user_id)
+    live = [r for r in rows if r.active and r.verified
+            and r.paid_until and r.paid_until > now]
+
+    post = (db.query(BazarPost)
+              .filter(BazarPost.user_id == owner_user_id, BazarPost.source == "dukan")
+              .first())
+
+    if not live:
+        if post and post.status != "closed":
+            post.status = "closed"
+            db.commit()
+        return
+
+    lead = live[0]
+    # commodities stores /bhav crop *slugs* (e.g. "paddy-common"), not Hindi
+    # names — there is no slug->Hindi reverse index this service layer can
+    # reach without importing routes/bhav.py (a real import cycle, not just a
+    # lazy one: bhav.py already imports from this module's neighbours). Good
+    # enough for an auto-generated caption; the hyphen swap just keeps it readable.
+    crops = sorted({c.replace("-", " ") for r in live
+                    for c in (r.commodities or "").split(",") if c.strip()})
+    districts = sorted({r.district for r in live if r.district})
+    crop_txt = ", ".join(crops) if crops else "सभी फसलें"
+    dist_txt = ", ".join(districts[:3])
+    if len(districts) > 3:
+        dist_txt += f" और {len(districts) - 3} अन्य जिले"
+    label, emoji = buyers_read.kind_label(lead.kind)
+    text = (f"{emoji} {lead.name} — {label}\n"
+            f"हम खरीदते हैं: {crop_txt}\n"
+            f"जिले: {dist_txt}")
+
+    if post:
+        post.text = text
+        post.state = lead.state
+        post.district = lead.district
+        post.status = "active"
+    else:
+        post = BazarPost(
+            user_id=owner_user_id, post_type="buy", text=text,
+            state=lead.state, district=lead.district, source="dukan",
+            status="active",
+        )
+        db.add(post)
+    db.commit()
 
 
 def funnel(db) -> dict:
@@ -286,9 +456,15 @@ def delete(db, slug: str) -> bool:
     row = db.query(Buyer).filter(Buyer.slug == slug).first()
     if not row:
         return False
+    owner_user_id = row.owner_user_id
     db.delete(row)
     db.commit()
     buyers_read.invalidate()
+    # Re-check after the delete: if that was the dealer's last remaining
+    # district, _sync_bazar_post's own for_owner() lookup now comes back
+    # empty and it closes the bazar post; if other districts remain, it just
+    # refreshes the caption's crop/district summary.
+    _sync_bazar_post(db, owner_user_id)
     return True
 
 
@@ -316,6 +492,18 @@ def listing(db, *, source: str = "") -> list[dict]:
             # Derived here so the panel never has to re-implement the date
             # comparison and drift from the funnel counts next to it.
             "paying":      bool(r.paid_until and r.paid_until > now),
+            # /dukan/product account grouping — None for admin-created/legacy
+            # rows, which the panel keeps showing exactly as it does today.
+            "owner_user_id": r.owner_user_id,
+            "bhav_rank":     r.bhav_rank,
+            # Admin-only, every one. services/buyers.py::as_dict() carries none
+            # of these, so the panel is the only surface that can render them —
+            # `note` especially, which is the private call log.
+            "note":       r.note or "",
+            "gstin":      r.gstin or "",
+            "license_no": r.license_no or "",
+            "email":      r.email or "",
+            "address":    r.address or "",
         })
         out.append(d)
     return out

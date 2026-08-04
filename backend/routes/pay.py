@@ -16,9 +16,17 @@
 # noindex, always. It is a private billing page for one named dealer, reached
 # from a WhatsApp message, and it has no business in a sitemap or a SERP.
 #
-# UNKNOWN OR MISSING ?d= STILL RENDERS. The generic page (fee, QR, no dealer
-# name) is the honest fallback for a mistyped link — the alternative is a 404
-# in front of someone holding his phone open, ready to pay.
+# ONE DEALER OR NOTHING. `?d=<slug>` is required: a bare /pay, or a slug that
+# resolves to nobody, renders a dead end rather than a generic fee and QR.
+#
+# It used to render that generic page, on the reasoning that a 404 in front of
+# someone ready to pay is worse than an unnamed page. That trade was wrong —
+# money arriving with no dealer attached cannot be matched to a listing, so
+# nobody can be marked paid for it and the payer has to be chased for a
+# screenshot just to establish who they were. The slug is also what becomes the
+# UPI `tr` reference, which is the only thread tying a bank credit back to a
+# row. A dealer always has his own link (admin.py::_pay_page_url), so the
+# generic page was never on anyone's real path to paying.
 # ============================================================
 from html import escape
 
@@ -71,17 +79,34 @@ font-size:14px;color:#8a2b2b;line-height:1.8;text-align:left}
 
 
 def _dealer(slug: str):
-    """The named dealer, or None. Fails soft — Neon being asleep must not turn a
-    payment page into an error page; it just loses the personalisation."""
+    """(name, district, own_price) for the named dealer, or ("", "", None).
+
+    Fails soft — Neon being asleep must not turn a payment page into an error
+    page; it just loses the personalisation and falls back to the flat fee.
+
+    `own_price` is what a /dukan/product account actually owes for its own
+    district count (services/dealers.py::quote — ₹199 + ₹50 each after), so a
+    dealer opening this page bare, with no ?amount= on the URL, is quoted his
+    real subscription rather than the KM_LISTING_FEE default that has nothing
+    to do with him. Plain values, not the ORM row: the session closes before
+    the template renders and a detached instance is a trap for the next edit.
+    """
     slug = (slug or "").strip()[:80]
     if not slug:
-        return None
+        return "", "", None
     db = None
     try:
         db = SessionLocal()
-        return db.query(Buyer).filter(Buyer.slug == slug).first()
+        row = db.query(Buyer).filter(Buyer.slug == slug).first()
+        if not row:
+            return "", "", None
+        price = None
+        if row.owner_user_id:
+            from backend.services import dealers
+            price = dealers.account_price(db, row.owner_user_id)
+        return (row.name or "").strip(), (row.district or "").strip(), price
     except Exception:
-        return None
+        return "", "", None
     finally:
         if db is not None:
             try:
@@ -93,33 +118,53 @@ def _dealer(slug: str):
 @router.get("/pay", response_class=HTMLResponse)
 def pay_page(d: str = "", amount: str = ""):
     canon = "https://krashimitra.in/pay"
-    row = _dealer(d)
+    name, district, own_price = _dealer(d)
 
-    if not upi.configured():
-        # Never a fabricated VPA to keep the page pretty — a wrong destination
-        # silently sends a dealer's money to a stranger.
-        body = ('<div class="pay-wrap"><div class="pay-card"><div class="pay-off">'
-                '<b>पेमेंट अभी चालू नहीं है।</b><br>'
-                'कृपया कृषि मित्र टीम से संपर्क करें — '
-                '<a href="tel:+919870951001">+91 98709 51001</a>'
-                '</div></div></div>')
+    def _dead_end(message: str) -> HTMLResponse:
+        body = (f'<div class="pay-wrap"><div class="pay-card"><div class="pay-off">'
+                f'{message}</div></div></div>')
         return _doc("पेमेंट — कृषि मित्र", "कृषि मित्र लिस्टिंग पेमेंट",
                     canon, "", body, active="", extra_css=_PAY_CSS,
                     robots="noindex, nofollow")
 
-    name     = (row.name or "").strip() if row else ""
-    district = (row.district or "").strip() if row else ""
-    # An explicit ?amount= is how a renewal or a negotiated rate is sent; it is
-    # clamped by clean_amount, so a hand-edited URL cannot produce a ₹0 or a
-    # ₹9,00,000 QR.
-    pack = upi.collect(name, district, amount=amount or None, ref=(d or "").strip()[:80])
+    if not upi.configured():
+        # Never a fabricated VPA to keep the page pretty — a wrong destination
+        # silently sends a dealer's money to a stranger.
+        return _dead_end(
+            '<b>पेमेंट अभी चालू नहीं है।</b><br>'
+            'कृपया कृषि मित्र टीम से संपर्क करें — '
+            '<a href="tel:+919870951001">+91 98709 51001</a>')
 
+    # No dealer, no payable page. This used to render a generic fee + QR for a
+    # bare /pay or a mistyped ?d=, on the reasoning that a 404 in front of
+    # someone ready to pay is worse. It is not: money that arrives with no
+    # dealer attached cannot be matched to a listing, so nobody can be marked
+    # paid for it and the payer has to be chased for a screenshot to work out
+    # who they even were. The dealer always reaches this page from his own
+    # WhatsApp link (/pay?d=<slug>, admin.py::_pay_page_url), which carries the
+    # slug into the UPI `tr` reference — that attribution is the whole point.
+    if not name:
+        return _dead_end(
+            '<b>यह पेमेंट लिंक अधूरा है।</b><br>'
+            'कृपया वही लिंक खोलें जो कृषि मित्र टीम ने आपको WhatsApp पर भेजा था, '
+            'या हमें कॉल करें — <a href="tel:+919870951001">+91 98709 51001</a>')
+
+    # An explicit ?amount= is how a renewal or a negotiated rate is sent, and it
+    # wins — the admin panel puts the figure it just quoted in the WhatsApp
+    # message onto the link itself, so the two can never disagree. Falling back
+    # to this dealer's own subscription price before the flat KM_LISTING_FEE:
+    # the default only makes sense for someone who has no account behind him.
+    # clean_amount clamps whichever wins, so a hand-edited URL cannot produce a
+    # ₹0 or a ₹9,00,000 QR.
+    amt = upi.clean_amount(amount, default=own_price) if amount else (
+        own_price or upi.DEFAULT_AMOUNT)
+    pack = upi.collect(name, district, amount=amt, ref=(d or "").strip()[:80])
+
+    # Always a named dealer past the guard above — the anonymous variant this
+    # used to carry is gone with the generic page.
     heading = (f'<p class="pay-for">लिस्टिंग शुल्क</p>'
                f'<h2 class="pay-name">{escape(name)}</h2>'
-               f'<p class="pay-place">{escape(district)}</p>') if name else (
-               '<p class="pay-for">कृषि मित्र</p>'
-               '<h2 class="pay-name">लिस्टिंग शुल्क</h2>'
-               '<p class="pay-place">खरीदार डायरेक्टरी</p>')
+               f'<p class="pay-place">{escape(district)}</p>')
 
     qr = f'<div class="pay-qr">{pack["qr_svg"]}</div><p class="pay-scan">किसी भी UPI ऐप से QR स्कैन करें</p>' \
          if pack["qr_svg"] else ""

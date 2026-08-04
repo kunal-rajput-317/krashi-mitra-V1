@@ -1771,7 +1771,7 @@ _NAV_ITEMS = [("bhav", f"{SITE}/bhav", "मंडी भाव"),
 
 _DRAWER_ITEMS = [("home", f"{SITE}/", "🏠", "मुख्य"),
                   ("weather", f"{SITE}/weather", "🌤️", "मौसम"),
-                  ("mandi", f"{SITE}/mandi", "🏪", "मंडी भाव"),
+                  ("mandi", f"{SITE}/bhav", "🏪", "मंडी भाव"),
                   ("bhav", f"{SITE}/bhav", "📈", "सभी भाव सूची"),
                   ("bazar", f"{SITE}/krashi_bajar", "🧺", "कृषि बाज़ार"),
                   ("shop", f"{SITE}/shop", "🛒", "दुकान"),
@@ -1932,7 +1932,7 @@ def _footer() -> str:
 <div class="km-footer-brand">🌾 कृषि मित्र</div>
 <nav class="km-footer-nav">
 <a href="{SITE}/">होम</a>
-<a href="{SITE}/mandi">मंडी ऐप</a>
+<a href="{SITE}/bhav">मंडी ऐप</a>
 <a href="{SITE}/bhav">सभी भाव</a>
 <a href="{SITE}/weather">मौसम</a>
 <a href="{SITE}/chat">AI सहायक</a>
@@ -2800,11 +2800,13 @@ def bhav_hub():
 <div class="shop-section-title"><span>राज्य चुनें — सभी फसलों के भाव देखें</span></div>
 <div class="place-grid" id="bhav-state-grid">{_LAZY_SKEL}</div>
 </div>
+{_dukan_pitch()}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_HUB_TAB_JS}
 {_lazy_script([('/bhav/api/hub-rest', 'bhav-crop-tail'), ('/bhav/api/hub-states', 'bhav-state-grid')])}"""
-    return _doc(title, desc, f"{SITE}/bhav", "", body, ld, extra_css=_LAZY_CSS)
+    return _doc(title, desc, f"{SITE}/bhav", "", body, ld,
+                extra_css=_LAZY_CSS + _DKP_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4523,13 +4525,14 @@ def bhav_crop(c_slug: str):
 <div class="cta-row">
 {_net_price_cta(hi, cs)}
 </div>
+{_dukan_pitch()}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_TIER_SEARCH_JS}
 {_lazy_script([('/bhav/api/tier2-extras/{cs}'.format(cs=cs), 'bhav-lazy-t2')])}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS)
+                extra_css=_LAZY_CSS + _DKP_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4601,6 +4604,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {_msp_html(commodity)}
+{_dealer_teaser_html(cs, ss, state)}
 {_lazy_div('bhav-lazy-t3')}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'जिला खोजें...')}
@@ -4615,7 +4619,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › {escape(hi_state)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS)
+                extra_css=_LAZY_CSS + _BP_CSS + _DKP_CSS + _PRODUCT_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4885,6 +4889,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_lead_gen_html()}
+{_dukan_pitch(district)}
 {_related_links(cs, ss, ds, commodity, district)}
 {_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4'),
                ('/bhav/api/season/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-season')])}"""
@@ -4893,7 +4898,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS + _APPEAL_CSS, updated=fresh_iso)
+                extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS, updated=fresh_iso)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4984,6 +4989,208 @@ border:1.5px solid rgba(255,255,255,.35);font-weight:700!important;margin-left:8
 .kh-join-wa{margin:9px 0 0}}
 .kh-fine{font-size:11px;color:var(--text-soft);line-height:1.55;margin-top:14px}
 """
+
+
+# ── /dukan/product: the Tier-3 (crop+state) paid-dealer panel ──
+# Deliberately its own small CSS block, not a reuse of _KH_CSS: .kh-btn/.kh-call
+# /.kh-wa exist to style a tel:/wa.me action, and this panel must never grow
+# one — see services/buyers.py::for_bhav_panel's docstring on why contact
+# details stay one click away, on the existing /kharidar page, rather than
+# inline here.
+_BP_CSS = """
+.bp-wrap{margin:16px 0;background:var(--white);border:1px solid var(--border);
+border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:16px 18px}
+.bp-h{margin:0 0 12px}
+.bp-h h2{font-size:15.5px;margin:0;color:var(--green-dark)}
+.bp-list{display:flex;flex-direction:column;gap:10px}
+.bp-card{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);
+border-radius:var(--radius-sm);padding:11px 13px;background:var(--cream)}
+.bp-ic{font-size:19px;line-height:1.3;flex:0 0 auto}
+.bp-body{min-width:0;flex:1}
+.bp-name{font-size:14.5px;font-weight:800;color:var(--text-dark);display:flex;
+align-items:center;gap:6px;flex-wrap:wrap}
+.bp-tick{font-size:10.5px;font-weight:800;color:var(--green-mid);
+background:var(--green-pale);border-radius:999px;padding:1px 7px}
+.bp-kind{font-size:11.5px;color:var(--text-soft);margin-top:2px}
+.bp-crops{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.bp-crop{font-size:11px;font-weight:700;color:var(--green-dark);background:var(--white);
+border:1px solid var(--border);border-radius:999px;padding:2px 8px}
+.bp-link{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;
+color:var(--green-dark);text-decoration:none}
+.bp-link:hover{text-decoration:underline}
+.bp-cta{display:block;text-align:center;margin-top:13px;font-size:12px;
+color:var(--text-soft);text-decoration:none}
+.bp-cta:hover{color:var(--green-dark)}
+"""
+
+# Its own block rather than part of _BP_CSS: the pitch renders on tiers 2 and 4
+# too, which carry no dealer panel and would otherwise ship the panel's styles
+# for nothing — or, worse, render the pitch unstyled because someone added it to
+# a page and forgot the CSS came bundled with something unrelated.
+_PRODUCT_CSS = """
+/* A paying dealer's product card. Field-for-field and class-for-class the
+   catalogue card routes/product.py::_hub_card() renders, so a dealer's item and
+   a KrashiMitra item look like the same kind of thing to a farmer — one design
+   language, one discount calculation, no second visual vocabulary. */
+.dp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+gap:10px;margin-top:11px}
+.dp-card{background:var(--white);border:1px solid var(--border);
+border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);
+display:block;text-decoration:none;color:inherit}
+.dp-photo{position:relative;height:104px;background:var(--cream);
+display:flex;align-items:center;justify-content:center;padding:8px}
+.dp-photo img{max-height:90px;max-width:90%;object-fit:contain;display:block}
+.dp-photo .dp-ph{font-size:34px;line-height:1}
+.dp-badge{position:absolute;top:7px;left:7px;background:var(--amber);color:#fff;
+font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;
+box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.dp-body{padding:9px 11px 11px}
+.dp-name{font-size:12.5px;font-weight:700;color:var(--text-dark);line-height:1.3}
+.dp-en{display:block;font-size:10px;font-weight:600;color:var(--text-soft);margin-top:1px}
+.dp-price{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;margin-top:6px}
+.dp-price b{font-size:15px;font-weight:700;color:var(--green-dark)}
+.dp-price .dp-mrp{font-size:10.5px;color:var(--text-soft);text-decoration:line-through}
+.dp-price .dp-off{font-size:10px;font-weight:700;color:#c0392b}
+.dp-unit{font-size:10.5px;color:var(--text-soft);margin-top:2px}
+"""
+
+
+def _product_cards(products: list, limit: int = 4) -> str:
+    """A dealer's catalogue as cards. "" when he has listed nothing, so a
+    dealer with no products renders exactly as he did before."""
+    items = [p for p in (products or []) if p.get("active", True)][:limit]
+    if not items:
+        return ""
+    out = []
+    for p in items:
+        pid = int(p.get("id") or 0)
+        photo = (f'<img src="/dukan/product-image/{pid}.webp?v={p.get("v", 0)}" '
+                 f'alt="{escape(p.get("name_hi", ""))}" loading="lazy" '
+                 f'decoding="async" width="120" height="90">'
+                 if p.get("has_image") else '<span class="dp-ph">📦</span>')
+        badge = (f'<span class="dp-badge">{escape(p["badge"])}</span>'
+                 if p.get("badge") else "")
+        # Only strike an MRP through when it actually beats the price —
+        # dealer_products.off_pct returns 0 otherwise, and "0% off" next to an
+        # unchanged number reads as a lie about a saving.
+        mrp = (f'<span class="dp-mrp">₹{p["mrp"]}</span>' if p.get("off") else "")
+        off = (f'<span class="dp-off">{p["off"]}% off</span>' if p.get("off") else "")
+        en = (f'<span class="dp-en">{escape(p["name_en"])}</span>'
+              if p.get("name_en") else "")
+        unit = (f'<div class="dp-unit">{escape(p["unit_hi"])}</div>'
+                if p.get("unit_hi") else "")
+        out.append(f"""<div class="dp-card">
+<div class="dp-photo">{badge}{photo}</div>
+<div class="dp-body">
+<div class="dp-name">{escape(p.get('name_hi', ''))}</div>{en}
+<div class="dp-price"><b>₹{p.get('price', 0)}</b>{mrp}{off}</div>
+{unit}
+</div>
+</div>""")
+    return f'<div class="dp-grid">{"".join(out)}</div>'
+
+
+_DKP_CSS = """
+/* The supply-side pitch (_dukan_pitch). Amber, like the homepage promo and
+   .kh-sell: it reads as "this one is not for you" to the farmer who makes up
+   most of this traffic, and catches the trader's eye precisely because it is
+   the only block on the page that is not about today's price. Deliberately
+   quiet and low on the page — it must never compete with the answer. */
+.dkp{display:flex;align-items:center;gap:13px;margin:18px 0;padding:14px 16px;
+background:#fffaf0;border:1px solid #f0dfae;border-radius:var(--radius-md)}
+.dkp-ic{flex:none;width:40px;height:40px;display:grid;place-items:center;font-size:19px;
+background:var(--white);border-radius:12px;box-shadow:var(--shadow-sm)}
+.dkp-tx{flex:1;min-width:0}
+.dkp-tx b{display:block;font-size:14px;font-weight:800;color:var(--green-dark);line-height:1.4}
+.dkp-tx small{display:block;margin-top:3px;font-size:12px;line-height:1.55;color:#6b5a2e}
+.dkp-go{flex:none;font-size:12.5px;font-weight:800;color:var(--green-dark);
+text-decoration:none;white-space:nowrap}
+.dkp-go:hover{text-decoration:underline}
+@media(max-width:560px){.dkp{flex-wrap:wrap}.dkp-go{margin-left:53px}}
+"""
+
+
+def _dukan_pitch(where: str = "") -> str:
+    """The supply-side ask: "you buy this crop — get listed".
+
+    One function for every /bhav tier so the price and the copy live in exactly
+    one place. Before this, /dukan/product was reachable from the bhav tree
+    only through surfaces that require a paying dealer to already exist (the
+    Tier-3 panel renders nothing when empty; the kharidar page is gated by
+    _has_kharidar and ships noindex until a district has a listing). With zero
+    dealers that is a closed loop: the acquisition page was invisible on the
+    highest-traffic surface the site has, which is also the one place a trader
+    is definitely standing.
+
+    `where` names the place in the pitch when we have one — "Hardoi में किसान"
+    outperforms "किसान" because a trader recognises his own district.
+    """
+    line = (f'{escape(where)} के किसान रोज़ यहां भाव देखते हैं'
+            if where else 'हजारों किसान रोज़ यहां भाव देखते हैं')
+    return (
+        '<aside class="dkp">'
+        '<span class="dkp-ic" aria-hidden="true">🧾</span>'
+        '<span class="dkp-tx">'
+        '<b>अनाज व्यापारी, आढ़तिया या खाद-बीज डीलर हैं?</b>'
+        f'<small>{line} — भाव देखने के बाद उनका अगला सवाल है "बेचूं किसे?"। '
+        'अपनी दुकान लिस्ट करें, ₹199/महीना से। किसान सीधे आपको कॉल करेंगे।</small>'
+        '</span>'
+        '<a class="dkp-go" href="/dukan/product">लिस्ट करें →</a>'
+        '</aside>')
+
+
+def _dealer_teaser_html(cs: str, ss: str, state: str) -> str:
+    """Up to 3 admin-ranked, paying dealers for this crop+state Tier-3 page —
+    name and products only, never a phone/WhatsApp number. services/dealers.py
+    ::_sync_bazar_post (the krashi_bajar feed post) and this panel are the only
+    two places a /dukan/product subscription actually shows; the district
+    Tier-4 page carries none of this.
+
+    A farmer who wants the number clicks "पूरी जानकारी..." through to the
+    existing full /kharidar page for that dealer's own district — still
+    krashimitra.in, never off-site, which is the whole point of withholding
+    it here rather than building a separate contact-request flow.
+    """
+    rows = buyers.for_bhav_panel(state, cs)
+    if not rows:
+        # No paying dealer in this state yet — so this is the one page where the
+        # ask is worth more than the list would be. Returning "" here (the
+        # original behaviour) is what made /dukan/product unreachable from the
+        # whole /bhav tree while the directory was empty, which is exactly when
+        # it needed reaching.
+        return _dukan_pitch(_hindi_state(state))
+
+    cards = []
+    for b in rows:
+        label, emoji = buyers.kind_label(b.get("kind"))
+        tick = '<span class="bp-tick">✓ सत्यापित</span>' if b.get("verified") else ""
+        crops = "".join(f'<span class="bp-crop">{escape(_hindi_name(c))}</span>'
+                        for c in (b.get("commodities") or [])[:5])
+        if not b.get("commodities"):
+            crops = '<span class="bp-crop">सभी फसलें</span>'
+        district = b.get("district") or ""
+        ds = _slugify(district)
+        link = f"/bhav/{cs}/{ss}/{ds}/kharidar" if ds else f"/bhav/{cs}/{ss}"
+        # His catalogue, if he has typed one. Prices are the whole reason a
+        # farmer reads this block, so they sit above the "see contact" link
+        # rather than behind it — the number is what stays one click away.
+        products = _product_cards(b.get("products"), limit=4)
+        cards.append(f"""<div class="bp-card">
+<span class="bp-ic">{emoji}</span>
+<div class="bp-body">
+<div class="bp-name">{escape(b.get('name', ''))}{tick}</div>
+<div class="bp-kind">{escape(label)} · {escape(district)}</div>
+<div class="bp-crops">{crops}</div>
+{products}
+<a class="bp-link" href="{link}">पूरी जानकारी व संपर्क नंबर देखें →</a>
+</div>
+</div>""")
+
+    return f"""<section class="bp-wrap">
+<div class="bp-h"><h2>{escape(_hindi_state(state))} में सत्यापित खरीदार</h2></div>
+<div class="bp-list">{"".join(cards)}</div>
+<a class="bp-cta" href="/dukan/product">अपनी दुकान यहां लिस्ट करें →</a>
+</section>"""
 
 
 # Which places have a live Krashi Bazar buy post, cached briefly. The tier-4
@@ -5158,7 +5365,15 @@ def _buyer_card(b: dict, c_slug: str) -> str:
             f'<span class="kh-kind">{escape(label)}{" · " + where if where else ""}{since}</span>'
             f'</span></div>'
             f'<div class="kh-crops">{crops}</div>'
-            + (f'<p class="kh-desc">{escape(b.get("note"))}</p>' if b.get("note") else "")
+            # `description` — the dealer's own blurb. Was `note`, which is the
+            # admin's private call log (dealers.py::log_call appends to it), so
+            # "[04 Aug] wants a discount" was being published to farmers under
+            # the dealer's own name. `note` is no longer in the public dict.
+            + (f'<p class="kh-desc">{escape(b.get("description"))}</p>'
+               if b.get("description") else "")
+            # The full catalogue here — this is the page a farmer lands on when
+            # he has decided to ring someone, so more of it is useful.
+            + _product_cards(b.get("products"), limit=8)
             + f'<div class="kh-acts">{"".join(acts)}</div>'
             '</article>')
 
@@ -5268,10 +5483,10 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     # lands in the admin queue as a row (database/db.py::Buyer) instead of a
     # message someone has to transcribe before it can be acted on.
     join = (f'<section class="kh-join"><h2>🧾 आप {escape(hi)} खरीदते हैं?</h2>'
-            f'<p>अपने जिले के किसानों तक सीधे पहुंचें। कृषि मित्र पर अपनी फर्म का नाम, '
-            f'नंबर और फसलें जुड़वाएं — किसान सीधे आपको कॉल करेंगे। लिस्टिंग मुफ्त है; '
+            f'<p>अपने जिले के किसानों तक सीधे पहुंचें। लॉगिन करें, अपने जिले चुनें, '
+            f'₹199/महीना से सब्सक्रिप्शन लें — किसान सीधे आपको कॉल करेंगे। '
             f'हम कॉल करके पुष्टि के बाद ही नाम दिखाते हैं।</p>'
-            f'<a href="{SITE}/dukan">अपनी दुकान लिस्ट करें →</a>'
+            f'<a href="{SITE}/dukan/product">अपनी दुकान लिस्ट करें →</a>'
             f'<a class="kh-join-wa" href="https://wa.me/919870951001?text={join_msg}" '
             f'rel="nofollow" target="_blank">या WhatsApp पर बात करें</a></section>')
 
@@ -5372,5 +5587,5 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › '
               f'<a href="{SITE}{price_url}">{escape(district)}</a> › खरीदार')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_KH_CSS + _APPEAL_CSS, robots=robots,
+                extra_css=_KH_CSS + _APPEAL_CSS + _PRODUCT_CSS, robots=robots,
                 updated=fresh_iso if st["avg"] else "")

@@ -4,13 +4,13 @@
 #
 # WhatsApp/Facebook/Telegram crawlers read OG tags from the first
 # 200 response and do NOT follow meta-refresh, so this page carries
-# the crop-specific preview while humans get bounced to mandi.html.
+# the crop-specific preview while humans get bounced to /bhav.
 # Reached via the Netlify proxy rule /share/* → backend.
 # ============================================================
 
 import re
 from html import escape
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
@@ -25,7 +25,7 @@ SITE = "https://krashimitra.in"
 BACKEND = "https://krashi-mitra-v1-oxdc.onrender.com"
 
 # commodity keyword → (Wikimedia file, md5 prefix)
-# mirrors COMMODITY_TILES in frontend/mandi.html
+# same ordering the /bhav hub's photo-card grid uses
 #
 # Two blocks. These are the STAPLES: the crops the app's mandi grid leads with,
 # and — because _tile_rank() is just the index here — the order the /bhav hub's
@@ -506,13 +506,16 @@ def share_bazar(post_id: int, db: Session = Depends(get_db)):
 
 @router.get("/share/mandi", response_class=HTMLResponse)
 def share_mandi(state: str = "", commodity: str = "", district: str = ""):
-    params = [("state", state), ("commodity", commodity), ("district", district)]
-    target = f"{SITE}/mandi.html?" + urlencode([(k, v) for k, v in params if v])
+    # Falls back to the generic hub; upgraded below to the exact crop/state/
+    # district page once the price lookup resolves the real DB commodity name
+    # (the humans-get-bounced-here target used to be mandi.html?state=...,
+    # but that JS-only page is retired — mandi data lives only on /bhav now).
+    target = f"{SITE}/bhav"
 
     # Hindi crop name + rounded rupee, so the WhatsApp preview reads "चावल: ₹4,819"
     # rather than "Rice: ₹6434.67". Imported lazily: bhav.py imports FROM this module
     # at load time, so a top-level import back into it would be circular.
-    from backend.routes.bhav import _hindi_name, _rupee
+    from backend.routes.bhav import _hindi_name, _rupee, _slugify
 
     hi_commodity = _hindi_name(commodity) if commodity else "मंडी भाव"
     title = f"{hi_commodity} — आज का मंडी भाव | कृषि मित्र"
@@ -523,6 +526,11 @@ def share_mandi(state: str = "", commodity: str = "", district: str = ""):
         prices = (data or {}).get("prices") or []
         if prices:
             p = prices[0]
+            cs, ss, ds = (_slugify(p.get("commodity", commodity)),
+                          _slugify(p.get("state", state)),
+                          _slugify(p.get("district", district)))
+            if cs and ss and ds:
+                target = f"{SITE}/bhav/{cs}/{ss}/{ds}"
             modal = p.get("modal_price")
             if modal and modal != "-":
                 title = f"{_hindi_name(p.get('commodity', commodity))}: {_rupee(modal)}/क्विंटल"

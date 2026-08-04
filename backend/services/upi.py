@@ -154,7 +154,18 @@ def qr_svg(data: str, scale: int = 5) -> str:
         return ""
     try:
         import segno
-        return segno.make(data, error="m").svg_inline(scale=scale, dark="#0f2419")
+        # omitsize=True swaps the fixed width/height attributes for a viewBox,
+        # and that is load-bearing rather than cosmetic. segno's default output
+        # is <svg width="245" height="245"> with NO viewBox, while both callers
+        # size the QR in CSS (.pay-qr svg / .pm-qr svg are 190px). Without a
+        # viewBox an SVG's coordinate system is pinned to its intrinsic size,
+        # so CSS resizes the viewport WITHOUT scaling the content: the browser
+        # shows the top-left 190x190 of a 245x245 QR and silently crops away
+        # the right/bottom edge — a finder pattern, part of the data, and the
+        # quiet zone. The result still looks like a QR and will not scan in any
+        # app. With a viewBox the artwork scales to whatever CSS asks for.
+        return segno.make(data, error="m").svg_inline(
+            scale=scale, dark="#0f2419", omitsize=True)
     except ImportError:
         log.warning(
             "QR not rendered: segno is not importable in this Python "

@@ -1258,6 +1258,169 @@ async def delete_buyer(
     return {"success": True, "counts": dealers.counts(db)}
 
 
+# ── A dealer's catalogue ──────────────────────────────────────
+# The dealer types what he sells on /dukan/product; the photos are put on here.
+# A public image upload would be a moderation queue nobody has time to run, on
+# a surface where a bad picture goes out under our own verified tick.
+
+@router.get("/buyers/{slug}/products")
+async def list_buyer_products(
+    slug: str,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.database.db import Buyer
+    from backend.services import dealer_products
+    row = db.query(Buyer).filter(Buyer.slug == slug).first()
+    if not row:
+        raise HTTPException(404, "Unknown dealer")
+    return {"success": True,
+            "products": dealer_products.for_buyer(db, row.slug, row.owner_user_id,
+                                                  only_active=False),
+            "max": dealer_products.MAX_PER_DEALER}
+
+
+@router.post("/buyers/{slug}/products")
+async def create_buyer_product(
+    slug:    str,
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.database.db import Buyer
+    from backend.services import dealer_products
+    row = db.query(Buyer).filter(Buyer.slug == slug).first()
+    if not row:
+        raise HTTPException(404, "Unknown dealer")
+    problem = dealer_products.validate(payload)
+    if problem:
+        raise HTTPException(400, problem)
+    created = _dealer_write(dealer_products.create, db, row.slug,
+                            row.owner_user_id, payload)
+    if not created:
+        raise HTTPException(400, f"Max {dealer_products.MAX_PER_DEALER} products per dealer")
+    return {"success": True, "product": dealer_products.as_dict(created)}
+
+
+@router.patch("/products/{product_id}")
+async def update_product(
+    product_id: int,
+    payload:    dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import dealer_products
+    # Only validate what a full edit would break; a partial patch (e.g. just
+    # `active`) must not be rejected for having no name in the body.
+    if "name_hi" in payload or "price" in payload:
+        problem = dealer_products.validate({
+            "name_hi": payload.get("name_hi", "xx"),
+            "price": payload.get("price", 1),
+            "mrp": payload.get("mrp"),
+        })
+        if problem:
+            raise HTTPException(400, problem)
+    row = _dealer_write(dealer_products.update, db, product_id, payload)
+    if not row:
+        raise HTTPException(404, "Unknown product")
+    return {"success": True, "product": dealer_products.as_dict(row)}
+
+
+@router.delete("/products/{product_id}")
+async def delete_product(
+    product_id: int,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import dealer_products
+    if not _dealer_write(dealer_products.delete, db, product_id):
+        raise HTTPException(404, "Unknown product")
+    return {"success": True}
+
+
+@router.post("/products/{product_id}/image")
+async def upload_product_image(
+    product_id: int,
+    file: UploadFile = File(...),
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """The product photo the dealer sent over WhatsApp.
+
+    Re-encoded to a small WebP and stored in Postgres, not on disk — Render's
+    free tier wipes uploads/ on every restart, the bug routes/profile.py
+    already hit with avatars.
+    """
+    import base64 as _b64
+    import io
+
+    from PIL import Image, ImageOps
+
+    from backend.services import dealer_products
+
+    raw = b""
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        raw += chunk
+        if len(raw) > 8 * 1024 * 1024:
+            raise HTTPException(400, "Image too large — 8 MB max")
+    if not raw:
+        raise HTTPException(400, "Empty upload")
+
+    try:
+        img = Image.open(io.BytesIO(raw))
+        img = ImageOps.exif_transpose(img)              # honour phone rotation
+        img = img.convert("RGB")
+        # `contain`, not a centre-crop: a product shot is a bag or a bottle and
+        # cropping it square cuts the label off. The card's photo box uses
+        # object-fit:contain to match, so the whole pack stays visible.
+        img.thumbnail((480, 480), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="WEBP", quality=82, method=6)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(400, "Could not read that image — try another file")
+
+    b64 = _b64.b64encode(buf.getvalue()).decode("ascii")
+    row = _dealer_write(dealer_products.set_image, db, product_id, b64, "image/webp")
+    if not row:
+        raise HTTPException(404, "Unknown product")
+    return {"success": True, "bytes": len(buf.getvalue())}
+
+
+@router.delete("/products/{product_id}/image")
+async def delete_product_image(
+    product_id: int,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import dealer_products
+    if not _dealer_write(dealer_products.set_image, db, product_id, None):
+        raise HTTPException(404, "Unknown product")
+    return {"success": True}
+
+
+@router.patch("/buyers/{slug}/rank")
+async def set_buyer_bhav_rank(
+    slug:    str,
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Which (if any) of the <=3 Tier-3 bhav-panel slots this row holds for its
+    state. {"rank": 1|2|3|null}. Routed through dealers.set_bhav_rank() rather
+    than the generic update() above — it has to clear whoever else in the same
+    state held that rank first, which update()/_apply() deliberately cannot do."""
+    from backend.services import dealers
+    row = _dealer_write(dealers.set_bhav_rank, db, slug, payload.get("rank"))
+    if not row:
+        raise HTTPException(404, "Unknown dealer, or rank must be 1, 2, 3 or null")
+    return {"success": True, "bhav_rank": row.bhav_rank}
+
+
 # ── Outreach: the call log and the ₹500 ───────────────────────
 # These three endpoints ARE the 31-Aug test, in the order it happens: ring him,
 # show him a QR, write down that the money landed.
@@ -1308,10 +1471,15 @@ async def dealer_collect(
     to word for a specific dealer, not a string baked into the code.
     """
     from backend.database.db import Buyer
-    from backend.services import upi
+    from backend.services import dealers, upi
     row = db.query(Buyer).filter(Buyer.slug == slug).first()
     if not row:
         raise HTTPException(404, "Unknown dealer")
+    # A /dukan/product account's real fee is dealers.quote() over however many
+    # districts it has, not the flat KM_LISTING_FEE default — only when the
+    # panel didn't already send its own amount, so a manual override always wins.
+    if not amount and row.owner_user_id:
+        amount = str(dealers.account_price(db, row.owner_user_id))
     if not upi.configured():
         raise HTTPException(
             503,
@@ -1322,7 +1490,11 @@ async def dealer_collect(
     pack = upi.collect(row.name or "", row.district or "",
                        amount=amount or None, ref=slug)
     pack["purpose"]  = (purpose or "").strip()[:200] or _DEFAULT_PURPOSE
-    pack["pay_url"]  = _pay_page_url(slug)
+    # The amount the owner just typed has to travel WITH the link. Without it
+    # the dealer opened /pay and saw the flat KM_LISTING_FEE default instead —
+    # a WhatsApp message quoting ₹249 above a page charging ₹500, which is the
+    # kind of mismatch that loses the payment and the trust in one go.
+    pack["pay_url"]  = _pay_page_url(slug, pack["amount"])
     pack["whatsapp"] = _collect_message(row, pack["amount"], pack["pay_url"], pack["purpose"])
     # So the panel can show a receipt button (or not) without a second round
     # trip — this is the same row's payment history, already on hand.
@@ -1333,10 +1505,17 @@ async def dealer_collect(
     return {"success": True, **pack}
 
 
-def _pay_page_url(slug: str) -> str:
+def _pay_page_url(slug: str, amount=None) -> str:
     """Absolute URL of the public /pay page — it gets pasted into WhatsApp, so a
-    site-relative path would arrive as unclickable text."""
-    return f"{SITE}/pay?d={quote(slug, safe='')}"
+    site-relative path would arrive as unclickable text.
+
+    `amount` is carried explicitly rather than left for /pay to re-derive: the
+    figure in the WhatsApp message and the figure on the page the dealer opens
+    have to be the same number, and only the caller knows whether this is the
+    standard fee, a renewal, or a rate that was negotiated on the phone. /pay
+    re-clamps it, so a hand-edited URL still cannot produce a ₹0 QR."""
+    url = f"{SITE}/pay?d={quote(slug, safe='')}"
+    return f"{url}&amount={int(amount)}" if amount else url
 
 
 def _collect_message(row, amount: int, pay_url: str, purpose: str = "") -> str:

@@ -2244,6 +2244,21 @@ body {
         .by-tag.lapsed { background: rgba(248,81,73,.16); color: #f85149; }
         .by-tag.called { background: rgba(139,148,158,.18); color: #8b949e; }
 
+        /* /dukan/product: rows sharing an owner_user_id are one subscription —
+           grouped for display only, every row underneath keeps its own call
+           log, rank and payment actions untouched. */
+        .by-acct-h {
+          font-size: 11px; font-weight: 800; color: var(--primary); margin: 14px 0 2px;
+          padding: 6px 10px; background: rgba(88,166,255,.08); border-radius: var(--radius-sm);
+          display: flex; align-items: center; gap: 6px;
+        }
+        .by-rank {
+          font-size: 10.5px; font-weight: 700; padding: 3px 6px; border-radius: var(--radius-sm);
+          border: 1px solid var(--border); background: var(--surface-hl); color: var(--text);
+          font-family: inherit; cursor: pointer;
+        }
+        .by-rank:disabled { opacity: .5; cursor: not-allowed; }
+
         .pay-modal {
           position: fixed; inset: 0; z-index: 400; display: flex;
           align-items: center; justify-content: center; padding: 20px;
@@ -2252,7 +2267,11 @@ body {
         .pay-modal[hidden] { display: none; }
         .pay-box {
           background: var(--surface); border: 1px solid var(--border);
-          border-radius: var(--radius-md); padding: 22px; width: 100%; max-width: 400px;
+          border-radius: var(--radius-md); padding: 24px 26px; width: 100%;
+          /* 400px was too tight once the modal grew a status banner, an
+             amount/purpose form and a record block — the purpose textarea in
+             particular wrapped every line. */
+          max-width: 560px;
           max-height: 90vh; overflow-y: auto; text-align: center;
         }
         .pay-box h3 { font-size: 15px; margin: 0 0 2px; }
@@ -2313,6 +2332,76 @@ body {
           background: var(--surface-hl); color: var(--primary); font-family: inherit;
         }
         .pm-receipt-btn:hover { background: var(--primary); color: #fff; }
+
+        /* ── Payment status, the first thing the modal answers ──
+           Before this the modal opened straight into "राशि (₹)" whether the
+           dealer had paid five minutes ago or never — so "has this man paid?"
+           had to be inferred from a receipt box appearing further down. */
+        .pm-state {
+          display: flex; align-items: flex-start; gap: 10px;
+          padding: 12px 13px; border-radius: var(--radius-sm); margin-bottom: 14px;
+          border: 1px solid var(--border); background: var(--surface-hl);
+        }
+        .pm-state.paid   { border-color: rgba(46,160,67,.45); background: rgba(46,160,67,.10); }
+        .pm-state.lapsed { border-color: rgba(210,153,34,.45); background: rgba(210,153,34,.10); }
+        .pm-state.never  { border-color: var(--border); }
+        .pm-state-ic { font-size: 17px; line-height: 1.25; flex: none; }
+        .pm-state-b  { flex: 1; min-width: 0; }
+        .pm-state-t  { font-size: 12.5px; font-weight: 800; line-height: 1.4; }
+        .pm-state.paid   .pm-state-t { color: #3fb950; }
+        .pm-state.lapsed .pm-state-t { color: #d29922; }
+        .pm-state-d  { font-size: 10.5px; color: var(--muted); line-height: 1.65; margin-top: 3px; }
+        .pm-state-amt {
+          font-family: var(--font-mono); font-size: 19px; font-weight: 800;
+          color: var(--text); margin-top: 5px;
+        }
+        /* Collect block is collapsed once a dealer is currently paying — the
+           common reason to open his modal then is a receipt, not a new QR. */
+        .pm-collect[hidden] { display: none; }
+        .pm-renew {
+          width: 100%; margin-top: 10px; padding: 9px 12px; cursor: pointer;
+          border-radius: var(--radius-sm); border: 1px solid var(--primary);
+          background: transparent; color: var(--primary);
+          font-family: inherit; font-size: 11.5px; font-weight: 700;
+        }
+        .pm-renew:hover { background: var(--primary); color: #fff; }
+
+        /* ── A dealer's catalogue, inside the edit modal ── */
+        .ed-prod {
+          display: flex; gap: 9px; align-items: center; padding: 8px 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .ed-prod:last-of-type { border-bottom: none; }
+        .ed-prod-pic {
+          flex: none; width: 46px; height: 46px; border-radius: 8px; overflow: hidden;
+          background: var(--surface-hl); border: 1px solid var(--border);
+          display: grid; place-items: center; font-size: 16px; color: var(--muted);
+        }
+        .ed-prod-pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .ed-prod-b { flex: 1; min-width: 0; }
+        .ed-prod-n { font-size: 12px; font-weight: 700; line-height: 1.35; }
+        .ed-prod-p { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+        .ed-prod-p .off { color: #f85149; font-weight: 700; }
+        .ed-prod-p .mrp { text-decoration: line-through; }
+        .ed-prod-acts { display: flex; gap: 5px; flex: none; }
+        .ed-prod-acts label {
+          font-size: 10.5px; font-weight: 700; cursor: pointer; padding: 4px 8px;
+          border: 1px solid var(--border); border-radius: var(--radius-sm);
+          color: var(--text-dim);
+        }
+        .ed-prod-acts label:hover { border-color: var(--primary); color: var(--primary); }
+        .ed-prod-add {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 11px;
+          padding-top: 11px; border-top: 1px dashed var(--border);
+        }
+        .ed-prod-add input {
+          padding: 7px 9px; font-size: 12px; border-radius: var(--radius-sm);
+          border: 1px solid var(--border); background: var(--surface);
+          color: var(--text); font-family: inherit; width: 100%; box-sizing: border-box;
+        }
+        .ed-prod-add input:focus { outline: none; border-color: var(--primary); }
+        .ed-prod-add button { grid-column: 1 / -1; }
+        .ed-prod-empty { font-size: 11.5px; color: var(--muted); padding: 6px 0; }
 
         .ck-add { display: flex; gap: 8px; margin-bottom: 14px; }
         .ck-add input {
@@ -2502,9 +2591,10 @@ body {
            yes, and hand-editing JSON is not an option." So the add form is the
            first thing on the page and needs four fields.
 
-           Two kinds of row: `signup` (arrived through /dukan, never live until
-           approved) and `admin` (typed here, live immediately). The blue tick
-           costs a real phone call — the backend will not let a signup set it. -->
+           Two kinds of row: `signup` (arrived through /dukan/product, never live
+           until approved) and `admin` (typed here, live immediately). The blue
+           tick costs a real phone call — the backend will not let a signup set
+           it, and paying does not set it either for a self-serve account. -->
       <div class="page" id="page-buyers">
         <div class="page-header">
           <div class="page-title">
@@ -2533,7 +2623,7 @@ body {
             <span class="stat-icon">📞</span>
             <div class="stat-label">Waiting on a call</div>
             <div class="stat-value ld-big" id="by-pending">—</div>
-            <div class="stat-sub">signed up via /dukan, not yet verified</div>
+            <div class="stat-sub">signed up via /dukan/product, not yet verified</div>
           </div>
           <div class="stat-card">
             <span class="stat-icon">🧾</span>
@@ -2603,25 +2693,42 @@ body {
         <h3 id="pm-name">—</h3>
         <p class="pm-sub" id="pm-place"></p>
 
-        <!-- What's being asked for — editable before it's sent. Backend
-             already accepts amount/purpose overrides per request; this is
-             just the panel exposing that instead of always using the
-             KM_LISTING_FEE default. -->
-        <div class="pm-req">
-          <label class="pm-req-label">राशि (₹)</label>
-          <input type="number" id="pm-req-amt" min="1" step="1">
-          <label class="pm-req-label">यह किसलिए है? (WhatsApp मैसेज में जाएगा)</label>
-          <textarea id="pm-req-purpose" rows="2" maxlength="200"></textarea>
-          <button class="pm-req-go" type="button" onclick="pmRegenerate()">↻ अपडेट करें</button>
+        <!-- Payment state first: paid / lapsed / never, with the figure and the
+             date. Everything below is the action that state implies. -->
+        <div class="pm-state never" id="pm-state">
+          <span class="pm-state-ic" id="pm-state-ic">•</span>
+          <span class="pm-state-b">
+            <span class="pm-state-t" id="pm-state-t">—</span>
+            <span class="pm-state-d" id="pm-state-d"></span>
+            <span class="pm-state-amt" id="pm-state-amt" hidden></span>
+          </span>
         </div>
+        <!-- Only rendered while the dealer is currently paying: the QR block is
+             collapsed then, and this is what re-opens it. -->
+        <button class="pm-renew" type="button" id="pm-renew-btn" hidden
+                onclick="pmShowCollect()">🔄 नवीनीकरण — नया QR बनाएं</button>
 
-        <div id="pm-qr-wrap"></div>
-        <div class="pm-amt" id="pm-amt">₹—</div>
-        <div class="pm-vpa" id="pm-vpa"></div>
-        <div class="pm-acts">
-          <button class="pm-primary" onclick="pmWhatsApp()">📱 WhatsApp पर भेजें</button>
-          <button onclick="pmCopy('link')">🔗 Copy payment page link</button>
-          <button onclick="pmCopy('upi')">Copy upi:// link</button>
+        <div class="pm-collect" id="pm-collect">
+          <!-- What's being asked for — editable before it's sent. Backend
+               already accepts amount/purpose overrides per request; this is
+               just the panel exposing that instead of always using the
+               KM_LISTING_FEE default. -->
+          <div class="pm-req">
+            <label class="pm-req-label">राशि (₹)</label>
+            <input type="number" id="pm-req-amt" min="1" step="1">
+            <label class="pm-req-label">यह किसलिए है? (WhatsApp मैसेज में जाएगा)</label>
+            <textarea id="pm-req-purpose" rows="2" maxlength="200"></textarea>
+            <button class="pm-req-go" type="button" onclick="pmRegenerate()">↻ अपडेट करें</button>
+          </div>
+
+          <div id="pm-qr-wrap"></div>
+          <div class="pm-amt" id="pm-amt">₹—</div>
+          <div class="pm-vpa" id="pm-vpa"></div>
+          <div class="pm-acts">
+            <button class="pm-primary" onclick="pmWhatsApp()">📱 WhatsApp पर भेजें</button>
+            <button onclick="pmCopy('link')">🔗 Copy payment page link</button>
+            <button onclick="pmCopy('upi')">Copy upi:// link</button>
+          </div>
         </div>
         <div class="pm-rec">
           <div class="pm-rec-t" id="pm-rec-title">पैसा आ गया? Record it</div>
@@ -2630,13 +2737,33 @@ body {
             callback that can confirm this for you — recording it also lists him
             and starts his 30 days.
           </div>
-          <div class="pm-rec-row">
-            <input type="number" id="pm-amt-in" placeholder="₹" min="1">
-            <input type="text" id="pm-ref-in" placeholder="UPI reference (optional)" maxlength="80">
-            <button class="by-btn ok" onclick="pmRecordPaid()" id="pm-rec-btn">✓ मिल गया</button>
-          </div>
+          <label class="pm-req-label">कितना मिला (₹) *</label>
+          <input type="number" id="pm-amt-in" min="1" placeholder="जो रकम बैंक में दिखी"
+                 style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:12px;
+                        border-radius:var(--radius-sm);border:1px solid var(--border);
+                        background:var(--surface);color:var(--text);font-family:inherit;">
+          <label class="pm-req-label">UPI transaction ID / UTR</label>
+          <input type="text" id="pm-ref-in" maxlength="80"
+                 placeholder="जैसे 412345678901 — बैंक/UPI ऐप में दिखता है"
+                 style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:12px;
+                        border-radius:var(--radius-sm);border:1px solid var(--border);
+                        background:var(--surface);color:var(--text);font-family:var(--font-mono);">
+          <label class="pm-req-label">कितने महीने का</label>
+          <select id="pm-months-in"
+                  style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:12px;
+                         border-radius:var(--radius-sm);border:1px solid var(--border);
+                         background:var(--surface);color:var(--text);font-family:inherit;">
+            <option value="1">1 महीना</option>
+            <option value="2">2 महीने</option>
+            <option value="3">3 महीने</option>
+            <option value="6">6 महीने</option>
+            <option value="12">12 महीने</option>
+          </select>
+          <button class="by-btn ok" onclick="pmRecordPaid()" id="pm-rec-btn"
+                  style="width:100%;margin-top:9px;padding:8px;">✓ मिल गया — रिकॉर्ड करें</button>
           <div class="pm-warn">
-            एक महीने के लिए · renewal will extend from the current end date.
+            UTR वही नंबर है जो आपके बैंक स्टेटमेंट में इस credit के सामने लिखा है — बाद में
+            मिलान के लिए यही काम आता है। Renewal will extend from the current end date.
           </div>
         </div>
 
@@ -2652,6 +2779,120 @@ body {
 
         <div class="pm-acts" style="margin-top:14px;">
           <button onclick="closePayModal()">बंद करें</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ EDIT DEALER ══════════
+         The panel could create and delete a listing but never correct one, so
+         a typo in a firm name or a missing licence number meant deleting the
+         row and retyping it — which throws away its call log, its payment
+         history and its slug (LeadClick quotes that slug; losing it orphans
+         the click history). PATCH /admin/buyers/{slug} already existed; this
+         is the UI that was missing.
+
+         Credentials live here and nowhere public: services/buyers.py::as_dict
+         does not carry them, so nothing farmer-facing can render one. -->
+    <div class="pay-modal" id="edit-modal" hidden onclick="if(event.target===this)closeEditModal()">
+      <div class="pay-box" style="text-align:left;max-width:520px;">
+        <h3 id="ed-title">दुकान की जानकारी</h3>
+        <p class="pm-sub" id="ed-sub"></p>
+
+        <div class="pm-req" style="text-align:left;">
+          <label class="pm-req-label">फर्म / दुकान का नाम *</label>
+          <input type="text" id="ed-name" maxlength="120">
+
+          <label class="pm-req-label">किस तरह का कारोबार</label>
+          <select id="ed-kind">
+            <option value="trader">व्यापारी / आढ़तिया</option>
+            <option value="dealer">खाद-बीज डीलर</option>
+            <option value="fpo">FPO</option>
+            <option value="processor">प्रोसेसर / मिल</option>
+          </select>
+
+          <label class="pm-req-label">मोबाइल *</label>
+          <input type="tel" id="ed-phone" maxlength="15">
+
+          <label class="pm-req-label">WhatsApp (अलग हो तो)</label>
+          <input type="tel" id="ed-whatsapp" maxlength="15">
+
+          <label class="pm-req-label">जिला *</label>
+          <input type="text" id="ed-district" maxlength="80">
+
+          <label class="pm-req-label">राज्य</label>
+          <input type="text" id="ed-state" maxlength="80">
+
+          <label class="pm-req-label">मंडी</label>
+          <input type="text" id="ed-market" maxlength="120">
+
+          <label class="pm-req-label">फसलें (crop slugs, comma-separated — खाली = सब)</label>
+          <input type="text" id="ed-commodities" maxlength="200">
+
+          <label class="pm-req-label">कब से काम कर रहे हैं</label>
+          <input type="text" id="ed-since" maxlength="40">
+
+          <label class="pm-req-label">
+            विवरण — किसानों को दिखता है
+            <span style="color:var(--muted);font-weight:400;">(dealer's own words)</span>
+          </label>
+          <textarea id="ed-description" rows="3" maxlength="400"></textarea>
+        </div>
+
+        <!-- The dealer's catalogue. He types the items on /dukan/product; the
+             photos are put on here, because a public image upload is a
+             moderation queue nobody has time to run on a surface where a bad
+             picture goes out under our own verified tick. -->
+        <div class="pm-req" style="text-align:left;">
+          <div class="pm-rec-t" style="margin-bottom:7px;">🛍️ प्रोडक्ट (भाव पेज पर कार्ड बनते हैं)</div>
+          <div class="pm-rec-h" style="margin-bottom:9px;">
+            Same card shape as the shop: नाम, ₹कीमत, MRP (कटा हुआ), % off, पैक साइज़।
+            MRP खाली छोड़ें तो कोई discount नहीं दिखेगा.
+          </div>
+          <div id="ed-prod-list"></div>
+
+          <div class="ed-prod-add">
+            <input type="text" id="ed-p-namehi" placeholder="नाम (हिंदी) *" maxlength="120">
+            <input type="text" id="ed-p-nameen" placeholder="Name (English)" maxlength="120">
+            <input type="number" id="ed-p-price" placeholder="₹ कीमत *" min="1">
+            <input type="number" id="ed-p-mrp" placeholder="₹ MRP" min="1">
+            <input type="text" id="ed-p-unit" placeholder="5 kg बैग" maxlength="60">
+            <input type="text" id="ed-p-badge" placeholder="बीज" maxlength="24">
+            <button class="by-btn ok" type="button" onclick="addProduct()" id="ed-p-btn">
+              ＋ Add product</button>
+          </div>
+        </div>
+
+        <!-- Credentials: what makes `verified` checkable instead of a feeling. -->
+        <div class="pm-req" style="text-align:left;">
+          <div class="pm-rec-t" style="margin-bottom:7px;">🪪 कागज़ात / Credentials</div>
+          <div class="pm-rec-h" style="margin-bottom:9px;">
+            Admin-only — none of this is ever rendered on a farmer-facing page.
+            A khad-beej dealer is legally required to hold a licence, so that
+            number is the strongest thing we can actually check about him.
+          </div>
+          <label class="pm-req-label">GST नंबर</label>
+          <input type="text" id="ed-gstin" maxlength="20" style="font-family:var(--font-mono);">
+          <label class="pm-req-label">लाइसेंस नंबर (खाद/बीज/मंडी)</label>
+          <input type="text" id="ed-license" maxlength="60" style="font-family:var(--font-mono);">
+          <label class="pm-req-label">ईमेल</label>
+          <input type="email" id="ed-email" maxlength="120">
+          <label class="pm-req-label">दुकान का पता</label>
+          <textarea id="ed-address" rows="2" maxlength="200"></textarea>
+        </div>
+
+        <!-- Private call log. Deliberately last and labelled as internal: it is
+             the one field that used to be published to farmers by mistake. -->
+        <div class="pm-req" style="text-align:left;">
+          <label class="pm-req-label">
+            🔒 अंदरूनी नोट — call log
+            <span style="color:var(--muted);font-weight:400;">(never shown to farmers)</span>
+          </label>
+          <textarea id="ed-note" rows="3" maxlength="400"></textarea>
+        </div>
+
+        <div class="pm-acts">
+          <button class="pm-primary" onclick="saveBuyerEdit()" id="ed-save-btn">💾 सेव करें</button>
+          <button onclick="closeEditModal()">रद्द करें</button>
         </div>
       </div>
     </div>
@@ -5341,70 +5582,366 @@ function renderBuyers(d) {
   if (!rows.length) {
     box.innerHTML = `<div class="by-empty">
       ${_byFilter === 'signup'
-        ? 'No signups yet. The /dukan form fills this — but nobody finds it until the directory ranks, so the first listings come from calls.'
+        ? 'No signups yet. /dukan/product fills this (login + paid subscription now, not the old free form) — but nobody finds it until the directory ranks, so the first listings come from calls.'
         : 'No dealers yet. Add one above, or seed the district you picked — until a district has a live dealer its खरीदार page renders <code>noindex</code> and stays out of the sitemap.'}
     </div>`;
     return;
   }
 
-  box.innerHTML = rows.map(b => {
-    const live    = b.active;
-    const crops   = (b.commodities || []).length
-      ? (b.commodities || []).join(', ') : 'सब फसल';
-    const tags = [
-      live ? '<span class="by-tag live">live</span>'
-           : '<span class="by-tag pending">not live</span>',
-      b.verified ? '<span class="by-tag tick">verified</span>' : '',
-      b.featured ? '<span class="by-tag feat">featured</span>' : '',
-      // Paying vs paid-once-and-lapsed is the difference between revenue and a
-      // renewal call that nobody remembered to make.
-      b.paying ? '<span class="by-tag paid">₹ paying</span>'
-               : (b.paid_at ? '<span class="by-tag lapsed">lapsed</span>' : ''),
-      (b.called_at && !b.paid_at)
-        ? `<span class="by-tag called">${BY_CALL[b.call_result] || 'called'}</span>` : '',
-    ].filter(Boolean).join(' ');
+  // /dukan/product: rows sharing an owner_user_id are one paying account
+  // (several districts, one subscription) — grouped here for display only,
+  // every row underneath keeps its own call log, rank and payment actions.
+  // Legacy/admin-added rows (owner_user_id null) render exactly as before.
+  const legacy = [];
+  const byOwner = new Map();
+  rows.forEach(b => {
+    if (b.owner_user_id) {
+      if (!byOwner.has(b.owner_user_id)) byOwner.set(b.owner_user_id, []);
+      byOwner.get(b.owner_user_id).push(b);
+    } else {
+      legacy.push(b);
+    }
+  });
 
-    const phone = b.phone || b.whatsapp || '';
-    // Never called is the state the whole test hinges on, so it is stated
-    // outright rather than inferred from a missing tag.
-    const callLine = b.called_at
-      ? `📞 ${b.call_count} call${b.call_count > 1 ? 's' : ''}, last ${byDate(b.called_at)}${
-          b.paid_at ? ` · ₹${b.paid_amount} on ${byDate(b.paid_at)}${
-            b.paid_until ? `, till ${byDate(b.paid_until)}` : ''}` : ''}`
-      : '☎️ अभी तक कॉल नहीं किया';
+  let html = legacy.map(buyerRowHtml).join('');
+  byOwner.forEach((group, ownerId) => {
+    const price = 199 + 50 * Math.max(0, group.length - 1);
+    html += `<div class="by-acct-h">🧑‍💼 /dukan/product खाता #${ownerId} — ` +
+            `${group.length} जिले — ₹${price}/महीना</div>` +
+            group.map(buyerRowHtml).join('');
+  });
+  box.innerHTML = html;
+}
 
-    return `<div class="by-row ${live ? '' : 'by-off'}" id="by-row-${escapeHtml(b.slug)}">
-      <div class="by-main">
-        <div class="by-name">${escapeHtml(b.name || '—')} ${tags}</div>
-        <div class="by-meta">
-          ${escapeHtml(BY_KINDS[b.kind] || b.kind || '')} ·
-          ${escapeHtml(b.district || '—')}${b.state ? ', ' + escapeHtml(b.state) : ''}
-          ${b.market ? ' · ' + escapeHtml(b.market) : ''}<br>
-          ${phone ? `📞 <a href="tel:${escapeHtml(phone)}" style="color:var(--primary)">${escapeHtml(phone)}</a> · ` : ''}
-          फसल: ${escapeHtml(crops)} ·
-          <code>${escapeHtml(b.slug)}</code> ·
-          ${b.source === 'signup' ? 'via /dukan' : 'added here'}<br>
-          <span class="by-callnote">${escapeHtml(callLine)}</span>
-          ${b.note ? '<br>' + escapeHtml(b.note) : ''}
-        </div>
-        <div class="by-callbar">
-          <span style="font-size:10.5px;color:var(--muted);align-self:center;">कॉल के बाद:</span>
-          ${Object.keys(BY_CALL).map(k =>
-            `<button class="by-cbtn" onclick="logCall('${escapeHtml(b.slug)}','${k}')">${BY_CALL[k]}</button>`
-          ).join('')}
-        </div>
+function buyerRowHtml(b) {
+  const live    = b.active;
+  const crops   = (b.commodities || []).length
+    ? (b.commodities || []).join(', ') : 'सब फसल';
+  const tags = [
+    live ? '<span class="by-tag live">live</span>'
+         : '<span class="by-tag pending">not live</span>',
+    b.verified ? '<span class="by-tag tick">verified</span>' : '',
+    b.featured ? '<span class="by-tag feat">featured</span>' : '',
+    // Paying vs paid-once-and-lapsed is the difference between revenue and a
+    // renewal call that nobody remembered to make.
+    b.paying ? '<span class="by-tag paid">₹ paying</span>'
+             : (b.paid_at ? '<span class="by-tag lapsed">lapsed</span>' : ''),
+    (b.called_at && !b.paid_at)
+      ? `<span class="by-tag called">${BY_CALL[b.call_result] || 'called'}</span>` : '',
+  ].filter(Boolean).join(' ');
+
+  const phone = b.phone || b.whatsapp || '';
+  // Never called is the state the whole test hinges on, so it is stated
+  // outright rather than inferred from a missing tag.
+  const callLine = b.called_at
+    ? `📞 ${b.call_count} call${b.call_count > 1 ? 's' : ''}, last ${byDate(b.called_at)}${
+        b.paid_at ? ` · ₹${b.paid_amount} on ${byDate(b.paid_at)}${
+          b.paid_until ? `, till ${byDate(b.paid_until)}` : ''}` : ''}`
+    : '☎️ अभी तक कॉल नहीं किया';
+
+  // Tier-3 bhav-panel slot — admin-only, and only meaningful once verified;
+  // the backend (dealers.set_bhav_rank) also enforces one holder per
+  // (state, rank), clearing whoever else in that state held it.
+  // Credentials, shown compactly so "is this one actually checked?" is
+  // answerable from the list without opening each row.
+  const creds = [
+    b.gstin      ? `GST ${escapeHtml(b.gstin)}` : '',
+    b.license_no ? `लाइसेंस ${escapeHtml(b.license_no)}` : '',
+    b.email      ? escapeHtml(b.email) : '',
+  ].filter(Boolean).join(' · ');
+
+  const rankOpt = n => `<option value="${n}" ${b.bhav_rank === n ? 'selected' : ''}>${n}</option>`;
+  const rankSelect = `<select class="by-rank" ${b.verified ? '' : 'disabled title="पहले verify करें"'}
+      onchange="setBhavRank('${escapeHtml(b.slug)}', this.value)">
+    <option value="" ${!b.bhav_rank ? 'selected' : ''}>Tier-3 rank: —</option>
+    ${rankOpt(1)}${rankOpt(2)}${rankOpt(3)}
+  </select>`;
+
+  return `<div class="by-row ${live ? '' : 'by-off'}" id="by-row-${escapeHtml(b.slug)}">
+    <div class="by-main">
+      <div class="by-name">${escapeHtml(b.name || '—')} ${tags}</div>
+      <div class="by-meta">
+        ${escapeHtml(BY_KINDS[b.kind] || b.kind || '')} ·
+        ${escapeHtml(b.district || '—')}${b.state ? ', ' + escapeHtml(b.state) : ''}
+        ${b.market ? ' · ' + escapeHtml(b.market) : ''}<br>
+        ${phone ? `📞 <a href="tel:${escapeHtml(phone)}" style="color:var(--primary)">${escapeHtml(phone)}</a> · ` : ''}
+        फसल: ${escapeHtml(crops)} ·
+        <code>${escapeHtml(b.slug)}</code> ·
+        ${b.source === 'signup' ? 'via /dukan' : 'added here'}<br>
+        <span class="by-callnote">${escapeHtml(callLine)}</span>
+        ${creds ? '<br>' + creds : ''}
+        ${b.description ? `<br>💬 ${escapeHtml(b.description)}` : ''}
+        ${b.note ? `<br><span class="by-callnote">🔒 ${escapeHtml(b.note)}</span>` : ''}
       </div>
-      <div class="by-acts">
-        <button class="by-btn ok" onclick="openPayModal('${escapeHtml(b.slug)}')">Payment</button>
-        ${live
-          ? `<button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','active',false)">Hide</button>`
-          : `<button class="by-btn ok" onclick="approveBuyer('${escapeHtml(b.slug)}')">✓ Called — list it</button>`}
-        <button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','featured',${!b.featured})">
-          ${b.featured ? 'Unfeature' : 'Feature'}</button>
-        <button class="by-btn warn" onclick="deleteBuyer('${escapeHtml(b.slug)}')">Delete</button>
+      <div class="by-callbar">
+        <span style="font-size:10.5px;color:var(--muted);align-self:center;">कॉल के बाद:</span>
+        ${Object.keys(BY_CALL).map(k =>
+          `<button class="by-cbtn" onclick="logCall('${escapeHtml(b.slug)}','${k}')">${BY_CALL[k]}</button>`
+        ).join('')}
+        ${b.owner_user_id ? rankSelect : ''}
+      </div>
+    </div>
+    <div class="by-acts">
+      <button class="by-btn ok" onclick="openPayModal('${escapeHtml(b.slug)}')">Payment</button>
+      <button class="by-btn" onclick="openEditBuyer('${escapeHtml(b.slug)}')">✏️ Edit</button>
+      ${live
+        ? `<button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','active',false)">Hide</button>`
+        : `<button class="by-btn ok" onclick="approveBuyer('${escapeHtml(b.slug)}')">✓ Called — list it</button>`}
+      <!-- One row is one (dealer, district), so this flag is already
+           per-district — labelled with the district so that is visible
+           rather than something you have to know. -->
+      <button class="by-btn" title="${b.featured ? 'इस जिले में प्रमुख हटाएं' : 'इसी जिले में प्रमुख बनाएं'}"
+              onclick="setBuyerFlag('${escapeHtml(b.slug)}','featured',${!b.featured})">
+        ${b.featured ? '★ Unfeature' : '☆ Feature'} in ${escapeHtml(b.district || '—')}</button>
+      <button class="by-btn" onclick="addDistrictFor('${escapeHtml(b.slug)}')"
+              title="इसी दुकान को एक और जिले में जोड़ें">＋ District</button>
+      <button class="by-btn warn" onclick="deleteBuyer('${escapeHtml(b.slug)}')">Delete</button>
+    </div>
+  </div>`;
+}
+
+/* ══════════ EDIT A DEALER ══════════
+   Correcting a row instead of deleting and retyping it. The slug is never
+   touched — LeadClick quotes it, so a rename must not orphan the click
+   history (services/dealers.py::unique_slug says the same thing). */
+let _edSlug = null;
+
+const ED_FIELDS = {
+  'ed-name': 'name', 'ed-kind': 'kind', 'ed-phone': 'phone',
+  'ed-whatsapp': 'whatsapp', 'ed-district': 'district', 'ed-state': 'state',
+  'ed-market': 'market', 'ed-since': 'since', 'ed-description': 'description',
+  'ed-gstin': 'gstin', 'ed-license': 'license_no', 'ed-email': 'email',
+  'ed-address': 'address', 'ed-note': 'note',
+};
+
+function openEditBuyer(slug) {
+  const row = (window._byRows || []).find(b => b.slug === slug);
+  if (!row) { showToast('Row not found — refresh', 'error'); return; }
+  _edSlug = slug;
+  document.getElementById('ed-title').textContent = row.name || slug;
+  document.getElementById('ed-sub').textContent =
+    `${row.district || '—'}${row.state ? ', ' + row.state : ''} · ${row.slug}`;
+  Object.entries(ED_FIELDS).forEach(([el, key]) => {
+    document.getElementById(el).value = row[key] || '';
+  });
+  // commodities is a list on the wire, a comma string in the box.
+  document.getElementById('ed-commodities').value = (row.commodities || []).join(', ');
+  document.getElementById('edit-modal').hidden = false;
+  edLoadProducts();
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').hidden = true;
+  _edSlug = null;
+}
+
+/* ══════════ A DEALER'S CATALOGUE ══════════
+   He types the items on /dukan/product; the photos go on here. Products hang
+   off the ACCOUNT (owner_user_id), so a dealer paying for three districts has
+   one catalogue rather than three copies to keep in step. */
+let _edProducts = [];
+
+async function edLoadProducts() {
+  const box = document.getElementById('ed-prod-list');
+  box.innerHTML = '<div class="ed-prod-empty">लोड हो रहा है…</div>';
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_edSlug)}/products`,
+                          { headers: getAuthHeader() });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    _edProducts = d.products || [];
+    edRenderProducts();
+  } catch (e) {
+    box.innerHTML = `<div class="ed-prod-empty">नहीं खुला — ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function edRenderProducts() {
+  const box = document.getElementById('ed-prod-list');
+  if (!_edProducts.length) {
+    box.innerHTML = '<div class="ed-prod-empty">अभी कोई प्रोडक्ट नहीं — नीचे से जोड़ें।</div>';
+    return;
+  }
+  box.innerHTML = _edProducts.map(p => {
+    // ?v= busts the 7-day cache on the image URL, which is keyed by an id
+    // that never changes — without it a replaced photo shows the old one.
+    const pic = p.has_image
+      ? `<img src="${API}/dukan/product-image/${p.id}.webp?v=${p.v || 0}" alt="">`
+      : '📦';
+    const price = `₹${p.price}` +
+      (p.off ? ` <span class="mrp">₹${p.mrp}</span> <span class="off">${p.off}% off</span>` : '') +
+      (p.unit_hi ? ` · ${escapeHtml(p.unit_hi)}` : '');
+    return `<div class="ed-prod">
+      <div class="ed-prod-pic">${pic}</div>
+      <div class="ed-prod-b">
+        <div class="ed-prod-n">${escapeHtml(p.name_hi)}${p.active ? '' : ' (छुपा)'}</div>
+        <div class="ed-prod-p">${price}</div>
+      </div>
+      <div class="ed-prod-acts">
+        <label>📷<input type="file" accept="image/*" hidden
+               onchange="uploadProductImage(${p.id}, this)"></label>
+        <button class="by-btn" onclick="toggleProduct(${p.id}, ${!p.active})">${p.active ? 'Hide' : 'Show'}</button>
+        <button class="by-btn warn" onclick="deleteProduct(${p.id})">✕</button>
       </div>
     </div>`;
   }).join('');
+}
+
+async function addProduct() {
+  if (!_edSlug) return;
+  const v = id => document.getElementById(id).value.trim();
+  if (v('ed-p-namehi').length < 2) { showToast('प्रोडक्ट का नाम डालें', 'error'); return; }
+  if (!parseInt(v('ed-p-price'), 10))  { showToast('सही कीमत डालें', 'error'); return; }
+
+  const btn = document.getElementById('ed-p-btn');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_edSlug)}/products`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name_hi: v('ed-p-namehi'), name_en: v('ed-p-nameen'),
+        price: v('ed-p-price'), mrp: v('ed-p-mrp') || null,
+        unit_hi: v('ed-p-unit'), badge: v('ed-p-badge'),
+      })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    ['ed-p-namehi','ed-p-nameen','ed-p-price','ed-p-mrp','ed-p-unit','ed-p-badge']
+      .forEach(i => document.getElementById(i).value = '');
+    showToast('प्रोडक्ट जुड़ गया');
+    edLoadProducts();
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function toggleProduct(id, active) {
+  try {
+    const r = await fetch(`${API}/admin/products/${id}`, {
+      method: 'PATCH',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active })
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    edLoadProducts();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('यह प्रोडक्ट हटा दें?')) return;
+  try {
+    const r = await fetch(`${API}/admin/products/${id}`,
+                          { method: 'DELETE', headers: getAuthHeader() });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    showToast('हटा दिया');
+    edLoadProducts();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function uploadProductImage(id, input) {
+  if (!input.files || !input.files[0]) return;
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  try {
+    // No Content-Type header: the browser must set the multipart boundary.
+    const r = await fetch(`${API}/admin/products/${id}/image`,
+                          { method: 'POST', headers: getAuthHeader(), body: fd });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    showToast(`फोटो लग गई (${Math.round((d.bytes || 0) / 1024)} KB)`);
+    edLoadProducts();
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    input.value = '';
+  }
+}
+
+async function saveBuyerEdit() {
+  if (!_edSlug) return;
+  const val = id => document.getElementById(id).value.trim();
+  if (val('ed-name').length < 2) { showToast('फर्म का नाम डालें', 'error'); return; }
+  if (!val('ed-district'))       { showToast('जिला डालें', 'error'); return; }
+
+  const body = {};
+  Object.entries(ED_FIELDS).forEach(([el, key]) => { body[key] = val(el); });
+  body.commodities = val('ed-commodities');
+
+  const btn = document.getElementById('ed-save-btn');
+  btn.disabled = true;
+  try {
+    await byPatch(_edSlug, body, 'सेव हो गया');
+    closeEditModal();
+    loadBuyers();
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Dealers: could not save "${_edSlug}" — ${e.message}`, 'log-entry-err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* Add another district for a dealer who already exists.
+   One `buyers` row IS one (dealer, district) pair — that is what makes
+   `featured` and the kharidar listing per-district in the first place — so a
+   second district is a second row carrying the same firm details and the same
+   owner_user_id. Without this the panel could only ever put an admin-added
+   dealer in the single district he was typed into. */
+async function addDistrictFor(slug) {
+  const row = (window._byRows || []).find(b => b.slug === slug);
+  if (!row) return;
+  const district = prompt(`${row.name} — कौन सा नया जिला जोड़ना है?\n\n` +
+                          'वही spelling जो मंडी भाव पेज पर दिखती है।');
+  if (!district || !district.trim()) return;
+
+  const state = prompt('राज्य?', row.state || '') || row.state || '';
+  try {
+    const r = await fetch(`${API}/admin/buyers`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: row.name, kind: row.kind, phone: row.phone, whatsapp: row.whatsapp,
+        commodities: (row.commodities || []).join(','), since: row.since,
+        description: row.description, market: '',
+        gstin: row.gstin, license_no: row.license_no,
+        email: row.email, address: row.address,
+        district: district.trim(), state: state.trim(),
+        // Keeps the new district on the same subscription — dealers.py::
+        // record_payment renews every row sharing this id together.
+        owner_user_id: row.owner_user_id || null,
+        active: !!row.active, verified: !!row.verified,
+      })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    bySetCounts(d.counts);
+    loadBuyers();
+    showToast(`${district.trim()} जोड़ दिया`);
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Dealers: could not add district — ${e.message}`, 'log-entry-err');
+  }
+}
+
+async function setBhavRank(slug, value) {
+  const rank = value ? parseInt(value, 10) : null;
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(slug)}/rank`, {
+      method: 'PATCH',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rank })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    showToast(rank ? `Tier-3 rank ${rank} सेट हुआ` : 'Tier-3 rank हटाया');
+    loadBuyers();
+  } catch (e) {
+    showToast(e.message, 'error');
+    printTerminalLog(`Rank: could not set rank for "${slug}" — ${e.message}`, 'log-entry-err');
+  }
 }
 
 function byDate(iso) {
@@ -5596,15 +6133,15 @@ async function pmFetchCollect(amount, purpose) {
     document.getElementById('pm-amt-in').value      = d.amount;
     document.getElementById('pm-ref-in').value      = '';
 
-    document.getElementById('pm-rec-title').textContent =
-      d.paid_at ? 'फिर से पैसा आया? Renew' : 'पैसा आ गया? Record it';
+    pmRenderState(d);
 
     const box = document.getElementById('pm-receipt-box');
     if (d.paid_at) {
       box.hidden = false;
       document.getElementById('pm-receipt-info').textContent =
-        `आखिरी बार ₹${d.paid_amount} मिला — ${pmDate(d.paid_at)} को, ` +
-        `${pmDate(d.paid_until)} तक लिस्टिंग लाइव रहेगी।`;
+        `आखिरी बार ₹${d.paid_amount} मिला — ${pmDate(d.paid_at)} को` +
+        (d.payment_ref ? ` · UPI ref: ${d.payment_ref}` : '') +
+        `, ${pmDate(d.paid_until)} तक लिस्टिंग लाइव रहेगी।`;
     } else {
       box.hidden = true;
     }
@@ -5621,6 +6158,68 @@ function pmDate(iso) {
   return isNaN(d) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/* Answer "has this man paid?" before anything else, and let the state decide
+   what the modal is FOR. Currently paying → the reason you opened it is a
+   receipt or a renewal, so the QR block collapses behind a Renew button.
+   Lapsed or never → it is a collect, so the QR is right there.
+
+   Three states, not two: "paid once and lapsed" is not "never paid", and the
+   difference is a renewal call somebody has to make. */
+function pmRenderState(d) {
+  const el      = document.getElementById('pm-state');
+  const ic      = document.getElementById('pm-state-ic');
+  const title   = document.getElementById('pm-state-t');
+  const detail  = document.getElementById('pm-state-d');
+  const amt     = document.getElementById('pm-state-amt');
+  const renew   = document.getElementById('pm-renew-btn');
+  const collect = document.getElementById('pm-collect');
+
+  const until  = d.paid_until ? new Date(d.paid_until) : null;
+  const paying = !!(until && until > new Date());
+  const days   = until ? Math.ceil((until - new Date()) / 86400000) : 0;
+
+  el.classList.remove('paid', 'lapsed', 'never');
+  amt.hidden = !d.paid_at;
+  if (d.paid_amount) amt.textContent = `₹${d.paid_amount}`;
+
+  if (paying) {
+    el.classList.add('paid');
+    ic.textContent = '✅';
+    title.textContent = 'भुगतान हो चुका है — लिस्टिंग सक्रिय';
+    detail.textContent =
+      `${pmDate(d.paid_at)} को मिला · ${pmDate(d.paid_until)} तक चालू` +
+      ` (${days} दिन बाकी)` +
+      (d.payment_ref ? ` · UPI ref: ${d.payment_ref}` : '');
+  } else if (d.paid_at) {
+    el.classList.add('lapsed');
+    ic.textContent = '⚠️';
+    title.textContent = 'सदस्यता खत्म हो चुकी है';
+    detail.textContent =
+      `आखिरी भुगतान ${pmDate(d.paid_at)} · ${pmDate(d.paid_until)} को खत्म हुई` +
+      (d.payment_ref ? ` · UPI ref: ${d.payment_ref}` : '');
+  } else {
+    el.classList.add('never');
+    ic.textContent = '•';
+    title.textContent = 'अभी तक कोई भुगतान नहीं';
+    detail.textContent = 'नीचे से QR या लिंक भेजें, पैसा आने पर रिकॉर्ड करें।';
+  }
+
+  // Collapsed only while he is actually paying — a lapsed dealer needs the QR
+  // in front of you, which is the whole point of opening his modal.
+  renew.hidden   = !paying;
+  collect.hidden = paying;
+}
+
+/* The Renew button: re-open the collect block for a dealer who is already
+   paying. Deliberately manual — auto-expanding it for everyone would put a
+   fresh QR in front of you every time you opened a paid dealer just to resend
+   a receipt. */
+function pmShowCollect() {
+  document.getElementById('pm-collect').hidden = false;
+  document.getElementById('pm-renew-btn').hidden = true;
+  document.getElementById('pm-req-amt').focus();
+}
+
 function pmRegenerate() {
   const amt = document.getElementById('pm-req-amt').value.trim();
   const purpose = document.getElementById('pm-req-purpose').value.trim();
@@ -5633,7 +6232,9 @@ function closePayModal() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !document.getElementById('pay-modal')?.hidden) closePayModal();
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('pay-modal')?.hidden) closePayModal();
+  else if (!document.getElementById('edit-modal')?.hidden) closeEditModal();
 });
 
 function pmWhatsApp() {
@@ -5655,10 +6256,11 @@ async function pmRecordPaid() {
   if (!_pmSlug) return;
   const amt = parseInt(document.getElementById('pm-amt-in').value, 10);
   const ref = document.getElementById('pm-ref-in').value.trim();
+  const months = parseInt(document.getElementById('pm-months-in').value, 10) || 1;
   if (!amt || amt < 1) { showToast('Enter the amount you actually received', 'error'); return; }
   if (!confirm(`Have you SEEN ₹${amt} in your bank app?\n\n` +
                'This is the only thing that marks him paid — nothing confirms it automatically. ' +
-               'It also lists him and starts his 30 days.')) return;
+               `It buys ${months} month${months > 1 ? 's' : ''}, extending from his current end date.`)) return;
 
   const btn = document.getElementById('pm-rec-btn');
   btn.disabled = true;
@@ -5666,7 +6268,7 @@ async function pmRecordPaid() {
     const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_pmSlug)}/payment`, {
       method: 'POST',
       headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: amt, ref, months: 1 })
+      body: JSON.stringify({ amount: amt, ref, months })
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
