@@ -285,6 +285,13 @@ def _derive_primary_crop(body_primary_crop: Optional[str], crops_grown: Optional
 def _sync_user(user: User, profile: UserProfile, db: Session):
     """Keep the basic fields on the users table in sync with user_profiles.
     Avatar is deliberately NOT mirrored — user_profiles is its sole home."""
+    # The profile form is the ONLY place a name can be edited — nothing else in
+    # the backend writes users.name after signup — so without this line the two
+    # tables drifted permanently the first time a farmer corrected his own name
+    # (users kept the signup/Google value, user_profiles got the real one).
+    # Direction is profile → users, matching alerts.display_name(): the name he
+    # filled in wins over whatever the signup form or Google supplied.
+    user.name               = (profile.name or "").strip() or user.name
     user.preferred_language = profile.language or user.preferred_language
     user.village            = profile.village  or user.village
     user.district           = profile.district or user.district
