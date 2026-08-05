@@ -57,6 +57,8 @@ SITE_URL = os.getenv("GSC_SITE_URL", "https://krashimitra.in/")
 TOKEN_URL    = "https://oauth2.googleapis.com/token"
 INSPECT_URL  = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect"
 INDEXING_URL = "https://indexing.googleapis.com/v3/urlNotifications:publish"
+ANALYTICS_URL = ("https://searchconsole.googleapis.com/webmasters/v3/sites/"
+                 "{site}/searchAnalytics/query")
 
 SCOPE_WEBMASTERS = "https://www.googleapis.com/auth/webmasters"
 SCOPE_INDEXING   = "https://www.googleapis.com/auth/indexing"
@@ -140,24 +142,90 @@ def inspect_url(url: str) -> dict | None:
         return None
 
 
-def request_indexing(url: str) -> bool:
-    """Best-effort Indexing API ping. A 403 here means Google is enforcing
-    its documented JobPosting/BroadcastEvent-only scope for this project,
-    not that anything is broken — logged and swallowed either way."""
+def request_indexing(url: str) -> int:
+    """Best-effort Indexing API ping. Returns the HTTP status code (200 =
+    accepted), or 0 when the call could not be made at all.
+
+    The code is returned rather than a bool because *which* non-200 it is
+    changes what to do about it, and the sweep's sync_log line is the only
+    place that survives long enough to be read: 403 means Google is enforcing
+    its documented JobPosting/BroadcastEvent-only scope and this lever is
+    simply not available for /bhav pages; 429 means quota, which is
+    self-correcting; 401 means the credential broke. Reporting a bare
+    "0 recrawl sent" made all three look identical."""
     token = _access_token(SCOPE_INDEXING)
     if not token:
-        return False
+        return 0
     try:
         res = requests.post(
             INDEXING_URL, headers={"Authorization": f"Bearer {token}"},
             json={"url": url, "type": "URL_UPDATED"}, timeout=20)
-        if res.status_code == 200:
-            return True
-        logger.info(f"Indexing API {res.status_code} for {url}: {res.text[:200]}")
-        return False
+        if res.status_code != 200:
+            logger.info(f"Indexing API {res.status_code} for {url}: {res.text[:200]}")
+        return res.status_code
     except requests.RequestException as e:
         logger.warning(f"Indexing API call failed for {url}: {e}")
-        return False
+        return 0
+
+
+def search_analytics(start: str, end: str, dimensions: list[str] | None = None,
+                     row_limit: int = 25000, filters: list[dict] | None = None,
+                     search_type: str = "web", data_state: str = "final") -> list[dict]:
+    """Search Analytics API → the performance numbers (clicks, impressions,
+    ctr, position) behind the GSC Performance report.
+
+    This is deliberately read-only and on-demand: nothing in the scheduled
+    sweep calls it. `inspect_url` above answers "has Google seen the fresh
+    page?"; this answers "did anyone click it?" — the two halves of the same
+    question, and the reason the recrawl work exists at all.
+
+    Rows come back as {keys: [...dimension values in order...], clicks,
+    impressions, ctr, position}; `keys` is flattened into `dimensions` here so
+    callers never have to remember the ordering. Google caps a response at
+    25,000 rows, so anything larger pages through startRow.
+
+    data_state="final" excludes the most recent ~2 days, which Google is still
+    counting — use "all" only when a same-day directional read matters more
+    than the number being right.
+    """
+    token = _access_token(SCOPE_WEBMASTERS)
+    if not token:
+        return []
+
+    dims = dimensions or ["query"]
+    url = ANALYTICS_URL.format(site=requests.utils.quote(SITE_URL, safe=""))
+    out: list[dict] = []
+    start_row = 0
+
+    while True:
+        body = {"startDate": start, "endDate": end, "dimensions": dims,
+                "rowLimit": min(row_limit, 25000), "startRow": start_row,
+                "type": search_type, "dataState": data_state}
+        if filters:
+            body["dimensionFilterGroups"] = [{"filters": filters}]
+        try:
+            res = requests.post(url, headers={"Authorization": f"Bearer {token}"},
+                                json=body, timeout=60)
+        except requests.RequestException as e:
+            logger.warning(f"Search Analytics call failed: {e}")
+            break
+        if res.status_code != 200:
+            logger.warning(f"Search Analytics {res.status_code}: {res.text[:300]}")
+            break
+
+        rows = res.json().get("rows", [])
+        for r in rows:
+            out.append({**{d: k for d, k in zip(dims, r.get("keys", []))},
+                        "clicks": r.get("clicks", 0),
+                        "impressions": r.get("impressions", 0),
+                        "ctr": r.get("ctr", 0.0),
+                        "position": r.get("position", 0.0)})
+        # A short page is the last page; Google does not send a next-page token.
+        if len(rows) < min(row_limit, 25000) or len(out) >= row_limit:
+            break
+        start_row += len(rows)
+
+    return out
 
 
 def _bhav_targets() -> list[tuple[str, str]]:
@@ -196,6 +264,7 @@ def run_stale_check(batch_size: int = BATCH_SIZE) -> dict:
     sample = random.sample(targets, min(batch_size, len(targets)))
 
     checked = stale = requested = errors = 0
+    idx_codes: dict[int, int] = {}
     for url, expected in sample:
         status = inspect_url(url)
         if status is None:
@@ -212,11 +281,18 @@ def run_stale_check(batch_size: int = BATCH_SIZE) -> dict:
         if behind < STALE_AFTER_DAYS:
             continue
         stale += 1
-        if request_indexing(url):
+        code = request_indexing(url)
+        idx_codes[code] = idx_codes.get(code, 0) + 1
+        if code == 200:
             requested += 1
 
+    # Spell out the rejection codes. "0 recrawl भेजे" on its own reads like
+    # "nothing was stale", which is the opposite of what it means.
+    rejected = ", ".join(f"{c}×{n}" for c, n in sorted(idx_codes.items())
+                         if c != 200)
     detail = (f"{checked} जांचे, {stale} बासी (>{STALE_AFTER_DAYS} दिन), "
-              f"{requested} recrawl भेजे, {errors} त्रुटि")
+              f"{requested} recrawl भेजे" + (f" (अस्वीकृत {rejected})" if rejected else "")
+              + f", {errors} त्रुटि")
     # "failed" only when NOTHING was inspected successfully (auth broken, API
     # down) — same rule sync_log_service.mandi_freshness uses for its own
     # feed: a run that delivered *some* rows is success/partial, never failed.
