@@ -97,6 +97,57 @@ class TestReferencedAssetsExist:
         )
 
 
+class TestApiBaseIsSetBeforeItIsRead:
+    """A page must never fall back to calling its own origin.
+
+    Regression for a real one: frontend/dukan/product/index.html read
+    `window.KRASHIMITRA_API_BASE || ''` in an inline script near the top of
+    <body>, but the only thing that sets the base — /api-config.js — loads at
+    the very bottom of that document, and this page was the one page missing
+    the sync <head> bootstrap every other page carries. So the base was "" and
+    every call went to the page's own origin.
+
+    That is invisible on the Render host, where the API *is* the origin. On
+    krashimitra.in it 404s: Netlify proxies a handful of paths and /dukan/* is
+    not one of them. The whole page was dead there — listings, products, and
+    the signup POST — while looking merely "slow to load".
+
+    A read is fine if the file assigns the base earlier, or if it carries a
+    real fallback URL. An empty-string fallback with nothing set above it is
+    the bug, and it is silent, so it gets a test.
+    """
+
+    READ = re.compile(r"window\.KRASHIMITRA_API_BASE")
+
+    def test_every_read_resolves_to_the_api(self, repo_root):
+        offenders = []
+        for path in sorted((repo_root / "frontend").rglob("*")):
+            if path.suffix.lower() not in FRONTEND_SUFFIXES or not path.is_file():
+                continue
+            # api-config.js IS the setter; its own guard read is the point.
+            if path.name == "api-config.js":
+                continue
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            assigned_at = text.find("window.KRASHIMITRA_API_BASE =")
+            for match in self.READ.finditer(text):
+                if assigned_at != -1 and match.start() > assigned_at:
+                    continue                       # already set further up
+                tail = text[match.end():match.end() + 60].lstrip()
+                if tail.startswith("=") and not tail.startswith("=="):
+                    continue                       # this IS the assignment
+                if tail.startswith("||"):
+                    fallback = tail[2:].lstrip()
+                    if not fallback.startswith(("''", '""')):
+                        continue                   # a real fallback URL
+                line = text[:match.start()].count("\n") + 1
+                offenders.append(f"{path.relative_to(repo_root)}:{line}")
+        assert not offenders, (
+            "these read the API base before anything sets it, so requests go "
+            "to the page's own origin (404 on krashimitra.in):\n  "
+            + "\n  ".join(offenders)
+        )
+
+
 class TestNakshaAssets:
     """The naksha pages build image URLs from a slug at request time.
 

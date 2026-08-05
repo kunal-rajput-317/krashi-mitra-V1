@@ -5,6 +5,25 @@
   <script src="/analytics.js"></script>
 
   <meta charset="UTF-8">
+  <!-- Sync API-base bootstrap so api-config.js can load deferred
+       (it early-returns when KRASHIMITRA_API_BASE is already set).
+       Every other page carries this; this one did not, and the page script
+       below reads the base at parse time — long before /api-config.js runs at
+       the end of the document. So the base was "" and every call went to the
+       page's own origin: fine on the Render host, 404 on krashimitra.in, where
+       Netlify proxies a handful of paths and /dukan/* is not one of them. That
+       404'd the whole page, signup included. -->
+  <script>
+    (function () {
+      var h = location.hostname,
+          l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
+              /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+      window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
+        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1-oxdc.onrender.com');
+      window.KRASHIMITRA_IS_LOCAL = l;
+      window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>अपनी दुकान लिस्ट करें — मंडी भाव पेज पर | कृषि मित्र</title>
@@ -679,7 +698,12 @@
 <script src="/india-districts.js"></script>
 <script>
 (function () {
-  var API = window.KRASHIMITRA_API_BASE || '';
+  // Read at CALL time, never captured here. This block is parsed near the top
+  // of <body>; /api-config.js loads at the very bottom, so a `var API = …` here
+  // freezes whatever the base was before either script that sets it has run.
+  // The <head> bootstrap above makes that safe, and this keeps it safe if
+  // someone moves the bootstrap.
+  function api() { return window.KRASHIMITRA_API_BASE || ''; }
 
   function token() {
     var t = localStorage.getItem('krishi_token');
@@ -893,7 +917,7 @@
       // ?v= busts the long cache on an image URL keyed by an id that never
       // changes, so a replaced photo is not shown stale for a week.
       var img = p.has_image
-        ? '<img src="' + API + '/dukan/product-image/' + p.id + '.webp?v=' + (p.v || 0) + '" alt="">'
+        ? '<img src="' + api() + '/dukan/product-image/' + p.id + '.webp?v=' + (p.v || 0) + '" alt="">'
         : '📦';
       var price = '₹' + p.price +
         (p.off ? ' <span class="mrp">₹' + p.mrp + '</span> <span class="off">' + p.off + '% off</span>' : '') +
@@ -909,7 +933,7 @@
   }
 
   function loadProducts() {
-    fetch(API + '/dukan/products', { headers: authHeaders() })
+    fetch(api() + '/dukan/products', { headers: authHeaders() })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) return;
@@ -920,7 +944,7 @@
   }
 
   function deleteProduct(id) {
-    fetch(API + '/dukan/products/' + id, { method: 'DELETE', headers: authHeaders() })
+    fetch(api() + '/dukan/products/' + id, { method: 'DELETE', headers: authHeaders() })
       .then(function (r) { if (r.ok) loadProducts(); });
   }
 
@@ -933,7 +957,7 @@
     if (!parseInt(val('dp-pp'), 10)) {
       perrEl.textContent = 'सही कीमत डालें।'; perrEl.hidden = false; return;
     }
-    fetch(API + '/dukan/products', {
+    fetch(api() + '/dukan/products', {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
@@ -960,7 +984,7 @@
   // `done` is the retry button's callback — it only needs to know the attempt
   // finished, not how it went.
   function loadMine(done) {
-    fetch(API + '/dukan/mine', { headers: authHeaders() })
+    fetch(api() + '/dukan/mine', { headers: authHeaders() })
       .then(function (r) {
         // 401 = token expired/revoked, 403 = no Authorization header at all
         // (FastAPI's HTTPBearer). Those two mean "log in"; nothing else does.
@@ -1062,7 +1086,7 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'भेजा जा रहा है…';
 
-    fetch(API + '/dukan/listings', {
+    fetch(api() + '/dukan/listings', {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify(body)
