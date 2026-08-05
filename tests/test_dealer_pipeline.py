@@ -36,6 +36,22 @@ from backend.services import buyers, dealers
 ADMIN = ("testadmin", "test-admin-pass")     # set in conftest before backend import
 
 
+def _dealer_panel(body: str) -> str:
+    """Just the "सत्यापित दुकानें" panel (bhav.py::_dealer_teaser_html).
+
+    A tier-3 page carries two blocks built from the same product-card design:
+    this panel, which renders the dealer's REAL catalogue, and the दुकान promo
+    under the MSP card, whose sample card is hard-coded. Asserting against the
+    whole page cannot tell them apart, so a "the dealer's product must not show
+    X" test would pass or fail on the promo's dummy data instead.
+    """
+    start = body.find('class="bp-wrap"')
+    if start < 0:
+        return ""
+    end = body.find("</section>", start)
+    return body[start:end if end > 0 else len(body)]
+
+
 @pytest.fixture()
 def clean(db_session, monkeypatch):
     """Empty buyers table, caches dropped on both sides, rate limiter reset.
@@ -555,6 +571,151 @@ class TestCredentialsAreAdminOnly:
         assert clean.query(dealers.Buyer).filter_by(slug=before).one().name == "New Firm"
 
 
+class TestSubscriptionLapseIsNeverSilent:
+    """A subscription simply ending used to be invisible.
+
+    services/buyers.py::_usable drops a /dukan/product dealer from every
+    farmer-facing surface the moment `paid_until` passes, and nothing told him
+    — his listing went dark and the first he knew was the calls stopping. Worse
+    for us: a lapse nobody chases is revenue lost in silence.
+
+    Both halves are asserted here — the dealer's own KrashiBook warning, and the
+    renewal list the owner works from. Derived live on every request (no
+    scheduler, no "reminder sent" flag), because a cron that quietly stops is
+    exactly the failure this is meant to prevent.
+    """
+
+    def _account(self, clean, client, dealer_user, days=None, verified=True):
+        """A dealer whose subscription ends `days` from now (negative = past)."""
+        user, headers = dealer_user
+        _listings(client, headers)
+        row = dealers.for_owner(clean, user.id)[0]
+        if verified:
+            dealers.approve(clean, row.slug)
+        if days is not None:
+            dealers.record_payment(clean, row.slug, 199)
+            live = clean.query(dealers.Buyer).filter_by(slug=row.slug).one()
+            live.paid_until = datetime.utcnow() + timedelta(days=days)
+            clean.commit()
+        return headers, row
+
+    def test_anonymous_callers_are_rejected(self, clean, client):
+        assert client.get("/dukan/subscription").status_code in (401, 403)
+
+    def test_a_farmer_with_no_listing_gets_nothing(self, clean, dealer_user, client):
+        """This endpoint is polled by KrashiBook on pages farmers use too."""
+        _user, headers = dealer_user
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert d["state"] == "none"
+        assert d["alerts"] == []
+
+    @pytest.mark.parametrize("days, state", [
+        (30, "active"),      # comfortably paid
+        (7, "expiring"),     # inside the warning window
+        (1, "expiring"),
+        (-1, "lapsed"),      # already dark
+    ])
+    def test_state_is_derived_from_paid_until(self, clean, dealer_user, client,
+                                               days, state):
+        headers, _row = self._account(clean, client, dealer_user, days=days)
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert d["state"] == state
+
+    def test_a_healthy_subscription_raises_no_alert(self, clean, dealer_user, client):
+        """A badge that lights up for good news teaches him to ignore the badge."""
+        headers, _row = self._account(clean, client, dealer_user, days=30)
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert d["alerts"] == []
+        assert d["now_count"] == 0
+
+    def test_expiring_warns_before_it_goes_dark(self, clean, dealer_user, client):
+        headers, _row = self._account(clean, client, dealer_user, days=3)
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert len(d["alerts"]) == 1
+        assert "खत्म" in d["alerts"][0]["title_hi"]
+        # The price he has to pay is in the message — a reminder he cannot act
+        # on is just an interruption.
+        assert str(d["price"]) in d["alerts"][0]["detail_hi"]
+
+    def test_lapsed_says_the_listing_is_already_off(self, clean, dealer_user, client):
+        headers, _row = self._account(clean, client, dealer_user, days=-2)
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert d["alerts"][0]["urgency"] == "now"
+        assert d["now_count"] == 1
+        assert "बंद" in d["alerts"][0]["title_hi"]
+
+    def test_verified_but_never_paid_is_chased_too(self, clean, dealer_user, client):
+        """Called, approved, and then the close was never made."""
+        headers, _row = self._account(clean, client, dealer_user, days=None)
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert d["state"] == "unpaid"
+        assert len(d["alerts"]) == 1
+        assert "भुगतान" in d["alerts"][0]["title_hi"]
+
+    def test_an_unverified_signup_is_not_nagged_for_money(self, clean, dealer_user,
+                                                           client):
+        """He has not been called yet — asking him to pay would jump the queue
+        the whole trust model rests on."""
+        headers, _row = self._account(clean, client, dealer_user, days=None,
+                                      verified=False)
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert d["alerts"] == []
+
+    def test_price_reflects_every_district_on_the_account(self, clean, dealer_user,
+                                                           client):
+        user, headers = dealer_user
+        _listings(client, headers, districts=[
+            {"state": "Uttar Pradesh", "district": "Hardoi"},
+            {"state": "Uttar Pradesh", "district": "Sitapur"},
+            {"state": "Uttar Pradesh", "district": "Unnao"},
+        ])
+        row = dealers.for_owner(clean, user.id)[0]
+        dealers.approve(clean, row.slug)
+        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        assert d["district_count"] == 3
+        assert d["price"] == 299
+
+    # ── the owner's half: the renewal call list ──
+
+    def test_admin_counts_expiring_and_lapsed(self, clean, dealer_user, client):
+        headers, _row = self._account(clean, client, dealer_user, days=3)
+        counts = client.get("/admin/buyers", auth=ADMIN).json()["counts"]
+        assert counts["expiring"] == 1
+        assert counts["lapsed"] == 0
+
+        # Push it past the end date; it should move buckets, not vanish.
+        row = dealers.for_owner(clean, dealer_user[0].id)[0]
+        live = clean.query(dealers.Buyer).filter_by(slug=row.slug).one()
+        live.paid_until = datetime.utcnow() - timedelta(days=1)
+        clean.commit()
+        counts = client.get("/admin/buyers", auth=ADMIN).json()["counts"]
+        assert counts["expiring"] == 0
+        assert counts["lapsed"] == 1
+
+    def test_renewal_list_counts_accounts_not_rows(self, clean, dealer_user, client):
+        """Three districts on one subscription is ONE phone call."""
+        user, headers = dealer_user
+        _listings(client, headers, districts=[
+            {"state": "Uttar Pradesh", "district": "Hardoi"},
+            {"state": "Uttar Pradesh", "district": "Sitapur"},
+            {"state": "Uttar Pradesh", "district": "Unnao"},
+        ])
+        row = dealers.for_owner(clean, user.id)[0]
+        dealers.approve(clean, row.slug)
+        dealers.record_payment(clean, row.slug, 299)   # renews all three
+        for r in dealers.for_owner(clean, user.id):
+            r.paid_until = datetime.utcnow() + timedelta(days=3)
+        clean.commit()
+        assert client.get("/admin/buyers", auth=ADMIN).json()["counts"]["expiring"] == 1
+
+    def test_the_warning_window_is_one_shared_constant(self):
+        """The dealer's warning and the owner's call list must agree about who
+        is about to go dark."""
+        from backend.routes import dukan as dukan_route
+        assert dukan_route._EXPIRY_WARN_DAYS == dealers.EXPIRY_WARN_DAYS
+
+
+
 class TestDealerCatalogue:
     """/dukan/product is named after this: what a paying dealer sells, and at
     what price, rendered as a card a farmer recognises from the shop.
@@ -652,18 +813,28 @@ class TestDealerCatalogue:
         self._add(client, listed.slug, name_hi="यूरिया", mrp=None)
         self._bhav(monkeypatch)
         buyers.invalidate()
-        assert "% off" not in client.get("/bhav/wheat/up").text
+        # Scoped to the dealer panel, not the whole page: the दुकान promo now
+        # renders under the MSP card on every tier, and its hard-coded sample
+        # card carries a "20% off" pill of its own.
+        assert "% off" not in _dealer_panel(client.get("/bhav/wheat/up").text)
 
     def test_products_never_render_for_an_unpaid_dealer(self, clean, listed, client,
                                                          monkeypatch):
-        """The catalogue is what he is paying for."""
-        self._add(client, listed.slug)
+        """The catalogue is what he is paying for.
+
+        A deliberately odd product name: the dealer PROMO that renders in his
+        place carries a sample card, and its demo product is the same
+        "गेहूं बीज HD-2967" from the design reference — so the default name
+        would be found on the page whether or not his real one rendered.
+        """
+        unique = "ZZ-टेस्ट-प्रोडक्ट-9931"
+        self._add(client, listed.slug, name_hi=unique)
         row = clean.query(dealers.Buyer).filter_by(slug=listed.slug).one()
         row.paid_until = datetime.utcnow() - timedelta(days=1)
         clean.commit()
         buyers.invalidate()
         self._bhav(monkeypatch)
-        assert "गेहूं बीज HD-2967" not in client.get("/bhav/wheat/up").text
+        assert unique not in client.get("/bhav/wheat/up").text
 
     def test_a_dealer_with_no_products_renders_as_before(self, clean, listed,
                                                           client, monkeypatch):
@@ -830,7 +1001,7 @@ class TestTier3PanelRendering:
     def test_panel_is_absent_until_a_dealer_is_ranked(self, rendered, client):
         rendered("Sharma Traders", "Hardoi", "9876543210")     # paid, but no rank
         body = client.get("/bhav/wheat/up").text
-        assert "सत्यापित खरीदार" not in body
+        assert "सत्यापित दुकानें" not in body
         assert "Sharma Traders" not in body
 
     def test_ranked_dealer_shows_name_but_never_the_number(self, rendered, client):
@@ -838,7 +1009,7 @@ class TestTier3PanelRendering:
         body = client.get("/bhav/wheat/up").text
 
         assert "Sharma Traders" in body, "the paid dealer never rendered"
-        assert "सत्यापित खरीदार" in body
+        assert "सत्यापित दुकानें" in body
         assert "9876543210" not in body, (
             "the phone number leaked onto the state page — a farmer can now ring "
             "the dealer without ever passing through krashimitra.in")
@@ -859,7 +1030,7 @@ class TestTier3PanelRendering:
         """The panel is a Tier-3 (crop+state) surface only."""
         rendered("Sharma Traders", "Hardoi", "9876543210", rank=1)
         body = client.get("/bhav/wheat/up/hardoi").text
-        assert "सत्यापित खरीदार" not in body
+        assert "सत्यापित दुकानें" not in body
 
     def test_lapsed_dealer_vanishes_from_the_panel(self, clean, rendered, client):
         row = rendered("Sharma Traders", "Hardoi", "9876543210", rank=1)
