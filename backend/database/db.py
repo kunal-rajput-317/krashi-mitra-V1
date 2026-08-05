@@ -1048,8 +1048,12 @@ class Buyer(Base):
     owner_user_id = Column(Integer,  nullable=True, index=True)
     # Which of the ≤3 Tier-3 bhav-panel slots this row holds for its state — 1/2/3
     # or NULL. Admin-only (see the `trusted` gate in _apply()), and deliberately
-    # not automatic: dealers.py::set_bhav_rank() enforces one holder per
-    # (state, rank) so two paying dealers never collide on the same slot.
+    # RETIRED, and deliberately not dropped. It held ONE rank for a whole
+    # state, so a wheat dealer at rank 1 blocked a rice dealer who could
+    # never have shared his page, and it could not express "district page
+    # only" at all — which is the ₹199 product. DealerPlacement below
+    # replaced it. Nothing reads this column now; it stays so a value the
+    # old panel wrote is still recoverable.
     bhav_rank     = Column(Integer,  nullable=True)
 
     # ── Firm credentials ──
@@ -1134,6 +1138,59 @@ class DealerProduct(Base):
     sort_order = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DealerPlacement(Base):
+    """One paid slot: this dealer, on this /bhav page, at this rank.
+
+    **This is the thing that is actually sold.** A `Buyer` row says a shop
+    exists and its subscription is current; that is eligibility, not placement.
+    Being *shown* is a separate decision with a separate price:
+
+        /bhav/{crop}/{state}/{district}   ₹199/month, +₹50 per extra district
+        /bhav/{crop}/{state}             ₹999/month, +₹999 per extra state
+
+    **Why a table and not `Buyer.bhav_rank`.** That column held one rank for a
+    whole state, so giving a wheat dealer rank 1 took rank 1 from a rice dealer
+    who could never have appeared on the same page — and it could not express
+    "district page only" at all, which is the ₹199 product. One row per (page,
+    rank) is the only shape that lets both products be sold at once.
+
+    **`district_slug` is "" for a state page, never NULL.** Postgres treats
+    NULLs as distinct in a UNIQUE constraint, so a nullable column would let
+    two dealers both hold rank 1 on the same state page — the exact collision
+    the constraint exists to prevent.
+
+    **Placement never publishes anyone by itself.** The render path resolves
+    each slug through services/buyers.py, which drops a dealer who is unpaid,
+    unverified or hidden. A lapsed subscription therefore empties his slots
+    without anything having to remember to clear this table.
+    """
+    __tablename__ = "dealer_placements"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    buyer_slug    = Column(String,  nullable=False, index=True)   # Buyer.slug, the public id
+    crop_slug     = Column(String,  nullable=False)               # "wheat", "gur-jaggery"
+    state_slug    = Column(String,  nullable=False)               # "uttar-pradesh"
+    district_slug = Column(String,  nullable=False, default="")   # "" = the state page
+    rank          = Column(Integer, nullable=False)               # 1 (top) … 3
+    # What was agreed for this slot, in whole rupees. A snapshot, not a lookup:
+    # the list price will change and a dealer already on the wall keeps the
+    # number he actually said yes to.
+    price         = Column(Integer, nullable=True)
+    created_at    = Column(DateTime, default=datetime.utcnow)
+    updated_at    = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        # One holder per slot, and one slot per dealer per page. Both are
+        # enforced here rather than only in the service, because "two dealers
+        # at rank 1" is invisible until a farmer sees the page.
+        UniqueConstraint("crop_slug", "state_slug", "district_slug", "rank",
+                         name="uq_placement_slot"),
+        UniqueConstraint("crop_slug", "state_slug", "district_slug", "buyer_slug",
+                         name="uq_placement_one_per_dealer"),
+        Index("ix_placement_page", "crop_slug", "state_slug", "district_slug"),
+    )
 
 
 class LeadClick(Base):

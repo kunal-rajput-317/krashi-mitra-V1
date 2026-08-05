@@ -31,7 +31,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from backend.services import buyers, dealers
+from backend.services import buyers, dealers, placements
 
 ADMIN = ("testadmin", "test-admin-pass")     # set in conftest before backend import
 
@@ -60,28 +60,37 @@ def clean(db_session, monkeypatch):
     TestClient's, so without the reset the fourth signup in the file 429s and
     the failure looks like a validation bug.
     """
-    from backend.database.db import BazarPost, Buyer, DealerProduct, User
+    from backend.database.db import (BazarPost, Buyer, DealerPlacement,
+                                     DealerProduct, User)
+    from backend.services import placements
     from backend.utils import security
 
     security._hits.clear()
     # DealerProduct first: it outlives its buyer row, so leaving it behind
     # leaks a catalogue into the next test and trips the per-dealer cap.
+    # DealerPlacement for the same reason and worse: a leftover slot puts a
+    # dealer from a previous test on this test's page, which reads as the
+    # feature working when it is only leaking.
     db_session.query(DealerProduct).delete()
+    db_session.query(DealerPlacement).delete()
     db_session.query(Buyer).delete()
     db_session.query(BazarPost).delete()
     db_session.query(User).filter(User.email.like("dealer-test%")).delete()
     db_session.commit()
     buyers.invalidate()
+    placements.invalidate()
     monkeypatch.setattr(buyers, "_cache", None)
     monkeypatch.setattr(buyers, "_mtime", -1.0)
     monkeypatch.setattr(buyers, "_place_idx", {})
     yield db_session
     db_session.query(DealerProduct).delete()
+    db_session.query(DealerPlacement).delete()
     db_session.query(Buyer).delete()
     db_session.query(BazarPost).delete()
     db_session.query(User).filter(User.email.like("dealer-test%")).delete()
     db_session.commit()
     buyers.invalidate()
+    placements.invalidate()
 
 
 @pytest.fixture()
@@ -352,9 +361,14 @@ class TestPaymentAndVerificationAreSeparateGates:
             == ["Verma Aadhat"]
 
 
-class TestBhavPanelRanking:
-    """Which <=3 dealers appear on a crop+state Tier-3 page is the owner's call,
-    made in the admin panel — never automatic."""
+class TestPlacementSlots:
+    """Which shops appear on a page, and in which of its three slots.
+
+    Placement is not eligibility. Paying makes a dealer ELIGIBLE; being shown
+    is a separate decision the owner makes per page, at a separate price:
+    ₹199/month for a district page, ₹999/month for a state page. Every test
+    here is about that second decision.
+    """
 
     def _live_dealer(self, clean, name, district, state="Uttar Pradesh",
                      owner_user_id=1, commodities=("wheat",)):
@@ -366,88 +380,105 @@ class TestBhavPanelRanking:
         dealers.record_payment(clean, row.slug, 199)
         return clean.query(dealers.Buyer).filter_by(slug=row.slug).one()
 
-    def test_unranked_dealers_do_not_appear(self, clean):
-        """Paying buys eligibility for the panel, not a slot on it."""
+    @staticmethod
+    def _names(crop="wheat", state="up", district=""):
+        buyers.invalidate()
+        placements.invalidate()
+        return [b["name"] for b in placements.for_page(crop, state, district)]
+
+    def test_paying_alone_puts_nobody_on_a_page(self, clean):
+        """The mistake this whole table exists to make visible: a dealer can be
+        live, verified and paid, and still be shown nowhere."""
         self._live_dealer(clean, "Sharma Traders", "Hardoi")
-        buyers.invalidate()
-        assert buyers.for_bhav_panel("Uttar Pradesh", "wheat") == []
+        assert self._names() == []
 
-    def test_ranked_dealer_appears(self, clean):
+    def test_a_placed_dealer_appears(self, clean):
         row = self._live_dealer(clean, "Sharma Traders", "Hardoi")
-        dealers.set_bhav_rank(clean, row.slug, 1)
-        buyers.invalidate()
-        assert [b["name"] for b in buyers.for_bhav_panel("Uttar Pradesh", "wheat")] \
-            == ["Sharma Traders"]
+        placements.set_placement(clean, row.slug, "wheat", "up", "", 1)
+        assert self._names() == ["Sharma Traders"]
 
-    def test_panel_is_ordered_by_rank_and_capped_at_three(self, clean):
-        for i, (name, dist) in enumerate([
-            ("Third Firm", "Unnao"), ("First Firm", "Hardoi"),
-            ("Second Firm", "Sitapur"), ("Fourth Firm", "Kanpur Nagar"),
-        ]):
-            row = self._live_dealer(clean, name, dist, owner_user_id=i + 1)
-            # Fourth Firm deliberately gets no rank — there are only three slots.
-            rank = {"First Firm": 1, "Second Firm": 2, "Third Firm": 3}.get(name)
-            if rank:
-                dealers.set_bhav_rank(clean, row.slug, rank)
-        buyers.invalidate()
-        assert [b["name"] for b in buyers.for_bhav_panel("Uttar Pradesh", "wheat")] \
-            == ["First Firm", "Second Firm", "Third Firm"]
+    def test_state_and_district_pages_are_separate_inventory(self, clean):
+        """The ₹999 and the ₹199 product. The old single bhav_rank column could
+        not express both at once — this is the reason for the table."""
+        a = self._live_dealer(clean, "Sharma Traders", "Hardoi", owner_user_id=1)
+        b = self._live_dealer(clean, "Verma Aadhat", "Hardoi", owner_user_id=2)
+        placements.set_placement(clean, a.slug, "wheat", "up", "", 1)
+        placements.set_placement(clean, b.slug, "wheat", "up", "hardoi", 1)
+        assert self._names() == ["Sharma Traders"]
+        assert self._names(district="hardoi") == ["Verma Aadhat"]
 
-    def test_one_holder_per_rank_per_state(self, clean):
+    def test_slots_render_in_rank_order(self, clean):
+        for i, (name, rank) in enumerate([("Third Firm", 3), ("First Firm", 1),
+                                          ("Second Firm", 2)]):
+            row = self._live_dealer(clean, name, "Hardoi", owner_user_id=i + 1)
+            placements.set_placement(clean, row.slug, "wheat", "up", "", rank)
+        assert self._names() == ["First Firm", "Second Firm", "Third Firm"]
+
+    def test_a_fourth_dealer_cannot_be_squeezed_in(self, clean):
+        """Three slots, enforced. A fourth paying dealer in the same state has
+        to be sold a different page, not a fourth row on this one."""
+        rows = [self._live_dealer(clean, f"Firm {i}", "Hardoi", owner_user_id=i)
+                for i in range(1, 5)]
+        for i, row in enumerate(rows[:3]):
+            placements.set_placement(clean, row.slug, "wheat", "up", "", i + 1)
+        assert placements.set_placement(clean, rows[3].slug, "wheat", "up", "", 4) is None
+        assert len(self._names()) == 3
+
+    def test_one_holder_per_slot(self, clean):
         """Giving rank 1 to a second dealer takes it off the first, rather than
         rendering two dealers in the same slot."""
         a = self._live_dealer(clean, "Sharma Traders", "Hardoi", owner_user_id=1)
         b = self._live_dealer(clean, "Verma Aadhat", "Sitapur", owner_user_id=2)
-        dealers.set_bhav_rank(clean, a.slug, 1)
-        dealers.set_bhav_rank(clean, b.slug, 1)
-        assert clean.query(dealers.Buyer).filter_by(slug=a.slug).one().bhav_rank is None
-        assert clean.query(dealers.Buyer).filter_by(slug=b.slug).one().bhav_rank == 1
+        placements.set_placement(clean, a.slug, "wheat", "up", "", 1)
+        placements.set_placement(clean, b.slug, "wheat", "up", "", 1)
+        assert self._names() == ["Verma Aadhat"]
 
-    def test_the_same_rank_is_free_in_another_state(self, clean):
-        """Ranks are scoped per state — a Bihar slot 1 must not evict a UP one."""
-        up = self._live_dealer(clean, "Sharma Traders", "Hardoi", owner_user_id=1)
-        br = self._live_dealer(clean, "Kumar Traders", "Patna", state="Bihar",
-                               owner_user_id=2)
-        dealers.set_bhav_rank(clean, up.slug, 1)
-        dealers.set_bhav_rank(clean, br.slug, 1)
-        assert clean.query(dealers.Buyer).filter_by(slug=up.slug).one().bhav_rank == 1
-        assert clean.query(dealers.Buyer).filter_by(slug=br.slug).one().bhav_rank == 1
-
-    def test_panel_respects_the_crop_filter(self, clean):
-        row = self._live_dealer(clean, "Aloo Wale", "Hardoi", commodities=("potato",))
-        dealers.set_bhav_rank(clean, row.slug, 1)
-        buyers.invalidate()
-        assert buyers.for_bhav_panel("Uttar Pradesh", "wheat") == []
-        assert len(buyers.for_bhav_panel("Uttar Pradesh", "potato")) == 1
-
-    def test_empty_commodities_matches_every_crop(self, clean):
-        """The आढ़तिया case: buys everything, so it must not filter to nothing."""
-        row = self._live_dealer(clean, "Sab Kuch Traders", "Hardoi", commodities=())
-        dealers.set_bhav_rank(clean, row.slug, 1)
-        buyers.invalidate()
-        assert len(buyers.for_bhav_panel("Uttar Pradesh", "wheat")) == 1
-
-    def test_rank_survives_only_while_paid(self, clean):
+    def test_a_dealer_holds_only_one_slot_per_page(self, clean):
+        """Moving him from rank 3 to rank 1 must move him, not clone him."""
         row = self._live_dealer(clean, "Sharma Traders", "Hardoi")
-        dealers.set_bhav_rank(clean, row.slug, 1)
+        placements.set_placement(clean, row.slug, "wheat", "up", "", 3)
+        placements.set_placement(clean, row.slug, "wheat", "up", "", 1)
+        assert self._names() == ["Sharma Traders"]
+        assert len(placements.for_dealer(row.slug)) == 1
+
+    def test_the_same_rank_is_free_on_every_other_page(self, clean):
+        """The old model shared three slots across a whole state, so a wheat
+        dealer at rank 1 blocked a rice dealer who could never have appeared on
+        the same page. Different crop, same state, both rank 1."""
+        a = self._live_dealer(clean, "Gehu Wale", "Hardoi", owner_user_id=1)
+        b = self._live_dealer(clean, "Aloo Wale", "Hardoi", owner_user_id=2,
+                              commodities=("potato",))
+        placements.set_placement(clean, a.slug, "wheat", "up", "", 1)
+        placements.set_placement(clean, b.slug, "potato", "up", "", 1)
+        assert self._names("wheat") == ["Gehu Wale"]
+        assert self._names("potato") == ["Aloo Wale"]
+
+    def test_a_lapsed_dealer_drops_out_of_his_slot(self, clean):
+        """Nothing clears the placement — eligibility is re-checked at render,
+        so his slot empties on its own and fills again when he renews."""
+        row = self._live_dealer(clean, "Sharma Traders", "Hardoi")
+        placements.set_placement(clean, row.slug, "wheat", "up", "", 1)
+        assert self._names() == ["Sharma Traders"]
         row.paid_until = datetime.utcnow() - timedelta(days=1)
         clean.commit()
-        buyers.invalidate()
-        assert buyers.for_bhav_panel("Uttar Pradesh", "wheat") == [], (
-            "a lapsed dealer kept his paid slot on the state page")
+        assert self._names() == [], "a lapsed dealer kept his paid slot"
+        assert placements.for_dealer(row.slug), "the slot itself was deleted"
 
-    def test_rank_is_admin_only_over_http(self, clean):
+    def test_placement_is_admin_only_over_http(self, clean):
+        """Anyone who could set this could put themselves on the state page."""
         row = self._live_dealer(clean, "Sharma Traders", "Hardoi")
-        assert client_patch_rank_unauthed(row.slug) in (401, 403)
+        assert _unauthed_placement(row.slug) in (401, 403)
 
 
-def client_patch_rank_unauthed(slug):
+
+def _unauthed_placement(slug):
     """Kept out of the test body so the fixture list stays readable."""
     from fastapi.testclient import TestClient
 
     from backend.main import app
-    return TestClient(app, raise_server_exceptions=False).patch(
-        f"/admin/buyers/{slug}/rank", json={"rank": 1}).status_code
+    return TestClient(app, raise_server_exceptions=False).post(
+        f"/admin/buyers/{slug}/placements",
+        json={"crop": "wheat", "state": "up", "rank": 1}).status_code
 
 
 class TestPrivateNoteNeverReachesAFarmer:
@@ -753,7 +784,7 @@ class TestDealerCatalogue:
             source="signup")
         dealers.approve(clean, row.slug)
         dealers.record_payment(clean, row.slug, 199)
-        dealers.set_bhav_rank(clean, row.slug, 1)
+        placements.set_placement(clean, row.slug, "wheat", "up", "", 1)
         buyers.invalidate()
         return row
 
@@ -997,8 +1028,10 @@ class TestTier3PanelRendering:
             dealers.approve(clean, row.slug)
             dealers.record_payment(clean, row.slug, 199)
             if rank:
-                dealers.set_bhav_rank(clean, row.slug, rank)
+                # A slot on THIS page, not a rank shared across the state.
+                placements.set_placement(clean, row.slug, "wheat", "up", "", rank)
             buyers.invalidate()
+            placements.invalidate()
             return row
 
         return _live
@@ -1209,6 +1242,21 @@ class TestApprovalPutsItLive:
 
 
 class TestAdminSurface:
+    @staticmethod
+    def _index(monkeypatch):
+        """A /bhav index with wheat only, so "sugarcane has no page" is a real
+        answer from real data rather than a stub that always says yes."""
+        from backend.routes import bhav
+        from backend.services import placements
+
+        monkeypatch.setattr(bhav, "_index", {
+            "crops": {"wheat": "Wheat"},
+            "states": {"wheat": {"up": "Uttar Pradesh"}},
+            "dists": {"wheat": {"up": {"hardoi": "Hardoi"}}},
+            "dates": {"wheat": {"up": {"hardoi": "2026-08-05"}}}})
+        monkeypatch.setattr(bhav, "_index_ts", float("inf"))
+        placements.invalidate()
+
     def test_listing_requires_auth(self, clean, client):
         assert client.get("/admin/buyers").status_code == 401
 
@@ -1250,38 +1298,71 @@ class TestAdminSurface:
         assert response.status_code == 200, response.text
         assert response.json()["counts"]["live"] == 1
 
-    def test_set_rank_over_http(self, clean, dealer_user, client):
-        user, headers = dealer_user
-        _listings(client, headers)
-        slug = dealers.for_owner(clean, user.id)[0].slug
-        response = client.patch(f"/admin/buyers/{slug}/rank", auth=ADMIN,
-                                json={"rank": 2})
-        assert response.status_code == 200, response.text
-        assert response.json()["bhav_rank"] == 2
+    # ── placement: which page, which slot ──
+    # The old PATCH /buyers/{slug}/rank is gone. It could only say "rank 2
+    # somewhere in this state", which is neither of the two things now sold.
 
-    @pytest.mark.parametrize("bad", [4, -1, "x"])
-    def test_rank_rejects_values_outside_the_three_slots(self, clean, dealer_user,
-                                                          client, bad):
-        """There are exactly three slots. Junk must 404, not 500 — the panel
-        sends this straight from a <select> and a typo is not a server fault."""
-        user, headers = dealer_user
-        _listings(client, headers)
-        slug = dealers.for_owner(clean, user.id)[0].slug
-        response = client.patch(f"/admin/buyers/{slug}/rank", auth=ADMIN,
-                                json={"rank": bad})
-        assert response.status_code == 404, response.text
+    def _place(self, client, slug, **over):
+        body = {"crop": "wheat", "state": "up", "district": "", "rank": 2}
+        body.update(over)
+        return client.post(f"/admin/buyers/{slug}/placements", auth=ADMIN, json=body)
 
-    @pytest.mark.parametrize("empty", [0, "", None])
-    def test_falsy_rank_clears_the_slot(self, clean, dealer_user, client, empty):
-        """The panel's "—" option, whichever way the browser serialises it."""
+    def test_place_on_a_state_page_over_http(self, clean, dealer_user, client,
+                                              monkeypatch):
+        self._index(monkeypatch)
         user, headers = dealer_user
         _listings(client, headers)
         slug = dealers.for_owner(clean, user.id)[0].slug
-        client.patch(f"/admin/buyers/{slug}/rank", auth=ADMIN, json={"rank": 2})
-        response = client.patch(f"/admin/buyers/{slug}/rank", auth=ADMIN,
-                                json={"rank": empty})
+        response = self._place(client, slug)
         assert response.status_code == 200, response.text
-        assert response.json()["bhav_rank"] is None
+        got = response.json()["placements"]
+        assert [(p["url"], p["rank"]) for p in got] == [("/bhav/wheat/up", 2)]
+
+    def test_place_on_a_district_page_over_http(self, clean, dealer_user, client,
+                                                 monkeypatch):
+        """The ₹199 product. The old rank column could not express it at all."""
+        self._index(monkeypatch)
+        user, headers = dealer_user
+        _listings(client, headers)
+        slug = dealers.for_owner(clean, user.id)[0].slug
+        response = self._place(client, slug, district="hardoi", rank=1)
+        assert response.status_code == 200, response.text
+        assert response.json()["placements"][0]["url"] == "/bhav/wheat/up/hardoi"
+
+    @pytest.mark.parametrize("bad", [4, -1, "x", 0, None])
+    def test_rank_outside_the_three_slots_is_refused(self, clean, dealer_user,
+                                                      client, monkeypatch, bad):
+        """There are exactly three slots. Junk must be a 400, not a 500 — the
+        panel sends this straight from a <select> and a typo is not a fault."""
+        self._index(monkeypatch)
+        user, headers = dealer_user
+        _listings(client, headers)
+        slug = dealers.for_owner(clean, user.id)[0].slug
+        assert self._place(client, slug, rank=bad).status_code == 400
+
+    def test_a_page_that_does_not_exist_cannot_be_sold(self, clean, dealer_user,
+                                                        client, monkeypatch):
+        """Chauhan Traders' real case: sugarcane has no Uttar Pradesh page,
+        because cane goes to mills at SAP and data.gov reports no mandi rows.
+        Taking money for a slot on a URL that 404s is the failure this
+        prevents."""
+        self._index(monkeypatch)
+        user, headers = dealer_user
+        _listings(client, headers)
+        slug = dealers.for_owner(clean, user.id)[0].slug
+        r = self._place(client, slug, crop="sugarcane")
+        assert r.status_code == 400
+        assert "not a page that exists" in r.text
+
+    def test_clearing_a_slot_over_http(self, clean, dealer_user, client, monkeypatch):
+        self._index(monkeypatch)
+        user, headers = dealer_user
+        _listings(client, headers)
+        slug = dealers.for_owner(clean, user.id)[0].slug
+        pid = self._place(client, slug).json()["placements"][0]["id"]
+        assert client.delete(f"/admin/placements/{pid}", auth=ADMIN).status_code == 200
+        assert client.get(f"/admin/buyers/{slug}/placements",
+                          auth=ADMIN).json()["placements"] == []
 
     def test_unknown_slug_is_404(self, clean, client):
         assert client.patch("/admin/buyers/nope", auth=ADMIN,

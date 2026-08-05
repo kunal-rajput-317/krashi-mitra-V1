@@ -119,7 +119,7 @@ def _apply(row: Buyer, data: dict, *, trusted: bool) -> None:
 
     `bhav_rank` is deliberately NOT settable here at all, trusted or not — it
     has cross-row side effects (clearing whoever else held that rank in the
-    same state) that only set_bhav_rank() below knows how to do safely.
+    same state) that only services/placements.py knows how to do safely.
     """
     if "name" in data:
         row.name = (data.get("name") or "").strip()[:120]
@@ -330,40 +330,12 @@ def account_price(db, owner_user_id: int) -> int:
     return quote(len(for_owner(db, owner_user_id)))
 
 
-def set_bhav_rank(db, slug: str, rank) -> Buyer | None:
-    """Assign (or clear, if `rank` is falsy) one of the <=3 Tier-3 bhav-panel
-    slots to this row's state. At most one dealer holds a given rank in a
-    given state: assigning it here clears whoever else in that same state held
-    it, so two paying dealers can never collide on the same slot. Admin-only —
-    called directly from the admin route, never through the generic update().
-    """
-    row = db.query(Buyer).filter(Buyer.slug == slug).first()
-    if not row:
-        return None
-    # A falsy rank ("" / 0 / None, i.e. the panel's "—" option) clears the slot.
-    # Anything else has to parse as one of the three real slots — int() on junk
-    # raises, and letting that reach the route would answer a typo with a 500.
-    if not rank:
-        rank = None
-    else:
-        try:
-            rank = int(rank)
-        except (TypeError, ValueError):
-            return None
-        if rank not in (1, 2, 3):
-            return None
-    if rank is not None and row.state:
-        state_key = _norm_state(row.state)
-        for other in db.query(Buyer).filter(Buyer.bhav_rank == rank,
-                                             Buyer.slug != slug).all():
-            if _norm_state(other.state or "") == state_key:
-                other.bhav_rank = None
-    row.bhav_rank = rank
-    row.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(row)
-    buyers_read.invalidate()
-    return row
+# set_bhav_rank() was here. It could only say "rank N somewhere in this state",
+# which is neither of the two things now sold — a district page (₹199) and a
+# state page (₹999) are separate inventory with their own three slots each.
+# services/placements.py replaced it; the Buyer.bhav_rank column is left in
+# place, unread, so a value written before the change is still recoverable if
+# anyone needs to see what the old panel had set.
 
 
 def _norm_state(s: str) -> str:
@@ -482,9 +454,14 @@ def listing(db, *, source: str = "") -> list[dict]:
         q = q.filter(Buyer.source == source)
     rows = q.order_by(Buyer.created_at.desc()).all()
     now = datetime.utcnow()
+    # Where each dealer is actually shown. On the row rather than behind a
+    # click because "paid but on no page" is the failure this panel exists to
+    # surface, and it is invisible from every other field here.
+    from backend.services import placements as placements_read
     out = []
     for r in rows:
         d = buyers_read.as_dict(r)
+        d["placements"] = placements_read.for_dealer(r.slug)
         d.update({
             "slug": r.slug, "source": r.source, "status": r.status,
             "created_at": r.created_at.isoformat() if r.created_at else "",

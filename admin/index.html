@@ -2258,6 +2258,68 @@ body {
           font-family: inherit; cursor: pointer;
         }
         .by-rank:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ── placement: which page, which slot ── */
+        .by-btn.unplaced { border-color: #d29922; color: #d29922; }
+        .by-btn.placed   { border-color: #3fb950; color: #3fb950; }
+        .by-places { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+        .by-place {
+          font-size: 10.5px; font-family: var(--font-mono); color: var(--text-dim);
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-radius: 20px; padding: 2px 9px;
+        }
+        .by-place b { color: #3fb950; }
+
+        .pl-modal { position: fixed; inset: 0; z-index: 420; display: flex;
+          align-items: center; justify-content: center; padding: 18px;
+          background: rgba(0,0,0,.66); }
+        .pl-box { background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius-md); width: 100%; max-width: 620px;
+          max-height: 88vh; overflow-y: auto; padding: 20px 22px; }
+        .pl-h { font-size: 15px; font-weight: 800; margin: 0 0 3px; }
+        .pl-sub { font-size: 11.5px; color: var(--muted); margin: 0 0 14px; line-height: 1.6; }
+        .pl-sec { font-size: 11px; font-weight: 800; color: var(--muted);
+          text-transform: uppercase; letter-spacing: .04em; margin: 16px 0 7px; }
+        .pl-cur { display: flex; flex-direction: column; gap: 6px; }
+        .pl-cur-row { display: flex; align-items: center; gap: 9px; padding: 7px 10px;
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-radius: var(--radius-sm); font-size: 12px; }
+        .pl-cur-row code { font-family: var(--font-mono); font-size: 11.5px; flex: 1; }
+        .pl-none { font-size: 12px; color: #d29922; padding: 9px 11px;
+          background: rgba(210,153,34,.10); border: 1px solid rgba(210,153,34,.35);
+          border-radius: var(--radius-sm); line-height: 1.55; }
+        .pl-search { width: 100%; box-sizing: border-box; padding: 9px 12px;
+          font-family: inherit; font-size: 13px; border-radius: var(--radius-sm);
+          border: 1px solid var(--border); background: var(--surface-hl); color: var(--text); }
+        .pl-results { margin-top: 8px; max-height: 260px; overflow-y: auto;
+          border: 1px solid var(--border); border-radius: var(--radius-sm); }
+        .pl-hit { display: flex; align-items: center; gap: 10px; padding: 9px 11px;
+          border-bottom: 1px solid var(--border); cursor: pointer; }
+        .pl-hit:last-child { border-bottom: 0; }
+        .pl-hit:hover { background: var(--surface-hl); }
+        .pl-hit.on { background: rgba(63,185,80,.12); }
+        .pl-hit-b { flex: 1; min-width: 0; }
+        .pl-hit-u { font-family: var(--font-mono); font-size: 11.5px; color: var(--text);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pl-hit-m { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+        .pl-kind { font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 20px;
+          white-space: nowrap; }
+        .pl-kind.district { background: rgba(88,166,255,.16); color: #58a6ff; }
+        .pl-kind.state    { background: rgba(163,113,247,.16); color: #a371f7; }
+        .pl-slots { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+        .pl-slot { flex: 1; min-width: 92px; padding: 8px 6px; text-align: center;
+          font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+          border-radius: var(--radius-sm); border: 1px solid var(--border);
+          background: var(--surface-hl); color: var(--text); }
+        .pl-slot small { display: block; font-size: 9.5px; font-weight: 600;
+          color: var(--muted); margin-top: 2px; }
+        .pl-slot.sel { border-color: #3fb950; color: #3fb950; }
+        .pl-slot.taken small { color: #d29922; }
+        .pl-warn { margin-top: 11px; font-size: 11.5px; line-height: 1.55;
+          color: #d29922; background: rgba(210,153,34,.10);
+          border: 1px solid rgba(210,153,34,.35); border-radius: var(--radius-sm);
+          padding: 9px 11px; }
+        .pl-foot { display: flex; gap: 9px; justify-content: flex-end; margin-top: 16px; }
         /* A dealer can be paying and still be shown on no state page, because
            the slot is a separate decision. Colouring the set state makes "he
            is pinned somewhere" answerable at a glance instead of by reading
@@ -2875,6 +2937,44 @@ body {
 
          Credentials live here and nowhere public: services/buyers.py::as_dict
          does not carry them, so nothing farmer-facing can render one. -->
+    <!-- PLACEMENT — which /bhav page this dealer is shown on, and in which of
+         its three slots. Search rather than a dropdown because the choice is
+         one of ~14,000 real pages, and REAL is the point: a page that does not
+         exist cannot be picked, so nobody can be sold a slot on a URL that
+         404s. That is not hypothetical — sugarcane has no Uttar Pradesh page
+         at all, because cane goes to mills at SAP and no mandi reports it. -->
+    <div class="pl-modal" id="pl-modal" hidden onclick="if(event.target===this)closePlaceModal()">
+      <div class="pl-box">
+        <h3 class="pl-h" id="pl-name">—</h3>
+        <p class="pl-sub">
+          पैसा देने से सिर्फ इतना तय होता है कि दुकान <b>दिख सकती है</b>।
+          <b>कहां</b> दिखेगी, वो यहां तय होता है।<br>
+          जिले का पेज ₹199/महीना · राज्य का पेज ₹999/महीना — हर पेज पर सिर्फ 3 जगह।
+        </p>
+
+        <div class="pl-sec">अभी कहां दिख रहे हैं</div>
+        <div class="pl-cur" id="pl-current"></div>
+
+        <div class="pl-sec">नया पेज जोड़ें</div>
+        <input class="pl-search" id="pl-q" type="text" autocomplete="off"
+               oninput="onPlaceSearch(this.value)"
+               placeholder="जिला, राज्य या फसल खोजें — जैसे bijnor, gur, wheat">
+        <div class="pl-results" id="pl-results"></div>
+
+        <div id="pl-pick" hidden>
+          <div class="pl-sec">कौन सी जगह</div>
+          <div class="pl-slots" id="pl-slots"></div>
+          <div class="pl-warn" id="pl-warn" hidden></div>
+        </div>
+
+        <div class="pl-foot">
+          <button class="by-btn" onclick="closePlaceModal()">बंद करें</button>
+          <button class="by-btn ok" id="pl-save" onclick="savePlacement()" disabled>
+            इस पेज पर लगाएं</button>
+        </div>
+      </div>
+    </div>
+
     <div class="pay-modal" id="edit-modal" hidden onclick="if(event.target===this)closeEditModal()">
       <div class="pay-box" style="text-align:left;max-width:520px;">
         <h3 id="ed-title">दुकान की जानकारी</h3>
@@ -5730,9 +5830,6 @@ function buyerRowHtml(b) {
           b.paid_until ? `, till ${byDate(b.paid_until)}` : ''}` : ''}`
     : '☎️ अभी तक कॉल नहीं किया';
 
-  // Tier-3 bhav-panel slot — admin-only, and only meaningful once verified;
-  // the backend (dealers.set_bhav_rank) also enforces one holder per
-  // (state, rank), clearing whoever else in that state held it.
   // Credentials, shown compactly so "is this one actually checked?" is
   // answerable from the list without opening each row.
   const creds = [
@@ -5741,19 +5838,14 @@ function buyerRowHtml(b) {
     b.email      ? escapeHtml(b.email) : '',
   ].filter(Boolean).join(' · ');
 
-  // Says what it does, not what it is called in the code: the state page has
-  // three slots and this picks which one he gets. "Tier-3 rank" meant nothing
-  // without reading the source.
-  const RANK_LABEL = { 1: 'रैंक 1 — सबसे ऊपर', 2: 'रैंक 2 — बीच में', 3: 'रैंक 3 — सबसे नीचे' };
-  const rankOpt = n =>
-    `<option value="${n}" ${b.bhav_rank === n ? 'selected' : ''}>${RANK_LABEL[n]}</option>`;
-  const rankSelect = `<select class="by-rank ${b.bhav_rank ? 'is-set' : ''}"
-      title="राज्य के भाव पेज पर सिर्फ 3 दुकानें दिखती हैं — यह तय करता है कि कौन सी जगह इनकी है"
-      ${b.verified ? '' : 'disabled title="पहले verify करें"'}
-      onchange="setBhavRank('${escapeHtml(b.slug)}', this.value)">
-    <option value="" ${!b.bhav_rank ? 'selected' : ''}>राज्य पेज पर जगह चुनें — अभी कहीं नहीं</option>
-    ${rankOpt(1)}${rankOpt(2)}${rankOpt(3)}
-  </select>`;
+  // Where this dealer is actually shown. Paying is eligibility; this is
+  // placement, and a dealer can be fully paid up and on no page at all — so
+  // the count is on the button rather than hidden behind a click.
+  const nPlaced = (b.placements || []).length;
+  const featBtn = `<button class="by-btn ${nPlaced ? 'placed' : 'unplaced'}"
+      title="किस पेज पर, किस जगह दिखेंगे"
+      onclick="openPlaceModal('${escapeHtml(b.slug)}')">
+    ${nPlaced ? `📍 ${nPlaced} पेज पर` : '📍 कहीं नहीं दिख रहे'}</button>`;
 
   return `<div class="by-row ${live ? '' : 'by-off'}" id="by-row-${escapeHtml(b.slug)}">
     <div class="by-main">
@@ -5776,25 +5868,25 @@ function buyerRowHtml(b) {
         ${Object.keys(BY_CALL).map(k =>
           `<button class="by-cbtn" onclick="logCall('${escapeHtml(b.slug)}','${k}')">${BY_CALL[k]}</button>`
         ).join('')}
-        ${b.owner_user_id ? rankSelect : ''}
       </div>
+      ${nPlaced ? `<div class="by-places">${(b.placements || []).map(p =>
+        `<span class="by-place">${p.district ? '📍' : '🗺️'} ${escapeHtml(p.url)}
+          <b>#${p.rank}</b></span>`).join('')}</div>` : ''}
     </div>
     <div class="by-acts">
       <button class="by-btn ok" onclick="openPayModal('${escapeHtml(b.slug)}')">Payment</button>
+      ${featBtn}
       <button class="by-btn" onclick="openEditBuyer('${escapeHtml(b.slug)}')">✏️ Edit</button>
       ${live
         ? `<button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','active',false)">Hide</button>`
         : `<button class="by-btn ok" onclick="approveBuyer('${escapeHtml(b.slug)}')">✓ Called — list it</button>`}
-      <!-- The "☆ Feature in <district>" button was here and was removed on
-           purpose: two different prominence controls on one row (this flag,
-           which sorts a dealer first WITHIN a district page, and the rank
-           dropdown, which picks the three dealers shown on a STATE page) is
-           one too many to hold in your head, and it only ever mattered once a
-           district had two dealers competing.
-           The featured column and its "featured first" sort in
-           services/buyers.py::for_place are untouched — if per-district
-           pinning is ever wanted back, it needs this button and nothing else.
-           Ranking now lives in one place: the dropdown in the call bar. -->
+      <!-- One placement control, not three. What used to be here: a "☆ Feature
+           in <district>" flag that sorted a dealer first WITHIN a district
+           page, and a rank dropdown that picked three dealers for a whole
+           STATE. Neither could say "this page, this slot", which is the thing
+           actually sold. Both are gone; 📍 above opens the one box that can.
+           The featured column and its sort in services/buyers.py::for_place
+           are untouched, just no longer settable from here. -->
       <button class="by-btn" onclick="addDistrictFor('${escapeHtml(b.slug)}')"
               title="इसी दुकान को एक और जिले में जोड़ें">＋ District</button>
       <button class="by-btn warn" onclick="deleteBuyer('${escapeHtml(b.slug)}')">Delete</button>
@@ -6028,23 +6120,155 @@ async function addDistrictFor(slug) {
   }
 }
 
-async function setBhavRank(slug, value) {
-  const rank = value ? parseInt(value, 10) : null;
+/* ══════════ PLACEMENT — which page, which slot ══════════
+   Replaces setBhavRank(), which could only say "rank N somewhere in this
+   state" — neither of the two things actually sold. */
+let _plSlug = null, _plPick = null, _plRank = null, _plTimer = null;
+
+async function openPlaceModal(slug) {
+  _plSlug = slug; _plPick = null; _plRank = null;
+  const row = (window._byRows || []).find(b => b.slug === slug) || {};
+  document.getElementById('pl-name').textContent = row.name || slug;
+  document.getElementById('pl-q').value = '';
+  document.getElementById('pl-results').innerHTML = '';
+  document.getElementById('pl-pick').hidden = true;
+  document.getElementById('pl-save').disabled = true;
+  document.getElementById('pl-modal').hidden = false;
+  await renderPlacements();
+  // Pre-seed with his own district/state so the common case is one click.
+  searchPages(row.district || row.state || '');
+  document.getElementById('pl-q').focus();
+}
+
+function closePlaceModal() {
+  document.getElementById('pl-modal').hidden = true;
+  _plSlug = _plPick = _plRank = null;
+}
+
+async function renderPlacements() {
+  const box = document.getElementById('pl-current');
+  const d = await adminGet(`/admin/buyers/${encodeURIComponent(_plSlug)}/placements`);
+  const rows = (d && d.placements) || [];
+  if (!rows.length) {
+    box.innerHTML = `<div class="pl-none">अभी ये किसी भी पेज पर नहीं दिख रहे।
+      पैसा चालू होने पर भी, जब तक नीचे से कोई पेज न चुनें, किसान इन्हें कहीं नहीं देखेंगे।</div>`;
+    return;
+  }
+  box.innerHTML = rows.map(p => `<div class="pl-cur-row">
+    <span class="pl-kind ${p.district ? 'district' : 'state'}">${p.district ? 'जिला' : 'राज्य'}</span>
+    <code>${escapeHtml(p.url)}</code>
+    <b>जगह #${p.rank}</b>
+    <span style="color:var(--muted)">₹${p.price || '—'}/माह</span>
+    <button class="by-btn warn" onclick="removePlacement(${p.id})">हटाएं</button>
+  </div>`).join('');
+}
+
+async function removePlacement(id) {
   try {
-    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(slug)}/rank`, {
-      method: 'PATCH',
+    const r = await fetch(`${API}/admin/placements/${id}`,
+                          { method: 'DELETE', headers: getAuthHeader() });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    showToast('पेज से हटा दिया');
+    await renderPlacements();
+    loadBuyers();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function onPlaceSearch(v) {
+  clearTimeout(_plTimer);
+  _plTimer = setTimeout(() => searchPages(v), 220);
+}
+
+async function searchPages(q) {
+  const box = document.getElementById('pl-results');
+  box.innerHTML = '<div class="pl-hit"><span class="pl-hit-b">खोज रहे हैं…</span></div>';
+  const d = await adminGet(`/admin/bhav/pages?q=${encodeURIComponent(q || '')}` +
+                           `&slug=${encodeURIComponent(_plSlug)}&limit=25`);
+  const pages = (d && d.pages) || [];
+  if (!pages.length) {
+    // The honest empty state. This is what Chauhan Traders' sugarcane looks
+    // like: no page exists, so there is nothing to sell.
+    box.innerHTML = `<div class="pl-hit"><span class="pl-hit-b">
+      <span class="pl-hit-u">कोई पेज नहीं मिला</span>
+      <span class="pl-hit-m">इस फसल/जिले का भाव पेज मौजूद ही नहीं है — जिस फसल का
+      मंडी भाव नहीं आता, उसका पेज भी नहीं बनता।</span></span></div>`;
+    return;
+  }
+  box.innerHTML = pages.map((p, i) => {
+    const free = p.slots.filter(s => !s.slug).length;
+    return `<div class="pl-hit" data-i="${i}" onclick="pickPage(${i})">
+      <span class="pl-kind ${p.kind}">${p.kind === 'district' ? 'जिला ₹199' : 'राज्य ₹999'}</span>
+      <span class="pl-hit-b">
+        <span class="pl-hit-u">${escapeHtml(p.url)}</span>
+        <span class="pl-hit-m">${escapeHtml(p.crop_hi || p.crop)} ·
+          ${escapeHtml(p.district_hi || p.state_hi || '')} ·
+          ${free} जगह खाली${p.crop_is_his ? '' : ' · इनकी फसल सूची में नहीं'}</span>
+      </span></div>`;
+  }).join('');
+  window._plPages = pages;
+}
+
+function pickPage(i) {
+  const p = (window._plPages || [])[i];
+  if (!p) return;
+  _plPick = p; _plRank = null;
+  document.querySelectorAll('.pl-hit').forEach(el =>
+    el.classList.toggle('on', el.dataset.i === String(i)));
+  document.getElementById('pl-pick').hidden = false;
+  document.getElementById('pl-save').disabled = true;
+  document.getElementById('pl-slots').innerHTML = p.slots.map(s => {
+    const holder = s.slug ? `<small>अभी: ${escapeHtml(s.slug)}</small>`
+                          : '<small>खाली</small>';
+    return `<button class="pl-slot ${s.slug ? 'taken' : ''}" data-r="${s.rank}"
+              onclick="pickRank(${s.rank})">जगह ${s.rank}${holder}</button>`;
+  }).join('');
+  const warn = document.getElementById('pl-warn');
+  warn.hidden = !!p.crop_is_his;
+  if (!p.crop_is_his) {
+    warn.innerHTML = `⚠️ इस दुकान की फसल सूची में <b>${escapeHtml(p.crop_hi || p.crop)}</b>
+      नहीं है। फिर भी लगा सकते हैं — आप इन्हें सूची से बेहतर जानते हैं।`;
+  }
+}
+
+function pickRank(rank) {
+  _plRank = rank;
+  document.querySelectorAll('.pl-slot').forEach(el =>
+    el.classList.toggle('sel', el.dataset.r === String(rank)));
+  document.getElementById('pl-save').disabled = false;
+}
+
+async function savePlacement() {
+  if (!_plPick || !_plRank) return;
+  const btn = document.getElementById('pl-save');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_plSlug)}/placements`, {
+      method: 'POST',
       headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rank })
+      body: JSON.stringify({ crop: _plPick.crop, state: _plPick.state,
+                             district: _plPick.district, rank: _plRank,
+                             price: _plPick.price })
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
-    showToast(rank
-      ? `राज्य पेज पर जगह ${rank} मिल गई — अब किसानों को दिखेंगे`
-      : 'राज्य पेज से हटा दिया — अब किसी राज्य पेज पर नहीं दिखेंगे');
+    showToast(`${_plPick.url} पर जगह ${_plRank} — अब किसानों को दिखेंगे`);
+    document.getElementById('pl-pick').hidden = true;
+    await renderPlacements();
     loadBuyers();
   } catch (e) {
     showToast(e.message, 'error');
-    printTerminalLog(`Rank: could not set rank for "${slug}" — ${e.message}`, 'log-entry-err');
+    printTerminalLog(`Placement failed for "${_plSlug}" — ${e.message}`, 'log-entry-err');
+  } finally { btn.disabled = false; }
+}
+
+async function adminGet(path) {
+  try {
+    const r = await fetch(`${API}${path}`, { headers: getAuthHeader() });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch (e) {
+    showToast(e.message, 'error');
+    return null;
   }
 }
 

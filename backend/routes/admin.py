@@ -1403,22 +1403,169 @@ async def delete_product_image(
     return {"success": True}
 
 
-@router.patch("/buyers/{slug}/rank")
-async def set_buyer_bhav_rank(
+# ── Placement: which /bhav page a dealer is shown on ──────────
+# The thing that is actually sold. Eligibility (paid, verified, live) is a
+# different question and lives on the Buyer row; a dealer can satisfy every one
+# of those and still be shown nowhere, which is precisely the mistake these
+# endpoints exist to make visible and fixable.
+
+
+def _page_label(idx: dict, crop: str, state: str, district: str = "") -> dict:
+    """One searchable /bhav page, named the way a person would say it."""
+    from backend.routes import bhav
+    from backend.services import placements
+
+    return {
+        "url":        placements.page_url(crop, state, district),
+        "crop":       crop,
+        "state":      state,
+        "district":   district,
+        "kind":       "district" if district else "state",
+        "crop_hi":    bhav._hindi_name(idx.get("crops", {}).get(crop, crop)),
+        "state_hi":   idx.get("states", {}).get(crop, {}).get(state, state),
+        "district_hi": (idx.get("dists", {}).get(crop, {})
+                           .get(state, {}).get(district, district)),
+        "price":      placements.price_for(district),
+    }
+
+
+@router.get("/bhav/pages")
+async def search_bhav_pages(
+    q:     str = "",
+    slug:  str = "",
+    limit: int = 25,
+    _: str = Depends(require_admin),
+):
+    """Search the real /bhav pages a dealer could be placed on.
+
+    Only pages that EXIST are returned, and that is the point of doing this
+    server-side against the live index rather than letting the panel build a
+    URL from a crop name. A dealer whose only crop is sugarcane in UP has no
+    page anywhere — data.gov reports no UP cane mandi rows, because cane goes
+    to mills at SAP — and the honest answer is an empty result list, not a slot
+    quietly sold on a URL that 404s.
+
+    `slug` biases the results toward that dealer's own state and district,
+    which is what is wanted 95% of the time.
+    """
+    from backend.routes import bhav
+    from backend.services import buyers, placements
+
+    idx = bhav._get_index()
+    needle = placements.norm(q)
+    home_state = home_district = ""
+    dealer_crops: set = set()
+    if slug:
+        d = buyers.by_id(slug) or {}
+        if not d:
+            from backend.services import dealers as _dealers
+            row = _dealers.get(slug) if hasattr(_dealers, "get") else None
+            d = {"state": getattr(row, "state", ""), "district": getattr(row, "district", ""),
+                 "commodities": []} if row else {}
+        home_state = placements.norm(d.get("state", "")).replace(" ", "-")
+        home_district = placements.norm(d.get("district", "")).replace(" ", "-")
+        dealer_crops = {placements.norm(c) for c in (d.get("commodities") or [])}
+
+    def matches(*parts) -> bool:
+        if not needle:
+            return True
+        return any(needle in placements.norm(str(p)) for p in parts if p)
+
+    out, seen = [], set()
+    for crop, states in idx.get("states", {}).items():
+        crop_hi = bhav._hindi_name(idx.get("crops", {}).get(crop, crop))
+        for state, state_name in states.items():
+            # the state page (₹999)
+            if matches(crop, crop_hi, state, state_name):
+                key = (crop, state, "")
+                if key not in seen:
+                    seen.add(key)
+                    out.append(_page_label(idx, crop, state))
+            dists = idx.get("dists", {}).get(crop, {}).get(state, {})
+            for district, district_name in dists.items():
+                if not matches(crop, crop_hi, district, district_name, state, state_name):
+                    continue
+                key = (crop, state, district)
+                if key not in seen:
+                    seen.add(key)
+                    out.append(_page_label(idx, crop, state, district))
+
+    def sort_key(p):
+        return (
+            0 if p["district"] and p["district"] == home_district else 1,
+            0 if p["state"] == home_state else 1,
+            0 if placements.norm(p["crop"]) in dealer_crops else 1,
+            0 if p["kind"] == "district" else 1,
+            p["url"],
+        )
+
+    out.sort(key=sort_key)
+    limit = max(1, min(int(limit or 25), 100))
+    for p in out[:limit]:
+        p["slots"] = placements.slots_on(p["crop"], p["state"], p["district"])
+        p["crop_is_his"] = placements.norm(p["crop"]) in dealer_crops if slug else True
+    return {"success": True, "pages": out[:limit], "total": len(out)}
+
+
+@router.get("/buyers/{slug}/placements")
+async def list_buyer_placements(
+    slug: str,
+    _: str = Depends(require_admin),
+):
+    from backend.services import placements
+    return {"success": True, "placements": placements.for_dealer(slug)}
+
+
+@router.post("/buyers/{slug}/placements")
+async def add_buyer_placement(
     slug:    str,
     payload: dict,
     _:  str     = Depends(require_admin),
     db: Session = Depends(admin_db),
 ):
-    """Which (if any) of the <=3 Tier-3 bhav-panel slots this row holds for its
-    state. {"rank": 1|2|3|null}. Routed through dealers.set_bhav_rank() rather
-    than the generic update() above — it has to clear whoever else in the same
-    state held that rank first, which update()/_apply() deliberately cannot do."""
-    from backend.services import dealers
-    row = _dealer_write(dealers.set_bhav_rank, db, slug, payload.get("rank"))
+    """{"crop": "...", "state": "...", "district": "", "rank": 1, "price": 999}
+
+    A crop the dealer does not deal in is allowed on purpose — the owner knows
+    his dealers better than a comma-separated list does — and the panel warns
+    before sending it. What is NOT allowed is a page that does not exist: that
+    would sell a slot on a 404.
+    """
+    from backend.routes import bhav
+    from backend.services import buyers, placements
+
+    if not buyers.by_id(slug):
+        from backend.services import dealers
+        if not dealers.for_slug(db, slug) if hasattr(dealers, "for_slug") else False:
+            pass                       # fall through; the write below 404s if unknown
+
+    crop = placements.norm(payload.get("crop"))
+    state = placements.norm(payload.get("state"))
+    district = placements.norm(payload.get("district") or "")
+
+    idx = bhav._get_index()
+    known_state = state in idx.get("states", {}).get(crop, {})
+    known_district = district in idx.get("dists", {}).get(crop, {}).get(state, {})
+    if not known_state or (district and not known_district):
+        raise HTTPException(400, f"{placements.page_url(crop, state, district)} "
+                                 f"is not a page that exists")
+
+    row = _dealer_write(placements.set_placement, db, slug, crop, state,
+                        district, payload.get("rank"), payload.get("price"))
     if not row:
-        raise HTTPException(404, "Unknown dealer, or rank must be 1, 2, 3 or null")
-    return {"success": True, "bhav_rank": row.bhav_rank}
+        raise HTTPException(400, "rank must be 1, 2 or 3")
+    return {"success": True, "placements": placements.for_dealer(slug)}
+
+
+@router.delete("/placements/{placement_id}")
+async def remove_placement(
+    placement_id: int,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    from backend.services import placements
+    if not _dealer_write(placements.clear_placement, db, placement_id):
+        raise HTTPException(404, "Unknown placement")
+    return {"success": True}
 
 
 # ── Outreach: the call log and the ₹500 ───────────────────────

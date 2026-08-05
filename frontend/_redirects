@@ -139,6 +139,21 @@
 /go/*            https://krashi-mitra-v1-oxdc.onrender.com/go/:splat            200
 /kharidar/go/*   https://krashi-mitra-v1-oxdc.onrender.com/kharidar/go/:splat   200
 
+# A paying dealer's product photos, same bug as /go above and found the same
+# way — on the live site, not in a test. The photo lives in Postgres and is
+# served by routes/dukanlisting.py::product_image; the card on /bhav and the
+# kharidar pages points at it with a ROOT-RELATIVE src, so on krashimitra.in
+# the browser asked Netlify for it and got nothing back. The product card
+# rendered with an empty grey box — no console error, no 404 anyone would see,
+# just the one thing the dealer is paying to show missing.
+#
+# Proxied rather than switched to an absolute onrender.com src so the URL stays
+# same-origin: it keeps the 7-day cache header working per-domain and avoids a
+# CORS round trip on an <img> a farmer is waiting for.
+/dukanlisting/product-image/*  https://krashi-mitra-v1-oxdc.onrender.com/dukanlisting/product-image/:splat  200
+# The old path, for HTML Google or a CDN cached before the /dukan rename.
+/dukan/product-image/*         https://krashi-mitra-v1-oxdc.onrender.com/dukanlisting/product-image/:splat  200
+
 # Proxy site search to the backend (routes/bhav.py /find — the search form on
 # product hub pages posts here; it was missing and 404ing in prod)
 /find   https://krashi-mitra-v1-oxdc.onrender.com/find   200

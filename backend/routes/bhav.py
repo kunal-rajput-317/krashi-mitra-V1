@@ -52,7 +52,9 @@ from sqlalchemy import func
 from backend.database.db import (SessionLocal, CropAppeal, MandiPrice, MandiLastSeen,
                                  User, UserProfile)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
-from backend.services import buyers, district_geo, freight, lead_clicks, leads, msp
+from backend.services import (
+    buyers, district_geo, freight, lead_clicks, leads, msp, placements,
+)
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
                                   _STAPLE_TILES_N)
@@ -912,6 +914,12 @@ def _related_links(c_slug: str, s_slug: str, d_slug: str,
         chips = "".join(
             _crop_chip(f"/bhav/{cs}/{s_slug}/{d_slug}", _hindi_name(cn), cn)
             for cs, cn in same_dist)
+        # …and the way out of the 10-chip cap: the district hub lists every crop
+        # this mandi reports. Also the only internal link those hubs get from the
+        # deep pages, which is where the crawler already spends its budget.
+        n_all = len(_crops_in(idx, s_slug, d_slug))
+        chips += (f'<a class="chip" href="/bhav/rajya/{s_slug}/{d_slug}">'
+                  f'<span class="ico">🗂️</span>सभी {n_all} फसलें</a>')
         out.append(f'<h2>{escape(district)} मंडी में अन्य फसलों के भाव</h2><div class="chips">{chips}</div>')
     return "\n".join(out)
 
@@ -2162,8 +2170,62 @@ def _switchers(c_slug: str, s_slug: str, d_slug: str) -> str:
 </div>"""
 
 
+def _state_name(idx: dict, ss: str) -> str:
+    """Display spelling of a state slug, from whichever crop reports it. The
+    place hubs (/bhav/rajya/…) have no crop to look it up under."""
+    for smap in idx.get("states", {}).values():
+        if ss in smap:
+            return smap[ss]
+    return ""
+
+
+def _dist_name(idx: dict, ss: str, ds: str) -> str:
+    for dmap in idx.get("dists", {}).values():
+        hit = dmap.get(ss, {}).get(ds)
+        if hit:
+            return hit
+    return ""
+
+
+def _crops_in(idx: dict, ss: str = "", ds: str = "") -> dict:
+    """{crop slug → commodity} actually reported in one district (ss+ds), one
+    state (ss), or anywhere (neither). Membership is what makes a place-scoped
+    crop link safe: every crop here really has a page at that place."""
+    out = {}
+    for c, cn in idx.get("crops", {}).items():
+        if not _is_crop(cn):
+            continue
+        if ds:
+            if ds not in idx.get("dists", {}).get(c, {}).get(ss, {}):
+                continue
+        elif ss:
+            if ss not in idx.get("states", {}).get(c, {}):
+                continue
+        out[c] = cn
+    return out
+
+
+def _states_all(idx: dict) -> dict:
+    """{state slug → state} across every crop — the crop-less state list."""
+    out = {}
+    for c, smap in idx.get("states", {}).items():
+        if _is_crop(idx.get("crops", {}).get(c, "")):
+            out.update(smap)
+    return out
+
+
+def _dists_in_state(idx: dict, ss: str) -> dict:
+    """{district slug → district} reporting ANY crop in one state."""
+    out = {}
+    for c, smap in idx.get("dists", {}).items():
+        if _is_crop(idx.get("crops", {}).get(c, "")):
+            out.update(smap.get(ss, {}))
+    return out
+
+
 def _hub_selector(cs: str, ss: str, ds: str, idx: dict,
-                   known_crop: bool = False, known_state: bool = False) -> str:
+                   known_crop: bool = False, known_state: bool = False,
+                   known_dist: bool = False) -> str:
     """Same crop/state/district quick-jump as _switchers(), but a type-or-speak
     <input list=datalist> instead of a plain <select> — the hub's district list
     can run to 60+ entries, too many to scan by scrolling on a first visit.
@@ -2171,28 +2233,40 @@ def _hub_selector(cs: str, ss: str, ds: str, idx: dict,
     already resolved, not picked from scratch) so that one keeps its plain,
     no-JS-safe <select> untouched.
 
-    फसल's options go to /bhav/{crop} (tier 2), NOT /bhav/{crop}/{ss}/{ds} — the
-    seed state/district are one crop's, and most other crops aren't reported in
-    that exact district, so combining them would 404 for most choices. राज्य and
-    मंडी/जिला stay scoped to the seed crop (idx only ever holds real combos), so
-    picking those two always lands on a real page.
+    known_crop/known_state/known_dist say which parts of the URL are REAL, and
+    that is what every destination is built from. A field the page has not
+    resolved must never be borrowed from a seed: /bhav/rajya/{state} seeds cs
+    with the state's widest-covered crop purely for ranking, and pointing the
+    जिला options at /bhav/{seed}/{ss}/{ds} sent a farmer who picked Bijnor on
+    the Uttar Pradesh hub straight into WHEAT prices he never asked for.
 
-    known_crop/known_state: on tier-2/3 pages cs/ss are the REAL crop/state the
-    URL is already on (not just a scoring seed like on the hub), so those fields
-    should show it as picked rather than an empty "चुनें" placeholder — this is
-    what tells a visitor the field they're looking at already matches the page."""
+    So, by what is known:
+      crop known   → राज्य/जिला stay inside that crop's tree (tier 2/3)
+      crop unknown → they go to the crop-less place hubs, /bhav/rajya/…, which
+                     ask for the crop instead of guessing one
+      place known  → फसल carries it: /bhav/{crop}/{ss}[/{ds}]
+    Each list is the real membership from idx (crops reported in that place,
+    districts that report anything there), so no combination can 404."""
     cur_crop = _hindi_name(idx["crops"].get(cs, "")) if known_crop else ""
-    cur_state = _hindi_state(idx["states"].get(cs, {}).get(ss, "")) if known_state else ""
+    cur_state = _hindi_state(_state_name(idx, ss)) if known_state else ""
+    cur_dist = _dist_name(idx, ss, ds) if known_dist else ""
 
     crops = sorted(
-        ((c, cn) for c, cn in idx["crops"].items() if _is_crop(cn)),
+        _crops_in(idx, ss if known_state else "", ds if known_dist else "").items(),
         key=lambda x: (_tile_rank(x[1]), _hindi_name(x[1])))
-    states = sorted(idx["states"].get(cs, {}).items(), key=lambda kv: kv[1])
-    dists = sorted(idx["dists"].get(cs, {}).get(ss, {}).items(), key=lambda kv: kv[1])
+    if known_crop:
+        states = sorted(idx["states"].get(cs, {}).items(), key=lambda kv: kv[1])
+        dists = sorted(idx["dists"].get(cs, {}).get(ss, {}).items(), key=lambda kv: kv[1])
+    else:
+        states = sorted(_states_all(idx).items(), key=lambda kv: kv[1])
+        dists = sorted(_dists_in_state(idx, ss).items(), key=lambda kv: kv[1])
 
-    crop_map = {_hindi_name(cn): f"/bhav/{c}" for c, cn in crops}
-    state_map = {_hindi_state(sn): f"/bhav/{cs}/{s}" for s, sn in states}
-    dist_map = {dn: f"/bhav/{cs}/{ss}/{d}" for d, dn in dists}
+    place = (f"/{ss}/{ds}" if known_dist else f"/{ss}") if known_state else ""
+    crop_map = {_hindi_name(cn): f"/bhav/{c}{place}" for c, cn in crops}
+    state_map = ({_hindi_state(sn): f"/bhav/{cs}/{s}" for s, sn in states} if known_crop
+                 else {_hindi_state(sn): f"/bhav/rajya/{s}" for s, sn in states})
+    dist_map = ({dn: f"/bhav/{cs}/{ss}/{d}" for d, dn in dists} if known_crop
+                else {dn: f"/bhav/rajya/{ss}/{d}" for d, dn in dists})
     # English synonyms, keyed by the same Hindi label used above, purely for
     # search — so typing "wheat" finds गेहूं just like typing "गेहूं" does.
     # The Hindi label stays the one thing that's shown, stored and navigated on.
@@ -2227,7 +2301,8 @@ onblur="kmComboBlur('{inp_id}')">
 
     fields = (_field("फसल", "dl-hub-crop", "फसल चुनें", crop_map, "window.dl_hub_crop_alt", cur_crop)
               + _field("राज्य", "dl-hub-state", "राज्य चुनें", state_map, "window.dl_hub_state_alt", cur_state)
-              + _field("मंडी / जिला", "dl-hub-dist", "मंडी / जिला चुनें", dist_map))
+              + _field("मंडी / जिला", "dl-hub-dist", "मंडी / जिला चुनें", dist_map,
+                       value=cur_dist))
 
     maps_js = "".join(
         f'window.{var}={_json.dumps(m, ensure_ascii=False)};'
@@ -2577,20 +2652,30 @@ def bhav_sitemap():
         site_last = max(site_last, crop_last)
         urls.append((f"{SITE}/bhav/{cs}", crop_last))
         urls.extend(crop_urls)
-    # State hubs (/bhav/rajya/{state}) — the hub's "राज्य के आधार पर" destinations.
-    # lastmod = newest arrival across EVERY crop reported in that state; a state
-    # with only dateless rows still ships (lastmod omitted) so its link is found.
+    # Place hubs — /bhav/rajya/{state} (the hub's "राज्य के आधार पर" destination)
+    # and /bhav/rajya/{state}/{district} under it. lastmod = newest arrival
+    # across EVERY crop reported in that place; a place with only dateless rows
+    # still ships (lastmod omitted) so its link is found.
     state_last, all_state_slugs = {}, set()
+    dist_last, dists_by_state = {}, {}
     for cs, cn in idx.get("crops", {}).items():
         if not _is_crop(cn):
             continue
         all_state_slugs |= set(idx["states"].get(cs, {}))
+        for ss, d_map in idx["dists"].get(cs, {}).items():
+            dists_by_state.setdefault(ss, set()).update(d_map)
         for ss, d_map in dates.get(cs, {}).items():
-            for d_last in d_map.values():
-                if d_last and d_last > state_last.get(ss, ""):
+            for ds, d_last in d_map.items():
+                if not d_last:
+                    continue
+                if d_last > state_last.get(ss, ""):
                     state_last[ss] = d_last
+                if d_last > dist_last.get((ss, ds), ""):
+                    dist_last[(ss, ds)] = d_last
     for ss in sorted(all_state_slugs):
         urls.append((f"{SITE}/bhav/rajya/{ss}", state_last.get(ss, "")))
+        for ds in sorted(dists_by_state.get(ss, ())):
+            urls.append((f"{SITE}/bhav/rajya/{ss}/{ds}", dist_last.get((ss, ds), "")))
     urls.insert(0, (f"{SITE}/bhav/net-price", ""))   # net-price calculator hub
     urls.insert(0, (f"{SITE}/bhav", site_last))
     body = "\n".join(
@@ -2840,34 +2925,30 @@ def bhav_hub():
 # fills that gap with real server-rendered, crawlable crop cards that link into
 # the existing crop×state pages. Registered ABOVE /bhav/{c_slug}/{x_slug} (TIER 3)
 # so "rajya" isn't swallowed as a crop slug.
+#
+# Picking a district here goes DOWN this same crop-less path (/bhav/rajya/{state}
+# /{district}), never sideways into some crop's tree — see _hub_selector.
 # ════════════════════════════════════════════════════════════
 @router.get("/bhav/rajya/{state}", response_class=HTMLResponse)
 def bhav_state_hub(state: str):
     idx = _get_index()
     ss = state.lower()
 
-    crops_here = {}
-    for c, smap in idx["states"].items():
-        if ss not in smap:
-            continue
-        cn = idx["crops"].get(c, "")
-        if _is_crop(cn):
-            crops_here[c] = cn
+    crops_here = _crops_in(idx, ss)
     if not crops_here:
         return _not_found()
 
     # Canonical display spelling of the state (from any crop that reports it).
-    sn = next(idx["states"][c][ss] for c in crops_here)
+    sn = _state_name(idx, ss)
     hi_state = _hindi_state(sn)
     today_hi = _hindi_date(date.today())
     canon = f"{SITE}/bhav/rajya/{ss}"
 
-    # Distinct districts reporting anything in this state — an honest size cue
-    # (no per-crop DB round-trips, so cheap enough for a shared cached page).
-    dist_set = set()
-    for c in crops_here:
-        dist_set |= set(idx["dists"].get(c, {}).get(ss, {}))
-    n_dist = len(dist_set)
+    # Every district reporting anything in this state — an honest size cue AND
+    # the जिला grid below (no per-crop DB round-trips, so cheap enough for a
+    # shared cached page).
+    dists_here = _dists_in_state(idx, ss)
+    n_dist = len(dists_here)
 
     # Staples first (same ranking as the hub grid), long tail after — one
     # crawlable crop card each, linking into the existing crop×state page.
@@ -2888,11 +2969,14 @@ def bhav_state_hub(state: str):
 <span class="lbl">{c_dist} जिले</span><span class="rate">भाव देखें →</span>
 </div></a>""")
 
-    # Seed the quick-jump selector with the widest-covered crop in this state,
-    # and mark राज्य as already picked (this page IS that state).
-    seed_cs = max(crops_here, key=lambda c: len(idx["dists"].get(c, {}).get(ss, {})))
-    seed_dists = idx["dists"].get(seed_cs, {}).get(ss, {})
-    seed_ds = sorted(seed_dists, key=lambda d: seed_dists[d])[0] if seed_dists else ""
+    # One crawlable link per district → the district hub, which asks for the
+    # crop. The selector's जिला field goes to the same place; this grid is the
+    # no-JS path and the only way Google reaches those pages by link.
+    dcards = "".join(
+        f'<a class="dcard" href="/bhav/rajya/{ss}/{ds}" data-name="{escape(dn.lower())}">'
+        f'<span class="dcard-n">{escape(dn)}</span>'
+        f'<span class="dcard-r">भाव देखें →</span></a>'
+        for ds, dn in sorted(dists_here.items(), key=lambda kv: kv[1]))
 
     faqs = [
         (f"{hi_state} में आज कौन-कौन सी फसलों का भाव मिलता है?",
@@ -2901,6 +2985,9 @@ def bhav_state_hub(state: str):
         (f"{hi_state} में अपनी फसल का भाव कैसे देखें?",
          f"नीचे अपनी फसल चुनें — फिर {hi_state} के सभी जिलों की मंडियों का न्यूनतम, अधिकतम और "
          f"मॉडल भाव प्रति क्विंटल दिख जाएगा।"),
+        (f"अपने जिले की मंडी में आज किन-किन फसलों का भाव है, यह कैसे देखें?",
+         f"नीचे 'जिला चुनें' में अपना जिला चुनें — उस जिले की मंडियों में आज जिन फसलों का भाव "
+         f"दर्ज हुआ है, उन सबकी सूची एक जगह खुल जाएगी। वहां से अपनी फसल चुनकर पूरा रेट देखें।"),
     ]
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
@@ -2920,16 +3007,109 @@ def bhav_state_hub(state: str):
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav">← सभी राज्य</a>
 </div>
-{_hub_selector(seed_cs, ss, seed_ds, idx, known_state=True)}
+{_hub_selector("", ss, "", idx, known_state=True)}
 <h2>{escape(hi_state)} में फसल चुनें</h2>
 {_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)')}
 <div class="crop-grid" id="tier-grid">{"".join(cards)}</div>
 {answer_lead}
+<h2>{escape(hi_state)} में जिला चुनें</h2>
+<p class="lead-out">अपना जिला चुनें — उस जिले की मंडियों में आज जिन फसलों का भाव दर्ज हुआ है, सब एक जगह दिखेंगी।</p>
+{_tier_search('dist-grid', 'जिला खोजें...')}
+<div class="dcard-grid" id="dist-grid">{dcards}</div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi_state)}')
     return _doc(title, desc, canon, crumbs, body, ld)
+
+
+# ════════════════════════════════════════════════════════════
+# DISTRICT HUB — /bhav/rajya/{state}/{district} : all crops in ONE district
+#
+# The other half of the crop-less path. A farmer who picks his state and then
+# his mandi has said WHERE, not WHAT — so this asks for the crop instead of
+# assuming one (picking a district used to drop him on the state's widest crop,
+# usually wheat). It is also the page "<जिला> मंडी भाव" is actually searched
+# for, which no crop-scoped URL could ever answer.
+# ════════════════════════════════════════════════════════════
+@router.get("/bhav/rajya/{state}/{district}", response_class=HTMLResponse)
+def bhav_district_hub(state: str, district: str):
+    idx = _get_index()
+    ss, ds = state.lower(), district.lower()
+
+    crops_here = _crops_in(idx, ss, ds)
+    if not crops_here:
+        return _not_found()
+
+    dn = _dist_name(idx, ss, ds)
+    sn = _state_name(idx, ss)
+    hi_state = _hindi_state(sn)
+    today_hi = _hindi_date(date.today())
+    canon = f"{SITE}/bhav/rajya/{ss}/{ds}"
+
+    ordered = sorted(crops_here.items(),
+                     key=lambda kv: (_tile_rank(kv[1]), _hindi_name(kv[1])))
+    cards = []
+    for c, cn in ordered:
+        hi = _hindi_name(cn)
+        has_photo = _has_photo(cn)
+        photo = (f'<img src="{escape(_crop_image(cn, 500))}" alt="{escape(hi)}" '
+                 f'loading="lazy" width="240" height="120">' if has_photo else "")
+        en = f'<span class="crop-card-en">{escape(cn)}</span>' if hi != cn else ""
+        cards.append(f"""<a class="crop-card" href="/bhav/{c}/{ss}/{ds}" data-name="{escape(f'{hi} {cn}'.lower())}">
+<div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
+<h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
+<div class="crop-card-body">
+<span class="lbl">{escape(dn)}</span><span class="rate">भाव देखें →</span>
+</div></a>""")
+
+    faqs = [
+        (f"{dn} मंडी में आज किन फसलों का भाव है?",
+         f"{today_hi} को {dn} ({hi_state}) की मंडियों में {len(crops_here)} फसलों के भाव सरकारी "
+         f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। नीचे अपनी फसल चुनकर आज का पूरा भाव देखें।"),
+        (f"{dn} मंडी का आज का भाव कैसे देखें?",
+         f"नीचे अपनी फसल चुनें — {dn} की मंडियों का आज का न्यूनतम, अधिकतम और मॉडल भाव "
+         f"प्रति क्विंटल दिख जाएगा, साथ में पिछले दिनों का रुझान भी।"),
+    ]
+    faq_html, faq_ld = _faq(faqs)
+    ld = _ld(faq_ld, _crumb_ld([
+        ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
+        (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn, canon)]))
+
+    title = _fit(f"{dn} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}",
+                 f"{dn} मंडी भाव आज — सभी फसलों के ताजा रेट",
+                 f"{dn} मंडी भाव आज — {hi_state}",
+                 f"{dn} मंडी भाव आज")
+    desc = _fit(
+        f"{today_hi}: {dn} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का ताजा भाव — "
+        f"अपनी फसल चुनकर आज का न्यूनतम, अधिकतम और मॉडल रेट देखें। रोज़ अपडेट (data.gov.in)।",
+        f"{today_hi}: {dn} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
+        f"फसल चुनकर आज का रेट देखें। रोज़ अपडेट (data.gov.in)।",
+        limit=162)
+
+    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(dn)} ({escape(hi_state)}) की मंडियों में '
+                   f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
+                   f'दर्ज हुआ। नीचे अपनी फसल चुनकर उस फसल का पूरा भाव देखें।</p>')
+
+    head_h1 = f"{escape(dn)} मंडी भाव आज — फसल चुनें"
+    head_sub = (f"📅 {today_hi} · {escape(hi_state)} · {len(crops_here)} फसलें · "
+                f"स्रोत: data.gov.in (Agmarknet)")
+    body = f"""{_tier_head(head_h1, head_sub)}
+<div class="cta-row">
+<a class="btn btn-app" href="{SITE}/bhav/rajya/{ss}">← {escape(hi_state)} के सभी जिले</a>
+</div>
+{_hub_selector("", ss, ds, idx, known_state=True, known_dist=True)}
+<h2>{escape(dn)} में फसल चुनें</h2>
+{_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)')}
+<div class="crop-grid" id="tier-grid">{"".join(cards)}</div>
+{answer_lead}
+{_dukan_pitch(dn)}
+<h2>अक्सर पूछे जाने वाले सवाल</h2>
+{faq_html}
+{_TIER_SEARCH_JS}"""
+    crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
+              f'<a href="{SITE}/bhav/rajya/{ss}">{escape(hi_state)}</a> › {escape(dn)}')
+    return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4519,10 +4699,10 @@ def bhav_crop(c_slug: str):
     ld = _ld(faq_ld, _crumb_ld([("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
                                 (hi, canon)]))
 
+    # No state in the URL yet, so the जिला field has to be seeded from one:
+    # the state where this crop is reported in the most districts.
     seed_ss = (max(state_map, key=lambda s: len(idx["dists"].get(cs, {}).get(s, {})))
                if state_map else "")
-    seed_dists = idx["dists"].get(cs, {}).get(seed_ss, {})
-    seed_ds = sorted(seed_dists, key=lambda d: seed_dists[d])[0] if seed_dists else ""
 
     t_hi, t_en, _same = _title_names(commodity)
     title = _fit(
@@ -4539,7 +4719,7 @@ def bhav_crop(c_slug: str):
     head_h1 = f"आज का {escape(hi)} भाव — राज्य चुनें"
     head_sub = f"📅 {today_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
     body = f"""{_tier_head(head_h1, head_sub)}
-{_hub_selector(cs, seed_ss, seed_ds, idx, known_crop=True)}
+{_hub_selector(cs, seed_ss, "", idx, known_crop=True)}
 {_msp_html(commodity)}
 {_dukan_pitch()}
 {_lazy_div('bhav-lazy-t2')}
@@ -4628,7 +4808,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {_msp_html(commodity)}
 {_dukan_pitch(hi_state)}
-{_dealer_teaser_html(cs, ss, state)}
+{_dealer_teaser_html(cs, ss, state, "")}
 {_lazy_div('bhav-lazy-t3')}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'जिला खोजें...')}
@@ -4908,6 +5088,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 </section>
 <p class="note">सभी भाव ₹ प्रति क्विंटल · मॉडल भाव (सबसे ज़्यादा कारोबार वाला रेट)।</p>
 
+{_dealer_teaser_html(cs, ss, state, ds)}
+
 <div class="cta-row">
 <button class="btn btn-wa" type="button" onclick="shareBhav()">📲 WhatsApp पर भाव भेजें</button>
 <button class="btn btn-appeal" type="button" onclick="openCropAppeal()">🤝 {escape(hi)} बेचना/खरीदना है?</button>
@@ -4926,7 +5108,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS, updated=fresh_iso)
+                # _BP_CSS + _PRODUCT_CSS are new here: the district page now
+                # carries the paid dealer panel too (the ₹199 product), which
+                # it never used to.
+                extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS + _BP_CSS + _PRODUCT_CSS,
+                updated=fresh_iso)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4976,10 +5162,17 @@ border-radius:999px;padding:2px 8px;letter-spacing:.2px}
 .kh-crop{font-size:11.5px;font-weight:700;color:var(--green-dark);background:var(--cream);
 border:1px solid var(--border);border-radius:999px;padding:3px 10px}
 .kh-desc{font-size:13px;color:var(--text-mid);line-height:1.55;margin-top:9px}
-.kh-acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
-.kh-btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
-font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:22px;
-transition:transform .15s,background .15s}
+/* Two equal columns, not wrapped pills: these are the only two things a farmer
+   can DO on this card, and at 390px the wrapped version put WhatsApp on its own
+   second line at a random width. */
+.kh-acts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+/* A dealer with only a phone (or only WhatsApp) gets one full-width button.
+   Set from Python rather than :has(), which older Android WebViews ignore —
+   and a lone half-width button is exactly the ragged look this replaced. */
+.kh-acts.one{grid-template-columns:1fr}
+.kh-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+text-decoration:none;font-size:13.5px;font-weight:700;padding:11px 12px;
+border-radius:22px;transition:transform .15s,background .15s}
 .kh-btn:hover{transform:translateY(-1px)}
 .kh-call{background:var(--green-dark);color:#fff}
 .kh-call:hover{background:var(--green-mid)}
@@ -5019,7 +5212,7 @@ border:1.5px solid rgba(255,255,255,.35);font-weight:700!important;margin-left:8
 """
 
 
-# ── /dukan/product: the Tier-3 (crop+state) paid-dealer panel ──
+# ── /dukanlisting: the Tier-3 (crop+state) paid-dealer panel ──
 # Deliberately its own small CSS block, not a reuse of _KH_CSS: .kh-btn/.kh-call
 # /.kh-wa exist to style a tel:/wa.me action, and this panel must never grow
 # one — see services/buyers.py::for_bhav_panel's docstring on why contact
@@ -5057,45 +5250,87 @@ color:var(--text-soft);text-decoration:none}
 # for nothing — or, worse, render the pitch unstyled because someone added it to
 # a page and forgot the CSS came bundled with something unrelated.
 _PRODUCT_CSS = """
-/* A paying dealer's product card. Field-for-field and class-for-class the
-   catalogue card routes/product.py::_hub_card() renders, so a dealer's item and
-   a KrashiMitra item look like the same kind of thing to a farmer — one design
-   language, one discount calculation, no second visual vocabulary. */
-.dp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-gap:10px;margin-top:11px}
-.dp-card{background:var(--white);border:1px solid var(--border);
-border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);
-display:block;text-decoration:none;color:inherit}
-.dp-photo{position:relative;height:104px;background:var(--cream);
-display:flex;align-items:center;justify-content:center;padding:8px}
-.dp-photo img{max-height:90px;max-width:90%;object-fit:contain;display:block}
-.dp-photo .dp-ph{font-size:34px;line-height:1}
-.dp-badge{position:absolute;top:7px;left:7px;background:var(--amber);color:#fff;
-font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;
+/* A paying dealer's catalogue, as a shelf you swipe — not a grid.
+   Field-for-field the same object routes/product.py::_hub_card() renders, so a
+   dealer's item and a KrashiMitra item look like the same kind of thing to a
+   farmer: one design language, one discount calculation.
+
+   WHY A STRIP. As a grid, every extra product added a whole 104px-tall row: a
+   dealer with six items owned about 1,100px of a phone screen, and the dealer
+   below him was never seen. The strip is a fixed ~200px however many he lists,
+   which is what makes "list more products" safe to encourage. Photos also stay
+   large, and the photo is the part a shopkeeper is actually paying for.
+
+   The cost, accepted: prices are harder to compare across a swipe than down a
+   list, and a dealer with one product looks sparse. Both get better as the
+   catalogue fills, which is the direction we want him pushed anyway. */
+.dp-shelf{display:flex;gap:9px;overflow-x:auto;margin-top:11px;padding-bottom:3px;
+scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.dp-shelf::-webkit-scrollbar{display:none}
+.dp-card{flex:0 0 118px;scroll-snap-align:start;background:var(--white);
+border:1px solid var(--border);border-radius:11px;overflow:hidden;
+box-shadow:var(--shadow-sm);text-decoration:none;color:inherit}
+/* A shelf with one or two items on it looks half-stocked at a fixed 118px —
+   the one thing a swipe strip is worse at than a grid. Widen them to fill the
+   row instead; from three up, the part-visible third card is the cue that
+   there is more to swipe to. */
+.dp-shelf>.dp-card:only-child{flex-basis:62%}
+.dp-shelf>.dp-card:first-child:nth-last-child(2),
+.dp-shelf>.dp-card:first-child:nth-last-child(2)~.dp-card{flex-basis:calc(50% - 5px)}
+.dp-photo{position:relative;height:80px;background:var(--cream);
+display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* cover, not contain: at 118px a letterboxed pack shot is mostly empty box.
+   The upload already fits the whole product inside a 480² frame
+   (routes/admin.py::upload_product_image), so there is padding to crop into. */
+.dp-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.dp-photo .dp-ph{font-size:30px;line-height:1}
+.dp-badge{position:absolute;top:5px;left:5px;background:var(--amber);color:#fff;
+font-size:9px;font-weight:700;padding:1px 7px;border-radius:9px;
 box-shadow:0 1px 4px rgba(0,0,0,.15)}
-.dp-body{padding:9px 11px 11px}
-.dp-name{font-size:12.5px;font-weight:700;color:var(--text-dark);line-height:1.3}
+.dp-body{padding:7px 9px 9px}
+/* Two lines then ellipsis: a long name must not make one card taller than the
+   rest of the shelf. */
+.dp-name{font-size:11.5px;font-weight:700;color:var(--text-dark);line-height:1.28;
+display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dp-en{display:none}
+.dp-price{display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;margin-top:4px}
+.dp-price b{font-size:14px;font-weight:800;color:var(--green-dark)}
+.dp-price .dp-mrp{font-size:10px;color:var(--text-soft);text-decoration:line-through}
+.dp-price .dp-off{font-size:9.5px;font-weight:700;color:#c0392b}
+.dp-unit{font-size:10px;color:var(--text-soft);margin-top:1px}
+@media(min-width:721px){
+.dp-card{flex-basis:140px}
+.dp-photo{height:96px}
+.dp-name{font-size:12.5px}
 .dp-en{display:block;font-size:10px;font-weight:600;color:var(--text-soft);margin-top:1px}
-.dp-price{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;margin-top:6px}
-.dp-price b{font-size:15px;font-weight:700;color:var(--green-dark)}
-.dp-price .dp-mrp{font-size:10.5px;color:var(--text-soft);text-decoration:line-through}
-.dp-price .dp-off{font-size:10px;font-weight:700;color:#c0392b}
-.dp-unit{font-size:10.5px;color:var(--text-soft);margin-top:2px}
+.dp-price b{font-size:15px}
+}
 """
 
 
 def _product_cards(products: list, limit: int = 4) -> str:
-    """A dealer's catalogue as cards. "" when he has listed nothing, so a
-    dealer with no products renders exactly as he did before."""
+    """A dealer's catalogue as a swipeable shelf. "" when he has listed nothing,
+    so a dealer with no products renders exactly as he did before.
+
+    `limit` is now about honesty rather than height — the strip costs the same
+    vertical space at 2 items or 12 — so it stays, but generously: the kharidar
+    page passes 8, and a farmer who has decided to ring someone wants the whole
+    stock list.
+    """
     items = [p for p in (products or []) if p.get("active", True)][:limit]
     if not items:
         return ""
     out = []
     for p in items:
         pid = int(p.get("id") or 0)
-        photo = (f'<img src="/dukan/product-image/{pid}.webp?v={p.get("v", 0)}" '
+        # Root-relative on purpose, and it only works because _redirects proxies
+        # /dukanlisting/product-image/* to the backend — on krashimitra.in this
+        # page is itself a proxy of the Render host, so an unproxied path here
+        # asks Netlify for a file it does not have and the photo silently
+        # vanishes. That is exactly how it shipped broken once.
+        photo = (f'<img src="/dukanlisting/product-image/{pid}.webp?v={p.get("v", 0)}" '
                  f'alt="{escape(p.get("name_hi", ""))}" loading="lazy" '
-                 f'decoding="async" width="120" height="90">'
+                 f'decoding="async" width="118" height="80">'
                  if p.get("has_image") else '<span class="dp-ph">📦</span>')
         badge = (f'<span class="dp-badge">{escape(p["badge"])}</span>'
                  if p.get("badge") else "")
@@ -5116,7 +5351,7 @@ def _product_cards(products: list, limit: int = 4) -> str:
 {unit}
 </div>
 </div>""")
-    return f'<div class="dp-grid">{"".join(out)}</div>'
+    return f'<div class="dp-shelf">{"".join(out)}</div>'
 
 
 # The sample card's photo. A real photograph, not the drawn bag that was here
@@ -5230,7 +5465,7 @@ def _dukan_pitch(where: str = "") -> str:
     one place, and the server twin of frontend/dukan-promo.js so a trader sees
     the same block whichever page he lands on.
 
-    Before this, /dukan/product was reachable from the bhav tree only through
+    Before this, /dukanlisting was reachable from the bhav tree only through
     surfaces that require a paying dealer to already exist (the Tier-3 panel
     renders nothing when empty; the kharidar page is gated by _has_kharidar and
     ships noindex until a district has a listing). With zero dealers that is a
@@ -5272,26 +5507,33 @@ def _dukan_pitch(where: str = "") -> str:
 <li><b>कोई कमीशन नहीं</b> — किसान सीधे आपको फोन करता है</li>
 <li><b>₹199/महीना</b> से · हर अतिरिक्त जिला +₹50</li>
 </ul>
-<a class="kmdp-cta" href="/dukan/product">अपनी दुकान लिस्ट करें →</a>
+<a class="kmdp-cta" href="/dukanlisting">अपनी दुकान लिस्ट करें →</a>
 <span class="kmdp-fine">व्यापारी · आढ़तिया · खाद-बीज डीलर · FPO · मिल</span>
 </div>
 </div>
 </aside>"""
 
 
-def _dealer_teaser_html(cs: str, ss: str, state: str) -> str:
-    """Up to 3 admin-ranked, paying dealers for this crop+state Tier-3 page —
-    name and products only, never a phone/WhatsApp number. services/dealers.py
-    ::_sync_bazar_post (the krashi_bajar feed post) and this panel are the only
-    two places a /dukan/product subscription actually shows; the district
-    Tier-4 page carries none of this.
+def _dealer_teaser_html(cs: str, ss: str, state: str, ds: str = "") -> str:
+    """The paid dealer panel: up to 3 shops, name and products only, never a
+    phone number.
 
-    A farmer who wants the number clicks "पूरी जानकारी..." through to the
-    existing full /kharidar page for that dealer's own district — still
-    krashimitra.in, never off-site, which is the whole point of withholding
-    it here rather than building a separate contact-request flow.
+    Serves BOTH products, told apart by `ds`:
+        ds == ""   the state page  /bhav/{crop}/{state}          ₹999/month
+        ds != ""   a district page /bhav/{crop}/{state}/{dist}   ₹199/month
+
+    Who appears is services/placements.py — one row per (page, slot), so the
+    two pages are genuinely separate inventory and a dealer can hold rank 1 on
+    his district while somebody else holds rank 1 on the state. It used to be
+    one `bhav_rank` column shared across a whole state, which could express
+    neither.
+
+    A farmer who wants the number clicks "पूरी जानकारी..." through to the full
+    /kharidar page for that dealer's own district — still krashimitra.in, never
+    off-site, which is the whole point of withholding it here rather than
+    building a separate contact-request flow.
     """
-    rows = buyers.for_bhav_panel(state, cs)
+    rows = placements.for_page(cs, ss, ds)
     if not rows:
         # Nothing to show, and nothing to say either: _dukan_pitch already runs
         # directly under the MSP card on this page, so the empty-directory ask
@@ -5307,8 +5549,10 @@ def _dealer_teaser_html(cs: str, ss: str, state: str) -> str:
         if not b.get("commodities"):
             crops = '<span class="bp-crop">सभी फसलें</span>'
         district = b.get("district") or ""
-        ds = _slugify(district)
-        link = f"/bhav/{cs}/{ss}/{ds}/kharidar" if ds else f"/bhav/{cs}/{ss}"
+        # NOT `ds` — that is the page we are rendering, and this is the dealer's
+        # own district, which is where his full card with the phone number lives.
+        his_ds = _slugify(district)
+        link = f"/bhav/{cs}/{ss}/{his_ds}/kharidar" if his_ds else f"/bhav/{cs}/{ss}"
         # His catalogue, if he has typed one. Prices are the whole reason a
         # farmer reads this block, so they sit above the "see contact" link
         # rather than behind it — the number is what stays one click away.
@@ -5324,10 +5568,18 @@ def _dealer_teaser_html(cs: str, ss: str, state: str) -> str:
 </div>
 </div>""")
 
+    # Named after the page it is on, not after the dealer's own district: on a
+    # district page "Bijnor में सत्यापित दुकानें" is the whole promise, and on
+    # the state page naming the state is what makes three shops feel chosen
+    # rather than arbitrary.
+    where = escape(_hindi_state(state))
+    if ds:
+        here = _get_index().get("dists", {}).get(cs, {}).get(ss, {}).get(ds, "")
+        where = escape(here or ds)
     return f"""<section class="bp-wrap">
-<div class="bp-h"><h2>{escape(_hindi_state(state))} में सत्यापित दुकानें</h2><p class="bp-sub">इनके प्रोडक्ट और भाव — सीधे दुकानदार से</p></div>
+<div class="bp-h"><h2>{where} में सत्यापित दुकानें</h2><p class="bp-sub">इनके प्रोडक्ट और भाव — सीधे दुकानदार से</p></div>
 <div class="bp-list">{"".join(cards)}</div>
-<a class="bp-cta" href="/dukan/product">अपनी दुकान यहां लिस्ट करें →</a>
+<a class="bp-cta" href="/dukanlisting">अपनी दुकान यहां लिस्ट करें →</a>
 </section>"""
 
 
@@ -5492,9 +5744,11 @@ def _buyer_card(b: dict, c_slug: str) -> str:
         acts.append(f'<a class="kh-btn kh-call" href="tel:{escape(tel)}" '
                     f'data-kh="{bid}" data-kh-ch="call">📞 कॉल करें</a>')
     if wa:
+        # Just "WhatsApp": the button is half a phone wide now, and the brand
+        # name alone is unambiguous — "पर बात करें" only cost it a second line.
         acts.append(f'<a class="kh-btn kh-wa" href="/kharidar/go/{bid}" '
                     f'data-kh="{bid}" data-kh-ch="wa" rel="nofollow" target="_blank">'
-                    f'WhatsApp पर बात करें</a>')
+                    f'WhatsApp</a>')
 
     return (f'<article class="kh-card{" feat" if b.get("featured") else ""}">'
             f'<div class="kh-head"><span class="kh-ic">{emoji}</span>'
@@ -5512,7 +5766,8 @@ def _buyer_card(b: dict, c_slug: str) -> str:
             # The full catalogue here — this is the page a farmer lands on when
             # he has decided to ring someone, so more of it is useful.
             + _product_cards(b.get("products"), limit=8)
-            + f'<div class="kh-acts">{"".join(acts)}</div>'
+            + f'<div class="kh-acts{" one" if len(acts) == 1 else ""}">'
+            f'{"".join(acts)}</div>'
             '</article>')
 
 
@@ -5624,7 +5879,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
             f'<p>अपने प्रोडक्ट इसी पेज पर दिखाएं — नाम, आपकी कीमत, MRP और छूट के साथ, '
             f'बिल्कुल ऊपर वाले कार्ड की तरह। ₹199/महीना से, हर अतिरिक्त जिला +₹50। '
             f'हम कॉल करके पुष्टि के बाद ही लिस्टिंग लाइव करते हैं।</p>'
-            f'<a href="{SITE}/dukan/product">अपनी दुकान लिस्ट करें →</a>'
+            f'<a href="{SITE}/dukanlisting">अपनी दुकान लिस्ट करें →</a>'
             f'<a class="kh-join-wa" href="https://wa.me/919870951001?text={join_msg}" '
             f'rel="nofollow" target="_blank">या WhatsApp पर बात करें</a></section>')
 

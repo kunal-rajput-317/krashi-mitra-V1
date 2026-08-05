@@ -122,8 +122,8 @@ def as_dict(row) -> dict:
         # all any more, so no render path can reach it.
         "description": row.description or "",
         "since":       row.since or "",
-        # /dukanlisting: which Tier-3 bhav-panel slot this row holds (admin-set,
-        # see dealers.py::set_bhav_rank), whether its subscription is current, and
+        # /dukanlisting: the retired bhav_rank (services/placements.py holds the
+        # real slots now), whether its subscription is current, and
         # which account it belongs to (gates _usable() above). All three are only
         # ever non-empty for rows that came through the paid signup — the
         # committed JSON seed and admin-added rows have none of them, so they
