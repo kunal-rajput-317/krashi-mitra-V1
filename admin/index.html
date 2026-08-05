@@ -2631,6 +2631,17 @@ body {
             <div class="stat-value ld-big" id="by-total">—</div>
             <div class="stat-sub">excludes the buyers.json seed</div>
           </div>
+          <!-- Renewals. The dealer gets his own warning in KrashiBook
+               (routes/dukan.py::my_subscription), but only you can make the
+               call — a lapse nobody chases is revenue lost in silence.
+               Counted per ACCOUNT: three districts on one subscription is
+               one phone call, not three. -->
+          <div class="stat-card" id="by-renewal-card">
+            <span class="stat-icon">⏳</span>
+            <div class="stat-label">Renewal due</div>
+            <div class="stat-value ld-big" id="by-expiring">—</div>
+            <div class="stat-sub" id="by-expiring-sub">expiring within 7 days</div>
+          </div>
         </div>
 
         <!-- ADD — deliberately the top of the page, and short -->
@@ -5561,6 +5572,15 @@ function bySetCounts(c) {
   document.getElementById('by-live').textContent    = c.live ?? '—';
   document.getElementById('by-pending').textContent = c.pending ?? '—';
   document.getElementById('by-total').textContent   = c.total ?? '—';
+
+  // Renewals: expiring soon and already-lapsed accounts. Shown together
+  // because both are the same action — pick up the phone.
+  const exp = c.expiring || 0, lapsed = c.lapsed || 0;
+  document.getElementById('by-expiring').textContent = exp + lapsed || '—';
+  document.getElementById('by-expiring-sub').textContent =
+    lapsed ? `${exp} expiring · ${lapsed} already lapsed` : 'expiring within 7 days';
+  const card = document.getElementById('by-renewal-card');
+  if (card) card.classList.toggle('accented', !!(exp + lapsed));
   // The badge is the point of the queue: a dealer who filled the form and was
   // never rung is worse than one who never found it.
   const badge = document.getElementById('by-nav-badge');

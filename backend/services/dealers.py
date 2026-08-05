@@ -39,6 +39,12 @@ STATUSES = ("new", "called", "listed", "rejected")
 # reading of a failed 31-Aug test that is worth anything.
 CALL_RESULTS = ("no_answer", "callback", "interested", "not_interested", "pitched")
 
+# How many days before expiry a subscription counts as "expiring" — for the
+# dealer's own KrashiBook warning (routes/dukan.py) and the owner's renewal
+# call list (counts() below) alike. One constant so the two can never
+# disagree about which dealers are about to go dark.
+EXPIRY_WARN_DAYS = 7
+
 _PHONE_RE = re.compile(r"\D+")
 
 
@@ -512,9 +518,19 @@ def listing(db, *, source: str = "") -> list[dict]:
 def counts(db) -> dict:
     """Queue sizes for the panel's badge — "3 dealers waiting on a call"."""
     rows = db.query(Buyer).all()
+    now = datetime.utcnow()
+    soon = now + timedelta(days=EXPIRY_WARN_DAYS)
+    # A renewal nobody remembers to ask for is revenue lost in silence, and the
+    # dealer's own KrashiBook warning (routes/dukan.py::my_subscription) only
+    # helps if the owner is making the call from this side too. Counted per
+    # ACCOUNT, not per row: three districts on one subscription is one call.
+    def _accounts(pred):
+        return len({r.owner_user_id or r.slug for r in rows if pred(r)})
     return {
         "total":   len(rows),
         "live":    sum(1 for r in rows if r.active),
         "pending": sum(1 for r in rows if r.source == "signup" and not r.active
                        and r.status not in ("rejected",)),
+        "expiring": _accounts(lambda r: r.paid_until and now < r.paid_until <= soon),
+        "lapsed":   _accounts(lambda r: r.paid_until and r.paid_until <= now),
     }

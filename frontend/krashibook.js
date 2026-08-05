@@ -259,13 +259,62 @@
         html += isQuoted(o) ? quoteCard(o, isNew) : statusCard(o, isNew);
       });
     }
+    html += '<div id="km-book-dukan-alert"></div>';
     html += '<div id="km-book-crop-nudges"></div>';
     html += '<div id="km-book-weather-alert"></div>';
     html += '<button class="km-book-ghost-btn" data-href="' + shopUrl() + '">📋 सभी ऑर्डर देखें</button>';
     list.innerHTML = html;
     wireActions(list);
+    loadDukanAlert();
     loadCropNudges();
     loadWeatherAlert();
+  }
+
+  // Dealer subscription state (/dukan/product). Parse-on-request, like the crop
+  // nudges: /dukan/subscription recomputes from paid_until on every call, so
+  // there is no scheduler to die quietly and no "reminder sent" flag to drift.
+  //
+  // This exists because a lapse was completely silent. services/buyers.py drops
+  // a dealer from every farmer-facing surface the moment his month ends, and
+  // nothing told him — his listing went dark and the first he knew was the
+  // calls stopping. Renders nothing for farmers, who have no listing.
+  function loadDukanAlert() {
+    var slot = document.getElementById("km-book-dukan-alert");
+    if (!slot) return;
+    var token = getToken();
+    if (!token) return;                       // guests own no listing
+    fetch(apiBase() + "/dukan/subscription", { headers: { "Authorization": "Bearer " + token } })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.success || !res.data) return;
+        var alerts = res.data.alerts || [];
+        var slot2 = document.getElementById("km-book-dukan-alert");
+        if (!slot2 || !alerts.length) return;
+        var html = "";
+        alerts.forEach(function (a) {
+          var isNow = a.urgency === "now";
+          var chip  = res.data.state === "lapsed" ? "⛔ बंद"
+                    : res.data.state === "expiring" ? "⏳ खत्म हो रही"
+                    : "💳 भुगतान बाकी";
+          html +=
+            '<div class="km-book-card ' + (isNow ? "warn" : "") + '">' +
+              '<div class="km-book-card-head">' +
+                '<span class="km-book-tracking">🏪 आपकी दुकान</span>' +
+                '<span class="km-book-chip ' + (isNow ? "warnchip" : "ok") + '">' + chip + '</span>' +
+              '</div>' +
+              '<div class="km-book-product">' + clean(a.title_hi) + '</div>' +
+              '<div class="km-book-line">' + clean(a.detail_hi) + '</div>' +
+              '<button class="km-book-ghost-btn" data-href="/dukan/product" style="margin-top:8px">' +
+                'अपनी दुकान देखें</button>' +
+            '</div>';
+        });
+        slot2.innerHTML = html;
+        // A lapsing subscription IS a notification — drop the empty card.
+        var emptyEl = document.getElementById("km-book-alerts-empty");
+        if (emptyEl) emptyEl.style.display = "none";
+        wireActions(slot2);
+      })
+      .catch(function () {});
   }
 
   // Crop-task nudges from the farmer's saved crops (मेरी फसल). Parse-on-request:
@@ -676,6 +725,18 @@
       .then(function (res) { cb((res && res.success && res.data && res.data.now_count) || 0); })
       .catch(function () { cb(0); });
   }
+  // A lapsed or lapsing listing (/dukan/product). Same contract as the crop
+  // count — the point of the badge is that the dealer does NOT have to open
+  // KrashiBook to find out his listing is about to go dark. 0 for farmers,
+  // who own no listing, and 0 for guests.
+  function fetchDukanNowCount(cb) {
+    var token = getToken();
+    if (!token) { cb(0); return; }
+    fetch(apiBase() + "/dukan/subscription", { headers: { "Authorization": "Bearer " + token } })
+      .then(function (r) { return r.json(); })
+      .then(function (res) { cb((res && res.success && res.data && res.data.now_count) || 0); })
+      .catch(function () { cb(0); });
+  }
   function updateBadge() {
     var badge = document.getElementById("km-book-badge");
     if (!badge) return;
@@ -683,9 +744,11 @@
       var seen = seenMap();
       var fresh = orders.filter(function (o) { return seen[o.tracking_code] !== lc(o); });
       fetchCropNowCount(function (nowCount) {
-        var total = fresh.length + nowCount;
-        if (total) { badge.textContent = total; badge.style.display = ""; }
-        else { badge.style.display = "none"; }
+        fetchDukanNowCount(function (dukanCount) {
+          var total = fresh.length + nowCount + dukanCount;
+          if (total) { badge.textContent = total; badge.style.display = ""; }
+          else { badge.style.display = "none"; }
+        });
       });
     });
   }

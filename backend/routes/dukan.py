@@ -198,6 +198,98 @@ async def my_listings(
     }}
 
 
+# Long enough that a renewal call and a UPI transfer both fit inside it without
+# his listing ever going dark, short enough that it is not background noise he
+# learns to ignore. Shared with the admin panel's renewal list via
+# services/dealers.py so the two views can never disagree.
+_EXPIRY_WARN_DAYS = dealers.EXPIRY_WARN_DAYS
+
+
+@router.get("/subscription")
+async def my_subscription(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """The dealer's own subscription state, for the KrashiBook alert.
+
+    Derived live from `paid_until` on every request — no scheduler, no stored
+    "reminder sent" flag, nothing to fall out of sync. Same parse-on-request
+    shape as /crop-calendar/nudges, and for the same reason: a cron that
+    silently stops is exactly the failure this endpoint exists to prevent.
+
+    The gap it closes: a subscription simply ended. services/buyers.py::_usable
+    drops the dealer from every farmer-facing surface the moment `paid_until`
+    passes, and until now nothing anywhere told him — his listing went dark and
+    the first he would know was wondering why the calls stopped.
+    """
+    rows = dealers.for_owner(db, current_user["user_id"])
+    if not rows:
+        return {"success": True, "data": {"state": "none", "alerts": []}}
+
+    now = datetime.utcnow()
+    # One account, one subscription: every row renews together
+    # (dealers.record_payment), so the account's window is the furthest of them.
+    until = max((r.paid_until for r in rows if r.paid_until), default=None)
+    verified = any(r.verified for r in rows)
+    districts = len(rows)
+    price = dealers.quote(districts)
+
+    if until is None:
+        state, days = "unpaid", None
+    else:
+        days = (until - now).days
+        if until <= now:
+            state = "lapsed"
+        elif days <= _EXPIRY_WARN_DAYS:
+            state = "expiring"
+        else:
+            state = "active"
+
+    # Only the states that need the dealer to DO something raise an alert.
+    # "active" returns none on purpose: a badge that lights up for good news
+    # teaches him to ignore the badge.
+    alerts = []
+    if state == "lapsed":
+        alerts.append({
+            "urgency": "now",
+            "title_hi": "आपकी लिस्टिंग बंद हो गई है",
+            "detail_hi": (
+                f"सदस्यता {until.strftime('%d-%m-%Y')} को खत्म हो गई, इसलिए आपके प्रोडक्ट "
+                f"अभी किसानों को नहीं दिख रहे। ₹{price}/महीना भरते ही {districts} "
+                f"{'जिले' if districts > 1 else 'जिला'} में दोबारा दिखने लगेंगे।"),
+        })
+    elif state == "expiring":
+        alerts.append({
+            "urgency": "now" if days <= 2 else "soon",
+            "title_hi": (f"सदस्यता {days} दिन में खत्म हो रही है"
+                         if days > 0 else "सदस्यता आज खत्म हो रही है"),
+            "detail_hi": (
+                f"{until.strftime('%d-%m-%Y')} के बाद आपके प्रोडक्ट भाव पेज से हट जाएंगे। "
+                f"₹{price}/महीना — नवीनीकरण के लिए हमें WhatsApp करें, लिंक भेज देंगे।"),
+        })
+    elif state == "unpaid" and verified:
+        # Called, approved, but never paid — the close that was never made.
+        alerts.append({
+            "urgency": "soon",
+            "title_hi": "भुगतान बाकी है — लिस्टिंग अभी लाइव नहीं",
+            "detail_hi": (
+                f"आपकी दुकान सत्यापित हो चुकी है। ₹{price}/महीना भरते ही आपके प्रोडक्ट "
+                f"{districts} {'जिलों' if districts > 1 else 'जिले'} के भाव पेज पर दिखने लगेंगे।"),
+        })
+
+    return {"success": True, "data": {
+        "state":          state,
+        "days_left":      days,
+        "paid_until":     until.isoformat() if until else None,
+        "district_count": districts,
+        "price":          price,
+        "verified":       verified,
+        "alerts":         alerts,
+        # Drives the 📒 badge, same contract as /crop-calendar/nudges.
+        "now_count":      sum(1 for a in alerts if a["urgency"] == "now"),
+    }}
+
+
 @router.get("/product-image/{product_id}.webp")
 def product_image(product_id: int, db: Session = Depends(get_db)):
     """A product photo, served as bytes.
