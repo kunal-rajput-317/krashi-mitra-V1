@@ -1101,6 +1101,63 @@ class TestBazarPostSync:
         dealers.record_payment(clean, row.slug, 500)
         assert clean.query(BazarPost).filter(BazarPost.source == "dukan").count() == 0
 
+    # ── whose name is on the card ──
+    #
+    # The post is authored under the dealer's personal login, because that is
+    # the only users.id there is. Signed with his profile name it read as a
+    # private person advertising a business — and it is the shop name he pays
+    # to put in front of farmers, not his own.
+
+    def _live(self, clean, dealer_user, client):
+        user, row = self._account(clean, dealer_user, client)
+        dealers.approve(clean, row.slug)
+        dealers.record_payment(clean, row.slug, 199)
+        return user
+
+    def test_feed_signs_the_post_with_the_shop_name(self, clean, dealer_user, client):
+        user = self._live(clean, dealer_user, client)
+        posts = client.get("/bazar/feed").json()["data"]["posts"]
+        mine = [p for p in posts if p["author"]["user_id"] == user.id]
+        assert mine, "the dealer's post is missing from the feed entirely"
+        assert mine[0]["author"]["name"] == "Sharma Traders"
+
+    def test_the_card_still_points_at_the_real_account(self, clean, dealer_user, client):
+        """Only the displayed name changes. Follow must still follow the person,
+        and tapping through must still open a real profile — a shopfront name
+        over a dead user_id would be a listing nobody can reach."""
+        user = self._live(clean, dealer_user, client)
+        posts = client.get("/bazar/feed").json()["data"]["posts"]
+        mine = [p for p in posts if p["author"]["user_id"] == user.id][0]
+        assert mine["author"]["user_id"] == user.id
+
+    def test_the_profile_keeps_the_real_name(self, clean, dealer_user, client):
+        """The profile card's whole job is saying who the account actually is.
+
+        Checked on the name fields, not on the whole payload: the post TEXT
+        legitimately contains the firm's name — _sync_bazar_post writes it
+        there — and that is the dealer advertising, not the card mislabelling
+        the account.
+        """
+        user = self._live(clean, dealer_user, client)
+        body = client.get(f"/bazar/users/{user.id}").json()["data"]
+        assert body["name"] != "Sharma Traders", "shopfront name on the profile"
+        for post in body["recent_posts"]:
+            assert post["author"]["name"] != "Sharma Traders"
+
+    def test_a_farmers_own_post_is_never_renamed(self, clean, dealer_user, client):
+        """The rename keys off source == "dukan", not off "this user happens to
+        own a shop" — a dealer who also sells his own crop posts as himself."""
+        from backend.database.db import BazarPost
+
+        user = self._live(clean, dealer_user, client)
+        clean.add(BazarPost(user_id=user.id, post_type="sell", status="active",
+                            text="मेरा अपना गेहूं बिकाऊ है"))
+        clean.commit()
+        posts = client.get("/bazar/feed").json()["data"]["posts"]
+        own = [p for p in posts if p["post_type"] == "sell"]
+        assert own, "the farmer-side post was not created"
+        assert own[0]["author"]["name"] != "Sharma Traders"
+
 
 class TestApprovalPutsItLive:
     """The other direction: after the call and the payment, it has to appear."""

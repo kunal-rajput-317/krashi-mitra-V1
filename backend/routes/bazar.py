@@ -39,7 +39,7 @@ from sqlalchemy import func, or_, desc
 from sqlalchemy.orm import Session
 
 from backend.database.db import (
-    User, UserProfile, BazarPost, BazarLike, BazarComment, BazarFollow, get_db
+    Buyer, User, UserProfile, BazarPost, BazarLike, BazarComment, BazarFollow, get_db
 )
 from backend.utils.auth_utils import get_current_user, resolve_token_user
 from backend.utils.security import assert_media_matches
@@ -165,7 +165,46 @@ def place_keys(db: Session, post_type: str = "buy") -> set:
     return {(_norm_place(c), _norm_place(s), _norm_place(d)) for c, s, d in rows}
 
 
-def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool) -> dict:
+def _shop_names(posts, db: Session) -> dict:
+    """{user_id: shop name} for the /dukan/product accounts among these posts.
+
+    A dealer's feed post is written by services/dealers.py::_sync_bazar_post
+    under his personal login, because that is the only users.id there is to
+    author it as. Signed with his profile name it read as a private person
+    advertising a business — "kunal rajput" over a व्यापारी card — which is
+    both confusing and worse for him than the name he actually pays to
+    advertise.
+    """
+    ids = {p.user_id for p in posts if (p.source or "") == "dukan" and p.user_id}
+    if not ids:
+        return {}
+    rows = (db.query(Buyer)
+              .filter(Buyer.owner_user_id.in_(ids))
+              .order_by(Buyer.id).all())
+    names = {}
+    for r in rows:
+        # First row wins, matching _sync_bazar_post's own `live[0]` choice, so
+        # the card and the post text can never name two different firms.
+        if r.name and r.owner_user_id not in names:
+            names[r.owner_user_id] = r.name
+    return names
+
+
+def _signed_as(p: BazarPost, author: dict, shop_names: dict) -> dict:
+    """The author as this POST should be signed — the shop for a dealer's own
+    listing, the person everywhere else.
+
+    Only the displayed name changes. user_id still points at the real account,
+    so Follow follows the person and tapping through opens the real profile
+    under the real name; nothing here hides who is behind the listing.
+    """
+    name = shop_names.get(p.user_id) if (p.source or "") == "dukan" else None
+    return {**author, "name": name, "is_shop": True} if name else author
+
+
+def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool,
+                  shop_names: Optional[dict] = None) -> dict:
+    author = _signed_as(p, author, shop_names or {})
     return {
         "id":             p.id,
         "post_type":      p.post_type,
@@ -296,6 +335,7 @@ def get_feed(
         for uid, a in authors.items():
             a["is_following"] = uid in followed
 
+    shops = _shop_names(posts, db)
     items = [
         _post_to_dict(
             p,
@@ -303,6 +343,7 @@ def get_feed(
                                     "verified": False, "location": ""}),
             liked=p.id in my_likes,
             is_mine=bool(me and me["user_id"] == p.user_id),
+            shop_names=shops,
         )
         for p in posts
     ]
@@ -346,7 +387,8 @@ def get_single_post(
     return {
         "success": True,
         "message": "",
-        "data": _post_to_dict(post, author, liked=liked, is_mine=is_mine)
+        "data": _post_to_dict(post, author, liked=liked, is_mine=is_mine,
+                              shop_names=_shop_names([post], db))
     }
 
 
@@ -658,6 +700,10 @@ def get_public_profile(
                 .filter(BazarPost.user_id == user_id, BazarPost.status != "closed")
                 .order_by(desc(BazarPost.created_at)).limit(6).all())
     author = _author_info(user, profile)
+    # No shop_names here on purpose. This card's whole job is to say who the
+    # account actually is, and a dealer's own posts listed under his real name
+    # and face is the point — the shopfront name belongs on the feed, where a
+    # farmer meets the listing cold and has no other context for it.
     recent_posts = [
         _post_to_dict(p, author, liked=False,
                       is_mine=bool(me and me["user_id"] == user_id))
