@@ -11,7 +11,7 @@
        below reads the base at parse time — long before /api-config.js runs at
        the end of the document. So the base was "" and every call went to the
        page's own origin: fine on the Render host, 404 on krashimitra.in, where
-       Netlify proxies a handful of paths and /dukan/* is not one of them. That
+       Netlify proxies a handful of paths and /dukanlisting/* is not one of them. That
        404'd the whole page, signup included. -->
   <script>
     (function () {
@@ -33,9 +33,9 @@
   <meta name="description" content="अपने प्रोडक्ट मंडी भाव पेज पर लिस्ट करें — नाम, कीमत, MRP और छूट के साथ कार्ड बनते हैं। ₹199/महीना से, हर अतिरिक्त जिला +₹50। किसान सीधे आपको कॉल करते हैं।">
   <meta name="keywords" content="अनाज व्यापारी लिस्टिंग, आढ़तिया, खाद बीज डीलर, FPO, मंडी व्यापारी, अपनी दुकान लिस्ट करें, dukan product subscription, krashimitra dealer listing">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-  <link rel="canonical" href="https://krashimitra.in/dukan/product">
-  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/dukan/product">
-  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/dukan/product">
+  <link rel="canonical" href="https://krashimitra.in/dukanlisting">
+  <link rel="alternate" hreflang="hi" href="https://krashimitra.in/dukanlisting">
+  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/dukanlisting">
   <meta name="geo.region" content="IN">
   <meta name="author" content="KrashiMitra — krashimitra.in">
 
@@ -44,7 +44,7 @@
   <meta property="og:locale" content="hi_IN">
   <meta property="og:title" content="अपनी दुकान लिस्ट करें | कृषि मित्र">
   <meta property="og:description" content="अपने प्रोडक्ट मंडी भाव पेज पर दिखाएं — कीमत, MRP और छूट के साथ। ₹199/महीना से।">
-  <meta property="og:url" content="https://krashimitra.in/dukan/product">
+  <meta property="og:url" content="https://krashimitra.in/dukanlisting">
   <meta property="og:site_name" content="KrashiMitra — किसान का डिजिटल साथी">
   <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg">
   <meta property="og:image:width" content="1024">
@@ -61,17 +61,17 @@
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": "https://krashimitra.in/dukan/product#webpage",
-        "url": "https://krashimitra.in/dukan/product",
+        "@id": "https://krashimitra.in/dukanlisting#webpage",
+        "url": "https://krashimitra.in/dukanlisting",
         "name": "अपनी दुकान लिस्ट करें — कृषि मित्र",
         "description": "व्यापारी, आढ़तिया, खाद-बीज डीलर, FPO और मिल के लिए लॉगिन-आधारित सब्सक्रिप्शन लिस्टिंग। सत्यापन कॉल के बाद ही नाम दिखता है।",
         "inLanguage": "hi-IN",
         "isPartOf": { "@id": "https://krashimitra.in/#website" },
-        "breadcrumb": { "@id": "https://krashimitra.in/dukan/product#breadcrumb" }
+        "breadcrumb": { "@id": "https://krashimitra.in/dukanlisting#breadcrumb" }
       },
       {
         "@type": "BreadcrumbList",
-        "@id": "https://krashimitra.in/dukan/product#breadcrumb",
+        "@id": "https://krashimitra.in/dukanlisting#breadcrumb",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "कृषि मित्र", "item": "https://krashimitra.in/" },
           { "@type": "ListItem", "position": 2, "name": "मंडी भाव", "item": "https://krashimitra.in/bhav" },
@@ -80,7 +80,7 @@
       },
       {
         "@type": "FAQPage",
-        "@id": "https://krashimitra.in/dukan/product#faq",
+        "@id": "https://krashimitra.in/dukanlisting#faq",
         "mainEntity": [
           {
             "@type": "Question",
@@ -101,6 +101,11 @@
             "@type": "Question",
             "name": "मेरे प्रोडक्ट कहां-कहां दिखेंगे?",
             "acceptedAnswer": { "@type": "Answer", "text": "तीन जगह — आपके राज्य के भाव पेज पर MSP पैनल के नीचे (ऊपर की सिर्फ 3 दुकानों में से एक जगह, नाम और प्रोडक्ट कार्ड के साथ, नंबर नहीं), आपके जिले के कौन-खरीदेगा पेज पर पूरा प्रोडक्ट कार्ड और फोन नंबर के साथ, और कृषि बाज़ार पर एक पोस्ट के रूप में। हर कार्ड पर प्रोडक्ट का नाम, आपकी कीमत, MRP और छूट दिखती है।" }
+          },
+          {
+            "@type": "Question",
+            "name": "ऊपर की 3 जगहें कैसे तय होती हैं? क्या ज्यादा पैसा देकर ऊपर आ सकते हैं?",
+            "acceptedAnswer": { "@type": "Answer", "text": "नहीं। पैसे से यह तय नहीं होता। सब्सक्रिप्शन से सिर्फ इतना तय होता है कि आप किस जिले या राज्य के पेज पर दिखेंगे — उस पेज पर कौन ऊपर रहेगा, यह हम इस आधार पर तय करते हैं कि किसानों को कौन सही दाम, सही माल और सही व्यवहार दे रहा है। किसानों की शिकायत आने पर क्रम नीचे जाता है, चाहे भुगतान चालू हो।" }
           },
           {
             "@type": "Question",
@@ -216,7 +221,7 @@
   .dk-fine { font-size:12.5px; color:#8a958f; line-height:1.66; text-align:center; margin-top:22px; }
   .dk-fine a { color:var(--dk-green); }
 
-  /* ── /dukan/product-only additions ── */
+  /* ── /dukanlisting-only additions ── */
   .dp-gate { text-align:center; padding:30px 20px; }
   .dp-gate-ic { font-size:44px; margin-bottom:12px; }
   .dp-gate-btn {
@@ -634,10 +639,19 @@
     </div>
   </section>
 
-  <!-- TRUST -->
+  <!-- TRUST.
+       The second paragraph is the more important one, and it is a promise to
+       the FARMER printed on the page we sell to the dealer — deliberately, so
+       it is on the record in front of the person it constrains. A ranking that
+       goes to the highest bidder is worth nothing to a farmer, and a list a
+       farmer does not trust is worth nothing to a dealer either. -->
   <section class="dk-card dk-trust">
     <p><b>हम बिना जांचे कोई नंबर नहीं दिखाते।</b> हर लिस्टिंग से पहले एक असली फोन कॉल होती है,
     सब्सक्रिप्शन का भुगतान होने पर भी — इसीलिए किसान इस सूची पर भरोसा करते हैं।</p>
+    <p><b>ऊपर की जगह पैसों से नहीं मिलती।</b> ज्यादा पैसा देकर कोई दुकान ऊपर नहीं आ सकती।
+    क्रम हम इस आधार पर तय करते हैं कि कौन किसानों को सही दाम, सही माल और सही व्यवहार दे रहा है —
+    किसानों की शिकायत या अच्छी राय, दोनों इसी में गिनी जाती हैं। सब्सक्रिप्शन सिर्फ यह तय करता है
+    कि आप <b>किस पेज पर</b> दिखेंगे, यह नहीं कि <b>कौन ऊपर</b> दिखेगा।</p>
   </section>
 
   <!-- FAQ -->
@@ -664,6 +678,13 @@
       एक जगह; वहां नाम और प्रोडक्ट कार्ड दिखते हैं, नंबर नहीं), आपके जिले के
       &ldquo;कौन खरीदेगा&rdquo; पेज पर पूरा कार्ड और फोन नंबर के साथ, और कृषि बाज़ार पर एक
       पोस्ट के रूप में। हर कार्ड पर प्रोडक्ट का नाम, आपकी कीमत, MRP और छूट दिखती है।</p>
+    </details>
+    <details>
+      <summary>ऊपर की 3 जगहें कैसे तय होती हैं? क्या ज्यादा पैसा देकर ऊपर आ सकते हैं?</summary>
+      <p><b>नहीं।</b> पैसे से यह तय नहीं होता। सब्सक्रिप्शन से सिर्फ इतना तय होता है कि आप किस
+      जिले या राज्य के पेज पर दिखेंगे — उस पेज पर <b>कौन ऊपर</b> रहेगा, यह हम इस आधार पर तय करते
+      हैं कि किसानों को कौन सही दाम, सही माल और सही व्यवहार दे रहा है। किसानों की शिकायत आने पर
+      क्रम नीचे जाता है, चाहे भुगतान चालू हो। किसान का भरोसा ही इस सूची की असली कीमत है।</p>
     </details>
     <details>
       <summary>क्या कृषि मित्र खुद फसल खरीदता या बेचता है?</summary>
@@ -730,7 +751,7 @@
   var errEl      = document.getElementById('dp-err');
   var submitBtn  = document.getElementById('dp-submit');
 
-  // ── Crop chips (same pattern the old /dukan form used) ──
+  // ── Crop chips (same pattern the old /dukanlisting form used) ──
   var CROPS = [
     ['wheat', 'गेहूं'], ['paddy-common', 'धान'], ['mustard', 'सरसों'],
     ['bengal-gram-gram', 'चना'], ['maize', 'मक्का'], ['potato', 'आलू'],
@@ -917,7 +938,7 @@
       // ?v= busts the long cache on an image URL keyed by an id that never
       // changes, so a replaced photo is not shown stale for a week.
       var img = p.has_image
-        ? '<img src="' + api() + '/dukan/product-image/' + p.id + '.webp?v=' + (p.v || 0) + '" alt="">'
+        ? '<img src="' + api() + '/dukanlisting/product-image/' + p.id + '.webp?v=' + (p.v || 0) + '" alt="">'
         : '📦';
       var price = '₹' + p.price +
         (p.off ? ' <span class="mrp">₹' + p.mrp + '</span> <span class="off">' + p.off + '% off</span>' : '') +
@@ -933,7 +954,7 @@
   }
 
   function loadProducts() {
-    fetch(api() + '/dukan/products', { headers: authHeaders() })
+    fetch(api() + '/dukanlisting/products', { headers: authHeaders() })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) return;
@@ -944,7 +965,7 @@
   }
 
   function deleteProduct(id) {
-    fetch(api() + '/dukan/products/' + id, { method: 'DELETE', headers: authHeaders() })
+    fetch(api() + '/dukanlisting/products/' + id, { method: 'DELETE', headers: authHeaders() })
       .then(function (r) { if (r.ok) loadProducts(); });
   }
 
@@ -957,7 +978,7 @@
     if (!parseInt(val('dp-pp'), 10)) {
       perrEl.textContent = 'सही कीमत डालें।'; perrEl.hidden = false; return;
     }
-    fetch(api() + '/dukan/products', {
+    fetch(api() + '/dukanlisting/products', {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
@@ -984,7 +1005,7 @@
   // `done` is the retry button's callback — it only needs to know the attempt
   // finished, not how it went.
   function loadMine(done) {
-    fetch(api() + '/dukan/mine', { headers: authHeaders() })
+    fetch(api() + '/dukanlisting/mine', { headers: authHeaders() })
       .then(function (r) {
         // 401 = token expired/revoked, 403 = no Authorization header at all
         // (FastAPI's HTTPBearer). Those two mean "log in"; nothing else does.
@@ -1086,7 +1107,7 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'भेजा जा रहा है…';
 
-    fetch(api() + '/dukan/listings', {
+    fetch(api() + '/dukanlisting/listings', {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify(body)

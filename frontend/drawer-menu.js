@@ -301,7 +301,7 @@
     return true;
   }
 
-  // /dukan/product (अपनी दुकान लिस्ट करें — paid dealer listings) has the same distribution
+  // /dukanlisting (अपनी दुकान लिस्ट करें — paid dealer listings) has the same distribution
   // problem net-price had: it is real and it is live, but the only static links
   // to it sit on /bhav/.../kharidar pages, and today zero districts have a live
   // listing for one of those pages to show — so a trader can only reach it by
@@ -317,9 +317,9 @@
     });
     if (have) return false;
     var a = document.createElement('a');
-    a.href = '/dukan/product';
+    a.href = '/dukanlisting';
     a.className = 'sidebar-drawer-link';
-    if (/^\/dukan/.test(location.pathname)) a.className += ' active';
+    if (/^\/dukanlisting/.test(location.pathname)) a.className += ' active';
     a.innerHTML = '<span class="sidebar-drawer-link-icon">🤝</span>' +
                   '<span>' + LABELS['🤝'].hi + '</span>';
     box.appendChild(a);

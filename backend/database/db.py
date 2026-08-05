@@ -974,7 +974,7 @@ class Buyer(Base):
     read correctly). Stable across edits — renaming a firm keeps its stats.
 
     **active/verified are ours to set, never the dealer's.** Both default False
-    and routes/dukan.py cannot raise them: a public signup is a request to be
+    and routes/dukanlisting.py cannot raise them: a public signup is a request to be
     listed, not a listing. `verified` is a claim we make to a farmer about a
     stranger's phone number, so it costs one real phone call — the rule
     data/buyers.json states in its own note, enforced here in the schema rather
@@ -1034,10 +1034,10 @@ class Buyer(Base):
     paid_amount  = Column(Integer,  nullable=True)              # whole rupees
     payment_ref  = Column(String,   nullable=True)              # UPI txn reference, typed from the statement
     paid_until   = Column(DateTime, nullable=True)              # end of the paid month — what "still paying" means
-    # ── /dukan/product: paid, login-gated, multi-district listings ──
+    # ── /dukanlisting: paid, login-gated, multi-district listings ──
     # NULL for every row created before this — the old anonymous /dukan/signup
     # and every admin-typed row have no account behind them. Set once, from the
-    # authenticated user's id, never from client input (routes/dukan.py stamps
+    # authenticated user's id, never from client input (routes/dukanlisting.py stamps
     # it; _apply() copies whatever the route already decided, same as any other
     # field — there is nothing here for a dealer to forge).
     #
@@ -1072,7 +1072,7 @@ class Buyer(Base):
     address     = Column(String, nullable=True)   # shop address for the receipt
 
     # The dealer's own words about what he deals in — written by him on
-    # /dukan/product and shown to farmers on the kharidar page.
+    # /dukanlisting and shown to farmers on the kharidar page.
     #
     # This is NOT `note`, and the split is the point. `note` is the private call
     # log: services/dealers.py::log_call appends "[04 Aug] wants a discount" to
@@ -1087,7 +1087,7 @@ class Buyer(Base):
 class DealerProduct(Base):
     """One item a paying dealer sells, rendered as a product card on /bhav.
 
-    This is what /dukan/product is named after. A `Buyer` row answers "who buys
+    This is what /dukanlisting is named after. A `Buyer` row answers "who buys
     here and how do I reach him"; this answers "what is he selling, and at what
     price" — the thing a farmer is actually scanning a listing for, and the
     reason a dealer pays to be on the page at all.
@@ -1108,13 +1108,13 @@ class DealerProduct(Base):
     not of a firm. Stored in Postgres as a base64 WebP for the reason
     routes/profile.py already learned with avatars — Render's free tier wipes
     uploads/ on restart — and deferred() so the ~15KB blob never loads on a
-    /bhav render; the card points at /dukan/product-image/<id>.webp instead.
+    /bhav render; the card points at /dukanlisting/product-image/<id>.webp instead.
     """
     __tablename__ = "dealer_products"
 
     id         = Column(Integer, primary_key=True, index=True)
     buyer_slug = Column(String, nullable=False, index=True)
-    # NULL for an admin-typed dealer; set for every /dukan/product account.
+    # NULL for an admin-typed dealer; set for every /dukanlisting account.
     owner_user_id = Column(Integer, nullable=True, index=True)
 
     name_hi = Column(String, nullable=False)            # "गेहूं बीज HD-2967"

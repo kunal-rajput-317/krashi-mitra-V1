@@ -178,53 +178,57 @@ class TestDealerAcquisitionRoute:
     def test_empty_district_still_pitches_the_dealer(self, seeded, client):
         """Most important here: an empty page's only job is recruiting supply."""
         body = client.get(_url(EMPTY)).text
-        assert "/dukan" in body, "no signup link on the page that needs it most"
+        assert "/dukanlisting" in body, "no signup link on the page that needs it most"
         assert "wa.me/919870951001" in body
 
     def test_seeded_district_pitches_too(self, seeded, client):
         """A competitor already being listed is the strongest pitch there is."""
-        assert "/dukan" in client.get(_url(SEEDED)).text
+        assert "/dukanlisting" in client.get(_url(SEEDED)).text
 
     def test_dukan_page_exists_and_is_wired_into_the_sitemap(self, client, repo_root):
         """Guards the whole chain: file present, redirect rules, sitemap entry.
         A link to a page the host does not serve is worse than no link.
 
-        /dukan/product is a real DIRECTORY, not a flat file plus a rewrite. That
+        /dukanlisting is a real DIRECTORY, not a flat file plus a rewrite. That
         is the whole point: a rewrite lives in _redirects, which only Netlify
         reads, so the page 404'd on the FastAPI static mount in local dev. A
         directory index resolves natively on both."""
-        assert (repo_root / "frontend" / "dukan" / "product" / "index.html").is_file()
+        assert (repo_root / "frontend" / "dukanlisting" / "index.html").is_file()
         assert not (repo_root / "frontend" / "dukan.html").exists(), (
-            "the free anonymous /dukan page is gone — /dukan/product replaced it")
+            "the free anonymous /dukan page is gone — /dukanlisting replaced it")
         redirects = (repo_root / "frontend" / "_redirects").read_text(encoding="utf-8")
-        assert "/dukan.html            /dukan/product" in redirects
-        assert "/dukan                 /dukan/product" in redirects
-        assert f"{bhav.SITE}/dukan/product</loc>" in client.get("/sitemap.xml").text
+        # Every old entry point still has to land somewhere: /dukan* was
+        # indexed and is in the wild, so it 301s rather than 404s.
+        for old in ("/dukan.html", "/dukan/product", "/dukan"):
+            assert f"{old} " in redirects and "/dukanlisting" in redirects, old
+        assert "/dukanlisting     /dukanlisting" not in redirects, (
+            "a rule redirects the page to itself — infinite loop")
+        assert f"{bhav.SITE}/dukanlisting</loc>" in client.get("/sitemap.xml").text
 
     def test_dukan_page_is_served_at_its_own_url(self, client):
         """The regression this exists to prevent: the page rendered a 404 at
-        /dukan/product locally because the only thing routing it was a Netlify
+        /dukanlisting locally because the only thing routing it was a Netlify
         rewrite. Asserted through the app itself, not the filesystem.
 
         One 307 hop to the trailing-slash form is expected and fine — that is
         Starlette's directory handling, and the client follows it."""
-        response = client.get("/dukan/product")
+        response = client.get("/dukanlisting")
         assert response.status_code == 200, response.text
         assert response.headers["content-type"].startswith("text/html")
         assert "अपनी दुकान लिस्ट करें" in response.text
-        assert "/dukan/listings" in response.text, "the form lost its endpoint"
+        assert "/dukanlisting/listings" in response.text, "the form lost its endpoint"
 
     def test_dukan_page_assets_are_root_absolute(self, repo_root):
-        """Served from /dukan/product/, a relative "km-shell.css" would resolve
-        to /dukan/product/km-shell.css and silently 404 — and per the repo's
+        """Served from /dukanlisting/, a relative "km-shell.css" would resolve
+        to /dukanlisting/km-shell.css and silently 404 — and per the repo's
         own note, a missing static file returns 200 + HTML rather than a 404,
         so this breaks invisibly."""
         import re
 
-        page = (repo_root / "frontend" / "dukan" / "product" / "index.html").read_text(
+        page = (repo_root / "frontend" / "dukanlisting" / "index.html").read_text(
             encoding="utf-8")
         # Static markup only. Script bodies build URLs by concatenation
-        # (`'<img src="' + API + '/dukan/...'`), which this regex reads as a
+        # (`'<img src="' + API + '/dukanlisting/...'`), which this regex reads as a
         # relative ref even though it resolves absolute at runtime.
         markup = re.sub(r"<script\b.*?</script>", "", page, flags=re.S | re.I)
         relative = re.findall(
@@ -233,11 +237,11 @@ class TestDealerAcquisitionRoute:
 
     def test_dukan_form_posts_to_a_route_that_exists(self, repo_root, client):
         """The form's endpoint is a string in HTML — nothing else type-checks it."""
-        page = (repo_root / "frontend" / "dukan" / "product" / "index.html").read_text(
+        page = (repo_root / "frontend" / "dukanlisting" / "index.html").read_text(
             encoding="utf-8")
-        assert "/dukan/listings" in page
+        assert "/dukanlisting/listings" in page
         # 401/422, not 404: proves the route is registered AND login-gated.
-        assert client.post("/dukan/listings", json={}).status_code in (401, 403, 422)
+        assert client.post("/dukanlisting/listings", json={}).status_code in (401, 403, 422)
 
 
 class TestUnseededRepoDefault:

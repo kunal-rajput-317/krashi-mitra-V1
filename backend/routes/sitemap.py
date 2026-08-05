@@ -76,7 +76,7 @@ CORE = [
     # _naksha_entries() below, so the manifest stays the single list.
     # Supply-side acquisition for the खरीदार directory. Hindi-only: the audience
     # is Indian traders and डीलर, and there is no ?lang= switcher on the page.
-    ("dukan/product/index.html", "/dukan/product", 0.7, "monthly", ("hi",), ()),
+    ("dukanlisting/index.html", "/dukanlisting", 0.7, "monthly", ("hi",), ()),
     ("help.html",           "/help",            0.6, "weekly", ("hi",), ()),
     ("about.html",          "/about",           0.4, "yearly", (), ()),
     ("privacy-policy.html", "/privacy-policy",  0.3, "yearly", (), ()),

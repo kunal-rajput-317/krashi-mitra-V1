@@ -442,7 +442,7 @@ class TestQuotedAmountReachesTheDealer:
 
 
 class TestSubscriptionPricingOnTheRail:
-    """A /dukan/product account owes ₹199 + ₹50 per extra district, not the flat
+    """A /dukanlisting account owes ₹199 + ₹50 per extra district, not the flat
     KM_LISTING_FEE — the default only makes sense for a row with no account
     behind it."""
 

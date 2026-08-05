@@ -97,7 +97,7 @@ def _section(url: str) -> str:
     14k /bhav URLs still says something at a glance."""
     p = url.split("krashimitra.in", 1)[-1] or "/"
     for prefix in ("/bhav/net-price", "/bhav", "/naksha", "/map", "/articles",
-                   "/product", "/dukan", "/sawal"):
+                   "/product", "/dukanlisting", "/sawal"):
         if p == prefix or p.startswith(prefix + "/"):
             return prefix
     return p if p.count("/") <= 1 else "/" + p.split("/")[1]

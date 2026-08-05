@@ -40,7 +40,7 @@ STATUSES = ("new", "called", "listed", "rejected")
 CALL_RESULTS = ("no_answer", "callback", "interested", "not_interested", "pitched")
 
 # How many days before expiry a subscription counts as "expiring" — for the
-# dealer's own KrashiBook warning (routes/dukan.py) and the owner's renewal
+# dealer's own KrashiBook warning (routes/dukanlisting.py) and the owner's renewal
 # call list (counts() below) alike. One constant so the two can never
 # disagree about which dealers are about to go dark.
 EXPIRY_WARN_DAYS = 7
@@ -114,7 +114,7 @@ def _apply(row: Buyer, data: dict, *, trusted: bool) -> None:
 
     `owner_user_id` sits outside that gate on purpose — it is not a trust flag,
     it is bookkeeping of *which account* a row belongs to. The only caller that
-    ever passes it is routes/dukan.py, which stamps it from the authenticated
+    ever passes it is routes/dukanlisting.py, which stamps it from the authenticated
     token itself; there is no request field a client could forge it through.
 
     `bhav_rank` is deliberately NOT settable here at all, trusted or not — it
@@ -272,7 +272,7 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     always: he is not paying to stay invisible, and the admin is the one who
     just clicked collect after deciding to trust him.
 
-    For a /dukan/product self-serve account (owner_user_id set), paying does
+    For a /dukanlisting self-serve account (owner_user_id set), paying does
     NOT flip active/verified — the phone-verification call stays a hard gate
     for those (see approve()); the payment only buys the subscription window.
     It renews every row that shares the same owner_user_id at once, since one
@@ -314,7 +314,7 @@ def quote(n_districts: int) -> int:
 
 
 def for_owner(db, owner_user_id: int) -> list[Buyer]:
-    """Every row one /dukan/product account owns. Powers the admin panel's
+    """Every row one /dukanlisting account owns. Powers the admin panel's
     per-account grouping and the dealer's own "my listings" view — and is how
     record_payment() finds every district a single payment has to renew."""
     if not owner_user_id:
@@ -371,7 +371,7 @@ def _norm_state(s: str) -> str:
 
 
 def _sync_bazar_post(db, owner_user_id) -> None:
-    """Keep one krashi_bajar feed post in sync with a /dukan/product account's
+    """Keep one krashi_bajar feed post in sync with a /dukanlisting account's
     eligibility (active + verified + a currently paid subscription) — created,
     refreshed, or closed automatically as a side effect of approve()/
     record_payment()/update(), the same way every other consequence on this
@@ -498,7 +498,7 @@ def listing(db, *, source: str = "") -> list[dict]:
             # Derived here so the panel never has to re-implement the date
             # comparison and drift from the funnel counts next to it.
             "paying":      bool(r.paid_until and r.paid_until > now),
-            # /dukan/product account grouping — None for admin-created/legacy
+            # /dukanlisting account grouping — None for admin-created/legacy
             # rows, which the panel keeps showing exactly as it does today.
             "owner_user_id": r.owner_user_id,
             "bhav_rank":     r.bhav_rank,
@@ -521,7 +521,7 @@ def counts(db) -> dict:
     now = datetime.utcnow()
     soon = now + timedelta(days=EXPIRY_WARN_DAYS)
     # A renewal nobody remembers to ask for is revenue lost in silence, and the
-    # dealer's own KrashiBook warning (routes/dukan.py::my_subscription) only
+    # dealer's own KrashiBook warning (routes/dukanlisting.py::my_subscription) only
     # helps if the owner is making the call from this side too. Counted per
     # ACCOUNT, not per row: three districts on one subscription is one call.
     def _accounts(pred):

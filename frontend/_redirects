@@ -114,15 +114,19 @@
 /sarkari_yojana.html   /sarkari_yojana    301!
 /khoj.html             /khoj              301!
 /meri_fasal.html       /meri_fasal        301!
-# /dukan/product replaced the free/anonymous /dukan entirely (login + paid
-# subscription now). The page itself needs NO rule: it is a real directory
-# (frontend/dukan/product/index.html), so Netlify, the FastAPI static mount and
+# The dealer sign-up page. It needs NO rule of its own: it is a real directory
+# (frontend/dukanlisting/index.html), so Netlify, the FastAPI static mount and
 # any other static host all resolve it natively — a flat file plus a rewrite
 # would have worked only on Netlify and 404'd on the backend in local dev.
-# These two only retire the old entry points. `!` forces them, because
-# /dukan is now a real directory that would otherwise be matched first.
-/dukan.html            /dukan/product     301!
-/dukan                 /dukan/product     301!
+#
+# Everything below retires an old entry point. /dukan* was renamed to
+# /dukanlisting because "dukan" already meant two other things on this site
+# (/product = कृषि दुकान, /shop = किसान की दुकान). The old URL was indexed and
+# is in the wild, so it 301s rather than 404s.
+# `!` forces the rule past the real files/directories Netlify would match first.
+/dukan.html            /dukanlisting     301!
+/dukan/product         /dukanlisting     301!
+/dukan                 /dukanlisting     301!
 /about.html            /about             301!
 /privacy-policy.html   /privacy-policy    301!
 /map.html              /map               301!

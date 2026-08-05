@@ -270,8 +270,8 @@
     loadWeatherAlert();
   }
 
-  // Dealer subscription state (/dukan/product). Parse-on-request, like the crop
-  // nudges: /dukan/subscription recomputes from paid_until on every call, so
+  // Dealer subscription state (/dukanlisting). Parse-on-request, like the crop
+  // nudges: /dukanlisting/subscription recomputes from paid_until on every call, so
   // there is no scheduler to die quietly and no "reminder sent" flag to drift.
   //
   // This exists because a lapse was completely silent. services/buyers.py drops
@@ -283,7 +283,7 @@
     if (!slot) return;
     var token = getToken();
     if (!token) return;                       // guests own no listing
-    fetch(apiBase() + "/dukan/subscription", { headers: { "Authorization": "Bearer " + token } })
+    fetch(apiBase() + "/dukanlisting/subscription", { headers: { "Authorization": "Bearer " + token } })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res || !res.success || !res.data) return;
@@ -304,7 +304,7 @@
               '</div>' +
               '<div class="km-book-product">' + clean(a.title_hi) + '</div>' +
               '<div class="km-book-line">' + clean(a.detail_hi) + '</div>' +
-              '<button class="km-book-ghost-btn" data-href="/dukan/product" style="margin-top:8px">' +
+              '<button class="km-book-ghost-btn" data-href="/dukanlisting" style="margin-top:8px">' +
                 'अपनी दुकान देखें</button>' +
             '</div>';
         });
@@ -725,14 +725,14 @@
       .then(function (res) { cb((res && res.success && res.data && res.data.now_count) || 0); })
       .catch(function () { cb(0); });
   }
-  // A lapsed or lapsing listing (/dukan/product). Same contract as the crop
+  // A lapsed or lapsing listing (/dukanlisting). Same contract as the crop
   // count — the point of the badge is that the dealer does NOT have to open
   // KrashiBook to find out his listing is about to go dark. 0 for farmers,
   // who own no listing, and 0 for guests.
   function fetchDukanNowCount(cb) {
     var token = getToken();
     if (!token) { cb(0); return; }
-    fetch(apiBase() + "/dukan/subscription", { headers: { "Authorization": "Bearer " + token } })
+    fetch(apiBase() + "/dukanlisting/subscription", { headers: { "Authorization": "Bearer " + token } })
       .then(function (r) { return r.json(); })
       .then(function (res) { cb((res && res.success && res.data && res.data.now_count) || 0); })
       .catch(function () { cb(0); });

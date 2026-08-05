@@ -2244,7 +2244,7 @@ body {
         .by-tag.lapsed { background: rgba(248,81,73,.16); color: #f85149; }
         .by-tag.called { background: rgba(139,148,158,.18); color: #8b949e; }
 
-        /* /dukan/product: rows sharing an owner_user_id are one subscription —
+        /* /dukanlisting: rows sharing an owner_user_id are one subscription —
            grouped for display only, every row underneath keeps its own call
            log, rank and payment actions untouched. */
         .by-acct-h {
@@ -2622,7 +2622,7 @@ body {
            yes, and hand-editing JSON is not an option." So the add form is the
            first thing on the page and needs four fields.
 
-           Two kinds of row: `signup` (arrived through /dukan/product, never live
+           Two kinds of row: `signup` (arrived through /dukanlisting, never live
            until approved) and `admin` (typed here, live immediately). The blue
            tick costs a real phone call — the backend will not let a signup set
            it, and paying does not set it either for a self-serve account. -->
@@ -2654,7 +2654,7 @@ body {
             <span class="stat-icon">📞</span>
             <div class="stat-label">Waiting on a call</div>
             <div class="stat-value ld-big" id="by-pending">—</div>
-            <div class="stat-sub">signed up via /dukan/product, not yet verified</div>
+            <div class="stat-sub">signed up via /dukanlisting, not yet verified</div>
           </div>
           <div class="stat-card">
             <span class="stat-icon">🧾</span>
@@ -2663,7 +2663,7 @@ body {
             <div class="stat-sub">excludes the buyers.json seed</div>
           </div>
           <!-- Renewals. The dealer gets his own warning in KrashiBook
-               (routes/dukan.py::my_subscription), but only you can make the
+               (routes/dukanlisting.py::my_subscription), but only you can make the
                call — a lapse nobody chases is revenue lost in silence.
                Counted per ACCOUNT: three districts on one subscription is
                one phone call, not three. -->
@@ -2920,7 +2920,7 @@ body {
           <textarea id="ed-description" rows="3" maxlength="400"></textarea>
         </div>
 
-        <!-- The dealer's catalogue. He types the items on /dukan/product; the
+        <!-- The dealer's catalogue. He types the items on /dukanlisting; the
              photos are put on here, because a public image upload is a
              moderation queue nobody has time to run on a surface where a bad
              picture goes out under our own verified tick. -->
@@ -5673,13 +5673,13 @@ function renderBuyers(d) {
   if (!rows.length) {
     box.innerHTML = `<div class="by-empty">
       ${_byFilter === 'signup'
-        ? 'No signups yet. /dukan/product fills this (login + paid subscription now, not the old free form) — but nobody finds it until the directory ranks, so the first listings come from calls.'
+        ? 'No signups yet. /dukanlisting fills this (login + paid subscription now, not the old free form) — but nobody finds it until the directory ranks, so the first listings come from calls.'
         : 'No dealers yet. Add one above, or seed the district you picked — until a district has a live dealer its खरीदार page renders <code>noindex</code> and stays out of the sitemap.'}
     </div>`;
     return;
   }
 
-  // /dukan/product: rows sharing an owner_user_id are one paying account
+  // /dukanlisting: rows sharing an owner_user_id are one paying account
   // (several districts, one subscription) — grouped here for display only,
   // every row underneath keeps its own call log, rank and payment actions.
   // Legacy/admin-added rows (owner_user_id null) render exactly as before.
@@ -5697,7 +5697,7 @@ function renderBuyers(d) {
   let html = legacy.map(buyerRowHtml).join('');
   byOwner.forEach((group, ownerId) => {
     const price = 199 + 50 * Math.max(0, group.length - 1);
-    html += `<div class="by-acct-h">🧑‍💼 /dukan/product खाता #${ownerId} — ` +
+    html += `<div class="by-acct-h">🧑‍💼 /dukanlisting खाता #${ownerId} — ` +
             `${group.length} जिले — ₹${price}/महीना</div>` +
             group.map(buyerRowHtml).join('');
   });
@@ -5765,7 +5765,7 @@ function buyerRowHtml(b) {
         ${phone ? `📞 <a href="tel:${escapeHtml(phone)}" style="color:var(--primary)">${escapeHtml(phone)}</a> · ` : ''}
         फसल: ${escapeHtml(crops)} ·
         <code>${escapeHtml(b.slug)}</code> ·
-        ${b.source === 'signup' ? 'via /dukan' : 'added here'}<br>
+        ${b.source === 'signup' ? 'via /dukanlisting' : 'added here'}<br>
         <span class="by-callnote">${escapeHtml(callLine)}</span>
         ${creds ? '<br>' + creds : ''}
         ${b.description ? `<br>💬 ${escapeHtml(b.description)}` : ''}
@@ -5838,7 +5838,7 @@ function closeEditModal() {
 }
 
 /* ══════════ A DEALER'S CATALOGUE ══════════
-   He types the items on /dukan/product; the photos go on here. Products hang
+   He types the items on /dukanlisting; the photos go on here. Products hang
    off the ACCOUNT (owner_user_id), so a dealer paying for three districts has
    one catalogue rather than three copies to keep in step. */
 let _edProducts = [];
@@ -5868,7 +5868,7 @@ function edRenderProducts() {
     // ?v= busts the 7-day cache on the image URL, which is keyed by an id
     // that never changes — without it a replaced photo shows the old one.
     const pic = p.has_image
-      ? `<img src="${API}/dukan/product-image/${p.id}.webp?v=${p.v || 0}" alt="">`
+      ? `<img src="${API}/dukanlisting/product-image/${p.id}.webp?v=${p.v || 0}" alt="">`
       : '📦';
     const price = `₹${p.price}` +
       (p.off ? ` <span class="mrp">₹${p.mrp}</span> <span class="off">${p.off}% off</span>` : '') +

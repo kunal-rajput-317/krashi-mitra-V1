@@ -166,7 +166,7 @@ def place_keys(db: Session, post_type: str = "buy") -> set:
 
 
 def _shop_names(posts, db: Session) -> dict:
-    """{user_id: shop name} for the /dukan/product accounts among these posts.
+    """{user_id: shop name} for the /dukanlisting accounts among these posts.
 
     A dealer's feed post is written by services/dealers.py::_sync_bazar_post
     under his personal login, because that is the only users.id there is to

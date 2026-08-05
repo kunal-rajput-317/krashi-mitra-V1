@@ -84,7 +84,7 @@ def _dealer(slug: str):
     Fails soft — Neon being asleep must not turn a payment page into an error
     page; it just loses the personalisation and falls back to the flat fee.
 
-    `own_price` is what a /dukan/product account actually owes for its own
+    `own_price` is what a /dukanlisting account actually owes for its own
     district count (services/dealers.py::quote — ₹199 + ₹50 each after), so a
     dealer opening this page bare, with no ?amount= on the URL, is quoted his
     real subscription rather than the KM_LISTING_FEE default that has nothing

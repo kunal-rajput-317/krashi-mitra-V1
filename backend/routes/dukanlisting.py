@@ -1,5 +1,5 @@
 # ============================================================
-# backend/routes/dukan.py
+# backend/routes/dukanlisting.py
 # KrashiMitra — "अपनी दुकान लिस्ट करें": paid, login-gated dealer subscriptions.
 #
 # Replaces the old anonymous, free, single-district /dukan/signup (shipped
@@ -12,9 +12,9 @@
 # additional one.
 #
 # ENDPOINTS (all Depends(get_current_user) — no anonymous path any more):
-#   POST   /dukan/listings         create/add districts to the caller's account
-#   GET    /dukan/mine             the caller's own districts + current price
-#   DELETE /dukan/listings/{slug}  drop one district (must own the row)
+#   POST   /dukanlisting/listings         create/add districts to the caller's account
+#   GET    /dukanlisting/mine             the caller's own districts + current price
+#   DELETE /dukanlisting/listings/{slug}  drop one district (must own the row)
 #
 # WHAT DOES NOT CHANGE from the old model:
 #   • Never live, never verified from here. services/dealers.py::from_signup
@@ -48,7 +48,7 @@ from backend.database.db import Buyer, get_db, is_read_only_error
 from backend.services import dealer_products, dealers
 from backend.utils.auth_utils import get_current_user
 
-router = APIRouter(prefix="/dukan", tags=["dukan"])
+router = APIRouter(prefix="/dukanlisting", tags=["dukan"])
 
 _MAX = {"name": 120, "state": 80, "district": 80, "market": 120,
         "phone": 20, "whatsapp": 20, "description": 400, "since": 40}

@@ -1,6 +1,6 @@
 # ============================================================
 # services/dealer_products.py
-# The catalogue behind /dukan/product — what a paying dealer actually sells.
+# The catalogue behind /dukanlisting — what a paying dealer actually sells.
 #
 # services/dealers.py owns the `buyers` row (who he is, where, is he paid).
 # This module owns `dealer_products` (what he sells, at what price), and it is
@@ -20,7 +20,7 @@
 #
 # THE BLOB IS NEVER LOADED ON A RENDER. DealerProduct.image_data is deferred()
 # in the model and only image_of() below ever touches it; every card reads the
-# `image_mime` presence flag and points at /dukan/product-image/<id>.webp.
+# `image_mime` presence flag and points at /dukanlisting/product-image/<id>.webp.
 # ============================================================
 from datetime import datetime
 

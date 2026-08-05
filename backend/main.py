@@ -290,8 +290,8 @@ app.include_router(alerts_route.router)  # 🔔 mandi bhav price alerts (web pus
 from backend.routes import appeal as appeal_route
 app.include_router(appeal_route.router)  # बेचना/खरीदना है — sell/buy appeals raised on /bhav pages
 
-from backend.routes import dukan as dukan_route
-app.include_router(dukan_route.router)   # अपनी दुकान लिस्ट करें — login-gated, paid dealer subscriptions (/dukan/product)
+from backend.routes import dukanlisting as dukanlisting_route
+app.include_router(dukanlisting_route.router)   # अपनी दुकान लिस्ट करें — login-gated, paid dealer subscriptions (/dukanlisting)
 
 from backend.routes import pay as pay_route
 app.include_router(pay_route.router)     # /pay — UPI listing-fee page sent to a dealer over WhatsApp (noindex)

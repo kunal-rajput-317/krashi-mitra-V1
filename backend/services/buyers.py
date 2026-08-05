@@ -82,7 +82,7 @@ def _usable(b: dict) -> bool:
     """A listing a farmer can actually act on. The phone check is the point:
     an unreachable number is worse than an empty page.
 
-    /dukan/product rows (owner_user_id set) have one more requirement: a
+    /dukanlisting rows (owner_user_id set) have one more requirement: a
     currently paid subscription. This is the paid model replacing the old
     free anonymous signup — a self-serve account that lets its subscription
     lapse disappears from every farmer-facing surface (this directory, the
@@ -122,7 +122,7 @@ def as_dict(row) -> dict:
         # all any more, so no render path can reach it.
         "description": row.description or "",
         "since":       row.since or "",
-        # /dukan/product: which Tier-3 bhav-panel slot this row holds (admin-set,
+        # /dukanlisting: which Tier-3 bhav-panel slot this row holds (admin-set,
         # see dealers.py::set_bhav_rank), whether its subscription is current, and
         # which account it belongs to (gates _usable() above). All three are only
         # ever non-empty for rows that came through the paid signup — the
@@ -262,7 +262,7 @@ def for_bhav_panel(state: str, c_slug: str) -> list:
     else held the rank, but it does not stop one dealer holding it twice.
     """
     # _is_paid() is already implied for every row here — _usable() (which built
-    # _place_idx) rejects an unpaid /dukan/product row before it ever arrives —
+    # _place_idx) rejects an unpaid /dukanlisting row before it ever arrives —
     # but it costs nothing to state the panel's own requirement explicitly
     # rather than lean on that as an invisible precondition.
     _load()

@@ -100,7 +100,7 @@ class TestReferencedAssetsExist:
 class TestApiBaseIsSetBeforeItIsRead:
     """A page must never fall back to calling its own origin.
 
-    Regression for a real one: frontend/dukan/product/index.html read
+    Regression for a real one: frontend/dukanlisting/index.html read
     `window.KRASHIMITRA_API_BASE || ''` in an inline script near the top of
     <body>, but the only thing that sets the base — /api-config.js — loads at
     the very bottom of that document, and this page was the one page missing
@@ -108,7 +108,7 @@ class TestApiBaseIsSetBeforeItIsRead:
     every call went to the page's own origin.
 
     That is invisible on the Render host, where the API *is* the origin. On
-    krashimitra.in it 404s: Netlify proxies a handful of paths and /dukan/* is
+    krashimitra.in it 404s: Netlify proxies a handful of paths and /dukanlisting/* is
     not one of them. The whole page was dead there — listings, products, and
     the signup POST — while looking merely "slow to load".
 

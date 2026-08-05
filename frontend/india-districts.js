@@ -1,7 +1,7 @@
 // ============================================================
 // frontend/india-districts.js
 // State → district list, shared by every page that needs a district picker
-// (currently /dukan/product's multi-district selector). Extracted from the
+// (currently /dukanlisting's multi-district selector). Extracted from the
 // state→district object mandi.html used to carry as its own inline const —
 // mandi.html itself is being retired in favour of /bhav, so this is now the
 // one copy rather than a second page-local duplicate of the same ~35-state

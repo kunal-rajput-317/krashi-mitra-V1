@@ -1259,7 +1259,7 @@ async def delete_buyer(
 
 
 # ── A dealer's catalogue ──────────────────────────────────────
-# The dealer types what he sells on /dukan/product; the photos are put on here.
+# The dealer types what he sells on /dukanlisting; the photos are put on here.
 # A public image upload would be a moderation queue nobody has time to run, on
 # a surface where a bad picture goes out under our own verified tick.
 
@@ -1475,7 +1475,7 @@ async def dealer_collect(
     row = db.query(Buyer).filter(Buyer.slug == slug).first()
     if not row:
         raise HTTPException(404, "Unknown dealer")
-    # A /dukan/product account's real fee is dealers.quote() over however many
+    # A /dukanlisting account's real fee is dealers.quote() over however many
     # districts it has, not the flat KM_LISTING_FEE default — only when the
     # panel didn't already send its own amount, so a manual override always wins.
     if not amount and row.owner_user_id:

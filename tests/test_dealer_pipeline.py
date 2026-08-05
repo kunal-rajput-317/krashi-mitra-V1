@@ -1,6 +1,6 @@
 """The dealer pipeline: paid signup → admin queue → live on the state page.
 
-/dukan/product replaced the free anonymous /dukan/signup entirely: a dealer now
+/dukanlisting replaced the free anonymous /dukan/signup entirely: a dealer now
 logs in, picks several districts, and pays a monthly subscription (₹199 for the
 first district, +₹50 each after). Four properties carry the weight here.
 
@@ -111,7 +111,7 @@ def _listings(client, headers, **over):
             "districts": [{"state": "Uttar Pradesh", "district": "Hardoi",
                            "market": "Hardoi Mandi"}]}
     body.update(over)
-    return client.post("/dukan/listings", json=body, headers=headers)
+    return client.post("/dukanlisting/listings", json=body, headers=headers)
 
 
 class TestLoginIsRequired:
@@ -119,23 +119,28 @@ class TestLoginIsRequired:
     to author as, and a subscription needs somebody to renew it."""
 
     @pytest.mark.parametrize("method, path", [
-        ("post", "/dukan/listings"),
-        ("get", "/dukan/mine"),
-        ("delete", "/dukan/listings/any-slug"),
+        ("post", "/dukanlisting/listings"),
+        ("get", "/dukanlisting/mine"),
+        ("delete", "/dukanlisting/listings/any-slug"),
     ])
     def test_endpoints_reject_anonymous_callers(self, clean, client, method, path):
         response = getattr(client, method)(path, **({"json": {}} if method == "post" else {}))
         assert response.status_code in (401, 403), (
             f"{method.upper()} {path} answered an anonymous caller")
 
-    def test_the_old_free_signup_endpoint_is_gone(self, clean, client):
+    @pytest.mark.parametrize("path", ["/dukan/signup", "/dukanlisting/signup"])
+    def test_the_old_free_signup_endpoint_is_gone(self, clean, client, path):
         """It let anyone create a row with no account and no subscription.
+
+        Both spellings: /dukan/signup is the one that actually shipped, and the
+        whole /dukan prefix moved to /dukanlisting afterwards. A rename must not
+        quietly resurrect a free signup under the new name.
 
         405 rather than 404: a catch-all GET route further down the stack still
         matches the path, so the method is what gets rejected. Either way it is
         unroutable — and the row count is the assertion that actually matters.
         """
-        response = client.post("/dukan/signup", json={
+        response = client.post(path, json={
             "name": "Ghost Traders", "district": "Hardoi", "phone": "9876543210"})
         assert response.status_code in (404, 405)
         assert clean.query(dealers.Buyer).count() == 0
@@ -222,7 +227,7 @@ class TestMultiDistrict:
     def test_mine_reports_districts_and_price(self, dealer_user, client):
         _user, headers = dealer_user
         _listings(client, headers, districts=self.THREE)
-        data = client.get("/dukan/mine", headers=headers).json()["data"]
+        data = client.get("/dukanlisting/mine", headers=headers).json()["data"]
         assert data["district_count"] == 3
         assert data["price"] == 299          # 199 + 2 x 50
         assert {l["district"] for l in data["listings"]} == {"Hardoi", "Sitapur", "Unnao"}
@@ -231,7 +236,7 @@ class TestMultiDistrict:
         user, headers = dealer_user
         _listings(client, headers, districts=self.THREE)
         slug = dealers.for_owner(clean, user.id)[0].slug
-        assert client.delete(f"/dukan/listings/{slug}", headers=headers).status_code == 200
+        assert client.delete(f"/dukanlisting/listings/{slug}", headers=headers).status_code == 200
         assert len(dealers.for_owner(clean, user.id)) == 2
 
     def test_dealer_cannot_drop_someone_elses_listing(self, clean, dealer_user, client):
@@ -240,7 +245,7 @@ class TestMultiDistrict:
         _user, headers = dealer_user
         other = dealers.create(clean, {"name": "Verma Aadhat", "district": "Kanpur Nagar",
                                        "state": "Uttar Pradesh", "phone": "9998887770"})
-        assert client.delete(f"/dukan/listings/{other.slug}",
+        assert client.delete(f"/dukanlisting/listings/{other.slug}",
                              headers=headers).status_code == 404
         assert clean.query(dealers.Buyer).filter_by(slug=other.slug).first() is not None
 
@@ -574,7 +579,7 @@ class TestCredentialsAreAdminOnly:
 class TestSubscriptionLapseIsNeverSilent:
     """A subscription simply ending used to be invisible.
 
-    services/buyers.py::_usable drops a /dukan/product dealer from every
+    services/buyers.py::_usable drops a /dukanlisting dealer from every
     farmer-facing surface the moment `paid_until` passes, and nothing told him
     — his listing went dark and the first he knew was the calls stopping. Worse
     for us: a lapse nobody chases is revenue lost in silence.
@@ -600,12 +605,12 @@ class TestSubscriptionLapseIsNeverSilent:
         return headers, row
 
     def test_anonymous_callers_are_rejected(self, clean, client):
-        assert client.get("/dukan/subscription").status_code in (401, 403)
+        assert client.get("/dukanlisting/subscription").status_code in (401, 403)
 
     def test_a_farmer_with_no_listing_gets_nothing(self, clean, dealer_user, client):
         """This endpoint is polled by KrashiBook on pages farmers use too."""
         _user, headers = dealer_user
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["state"] == "none"
         assert d["alerts"] == []
 
@@ -618,19 +623,19 @@ class TestSubscriptionLapseIsNeverSilent:
     def test_state_is_derived_from_paid_until(self, clean, dealer_user, client,
                                                days, state):
         headers, _row = self._account(clean, client, dealer_user, days=days)
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["state"] == state
 
     def test_a_healthy_subscription_raises_no_alert(self, clean, dealer_user, client):
         """A badge that lights up for good news teaches him to ignore the badge."""
         headers, _row = self._account(clean, client, dealer_user, days=30)
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["alerts"] == []
         assert d["now_count"] == 0
 
     def test_expiring_warns_before_it_goes_dark(self, clean, dealer_user, client):
         headers, _row = self._account(clean, client, dealer_user, days=3)
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert len(d["alerts"]) == 1
         assert "खत्म" in d["alerts"][0]["title_hi"]
         # The price he has to pay is in the message — a reminder he cannot act
@@ -639,7 +644,7 @@ class TestSubscriptionLapseIsNeverSilent:
 
     def test_lapsed_says_the_listing_is_already_off(self, clean, dealer_user, client):
         headers, _row = self._account(clean, client, dealer_user, days=-2)
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["alerts"][0]["urgency"] == "now"
         assert d["now_count"] == 1
         assert "बंद" in d["alerts"][0]["title_hi"]
@@ -647,7 +652,7 @@ class TestSubscriptionLapseIsNeverSilent:
     def test_verified_but_never_paid_is_chased_too(self, clean, dealer_user, client):
         """Called, approved, and then the close was never made."""
         headers, _row = self._account(clean, client, dealer_user, days=None)
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["state"] == "unpaid"
         assert len(d["alerts"]) == 1
         assert "भुगतान" in d["alerts"][0]["title_hi"]
@@ -658,7 +663,7 @@ class TestSubscriptionLapseIsNeverSilent:
         the whole trust model rests on."""
         headers, _row = self._account(clean, client, dealer_user, days=None,
                                       verified=False)
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["alerts"] == []
 
     def test_price_reflects_every_district_on_the_account(self, clean, dealer_user,
@@ -671,7 +676,7 @@ class TestSubscriptionLapseIsNeverSilent:
         ])
         row = dealers.for_owner(clean, user.id)[0]
         dealers.approve(clean, row.slug)
-        d = client.get("/dukan/subscription", headers=headers).json()["data"]
+        d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["district_count"] == 3
         assert d["price"] == 299
 
@@ -711,13 +716,13 @@ class TestSubscriptionLapseIsNeverSilent:
     def test_the_warning_window_is_one_shared_constant(self):
         """The dealer's warning and the owner's call list must agree about who
         is about to go dark."""
-        from backend.routes import dukan as dukan_route
+        from backend.routes import dukanlisting as dukan_route
         assert dukan_route._EXPIRY_WARN_DAYS == dealers.EXPIRY_WARN_DAYS
 
 
 
 class TestDealerCatalogue:
-    """/dukan/product is named after this: what a paying dealer sells, and at
+    """/dukanlisting is named after this: what a paying dealer sells, and at
     what price, rendered as a card a farmer recognises from the shop.
 
     The card shape is deliberately the same as routes/product.py::_hub_card —
@@ -851,7 +856,7 @@ class TestDealerCatalogue:
                          files={"file": ("x.png", self._png(), "image/png")})
         assert up.status_code == 200, up.text
 
-        got = client.get(f"/dukan/product-image/{pid}.webp")
+        got = client.get(f"/dukanlisting/product-image/{pid}.webp")
         assert got.status_code == 200
         assert got.headers["content-type"] == "image/webp"
         assert got.content[:4] == b"RIFF"
@@ -867,7 +872,7 @@ class TestDealerCatalogue:
         client.post(f"/admin/products/{pid}/image", auth=ADMIN,
                     files={"file": ("x.png", self._png((600, 400)), "image/png")})
         w, h = Image.open(io.BytesIO(
-            client.get(f"/dukan/product-image/{pid}.webp").content)).size
+            client.get(f"/dukanlisting/product-image/{pid}.webp").content)).size
         assert w > h, "a landscape pack shot came back square — it was cropped"
         assert max(w, h) <= 480
 
@@ -881,7 +886,7 @@ class TestDealerCatalogue:
         buyers.invalidate()
 
         body = client.get("/bhav/wheat/up").text
-        assert f"/dukan/product-image/{pid}.webp" in body
+        assert f"/dukanlisting/product-image/{pid}.webp" in body
         assert "data:image/webp" not in body
 
     def test_public_payload_has_no_blob(self, clean, listed, client):
@@ -895,8 +900,8 @@ class TestDealerCatalogue:
 
     def test_missing_image_is_404(self, clean, listed, client):
         pid = self._add(client, listed.slug).json()["product"]["id"]
-        assert client.get(f"/dukan/product-image/{pid}.webp").status_code == 404
-        assert client.get("/dukan/product-image/999999.webp").status_code == 404
+        assert client.get(f"/dukanlisting/product-image/{pid}.webp").status_code == 404
+        assert client.get("/dukanlisting/product-image/999999.webp").status_code == 404
 
     def test_garbage_upload_is_rejected(self, clean, listed, client):
         pid = self._add(client, listed.slug).json()["product"]["id"]
@@ -910,7 +915,7 @@ class TestDealerCatalogue:
                     files={"file": ("x.png", self._png(), "image/png")})
         assert client.delete(f"/admin/products/{pid}/image",
                              auth=ADMIN).status_code == 200
-        assert client.get(f"/dukan/product-image/{pid}.webp").status_code == 404
+        assert client.get(f"/dukanlisting/product-image/{pid}.webp").status_code == 404
 
     # ── ownership + limits ──
 
@@ -935,22 +940,22 @@ class TestDealerCatalogue:
         checked in the route rather than in the service."""
         _user, headers = dealer_user
         pid = self._add(client, listed.slug).json()["product"]["id"]
-        assert client.delete(f"/dukan/products/{pid}",
+        assert client.delete(f"/dukanlisting/products/{pid}",
                              headers=headers).status_code == 404
 
     def test_a_dealer_can_add_and_drop_his_own(self, clean, dealer_user, client):
         user, headers = dealer_user
         _listings(client, headers)
-        r = client.post("/dukan/products", headers=headers, json={
+        r = client.post("/dukanlisting/products", headers=headers, json={
             "name_hi": "यूरिया", "price": 266, "unit_hi": "45 kg बैग"})
         assert r.status_code == 200, r.text
         pid = r.json()["data"]["id"]
-        assert client.get("/dukan/products", headers=headers).json()["data"]["products"]
-        assert client.delete(f"/dukan/products/{pid}", headers=headers).status_code == 200
+        assert client.get("/dukanlisting/products", headers=headers).json()["data"]["products"]
+        assert client.delete(f"/dukanlisting/products/{pid}", headers=headers).status_code == 200
 
     def test_product_endpoints_reject_anonymous(self, clean, client):
-        assert client.get("/dukan/products").status_code in (401, 403)
-        assert client.post("/dukan/products", json={}).status_code in (401, 403)
+        assert client.get("/dukanlisting/products").status_code in (401, 403)
+        assert client.post("/dukanlisting/products", json={}).status_code in (401, 403)
 
     def test_catalogue_is_capped(self, clean, listed, client):
         from backend.services import dealer_products
@@ -1024,7 +1029,7 @@ class TestTier3PanelRendering:
 
     def test_panel_pitches_the_signup_to_other_dealers(self, rendered, client):
         rendered("Sharma Traders", "Hardoi", "9876543210", rank=1)
-        assert "/dukan/product" in client.get("/bhav/wheat/up").text
+        assert "/dukanlisting" in client.get("/bhav/wheat/up").text
 
     def test_tier4_district_page_carries_no_panel(self, rendered, client):
         """The panel is a Tier-3 (crop+state) surface only."""
