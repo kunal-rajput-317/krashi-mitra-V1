@@ -2258,6 +2258,37 @@ body {
           font-family: inherit; cursor: pointer;
         }
         .by-rank:disabled { opacity: .5; cursor: not-allowed; }
+        /* A dealer can be paying and still be shown on no state page, because
+           the slot is a separate decision. Colouring the set state makes "he
+           is pinned somewhere" answerable at a glance instead of by reading
+           every dropdown. */
+        .by-rank.is-set { border-color: var(--ok, #3fb950); color: var(--ok, #3fb950); font-weight: 800; }
+
+        /* ── ⓘ help ── what each button on a listing row actually does. */
+        .by-help-btn {
+          background: none; border: 1px solid var(--border); color: var(--muted);
+          width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+          font-family: inherit; font-size: 12px; font-weight: 800; line-height: 1;
+          display: inline-flex; align-items: center; justify-content: center; padding: 0;
+        }
+        .by-help-btn:hover { color: var(--primary); border-color: var(--primary); }
+        .by-help {
+          display: none; margin: 0 0 12px; padding: 12px 14px;
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-left: 3px solid var(--primary); border-radius: var(--radius-sm);
+          font-size: 12px; line-height: 1.7; color: var(--text);
+        }
+        .by-help.open { display: block; }
+        .by-help dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; }
+        .by-help dt { font-weight: 800; white-space: nowrap; color: var(--primary); }
+        .by-help dd { margin: 0; color: var(--muted); }
+        .by-help .by-help-note {
+          margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border); color: var(--muted);
+        }
+        @media (max-width: 640px) {
+          .by-help dl { grid-template-columns: 1fr; gap: 2px; }
+          .by-help dd { margin-bottom: 7px; }
+        }
 
         .pay-modal {
           position: fixed; inset: 0; z-index: 400; display: flex;
@@ -2676,7 +2707,11 @@ body {
         <!-- LIST -->
         <div class="dashboard-panel">
           <div class="panel-header">
-            <div class="panel-title">📋 All listings</div>
+            <div class="panel-title">
+              📋 All listings
+              <button class="by-help-btn" type="button" onclick="toggleBuyerHelp()"
+                      title="ये बटन क्या करते हैं?" aria-label="मदद">i</button>
+            </div>
             <div class="by-filters">
               <button class="by-fbtn active" data-f="" onclick="filterBuyers('', this)">All</button>
               <button class="by-fbtn" data-f="signup" onclick="filterBuyers('signup', this)">Signups</button>
@@ -2684,6 +2719,42 @@ body {
             </div>
           </div>
           <div class="panel-body">
+            <!-- Written for the person using the panel at 11pm, not for whoever
+                 wrote it: every line says what a farmer sees as a result, since
+                 that is the only thing any of these buttons is actually for. -->
+            <div class="by-help" id="by-help">
+              <dl>
+                <dt>✓ Called — list it</dt>
+                <dd>फोन पर बात हो गई और दुकान असली है — इसे चालू करता है। इसके बाद ही नीला ✓ मिलता है।</dd>
+
+                <dt>Payment</dt>
+                <dd>₹ लेने के बाद यहीं दर्ज करें। पैसा अपने आप नहीं पकड़ा जाता — जो आप लिखेंगे वही सच माना जाएगा।</dd>
+
+                <dt>Hide</dt>
+                <dd>किसानों को दिखना तुरंत बंद। मिटता कुछ नहीं — दोबारा चालू कर सकते हैं।</dd>
+
+                <dt>✏️ Edit</dt>
+                <dd>नाम, फोन, फसल, विवरण ठीक करें — और इनके प्रोडक्ट की फोटो 📷 यहीं लगती है।</dd>
+
+                <dt>＋ District</dt>
+                <dd>इसी दुकान को एक और जिले में जोड़ें (+₹50/महीना)।</dd>
+
+                <dt>Delete</dt>
+                <dd>पूरी तरह मिटा देता है। वापस नहीं आता।</dd>
+
+                <dt>कॉल के बाद</dt>
+                <dd>फोन का नतीजा दर्ज करने के लिए — किसे दोबारा फोन करना है, यह इसी से पता चलता है।</dd>
+
+                <dt>राज्य पेज पर जगह</dt>
+                <dd>राज्य के भाव पेज पर सिर्फ <b>3 दुकानें</b> दिख सकती हैं। यह चुनता है कि इनकी जगह कौन सी
+                    है — 1 सबसे ऊपर। कुछ न चुनें तो पैसा देने के बाद भी ये किसी राज्य पेज पर नहीं दिखेंगे।
+                    किसी और को वही नंबर देने पर पुराना अपने आप हट जाता है।</dd>
+              </dl>
+              <div class="by-help-note">
+                🟢 <b>LIVE · VERIFIED · PAYING</b> = दुकान असली है और पैसा चालू है — यानी दिखने की
+                <i>इजाज़त</i> है। <b>जगह</b> अलग चीज़ है: वो तय करती है कि असल में दिखेंगे कहां।
+              </div>
+            </div>
             <div id="by-list">
               <div class="km-loader"><span class="km-spinner"></span> Loading…</div>
             </div>
@@ -5670,10 +5741,17 @@ function buyerRowHtml(b) {
     b.email      ? escapeHtml(b.email) : '',
   ].filter(Boolean).join(' · ');
 
-  const rankOpt = n => `<option value="${n}" ${b.bhav_rank === n ? 'selected' : ''}>${n}</option>`;
-  const rankSelect = `<select class="by-rank" ${b.verified ? '' : 'disabled title="पहले verify करें"'}
+  // Says what it does, not what it is called in the code: the state page has
+  // three slots and this picks which one he gets. "Tier-3 rank" meant nothing
+  // without reading the source.
+  const RANK_LABEL = { 1: 'रैंक 1 — सबसे ऊपर', 2: 'रैंक 2 — बीच में', 3: 'रैंक 3 — सबसे नीचे' };
+  const rankOpt = n =>
+    `<option value="${n}" ${b.bhav_rank === n ? 'selected' : ''}>${RANK_LABEL[n]}</option>`;
+  const rankSelect = `<select class="by-rank ${b.bhav_rank ? 'is-set' : ''}"
+      title="राज्य के भाव पेज पर सिर्फ 3 दुकानें दिखती हैं — यह तय करता है कि कौन सी जगह इनकी है"
+      ${b.verified ? '' : 'disabled title="पहले verify करें"'}
       onchange="setBhavRank('${escapeHtml(b.slug)}', this.value)">
-    <option value="" ${!b.bhav_rank ? 'selected' : ''}>Tier-3 rank: —</option>
+    <option value="" ${!b.bhav_rank ? 'selected' : ''}>राज्य पेज पर जगह चुनें — अभी कहीं नहीं</option>
     ${rankOpt(1)}${rankOpt(2)}${rankOpt(3)}
   </select>`;
 
@@ -5707,12 +5785,16 @@ function buyerRowHtml(b) {
       ${live
         ? `<button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','active',false)">Hide</button>`
         : `<button class="by-btn ok" onclick="approveBuyer('${escapeHtml(b.slug)}')">✓ Called — list it</button>`}
-      <!-- One row is one (dealer, district), so this flag is already
-           per-district — labelled with the district so that is visible
-           rather than something you have to know. -->
-      <button class="by-btn" title="${b.featured ? 'इस जिले में प्रमुख हटाएं' : 'इसी जिले में प्रमुख बनाएं'}"
-              onclick="setBuyerFlag('${escapeHtml(b.slug)}','featured',${!b.featured})">
-        ${b.featured ? '★ Unfeature' : '☆ Feature'} in ${escapeHtml(b.district || '—')}</button>
+      <!-- The "☆ Feature in <district>" button was here and was removed on
+           purpose: two different prominence controls on one row (this flag,
+           which sorts a dealer first WITHIN a district page, and the rank
+           dropdown, which picks the three dealers shown on a STATE page) is
+           one too many to hold in your head, and it only ever mattered once a
+           district had two dealers competing.
+           The featured column and its "featured first" sort in
+           services/buyers.py::for_place are untouched — if per-district
+           pinning is ever wanted back, it needs this button and nothing else.
+           Ranking now lives in one place: the dropdown in the call bar. -->
       <button class="by-btn" onclick="addDistrictFor('${escapeHtml(b.slug)}')"
               title="इसी दुकान को एक और जिले में जोड़ें">＋ District</button>
       <button class="by-btn warn" onclick="deleteBuyer('${escapeHtml(b.slug)}')">Delete</button>
@@ -5956,7 +6038,9 @@ async function setBhavRank(slug, value) {
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
-    showToast(rank ? `Tier-3 rank ${rank} सेट हुआ` : 'Tier-3 rank हटाया');
+    showToast(rank
+      ? `राज्य पेज पर जगह ${rank} मिल गई — अब किसानों को दिखेंगे`
+      : 'राज्य पेज से हटा दिया — अब किसी राज्य पेज पर नहीं दिखेंगे');
     loadBuyers();
   } catch (e) {
     showToast(e.message, 'error');
@@ -6001,6 +6085,22 @@ function filterBuyers(source, el) {
   if (el) el.classList.add('active');
   loadBuyers();
 }
+
+/* The ⓘ next to "All listings". Sticky across reloads via localStorage:
+   whether you need the legend is a fact about you, not about this page load,
+   and re-opening it on every refresh is its own small annoyance. */
+function toggleBuyerHelp(force) {
+  const box = document.getElementById('by-help');
+  if (!box) return;
+  const open = force === undefined ? !box.classList.contains('open') : !!force;
+  box.classList.toggle('open', open);
+  try { localStorage.setItem('km_admin_by_help', open ? '1' : '0'); } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', function () {
+  let open = false;
+  try { open = localStorage.getItem('km_admin_by_help') === '1'; } catch (e) {}
+  if (open) toggleBuyerHelp(true);
+});
 
 async function byPatch(slug, body, okMsg) {
   const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(slug)}`, {
