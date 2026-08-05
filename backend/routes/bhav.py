@@ -336,6 +336,29 @@ def _fresh_iso(idx: dict, cs: str, ss: str, ds: str) -> str:
     return idx.get("dates", {}).get(cs, {}).get(ss, {}).get(ds, "")
 
 
+def _as_of_hi(fresh_iso: str) -> str:
+    """The date to print NEXT TO A PRICE — the date that price was reported,
+    not today's.
+
+    data.gov.in does not report every mandi every day: on 2026-08-05 roughly a
+    quarter of district pages carried prices four or more days old, the worst
+    seventeen days old. Every one of those pages still opened its own meta
+    description with `_hindi_date(date.today())`, so the snippet Google showed
+    read "5 अगस्त 2026: ... का ताजा भाव — औसत ₹800/क्विंटल" above a number last
+    reported on 19 जुलाई. The page's dateModified said 19 जुलाई at the same
+    time, so the page contradicted itself, and a farmer who clicked got
+    seventeen-day-old prices under today's date.
+
+    Falls back to today only when the page has no reported date at all, which
+    is the one case where today is the honest answer (nothing claims
+    otherwise).
+    """
+    try:
+        return _hindi_date(date.fromisoformat(fresh_iso))
+    except (TypeError, ValueError):
+        return _hindi_date(date.today())
+
+
 # Agmarknet's commodity list carries a few non-crop items (livestock, fuel).
 # They keep their own pages if someone lands on one, but they are never
 # surfaced as "crops" in the hub, the sitemap, or the related-crop chips.
@@ -4518,6 +4541,7 @@ def bhav_crop(c_slug: str):
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, seed_ss, seed_ds, idx, known_crop=True)}
 {_msp_html(commodity)}
+{_dukan_pitch()}
 {_lazy_div('bhav-lazy-t2')}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'राज्य खोजें... (उत्तर प्रदेश, बिहार)')}
@@ -4525,7 +4549,6 @@ def bhav_crop(c_slug: str):
 <div class="cta-row">
 {_net_price_cta(hi, cs)}
 </div>
-{_dukan_pitch()}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_TIER_SEARCH_JS}
@@ -4604,6 +4627,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {_msp_html(commodity)}
+{_dukan_pitch(hi_state)}
 {_dealer_teaser_html(cs, ss, state)}
 {_lazy_div('bhav-lazy-t3')}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
@@ -4646,9 +4670,12 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         return _not_found()
 
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
-    today_hi  = _hindi_date(date.today())
     data_date = prices[0].get("date", "-")
     fresh_iso = _fresh_iso(idx, cs, ss, ds)
+    # Every sentence on this page that sits next to a price is dated by the
+    # price, not by the clock — see _as_of_hi. `today_hi` is deliberately not
+    # defined here any more so a future edit cannot reintroduce the mismatch.
+    as_of_hi  = _as_of_hi(fresh_iso)
     canon     = f"{SITE}/bhav/{cs}/{ss}/{ds}"
     st = _stats(prices)
 
@@ -4725,7 +4752,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                  if st["avg"] and st["lo"] and st["hi"] else "नीचे मंडीवार भाव देखें")
     faqs = [
         (f"आज {district} में {hi} का भाव क्या है?",
-         f"{today_hi} को {district} ({hi_state}) की मंडियों में {hi} का भाव {price_txt} है। "
+         f"{as_of_hi} को {district} ({hi_state}) की मंडियों में {hi} का भाव {price_txt} है। "
          f"यह भाव {_mandis_gen(st['n'])} की सरकारी रिपोर्ट पर आधारित है।"),
         (f"{district} में {hi} का न्यूनतम और अधिकतम रेट कितना है?",
          (f"आज {district} में {hi} का न्यूनतम भाव ₹{st['lo']:,} और अधिकतम भाव "
@@ -4768,9 +4795,9 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
          f"{t_hi} का भाव — {district}")))
     _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
     desc  = _fit(
-        f"{today_hi}: {district} ({hi_state}) में {hi} का ताजा भाव — {_avg}"
+        f"{as_of_hi}: {district} ({hi_state}) में {hi} का ताजा भाव — {_avg}"
         f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और 7-दिन का रुझान।",
-        f"{today_hi}: {district} में {hi} का ताजा भाव — {_avg}"
+        f"{as_of_hi}: {district} में {hi} का ताजा भाव — {_avg}"
         f"{_mandis_gen(st['n'])} के रेट और 7-दिन का रुझान।",
         limit=162)
 
@@ -4809,7 +4836,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # carry them all: date, place, average, range, source. One quotable passage.
     lead_range = (f" (न्यूनतम ₹{st['lo']:,} — अधिकतम ₹{st['hi']:,})"
                   if st["lo"] and st["hi"] else "")
-    answer_lead = ((f'<p class="lead-out">{today_hi} को {escape(district)} ({escape(hi_state)}) की '
+    answer_lead = ((f'<p class="lead-out">{as_of_hi} को {escape(district)} ({escape(hi_state)}) की '
                     f'{_mandis_gen(st["n"])} में {escape(hi)} का औसत मॉडल भाव ₹{st["avg"]:,} प्रति क्विंटल '
                     f'दर्ज हुआ{lead_range}। स्रोत: भारत सरकार का Agmarknet (data.gov.in) पोर्टल, '
                     f'{escape(_hindi_data_date(data_date))} तक।</p>')
@@ -4828,7 +4855,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_alert_bell(commodity, state, district)}
 <div class="answer-in">
 <h1>आज का {escape(hi)} भाव — {escape(district)} मंडी</h1>
-<p class="answer-sub">📅 {today_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · {escape(_hindi_data_date(data_date))} तक</p>
+<p class="answer-sub">📅 {as_of_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · {escape(_hindi_data_date(data_date))} तक</p>
 <div class="answer-price">
 <div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
 {delta_html}
@@ -4863,6 +4890,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 {_msp_html(commodity, st["avg"])}
 
+{_dukan_pitch(district)}
+
 {better_html}
 
 {chart_html}
@@ -4889,7 +4918,6 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_lead_gen_html()}
-{_dukan_pitch(district)}
 {_related_links(cs, ss, ds, commodity, district)}
 {_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4'),
                ('/bhav/api/season/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-season')])}"""
@@ -5002,6 +5030,7 @@ _BP_CSS = """
 border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:16px 18px}
 .bp-h{margin:0 0 12px}
 .bp-h h2{font-size:15.5px;margin:0;color:var(--green-dark)}
+.bp-sub{font-size:11.5px;color:var(--text-soft);margin:2px 0 0}
 .bp-list{display:flex;flex-direction:column;gap:10px}
 .bp-card{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);
 border-radius:var(--radius-sm);padding:11px 13px;background:var(--cream)}
@@ -5090,53 +5119,164 @@ def _product_cards(products: list, limit: int = 4) -> str:
     return f'<div class="dp-grid">{"".join(out)}</div>'
 
 
+# The sample card's photo. A real photograph, not the drawn bag that was here
+# before: the block's whole claim is "your product will look like this", and a
+# cartoon undersells the thing being sold.
+#
+# Served from frontend/images/ — root-relative, which resolves on both hosts
+# (Netlify serves frontend/ at the root on krashimitra.in; main.py mounts the
+# same directory at "/" on the Render domain). Deliberately no brand on the
+# pack: this is our sample, printed next to a price we invented, so it must not
+# put a real manufacturer's name behind that number.
+#
+# Cropped to 240px square (~15 KB) rather than reusing the 1200px original —
+# it renders at 72–100px and this block is on ~10,000 pages.
+_PACK_IMG = (
+    '<img src="/images/seeds/wheat-seed-hd2967-card.webp" '
+    'alt="नमूना प्रोडक्ट फोटो — गेहूं बीज" '
+    'width="240" height="240" loading="lazy" decoding="async">'
+)
+
+
 _DKP_CSS = """
-/* The supply-side pitch (_dukan_pitch). Amber, like the homepage promo and
-   .kh-sell: it reads as "this one is not for you" to the farmer who makes up
-   most of this traffic, and catches the trader's eye precisely because it is
-   the only block on the page that is not about today's price. Deliberately
-   quiet and low on the page — it must never compete with the answer. */
-.dkp{display:flex;align-items:center;gap:13px;margin:18px 0;padding:14px 16px;
-background:#fffaf0;border:1px solid #f0dfae;border-radius:var(--radius-md)}
-.dkp-ic{flex:none;width:40px;height:40px;display:grid;place-items:center;font-size:19px;
-background:var(--white);border-radius:12px;box-shadow:var(--shadow-sm)}
-.dkp-tx{flex:1;min-width:0}
-.dkp-tx b{display:block;font-size:14px;font-weight:800;color:var(--green-dark);line-height:1.4}
-.dkp-tx small{display:block;margin-top:3px;font-size:12px;line-height:1.55;color:#6b5a2e}
-.dkp-go{flex:none;font-size:12.5px;font-weight:800;color:var(--green-dark);
-text-decoration:none;white-space:nowrap}
-.dkp-go:hover{text-decoration:underline}
-@media(max-width:560px){.dkp{flex-wrap:wrap}.dkp-go{margin-left:53px}}
+/* DEALER PROMO — the server twin of frontend/dukan-promo.js (.kmdp-*),
+   rendered into the ~10,000 SEO pages. Same classes, same layout, same copy;
+   change one and change the other.
+
+   It teaches rather than advertises: most people who see it have never heard
+   of the feature, and the one-line amber strip this replaced named a price
+   without ever saying what you got for it. The sample product card is the
+   load-bearing part — it is the thing being sold, so showing one beats any
+   sentence about it.
+
+   The block now sits directly under the MSP card, above the mandi table the
+   farmer came for, and 98% of this traffic is a phone. So the PHONE layout is
+   the real one and it is built to stay small: the sample card floats as a
+   104px thumbnail with the copy wrapping around it, which costs about a third
+   of a screen instead of a screenful. The two-column desktop version below is
+   the variant, not the other way round.
+
+   Still amber, so that to the farmer who is most of this traffic it reads as
+   "not for you" at a glance. */
+.kmdp{margin:16px 0;padding:15px;box-sizing:border-box;
+background:linear-gradient(135deg,#fffdf6 0%,#fdf6e3 100%);
+border:1px solid #f0dfae;border-radius:var(--radius-md);
+box-shadow:0 2px 14px rgba(120,95,20,.07)}
+.kmdp-eyebrow{display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;
+background:rgba(233,168,37,.18);border:1px solid rgba(233,168,37,.42);
+color:#7a5200;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px}
+.kmdp-demo{float:right;width:104px;margin:0 0 10px 12px;text-align:center}
+.kmdp-h{font-size:16px;font-weight:800;line-height:1.35;
+color:var(--green-dark);margin:0 0 5px}
+.kmdp-p{font-size:12.5px;line-height:1.55;color:#5b4a1e;margin:0 0 9px}
+.kmdp-list{list-style:none;padding:0;margin:0 0 12px;display:grid;gap:5px}
+/* The ✓ is positioned, not a flex item: as flex, the <b> lead and the rest of
+   the sentence became two columns and every line broke mid-phrase. */
+.kmdp-list li{position:relative;padding-left:23px;font-size:12px;
+line-height:1.45;color:var(--text-mid)}
+.kmdp-list li::before{content:'✓';position:absolute;left:0;top:1px;
+width:16px;height:16px;border-radius:50%;
+background:var(--green-mid);color:#fff;font-size:9.5px;font-weight:800;
+display:flex;align-items:center;justify-content:center}
+.kmdp-list b{color:var(--green-dark);font-weight:700}
+/* clear:both so the button never tucks beside the float and loses half its width */
+.kmdp-cta{display:flex;align-items:center;justify-content:center;gap:8px;clear:both;
+background:var(--green-dark);color:#fff;text-decoration:none;font-size:14px;
+font-weight:800;padding:11px 20px;border-radius:24px;box-sizing:border-box}
+.kmdp-cta:hover{background:var(--green-mid)}
+.kmdp-fine{display:block;margin-top:8px;font-size:11px;color:#8a7a4e;text-align:center}
+.kmdp-card{background:var(--white);border:1px solid var(--border);border-radius:12px;
+overflow:hidden;box-shadow:0 3px 12px rgba(20,40,30,.12)}
+.kmdp-photo{position:relative;height:72px;background:#f6f3e9;display:flex;
+align-items:center;justify-content:center;overflow:hidden}
+/* contain, exactly like .dp-photo img on the real card: a pack shot that gets
+   centre-cropped loses its label, so the sample must not crop either. */
+.kmdp-photo img{max-height:100%;max-width:100%;object-fit:contain;display:block}
+.kmdp-badge{position:absolute;top:5px;left:5px;background:var(--amber);color:#fff;
+font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px}
+.kmdp-cbody{padding:7px 8px 9px;text-align:left}
+.kmdp-cname{font-size:11.5px;font-weight:700;color:var(--text-dark);line-height:1.3}
+.kmdp-cen{display:block;font-size:9px;font-weight:600;color:var(--text-soft);margin-top:1px}
+.kmdp-cprice{display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;margin-top:5px}
+.kmdp-cprice b{font-size:14px;font-weight:800;color:var(--green-mid)}
+.kmdp-cmrp{font-size:10px;color:var(--text-soft);text-decoration:line-through}
+.kmdp-coff{font-size:9.5px;font-weight:700;color:#c0392b}
+.kmdp-cunit{font-size:10px;color:var(--text-soft);margin-top:2px}
+.kmdp-cap{font-size:10px;color:#8a7a4e;margin:5px 0 0;line-height:1.35}
+@media(min-width:721px){
+.kmdp{margin:22px 0;padding:18px 20px}
+.kmdp-in{display:flex;gap:20px;align-items:center}
+.kmdp-body{flex:1;min-width:0}
+/* order:2 keeps the card on the right where the copy reads first; the markup
+   leads with it because the phone float needs it before the text it wraps. */
+.kmdp-demo{float:none;flex:none;width:166px;margin:0;order:2}
+.kmdp-h{font-size:17px;margin-bottom:6px}
+.kmdp-p{font-size:13px;line-height:1.6;margin-bottom:11px}
+.kmdp-list{gap:5px;margin-bottom:14px}
+.kmdp-list li{font-size:12.5px;line-height:1.5}
+.kmdp-cta{display:inline-flex;padding:10px 20px}
+.kmdp-fine{text-align:left}
+.kmdp-photo{height:100px}
+.kmdp-cname{font-size:12.5px}
+.kmdp-cprice b{font-size:15.5px}
+.kmdp-cap{font-size:11px;margin-top:8px}}
 """
 
 
 def _dukan_pitch(where: str = "") -> str:
-    """The supply-side ask: "you buy this crop — get listed".
+    """The supply-side ask: "you sell this — show it here".
 
     One function for every /bhav tier so the price and the copy live in exactly
-    one place. Before this, /dukan/product was reachable from the bhav tree
-    only through surfaces that require a paying dealer to already exist (the
-    Tier-3 panel renders nothing when empty; the kharidar page is gated by
-    _has_kharidar and ships noindex until a district has a listing). With zero
-    dealers that is a closed loop: the acquisition page was invisible on the
-    highest-traffic surface the site has, which is also the one place a trader
-    is definitely standing.
+    one place, and the server twin of frontend/dukan-promo.js so a trader sees
+    the same block whichever page he lands on.
 
-    `where` names the place in the pitch when we have one — "Hardoi में किसान"
-    outperforms "किसान" because a trader recognises his own district.
+    Before this, /dukan/product was reachable from the bhav tree only through
+    surfaces that require a paying dealer to already exist (the Tier-3 panel
+    renders nothing when empty; the kharidar page is gated by _has_kharidar and
+    ships noindex until a district has a listing). With zero dealers that is a
+    closed loop: the acquisition page was invisible on the highest-traffic
+    surface the site has, which is also the one place a trader is definitely
+    standing.
+
+    `where` names the place when we have one — "Hardoi के किसान" outperforms
+    "हजारों किसान" because a trader recognises his own district.
+
+    The hook is the farmer's NEXT question, not our price: he has just read
+    today's rate, and what follows it is "खाद-बीज कहां से लूं?". That is the
+    moment this block interrupts, which is why it now sits directly under the
+    MSP card on every tier rather than down by the footer.
     """
-    line = (f'{escape(where)} के किसान रोज़ यहां भाव देखते हैं'
-            if where else 'हजारों किसान रोज़ यहां भाव देखते हैं')
-    return (
-        '<aside class="dkp">'
-        '<span class="dkp-ic" aria-hidden="true">🧾</span>'
-        '<span class="dkp-tx">'
-        '<b>अनाज व्यापारी, आढ़तिया या खाद-बीज डीलर हैं?</b>'
-        f'<small>{line} — भाव देखने के बाद उनका अगला सवाल है "बेचूं किसे?"। '
-        'अपनी दुकान लिस्ट करें, ₹199/महीना से। किसान सीधे आपको कॉल करेंगे।</small>'
-        '</span>'
-        '<a class="dkp-go" href="/dukan/product">लिस्ट करें →</a>'
-        '</aside>')
+    line = (f'{escape(where)} के किसान रोज़ यहां अपना भाव देखते हैं'
+            if where else 'हर दिन हजारों किसान यहां अपने जिले का भाव देखते हैं')
+    return f"""<aside class="kmdp">
+<span class="kmdp-eyebrow">🏪 दुकानदारों के लिए</span>
+<div class="kmdp-in">
+<div class="kmdp-demo">
+<div class="kmdp-card">
+<div class="kmdp-photo"><span class="kmdp-badge">बीज</span>{_PACK_IMG}</div>
+<div class="kmdp-cbody">
+<div class="kmdp-cname">गेहूं बीज HD-2967</div>
+<span class="kmdp-cen">Wheat Seeds HD-2967</span>
+<div class="kmdp-cprice"><b>₹280</b><span class="kmdp-cmrp">₹350</span><span class="kmdp-coff">20% off</span></div>
+<div class="kmdp-cunit">5 kg बैग</div>
+</div>
+</div>
+<p class="kmdp-cap">↑ ऐसा दिखेगा आपका प्रोडक्ट</p>
+</div>
+<div class="kmdp-body">
+<h2 class="kmdp-h">अपनी दुकान किसानों तक पहुंचाएं</h2>
+<p class="kmdp-p">{line} — और भाव देखने के बाद उनका अगला सवाल होता है
+“खाद-बीज कहां से लूं?”। आपके प्रोडक्ट ठीक उसी जगह, इसी तरह दिखेंगे।</p>
+<ul class="kmdp-list">
+<li><b>नाम, आपकी कीमत, MRP और छूट</b> — बिल्कुल दुकान जैसा कार्ड</li>
+<li><b>कोई कमीशन नहीं</b> — किसान सीधे आपको फोन करता है</li>
+<li><b>₹199/महीना</b> से · हर अतिरिक्त जिला +₹50</li>
+</ul>
+<a class="kmdp-cta" href="/dukan/product">अपनी दुकान लिस्ट करें →</a>
+<span class="kmdp-fine">व्यापारी · आढ़तिया · खाद-बीज डीलर · FPO · मिल</span>
+</div>
+</div>
+</aside>"""
 
 
 def _dealer_teaser_html(cs: str, ss: str, state: str) -> str:
@@ -5153,12 +5293,10 @@ def _dealer_teaser_html(cs: str, ss: str, state: str) -> str:
     """
     rows = buyers.for_bhav_panel(state, cs)
     if not rows:
-        # No paying dealer in this state yet — so this is the one page where the
-        # ask is worth more than the list would be. Returning "" here (the
-        # original behaviour) is what made /dukan/product unreachable from the
-        # whole /bhav tree while the directory was empty, which is exactly when
-        # it needed reaching.
-        return _dukan_pitch(_hindi_state(state))
+        # Nothing to show, and nothing to say either: _dukan_pitch already runs
+        # directly under the MSP card on this page, so the empty-directory ask
+        # it used to make from here would now be the same block twice.
+        return ""
 
     cards = []
     for b in rows:
@@ -5187,7 +5325,7 @@ def _dealer_teaser_html(cs: str, ss: str, state: str) -> str:
 </div>""")
 
     return f"""<section class="bp-wrap">
-<div class="bp-h"><h2>{escape(_hindi_state(state))} में सत्यापित खरीदार</h2></div>
+<div class="bp-h"><h2>{escape(_hindi_state(state))} में सत्यापित दुकानें</h2><p class="bp-sub">इनके प्रोडक्ट और भाव — सीधे दुकानदार से</p></div>
 <div class="bp-list">{"".join(cards)}</div>
 <a class="bp-cta" href="/dukan/product">अपनी दुकान यहां लिस्ट करें →</a>
 </section>"""
@@ -5420,7 +5558,6 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
         return _not_found()
 
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
-    today_hi = _hindi_date(date.today())
     canon = f"{SITE}/bhav/{cs}/{ss}/{ds}/kharidar"
     price_url = f"/bhav/{cs}/{ss}/{ds}"
 
@@ -5430,6 +5567,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
         or _rows_for_district(idx, cs, ss, ds)
     st = _stats(prices) if prices else {"avg": None, "lo": None, "hi": None, "n": 0}
     fresh_iso = _fresh_iso(idx, cs, ss, ds)
+    as_of_hi  = _as_of_hi(fresh_iso)   # dates the price below, not the visit
 
     # Two sources, one page: hand-verified dealers we sell listings to, and the
     # district's slice of Krashi Bazar. Dealers pin above because they are the
@@ -5439,8 +5577,8 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     total = len(rows) + len(bz)
 
     price_note = (
-        f'<div class="kh-note">📊 आज {escape(district)} में <b>{escape(hi)}</b> का औसत मंडी भाव '
-        f'<b>₹{st["avg"]:,}/क्विंटल</b> है — सौदा करने से पहले यही दाम ध्यान में रखें। '
+        f'<div class="kh-note">📊 {as_of_hi} को {escape(district)} में <b>{escape(hi)}</b> का औसत मंडी भाव '
+        f'<b>₹{st["avg"]:,}/क्विंटल</b> था — सौदा करने से पहले यही दाम ध्यान में रखें। '
         f'<a href="{price_url}">मंडीवार भाव देखें →</a></div>'
         if st["avg"] else
         f'<div class="kh-note">📊 <a href="{price_url}">{escape(district)} में {escape(hi)} '
@@ -5483,9 +5621,9 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     # lands in the admin queue as a row (database/db.py::Buyer) instead of a
     # message someone has to transcribe before it can be acted on.
     join = (f'<section class="kh-join"><h2>🧾 आप {escape(hi)} खरीदते हैं?</h2>'
-            f'<p>अपने जिले के किसानों तक सीधे पहुंचें। लॉगिन करें, अपने जिले चुनें, '
-            f'₹199/महीना से सब्सक्रिप्शन लें — किसान सीधे आपको कॉल करेंगे। '
-            f'हम कॉल करके पुष्टि के बाद ही नाम दिखाते हैं।</p>'
+            f'<p>अपने प्रोडक्ट इसी पेज पर दिखाएं — नाम, आपकी कीमत, MRP और छूट के साथ, '
+            f'बिल्कुल ऊपर वाले कार्ड की तरह। ₹199/महीना से, हर अतिरिक्त जिला +₹50। '
+            f'हम कॉल करके पुष्टि के बाद ही लिस्टिंग लाइव करते हैं।</p>'
             f'<a href="{SITE}/dukan/product">अपनी दुकान लिस्ट करें →</a>'
             f'<a class="kh-join-wa" href="https://wa.me/919870951001?text={join_msg}" '
             f'rel="nofollow" target="_blank">या WhatsApp पर बात करें</a></section>')
@@ -5566,7 +5704,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
         limit=162)
 
     body = f"""{_tier_head(f"{escape(district)} में {escape(hi)} कौन खरीदेगा?",
-                           f"📅 {today_hi} · {escape(hi_state)} · {n_txt}")}
+                           f"📅 {as_of_hi} · {escape(hi_state)} · {n_txt}")}
 {price_note}
 {listing}
 {sell_cta}

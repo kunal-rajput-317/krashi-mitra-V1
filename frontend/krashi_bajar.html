@@ -547,24 +547,6 @@
   }
   .bz-bluetick-note .bz-verified-badge { flex-shrink: 0; margin-top: 1px; }
 
-  /* Supply-side pitch (/dukan/product). Amber against the note's blue so the
-     two read as different messages to different people. */
-  .bz-dukan {
-    display: flex; gap: 13px; align-items: center;
-    max-width: 640px; margin: 10px auto 26px;
-    background: #fffaf0; border: 1px solid #f0dfae; border-radius: var(--radius);
-    padding: 14px 16px; text-decoration: none;
-  }
-  .bz-dukan-ic {
-    flex: none; width: 40px; height: 40px; display: grid; place-items: center;
-    font-size: 19px; background: #fff; border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(20,40,30,.08);
-  }
-  .bz-dukan-tx { flex: 1; min-width: 0; }
-  .bz-dukan-tx b { display: block; font-size: 13.5px; font-weight: 800; color: var(--green-dark, #1a3c2e); line-height: 1.4; }
-  .bz-dukan-tx small { display: block; margin-top: 3px; font-size: 12px; line-height: 1.55; color: #6b5a2e; }
-  .bz-dukan-go { flex: none; font-size: 12.5px; font-weight: 800; color: var(--green-dark, #1a3c2e); white-space: nowrap; }
-  @media (max-width: 560px) { .bz-dukan { flex-wrap: wrap; } .bz-dukan-go { margin-left: 53px; } }
 
   /* Empty state (filtered / my-listings with no results) */
   .bz-empty-state { text-align: center; padding: 42px 20px; color: var(--text-mid); }
@@ -1415,18 +1397,8 @@
     <span data-t="bluetick_note">नीला टिक ✓ का मतलब — यह विक्रेता KrashiMitra द्वारा सत्यापित है। सत्यापित विक्रेता ज़्यादा भरोसेमंद माने जाते हैं।</span>
   </div>
 
-  <!-- Supply-side pitch. This page has a "खरीदार बनें" tab, so a trader is
-       already a first-class audience here — unlike most of the site, which is
-       written for farmers. Placed below the feed so it never pushes listings
-       down the page. -->
-  <a class="bz-dukan" href="/dukan/product">
-    <span class="bz-dukan-ic" aria-hidden="true">🧾</span>
-    <span class="bz-dukan-tx">
-      <b>अनाज व्यापारी, आढ़तिया या खाद-बीज डीलर हैं?</b>
-      <small>अपनी दुकान लिस्ट करें — ₹199/महीना से। आपके जिले के किसान भाव देखकर सीधे आपको कॉल करेंगे।</small>
-    </span>
-    <span class="bz-dukan-go">लिस्ट करें →</span>
-  </a>
+  <!-- Dealer promo — shared component (dukan-promo.js + km-shell.css). -->
+  <div data-dukan-promo></div>
 
 </div>
 
@@ -3370,6 +3342,7 @@ async function submitPost() {
     });
   </script>
   <script src="krashibook.js"></script>
+  <script src="dukan-promo.js" defer></script>
   <script src="drawer-menu.js"></script>
   <script src="bottomnav.js" defer></script>
 </body>

@@ -2815,27 +2815,8 @@
   .faq-item[open] summary::after{content:'–';}
   .faq-ans{padding:0 18px 16px;color:#3d4f44;font-size:14px;line-height:1.75;}
   .faq-ans a{color:var(--green-mid);font-weight:600;}
-  /* ── दुकान promo — supply-side acquisition for the खरीदार directory ──
-     Sits last, right before the footer: the farmer journey (hero → mandi
-     prices → net-price → schemes → articles) owns everything above it, and
-     this is the one card on the homepage not addressed to a farmer. Amber,
-     not the net-price card's green, so it reads as a distinct audience
-     rather than another farmer tool. */
-  .dukan-promo{display:flex;align-items:center;gap:14px;max-width:820px;margin:22px auto 0;
-    padding:16px 18px;background:var(--amber-light);border:1px solid #f3dfa0;
-    border-radius:var(--radius-md);text-decoration:none;}
-  .dukan-promo-icon{flex:none;width:46px;height:46px;display:grid;place-items:center;
-    font-size:22px;background:#fff;border-radius:14px;box-shadow:var(--shadow-sm);}
-  .dukan-promo-text{flex:1;min-width:0;}
-  .dukan-promo-title{display:block;font-family:var(--font-serif);font-size:15.5px;
-    font-weight:700;color:var(--green-dark);line-height:1.35;}
-  .dukan-promo-sub{display:block;margin-top:3px;font-size:12.5px;line-height:1.5;color:#5b4a1e;}
-  .dukan-promo-cta{flex:none;font-size:13px;font-weight:800;color:var(--green-dark);
-    white-space:nowrap;}
-  @media (max-width:560px){
-    .dukan-promo{flex-wrap:wrap;}
-    .dukan-promo-cta{margin-left:60px;}
-  }
+  /* The दुकान promo that used to be styled here is now the shared component
+     in dukan-promo.js (markup + styles), placed just before the footer. */
   .site-footer{background:var(--green-dark);color:#cfe3d6;margin-top:34px;padding:26px 16px 30px;text-align:center;font-size:13px;}
   .site-footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;margin-bottom:14px;}
   .site-footer-links a{color:#fff;text-decoration:none;font-weight:600;}
@@ -2867,14 +2848,9 @@
   </div>
 </section>
 
-<a class="dukan-promo" href="/dukan/product">
-  <span class="dukan-promo-icon" aria-hidden="true">🤝</span>
-  <span class="dukan-promo-text">
-    <span class="dukan-promo-title">अनाज व्यापारी, आढ़तिया या खाद-बीज डीलर हैं?</span>
-    <span class="dukan-promo-sub">₹199/महीना से अपनी दुकान लिस्ट करें — आपके जिले के किसान सीधे आपको कॉल करेंगे।</span>
-  </span>
-  <span class="dukan-promo-cta">अपनी दुकान लिस्ट करें →</span>
-</a>
+<!-- Dealer promo. Markup + styles are shared (dukan-promo.js / km-shell.css)
+     so the same block appears identically on every page that opts in. -->
+<div data-dukan-promo></div>
 
 <!-- ══════════════════════════
      FOOTER — universal shell links (about/privacy were unreachable from
@@ -3505,6 +3481,7 @@
       console.log('KrashiMitra was installed successfully!');
     });
   </script>
+  <script src="dukan-promo.js" defer></script>
   <script src="drawer-menu.js"></script>
   <script src="bottomnav.js" defer></script>
   <script src="location.js" defer></script>

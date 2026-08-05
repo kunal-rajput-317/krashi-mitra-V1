@@ -160,3 +160,17 @@
   .header-logo-text{font-size:17px}
   .commodity-navbar{position:static}
 }
+
+/* ============================================================
+   DEALER PROMO — "list your shop on the bhav pages"
+   ------------------------------------------------------------
+   Moved out of this file: the .kmdp-* rules now ship inside
+   frontend/dukan-promo.js, next to the markup they style.
+   index.html and krashi_bajar.html are the two pages that carry
+   the block and neither loads km-shell.css, so styling it from
+   here rendered it as plain unstyled text. A page opts in with
+   <div data-dukan-promo></div> + that one script, nothing else.
+
+   backend/routes/bhav.py::_dukan_pitch + _DKP_CSS is the server
+   twin for the ~10,000 SEO pages.
+   ============================================================ */
