@@ -1906,7 +1906,10 @@ function renderChips() {
 function setCrop(v) { activeCrop = v; renderChips(); loadFeed(true); }
 
 // ── Feed state ──────────────────────────────────────────────
-// Every post is a SELL listing (the पोस्ट करें button only sells).
+// Two kinds of post land here, and `mode` is NOT the switch between them:
+//   post_type 'sell' — a farmer's crop, from the पोस्ट करें button.
+//   post_type 'buy'  — a paying /dukan/product dealer, written and kept in
+//                      sync by services/dealers.py::_sync_bazar_post.
 // Tab 'buy'  = buyer view: browse everyone's listings.
 // Tab 'sell' = seller view: post your crop + see your own listings.
 let mode = 'buy';
@@ -2014,7 +2017,11 @@ async function loadFeed(reset) {
   document.getElementById('bz-loadmore').style.display = 'none';
   try {
     const q = document.getElementById('bz-search').value.trim();
-    const params = new URLSearchParams({ post_type: 'sell', page: feedPage + 1, page_size: 10 });
+    // No post_type filter: the API defaults to both, and forcing 'sell' here
+    // is why a paying dealer's खरीदना-है post never appeared on this page
+    // even though _sync_bazar_post had created it and the card renderer
+    // below has always handled p.post_type === 'buy'.
+    const params = new URLSearchParams({ page: feedPage + 1, page_size: 10 });
     if (mode === 'sell' && bazarMe) params.set('user', bazarMe.user_id);  // my listings
     if (activeCrop) params.set('crop', activeCrop);
     if (q) params.set('q', q);

@@ -148,6 +148,32 @@ class TestApiBaseIsSetBeforeItIsRead:
         )
 
 
+class TestBazarFeedShowsDealerPosts:
+    """krashi_bajar.html must not filter the dealer rail out of its own feed.
+
+    services/dealers.py::_sync_bazar_post writes a paying dealer into the
+    Krashi Bazar feed as a post_type="buy" post — that post IS part of what a
+    ₹199/month subscription buys. The page's feed query pinned
+    `post_type: 'sell'`, so the post was created, kept in sync, returned by the
+    API, and never rendered anywhere a farmer could see it.
+
+    Nothing failed: no error, no empty state, just a dealer paying for a
+    surface that silently excluded him. Hence a test.
+    """
+
+    def test_feed_query_does_not_pin_post_type(self, repo_root):
+        page = repo_root / "frontend" / "krashi_bajar.html"
+        text = page.read_text(encoding="utf-8")
+        for match in re.finditer(r"URLSearchParams\(\{([^}]*)\}\)", text):
+            params = match.group(1)
+            if "page_size" not in params:
+                continue                      # not the feed query
+            assert "post_type" not in params, (
+                "krashi_bajar.html pins post_type in its feed query, which "
+                "hides every paying dealer's post:\n  " + params.strip()
+            )
+
+
 class TestNakshaAssets:
     """The naksha pages build image URLs from a slug at request time.
 
