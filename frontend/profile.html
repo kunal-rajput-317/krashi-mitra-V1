@@ -1613,9 +1613,7 @@
       try {
         const res = await fetch(`${API_BASE}/profile`, { headers: { Authorization: `Bearer ${token}` } });
         if (res.status === 401 || res.status === 403) {
-          localStorage.removeItem("krishi_token");
-          localStorage.removeItem("user_avatar_url");
-          localStorage.removeItem("user_name");
+          endSession();
           window.location.replace("login.html");
           return;
         }
@@ -1627,9 +1625,7 @@
         // real account anymore → back to login.
         const acctEmail = (data.data && data.data.email) || "";
         if (res.ok && !acctEmail) {
-          localStorage.removeItem("krishi_token");
-          localStorage.removeItem("user_avatar_url");
-          localStorage.removeItem("user_name");
+          endSession();
           window.location.replace("login.html");
           return;
         }
@@ -1733,10 +1729,18 @@
       window.location.href = "krashi_bajar.html" + q;
     }
 
+    // The only logout button on the site. It has to clear everything the
+    // account left behind — not just the token — so the next person to sign in
+    // on this phone doesn't inherit the previous one's avatar, name and
+    // KrashiBook data. KMClearUserData (api-config.js) owns that key list.
+    function endSession() {
+      if (window.KMClearUserData) { window.KMClearUserData(); return; }
+      ["krishi_token", "user_avatar_url", "user_name",
+       "km_seen_status", "km_fasal_summary"].forEach(k => localStorage.removeItem(k));
+    }
+
     function logout() {
-      localStorage.removeItem("krishi_token");
-      localStorage.removeItem("user_avatar_url");
-      localStorage.removeItem("user_name");
+      endSession();
       window.location.href = "login.html";
     }
 

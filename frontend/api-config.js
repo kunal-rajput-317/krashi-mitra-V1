@@ -163,6 +163,54 @@ window.KRASHIMITRA_GOOGLE_CLIENT_ID = "235912622385-faavoh67rvg0m126bj5af8ot3n2k
   };
 })();
 
+// ── Signing out / switching account ───────────────────────────
+// localStorage holds two different kinds of thing, and they must not be treated
+// alike: settings that belong to this PHONE (language, the device's location,
+// the guest order handle) and data that belongs to WHOEVER IS SIGNED IN (the
+// token, the header avatar, the name, the KrashiBook caches).
+//
+// Clearing the second kind is part of logging IN, not only of logging out. A
+// farmer signing into a second account on the same phone — or a father and son
+// sharing one — would otherwise keep seeing the previous account's photo, name
+// and फसल summary on every page until each one happened to re-fetch, which
+// looks exactly like "it logged me into the wrong account".
+(function () {
+  var USER_KEYS = [
+    "krishi_token",       // the session itself
+    "user_avatar_url",    // header avatar — painted from cache before any fetch
+    "user_name",
+    "km_seen_status",     // KrashiBook read-markers (that user's order/alert ids)
+    "km_fasal_summary",   // मेरी फसल summary the 📒 book shows on every page
+    "km_pending_order",   // a half-finished order from the previous session
+    "km_login_attempts",  // login-page lockout state
+    "km_cooldown_until",
+    "km_cooldown_reason"
+  ];
+  // Deliberately kept: km_lang, km_geo, km_local_crops, km_session_id — those
+  // describe the device or its guest, not the account that just left.
+
+  /** Forget everything about the account currently signed in on this device. */
+  window.KMClearUserData = function () {
+    USER_KEYS.forEach(function (k) {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+    // Google Identity remembers the account it last signed in with and will
+    // reuse it without asking — the one thing somebody switching accounts
+    // definitely does not want. No-op on pages that don't load GSI.
+    try {
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
+      }
+    } catch (e) {}
+  };
+
+  /** Clear the session and go to the login page (or `dest`). */
+  window.KMLogout = function (dest) {
+    window.KMClearUserData();
+    window.location.href = dest || "/login.html";
+  };
+})();
+
 // ── Auto Header Avatar Button Handling ─────────────────────────
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("header-avatar-btn") || document.querySelector(".header-avatar-btn");

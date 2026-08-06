@@ -351,6 +351,54 @@
       transform: none !important;
     }
 
+    /* "Already signed in on this phone" panel — hidden until a token is found */
+    .signed-in-card { display: none; }
+    .signed-in-card.show { display: block; }
+    .signed-in-who {
+      background: var(--green-pale);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .signed-in-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-mid);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 5px;
+    }
+    .signed-in-email {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--green-dark);
+      word-break: break-all;
+      min-height: 20px;
+      line-height: 1.35;
+    }
+    .signed-in-switch {
+      width: 100%;
+      margin-top: 10px;
+      padding: 13px;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-mid);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      min-height: 48px;
+      transition: all 0.2s ease;
+    }
+    .signed-in-switch:hover {
+      background: var(--cream);
+      border-color: var(--green-mid);
+      color: var(--green-dark);
+    }
+
     /* Cooldown Warning */
     .cooldown-warning {
       background: #fffbeb;
@@ -623,8 +671,27 @@
         <img src="assets/krashimitra_logo.png" alt="Logo">
         कृषि मित्र
       </div>
-      <div class="auth-modal-title">आपका स्वागत है</div>
-      <div class="auth-modal-sub">कृषि मित्र में लॉगिन करें</div>
+      <div class="auth-modal-title" id="login-title">आपका स्वागत है</div>
+      <div class="auth-modal-sub" id="login-sub">कृषि मित्र में लॉगिन करें</div>
+
+      <!-- Shown only when this phone already has a session. Opening the login
+           page used to bounce straight to that account's profile, so switching
+           accounts was impossible without first hunting down the logout button
+           on profile.html. -->
+      <div class="signed-in-card" id="signed-in-card">
+        <div class="signed-in-who">
+          <div class="signed-in-label">इस समय लॉगिन</div>
+          <div class="signed-in-email" id="signed-in-email">…</div>
+        </div>
+        <button class="auth-btn" type="button" onclick="continueAsCurrent()">
+          इसी account से आगे बढ़ें →
+        </button>
+        <button class="signed-in-switch" type="button" onclick="switchAccount()">
+          दूसरे account से लॉगिन करें
+        </button>
+      </div>
+
+      <div id="login-form-body">
 
       <div class="cooldown-warning" id="login-cooldown-warning">
         <div class="cw-msg" id="cw-msg"></div>
@@ -664,6 +731,8 @@
       <div class="auth-switch" style="margin-top:14px;">
         नया account बनाएं? <a onclick="showStep('signup')">Signup करें</a>
       </div>
+
+      </div><!-- /#login-form-body -->
     </div>
 
     <!-- ── STEP 2: Signup ── -->
@@ -1091,8 +1160,85 @@
     showStep("forgot");
   }
 
-  function getToken()  { return localStorage.getItem("krishi_token"); }
-  function setToken(t) { localStorage.setItem("krishi_token", t); }
+  function getToken() {
+    const t = localStorage.getItem("krishi_token");
+    return (t && t !== "null" && t !== "undefined") ? t : null;
+  }
+
+  /** Store the new session — after wiping whatever the last account left here.
+   *  Signing in is the moment the previous account stops owning this browser:
+   *  its cached avatar, name and KrashiBook data have to go with it, or the new
+   *  farmer sees the old one's face in the header on every page he opens. */
+  function setToken(t) {
+    if (window.KMClearUserData) window.KMClearUserData();
+    else ["user_avatar_url", "user_name", "km_seen_status", "km_fasal_summary"]
+           .forEach(k => localStorage.removeItem(k));
+    localStorage.setItem("krishi_token", t);
+  }
+
+  // ══════════════════════════════════════
+  // ALREADY SIGNED IN ON THIS PHONE
+  // ══════════════════════════════════════
+  // Landing here with a live token used to redirect to that account's profile
+  // before the form ever painted — so a farmer who came to this page precisely
+  // because he wanted his OTHER account just got thrown back into the one he
+  // was trying to leave. Show him who is signed in and let him choose instead.
+
+  let signedInCardShown = false;
+
+  async function showSignedInCard() {
+    signedInCardShown = true;
+    document.getElementById("signed-in-card").classList.add("show");
+    document.getElementById("login-form-body").style.display = "none";
+    document.getElementById("login-title").innerText = "आप पहले से लॉगिन हैं";
+    document.getElementById("login-sub").innerText   = "नीचे से चुनें कि आगे क्या करना है";
+
+    // Fill in whose session it is. Backgrounded on purpose — the card is usable
+    // the moment it paints, and the API can be cold-starting for 30s.
+    const emailEl = document.getElementById("signed-in-email");
+    try {
+      const res = await fetchWithTimeout(`${getAPI()}/profile`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      }, 15000);
+      if (res.status === 401 || res.status === 403) return switchAccount(true);
+      const data  = await res.json().catch(() => ({}));
+      const email = (data.data && data.data.email) || "";
+      // A 200 with no account email means the token no longer maps to a real
+      // account (deleted / un-verified) — don't offer to continue as a ghost.
+      if (res.ok && !email) return switchAccount(true);
+      emailEl.innerText = email || "";
+    } catch (e) {
+      // Offline or a cold server: the session is probably fine, so keep the
+      // card and simply don't name the account.
+      emailEl.innerText = "";
+    }
+  }
+
+  /** Stay in the current account — carry on to wherever we were headed. */
+  function continueAsCurrent() {
+    window.location.href = nextTarget();
+  }
+
+  /** Drop the current session and show a clean login form.
+   *  `auto` = we found the token was dead, so say nothing about it. */
+  function switchAccount(auto) {
+    if (window.KMClearUserData) window.KMClearUserData();
+    else localStorage.removeItem("krishi_token");
+
+    signedInCardShown = false;
+    document.getElementById("signed-in-card").classList.remove("show");
+    document.getElementById("login-form-body").style.display = "";
+    document.getElementById("login-title").innerText = "आपका स्वागत है";
+    document.getElementById("login-sub").innerText   = "कृषि मित्र में लॉगिन करें";
+    loginAttempts = 0;
+
+    const inp = document.getElementById("login-email");
+    if (inp && !loginCooldownActive) {
+      inp.value = "";
+      inp.focus();
+    }
+    if (!auto) authOk("login-success", "अब दूसरे account से लॉगिन करें।");
+  }
 
   // ══════════════════════════════════════
   // RETURN-TO-ACTION  (?next= / ?do=)
@@ -1451,6 +1597,9 @@
 
   async function handleGoogleCredential(response) {
     const idToken = response.credential;
+    // No pre-emptive clearing here: setToken() below already hands the browser
+    // over to the new account, and wiping the old session before we know the
+    // Google call succeeded would sign the farmer out for nothing.
     showStep("login");
     clearAuthMsg("login-error", "login-success");
     setBtnLoading("login-btn", true, "Login करें →");
@@ -1510,11 +1659,20 @@
   }
 
   // ══════════════════════════════════════
-  // AUTO-REDIRECT if already logged in
+  // ALREADY LOGGED IN?
   // ══════════════════════════════════════
   window.addEventListener("load", () => {
     if (getToken()) {
-      window.location.href = nextTarget();
+      // Sent here mid-task by a login gate (?next=/bhav/... &do=alert) and the
+      // session is already live → finish the job, don't ask a question.
+      const params = new URLSearchParams(location.search);
+      if (params.get("next")) {
+        window.location.href = nextTarget();
+        return;
+      }
+      // Otherwise he typed/tapped his way to the login page on purpose. Offer
+      // the choice rather than silently returning him to the same account.
+      showSignedInCard();
     }
     // Restore cooldown if active before refresh; clear stale multi-hour locks
     const savedCooldownUntil = parseInt(localStorage.getItem('km_cooldown_until') || '0', 10);
@@ -1531,9 +1689,10 @@
       localStorage.removeItem('km_cooldown_reason');
     }
 
-    // Focus email on load
+    // Focus email on load (not while the "already signed in" card is up — the
+    // choice is the point there, and focusing a hidden field scrolls it away)
     const emailInp = document.getElementById("login-email");
-    if (emailInp && !loginCooldownActive) emailInp.focus();
+    if (emailInp && !loginCooldownActive && !signedInCardShown) emailInp.focus();
 
     // Init Google Sign-In — GSI script is async so poll until ready
     if (GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE")) {
@@ -1548,8 +1707,6 @@
       }, 100);
     }
   });
-
-  localStorage.setItem('km_just_logged_in', '1');
 
 </script>
 

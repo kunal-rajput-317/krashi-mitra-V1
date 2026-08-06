@@ -1,4 +1,7 @@
-const CACHE_NAME = 'krashimitra-v5'; // v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
+// v6 is a forced purge, not just a version bump: v5 caches can hold one
+// farmer's /profile response (see the fetch handler below), and the activate
+// step deletes every cache that isn't the current name.
+const CACHE_NAME = 'krashimitra-v6'; // v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './analytics.js',
@@ -45,36 +48,66 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// A page navigation — the only thing that gets the network-first HTML treatment.
+function isPageRequest(request) {
+  return request.mode === 'navigate' || request.destination === 'document';
+}
+
+// Is this a plain static file, safe to serve to anybody from a URL-keyed cache?
+//
+// This distinction is the whole point of the guard. The Render host serves the
+// site AND the API from one origin (backend/main.py mounts frontend/ at "/"),
+// and so does uvicorn on :8000 in development — so /profile, /alerts and every
+// other per-user endpoint is a same-origin GET here, exactly like a stylesheet.
+// The old rule ("not text/html → cache-first") therefore cached one farmer's
+// /profile response under the URL alone, with no regard for the Authorization
+// header that produced it, and replayed it to the next account signed in on the
+// same phone. Logging into a second account showed the first account's name,
+// village and crops, and no amount of re-fetching could shift it, because the
+// re-fetch was answered by the cache too.
+//
+// `destination` is what separates them: a stylesheet is "style", an image is
+// "image", and a fetch()/XHR call — every API call this app makes — is "".
+function isStaticAsset(request) {
+  // Anything carrying a session is per-user by definition, whatever it looks like.
+  if (request.headers.get('Authorization')) return false;
+  const d = request.destination;
+  return d === 'style' || d === 'script' || d === 'image' ||
+         d === 'font'  || d === 'manifest';
+}
+
 // Fetch Event
 self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
+  const request    = event.request;
+  const requestUrl = new URL(request.url);
 
-  // Exclude external API requests (FastAPI backend and analytics)
+  // Exclude other origins (incl. the cross-origin backend and analytics) and
+  // anything that isn't a plain GET.
   if (
     requestUrl.origin !== self.location.origin ||
-    event.request.method !== 'GET' ||
+    request.method !== 'GET' ||
     requestUrl.pathname.includes('/api') ||
-    event.request.url.includes('google-analytics') ||
-    event.request.url.includes('googletagmanager')
+    request.url.includes('google-analytics') ||
+    request.url.includes('googletagmanager')
   ) {
     return;
   }
 
-  // Network-First with Cache-Fallback for HTML pages (ensures dynamic data stays fresh, but works offline)
-  if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
+  // Network-First with Cache-Fallback for pages (dynamic data stays fresh, still works offline)
+  if (isPageRequest(request)) {
     event.respondWith(
-      fetch(event.request)
+      fetch(request)
         .then((response) => {
           // Clone response and save to cache
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
+            cache.put(request, responseClone);
           });
           return response;
         })
         .catch(() => {
           // If network fails, serve from cache
-          return caches.match(event.request).then((cachedResponse) => {
+          return caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
               return cachedResponse;
             }
@@ -83,24 +116,31 @@ self.addEventListener('fetch', (event) => {
           });
         })
     );
-  } else {
-    // Cache-First / Network-Fallback for assets (CSS, JS, Images, Fonts)
+    return;
+  }
+
+  // Cache-First / Network-Fallback for assets (CSS, JS, Images, Fonts)
+  if (isStaticAsset(request)) {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
+      caches.match(request).then((cachedResponse) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        return fetch(event.request).then((response) => {
+        return fetch(request).then((response) => {
           // Cache new asset response
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
+            cache.put(request, responseClone);
           });
           return response;
         });
       })
     );
+    return;
   }
+
+  // Everything else — API calls above all — goes straight to the network,
+  // untouched and uncached.
 });
 
 // ══════════════════════════════════════════════════════════
