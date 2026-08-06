@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <!-- Google Analytics -->
+  <!-- Analytics: GA4 + Clarity -->
+  <script src="analytics.js"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Terms of Use — उपयोग की शर्तें | KrashiMitra</title>
+  <link rel="icon" type="image/png" href="https://krashimitra.in/assets/krashimitra_logo.png">
+  <link rel="shortcut icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/x-icon">
+  <meta name="theme-color" content="#1a3c2e">
+
+  <meta name="description" content="KrashiMitra की उपयोग शर्तें — हम किसान और दुकानदार को जोड़ते हैं, सौदे के पक्षकार नहीं हैं। लिस्टिंग, भुगतान, दायित्व और शिकायत निवारण की जानकारी।">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://krashimitra.in/terms">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Terms of Use — उपयोग की शर्तें | KrashiMitra">
+  <meta property="og:description" content="KrashiMitra की उपयोग शर्तें — भूमिका, दायित्व और शिकायत निवारण।">
+  <meta property="og:url" content="https://krashimitra.in/terms">
+  <meta property="og:site_name" content="KrashiMitra — किसान का डिजिटल साथी">
+  <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Terms of Use — उपयोग की शर्तें | KrashiMitra">
+  <meta name="twitter:description" content="KrashiMitra की उपयोग शर्तें — भूमिका, दायित्व और शिकायत निवारण।">
+  <meta name="twitter:image" content="https://krashimitra.in/images/og-banner.jpg">
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2792326360609634"
+    crossorigin="anonymous"></script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Devanagari:wght@700;800&display=swap">
+
+  <style>
+    :root {
+      --green-dark:  #1a3c2e;
+      --green-mid:   #2d6a4f;
+      --green-light: #52b788;
+      --green-pale:  #d8f3dc;
+      --amber:       #e9a825;
+      --cream:       #f5f7f4;
+      --white:       #ffffff;
+      --text-dark:   #1a2e1e;
+      --text-mid:    #4a6355;
+      --text-light:  #8aab96;
+      --border:      #ddeee4;
+      --shadow:      0 2px 12px rgba(26,60,46,0.08);
+      --radius:      14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--green-dark);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 60px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .topbar-logo-icon { font-size: 26px; line-height: 1; }
+    .topbar-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .topbar-logo-name { font-family: 'Noto Serif Devanagari', 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: #fff; }
+    .topbar-logo-name span { color: var(--amber); }
+    .topbar-logo-sub { font-size: 9.5px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; }
+    .topbar-nav { display: flex; align-items: center; gap: 2px; }
+    .tnav-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      color: rgba(255,255,255,0.80);
+      padding: 7px 14px; border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .tnav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .topbar-avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25);
+      color: #fff; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; text-decoration: none;
+    }
+
+    /* ── Hamburger (opens sidebar drawer) ── */
+    .hamburger-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 22px; color: rgba(255,255,255,0.92);
+      padding: 4px 6px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; transition: background 0.15s;
+      flex-shrink: 0; margin-right: 4px;
+    }
+    .hamburger-btn:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── Sidebar slide-out drawer ── */
+    .sidebar-drawer-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      z-index: 4000; justify-content: flex-start;
+    }
+    .sidebar-drawer-overlay.open { display: flex; }
+    .sidebar-drawer {
+      width: 280px; background: var(--white); height: 100%;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column;
+      animation: slide-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    .sidebar-drawer-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .sidebar-drawer-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 700; color: var(--green-mid);
+    }
+    .sidebar-drawer-close {
+      background: none; border: none; font-size: 20px; cursor: pointer;
+      color: var(--text-mid); width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; transition: background 0.15s;
+    }
+    .sidebar-drawer-close:hover { background: var(--cream); }
+    .sidebar-drawer-links { padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .sidebar-drawer-link {
+      padding: 12px 16px;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-size: 15px; font-weight: 700; color: var(--text-dark);
+      text-decoration: none; border-radius: 8px; transition: background 0.15s, color 0.15s;
+    }
+    .sidebar-drawer-link:hover { background: var(--green-pale); color: var(--green-mid); }
+    .sidebar-drawer-link.active { background: var(--green-pale); color: var(--green-dark); }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 10px 28px; font-size: 12.5px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .breadcrumb a { color: var(--green-mid); text-decoration: none; font-weight: 600; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb-sep { color: var(--text-light); }
+    .breadcrumb-current { color: var(--text-mid); font-weight: 600; }
+
+    /* ── MAIN ── */
+    .main-content {
+      max-width: 860px; margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── PAGE HERO ── */
+    .page-hero {
+      background: linear-gradient(135deg, var(--green-dark) 0%, #245c42 60%, #2d6a4f 100%);
+      padding: 32px 28px 28px; margin-bottom: 32px;
+    }
+    .hero-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px; font-weight: 700; color: #fff;
+      line-height: 1.25; margin: 0 0 8px;
+    }
+    .hero-sub { font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 500; }
+    .hero-date { font-size: 11.5px; color: rgba(255,255,255,0.45); margin-top: 12px; }
+
+    /* ── POLICY CARD ── */
+    .policy-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+
+    .policy-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; color: var(--green-dark);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--green-pale);
+    }
+
+    .policy-card p {
+      font-size: 14px; line-height: 1.85;
+      color: var(--text-mid); margin-bottom: 12px;
+    }
+    .policy-card p:last-child { margin-bottom: 0; }
+
+    .policy-card ul {
+      padding-left: 20px; margin-bottom: 12px;
+    }
+    .policy-card ul li {
+      font-size: 14px; line-height: 1.8;
+      color: var(--text-mid); margin-bottom: 4px;
+    }
+
+    .policy-card a {
+      color: var(--green-mid); font-weight: 600; text-decoration: underline;
+    }
+    .policy-card a:hover { color: var(--green-dark); }
+
+    .highlight-box {
+      background: var(--green-pale);
+      border-left: 4px solid var(--green-light);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      font-size: 13.5px; color: var(--text-dark); line-height: 1.7;
+    }
+
+    .contact-box {
+      background: var(--amber);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-top: 24px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .contact-box-icon { font-size: 32px; flex-shrink: 0; }
+    .contact-box-text { flex: 1; }
+    .contact-box-title { font-size: 15px; font-weight: 800; color: var(--green-dark); margin-bottom: 4px; }
+    .contact-box-sub { font-size: 13px; color: #3a3a3a; line-height: 1.6; }
+    .contact-box-sub a { color: var(--green-dark); font-weight: 700; text-decoration: none; }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      background: var(--green-dark); color: rgba(255,255,255,0.65);
+      text-align: center; padding: 16px 24px;
+      font-size: 12px; letter-spacing: 0.3px;
+    }
+    .site-footer a { color: var(--green-light); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .site-footer-links { display: flex; justify-content: center; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 1024px) {
+      .topbar-nav { display: none; }
+      .topbar { padding: 0 14px; height: 54px; }
+      .topbar-logo-name { font-size: 15px; }
+      .topbar-logo-sub { display: none; }
+      .breadcrumb { padding: 9px 14px; }
+      .main-content { padding: 0 12px 60px; }
+      .page-hero { padding: 22px 16px 20px; margin-bottom: 20px; }
+      .hero-title { font-size: 22px; }
+      .policy-card { padding: 18px 16px; }
+      .policy-card h2 { font-size: 16px; }
+
+      .site-footer { display: none; }
+    }
+  </style>
+<style id="km-drawer-css">
+  /* Canonical sidebar drawer - identical across all pages */
+  .sidebar-drawer-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,20,0.5); backdrop-filter: blur(3px);
+    z-index: 4000; justify-content: flex-start;
+  }
+  .sidebar-drawer-overlay.open { display: flex; }
+  .sidebar-drawer {
+    width: 288px; max-width: 84vw; background: #ffffff; height: 100%;
+    box-shadow: 6px 0 28px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column;
+    animation: km-slide-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes km-slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  .sidebar-drawer-header {
+    padding: 18px 16px 12px 20px; display: flex; align-items: center;
+    justify-content: space-between; flex-shrink: 0;
+  }
+  .sidebar-drawer-title { font-size: 17px; font-weight: 800; color: #1c2b22; }
+  .sidebar-drawer-close {
+    background: #f2f5f3; border: none; font-size: 15px; cursor: pointer; color: #5b675f;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: background 0.15s, color 0.15s;
+  }
+  .sidebar-drawer-close:hover { background: #e6ebe8; color: #1c2b22; }
+  .sidebar-drawer-links { flex: 1; padding: 6px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .sidebar-drawer-link {
+    display: flex; align-items: center; gap: 13px; min-height: 46px;
+    padding: 10px 12px; font-size: 15px; font-weight: 700; color: #2d3748;
+    text-decoration: none; border-radius: 10px; border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .sidebar-drawer-link-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
+  .sidebar-drawer-link:hover { background: #f2f8f4; }
+  .sidebar-drawer-link.active { background: #eaf6ed; color: #2d6a4f; border-left-color: #2d6a4f; }
+  .sidebar-drawer-footer { flex-shrink: 0; border-top: 1px solid #eef2ef; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar-drawer-lang-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .sidebar-drawer-lang-label { font-size: 12px; font-weight: 700; color: #8a958f; }
+  .sidebar-lang-btn {
+    background: #f2f8f4; border: 1.5px solid #e3ece5; border-radius: 20px;
+    padding: 5px 12px; font-size: 12px; font-weight: 700; color: #2d3748;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+</style>
+  
+  <!-- Universal page shell -->
+  <link rel="stylesheet" href="km-shell.css">
+</head>
+<body>
+
+<!-- ══ TOPBAR ══ -->
+<!-- ══ CANONICAL HEADER — universal across every page ══ -->
+<div class="header-wrapper" id="header-wrapper">
+<div class="pre-topbar">
+  <a href="tel:+919870951001" class="pre-topbar-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+</div>
+<div class="top-utility-bar"><div class="top-utility-inner">
+  <div class="top-utility-left">
+    <a href="index.html" class="top-utility-link">मुख्य</a><span class="top-utility-divider">|</span>
+    <a href="map.html" class="top-utility-link">कृषि मानचित्र</a><span class="top-utility-divider">|</span>
+    <a href="articles/" class="top-utility-link">कृषि समाचार</a><span class="top-utility-divider">|</span>
+    <a href="sarkari_yojana.html" class="top-utility-link">सरकारी योजना</a>
+  </div>
+  <div class="top-utility-right">
+    <a href="tel:+919870951001" class="top-utility-helpline"><span class="pre-topbar-phone-icon">📞</span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+    <span class="top-utility-divider">|</span>
+    <a href="chat.html" class="top-utility-link">संपर्क</a>
+  </div>
+</div></div>
+<header class="main-header"><div class="main-header-inner">
+  <button class="hamburger-btn" onclick="var o=document.querySelector('.sidebar-drawer-overlay');if(o)o.classList.add('open')" aria-label="Menu">☰</button>
+  <div class="header-left-group">
+    <a class="header-logo-link" href="index.html">
+      <img src="assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" width="38" height="38">
+      <span class="header-logo-text">कृषि मित्र</span></a>
+  </div>
+  <nav class="header-nav">
+    <a class="header-nav-link" href="/bhav">मंडी भाव</a>
+    <a class="header-nav-link" href="krashi_bajar.html">कृषि बाज़ार</a>
+    <a class="header-nav-link" href="weather.html">मौसम देखें</a>
+    <a class="header-nav-link" href="/product/">कृषि दुकान</a>
+  </nav>
+  <div class="header-right-group">
+    <div class="km-hlang" id="km-hlang">
+      <button class="km-hlang-btn" type="button" aria-label="भाषा"><span class="km-hlang-cur">हिं</span><span class="km-hlang-caret">▾</span></button>
+      <div class="km-hlang-menu">
+        <button data-lang="hi"><span class="km-hlang-code">हिं</span>हिंदी</button>
+        <button data-lang="en"><span class="km-hlang-code">EN</span>English</button>
+        <button data-lang="kn"><span class="km-hlang-code">ಕ</span>ಕನ್ನಡ</button>
+      </div>
+    </div>
+    <a href="login.html" class="header-avatar-btn" id="header-avatar-btn">👤</a>
+  </div>
+</div></header>
+<div class="commodity-navbar"><div class="cnav-inner">
+  <a class="cnav-item" href="/bhav">बाज़ार भाव</a>
+  <a class="cnav-item" href="weather.html">मौसम</a>
+  <a class="cnav-item" href="/bhav">मंडी भाव</a>
+  <a class="cnav-item" href="/product/">कृषि दुकान</a>
+  <a class="cnav-item" href="articles/">कृषि लेख</a>
+  <a class="cnav-item" href="sarkari_yojana.html">सरकारी योजना</a>
+</div></div>
+</div><!-- /.header-wrapper -->
+<div class="km-nav-loading" id="km-nav-loading" aria-hidden="true"><div class="km-nav-spinner"></div></div>
+<!-- SIDEBAR SLIDE-OUT DRAWER MENU -->
+<!-- CANONICAL SIDEBAR DRAWER - keep identical across pages -->
+<div class="sidebar-drawer-overlay" id="sidebar-drawer-overlay" onclick="toggleSidebarMenu()">
+  <div class="sidebar-drawer" onclick="event.stopPropagation()">
+    <div class="sidebar-drawer-header">
+      <span class="sidebar-drawer-title" data-t="menu_title">मेनु</span>
+      <button class="sidebar-drawer-close" onclick="toggleSidebarMenu()" aria-label="Close menu">✕</button>
+    </div>
+    <div class="sidebar-drawer-links">
+      <a href="index.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏠</span><span data-t="nav_home">मुख्य</span></a>
+      <a href="weather.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🌤️</span><span data-t="nav_weather">मौसम</span></a>
+      <a href="/bhav" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏪</span><span data-t="nav_mandi">मंडी भाव</span></a>
+      <a href="krashi_bajar.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🧺</span><span data-t="nav_bazar">कृषि बाज़ार</span></a>
+      <a href="shop.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🛒</span><span data-t="nav_shop">दुकान</span></a>
+      <a href="khoj.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🔍</span><span data-t="nav_khoj">कृषि खोज</span></a>
+      <a href="map.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🗺️</span><span data-t="nav_map">कृषि मानचित्र</span></a>
+      <a href="articles/" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">📰</span><span data-t="nav_news">कृषि लेख</span></a>
+      <a href="sarkari_yojana.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">🏛️</span><span data-t="nav_schemes">सरकारी योजना</span></a>
+      <a href="chat.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">💬</span><span data-t="nav_chat">AI सहायता</span></a>
+      <a href="profile.html" class="sidebar-drawer-link"><span class="sidebar-drawer-link-icon">👤</span><span>मेरी प्रोफ़ाइल</span></a>
+    </div>
+  </div>
+</div>
+
+<div class="topbar-spacer" id="topbar-spacer"></div>
+
+<!-- ══ BREADCRUMB ══ -->
+<nav class="breadcrumb" aria-label="breadcrumb">
+  <a href="index.html">🏠 मुख्य</a>
+  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-current">Terms of Use — उपयोग की शर्तें</span>
+</nav>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content">
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <div class="hero-label">KRASHIMITRA.IN — LEGAL</div>
+    <h1 class="hero-title">Terms of Use<br>उपयोग की शर्तें</h1>
+    <div class="hero-sub">KrashiMitra किसान और दुकानदार को आपस में जोड़ता है — सौदा उनका अपना
+    होता है। यह पेज बताता है कि हम क्या करते हैं, क्या नहीं, और किसकी क्या ज़िम्मेदारी है।</div>
+    <div class="hero-date">अंतिम अपडेट: 5 अगस्त 2026 &nbsp;|&nbsp; प्रभावी तिथि: 5 अगस्त 2026</div>
+  </div>
+
+  <!-- 1 -->
+  <div class="policy-card">
+    <h2>1. हम क्या हैं (What KrashiMitra is)</h2>
+    <p>
+      KrashiMitra (<strong>krashimitra.in</strong>) एक <strong>सूचना और परिचय मंच</strong> है।
+      हम सरकारी स्रोत से मंडी भाव दिखाते हैं, मौसम और खेती की जानकारी देते हैं, किसानों को
+      उनके इलाके के व्यापारियों, आढ़तियों और खाद-बीज दुकानदारों से जोड़ते हैं, और कृषि दुकान पर
+      सामान की <strong>प्री-बुक रिक्वेस्ट</strong> लेकर डीलर से दाम पता करके देते हैं।
+    </p>
+    <p>
+      कृषि दुकान (<a href="/shop">/shop</a>) पर आप सामान <strong>प्री-बुक</strong> कर सकते हैं।
+      प्री-बुक का मतलब है: आप बताते हैं कि क्या चाहिए, हम आपके नज़दीकी डीलर से
+      <strong>पूरा दाम (डिलीवरी सहित) पता करके आपको भेजते हैं</strong>, और फिर लेना-न-लेना आप तय
+      करते हैं। कुछ पेजों पर Amazon / Flipkart के लिंक भी होते हैं।
+    </p>
+    <p><strong>इसका मतलब यह नहीं है कि सामान हम बेच रहे हैं:</strong></p>
+    <ul>
+      <li>प्री-बुक करने से <strong>सौदा तय नहीं होता</strong> — वह सिर्फ दाम पूछने की रिक्वेस्ट है।
+      अंतिम बिक्री, बिल, डिलीवरी और वारंटी उसी डीलर/विक्रेता की होती है जिससे आप लेते हैं।</li>
+      <li>हम <strong>माल का स्टॉक नहीं रखते</strong> और सामान के बदले <strong>आपसे पैसा नहीं
+      लेते</strong> — भुगतान सीधे विक्रेता को होता है। हम कोई एस्क्रो नहीं रखते।</li>
+      <li>Amazon / Flipkart के लिंक <strong>एफिलिएट लिंक</strong> हैं — वहां खरीदने पर उसी वेबसाइट
+      की शर्तें लागू होती हैं, और हमें कमीशन मिल सकता है। उस सौदे में भी हम पक्षकार नहीं हैं।</li>
+      <li>हम माल की गुणवत्ता, तौल, डिलीवरी या भुगतान की <strong>गारंटी नहीं</strong> देते।
+      पेज पर दिखी कीमत बदल सकती है — मान्य वही दाम है जो डीलर आपको कोट करता है।</li>
+    </ul>
+    <div class="highlight-box">मंच का उपयोग करके आप इन शर्तों से सहमत होते हैं। सहमत न हों तो कृपया मंच का उपयोग न करें।</div>
+  </div>
+
+  <!-- 2 -->
+  <div class="policy-card" id="dealer-terms">
+    <h2>2. दुकान लिस्टिंग — शर्तें (Dealer Listing Terms)</h2>
+    <p>
+      मंडी भाव पेजों पर दिखने वाली दुकानें, व्यापारी और डीलर <strong>भुगतान करके अपनी लिस्टिंग
+      लेते हैं</strong> (देखें <a href="/dukanlisting">/dukanlisting</a>)। यह एक
+      <strong>विज्ञापन जगह</strong> है — सिफ़ारिश नहीं।
+    </p>
+    <ul>
+      <li><strong>हम क्या जाँचते हैं:</strong> लिस्टिंग लाइव करने से पहले हम दिए गए मोबाइल नंबर पर
+      फोन करके दुकान का अस्तित्व और पहचान की पुष्टि करते हैं। ✓ सत्यापित का <strong>बस इतना ही
+      मतलब</strong> है।</li>
+      <li><strong>हम क्या नहीं जाँचते:</strong> सामान की गुणवत्ता, असली/नकली होना, वजन, कीमत,
+      स्टॉक, डिलीवरी, या दुकानदार का व्यवहार। ✓ सत्यापित किसी सौदे, माल या भुगतान की
+      <strong>गारंटी नहीं</strong> है।</li>
+      <li><strong>सौदा आपका है:</strong> कीमत, भुगतान, तौल, गुणवत्ता और डिलीवरी की सारी शर्तें
+      किसान और दुकानदार आपस में तय करते हैं।</li>
+      <li><strong>भुगतान की गई लिस्टिंग सिफ़ारिश नहीं है।</strong> शुल्क से यह तय होता है कि दुकान
+      <em>किस पेज पर</em> दिखेगी — यह नहीं कि वह अच्छी, सस्ती या भरोसेमंद है। ऊपर का क्रम पैसों से
+      नहीं मिलता; वह किसानों को मिली सेवा के आधार पर तय होता है।</li>
+      <li><strong>दुकानदार की ज़िम्मेदारी:</strong> खाद/बीज/कीटनाशक का लाइसेंस, GST, बिल-रसीद और
+      सभी सरकारी नियमों का पालन पूरी तरह दुकानदार का दायित्व है। गलत या भ्रामक जानकारी देने पर
+      लिस्टिंग बिना वापसी के हटाई जा सकती है।</li>
+      <li><strong>शिकायत पर कार्रवाई:</strong> धोखाधड़ी, नकली माल या गलत व्यवहार की शिकायत मिलने
+      पर जाँच के बाद दुकान का क्रम नीचे किया जा सकता है या लिस्टिंग हटाई जा सकती है — चाहे उसका
+      भुगतान चालू हो। ऐसी स्थिति में बचे हुए शुल्क की वापसी नहीं होगी।</li>
+    </ul>
+    <div class="highlight-box">KrashiMitra केवल परिचय कराता है। किसान और दुकानदार के बीच हुए किसी भी सौदे, लेन-देन,
+      धोखाधड़ी, नुकसान, विवाद या क्षति के लिए KrashiMitra <strong>किसी भी रूप में उत्तरदायी नहीं
+      है</strong>।</div>
+  </div>
+
+  <!-- 3 -->
+  <div class="policy-card" id="bazar-terms">
+    <h2>3. कृषि बाज़ार — मार्केटप्लेस शर्तें</h2>
+    <p>
+      कृषि बाज़ार वह मंच है जहाँ किसान अपनी फसल की पोस्ट डालते हैं और खरीदार उनसे सीधे जुड़ते हैं।
+      KrashiMitra की भूमिका <strong>केवल जोड़ने</strong> की है।
+    </p>
+    <ul>
+      <li>फसल की <strong>गुणवत्ता, मात्रा, कीमत, भुगतान और डिलीवरी</strong> — सब किसान और खरीदार
+      आपस में तय करते हैं।</li>
+      <li>किसी भी सौदे से पहले <strong>सामने वाले पक्ष की पहचान और माल की जाँच स्वयं करें</strong>।
+      <strong>अग्रिम (advance) भुगतान में विशेष सावधानी रखें</strong> और पक्की रसीद लें।</li>
+      <li>नीला टिक ✓ केवल पहचान का सत्यापन दर्शाता है — किसी सौदे, गुणवत्ता या भुगतान की
+      <strong>गारंटी नहीं</strong>।</li>
+    </ul>
+  </div>
+
+  <!-- 4 -->
+  <div class="policy-card">
+    <h2>4. भाव, मौसम और AI सलाह</h2>
+    <ul>
+      <li>मंडी भाव भारत सरकार के <strong>data.gov.in (Agmarknet)</strong> से स्वतः आते हैं — ये
+      <strong>केवल सामान्य जानकारी</strong> हैं, खरीद-बिक्री की सलाह नहीं।</li>
+      <li>स्रोत डेटा में देरी, अंतराल या त्रुटि संभव है — यह हमारे नियंत्रण से बाहर है। सौदे से पहले
+      <strong>अपनी मंडी/APMC से भाव की पुष्टि अवश्य करें</strong>।</li>
+      <li>मौसम जानकारी और AI कृषि सलाह सामान्य मार्गदर्शन हैं — विशेषज्ञ या स्थानीय सलाह का विकल्प
+      नहीं। दवा/खाद की मात्रा हमेशा लेबल और स्थानीय कृषि अधिकारी से जाँचें।</li>
+    </ul>
+    <div class="highlight-box">इस जानकारी के आधार पर लिए गए किसी भी निर्णय, सौदे या हानि के लिए KrashiMitra ज़िम्मेदार
+      नहीं होगा।</div>
+  </div>
+
+  <!-- 5 -->
+  <div class="policy-card">
+    <h2>5. सदस्यता और भुगतान (दुकानदारों के लिए)</h2>
+    <ul>
+      <li>शुल्क मासिक है और <strong>पहले से (advance)</strong> लिया जाता है। कोई ऑटो-डेबिट नहीं —
+      हर महीने आप स्वयं तय करते हैं।</li>
+      <li>शुल्क <strong>लिस्टिंग जगह (विज्ञापन)</strong> के लिए है — ग्राहक के लिए नहीं।</li>
+      <li>कितने किसान फोन करेंगे यह कई बातों पर निर्भर करता है जो हमारे हाथ में नहीं हैं —
+      सीजन, उस जिले में उस फसल की मांग, आपकी अपनी कीमत, माल और व्यवहार, और सर्च से आने वाला
+      ट्रैफिक। यह हर महीने घट-बढ़ सकता है।</li>
+      <li>भुगतान के बाद भी लिस्टिंग तभी लाइव होती है जब सत्यापन कॉल पूरी हो जाए।</li>
+      <li>शर्तों के उल्लंघन, शिकायत या गलत जानकारी पर लिस्टिंग हटाई जा सकती है और
+      <strong>बचा हुआ शुल्क वापस नहीं होगा</strong>।</li>
+      <li>शुरुआती ऑफर की कीमत सीमित समय के लिए है; ऑफर समाप्त होने पर नई लिस्टिंग की कीमत सूची
+      मूल्य पर होगी। पहले से जुड़े दुकानदारों की कीमत उनके चालू चक्र में नहीं बढ़ेगी।</li>
+    </ul>
+    <div class="highlight-box">
+      ग्राहक की कोई गारंटी नहीं। भुगतान से आपकी दुकान किसानों को <strong>दिखने लगती है</strong> —
+      यह गारंटी नहीं है कि कितने किसान फोन करेंगे, कितने सौदे होंगे या कितनी कमाई होगी।
+      &ldquo;पैसा दिया पर ग्राहक नहीं मिले&rdquo; के आधार पर शुल्क वापस नहीं होता।
+      कम कॉल आने पर हम आपको बताते हैं कि क्या सुधारा जा सकता है (फोटो, कीमत, फसल की सूची),
+      पर नतीजे की गारंटी कोई नहीं दे सकता — और जो देता है, वह सच नहीं बोल रहा।
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="policy-card">
+    <h2>6. क्या नहीं करना है</h2>
+    <ul>
+      <li>झूठी, भ्रामक या किसी और की जानकारी डालना।</li>
+      <li>नकली, प्रतिबंधित या बिना लाइसेंस वाला सामान बेचने के लिए मंच का उपयोग।</li>
+      <li>किसी को धोखा देना, परेशान करना या स्पैम भेजना।</li>
+      <li>मंच का डेटा स्वतः (scraping/bots) निकालना या दोबारा प्रकाशित करना।</li>
+    </ul>
+    <p>ऐसा पाए जाने पर अकाउंट/लिस्टिंग बिना सूचना और बिना वापसी के हटाई जा सकती है।</p>
+  </div>
+
+  <!-- 7 -->
+  <div class="policy-card" id="grievance">
+    <h2>7. शिकायत निवारण (Grievance Redressal)</h2>
+    <p>
+      किसी भी शिकायत — गलत लिस्टिंग, धोखाधड़ी, आपत्तिजनक पोस्ट या डेटा से जुड़ी — के लिए हमारे
+      शिकायत अधिकारी से संपर्क करें:
+    </p>
+    <ul>
+      <li><strong>शिकायत अधिकारी (Grievance Officer):</strong> KrashiMitra Grievance Officer</li>
+      <li><strong>ईमेल:</strong> <a href="mailto:krashimitra038@gmail.com">krashimitra038@gmail.com</a></li>
+      <li><strong>फोन / WhatsApp:</strong> <a href="tel:+919870951001">+91 98709 51001</a></li>
+    </ul>
+    <p>
+      शिकायत मिलने पर <strong>48 घंटे</strong> के भीतर पावती दी जाएगी और सामान्यतः
+      <strong>15 दिन</strong> के भीतर निपटारा किया जाएगा।
+    </p>
+  </div>
+
+  <!-- 8 -->
+  <div class="policy-card">
+    <h2>8. दायित्व की सीमा और कानून</h2>
+    <ul>
+      <li>मंच <strong>"जैसा है वैसा" (as-is)</strong> उपलब्ध कराया जाता है। निरंतर उपलब्धता या
+      त्रुटिरहित होने की गारंटी नहीं है।</li>
+      <li>किसी अप्रत्यक्ष, आकस्मिक या परिणामी हानि (indirect/consequential loss) के लिए
+      KrashiMitra उत्तरदायी नहीं होगा।</li>
+      <li>जहाँ कानून दायित्व को पूरी तरह समाप्त करने की अनुमति नहीं देता, वहाँ हमारा कुल दायित्व
+      आपके द्वारा पिछले 3 महीनों में KrashiMitra को दी गई राशि तक सीमित रहेगा।</li>
+      <li>ये शर्तें <strong>भारतीय कानून</strong> के अधीन हैं। विवाद की स्थिति में क्षेत्राधिकार
+      भारत में होगा।</li>
+      <li>ये शर्तें समय-समय पर बदली जा सकती हैं; बदलाव इसी पेज पर प्रकाशित होंगे।</li>
+    </ul>
+    <div class="highlight-box">यह पेज <a href="/privacy-policy">गोपनीयता नीति</a>
+    <a href="/terms">शर्तें</a> के साथ पढ़ा जाए — दोनों मिलकर मंच के
+      उपयोग की पूरी शर्तें बनाते हैं।</div>
+  </div>
+
+  <!-- Contact -->
+  <div class="contact-box">
+    <div class="contact-box-text">
+      <div class="contact-box-title">हमसे संपर्क करें (Contact Us)</div>
+      <div class="contact-box-sub">
+        Privacy से संबंधित किसी भी प्रश्न के लिए:<br>
+        📧 Email: <a href="mailto:krashimitra038@gmail.com">krashimitra038@gmail.com</a><br>
+        📱 WhatsApp: <a href="https://wa.me/919870951001" target="_blank">+91 98709 51001</a><br>
+        🌐 Website: <a href="https://krashimitra.in" target="_blank">krashimitra.in</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.main-content -->
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer">
+  <div class="site-footer-links">
+    <a href="index.html">Home</a>
+    <a href="/bhav">Mandi Bhav</a>
+    <a href="weather.html">Weather</a>
+    <a href="shop.html">Shop</a>
+    <a href="chat.html">AI Advisor</a>
+    <a href="about.html">About Us</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+  </div>
+  <div>© 2026 <strong>KrashiMitra</strong> — krashimitra.in &nbsp;|&nbsp; किसान का डिजिटल साथी &nbsp;|&nbsp; All rights reserved.</div>
+</footer>
+
+<script>
+  // ── Sidebar slide-out drawer ──
+  function toggleSidebarMenu() {
+    document.getElementById('sidebar-drawer-overlay').classList.toggle('open');
+  }
+
+  // ── SCROLL HEADER ──
+  (function initScrollHeader() {
+    const wrapper = document.getElementById('header-wrapper');
+    const spacer  = document.getElementById('topbar-spacer');
+    let lastScrollY = window.scrollY;
+    let announcementH = 0;
+    let ticking = false;
+
+    function measureHeader() {
+      const ann = document.querySelector('.pre-topbar');
+      if (!ann || !wrapper || !spacer) return;
+      announcementH = ann.getBoundingClientRect().height;
+      spacer.style.height = wrapper.getBoundingClientRect().height + 'px';
+    }
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY;
+          wrapper.style.transform = (y > lastScrollY && y > announcementH)
+            ? 'translateY(-' + announcementH + 'px)'
+            : 'translateY(0)';
+          lastScrollY = y;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (window.ResizeObserver && wrapper) {
+      new ResizeObserver(measureHeader).observe(wrapper);
+    }
+  })();
+</script>
+
+  <script src="drawer-menu.js"></script>
+  <script src="bottomnav.js" defer></script>
+</body>
+</html>

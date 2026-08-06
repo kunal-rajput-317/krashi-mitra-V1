@@ -5224,6 +5224,13 @@ border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:16px 18px}
 .bp-h{margin:0 0 12px}
 .bp-h h2{font-size:15.5px;margin:0;color:var(--green-dark)}
 .bp-sub{font-size:11.5px;color:var(--text-soft);margin:2px 0 0}
+/* The farmer's side of the deal. The dealer agrees to terms before he pays;
+   the farmer never signs anything, so the one caution he gets has to be where
+   the phone number is — not only in a policy page nobody opens. */
+.bp-warn{font-size:11.5px;line-height:1.6;color:var(--text-soft);margin:11px 0 0;
+padding:9px 11px;background:var(--cream);border:1px solid var(--border);
+border-radius:var(--radius-sm)}
+.bp-warn a{color:var(--text-soft);text-decoration:underline}
 .bp-list{display:flex;flex-direction:column;gap:10px}
 .bp-card{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);
 border-radius:var(--radius-sm);padding:11px 13px;background:var(--cream)}
@@ -5505,7 +5512,7 @@ def _dukan_pitch(where: str = "") -> str:
 <ul class="kmdp-list">
 <li><b>नाम, आपकी कीमत, MRP और छूट</b> — बिल्कुल दुकान जैसा कार्ड</li>
 <li><b>कोई कमीशन नहीं</b> — किसान सीधे आपको फोन करता है</li>
-<li><b>₹199/महीना</b> से · हर अतिरिक्त जिला +₹50</li>
+<li><s>₹599</s> <b>₹199/महीना</b> से — शुरुआती ऑफर · हर अतिरिक्त जिला +₹50</li>
 </ul>
 <a class="kmdp-cta" href="/dukanlisting">अपनी दुकान लिस्ट करें →</a>
 <span class="kmdp-fine">व्यापारी · आढ़तिया · खाद-बीज डीलर · FPO · मिल</span>
@@ -5579,6 +5586,10 @@ def _dealer_teaser_html(cs: str, ss: str, state: str, ds: str = "") -> str:
     return f"""<section class="bp-wrap">
 <div class="bp-h"><h2>{where} में सत्यापित दुकानें</h2><p class="bp-sub">इनके प्रोडक्ट और भाव — सीधे दुकानदार से</p></div>
 <div class="bp-list">{"".join(cards)}</div>
+<p class="bp-warn">ये दुकानें भुगतान करके यहां लिस्ट हैं — यह हमारी सिफ़ारिश नहीं है।
+हमने सिर्फ फोन करके इनकी पहचान जांची है, माल या व्यवहार की नहीं। सौदा करने से पहले
+सामान खुद देख लें, पक्की रसीद लें और अग्रिम भुगतान में सावधानी रखें।
+<a href="/terms#dealer-terms">शर्तें</a></p>
 <a class="bp-cta" href="/dukanlisting">अपनी दुकान यहां लिस्ट करें →</a>
 </section>"""
 
@@ -5877,7 +5888,8 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     # message someone has to transcribe before it can be acted on.
     join = (f'<section class="kh-join"><h2>🧾 आप {escape(hi)} खरीदते हैं?</h2>'
             f'<p>अपने प्रोडक्ट इसी पेज पर दिखाएं — नाम, आपकी कीमत, MRP और छूट के साथ, '
-            f'बिल्कुल ऊपर वाले कार्ड की तरह। ₹199/महीना से, हर अतिरिक्त जिला +₹50। '
+            f'बिल्कुल ऊपर वाले कार्ड की तरह। शुरुआती ऑफर: ₹599 की जगह ₹199/महीना, '
+            f'हर अतिरिक्त जिला +₹50। '
             f'हम कॉल करके पुष्टि के बाद ही लिस्टिंग लाइव करते हैं।</p>'
             f'<a href="{SITE}/dukanlisting">अपनी दुकान लिस्ट करें →</a>'
             f'<a class="kh-join-wa" href="https://wa.me/919870951001?text={join_msg}" '

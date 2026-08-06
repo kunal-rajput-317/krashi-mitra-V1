@@ -80,6 +80,7 @@ CORE = [
     ("help.html",           "/help",            0.6, "weekly", ("hi",), ()),
     ("about.html",          "/about",           0.4, "yearly", (), ()),
     ("privacy-policy.html", "/privacy-policy",  0.3, "yearly", (), ()),
+    ("terms.html",          "/terms",           0.3, "yearly", (), ()),
     # login.html is deliberately absent — the page is noindex.
     ("articles/index.html", "/articles/",       0.9, "daily",  ("hi", "en", "kn"), ()),
 ]
