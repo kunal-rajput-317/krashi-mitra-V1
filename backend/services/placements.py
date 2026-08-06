@@ -41,6 +41,18 @@ PRICE_DISTRICT_EXTRA = 50   # each additional district
 PRICE_STATE = 999           # first state
 PRICE_STATE_EXTRA = 999     # each additional state
 
+# The list price, shown struck through beside the offer price.
+#
+# THIS IS A PROMISE, NOT A DECORATION. A crossed-out number that was never
+# charged and never will be is a false reference price — the thing India's
+# CCPA dark-pattern rules are about, and the same kind of claim /dukanlisting
+# explicitly promises farmers we do not make about ranking. So these are the
+# real list prices: when the introductory period ends, THIS is what a new
+# dealer pays, and every surface says "शुरुआती ऑफर" rather than implying a
+# discount that has already been taken away from someone.
+LIST_DISTRICT = 599
+LIST_STATE = 1999
+
 _TTL = 120.0                # seconds; the floor under a missed invalidate()
 _cache: list | None = None
 _at = -1.0
@@ -63,12 +75,18 @@ def page_url(crop: str, state: str, district: str = "") -> str:
 
 
 def price_for(district: str, n_existing: int = 0) -> int:
-    """List price for one more slot of this kind. `n_existing` is how many of
+    """What one more slot of this kind costs today. `n_existing` is how many of
     that kind the dealer already holds, so the second district is ₹50 and not
     another ₹199."""
     if norm(district):
         return PRICE_DISTRICT if n_existing == 0 else PRICE_DISTRICT_EXTRA
     return PRICE_STATE if n_existing == 0 else PRICE_STATE_EXTRA
+
+
+def list_price_for(district: str) -> int:
+    """The struck-through number beside it. Only ever the FIRST slot's list
+    price: "₹599 ₹50" next to an add-on district would be nonsense."""
+    return LIST_DISTRICT if norm(district) else LIST_STATE
 
 
 def invalidate() -> None:

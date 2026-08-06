@@ -29,11 +29,14 @@
 #     one subscription payment renews all of them (record_payment()) and the
 #     bhav Tier-3 panel / krashi_bajar post both key off the whole account's
 #     eligibility, not one row in isolation.
-#   • Listing itself only ever happens on the crop+state Tier-3 bhav page
-#     (services/buyers.py::for_bhav_panel) and as a krashi_bajar feed post
-#     (services/dealers.py::_sync_bazar_post) — never on the district Tier-4
-#     page, and never with a phone number visible outside the existing
-#     /kharidar page.
+#   • WHERE a dealer is shown is a separate, paid decision — see
+#     services/placements.py. Two products: a slot on a DISTRICT price page
+#     (/bhav/{crop}/{state}/{district}, ₹199/mo) or one on the STATE page
+#     (/bhav/{crop}/{state}, ₹999/mo). A state slot is ONE page — the one
+#     farmers from across that state land on — not every district page in it,
+#     and the copy on /dukanlisting says so in as many words.
+#     Paying alone shows him nowhere; the admin picks the page and the slot.
+#     A phone number still appears only on the /kharidar page.
 # ============================================================
 
 import base64
@@ -90,6 +93,12 @@ class ListingsIn(BaseModel):
     description: Optional[str] = ""
     since: Optional[str] = ""
     districts: List[DistrictIn] = []
+    # Which product he thinks he is buying — "district" (₹199) or "state"
+    # (₹999). It does not change what is created here (a state listing is still
+    # rows for the districts he named); it is recorded so the admin ringing him
+    # knows what he asked for before quoting a price. Anything else is ignored
+    # rather than rejected: a stale cached page must not break a signup.
+    plan: Optional[str] = ""
 
 
 @router.post("/listings")
@@ -128,6 +137,14 @@ async def create_listings(
     existing_keys = {(_norm(r.state), _norm(r.district))
                      for r in dealers.for_owner(db, user_id)}
 
+    # Written to `note`, the admin-only call log, and never through _apply() —
+    # which drops `note` from untrusted input on purpose, so a dealer cannot
+    # write into his own call log. This is the route stamping what it was told,
+    # not the dealer's text.
+    plan_note = {"district": "[प्लान] जिला — ₹199/माह",
+                 "state":    "[प्लान] राज्य का पेज — ₹999/माह"}.get(
+        (payload.plan or "").strip().lower(), "")
+
     try:
         created = 0
         for d in incoming:
@@ -135,13 +152,17 @@ async def create_listings(
             if key in existing_keys:
                 continue
             existing_keys.add(key)
-            dealers.from_signup(db, {
+            row = dealers.from_signup(db, {
                 **base,
                 "state":    (d.state or "").strip()[:_MAX["state"]],
                 "district": (d.district or "").strip()[:_MAX["district"]],
                 "market":   (d.market or "").strip()[:_MAX["market"]],
             })
+            if plan_note and row is not None:
+                row.note = plan_note
             created += 1
+        if plan_note:
+            db.commit()
     except Exception as e:
         if is_read_only_error(e):
             raise HTTPException(503, READ_ONLY)
