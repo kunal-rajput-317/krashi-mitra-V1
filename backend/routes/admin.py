@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -1426,6 +1427,7 @@ def _page_label(idx: dict, crop: str, state: str, district: str = "") -> dict:
         "district_hi": (idx.get("dists", {}).get(crop, {})
                            .get(state, {}).get(district, district)),
         "price":      placements.price_for(district),
+        "list_price": placements.list_price_for(district),
     }
 
 
@@ -1452,7 +1454,14 @@ async def search_bhav_pages(
     from backend.services import buyers, placements
 
     idx = bhav._get_index()
-    needle = placements.norm(q)
+    # Tokenised, and it accepts a pasted URL. Typing "/bhav/wheat" is the
+    # obvious thing to do in a box that lists URLs, and a single-substring
+    # match answered that with "कोई पेज नहीं मिला" — indistinguishable from
+    # "this crop has no page", which is the one answer this box must get right.
+    # Splitting on / and whitespace turns both "/bhav/wheat/uttar-pradesh" and
+    # "wheat bijnor" into tokens; every token has to match, so more words
+    # narrow rather than widen.
+    tokens = [t for t in re.split(r"[\s/,]+", placements.norm(q)) if t and t != "bhav"]
     home_state = home_district = ""
     dealer_crops: set = set()
     if slug:
@@ -1467,9 +1476,10 @@ async def search_bhav_pages(
         dealer_crops = {placements.norm(c) for c in (d.get("commodities") or [])}
 
     def matches(*parts) -> bool:
-        if not needle:
+        if not tokens:
             return True
-        return any(needle in placements.norm(str(p)) for p in parts if p)
+        hay = " ".join(placements.norm(str(p)) for p in parts if p)
+        return all(t in hay for t in tokens)
 
     out, seen = [], set()
     for crop, states in idx.get("states", {}).items():

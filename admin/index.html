@@ -2259,6 +2259,74 @@ body {
         }
         .by-rank:disabled { opacity: .5; cursor: not-allowed; }
 
+        /* ══════════ ONE DEALER = ONE CARD ══════════
+           The panel used to render one row per (dealer, district), so a shop
+           covering two districts looked like two shops — same name, same
+           number, two call logs, two of every button. This is one card per
+           ACCOUNT: the districts are a line inside it, and the only per-page
+           thing left is where he is shown, which is what he pays for.
+
+           Status is computed, never a stored flag. "दिख रहे हैं" means the
+           subscription is current AND he holds a slot on a real page — the two
+           conditions the render path itself checks — so the panel cannot claim
+           a dealer is visible while a farmer sees nothing. */
+        .dl-card {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius-md); padding: 15px 17px; margin-bottom: 11px;
+        }
+        .dl-top { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+        .dl-id { flex: 1; min-width: 190px; }
+        .dl-name { font-size: 15.5px; font-weight: 800; color: var(--text); line-height: 1.3; }
+        .dl-meta { font-size: 12px; color: var(--text-dim); margin-top: 4px; line-height: 1.7; }
+        .dl-meta a { color: var(--primary); text-decoration: none; }
+        .dl-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+        .dl-status {
+          display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
+          font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: 20px;
+        }
+        .dl-status::before { content: '●'; font-size: 10px; }
+        .dl-status.live { background: rgba(63,185,80,.14);  color: #3fb950; }
+        .dl-status.warn { background: rgba(210,153,34,.14); color: #d29922; }
+        .dl-status.wait { background: rgba(88,166,255,.14); color: #58a6ff; }
+        .dl-status.new  { background: var(--surface-hl);    color: var(--text-dim); }
+        .dl-status.off  { background: var(--surface-hl);    color: var(--muted); }
+        .dl-money { font-size: 12px; color: var(--text-dim); margin-left: 10px; }
+
+        .dl-sec { font-size: 10.5px; font-weight: 800; color: var(--muted);
+          text-transform: uppercase; letter-spacing: .05em; margin: 14px 0 6px; }
+        .dl-dists { display: flex; flex-wrap: wrap; gap: 5px; }
+        .dl-dist { font-size: 11.5px; font-weight: 600; color: var(--text-dim);
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-radius: 20px; padding: 3px 10px; }
+        .dl-pages { display: flex; flex-direction: column; gap: 5px; }
+        .dl-page { display: flex; align-items: center; gap: 9px; font-size: 11.5px;
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-radius: var(--radius-sm); padding: 6px 10px; }
+        .dl-page code { font-family: var(--font-mono); flex: 1; color: var(--text); }
+        .dl-page b { color: #3fb950; }
+        .dl-nopage { font-size: 11.5px; color: #d29922; line-height: 1.55; }
+
+        /* Yellow until the money lands, green while it is current — the one
+           thing worth reading off a list of twenty at a glance. */
+        .by-btn.pay-due  { background: rgba(210,153,34,.18); border-color: #d29922; color: #d29922; }
+        .by-btn.pay-paid { background: rgba(63,185,80,.16);  border-color: #3fb950; color: #3fb950; }
+
+        /* ── confirm popup ── */
+        .km-confirm { position: fixed; inset: 0; z-index: 500; display: flex;
+          align-items: center; justify-content: center; padding: 20px;
+          background: rgba(0,0,0,.7); }
+        .km-confirm[hidden] { display: none; }   /* the attribute alone loses to display:flex */
+        .km-confirm-box { background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius-md); padding: 24px 24px 20px; max-width: 420px;
+          width: 100%; text-align: center; }
+        .km-confirm-ic { font-size: 34px; line-height: 1; margin-bottom: 10px; }
+        .km-confirm-box h3 { margin: 0 0 8px; font-size: 16px; font-weight: 800; color: var(--text); }
+        .km-confirm-box p { margin: 0; font-size: 13px; line-height: 1.65; color: var(--text-dim); }
+        .km-confirm-box p b { color: var(--text); }
+        .km-confirm-acts { display: flex; gap: 9px; justify-content: center; margin-top: 18px; }
+        .km-confirm-acts .by-btn { padding: 9px 18px; font-size: 13px; }
+
         /* ── placement: which page, which slot ── */
         .by-btn.unplaced { border-color: #d29922; color: #d29922; }
         .by-btn.placed   { border-color: #3fb950; color: #3fb950; }
@@ -2273,6 +2341,11 @@ body {
         .pl-modal { position: fixed; inset: 0; z-index: 420; display: flex;
           align-items: center; justify-content: center; padding: 18px;
           background: rgba(0,0,0,.66); }
+        /* REQUIRED, not tidiness: the `hidden` attribute is only display:none
+           from the UA stylesheet, and the author rule above outranks it. Without
+           this the box sat open over the panel on every single page load — the
+           same reason .pay-modal[hidden] exists a few rules up. */
+        .pl-modal[hidden] { display: none; }
         .pl-box { background: var(--surface); border: 1px solid var(--border);
           border-radius: var(--radius-md); width: 100%; max-width: 620px;
           max-height: 88vh; overflow-y: auto; padding: 20px 22px; }
@@ -2493,6 +2566,19 @@ body {
           color: var(--text); font-family: inherit; width: 100%; box-sizing: border-box;
         }
         .ed-prod-add input:focus { outline: none; border-color: var(--primary); }
+        /* The label text is ONE inline span. As direct children of a column
+           flex, the "*" and the "(hint)" each became their own row and the
+           form looked broken. */
+        .ed-pl { display: flex; flex-direction: column; gap: 4px; }
+        .ed-pl > span { font-size: 11px; font-weight: 700; color: var(--text-dim);
+          line-height: 1.4; }
+        .ed-pl b { color: #f85149; }
+        .ed-pl small { font-weight: 600; color: var(--muted); }
+        .ed-phint { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted);
+          background: var(--surface-hl); border: 1px solid var(--border);
+          border-radius: var(--radius-sm); padding: 7px 10px; }
+        .ed-phint.on { color: #3fb950; border-color: rgba(63,185,80,.4); }
+        .ed-phint.bad { color: #d29922; border-color: rgba(210,153,34,.45); }
         .ed-prod-add button { grid-column: 1 / -1; }
         .ed-prod-empty { font-size: 11.5px; color: var(--muted); padding: 6px 0; }
 
@@ -2785,36 +2871,40 @@ body {
                  wrote it: every line says what a farmer sees as a result, since
                  that is the only thing any of these buttons is actually for. -->
             <div class="by-help" id="by-help">
+              <div class="by-help-note" style="margin:0 0 11px;padding:0 0 9px;border-top:0;border-bottom:1px solid var(--border);">
+                <b>एक दुकान = एक कार्ड।</b> दुकानदार जितने जिले चुने, सब एक ही कार्ड में — एक
+                सदस्यता, एक फोन, एक कॉल रिकॉर्ड।<br>
+                काम का क्रम: <b>रिक्वेस्ट आई → कॉल की → पैसा आया → 📍 से पेज चुना → किसानों को दिखने लगे।</b>
+              </div>
               <dl>
-                <dt>✓ Called — list it</dt>
-                <dd>फोन पर बात हो गई और दुकान असली है — इसे चालू करता है। इसके बाद ही नीला ✓ मिलता है।</dd>
+                <dt>✓ कॉल हो गई — चालू करें</dt>
+                <dd>फोन पर बात हो गई और दुकान असली है। इसके बाद ही दुकान दिखने लायक बनती है।</dd>
 
-                <dt>Payment</dt>
-                <dd>₹ लेने के बाद यहीं दर्ज करें। पैसा अपने आप नहीं पकड़ा जाता — जो आप लिखेंगे वही सच माना जाएगा।</dd>
+                <dt>₹ Payment</dt>
+                <dd><b>पीला</b> = पैसा बाकी, <b>हरा</b> = पैसा चालू। ₹ लेने के बाद यहीं दर्ज करें —
+                    पैसा अपने आप नहीं पकड़ा जाता, जो आप लिखेंगे वही सच माना जाएगा।</dd>
 
-                <dt>Hide</dt>
-                <dd>किसानों को दिखना तुरंत बंद। मिटता कुछ नहीं — दोबारा चालू कर सकते हैं।</dd>
+                <dt>📍 पेज</dt>
+                <dd><b>सबसे ज़रूरी बटन।</b> यह तय करता है कि दुकान किस भाव पेज पर दिखेगी।
+                    हर पेज पर सिर्फ <b>3 जगह</b> — 1 सबसे ऊपर। यह न चुनें तो पैसा देने के बाद भी
+                    दुकान किसी को नहीं दिखेगी। किसी और को वही जगह देने पर पुराना अपने आप हट जाता है।</dd>
 
                 <dt>✏️ Edit</dt>
                 <dd>नाम, फोन, फसल, विवरण ठीक करें — और इनके प्रोडक्ट की फोटो 📷 यहीं लगती है।</dd>
 
-                <dt>＋ District</dt>
-                <dd>इसी दुकान को एक और जिले में जोड़ें (+₹50/महीना)।</dd>
+                <dt>छुपाएं</dt>
+                <dd>किसानों को दिखना तुरंत बंद, सारे जिलों में। मिटता कुछ नहीं — दोबारा चालू कर सकते हैं।</dd>
 
                 <dt>Delete</dt>
-                <dd>पूरी तरह मिटा देता है। वापस नहीं आता।</dd>
+                <dd>पूरी तरह मिटा देता है, सारे जिलों समेत। वापस नहीं आता।</dd>
 
                 <dt>कॉल के बाद</dt>
                 <dd>फोन का नतीजा दर्ज करने के लिए — किसे दोबारा फोन करना है, यह इसी से पता चलता है।</dd>
-
-                <dt>राज्य पेज पर जगह</dt>
-                <dd>राज्य के भाव पेज पर सिर्फ <b>3 दुकानें</b> दिख सकती हैं। यह चुनता है कि इनकी जगह कौन सी
-                    है — 1 सबसे ऊपर। कुछ न चुनें तो पैसा देने के बाद भी ये किसी राज्य पेज पर नहीं दिखेंगे।
-                    किसी और को वही नंबर देने पर पुराना अपने आप हट जाता है।</dd>
               </dl>
               <div class="by-help-note">
-                🟢 <b>LIVE · VERIFIED · PAYING</b> = दुकान असली है और पैसा चालू है — यानी दिखने की
-                <i>इजाज़त</i> है। <b>जगह</b> अलग चीज़ है: वो तय करती है कि असल में दिखेंगे कहां।
+                ऊपर वाली हरी/पीली लाइन <b>अंदाज़ा नहीं, सच</b> है — "दिख रहे हैं" तभी लिखा आता है जब
+                पैसा चालू हो <i>और</i> कोई पेज चुना हो। दोनों में से एक भी न हो तो वही लाइन बता देगी
+                कि क्या बाकी है।
               </div>
             </div>
             <div id="by-list">
@@ -2937,6 +3027,25 @@ body {
 
          Credentials live here and nowhere public: services/buyers.py::as_dict
          does not carry them, so nothing farmer-facing can render one. -->
+    <!-- CONFIRM — one popup for everything that destroys something.
+         A native confirm() is one keystroke from "OK" and cannot say what is
+         actually being lost; several of these actions cost a paying dealer his
+         visibility, so they are worth a deliberate second click. The danger
+         button is on the RIGHT and the safe one takes the default focus, so a
+         stray Enter cancels rather than deletes. -->
+    <div class="km-confirm" id="km-confirm" hidden
+         onclick="if(event.target===this)kmConfirmDone(false)">
+      <div class="km-confirm-box">
+        <div class="km-confirm-ic" id="kc-ic">⚠️</div>
+        <h3 id="kc-title">पक्का?</h3>
+        <p id="kc-text"></p>
+        <div class="km-confirm-acts">
+          <button class="by-btn" id="kc-no" onclick="kmConfirmDone(false)">नहीं, रहने दें</button>
+          <button class="by-btn warn" id="kc-yes" onclick="kmConfirmDone(true)">हां</button>
+        </div>
+      </div>
+    </div>
+
     <!-- PLACEMENT — which /bhav page this dealer is shown on, and in which of
          its three slots. Search rather than a dropdown because the choice is
          one of ~14,000 real pages, and REAL is the point: a page that does not
@@ -2949,7 +3058,8 @@ body {
         <p class="pl-sub">
           पैसा देने से सिर्फ इतना तय होता है कि दुकान <b>दिख सकती है</b>।
           <b>कहां</b> दिखेगी, वो यहां तय होता है।<br>
-          जिले का पेज ₹199/महीना · राज्य का पेज ₹999/महीना — हर पेज पर सिर्फ 3 जगह।
+          जिले का पेज <s>₹599</s> <b>₹199</b>/महीना · राज्य का पेज <s>₹1999</s> <b>₹999</b>/महीना
+          — शुरुआती ऑफर। हर पेज पर सिर्फ 3 जगह।
         </p>
 
         <div class="pl-sec">अभी कहां दिख रहे हैं</div>
@@ -2958,7 +3068,7 @@ body {
         <div class="pl-sec">नया पेज जोड़ें</div>
         <input class="pl-search" id="pl-q" type="text" autocomplete="off"
                oninput="onPlaceSearch(this.value)"
-               placeholder="जिला, राज्य या फसल खोजें — जैसे bijnor, gur, wheat">
+               placeholder="जिला, फसल या पूरा URL — जैसे bijnor · gur · wheat bijnor · /bhav/wheat">
         <div class="pl-results" id="pl-results"></div>
 
         <div id="pl-pick" hidden>
@@ -3032,13 +3142,28 @@ body {
           </div>
           <div id="ed-prod-list"></div>
 
+          <!-- Both price boxes are labelled, not just placeholders. As bare
+               placeholders nobody could tell which one was struck through, so
+               the discount pill went unused: "₹ MRP" does not read as "the
+               original price" to anyone who is not already thinking in our
+               field names. The live hint below shows the % as it is typed. -->
           <div class="ed-prod-add">
-            <input type="text" id="ed-p-namehi" placeholder="नाम (हिंदी) *" maxlength="120">
-            <input type="text" id="ed-p-nameen" placeholder="Name (English)" maxlength="120">
-            <input type="number" id="ed-p-price" placeholder="₹ कीमत *" min="1">
-            <input type="number" id="ed-p-mrp" placeholder="₹ MRP" min="1">
-            <input type="text" id="ed-p-unit" placeholder="5 kg बैग" maxlength="60">
-            <input type="text" id="ed-p-badge" placeholder="बीज" maxlength="24">
+            <label class="ed-pl"><span>नाम (हिंदी) <b>*</b></span>
+              <input type="text" id="ed-p-namehi" placeholder="जैसे: यूरिया" maxlength="120"></label>
+            <label class="ed-pl"><span>Name (English)</span>
+              <input type="text" id="ed-p-nameen" placeholder="Urea" maxlength="120"></label>
+            <label class="ed-pl"><span>₹ असली कीमत / MRP <small>(कटी हुई दिखेगी)</small></span>
+              <input type="number" id="ed-p-mrp" placeholder="350" min="1"
+                     oninput="edPriceHint()"></label>
+            <label class="ed-pl"><span>₹ आपकी कीमत <b>*</b> <small>(किसान यही देगा)</small></span>
+              <input type="number" id="ed-p-price" placeholder="280" min="1"
+                     oninput="edPriceHint()"></label>
+            <label class="ed-pl"><span>पैक साइज़</span>
+              <input type="text" id="ed-p-unit" placeholder="5 kg बैग" maxlength="60"></label>
+            <label class="ed-pl"><span>बैज <small>(फोटो पर)</small></span>
+              <input type="text" id="ed-p-badge" placeholder="बीज / खाद" maxlength="24"></label>
+            <div class="ed-phint" id="ed-p-hint">दोनों कीमतें भरें तो कार्ड पर
+              &ldquo;% off&rdquo; दिखेगा।</div>
             <button class="by-btn ok" type="button" onclick="addProduct()" id="ed-p-btn">
               ＋ Add product</button>
           </div>
@@ -5767,132 +5892,195 @@ function renderBuyers(d) {
   if (d.upi) _byUpi = d.upi;
   const box  = document.getElementById('by-list');
   const rows = d.buyers || [];
-  // Kept so the collect modal can show the firm name without a second fetch.
-  window._byRows = rows;
+  window._byRows = rows;      // the collect/edit modals look rows up by slug
 
   if (!rows.length) {
     box.innerHTML = `<div class="by-empty">
       ${_byFilter === 'signup'
-        ? 'No signups yet. /dukanlisting fills this (login + paid subscription now, not the old free form) — but nobody finds it until the directory ranks, so the first listings come from calls.'
+        ? 'No signups yet. /dukanlisting fills this — but nobody finds it until the directory ranks, so the first listings come from calls.'
         : 'No dealers yet. Add one above, or seed the district you picked — until a district has a live dealer its खरीदार page renders <code>noindex</code> and stays out of the sitemap.'}
     </div>`;
     return;
   }
 
-  // /dukanlisting: rows sharing an owner_user_id are one paying account
-  // (several districts, one subscription) — grouped here for display only,
-  // every row underneath keeps its own call log, rank and payment actions.
-  // Legacy/admin-added rows (owner_user_id null) render exactly as before.
-  const legacy = [];
+  // ONE CARD PER ACCOUNT. Rows sharing an owner_user_id are one shop that
+  // picked several districts — one subscription, one phone, one call log. The
+  // panel used to draw each row separately, so that shop appeared twice with
+  // every button duplicated; that is why "+ District" looked like it created a
+  // second account. Visually it did.
+  // Legacy rows (owner_user_id null, admin-typed) are their own one-row account.
+  const groups = [];
   const byOwner = new Map();
   rows.forEach(b => {
-    if (b.owner_user_id) {
-      if (!byOwner.has(b.owner_user_id)) byOwner.set(b.owner_user_id, []);
-      byOwner.get(b.owner_user_id).push(b);
-    } else {
-      legacy.push(b);
+    if (!b.owner_user_id) { groups.push([b]); return; }
+    if (!byOwner.has(b.owner_user_id)) {
+      byOwner.set(b.owner_user_id, []);
+      groups.push(byOwner.get(b.owner_user_id));
     }
+    byOwner.get(b.owner_user_id).push(b);
   });
-
-  let html = legacy.map(buyerRowHtml).join('');
-  byOwner.forEach((group, ownerId) => {
-    const price = 199 + 50 * Math.max(0, group.length - 1);
-    html += `<div class="by-acct-h">🧑‍💼 /dukanlisting खाता #${ownerId} — ` +
-            `${group.length} जिले — ₹${price}/महीना</div>` +
-            group.map(buyerRowHtml).join('');
-  });
-  box.innerHTML = html;
+  box.innerHTML = groups.map(dealerCardHtml).join('');
 }
 
-function buyerRowHtml(b) {
-  const live    = b.active;
-  const crops   = (b.commodities || []).length
-    ? (b.commodities || []).join(', ') : 'सब फसल';
-  const tags = [
-    live ? '<span class="by-tag live">live</span>'
-         : '<span class="by-tag pending">not live</span>',
-    b.verified ? '<span class="by-tag tick">verified</span>' : '',
-    b.featured ? '<span class="by-tag feat">featured</span>' : '',
-    // Paying vs paid-once-and-lapsed is the difference between revenue and a
-    // renewal call that nobody remembered to make.
-    b.paying ? '<span class="by-tag paid">₹ paying</span>'
-             : (b.paid_at ? '<span class="by-tag lapsed">lapsed</span>' : ''),
-    (b.called_at && !b.paid_at)
-      ? `<span class="by-tag called">${BY_CALL[b.call_result] || 'called'}</span>` : '',
-  ].filter(Boolean).join(' ');
+/* The one status line, computed from the same two conditions the render path
+   itself checks — so the panel can never claim a dealer is visible while a
+   farmer sees nothing. A placement only renders if ITS OWN row is active and
+   paid, which is why this counts per row rather than per account. */
+function dealerStatus(group) {
+  const livePages = group
+    .filter(r => r.active && r.paying)
+    .reduce((n, r) => n + ((r.placements || []).length), 0);
+  const anyActive = group.some(r => r.active);
+  const paying    = group.some(r => r.paying);
+  const paidOnce  = group.some(r => r.paid_at);
+  const called    = group.some(r => r.called_at);
 
-  const phone = b.phone || b.whatsapp || '';
-  // Never called is the state the whole test hinges on, so it is stated
-  // outright rather than inferred from a missing tag.
-  const callLine = b.called_at
-    ? `📞 ${b.call_count} call${b.call_count > 1 ? 's' : ''}, last ${byDate(b.called_at)}${
-        b.paid_at ? ` · ₹${b.paid_amount} on ${byDate(b.paid_at)}${
-          b.paid_until ? `, till ${byDate(b.paid_until)}` : ''}` : ''}`
+  if (!anyActive)          return { k: 'off',  t: 'बंद — किसानों को नहीं दिख रहे' };
+  if (paying && livePages) return { k: 'live', t: 'दिख रहे हैं — ' + livePages + ' पेज पर' };
+  if (paying)              return { k: 'warn', t: 'पैसा आया, पर किसी पेज पर नहीं लगाया' };
+  if (paidOnce)            return { k: 'warn', t: 'सदस्यता खत्म — नवीनीकरण कराएं' };
+  if (called)              return { k: 'wait', t: 'कॉल हो गई — पैसा आना बाकी' };
+  return { k: 'new', t: 'नया — कॉल करना है' };
+}
+
+function dealerCardHtml(group) {
+  const lead = group[0];               // business fields are identical on every row
+  const slug = escapeHtml(lead.slug);
+  const st   = dealerStatus(group);
+  const phone = lead.phone || lead.whatsapp || '';
+  const crops = (lead.commodities || []).length
+    ? (lead.commodities || []).join(', ') : 'सब फसल';
+
+  // Every district on the subscription, and what it costs. The dealer picks
+  // these on /dukanlisting; nothing in this panel creates them any more.
+  const districts = group.map(r => escapeHtml(r.district || '—'));
+  const price = 199 + 50 * Math.max(0, group.length - 1);
+
+  const paidRow  = group.find(r => r.paid_at) || {};
+  const payingRow = group.find(r => r.paying);
+  const money = payingRow
+    ? '₹' + price + '/महीना · ' + byDate(payingRow.paid_until) + ' तक'
+    : (paidRow.paid_at
+        ? 'आखिरी भुगतान ₹' + paidRow.paid_amount + ' · ' + byDate(paidRow.paid_at) : '');
+
+  const callLine = lead.called_at
+    ? '📞 ' + lead.call_count + ' call' + (lead.call_count > 1 ? 's' : '') +
+      ', last ' + byDate(lead.called_at)
     : '☎️ अभी तक कॉल नहीं किया';
 
-  // Credentials, shown compactly so "is this one actually checked?" is
-  // answerable from the list without opening each row.
   const creds = [
-    b.gstin      ? `GST ${escapeHtml(b.gstin)}` : '',
-    b.license_no ? `लाइसेंस ${escapeHtml(b.license_no)}` : '',
-    b.email      ? escapeHtml(b.email) : '',
+    lead.gstin      ? 'GST ' + escapeHtml(lead.gstin) : '',
+    lead.license_no ? 'लाइसेंस ' + escapeHtml(lead.license_no) : '',
+    lead.email      ? escapeHtml(lead.email) : '',
   ].filter(Boolean).join(' · ');
 
-  // Where this dealer is actually shown. Paying is eligibility; this is
-  // placement, and a dealer can be fully paid up and on no page at all — so
-  // the count is on the button rather than hidden behind a click.
-  const nPlaced = (b.placements || []).length;
-  const featBtn = `<button class="by-btn ${nPlaced ? 'placed' : 'unplaced'}"
-      title="किस पेज पर, किस जगह दिखेंगे"
-      onclick="openPlaceModal('${escapeHtml(b.slug)}')">
-    ${nPlaced ? `📍 ${nPlaced} पेज पर` : '📍 कहीं नहीं दिख रहे'}</button>`;
+  // Placements belong to the account, so they are listed once, here.
+  const pages = group.flatMap(r => (r.placements || []));
+  const pagesHtml = pages.length
+    ? pages.map(p => `<div class="dl-page">
+        <span>${p.district ? '📍' : '🗺️'}</span>
+        <code>${escapeHtml(p.url)}</code>
+        <b>जगह #${p.rank}</b>
+        <span style="color:var(--muted)">₹${p.price || '—'}</span>
+        <button class="by-btn warn" onclick="removePlacement(${p.id})">हटाएं</button>
+      </div>`).join('')
+    : `<div class="dl-nopage">अभी किसी पेज पर नहीं लगाया — पैसा चालू होने पर भी किसान
+       इन्हें कहीं नहीं देखेंगे। 📍 दबाकर पेज चुनें।</div>`;
 
-  return `<div class="by-row ${live ? '' : 'by-off'}" id="by-row-${escapeHtml(b.slug)}">
-    <div class="by-main">
-      <div class="by-name">${escapeHtml(b.name || '—')} ${tags}</div>
-      <div class="by-meta">
-        ${escapeHtml(BY_KINDS[b.kind] || b.kind || '')} ·
-        ${escapeHtml(b.district || '—')}${b.state ? ', ' + escapeHtml(b.state) : ''}
-        ${b.market ? ' · ' + escapeHtml(b.market) : ''}<br>
-        ${phone ? `📞 <a href="tel:${escapeHtml(phone)}" style="color:var(--primary)">${escapeHtml(phone)}</a> · ` : ''}
-        फसल: ${escapeHtml(crops)} ·
-        <code>${escapeHtml(b.slug)}</code> ·
-        ${b.source === 'signup' ? 'via /dukanlisting' : 'added here'}<br>
-        <span class="by-callnote">${escapeHtml(callLine)}</span>
-        ${creds ? '<br>' + creds : ''}
-        ${b.description ? `<br>💬 ${escapeHtml(b.description)}` : ''}
-        ${b.note ? `<br><span class="by-callnote">🔒 ${escapeHtml(b.note)}</span>` : ''}
+  const payClass = payingRow ? 'pay-paid' : 'pay-due';
+  const all = escapeHtml(group.map(r => r.slug).join('|'));
+
+  return `<div class="dl-card" id="by-row-${slug}">
+    <div class="dl-top">
+      <div class="dl-id">
+        <div class="dl-name">${escapeHtml(lead.name || '—')}</div>
+        <div class="dl-meta">
+          ${escapeHtml(BY_KINDS[lead.kind] || lead.kind || '')} ·
+          ${escapeHtml(lead.state || '')} ·
+          ${lead.source === 'signup' ? 'via /dukanlisting' : 'added here'}<br>
+          ${phone ? `📞 <a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a> · ` : ''}
+          फसल: ${escapeHtml(crops)}<br>
+          <span class="by-callnote">${escapeHtml(callLine)}</span>
+          ${creds ? '<br>' + creds : ''}
+          ${lead.description ? '<br>💬 ' + escapeHtml(lead.description) : ''}
+          ${lead.note ? `<br><span class="by-callnote">🔒 ${escapeHtml(lead.note)}</span>` : ''}
+        </div>
       </div>
-      <div class="by-callbar">
-        <span style="font-size:10.5px;color:var(--muted);align-self:center;">कॉल के बाद:</span>
-        ${Object.keys(BY_CALL).map(k =>
-          `<button class="by-cbtn" onclick="logCall('${escapeHtml(b.slug)}','${k}')">${BY_CALL[k]}</button>`
-        ).join('')}
+      <div class="dl-acts">
+        <button class="by-btn ${payClass}" onclick="openPayModal('${slug}')">₹ Payment</button>
+        <button class="by-btn" onclick="openPlaceModal('${slug}')"
+                title="किस पेज पर, किस जगह दिखेंगे">📍 पेज</button>
+        <button class="by-btn" onclick="openEditBuyer('${slug}')">✏️ Edit</button>
+        ${group.some(r => r.active)
+          ? `<button class="by-btn" onclick="setAccountActive('${all}', false)">छुपाएं</button>`
+          : `<button class="by-btn ok" onclick="setAccountActive('${all}', true)">✓ कॉल हो गई — चालू करें</button>`}
+        <button class="by-btn warn" onclick="deleteAccount('${all}')">Delete</button>
       </div>
-      ${nPlaced ? `<div class="by-places">${(b.placements || []).map(p =>
-        `<span class="by-place">${p.district ? '📍' : '🗺️'} ${escapeHtml(p.url)}
-          <b>#${p.rank}</b></span>`).join('')}</div>` : ''}
     </div>
-    <div class="by-acts">
-      <button class="by-btn ok" onclick="openPayModal('${escapeHtml(b.slug)}')">Payment</button>
-      ${featBtn}
-      <button class="by-btn" onclick="openEditBuyer('${escapeHtml(b.slug)}')">✏️ Edit</button>
-      ${live
-        ? `<button class="by-btn" onclick="setBuyerFlag('${escapeHtml(b.slug)}','active',false)">Hide</button>`
-        : `<button class="by-btn ok" onclick="approveBuyer('${escapeHtml(b.slug)}')">✓ Called — list it</button>`}
-      <!-- One placement control, not three. What used to be here: a "☆ Feature
-           in <district>" flag that sorted a dealer first WITHIN a district
-           page, and a rank dropdown that picked three dealers for a whole
-           STATE. Neither could say "this page, this slot", which is the thing
-           actually sold. Both are gone; 📍 above opens the one box that can.
-           The featured column and its sort in services/buyers.py::for_place
-           are untouched, just no longer settable from here. -->
-      <button class="by-btn" onclick="addDistrictFor('${escapeHtml(b.slug)}')"
-              title="इसी दुकान को एक और जिले में जोड़ें">＋ District</button>
-      <button class="by-btn warn" onclick="deleteBuyer('${escapeHtml(b.slug)}')">Delete</button>
+
+    <span class="dl-status ${st.k}">${st.t}</span>
+    ${money ? `<span class="dl-money">${money}</span>` : ''}
+
+    <div class="dl-sec">जिले (${group.length}) — सदस्यता</div>
+    <div class="dl-dists">${districts.map(x => '<span class="dl-dist">' + x + '</span>').join('')}</div>
+
+    <div class="dl-sec">कहां दिख रहे हैं</div>
+    <div class="dl-pages">${pagesHtml}</div>
+
+    <div class="by-callbar">
+      <span style="font-size:10.5px;color:var(--muted);align-self:center;">कॉल के बाद:</span>
+      ${Object.keys(BY_CALL).map(k =>
+        `<button class="by-cbtn" onclick="logCall('${slug}','${k}')">${BY_CALL[k]}</button>`
+      ).join('')}
     </div>
   </div>`;
 }
+
+/* Account-wide versions of the row actions. A shop with three districts is one
+   shop: hiding it has to hide all three, or it stays half-visible — which is
+   exactly the kind of half-true state this redesign exists to remove.
+   Slugs travel as a pipe-joined string because they go through an inline
+   onclick attribute. */
+async function setAccountActive(slugs, on) {
+  const list = slugs.split('|');
+  // Hiding is reversible, but it takes a PAYING dealer off every page at once.
+  // Worth a deliberate click; switching one back on is not.
+  if (!on) {
+    const ok = await kmConfirm({
+      icon: '🙈',
+      title: 'किसानों को दिखना बंद करें?',
+      text: `इस दुकान की <b>${list.length}</b> जिले की लिस्टिंग तुरंत छिप जाएगी।
+             भुगतान चालू हो तब भी किसान इन्हें नहीं देखेंगे।
+             <br><br>मिटेगा कुछ नहीं — जब चाहें दोबारा चालू कर सकते हैं।`,
+      yes: 'हां, छुपाएं',
+    });
+    if (!ok) return;
+  }
+  for (const s of list) await byPatch(s, { active: on, verified: on || undefined }, null);
+  showToast(on ? 'चालू कर दिया — अब 📍 से पेज चुनें' : 'छुपा दिया');
+  loadBuyers();
+}
+
+async function deleteAccount(slugs) {
+  const list = slugs.split('|');
+  const row = (window._byRows || []).find(r => r.slug === list[0]) || {};
+  const ok = await kmConfirm({
+    icon: '🗑️',
+    title: 'पूरी दुकान मिटाएं?',
+    text: `<b>${escapeHtml(row.name || list[0])}</b> — ${list.length} जिले की लिस्टिंग,
+           प्रोडक्ट और सारी जगहें हमेशा के लिए मिट जाएंगी। <b>यह वापस नहीं आएगा।</b>
+           <br><br>सिर्फ कुछ देर के लिए हटाना है तो <b>छुपाएं</b> दबाएं — वो वापस लाया जा सकता है।`,
+    yes: 'हां, हमेशा के लिए मिटाएं',
+  });
+  if (!ok) return;
+  for (const s of list) {
+    await fetch(`${API}/admin/buyers/${encodeURIComponent(s)}`,
+                { method: 'DELETE', headers: getAuthHeader() });
+  }
+  showToast('मिटा दिया');
+  loadBuyers();
+}
+
 
 /* ══════════ EDIT A DEALER ══════════
    Correcting a row instead of deleting and retyping it. The slug is never
@@ -5981,6 +6169,28 @@ function edRenderProducts() {
   }).join('');
 }
 
+/* Shows the discount as it is typed, and says so plainly when the numbers are
+   the wrong way round — services/dealer_products.py refuses to render a pill
+   when MRP is not above the price, and silently dropping it looked like a bug. */
+function edPriceHint() {
+  const mrp = parseFloat(document.getElementById('ed-p-mrp').value || '0');
+  const price = parseFloat(document.getElementById('ed-p-price').value || '0');
+  const el = document.getElementById('ed-p-hint');
+  el.classList.remove('on', 'bad');
+  if (!price || !mrp) {
+    el.textContent = 'दोनों कीमतें भरें तो कार्ड पर "% off" दिखेगा।';
+    return;
+  }
+  if (mrp <= price) {
+    el.classList.add('bad');
+    el.textContent = 'असली कीमत (MRP) आपकी कीमत से ज्यादा होनी चाहिए — तभी छूट दिखेगी।';
+    return;
+  }
+  el.classList.add('on');
+  el.innerHTML = `कार्ड पर दिखेगा: <s>₹${mrp}</s> <b>₹${price}</b> · ` +
+    `<b>${Math.round(((mrp - price) / mrp) * 100)}% off</b>`;
+}
+
 async function addProduct() {
   if (!_edSlug) return;
   const v = id => document.getElementById(id).value.trim();
@@ -6025,7 +6235,14 @@ async function toggleProduct(id, active) {
 }
 
 async function deleteProduct(id) {
-  if (!confirm('यह प्रोडक्ट हटा दें?')) return;
+  const ok = await kmConfirm({
+    icon: '📦',
+    title: 'यह प्रोडक्ट मिटाएं?',
+    text: 'फोटो समेत हमेशा के लिए मिट जाएगा और भाव पेज से तुरंत हट जाएगा। '
+          + 'कुछ देर के लिए छिपाना हो तो <b>Hide</b> दबाएं।',
+    yes: 'हां, मिटाएं',
+  });
+  if (!ok) return;
   try {
     const r = await fetch(`${API}/admin/products/${id}`,
                           { method: 'DELETE', headers: getAuthHeader() });
@@ -6163,7 +6380,44 @@ async function renderPlacements() {
   </div>`).join('');
 }
 
+/* One styled confirm for every destructive action. Returns a promise so the
+   callers read like the native confirm() they replaced. */
+let _kcResolve = null;
+
+function kmConfirm(opts) {
+  const o = opts || {};
+  document.getElementById('kc-ic').textContent    = o.icon || '⚠️';
+  document.getElementById('kc-title').textContent = o.title || 'पक्का?';
+  document.getElementById('kc-text').innerHTML    = o.text || '';
+  document.getElementById('kc-yes').textContent   = o.yes || 'हां, हटाएं';
+  document.getElementById('kc-no').textContent    = o.no || 'नहीं, रहने दें';
+  document.getElementById('km-confirm').hidden = false;
+  // Focus the SAFE button: a stray Enter should cancel, never destroy.
+  setTimeout(() => document.getElementById('kc-no').focus(), 30);
+  return new Promise(res => { _kcResolve = res; });
+}
+
+function kmConfirmDone(ok) {
+  document.getElementById('km-confirm').hidden = true;
+  if (_kcResolve) { _kcResolve(ok); _kcResolve = null; }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('km-confirm').hidden) kmConfirmDone(false);
+});
+
 async function removePlacement(id) {
+  const p = (window._byRows || [])
+    .flatMap(r => r.placements || []).find(x => x.id === id) || {};
+  const ok = await kmConfirm({
+    icon: '📍',
+    title: 'इस पेज से हटाएं?',
+    text: `<b>${escapeHtml(p.url || 'यह पेज')}</b> पर यह दुकान अभी जगह #${p.rank || '—'}
+           पर है। हटाते ही किसानों को इस पेज पर दिखना बंद हो जाएगा — भुगतान चालू रहने पर भी।
+           <br><br>यह जगह खाली हो जाएगी और किसी और को दी जा सकेगी।`,
+    yes: 'हां, हटाएं',
+  });
+  if (!ok) return;
   try {
     const r = await fetch(`${API}/admin/placements/${id}`,
                           { method: 'DELETE', headers: getAuthHeader() });
@@ -6184,7 +6438,17 @@ async function searchPages(q) {
   box.innerHTML = '<div class="pl-hit"><span class="pl-hit-b">खोज रहे हैं…</span></div>';
   const d = await adminGet(`/admin/bhav/pages?q=${encodeURIComponent(q || '')}` +
                            `&slug=${encodeURIComponent(_plSlug)}&limit=25`);
-  const pages = (d && d.pages) || [];
+  // A failed request must NOT look like "no such page". Those are opposite
+  // answers — one means try again, the other means this crop has no page and
+  // never will — and adminGet returns null only on failure.
+  if (!d) {
+    box.innerHTML = `<div class="pl-hit"><span class="pl-hit-b">
+      <span class="pl-hit-u">खोज नहीं चल पाई</span>
+      <span class="pl-hit-m">सर्वर से जवाब नहीं आया। दोबारा टाइप करके देखें।</span>
+      </span></div>`;
+    return;
+  }
+  const pages = d.pages || [];
   if (!pages.length) {
     // The honest empty state. This is what Chauhan Traders' sugarcane looks
     // like: no page exists, so there is nothing to sell.
@@ -6197,7 +6461,8 @@ async function searchPages(q) {
   box.innerHTML = pages.map((p, i) => {
     const free = p.slots.filter(s => !s.slug).length;
     return `<div class="pl-hit" data-i="${i}" onclick="pickPage(${i})">
-      <span class="pl-kind ${p.kind}">${p.kind === 'district' ? 'जिला ₹199' : 'राज्य ₹999'}</span>
+      <span class="pl-kind ${p.kind}">${p.kind === 'district' ? 'जिला' : 'राज्य'}
+        <s>₹${p.list_price}</s> ₹${p.price}</span>
       <span class="pl-hit-b">
         <span class="pl-hit-u">${escapeHtml(p.url)}</span>
         <span class="pl-hit-m">${escapeHtml(p.crop_hi || p.crop)} ·

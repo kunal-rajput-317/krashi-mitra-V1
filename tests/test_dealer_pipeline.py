@@ -1354,6 +1354,42 @@ class TestAdminSurface:
         assert r.status_code == 400
         assert "not a page that exists" in r.text
 
+    # ── the page search ──
+    # It is the only way into the placement box, so a query that finds nothing
+    # is indistinguishable from "this crop has no page" — the one answer the
+    # box exists to give correctly.
+
+    def _search(self, client, q):
+        r = client.get(f"/admin/bhav/pages?q={q}", auth=ADMIN)
+        assert r.status_code == 200, r.text
+        return [p["url"] for p in r.json()["pages"]]
+
+    @pytest.mark.parametrize("q", [
+        "wheat",                              # the crop slug
+        "hardoi",                             # the district
+        "Hardoi",                             # ...and case does not matter
+        "/bhav/wheat",                        # a pasted URL — what a person types
+        "/bhav/wheat/up/hardoi",              # a pasted URL, in full
+        "wheat hardoi",                       # two words, both must match
+        "गेहूं",                                # the Hindi crop name
+    ])
+    def test_search_finds_a_real_page(self, clean, client, monkeypatch, q):
+        self._index(monkeypatch)
+        assert "/bhav/wheat/up/hardoi" in self._search(client, q), q
+
+    def test_search_narrows_rather_than_widens(self, clean, client, monkeypatch):
+        """Every token has to match. "wheat sitapur" must not fall back to
+        every wheat page — a wrong page sold is worse than no result."""
+        self._index(monkeypatch)
+        assert self._search(client, "wheat sitapur") == []
+
+    def test_search_says_nothing_for_a_crop_with_no_page(self, clean, client,
+                                                          monkeypatch):
+        """Chauhan Traders' real case, and the reason the box searches the live
+        index instead of letting anyone type a URL."""
+        self._index(monkeypatch)
+        assert self._search(client, "sugarcane") == []
+
     def test_clearing_a_slot_over_http(self, clean, dealer_user, client, monkeypatch):
         self._index(monkeypatch)
         user, headers = dealer_user
