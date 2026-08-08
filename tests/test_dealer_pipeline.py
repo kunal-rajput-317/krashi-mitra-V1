@@ -1,8 +1,9 @@
 """The dealer pipeline: paid signup → admin queue → live on the state page.
 
 /dukanlisting replaced the free anonymous /dukan/signup entirely: a dealer now
-logs in, picks several districts, and pays a monthly subscription (₹199 for the
-first district, +₹50 each after). Four properties carry the weight here.
+logs in, picks several districts, and pays a per-season subscription (see
+services/placements.py::PRICE for the rate card, and SEASON_MONTHS for why a
+season and not a month). Four properties carry the weight here.
 
 **The trust rule is structural.** data/buyers.json states it in prose — a blue
 tick is a claim we make to a farmer about a stranger's phone number, so it costs
@@ -237,8 +238,9 @@ class TestMultiDistrict:
         _user, headers = dealer_user
         _listings(client, headers, districts=self.THREE)
         data = client.get("/dukanlisting/mine", headers=headers).json()["data"]
+        from backend.services import placements
         assert data["district_count"] == 3
-        assert data["price"] == 299          # 199 + 2 x 50
+        assert data["price"] == placements.quote(3, data["crop_count"])
         assert {l["district"] for l in data["listings"]} == {"Hardoi", "Sitapur", "Unnao"}
 
     def test_dealer_can_drop_one_of_his_own_districts(self, clean, dealer_user, client):
@@ -260,23 +262,37 @@ class TestMultiDistrict:
 
 
 class TestPricing:
-    """₹199 for the first district, +₹50 for each additional one. One formula,
-    quoted by both the signup form and the admin collect modal."""
+    """Metered: ₹199 per district + ₹50 per crop page, per season. One formula,
+    quoted by the signup form and the admin collect modal alike.
 
-    @pytest.mark.parametrize("n, expected", [
-        (1, 199), (2, 249), (3, 299), (5, 399), (10, 649),
-        (0, 199),   # never below the floor — a 0-district account cannot exist
+    The numbers come from placements rather than being typed in. An earlier
+    version hardcoded them and every case broke on the first reprice, which
+    taught nothing: what is worth pinning is that the two surfaces agree and
+    that the shape of the formula is right, not what the rate card said the day
+    it was written.
+    """
+
+    @pytest.mark.parametrize("districts, crops", [
+        (1, 0), (1, 1), (1, 5), (2, 5), (3, 12), (1, 61),
     ])
-    def test_quote(self, n, expected):
-        assert dealers.quote(n) == expected
+    def test_quote_is_districts_plus_crops(self, districts, crops):
+        from backend.services import placements
+        assert dealers.quote(districts, crops) == (
+            placements.PRICE_DISTRICT * districts + placements.PRICE_CROP * crops)
 
-    def test_account_price_follows_the_district_count(self, clean, dealer_user, client):
+    def test_quote_never_falls_below_one_district(self):
+        """A 0-district account cannot exist; it must not quote ₹0 if one does."""
+        from backend.services import placements
+        assert dealers.quote(0, 0) == placements.PRICE_DISTRICT
+
+    def test_account_price_counts_districts_and_crops(self, clean, dealer_user, client):
+        from backend.services import placements
         user, headers = dealer_user
-        _listings(client, headers, districts=[
+        _listings(client, headers, plan_crops=["wheat", "potato"], districts=[
             {"state": "Uttar Pradesh", "district": "Hardoi"},
             {"state": "Uttar Pradesh", "district": "Sitapur"},
         ])
-        assert dealers.account_price(clean, user.id) == 249
+        assert dealers.account_price(clean, user.id) == placements.quote(2, 2)
 
 
 class TestPaymentAndVerificationAreSeparateGates:
@@ -365,8 +381,8 @@ class TestPlacementSlots:
     """Which shops appear on a page, and in which of its three slots.
 
     Placement is not eligibility. Paying makes a dealer ELIGIBLE; being shown
-    is a separate decision the owner makes per page, at a separate price:
-    ₹199/month for a district page, ₹999/month for a state page. Every test
+    is a separate decision the owner makes per pattern, at a separate price —
+    see services/placements.py::TIERS for the five of them. Every test
     here is about that second decision.
     """
 
@@ -398,7 +414,7 @@ class TestPlacementSlots:
         assert self._names() == ["Sharma Traders"]
 
     def test_state_and_district_pages_are_separate_inventory(self, clean):
-        """The ₹999 and the ₹199 product. The old single bhav_rank column could
+        """Two separate products. The old single bhav_rank column could
         not express both at once — this is the reason for the table."""
         a = self._live_dealer(clean, "Sharma Traders", "Hardoi", owner_user_id=1)
         b = self._live_dealer(clean, "Verma Aadhat", "Hardoi", owner_user_id=2)
@@ -541,14 +557,41 @@ class TestPrivateNoteNeverReachesAFarmer:
         assert "नकद भुगतान" in client.get("/bhav/wheat/up/hardoi/kharidar").text
 
     def test_signup_can_set_its_description_but_not_its_note(self, clean, dealer_user, client):
-        """A dealer writes his own blurb; he cannot write into the call log."""
+        """A dealer writes his own blurb; he cannot write into the call log.
+
+        `note` is no longer empty after a signup — the route stamps the
+        requested plan into it so whoever rings him knows what to quote. That
+        is US writing, and the distinction is the whole property: assert that
+        NOTHING the dealer typed survives into the field, rather than that the
+        field is blank, which would pass just as well if we stopped writing it.
+        """
         _user, headers = dealer_user
-        _listings(client, headers, description="मैं गेहूं खरीदता हूं",
-                  note="मुझे मुफ्त लिस्टिंग दो")
+        mine = "मुझे मुफ्त लिस्टिंग दो"
+        _listings(client, headers, description="मैं गेहूं खरीदता हूं", note=mine)
         row = clean.query(dealers.Buyer).filter(
             dealers.Buyer.name == "Sharma Traders").one()
         assert row.description == "मैं गेहूं खरीदता हूं"
-        assert row.note is None, "a dealer wrote into the private call log"
+        assert mine not in (row.note or ""), "a dealer wrote into the private call log"
+        assert (row.note or "").startswith("[प्लान]"),             "the call log should carry the requested plan"
+
+    def test_the_chosen_crop_never_reaches_the_call_log(self, clean, dealer_user, client):
+        """plan_crop is the one signup field a dealer picks AND an operator
+        reads. It has its own column; concatenating it into `note` would be a
+        write path from the public form into the private log by the back door.
+        """
+        _user, headers = dealer_user
+        _listings(client, headers, plan_crops=["wheat<script>alert(1)</script>"])
+        row = clean.query(dealers.Buyer).filter(
+            dealers.Buyer.name == "Sharma Traders").one()
+        assert "script" not in (row.note or "")
+        assert row.plan_crops is None, "a non-slug crop was stored verbatim"
+
+    def test_a_real_crop_slug_is_kept(self, clean, dealer_user, client):
+        _user, headers = dealer_user
+        _listings(client, headers, plan_crops=["wheat", "potato"])
+        row = clean.query(dealers.Buyer).filter(
+            dealers.Buyer.name == "Sharma Traders").one()
+        assert row.plan_crops == "wheat,potato"
 
 
 class TestCredentialsAreAdminOnly:
@@ -707,9 +750,10 @@ class TestSubscriptionLapseIsNeverSilent:
         ])
         row = dealers.for_owner(clean, user.id)[0]
         dealers.approve(clean, row.slug)
+        from backend.services import placements
         d = client.get("/dukanlisting/subscription", headers=headers).json()["data"]
         assert d["district_count"] == 3
-        assert d["price"] == 299
+        assert d["price"] == placements.quote(3, d["crop_count"])
 
     # ── the owner's half: the renewal call list ──
 
@@ -1352,7 +1396,7 @@ class TestAdminSurface:
         slug = dealers.for_owner(clean, user.id)[0].slug
         r = self._place(client, slug, crop="sugarcane")
         assert r.status_code == 400
-        assert "not a page that exists" in r.text
+        assert "covers no page that exists" in r.text
 
     # ── the page search ──
     # It is the only way into the placement box, so a query that finds nothing

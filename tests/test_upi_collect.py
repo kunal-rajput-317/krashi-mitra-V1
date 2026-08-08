@@ -442,7 +442,8 @@ class TestQuotedAmountReachesTheDealer:
 
 
 class TestSubscriptionPricingOnTheRail:
-    """A /dukanlisting account owes ₹199 + ₹50 per extra district, not the flat
+    """A /dukanlisting account owes its tier price + an add-on per extra
+    district (services/placements.py), not the flat
     KM_LISTING_FEE — the default only makes sense for a row with no account
     behind it."""
 
@@ -461,12 +462,12 @@ class TestSubscriptionPricingOnTheRail:
 
     def test_collect_prefills_the_account_price(self, upi, account, client):
         d = client.get(f"/admin/buyers/{account[0].slug}/collect", auth=ADMIN).json()
-        assert d["amount"] == 299, "3 districts is 199 + 2 x 50"
+        assert d["amount"] == dealers.quote(3)
 
     def test_bare_pay_page_quotes_the_account_price(self, upi, account, client):
         """A dealer who opens his link with no ?amount= must not be shown the
         ₹500 default that has nothing to do with his subscription."""
-        assert self._page_amount(client, f"/pay?d={account[0].slug}") == "299"
+        assert self._page_amount(client, f"/pay?d={account[0].slug}") == str(dealers.quote(3))
 
     def test_an_explicit_amount_still_wins(self, upi, account, client):
         """A renewal or negotiated rate overrides the computed price."""
@@ -478,7 +479,7 @@ class TestSubscriptionPricingOnTheRail:
     def test_price_follows_the_district_count(self, upi, account, clean, client):
         dealers.delete(clean, account[0].slug)
         d = client.get(f"/admin/buyers/{account[1].slug}/collect", auth=ADMIN).json()
-        assert d["amount"] == 249, "2 districts is 199 + 50"
+        assert d["amount"] == dealers.quote(2)
 
 
 class TestReceipt:

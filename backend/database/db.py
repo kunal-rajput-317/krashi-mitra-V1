@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey, Index
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey, Index, select
 from sqlalchemy.orm import sessionmaker, declarative_base, deferred
 from datetime import datetime
 import os
@@ -286,14 +286,15 @@ class User(Base):
     __tablename__ = "users"
 
     id                 = Column(Integer,  primary_key=True, index=True)
-    # Mirrors `id` — kept as its own column (not just an alias) so other
-    # tables/tools can key off "user_id" the same way they do on every other
-    # table in this schema. Kept in sync automatically by a DB trigger, see
-    # _ensure_postgres_columns() — never set this by hand.
+    # The account number — its own column (not just an alias for `id`) so
+    # other tables/tools can key off "user_id" the same way they do on every
+    # other table in this schema. Kept in sync automatically by DB triggers,
+    # see _ensure_postgres_columns() — never set this by hand.
     #
-    # NULL until the account is verified: an unverified row is a signup
-    # attempt that cannot log in, so it holds no account number. The trigger
-    # fills it in the moment is_verified flips true.
+    # It is NOT unconditionally a copy of `id`. A row here on its own is only
+    # a signup attempt; the account exists once it has a user_profiles row, so
+    # that is when the number is handed out — and it is taken back if the
+    # profile row ever goes away. Rows without a profile keep user_id NULL.
     user_id            = Column(Integer,  unique=True, index=True)
     name               = Column(String,   nullable=False)
     email              = Column(String,   unique=True, nullable=False, index=True)
@@ -321,13 +322,27 @@ class UserProfile(Base):
 
     # Core
     id                   = Column(Integer,  primary_key=True, index=True)
-    # Owned by the account: deleting the user deletes the profile (see _FOREIGN_KEYS).
+    # THE ACCOUNT NUMBER, AND ALWAYS EQUAL TO `id` ABOVE.
+    #
+    # Note the FK target: users.user_id, NOT users.id. That is deliberate and
+    # it is what makes `id == user_id` hold here. users.id is a raw serial with
+    # gaps in it — every unverified signup burns one and never earns a profile
+    # — so a gapless column in THIS table can never match it. users.user_id is
+    # the gapless account number, allocated by this very row (see
+    # ensure_user_profile()), which is why the two line up and stay lined up.
+    #
+    # Consequence worth remembering: user_profiles is the ONLY child table
+    # keyed on users.user_id. orders, bazar_posts, mandi_alerts, carts and the
+    # rest all key on users.id, so joining a profile to any of them needs a hop
+    # through users — see the helper in backend/routes/profile.py.
+    #
     # UNIQUE + NOT NULL: exactly one profile row per account, and only for an
     # account whose is_verified is true — both enforced in the DB itself
     # (user_profiles_user_id_uidx + trg_profile_requires_verified_user), because
     # app-level "insert if not exists" checks had already let a duplicate through.
     user_id              = Column(Integer,
-                                  ForeignKey("users.id", ondelete="CASCADE",
+                                  ForeignKey("users.user_id", ondelete="CASCADE",
+                                             onupdate="CASCADE",
                                              name="fk_user_profiles_user_id"),
                                   nullable=False, unique=True, index=True)
 
@@ -406,6 +421,33 @@ class UserProfile(Base):
 
     created_at           = Column(DateTime, default=datetime.utcnow)
     updated_at           = Column(DateTime, default=datetime.utcnow)
+
+
+def acct(users_id):
+    """The account number for a users.id, as a SQL expression.
+
+    user_profiles is the ONE child table keyed on users.user_id (the gapless
+    account number) instead of users.id — see UserProfile.user_id for why. So
+    a users.id can never be compared to user_profiles.user_id directly; it has
+    to be translated, and this is the translation:
+
+        db.query(UserProfile).filter(UserProfile.user_id == acct(user_id))
+
+    `users_id` may be a plain int (a JWT's user_id) or a column expression
+    (MandiAlert.user_id, BazarPost.user_id, …), so the same call works for
+    scalar lookups and for joins across the sibling tables.
+
+    Returns NULL for an unverified account, which has no number yet — and a
+    comparison against NULL matches nothing, which is the correct answer: an
+    unverified account has no profile either.
+    """
+    return select(User.user_id).where(User.id == users_id).scalar_subquery()
+
+
+def accts(users_ids):
+    """Same translation for a batch — use with .in_() when fanning out over a
+    list of users.id (feed authors, alert owners)."""
+    return select(User.user_id).where(User.id.in_(users_ids))
 
 
 class ChatHistory(Base):
@@ -1046,6 +1088,25 @@ class Buyer(Base):
     # renews all of them together, and services/buyers.py::for_bhav_panel groups
     # them by state to decide who gets a state-level Tier-3 slot.
     owner_user_id = Column(Integer,  nullable=True, index=True)
+    # ── What he asked to buy ──
+    # WHICH TIER HE REQUESTED, not what he was given. A signup is a request; the
+    # placement that actually earns money is created later by the admin, on the
+    # call, in services/placements.py. This column is the bridge between the two:
+    # without it the owner picks up the phone not knowing whether he is quoting
+    # ₹499 or ₹12,999, and the /dukanlisting price readout can only ever guess.
+    #
+    # "metered" (the self-serve form) or "custom" (hand-sold single page) — see
+    # services/placements.py::PLANS. NULL on every row created before this and
+    # on every admin-typed one; those read as metered, which is what they were.
+    plan          = Column(String,   nullable=True)
+    # WHICH CROP PAGES HE IS PAYING FOR, comma-separated slugs. This is half the
+    # bill (₹50 each) and not a description of his trade — `commodities` above
+    # is what he buys and sells, this is what he bought advertising on, and the
+    # two are routinely different: a dealer who trades everything may only want
+    # to appear on wheat. Charged once per account, so every row of one account
+    # carries the same list; services/dealers.py::crops_of() is the only place
+    # that assumption is turned back into a number.
+    plan_crops    = Column(String,   nullable=True)
     # Which of the ≤3 Tier-3 bhav-panel slots this row holds for its state — 1/2/3
     # or NULL. Admin-only (see the `trusted` gate in _apply()), and deliberately
     # RETIRED, and deliberately not dropped. It held ONE rank for a whole
@@ -1500,6 +1561,13 @@ def _ensure_postgres_columns():
             ("email",         "VARCHAR"),
             ("address",       "VARCHAR"),
             ("description",   "VARCHAR"),
+            # Added 2026-08-08 with the five-tier rate card. NULL says "this row
+            # was never a plan request" honestly, which is true of every
+            # admin-typed listing and everything created before that date —
+            # defaulting them to the cheapest tier would invent a request the
+            # dealer never made and put a wrong number in front of the caller.
+            ("plan",          "VARCHAR"),
+            ("plan_crops",    "VARCHAR"),
         ],
     }
 
@@ -1604,22 +1672,36 @@ def _ensure_postgres_columns():
             ON push_subscriptions(user_id) WHERE user_id IS NOT NULL;
         """))
 
-        # ── users.user_id mirrors users.id, but only once verified ───
-        # Requested as a standalone column (not just `id` reused) so every
-        # table in this schema can be keyed off "user_id" consistently. Kept
-        # in sync automatically — no manual backfill/re-run ever needed.
+        # ── users.user_id — the account number ───────────────────
+        # THE TWO COLUMNS ARE NOT THE SAME THING, and this is the whole point:
         #
-        # An unverified row is a signup attempt, not an account: it cannot log
-        # in (auth.py rejects is_verified = false), so it gets no account
-        # number and user_id stays NULL until verification flips it true.
-        # That is why UPDATE OF lists is_verified as well as id — verification
-        # lands long after the INSERT, and the number has to appear then.
-        # Any number of unverified rows can coexist under users_user_id_uidx:
-        # Postgres treats NULLs as distinct in a unique index.
+        #   users.id       raw serial. HAS GAPS. Every signup burns one, and a
+        #                  signup that never verifies keeps its id forever
+        #                  while never becoming an account.
+        #   users.user_id  the account number. NULL until verified, then
+        #                  GAPLESS 1..N, because it is allocated by the
+        #                  user_profiles row rather than copied off `id`.
+        #
+        # That gaplessness is what lets user_profiles hold `id = user_id` — a
+        # gapless column in that table could never have matched users.id.
+        # user_profiles.user_id is therefore an FK to users.user_id; see the
+        # UserProfile model and _FOREIGN_KEYS.
+        #
+        # The unique index below is what makes users.user_id a legal FK target,
+        # so it is not optional. NULLs are distinct in a Postgres unique index,
+        # so any number of unverified signups can coexist under it.
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS users_user_id_uidx ON users(user_id);
+        """))
+        # A brand-new row never carries an account number, whatever the caller
+        # passed: the number is issued by ensure_user_profile() below, once
+        # there is a profile to issue it to. Forcing NULL here (rather than
+        # trusting the INSERT) keeps a hand-written INSERT in the Neon GUI from
+        # minting an account number that no profile backs.
         conn.execute(text("""
             CREATE OR REPLACE FUNCTION sync_users_user_id() RETURNS trigger AS $$
             BEGIN
-                NEW.user_id := CASE WHEN NEW.is_verified THEN NEW.id ELSE NULL END;
+                NEW.user_id := NULL;
                 RETURN NEW;
             END;
             $$ LANGUAGE plpgsql;
@@ -1627,19 +1709,36 @@ def _ensure_postgres_columns():
         conn.execute(text("DROP TRIGGER IF EXISTS trg_sync_users_user_id ON users;"))
         conn.execute(text("""
             CREATE TRIGGER trg_sync_users_user_id
-                BEFORE INSERT OR UPDATE OF id, is_verified ON users
+                BEFORE INSERT ON users
                 FOR EACH ROW
                 EXECUTE FUNCTION sync_users_user_id();
         """))
-        # Re-align rows that predate this rule, plus any row whose is_verified
-        # was flipped by hand in the DB GUI while the trigger still ignored it.
+        # Losing the profile row surrenders the account number. Written as
+        # "WHERE user_id = OLD.user_id" because OLD.user_id IS the account
+        # number now, not a users.id.
+        #
+        # Skipped when the account itself is going away: the FK is ON DELETE
+        # CASCADE, so a users DELETE reaches here with the parent already gone
+        # and the UPDATE would match nothing anyway.
         conn.execute(text("""
-            UPDATE users
-               SET user_id = CASE WHEN is_verified THEN id ELSE NULL END
-             WHERE user_id IS DISTINCT FROM CASE WHEN is_verified THEN id ELSE NULL END;
+            CREATE OR REPLACE FUNCTION release_user_id_with_profile() RETURNS trigger AS $$
+            BEGIN
+                UPDATE users u
+                   SET user_id = NULL
+                 WHERE u.user_id = OLD.user_id
+                   AND NOT EXISTS (SELECT 1 FROM user_profiles p
+                                    WHERE p.user_id = OLD.user_id);
+                RETURN NULL;
+            END;
+            $$ LANGUAGE plpgsql;
         """))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_sync_user_id_from_profile ON user_profiles;"))
+        conn.execute(text("DROP TRIGGER IF EXISTS trg_release_user_id_with_profile ON user_profiles;"))
         conn.execute(text("""
-            CREATE UNIQUE INDEX IF NOT EXISTS users_user_id_uidx ON users(user_id);
+            CREATE TRIGGER trg_release_user_id_with_profile
+                AFTER DELETE ON user_profiles
+                FOR EACH ROW
+                EXECUTE FUNCTION release_user_id_with_profile();
         """))
         # Fresh-start numbering: an empty users table means the next signup is
         # account #1, not #5. A Postgres sequence never rewinds on its own, so
@@ -1662,14 +1761,36 @@ def _ensure_postgres_columns():
         # GUI — or any future code path — bypassed it, leaving verified users
         # with no user_profiles row. This DB trigger closes that gap: a profile
         # is created automatically no matter HOW is_verified becomes true.
+        #
+        # It is also the ALLOCATOR for the account number. Order is forced by
+        # the FK: user_profiles.user_id references users.user_id, so the number
+        # has to land on the users row BEFORE the profile row that carries it.
+        #
+        #   1. take the next number off user_profiles' own id sequence
+        #   2. UPDATE users SET user_id = n   ← parent value now exists
+        #   3. INSERT the profile with id = n AND user_id = n
+        #
+        # Step 3 is where "id = user_id, always" comes from — one number, two
+        # columns, written in the same statement. Taking it from the sequence
+        # rather than max(id)+1 is what keeps two simultaneous verifications
+        # from claiming the same number; the compaction pass further down closes
+        # any gap a later profile deletion opens.
         conn.execute(text("""
             CREATE OR REPLACE FUNCTION ensure_user_profile() RETURNS trigger AS $$
+            DECLARE n integer;
             BEGIN
-                INSERT INTO user_profiles (user_id, name, language)
-                SELECT NEW.id, NEW.name, COALESCE(NEW.preferred_language, 'hindi')
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM user_profiles WHERE user_id = NEW.id
-                );
+                IF NEW.user_id IS NOT NULL
+                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = NEW.user_id) THEN
+                    RETURN NEW;                      -- already has both
+                END IF;
+
+                n := nextval(pg_get_serial_sequence('user_profiles', 'id'));
+
+                UPDATE users SET user_id = n WHERE id = NEW.id;
+
+                INSERT INTO user_profiles (id, user_id, name, language)
+                VALUES (n, n, NEW.name, COALESCE(NEW.preferred_language, 'hindi'));
+
                 RETURN NEW;
             END;
             $$ LANGUAGE plpgsql;
@@ -1682,14 +1803,104 @@ def _ensure_postgres_columns():
                 WHEN (NEW.is_verified)
                 EXECUTE FUNCTION ensure_user_profile();
         """))
-        # One-time backfill for accounts that were verified before this trigger
-        # existed (e.g. users 5, 6, 7, 13 verified manually in the GUI).
+        # ── ONE-TIME: user_profiles.user_id changes MEANING ──────
+        # Until now it held a users.id. It now holds the account number, and
+        # the FK moved from users.id to users.user_id with it. Every predicate
+        # below this point reads it the new way, so the data has to be
+        # converted here, before any of them run — a debris sweep that still
+        # believed the old meaning would delete every profile in the table.
+        #
+        # Self-guarding on the FK's actual target column, so it runs exactly
+        # once ever, and is skipped on a brand-new DB where create_all() already
+        # emitted the constraint pointing at users.user_id.
+        #
+        # The old FK has to go first: it still points at users.id and would
+        # reject the new values. _ensure_foreign_keys() reinstalls the correct
+        # one later in the same boot.
         conn.execute(text("""
-            INSERT INTO user_profiles (user_id, name, language)
-            SELECT u.id, u.name, COALESCE(u.preferred_language, 'hindi')
-            FROM users u
-            LEFT JOIN user_profiles p ON p.user_id = u.id
-            WHERE u.is_verified AND p.id IS NULL;
+            DO $$
+            DECLARE pcol text;
+            BEGIN
+                SELECT pa.attname INTO pcol
+                  FROM pg_constraint c
+                  JOIN pg_attribute a  ON a.attrelid  = c.conrelid  AND a.attnum  = c.conkey[1]
+                  JOIN pg_attribute pa ON pa.attrelid = c.confrelid AND pa.attnum = c.confkey[1]
+                 WHERE c.contype = 'f'
+                   AND c.conrelid  = 'user_profiles'::regclass
+                   AND c.confrelid = 'users'::regclass
+                   AND a.attname = 'user_id';
+
+                IF pcol IS DISTINCT FROM 'id' THEN
+                    RETURN;                       -- already migrated, or new DB
+                END IF;
+
+                EXECUTE 'ALTER TABLE user_profiles DROP CONSTRAINT '
+                        || quote_ident((SELECT conname FROM pg_constraint
+                                         WHERE conrelid = 'user_profiles'::regclass
+                                           AND contype = 'f'
+                                           AND confrelid = 'users'::regclass
+                                         LIMIT 1));
+
+                -- The account number each profile is about to take: gapless,
+                -- ordered by the profile row that earns it.
+                CREATE TEMP TABLE _acct ON COMMIT DROP AS
+                SELECT p.id       AS old_profile_id,
+                       p.user_id  AS owner_users_id,
+                       row_number() OVER (ORDER BY p.id) AS n
+                  FROM user_profiles p
+                 WHERE p.user_id IS NOT NULL
+                   AND EXISTS (SELECT 1 FROM users u
+                                WHERE u.id = p.user_id AND u.is_verified);
+
+                -- Clear first: users.user_id is UNIQUE, and the old values
+                -- (copies of id) overlap the new ones.
+                UPDATE users SET user_id = NULL WHERE user_id IS NOT NULL;
+                UPDATE users u SET user_id = a.n
+                  FROM _acct a WHERE u.id = a.owner_users_id;
+
+                -- Two passes, offset out of the way, so a row never collides
+                -- with an id the renumbering has not moved yet.
+                UPDATE user_profiles SET id = id + 1000000;
+                UPDATE user_profiles p
+                   SET id = a.n, user_id = a.n
+                  FROM _acct a
+                 WHERE p.id = a.old_profile_id + 1000000;
+
+                -- Anything left in the 1000000+ range had no verified owner:
+                -- debris the sweep below would have deleted anyway.
+                DELETE FROM user_profiles WHERE id > 1000000;
+
+                PERFORM setval(pg_get_serial_sequence('user_profiles', 'id'),
+                               GREATEST((SELECT count(*) FROM user_profiles), 1),
+                               (SELECT count(*) FROM user_profiles) > 0);
+
+                RAISE NOTICE 'user_profiles.user_id migrated to account numbers (% rows)',
+                             (SELECT count(*) FROM user_profiles);
+            END $$;
+        """))
+
+        # Backfill for accounts verified before the trigger existed. Goes
+        # through the users table so the allocator above issues the number —
+        # a direct INSERT here could not know what account number to use.
+        conn.execute(text("""
+            DO $$
+            DECLARE u record; n integer;
+            BEGIN
+                FOR u IN
+                    SELECT us.id, us.name, us.preferred_language
+                      FROM users us
+                     WHERE us.is_verified
+                       AND (us.user_id IS NULL
+                            OR NOT EXISTS (SELECT 1 FROM user_profiles p
+                                            WHERE p.user_id = us.user_id))
+                     ORDER BY us.id
+                LOOP
+                    n := nextval(pg_get_serial_sequence('user_profiles', 'id'));
+                    UPDATE users SET user_id = n WHERE id = u.id;
+                    INSERT INTO user_profiles (id, user_id, name, language)
+                    VALUES (n, n, u.name, COALESCE(u.preferred_language, 'hindi'));
+                END LOOP;
+            END $$;
         """))
 
         # ── EXACTLY ONE profile row, and only for a VERIFIED account ──
@@ -1711,7 +1922,7 @@ def _ensure_postgres_columns():
              WHERE p.user_id IS NULL
                 OR NOT EXISTS (
                     SELECT 1 FROM users u
-                     WHERE u.id = p.user_id AND u.is_verified
+                     WHERE u.user_id = p.user_id AND u.is_verified
                 );
         """))
 
@@ -1789,11 +2000,20 @@ def _ensure_postgres_columns():
                         'user_profiles.user_id cannot be NULL — a profile must belong to an account';
                 END IF;
                 IF NOT EXISTS (
-                    SELECT 1 FROM users u WHERE u.id = NEW.user_id AND u.is_verified
+                    SELECT 1 FROM users u WHERE u.user_id = NEW.user_id AND u.is_verified
                 ) THEN
                     RAISE EXCEPTION
-                        'users.id % is not verified — user_profiles rows exist only for verified accounts',
+                        'account number % has no verified users row — user_profiles rows exist only for verified accounts',
                         NEW.user_id;
+                END IF;
+                -- INSERT only. The compaction pass drives its renumber from
+                -- users.user_id and lets ON UPDATE CASCADE carry it down here,
+                -- which unavoidably lands user_id before id catches up; that
+                -- transient mismatch is repaired two statements later.
+                IF TG_OP = 'INSERT' AND NEW.id <> NEW.user_id THEN
+                    RAISE EXCEPTION
+                        'user_profiles.id (%) must equal user_id (%) — the account number is one number in two columns',
+                        NEW.id, NEW.user_id;
                 END IF;
 
                 IF TG_OP = 'INSERT'
@@ -1824,10 +2044,11 @@ def _ensure_postgres_columns():
             CREATE OR REPLACE FUNCTION block_unverify_with_profile() RETURNS trigger AS $$
             BEGIN
                 IF OLD.is_verified AND NOT NEW.is_verified
-                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = OLD.id) THEN
+                   AND OLD.user_id IS NOT NULL
+                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = OLD.user_id) THEN
                     RAISE EXCEPTION
-                        'users.id % has a user_profiles row — delete that row (or the account) before un-verifying',
-                        OLD.id;
+                        'users.id % (account no. %) has a user_profiles row — delete that row (or the account) before un-verifying',
+                        OLD.id, OLD.user_id;
                 END IF;
                 RETURN NEW;
             END;
@@ -1841,29 +2062,44 @@ def _ensure_postgres_columns():
                 EXECUTE FUNCTION block_unverify_with_profile();
         """))
 
-        # 6. Keep the serial readable: ids ran 3, 4 because two orphan rows were
-        #    deleted long ago and a Postgres sequence never rewinds. Renumber to
-        #    1..N whenever a gap shows up and re-point the sequence at N+1.
-        #    Safe to do on live rows: nothing in the schema or the app keys off
-        #    user_profiles.id — every consumer looks the row up by user_id.
-        #    Two passes because a single renumbering UPDATE can transiently
-        #    collide with an id it has not moved yet.
+        # 6. NO GAPS. This is what makes the account number an account number
+        #    rather than a second copy of users.id — deleting a profile leaves
+        #    a hole in the run, and this closes it so the column stays 1..N.
+        #
+        #    Direction matters. users.user_id is the FK PARENT now, so the
+        #    renumber is driven from there and ON UPDATE CASCADE drags
+        #    user_profiles.user_id along; only then is user_profiles.id pulled
+        #    back into line with it. Doing it child-first would hit the FK.
+        #
+        #    Two passes, offset out of the way, because a single renumbering
+        #    UPDATE can transiently collide with a number it has not moved yet.
         conn.execute(text("""
             DO $$
             DECLARE n bigint;
             BEGIN
                 SELECT count(*) INTO n FROM user_profiles;
                 IF n > 0
-                   AND (SELECT max(id) FROM user_profiles) <> n
-                   AND (SELECT max(id) FROM user_profiles) < 1000000 THEN
-                    UPDATE user_profiles SET id = id + 1000000;
-                    UPDATE user_profiles p
-                       SET id = s.rn
-                      FROM (SELECT id, row_number() OVER (ORDER BY id) AS rn
-                              FROM user_profiles) s
-                     WHERE p.id = s.id;
-                    RAISE NOTICE 'user_profiles ids compacted to 1..%', n;
+                   AND (SELECT max(user_id) FROM user_profiles) <> n
+                   AND (SELECT max(user_id) FROM user_profiles) < 1000000 THEN
+
+                    UPDATE users SET user_id = user_id + 1000000
+                     WHERE user_id IS NOT NULL;
+                    UPDATE users u
+                       SET user_id = s.rn
+                      FROM (SELECT user_id, row_number() OVER (ORDER BY user_id) AS rn
+                              FROM users WHERE user_id IS NOT NULL) s
+                     WHERE u.user_id = s.user_id;
+
+                    RAISE NOTICE 'account numbers compacted to 1..%', n;
                 END IF;
+
+                -- id follows user_id, always. Same offset dance.
+                IF EXISTS (SELECT 1 FROM user_profiles WHERE id <> user_id) THEN
+                    UPDATE user_profiles SET id = id + 1000000;
+                    UPDATE user_profiles SET id = user_id;
+                    RAISE NOTICE 'user_profiles.id realigned to user_id';
+                END IF;
+
                 PERFORM setval(pg_get_serial_sequence('user_profiles', 'id'),
                                GREATEST(n, 1), n > 0);
             END $$;
@@ -1884,7 +2120,7 @@ def _ensure_postgres_columns():
                     UPDATE user_profiles p
                     SET avatar_url = u.avatar_url
                     FROM users u
-                    WHERE p.user_id = u.id
+                    WHERE p.user_id = u.user_id
                       AND (p.avatar_url IS NULL OR p.avatar_url = '')
                       AND u.avatar_url IS NOT NULL AND u.avatar_url <> '';
 
@@ -1988,7 +2224,7 @@ def _ensure_users_column_order():
         conn.execute(text("CREATE UNIQUE INDEX users_user_id_uidx ON users(user_id)"))
         conn.execute(text("""
             CREATE TRIGGER trg_sync_users_user_id
-                BEFORE INSERT OR UPDATE OF id ON users
+                BEFORE INSERT ON users
                 FOR EACH ROW
                 EXECUTE FUNCTION sync_users_user_id()
         """))
@@ -2003,7 +2239,8 @@ def _ensure_users_column_order():
 
 
 # ── REFERENTIAL INTEGRITY ────────────────────────────────────
-# (child_table, child_column, parent_table, parent_column, ON DELETE rule)
+# (child_table, child_column, parent_table, parent_column, ON DELETE rule
+#  [, ON UPDATE rule — defaults to NO ACTION])
 #
 # Every one of these columns is documented as "users.id" / "push_subscriptions.id"
 # in the models above, but until now not one of them was actually declared as a
@@ -2024,7 +2261,11 @@ def _ensure_users_column_order():
 # Order matters: a parent is cleaned before the children that hang off it, so a
 # bazar_post removed with its owner takes its likes and comments with it.
 _FOREIGN_KEYS = [
-    ("user_profiles",      "user_id",         "users",              "id", "CASCADE"),
+    # The odd one out, deliberately: this points at users.user_id (the gapless
+    # account number), not users.id. See UserProfile.user_id for why. ON UPDATE
+    # CASCADE because the compaction pass renumbers account numbers to close
+    # gaps, and the profile row has to follow its account.
+    ("user_profiles",      "user_id",         "users",         "user_id", "CASCADE", "CASCADE"),
     ("crop_calendar",      "user_id",         "users",              "id", "CASCADE"),
     ("carts",              "user_id",         "users",              "id", "CASCADE"),
     ("chat_history",       "user_id",         "users",              "id", "SET NULL"),
@@ -2146,29 +2387,45 @@ def _ensure_foreign_keys():
     if engine.dialect.name != "postgresql":
         return
 
-    for child, col, parent, pcol, on_delete in _FOREIGN_KEYS:
+    for fk in _FOREIGN_KEYS:
+        child, col, parent, pcol, on_delete = fk[:5]
+        on_update = fk[5] if len(fk) > 5 else "NO ACTION"
         name = f"fk_{child}_{col}"
         try:
             with engine.begin() as conn:
                 if not (_has_column(conn, child, col) and _has_column(conn, parent, pcol)):
                     continue
-                # Matched by (child column → parent table), not by name: on a
-                # brand-new DB create_all() has already emitted the constraint
-                # from the model, and Postgres would happily accept a second,
-                # identical one under a different name.
-                exists = conn.execute(text("""
-                    SELECT 1
+                # Matched by (child column → parent table → parent COLUMN), not
+                # by name: on a brand-new DB create_all() has already emitted the
+                # constraint from the model, and Postgres would happily accept a
+                # second, identical one under a different name.
+                #
+                # The parent column is part of the match because retargeting one
+                # is a real migration — user_profiles.user_id moved from
+                # users.id to users.user_id — and a table-only match would see
+                # the stale constraint, call it "already there", and leave the
+                # schema silently one release behind forever.
+                current = conn.execute(text("""
+                    SELECT c.conname, pa.attname
                     FROM pg_constraint c
                     JOIN pg_attribute a
                       ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+                    JOIN pg_attribute pa
+                      ON pa.attrelid = c.confrelid AND pa.attnum = c.confkey[1]
                     WHERE c.contype  = 'f'
                       AND c.conrelid  = to_regclass('public.' || :child)
                       AND c.confrelid = to_regclass('public.' || :parent)
                       AND array_length(c.conkey, 1) = 1
                       AND a.attname   = :col
-                """), {"child": child, "parent": parent, "col": col}).scalar()
-                if exists:
+                """), {"child": child, "parent": parent, "col": col}).fetchone()
+                if current and current[1] == pcol:
                     continue
+                if current:
+                    conn.execute(text(
+                        f'ALTER TABLE "{child}" DROP CONSTRAINT "{current[0]}"'
+                    ))
+                    log.info(f"🔁 {child}.{col}: retargeting {parent}.{current[1]} "
+                             f"→ {parent}.{pcol}")
 
                 orphan_filter = (
                     f'WHERE c."{col}" IS NOT NULL '
@@ -2191,9 +2448,10 @@ def _ensure_foreign_keys():
                 conn.execute(text(
                     f'ALTER TABLE "{child}" ADD CONSTRAINT "{name}" '
                     f'FOREIGN KEY ("{col}") REFERENCES "{parent}"("{pcol}") '
-                    f'ON DELETE {on_delete}'
+                    f'ON DELETE {on_delete} ON UPDATE {on_update}'
                 ))
-                log.info(f"🔗 {name} → {parent}.{pcol} ON DELETE {on_delete}")
+                log.info(f"🔗 {name} → {parent}.{pcol} "
+                         f"ON DELETE {on_delete} ON UPDATE {on_update}")
         except Exception as e:
             log.warning(f"⚠️  Foreign key {name} skipped: {e}")
 

@@ -30,7 +30,7 @@
   <link rel="icon" type="image/png" href="https://krashimitra.in/assets/krashimitra_logo.png">
   <meta name="theme-color" content="#1a3c2e">
 
-  <meta name="description" content="अपने प्रोडक्ट मंडी भाव पेज पर लिस्ट करें — नाम, कीमत, MRP और छूट के साथ। शुरुआती ऑफर: ₹599 की जगह ₹199/महीना। किसान सीधे आपको कॉल करते हैं।">
+  <meta name="description" content="अपने प्रोडक्ट मंडी भाव पेज पर लिस्ट करें — नाम, कीमत, MRP और छूट के साथ। शुरुआती ऑफर: ₹199 (जिला) + ₹50 प्रति फसल पेज — प्रति सीज़न। किसान सीधे आपको कॉल करते हैं।">
   <meta name="keywords" content="अनाज व्यापारी लिस्टिंग, आढ़तिया, खाद बीज डीलर, FPO, मंडी व्यापारी, अपनी दुकान लिस्ट करें, dukan product subscription, krashimitra dealer listing">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
   <link rel="canonical" href="https://krashimitra.in/dukanlisting">
@@ -43,7 +43,7 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="hi_IN">
   <meta property="og:title" content="अपनी दुकान लिस्ट करें | कृषि मित्र">
-  <meta property="og:description" content="अपने प्रोडक्ट मंडी भाव पेज पर दिखाएं — कीमत, MRP और छूट के साथ। शुरुआती ऑफर: ₹599 की जगह ₹199/महीना।">
+  <meta property="og:description" content="अपने प्रोडक्ट मंडी भाव पेज पर दिखाएं — कीमत, MRP और छूट के साथ। शुरुआती ऑफर: ₹199 (जिला) + ₹50 प्रति फसल पेज — प्रति सीज़न।">
   <meta property="og:url" content="https://krashimitra.in/dukanlisting">
   <meta property="og:site_name" content="KrashiMitra — किसान का डिजिटल साथी">
   <meta property="og:image" content="https://krashimitra.in/images/og-banner.jpg">
@@ -52,7 +52,7 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="अपनी दुकान लिस्ट करें | कृषि मित्र">
-  <meta name="twitter:description" content="लॉगिन करें, जिले चुनें — शुरुआती ऑफर ₹599 की जगह ₹199/महीना।">
+  <meta name="twitter:description" content="लॉगिन करें, जिले चुनें — शुरुआती ऑफर: ₹199 (जिला) + ₹50 प्रति फसल पेज — प्रति सीज़न।">
   <meta name="twitter:image" content="https://krashimitra.in/images/og-banner.jpg">
 
   <script type="application/ld+json">
@@ -85,7 +85,7 @@
           {
             "@type": "Question",
             "name": "लिस्टिंग का कितना पैसा लगता है?",
-            "acceptedAnswer": { "@type": "Answer", "text": "शुरुआती ऑफर: जिले के पेज पर ₹599 की जगह ₹199/महीना (हर अतिरिक्त जिला +₹50), और राज्य वाले पेज पर ₹1999 की जगह ₹999/महीना (हर अतिरिक्त राज्य +₹999)। ऑफर खत्म होने पर नई लिस्टिंग की कीमत ₹599 और ₹1999 होगी — जो दुकानदार अभी जुड़ेंगे, उनकी कीमत नहीं बढ़ेगी। भुगतान UPI से होता है और हमारी टीम कॉल पर लिंक भेजती है — कोई ऑटो-डेबिट नहीं।" }
+            "acceptedAnswer": { "@type": "Answer", "text": "शुरुआती ऑफर — सब कीमतें एक सीज़न = 3 महीने की हैं। कीमत आप खुद बनाते हैं: हर जिला ₹599 ₹199 + हर फसल का पेज ₹150 ₹50। जैसे 1 जिला + 5 फसल = ₹449/सीज़न। फसलें एक बार ही गिनी जाती हैं, चाहे आप कितने भी जिले लें। कोई पैकेज या सीमा नहीं — जितने पेज, उतना पैसा। किसी एक बड़े पेज पर जगह चाहिए तो कस्टम प्लान ₹4,999/सीज़न से। एक साथ पूरे साल का लें तो 4 सीज़न, पैसे 3 के। भुगतान UPI से होता है और हमारी टीम कॉल पर लिंक भेजती है — कोई ऑटो-डेबिट नहीं।" }
           },
           {
             "@type": "Question",
@@ -178,8 +178,106 @@
   .dp-plan-p s { font-size:14px; color:#9aa6a0; margin-right:6px; }
   .dp-plan-p b { font-size:30px; font-weight:800; color:var(--dk-dark); letter-spacing:-.5px; }
   .dp-plan-p small { font-size:12px; font-weight:600; color:var(--dk-mut); }
+  /* The custom card leads with a word rather than a figure. The -.5px tracking
+     the price numerals use looks cramped on caps, so it is reset here, and the
+     "from" line drops below instead of sitting inline — a small number tucked
+     beside a big word reads as part of it. */
+  .dp-plan-p .dp-plan-word { letter-spacing:.6px; font-size:27px; }
+  .dp-plan-p .dp-plan-from { display:block; margin-top:3px; }
   .dp-plan-d { font-size:12px; line-height:1.55; color:var(--dk-mut); }
   .dp-plan-go { font-size:13px; font-weight:800; color:var(--dk-green); margin-top:3px; }
+  /* The <a> variant of a plan card (the wide tiers, which open WhatsApp rather
+     than the form) has to be told to look like the <button> ones. */
+  a.dp-plan { text-decoration:none; }
+
+  /* The metered rate, as two lines and a plus rather than a table — it is an
+     equation, and it should read like one. */
+  /* Stacked by default. A wrapping flex ROW put the "+" at the top-right of the
+     first rate instead of between the two, so the thing that reads as an
+     equation on a wide screen read as a stray plus sign on a 390px phone —
+     which is the screen 98% of these dealers are on. Column first, and the
+     side-by-side equation only where there is genuinely room for it. */
+  .dp-meter {
+    display:flex; flex-direction:column; gap:6px;
+    background:#f6fbf8; border:1px solid var(--dk-line); border-radius:12px; padding:12px 14px;
+  }
+  .dp-meter-row {
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px; min-width:0;
+  }
+  .dp-meter-k { font-size:12.5px; color:var(--dk-mut); font-weight:600; }
+  .dp-meter-v { font-size:15px; white-space:nowrap; }
+  .dp-meter-v s { color:#9aa6a0; font-size:12.5px; margin-right:5px; }
+  .dp-meter-v b { font-size:22px; font-weight:800; color:var(--dk-dark); }
+  .dp-meter-plus {
+    font-size:17px; font-weight:800; color:var(--dk-mut); line-height:1;
+    text-align:center; padding:1px 0; border-top:1px dashed var(--dk-line);
+    padding-top:7px;
+  }
+  @media (min-width:560px) {
+    .dp-meter { flex-direction:row; align-items:center; gap:14px; }
+    .dp-meter-row { flex-direction:column; align-items:flex-start; justify-content:center;
+                    gap:2px; flex:1 1 0; }
+    .dp-meter-plus { flex:0 0 auto; border-top:0; padding-top:1px; }
+  }
+
+  /* The paid crop picker. Capped in height and scrolled on purpose: a district
+     can carry sixty crops, and an un-capped list buries the price box and the
+     submit button under a wall of checkboxes on a 390px screen. */
+  .dp-cropscroll {
+    max-height:280px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    border:1px solid var(--dk-line); border-radius:10px; padding:6px;
+  }
+  .dp-croplist { display:flex; flex-direction:column; gap:2px; }
+  /* `.dk-f label` above sets display:block at specificity (0,1,1) and these
+     rows ARE labels inside a .dk-f — so each rule here has to match that or the
+     row collapses into a stacked checkbox with the crop name jammed against its
+     own impression count. Scoped through .dp-croplist rather than bumped with
+     !important, which would only move the fight somewhere less obvious. */
+  .dp-croplist .dp-cropitem {
+    display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px;
+    cursor:pointer; transition:background .12s; margin:0; font-weight:400;
+  }
+  .dp-croplist .dp-cropitem:hover { background:#f6fbf8; }
+  .dp-croplist .dp-cropitem.on { background:#eaf6ef; }
+  .dp-croplist .dp-cropitem input {
+    width:18px; height:18px; flex:0 0 auto; margin:0; accent-color:var(--dk-green);
+  }
+  .dp-croplist .dp-cropname {
+    flex:1 1 auto; font-size:13.5px; font-weight:600; min-width:0;
+    color:var(--dk-dark); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  /* The number is the whole point of this control, so it is never allowed to
+     wrap or truncate away. */
+  .dp-croplist .dp-cropimp { font-size:11.5px; font-weight:700; white-space:nowrap; flex:0 0 auto; }
+  .dp-croplist .dp-cropimp.good { color:var(--dk-green); }
+  .dp-croplist .dp-cropimp.zero { color:#b08a2e; }
+  .dp-croplist .dp-cropimp.none { color:var(--dk-mut); font-weight:600; }
+
+  .dp-rates { margin-top:14px; }
+  .dp-rates > summary {
+    cursor:pointer; font-size:13px; font-weight:700; color:var(--dk-green);
+    padding:8px 2px; list-style:none;
+  }
+  .dp-rates > summary::-webkit-details-marker { display:none; }
+  .dp-rates > summary::before { content:"▸ "; }
+  .dp-rates[open] > summary::before { content:"▾ "; }
+  /* The rate card is five rows of three columns and must never widen the page
+     on a 390px phone — it scrolls inside its own box instead. */
+  .dp-rate-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  /* No min-width: with the price stacked (below) the table fits a 300px card
+     unaided, and a min-width only reintroduced the scroll it was meant to
+     rescue. The overflow-x wrapper stays as the guard for long crop names. */
+  .dp-rate-tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .dp-rate-tbl th, .dp-rate-tbl td {
+    text-align:left; padding:7px 8px; border-bottom:1px solid #e8eeea; vertical-align:top;
+  }
+  .dp-rate-tbl th { font-size:11.5px; color:var(--dk-mut); font-weight:700; }
+  .dp-rate-tbl td:last-child, .dp-rate-tbl th:last-child { text-align:right; white-space:nowrap; }
+  /* The struck list price sits ABOVE the offer price, not beside it. Side by
+     side the price column needed ~95px and got pushed off the right edge of a
+     390px screen — the one column nobody should have to scroll to read. */
+  .dp-rate-tbl s { color:#9aa6a0; display:block; font-size:11px; line-height:1.3; }
+  .dp-rate-tbl .is-pick { background:#f6fbf8; font-weight:700; }
   .dp-back {
     background:none; border:none; padding:0 0 10px; font-family:inherit; cursor:pointer;
     font-size:12.5px; font-weight:700; color:var(--dk-mut);
@@ -594,35 +692,75 @@
     <button class="dp-add-more" type="button" id="dp-add-more-btn">+ और जिला जोड़ें</button>
   </section>
 
-  <!-- STEP 1 — PICK A PLAN.
-       The form used to be the first thing a logged-in dealer saw: fourteen
-       fields before he knew what it cost. Now the price is the question, and
-       the form only opens once he has answered it — which also means the form
-       can ask for exactly what that plan needs and nothing else. -->
+  <!-- STEP 1 — HOW THE PRICE WORKS.
+       There is one plan, and it is metered: a rate per district plus a rate
+       per crop page. No tiers, and deliberately no "all crops" bundle with a
+       flat ceiling — crop counts per district run 4 to 61, so any cap charges
+       a dealer with twelve pages the same as one with sixty-one. Metered all
+       the way up means two dealers with different page counts never pay the
+       same. The corollary is that nobody buys sixty-one crops, which is fine:
+       the picker shows each page's real traffic and he takes the ones worth
+       taking. -->
   <section class="dk-card" id="dp-plans" hidden>
-    <h2>पहले प्लान चुनें</h2>
-    <p class="dk-note" style="margin-bottom:14px">दोनों में आपके प्रोडक्ट कार्ड बनकर
-    दिखते हैं। फर्क सिर्फ इतना है कि <b>कितने किसान</b> देखेंगे।</p>
+    <h2>कीमत कैसे बनती है</h2>
+    <p class="dk-note" style="margin-bottom:14px">आप <b>खुद चुनते हैं</b> कि किस जिले में
+    और किन फसलों के पेज पर दिखना है — उतने का ही पैसा लगता है।
+    कीमत <b>एक सीज़न = 3 महीने</b> की है।</p>
 
-    <div class="dp-plan-grid">
-      <button class="dp-plan" type="button" onclick="choosePlan('district')">
-        <span class="dp-plan-k">अपने जिले में</span>
-        <span class="dp-plan-p"><s>₹599</s> <b>₹199</b><small>/महीना</small></span>
-        <span class="dp-plan-d">आपके जिले का भाव पेज देखने वाले किसानों को दिखेंगे।
-          हर अतिरिक्त जिला +₹50/महीना।</span>
-        <span class="dp-plan-go">यह चुनें →</span>
-      </button>
-
-      <button class="dp-plan best" type="button" onclick="choosePlan('state')">
-        <span class="dp-plan-tag">ज्यादा किसान</span>
-        <span class="dp-plan-k">राज्य के पेज पर</span>
-        <span class="dp-plan-p"><s>₹1999</s> <b>₹999</b><small>/महीना</small></span>
-        <span class="dp-plan-d">राज्य वाले एक भाव पेज पर, जहां पूरे राज्य से किसान
-          भाव देखने आते हैं। <b>जिलों के अलग-अलग पेज पर नहीं।</b>
-          हर अतिरिक्त राज्य +₹999/महीना।</span>
-        <span class="dp-plan-go">यह चुनें →</span>
-      </button>
+    <div class="dp-meter">
+      <div class="dp-meter-row">
+        <span class="dp-meter-k">हर जिला</span>
+        <span class="dp-meter-v"><s>₹599</s> <b>₹199</b></span>
+      </div>
+      <div class="dp-meter-plus">+</div>
+      <div class="dp-meter-row">
+        <span class="dp-meter-k">हर फसल का पेज</span>
+        <span class="dp-meter-v"><s>₹150</s> <b>₹50</b></span>
+      </div>
     </div>
+    <p class="dk-note" style="margin-top:10px">जैसे — <b>1 जिला + 5 फसल = ₹449/सीज़न</b>।
+    फसलें सिर्फ एक बार गिनी जाती हैं, चाहे आप कितने भी जिले लें।</p>
+
+    <!-- The reason this page can charge a flat ₹50 for pages that are not
+         worth the same: the dealer sees each page's real numbers before he
+         ticks it. Said here so it reads as a promise, not a surprise. -->
+    <p class="dk-note" style="margin-top:10px">🔍 फसल चुनते समय आपको दिखेगा कि
+    <b>पिछले महीने हर पेज कितनी बार Google पर दिखा</b> — जो पेज खाली है उसका पैसा
+    मत दीजिए।</p>
+
+    <div class="dp-plan-grid" style="margin-top:14px">
+      <button class="dp-plan best" type="button" onclick="choosePlan('metered')">
+        <span class="dp-plan-tag">दुकान के लिए</span>
+        <span class="dp-plan-k">अपना जिला + अपनी फसलें</span>
+        <span class="dp-plan-p"><b>₹249</b><small>/सीज़न से</small></span>
+        <span class="dp-plan-d">1 जिला + 1 फसल से शुरू। जितनी फसलें जोड़ेंगे,
+          उतना ही बढ़ेगा — कोई पैकेज नहीं।</span>
+        <span class="dp-plan-go">शुरू करें →</span>
+      </button>
+
+      <!-- Not a form. One page, negotiated, and only offered on pages whose
+           own numbers justify it — services/placements.py::custom_quote
+           refuses below the impression gate rather than quoting the floor. -->
+      <a class="dp-plan" href="https://wa.me/919870951001?text=%E0%A4%AE%E0%A5%81%E0%A4%9D%E0%A5%87%20%E0%A4%95%E0%A4%B8%E0%A5%8D%E0%A4%9F%E0%A4%AE%20%E0%A4%AA%E0%A5%8D%E0%A4%B2%E0%A4%BE%E0%A4%A8%20%E0%A4%9A%E0%A4%BE%E0%A4%B9%E0%A4%BF%E0%A4%8F"
+         target="_blank" rel="nofollow">
+        <span class="dp-plan-k">एक खास पेज</span>
+        <!-- The word, not the number, is the headline here. ₹4,999 is a FLOOR
+             that services/placements.py::custom_quote scales up from the page's
+             own traffic — printing it the same size as the metered plan's price
+             would read as a fixed rate and make every real quote look like an
+             upcharge. -->
+        <span class="dp-plan-p"><b class="dp-plan-word">CUSTOM</b>
+          <small class="dp-plan-from">&gt;₹4,999/सीज़न</small></span>
+        <span class="dp-plan-d">किसी एक बड़े पेज पर जगह। कीमत उस पेज के अपने
+          आंकड़ों से तय होती है — कंपनी और बड़े व्यापारियों के लिए।</span>
+        <span class="dp-plan-go">WhatsApp पर बात करें →</span>
+      </a>
+    </div>
+
+    <p class="dk-note" style="margin-top:12px">एक साथ पूरे साल का लें तो
+    <b>4 सीज़न, पैसे 3 के</b>। ऊपर कटी हुई कीमत वही है जो शुरुआती ऑफर खत्म होने के बाद
+    <b>नए</b> दुकानदार से ली जाएगी — जो अभी जुड़ेंगे उनकी कीमत नहीं बढ़ेगी।</p>
+
     <p class="dk-note" style="margin-top:12px">🎉 शुरुआती ऑफर। पैसा तभी देना है जब हम
     कॉल करके पुष्टि कर लें — अभी कुछ नहीं लगता।</p>
   </section>
@@ -688,7 +826,30 @@
           <button class="dp-add-btn" type="button" id="dp-add-district-btn">+ जोड़ें</button>
         </div>
         <div class="dp-dchips" id="dp-district-chips"></div>
-        <div class="dp-price-box is-note" id="dp-price" style="margin-top:12px"><b>नोट:</b> जिला जोड़ें तो कीमत दिखेगी</div>
+      </div>
+
+      <!-- THE PAID CROP PICKER.
+           Every crop here costs the same ₹50, but the pages behind them do not
+           perform the same — impressions per crop page run 0 to 46 across UP
+           districts. Rather than price that with a formula nobody could explain
+           on a phone call, the real number is shown next to each crop while he
+           picks. He takes the pages worth taking, the dead ones go unsold, and
+           a flat ₹50 lands fair without any arithmetic. It is also the churn
+           defence: he chose it with the figure on screen.
+
+           Distinct from "आप कौन सी फसलें खरीदते हैं?" above, which is free and
+           feeds the खरीदार directory. This one is money. -->
+      <div class="dk-f" id="dp-pagecrops-wrap" hidden>
+        <label>किन फसलों के भाव पेज पर दिखना है?
+          <span class="dk-req">*</span>
+          <span class="dk-hint">(₹50 प्रति फसल · एक बार)</span></label>
+        <p class="dk-note" id="dp-pagecrops-note" style="margin-bottom:8px"></p>
+        <div class="dp-cropscroll"><div class="dp-croplist" id="dp-pagecrops"></div></div>
+        <p class="dk-note" id="dp-pagecrops-foot" hidden></p>
+      </div>
+
+      <div class="dk-f">
+        <div class="dp-price-box is-note" id="dp-price"><b>नोट:</b> जिला जोड़ें तो कीमत दिखेगी</div>
       </div>
 
       <div class="dk-f">
@@ -722,7 +883,7 @@
   </section>
 
   <!-- WHAT YOU ACTUALLY GET.
-       A dealer is being asked for ₹199/month on the strength of a promise he
+       A dealer is being asked for a season's fee on the strength of a promise he
        cannot see from here. This renders the real card — the same fields and
        the same layout the /bhav page builds (routes/bhav.py::_product_cards) —
        so "what am I paying for" is answered by looking at it, not by reading
@@ -784,8 +945,7 @@
     <ol class="dk-steps">
       <li><b>लॉगिन करें</b> — अपने कृषि मित्र खाते से, दो मिनट का काम है।</li>
       <li><b>अपने जिले चुनें</b> — जितने जिलों में ग्राहक चाहिए, उतने जोड़ें। पहला जिला
-          <s>₹599</s> ₹199/महीना (शुरुआती ऑफर), हर अगला जिला +₹50/महीना। राज्य वाले
-          पेज पर दिखना हो तो <s>₹1999</s> ₹999/महीना।</li>
+          हर जिले के <s>₹599</s> ₹199/सीज़न। फिर चुनें कि <b>किन फसलों के पेज</b> पर दिखना है — हर फसल <s>₹150</s> ₹50। चुनते समय हर पेज के असली आंकड़े सामने होंगे।</li>
       <li><b>अपने प्रोडक्ट डालें</b> — नाम, आपकी कीमत, MRP और पैक साइज़। फोटो WhatsApp
           पर भेज दें, हमारी टीम लगा देगी।</li>
       <li><b>हम आपको कॉल करते हैं।</b> बिना बात किए कोई नंबर लाइव नहीं होता — यही वजह है
@@ -816,10 +976,7 @@
     <h2>अक्सर पूछे जाने वाले सवाल</h2>
     <details>
       <summary>लिस्टिंग का कितना पैसा लगता है?</summary>
-      <p><b>शुरुआती ऑफर:</b> जिले के पेज पर <s>₹599</s> ₹199/महीना (हर अतिरिक्त जिला +₹50),
-      और राज्य वाले पेज पर <s>₹1999</s> ₹999/महीना (हर अतिरिक्त राज्य +₹999)। ऑफर खत्म
-      होने पर नई लिस्टिंग की कीमत ₹599 और ₹1999 होगी — जो दुकानदार अभी जुड़ेंगे, उनकी कीमत
-      नहीं बढ़ेगी। भुगतान UPI से होता है और हमारी टीम कॉल पर लिंक भेजती है — कोई ऑटो-डेबिट नहीं।</p>
+      <p><b>शुरुआती ऑफर</b> — सब कीमतें <b>एक सीज़न = 3 महीने</b> की हैं। कीमत आप खुद बनाते हैं: <b>हर जिला <s>₹599</s> ₹199</b> + <b>हर फसल का पेज <s>₹150</s> ₹50</b>। जैसे 1 जिला + 5 फसल = ₹449/सीज़न। फसलें एक बार ही गिनी जाती हैं, चाहे आप कितने भी जिले लें। कोई पैकेज या सीमा नहीं — जितने पेज, उतना पैसा। किसी एक बड़े पेज पर जगह चाहिए तो कस्टम प्लान ₹4,999/सीज़न से। एक साथ पूरे साल का लें तो <b>4 सीज़न, पैसे 3 के</b>। भुगतान UPI से होता है और हमारी टीम कॉल पर लिंक भेजती है — कोई ऑटो-डेबिट नहीं।</p>
     </details>
     <details>
       <summary>लॉगिन क्यों जरूरी है?</summary>
@@ -868,8 +1025,8 @@
        The long-form version is /privacy-policy#dealer-terms (§13). -->
   <section class="dk-card dk-legal">
     <h2>⚖️ ज़रूरी बात — लिस्टिंग की शर्तें</h2>
-    <p><b>कृषि मित्र सिर्फ किसान और आपको आपस में जोड़ता है।</b> हम न सामान बेचते हैं, न खरीदते
-    हैं, न किसी सौदे में पैसा लेते-देते हैं, और न किसी सौदे के पक्षकार हैं।</p>
+    <p><b>इस लिस्टिंग में कृषि मित्र सिर्फ किसान और आपको आपस में जोड़ता है</b> — आपके और
+    किसान के बीच होने वाले सौदे में कृषि मित्र कोई पक्ष नहीं है।</p>
     <ul>
       <li><b>सौदा सीधे आपके और किसान के बीच होता है</b> — कीमत, तौल, गुणवत्ता, भुगतान और
       डिलीवरी, सब आप दोनों तय करते हैं। किसी भी लेन-देन, विवाद, नुकसान या धोखाधड़ी के लिए
@@ -975,29 +1132,6 @@
     });
     cropListEl.appendChild(label);
   });
-  allBox.addEventListener('change', function () {
-    allChip.classList.toggle('on', this.checked);
-    cropListEl.classList.toggle('dk-off', this.checked);
-    if (this.checked) {
-      cropListEl.querySelectorAll('input').forEach(function (i) {
-        i.checked = false;
-        i.closest('.dk-chip').classList.remove('on');
-      });
-    }
-  });
-
-  function setCrops(slugs) {
-    var set = {};
-    (slugs || []).forEach(function (s) { set[s] = true; });
-    var any = Object.keys(set).length > 0;
-    allBox.checked = !any;
-    allChip.classList.toggle('on', !any);
-    cropListEl.classList.toggle('dk-off', !any);
-    cropListEl.querySelectorAll('input').forEach(function (i) {
-      i.checked = !!set[i.value];
-      i.closest('.dk-chip').classList.toggle('on', !!set[i.value]);
-    });
-  }
 
   // ── District picker ──
   var selectedDistricts = [];
@@ -1034,85 +1168,165 @@
       });
     });
     updatePrice();
+    loadPageCrops();
   }
 
-  // Which product he picked on the plan cards. Everything the form asks and
-  // quotes hangs off this, so a state buyer is never shown district maths.
-  var plan = 'district';
+  // THE RATE CARD, mirrored from services/placements.py. The backend recomputes
+  // every total from its own copy and ignores whatever we send, so these are
+  // only what the dealer is SHOWN — but they must still agree, because a price
+  // he read here and a price he is quoted on the call that differ is the
+  // fastest way to lose him.
+  var RATE_DISTRICT = 199,  LIST_DISTRICT = 599;
+  var RATE_CROP     = 50,   LIST_CROP     = 150;
+  var plan = 'metered';
 
-  window.choosePlan = function (p) {
-    plan = (p === 'state') ? 'state' : 'district';
+  // Which crop PAGES he is paying for — distinct from the free "what do you
+  // trade" chips above, which feed the खरीदार directory and cost nothing.
+  var pageCrops = [];
+  var cropsWrap = document.getElementById('dp-pagecrops-wrap');
+  var cropsEl   = document.getElementById('dp-pagecrops');
+  var cropsNote = document.getElementById('dp-pagecrops-note');
+  var cropsFoot = document.getElementById('dp-pagecrops-foot');
+  var cropsSeq  = 0;      // guards against a slow response for an old district
+
+  window.choosePlan = function () {
+    plan = 'metered';
     if (!(window.KMIsLoggedIn && window.KMIsLoggedIn())) {
       try { localStorage.setItem('km_dukan_plan', plan); } catch (e) {}
       location.href = '/login.html?next=' + encodeURIComponent(location.pathname) +
                       '&do=dukan-product';
       return;
     }
-    var state = plan === 'state';
-    document.getElementById('dp-plan-line').innerHTML = state
-      ? 'चुना हुआ प्लान: <b>राज्य के पेज पर — <s>₹1999</s> ₹999/महीना</b>. ' +
-        'नीचे राज्य चुनें — उस राज्य के <b>एक</b> भाव पेज पर दिखेंगे, ' +
-        'जिलों के अलग-अलग पेज पर नहीं।'
-      : 'चुना हुआ प्लान: <b>अपने जिले में — <s>₹599</s> ₹199/महीना</b>. ' +
-        'जितने जिलों में दिखना है, सब जोड़ें (+₹50 हर अगला जिला)।';
-    // The state plan buys a STATE, so that is the question asked. The district
-    // is still needed — a listing carries the shop's own location, and the
-    // kharidar directory is keyed on it — but it is asked as an address, not as
-    // something being bought, and the "+ जोड़ें" multi-add is hidden so nobody
-    // is invited to add districts he is not buying.
-    document.getElementById('dp-dist-label').innerHTML = state
-      ? 'किस राज्य में दिखना है? <span class="dk-req">*</span>'
-      : 'आप किन जिलों में लिस्ट होना चाहते हैं? <span class="dk-req">*</span>';
-    document.getElementById('dp-state-label').textContent =
-      state ? 'राज्य (इसी के पेज पर दिखेंगे)' : 'राज्य';
-    document.getElementById('dp-district-label').textContent =
-      state ? 'आपकी दुकान किस जिले में है?' : 'जिला';
-    document.getElementById('dp-add-district-btn').hidden = state;
-    document.getElementById('dp-district-chips').hidden = state;
+    document.getElementById('dp-plan-line').innerHTML =
+      'हर जिला <b>₹' + RATE_DISTRICT + '</b> + हर फसल का पेज <b>₹' + RATE_CROP +
+      '</b> — प्रति सीज़न (3 महीने)। नीचे जिला चुनें, फिर फसलें।';
     selectedDistricts = [];
+    pageCrops = [];
     renderDistrictChips();
     only(formCardEl);
     formCardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    updatePrice();
   };
 
   window.backToPlans = function () { only(plansEl); };
 
-  function updatePrice() {
-    var n = selectedDistricts.length;
-    // innerHTML, not textContent: the struck-through list price is the whole
-    // point of the line.
-    priceEl.classList.toggle('is-note', !n);
-    if (!n) {
-      priceEl.innerHTML = plan === 'state'
-        ? '<b>नोट:</b> राज्य और जिला चुनें तो कीमत दिखेगी'
-        : '<b>नोट:</b> जिला जोड़ें तो कीमत दिखेगी';
-    } else if (plan === 'state') {
-      // One flat price for the whole state. Extra districts do not add ₹50
-      // here — they are already inside the state he is buying.
-      priceEl.innerHTML = '<s style="opacity:.55">₹1999</s> <b>₹999</b>/महीना ' +
-        '<span style="font-size:11.5px;opacity:.8">(राज्य का पेज · शुरुआती ऑफर)</span>';
-    } else if (n === 1) {
-      priceEl.innerHTML = '<s style="opacity:.55">₹599</s> <b>₹199</b>/महीना ' +
-        '<span style="font-size:11.5px;opacity:.8">(शुरुआती ऑफर)</span>';
-    } else {
-      priceEl.innerHTML = '<s style="opacity:.55">₹' + (599 + 50 * (n - 1)) + '</s> ' +
-        '<b>₹' + (199 + 50 * (n - 1)) + '</b>/महीना ' +
-        '<span style="font-size:11.5px;opacity:.8">(₹199 + ' + (n - 1) + ' × ₹50)</span>';
-    }
-    submitBtn.disabled = n === 0;
+  // ── The crop picker, with each page's real traffic ──
+  // Loaded for the FIRST district he picks. Numbers are per district and a
+  // dealer with three districts would otherwise need three lists; the first is
+  // the one he cares about, and the crops he chooses apply to all of them
+  // (crops are billed once per account, not per district).
+  function loadPageCrops() {
+    var d = selectedDistricts[0];
+    if (!d) { cropsWrap.hidden = true; return; }
+    var seq = ++cropsSeq;
+    cropsWrap.hidden = false;
+    cropsNote.textContent = 'फसलें लोड हो रही हैं…';
+    cropsEl.innerHTML = '';
+    fetch('/dukanlisting/crops?state=' + encodeURIComponent(d.state) +
+          '&district=' + encodeURIComponent(d.district))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (seq !== cropsSeq) { return; }      // a newer district won
+        var data = (j && j.data) || {};
+        renderPageCrops(data, d);
+      })
+      .catch(function () {
+        if (seq !== cropsSeq) { return; }
+        // The picker is how crops get chosen, so it cannot simply vanish on a
+        // network blip — fall back to the plain trade-crop chips as the list.
+        cropsNote.textContent = 'फसलों की सूची अभी नहीं आ पाई। ऊपर चुनी हुई फसलें ही जोड़ दी जाएंगी।';
+        pageCrops = currentTradeCrops();
+        updatePrice();
+      });
   }
 
-  // State plan: picking the pair is the whole selection, so it registers on
-  // change instead of waiting for a button that is not there.
-  function syncStateSelection() {
-    if (plan !== 'state') return;
-    var s = stateSel.value, d = distSel.value;
-    selectedDistricts = (s && d) ? [{ state: s, district: d, market: '' }] : [];
+  function currentTradeCrops() {
+    var out = [];
+    cropListEl.querySelectorAll('input:checked').forEach(function (i) { out.push(i.value); });
+    return out;
+  }
+
+  function renderPageCrops(data, d) {
+    var crops = data.crops || [];
+    if (!crops.length) {
+      cropsNote.textContent = d.district + ' के लिए अभी कोई भाव पेज नहीं है — ' +
+        'हम कॉल पर बता देंगे कि क्या हो सकता है।';
+      cropsEl.innerHTML = '';
+      pageCrops = [];
+      updatePrice();
+      return;
+    }
+    var haveStats = crops.some(function (c) { return c.impressions !== null; });
+    cropsNote.innerHTML = haveStats
+      ? ('नीचे का नंबर = पिछले ' + (data.window_days || 28) +
+         ' दिन में वह पेज Google पर कितनी बार दिखा। ' +
+         '<b>जो पेज खाली है उसका पैसा मत दीजिए।</b>')
+      : 'हर फसल का पेज ₹' + RATE_CROP + '/सीज़न।';
+
+    // Seed from what he said he trades — one tick for most dealers — but only
+    // where that crop actually has a page here.
+    var trade = {}; currentTradeCrops().forEach(function (c) { trade[c] = true; });
+    if (!pageCrops.length) {
+      pageCrops = crops.filter(function (c) { return trade[c.slug]; })
+                       .map(function (c) { return c.slug; });
+    }
+    var chosen = {}; pageCrops.forEach(function (c) { chosen[c] = true; });
+
+    cropsEl.innerHTML = '';
+    crops.forEach(function (c) {
+      var row = document.createElement('label');
+      row.className = 'dp-cropitem' + (chosen[c.slug] ? ' on' : '');
+      var imp = c.impressions;
+      var cls = imp === null ? 'none' : (imp > 0 ? 'good' : 'zero');
+      var txt = imp === null ? '' : (imp > 0 ? imp.toLocaleString('en-IN') + ' बार' : '0 बार');
+      row.innerHTML =
+        '<input type="checkbox" value="' + c.slug + '"' + (chosen[c.slug] ? ' checked' : '') + '>' +
+        '<span class="dp-cropname"></span>' +
+        '<span class="dp-cropimp ' + cls + '"></span>';
+      row.querySelector('.dp-cropname').textContent = c.name_hi;
+      row.querySelector('.dp-cropimp').textContent = txt;
+      row.querySelector('input').addEventListener('change', function () {
+        row.classList.toggle('on', this.checked);
+        if (this.checked) {
+          if (pageCrops.indexOf(c.slug) < 0) { pageCrops.push(c.slug); }
+        } else {
+          pageCrops = pageCrops.filter(function (x) { return x !== c.slug; });
+        }
+        updatePrice();
+      });
+      cropsEl.appendChild(row);
+    });
+
+    if (data.stats_stale && haveStats) {
+      cropsFoot.hidden = false;
+      cropsFoot.textContent = 'आंकड़े ' + (data.stats_age_days || '?') + ' दिन पुराने हैं।';
+    } else {
+      cropsFoot.hidden = true;
+    }
     updatePrice();
   }
-  stateSel.addEventListener('change', syncStateSelection);
-  distSel.addEventListener('change', syncStateSelection);
+
+  function updatePrice() {
+    var n = selectedDistricts.length;
+    var k = pageCrops.length;
+    var rs = function (v) { return '₹' + v.toLocaleString('en-IN'); };
+    priceEl.classList.toggle('is-note', !n);
+    if (!n) {
+      priceEl.innerHTML = '<b>नोट:</b> जिला जोड़ें तो कीमत दिखेगी';
+      submitBtn.disabled = true;
+      return;
+    }
+    var total = RATE_DISTRICT * n + RATE_CROP * k;
+    var list  = LIST_DISTRICT * n + LIST_CROP * k;
+    // Itemised, not just a total: a dealer who can check the arithmetic himself
+    // argues with it less on the call.
+    priceEl.innerHTML =
+      '<s style="opacity:.55">' + rs(list) + '</s> <b>' + rs(total) + '</b>/सीज़न ' +
+      '<span style="font-size:11.5px;opacity:.8">(' + n + ' जिला × ' + rs(RATE_DISTRICT) +
+      (k ? ' + ' + k + ' फसल × ' + rs(RATE_CROP) : '') + ' · 3 महीने)</span>';
+    // A district with no crop page selected buys nothing renderable, so it is
+    // not a sale we should let him make.
+    submitBtn.disabled = k === 0;
+  }
 
   document.getElementById('dp-add-district-btn').addEventListener('click', function () {
     var state = stateSel.value, district = distSel.value;
@@ -1193,7 +1407,7 @@
     }).join('');
     document.getElementById('dp-mine-list').innerHTML = rows;
     document.getElementById('dp-mine-price').textContent =
-      '₹' + data.price + '/महीना कुल (' + data.district_count + ' जिले)';
+      '₹' + data.price + '/सीज़न कुल (' + data.district_count + ' जिले)';
   }
 
   // ── The dealer's own catalogue ──
@@ -1405,8 +1619,10 @@
     if (!validPhone(phone.value)) return fail('सही 10 अंकों का मोबाइल नंबर डालें।', phone);
     if (wa.value.trim() && !validPhone(wa.value)) return fail('WhatsApp नंबर सही नहीं लग रहा।', wa);
     if (!selectedDistricts.length) {
-      return fail(plan === 'state' ? 'राज्य और अपनी दुकान का जिला चुनें।'
-                                   : 'कम से कम एक जिला जोड़ें।');
+      return fail('कम से कम एक जिला जोड़ें।');
+    }
+    if (!pageCrops.length) {
+      return fail('कम से कम एक फसल चुनें जिसके पेज पर दिखना है।');
     }
 
     var crops = [];
@@ -1423,9 +1639,11 @@
       description: document.getElementById('dp-desc').value.trim(),
       since: document.getElementById('dp-since').value.trim(),
       districts: selectedDistricts,
-      // Which product he thinks he bought. The rows created are the same
-      // either way; this is so whoever rings him knows what to quote.
-      plan: plan
+      // Which product he is ASKING for, and for which crop. The rows created
+      // are the same either way and none of them go live — this is so whoever
+      // rings him knows what to quote before he picks up the phone.
+      plan: plan,
+      plan_crops: pageCrops
     };
 
     submitBtn.disabled = true;
@@ -1450,7 +1668,7 @@
       document.getElementById('dp-done-wa').href = 'https://wa.me/919870951001?text=' + encodeURIComponent(msg);
       document.getElementById('dp-done-msg').textContent =
         ((res.d && res.d.message) || 'हमारी टीम आपके नंबर पर कॉल करके पुष्टि करेगी।') +
-        (price ? ' कुल सब्सक्रिप्शन: ₹' + price + '/महीना।' : '');
+        (price ? ' कुल सब्सक्रिप्शन: ₹' + price + '/सीज़न।' : '');
       formEl.hidden = true;
       doneEl.hidden = false;
       if (window.gtag) window.gtag('event', 'dukan_product_signup', { districts: selectedDistricts.length });

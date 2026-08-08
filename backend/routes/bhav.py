@@ -49,8 +49,9 @@ from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy import func
 
-from backend.database.db import (SessionLocal, CropAppeal, MandiPrice, MandiLastSeen,
-                                 User, UserProfile)
+from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice,
+                                 MandiLastSeen, MandiPriceHistory, User, UserProfile,
+                                 acct)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
     buyers, district_geo, freight, lead_clicks, leads, msp, placements,
@@ -603,6 +604,147 @@ def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
         db.close()
 
 
+# ── the district trend line ──────────────────────────────────
+# How far back the chart looks, in CALENDAR days. Deliberately days and not
+# data points — see _district_series. Capped below mandi_price_history's
+# ~15-day retention so the window is always fully covered by real rows.
+CHART_DAYS = 10
+
+
+def _mkt_ident(commodity, market, variety, grade) -> tuple:
+    """The identity of one priced line-item, lowercased, with the renderer's '-'
+    placeholder read back as the empty string it stands for.
+
+    This is what joins a rendered snapshot row to its own rows in
+    mandi_price_history. It is deliberately NOT the md5 group_key those tables
+    share: group_key cannot be recomputed from a rendered row, because
+    _row_to_dict turns a missing variety/grade into '-' while _group_key hashed
+    the same field as ''. Two rows that are the same line-item would hash apart.
+    """
+    def n(v):
+        s = ("" if v is None else str(v)).strip().lower()
+        return "" if s == "-" else s
+    return (n(commodity), n(market), n(variety), n(grade))
+
+
+def _district_series(prices: list, end_iso: str, today_avg) -> list[int]:
+    """The district's own average modal price, one point per calendar day.
+
+    This used to be `max(sparks, key=len)` — the single mandi+variety with the
+    longest run of reports, drawn under a heading naming the whole district.
+    Three separate untruths came out of that, all visible on Bijnor wheat on
+    6 Aug 2026:
+
+      * the line ended at ₹2,650 (Bijnaur APMC's "Other" variety) while the
+        price panel directly above it read ₹2,615 (the district average), so
+        the page contradicted itself in the two places a farmer actually looks;
+      * `spark` holds the last ~8 REPORTS, not the last 8 days, so a mandi that
+        trades twice a week drew a "4-दिन रुझान" spanning a fortnight, and the
+        axis label counted points rather than days on top of that;
+      * ties in `max(..., key=len)` broke on list order, so which single mandi
+        got to speak for the district changed with the row ordering.
+
+    So instead: read this district's history, bucket it by arrival date, and
+    average across the SAME line-items the page lists — one value per item per
+    day. A day an item did not report carries its previous rate forward, which
+    is exactly what the snapshot itself does ("जिन मंडियों की रिपोर्ट आज नहीं
+    आई, उनका पिछला भाव दिखता है"), and days before its first report carry the
+    first rate backward. Both fills exist for the same reason: the set of
+    mandis behind every point must be identical, or the line moves when the
+    *composition* changes rather than when a price does.
+
+    The last point is then forced to the panel's own average, so the chart, the
+    headline and the sell-signal can never disagree again.
+
+    Returns [] when the history is too thin to draw anything honest — fewer
+    than two reporting days, or a span under three days. The per-mandi
+    sparklines on the cards still carry the movement in that case.
+
+    One extra district-scoped query per tier-4 render, served by
+    mandi_history_csd_dt_idx (commodity, state, district, arrival_dt DESC).
+    """
+    latest, order = {}, []
+    for p in prices:
+        m = _num(p.get("modal_price"))
+        if not m:
+            continue
+        k = _mkt_ident(p.get("commodity"), p.get("market"),
+                       p.get("variety"), p.get("grade"))
+        if k not in latest:
+            order.append(k)
+        latest[k] = m
+    if not latest or not today_avg:
+        return []
+    try:
+        end = date.fromisoformat(end_iso)
+    except (TypeError, ValueError):
+        return []                       # no reported date → nothing to date a chart by
+
+    state    = prices[0].get("state") or ""
+    district = prices[0].get("district") or ""
+    names    = sorted({p.get("commodity") for p in prices if p.get("commodity")})
+
+    db = SessionLocal()
+    try:
+        rows = (db.query(MandiPriceHistory.commodity, MandiPriceHistory.market,
+                         MandiPriceHistory.variety, MandiPriceHistory.grade,
+                         MandiPriceHistory.arrival_dt, MandiPriceHistory.modal_price)
+                  .filter(MandiPriceHistory.commodity.in_(names),
+                          MandiPriceHistory.state == state,
+                          MandiPriceHistory.district == district,
+                          MandiPriceHistory.arrival_dt >= end - timedelta(days=CHART_DAYS - 1),
+                          MandiPriceHistory.arrival_dt <= end)
+                  .all())
+    except Exception as exc:
+        logger.warning("district trend query failed (%s, %s): %s", district, state, exc)
+        return []
+    finally:
+        db.close()
+
+    seen: dict[tuple, dict] = {}
+    for com, mkt, var, grd, dt, modal in rows:
+        k, m = _mkt_ident(com, mkt, var, grd), _num(modal)
+        if dt and m and k in latest:
+            seen.setdefault(k, {})[dt] = m
+
+    obs = {d for hist in seen.values() for d in hist}
+    if len(obs) < 2:
+        return []                       # a single reporting day is not a trend
+    start = min(obs)                    # start where the data does — never pad
+    span  = (end - start).days          # a flat lead-in onto the front of the line
+    if span < 2:
+        return []                       # _chart needs three points to say anything
+
+    days = [start + timedelta(days=i) for i in range(span + 1)]
+    cols = []
+    for k in order:
+        hist = seen.get(k) or {}
+        col  = [hist.get(d) for d in days]
+        col[-1] = latest[k]             # the snapshot IS the rate its card shows
+        carry = None
+        for i, v in enumerate(col):     # forward-fill: didn't report → last rate holds
+            if v is None:
+                col[i] = carry
+            else:
+                carry = v
+        carry = None
+        for i in range(len(col) - 1, -1, -1):   # backward-fill the lead-in, so the
+            if col[i] is None:                  # same mandis sit behind every point
+                col[i] = carry
+            else:
+                carry = col[i]
+        cols.append(col)
+
+    series = []
+    for i in range(len(days)):
+        vals = [c[i] for c in cols if c[i]]
+        series.append(round(sum(vals) / len(vals)) if vals else None)
+    if any(v is None for v in series):
+        return []
+    series[-1] = today_avg              # the chart ends on the number in the panel
+    return series
+
+
 def _stats(prices: list) -> dict:
     """Average/min/max modal price, plus a mandi count that counts mandis rather
     than rows (one mandi can report several varieties)."""
@@ -622,11 +764,17 @@ def _sell_signal(series: list, today_avg, avg_pct) -> str:
     """A compact 'sell today or wait?' strip that sits INSIDE the green price
     panel, right by the rate.
 
-    Compares today's average modal against this district's own recent (up to
-    7-day) daily average and its day-on-day move. It is a *read of the past*, not
-    a forecast — the copy states the fact and gives a gentle, non-speculative
-    nudge, never a price prediction. Renders nothing when the history is too thin
-    (<3 days) to say anything honest. Pure compute on data already in memory.
+    Compares today's average modal against this district's own recent daily
+    average and its day-on-day move. It is a *read of the past*, not a forecast —
+    the copy states the fact and gives a gentle, non-speculative nudge, never a
+    price prediction. Renders nothing when the history is too thin (<3 days) to
+    say anything honest. Pure compute on data already in memory.
+
+    `series` MUST be the district-wide series from _district_series, on the same
+    basis as `today_avg`. It used to be one mandi+variety's spark while
+    today_avg was the district average, so the strip printed "4-दिन औसत ₹2,651"
+    (one variety at one mandi) next to a headline of ₹2,615 (four rows across
+    three mandis) and picked its 🟢/🟡/🔵 verdict by comparing the two.
     """
     hist = [v for v in series if v]
     if len(hist) < 3 or not today_avg:
@@ -1938,7 +2086,17 @@ window.addEventListener('pageshow',window.kmHideLoading);
 <script src="{_asset('header-scroll.js')}"></script>"""
 
 
-def _footer() -> str:
+_FOOTER_NOTE = ("भाव भारत सरकार के data.gov.in (Agmarknet) से रोज़ अपडेट होते हैं।\n"
+                "बेचने से पहले अपनी मंडी में भाव ज़रूर पुष्टि करें।")
+
+
+def _footer(note: str = "") -> str:
+    """`note` overrides the standing Agmarknet line for callers where it is not
+    true. It is correct for anything priced off the mandi feed, and false for a
+    page that is not: cane is bought by mills at an administered price, so on
+    /ganna the default would claim a daily Agmarknet update for a number that
+    changes once a season, and send the farmer to a mandi that never trades his
+    crop. Default keeps every existing caller byte-identical."""
     # Second nav row: the widest-covered crop hubs, derived from the live
     # index. Every one of the ~14k server pages carries these links, so the
     # long tail of district pages continuously votes for the head-term pages
@@ -1969,8 +2127,7 @@ def _footer() -> str:
 <a href="{SITE}/chat">AI सहायक</a>
 </nav>
 {crops_nav}
-<div class="km-footer-note">भाव भारत सरकार के data.gov.in (Agmarknet) से रोज़ अपडेट होते हैं।
-बेचने से पहले अपनी मंडी में भाव ज़रूर पुष्टि करें।</div>
+<div class="km-footer-note">{escape(note or _FOOTER_NOTE)}</div>
 </div></footer>"""
 
 
@@ -1990,7 +2147,7 @@ _CACHE_HEADERS = {
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
          extra_css: str = "", robots: str = "", head_extra: str = "",
-         updated: str = "") -> HTMLResponse:
+         updated: str = "", footer_note: str = "") -> HTMLResponse:
     """One page shell for all four tiers — head, header, crumbs, body, footer.
     `active` defaults to "bhav" for this module's own pages; other SEO routes
     (e.g. product.py) that reuse this shell pass their own nav key/"" so they
@@ -2011,7 +2168,9 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     to judge that by and can serve a weeks-old snippet as if it were today's
     (see docs — the "13 Jul" Bareilly wheat snippet still live on 2 Aug). Pass
     "" (the default) for pages with no per-page number to go stale — omitting
-    the signal costs nothing; a wrong one costs trust in every date after it."""
+    the signal costs nothing; a wrong one costs trust in every date after it.
+    `footer_note` replaces the footer's standing "prices update daily from
+    Agmarknet" line for a caller where that is not true — see _footer."""
     og = og_img or f"{SITE}/images/og-banner.webp"
     # /bhav pages (active=="bhav") ship NO visible breadcrumb — the trail lives
     # only as BreadcrumbList JSON-LD in `ld` (still feeds SERP breadcrumbs).
@@ -2057,7 +2216,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <div class="wrap">
 {body}
 </div>
-{_footer()}
+{_footer(footer_note)}
 </body>
 </html>""", headers=headers)
 
@@ -2397,8 +2556,13 @@ rec.start();
 
 
 def _chart(vals: list[float]) -> str:
-    """Full-width 7-day trend chart. The old page buried this in a 64px table cell —
+    """Full-width daily trend chart. The old page buried this in a 64px table cell —
     it is the one thing a farmer cannot get from a Google snippet, so it leads.
+
+    `vals` is one point per CALENDAR day, oldest first (see _district_series), so
+    the x-axis can name a real number of days. It used to be one mandi's last N
+    *reports* labelled "{N} दिन पहले", which was wrong twice over: the points
+    were not daily, and N points span N-1 days even when they are.
 
     Under 3 points there is no trend to show, only a big box with a straight line in
     it, so the chart is dropped entirely and the per-mandi sparkline carries the move.
@@ -2447,7 +2611,7 @@ def _chart(vals: list[float]) -> str:
 {dots}
 <circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="5.5" fill="{col}"
  stroke="#fff" stroke-width="2.5"/>
-<text x="{pad_l}" y="{h - 7}" font-size="11" fill="#7c8983">{n} दिन पहले</text>
+<text x="{pad_l}" y="{h - 7}" font-size="11" fill="#7c8983">{n - 1} दिन पहले</text>
 <text x="{w - pad_r}" y="{h - 7}" font-size="11" fill="#7c8983" text-anchor="end">आज</text>
 </svg>"""
 
@@ -3297,17 +3461,40 @@ def _msp_faqs(commodity: str, avg=None, place: str = "") -> list:
     return out
 
 
-# ── "बेचना है / खरीदना है" appeal (tier 4) ───────────────────
+# ── "बेचना है / खरीदना है" — the two doors out of a price page ──
+
+# A district page ends on a number, and the farmer's next sentence is one of
+# two: "मुझे बेचना है" or "मुझे खरीदना है". Both of those live on Krashi Bazar,
+# so this panel is a chooser and nothing else — it names the two intents in the
+# farmer's own words and hands him to the feed that can act on them.
+#
+# It used to be a whole flow inside this modal: a crop composer that posted to
+# /bazar/posts, a browser for the district's own listings, and a /appeal/crop
+# lead form for when that district turned out to be empty. On a feed this young
+# the empty branch is what nearly everyone met — a form, and then a promise to
+# call back. Two links into the real marketplace beat a form that answers
+# nobody today. /appeal/crop still exists and still holds the rows it collected;
+# nothing under /bhav writes to it any more.
+
+# Where each intent goes. `mode=sell` opens Krashi Bazar's "मेरी फसल बेचें" tab,
+# which already owns the login gate, the profile/phone check and the composer —
+# so none of those are duplicated on this side.
+_BAZAR_BUY  = "/krashi_bajar.html"
+_BAZAR_SELL = "/krashi_bajar.html?mode=sell"
 
 _APPEAL_CSS = """
 .btn-appeal{background:var(--green-dark);color:#fff;box-shadow:var(--shadow-sm)}
 .btn-appeal:hover{background:var(--green-mid)}
-.ap-ov{position:fixed;inset:0;z-index:10000;background:rgba(16,32,25,.55);
+/* Above the page's floating furniture, not merely above the page: the device
+   location opt-in card (location.js) parks itself at the bottom of the screen
+   at z-index 99998, which is exactly where this sheet opens. At 10000 it landed
+   squarely on top of the बेचना है row. */
+.ap-ov{position:fixed;inset:0;z-index:100000;background:rgba(16,32,25,.55);
 display:flex;align-items:flex-end;justify-content:center;padding:0;
 -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .ap-ov[hidden]{display:none}
-.ap-box{position:relative;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
-background:var(--white);border-radius:20px 20px 0 0;padding:22px 18px 20px;
+.ap-box{position:relative;width:100%;max-width:520px;background:var(--white);
+border-radius:20px 20px 0 0;padding:22px 18px 20px;
 box-shadow:var(--shadow-md);animation:ap-up .22s ease}
 @keyframes ap-up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
 @media(min-width:600px){.ap-ov{align-items:center;padding:20px}
@@ -3317,557 +3504,63 @@ box-shadow:var(--shadow-md);animation:ap-up .22s ease}
 .ap-x{position:absolute;top:12px;right:12px;width:34px;height:34px;border:0;border-radius:50%;
 background:var(--cream);color:var(--text-mid);font-size:21px;line-height:1;cursor:pointer}
 .ap-x:hover{background:var(--border)}
-/* ── Three screens in one box: pick → (sell | buy). The old segmented
-   sell/buy toggle is gone: the two answers now lead to genuinely different
-   things (a public Bazar listing vs. browsing what is already for sale), and a
-   toggle above a shared form implied they were the same form with a flag. ── */
-.ap-scr[hidden]{display:none}
+/* The whole box is these two rows. Anchors rather than buttons, because each
+   one is now a plain navigation to Krashi Bazar and has to behave like the link
+   it is — long-press, middle-click, open in a new tab. */
 .ap-pick{display:flex;flex-direction:column;gap:11px;margin-bottom:4px}
-.ap-pick button{display:flex;align-items:center;gap:13px;width:100%;text-align:left;
-font:inherit;padding:15px 16px;cursor:pointer;border:1.5px solid var(--border);
+.ap-pick a{display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+text-decoration:none;color:inherit;padding:15px 16px;border:1.5px solid var(--border);
 border-radius:14px;background:var(--white);transition:border-color .15s,background .15s}
-.ap-pick button:hover{border-color:var(--green-mid);background:var(--green-pale)}
+.ap-pick a:hover{border-color:var(--green-mid);background:var(--green-pale)}
 .ap-pick .ap-pi{font-size:26px;line-height:1;flex:0 0 auto}
 .ap-pick .ap-pt{display:flex;flex-direction:column;min-width:0}
 .ap-pick b{font-size:16px;font-weight:800;color:var(--green-dark)}
 .ap-pick small{font-size:12px;color:var(--text-soft);margin-top:2px;line-height:1.45}
-.ap-back{background:none;border:0;padding:0 0 12px;font:inherit;font-size:13px;
-font-weight:700;color:var(--green-mid);cursor:pointer}
-.ap-back:hover{color:var(--green-dark)}
-/* Blocked-by-a-missing-prerequisite state (no profile / no phone). It is not an
-   error — it is the next step — so it reads as a prompt, not a red warning. */
-.ap-gate{background:var(--green-pale);border:1px solid #bfe3c8;border-radius:14px;
-padding:15px 16px;font-size:13.5px;line-height:1.6;color:var(--green-dark)}
-.ap-gate a{display:inline-block;margin-top:10px;background:var(--green-dark);color:#fff;
-text-decoration:none;font-size:14px;font-weight:800;padding:10px 18px;border-radius:11px}
-.ap-gate a:hover{background:var(--green-mid)}
-.ap-file{font-size:13px;padding:9px 0}
-/* Listings shown to someone who tapped खरीदना है. */
-.ap-bl{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.ap-bcard{display:block;text-decoration:none;color:inherit;background:var(--cream);
-border:1px solid var(--border);border-radius:13px;padding:12px 14px}
-.ap-bcard:hover{border-color:var(--green-light);background:var(--green-pale)}
-.ap-bn{font-size:14.5px;font-weight:800;color:var(--text-dark)}
-.ap-bm{font-size:13px;font-weight:800;color:var(--green-dark);margin-top:3px}
-.ap-bx{font-size:12.5px;color:var(--text-mid);margin-top:4px;line-height:1.5}
-.ap-bnone{font-size:13.5px;color:var(--text-mid);line-height:1.6;margin-bottom:14px}
-.ap-load{font-size:13.5px;color:var(--text-soft);text-align:center;padding:18px 0}
-.ap-f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;min-width:0}
-.ap-f label{font-size:12.5px;font-weight:700;color:var(--text-soft)}
-.ap-f input,.ap-f textarea{width:100%;font:inherit;font-size:15px;padding:11px 12px;
-border:1.5px solid var(--border);border-radius:12px;background:var(--white);
-color:var(--text-dark);-webkit-appearance:none;appearance:none;resize:vertical}
-.ap-f input:focus,.ap-f textarea:focus{outline:none;border-color:var(--green-mid)}
-.ap-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:420px){.ap-row{grid-template-columns:1fr;gap:0}}
-/* Phone: the country code is furniture, not something to type. The field took
-   20 free-form characters before this and collected pasted junk; a fixed +91
-   welded to a 10-digit box says what is wanted without a line of instruction. */
-.ap-tel{display:flex;align-items:stretch;border:1.5px solid var(--border);
-border-radius:12px;background:var(--white);overflow:hidden}
-.ap-tel:focus-within{border-color:var(--green-mid)}
-.ap-cc{display:flex;align-items:center;padding:0 11px;font-size:15px;font-weight:700;
-color:var(--text-mid);background:var(--cream);border-right:1.5px solid var(--border);
-white-space:nowrap;-webkit-user-select:none;user-select:none}
-.ap-f .ap-tel input{border:0;border-radius:0;flex:1;min-width:0;letter-spacing:.5px}
-.ap-f .ap-tel input:focus{border-color:transparent}
-/* …and the way out of it. A landline with an STD code, a second number, a
-   border-district Nepal code — all real, none of them ten Indian digits. The
-   strict box stays the default because it suits almost everyone; this is the
-   door for the rest, rather than a field that silently eats what they typed. */
-.ap-tel.free .ap-cc{display:none}
-.ap-free{align-self:flex-start;margin-top:3px;background:none;border:0;padding:0;
-font:inherit;font-size:11.5px;font-weight:700;color:var(--green-mid);cursor:pointer;
-text-decoration:underline;text-align:left}
-.ap-free:hover{color:var(--green-dark)}
-.ap-note{margin:2px 0 14px;font-size:12px;color:var(--text-soft);line-height:1.5}
-.ap-send{width:100%;border:0;border-radius:12px;background:var(--green-dark);color:#fff;
-font:inherit;font-size:16px;font-weight:800;padding:14px;cursor:pointer}
-.ap-send:hover{background:var(--green-mid)}
-.ap-send[disabled]{opacity:.6;cursor:default}
-.ap-out{margin:12px 0 0;font-size:14px;line-height:1.55;text-align:center;font-weight:700}
-.ap-out.ok{color:var(--green-mid)}
-.ap-out.bad{color:#b3261e}
-/* Success state — its own panel, above everything, not a strip appended under
-   the form. A filled-in appeal form is close to two phone screens tall inside a
-   scrolling box, so the one line the farmer actually needs ("आपकी बात पहुँचा दी
-   गई है") was landing below the fold of what he had just been typing into. It
-   sits at a z-index above the form overlay (10000) and the page's own floating
-   furniture, and it never auto-closes: there is a next step here now, and an
-   overlay that vanishes on a timer would take it away mid-read. */
-.ap-ok-ov{position:fixed;inset:0;z-index:100000;background:rgba(16,32,25,.62);
-display:flex;align-items:center;justify-content:center;padding:18px;
--webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-.ap-ok-ov[hidden]{display:none}
-.ap-ok{position:relative;width:100%;max-width:400px;background:var(--white);
-border-radius:20px;padding:26px 20px 20px;text-align:center;box-shadow:var(--shadow-md);
-animation:ap-pop .24s cubic-bezier(.16,1,.3,1)}
-@keyframes ap-pop{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
-.ap-ok-ic{width:58px;height:58px;margin:0 auto 14px;border-radius:50%;
-background:var(--green-pale);display:flex;align-items:center;justify-content:center;
-font-size:29px;line-height:1}
-.ap-ok h2{margin:0 0 8px;font-size:18px;line-height:1.4;color:var(--green-dark);padding:0 18px}
-.ap-ok-sub{margin:0 0 18px;font-size:13.5px;line-height:1.6;color:var(--text-mid)}
-.ap-kh{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
-border-radius:12px;background:var(--green-dark);color:#fff;text-decoration:none;
-font-size:15px;font-weight:800;padding:13px;margin-bottom:10px}
-.ap-kh[hidden]{display:none}
-.ap-kh:hover{background:var(--green-mid)}
-.ap-book{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
-border:0;border-radius:12px;background:#0077b6;color:#fff;font:inherit;font-size:15px;
-font-weight:800;padding:13px;cursor:pointer}
-.ap-book[hidden]{display:none}
-.ap-book:hover{background:#01659c}
-.ap-ok-done{width:100%;margin-top:10px;border:0;border-radius:12px;background:var(--cream);
-color:var(--text-mid);font:inherit;font-size:14.5px;font-weight:700;padding:12px;cursor:pointer}
-.ap-ok-done:hover{background:var(--border)}
 """
 
 # Plain string, not an f-string — the JS braces would need doubling otherwise.
-# `T` (page context + the two pre-written messages) is injected by the wrapper.
 _APPEAL_JS = """
 var ov=document.getElementById('ap-ov');
 if(!ov)return;
-var fName=document.getElementById('ap-name'),fQty=document.getElementById('ap-qty'),
-    fPh=document.getElementById('ap-ph'),fMsg=document.getElementById('ap-msg'),
-    btn=document.getElementById('ap-send'),out=document.getElementById('ap-out'),
-    okOv=document.getElementById('ap-ok-ov'),okMsg='',
-    /* The appeal form is now reached ONLY from the खरीदना है branch, and only
-       when nothing is for sale here — selling posts to Krashi Bazar instead. */
-    kind='buy',dirty=false,sent=false,busy=false,filled=false,
-    sBusy=false,sSent=false,bLoaded=false;
-function tok(){var t=localStorage.getItem('krishi_token');
- return (t&&t!=='null'&&t!=='undefined')?t:null;}
-function say(txt,cls){out.textContent=txt||'';out.className='ap-out'+(cls?' '+cls:'');}
-/* Ten digits, nothing else — the +91 next to the box is ours to supply. Autofill
-   and pasted numbers arrive as +91…, 91…, 0… or with spaces, so the country code
-   and trunk zero are peeled off rather than the subscriber digits: truncating
-   the front of "+919876543210" would store a number that dials nobody. */
-function normPhone(raw){
- var v=(raw||'').replace(/[^0-9]/g,'');
- if(v.length>10&&v.slice(0,2)==='91')v=v.slice(2);
- if(v.length>10&&v.charAt(0)==='0')v=v.slice(1);
- return v.slice(0,10);
-}
-/* The +91 box is the default because it is right for almost every farmer here.
-   This is the escape hatch for the rest — an STD landline, two numbers, a
-   border-district code — so an unusual number gets typed as it is instead of
-   being quietly trimmed to ten digits that reach nobody. */
-var tel=document.getElementById('ap-tel'),freeBtn=document.getElementById('ap-free'),freePh=false;
-window.toggleFreePhone=function(){
- freePh=!freePh;
- if(tel)tel.classList.toggle('free',freePh);
- fPh.maxLength=freePh?20:15;
- fPh.inputMode=freePh?'tel':'numeric';
- fPh.placeholder=freePh?'जैसे 05522-234567':'10 अंकों का नंबर';
- if(freePh)fPh.removeAttribute('pattern');else fPh.setAttribute('pattern','[0-9]{10}');
- if(freeBtn)freeBtn.textContent=freePh?'↩ +91 वाला 10 अंकों का डिब्बा':'दूसरा फ़ॉर्मैट — नंबर खुद लिखें';
- /* Coming back to the strict box has to leave a value it would accept. */
- if(!freePh)fPh.value=normPhone(fPh.value);
- try{fPh.focus();}catch(e){}
-};
-fPh.addEventListener('input',function(){
- if(freePh)return;
- var p=this.selectionStart,before=this.value,after=normPhone(before);
- if(after===before)return;
- this.value=after;
- /* Keep the caret where the farmer was typing instead of jumping to the end
-    when a stripped character shortens the value. */
- try{var d=before.length-after.length;this.setSelectionRange(Math.max(0,p-d),Math.max(0,p-d));}catch(e){}
-});
-/* The pre-written message is a starting point, not a template to defend: once
-   the farmer edits it we stop overwriting it. */
-function paintMsg(){if(!dirty)fMsg.value=T.msg[kind];}
-fMsg.addEventListener('input',function(){dirty=true;});
-
-/* ── Screens ──────────────────────────────────────────────
-   बेचना है  → post a real listing to Krashi Bazar, then send him to the
-              खरीदार page for his district (which is a filtered view of that
-              same feed, so his post and its buyers live in one place).
-   खरीदना है → show what is already for sale here; only if there is nothing
-              does the old "मुझे खरीदना है" appeal form appear. */
-var scrPick=document.getElementById('ap-pick'),scrSell=document.getElementById('ap-sell'),
-    scrBuy=document.getElementById('ap-buy'),elSub=document.getElementById('ap-sub'),
-    elTitle=document.getElementById('ap-t');
-function apShow(name){
- scrPick.hidden=name!=='pick';scrSell.hidden=name!=='sell';scrBuy.hidden=name!=='buy';
- elTitle.textContent=name==='sell'?T.tSell:(name==='buy'?T.tBuy:T.tPick);
- elSub.textContent=name==='sell'?T.sSell:(name==='buy'?T.sBuy:T.sPick);
- try{ov.querySelector('.ap-box').scrollTop=0;}catch(e){}
-}
-window.apBack=function(){apShow('pick');};
-
-/* Posting a public listing needs a profile AND a reachable number — same rule
-   as krashi_bajar, checked here so the farmer isn't told after typing. */
-function apGate(j){
- var g=document.getElementById('ap-gate'),f=document.getElementById('ap-sellform');
- if(j&&j.has_profile&&j.has_phone){g.hidden=true;f.hidden=false;return true;}
- f.hidden=true;g.hidden=false;
- g.innerHTML=j&&!j.has_profile
-  ? 'फसल बेचने के लिए पहले अपनी प्रोफ़ाइल बनाएं — खरीदार को पता चलना चाहिए कि '
-    +'फसल किसकी है और कहाँ है।<a href="/profile.html">प्रोफ़ाइल बनाएं →</a>'
-  : 'आपकी प्रोफ़ाइल में फ़ोन नंबर नहीं है। बिना नंबर के खरीदार आप तक नहीं पहुँच '
-    +'पाएगा, इसलिए नंबर जोड़ना ज़रूरी है।<a href="/profile.html">नंबर जोड़ें →</a>';
- return false;
-}
-window.apGoSell=function(){
- if(!gateAppeal('crop-sell'))return;
- apShow('sell');
- var g=document.getElementById('ap-gate'),f=document.getElementById('ap-sellform');
- g.hidden=false;f.hidden=true;g.textContent='देख रहे हैं…';
- fetch('/bazar/me',{headers:{'Authorization':'Bearer '+tok()}})
-  .then(function(r){return r.json();})
-  .then(function(j){apGate(j&&j.data);})
-  .catch(function(){g.innerHTML='अभी जानकारी नहीं मिल पाई — दोबारा कोशिश करें।';});
-};
-window.apSendSell=function(){
- if(sBusy)return;
- var txt=(document.getElementById('ap-stext').value||'').trim(),
-     qty=document.getElementById('ap-sqty').value,
-     pr=document.getElementById('ap-sprice').value,
-     media=document.getElementById('ap-smedia').files[0],
-     sOut=document.getElementById('ap-sout'),sBtn=document.getElementById('ap-ssend');
- function sSay(t,c){sOut.textContent=t||'';sOut.className='ap-out'+(c?' '+c:'');}
- if(txt.length<5&&!media){sSay('फसल के बारे में कुछ लिखें या फोटो जोड़ें।','bad');return;}
- sBusy=true;sBtn.disabled=true;sSay('भेजा जा रहा है…','');
- var fd=new FormData();
- fd.append('post_type','sell');fd.append('crop',T.hi);fd.append('text',txt);
- fd.append('crop_slug',T.crop_slug);fd.append('state',T.state);
- fd.append('district',T.district);fd.append('source','bhav');
- fd.append('unit','क्विंटल');
- if(qty)fd.append('quantity',qty);
- if(pr)fd.append('price',pr);
- if(media)fd.append('media',media);
- fetch('/bazar/posts',{method:'POST',headers:{'Authorization':'Bearer '+tok()},body:fd})
-  .then(function(r){return r.json().then(function(j){return {ok:r.ok,status:r.status,body:j};});})
-  .then(function(res){
-   if(res.ok&&res.body&&res.body.success){
-    sSent=true;sBtn.hidden=true;sSay('');
-    okMsg=T.okSell;
-    showAppealOk(true);
-    return;
-   }
-   sBtn.disabled=false;
-   var d=res.body&&res.body.detail;
-   sSay(d==='PROFILE_REQUIRED'?'पहले अपनी प्रोफ़ाइल बनाएं।'
-       :d==='PHONE_REQUIRED'?'पहले प्रोफ़ाइल में फ़ोन नंबर जोड़ें।'
-       :res.status===401?'भेजने के लिए पहले लॉगिन करें।'
-       :(typeof d==='string'&&d?d:'अभी नहीं भेजा जा सका — दोबारा कोशिश करें।'),'bad');
-  }).catch(function(){
-   sBtn.disabled=false;sSay('नेटवर्क की समस्या — दोबारा कोशिश करें।','bad');
-  }).then(function(){sBusy=false;});
-};
-/* खरीदना है — what is already for sale in this district, before we offer to
-   file yet another request nobody can answer today. */
-window.apGoBuy=function(){
- apShow('buy');
- if(bLoaded)return;
- bLoaded=true;
- var list=document.getElementById('ap-bl'),form=document.getElementById('ap-form');
- list.innerHTML='<p class="ap-load">देख रहे हैं…</p>';
- fetch('/bazar/feed?post_type=sell&page_size=8&crop_slug='+encodeURIComponent(T.crop_slug)
-      +'&state='+encodeURIComponent(T.state)+'&district='+encodeURIComponent(T.district))
-  .then(function(r){return r.json();})
-  .then(function(j){
-   var ps=(j&&j.data&&j.data.posts)||[];
-   if(!ps.length){
-    /* Nothing for sale here — fall through to the appeal form, which is what
-       that form was always for: an intent we cannot satisfy yet. */
-    list.innerHTML='<p class="ap-bnone">'+T.noSell+'</p>';
-    form.hidden=false;paintMsg();prefill();
-    return;
-   }
-   var h='';
-   for(var i=0;i<ps.length;i++){
-    var p=ps[i],bits=[];
-    if(p.quantity)bits.push(Math.round(p.quantity).toLocaleString('en-IN')+' '+(p.unit||'क्विंटल'));
-    if(p.price)bits.push('₹'+Math.round(p.price).toLocaleString('en-IN')+'/क्विंटल');
-    h+='<a class="ap-bcard" href="/krashi_bajar.html?post='+p.id+'">'
-      +'<span class="ap-bn">'+esc((p.author&&p.author.name)||'किसान')+'</span>'
-      +(bits.length?'<span class="ap-bm">'+esc(bits.join(' · '))+'</span>':'')
-      +(p.text?'<span class="ap-bx">'+esc(p.text.slice(0,110))+'</span>':'')
-      +'</a>';
-   }
-   list.innerHTML=h;
-   form.hidden=true;
-  }).catch(function(){
-   list.innerHTML='<p class="ap-bnone">'+T.noSell+'</p>';
-   form.hidden=false;paintMsg();prefill();
-  });
-};
-function esc(s){var d=document.createElement('span');d.textContent=s==null?'':s;return d.innerHTML;}
-/* Signed-in farmer shouldn't retype what we already know. Fetched on open, not
-   on load: this page is edge-cached SEO traffic, most of which is logged out. */
-function prefill(){
- if(filled)return;filled=true;
- var t=tok();if(!t)return;
- fetch('/profile',{headers:{'Authorization':'Bearer '+t}})
-  .then(function(r){return r.json();})
-  .then(function(j){
-   var d=j&&j.data;if(!d)return;
-   if(!fName.value&&d.full_name)fName.value=d.full_name;
-   if(!fPh.value)fPh.value=normPhone(d.phone_number||d.whatsapp_number||'');
-  }).catch(function(){});
-}
-/* Login gate. The server refuses a guest appeal outright (401), so asking here
-   saves the farmer typing a whole form before being told. Checked at open, not
-   at send, for the same reason. */
-function gateAppeal(resume){
- if(tok())return true;
- if(window.KMRequireLogin)window.KMRequireLogin({
-  title:'बेचने/खरीदने के लिए लॉगिन करें',
-  text:'लॉगिन करने पर आपकी बात आपके खाते से जुड़ जाती है — खरीदार या बेचने वाला मिलते ही उसका अपडेट आपकी कृषि बुक में दिखेगा।',
-  resume:resume||'crop-appeal'});
- else location.href='/login.html';
- return false;
-}
-/* Opens on the CHOICE, not on a form, and with no login wall: what the farmer
-   taps next decides which gate (if any) he meets. Browsing what is already for
-   sale needs no account at all — only posting does. */
 window.openCropAppeal=function(){
- /* Already filed on this page view — show the receipt again, not an empty form
-    he cannot send twice anyway. */
- if(sent||sSent){showAppealOk(sSent);return;}
  ov.hidden=false;document.body.style.overflow='hidden';
- apShow('pick');
-};
-/* ── Confirmation panel ──
-   Its own overlay rather than a block inside .ap-box: the form it confirms is
-   taller than a phone screen, so appended-at-the-bottom meant the farmer had to
-   scroll back through his own answers to find out whether they went through. */
-function showAppealOk(isSell){
- if(!okOv)return;
- var sub=document.getElementById('ap-done-sub'),book=document.getElementById('ap-book'),
-     kh=document.getElementById('ap-kh'),ttl=document.getElementById('ap-ok-t');
- if(sub)sub.textContent=okMsg;
- /* A sell listing has a real next destination — the खरीदार page for this
-    district, which is the same feed filtered to where his crop actually is.
-    Offered as a button rather than an automatic redirect: the existing rule for
-    this panel is that the confirmation never moves on its own, because the
-    farmer is still reading what just happened to his listing.
-    T.here is set when the panel is opened ON that page: a button offering to
-    take him where he already is reads as a broken link. */
- if(kh)kh.hidden=!isSell||!!T.here;
- if(ttl)ttl.textContent=isSell
-  ? 'आपकी फसल कृषि बाज़ार पर डाल दी गई है ✅'
-  : 'भाई! आपकी बात कृषि मित्र तक पहुँचा दी गई है';
- /* Never offer a button that goes nowhere: if krashibook.js somehow didn't load
-    on this page, the message stands on its own without it. */
- if(book)book.hidden=!document.getElementById('km-book-btn');
- ov.hidden=true;okOv.hidden=false;document.body.style.overflow='hidden';
- var f=okOv.querySelector('.ap-book:not([hidden]),.ap-ok-done');
- if(f)try{f.focus({preventScroll:true});}catch(e){}
-}
-window.closeAppealOk=function(){
- if(!okOv)return;
- okOv.hidden=true;document.body.style.overflow='';
-};
-if(okOv){
- okOv.addEventListener('click',function(e){if(e.target===okOv)window.closeAppealOk();});
-}
-/* Back from login with ?do=crop-appeal — reopen the form he originally tapped.
-   Peek at the URL rather than calling KMTakeResume() outright: that helper
-   consumes the parameter for whoever reads it first, and the 🔔 bell on this
-   same page reads it too. Only claim it when it is ours. */
-(function(){
- var todo='';
- try{todo=new URLSearchParams(location.search).get('do')||'';}catch(e){}
- if(todo!=='crop-appeal'&&todo!=='crop-sell')return;
- if(window.KMTakeResume)window.KMTakeResume();
- setTimeout(function(){
-  window.openCropAppeal();
-  /* Came back from login specifically to sell — skip the chooser he already
-     answered once and take him straight to the listing form. */
-  if(todo==='crop-sell'&&window.apGoSell)window.apGoSell();
- },250);
-})();
-/* KrashiBook is a modal owned by krashibook.js (bootstrapped for every page by
-   drawer-menu.js), so "open it" means firing its own floating button. */
-window.openAppealBook=function(){
- var b=document.getElementById('km-book-btn');
- window.closeAppealOk();window.closeCropAppeal();
- if(b)b.click();
 };
 window.closeCropAppeal=function(){
  ov.hidden=true;document.body.style.overflow='';
 };
 ov.addEventListener('click',function(e){if(e.target===ov)window.closeCropAppeal();});
 document.addEventListener('keydown',function(e){
- if(e.key!=='Escape')return;
- /* Topmost panel first — the confirmation sits above the form. */
- if(okOv&&!okOv.hidden){window.closeAppealOk();return;}
- if(!ov.hidden)window.closeCropAppeal();});
-window.sendCropAppeal=function(){
- if(busy)return;
- /* One appeal per page view. Without this a double-tap on a slow rural
-    connection files the same request twice and the follow-up call is wasted. */
- if(sent){showAppealOk();return;}
- var name=(fName.value||'').trim(),msg=(fMsg.value||'').trim(),
-     ph=freePh?(fPh.value||'').trim():normPhone(fPh.value);
- if(name.length<2){say('कृपया अपना नाम लिखें।','bad');fName.focus();return;}
- if(msg.length<5){say('कृपया अपना संदेश लिखें।','bad');fMsg.focus();return;}
- /* The number stays optional — but half a number is worse than none: it looks
-    like a way to reach him and isn't. */
- if(!freePh&&ph&&ph.length<10){say('फ़ोन नंबर पूरे 10 अंकों का लिखें, या खाली छोड़ दें।','bad');
-  fPh.focus();return;}
- busy=true;btn.disabled=true;say('भेजा जा रहा है…','');
- var h={'Content-Type':'application/json'},t=tok();
- if(t)h['Authorization']='Bearer '+t;
- fetch('/appeal/crop',{method:'POST',headers:h,body:JSON.stringify({
-  kind:kind,name:name,description:msg,
-  phone:ph,quantity:(fQty.value||'').trim(),
-  commodity:T.commodity,state:T.state,district:T.district,
-  page_url:location.pathname
- })}).then(function(r){
-  return r.json().then(function(j){return {ok:r.ok,status:r.status,body:j};});
- }).then(function(res){
-  if(res.ok&&res.body&&res.body.success){
-   sent=true;btn.hidden=true;say('');
-   okMsg=(res.body.message||'')+' आगे का अपडेट आप कृषि बुक में देख सकते हैं।';
-   showAppealOk();
-   return;
-  }
-  btn.disabled=false;
-  var d=res.body&&res.body.detail;
-  say(res.status===429
-      ? 'बहुत सारे अनुरोध — कुछ देर बाद कोशिश करें।'
-      : res.status===401
-      ? 'भेजने के लिए पहले लॉगिन करें।'
-      : (typeof d==='string'&&d?d:'अभी नहीं भेजा जा सका — दोबारा कोशिश करें।'),'bad');
- }).catch(function(){
-  btn.disabled=false;say('नेटवर्क की समस्या — दोबारा कोशिश करें।','bad');
- }).then(function(){busy=false;});
-};
+ if(e.key==='Escape'&&!ov.hidden)window.closeCropAppeal();});
 """
 
 
-def _appeal_block(hi: str, commodity: str, state: str, district: str,
-                  c_slug: str = "", s_slug: str = "", d_slug: str = "",
-                  here: bool = False, ok_sell: str = "") -> str:
-    """🤝 "बेचना है / खरीदना है" button + its panel, for tier-4 district pages.
+def _appeal_block(hi: str, state: str, district: str) -> str:
+    """🤝 "बेचना है / खरीदना है" chooser — the panel behind the tier-4 buttons.
 
-    A district page is where intent is at its sharpest: the farmer has just read
-    what his crop fetches in *his* mandi. Until now the page ended there. This
-    captures the next sentence — who wants to sell, what, where — into
-    crop_appeals, and it is the supply side of the buyer/dealer directory.
+    Two links, no form and no login wall. Whichever door he takes, Krashi Bazar
+    is where the rules live (posting needs a profile and a reachable number;
+    browsing needs nothing at all), so a gate here would only mean being told no
+    twice.
 
-    `here=True` renders the same panel on the खरीदार page itself, where the only
-    difference is what happens afterwards: the confirmation stops offering a link
-    to the buyer page the farmer is already standing on. `ok_sell` lets that
-    caller write the confirmation line, because whether the page has any buyers
-    on it to promise him is something only the caller knows.
-
-    Deliberately not login-gated (see routes/appeal.py): a wall here would cost
-    more appeals than the account linkage is worth. Name is the only thing a
-    farmer must type; the message is pre-written and the profile fields fill
-    themselves in for anyone signed in.
-
-    All markup is identical for every visitor — /bhav HTML is edge-cached, so
-    nothing user-specific may be rendered server-side. The panel hydrates
-    client-side, same contract as _alert_bell."""
-    place = f"{district} के आस-पास"
-    kh_url = f"/bhav/{c_slug}/{s_slug}/{d_slug}/kharidar"
-    cfg = _json.dumps({
-        "commodity": commodity or "",
-        "state":     state or "",
-        "district":  district or "",
-        "crop_slug": c_slug or "",
-        "hi":        hi or "",
-        "kh":        kh_url,
-        "here":      bool(here),
-        "okSell": (ok_sell or
-                   f"आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है। "
-                   f"{district} के खरीदार नीचे दिए पेज पर देखें।"),
-        "tPick": f"{hi} बेचना है या खरीदना है?",
-        "sPick": f"📍 {district}, {_hindi_state(state)} · नीचे से चुनें।",
-        "tSell": f"अपना {hi} बेचने के लिए डालें",
-        "sSell": ("यह जानकारी कृषि बाज़ार पर सबको दिखेगी, और इसी पेज पर भी।"
-                  if here else
-                  "यह जानकारी कृषि बाज़ार पर सबको दिखेगी, और आपके जिले के "
-                  "खरीदार पेज पर भी।"),
-        "tBuy":  f"{district} में {hi} कौन बेच रहा है?",
-        "sBuy":  "अभी बिकने के लिए रखी फसलें नीचे दी गई हैं।",
-        "noSell": (f"अभी {district} में {hi} बेचने के लिए किसी ने नहीं डाला है। "
-                   f"नीचे अपनी जरूरत लिख दें — कोई बेचने वाला आते ही आपको बताया जाएगा।"),
-        "msg": {
-            "sell": (f"मेरे पास बिक्री के लिए {hi} है। {place} अच्छा भाव देने वाले "
-                     f"खरीदार से मेरी बात कराएं।"),
-            "buy":  (f"मुझे {hi} खरीदना है। {place} बेचने वाले किसान या व्यापारी से "
-                     f"मेरी बात कराएं।"),
-        },
-    }, ensure_ascii=False)
+    Identical markup for every visitor — /bhav HTML is edge-cached, so nothing
+    user-specific may be rendered server-side. There is nothing left to hydrate
+    beyond opening and closing the box."""
     return f"""<div class="ap-ov" id="ap-ov" hidden>
 <div class="ap-box" role="dialog" aria-modal="true" aria-labelledby="ap-t">
 <button class="ap-x" type="button" onclick="closeCropAppeal()" aria-label="बंद करें">&times;</button>
 <h2 id="ap-t">{escape(hi)} बेचना है या खरीदना है?</h2>
-<p class="ap-sub" id="ap-sub">📍 {escape(district)}, {escape(_hindi_state(state))} · नीचे से चुनें।</p>
-
-<div class="ap-scr" id="ap-pick">
+<p class="ap-sub">📍 {escape(district)}, {escape(_hindi_state(state))} · नीचे से चुनें।</p>
 <div class="ap-pick">
-<button type="button" onclick="apGoSell()">
+<a href="{_BAZAR_SELL}">
 <span class="ap-pi" aria-hidden="true">🌾</span>
-<span class="ap-pt"><b>बेचना है</b><small>अपनी फसल की जानकारी डालें — खरीदार तक पहुंचेगी</small></span></button>
-<button type="button" onclick="apGoBuy()">
+<span class="ap-pt"><b>बेचना है</b><small>कृषि बाज़ार पर अपनी फसल की पोस्ट डालें — मात्रा, भाव और फोटो के साथ। खरीदार सीधे आपको फोन करेंगे।</small></span></a>
+<a href="{_BAZAR_BUY}">
 <span class="ap-pi" aria-hidden="true">🛒</span>
-<span class="ap-pt"><b>खरीदना है</b><small>इस जिले में बिकने के लिए रखी फसल देखें</small></span></button>
-</div>
-</div>
-
-<div class="ap-scr" id="ap-sell" hidden>
-<button class="ap-back" type="button" onclick="apBack()">← वापस</button>
-<div class="ap-gate" id="ap-gate" hidden></div>
-<div id="ap-sellform" hidden>
-<div class="ap-row">
-<div class="ap-f"><label for="ap-sqty">मात्रा (क्विंटल)</label>
-<input id="ap-sqty" type="number" min="0" step="any" inputmode="decimal" placeholder="जैसे 40"></div>
-<div class="ap-f"><label for="ap-sprice">भाव ₹/क्विंटल</label>
-<input id="ap-sprice" type="number" min="0" step="any" inputmode="decimal" placeholder="जैसे 2450"></div>
-</div>
-<div class="ap-f"><label for="ap-stext">फसल के बारे में *</label>
-<textarea id="ap-stext" rows="3" maxlength="1000" placeholder="किस्म, कब कटी, कहाँ रखी है — जितना लिखेंगे, खरीदार उतनी जल्दी बात करेगा।"></textarea></div>
-<div class="ap-f"><label for="ap-smedia">फोटो या वीडियो (ज़रूरी नहीं)</label>
-<input class="ap-file" id="ap-smedia" type="file" accept="image/*,video/*"></div>
-<button class="ap-send" id="ap-ssend" type="button" onclick="apSendSell()">कृषि बाज़ार पर डालें</button>
-<p class="ap-out" id="ap-sout" role="status" aria-live="polite"></p>
-</div>
-</div>
-
-<div class="ap-scr" id="ap-buy" hidden>
-<button class="ap-back" type="button" onclick="apBack()">← वापस</button>
-<div class="ap-bl" id="ap-bl"></div>
-<div id="ap-form" hidden>
-<div class="ap-f"><label for="ap-name">आपका नाम *</label>
-<input id="ap-name" type="text" maxlength="80" autocomplete="name" placeholder="जैसे रामकिशोर यादव"></div>
-<div class="ap-row">
-<div class="ap-f"><label for="ap-qty">मात्रा</label>
-<input id="ap-qty" type="text" maxlength="40" placeholder="जैसे 40 क्विंटल"></div>
-<div class="ap-f"><label for="ap-ph">फ़ोन नंबर</label>
-<div class="ap-tel" id="ap-tel"><span class="ap-cc" id="ap-cc" aria-hidden="true">+91</span>
-<input id="ap-ph" type="tel" maxlength="15" inputmode="numeric" autocomplete="tel"
-pattern="[0-9]{{10}}" placeholder="10 अंकों का नंबर" aria-describedby="ap-note"></div>
-<button class="ap-free" id="ap-free" type="button" onclick="toggleFreePhone()">दूसरा फ़ॉर्मैट — नंबर खुद लिखें</button></div>
-</div>
-<div class="ap-f"><label for="ap-msg">आपका संदेश *</label>
-<textarea id="ap-msg" rows="4" maxlength="1000"></textarea></div>
-<p class="ap-note" id="ap-note">फ़ोन नंबर देना ज़रूरी नहीं है, लेकिन नंबर होने पर खरीदार से जोड़ना आसान हो जाता है। आपका नंबर पेज पर कहीं नहीं दिखाया जाता।</p>
-<button class="ap-send" id="ap-send" type="button" onclick="sendCropAppeal()">भेजें</button>
-<p class="ap-out" id="ap-out" role="status" aria-live="polite"></p>
+<span class="ap-pt"><b>खरीदना है</b><small>कृषि बाज़ार में किसानों और व्यापारियों की बिकाऊ फसल देखें — फोटो, मात्रा और भाव के साथ।</small></span></a>
 </div>
 </div>
 </div>
-</div>
-<div class="ap-ok-ov" id="ap-ok-ov" hidden>
-<div class="ap-ok" role="dialog" aria-modal="true" aria-labelledby="ap-ok-t">
-<button class="ap-x" type="button" onclick="closeAppealOk()" aria-label="बंद करें">&times;</button>
-<div class="ap-ok-ic" aria-hidden="true">✅</div>
-<h2 id="ap-ok-t">भाई! आपकी बात कृषि मित्र तक पहुँचा दी गई है</h2>
-<p class="ap-ok-sub" id="ap-done-sub"></p>
-<a class="ap-kh" id="ap-kh" href="{kh_url}" hidden>🧾 {escape(district)} के खरीदार देखें →</a>
-<button class="ap-book" id="ap-book" type="button" onclick="openAppealBook()">📒 कृषि बुक खोलें</button>
-<button class="ap-ok-done" type="button" onclick="closeAppealOk()">ठीक है</button>
-</div>
-</div>
-<script>(function(){{var T={cfg};{_APPEAL_JS}}})();</script>"""
+<script>(function(){{{_APPEAL_JS}}})();</script>"""
 
 
 def _nearest_panel_html(cs: str, hi: str, row: dict, dist_km: float) -> str:
@@ -4884,16 +4577,35 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 </article>""")
     mkt_cards = "\n".join(cards_html)
 
-    # ── overall day-on-day move, averaged over the mandis that reported one ──
-    pcts = []
-    for p in prices:
-        try:
-            v = float(p.get("change_pct"))
-            if v:
-                pcts.append(v)
-        except (TypeError, ValueError):
-            pass
-    avg_pct = round(sum(pcts) / len(pcts), 1) if pcts else None
+    # ── the district's daily average, one point per calendar day ──
+    # Everything below that quotes a trend reads THIS: the headline delta, the
+    # sell-signal and the chart. They used to be computed three different ways
+    # off three different row sets and openly disagreed on the page.
+    series = _district_series(prices, fresh_iso, st["avg"])
+
+    # ── overall day-on-day move ──
+    # Yesterday's district average vs today's, on the same carry-forward basis
+    # as the headline itself, so "कल से" is literally what it measures. The old
+    # number was the unweighted mean of the per-mandi change_pct values, which
+    # (a) silently dropped every mandi with no previous price, (b) averaged
+    # percentages against different base dates — a mandi's "prev" can be a week
+    # old — so "कल से" was often not from yesterday, and (c) could not be
+    # reconciled with either the chart or the headline.
+    avg_pct = None
+    if len(series) >= 2 and series[-2]:
+        avg_pct = round((series[-1] - series[-2]) / series[-2] * 100, 1)
+    if avg_pct is None:
+        # No usable history (the mandi_last_seen rescue path) — fall back to the
+        # per-row deltas, which are all such a page has.
+        pcts = []
+        for p in prices:
+            try:
+                v = float(p.get("change_pct"))
+                if v:
+                    pcts.append(v)
+            except (TypeError, ValueError):
+                pass
+        avg_pct = round(sum(pcts) / len(pcts), 1) if pcts else None
     if avg_pct:
         d_cls  = "up" if avg_pct > 0 else "dn"
         d_sym  = "▲" if avg_pct > 0 else "▼"
@@ -4917,9 +4629,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # never wait on that.
     season_html = _lazy_div('bhav-lazy-season')
 
-    # ── chart series: the mandi with the longest history speaks for the district ──
-    sparks = [[v for v in (_num(x) for x in (p.get("spark") or [])) if v] for p in prices]
-    series = max(sparks, key=len) if sparks else []
+    # ── the trend chart, drawn from the district series built above ──
     # sell-or-wait read, from the same history the chart draws (no forecast made)
     signal_html = _sell_signal(series, st["avg"], avg_pct)
     chart_svg = _chart(series)
@@ -4976,9 +4686,12 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
     desc  = _fit(
         f"{as_of_hi}: {district} ({hi_state}) में {hi} का ताजा भाव — {_avg}"
-        f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और 7-दिन का रुझान।",
+        # No "7-दिन" here: the chart's window is however many days this district
+        # actually has history for, so a hard-coded number is a claim the page
+        # cannot keep.
+        f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और भाव का रुझान।",
         f"{as_of_hi}: {district} में {hi} का ताजा भाव — {_avg}"
-        f"{_mandis_gen(st['n'])} के रेट और 7-दिन का रुझान।",
+        f"{_mandis_gen(st['n'])} के रेट और भाव का रुझान।",
         limit=162)
 
     # WhatsApp share — share THIS bhav page's own URL, not the /share/mandi deep
@@ -5095,7 +4808,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <button class="btn btn-appeal" type="button" onclick="openCropAppeal()">🤝 {escape(hi)} बेचना/खरीदना है?</button>
 {kharidar_cta}
 </div>
-{_appeal_block(hi, commodity, state, district, cs, ss, ds)}
+{_appeal_block(hi, state, district)}
 
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
@@ -5109,7 +4822,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 # _BP_CSS + _PRODUCT_CSS are new here: the district page now
-                # carries the paid dealer panel too (the ₹199 product), which
+                # carries the paid dealer panel too (the metered product), which
                 # it never used to.
                 extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS + _BP_CSS + _PRODUCT_CSS,
                 updated=fresh_iso)
@@ -5194,8 +4907,8 @@ padding:18px 20px;box-shadow:var(--shadow-sm)}
 border-radius:var(--radius-sm);padding:9px 12px;margin:0 0 13px!important}
 .kh-sell-n b{font-weight:800}
 .kh-sell-btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;
-background:var(--green-dark);color:#fff;font:inherit;font-size:14px;font-weight:800;
-padding:11px 20px;border-radius:24px;transition:background .15s,transform .15s}
+text-decoration:none;background:var(--green-dark);color:#fff;font:inherit;font-size:14px;
+font-weight:800;padding:11px 20px;border-radius:24px;transition:background .15s,transform .15s}
 .kh-sell-btn:hover{background:var(--green-mid);transform:translateY(-1px)}
 .kh-join{margin-top:22px;background:var(--green-dark);color:#fff;border-radius:var(--radius-md);
 padding:18px 20px;box-shadow:var(--shadow-md)}
@@ -5512,7 +5225,7 @@ def _dukan_pitch(where: str = "") -> str:
 <ul class="kmdp-list">
 <li><b>नाम, आपकी कीमत, MRP और छूट</b> — बिल्कुल दुकान जैसा कार्ड</li>
 <li><b>कोई कमीशन नहीं</b> — किसान सीधे आपको फोन करता है</li>
-<li><s>₹599</s> <b>₹199/महीना</b> से — शुरुआती ऑफर · हर अतिरिक्त जिला +₹50</li>
+<li><b>₹199 जिला + ₹50 प्रति फसल</b> — प्रति सीज़न (3 महीने) · जितने पेज, उतना पैसा</li>
 </ul>
 <a class="kmdp-cta" href="/dukanlisting">अपनी दुकान लिस्ट करें →</a>
 <span class="kmdp-fine">व्यापारी · आढ़तिया · खाद-बीज डीलर · FPO · मिल</span>
@@ -5527,7 +5240,7 @@ def _dealer_teaser_html(cs: str, ss: str, state: str, ds: str = "") -> str:
 
     Serves BOTH products, told apart by `ds`:
         ds == ""   the state page  /bhav/{crop}/{state}          ₹999/month
-        ds != ""   a district page /bhav/{crop}/{state}/{dist}   ₹199/month
+        ds != ""   a district page /bhav/{crop}/{state}/{dist}   ₹199+₹50/crop
 
     Who appears is services/placements.py — one row per (page, slot), so the
     two pages are genuinely separate inventory and a dealer can hold rank 1 on
@@ -5651,7 +5364,7 @@ def _bazar_slice(post_type: str, cs: str, state: str, district: str,
         for p in rows:
             author = bazar._author_info(
                 db.query(User).filter(User.id == p.user_id).first(),
-                db.query(UserProfile).filter(UserProfile.user_id == p.user_id).first())
+                db.query(UserProfile).filter(UserProfile.user_id == acct(p.user_id)).first())
             out.append({
                 "id": p.id, "text": p.text or "", "price": p.price,
                 "quantity": p.quantity, "unit": p.unit or "क्विंटल",
@@ -5667,7 +5380,8 @@ def _bazar_slice(post_type: str, cs: str, state: str, district: str,
         db.close()
 
 
-def _sell_intent(commodity: str, district: str, days: int = 60) -> int:
+def _sell_intent(commodity: str, cs: str, state: str, district: str,
+                 days: int = 60) -> int:
     """How many farmers have asked to SELL this crop in this district lately.
 
     This is the number the खरीदार page is actually selling. A dealer does not
@@ -5675,23 +5389,43 @@ def _sell_intent(commodity: str, district: str, days: int = 60) -> int:
     किसानों ने गेहूं बेचने के लिए कहा है" is a queue with his name on it. The
     click that follows is what lead_clicks counts — this is the supply behind it.
 
-    A count, never the rows: names and phone numbers in crop_appeals belong to
-    the farmers who typed them, and a public page listing who has grain sitting
-    at home is not something we would want done to us. 60 days because a farmer
-    who wrote in last month is still holding the crop; a harvest does not move
-    on a 30-day boundary.
+    Two sources, because the ask moved. It used to arrive only as a crop_appeals
+    row from the form this page carried; the बेचना है door now goes straight to
+    Krashi Bazar, so new supply lands as an active sell post instead. Counting
+    only the old table would have let this line decay to zero over 60 days while
+    the supply behind it was growing.
+
+    A count, never the rows: names and numbers belong to the farmers who typed
+    them, and a public page listing who has grain sitting at home is not
+    something we would want done to us. 60 days because a farmer who wrote in
+    last month is still holding the crop; a harvest does not move on a 30-day
+    boundary.
     """
     if not (commodity and district):
         return 0
     db = SessionLocal()
     try:
         cutoff = datetime.utcnow() - timedelta(days=days)
-        return (db.query(func.count(CropAppeal.id))
-                  .filter(CropAppeal.kind == "sell",
-                          CropAppeal.commodity == commodity,
-                          CropAppeal.district == district,
-                          CropAppeal.created_at >= cutoff)
-                  .scalar() or 0)
+        n = (db.query(func.count(CropAppeal.id))
+               .filter(CropAppeal.kind == "sell",
+                       CropAppeal.commodity == commodity,
+                       CropAppeal.district == district,
+                       CropAppeal.created_at >= cutoff)
+               .scalar() or 0)
+        if cs:
+            # Same place-matching as bazar.place_posts, so this count and the
+            # listings the page shows can never disagree about which rows are
+            # "in this district".
+            q = (db.query(func.count(BazarPost.id))
+                   .filter(BazarPost.post_type == "sell",
+                           BazarPost.status == "active",
+                           func.lower(BazarPost.crop_slug) == bazar._norm_place(cs),
+                           func.lower(BazarPost.district) == bazar._norm_place(district),
+                           BazarPost.created_at >= cutoff))
+            if state:
+                q = q.filter(func.lower(BazarPost.state) == bazar._norm_place(state))
+            n += q.scalar() or 0
+        return n
     except Exception as e:
         # Same rule as the bazar slice: the page must not 500 over a side panel.
         logger.warning("sell intent failed (%s/%s): %s", commodity, district, e)
@@ -5856,10 +5590,11 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     join_msg = quote(f"नमस्ते, मुझे कृषि मित्र पर {district} ({state}) में "
                      f"{hi} खरीदार के रूप में अपना नाम जोड़वाना है।")
     # The other half of the page. Everything above answers "who will buy it";
-    # this captures "I have it" — the same crop_appeals / Krashi Bazar flow the
-    # price page uses, opened right where the farmer is looking at buyers. Until
-    # now the empty state promised a form here that did not exist.
-    n_sell = _sell_intent(commodity, district)
+    # this is "I have it" — and it now goes where that sentence can actually be
+    # acted on. The in-page composer this used to open is gone: Krashi Bazar's
+    # seller tab is the same post, with the photo picker, the login gate and the
+    # farmer's own listings around it.
+    n_sell = _sell_intent(commodity, cs, state, district)
     intent_line = (
         f'<p class="kh-sell-n">🌾 पिछले दो महीनों में <b>{n_sell} किसानों</b> ने '
         f'{escape(district)} में {escape(hi)} बेचने के लिए कहा है।</p>'
@@ -5870,17 +5605,13 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
                 f'दोनों तक पहुंचेगी।' if total else
                 f'यह कृषि बाज़ार पर दिख जाएगी, और {escape(district)} में खरीदार '
                 f'जुड़ते ही सबसे पहले यही सूची उन्हें दिखाई जाएगी।')
-    ok_sell = (f"आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है — ऊपर दिए "
-               f"{district} के खरीदारों को भी।" if total else
-               f"आपकी फसल की जानकारी कृषि बाज़ार पर सबको दिख रही है। {district} में "
-               f"खरीदार जुड़ते ही आपको बताया जाएगा।")
     sell_cta = (
         f'<section class="kh-sell"><h2>🌾 आपको {escape(hi)} बेचना है?</h2>'
-        f'<p>अपनी फसल की जानकारी यहीं डालें — मात्रा, भाव और फोटो। {sell_sub}</p>'
+        f'<p>कृषि बाज़ार पर अपनी फसल की पोस्ट डालें — मात्रा, भाव और फोटो के साथ। '
+        f'{sell_sub}</p>'
         f'{intent_line}'
-        f'<button class="kh-sell-btn" type="button" onclick="openCropAppeal()">'
-        f'फसल की जानकारी डालें →</button></section>'
-        f'{_appeal_block(hi, commodity, state, district, cs, ss, ds, here=True, ok_sell=ok_sell)}')
+        f'<a class="kh-sell-btn" href="{_BAZAR_SELL}">'
+        f'कृषि बाज़ार पर फसल डालें →</a></section>')
 
     # Two doors, because a trader browsing at 11pm will not wait for a reply and
     # a trader standing in a mandi will not fill a form. The form is primary: it
@@ -5888,7 +5619,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     # message someone has to transcribe before it can be acted on.
     join = (f'<section class="kh-join"><h2>🧾 आप {escape(hi)} खरीदते हैं?</h2>'
             f'<p>अपने प्रोडक्ट इसी पेज पर दिखाएं — नाम, आपकी कीमत, MRP और छूट के साथ, '
-            f'बिल्कुल ऊपर वाले कार्ड की तरह। शुरुआती ऑफर: ₹599 की जगह ₹199/महीना, '
+            f'बिल्कुल ऊपर वाले कार्ड की तरह। शुरुआती ऑफर: ₹199 जिला + ₹50 प्रति फसल प्रति सीज़न, '
             f'हर अतिरिक्त जिला +₹50। '
             f'हम कॉल करके पुष्टि के बाद ही लिस्टिंग लाइव करते हैं।</p>'
             f'<a href="{SITE}/dukanlisting">अपनी दुकान लिस्ट करें →</a>'
@@ -5992,5 +5723,5 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › '
               f'<a href="{SITE}{price_url}">{escape(district)}</a> › खरीदार')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_KH_CSS + _APPEAL_CSS + _PRODUCT_CSS, robots=robots,
+                extra_css=_KH_CSS + _PRODUCT_CSS, robots=robots,
                 updated=fresh_iso if st["avg"] else "")

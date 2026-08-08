@@ -18,11 +18,20 @@ scheduler = AsyncIOScheduler(timezone=IST)
 
 
 def _run():
+    from backend.services import page_stats
     from backend.services.gsc_service import configured, run_stale_check
     if not configured():
         logger.info("GSC credentials not configured — skipping stale check")
         return
     run_stale_check()
+    # Same credentials, same daily window, one more call: the per-page
+    # impression snapshot the /dukanlisting crop picker quotes. Deliberately
+    # after the recrawl sweep and in its own try — a Search Analytics failure
+    # must not cost us the recrawl requests, which are the job's main purpose.
+    try:
+        page_stats.refresh()
+    except Exception as e:
+        logger.warning("page stats refresh raised, continuing: %s", e)
 
 
 def _register_job():
@@ -32,7 +41,7 @@ def _register_job():
         # reflects yesterday's final prices, before the day's own 08:00 fetch.
         trigger            = CronTrigger(hour=5, minute=30, timezone=IST),
         id                 = "gsc_stale_check",
-        name               = "Google Search Console staleness sweep — daily 05:30 IST",
+        name               = "GSC staleness sweep + page-stats snapshot — daily 05:30 IST",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,

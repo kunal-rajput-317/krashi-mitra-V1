@@ -544,9 +544,12 @@ async def list_admin_alerts(
     pushes and are part of what is going out."""
     from backend.database.db import MandiAlert, PushSubscription, User, UserProfile
 
+    # The profile joins on User.user_id, not MandiAlert.user_id: mandi_alerts
+    # keys on users.id like every other child table, while user_profiles keys
+    # on the account number. The already-joined User row is the bridge.
     q = db.query(MandiAlert, User, UserProfile) \
           .outerjoin(User,        User.id        == MandiAlert.user_id) \
-          .outerjoin(UserProfile, UserProfile.user_id == MandiAlert.user_id)
+          .outerjoin(UserProfile, UserProfile.user_id == User.user_id)
     if active:
         q = q.filter(MandiAlert.active.is_(True))
 
@@ -966,6 +969,8 @@ async def farmer_locations(
     from backend.database.db import User, UserProfile
 
     try:
+        # Keyed by account number (user_profiles.user_id), so the lookup below
+        # goes through user.user_id — NOT user.id.
         profiles = {p.user_id: p for p in db.query(UserProfile).all() if p.user_id is not None}
         users = db.query(User).all()
 
@@ -976,7 +981,7 @@ async def farmer_locations(
 
         farmers = []
         for user in users:
-            profile = profiles.get(user.id)
+            profile = profiles.get(user.user_id)
             lat, lon, accuracy = _resolve_coords(profile, user)
             crop = _primary_crop(profile, user)
             place = _readable_place(profile, user, accuracy == "device")
@@ -1414,7 +1419,7 @@ async def delete_product_image(
 def _page_label(idx: dict, crop: str, state: str, district: str = "") -> dict:
     """One searchable /bhav page, named the way a person would say it."""
     from backend.routes import bhav
-    from backend.services import placements
+    from backend.services import page_stats, placements
 
     return {
         "url":        placements.page_url(crop, state, district),
@@ -1426,8 +1431,14 @@ def _page_label(idx: dict, crop: str, state: str, district: str = "") -> dict:
         "state_hi":   idx.get("states", {}).get(crop, {}).get(state, state),
         "district_hi": (idx.get("dists", {}).get(crop, {})
                            .get(state, {}).get(district, district)),
-        "price":      placements.price_for(district),
-        "list_price": placements.list_price_for(district),
+        "price":      placements.slot_price(crop, state, district),
+        "tier":       placements.tier_of(crop, state, district),
+        "tier_label": placements.tier_label(placements.tier_of(crop, state, district)),
+        # What the page actually did, on the row the owner is about to sell.
+        # None = no data yet, 0 = Google showed it to nobody — the panel says
+        # different things for each, because only one of them is a reason not
+        # to take the money.
+        "traffic":    page_stats.for_page(crop, state, district),
     }
 
 
@@ -1535,35 +1546,126 @@ async def add_buyer_placement(
 ):
     """{"crop": "...", "state": "...", "district": "", "rank": 1, "price": 999}
 
+    Any of crop/state/district may be "*" — that is how the wide plans are
+    sold. See services/placements.py::TIERS for the five shapes.
+
     A crop the dealer does not deal in is allowed on purpose — the owner knows
     his dealers better than a comma-separated list does — and the panel warns
-    before sending it. What is NOT allowed is a page that does not exist: that
-    would sell a slot on a 404.
+    before sending it. What is NOT allowed is selling a pattern that covers no
+    real page: on an exact page that would be a slot on a 404, and on a
+    wildcard it would be worse — an invoice for 1,800 pages, none of which
+    exist. _pattern_covers() is the one check for both.
     """
-    from backend.routes import bhav
-    from backend.services import buyers, placements
+    from backend.services import placements
 
-    if not buyers.by_id(slug):
-        from backend.services import dealers
-        if not dealers.for_slug(db, slug) if hasattr(dealers, "for_slug") else False:
-            pass                       # fall through; the write below 404s if unknown
+    crop, state, district = placements.normalise_pattern(
+        payload.get("crop"), payload.get("state"), payload.get("district") or "")
 
-    crop = placements.norm(payload.get("crop"))
-    state = placements.norm(payload.get("state"))
-    district = placements.norm(payload.get("district") or "")
-
-    idx = bhav._get_index()
-    known_state = state in idx.get("states", {}).get(crop, {})
-    known_district = district in idx.get("dists", {}).get(crop, {}).get(state, {})
-    if not known_state or (district and not known_district):
+    covered = _pattern_covers(crop, state, district)
+    if not covered:
         raise HTTPException(400, f"{placements.page_url(crop, state, district)} "
-                                 f"is not a page that exists")
+                                 f"covers no page that exists")
 
     row = _dealer_write(placements.set_placement, db, slug, crop, state,
                         district, payload.get("rank"), payload.get("price"))
     if not row:
-        raise HTTPException(400, "rank must be 1, 2 or 3")
-    return {"success": True, "placements": placements.for_dealer(slug)}
+        raise HTTPException(400, "rank must be 1, 2 or 3, and the pattern must "
+                                 "be one of the five sold tiers")
+    return {"success": True, "pages_covered": covered,
+            "placements": placements.for_dealer(slug)}
+
+
+def _pattern_covers(crop: str, state: str, district: str) -> int:
+    """How many real /bhav pages this placement pattern would appear on.
+
+    Also the honesty check before money changes hands: quoting ₹6,999 for
+    "wheat across UP" is only defensible if we can say it is 74 real pages, and
+    a pattern that resolves to zero is a sale that must not happen.
+    """
+    from backend.routes import bhav
+    from backend.services import placements
+
+    idx = bhav._get_index()
+    W = placements.WILD
+    crops = ([c for c in idx.get("crops", {}) if bhav._is_crop(idx["crops"][c])]
+             if crop == W else [crop])
+
+    n = 0
+    for c in crops:
+        states = idx.get("states", {}).get(c, {})
+        for s in (states if state == W else [state]):
+            if s not in states:
+                continue
+            dists = idx.get("dists", {}).get(c, {}).get(s, {})
+            if district == W:
+                n += len(dists) + 1        # every district page, plus the state page
+            elif district == "":
+                n += 1                     # the state landing page only
+            elif district in dists:
+                n += 1
+    return n
+
+
+@router.get("/placements/capacity")
+async def placement_capacity(
+    crop:     str = "",
+    state:    str = "",
+    district: str = "",
+    _: str = Depends(require_admin),
+):
+    """Is there anything left to sell here, and is it guaranteed to render?
+
+    Called before quoting. Over-selling used to be self-correcting because a
+    sale simply evicted the previous holder on one visible page; a wide plan
+    renders on 1,800 pages, so the fourth buyer's disappointment is invisible
+    without asking first.
+    """
+    from backend.services import placements
+    cap = placements.capacity(crop, state, district)
+    cap["pages_covered"] = _pattern_covers(
+        *placements.normalise_pattern(crop, state, district))
+    return {"success": True, **cap}
+
+
+@router.get("/placements/rates")
+async def placement_rates(_: str = Depends(require_admin)):
+    """The rate card, straight from services/placements.py, so the panel can
+    never quote a number the backend does not charge."""
+    from backend.services import page_stats, placements
+    return {"success": True,
+            "season_months": placements.SEASON_MONTHS,
+            "slots": placements.SLOTS,
+            "local_cap": placements.LOCAL_CAP,
+            "year_seasons_charged": placements.YEAR_SEASONS_CHARGED,
+            "year_seasons_given": placements.YEAR_SEASONS_GIVEN,
+            "district_rate": placements.PRICE_DISTRICT,
+            "crop_rate": placements.PRICE_CROP,
+            "list_district_rate": placements.LIST_DISTRICT,
+            "list_crop_rate": placements.LIST_CROP,
+            "custom_floor": placements.CUSTOM_FLOOR,
+            "custom_min_impressions": placements.CUSTOM_MIN_IMPRESSIONS,
+            "stats_age_days": page_stats.snapshot_age_days(),
+            "stats_stale": page_stats.is_stale(),
+            "patterns": [{"key": k, "label": v["label"], "local": v["local"]}
+                         for k, v in placements.TIERS.items()]}
+
+
+@router.get("/placements/custom-quote")
+async def custom_page_quote(
+    crop:     str = "",
+    state:    str = "",
+    district: str = "",
+    _: str = Depends(require_admin),
+):
+    """What the hand-sold single-page tier is worth on THIS page, and whether
+    it should be offered at all.
+
+    Refuses below the impression gate rather than returning the floor: of
+    ~12,900 crop×district pages, most got no clicks at all last month, and
+    quoting ₹4,999 on one of those buys a season of revenue and loses the
+    buyer permanently."""
+    from backend.services import placements
+    return {"success": True, **placements.custom_quote(crop, state, district)}
 
 
 @router.delete("/placements/{placement_id}")

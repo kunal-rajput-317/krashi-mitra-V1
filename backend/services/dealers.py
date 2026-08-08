@@ -45,6 +45,38 @@ CALL_RESULTS = ("no_answer", "callback", "interested", "not_interested", "pitche
 # disagree about which dealers are about to go dark.
 EXPIRY_WARN_DAYS = 7
 
+# A sanity cap on the metered crop list, not an abuse defence — the account is
+# already logged in. The biggest real district in the index carries 61 crops, so
+# this is "more than anyone will ever pick" rather than a limit anyone meets.
+_MAX_PLAN_CROPS = 80
+
+_CROP_SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
+
+
+def normalise_plan_crops(raw) -> list[str]:
+    """The crop list a dealer is being billed for, cleaned and deduped.
+
+    ONE normaliser, because two would eventually disagree about the count and
+    the disagreement would be between the price he was quoted and the price
+    stored on his row. The route uses it to say what he owes; _apply() uses it
+    to persist the same list.
+
+    Accepts a list or a comma string. Anything that is not a plausible /bhav
+    crop slug is dropped rather than sanitised — a crop we cannot match to a
+    page is an unbuyable line on an invoice, and it is also the one string on a
+    signup that a dealer picks and an operator later reads.
+    """
+    if isinstance(raw, str):
+        raw = raw.split(",")
+    keep: list[str] = []
+    for c in (raw or []):
+        c = str(c).strip().lower()[:80]
+        if c and _CROP_SLUG.fullmatch(c) and c not in keep:
+            keep.append(c)
+        if len(keep) >= _MAX_PLAN_CROPS:
+            break
+    return keep
+
 _PHONE_RE = re.compile(r"\D+")
 
 
@@ -139,6 +171,26 @@ def _apply(row: Buyer, data: dict, *, trusted: bool) -> None:
         row.commodities = _commodities(data.get("commodities")) or None
     if "owner_user_id" in data:
         row.owner_user_id = data.get("owner_user_id")
+    # WHICH TIER HE ASKED FOR. Outside the `trusted` gate for the same reason
+    # owner_user_id is: it is not a claim about him, it is what he requested,
+    # and requesting the ₹12,999 tier grants nothing at all — the placement is
+    # still created by hand after the call. An unknown key is dropped rather
+    # than stored, so a stale cached page cannot write a tier that has no price.
+    if "plan" in data:
+        from backend.services import placements
+        plan = (data.get("plan") or "").strip().lower()
+        row.plan = plan if plan in placements.PLANS else None
+    if "plan_crops" in data:
+        # WHICH CROP PAGES HE IS PAYING FOR — the metered half of the bill, so
+        # this list IS money and is validated like it.
+        #
+        # Slug charset only. These arrive from the public form and are rendered
+        # in the admin panel, so they are the one thing on a signup that a
+        # dealer chooses AND an operator reads. Anything that is not a plausible
+        # /bhav crop slug is dropped rather than sanitised: a crop name we
+        # cannot match to a page is worth nothing to the person making the call,
+        # and storing it would put an unbuyable line on the invoice.
+        row.plan_crops = ",".join(normalise_plan_crops(data.get("plan_crops"))) or None
     if trusted:
         for flag in ("active", "verified", "featured"):
             if flag in data:
@@ -260,7 +312,7 @@ def log_call(db, slug: str, result: str, note: str = "") -> Buyer | None:
 
 
 def record_payment(db, slug: str, amount: int, ref: str = "",
-                   months: int = 1) -> Buyer | None:
+                   months: int | None = None) -> Buyer | None:
     """Money actually arrived. Typed in by hand, and that is the design.
 
     A upi:// link hands off to the dealer's own app and reports nothing back
@@ -282,13 +334,18 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     row = db.query(Buyer).filter(Buyer.slug == slug).first()
     if not row:
         return None
+    from backend.services import placements
     now = datetime.utcnow()
     targets = for_owner(db, row.owner_user_id) if row.owner_user_id else [row]
-    # Renewals extend from whichever is later: paying early should add a month,
-    # not throw away the days already bought, and a lapsed dealer's new month
+    # A season by default, not a month — SEASON_MONTHS is the one place that
+    # number lives. `months` is still honoured so the admin can key in a
+    # part-season or a full year without a second code path.
+    span = placements.SEASON_MONTHS if months is None else max(1, int(months))
+    # Renewals extend from whichever is later: paying early should add a season,
+    # not throw away the days already bought, and a lapsed dealer's new season
     # starts today rather than backdated into a gap he was not listed for.
     base = row.paid_until if (row.paid_until and row.paid_until > now) else now
-    paid_until = base + timedelta(days=30 * max(1, int(months)))
+    paid_until = base + timedelta(days=30 * span)
     for r in targets:
         r.paid_at = now
         r.paid_amount = int(amount)
@@ -305,12 +362,59 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     return row
 
 
-def quote(n_districts: int) -> int:
-    """₹199/month for the first interested district, +₹50/month for each
-    additional one — the one place this formula lives, so the signup form's
-    live price readout and the admin collect modal's prefilled amount can
-    never quietly disagree."""
-    return 199 + 50 * (max(1, int(n_districts)) - 1)
+def quote(n_districts: int, n_crops: int = 0) -> int:
+    """What a /dukanlisting account pays for one SEASON.
+
+    Metered: ₹199 per district + ₹50 per crop page. The formula itself lives in
+    services/placements.py::quote — this wrapper exists so the signup form, the
+    admin collect modal and the renewal alert all reach it through one name and
+    can never quietly disagree.
+
+    Per season, not per month: see services/placements.py::SEASON_MONTHS for
+    why three months is the unit everywhere.
+    """
+    from backend.services import placements
+    return placements.quote(n_districts, n_crops)
+
+
+def quote_year(n_districts: int, n_crops: int = 0) -> int:
+    """Four seasons for the price of three, for the dealer who would rather pay
+    once. Never the default — annual up-front is not a cadence a village shop
+    budgets in, which is the whole reason the season exists."""
+    from backend.services import placements
+    return placements.year_quote(n_districts, n_crops)
+
+
+def crops_of(rows: list) -> list[str]:
+    """Which crop pages this account is buying, deduped across its rows.
+
+    Crops are charged ONCE per account, not per district — a dealer's crop mix
+    does not change between his districts, and billing per district×crop pair
+    would be a penalty for expanding. Every row of an account carries the same
+    list; this is the one place that assumption is turned back into a number,
+    so a hand-corrected row cannot quietly double someone's bill.
+    """
+    seen: list[str] = []
+    for r in rows:
+        for c in (getattr(r, "plan_crops", "") or "").split(","):
+            c = c.strip()
+            if c and c not in seen:
+                seen.append(c)
+    return seen
+
+
+def plan_of(rows: list) -> str:
+    """How this account was sold: metered (the form) or custom (by hand).
+
+    NULL on every row created before the metered rate card, which is exactly
+    what those were — self-serve district listings — so they read as metered
+    and quote correctly without a backfill.
+    """
+    from backend.services import placements
+    for r in rows:
+        if getattr(r, "plan", None) == "custom":
+            return "custom"
+    return placements.DEFAULT_PLAN
 
 
 def for_owner(db, owner_user_id: int) -> list[Buyer]:
@@ -324,15 +428,16 @@ def for_owner(db, owner_user_id: int) -> list[Buyer]:
 
 
 def account_price(db, owner_user_id: int) -> int:
-    """quote() for however many districts this account currently has —
-    what the admin's collect modal should prefill instead of the flat
-    KM_LISTING_FEE default once a row has an owner_user_id."""
-    return quote(len(for_owner(db, owner_user_id)))
+    """quote() over however many districts and crop pages this account is
+    actually buying — what the admin's collect modal should prefill instead of
+    the flat KM_LISTING_FEE default once a row has an owner_user_id."""
+    rows = for_owner(db, owner_user_id)
+    return quote(len(rows), len(crops_of(rows)))
 
 
 # set_bhav_rank() was here. It could only say "rank N somewhere in this state",
-# which is neither of the two things now sold — a district page (₹199) and a
-# state page (₹999) are separate inventory with their own three slots each.
+# which is none of the five things now sold — see services/placements.py::TIERS,
+# where each is separate inventory with its own three slots.
 # services/placements.py replaced it; the Buyer.bhav_rank column is left in
 # place, unread, so a value written before the change is still recoverable if
 # anyone needs to see what the old panel had set.
@@ -454,6 +559,16 @@ def listing(db, *, source: str = "") -> list[dict]:
         q = q.filter(Buyer.source == source)
     rows = q.order_by(Buyer.created_at.desc()).all()
     now = datetime.utcnow()
+    # Per-account season price, computed ONCE per owner from the rows already
+    # in hand. The obvious spelling — calling account_price() per row — is an
+    # N+1 against a panel that loads every dealer on the site, and it is the
+    # kind that only hurts once there are enough dealers to matter.
+    by_owner: dict = {}
+    for r in rows:
+        if r.owner_user_id:
+            by_owner.setdefault(r.owner_user_id, []).append(r)
+    owner_price = {oid: quote(len(rs), len(crops_of(rs)))
+                   for oid, rs in by_owner.items()}
     # Where each dealer is actually shown. On the row rather than behind a
     # click because "paid but on no page" is the failure this panel exists to
     # surface, and it is invisible from every other field here.
@@ -479,6 +594,19 @@ def listing(db, *, source: str = "") -> list[dict]:
             # rows, which the panel keeps showing exactly as it does today.
             "owner_user_id": r.owner_user_id,
             "bhav_rank":     r.bhav_rank,
+            # WHAT HE ASKED FOR, next to where he actually is. The two are
+            # deliberately different fields: `plan` is the request, `placements`
+            # above is what was granted. A row where the first is set and the
+            # second is empty is a deal that was agreed and never delivered —
+            # the single most expensive thing this panel can hide, now readable
+            # without opening the call log.
+            "plan":        r.plan or placements_read.DEFAULT_PLAN,
+            "plan_label":  placements_read.plan_label(r.plan or placements_read.DEFAULT_PLAN),
+            "plan_crops":  [c for c in (r.plan_crops or "").split(",") if c],
+            # What his own account currently comes to, per season. On the row
+            # because the collect modal prefills from it and the caller should
+            # not have to do the arithmetic while the dealer is on the line.
+            "plan_price":  owner_price.get(r.owner_user_id, 0),
             # Admin-only, every one. services/buyers.py::as_dict() carries none
             # of these, so the panel is the only surface that can render them —
             # `note` especially, which is the private call log.

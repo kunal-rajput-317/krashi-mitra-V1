@@ -23,3 +23,8 @@ scratch/
 # that services/village_service.py refills from real traffic. Committing it
 # would put ~40k rows of derived data in the repo and let it go stale.
 backend/data/villages/
+
+# per-page Search Console snapshot — services/page_stats.py rebuilds it daily
+# from the live API. Same reasoning as the village cache above: ~4,400 rows of
+# derived data that would be stale the day after it was committed.
+cache/page_stats.json

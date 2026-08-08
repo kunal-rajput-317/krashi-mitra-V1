@@ -30,12 +30,12 @@
 #     bhav Tier-3 panel / krashi_bajar post both key off the whole account's
 #     eligibility, not one row in isolation.
 #   • WHERE a dealer is shown is a separate, paid decision — see
-#     services/placements.py. Two products: a slot on a DISTRICT price page
-#     (/bhav/{crop}/{state}/{district}, ₹199/mo) or one on the STATE page
-#     (/bhav/{crop}/{state}, ₹999/mo). A state slot is ONE page — the one
-#     farmers from across that state land on — not every district page in it,
-#     and the copy on /dukanlisting says so in as many words.
-#     Paying alone shows him nowhere; the admin picks the page and the slot.
+#     services/placements.py, which now sells five tiers from one district page
+#     up to a whole crop nationally, priced per SEASON (3 months) rather than
+#     per month. This route sells only the self-serve one — "मेरा पूरा जिला",
+#     every crop page in his district — because that is the only tier a shop
+#     can buy without a phone call; the wide tiers are quoted by hand.
+#     Paying alone shows him nowhere; the admin picks the pattern and the rank.
 #     A phone number still appears only on the /kharidar page.
 # ============================================================
 
@@ -48,7 +48,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.database.db import Buyer, get_db, is_read_only_error
-from backend.services import dealer_products, dealers
+from backend.services import dealer_products, dealers, placements
 from backend.utils.auth_utils import get_current_user
 
 router = APIRouter(prefix="/dukanlisting", tags=["dukan"])
@@ -93,12 +93,18 @@ class ListingsIn(BaseModel):
     description: Optional[str] = ""
     since: Optional[str] = ""
     districts: List[DistrictIn] = []
-    # Which product he thinks he is buying — "district" (₹199) or "state"
-    # (₹999). It does not change what is created here (a state listing is still
-    # rows for the districts he named); it is recorded so the admin ringing him
-    # knows what he asked for before quoting a price. Anything else is ignored
-    # rather than rejected: a stale cached page must not break a signup.
+    # Which of the five products he is asking for — see
+    # services/placements.py::TIERS. It does not change what is created here
+    # (every plan still becomes rows for the districts he named, and none of
+    # them live); it is recorded so the admin ringing him knows what he asked
+    # for before quoting a price. An unknown value falls back to the self-serve
+    # tier rather than being rejected: a stale cached page must not break a
+    # signup.
     plan: Optional[str] = ""
+    # WHICH CROP PAGES HE IS BUYING — ₹50 each, counted once across the account
+    # however many districts he picked. Half the bill, so it is validated in
+    # services/dealers.py::_apply rather than trusted.
+    plan_crops: List[str] = []
 
 
 @router.post("/listings")
@@ -114,6 +120,13 @@ async def create_listings(
     or touching that row's call/payment history.
     """
     user_id = current_user["user_id"]
+    # The self-serve form only ever sells the metered plan; "custom" is a
+    # single page negotiated by hand and never arrives here. An unknown value
+    # falls back rather than rejecting the signup — a stale cached page must
+    # never cost us a lead.
+    plan = (payload.plan or "").strip().lower()
+    if plan != "metered":
+        plan = placements.DEFAULT_PLAN
     base = {
         "name":          (payload.name or "").strip()[:_MAX["name"]],
         "kind":          payload.kind,
@@ -123,6 +136,8 @@ async def create_listings(
         "description":   (payload.description or "").strip()[:_MAX["description"]],
         "since":         (payload.since or "").strip()[:_MAX["since"]],
         "owner_user_id": user_id,
+        "plan":          plan,
+        "plan_crops":    payload.plan_crops or [],
     }
 
     incoming = [d for d in (payload.districts or []) if (d.district or "").strip()]
@@ -140,10 +155,21 @@ async def create_listings(
     # Written to `note`, the admin-only call log, and never through _apply() —
     # which drops `note` from untrusted input on purpose, so a dealer cannot
     # write into his own call log. This is the route stamping what it was told,
-    # not the dealer's text.
-    plan_note = {"district": "[प्लान] जिला — ₹199/माह",
-                 "state":    "[प्लान] राज्य का पेज — ₹999/माह"}.get(
-        (payload.plan or "").strip().lower(), "")
+    # not the dealer's text. The tier itself is a real column (Buyer.plan); this
+    # line is the human-readable twin the caller actually reads, built from
+    # placements.TIERS rather than typed out, so a reprice cannot leave the
+    # call log quoting a number we no longer charge.
+    # Generated entirely from our own rate card — NOTHING the dealer typed goes
+    # in here, not even his chosen crops. `plan_crops` has its own column and
+    # the panel renders it from there; concatenating it into this string would
+    # be a write path from the signup form straight into the private call log,
+    # which is the one thing this field must never have.
+    n_crops = len(dealers.normalise_plan_crops(base["plan_crops"]))
+    plan_note = (f"[प्लान] {placements.plan_label(plan)} — "
+                 f"{len(incoming)} जिला × ₹{placements.PRICE_DISTRICT} + "
+                 f"{n_crops} फसल × ₹{placements.PRICE_CROP} = "
+                 f"₹{placements.quote(len(incoming), n_crops)}/सीज़न "
+                 f"({placements.SEASON_MONTHS} माह)")
 
     try:
         created = 0
@@ -168,12 +194,95 @@ async def create_listings(
             raise HTTPException(503, READ_ONLY)
         raise HTTPException(500, "जानकारी सेव नहीं हो पाई। दोबारा कोशिश करें।")
 
-    total = len(dealers.for_owner(db, user_id))
+    rows = dealers.for_owner(db, user_id)
+    total = len(rows)
+    crops = dealers.crops_of(rows)
     return {"success": True, "message": OK, "data": {
         "created":         created,
         "district_count":  total,
-        "price":           dealers.quote(total) if total else 0,
+        "crop_count":      len(crops),
+        "plan":            plan,
+        "plan_label":      placements.plan_label(plan),
+        "price":           dealers.quote(total, len(crops)) if total else 0,
+        "breakdown":       placements.breakdown(total, len(crops)) if total else None,
     }}
+
+
+@router.get("/crops")
+async def crops_for_district(state: str = "", district: str = ""):
+    """Which crop pages exist in this district, and what each one actually did.
+
+    THIS IS THE HONEST HALF OF THE RATE CARD. Every crop here costs the same
+    ₹50, but the pages behind them are not the same: impressions per crop page
+    run from 0 to 46 across UP districts. Rather than price that difference
+    with a formula nobody could explain on a phone call, the number is put in
+    front of the dealer while he picks. He buys the pages worth buying, the
+    dead ones go unsold, and a flat ₹50 comes out fair without any arithmetic.
+    It is also the churn defence: he chose it with the figure on screen.
+
+    Deliberately open — no login. A dealer weighing up whether to sign up at
+    all is exactly who this has to convince, and there is nothing private here:
+    it is our own inventory's performance.
+
+    `impressions: null` means we have no data (no snapshot yet, or Search
+    Console has never reported that URL) and renders as nothing at all. Zero
+    means Google showed it to nobody, and renders as zero. Conflating them
+    would either invent traffic or claim a page is dead when we simply do not
+    know.
+    """
+    from backend.routes import bhav
+    from backend.services import page_stats
+
+    s_slug = _norm(state).replace(" ", "-")
+    d_slug = _norm(district).replace(" ", "-")
+    if not s_slug or not d_slug:
+        raise HTTPException(400, "राज्य और जिला दोनों चाहिए")
+
+    idx = bhav._get_index()
+    out = []
+    for c_slug, commodity in idx.get("crops", {}).items():
+        if not bhav._is_crop(commodity):
+            continue
+        if d_slug not in idx.get("dists", {}).get(c_slug, {}).get(s_slug, {}):
+            continue
+        stats = page_stats.for_page(c_slug, s_slug, d_slug)
+        out.append({
+            "slug":        c_slug,
+            "name_hi":     bhav._hindi_name(commodity),
+            "name_en":     commodity,
+            "url":         placements.page_url(c_slug, s_slug, d_slug),
+            "impressions": stats["impressions"] if stats else None,
+            "clicks":      stats["clicks"] if stats else None,
+        })
+
+    # Busiest first. A dealer scanning a list of forty crops should meet the
+    # ones worth his ₹50 before he gets bored, and the ones showing nothing
+    # should be the ones he has to scroll for.
+    out.sort(key=lambda c: (-(c["impressions"] or 0), c["name_hi"]))
+    return {"success": True, "data": {
+        "state":        s_slug,
+        "district":     d_slug,
+        "crops":        out,
+        "crop_rate":    placements.PRICE_CROP,
+        "district_rate": placements.PRICE_DISTRICT,
+        "window_days":  page_stats.WINDOW_DAYS,
+        # So the page can say "आंकड़े N दिन पुराने हैं" rather than presenting a
+        # month-old snapshot as this morning's.
+        "stats_age_days": page_stats.snapshot_age_days(),
+        "stats_stale":    page_stats.is_stale(),
+    }}
+
+
+@router.get("/quote")
+async def price_quote(districts: int = 1, crops: int = 0):
+    """The live price readout, computed server-side.
+
+    The form does the same arithmetic in JS for instant feedback, but this is
+    the number that governs — one endpoint the page and the admin panel can
+    both call means the dealer can never be shown a total the backend would
+    not charge.
+    """
+    return {"success": True, "data": placements.breakdown(districts, crops)}
 
 
 @router.get("/mine")
@@ -182,8 +291,8 @@ async def my_listings(
     db: Session = Depends(get_db),
 ):
     """The caller's own districts, verification/payment status, and the
-    current monthly price — so the page can show "your listings" instead of a
-    blank form on a repeat visit."""
+    current per-season price — so the page can show "your listings" instead of
+    a blank form on a repeat visit."""
     rows = dealers.for_owner(db, current_user["user_id"])
     now = datetime.utcnow()
     items = [{
@@ -211,10 +320,17 @@ async def my_listings(
         "description": lead.description if lead else "",
         "since":       lead.since if lead else "",
     } if lead else None
+    plan = dealers.plan_of(rows)
+    crops = dealers.crops_of(rows)
     return {"success": True, "data": {
         "listings":        items,
         "district_count":  len(items),
-        "price":           dealers.quote(len(items)) if items else 0,
+        "plan":            plan,
+        "plan_label":      placements.plan_label(plan),
+        "plan_crops":      crops,
+        "crop_count":      len(crops),
+        "price":           dealers.quote(len(items), len(crops)) if items else 0,
+        "breakdown":       placements.breakdown(len(items), len(crops)) if items else None,
         "business":        business,
     }}
 
@@ -224,6 +340,7 @@ async def my_listings(
 # learns to ignore. Shared with the admin panel's renewal list via
 # services/dealers.py so the two views can never disagree.
 _EXPIRY_WARN_DAYS = dealers.EXPIRY_WARN_DAYS
+_SEASON = placements.SEASON_MONTHS
 
 
 @router.get("/subscription")
@@ -253,7 +370,9 @@ async def my_subscription(
     until = max((r.paid_until for r in rows if r.paid_until), default=None)
     verified = any(r.verified for r in rows)
     districts = len(rows)
-    price = dealers.quote(districts)
+    plan = dealers.plan_of(rows)
+    crops = dealers.crops_of(rows)
+    price = dealers.quote(districts, len(crops))
 
     if until is None:
         state, days = "unpaid", None
@@ -276,7 +395,7 @@ async def my_subscription(
             "title_hi": "आपकी लिस्टिंग बंद हो गई है",
             "detail_hi": (
                 f"सदस्यता {until.strftime('%d-%m-%Y')} को खत्म हो गई, इसलिए आपके प्रोडक्ट "
-                f"अभी किसानों को नहीं दिख रहे। ₹{price}/महीना भरते ही {districts} "
+                f"अभी किसानों को नहीं दिख रहे। ₹{price}/सीज़न भरते ही {districts} "
                 f"{'जिले' if districts > 1 else 'जिला'} में दोबारा दिखने लगेंगे।"),
         })
     elif state == "expiring":
@@ -286,7 +405,8 @@ async def my_subscription(
                          if days > 0 else "सदस्यता आज खत्म हो रही है"),
             "detail_hi": (
                 f"{until.strftime('%d-%m-%Y')} के बाद आपके प्रोडक्ट भाव पेज से हट जाएंगे। "
-                f"₹{price}/महीना — नवीनीकरण के लिए हमें WhatsApp करें, लिंक भेज देंगे।"),
+                f"₹{price}/सीज़न ({_SEASON} महीने) — नवीनीकरण के लिए हमें WhatsApp करें, "
+                f"लिंक भेज देंगे।"),
         })
     elif state == "unpaid" and verified:
         # Called, approved, but never paid — the close that was never made.
@@ -294,7 +414,7 @@ async def my_subscription(
             "urgency": "soon",
             "title_hi": "भुगतान बाकी है — लिस्टिंग अभी लाइव नहीं",
             "detail_hi": (
-                f"आपकी दुकान सत्यापित हो चुकी है। ₹{price}/महीना भरते ही आपके प्रोडक्ट "
+                f"आपकी दुकान सत्यापित हो चुकी है। ₹{price}/सीज़न भरते ही आपके प्रोडक्ट "
                 f"{districts} {'जिलों' if districts > 1 else 'जिले'} के भाव पेज पर दिखने लगेंगे।"),
         })
 
@@ -303,6 +423,9 @@ async def my_subscription(
         "days_left":      days,
         "paid_until":     until.isoformat() if until else None,
         "district_count": districts,
+        "crop_count":     len(crops),
+        "plan":           plan,
+        "plan_label":     placements.plan_label(plan),
         "price":          price,
         "verified":       verified,
         "alerts":         alerts,

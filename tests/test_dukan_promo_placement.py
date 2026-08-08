@@ -98,7 +98,14 @@ class TestPromoCopy:
         assert "अपनी दुकान लिस्ट करें" in body
 
     def test_carries_the_price_so_nobody_clicks_to_find_it(self, priced, client):
-        assert "₹199/महीना" in client.get("/bhav/wheat").text
+        """Both halves of the metered rate, read from the rate card rather than
+        typed in — the last time these were hardcoded, every one of them broke
+        on the first reprice and taught nothing."""
+        from backend.services import placements
+
+        body = client.get("/bhav/wheat").text
+        assert f"₹{placements.PRICE_DISTRICT}" in body
+        assert f"₹{placements.PRICE_CROP}" in body
 
     def test_sample_card_photo_is_a_file_that_exists(self, priced, client):
         """A missing static file on this site answers 200 with HTML, so a
