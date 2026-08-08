@@ -73,6 +73,7 @@ from backend.routes.order      import router as order_router    # ORDER
 from backend.services.weather_scheduler import start_scheduler  # WEATHER CACHE
 from backend.services.mandi_scheduler   import start_scheduler as start_mandi_scheduler  # MANDI CACHE
 from backend.services.gsc_scheduler     import start_scheduler as start_gsc_scheduler  # GSC RECRAWL SWEEP
+from backend.services.ganna_mill_scheduler import start_scheduler as start_mill_scheduler  # SUGAR-MILL REGISTER
 
 app = FastAPI(
     title="KrashiMitra API",
@@ -236,6 +237,10 @@ async def startup():
         await start_gsc_scheduler()  # GSC — daily /bhav staleness sweep + recrawl requests
     except Exception as e:
         log.warning(f"⚠️ GSC scheduler startup error (non-fatal): {e}")
+    try:
+        await start_mill_scheduler()  # /ganna — weekly sugar-mill register refresh
+    except Exception as e:
+        log.warning(f"⚠️ Mill register scheduler startup error (non-fatal): {e}")
     # MSP hides any crop it can't vouch for (unconfirmed figure, or a marketing
     # season past its valid_until). That silence is correct but invisible, so say
     # it out loud once at boot — otherwise a lapsed season is discovered by a
@@ -307,6 +312,9 @@ app.include_router(naksha_route.router)  # /naksha, /naksha/{state}[/jile] + /ma
 
 from backend.routes import sawal as sawal_route
 app.include_router(sawal_route.router)  # /sawal — real Kisan Call Centre Q&A, per crop
+
+from backend.routes import ganna as ganna_route
+app.include_router(ganna_route.router)  # /ganna — cane SAP/FRP per state + /ganna/sitemap.xml
 
 from backend.routes import sitemap as sitemap_route
 app.include_router(sitemap_route.router)  # /sitemap.xml — generated from the pages/articles on disk

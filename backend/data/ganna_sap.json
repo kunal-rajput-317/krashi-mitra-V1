@@ -1,0 +1,152 @@
+{
+  "_comment": [
+    "Cane price (Layer B) — the ONE number per state per season. Hand-verified,",
+    "not fetched: SAP is announced once a year in a cabinet press note, there is",
+    "no feed to poll and inventing one would be a scraper that runs 365 days to",
+    "catch a single change. Update this file when a state announces; the season",
+    "rollover is handled in code, not here.",
+    "",
+    "'indexed': false means the page renders but is served noindex — we have no",
+    "distinct verified number for that state yet, and a page whose only content",
+    "is the national FRP repeated is thin. Same rule naksha.py uses for a",
+    "district whose village cache has not landed. Flip to true the moment the",
+    "state gets a real number (its own SAP, or its verified average recovery).",
+    "",
+    "'announced' is the date the number was declared — it becomes the page's",
+    "dateModified/Last-Modified. Omit it rather than guess: a wrong date costs",
+    "trust in every date after it (see _doc's docstring in bhav.py)."
+  ],
+
+  "season": "2025-26",
+  "next_season": "2026-27",
+
+  "frp": {
+    "2025-26": { "rate": 355, "recovery": 10.25 },
+    "2026-27": {
+      "rate": 365,
+      "recovery": 10.25,
+      "step": 3.56,
+      "floor_recovery": 9.5,
+      "floor_rate": 338.30,
+      "effective_from": "2026-10-01",
+      "announced": "2026-05-06",
+      "source": "CCEA, 6 May 2026"
+    }
+  },
+
+  "states": [
+    {
+      "slug": "uttar-pradesh",
+      "hi": "उत्तर प्रदेश",
+      "en": "Uttar Pradesh",
+      "kind": "sap",
+      "indexed": true,
+      "season": "2025-26",
+      "announced": "2025-10-29",
+      "rates": [
+        { "key": "agheti",  "hi": "अगेती प्रजाति",  "rate": 400, "prev": 370 },
+        { "key": "samanya", "hi": "सामान्य प्रजाति", "rate": 390, "prev": 360 }
+      ],
+      "note": "उत्तर प्रदेश देश में सबसे ज़्यादा गन्ना पैदा करने वाला राज्य है। 2025-26 सीजन के लिए SAP में ₹30 प्रति क्विंटल की बढ़ोतरी की गई।"
+    },
+    {
+      "slug": "uttarakhand",
+      "hi": "उत्तराखंड",
+      "en": "Uttarakhand",
+      "kind": "sap",
+      "indexed": true,
+      "season": "2025-26",
+      "rates": [
+        { "key": "agheti",  "hi": "अगेती प्रजाति",  "rate": 405, "prev": 375 },
+        { "key": "samanya", "hi": "सामान्य प्रजाति", "rate": 395, "prev": 365 }
+      ],
+      "note": "उत्तराखंड ने भी 2025-26 सीजन के लिए दोनों प्रजातियों में ₹30 प्रति क्विंटल की बढ़ोतरी की।"
+    },
+    {
+      "slug": "punjab",
+      "hi": "पंजाब",
+      "en": "Punjab",
+      "kind": "sap",
+      "indexed": true,
+      "season": "2025-26",
+      "announced": "2025-11-27",
+      "rates": [
+        { "key": "flat", "hi": "सभी प्रजाति", "rate": 416 }
+      ],
+      "note": "पंजाब का SAP देश में सबसे ऊंचा है — केंद्र के FRP से काफ़ी ज़्यादा।"
+    },
+    {
+      "slug": "haryana",
+      "hi": "हरियाणा",
+      "en": "Haryana",
+      "kind": "sap",
+      "indexed": true,
+      "season": "2025-26",
+      "rates": [
+        { "key": "flat", "hi": "सभी प्रजाति", "rate": 415 }
+      ],
+      "note": "हरियाणा का SAP पंजाब के लगभग बराबर है और देश के सबसे ऊंचे रेट में गिना जाता है।"
+    },
+    {
+      "slug": "maharashtra",
+      "hi": "महाराष्ट्र",
+      "en": "Maharashtra",
+      "kind": "frp",
+      "indexed": true,
+      "recovery": 11.29,
+      "recovery_season": "2024-25",
+      "factories": 200,
+      "crushed_lmt": 855.10,
+      "note": "महाराष्ट्र में अलग SAP नहीं है — केंद्र का FRP ही लागू होता है। लेकिन यहां की रिकवरी देश के औसत से ऊंची है, इसलिए असल में मिलने वाला रेट बेस FRP से ज़्यादा बैठता है।"
+    },
+    {
+      "slug": "karnataka",
+      "hi": "कर्नाटक",
+      "en": "Karnataka",
+      "kind": "frp",
+      "indexed": false
+    },
+    {
+      "slug": "gujarat",
+      "hi": "गुजरात",
+      "en": "Gujarat",
+      "kind": "frp",
+      "indexed": false
+    },
+    {
+      "slug": "bihar",
+      "hi": "बिहार",
+      "en": "Bihar",
+      "kind": "sap",
+      "indexed": false
+    },
+    {
+      "slug": "tamil-nadu",
+      "hi": "तमिलनाडु",
+      "en": "Tamil Nadu",
+      "kind": "sap",
+      "indexed": false
+    },
+    {
+      "slug": "andhra-pradesh",
+      "hi": "आंध्र प्रदेश",
+      "en": "Andhra Pradesh",
+      "kind": "frp",
+      "indexed": false
+    },
+    {
+      "slug": "telangana",
+      "hi": "तेलंगाना",
+      "en": "Telangana",
+      "kind": "frp",
+      "indexed": false
+    },
+    {
+      "slug": "madhya-pradesh",
+      "hi": "मध्य प्रदेश",
+      "en": "Madhya Pradesh",
+      "kind": "frp",
+      "indexed": false
+    }
+  ]
+}
