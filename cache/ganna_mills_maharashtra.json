@@ -1,0 +1,1881 @@
+{
+ "state": "maharashtra",
+ "scope": "cooperative",
+ "source": "साखर आयुक्तालय, महाराष्ट्र",
+ "source_url": "https://mahasugar.in/sugar-factories-en.php",
+ "fetched": "2026-08-07",
+ "mills": [
+  {
+   "slug": "kolhapur-969cf130",
+   "name": "श्री.तात्यासाहेब कोरे वारणा सहकारी साखर कारखाना लि. वारणानगर,ता.पन्हाळा,जि.कोल्हापूर 416116",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 12000,
+   "registered": "27-09-1955"
+  },
+  {
+   "slug": "kolhapur-d0144e58",
+   "name": "देशभक्त रत्नाप्पा अण्णा कुंभार पंचगंगा सहकारी साखर कारखाना लि. गंगानगर,इचलकरंजी,ता. हातकणंगले , जि.कोल्हापूर 416116",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 5000,
+   "registered": "10-01-1955"
+  },
+  {
+   "slug": "kolhapur-393b3c57",
+   "name": "भोगावती सहकारी साखर कारखाना लि. परिते, ता. करवीर, जि.कोल्हापूर 416211",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 4000,
+   "registered": "18-10-1955"
+  },
+  {
+   "slug": "kolhapur-1914a752",
+   "name": "दूधगंगा वेदगंगा सहकारी साखर कारखाना लि.बिद्री, ता. कागल , जि.कोल्हापूर 416208",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 7500,
+   "registered": "10-10-1956"
+  },
+  {
+   "slug": "kolhapur-619f41a0",
+   "name": "कुंभी कासारी सहकारी साखर कारखाना लि.कुडित्रे,ता.करवीर,जि.कोल्हापूर 416204",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 5000,
+   "registered": "20-06-1960"
+  },
+  {
+   "slug": "kolhapur-0c55a980",
+   "name": "श्री दत्त सहकारी साखर कारखाना लि.असूर्लेपोर्ले,ता. पन्हाळा जि.कोल्हापूर 416229",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 10000,
+   "registered": "23-05-1968"
+  },
+  {
+   "slug": "kolhapur-87fe1c02",
+   "name": "दौलत शेतकरी सहकारी साखर कारखाना लि.हलकर्णी, ता.चंदगड,जि.कोल्हापूर 416552",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 3500,
+   "registered": "30-09-1970"
+  },
+  {
+   "slug": "kolhapur-ca5cf51e",
+   "name": "आप्पासाहेब नलावडे गडहिंग्लज तालुका सहकारी साखर कारखाना लि.हरळी ता.गडहिंग्लज जि.कोल्हापूर-416502",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 2000,
+   "registered": "02-12-1971"
+  },
+  {
+   "slug": "kolhapur-672f862f",
+   "name": "श्री दत्त शेतकरी सहकारी साखर कारखाना लि.शिरोळ , ता.शिरोळ जि.कोल्हापूर-416120",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 12000,
+   "registered": "06-09-1969"
+  },
+  {
+   "slug": "kolhapur-a022ad21",
+   "name": "छत्रपती शाहू सहकारी साखर कारखाना लि. कागल,ता.कागल,जि.कोल्हापूर 416126",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 7500,
+   "registered": "21-02-1977"
+  },
+  {
+   "slug": "kolhapur-1d228633",
+   "name": "छत्रपती राजाराम सहकारी साखर कारखाना म,कसबाबावडाता.करवीर,जि.कोल्हापूर 416006",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 3500,
+   "registered": "04-11-1984"
+  },
+  {
+   "slug": "kolhapur-ebb3e86d",
+   "name": "कल्लाप्पाण्णा आवाडे जवाहर शेतकरी सहकारी साखर कारखाना लि.हूपरी ,ता.हातकनंगले,जि.कोल्हापूर 416203",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 16000,
+   "registered": "29-01-1990"
+  },
+  {
+   "slug": "kolhapur-835dec20",
+   "name": "आजरा शेतकरी सहकारी साखर कारखाना लि.गवसे,ता.आजरा,जि.कोल्हापूर 416505",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 2500,
+   "registered": "06-12-1990"
+  },
+  {
+   "slug": "kolhapur-0184802e",
+   "name": "पद्मश्री डॉ.डी.वाय. पाटिल सहकारी साखर कारखाना लि.ज्ञानशांतीनगर, ता.गगनबावडा, जि.कोल्हापूर",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 5000,
+   "registered": "04-06-1994"
+  },
+  {
+   "slug": "kolhapur-5a7a800a",
+   "name": "उदयसिंह गायकवाड सहकारी साखर कारखाना लि.सोनवडे-बांबवडे,ता.शाहूवाडी ,जि.कोल्हापूर",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 6000,
+   "registered": "04-12-1994"
+  },
+  {
+   "slug": "kolhapur-62b3e232",
+   "name": "सहयाद्री सहकारी साखर कारखाना लि.इंदुमतीनगर, पो.धामोड, ता.राधानगरी , जि.कोल्हापूर- 416211",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 2500,
+   "registered": "25-04-1994"
+  },
+  {
+   "slug": "kolhapur-d7a21247",
+   "name": "शरद सहकारी साखर कारखाना लि. पो.नरंदे, ता.हातकणंगले, जि.कोल्हापूर 416110",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 2500,
+   "registered": "08-01-1996"
+  },
+  {
+   "slug": "kolhapur-02d45bd2",
+   "name": "सदाशिवराव मंडलिक सहकारी साखर कारखाना लि.सदाशिवनगर,हमीदवाडा-कौलगे,ता.कागल,जि.कोल्हापूर 416235",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 4000,
+   "registered": "08-08-1996"
+  },
+  {
+   "slug": "kolhapur-7e9989cd",
+   "name": "इंदिरा गांधी महिला सहकारी साखर कारखाना लि.तांभाळे, ता.भुदरगड,जि.कोल्हापूर",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 4000,
+   "registered": "14-05-1997"
+  },
+  {
+   "slug": "kolhapur-19674162",
+   "name": "भुदरगड तालूका सहकारी साखर कारखाना म. नवले, ता.भुदरगड,जि.कोल्हापूर",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 2500,
+   "registered": "19-03-1997"
+  },
+  {
+   "slug": "kolhapur-711f2a0d",
+   "name": "भुदरगड तालूका सहकारी साखर कारखाना म. देवर्डे ता.भुदरगड ,जि.कोल्हापूर",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 2500,
+   "registered": "04-05-1997"
+  },
+  {
+   "slug": "kolhapur-df40714d",
+   "name": "खा.बाळासाहेब माने सहकारी साखर कारखाना म,शिरोळ, ता.शिरोळ,जि.कोल्हापूर",
+   "district": "कोल्हापूर",
+   "district_slug": "kolhapur",
+   "tcd": 2500,
+   "registered": "30-7-2002"
+  },
+  {
+   "slug": "ratnagiri-9bad1357",
+   "name": "परशूराम सहकारी साखर कारखाना म,चिपळूण, ता.चिपळूण,जि.रत्नागिरी",
+   "district": "रत्नागिरी",
+   "district_slug": "ratnagiri",
+   "tcd": 0,
+   "registered": "10-02-1970"
+  },
+  {
+   "slug": "ratnagiri-fd7a1e02",
+   "name": "लक्ष्मी सहकारी साखर कारखाना म.कोडबिरे, ता.संगमेश्वर, जि.रत्नागिरी",
+   "district": "रत्नागिरी",
+   "district_slug": "ratnagiri",
+   "tcd": 300,
+   "registered": "06-02-2000"
+  },
+  {
+   "slug": "sangli-e0a1d456",
+   "name": "वसंतदादा शेतकरी सहकारी साखर कारखाना लि. ता.मिरज , जि.सांगली 416 416",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 7500,
+   "registered": "10-08-1956"
+  },
+  {
+   "slug": "sangli-cb67878f",
+   "name": "विश्वासराव नाईक सहकारी साखर कारखाना लि. यशवंतनगर, ता.शिराळा,जि.सांगली 415408",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 7000,
+   "registered": "05-04-1967"
+  },
+  {
+   "slug": "sangli-369d036c",
+   "name": "राजारामबापू पाटिल सहकारी साखर कारखाना लि. राजारामनगर,पो. साखराळे ,ता.वाळवा,जि.सांगली -415414",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 7000,
+   "registered": "17-08-1968"
+  },
+  {
+   "slug": "sangli-f4f709d4",
+   "name": "पदमभूषण क्रातीवीर डॉ.नागनाथअण्णा नाईकवडी हूतात्मा किसन आहिर सहकारी साखर कारखाना लि. नागनाथअण्णानगर, मु.पो.नागनाथअण्णानगर , ता.वाळवा जिल्हा-सांगली",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 5000,
+   "registered": "29-06-1989"
+  },
+  {
+   "slug": "sangli-ebacaae6",
+   "name": "माणगंगा सहकारी साखर कारखाना लि. सोनारसिध्दनगर, ता.आटपाडी ,जि.सांगली415 301",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 1250,
+   "registered": "25-11-1981"
+  },
+  {
+   "slug": "sangli-cba923d5",
+   "name": "श्री महांकाली सहकारी साखर कारखाना लि. कवठेमहांकाळ , ता.कवठेमहांकाळ,जि.सांगली",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 2000,
+   "registered": "03-03-1982"
+  },
+  {
+   "slug": "sangli-038e45a2",
+   "name": "यशवंत सहकारी साखर कारखाना लि.नागेवाडी, ता.खानापूर जि.सांगली-415 311",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 1750,
+   "registered": "23-06-1988"
+  },
+  {
+   "slug": "sangli-cbbe4462",
+   "name": "तासगाव तालुका सहकारी साखर कारखाना लि.तुरची ता.तासगांव जि.सांगली- 416312",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 2700,
+   "registered": "28-05-1990"
+  },
+  {
+   "slug": "sangli-f395580a",
+   "name": "डॉ. पतंगराव कदम सोनहिरा सहकारी साखर कारखाना लि. मोहनराव कदमनगर, वांगी,ता.कडेगांव, जि.सांगली 415 305",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 5500,
+   "registered": "25-03-1994"
+  },
+  {
+   "slug": "sangli-fccd63c6",
+   "name": "राजे विजयसिंह डफळे तालूका सहकारी साखर कारखाना लि.तिपेहळळी,ता.जत, जि.सांगली-416 404",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 2500,
+   "registered": "25-03-1994"
+  },
+  {
+   "slug": "sangli-79c186c4",
+   "name": "डोंगराई सागरेश्वरी शेतकरी सहकारी साख्रर कारखाना लि. रायगांव,पो.हिंगणगांव,ता.कडेगांव, जि. सांगली.",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 2500,
+   "registered": "04-06-1994"
+  },
+  {
+   "slug": "sangli-7a94b060",
+   "name": "मोहनराव शिंदे सहकारी साखर कारखाना लि. मोहननगर, पो.आरग, ता. मिरज जि.सांगली 416 401",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 4000,
+   "registered": "05-06-1994"
+  },
+  {
+   "slug": "sangli-1a6bd216",
+   "name": "निनाईदेवी सहकारी साखर कारखाना लि.कोकरुड, करुंगळी, ता.शिराळा, जि.सांगली 415 405",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 5000,
+   "registered": "27-09-1994"
+  },
+  {
+   "slug": "sangli-f8fc513b",
+   "name": "क्रांतिअग्रणी डॉ.जी.डी.बापू लाड सहकारी साखर कारखाना लि.कुंडल ,ता.पलूस, जि.सांगली - 416309",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 7500,
+   "registered": "05-12-1997"
+  },
+  {
+   "slug": "sangli-996c8cc6",
+   "name": "शेतकरी सहकारी साखर कारखाना लि.सोनी कोकळे, ता.कवठेमहांकाळ,जि.सांगली.",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 2700,
+   "registered": "14-11-1994"
+  },
+  {
+   "slug": "sangli-706dce29",
+   "name": "सर्वोदय सहकारी साखर कारखाना लि.कारंदवाडी, ता. वाळवा, जि.सांगली-41 301",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 3500,
+   "registered": "26-11-1956"
+  },
+  {
+   "slug": "sangli-4be5d461",
+   "name": "जनता सहकारी साखर कारखाना म,शिरशी, जि.सांगली",
+   "district": "सांगली",
+   "district_slug": "sangli",
+   "tcd": 2500,
+   "registered": "27-05-1997"
+  },
+  {
+   "slug": "pune-78cc8b19",
+   "name": "माळेगाव सहकारी साखर कारखाना लि. शिवनगर(बु.),ता.बारामती जि.पुणे-413 116",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 7500,
+   "registered": "24-02-1955"
+  },
+  {
+   "slug": "pune-a6a1d332",
+   "name": "छत्रपती सहकारी साखर कारखाना लि.भवानीनगर, ता.इंदापूर,जि.पुणे 413 104.",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 6500,
+   "registered": "08-06-1955"
+  },
+  {
+   "slug": "pune-5ab3ec0b",
+   "name": "सोमेश्वर सहकारी साखर कारखाना लि.सोमेश्वरनगर, ता.बारामती,जि.पुणे 412 306",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 7500,
+   "registered": "20-06-1960"
+  },
+  {
+   "slug": "pune-7d35e011",
+   "name": "यशवंत सहकारी साखर कारखाना लि.थेऊर,ता.हवेली, जि.पुणे",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 2500,
+   "registered": "29-12-1966"
+  },
+  {
+   "slug": "pune-7b693050",
+   "name": "भिमा सहकारी साखर कारखाना लि. मधुकरनगर,पाटस,ता.दौड,जि.पुणे-412 219",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 5000,
+   "registered": "22-12-1976"
+  },
+  {
+   "slug": "pune-a159c447",
+   "name": "श्री विघ्नहर सहकारी साखर कारखाना लि.निवृत्तीनगर (ढालेवाडी), पो.शिरोली, ता.जून्नर ,जि.पुणे 410511",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 7500,
+   "registered": "17-10-1981"
+  },
+  {
+   "slug": "pune-f5ca54a6",
+   "name": "कर्मयोगी शंकररावजी पाटील सहकारी साखर कारखाना लि. महात्मा फुलेनगर, पो.बिजवडी, ता.इंदापूर, जि.पुणे 413 106.",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 8000,
+   "registered": "26-01-1984"
+  },
+  {
+   "slug": "pune-67902101",
+   "name": "राजगड सहकारी साखर कारखाना लि. अनंतनगर-निगडे, ता.भोर, जि.पुणे-412205",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 1250,
+   "registered": "20-10-1988"
+  },
+  {
+   "slug": "pune-364313cc",
+   "name": "रावसाहेबदादा पवार घोडगंगा सहकारी साखर कारखाना लि.रावसाहेबनगर,पो.न्हावरे,ता.शिरुर,जि.पुणे 412 211.",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 5000,
+   "registered": "16-05-1990"
+  },
+  {
+   "slug": "pune-62f63737",
+   "name": "श्री संत तुकाराम सहकारी साखर कारखाना लि. कासारसाई दारुंब्रे ,ता.मुळशी,जि.पुणे 410 506.",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 2500,
+   "registered": "22-05-1990"
+  },
+  {
+   "slug": "pune-6a0c39f8",
+   "name": "भिमाशंकर सहकारी साखर कारखाना लि. दत्तात्रयनगर, पारगांव तर्फे अवसरी बु. ता.आंबेगाव,जि.पुणे 412 406.",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 6000,
+   "registered": "31-03-1994"
+  },
+  {
+   "slug": "pune-d5aeeae7",
+   "name": "निरा भिमा सहकारी साखर कारखाना लि.शहाजीनगर, पो.रेडणी,ता. इंदापूर,जि.पुणे 413 114.",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 3500,
+   "registered": "05-12-1999"
+  },
+  {
+   "slug": "pune-a4ef3b6f",
+   "name": "दौड सहकारी साखर कारखाना म,दौड,ता.दौड,जि.पुणे",
+   "district": "पुणे",
+   "district_slug": "pune",
+   "tcd": 2500,
+   "registered": "24-01-1997"
+  },
+  {
+   "slug": "satara-d3cc854e",
+   "name": "श्रीराम सहकारी साखर कारखाना लि. फलटण,जि.सातारा- 415 523.",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 4950,
+   "registered": "24-07-1954"
+  },
+  {
+   "slug": "satara-47437362",
+   "name": "यशवंतराव मोहिते कृष्णा सहकारी साखर कारखाना लि. रेठरे बु., ता.कराड,जि.सातारा-415 108.",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 12000,
+   "registered": "28-07-1955"
+  },
+  {
+   "slug": "satara-aba9d889",
+   "name": "किसनवीर सातारा सहकारी साखर कारखाना लि. मु.प. किसनवीरनगर, ता.वाई,जि.सातारा-415 530.",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 4000,
+   "registered": "10-01-1998"
+  },
+  {
+   "slug": "satara-b28035b6",
+   "name": "सहयाद्री सहकारी साखर कारखाना लि. यशवंतनगर,ता.कराड जि.सातारा-415 115.",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 11000,
+   "registered": "26-08-1969"
+  },
+  {
+   "slug": "satara-48a41122",
+   "name": "लोकनेते बाळासाहेब देसाई सहकारी साखर कारखाना लि. मु.पो.दौलतनगर,मरळी,ता.पाटण,जि.सातारा-415 211",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 3500,
+   "registered": "14-10-1969"
+  },
+  {
+   "slug": "satara-e558a3f8",
+   "name": "अजिंक्यतारा सहकारी साखर कारखाना लि. शाहूनगर,पो.शेंद्रे, ता.जि.सातारा-415 519",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 4500,
+   "registered": "28-01-1970"
+  },
+  {
+   "slug": "satara-04d01df0",
+   "name": "जरंडेश्वर सहकारी साखर कारखाना लि. चिमणगांव,ता.कोरेगांव,जि.सातारा",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 10000,
+   "registered": "21-11-1989"
+  },
+  {
+   "slug": "satara-fcf1d0bd",
+   "name": "खंडाळा तालुका शेतकरी सहकारी साखर कारखाना लि. म्हावशी, ता. खंडाळा,जि.सातारा",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 2500,
+   "registered": "12-07-1994"
+  },
+  {
+   "slug": "satara-82a11180",
+   "name": "रयत सहकारी साखर कारखाना लि. शेवाळेवाडी,म्हासोली,ता.कराड,जि.सातारा-415 111",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 6000,
+   "registered": "08-01-1996"
+  },
+  {
+   "slug": "satara-b6703817",
+   "name": "प्रतापगड सहकारी साखर कारखाना लि.मु.पो.सोनगांव, करंदोशी, ता.जावळी जि.सातारा-415 530",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 2500,
+   "registered": "09-11-1996"
+  },
+  {
+   "slug": "satara-eb28bb5f",
+   "name": "तुळजाभवानीदेवी सहकारी साखर कारखाना",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 2500,
+   "registered": "04-06-1994"
+  },
+  {
+   "slug": "satara-2a483822",
+   "name": "संपतराव देशमुख सहकारी साखर कारखाना, खटाव",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 1250,
+   "registered": "22-06-1999"
+  },
+  {
+   "slug": "satara-b661bdaa",
+   "name": "फलटण तालुका सहकारी साखर कारखाना, साखरवाडी",
+   "district": "सातारा",
+   "district_slug": "satara",
+   "tcd": 1250,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-00a53cdb",
+   "name": "डीडीएन एसएफए लि., हावरगाव, जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 1250,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-c80965d3",
+   "name": "धाराशिव शुगर मिल्स लि., , चोराखळी, ता.कळंब, जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-49f20131",
+   "name": "नॅचरल शुगर ॲन्ड अलाईड इंडस्ट्रीज लि. , रांजनी, ता. कळंब, जि.धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-0af7ae39",
+   "name": "लोकमंगल माऊली इंडस्ट्रीज लि. , खेड बु., ता. लोहारा, जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 6000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-a8f28667",
+   "name": "भैरवनाथ शुगर वर्क्स लि. , सोनारी, ता. परंडा, जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 3500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-0fa0e568",
+   "name": "कंचेश्वर शुगर लि. , मंगळूर, ता. तुळजापूर, जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 3500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-523ab6a6",
+   "name": "भिमाशंकर शुगर मिल्स लि. , पारगांव, ता. वाशी, जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-dd34af5c",
+   "name": "आयान मल्टिट्रेड एलएलपी ( बाणगंगा सहकारी साखर कारखाना लि. हा भाडयाने , इडाजवळा, ता.भूम, जि.धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 4000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-944163f4",
+   "name": "गोकुळ शुगर्स, धोत्री, दक्षिण सोलापूर, (श्री तुळजाभवानी शेतकरी सहकारी साखर कारखाना लि. हा भाडयाने , नळदुर्ग , ता. तुळजापूर, जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 1250,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-3af88aea",
+   "name": "क्युनर्जी इंडस्ट्रिज लि. (भाऊसाहेब बिराजदार सहकारी साखर कारखाना लि. हा भाडयाने , समुद्राळ, ता.उमरगा, जि.धाराशिव.",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 4000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-5d2141e4",
+   "name": "भैरवनाथ शुगर्स प्रा.लि. (शिवशक्ती सहकारी साखर कारखाना लि. हा भागीदारी तत्वावर , वाशी, जि.धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 1250,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-a631fbba",
+   "name": "डॉ. बाबासाहेब आंबेडकर सहकारी साखर कारखाना लि. , केशेगाव, ता. जि. धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-400171ae",
+   "name": "श्री. विठ्ठलसाई सहकारी साखर कारखाना लि. , राजीव गांधीनगर, मुरुम, ता.उमरगा,जि.धाराशिव",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-fc244350",
+   "name": "मातोश्री लक्ष्मी शुगर कोजनरेशन इंडस्ट्रीज लि. , रुद्देवाडी, ता. अक्कलकोट, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 3500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-e3e63291",
+   "name": "व्हिपी शुगर्स लि. , तडवळ, ता. अक्कलकोट, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 4700,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-f8cb3bf1",
+   "name": "बबनरावजी शिंदे शुगर अॅण्ड अलाईड इंडस्ट्रीज लि., तुर्कपिंप्री, ता. बार्शी, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-04f516cf",
+   "name": "इंद्रेश्वर शुगर मिल्स प्रा. लि, , भगवंतनगर, उपळाई, ता. बार्शी, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-f26ce192",
+   "name": "येडेश्वरी ॲग्रो प्रोडक्ट लि.युनिट 02 , खामगांव ता.बार्शी",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-613fb3a4",
+   "name": "भैरवनाथ शुगर वर्क्स लि. , विहाळ, ता. करमाळा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-4bf2ffc5",
+   "name": "विठ्ठल रिफाइन्ड शुगर्स लि., पांडे, ता. करमाळा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-015b9ec6",
+   "name": "भैरवनाथ शुगर वर्क्स लि. , आलेगांव बु., ता. माढा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-dfb1d2fd",
+   "name": "विठ्ठल कार्पेोरेशन लि., म्हैसगांव, ता. माढा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-8f94ddec",
+   "name": "ओंकार साखर कारखाना प्रा. लि. , चांदापूरी, ता. माळशिरस, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-1c5842b5",
+   "name": "दि. सासवड माळी शुगर फॅक्टरी लि. , माळीनगर, ता. माळशिरस, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 4500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-96c9d9b4",
+   "name": "अवताडे शुगर्स लि. , नदूर ता. मंगळवेढा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-ff2b090e",
+   "name": "भैरवनाथ शुगर वर्क्स लि. , लवंगी, ता. मंगळवेढा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-15817c41",
+   "name": "युटोपियन शुगर्स लि. , कचरेवाडी, ता. मंगळवेढा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 3500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-9cbfb5c5",
+   "name": "आष्टी शुगर लि. , आष्टी, ता. मोहोळ, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-7f1a4687",
+   "name": "जाकराया शुगर लि., वटवटे, ता. मोहोळ, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 3500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-fe19537e",
+   "name": "लोकनेते बाबुराव पाटील अँग्रो इंडस्ट्रिज लि. , लक्ष्मीनगर, अनगर, ता. मोहोळ, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-8ea38a59",
+   "name": "लोकमंगल ॲग्रो इंडस्ट्रीज लि. , बिबीदारफळ, ता. उत्तर सोलापूर, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-4eb9f468",
+   "name": "सिध्दनाथ शुगर मिल्स लि. , तिऱ्हे, ता. उत्तर सोलापूर, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 6000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-506fdc25",
+   "name": "सिताराम महाराज साखर कारखाना प्रा. लि. , खर्डी, ता.पंढरपूर, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-2078521c",
+   "name": "गोकुळ शुगर इंडस्ट्रीज लि. , धोत्री, ता. दक्षिण सोलापूर, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 3500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-428bf7fb",
+   "name": "जयहिंद शुगर प्रा. लि. , आचेगाव, ता. दक्षिण सोलापूर, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-bb9728e0",
+   "name": "लोकमंगल शुगर इथेनॉल ॲन्ड कोजनरेशन इंडस्ट्रीज लि. , भंडारकवठे, ता. दक्षिण सोलापूर, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 6000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-0934afc4",
+   "name": "धाराशिव शुगर लि.( सांगोला तालुका सहकारी साखर कारखाना लि. हा भाडयाने , वाकी शिवणे, ता. सांगोला, जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-98cedfbc",
+   "name": "श्री अदिनाथ सहकारी साखर कारखाना लि.,, शेलगांव भाळवणी पोस्ट जेऊर ता.करमाळा जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-1430308a",
+   "name": "श्री मकाई सहकारी साखर कारखाना लि. , मकाईनगर, मु. भिलारवाडी, पो. जिंती, ता. करमाळा, जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 1250,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-93a991db",
+   "name": "श्री संत कुर्मदास सहकारी साखर कारखाना लि. , गणपतराव साठेनगर, पडसाळी, पिंपळदरा, ता. माढा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 1250,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-08bd6f11",
+   "name": "सहकार महर्षि शंकरराव मोहिते पाटील सहकारी साखर कारखाना लि. , शंकरनगर, अकलूज, ता. माळशिरस,जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 7200,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-6b293a8e",
+   "name": "श्री. पांडुरंग सहकारी साखर कारखाना लि., श्रीपूर, ता. माळशिरस, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 6000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-9a866114",
+   "name": "श्री शंकर सहकारी साखर कारखाना लि. , मु.पो.सदाशिवनगर, ता. माळशिरस, जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-19d8ba21",
+   "name": "श्री. संत दामाजी सहकारी साखर कारखाना लि. , मंगळवेढा, ता. मंगळवेढा, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-883c3037",
+   "name": "सहकार शिरोमणी वसंतराव काळे सहकारी साखर कारखाना लि., चंद्रभागानगर, भाळवणी, ता. पंढरपूर, जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 3500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-ee030297",
+   "name": "श्री विठ्ठल सहकारी साखर कारखाना लि., वेणूनगर ता.पंढरपूर जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 7500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-1be92204",
+   "name": "विठ्ठलराव शिंदे सहकारी साखर कारखाना लि., पिंपळनेर, ता. माढा, जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 11000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-c8add3af",
+   "name": "विठ्ठलराव शिंदे सहकारी साखर कारखाना लि. युनिट 2 , करकंब,ता. पंढरपूर, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 2500,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-004a8d2f",
+   "name": "भिमा सहकारी साखर कारखाना लि., टाकळी सिकंदर, ता .मोहोळ, जि. सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 5000,
+   "registered": ""
+  },
+  {
+   "slug": "solapur-2fcf95b6",
+   "name": "श्री. सिध्देश्वर सहकारी साखर कारखाना लि., कुमठे, ता. उत्तर सोलापूर, जि.सोलापूर",
+   "district": "सोलापूर",
+   "district_slug": "solapur",
+   "tcd": 7500,
+   "registered": ""
+  },
+  {
+   "slug": "osmanabad-d5980ac9",
+   "name": "तेरणा सहकारी साखर कारखाना लि.तेरणानगर, पो.ढोकी, ता.जि.उस्मानाबाद-413580",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 3500,
+   "registered": "09-10-1965"
+  },
+  {
+   "slug": "osmanabad-17debc2c",
+   "name": "श्री तुळजाभवानी सहकारी साखर कारखाना लि.नळदुर्ग , ता.तुळजापूर, जि.उस्मानाबाद-413 602",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 1250,
+   "registered": "30-01-1983"
+  },
+  {
+   "slug": "osmanabad-640e904f",
+   "name": "शिवशक्ती सहकारी साखर कारखाना लि.वाशी तांदूळवाडी, ता.वाशी, जि.उस्मानाबाद-413 503",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 1250,
+   "registered": "26-08-1988"
+  },
+  {
+   "slug": "osmanabad-4ea3b629",
+   "name": "डॉ. बाबासाहेब आंबेडकर सहकारी साखर कारखाना लि. केशेगाव,ता. जि.उस्मानाबाद-413 506.",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 2500,
+   "registered": "27-03-1997"
+  },
+  {
+   "slug": "osmanabad-e769723a",
+   "name": "नरसिंह सहकारी साखर कारखाना लि.इंदापूर, ता.भूम, जि.उस्मानाबाद",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 1250,
+   "registered": "05-12-1999"
+  },
+  {
+   "slug": "osmanabad-558fd191",
+   "name": "बाणगंगा सहकारी साखर कारखाना लि.इडाजवळा, ता.भूम, जि.उस्मानाबाद-413 504",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 6000,
+   "registered": "31-10-2000"
+  },
+  {
+   "slug": "osmanabad-6ec2dd49",
+   "name": "भाऊसाहेब बिराजदार सहकारी साखर कारखाना लि. समुद्राळ, ता.उमरगा, जि.उस्मानाबाद-413 606.",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 6000,
+   "registered": "22-03-2001"
+  },
+  {
+   "slug": "osmanabad-94ee7d42",
+   "name": "शिवशक्ती सहकारी साखर कारखाना लि.कोळसूर, जगदाळवादी, ता.उमरगा, जि.उस्मानाबाद",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 1250,
+   "registered": "28-06-2001"
+  },
+  {
+   "slug": "osmanabad-d18c82b5",
+   "name": "श्री विठ्ठलसाई सहकारी साखर कारखाना लि. राजीव गांधीनगर, मुरुम, ता.उमरगा,जि.उस्मानाबाद-413 605",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 2500,
+   "registered": "21-04-1994"
+  },
+  {
+   "slug": "osmanabad-8a1d8092",
+   "name": "छत्रपती सहकारी साखर कारखाना म,कास्ती बु., ता.उमरगा, जि.उस्मानाबाद",
+   "district": "उस्मानाबाद",
+   "district_slug": "osmanabad",
+   "tcd": 1250,
+   "registered": "19-05-1999"
+  },
+  {
+   "slug": "ahilyanagar-415c1a8b",
+   "name": "पद्मश्री विखे पाटील सहकारी साखर कारखाना लि. प्रवरानगर , ता.श्रीरामपूर जि. अहमदनगर-413 712",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 5000,
+   "registered": "31-12-1948"
+  },
+  {
+   "slug": "ahilyanagar-c7577a14",
+   "name": "कर्मवीर शंकरराव काळे, सहकारी साखर कारखाना लि. कोळपेवाडी, ता.कोपरगाव,जि.अहमदनगर-423 602",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 4000,
+   "registered": "06-04-1953"
+  },
+  {
+   "slug": "ahilyanagar-b3c8b7f4",
+   "name": "डॉ.बाबूराव बापूजी तनपुरे सहकारी साखर कारखाना लि. श्री शिवाजीनगर, ता.राहूरी, जि.अहमदनगर-413 706",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 4250,
+   "registered": "11-03-1954"
+  },
+  {
+   "slug": "ahilyanagar-3ef9b18c",
+   "name": "अशोक सहकारी साखर कारखाना लि.अशोकनगर, ता.श्रीरामपूर,जि.अहमदनगर-413 717",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 4000,
+   "registered": "12-01-1954"
+  },
+  {
+   "slug": "ahilyanagar-1849ecb5",
+   "name": "श्री गणेश सहकारी साखर कारखाना लि.गणेशनगर, रांजणगाव खु. ता.कोपरगाव, जि.अहमदनगर-413 719",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 1750,
+   "registered": "03-03-1955"
+  },
+  {
+   "slug": "ahilyanagar-7cbd16da",
+   "name": "सहकार महर्षि शंकररावजी कोल्हे सहकारी साखर कारखाना लि. सहजानंदनगर, पो.शिंगणापूर ता. कोपरगाव, जि. अहमदनगर-423 603",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 4500,
+   "registered": "28-10-1960"
+  },
+  {
+   "slug": "ahilyanagar-9f9e445e",
+   "name": "सहकार महर्षी शिवाजीराव नारायण नागवडे सहकारी साखर कारखाना लि.मु.पो.श्रीगोंदा फॅक्टरी, ता. श्रीगोंदा, जि.अहमदनगर- 413 726",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 7000,
+   "registered": "08-03-1965"
+  },
+  {
+   "slug": "ahilyanagar-217f89ef",
+   "name": "सहकार महर्षी भाऊसाहेब थोरात सहकारी साखर कारखाना लि.अमृतनगर, ता.संगमनेर,जि.अहमदनगर-422 608",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 9000,
+   "registered": "09-06-1966"
+  },
+  {
+   "slug": "ahilyanagar-7d53feb3",
+   "name": "श्री वृध्देश्वर सहकारी साखर कारखाना लि. आदिनाथनगर, ता.पाथर्डी,जि.अहमदनगर-414 505",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 2500,
+   "registered": "02-10-1970"
+  },
+  {
+   "slug": "ahilyanagar-f82265be",
+   "name": "मुळा सहकारी साखर कारखाना लि.सोनई ,ता.नेवासा, जि. अहमदनगर-414105",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 7000,
+   "registered": "27-02-1970"
+  },
+  {
+   "slug": "ahilyanagar-47879d00",
+   "name": "जगदंबा सहकारी साखर कारखाना लि. राशिन, ता.कर्जत, जि.अहमदनगर-414 403.",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 12500,
+   "registered": "17-10-1970"
+  },
+  {
+   "slug": "ahilyanagar-addb4f19",
+   "name": "लोकनेते मारुतराव घुले पाटील ज्ञानेश्वर सहकारी साखर कारखाना लि.ज्ञानेश्वरनगर, पो.भेंडे, ता.नेवासा, जि.अहमदनगर-414 605",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 7000,
+   "registered": "19-10-1970"
+  },
+  {
+   "slug": "ahilyanagar-2705dfed",
+   "name": "पारनेर तालुका सहकारी साखर कारखाना लि.देवीभोयरे, ता.पारनेर, जि.अहमदनगर-414 306",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 1250,
+   "registered": "24-06-1982"
+  },
+  {
+   "slug": "ahilyanagar-876cd681",
+   "name": "अगस्ती सहकारी साखर कारखाना लि.अगस्तीनगर, ता.अकोले , जि.अहमदनगर-422 601",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 3500,
+   "registered": "12-04-1989"
+  },
+  {
+   "slug": "ahilyanagar-c9c0775f",
+   "name": "श्री केदारेश्वर सहकारी साखर कारखाना लि.मु.पो.बाधेगांव, ता.शेवगाव, जि.अहमदनगर-414 503",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 2500,
+   "registered": "02-02-1990"
+  },
+  {
+   "slug": "ahilyanagar-c0858256",
+   "name": "नगर तालुका सहकारी साखर कारखाना लि.ता.वाळकी, जि.अहमदनगर-",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 2500,
+   "registered": "19-05-1997"
+  },
+  {
+   "slug": "ahilyanagar-a293a2cd",
+   "name": "कर्मयोगी कुंडलिकराव रामराव जगताप पाटील कुकडी सहकारी साखर कारखाना लि.मु.पो.पिंपळगाव पिसा, ता.श्रीगोंदा,जि.अहमदनगर-413 703.",
+   "district": "अहिल्यानगर",
+   "district_slug": "ahilyanagar",
+   "tcd": 3500,
+   "registered": "08-01-1997"
+  },
+  {
+   "slug": "nashik-620c22e7",
+   "name": "गिरणा सहकारी साखर कारखाना लि.दाभाडी ,ता. मालेगाव, जि.नाशिक-423 202.",
+   "district": "नाशिक",
+   "district_slug": "nashik",
+   "tcd": 2500,
+   "registered": "08-08-1955"
+  },
+  {
+   "slug": "nashik-b71392f5",
+   "name": "निफाड सहकारी साखर कारखाना लि. पिंपळस, भाऊसाहेबनगर, ता.निफाड, जि.नाशिक-422 301",
+   "district": "नाशिक",
+   "district_slug": "nashik",
+   "tcd": 3500,
+   "registered": "26-01-1961"
+  },
+  {
+   "slug": "nashik-738363ed",
+   "name": "कादवा सहकारी साखर कारखाना लि. मातेरेवाडी, ता.दिंडोरी, जि.नाशिक-422 209",
+   "district": "नाशिक",
+   "district_slug": "nashik",
+   "tcd": 3500,
+   "registered": "15-10-1970"
+  },
+  {
+   "slug": "nashik-fa349e38",
+   "name": "नाशिक सहकारी साखर कारखाना लि.श्री संत जनार्दन स्वामीनगर,पो. पळसे, ता.जि. नाशिक -422 101",
+   "district": "नाशिक",
+   "district_slug": "nashik",
+   "tcd": 1250,
+   "registered": "15-10-1970"
+  },
+  {
+   "slug": "nashik-e2985c55",
+   "name": "कर्मवीर काकासाहेब वाघ सहकारी साखर कारखाना लि. काकासाहेबनगर,रानवड, ता.निफाड , जि.नाशिक-422 308",
+   "district": "नाशिक",
+   "district_slug": "nashik",
+   "tcd": 1250,
+   "registered": "10-06-1973"
+  },
+  {
+   "slug": "nashik-8c3969d8",
+   "name": "वसंतदादा पाटील सहकारी साखर कारखाना लि. विठेवाडी , ता.कळवण,जि.नाशिक-423 304",
+   "district": "नाशिक",
+   "district_slug": "nashik",
+   "tcd": 2500,
+   "registered": "18-02-1982"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-03f0c201",
+   "name": "गंगापूर सहकारी साखर कारखाना लि. गंगापूर, जि औरंगाबाद.",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 2000,
+   "registered": "22-04-1968"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-8e62e46b",
+   "name": "कन्नड सहकारी साखर कारखाना लि.महात्मा फुले नगर, ता.कन्नड, जि. औरंगाबाद - 413 130",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 7000,
+   "registered": "22-07-1969"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-e9b4dd12",
+   "name": "सिध्देश्वर सहकारी साखर कारखाना लि. माणिकनगर, ता. सिल्लोड, जि.औरंगाबाद-431 135.",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 2000,
+   "registered": "22-07-1969"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-3532ecba",
+   "name": "संत एकनाथ सहकारी साखर कारखाना लि. एकनाथनगर, ता.पैठण, जि. औरंगाबाद-431 148",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 1250,
+   "registered": "17-04-1971"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-2d746c85",
+   "name": "देवगिरी सहकारी साखर कारखाना लि. फुलंब्री, जि.औरंगाबाद-",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 2500,
+   "registered": "17-02-1989"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-d3e58530",
+   "name": "घृष्णेश्वर सहकारी साखर कारखाना लि. गदाना, ता. खुल्ताबाद जि.औरंगाबाद",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 2500,
+   "registered": "16-05-1994"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-290d5360",
+   "name": "रेणूकादेवी शरद सहकारी साखर कारखाना लि. प्रतिभानगर, विहामांडवा, ता.पैठण, जि.औरंगाबाद-431 137",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 1250,
+   "registered": "04-04-2000"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-2107035f",
+   "name": "विनायक सहकारी साखर कारखाना म,परसोडा,ता.वैजापूर, जि.औरंगाबाद",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 1250,
+   "registered": "22-07-1969"
+  },
+  {
+   "slug": "chhatrapati-sambhajinagar-6962284c",
+   "name": "हिराजी महाराज सहकारी साखर कारखाना म,पिशोर, ता.कन्नड, जि.औरंगाबाद",
+   "district": "छ. संभाजीनगर",
+   "district_slug": "chhatrapati-sambhajinagar",
+   "tcd": 2500,
+   "registered": "19-04-1994"
+  },
+  {
+   "slug": "jalna-d1eea301",
+   "name": "कर्मयोगी अंकुशराव टोपे समर्थ सहकारी साखर कारखाना लि. अंकुशनगर, ता.अंबड, जि.जालना-431 212",
+   "district": "जालना",
+   "district_slug": "jalna",
+   "tcd": 7500,
+   "registered": "02-10-1982"
+  },
+  {
+   "slug": "jalna-822f472c",
+   "name": "जालना सहकारी साखर कारखाना लि. वरफळ,, रामनगर, ता.परतूर, जि.जालना-431 202.",
+   "district": "जालना",
+   "district_slug": "jalna",
+   "tcd": 1250,
+   "registered": "02-12-1984"
+  },
+  {
+   "slug": "jalna-23fc3a39",
+   "name": "श्री रामेश्वर सहकारी साखर कारखाना लि. सिपोराबाजार, रावसाहेबनगर, ता. भोकरदन,जि.जालना-431 114",
+   "district": "जालना",
+   "district_slug": "jalna",
+   "tcd": 2500,
+   "registered": "18-04-1994"
+  },
+  {
+   "slug": "jalna-ca2702a1",
+   "name": "सागर सहकारी साखर कारखाना लि., पो. तिर्थपुरी, ता,घनसावंगी , जि.जालना-431 209",
+   "district": "जालना",
+   "district_slug": "jalna",
+   "tcd": 10000,
+   "registered": "06-01-2001"
+  },
+  {
+   "slug": "jalna-d183a2a5",
+   "name": "रेणूका सहकारी साखर कारखाना म,पिंपळगाव, ता.घनसांगवी, जि.जालना",
+   "district": "जालना",
+   "district_slug": "jalna",
+   "tcd": 1250,
+   "registered": "19-05-1999"
+  },
+  {
+   "slug": "jalna-d8f44d71",
+   "name": "बागेश्वरी सहकारी साखर कारखाना म,परतूर,ता.परतूर, जि.जालना",
+   "district": "जालना",
+   "district_slug": "jalna",
+   "tcd": 4500,
+   "registered": ""
+  },
+  {
+   "slug": "beed-1efd491d",
+   "name": "अंबेजोगाई सहकारी साखर कारखाना लि.सावरखेडा, पो.अंबासाखर, ता.अंबेजोगाई ,जि.बीड-431 523",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 2500,
+   "registered": "24-10-1979"
+  },
+  {
+   "slug": "beed-e0811bed",
+   "name": "जयभवानी सहकारी साखर कारखाना लि. शिवाजीनगर ता.गेवराई , जि.बीड- 431 143",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 2500,
+   "registered": "10-02-1973"
+  },
+  {
+   "slug": "beed-760383f9",
+   "name": "महेश सहकारी साखर कारखाना लि. मु.पो.कडासाखर, ता.आष्टी, जि.बीड-414 308.",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 1250,
+   "registered": "14-06-1974"
+  },
+  {
+   "slug": "beed-d8a71ee6",
+   "name": "श्री गजानन सहकारी साखर कारखाना लि. सोनाजीनगर, राजूरी, ता. जि.बीड-414 205",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 2500,
+   "registered": "07-09-1982"
+  },
+  {
+   "slug": "beed-f96f1325",
+   "name": "वैद्यनाथ सहकारी साखर कारखाना लि. पांगरी, ता.परळी वैजनाथ, जि.बीड-431 530",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 4500,
+   "registered": "08-05-1996"
+  },
+  {
+   "slug": "beed-f5f394ed",
+   "name": "सिंदफणा सहकारी साखर कारखाना लि. पिंपळनेर फाटा, ता.शिरुरकासार, जि.बीड",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 2500,
+   "registered": "25-04-1997"
+  },
+  {
+   "slug": "beed-0e2d4124",
+   "name": "लोकनेते सुंदररावजी सोळंके सहकारी साखर कारखाना लि. सुंदरनगर,पो.तेलगांव बु. ता.माजलगांव,जि.बीड-431 131",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 5000,
+   "registered": "11-09-1989"
+  },
+  {
+   "slug": "beed-9ef30f38",
+   "name": "पद्मश्री डॉ. वि. वि.पाटील सहकारी साखर कारखाना लि. अशोकनगर, ता.केज, जि.बीड-431 123",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 4900,
+   "registered": "03-05-1991"
+  },
+  {
+   "slug": "beed-a1d19623",
+   "name": "छत्रपती सहकारी साखर कारखाना लि. सोनाजीनगर, सावरगांव, ता. माजलगांव, जि.बीड-431 131",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 2500,
+   "registered": "05-05-2000"
+  },
+  {
+   "slug": "beed-7f3fb392",
+   "name": "सोमेश्वर सहकारी साखर कारखाना लि. घाटनांदूर,ता. अंबाजोगाई ,जि. बीड",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 2500,
+   "registered": "25-06-1990"
+  },
+  {
+   "slug": "beed-5fbf4939",
+   "name": "महात्मा जोतिबा फुले सहकारी साखर कारखाना म,महासांगवी, ता.पाटोदा, जि.बीड",
+   "district": "बीड",
+   "district_slug": "beed",
+   "tcd": 2500,
+   "registered": "06-06-1997"
+  },
+  {
+   "slug": "dhule-75a530ba",
+   "name": "पांझराकान सहकारी साखर कारखाना लि. भाडणे, ता.साक्री, जि.धुळे-",
+   "district": "धुळे",
+   "district_slug": "dhule",
+   "tcd": 2500,
+   "registered": "14-05-1966"
+  },
+  {
+   "slug": "dhule-593d333a",
+   "name": "श्री सातपूडा तापी सहकारी साखर कारखाना लि. पुरषोत्तमनगर, ता.शहादा, जि. नंदुरबार-425 424",
+   "district": "धुळे",
+   "district_slug": "dhule",
+   "tcd": 5000,
+   "registered": "09-05-1969"
+  },
+  {
+   "slug": "dhule-a5ff7dd8",
+   "name": "संजय सहकारी साखर कारखाना लि. विजयनगर, ता.जि.धुळे",
+   "district": "धुळे",
+   "district_slug": "dhule",
+   "tcd": 2500,
+   "registered": "29-07-1981"
+  },
+  {
+   "slug": "dhule-c581a8fe",
+   "name": "शिरपूर सहकारी साखर कारखाना लि. शिवाजीनगर, दहिवद, ता.शिरपूर, जि.धुळे-425 405",
+   "district": "धुळे",
+   "district_slug": "dhule",
+   "tcd": 2500,
+   "registered": "14-04-1982"
+  },
+  {
+   "slug": "dhule-287b9ac3",
+   "name": "सिंदखेडा सहकारी साखर कारखाना म,विखुर्ले, ता.सिंदखेडा, जि.धुळे",
+   "district": "धुळे",
+   "district_slug": "dhule",
+   "tcd": 2500,
+   "registered": "29-08-1989"
+  },
+  {
+   "slug": "dhule-3268d3b7",
+   "name": "आण्णासो.चुडामण पाटिल सहकारी साखर कारखाना म. नेर , जि.धुळे",
+   "district": "धुळे",
+   "district_slug": "dhule",
+   "tcd": 1250,
+   "registered": "17-04-2001"
+  },
+  {
+   "slug": "nandurbar-14109d58",
+   "name": "पुष्पदंतेश्वर सहकारी साखर कारखाना लि.समशेरपूर, ता. जि. नंदूरबार",
+   "district": "नंदुरबार",
+   "district_slug": "nandurbar",
+   "tcd": 10000,
+   "registered": "01-09-1991"
+  },
+  {
+   "slug": "nandurbar-2d551b59",
+   "name": "आदिवासी सहकारी साखर कारखाना लि. स्वरुपसिंग नाईकनगर ,डोकारे, ता.नवापूर जि. नंदूरबार-425 418",
+   "district": "नंदुरबार",
+   "district_slug": "nandurbar",
+   "tcd": 1250,
+   "registered": "29-05-1997"
+  },
+  {
+   "slug": "jalgaon-766bdc14",
+   "name": "बेलगंगा सहकारी साखर कारखाना लि. मालेगांव रोड, पो.भोरस, ता.चाळीसगांव, जि.जळगाव-424 119.",
+   "district": "जळगांव",
+   "district_slug": "jalgaon",
+   "tcd": 2500,
+   "registered": "15-01-1971"
+  },
+  {
+   "slug": "jalgaon-4bfa8dcc",
+   "name": "वसंत सहकारी साखर कारखाना लि.कासोदा, ता.एरंडोल, जि.जळगाव",
+   "district": "जळगांव",
+   "district_slug": "jalgaon",
+   "tcd": 1250,
+   "registered": "20-02-1973"
+  },
+  {
+   "slug": "jalgaon-b8697afc",
+   "name": "मधुकर सहकारी साखर कारखाना लि. मु.पो.जिवरामनगर, फैजपूर, ता.यावल , जि.जळगाव-425 524",
+   "district": "जळगांव",
+   "district_slug": "jalgaon",
+   "tcd": 2500,
+   "registered": "27-09-1973"
+  },
+  {
+   "slug": "jalgaon-45cc0b61",
+   "name": "श्री संत मुक्ताबाई सहकारी साखर कारखाना लि.प्रतिभानगर, ता.एदलाबाद, जि.जळगाव-425 306",
+   "district": "जळगांव",
+   "district_slug": "jalgaon",
+   "tcd": 2500,
+   "registered": "04-11-1988"
+  },
+  {
+   "slug": "jalgaon-41d55cf8",
+   "name": "चोपडा सहकारी साखर कारखाना लि.चहार्डी, ता.चोपडा, जि.जळगाव-425 107",
+   "district": "जळगांव",
+   "district_slug": "jalgaon",
+   "tcd": 2500,
+   "registered": "04-10-1989"
+  },
+  {
+   "slug": "jalgaon-a3cf5867",
+   "name": "जामनेर सहकारी साखर कारखाना लि. गोंडखेल, ता.जामनेर, जि.जळगाव-",
+   "district": "जळगांव",
+   "district_slug": "jalgaon",
+   "tcd": 2500,
+   "registered": "13-01-1992"
+  },
+  {
+   "slug": "jalgaon-671d9e5c",
+   "name": "रावेर सहकारी साखर कारखाना लि. करजोद, ओंकारेश्वर, ता.रावेर , जि.जळगाव",
+   "district": "जळगांव",
+   "district_slug": "jalgaon",
+   "tcd": 1250,
+   "registered": "31-05-1999"
+  },
+  {
+   "slug": "nanded-a96964b4",
+   "name": "कलंबर विभाग सहकारी साखर कारखाना लि.गांधीनगर, ता.लोहा, जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 1250,
+   "registered": "23-03-1966"
+  },
+  {
+   "slug": "nanded-283ca9ab",
+   "name": "गोदावरी मनार सहकारी साखर कारखाना लि.शंकरनगर, ता.बिलोली , जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 2500,
+   "registered": "05-09-1976"
+  },
+  {
+   "slug": "nanded-ec826844",
+   "name": "शंकर सहकारी साखर कारखाना लि. वाघलवाडा, ता.उमरी, जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 2500,
+   "registered": "04-10-1984"
+  },
+  {
+   "slug": "nanded-f52a58f8",
+   "name": "जय अंबिका सहकारी साखर कारखाना लि. कुटुंर, ता. नायगांव, जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 2500,
+   "registered": "18-06-1990"
+  },
+  {
+   "slug": "nanded-4893b2c3",
+   "name": "हुतात्मा जयवंतराव पाटील सहकारी साखर कारखाना लि.सुर्यनगर, हडसरी, ता.हदगाव , जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 2500,
+   "registered": "25-07-1990"
+  },
+  {
+   "slug": "nanded-79ba7bcd",
+   "name": "भाऊराव चव्हाण सहकारी साखर कारखाना लि. लक्ष्मीनगर, ता. अर्धापूर, जि.नांदेड-431 605",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 3500,
+   "registered": "26-07-1990"
+  },
+  {
+   "slug": "nanded-06358a54",
+   "name": "जयशिवशंकर सहकारी साखर कारखाना लि. शेषनगर, बारहळी, ता.मुखेड, जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 1250,
+   "registered": "06-04-1999"
+  },
+  {
+   "slug": "nanded-56426640",
+   "name": "नंदिग्राम सहकारी साखर कारखाना म सोमेश्वर, ता. जि. नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 2500,
+   "registered": "20-04-1994"
+  },
+  {
+   "slug": "nanded-50c0611d",
+   "name": "पैनगंगा सहकारी साखर कारखाना म.उनकदेव, ता.किनवट, जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 2500,
+   "registered": "23-06-1994"
+  },
+  {
+   "slug": "nanded-a4355e0c",
+   "name": "विठठल सहकारी साखर कारखाना म.मारताळा ता.लोहा, जि.नांदेड",
+   "district": "नांदेड",
+   "district_slug": "nanded",
+   "tcd": 1250,
+   "registered": "01-05-2001"
+  },
+  {
+   "slug": "hingoli-500976db",
+   "name": "मराठवाडा सहकारी साखर कारखाना लि.डोंगरकडा, ता.कळमनुरी, जि.हिंगोली -",
+   "district": "हिंगोली",
+   "district_slug": "hingoli",
+   "tcd": 1250,
+   "registered": "11-07-1969"
+  },
+  {
+   "slug": "hingoli-d373c5e2",
+   "name": "पुर्णा सहकारी साखर कारखाना लि.मु.पो. ता.बसमतनगर, जि.हिंगोली -431 512",
+   "district": "हिंगोली",
+   "district_slug": "hingoli",
+   "tcd": 2500,
+   "registered": "16-01-1970"
+  },
+  {
+   "slug": "hingoli-1bf69610",
+   "name": "बाराशिव हनुमान सहकारी साखर कारखाना लि. जवळाबाजार, ता.औंढा नागनाथ, जि.हिंगोली",
+   "district": "हिंगोली",
+   "district_slug": "hingoli",
+   "tcd": 2500,
+   "registered": "08-01-1996"
+  },
+  {
+   "slug": "hingoli-ebd150b5",
+   "name": "टोकाई सहकारी साखर कारखाना लि.कुरुंदा, ता.बसमतनगर., जि.हिंगोली-431 512",
+   "district": "हिंगोली",
+   "district_slug": "hingoli",
+   "tcd": 1250,
+   "registered": "03-03-1997"
+  },
+  {
+   "slug": "parbhani-1bf85877",
+   "name": "गोदावरी दुधना सहकारी साखर कारखाना लि. देवनांद्रा, ता. पाथरी, जि.परभणी-431 506",
+   "district": "परभणी",
+   "district_slug": "parbhani",
+   "tcd": 1250,
+   "registered": "12-12-1975"
+  },
+  {
+   "slug": "parbhani-b7fdca52",
+   "name": "नृसिंह सहकारी साखर कारखाना लि. अमदापूर लोहगांव, पो.शिंगणापूर, ता. जि.परभणी",
+   "district": "परभणी",
+   "district_slug": "parbhani",
+   "tcd": 2500,
+   "registered": "17-04-1990"
+  },
+  {
+   "slug": "parbhani-e0845b87",
+   "name": "इंदिरा सहकारी साखर कारखाना म,पुसेगाव, ता.हिंगोली , जि.परभणी",
+   "district": "परभणी",
+   "district_slug": "parbhani",
+   "tcd": 2500,
+   "registered": "07-05-1990"
+  },
+  {
+   "slug": "parbhani-60d1cad3",
+   "name": "श्री साईबाबा सहकारी साखर कारखाना म,माणकेश्वर, ता.जिंतूर जि.परभणी",
+   "district": "परभणी",
+   "district_slug": "parbhani",
+   "tcd": 2500,
+   "registered": "21-11-1994"
+  },
+  {
+   "slug": "latur-7fbda361",
+   "name": "शेतकरी सहकारी साखर कारखाना लि. स्वामी रामानंदतिर्थ नगर, पो.किल्लारी, ता.औसा, जि.लातूर-413 516",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 1250,
+   "registered": "06-06-1969"
+  },
+  {
+   "slug": "latur-f077885b",
+   "name": "जय जवान जयकिसान सहकारी साखर कारखाना लि. लालबहादूर शास्त्रीनगर,पो. नळेगाव ,ता.चाकूर, जि.लातूर-413 524",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 1250,
+   "registered": "16-08-1982"
+  },
+  {
+   "slug": "latur-70e8afcd",
+   "name": "विकासरत्न विलासराव देशमुख मांजरा सहकारी साखर कारखाना लि. विलासनगर, ता. जि. लातूर-413 531",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 7500,
+   "registered": "01-11-1984"
+  },
+  {
+   "slug": "latur-15dbfa00",
+   "name": "शिवाजीराव पाटिल निलंगेकर सहकारी साखर कारखाना लि. झरी, अंबूलगा, ता.निलंगा, जि.लातूर",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 2500,
+   "registered": "27-10-1989"
+  },
+  {
+   "slug": "latur-9a9f94b9",
+   "name": "प्रियदर्शनी सहकारी साखर कारखाना लि.तोंडार, ता.उदगिर, जि.लातूर-413563",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 3000,
+   "registered": "04-12-1994"
+  },
+  {
+   "slug": "latur-6c91460f",
+   "name": "विलास सहकारी साखर कारखाना लि. वैशालीनगर ,निवळी , जि.लातूर",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 3500,
+   "registered": "21-03-2000"
+  },
+  {
+   "slug": "latur-e20b0aec",
+   "name": "श्री संत शिरोमणी मारुती महाराज सहकारी साखर कारखाना लि. माऊलीनगर,बेलकुंड, ता.औसा, जि.लातूर-413 502",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 1250,
+   "registered": "18-07-2000"
+  },
+  {
+   "slug": "latur-3f98eef1",
+   "name": "रेणा सहकारी साखर कारखाना लि. दिलीपनगर निवाडा, हरवाडी, ता.रेणापूर , जि.लातूर-413 527",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 2500,
+   "registered": "27-09-2001"
+  },
+  {
+   "slug": "latur-b95f112d",
+   "name": "बालाघाट सहकारी साखर कारखाना लि. महेशनगर, पो.उजना, ता.अहमदपूर, जि.लातूर-413 515",
+   "district": "लातूर",
+   "district_slug": "latur",
+   "tcd": 2500,
+   "registered": "25-06-1990"
+  },
+  {
+   "slug": "amravati-af289c31",
+   "name": "शेतकरी सहकारी साखर कारखाना लि.देवगांव,चांदुररेल्वे ता. धामणगाव, जि.अमरावती -",
+   "district": "अमरावती",
+   "district_slug": "amravati",
+   "tcd": 1250,
+   "registered": "15-03-1984"
+  },
+  {
+   "slug": "amravati-a71af22b",
+   "name": "श्री.अंबादेवी सहकारी साखर कारखाना लि.ता.अंजनगाव सूर्जी, जि.अमरावती",
+   "district": "अमरावती",
+   "district_slug": "amravati",
+   "tcd": 2500,
+   "registered": "23-09-1988"
+  },
+  {
+   "slug": "amravati-98f51557",
+   "name": "कोंडेश्वर सहकारी साखर कारखाना लि. फुबगांव, ता.नांदगांव, जि. अमरावती",
+   "district": "अमरावती",
+   "district_slug": "amravati",
+   "tcd": 2500,
+   "registered": "30-06-1989"
+  },
+  {
+   "slug": "buldhana-2e46e010",
+   "name": "जिजामाता सहकारी साखर कारखाना लि.दुसरबीड, ता. सिंदखेडराजा, जि.बुलढाणा",
+   "district": "बुलढाणा",
+   "district_slug": "buldhana",
+   "tcd": 1250,
+   "registered": "21-07-1969"
+  },
+  {
+   "slug": "buldhana-88a75a81",
+   "name": "शिवशक्ती आदिवासी सहकारी साखर कारखाना लि. बाळकृष्ण वासनिकनगर, सुजातपुर, ता.खामगाव, जि.बुलढाणा",
+   "district": "बुलढाणा",
+   "district_slug": "buldhana",
+   "tcd": 2500,
+   "registered": "16-11-1988"
+  },
+  {
+   "slug": "akola-108151f8",
+   "name": "श्री बालाजी सहकारी साखर कारखाना लि.मसलापेन, ता.रिसोड, जि.वाशिम.",
+   "district": "अकोला",
+   "district_slug": "akola",
+   "tcd": 1250,
+   "registered": "22-03-1985"
+  },
+  {
+   "slug": "akola-8f78eda2",
+   "name": "अकोला जिल्हा सहकारी साखर कारखाना लि.विझोरा, ता. बार्शीटाकळी, जि.अकोला-444 001.",
+   "district": "अकोला",
+   "district_slug": "akola",
+   "tcd": 2500,
+   "registered": "26-04-1989"
+  },
+  {
+   "slug": "yavatmal-8fc1e2cb",
+   "name": "वसंत सहकारी साखर कारखाना लि.पुसद,पोफळी, वसंतनगर, ता.उमरखेड, जि.यवतमाळ-445213",
+   "district": "यवतमाळ",
+   "district_slug": "yavatmal",
+   "tcd": 2500,
+   "registered": "07-01-1969"
+  },
+  {
+   "slug": "yavatmal-f4ddd520",
+   "name": "शंकर शेतकरी सहकारी साखर कारखाना लि. मंगरुळपीर, ता. दिग्रस, जि. यवतमाळ",
+   "district": "यवतमाळ",
+   "district_slug": "yavatmal",
+   "tcd": 2500,
+   "registered": "15-07-1989"
+  },
+  {
+   "slug": "yavatmal-63e50d75",
+   "name": "सुधाकरराव नाईक सहकारी साखर कारखाना लि.ता.पुसद, जि.यवतमाळ",
+   "district": "यवतमाळ",
+   "district_slug": "yavatmal",
+   "tcd": 2500,
+   "registered": "02-07-1990"
+  },
+  {
+   "slug": "yavatmal-c33ed419",
+   "name": "जयकिसान सहकारी साखर कारखाना लि. बोदेगांव, ता.दारव्हा, जि.यवतमाळ",
+   "district": "यवतमाळ",
+   "district_slug": "yavatmal",
+   "tcd": 2500,
+   "registered": "16-05-1989"
+  },
+  {
+   "slug": "nagpur-62205a9d",
+   "name": "श्रीराम सहकारी साखर कारखाना लि.बाबदेव ,ता.मौदा, जि.नागपूर.",
+   "district": "नागपूर",
+   "district_slug": "nagpur",
+   "tcd": 2500,
+   "registered": "14-02-1984"
+  },
+  {
+   "slug": "nagpur-3f52de25",
+   "name": "राम गणेश गडकरी सहकारी साखर कारखाना लि. हेटीसुरला, ता.सावनेर, जि.नागपूर",
+   "district": "नागपूर",
+   "district_slug": "nagpur",
+   "tcd": 2500,
+   "registered": "30-06-1989"
+  },
+  {
+   "slug": "bhandara-51ae321d",
+   "name": "वैनगंगा सहकारी साखर कारखाना लि.तुमसर, देव्हाडा, ता.मोहाडी, जि.भंडारा",
+   "district": "भंडारा",
+   "district_slug": "bhandara",
+   "tcd": 1250,
+   "registered": "11-09-1984"
+  },
+  {
+   "slug": "wardha-a8892176",
+   "name": "महात्मा सहकारी साखर कारखाना लि. दिनकरनगर, जामणी, ता.सेलू, जि.वर्धा-441 115",
+   "district": "वर्धा",
+   "district_slug": "wardha",
+   "tcd": 2500,
+   "registered": "03-05-1984"
+  },
+  {
+   "slug": "wardha-adf63708",
+   "name": "स्व. बापूरावजी देशमुख सहकारी साखर कारखाना लि.,वेळा, ता.हिंगणघाट जि.वर्धा",
+   "district": "वर्धा",
+   "district_slug": "wardha",
+   "tcd": 2500,
+   "registered": "09-05-1989"
+  }
+ ]
+}

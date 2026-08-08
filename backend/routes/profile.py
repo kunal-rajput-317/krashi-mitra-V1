@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Optional
 
-from backend.database.db import UserProfile, User, BazarPost, BazarFollow, get_db
+from backend.database.db import UserProfile, User, BazarPost, BazarFollow, get_db, acct
 from backend.utils.auth_utils import get_current_user
 from backend.utils.security import assert_media_matches
 
@@ -309,7 +309,7 @@ def create_profile(
 ):
     user_id = current_user["user_id"]
 
-    existing = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    existing = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if existing:
         return {
             "success": False,
@@ -317,8 +317,18 @@ def create_profile(
             "data":    {}
         }
 
+    account = db.query(User).filter(User.id == user_id).first()
+    if not account or account.user_id is None:
+        raise HTTPException(
+            status_code=409,
+            detail="खाता अभी verify नहीं हुआ — profile नहीं बन सका।",
+        )
+
     profile = UserProfile(
-        user_id             = user_id,
+        # The account number, in both columns. NOT users.id — see
+        # UserProfile.user_id in backend/database/db.py.
+        id                  = account.user_id,
+        user_id             = account.user_id,
         # Personal
         name                = body.full_name,
         phone_number        = body.phone_number,
@@ -403,7 +413,7 @@ def update_profile(
 ):
     user_id = current_user["user_id"]
 
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if not profile:
         return {
             "success": False,
@@ -511,7 +521,7 @@ def get_profile(
 ):
     user_id = current_user["user_id"]
 
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if not profile:
         # No profile yet, but the caller IS authenticated — still return the
         # account email + signup name so the frontend can show them
@@ -562,15 +572,22 @@ def update_location(
 ):
     user_id = current_user["user_id"]
 
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if not profile:
         # Verified users always have a profile (DB trigger), but stay defensive:
         # mint a bare one from the account name so the location never gets lost.
-        acct = db.query(User).filter(User.id == user_id).first()
-        if not acct:
+        account = db.query(User).filter(User.id == user_id).first()
+        if not account:
             raise HTTPException(status_code=404, detail="User नहीं मिला।")
-        profile = UserProfile(user_id=user_id, name=acct.name,
-                              language=acct.preferred_language or "hindi")
+        if account.user_id is None:
+            raise HTTPException(
+                status_code=409,
+                detail="खाता अभी verify नहीं हुआ — स्थान सेव नहीं हो सका।",
+            )
+        # id AND user_id are the same account number; never users.id.
+        profile = UserProfile(id=account.user_id, user_id=account.user_id,
+                              name=account.name,
+                              language=account.preferred_language or "hindi")
         db.add(profile)
 
     profile.geo_lat        = body.lat
@@ -600,7 +617,7 @@ async def upload_avatar(
     db:           Session    = Depends(get_db),
 ):
     user_id = current_user["user_id"]
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if not profile:
         raise HTTPException(
             status_code=403,
@@ -669,7 +686,7 @@ def delete_avatar(
     db:           Session = Depends(get_db),
 ):
     user_id = current_user["user_id"]
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if not profile:
         raise HTTPException(status_code=404, detail="Profile नहीं मिला।")
 

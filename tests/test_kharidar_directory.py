@@ -135,23 +135,34 @@ class TestSellIntentIsWiredIntoTheKharidarPage:
 
     The खरीदार page is the one place where a farmer's sell intent *is* the
     product — a dealer pays because there is a queue of sellers behind the
-    listing. So the appeal panel has to be on this page, not only on the price
-    page, and it has to know it is here (`here=True`), or the confirmation
-    offers a link to the page the farmer is already standing on.
+    listing. So the "बेचना है" door has to be on this page, not only on the
+    price page.
+
+    That door used to be an in-page composer inside the appeal modal. It is now
+    a link to Krashi Bazar's seller tab, which owns the login gate, the photo
+    picker and the farmer's own listings — one composer instead of two.
     """
 
-    def test_panel_is_present_on_an_empty_district(self, seeded, client):
+    def test_sell_door_is_present_on_an_empty_district(self, seeded, client):
         """Especially here: an empty directory has nothing else to collect."""
         body = client.get(_url(EMPTY)).text
-        assert 'id="ap-ov"' in body, "appeal panel missing from the kharidar page"
-        assert "openCropAppeal()" in body, "nothing opens the appeal panel"
+        assert 'class="kh-sell"' in body, "sell panel missing from the kharidar page"
+        assert "/krashi_bajar.html?mode=sell" in body, (
+            "the sell panel does not lead anywhere a farmer can post")
 
-    def test_panel_knows_it_is_on_the_kharidar_page(self, seeded, client):
-        assert '"here": true' in client.get(_url(SEEDED)).text
+    def test_kharidar_page_no_longer_carries_its_own_composer(self, seeded, client):
+        """The modal is a chooser for the price page now. Rendering it here too
+        would put a second, emptier way to post a crop on the one page that
+        already has a direct link to the real one."""
+        assert 'id="ap-ov"' not in client.get(_url(SEEDED)).text
 
-    def test_price_page_panel_does_not_claim_to_be_here(self, seeded, client):
-        """Same helper, other caller — the flag must actually vary."""
-        assert '"here": false' in client.get("/bhav/wheat/up/hardoi").text
+    def test_price_page_chooser_offers_both_doors(self, seeded, client):
+        """Same two intents, one page earlier: the 🤝 खरीदें/बेचें button."""
+        body = client.get("/bhav/wheat/up/hardoi").text
+        assert 'id="ap-ov"' in body, "chooser missing from the price page"
+        assert "openCropAppeal()" in body, "nothing opens the chooser"
+        assert "/krashi_bajar.html?mode=sell" in body, "no बेचना है door"
+        assert 'href="/krashi_bajar.html"' in body, "no खरीदना है door"
 
     def test_empty_district_does_not_promise_buyers_it_lacks(self, seeded, client):
         """An honest empty state. Promising a farmer his crop goes in front of

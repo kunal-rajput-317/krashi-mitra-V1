@@ -85,10 +85,13 @@ CORE = [
     ("articles/index.html", "/articles/",       0.9, "daily",  ("hi", "en", "kn"), ()),
 ]
 
-# Hubs only. The full lists live in /bhav/sitemap.xml, /product/sitemap.xml
-# and /sawal/sitemap.xml.
+# Hubs only. The full lists live in /bhav/sitemap.xml, /product/sitemap.xml,
+# /sawal/sitemap.xml and /ganna/sitemap.xml.
+# /ganna is "yearly" on purpose: cane price is announced once a season, so
+# claiming anything faster is the same false-freshness signal /bhav's own
+# sitemap comment warns about.
 HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
-        ("/sawal", 0.7, "monthly")]
+        ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly")]
 
 _ARTICLE_PRIORITY = 0.8
 _ARTICLE_CHANGEFREQ = "weekly"

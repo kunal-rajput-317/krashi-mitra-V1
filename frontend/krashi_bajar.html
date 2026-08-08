@@ -655,6 +655,19 @@
     transition: transform 0.15s, box-shadow 0.15s;
   }
   .bz-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(26,60,46,0.42); }
+  /* The bottom nav (bottomnav.js) owns the bottom 64px on phones at z-index
+     3500, and this button is position:fixed — the body padding that clears the
+     nav for normal content cannot move it. At bottom:22px/z-index:900 it sat
+     UNDER the nav: elementFromPoint at the button's own centre returned a
+     .km-bn-item, so the tap the empty seller state asks for ("➕ पोस्ट करें से
+     अपनी पहली फसल बेचें") landed on the nav instead. Same breakpoint as the
+     nav's own, so nothing moves on desktop, where there is no nav to clear. */
+  @media (max-width: 768px) {
+    body.km-has-bn .bz-fab {
+      bottom: calc(78px + env(safe-area-inset-bottom));
+      z-index: 3600;
+    }
+  }
 
   /* ── GENERIC MODAL ── */
   .bz-modal-overlay {
@@ -3277,7 +3290,16 @@ async function submitPost() {
   setLang(currentLang);
   fillCropSelect();
   renderChips();
-  loadFeed(true);
+  // Deep link ?mode=sell — the "बेचना है" door on every /bhav price page lands
+  // here rather than opening a second composer over there. setMode owns the
+  // login/profile gate and loads the feed itself; when it bails (guest, or no
+  // profile yet) `mode` is still 'buy', and the buyer feed is loaded instead so
+  // nobody is left staring at a blank page behind the login prompt.
+  if (urlParams.get('mode') === 'sell') {
+    setMode('sell').then(() => { if (mode !== 'sell') loadFeed(true); });
+  } else {
+    loadFeed(true);
+  }
   fetchMe().then(me => {
     if (me) {
       const btn = document.getElementById('header-avatar-btn');

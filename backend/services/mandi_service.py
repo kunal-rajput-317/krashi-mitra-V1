@@ -12,12 +12,27 @@
 import json
 import os
 import logging
+from datetime import date
 
 from sqlalchemy import func
 
 from backend.database.db import SessionLocal, MandiPrice, MandiPriceHistory
 
 logger = logging.getLogger("krishi.mandi_service")
+
+
+def _arrival_date(raw) -> date:
+    """Parse Agmarknet's DD/MM/YYYY arrival_date for sorting. Unparseable or
+    missing → date.min, so those rows sink to the bottom instead of jumping
+    to the top of a descending sort."""
+    parts = str(raw or "").strip().split("/")
+    if len(parts) != 3:
+        return date.min
+    try:
+        d, m, y = (int(p) for p in parts)
+        return date(y, m, d)
+    except ValueError:
+        return date.min
 
 # ── JSON seed (lazy fallback only) ───────────────────────────
 _json_path = os.path.join(
@@ -96,9 +111,26 @@ def get_mandi_prices(commodity: str, district: str, state: str) -> dict:
             q = q.filter(func.lower(MandiPrice.district) == district.lower())
 
         limit = 50 if commodity else 150
-        rows  = q.limit(limit).all()
+        # ORDER BY is not cosmetic here. mandi_prices is a MERGED snapshot: a
+        # market that has not reported for days keeps its last known row (see
+        # MandiPrice's docstring), so the table holds a mix of arrival_dates,
+        # and a state query has thousands of rows for a 150-row cap. Unordered,
+        # which rows survived the LIMIT was arbitrary physical order — callers
+        # that take the head (krashibook.js reads prices[0]) were quoting a
+        # random market, and index.html's homepage panel was picking week-old
+        # prices out of the slice.
+        #
+        # fetched_at, not arrival_date: arrival_date is a DD/MM/YYYY *string*,
+        # so sorting it in SQL orders by day-of-month. fetched_at is when we
+        # last saw this market report, which is the same ranking for the
+        # purpose of the cap. The exact arrival-date order is then applied in
+        # Python below, over the page we actually returned.
+        rows = q.order_by(MandiPrice.fetched_at.desc()).limit(limit).all()
 
         if rows:
+            # Newest arrival_date first, so the head of the list is the most
+            # recent real price and not merely the most recently fetched.
+            rows.sort(key=lambda r: _arrival_date(r.arrival_date), reverse=True)
             return {"commodity": commodity or "all",
                     "prices": [_row_to_dict(r) for r in rows]}
 
@@ -120,6 +152,10 @@ def get_mandi_prices(commodity: str, district: str, state: str) -> dict:
     if not filtered:
         return {"commodity": commodity or "all", "prices": [], "message": "No data found"}
     limit = 50 if commodity else 150
+    # Same newest-first contract as the DB path, so a caller reading prices[0]
+    # behaves identically whichever source answered.
+    filtered = sorted(filtered, key=lambda r: _arrival_date(r.get("arrival_date")),
+                      reverse=True)
     return {"commodity": commodity or "all",
             "prices": [_json_to_dict(r) for r in filtered[:limit]]}
 

@@ -91,13 +91,13 @@ def create_crop_appeal(payload: AppealIn, request: Request,
     """Record one sell/buy appeal against a crop + place. Login required."""
     # Checked first: a guest has nothing to fix by editing the form, so tell him
     # what's actually wrong before validating fields he may not need to retype.
-    user = get_optional_user(request)
+    user = get_optional_user(request, db)
     if not user:
         raise HTTPException(status_code=401, detail=LOGIN_REQUIRED)
-    # get_optional_user only decodes the token; it does not check the account is
-    # still there. crop_appeals.user_id has a foreign key to users, so a token
-    # left over from a deleted account would take the whole appeal down at
-    # commit with a 500 rather than a fixable message. Same guard as /order/log.
+    # Belt and braces on top of get_optional_user's own account check:
+    # crop_appeals.user_id has a foreign key to users, so a row written for an
+    # id that is not there any more would take the whole appeal down at commit
+    # with a 500 rather than a fixable message. Same guard as /order/log.
     if not db.query(User).filter(User.id == user["user_id"]).first():
         raise HTTPException(status_code=401, detail=ACCOUNT_GONE)
 

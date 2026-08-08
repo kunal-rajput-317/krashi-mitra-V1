@@ -174,14 +174,41 @@ def _ensure_profile(db: Session, user: User):
     # (user 1 → rows 3 and 4). Flushing emits the UPDATE, lets the trigger run,
     # and makes its row visible here — so this stays the no-op it was meant to be.
     db.flush()
-    exists = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
-    if exists:
+    # The flush is what creates the row: trg_ensure_user_profile fires on
+    # is_verified going true and inserts it. This function no longer inserts
+    # anything itself, and must not — that trigger is also the ALLOCATOR of the
+    # account number (users.user_id), and user_profiles.user_id is a foreign key
+    # to it. An INSERT from here would have to invent a number the DB has not
+    # issued, and would collide the moment two accounts verified at once.
+    #
+    # Refresh so the number the trigger just assigned is visible on the ORM
+    # object; callers read user.user_id straight after this.
+    db.refresh(user)
+    if user.user_id is not None:
         return
+
+    # Fallback for SQLite, which has none of those triggers — the test suite
+    # runs on it, and without this no test account would ever get a profile.
+    # max+1 is safe here in a way it would NOT be on Postgres: SQLite takes a
+    # write lock for the whole transaction, so there is no concurrent verify to
+    # race against.
+    if db.bind is not None and db.bind.dialect.name == "postgresql":
+        logger.warning(
+            "no account number for users.id=%s after verify — "
+            "trg_ensure_user_profile did not fire", user.id,
+        )
+        return
+
+    n = (db.query(func.max(UserProfile.id)).scalar() or 0) + 1
+    user.user_id = n
+    db.flush()
     db.add(UserProfile(
-        user_id  = user.id,
+        id       = n,
+        user_id  = n,
         name     = user.name,
         language = user.preferred_language or "hindi",
     ))
+    db.flush()
 
 
 def _find_user_by_email(db: Session, email: str) -> Optional[User]:

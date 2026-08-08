@@ -28,7 +28,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.database.db import (
-    MandiAlert, PushSubscription, User, UserProfile, get_db,
+    MandiAlert, PushSubscription, User, UserProfile, get_db, acct,
 )
 from backend.utils.auth_utils import resolve_token_user_id
 
@@ -96,7 +96,7 @@ def display_name(db: Session, user_id: int) -> Optional[str]:
     Google supplied. Returns None rather than a placeholder: an empty cell reads
     as "no name on file", where "Unknown" reads like a real answer."""
     profile = (db.query(UserProfile)
-                 .filter(UserProfile.user_id == user_id)
+                 .filter(UserProfile.user_id == acct(user_id))
                  .first())
     if profile and (profile.name or "").strip():
         return profile.name.strip()[:120]

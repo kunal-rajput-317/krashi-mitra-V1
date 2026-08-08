@@ -3217,6 +3217,32 @@
     return json.prices || [];
   }
 
+  // DD/MM/YYYY → Date (midnight local), or null. The feed's only date format.
+  const mandiDate = s => {
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s || '').trim());
+    return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+  };
+  const mandiDayDiff = d => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.round((today - d) / 86400000);
+  };
+
+  /* One row per crop, chosen by ARRIVAL DATE — freshest wins.
+     /shop/mandi serves a merged snapshot, not a single day: a market that has
+     not reported for days keeps its last known row, and one crop legitimately
+     has several rows in a district (per market, and per variety — Meerut APMC
+     wheat reports separately as Other / Medium / Dara). So the same crop
+     arrives here several times at several prices and several dates, and which
+     one we show is the whole question.
+     This used to keep whichever row had the LONGEST sparkline, which is a
+     measure of reporting streak, not recency — so it systematically preferred
+     the oldest, best-established variety. On 6 Aug 2026 that put गेहूं at
+     ₹2,605 from 1 Aug (5 Aug was ₹2,600) and आलू at ₹450 from 2 Aug when
+     Mawana's 5 Aug price was ₹672.73 — a third of the way off, under a pill
+     that read "कल". Sparkline length is now only the tie-break between rows
+     of the SAME date, where it does what it was meant to: prefer the row with
+     a real trend line to draw. */
   function mandiPickRows(prices) {
     const best = new Map();                       // one row per crop
     for (const p of prices) {
@@ -3229,31 +3255,51 @@
         commodity: p.commodity,
         market:    p.market,
         district:  p.district,
+        state:     p.state,
         date:      p.date,
+        dt:        mandiDate(p.date),
         prev:      mandiNum(p.prev_modal_price),
         spark:     (p.spark || []).map(mandiNum).filter(Boolean),
       };
       const held = best.get(crop.hi);
-      if (!held || row.spark.length > held.spark.length) best.set(crop.hi, row);
+      if (!held || mandiFresher(row, held)) best.set(crop.hi, row);
     }
     return MANDI_CROPS.map(c => best.get(c.hi)).filter(Boolean).slice(0, MANDI_MAX_ROWS);
   }
 
+  // Is `a` the better row to show than `b`? Newer date first; a dateless row
+  // never displaces a dated one; equal dates fall back to the longer sparkline.
+  function mandiFresher(a, b) {
+    if (a.dt && !b.dt) return true;
+    if (!a.dt) return false;
+    if (+a.dt !== +b.dt) return a.dt > b.dt;
+    return a.spark.length > b.spark.length;
+  }
+
+  /* The header pill describes the panel, so it has to answer for the OLDEST
+     row on show, not the newest. Labelling the whole panel with the newest
+     date is how a 1-August wheat price came to sit under "कल" — every stale
+     row inherited the freshest row's credibility. Rows that lag now also
+     carry their own date (see mandiRender), so a mixed panel is readable
+     row by row instead of averaging into a claim that is wrong for most of
+     it. */
   function mandiFreshness(rows) {
-    const dates = rows
-      .map(r => /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(r.date || '').trim()))
-      .filter(Boolean)
-      .map(m => new Date(+m[3], +m[2] - 1, +m[1]));
+    const dates = rows.map(r => r.dt).filter(Boolean);
     if (!dates.length) return null;
 
-    const latest = new Date(Math.max(...dates));
-    const today  = new Date();
-    today.setHours(0, 0, 0, 0);
-    const days  = Math.round((today - latest) / 86400000);
-    const label = `${latest.getDate()} ${MANDI_HI_MONTHS[latest.getMonth()]}`;
-    if (days <= 0) return { text: `आज · ${label}`,  stale: false };
-    if (days === 1) return { text: `कल · ${label}`, stale: false };
-    return { text: `${label} का भाव`, stale: days > 2 };
+    const oldest = new Date(Math.min(...dates));
+    const newest = new Date(Math.max(...dates));
+    const days   = mandiDayDiff(oldest);
+    const label  = d => `${d.getDate()} ${MANDI_HI_MONTHS[d.getMonth()]}`;
+
+    // All one day → say so plainly.
+    if (+oldest === +newest) {
+      if (days <= 0)  return { text: `आज · ${label(newest)}`,  stale: false };
+      if (days === 1) return { text: `कल · ${label(newest)}`,  stale: false };
+      return { text: `${label(newest)} का भाव`, stale: days > 2 };
+    }
+    // Mixed dates → state the range, and go amber on the oldest end.
+    return { text: `${label(oldest)}–${label(newest)} के भाव`, stale: days > 2 };
   }
 
   // Day-over-day direction as a chevron: ^ green when up, v red when down.
@@ -3282,6 +3328,12 @@
       pill.hidden = true;
     }
 
+    // A row is only allowed to borrow the panel's date if it IS the panel's
+    // date. Anything older names its own day right on the card, so a farmer
+    // reading ₹450 can see it is Tuesday's ₹450.
+    const dates = rows.map(r => r.dt).filter(Boolean);
+    const newest = dates.length ? Math.max(...dates) : null;
+
     document.getElementById('mandi-rows').innerHTML = rows.map(r => {
       const delta = r.prev === null ? null : Math.round(r.price - r.prev);
       const up    = (delta === null || delta === 0) ? null : delta > 0;
@@ -3290,7 +3342,14 @@
         : delta === 0
           ? '<span class="mandi-change flat">— स्थिर</span>'
           : `<span class="mandi-change ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ₹${Math.abs(delta).toLocaleString('en-IN')}</span>`;
-      const sub   = showDistrict ? `${r.market}, ${r.district}` : r.market;
+      // The date goes FIRST, not appended: .mandi-crop-unit is nowrap +
+      // text-overflow:ellipsis, and in the state-wide view the place is already
+      // "Market, District" — a trailing date would be the first thing clipped
+      // on a 390px card, which is exactly the part that must not be lost.
+      const place_ = showDistrict ? `${r.market}, ${r.district}` : r.market;
+      const sub   = (r.dt && newest && +r.dt !== newest)
+        ? `${r.dt.getDate()} ${MANDI_HI_MONTHS[r.dt.getMonth()]} · ${place_}`
+        : place_;
       const price = Math.round(r.price).toLocaleString('en-IN');
       const src   = mandiThumb(r.crop.file, r.crop.h);
       // Emoji sits underneath; the photo fades in over it once decoded, and is

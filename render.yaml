@@ -51,11 +51,11 @@ services:
       # "false" to drop the whole torch stack and fall back to fuzzy text
       # cache matching — see backend/main.py::_warm_up_models.
       - key: CACHE_SEMANTIC_ENABLED
-        value: "true"
+        value: "false"
       - key: RAG_ENABLED
-        value: "true"
+        value: "false"
       - key: AI_RESPONSE_ENABLED
-        value: "true"
+        value: "false"
 
       # ── Secrets — values set in the Render dashboard ────────
       - key: DATABASE_URL

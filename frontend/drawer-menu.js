@@ -209,10 +209,49 @@
   var DROP = { '📈': '🏪' };
 
   // Hrefs this file owns outright, whatever a page shipped. Root-absolute for
-  // the same reason ensureNetPrice() is: drawer markup lives at several
+  // the same reason INVENTORY below is: drawer markup lives at several
   // directory depths and /bhav is served by the backend, so a relative path
   // would resolve wrong from /articles/ or from inside the /bhav tree.
   var HREF = { '🏪': '/bhav' };
+
+  // ---- The canonical menu, in full -----------------------------------
+  // The drawer used to be only as complete as whatever flat links each page
+  // happened to ship, and no two page generations shipped the same set: the
+  // /bhav + /product trees carry no मेरी फसल and no प्रोफ़ाइल, /dukanlisting
+  // carries no मंडी भाव at all, and 404/login/terms/privacy/articles-index are
+  // each missing something else. Same hamburger, different menu — the farmer
+  // couldn't learn where anything was.
+  //
+  // So this file now guarantees the whole set instead of merely regrouping
+  // what it finds: anything a page didn't ship gets synthesised here, which is
+  // how 🚜 net-price and 🤝 dukanlisting already reached all ~44 static pages
+  // plus the server-rendered trees from one edit. Pages written later inherit
+  // a complete menu by shipping the standard shell.
+  //
+  // `at` marks the page the link points at, so a synthesised entry can still
+  // show "you are here" (only reachable when the page itself omitted the link
+  // — e.g. /dukanlisting, whose own drawer has no 🤝).
+  //
+  // Hrefs are root-absolute, and keep the .html suffix for the static pages:
+  // the extensionless forms are the prod canonicals (Netlify 301s .html → them,
+  // see frontend/_redirects) but only .html resolves under Live Server in dev,
+  // and every page's own drawer already links the .html form.
+  var INVENTORY = [
+    { k: '🏠',  href: '/index.html',          at: /^\/(index\.html)?$/ },
+    { k: '🌤️', href: '/weather.html',        at: /^\/weather(\.html)?$/ },
+    { k: '🌱',  href: '/meri_fasal.html',     at: /^\/meri_fasal(\.html)?$/ },
+    { k: '🗺️', href: '/map.html',            at: /^\/(map|naksha)(\.html)?(\/|$)/ },
+    { k: '🏪',  href: '/bhav',                at: /^\/bhav(\/(?!net-price)|$)/ },
+    { k: '🚜',  href: '/bhav/net-price',      at: /^\/bhav\/net-price/ },
+    { k: '🛒',  href: '/shop.html',           at: /^\/shop(\.html)?$/ },
+    { k: '🤝',  href: '/dukanlisting',        at: /^\/dukanlisting/ },
+    { k: '🔍',  href: '/khoj.html',           at: /^\/khoj(\.html)?$/ },
+    { k: '🧺',  href: '/krashi_bajar.html',   at: /^\/krashi_bajar(\.html)?$/ },
+    { k: '📰',  href: '/articles/',           at: /^\/articles(\/|$)/ },
+    { k: '🏛️', href: '/sarkari_yojana.html', at: /^\/sarkari_yojana(\.html)?$/ },
+    { k: '💬',  href: '/chat.html',           at: /^\/chat(\.html)?$/ },
+    { k: '👤',  href: '/profile.html',        at: /^\/profile(\.html)?$/ }
+  ];
 
   function injectCss() {
     if (document.getElementById(STYLE_ID)) return;
@@ -268,62 +307,41 @@
     if (btn) btn.click();
   }
 
-  // The net-price calculator is the one farmer-facing feature no competitor has,
-  // and until now it was reachable only from inside the /bhav tree — no static
-  // page linked it at all. Synthesising the link here instead of hand-adding it
-  // to ~44 static pages plus bhav.py's server-rendered drawer means every page
-  // on the site gains the entry point from one edit, and pages written later
-  // inherit it by shipping the standard shell. Absolute href: drawer markup
-  // lives at several directory depths (articles/ is one down) and /bhav pages
-  // are served by the backend, so a relative path would break somewhere.
-  // Returns true when it actually injected, so build() can group what it added.
-  function ensureNetPrice(box) {
-    var have = [].slice.call(box.children).some(function (n) {
-      return n.classList && n.classList.contains('sidebar-drawer-link') &&
-             iconOf(n) === '🚜';
-    });
-    if (have) return false;
-    var a = document.createElement('a');
-    a.href = '/bhav/net-price';
-    a.className = 'sidebar-drawer-link';
-    // On the calculator page itself the server-rendered drawer has already
-    // highlighted its भाव entry (bhav.py renders every page in this module with
-    // active="bhav", and fixupLinks has since passed that highlight to मंडी
-    // भाव), so hand it over rather than showing two.
-    if (/^\/bhav\/net-price/.test(location.pathname)) {
-      [].forEach.call(box.querySelectorAll('.sidebar-drawer-link.active'),
-                      function (n) { n.classList.remove('active'); });
-      a.className += ' active';
-    }
-    a.innerHTML = '<span class="sidebar-drawer-link-icon">🚜</span>' +
-                  '<span>' + LABELS['🚜'].hi + '</span>';
-    box.appendChild(a);   // position comes from GROUPS, not document order
-    return true;
-  }
+  // Emoji comparison, ignoring the variation selector: pages disagree on whether
+  // they ship 🌤️/🌤, 🗺️/🗺, 🏛️/🏛, and a mismatch here would synthesise a
+  // duplicate of a link the page already has.
+  function keyOf(s) { return (s || '').replace(/️/g, ''); }
 
-  // /dukanlisting (अपनी दुकान लिस्ट करें — paid dealer listings) has the same distribution
-  // problem net-price had: it is real and it is live, but the only static links
-  // to it sit on /bhav/.../kharidar pages, and today zero districts have a live
-  // listing for one of those pages to show — so a trader can only reach it by
-  // guessing the URL or finding it in search. Synthesising it into the drawer
-  // here, exactly like ensureNetPrice() above, means every page on the site
-  // (44 static pages, the /bhav and /product trees, every article) carries a
-  // path to it from one edit, instead of it staying an island only the kharidar
-  // pages point to.
-  function ensureDukan(box) {
-    var have = [].slice.call(box.children).some(function (n) {
-      return n.classList && n.classList.contains('sidebar-drawer-link') &&
-             iconOf(n) === '🤝';
+  // Top up the drawer to the full INVENTORY. Appends in document order; the
+  // final position of each link comes from GROUPS, not from where it lands here.
+  // Returns the links it added so build() can fold them into its list.
+  function ensureItems(box) {
+    var have = {};
+    [].forEach.call(box.children, function (n) {
+      if (n.classList && n.classList.contains('sidebar-drawer-link')) have[keyOf(iconOf(n))] = 1;
     });
-    if (have) return false;
-    var a = document.createElement('a');
-    a.href = '/dukanlisting';
-    a.className = 'sidebar-drawer-link';
-    if (/^\/dukanlisting/.test(location.pathname)) a.className += ' active';
-    a.innerHTML = '<span class="sidebar-drawer-link-icon">🤝</span>' +
-                  '<span>' + LABELS['🤝'].hi + '</span>';
-    box.appendChild(a);
-    return true;
+
+    var added = [];
+    INVENTORY.forEach(function (it) {
+      if (have[keyOf(it.k)]) return;
+      var a = document.createElement('a');
+      a.href = it.href;
+      a.className = 'sidebar-drawer-link';
+      // Only a page that omitted its own link can land here, e.g. /bhav/net-price
+      // (bhav.py renders every page in that module with active="bhav", so the
+      // भाव entry is already lit) or /dukanlisting. Take the highlight over
+      // rather than showing two "you are here"s.
+      if (it.at && it.at.test(location.pathname)) {
+        [].forEach.call(box.querySelectorAll('.sidebar-drawer-link.active'),
+                        function (n) { n.classList.remove('active'); });
+        a.className += ' active';
+      }
+      a.innerHTML = '<span class="sidebar-drawer-link-icon">' + it.k + '</span>' +
+                    '<span>' + LABELS[it.k].hi + '</span>';
+      box.appendChild(a);
+      added.push(a);
+    });
+    return added;
   }
 
   // Retire DROP'd links and repoint the HREF'd ones. Done here rather than in
@@ -363,13 +381,16 @@
     var links = [].slice.call(box.children).filter(function (n) {
       return n.classList && n.classList.contains('sidebar-drawer-link');
     });
-    fixupLinks(links);
-    // Bail before injecting: on a page too sparse to group, an appended link
-    // would be left sitting there with a raw emoji and no category. Counted
-    // after the fixup, so a dropped link can't leave a one-item menu grouped.
+    // Bail before injecting: a drawer this sparse isn't the site shell (a stub,
+    // a one-off page), and topping it up to the full menu would be rewriting
+    // someone else's markup rather than making the shell consistent.
     if (links.length < 2) return;
-    if (ensureNetPrice(box)) links.push(box.lastChild);
-    if (ensureDukan(box)) links.push(box.lastChild);
+
+    // Top up first, then fix up: 📈 hands its "you are here" to 🏪 below, and
+    // on /dukanlisting — whose own drawer ships 📈 but no मंडी भाव — the heir
+    // only exists because ensureItems just synthesised it.
+    links = links.concat(ensureItems(box));
+    fixupLinks(links);
 
     var byIcon = {};
     links.forEach(function (a) {

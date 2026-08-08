@@ -39,7 +39,8 @@ from sqlalchemy import func, or_, desc
 from sqlalchemy.orm import Session
 
 from backend.database.db import (
-    Buyer, User, UserProfile, BazarPost, BazarLike, BazarComment, BazarFollow, get_db
+    Buyer, User, UserProfile, BazarPost, BazarLike, BazarComment, BazarFollow, get_db,
+    acct, accts
 )
 from backend.utils.auth_utils import get_current_user, resolve_token_user
 from backend.utils.security import assert_media_matches
@@ -64,11 +65,18 @@ MAX_VIDEO_BYTES = 120 * 1024 * 1024   # 120 MB (~5 min at phone-camera bitrate)
 
 # ── Auth helpers ─────────────────────────────────────────────
 
-def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Optional[dict]:
+def get_optional_user(request: Request, db: Session) -> Optional[dict]:
     """Like get_current_user but returns None instead of 401 for guests.
 
     Same validation as the strict dependency (live, verified, non-recycled
-    account) — only the failure mode differs: guest instead of 401."""
+    account) — only the failure mode differs: guest instead of 401.
+
+    `db` is a required positional argument, NOT `= Depends(get_db)`. This is
+    called by hand from inside endpoints, not resolved by FastAPI, so a
+    Depends() default would arrive as the sentinel object itself and blow up on
+    `db.query()` — a 500 on the feed for every logged-in viewer, while guests
+    saw nothing wrong. Pass the endpoint's own session.
+    """
     auth = request.headers.get("Authorization", "")
     if not auth.lower().startswith("bearer "):
         return None
@@ -78,7 +86,7 @@ def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Option
 
 def require_profile(user_id: int, db: Session) -> UserProfile:
     """Selling/buying interactions need a completed farmer profile."""
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if not profile:
         raise HTTPException(
             status_code=403,
@@ -236,8 +244,13 @@ def _authors_for(posts, db: Session) -> dict:
     if not ids:
         return {}
     users    = {u.id: u for u in db.query(User).filter(User.id.in_(ids)).all()}
-    profiles = {pr.user_id: pr for pr in
-                db.query(UserProfile).filter(UserProfile.user_id.in_(ids)).all()}
+    # user_profiles is keyed on the account number (users.user_id), not on
+    # users.id like every other table here — so it comes back keyed the wrong
+    # way and has to be re-keyed through `users` before callers can index it by
+    # post author id. See UserProfile.user_id in backend/database/db.py.
+    by_acct  = {pr.user_id: pr for pr in
+                db.query(UserProfile).filter(UserProfile.user_id.in_(accts(ids))).all()}
+    profiles = {uid: by_acct.get(u.user_id) for uid, u in users.items()}
     return {uid: _author_info(users.get(uid), profiles.get(uid)) for uid in ids}
 
 
@@ -250,7 +263,7 @@ def bazar_me(
 ):
     user_id = current_user["user_id"]
     user    = db.query(User).filter(User.id == user_id).first()
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return {
@@ -285,7 +298,7 @@ def get_feed(
     request:   Request = None,
     db:        Session = Depends(get_db),
 ):
-    me = get_optional_user(request) if request else None
+    me = get_optional_user(request, db) if request else None
 
     query = db.query(BazarPost).filter(BazarPost.status != "closed")
 
@@ -368,7 +381,7 @@ def get_single_post(
     request: Request = None,
     db:      Session = Depends(get_db),
 ):
-    me = get_optional_user(request) if request else None
+    me = get_optional_user(request, db) if request else None
     post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
     if not post:
         raise HTTPException(404, "Post नहीं मिला।")
@@ -679,11 +692,11 @@ def get_public_profile(
     request: Request = None,
     db:      Session = Depends(get_db),
 ):
-    me      = get_optional_user(request) if request else None
+    me      = get_optional_user(request, db) if request else None
     user    = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(404, "User नहीं मिला।")
-    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
 
     posts_count     = db.query(BazarPost).filter(BazarPost.user_id == user_id).count()
     followers_count = db.query(BazarFollow).filter(BazarFollow.following_id == user_id).count()
@@ -745,8 +758,10 @@ def _follow_user_cards(ids, viewer_id, db) -> list:
     if not ids:
         return []
     users    = {u.id: u for u in db.query(User).filter(User.id.in_(ids)).all()}
-    profiles = {pr.user_id: pr for pr in
-                db.query(UserProfile).filter(UserProfile.user_id.in_(ids)).all()}
+    # Re-keyed account number → users.id, same reason as _authors_for above.
+    by_acct  = {pr.user_id: pr for pr in
+                db.query(UserProfile).filter(UserProfile.user_id.in_(accts(ids))).all()}
+    profiles = {uid: by_acct.get(u.user_id) for uid, u in users.items()}
     following_set = set()
     if viewer_id:
         rows = (db.query(BazarFollow.following_id)
@@ -777,7 +792,7 @@ def list_followers(
     db:      Session = Depends(get_db),
 ):
     """Users who follow user_id (most recent first)."""
-    me   = get_optional_user(request) if request else None
+    me   = get_optional_user(request, db) if request else None
     rows = (db.query(BazarFollow.follower_id)
               .filter(BazarFollow.following_id == user_id)
               .order_by(desc(BazarFollow.created_at)).all())
@@ -793,7 +808,7 @@ def list_following(
     db:      Session = Depends(get_db),
 ):
     """Users that user_id follows (most recent first)."""
-    me   = get_optional_user(request) if request else None
+    me   = get_optional_user(request, db) if request else None
     rows = (db.query(BazarFollow.following_id)
               .filter(BazarFollow.follower_id == user_id)
               .order_by(desc(BazarFollow.created_at)).all())

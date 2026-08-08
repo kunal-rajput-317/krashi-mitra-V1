@@ -17,7 +17,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from backend.services.mandi_service import get_mandi_prices
-from backend.database.db import BazarPost, User, UserProfile, get_db
+from backend.database.db import BazarPost, User, UserProfile, get_db, acct
 
 router = APIRouter()
 
@@ -446,7 +446,7 @@ def share_bazar(post_id: int, db: Session = Depends(get_db)):
         post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
         if post:
             user    = db.query(User).filter(User.id == post.user_id).first()
-            profile = db.query(UserProfile).filter(UserProfile.user_id == post.user_id).first()
+            profile = db.query(UserProfile).filter(UserProfile.user_id == acct(post.user_id)).first()
 
             name = (profile.name if profile and profile.name
                     else (user.name if user else "किसान"))
