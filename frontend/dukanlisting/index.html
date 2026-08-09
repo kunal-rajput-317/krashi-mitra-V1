@@ -866,6 +866,10 @@
       </div>
 
       <div class="dk-msg err" id="dp-err" hidden></div>
+      <!-- Why the button below is grey. Written by gateSubmit(), which is the
+           only thing that disables it. -->
+      <p class="dk-note" id="dp-submit-note" style="text-align:center;margin-bottom:8px"
+         hidden>भेजने के लिए ऊपर कम से कम एक जिला जोड़ें।</p>
       <button class="dk-submit" type="submit" id="dp-submit" disabled>जानकारी भेजें</button>
       <p class="dk-note" style="text-align:center">भेजने पर आप सहमत हैं कि हम पुष्टि के लिए
       आपको कॉल या WhatsApp कर सकते हैं, और सब्सक्रिप्शन का भुगतान UPI से करेंगे।</p>
@@ -1109,6 +1113,7 @@
   var doneEl     = document.getElementById('dp-done');
   var errEl      = document.getElementById('dp-err');
   var submitBtn  = document.getElementById('dp-submit');
+  var submitNote = document.getElementById('dp-submit-note');
 
   // ── Crop chips (same pattern the old /dukanlisting form used) ──
   var CROPS = [
@@ -1188,6 +1193,13 @@
   var cropsNote = document.getElementById('dp-pagecrops-note');
   var cropsFoot = document.getElementById('dp-pagecrops-foot');
   var cropsSeq  = 0;      // guards against a slow response for an old district
+  // Is the paid crop list actually a choice he can make right now? False when
+  // the picker could not load, or when the district genuinely has no भाव pages.
+  // The submit button is gated on the crop count, so without this flag either
+  // of those left the button grey forever with nothing on screen saying why —
+  // a dead form, not a rejected sale. When there is nothing to tick he buys the
+  // district on its own and the call sorts the crops out.
+  var cropsPickable = false;
 
   window.choosePlan = function () {
     plan = 'metered';
@@ -1202,6 +1214,7 @@
       '</b> — प्रति सीज़न (3 महीने)। नीचे जिला चुनें, फिर फसलें।';
     selectedDistricts = [];
     pageCrops = [];
+    cropsPickable = false;
     renderDistrictChips();
     only(formCardEl);
     formCardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1216,14 +1229,22 @@
   // (crops are billed once per account, not per district).
   function loadPageCrops() {
     var d = selectedDistricts[0];
-    if (!d) { cropsWrap.hidden = true; return; }
+    if (!d) { cropsWrap.hidden = true; cropsPickable = false; return; }
     var seq = ++cropsSeq;
     cropsWrap.hidden = false;
     cropsNote.textContent = 'फसलें लोड हो रही हैं…';
     cropsEl.innerHTML = '';
-    fetch('/dukanlisting/crops?state=' + encodeURIComponent(d.state) +
+    // api() + path, never a bare path — see the bootstrap comment at the top of
+    // this file. On krashimitra.in a site-relative /dukanlisting/* is Netlify's,
+    // not the API's, and it answers 404 with an HTML body.
+    fetch(api() + '/dukanlisting/crops?state=' + encodeURIComponent(d.state) +
           '&district=' + encodeURIComponent(d.district))
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        // An HTML error page parses as neither JSON nor a crop list; treat any
+        // non-2xx as "no list" rather than letting it reach renderPageCrops.
+        if (!r.ok) { throw new Error(r.status); }
+        return r.json();
+      })
       .then(function (j) {
         if (seq !== cropsSeq) { return; }      // a newer district won
         var data = (j && j.data) || {};
@@ -1234,6 +1255,7 @@
         // The picker is how crops get chosen, so it cannot simply vanish on a
         // network blip — fall back to the plain trade-crop chips as the list.
         cropsNote.textContent = 'फसलों की सूची अभी नहीं आ पाई। ऊपर चुनी हुई फसलें ही जोड़ दी जाएंगी।';
+        cropsPickable = false;
         pageCrops = currentTradeCrops();
         updatePrice();
       });
@@ -1251,10 +1273,12 @@
       cropsNote.textContent = d.district + ' के लिए अभी कोई भाव पेज नहीं है — ' +
         'हम कॉल पर बता देंगे कि क्या हो सकता है।';
       cropsEl.innerHTML = '';
+      cropsPickable = false;
       pageCrops = [];
       updatePrice();
       return;
     }
+    cropsPickable = true;
     var haveStats = crops.some(function (c) { return c.impressions !== null; });
     cropsNote.innerHTML = haveStats
       ? ('नीचे का नंबर = पिछले ' + (data.window_days || 28) +
@@ -1312,7 +1336,7 @@
     priceEl.classList.toggle('is-note', !n);
     if (!n) {
       priceEl.innerHTML = '<b>नोट:</b> जिला जोड़ें तो कीमत दिखेगी';
-      submitBtn.disabled = true;
+      gateSubmit(true, 'भेजने के लिए ऊपर कम से कम एक जिला जोड़ें।');
       return;
     }
     var total = RATE_DISTRICT * n + RATE_CROP * k;
@@ -1324,8 +1348,19 @@
       '<span style="font-size:11.5px;opacity:.8">(' + n + ' जिला × ' + rs(RATE_DISTRICT) +
       (k ? ' + ' + k + ' फसल × ' + rs(RATE_CROP) : '') + ' · 3 महीने)</span>';
     // A district with no crop page selected buys nothing renderable, so it is
-    // not a sale we should let him make.
-    submitBtn.disabled = k === 0;
+    // not a sale we should let him make — but only when there were crops to
+    // pick in the first place. See cropsPickable.
+    gateSubmit(cropsPickable && k === 0,
+               'भेजने के लिए ऊपर कम से कम एक फसल चुनें।');
+  }
+
+  // The one place the submit button is turned off, and it never goes grey
+  // without saying why: a disabled button with no reason next to it reads as a
+  // broken page, and the dealer leaves instead of fixing the one thing missing.
+  function gateSubmit(blocked, why) {
+    submitBtn.disabled = !!blocked;
+    submitNote.textContent = blocked ? why : '';
+    submitNote.hidden = !blocked;
   }
 
   document.getElementById('dp-add-district-btn').addEventListener('click', function () {
@@ -1621,7 +1656,9 @@
     if (!selectedDistricts.length) {
       return fail('कम से कम एक जिला जोड़ें।');
     }
-    if (!pageCrops.length) {
+    // Same condition as gateSubmit(): only a dealer who HAS a list to pick from
+    // is held back for picking nothing off it.
+    if (cropsPickable && !pageCrops.length) {
       return fail('कम से कम एक फसल चुनें जिसके पेज पर दिखना है।');
     }
 
