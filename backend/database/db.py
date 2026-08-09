@@ -1327,6 +1327,48 @@ def _ensure_table_renames():
                     log.warning(f"⚠️  both {old} and {new} exist and {old} has {old_count} row(s) — needs manual merge")
 
 
+# The guard behind trg_profile_requires_verified_user, kept out here because
+# _ensure_postgres_columns() has to install it TWICE in one boot: once before
+# the one-time account-number conversion, which needs a guard that already
+# reads user_id as an account number, and once at its own step 4 where the
+# whole 1:1 rule is declared. One definition, so the two can never drift.
+_PROFILE_GUARD_FN = """
+    CREATE OR REPLACE FUNCTION profile_requires_verified_user() RETURNS trigger AS $$
+    BEGIN
+        IF NEW.user_id IS NULL THEN
+            RAISE EXCEPTION
+                'user_profiles.user_id cannot be NULL — a profile must belong to an account';
+        END IF;
+        IF NOT EXISTS (
+            SELECT 1 FROM users u WHERE u.user_id = NEW.user_id AND u.is_verified
+        ) THEN
+            RAISE EXCEPTION
+                'account number % has no verified users row — user_profiles rows exist only for verified accounts',
+                NEW.user_id;
+        END IF;
+        -- INSERT only. The compaction pass drives its renumber from
+        -- users.user_id and lets ON UPDATE CASCADE carry it down here,
+        -- which unavoidably lands user_id before id catches up; that
+        -- transient mismatch is repaired two statements later.
+        IF TG_OP = 'INSERT' AND NEW.id <> NEW.user_id THEN
+            RAISE EXCEPTION
+                'user_profiles.id (%) must equal user_id (%) — the account number is one number in two columns',
+                NEW.id, NEW.user_id;
+        END IF;
+
+        IF TG_OP = 'INSERT'
+           AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = NEW.user_id) THEN
+            RAISE EXCEPTION
+                'users.id % already has a user_profiles row — UPDATE it instead of inserting a second (caller must db.flush() before it checks; SessionLocal has autoflush=False)',
+                NEW.user_id;
+        END IF;
+
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+"""
+
+
 def _ensure_postgres_columns():
     """Add columns that older Neon tables may be missing."""
     if engine.dialect.name != "postgresql":
@@ -1740,6 +1782,11 @@ def _ensure_postgres_columns():
                 FOR EACH ROW
                 EXECUTE FUNCTION release_user_id_with_profile();
         """))
+        # Dropping the trigger left its function sitting in pg_proc, still
+        # reading user_id as a users.id. Nothing calls it — but a function that
+        # believes the old meaning is precisely what broke this boot once
+        # already, so it goes too rather than waiting to be re-attached by hand.
+        conn.execute(text("DROP FUNCTION IF EXISTS sync_user_id_from_profile();"))
         # Fresh-start numbering: an empty users table means the next signup is
         # account #1, not #5. A Postgres sequence never rewinds on its own, so
         # after a wipe the ids would otherwise resume from wherever the deleted
@@ -1817,6 +1864,17 @@ def _ensure_postgres_columns():
         # The old FK has to go first: it still points at users.id and would
         # reject the new values. _ensure_foreign_keys() reinstalls the correct
         # one later in the same boot.
+        #
+        # And the GUARD has to be re-taught first, for the same reason the FK
+        # does. trg_profile_requires_verified_user is already on the table from
+        # an earlier generation, and its function still reads user_id as a
+        # users.id: mid-conversion it looked up account number 14 as if it were
+        # users.id 14 — an unverified signup — and raised, aborting the whole
+        # boot transaction. Step 4 below installs the same function where the
+        # rule it enforces is actually declared; this call is here purely for
+        # ordering, so the conversion runs under a guard that reads the new
+        # meaning.
+        conn.execute(text(_PROFILE_GUARD_FN))
         conn.execute(text("""
             DO $$
             DECLARE pcol text;
@@ -1992,41 +2050,7 @@ def _ensure_postgres_columns():
         #    the second INSERT instead is not an option: SQLAlchemy needs the
         #    RETURNING row back, so a skipped insert only trades this error for a
         #    more cryptic FlushError.
-        conn.execute(text("""
-            CREATE OR REPLACE FUNCTION profile_requires_verified_user() RETURNS trigger AS $$
-            BEGIN
-                IF NEW.user_id IS NULL THEN
-                    RAISE EXCEPTION
-                        'user_profiles.user_id cannot be NULL — a profile must belong to an account';
-                END IF;
-                IF NOT EXISTS (
-                    SELECT 1 FROM users u WHERE u.user_id = NEW.user_id AND u.is_verified
-                ) THEN
-                    RAISE EXCEPTION
-                        'account number % has no verified users row — user_profiles rows exist only for verified accounts',
-                        NEW.user_id;
-                END IF;
-                -- INSERT only. The compaction pass drives its renumber from
-                -- users.user_id and lets ON UPDATE CASCADE carry it down here,
-                -- which unavoidably lands user_id before id catches up; that
-                -- transient mismatch is repaired two statements later.
-                IF TG_OP = 'INSERT' AND NEW.id <> NEW.user_id THEN
-                    RAISE EXCEPTION
-                        'user_profiles.id (%) must equal user_id (%) — the account number is one number in two columns',
-                        NEW.id, NEW.user_id;
-                END IF;
-
-                IF TG_OP = 'INSERT'
-                   AND EXISTS (SELECT 1 FROM user_profiles WHERE user_id = NEW.user_id) THEN
-                    RAISE EXCEPTION
-                        'users.id % already has a user_profiles row — UPDATE it instead of inserting a second (caller must db.flush() before it checks; SessionLocal has autoflush=False)',
-                        NEW.user_id;
-                END IF;
-
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-        """))
+        conn.execute(text(_PROFILE_GUARD_FN))
         conn.execute(text("DROP TRIGGER IF EXISTS trg_profile_requires_verified_user ON user_profiles;"))
         conn.execute(text("""
             CREATE TRIGGER trg_profile_requires_verified_user
