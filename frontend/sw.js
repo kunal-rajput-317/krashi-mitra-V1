@@ -1,7 +1,8 @@
-// v6 is a forced purge, not just a version bump: v5 caches can hold one
-// farmer's /profile response (see the fetch handler below), and the activate
-// step deletes every cache that isn't the current name.
-const CACHE_NAME = 'krashimitra-v6'; // v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
+// v7 is a forced purge, like v6 before it: caches written during the 11 Aug 2026
+// outage hold Netlify's `{"error":"usage_exceeded"}` 503 under the URL of a real
+// page or stylesheet, and the activate step deletes every cache that isn't the
+// current name.
+const CACHE_NAME = 'krashimitra-v7'; // v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './analytics.js',
@@ -76,6 +77,15 @@ function isStaticAsset(request) {
          d === 'font'  || d === 'manifest';
 }
 
+// Last-known-good copy of a URL, else the offline shell, else whatever the
+// network said. `fallback` is the network's own response, handed back when
+// there is nothing cached, so a genuine failure still surfaces as one.
+function lastKnownGood(request, fallback) {
+  return caches.match(request)
+    .then((hit) => hit || caches.match('./index.html'))
+    .then((hit) => hit || fallback || Response.error());
+}
+
 // Fetch Event
 self.addEventListener('fetch', (event) => {
   const request    = event.request;
@@ -98,23 +108,23 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone response and save to cache
+          // A 5xx is a *resolved* fetch, so the .catch() below never sees it.
+          // Left alone this branch wrote the host's outage page over the last
+          // good copy of the page and then replayed it offline — on 11 Aug 2026
+          // that meant farmers holding a cached `{"error":"usage_exceeded"}`
+          // where the day's bhav used to be. Serve the last good page instead,
+          // and leave the cache as it was.
+          if (response.status >= 500) return lastKnownGood(request, response);
+          // A 404 is the server's real answer about this URL, not an outage:
+          // pass it through, but never let it overwrite the cache either.
+          if (!response.ok) return response;
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone);
           });
           return response;
         })
-        .catch(() => {
-          // If network fails, serve from cache
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            // Fallback for pages not in cache
-            return caches.match('./index.html');
-          });
-        })
+        .catch(() => lastKnownGood(request, null))
     );
     return;
   }
@@ -127,7 +137,11 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse;
         }
         return fetch(request).then((response) => {
-          // Cache new asset response
+          // Only ever cache a real asset. This branch is cache-*first*, so a
+          // stored failure is permanent: one stylesheet fetched during an
+          // outage would keep the site looking broken long after the outage
+          // ended, with no re-fetch to correct it.
+          if (!response.ok) return response;
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone);
