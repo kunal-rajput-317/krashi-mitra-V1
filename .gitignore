@@ -19,6 +19,10 @@ docs/
 # throwaway experiments / local verify artifacts
 scratch/
 
+# Neon migration payload — real user data (emails, phones, base64 avatars)
+# dumped by tools/neon/neon_dump.py. Never commit it; delete after cutover.
+tools/neon/dump/
+
 # village points fetched from OpenStreetMap per district — a disposable cache
 # that services/village_service.py refills from real traffic. Committing it
 # would put ~40k rows of derived data in the repo and let it go stale.
