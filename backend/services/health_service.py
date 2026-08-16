@@ -15,7 +15,9 @@
 #   1. It NEVER calls a third-party API. Every judgement is derived from what
 #      the last automatic run left behind (sync_log, table contents, files on
 #      disk). A health page that burns the data.gov quota is a health page that
-#      causes outages.
+#      causes outages. The single exception is _chk_ads_txt, which fetches 59
+#      bytes from our own origin — see the reasoning in that function; a purely
+#      on-disk check provably could not catch the failure it exists for.
 #   2. A pass is memoised for CACHE_TTL_SEC. The database is Neon: round-the-
 #      clock traffic is what quota-blocked the compute in July and took the
 #      whole site down, which is why the staleness watchdog runs 3-hourly and
@@ -494,6 +496,59 @@ def _chk_articles(db, detailed):
     return {"status": "ok", "detail": f"{len(files)} लेख पेज लाइव", "facts": facts}
 
 
+def _chk_ads_txt(db, detailed):
+    """Is ads.txt actually being SERVED — not merely present in the repo?
+
+    This is the one check that leaves the box, and it is a deliberate, narrow
+    exception to rule 1 at the top of this file. That rule exists so a health
+    page cannot burn a metered third-party quota; this fetches 59 bytes from
+    our own origin, has no API key and no quota, and is memoised with every
+    other check (CACHE_TTL_SEC).
+
+    It earns the exception because no filesystem check could have caught the
+    failure it is here for. frontend/ads.txt was committed and correct the
+    whole time AdSense reported "Ads.txt status: Not found" — what actually
+    happened is that Netlify hit its usage cap, served 503 on every URL and
+    then stopped answering DNS for the zone, so Google's crawl of ads.txt
+    failed. Every on-disk check was green throughout. Without ads.txt Google
+    may stop paying out on the inventory, so a silent failure here costs real
+    money and nothing else on this page would have shown it.
+    """
+    import requests
+
+    url = "https://krashimitra.in/ads.txt"
+    pub = "pub-2792326360609634"          # the AdSense account this site bills to
+    try:
+        r = requests.get(url, timeout=6, allow_redirects=False,
+                         headers={"User-Agent": "KrashiMitra-health/1.0"})
+    except Exception as e:
+        return {"status": "down",
+                "detail": f"ads.txt माँगा नहीं जा सका — साइट बंद हो सकती है ({str(e)[:60]})",
+                "facts": [["URL", url]]}
+
+    ctype = (r.headers.get("content-type") or "").split(";")[0].strip()
+    facts = [["HTTP", str(r.status_code)], ["प्रकार", ctype or "—"],
+             ["आकार", f"{len(r.content)} bytes"]]
+
+    if r.status_code in (301, 302, 307, 308):
+        return {"status": "warn",
+                "detail": f"ads.txt रीडायरेक्ट हो रहा है → {r.headers.get('location', '?')[:60]}",
+                "facts": facts}
+    if r.status_code != 200:
+        return {"status": "down", "detail": f"ads.txt पर {r.status_code} — Google इसे नहीं पढ़ पाएगा",
+                "facts": facts}
+    # A missing static file is served as the 200-HTML fallback, never a 404 —
+    # so status alone proves nothing. The publisher line is the real test.
+    if pub not in r.text:
+        return {"status": "down",
+                "detail": "ads.txt में पब्लिशर ID नहीं मिली — फ़ाइल बदल गई या HTML लौट रहा है",
+                "facts": facts}
+    if ctype != "text/plain":
+        return {"status": "warn", "detail": f"ads.txt का content-type {ctype} है, text/plain चाहिए",
+                "facts": facts}
+    return {"status": "ok", "detail": "ads.txt लाइव है और पब्लिशर ID सही है", "facts": facts}
+
+
 def _chk_naksha(db, detailed):
     """/naksha is server-rendered from one JSON + self-hosted district GeoJSON."""
     cfg = BASE_DIR / "backend" / "data" / "naksha_states.json"
@@ -615,6 +670,7 @@ _GROUPS = [
         ("email",    "ईमेल / OTP",     "✉️", _chk_email,    False),
         ("articles", "लेख",            "📰", _chk_articles, False),
         ("naksha",   "नक्शा",          "🗺️", _chk_naksha,   False),
+        ("ads_txt",  "ads.txt (विज्ञापन)", "💰", _chk_ads_txt, False),
     ]),
     ("private", "निजी (एडमिन)", "सिर्फ़ एडमिन पासवर्ड के साथ दिखता है", [
         ("accounts",     "खाते",          "👤", _chk_accounts,     True),
