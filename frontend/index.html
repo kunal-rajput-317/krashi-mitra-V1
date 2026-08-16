@@ -178,7 +178,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KrashiMitra">
-  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <!-- assets/logo-192.png, not icon-192.png — the latter has never existed, and
+       a missing static file is served as the 200-HTML fallback, so the iOS
+       home-screen icon silently fell back to a page screenshot. -->
+  <link rel="apple-touch-icon" href="/assets/logo-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&family=Noto+Serif+Devanagari:wght@600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -3497,7 +3500,7 @@
 @media(min-width:1025px){.ai-chat-fab{bottom:28px;right:28px;width:68px;height:68px;}.ai-fab-icon{width:68px;height:68px;}}
 </style>
 <a href="chat.html" class="ai-chat-fab" title="कृषि सहायक से पूछें">
-  <span class="ai-fab-icon"><img src="images/AI chat icon.png" alt="कृषि सहायक"></span>
+  <span class="ai-fab-icon"><img src="images/ai-chat-icon.webp" alt="कृषि सहायक"></span>
   <span class="ai-fab-tip">कृषि सहायक</span>
 </a>
   <script src="fab-autohide.js"></script>
