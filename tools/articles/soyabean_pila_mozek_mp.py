@@ -275,8 +275,9 @@ ARTICLE = {
 
     "og_title": "सोयाबीन में पीला मोज़ेक रोग — पहचान, सफेद मक्खी नियंत्रण और दवा | KrashiMitra.in",
     "og_desc": "वायरस पर नहीं, उसके वाहक सफेद मक्खी पर वार करें — पहचान, रोगिंग, स्टिकी ट्रैप और IISR इंदौर की अनुशंसित दवाएँ।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/soyabean-pila-mozek-mp.webp",
+                   "सोयाबीन का बीज",
+                   "सोयाबीन (JS-335) का बीज — पीला मोज़ेक बीज और सफेद मक्खी दोनों से फैलता है।"),
     "headline": "सोयाबीन में पीला मोज़ेक रोग — पहचान, सफेद मक्खी नियंत्रण और दवा",
     "headline_en": "Yellow Mosaic Disease in Soybean — Whitefly Control & Management in Madhya Pradesh",
     "schema_desc": "सोयाबीन के पीला मोज़ेक रोग (MYMIV) की पहचान, सफेद मक्खी से फैलाव, रोगिंग, पीले स्टिकी ट्रैप, ICAR-IISR इंदौर की अनुशंसित दवाएँ और डोज़, तथा मध्य प्रदेश के लिए महीनेवार कैलेंडर।",

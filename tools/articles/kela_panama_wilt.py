@@ -223,8 +223,9 @@ ARTICLE = {
 
     "og_title": "केले में पनामा विल्ट (TR4) — पहचान और बचाव | KrashiMitra.in",
     "og_desc": "इस रोग की कोई दवा नहीं है — रोगमुक्त पौधा, सफाई और पानी का नियंत्रण ही बाग बचाते हैं।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/kela-panama-wilt.webp",
+                   "केले का बाग",
+                   "केले का बाग — पनामा विल्ट (TR4) मिट्टी से फैलता है और संक्रमित खेत सालों तक अनुपयोगी हो जाता है।"),
     "headline": "केले में पनामा विल्ट (TR4) — पहचान और रोकथाम",
     "headline_en": "Panama Wilt (Fusarium TR4) in Banana — Identification and Prevention",
     "schema_desc": "केले में पनामा विल्ट (Fusarium oxysporum f.sp. cubense TR4) की पहचान, तना काटकर की जाने वाली जाँच, भारत में फैलाव, रोगमुक्त टिश्यू कल्चर पौधे का महत्व, ICAR-NRCB की ट्राइकोडर्मा आधारित तकनीक और संक्रमित पौधे को नष्ट करने का सही तरीका।",

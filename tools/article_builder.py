@@ -58,12 +58,18 @@ SHELL_SOURCE = ARTICLES / "tomato-leaf-curl.html"
 
 REQUIRED_KEYS = (
     "slug date date_label read_time word_count section cat_label cat_query "
-    "breadcrumb_leaf title description keywords og_title og_desc og_image "
+    "breadcrumb_leaf title description keywords og_title og_desc "
     "headline headline_en schema_desc schema_keywords h1 h1_en share_title "
     "hero_excerpt lede_h2 badges quick_facts body faqs bhav_links related card"
 ).split()
 
 REQUIRED_CARD_KEYS = "emoji bg accent tag tag_bg tag_color title cats keywords".split()
+
+# Where an article with no photograph of its own falls back to. Used for
+# og:image only — it is deliberately NOT rendered on the page, because a
+# generic site banner sitting where the subject should be is worse than no
+# image at all.
+FALLBACK_OG = f"{SITE}/images/og-banner.jpg"
 
 
 # ── shared chunks, lifted from the live shell source ────────────────────────
@@ -111,6 +117,58 @@ def _canonical(slug: str) -> str:
     return f"{SITE}/articles/{slug.lower()}"
 
 
+# ── hero image ─────────────────────────────────────────────────────────────
+#
+# One optional key, `hero_image`, feeds all four places an article's picture has
+# to appear: the <figure> on the page, og:image, the Article schema image, and
+# the card on /articles/. They used to be independent, which is how 44 articles
+# ended up declaring the generic site banner as their og:image while showing no
+# picture at all and rendering an emoji on the index.
+#
+#   "hero_image": ("images/articles/foo.webp", "alt text", "caption"),
+#
+# The path is frontend-relative and must exist on disk: a missing static file is
+# served as the 200-HTML fallback, not a 404, so a typo would fail silently.
+
+def _hero(a: dict) -> tuple[str, str, str] | None:
+    h = a.get("hero_image")
+    if not h:
+        return None
+    if isinstance(h, str):
+        h = (h, a.get("h1_en") or a.get("h1", ""), "")
+    path, alt, caption = (list(h) + ["", ""])[:3]
+    path = path.lstrip("/")
+    if not (FRONTEND / path).is_file():
+        raise SystemExit(f"article_builder: {a['slug']} hero_image not on disk: "
+                         f"frontend/{path}")
+    return path, alt, caption
+
+
+def _card_cut(rel: str) -> str:
+    """The 480px variant of a hero, when fetch_article_images.py made one.
+
+    Mirrors routes/articles.py::_card_cut — the card in the markup and the card
+    the runtime sync swaps in have to resolve to the same file, or every view
+    would replace one with the other.
+    """
+    stem, dot, ext = rel.rpartition(".")
+    if not stem:
+        return rel
+    # Test the candidate rather than the stem's spelling: "kisan-credit-card"
+    # ends in "-card" and is not a card cut, and a stem-based guard silently
+    # left that article (and mitti-jaanch-soil-health-card) on the 1200px file.
+    cut = f"{stem}-card{dot}{ext}"
+    return cut if cut != rel and (FRONTEND / cut).is_file() else rel
+
+
+def _og_image(a: dict) -> str:
+    """og:image — the hero if there is one, else the site banner."""
+    hero = _hero(a)
+    if hero:
+        return f"{SITE}/{hero[0]}"
+    return a.get("og_image") or FALLBACK_OG
+
+
 # ── page rendering ─────────────────────────────────────────────────────────
 
 def render(a: dict) -> str:
@@ -128,6 +186,21 @@ def render(a: dict) -> str:
     shell = _load_shell()
     url = _canonical(a["slug"])
     faqs = a["faqs"]
+    hero = _hero(a)
+    og_image = _og_image(a)
+
+    if hero:
+        path, alt, caption = hero
+        figure = (
+            '\n  <!-- FEATURED IMAGE -->\n'
+            '  <figure class="featured-image">\n'
+            f'    <img src="../{path}" alt="{alt}" width="1200" height="675" '
+            'loading="eager" fetchpriority="high" decoding="async" />\n'
+            + (f'    <figcaption>{caption}</figcaption>\n' if caption else '')
+            + '  </figure>\n'
+        )
+    else:
+        figure = ""
 
     # The visible markup and the schema come from the same list, in the same
     # pass. There is no way to change one without the other.
@@ -148,7 +221,7 @@ def render(a: dict) -> str:
     article_schema = {
         "@context": "https://schema.org", "@type": "Article",
         "headline": a["headline"], "alternativeHeadline": a["headline_en"],
-        "description": a["schema_desc"], "image": a["og_image"], "url": url,
+        "description": a["schema_desc"], "image": og_image, "url": url,
         "inLanguage": "hi",
         "datePublished": a["date"], "dateModified": a.get("date_modified", a["date"]),
         "author": {"@type": "Person", "@id": f"{SITE}/about#kunal-rajput",
@@ -228,7 +301,7 @@ def render(a: dict) -> str:
   <meta property="og:description" content="{a['og_desc']}" />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="{url}" />
-  <meta property="og:image" content="{a['og_image']}" />
+  <meta property="og:image" content="{og_image}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="hi_IN" />
@@ -238,7 +311,7 @@ def render(a: dict) -> str:
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{a['og_title']}" />
   <meta name="twitter:description" content="{a['og_desc']}" />
-  <meta name="twitter:image" content="{a['og_image']}" />
+  <meta name="twitter:image" content="{og_image}" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -320,7 +393,7 @@ def render(a: dict) -> str:
      ARTICLE CONTENT
 ════════════════════════════════════════ -->
 <div class="article-wrapper">
-
+{figure}
   <div class="section-heading"></div>
   <h2>{a['lede_h2']}</h2>
 
@@ -394,14 +467,30 @@ def sync_index_card(a: dict) -> str:
     the builder replaces the existing card rather than adding a second one.
     """
     c, slug = a["card"], a["slug"]
+    hero = _hero(a)
+    # The emoji stays in the markup either way — it is the layered fallback the
+    # band reveals if the image 404s, not an alternative to having one.
+    if hero:
+        media = (
+            f'      <div class="article-media" style="background:{c["bg"]}">\n'
+            f'        <img src="../{_card_cut(hero[0])}" alt="{hero[1] or c["title"]}" '
+            f'loading="lazy" decoding="async" onerror="this.closest'
+            f"('.article-media').classList.add('noimg');this.remove()\">\n"
+            f'        <span class="article-media-emoji">{c["emoji"]}</span>\n'
+            f'      </div>\n'
+        )
+    else:
+        media = (
+            f'      <div class="article-media noimg" style="background:{c["bg"]}">\n'
+            f'        <span class="article-media-emoji">{c["emoji"]}</span>\n'
+            f'      </div>\n'
+        )
     card = (
         f'    <!-- {c["title"]} -->\n'
         f'    <a class="article-card" href="{slug}" data-cat="{c["cats"]}" '
         f'data-lang="{a.get("lang", "hi")}" data-title="{c["keywords"]}" '
         f'style="--accent:{c["accent"]}">\n'
-        f'      <div class="article-media noimg" style="background:{c["bg"]}">\n'
-        f'        <span class="article-media-emoji">{c["emoji"]}</span>\n'
-        f'      </div>\n'
+        f'{media}'
         f'      <div class="article-body">\n'
         f'        <span class="article-tag" style="background:{c["tag_bg"]};'
         f'color:{c["tag_color"]}">{c["tag"]}</span>\n'
@@ -544,6 +633,11 @@ def validate(path: Path) -> list[str]:
     if og:
         rel = og.group(1).replace(f"{SITE}/", "")
         check((FRONTEND / rel).is_file(), f"og:image not on disk: {rel}")
+        # The generic banner as og:image means no picture was ever sourced. It
+        # went unnoticed on 44 articles at once, so it fails the build now.
+        check(og.group(1) != FALLBACK_OG,
+              "og:image is the generic site banner — set hero_image")
+    check('class="featured-image"' in doc, "no hero <figure> on the page")
     for m in re.findall(r'(?:src|href)="\.\./([^"?#]+)"', doc):
         check((FRONTEND / m).is_file(), f"missing relative asset ../{m}")
     for m in set(re.findall(

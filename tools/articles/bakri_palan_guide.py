@@ -253,8 +253,9 @@ ARTICLE = {
 
     "og_title": "बकरी पालन — नस्ल, बाड़ा, टीकाकरण और सब्सिडी | KrashiMitra.in",
     "og_desc": "शुरुआत कैसे करें, कौन सी नस्ल लें, बाड़ा कैसा हो, कौन से टीके ज़रूरी हैं और NLM सब्सिडी का सच।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/bakri-palan-guide.webp",
+                   "गाँव में बकरी पालन",
+                   "भारतीय गाँव में बकरी पालन — कम लागत में शुरू होने वाला पशुपालन व्यवसाय।"),
     "headline": "बकरी पालन — नस्ल, बाड़ा, टीकाकरण और सरकारी सहायता",
     "headline_en": "Goat Farming in India — Breeds, Housing, Vaccination and NLM Subsidy",
     "schema_desc": "बकरी पालन की पूरी जानकारी — क्षेत्रवार नस्लों का चुनाव, ऊँचे सूखे फर्श वाला बाड़ा और प्रति पशु जगह, PPR व अन्य टीके, कृमिनाशक का कार्यक्रम, चारे की व्यवस्था और राष्ट्रीय पशुधन मिशन (NLM) की सब्सिडी।",

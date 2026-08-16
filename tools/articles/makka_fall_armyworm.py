@@ -353,8 +353,9 @@ ARTICLE = {
 
     "og_title": "मक्का में फॉल आर्मीवर्म (फौजी कीट) — पहचान, दवा और नियंत्रण | KrashiMitra.in",
     "og_desc": "उल्टा Y और गोभ में बुरादा — फॉल आर्मीवर्म की पक्की पहचान, सही दवा का डोज़ और रेत+चूने का देसी उपाय। हर मक्का किसान के लिए ज़रूरी।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/makka-fall-armyworm.webp",
+                   "मक्का में फॉल आर्मीवर्म की सूंडी",
+                   "मक्का के गोफ में फॉल आर्मीवर्म की सूंडी — पहचान इसके सिर पर बने उल्टे 'Y' निशान से होती है।"),
     "headline": "मक्का में फॉल आर्मीवर्म (फौजी कीट) — पहचान, दवा और नियंत्रण",
     "headline_en": "Fall Armyworm in Maize (Spodoptera frugiperda) — Identification, Damage & Control",
     "schema_desc": "मक्का में फॉल आर्मीवर्म (फौजी कीट) की पहचान, जीवन चक्र, ETL, देसी-जैविक उपाय और सिफ़ारिश की गई दवाओं का सही डोज़।",

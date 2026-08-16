@@ -344,8 +344,9 @@ ARTICLE = {
 
     "og_title": "कपास में गुलाबी सुंडी (Pink Bollworm) — पहचान, दवा और रोकथाम | KrashiMitra.in",
     "og_desc": "गुलाब जैसा बंद फूल और टिंडे में गुलाबी इल्ली — पहचान, फेरोमोन ट्रैप, ETL और सही दवा का डोज़। हर कपास किसान के लिए ज़रूरी।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/kapas-gulabi-sundi.webp",
+                   "कपास की फसल",
+                   "कपास का खेत — गुलाबी सुंडी बंद टिंडे के अंदर रहकर नुकसान करती है, इसलिए बाहर से दिखती नहीं।"),
     "headline": "कपास में गुलाबी सुंडी (Pink Bollworm) — पहचान, दवा और रोकथाम",
     "headline_en": "Pink Bollworm in Cotton (Pectinophora gossypiella) — Identification, Damage & Control",
     "schema_desc": "कपास में गुलाबी सुंडी (Pink Bollworm) की पहचान, जीवन चक्र और डायपॉज़, फेरोमोन ट्रैप से निगरानी, ETL, जैविक उपाय और सिफ़ारिश की गई दवाओं का सही डोज़।",

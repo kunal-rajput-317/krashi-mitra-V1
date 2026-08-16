@@ -255,8 +255,9 @@ ARTICLE = {
 
     "og_title": "अदरक और हल्दी में कंद सड़न — पहचान और सही इलाज | KrashiMitra.in",
     "og_desc": "पानी ठहरना ही असली कारण है — ऊँची क्यारी, बीज-कंद उपचार, ट्राइकोडर्मा और ड्रेंचिंग की पूरी विधि।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/adrak-haldi-kand-sadan.webp",
+                   "अदरक का कंद (प्रकंद)",
+                   "अदरक का स्वस्थ कंद — कंद सड़न की पहचान इसी हिस्से के गलने और बदबू से होती है।"),
     "headline": "अदरक और हल्दी में कंद सड़न — पहचान और नियंत्रण",
     "headline_en": "Rhizome Rot in Ginger and Turmeric — Identification and Management",
     "schema_desc": "अदरक और हल्दी में कंद सड़न (Rhizome Rot / Soft Rot) की पहचान, Pythium और Fusarium सड़न में फर्क, जल निकासी की भूमिका, बीज-कंद उपचार, ट्राइकोडर्मा का प्रयोग और ड्रेंचिंग की सही विधि।",

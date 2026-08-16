@@ -259,8 +259,9 @@ ARTICLE = {
 
     "og_title": "बैंगन में तना और फल छेदक — कीड़े वाली बैंगन से बचाव | KrashiMitra.in",
     "og_desc": "क्लिपिंग, फेरोमोन ट्रैप और सही दवा — कम छिड़काव में ज़्यादा साफ फल।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/baingan-tana-phal-chhedak.webp",
+                   "बैंगन का पौधा और फल",
+                   "बैंगन की फसल — तना और फल छेदक इसी अवस्था में सबसे ज़्यादा नुकसान करता है।"),
     "headline": "बैंगन में तना और फल छेदक — पहचान, ट्रैप और सही दवा",
     "headline_en": "Brinjal Shoot and Fruit Borer — Identification, Traps and Control",
     "schema_desc": "बैंगन में तना एवं फल छेदक (Leucinodes orbonalis) की पहचान, मुरझाई टहनी काटने की विधि, फेरोमोन ट्रैप की संख्या और ल्यूर बदलने का समय, ट्राइकोकार्ड, तथा क्लोरएंट्रानिलिप्रोल व स्पिनोसैड जैसी दवाओं की सही मात्रा और प्रतीक्षा अवधि।",

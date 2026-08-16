@@ -284,8 +284,9 @@ ARTICLE = {
 
     "og_title": "धान में तना छेदक — सूखी गोभ और सफेद बाली का इलाज | KrashiMitra.in",
     "og_desc": "पहचान की एक पक्की जाँच, कार्रवाई का सही समय (5% सूखी गोभ), ट्राइकोकार्ड और असरदार दवाओं की मात्रा।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/dhan-tana-chhedak.webp",
+                   "धान का पीला तना छेदक",
+                   "धान का पीला तना छेदक — यही कीट 'डेड हार्ट' और 'सफेद बाली' का कारण बनता है।"),
     "headline": "धान में तना छेदक — पहचान, सही समय और असरदार दवा",
     "headline_en": "Yellow Stem Borer in Paddy — Dead Heart, White Ear Head and Control",
     "schema_desc": "धान में तना छेदक (Scirpophaga incertulas) की पहचान, सूखी गोभ और सफेद बाली का फर्क, आर्थिक क्षति स्तर (5% डेड हार्ट), पौध की चोटी काटना, ट्राइकोग्रामा कार्ड और क्लोरएंट्रानिलिप्रोल व कार्टाप जैसी दवाओं की सही मात्रा।",

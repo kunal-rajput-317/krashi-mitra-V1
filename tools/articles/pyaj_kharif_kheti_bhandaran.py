@@ -286,8 +286,9 @@ ARTICLE = {
 
     "og_title": "खरीफ प्याज की खेती और भंडारण — पूरी विधि | KrashiMitra.in",
     "og_desc": "रोपाई का सही समय, उठी हुई क्यारी, बैंगनी धब्बा-थ्रिप्स का इलाज और भंडारण में नुकसान घटाने के नियम।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/pyaj-kharif-kheti-bhandaran.webp",
+                   "नासिक लाल प्याज",
+                   "प्याज की किस्म और सुखाई ही तय करती है कि भंडारण में कितना नुकसान होगा।"),
     "headline": "खरीफ प्याज की खेती और भंडारण — पूरी विधि",
     "headline_en": "Kharif Onion Cultivation and Storage — Complete Guide",
     "schema_desc": "खरीफ प्याज की रोपाई का सही समय, उपयुक्त किस्में, उठी हुई क्यारी (रेज़्ड बेड) की तकनीक, बैंगनी धब्बा व थ्रिप्स का प्रबंधन, क्योरिंग और भंडारण में 30–40% नुकसान घटाने के उपाय।",

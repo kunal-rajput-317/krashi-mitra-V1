@@ -186,11 +186,58 @@ one internal link took months to index here. After building, consider adding:
 - a per-crop link from the `/bhav` pages (`backend/routes/bhav.py` currently
   links only to `/articles/`, the hub)
 
-Also still manual: a real per-article hero image. Without one the card falls
-back to an emoji and the SERP thumbnail is the generic banner. `_hero_image()`
-in `backend/routes/articles.py` deliberately ignores `og-banner.jpg`, so
-committing a real image under `frontend/images/` and pointing `og_image` at it
-is all it takes.
+The hero image is **no longer** manual, and no longer optional — see below.
+
+---
+
+## The hero image
+
+Every article needs one. `hero_image` in the content module is a
+`(path, alt, caption)` triple and it is the single source for all four places
+the picture appears — the `<figure>` on the page, `og:image`, the `Article`
+schema image, and the card on `/articles/`. The build **fails** if it is
+missing or if `og:image` is still the generic banner.
+
+That check exists because the four used to be independent: 44 articles shipped
+declaring `og-banner.jpg`, showing no picture at all, and rendering an emoji on
+the index, and nothing complained.
+
+To add an image:
+
+1. Find a freely-licensed file on Wikimedia Commons and add it to
+   `tools/article_images.py` under the article's slug.
+2. `python tools/fetch_article_images.py --verify` — Commons renames and
+   deletes files; six of our old hotlinks had already rotted this way.
+3. `python tools/fetch_article_images.py` — downloads it, centre-crops to
+   1200×675, writes `frontend/images/articles/<slug>.webp` plus a 480×270
+   `<slug>-card.webp`, and records the author and licence in `CREDITS.json`.
+4. Point `hero_image` at `images/articles/<slug>.webp` (the *hero*, not the
+   card cut — the builder and `/articles/meta` pick the card cut themselves).
+
+Rules the fetcher enforces, so you do not have to remember them:
+
+- **≥900px source.** Four of the originals we were hotlinking were being
+  upscaled from 600–800px on the live site.
+- **No NonCommercial, no GFDL-only.** The site carries AdSense, so it is a
+  commercial use — a CC BY-NC photograph is not licensed for it however well
+  attributed. One had already slipped in.
+- **Attribution is published.** `/articles/credits` renders from
+  `CREDITS.json` at request time. CC BY / CC BY-SA permit self-hosting *only*
+  while the author, the licence and the fact we modified the file are stated,
+  so that page is a licence condition — do not remove it or its link.
+
+Two content rules the tooling cannot check for you:
+
+- **Prefer Indian subject matter.** A Nashik vineyard beats a Californian one
+  on an article about Maharashtra grapes.
+- **The caption says what the picture shows.** Where no free photograph of the
+  specific pathogen exists (bacterial leaf blight, leaf curl virus), use the
+  crop and say so in the caption. Never imply the reader is looking at the
+  disease.
+
+For the older hand-written articles that predate the builder, the equivalent
+pass is `python tools/fix_legacy_article_images.py` (idempotent, `--dry-run`
+to preview).
 
 ---
 

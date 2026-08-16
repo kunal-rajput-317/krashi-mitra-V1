@@ -324,8 +324,9 @@ ARTICLE = {
 
     "og_title": "धान में भूरा फुदका (BPH) — पहचान, ETL और सही दवा | KrashiMitra.in",
     "og_desc": "गोल भूरा चकत्ता बनने से पहले पहचानें — गिनती का तरीका, बिना पैसे के उपाय और लेबल-अनुमोदित दवाओं का सही डोज़।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/dhan-bhura-fudka-up.webp",
+                   "धान की रोपाई",
+                   "धान का खेत — भूरा फुदका पौधे के तने के निचले हिस्से में बैठकर रस चूसता है।"),
     "headline": "धान में भूरा फुदका (भूरा माहू) — पहचान, ETL और नियंत्रण",
     "headline_en": "Brown Plant Hopper (BPH) in Paddy — Identification, ETL and Control in Uttar Pradesh",
     "schema_desc": "धान में भूरा फुदका (Brown Plant Hopper) की पहचान, हॉपर बर्न, जीवन चक्र, ETL आधारित निगरानी, जल निकासी जैसे मुफ्त उपाय और सिफ़ारिश की गई दवाओं का सही डोज़ — उत्तर प्रदेश के किसानों के लिए।",

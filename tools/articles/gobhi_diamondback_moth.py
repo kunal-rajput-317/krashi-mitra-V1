@@ -288,8 +288,9 @@ ARTICLE = {
 
     "og_title": "गोभी में डायमंड बैक मॉथ — पहचान, ट्रैप फसल और इलाज | KrashiMitra.in",
     "og_desc": "DBM दवा से नहीं, तरीके से हारता है। सरसों की ट्रैप फसल, बीटी और दवा बदलने का पूरा नियम।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/gobhi-diamondback-moth.webp",
+                   "पत्ता गोभी की फसल",
+                   "पत्ता गोभी का खेत — डायमंड बैक मॉथ की सूंडी पत्तियों को छलनी कर देती है।"),
     "headline": "गोभी में डायमंड बैक मॉथ — पहचान और नियंत्रण",
     "headline_en": "Diamondback Moth in Cabbage &amp; Cauliflower — Identification and Control",
     "schema_desc": "पत्तागोभी और फूलगोभी में डायमंड बैक मॉथ (DBM) की पहचान, तंबाकू की सूंडी से फर्क, 18–21 दिन का जीवन चक्र, सरसों की ट्रैप फसल का सही तरीका, बीटी व नीम जैसे जैविक उपाय, कीटनाशक प्रतिरोध से बचने के लिए दवा बदलने का नियम और पूरा कैलेंडर।",

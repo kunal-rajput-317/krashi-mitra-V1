@@ -262,8 +262,9 @@ ARTICLE = {
 
     "og_title": "कृषि यंत्र सब्सिडी (SMAM) — दर, दस्तावेज़ और आवेदन | KrashiMitra.in",
     "og_desc": "40–50% सहायता, आवेदन का सही क्रम, ज़रूरी दस्तावेज़ और CHC खोलने का रास्ता।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/krishi-yantra-subsidy.webp",
+                   "उत्तर प्रदेश में ट्रैक्टर से जुताई",
+                   "उत्तर प्रदेश में ट्रैक्टर से जुताई — SMAM के तहत ऐसे यंत्रों पर 40-50% तक सब्सिडी मिलती है।"),
     "headline": "कृषि यंत्र सब्सिडी (SMAM) — दर, आवेदन और दस्तावेज़",
     "headline_en": "Farm Machinery Subsidy in India (SMAM) — Rates and Application",
     "schema_desc": "कृषि यंत्रीकरण उप-मिशन (SMAM) के तहत कृषि यंत्रों पर सब्सिडी — SC/ST, लघु-सीमांत व महिला किसानों के लिए लगभग 50% और अन्य के लिए 40%, आवेदन का सही क्रम, ज़रूरी दस्तावेज़, कस्टम हायरिंग सेंटर तथा फार्म मशीनरी बैंक की जानकारी।",

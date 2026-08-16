@@ -220,8 +220,9 @@ ARTICLE = {
 
     "og_title": "खेत में पानी भर जाए तो क्या करें — पहले 48 घंटे | KrashiMitra.in",
     "og_desc": "पानी निकालने का सही तरीका, फसलवार सहनशीलता, बीमा का 72 घंटे नियम और पानी उतरने के बाद की पूरी योजना।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/jalbharav-baadh-fasal-bachav.webp",
+                   "जलभराव वाला धान का खेत",
+                   "मानसून में जलभराव — धान इसे कुछ दिन सह लेता है, पर दलहन और सब्जी 48 घंटे में ही खराब होने लगती हैं।"),
     "headline": "जलभराव और बाढ़ में फसल कैसे बचाएँ",
     "headline_en": "Saving Crops from Waterlogging and Flood — First 48 Hours Checklist",
     "schema_desc": "खेत में जलभराव या बाढ़ का पानी भरने पर पहले 48 घंटे की चेकलिस्ट, फसलवार सहनशीलता, पानी उतरने के बाद पर्णीय छिड़काव, फसल बीमा में 72 घंटे की सूचना और अगले साल के लिए स्थायी बचाव।",

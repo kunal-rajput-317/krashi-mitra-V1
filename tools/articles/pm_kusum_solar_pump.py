@@ -249,8 +249,9 @@ ARTICLE = {
 
     "og_title": "PM-KUSUM सोलर पंप योजना — सब्सिडी, पात्रता और आवेदन | KrashiMitra.in",
     "og_desc": "तीनों कंपोनेंट का फर्क, सब्सिडी का पूरा गणित, ज़रूरी कागज़ और सोलर पंप के नाम पर होने वाली ठगी से बचने के नियम।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/pm-kusum-solar-pump-yojana.webp",
+                   "सोलर पंप से सिंचाई",
+                   "सोलर पंप से सिंचाई — डीज़ल का खर्च पूरी तरह खत्म हो जाता है।"),
     "headline": "PM-KUSUM सोलर पंप योजना — सब्सिडी, पात्रता और आवेदन",
     "headline_en": "PM-KUSUM Solar Pump Scheme — Subsidy, Eligibility and How to Apply",
     "schema_desc": "प्रधानमंत्री किसान ऊर्जा सुरक्षा एवं उत्थान महाभियान (PM-KUSUM) के तीनों कंपोनेंट, स्टैंडअलोन सोलर पंप पर सब्सिडी का ढाँचा, पात्रता, ज़रूरी दस्तावेज़, राज्य नोडल एजेंसी से आवेदन की प्रक्रिया और ठगी से बचने के उपाय।",

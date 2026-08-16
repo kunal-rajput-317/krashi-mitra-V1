@@ -303,8 +303,9 @@ ARTICLE = {
 
     "og_title": "जूट (पाट) की सड़ाई और बेहतर ग्रेड — MSP ₹5,925 | KrashiMitra.in",
     "og_desc": "कटाई का सही दिन, सड़ाई की पूरी विधि, क्रीजाफ सोना और ग्रेड सुधारकर ज़्यादा दाम पाने का तरीका।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/paat-jute-sadai-kolkata.webp",
+                   "पश्चिम बंगाल में जूट की सड़ाई",
+                   "पश्चिम बंगाल में पानी भरे खेत में जूट किसान — रेशे का ग्रेड सड़ाई के पानी पर ही तय होता है।"),
     "headline": "जूट (पाट) की सड़ाई और बेहतर ग्रेड — पूरी विधि",
     "headline_en": "Jute Retting & Fibre Grading — Complete Guide for Kolkata and West Bengal Farmers",
     "schema_desc": "पाट (जूट) की कटाई का सही समय, सड़ाई (retting) की पूरी विधि, क्रीजाफ सोना तकनीक, रेशे के ग्रेड (TD-1 से TD-8), 2026-27 का MSP ₹5,925 प्रति क्विंटल और JCI से बिक्री — कोलकाता व पश्चिम बंगाल के किसानों के लिए।",

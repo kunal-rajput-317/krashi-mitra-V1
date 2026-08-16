@@ -33,10 +33,32 @@ _OG_IMAGE_RE = re.compile(r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"'
 _IMG_SRC_RE = re.compile(r'<img[^>]+src="([^"]+)"')
 
 # Chrome that appears in every article and is never the article's subject.
-_NOT_A_HERO = ("krashimitra_logo", "ai chat icon", "og-banner", "whatsapp_icon", "favicon")
+# Both spellings of the assistant icon: it was "AI chat icon.png" (a 1.1 MB
+# 1254px PNG drawn into a 62px box on all 89 pages) before it became
+# "ai-chat-icon.webp", and a rename must not quietly make it hero-eligible.
+_NOT_A_HERO = ("krashimitra_logo", "ai chat icon", "ai-chat-icon",
+               "og-banner", "whatsapp_icon", "favicon")
 
 # slug → {published, modified, image}, rebuilt when any article file's mtime changes.
 _cache: dict = {"stamp": None, "meta": {}}
+
+
+def _card_cut(rel: str) -> str:
+    """Prefer the 480px card variant of a hero when one sits beside it.
+
+    tools/fetch_article_images.py writes "<name>.webp" (1200×675, for the page
+    and og:image) and "<name>-card.webp" (480×270). This endpoint only ever
+    feeds card images, and /articles/ renders 79 of them into ~360px-wide bands
+    on phones, so the big one would be ~5× the bytes for no visible difference.
+    """
+    stem, dot, ext = rel.rpartition(".")
+    if not stem:
+        return rel
+    # Test the candidate, not the stem's spelling: "kisan-credit-card" ends in
+    # "-card" without being a card cut, so a stem-based guard would leave that
+    # article on the full-size file forever.
+    card = f"{stem}-card{dot}{ext}"
+    return card if card != rel and (_FRONTEND_DIR / card).is_file() else rel
 
 
 def _hero_image(text: str) -> str | None:
@@ -59,7 +81,7 @@ def _hero_image(text: str) -> str | None:
         if not rel.startswith("images/"):
             continue
         if (_FRONTEND_DIR / rel).is_file():
-            return rel
+            return _card_cut(rel)
     return None
 
 

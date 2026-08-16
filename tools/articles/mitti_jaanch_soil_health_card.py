@@ -234,8 +234,9 @@ ARTICLE = {
 
     "og_title": "मिट्टी की जाँच और मृदा स्वास्थ्य कार्ड — पूरी विधि | KrashiMitra.in",
     "og_desc": "नमूना लेने का सही तरीका, 12 मापदंड, कार्ड कैसे पढ़ें और खाद का खर्च कैसे घटाएँ।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/mitti-jaanch-soil-health-card.webp",
+                   "मिट्टी का नमूना जाँच",
+                   "मिट्टी के नमूने की जाँच — सही नमूना लेना ही आधी जाँच है।"),
     "headline": "मिट्टी की जाँच और मृदा स्वास्थ्य कार्ड — पूरी जानकारी",
     "headline_en": "Soil Testing and the Soil Health Card — Sampling Method and How to Read It",
     "schema_desc": "मिट्टी की जाँच के लिए नमूना लेने का सही तरीका (ज़िग-ज़ैग, V कट, 15–20 से.मी. गहराई, चौथाई विधि), मृदा स्वास्थ्य कार्ड के 12 मापदंड, कार्ड पढ़ने का तरीका और जाँच कहाँ से कराएँ।",

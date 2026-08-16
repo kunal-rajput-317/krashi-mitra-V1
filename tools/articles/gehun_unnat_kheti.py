@@ -259,8 +259,9 @@ ARTICLE = {
 
     "og_title": "गेहूं की उन्नत खेती — बुवाई, किस्में और सिंचाई | KrashiMitra.in",
     "og_desc": "बुवाई की सही खिड़की, IIWBR करनाल की नई किस्में, बीज दर और छह ज़रूरी सिंचाइयों का पूरा कैलेंडर।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/gehun-unnat-kheti.webp",
+                   "उत्तर प्रदेश में गेहूं का खेत",
+                   "उत्तर प्रदेश (हरदुआगंज) का गेहूं का खेत बालियाँ भरने की अवस्था में।"),
     "headline": "गेहूं की उन्नत खेती — बुवाई से कटाई तक",
     "headline_en": "Improved Wheat Cultivation — Sowing Window, Varieties and Irrigation Schedule",
     "schema_desc": "गेहूं की उन्नत खेती — बुवाई का सही समय, ICAR-IIWBR करनाल की नई किस्में (DBW 303, DBW 327, HD 3386), बीज दर और दूरी, छह ज़रूरी सिंचाइयाँ, गुल्ली डंडा का प्रतिरोध और पोषण प्रबंधन।",

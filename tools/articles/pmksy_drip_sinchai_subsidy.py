@@ -274,8 +274,9 @@ ARTICLE = {
 
     "og_title": "PMKSY ड्रिप सिंचाई सब्सिडी — Per Drop More Crop योजना | KrashiMitra.in",
     "og_desc": "छोटे किसानों को ड्रिप-स्प्रिंकलर पर 55% और बाकी किसानों को 45% सब्सिडी — पात्रता, कागज़ और सही आवेदन प्रक्रिया।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/pmksy-drip-sinchai-subsidy.webp",
+                   "ड्रिप सिंचाई",
+                   "भारत में ड्रिप सिंचाई — पानी सीधे जड़ तक, 40-60% तक बचत के साथ।"),
     "headline": "PMKSY ड्रिप सिंचाई सब्सिडी — Per Drop More Crop योजना",
     "headline_en": "PMKSY Per Drop More Crop — Drip &amp; Sprinkler Irrigation Subsidy",
     "schema_desc": "PMKSY की Per Drop More Crop (PDMC) योजना के तहत ड्रिप और स्प्रिंकलर सूक्ष्म सिंचाई पर मिलने वाली सब्सिडी, PM-KUSUM से फर्क, पात्रता, ज़रूरी दस्तावेज़, राज्य विभाग से आवेदन की प्रक्रिया और ठगी से बचने के उपाय।",

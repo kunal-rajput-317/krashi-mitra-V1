@@ -232,10 +232,25 @@ ARTICLE = {
 
     "og_title": "TODO | KrashiMitra.in",
     "og_desc": "TODO — one line, benefit-led.",
-    # Use a real per-article image under frontend/images/ if you have one and
-    # have committed it; og-banner.jpg is the fallback. The builder asserts the
-    # file exists — a missing static is served as 200-HTML, never a 404.
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
+
+    # REQUIRED — (path, alt, caption). One key feeds all four places the
+    # article's picture appears: the <figure> on the page, og:image, the Article
+    # schema image, and the card on /articles/. They used to be independent,
+    # which is how 44 articles ended up declaring the generic site banner while
+    # showing no picture at all and rendering an emoji on the index — so the
+    # builder now FAILS rather than let that ship again.
+    #
+    # To add one: put the Commons filename in tools/article_images.py, run
+    #   python tools/fetch_article_images.py --verify   (does it still exist?)
+    #   python tools/fetch_article_images.py            (fetch + 1200×675 + card cut)
+    # and point hero_image at frontend/images/articles/<slug>.webp.
+    #
+    # The caption must describe what the picture ACTUALLY shows. Where no free
+    # photograph of the specific pathogen exists, use the crop and say so —
+    # never imply the reader is looking at the disease.
+    "hero_image": ("images/articles/TODO.webp",
+                   "TODO — alt text, what is in the picture",
+                   "TODO — caption; say what it shows, not what the article is about"),
 
     "headline": "TODO",               # schema headline (no site suffix)
     "headline_en": "TODO — English equivalent, helps entity matching",

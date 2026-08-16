@@ -264,8 +264,9 @@ ARTICLE = {
 
     "og_title": "धान में जीवाणु झुलसा (BLB) — पहचान और असली इलाज | KrashiMitra.in",
     "og_desc": "फंगीसाइड यहाँ बेकार है। गिलास वाली जाँच, यूरिया रोकना और पानी निकालना — पूरी जानकारी।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/dhan-jivanu-jhulsa-blb.webp",
+                   "धान का खेत",
+                   "धान का खेत — जीवाणु झुलसा (BLB) कटी-फटी पत्तियों और खेत में पानी भरे रहने पर तेज़ी से फैलता है।"),
     "headline": "धान में जीवाणु झुलसा (BLB) — पहचान और नियंत्रण",
     "headline_en": "Bacterial Leaf Blight (BLB) in Paddy — Identification and Management",
     "schema_desc": "धान में जीवाणु झुलसा (Bacterial Leaf Blight) की पहचान, गिलास वाली जाँच, झोंका रोग से फर्क, केसेक, तथा यूरिया रोकना-पानी निकालना जैसे मुफ्त उपाय और कॉपर आधारित छिड़काव की सही मात्रा।",

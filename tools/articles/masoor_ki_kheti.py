@@ -263,8 +263,9 @@ ARTICLE = {
 
     "og_title": "मसूर की खेती — कम पानी में रबी दलहन | KrashiMitra.in",
     "og_desc": "बुवाई का समय, बीज दर, बीज उपचार, सिंचाई और उकठा-पाला से बचाव की पूरी गाइड।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/masoor-ki-kheti.webp",
+                   "मसूर के फूल",
+                   "मसूर का पौधा फूल की अवस्था में।"),
     "headline": "मसूर की उन्नत खेती — बुवाई से कटाई तक",
     "headline_en": "Lentil (Masoor) Cultivation Guide — Sowing to Harvest",
     "schema_desc": "मसूर की उन्नत खेती — बुवाई का सही समय, छोटे और बड़े दाने वाली किस्मों की बीज दर, 4–5 से.मी. गहराई, बीज उपचार का सही क्रम, दो हल्की सिंचाई, उकठा व जड़ सड़न से बचाव, फली छेदक तथा पाले से सुरक्षा।",

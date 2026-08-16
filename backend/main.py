@@ -307,6 +307,9 @@ app.include_router(product_route.router)  # SEO shop-product pages (/product/*) 
 from backend.routes import articles as articles_route
 app.include_router(articles_route.router)  # /articles/meta — live published/updated dates from article JSON-LD
 
+from backend.routes import credits as credits_route
+app.include_router(credits_route.router)  # /articles/credits — Commons photo attribution the licences require (noindex)
+
 from backend.routes import naksha as naksha_route
 app.include_router(naksha_route.router)  # /naksha, /naksha/{state}[/jile] + /map — state district maps
 

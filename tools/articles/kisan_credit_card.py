@@ -346,8 +346,9 @@ ARTICLE = {
 
     "og_title": "किसान क्रेडिट कार्ड (KCC) 2026 — ब्याज सिर्फ 4%, ₹5 लाख तक लोन | KrashiMitra.in",
     "og_desc": "KCC कैसे बनवाएं, कितना लोन मिलेगा, ब्याज का पूरा गणित (7% → 4%), ज़रूरी कागज़ और बैंक मना कर दे तो क्या करें।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/kisan-credit-card.webp",
+                   "भारतीय रुपये के नोट",
+                   "KCC पर ब्याज सिर्फ़ उतने पैसे और उतने दिन का लगता है, जितना आपने निकाला हो।"),
     "headline": "किसान क्रेडिट कार्ड (KCC) 2026 — ब्याज दर, लोन सीमा और आवेदन की पूरी प्रक्रिया",
     "headline_en": "Kisan Credit Card (KCC) 2026 — Interest Rate, ₹5 Lakh Limit & How to Apply",
     "schema_desc": "किसान क्रेडिट कार्ड (KCC) 2026 की ब्याज दर, ₹5 लाख की नई लोन सीमा, ₹2 लाख तक बिना गारंटी, पात्रता, ज़रूरी दस्तावेज़ और आवेदन की पूरी प्रक्रिया।",

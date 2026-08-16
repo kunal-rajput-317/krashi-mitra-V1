@@ -215,8 +215,9 @@ ARTICLE = {
 
     "og_title": "e-NAM पर फसल कैसे बेचें — पूरी प्रक्रिया | KrashiMitra.in",
     "og_desc": "पंजीकरण, लॉट नंबर, गुणवत्ता जाँच, ऑनलाइन बोली और सीधे खाते में भुगतान — सब आसान हिंदी में।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/enam-online-fasal-bechna.webp",
+                   "भारतीय मंडी",
+                   "मंडी में फसल की बिक्री — e-NAM इसी नीलामी को ऑनलाइन कर देता है।"),
     "headline": "e-NAM पर फसल कैसे बेचें — पूरी प्रक्रिया",
     "headline_en": "How to Sell Your Crop on e-NAM — Registration, Assaying and Payment",
     "schema_desc": "e-NAM (इलेक्ट्रॉनिक राष्ट्रीय कृषि बाज़ार) पर फसल बेचने की पूरी प्रक्रिया — पंजीकरण के दस्तावेज़, गेट एंट्री और लॉट नंबर, प्रयोगशाला गुणवत्ता जाँच, ऑनलाइन बोली, बोली ठुकराने का अधिकार और बैंक खाते में सीधा भुगतान।",

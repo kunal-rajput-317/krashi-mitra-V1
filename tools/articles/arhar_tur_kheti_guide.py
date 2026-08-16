@@ -274,8 +274,9 @@ ARTICLE = {
 
     "og_title": "अरहर (तुअर) की खेती — बुवाई से कटाई तक पूरी गाइड | KrashiMitra.in",
     "og_desc": "मेड़ पर बुवाई, निपिंग से ज़्यादा फलियाँ, उकठा रोग से बचाव और फली छेदक का ETL आधारित प्रबंधन।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/arhar-tur-kheti-guide.webp",
+                   "अरहर (तुअर) का पौधा",
+                   "अरहर का पौधा फूल और फली की अवस्था में।"),
     "headline": "अरहर (तुअर) की उन्नत खेती — बुवाई से कटाई तक",
     "headline_en": "Pigeonpea (Arhar/Tur) Cultivation — Complete Guide from Sowing to Harvest",
     "schema_desc": "अरहर (तुअर) की उन्नत खेती — किस्म की अवधि के अनुसार दूरी और बीज दर, मेड़ पर बुवाई, बीज उपचार का सही क्रम, शीर्ष कटाई (निपिंग), उकठा रोग की पहचान और फली छेदक का ETL आधारित प्रबंधन।",

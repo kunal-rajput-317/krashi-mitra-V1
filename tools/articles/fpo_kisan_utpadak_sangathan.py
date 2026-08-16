@@ -255,8 +255,9 @@ ARTICLE = {
 
     "og_title": "FPO — किसान उत्पादक संगठन कैसे बनाएँ | KrashiMitra.in",
     "og_desc": "10,000 FPO योजना की पूरी जानकारी — पात्रता, ग्रांट, पंजीकरण और कमाई के रास्ते।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/fpo-kisan-utpadak-sangathan.webp",
+                   "किसान सहकारिता सम्मेलन",
+                   "किसान सहकारिता पर राष्ट्रीय सम्मेलन — FPO इसी सामूहिक ढाँचे पर बनते हैं।"),
     "headline": "FPO (किसान उत्पादक संगठन) — गठन, ग्रांट और कारोबार",
     "headline_en": "Farmer Producer Organisation (FPO) — Formation, Grants and Business",
     "schema_desc": "किसान उत्पादक संगठन (FPO) क्या है, सहकारी समिति से अंतर, 10,000 FPO योजना के तहत ₹18 लाख प्रबंधन खर्च, ₹2,000 प्रति सदस्य मैचिंग इक्विटी ग्रांट और ₹2 करोड़ तक ऋण गारंटी, पात्रता, पंजीकरण की प्रक्रिया और कमाई के रास्ते।",

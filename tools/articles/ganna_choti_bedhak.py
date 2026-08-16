@@ -277,8 +277,9 @@ ARTICLE = {
 
     "og_title": "गन्ने में चोटी बेधक — पहचान, ट्राइकोकार्ड और सही दवा | KrashiMitra.in",
     "og_desc": "गुच्छेदार चोटी बनने से पहले पहचानें — अंडा समूह हटाना, ट्राइकोकार्ड और जड़ में ड्रेंचिंग की पूरी विधि।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/ganna-choti-bedhak.webp",
+                   "गन्ने का खेत",
+                   "गन्ने की फसल — चोटी बेधक पौधे की सबसे ऊपरी गोफ को सुखा देता है।"),
     "headline": "गन्ने में चोटी बेधक (Top Borer) — पहचान और नियंत्रण",
     "headline_en": "Top Borer in Sugarcane — Identification, Trichocard and Control in Uttar Pradesh",
     "schema_desc": "गन्ने में चोटी बेधक (Top Borer) की पहचान, अंकुर बेधक से फर्क, पाँच पीढ़ियों का चक्र, अंडा समूह हटाना, ट्राइकोकार्ड से जैविक नियंत्रण और जड़ में ड्रेंचिंग की सही मात्रा — उत्तर प्रदेश के गन्ना किसानों के लिए।",

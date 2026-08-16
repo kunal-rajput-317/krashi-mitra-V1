@@ -256,8 +256,9 @@ ARTICLE = {
 
     "og_title": "गेहूं में गुल्ली डंडा (मंडूसी) — पहचान और नियंत्रण | KrashiMitra.in",
     "og_desc": "पहचान का पक्का तरीका, बिना दवा के उपाय, सही दवा-सही समय और प्रतिरोध से बचने का नियम।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/gehun-gulli-danda.webp",
+                   "गुल्ली डंडा (Phalaris minor) खरपतवार",
+                   "पंजाब के खेत में गुल्ली डंडा (Phalaris minor) — गेहूं जैसा दिखने वाला यही खरपतवार सबसे बड़ा नुकसान करता है।"),
     "headline": "गेहूं में गुल्ली डंडा — पहचान, नियंत्रण और प्रतिरोध",
     "headline_en": "Phalaris minor (Gulli Danda) in Wheat — Identification and Control",
     "schema_desc": "गेहूं के सबसे बड़े खरपतवार गुल्ली डंडा (Phalaris minor) की पहचान, गेहूं से फर्क, फसल चक्र व ज़ीरो टिलेज जैसे बिना-दवा उपाय, पेंडीमेथालिन-क्लोडिनाफॉप-पिनोक्साडेन जैसी दवाओं का सही समय और खरपतवारनाशी प्रतिरोध से बचने के नियम।",

@@ -227,8 +227,9 @@ ARTICLE = {
 
     "og_title": "नैनो यूरिया और नैनो DAP — सही मात्रा और ईमानदार तस्वीर | KrashiMitra.in",
     "og_desc": "कहाँ फायदा है, कहाँ नहीं — मात्रा, छिड़काव का समय और वे गलतियाँ जिनसे बोतल बेकार जाती है।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/nano-urea-nano-dap.webp",
+                   "यूरिया खाद",
+                   "पारंपरिक यूरिया — नैनो यूरिया इसी की जगह पत्तियों पर छिड़काव से काम करता है।"),
     "headline": "नैनो यूरिया और नैनो DAP — सही उपयोग और सच्चाई",
     "headline_en": "Nano Urea and Nano DAP — Correct Dose, Spray Timing and an Honest Assessment",
     "schema_desc": "नैनो यूरिया की सही मात्रा (2–4 मि.ली./लीटर), छिड़काव का समय और तरीका, नैनो DAP से बीज उपचार, ICAR परीक्षणों के नतीजे, दानेदार यूरिया से तुलना और वे गलतियाँ जिनसे इसका असर नहीं दिखता।",

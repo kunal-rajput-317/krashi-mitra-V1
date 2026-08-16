@@ -249,8 +249,9 @@ ARTICLE = {
 
     "og_title": "मशरूम की खेती — एक कमरे से शुरुआत की पूरी विधि | KrashiMitra.in",
     "og_desc": "पुआल का उपचार, बैग भरना, स्पॉन रन, तुड़ाई और बिक्री — बिना खेत के शुरू होने वाला काम।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/mushroom-ki-kheti.webp",
+                   "मशरूम की खेती का कमरा",
+                   "ढिंगरी (ऑयस्टर) मशरूम की खेती — कम जगह और कम पूँजी में शुरू होने वाला व्यवसाय।"),
     "headline": "मशरूम की खेती — बिना खेत, एक कमरे से शुरुआत",
     "headline_en": "Mushroom Farming at Home — Oyster Mushroom Cultivation Step by Step",
     "schema_desc": "ढींगरी (ऑयस्टर) मशरूम की खेती की पूरी विधि — पुआल का उपचार, स्पॉन की मात्रा, बैग भरना, स्पॉन रन का तापमान और अवधि, तुड़ाई का सही समय, हरी फफूंद जैसी समस्याओं का कारण और बिक्री की योजना।",

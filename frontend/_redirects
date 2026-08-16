@@ -39,6 +39,12 @@
 /health    https://krashi-mitra-v1-oxdc.onrender.com/health         200!
 /health/*  https://krashi-mitra-v1-oxdc.onrender.com/health/:splat  200!
 
+# Photo attribution for the article images (routes/credits.py), rendered from
+# CREDITS.json so it cannot fall behind what is actually published. The CC BY /
+# CC BY-SA files we self-host are only licensed to us while this page exists.
+# Exact path, so it does not shadow any /articles/<slug> static file.
+/articles/credits  https://krashi-mitra-v1-oxdc.onrender.com/articles/credits  200!
+
 # Canonical article URLs: 301 old .html forms to extensionless
 # (Netlify already lowercases mixed-case paths with its own 301)
 /articles/index.html   /articles/   301!
@@ -55,11 +61,13 @@
 /articles/baingan-tana-phal-chhedak.html   /articles/baingan-tana-phal-chhedak   301!
 /articles/bajra-jogiya-rog-rajasthan.html   /articles/bajra-jogiya-rog-rajasthan   301!
 /articles/bakri-palan-guide.html   /articles/bakri-palan-guide   301!
+/articles/bans-ki-kheti.html   /articles/bans-ki-kheti   301!
 /articles/beej-upchar-vidhi.html   /articles/beej-upchar-vidhi   301!
 /articles/bhandaran-ghun-keet.html   /articles/bhandaran-ghun-keet   301!
 /articles/bhindi-pila-mozek.html   /articles/bhindi-pila-mozek   301!
 /articles/chana-ki-kheti.html   /articles/chana-ki-kheti   301!
 /articles/chana-unnat-kheti.html   /articles/chana-unnat-kheti   301!
+/articles/chandan-ki-kheti.html   /articles/chandan-ki-kheti   301!
 /articles/chilli-guide-karnataka.html   /articles/chilli-guide-karnataka   301!
 /articles/chini-utpadan.html   /articles/chini-utpadan   301!
 /articles/dhan-bhura-fudka-up.html   /articles/dhan-bhura-fudka-up   301!
@@ -67,6 +75,7 @@
 /articles/dhan-jivanu-jhulsa-blb.html   /articles/dhan-jivanu-jhulsa-blb   301!
 /articles/dhan-tana-chhedak.html   /articles/dhan-tana-chhedak   301!
 /articles/enam-online-fasal-bechna.html   /articles/enam-online-fasal-bechna   301!
+/articles/eucalyptus-safeda-ki-kheti.html   /articles/eucalyptus-safeda-ki-kheti   301!
 /articles/fpo-kisan-utpadak-sangathan.html   /articles/fpo-kisan-utpadak-sangathan   301!
 /articles/ganna-choti-bedhak.html   /articles/ganna-choti-bedhak   301!
 /articles/ganna-guide-up.html   /articles/ganna-guide-up   301!
@@ -91,8 +100,10 @@
 /articles/litchi-guide-bihar.html   /articles/litchi-guide-bihar   301!
 /articles/machhli-palan-guide.html   /articles/machhli-palan-guide   301!
 /articles/madhumakhi-palan-guide.html   /articles/madhumakhi-palan-guide   301!
+/articles/mahogany-ki-kheti.html   /articles/mahogany-ki-kheti   301!
 /articles/makka-fall-armyworm.html   /articles/makka-fall-armyworm   301!
 /articles/makka-guide-up.html   /articles/makka-guide-up   301!
+/articles/malabar-neem-melia-dubia.html   /articles/malabar-neem-melia-dubia   301!
 /articles/masoor-ki-kheti.html   /articles/masoor-ki-kheti   301!
 /articles/matar-ki-kheti.html   /articles/matar-ki-kheti   301!
 /articles/mausam-guide.html   /articles/mausam-guide   301!
@@ -111,8 +122,11 @@
 /articles/pm-fasal-bima-yojana-2026.html   /articles/pm-fasal-bima-yojana-2026   301!
 /articles/pm-kusum-solar-pump-yojana.html   /articles/pm-kusum-solar-pump-yojana   301!
 /articles/pmksy-drip-sinchai-subsidy.html   /articles/pmksy-drip-sinchai-subsidy   301!
+/articles/poplar-ki-kheti.html   /articles/poplar-ki-kheti   301!
 /articles/potato_guide_up.html   /articles/potato_guide_up   301!
 /articles/pyaj-kharif-kheti-bhandaran.html   /articles/pyaj-kharif-kheti-bhandaran   301!
+/articles/sagaun-teak-ki-kheti.html   /articles/sagaun-teak-ki-kheti   301!
+/articles/sahjan-munga-ki-kheti.html   /articles/sahjan-munga-ki-kheti   301!
 /articles/sarso-guide-up.html   /articles/sarso-guide-up   301!
 /articles/sarso-mahu-chepa.html   /articles/sarso-mahu-chepa   301!
 /articles/soyabean-MP-guide.html   /articles/soyabean-mp-guide   301!
@@ -181,6 +195,16 @@
 # Proxy the Kisan Call Centre Q&A pages to the backend (routes/sawal.py)
 /sawal      https://krashi-mitra-v1-oxdc.onrender.com/sawal         200
 /sawal/*    https://krashi-mitra-v1-oxdc.onrender.com/sawal/:splat  200
+
+# The गन्ना cluster is server-rendered too (backend/routes/ganna.py): the hub,
+# the state SAP/FRP pages and the per-district mill directory. It shipped
+# without these two lines, so every /ganna URL fell through to the /* catch-all
+# below and 404'd on krashimitra.in while answering 200 on Render — including
+# /ganna, which sitemap.py lists as a hub. We were handing Google a 404.
+# The splat also covers /ganna/sitemap.xml (declared in robots.txt); ganna.py
+# registers that route above its /ganna/{slug} catch-all, so it resolves there.
+/ganna      https://krashi-mitra-v1-oxdc.onrender.com/ganna         200
+/ganna/*    https://krashi-mitra-v1-oxdc.onrender.com/ganna/:splat  200
 
 # The नक्शा cluster is server-rendered (backend/routes/naksha.py), like /bhav —
 # there are no per-state HTML files any more. One rule covers all 36 states and

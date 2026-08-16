@@ -278,8 +278,9 @@ ARTICLE = {
 
     "og_title": "बाजरे में जोगिया रोग (हरी बाली) — पहचान और इलाज | KrashiMitra.in",
     "og_desc": "जोगिया रोग बाली में नहीं, बीज की थैली में रुकता है — मेटालैक्सिल बीज उपचार, रोगिंग और सही किस्म की पूरी जानकारी।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/bajra-jogiya-rog-rajasthan.webp",
+                   "बाजरे की बाली",
+                   "बाजरे की स्वस्थ बाली — जोगिया रोग में यही बाली हरी पत्तियों के गुच्छे में बदल जाती है।"),
     "headline": "बाजरे में जोगिया रोग (हरी बाली) — पहचान, बीज उपचार और नियंत्रण",
     "headline_en": "Downy Mildew (Green Ear) in Pearl Millet — Identification, Seed Treatment & Control in Rajasthan",
     "schema_desc": "बाजरे के जोगिया रोग (डाउनी मिल्ड्यू / हरी बाली, Sclerospora graminicola) की पहचान, फैलाव, मेटालैक्सिल से बीज उपचार की सही मात्रा, रोगिंग, प्रतिरोधी किस्में और राजस्थान के लिए महीनेवार कैलेंडर।",

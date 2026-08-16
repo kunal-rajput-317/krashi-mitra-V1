@@ -285,8 +285,9 @@ ARTICLE = {
 
     "og_title": "चने की खेती — बुवाई, किस्म और उकठा से बचाव | KrashiMitra.in",
     "og_desc": "कम पानी में भरोसेमंद रबी फसल — किस्म, बीज दर, बीज उपचार और इल्ली प्रबंधन की पूरी गाइड।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/chana-ki-kheti.webp",
+                   "चने का पौधा",
+                   "चने का पौधा फली बनने की अवस्था में।"),
     "headline": "चने की उन्नत खेती — बुवाई से कटाई तक",
     "headline_en": "Chickpea (Chana) Cultivation Guide — Sowing to Harvest",
     "schema_desc": "चने की उन्नत खेती की पूरी गाइड — बुवाई का समय, बीज दर 75–80 किग्रा प्रति हेक्टेयर, JAKI 9218 व JG 14 जैसी उकठा-रोधी किस्में, बीज उपचार का सही क्रम, दो हल्की सिंचाई, निपिंग, उकठा रोग और फली छेदक इल्ली का प्रबंधन।",

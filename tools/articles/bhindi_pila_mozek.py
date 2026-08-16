@@ -262,8 +262,9 @@ ARTICLE = {
 
     "og_title": "भिंडी में पीला शिरा मोज़ेक — पहचान और रोकथाम | KrashiMitra.in",
     "og_desc": "यह खाद की कमी नहीं, वायरस है। सहनशील किस्में, रोगिंग और सफेद मक्खी नियंत्रण का पूरा तरीका।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/bhindi-pila-mozek.webp",
+                   "भिंडी की फसल",
+                   "भिंडी का खेत — पीला शिरा मोज़ेक सफेद मक्खी के ज़रिए इसी अवस्था में फैलता है।"),
     "headline": "भिंडी में पीला शिरा मोज़ेक — पहचान, किस्में और रोकथाम",
     "headline_en": "Yellow Vein Mosaic Virus (YVMV) in Okra — Identification and Management",
     "schema_desc": "भिंडी में पीला शिरा मोज़ेक वायरस (YVMV) की पहचान, नत्रजन की कमी से फर्क, काशी प्रगति व अर्का अनामिका जैसी सहनशील किस्में, रोगी पौधे हटाना, पीली स्टिकी ट्रैप और सफेद मक्खी की दवा की सही मात्रा।",

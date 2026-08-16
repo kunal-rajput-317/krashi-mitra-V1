@@ -257,8 +257,9 @@ ARTICLE = {
 
     "og_title": "पशुओं में लंपी स्किन रोग — पहचान, बचाव और टीका | KrashiMitra.in",
     "og_desc": "गाँठें, बुखार और गिरता दूध — लंपी को पहचानें, फैलाव रोकें और सही टीके की स्थिति जानें।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/pashu-lumpy-skin-rog.webp",
+                   "गाँव में पशु",
+                   "गाँव की सड़क पर पशु — लंपी स्किन रोग मक्खी-मच्छर और साझा चरागाह से एक पशु से दूसरे तक पहुँचता है।"),
     "headline": "पशुओं में लंपी स्किन रोग — पहचान, बचाव और टीका",
     "headline_en": "Lumpy Skin Disease in Cattle — Symptoms, Prevention and Vaccination",
     "schema_desc": "गाय-भैंस में लंपी स्किन डिजीज (LSD) की पहचान, मक्खी-मच्छर-चिचड़ी से फैलाव, बाड़े में बचाव के उपाय, गोटपॉक्स टीके की सीमित प्रभावशीलता, स्वदेशी Lumpi-ProVacInd टीके की स्थिति और बीमार पशु की सही देखभाल।",

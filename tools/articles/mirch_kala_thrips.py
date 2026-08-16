@@ -256,8 +256,9 @@ ARTICLE = {
 
     "og_title": "मिर्च में काला थ्रिप्स — फूल झड़ना रोकें | KrashiMitra.in",
     "og_desc": "पहचान, नीली स्टिकी ट्रैप से निगरानी, असरदार दवाएँ और वे दवाएँ जिनसे हालात बिगड़ते हैं।",
-    "og_image": "https://krashimitra.in/images/og-banner.jpg",
-
+    "hero_image": ("images/articles/mirch-kala-thrips.webp",
+                   "मिर्च की पत्तियों पर थ्रिप्स का हमला",
+                   "मिर्च में थ्रिप्स का पहला लक्षण — पत्तियों का किनारों से ऊपर की ओर मुड़ना।"),
     "headline": "मिर्च में काला थ्रिप्स — पहचान, नियंत्रण और सही दवा",
     "headline_en": "Black Thrips (Thrips parvispinus) in Chilli — Identification and Management",
     "schema_desc": "मिर्च में काला थ्रिप्स (Thrips parvispinus) की पहचान, फूल झड़ने का कारण, नीली स्टिकी ट्रैप से निगरानी, सिल्वर मल्चिंग व नीम खली जैसे उपाय, असरदार पाई गई दवाएँ और जिन कीटनाशकों से बचना चाहिए।",
