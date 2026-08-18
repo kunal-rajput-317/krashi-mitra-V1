@@ -1,0 +1,35 @@
+# ============================================================
+# KrashiMitra — where the backend lives. ONE place.
+# ------------------------------------------------------------
+# Render reassigns the .onrender.com subdomain whenever the service is
+# recreated. It has happened twice:
+#
+#   krashi-mitra-v1.onrender.com       → dead
+#   krashi-mitra-v1-oxdc.onrender.com  → dead
+#   krashi-mitra-v1-muup.onrender.com  → current
+#
+# Each rename took the site down and neither was noticed quickly, because
+# krashimitra.in keeps serving its static homepage off Netlify while every
+# proxied route (/bhav, /naksha, /ganna, /sawal, /product/*, /go/*,
+# /sitemap.xml) 404s. The first rename also silently broke the monitor
+# workflow, which then spent days reporting "site DOWN" and exiting before it
+# ever reached the mandi-freshness check it exists for.
+#
+# The URL used to be copy-pasted into 23 files (26 lines of _redirects alone),
+# so a rename meant finding all of them under time pressure. Now it lives here.
+#
+#   Change it:   python tools/set_backend_origin.py https://new-host.onrender.com
+#   Verify it:   python tools/set_backend_origin.py --check
+#
+# Python and the GitHub workflows read this file directly, so they need no
+# rewrite at all. Netlify's _redirects and the browser JS cannot read a file at
+# request time, so the tool rewrites those — and tests/test_backend_origin.py
+# fails the build if any of them ever drifts from the line below.
+#
+# The permanent fix is a custom domain (api.krashimitra.in CNAME'd to Render),
+# after which Render can rename its subdomain freely and nothing here changes.
+# Until that DNS exists, this file is the single point of change.
+#
+# Format: the first line starting with http is the origin. No trailing slash.
+# ============================================================
+https://krashi-mitra-v1-muup.onrender.com

@@ -1,0 +1,513 @@
+{
+  "_note": "कृषि मित्र Book — the operating manual shown in the admin panel. Source of truth for everything the owner should not have to re-derive: the goal, the standing rules, the mistakes that already cost us, the commands, and the free-tier arithmetic. Read live by mtime (same rule as deadline_checklist.json / lead_offers.json / buyers.json), so editing this file changes the panel on the next load — no deploy, no migration, no build step. Nothing here is state: there is nothing to tick, nothing stored in the database. Write only things that stay true for weeks; anything that changes daily belongs on a live panel instead, and anything that is one task belongs in deadline_checklist.json. Every 'mistake' entry must name what actually happened, how it was caught, and the rule that came out of it — an entry without those three is a platitude and will be ignored on the day it matters.",
+
+  "title": "कृषि मित्र Book",
+  "sub": "काम शुरू करने से पहले पढ़ने की चीज़ — लक्ष्य, नियम, कमांड, और वो गलतियाँ जो दोबारा नहीं होनी चाहिए",
+  "ref": "backend/data/krashimitra_book.json",
+
+  "sections": [
+    {
+      "key": "goal",
+      "icon": "🎯",
+      "title": "लक्ष्य — यह सब किसलिए है",
+      "sub": "हर फ़ैसला इसी से तौला जाता है। फ़ीचर अच्छा है या नहीं, यह सवाल नहीं — सवाल यह है कि वह इस लक्ष्य को पास लाता है या नहीं।",
+      "entries": [
+        {
+          "id": "primary-income",
+          "level": "critical",
+          "title": "कृषि मित्र को मालिक की मुख्य कमाई बनना है",
+          "body": "यह शौक़ का प्रोजेक्ट नहीं है। जब भी चुनाव करना हो — 'दिखने में अच्छा फ़ीचर' बनाम 'पैसा लाने वाला रास्ता' — पैसा जीतता है। ट्रैफ़िक, CTR, नए लेख, नए पेज: ये सब ज़रिया हैं, नतीजा नहीं।",
+          "why": "जुलाई भर ट्रैफ़िक बढ़ता रहा और कमाई ₹0 रही। दोनों चीज़ें एक साथ हो सकती हैं — इसीलिए कमाई को अलग से नापना पड़ता है।",
+          "tags": ["goal", "money"],
+          "link": {"label": "docs/MARKET-AND-MONEY.md", "url": ""}
+        },
+        {
+          "id": "the-test",
+          "level": "critical",
+          "title": "31 अगस्त 2026 का इम्तिहान: कम से कम एक भुगतान करने वाला",
+          "body": "एक लोकल डीलर ₹500/महीना लिस्टिंग के लिए, या एक solar/loan/insurance पार्टनर per-lead. रकम मायने नहीं रखती — ₹500 भी पास है। सवाल यह नहीं कि कितना, सवाल यह है कि इस बाज़ार में कोई हमें पैसा देगा भी या नहीं।",
+          "why": "खुले-अंत वाली योजना कभी फेल नहीं होती, इसलिए फ़ैसला कभी नहीं होता। तारीख इसीलिए तय है — फ़ैसला पहले से तय पैमाने पर हो, न कि जिस दिन झुँझलाहट सबसे ज़्यादा हो।",
+          "tags": ["goal", "deadline"],
+          "link": {"label": "docs/MARKET-AND-MONEY.md §8", "url": ""}
+        },
+        {
+          "id": "what-does-not-count",
+          "level": "warn",
+          "title": "जो गिना नहीं जाएगा",
+          "body": "ट्रैफ़िक बढ़ना, CTR सुधरना, नए फ़ीचर, नए लेख, AdSense की कमाई, और वो पार्टनर जो 'दिलचस्पी' दिखा रहा है। इनमें से हर एक ऊपर जा सकता है जबकि कमाई ठीक ₹0 पर टिकी रहे।",
+          "why": "जुलाई में यही हुआ था।",
+          "tags": ["goal"]
+        },
+        {
+          "id": "read-failure-right",
+          "level": "info",
+          "title": "फेल होने पर सही वजह पढ़िए",
+          "body": "'हमने पूछा और उन्होंने मना किया' = असली संकेत, इस पर फ़ैसला लीजिए। 'फ़ोन कभी हुए ही नहीं' = बाज़ार के बारे में कोई संकेत नहीं, इम्तिहान दोबारा चलाइए। दोनों को लिखकर अलग रखिए — इनके नतीजे उल्टे होते हैं।",
+          "tags": ["goal", "deadline"],
+          "link": {"label": "docs/MARKET-AND-MONEY.md §8.4", "url": ""}
+        },
+        {
+          "id": "positioning",
+          "level": "info",
+          "title": "पहचान: राष्ट्रीय मंडी भाव + UP का मौसम",
+          "body": "मंडी भाव पूरे भारत का, मौसम और ज़मीनी गहराई उत्तर प्रदेश की। About पेज के ईमानदार आँकड़े: 20+ राज्य, 650+ मंडियाँ, 150+ फ़सलें — इन्हें दोबारा बढ़ा-चढ़ाकर मत लिखिए।",
+          "why": "तय हुआ 24 जुलाई 2026। बढ़ा-चढ़ाकर लिखे आँकड़े वही भरोसा तोड़ते हैं जो पूरी साइट कमाने की कोशिश कर रही है।",
+          "tags": ["goal", "brand"]
+        }
+      ]
+    },
+
+    {
+      "key": "rules",
+      "icon": "📏",
+      "title": "हमेशा याद रखने वाले नियम",
+      "sub": "ये पसंद-नापसंद नहीं हैं। हर एक किसी न किसी दिन टूटा है और उसकी कीमत चुकानी पड़ी है — नीचे 'गलतियाँ' सेक्शन उन्हीं दिनों का रिकॉर्ड है।",
+      "entries": [
+        {
+          "id": "mobile-first",
+          "level": "critical",
+          "title": "मोबाइल ही असली लेआउट है — 390px पर बनाइए, 390px पर जाँचिए",
+          "body": "98% ट्रैफ़िक फ़ोन से आता है। डेस्कटॉप `min-width:721px` वाला वेरिएंट है, उल्टा नहीं। कोई भी UI बदलाव तब तक पूरा नहीं जब तक 390px चौड़ाई पर देखा न गया हो।",
+          "why": "एक बार `.top-utility-bar` (जो मोबाइल पर display:none है) में एक div बंद नहीं हुआ था — डेस्कटॉप बिल्कुल ठीक दिखा और मोबाइल पर पूरा पेज खाली हो गया।",
+          "tags": ["ui", "mobile"]
+        },
+        {
+          "id": "everything-automatic",
+          "level": "critical",
+          "title": "सब कुछ अपने आप चले — कोई manual seam नहीं",
+          "body": "कोई 'फिर से चलाइए', 'दोबारा generate कीजिए', 'restart कीजिए' वाला कदम नहीं होना चाहिए। डेटा या तो request पर parse हो, या scheduler से आए। build step नहीं।",
+          "why": "जो कदम हाथ से चलाना पड़ता है, वह किसी दिन नहीं चलेगा — और तब तक पता भी नहीं चलेगा जब तक किसान को ग़लत भाव न दिख जाए।",
+          "tags": ["architecture"]
+        },
+        {
+          "id": "never-commit-until-told",
+          "level": "critical",
+          "title": "कहे बिना commit या push कभी नहीं",
+          "body": "काम कीजिए, जाँचिए, फिर रुकिए। commit/push तभी जब साफ़ शब्दों में कहा जाए।",
+          "tags": ["workflow", "git"]
+        },
+        {
+          "id": "deploys-track-main",
+          "level": "warn",
+          "title": "Deploy `main` से होता है — हर ship के अंत में main पर push",
+          "body": "Render का autoDeploy `main` ब्रांच देखता है (render.yaml)। किसी और ब्रांच पर काम हुआ हो तो अंत में main पर लाना ज़रूरी है, वरना कोड लिखा तो गया पर लाइव कहीं नहीं है।",
+          "tags": ["deploy", "git"]
+        },
+        {
+          "id": "lowercase-slugs",
+          "level": "warn",
+          "title": "URL slug हमेशा lowercase",
+          "body": "canonical, sitemap, _redirects, अंदरूनी लिंक, /articles/meta — सब एक ही convention पर। कोई मिला-जुला case नहीं।",
+          "why": "5 mixed-case लेख फ़ाइलें दो-दो URL पर लाइव थीं, और उनके canonical आपस में टकरा रहे थे। Google के लिए वे अलग-अलग पेज थे।",
+          "tags": ["seo", "urls"]
+        },
+        {
+          "id": "serp-budgets",
+          "level": "warn",
+          "title": "SERP की लंबाई: title ≤ 68 अक्षर, description ≤ 162, कोई brand suffix नहीं",
+          "body": "इससे लंबा लिखा तो Google बीच में काट देता है और लिखी हुई बात अधूरी दिखती है। article builder का validator अब लंबा title मिलने पर build ही फेल कर देता है।",
+          "tags": ["seo", "content"]
+        },
+        {
+          "id": "hide-value-not-layout",
+          "level": "info",
+          "title": "छुपाना है तो सिर्फ़ जवाब छुपाइए, ढाँचा नहीं",
+          "body": "Teaser ब्लॉक में पूरी list/card संरचना दिखती रहे — सिर्फ़ वह नंबर रोका जाए जिसके लिए login/भुगतान चाहिए। खाली डिब्बा दिखाना कुछ नहीं दिखाने जैसा है।",
+          "tags": ["ui", "product"]
+        },
+        {
+          "id": "dealer-name-hidden",
+          "level": "warn",
+          "title": "डीलर का नाम किसान को कभी नहीं दिखता",
+          "body": "`dealer_name` सिर्फ़ admin में। shop.html के quote कार्ड पर कभी नहीं।",
+          "why": "नाम दिख गया तो किसान सीधे डीलर तक पहुँच जाएगा और प्लेटफ़ॉर्म बीच से हट जाएगा — यानी कमाई का रास्ता ही कट गया।",
+          "tags": ["product", "money"]
+        },
+        {
+          "id": "personal-email",
+          "level": "critical",
+          "title": "साइट पर सिर्फ़ आधिकारिक संपर्क — निजी gmail कभी नहीं",
+          "body": "krashimitra038@gmail.com और +91 9870951001. मालिक का निजी gmail किसी पेज, schema, footer या मेल में नहीं जाना चाहिए।",
+          "tags": ["brand", "privacy"]
+        },
+        {
+          "id": "faq-schema-generated",
+          "level": "warn",
+          "title": "FAQ schema हाथ से नहीं लिखा जाता — दिखने वाले markup से बनता है",
+          "body": "FAQPage JSON-LD हमेशा visible `.faq-item` markup से generate होता है। एक ही स्रोत, इसलिए दोनों में फ़र्क़ आ ही नहीं सकता।",
+          "why": "हाथ से लिखा schema बहक चुका था — एक पेज पर 3 सवाल declared थे जबकि 8 दिख रहे थे, और एक पेज पर FAQ schema था पर पेज पर कोई FAQ ही नहीं था।",
+          "tags": ["seo", "content"]
+        },
+        {
+          "id": "articles-are-generated",
+          "level": "warn",
+          "title": "लेख का HTML कभी हाथ से मत लिखिए",
+          "body": "लेख `tools/articles/*.py` से `tools/article_builder.py` बनाता है। एक लेख पेज ~1,780 लाइन का है जिसमें ~1,500 साझा shell है। `docs/` gitignored है।",
+          "tags": ["content", "workflow"]
+        },
+        {
+          "id": "brand-on-maps",
+          "level": "info",
+          "title": "हर generated नक्शे पर ब्रांड लॉकअप",
+          "body": "सभी map images — अभी के और आगे के हर राज्य के — पर `make_state_maps.py` का `brand_mark()` कृषि मित्र emblem + wordmark लगाता है। हाथ से कभी मत लिखिए।",
+          "tags": ["brand", "maps"]
+        },
+        {
+          "id": "kcc-gate",
+          "level": "critical",
+          "title": "/sawal का crop-gate कभी ढीला मत कीजिए",
+          "body": "कच्चे KCC जवाबों में से ~2% ग़लत फ़सल की कीटनाशक सलाह होती है। gate सिर्फ़ वही जवाब रखता है जो अपनी ही फ़सल का नाम लेते हैं।",
+          "why": "ग़लत फ़सल की कीटनाशक सलाह से असली फ़सल बर्बाद हो सकती है। यह वो जगह है जहाँ ग़लती की कीमत किसी और की कमाई है।",
+          "tags": ["content", "safety"]
+        }
+      ]
+    },
+
+    {
+      "key": "mistakes",
+      "icon": "🩹",
+      "title": "जो गलतियाँ पहले हो चुकी हैं",
+      "sub": "हर एक असली है और हर एक की एक कीमत थी। यह सेक्शन शर्मिंदगी के लिए नहीं — यह वह सूची है जिसे नई गड़बड़ी आने पर सबसे पहले पढ़ना चाहिए, क्योंकि अक्सर वही पुरानी गड़बड़ी नए भेस में होती है।",
+      "entries": [
+        {
+          "id": "netlify-quota-outage",
+          "level": "critical",
+          "title": "11 अगस्त 2026 — Netlify का कोटा ख़त्म, पूरी साइट अंधेरे में",
+          "body": "हर URL पर usage_exceeded 503, फिर Netlify ने zone की DNS ही देना बंद कर दिया। Render का app पूरे वक़्त बिल्कुल स्वस्थ था, इसलिए backend की हर जाँच हरी दिख रही थी। ऊपर से `sw.js` उन्हीं error responses को cache कर रहा था, तो ठीक होने के बाद भी कुछ लोगों को टूटी साइट दिखती रही।",
+          "why": "सीख: कोटा खत्म होना 'बग' जैसा नहीं दिखता, 'सब ठीक है' जैसा दिखता है। इसी वजह से यह Infra & Credits पैनल बना — अब हर free plan का बचा हुआ हिसाब एक जगह दिखता है।",
+          "tags": ["outage", "netlify"]
+        },
+        {
+          "id": "gaon-sitemap-bandwidth",
+          "level": "critical",
+          "title": "17 अगस्त 2026 — Render का bandwidth ख़त्म, वजह: 44,000 noindex गाँव-पेज और कभी न हुई compression",
+          "body": "पूरा Render workspace suspend हो गया (`x-render-routing: suspend-by-user`), और proxy से जाने वाला हर route 503 देने लगा — /bhav, /naksha, /ganna, /sawal, /product, /pay, /sitemap.xml, और /go/* यानी डीलर वाला कमाई का रास्ता भी। Netlify के static पेज चलते रहे, इसलिए होमपेज बिल्कुल ठीक दिखता रहा। दो वजहें एक साथ थीं। पहली: app ने कभी कोई response compress ही नहीं किया — हिंदी सबसे बुरा मामला है क्योंकि देवनागरी UTF-8 में 3 bytes प्रति अक्षर है और `_doc()` हर पेज में 43 KB CSS भी अंदर ही भेजता है; नापा गया एक लेख पेज 106,601 bytes कच्चा बनाम 18,971 gzipped = 5.6 गुना। दूसरी: robots.txt खुद `/naksha/gaon-sitemap.xml` का पता दे रहा था, यानी हम Google को ~44,000 गाँव-पेज (737 ज़िले × ~60) खुद न्योता दे रहे थे — जबकि वे पेज `noindex` हैं और कभी rank कर ही नहीं सकते।",
+          "why": "तीन सीखें। (1) `noindex` crawl नहीं रोकता, सिर्फ़ indexing रोकता है — crawler फिर भी पूरा पेज download करता है, और bandwidth का बिल download पर बनता है, ranking पर नहीं। crawl रोकना है तो robots.txt का Disallow चाहिए। (2) यह पेड़ अपने-आप बढ़ता था: गाँव का डेटा पहली बार देखने पर Overpass से आता है, तो किसी ज़िले का /gaon पेज crawl होते ही अगले 60 URL *बन* जाते थे, जो फिर gaon-sitemap में जाकर खुद crawl हो जाते थे। (3) आगे का नियम: `/naksha/gaon-sitemap.xml` को robots.txt में दोबारा तभी लिखिए जब गाँव पेजों में असली डेटा आ जाए और उनका noindex हट जाए। और कोई भी नया पेज-पेड़ चालू करने से पहले crawl-surface × page-size गिनिए — Free plan वाला सेक्शन देखिए।",
+          "tags": ["outage", "render", "seo", "bandwidth"],
+          "link": {"label": "frontend/robots.txt", "url": ""}
+        },
+        {
+          "id": "render-subdomain-rename",
+          "level": "critical",
+          "title": "Render का subdomain दो बार बदला, और दोनों बार साइट चुपचाप बंद हुई",
+          "body": "जब भी service दोबारा बनती है, Render नया subdomain दे देता है: krashi-mitra-v1 → -oxdc → -muup। पुराने पते पर `x-render-routing: no-server` के साथ 404 आने लगता है। पकड़ में इसलिए नहीं आता कि homepage Netlify से 200 देता रहता है — सिर्फ़ proxied routes (/bhav, /naksha, /ganna, /sawal, /product/*, /go/*, /sitemap.xml) मरते हैं। पहली बार तो monitor workflow भी पुराने पते पर टिका रह गया और 'site DOWN' कहकर बाहर निकलता रहा, इसलिए अटकी मंडी फ़ीड दिनों तक नहीं दिखी।",
+          "why": "यह URL 23 फ़ाइलों में हाथ से लिखा हुआ था (अकेले _redirects में 24 लाइनें), इसलिए हर rename का मतलब था — साइट बंद हालत में सारी जगहें ढूँढ़ना। अब इसका एक ही मालिक है: config/backend-origin.txt. Python और workflows उसे सीधे पढ़ते हैं; बाकी को `python tools/set_backend_origin.py <url>` एक साथ बदल देता है; और tests/test_backend_origin.py drift पर build फेल कर देता है। पक्का हल custom domain है (api.krashimitra.in → Render), जिसके बाद Render जो चाहे नाम रखे, फ़र्क़ नहीं पड़ेगा।",
+          "tags": ["outage", "render", "deploy"],
+          "link": {"label": "config/backend-origin.txt", "url": ""}
+        },
+        {
+          "id": "neon-read-only",
+          "level": "critical",
+          "title": "Neon का compute चुपचाप read-only हो जाना",
+          "body": "storage cap (`neon.max_cluster_size`, free plan पर 512MB) पार होते ही Neon compute को read-only कर देता है। पढ़ना बिल्कुल ठीक चलता है — हर पेज, हर भाव, पूरा SEO — और हर लिखाई 500 देती है: signup, order, appeal, alert, dealer row, lead click. Neon का अपना dashboard तब भी 'All OK' कहता है, क्योंकि सेवा तो ठीक ही है, सिर्फ़ कोटा नहीं।",
+          "why": "पकड़ने का एक ही तरीक़ा है — लिखकर देखना। `db_health_service.py` का canary यही करता है: `UPDATE sync_log SET id = id WHERE false` — स्वस्थ DB पर यह एक भी row नहीं छूता, कोई WAL नहीं लिखता, और read-only पर ठीक SQLSTATE 25006 देता है।",
+          "tags": ["outage", "neon", "database"]
+        },
+        {
+          "id": "neon-16-day-ceiling",
+          "level": "critical",
+          "title": "Neon free tier की 16-दिन वाली छत — खाता बदलने से हल नहीं होती",
+          "body": "100 CU-hours ÷ 0.25 CU (सबसे छोटा compute) = 400 घंटे = 16.7 दिन हमेशा-चालू compute. महीना 30 दिन का है। नया Neon खाता बना लेने से यह गणित नहीं बदलता, बस घड़ी दोबारा शुरू होती है।",
+          "why": "इसीलिए keep-alive ping डेटाबेस को छूता ही नहीं, और staleness watchdog 3 घंटे का कर दिया गया — 30 मिनट वाला watchdog अकेले ही compute को चौबीसों घंटे जगाए रखता था।",
+          "tags": ["neon", "limits"]
+        },
+        {
+          "id": "monitor-pointed-at-old-url",
+          "level": "warn",
+          "title": "monitor workflow पुराने URL पर टिका रहा, और मंडी फ़ीड चुपचाप रुकी रही",
+          "body": "service का नाम बदला तो `krashi-mitra-v1.onrender.com` 404 देने लगा। monitor job हर बार 'site DOWN' कहकर वहीं बाहर निकल जाता था — freshness वाली जाँच तक पहुँचता ही नहीं था। नतीजा: 29 जुलाई से अटकी मंडी फ़ीड दिनों तक किसी को नहीं दिखी।",
+          "why": "सीख: alert का चालू होना काफ़ी नहीं — यह भी जाँचिए कि alert सही चीज़ तक पहुँच भी रहा है या नहीं। URL बदले तो `.github/workflows/monitor.yml` और `frontend/_redirects` दोनों साथ बदलें।",
+          "tags": ["outage", "monitoring"]
+        },
+        {
+          "id": "missing-static-200",
+          "level": "warn",
+          "title": "ग़ायब static फ़ाइल 404 नहीं, 200 + HTML देती है",
+          "body": "deploy की गई साइट किसी भी ग़ायब asset पर 404 नहीं देती — SPA fallback के कारण 200 और HTML लौटती है। इसलिए टूटा हुआ image path चुपचाप फेल होता है और status code देखकर बनाया गया कोई भी test पास हो जाता है।",
+          "why": "नियम: asset की जाँच हमेशा content-type पर कीजिए, status code पर कभी नहीं। `ads.txt` वाली जाँच इसी वजह से publisher ID खोजती है, सिर्फ़ HTTP 200 नहीं देखती।",
+          "tags": ["testing", "deploy"]
+        },
+        {
+          "id": "torch-oom",
+          "level": "warn",
+          "title": "512MB पर torch/e5-small हमेशा OOM",
+          "body": "sentence-transformers + ChromaDB Render के 512MB free dyno का सबसे बड़ा memory खाने वाला है। इसीलिए render.yaml में `CACHE_SEMANTIC_ENABLED` / `RAG_ENABLED` / `AI_RESPONSE_ENABLED` तीनों `false` हैं।",
+          "why": "असली हल (Gemini embeddings + pgvector) डिज़ाइन हो चुका है पर टाल दिया गया है जब तक ट्रैफ़िक कम है — docs/AI-HOSTING-DECISION.md. तब तक health check भी RAG को छूता नहीं, क्योंकि जो जाँच खुद outage पैदा करे वह जाँच न होने से बुरी है।",
+          "tags": ["render", "ai", "limits"]
+        },
+        {
+          "id": "js-only-links",
+          "level": "warn",
+          "title": "सिर्फ़ JS से बने अंदरूनी लिंक = Google के लिए कोई लिंक नहीं",
+          "body": "/bhav के पेज sitemap में तो थे पर index नहीं हो रहे थे, क्योंकि index.html और mandi.html से उस पूरे पेड़ तक एक भी static लिंक नहीं जाता था — सारे लिंक JS बनाता था।",
+          "why": "13 जुलाई 2026 को ठीक हुआ। नियम: हर अहम पेज तक कम से कम एक ऐसा लिंक हो जो HTML स्रोत में दिखे।",
+          "tags": ["seo"]
+        },
+        {
+          "id": "stale-snippet",
+          "level": "info",
+          "title": "Google के snippet में हफ़्तों पुराना 'आज का भाव'",
+          "body": "2 अगस्त को दिखाया जा रहा snippet 13 जुलाई के आँकड़े दिखा रहा था। वजह: tier-4 और kharidar पेजों पर न dateModified था, न Last-Modified header।",
+          "why": "अब दोनों `idx[\"dates\"]` से आते हैं — वही value जो sitemap के lastmod में जाती है, ताकि दोनों कभी अलग बात न कहें।",
+          "tags": ["seo"]
+        }
+      ]
+    },
+
+    {
+      "key": "commands",
+      "icon": "⌨️",
+      "title": "रोज़ के कमांड",
+      "sub": "कॉपी बटन दबाइए और टर्मिनल में चिपकाइए। सब repo की जड़ (repo root) से चलते हैं।",
+      "entries": [
+        {
+          "id": "run-backend",
+          "title": "Backend चलाइए (dev)",
+          "cmd": "uvicorn main:app --reload --port 8000",
+          "body": "पेज Live Server :5501 से खुलते हैं, API :8000 पर।",
+          "why": "सावधानी: `--reload` वाला uvicorn हर backend .py सेव पर startup DB migrations दोबारा चलाता है — और वो LIVE Neon के ख़िलाफ़ चलते हैं, local copy पर नहीं।",
+          "level": "warn",
+          "tags": ["dev"]
+        },
+        {
+          "id": "tests",
+          "title": "टेस्ट चलाइए",
+          "cmd": "pytest",
+          "body": "pytest.ini में testpaths=tests, addopts=-q. किसी एक फेल का पीछा करते समय -v जोड़िए।",
+          "tags": ["dev", "testing"]
+        },
+        {
+          "id": "health-local",
+          "title": "पूरी feature-by-feature health जाँच (टर्मिनल में)",
+          "cmd": "python -m backend.services.health_service",
+          "body": "वही जाँचें जो /health?full=1 दिखाता है, JSON में। कोई third-party API नहीं छूती।",
+          "tags": ["ops"]
+        },
+        {
+          "id": "db-canary",
+          "title": "डेटाबेस लिख पा रहा है या नहीं",
+          "cmd": "python -m backend.services.db_health_service",
+          "body": "write canary + storage के आँकड़े। Neon के read-only होने पर यही सबसे पहले बताता है।",
+          "tags": ["ops", "database"]
+        },
+        {
+          "id": "infra-runway",
+          "title": "तीनों free plan में कितना बचा है",
+          "cmd": "python -m backend.services.infra_service",
+          "body": "Netlify / Render / Neon का हिसाब, burn rate और 'कितने दिन बचे' — वही जो Infra & Credits पैनल दिखाता है।",
+          "tags": ["ops", "money"]
+        },
+        {
+          "id": "backend-url-change",
+          "level": "critical",
+          "title": "Render का URL बदल जाए तो — एक ही कमांड",
+          "cmds": [
+            "python tools/set_backend_origin.py https://नया-होस्ट.onrender.com",
+            "python tools/set_backend_origin.py --check"
+          ],
+          "body": "URL का एकमात्र मालिक config/backend-origin.txt है। पहला कमांड उसे बदलता है और साथ ही _redirects की 24 लाइनें, api-config.js और हर बाकी पेज — कुल 48 जगहें — एक साथ ठीक कर देता है। Python और GitHub workflows उस फ़ाइल को सीधे पढ़ते हैं, इसलिए उनमें कुछ बदलना ही नहीं पड़ता। दूसरा कमांड सिर्फ़ जाँचता है, लिखता कुछ नहीं। बदलने के बाद main पर push ज़रूरी है — असली फ़र्क़ तब पड़ता है जब Netlify नया _redirects deploy कर ले।",
+          "why": "यह URL 23 फ़ाइलों में हाथ से लिखा हुआ था। Render ने subdomain दो बार बदला और दोनों बार साइट बंद हुई — और दिखी नहीं, क्योंकि homepage Netlify से हरा आता रहा।",
+          "tags": ["ops", "deploy", "render"],
+          "link": {"label": "config/backend-origin.txt", "url": ""}
+        },
+        {
+          "id": "article-build",
+          "title": "लेख बनाइए / दोबारा बनाइए",
+          "cmds": [
+            "python tools/article_builder.py tools/articles/my_article.py",
+            "python tools/article_builder.py --all",
+            "python tools/article_builder.py --check"
+          ],
+          "body": "`--check` कुछ लिखता नहीं, सिर्फ़ जाँचता है। builder ही index card, _redirects का 301 ब्लॉक और FAQ schema भी बनाता है।",
+          "tags": ["content"]
+        },
+        {
+          "id": "state-maps",
+          "title": "राज्य के नक्शे बनाइए",
+          "cmds": [
+            "python make_state_maps.py",
+            "python make_state_maps.py rajasthan"
+          ],
+          "body": "geojson + labeled PNG + WebP + og card, हर एक पर ब्रांड लॉकअप। playwright + chromium चाहिए। सिर्फ़ तब चलाइए जब boundaries बदलें या डिज़ाइन दोबारा हो।",
+          "tags": ["maps"]
+        },
+        {
+          "id": "naksha-data",
+          "title": "नक्शा data दोबारा बनाइए",
+          "cmd": "python make_naksha_data.py",
+          "body": "/naksha के पीछे का backend/data/naksha_states.json.",
+          "tags": ["maps"]
+        },
+        {
+          "id": "neon-migrate",
+          "title": "Neon खाता बदलिए (dump → schema → load)",
+          "cmds": [
+            "python tools/neon/neon_dump.py",
+            "python tools/neon/neon_schema.py 'postgresql://USER:PASS@ep-xxx.aws.neon.tech/neondb?sslmode=require'",
+            "python tools/neon/neon_load.py 'postgresql://...same...' --dry-run",
+            "python tools/neon/neon_load.py 'postgresql://...same...' --yes"
+          ],
+          "body": "फिर Render dashboard → DATABASE_URL बदलकर redeploy. इस मशीन पर pg_dump है ही नहीं — उसका इंतज़ार मत कीजिए। PowerShell में connection string को single quote में रखिए (`&` एक operator है), और Neon के copy बटन से आया पहला शब्द `psql` हटाइए।",
+          "level": "warn",
+          "tags": ["database", "ops"],
+          "link": {"label": "tools/neon/README.md", "url": ""}
+        },
+        {
+          "id": "curl-health",
+          "title": "लाइव साइट की जाँच (बाहर से)",
+          "cmds": [
+            "curl -s https://krashi-mitra-v1-muup.onrender.com/health",
+            "curl -s https://krashi-mitra-v1-muup.onrender.com/health/data",
+            "curl -sI https://krashimitra.in/bhav | grep -i 'x-render-routing\\|HTTP/'",
+            "curl -sI -H 'Accept-Encoding: gzip' https://krashimitra.in/bhav | grep -i content-encoding",
+            "curl -s -I https://krashimitra.in/ads.txt"
+          ],
+          "body": "पहला liveness (DB नहीं छूता), दूसरा मंडी डेटा की ताज़गी, तीसरा एक proxied route जो सच में Render से आता है, चौथा compression चालू है या नहीं, पाँचवाँ ads.txt सच में serve हो रहा है या नहीं।",
+          "why": "homepage Netlify से आता है, इसलिए Render पूरी तरह suspend होने पर भी वह हरा दिखता रहेगा — 17 अगस्त को यही हुआ। हरा homepage इस बात का सबूत नहीं कि साइट चालू है; हमेशा एक proxied route जाँचिए। `x-render-routing: suspend-by-user` दिखे तो कोटा खत्म है। और gzip की पुष्टि बाहर से ज़रूरी है क्योंकि Render के आगे Cloudflare है — बिना compression हिंदी पेज 5.6× bandwidth खाते हैं।",
+          "level": "warn",
+          "tags": ["ops", "bandwidth"]
+        }
+      ]
+    },
+
+    {
+      "key": "limits",
+      "icon": "🧮",
+      "title": "Free plan का गणित",
+      "sub": "ये सीमाएँ ट्रैफ़िक से नहीं टूटतीं, गणित से टूटती हैं। असली आँकड़े Infra & Credits पैनल में लाइव दिखते हैं — यहाँ वो संख्याएँ हैं जो उन्हें समझने के लिए चाहिए।",
+      "entries": [
+        {
+          "id": "netlify-limits",
+          "title": "Netlify Free — 100 GB bandwidth + 300 build minutes / महीना",
+          "body": "bandwidth खत्म = हर URL पर 503 और आख़िर में DNS भी बंद। build minutes खत्म = पुरानी साइट चलती रहती है, बस नया deploy नहीं होता। दोनों में से पहला वाला साइट गिराता है।",
+          "level": "critical",
+          "tags": ["netlify", "limits"]
+        },
+        {
+          "id": "render-limits",
+          "title": "Render Free — 512 MB RAM, 750 instance-hours, और सिर्फ़ 5 GB bandwidth / महीना",
+          "body": "महीने में 730–744 घंटे होते हैं, यानी 750 घंटे में एक ही service चौबीसों घंटे चल सकती है — दूसरी free service के लिए जगह नहीं। 15 मिनट खाली रहने पर instance सो जाती है, इसलिए keep-alive हर 10 मिनट /health पिंग करता है। ध्यान दीजिए: bandwidth 5 GB है, 100 GB नहीं — यहाँ पहले 100 GB लिखा था और उसी ग़लत आँकड़े की वजह से 17 अगस्त 2026 की suspension बिना किसी चेतावनी के आई। कोटा पार = पूरा workspace suspend, हर route पर 503।",
+          "level": "critical",
+          "tags": ["render", "limits", "bandwidth"]
+        },
+        {
+          "id": "neon-limits",
+          "title": "Neon Free — 0.5 GB storage, 100 CU-hours, 5 GB transfer / महीना",
+          "body": "storage cap भरते ही compute read-only (पेज चलते रहेंगे, कुछ सेव नहीं होगा)। CU-hours खत्म होते ही project रुक जाता है। मंडी का इतिहास ही storage बढ़ाने वाली मुख्य चीज़ है — `MANDI_HISTORY_DAYS` वही घुंडी है।",
+          "level": "critical",
+          "tags": ["neon", "limits"]
+        },
+        {
+          "id": "crawl-surface-arithmetic",
+          "title": "Bandwidth का असली गणित: crawl-surface × page-size",
+          "body": "bandwidth किसान नहीं खाते, crawler खाते हैं। हिसाब यह है: कुल crawl होने लायक URL × एक पेज का वज़न। गाँव वाले पेड़ के साथ यह ~60,000 URL था और gzip से पहले एक पेज 106,601 bytes का — यानी Google का एक पूरा चक्कर = 6.4 GB, जो पूरे महीने के कोटे से भी ज़्यादा। gzip के बाद वही पेज 18,971 bytes (5.6 गुना कम), और गाँव के पत्ते robots.txt से बाहर होने पर surface ~16,000 — एक पूरा चक्कर अब ~0.3 GB।",
+          "level": "critical",
+          "why": "इसीलिए नया पेज-पेड़ बनाने से पहले दो संख्याएँ गिनिए: कितने URL बनेंगे, और एक पेज कितने bytes का है। दोनों का गुणा ही असली बिल है — रोज़ के visitors नहीं।",
+          "tags": ["limits", "bandwidth", "seo"]
+        },
+        {
+          "id": "capacity-baseline",
+          "title": "क्षमता की असली नाप (7 अगस्त 2026)",
+          "body": "~3 req/s आराम से, ~6 req/s पर घुटना, और पूरी तरह भरे होने पर भी एक भी 5xx नहीं। यानी ट्रैफ़िक छत नहीं है — छत Neon का कोटा और 512MB RAM हैं।",
+          "tags": ["limits", "performance"]
+        },
+        {
+          "id": "fetch-windows",
+          "title": "मंडी फ़ेच की खिड़कियाँ: 08 / 10 / 13 / 16 / 20 + 23:11 IST",
+          "body": "data.gov की फ़ीड रात में साफ़ हो जाती है और दिन भर भरती है, इसलिए manual fetch सिर्फ़ वही ला सकता है जो अब तक मंडियों ने भेजा है। नतीजे हमेशा merge होते हैं, और लगभग-खाली नतीजे sparse-feed guard रोक देता है।",
+          "tags": ["mandi", "data"]
+        }
+      ]
+    },
+
+    {
+      "key": "facts",
+      "icon": "📇",
+      "title": "ज़रूरी जानकारी — एक जगह",
+      "sub": "वो चीज़ें जो हर बार ढूँढ़नी पड़ती हैं।",
+      "entries": [
+        {
+          "id": "urls",
+          "title": "पते",
+          "body": "साइट: https://krashimitra.in (Netlify) · API: https://krashi-mitra-v1-muup.onrender.com (Render) · डेटाबेस: Neon Postgres · repo: github.com/kunal-rajput-317/krashi-mitra-V1",
+          "tags": ["reference"]
+        },
+        {
+          "id": "contact",
+          "title": "आधिकारिक संपर्क",
+          "body": "krashimitra038@gmail.com · +91 9870951001. साइट पर सिर्फ़ यही जाते हैं।",
+          "tags": ["reference", "brand"]
+        },
+        {
+          "id": "adsense",
+          "title": "AdSense",
+          "body": "मंज़ूर खाता ca-pub-2792326360609634. विज्ञापन सभी /bhav पेजों पर `_doc` से (active==\"bhav\" पर gated, shop बाहर)। ads.txt में यही publisher ID होनी चाहिए, वरना Google भुगतान रोक सकता है।",
+          "tags": ["reference", "money"]
+        },
+        {
+          "id": "workflows",
+          "title": "GitHub Actions जो अपने आप चलते हैं",
+          "body": "keepalive.yml — हर 10 मिनट /health (Render को जगाए रखने के लिए, DB नहीं छूता)। monitor.yml — हर 6 घंटे uptime + मंडी डेटा की ताज़गी; गड़बड़ी पर Telegram (अगर TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID secrets सेट हों) और job फेल, जिससे GitHub ईमेल भेज देता है। tests.yml — टेस्ट।",
+          "tags": ["reference", "ops"]
+        },
+        {
+          "id": "health-urls",
+          "title": "स्थिति देखने के पते",
+          "body": "/health — ब्राउज़र में feature-by-feature पेज, curl पर सिर्फ़ {\"status\":\"ok\"} · /health?full=1 — admin पासवर्ड के साथ निजी कार्ड · /health/checks — वही डेटा JSON में · /health/data — सिर्फ़ मंडी की ताज़गी (monitor workflow इसी को देखता है)।",
+          "tags": ["reference", "ops"]
+        },
+        {
+          "id": "infra-env",
+          "title": "Infra पैनल के लिए ज़रूरी env keys",
+          "body": "NETLIFY_AUTH_TOKEN · RENDER_API_KEY · NEON_API_KEY (सब वैकल्पिक — जो नहीं है, पैनल उसी का सेटअप तरीक़ा दिखा देता है)। Neon का storage और write-canary बिना किसी key के भी दिखते हैं, क्योंकि वे सीधे Postgres से आते हैं।",
+          "tags": ["reference", "ops"]
+        },
+        {
+          "id": "second-brain",
+          "title": "Obsidian Second Brain",
+          "body": "D:\\SecondBrain\\SecondBrain — इसमें Projects/KrashiMitra/ के अंदर curated notes हैं। बड़े फ़ैसले के बाद वहाँ भी अपडेट कीजिए।",
+          "tags": ["reference"]
+        }
+      ]
+    },
+
+    {
+      "key": "map",
+      "icon": "🗺️",
+      "title": "कहाँ क्या रखा है",
+      "sub": "किसी चीज़ को छूने से पहले यह देख लीजिए कि उसका असली मालिक कौन-सी फ़ाइल है।",
+      "entries": [
+        {
+          "id": "page-shell",
+          "title": "हर पेज का साझा ढाँचा",
+          "body": "km-shell.css + static markup + drawer-menu.js + bottomnav.js. Server-side जुड़वाँ: bhav.py का `_header`. Drawer एक runtime accordion है — GROUPS `frontend/drawer-menu.js` में बदलिए, किसी पेज का drawer markup हाथ से मत छेड़िए।",
+          "tags": ["architecture", "ui"]
+        },
+        {
+          "id": "bhav-tree",
+          "title": "/bhav — कीमत वाले SEO पेज",
+          "body": "backend/routes/bhav.py. `_doc()` पूरे शेल का मालिक है और /product/{slug} उसी को import करता है (कॉपी नहीं)। title `_fit()` की variant सूची + `_en_short`/`_title_names` से बनते हैं — कभी एक अकेली f-string नहीं, और अंग्रेज़ी फ़सल-नाम कभी मत हटाइए।",
+          "tags": ["architecture", "seo"]
+        },
+        {
+          "id": "live-configs",
+          "title": "वो JSON जो request पर पढ़े जाते हैं (deploy की ज़रूरत नहीं)",
+          "body": "backend/data/deadline_checklist.json · backend/data/krashimitra_book.json (यही पेज) · data/lead_offers.json · data/buyers.json का बचा हुआ हिस्सा · frontend/images/articles/CREDITS.json. इन्हें बदलिए, अगली load पर लाइव।",
+          "tags": ["architecture"]
+        },
+        {
+          "id": "schedulers",
+          "title": "अपने आप चलने वाले काम",
+          "body": "backend/services/mandi_scheduler.py और weather_scheduler.py (APScheduler)। इनके बंद होने का मतलब है कि एक दिन तक कहीं कुछ ग़लत नहीं दिखेगा — और फिर सब ग़लत दिखेगा। /health का 'ऑटो-शेड्यूलर' कार्ड यही देखता है।",
+          "tags": ["architecture", "ops"]
+        },
+        {
+          "id": "two-answer-systems",
+          "title": "जवाब देने वाले दो अलग सिस्टम",
+          "body": "Khoj — khoj.html के अंदर embedded KHOJ_KB. AI chat — agri_knowledge.json पर RAG. ये एक चीज़ नहीं हैं; एक में बदलाव दूसरे में नहीं पहुँचता।",
+          "tags": ["architecture", "ai"]
+        }
+      ]
+    }
+  ]
+}

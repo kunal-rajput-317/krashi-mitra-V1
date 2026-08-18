@@ -1093,6 +1093,15 @@ body {
         <span class="nav-icon">🎯</span>
         <span>Deadline Checklist</span>
       </div>
+      <div class="nav-item" onclick="switchPage('infra', this)">
+        <span class="nav-icon">📡</span>
+        <span>Infra &amp; Credits</span>
+        <span class="nav-badge" id="if-nav-badge" hidden>!</span>
+      </div>
+      <div class="nav-item" onclick="switchPage('book', this)">
+        <span class="nav-icon">📖</span>
+        <span>krashimitra_book</span>
+      </div>
     </nav>
 
     <div class="sidebar-theme">
@@ -1177,6 +1186,39 @@ body {
               <span class="service-desc">Gemini + RAG — see AI Chatbed</span>
             </div>
             <span class="status-pill" id="health-ai">—</span>
+          </div>
+        </div>
+
+        <!-- Free-tier runway. On 11 Aug every indicator above stayed green
+             while Netlify's usage cap 503'd the entire public site, so the
+             quota numbers belong on the first screen and not only on their
+             own page. Filled by loadInfra(); tap through for the meters. -->
+        <div class="sec-label" style="margin-top:22px;">
+          Free-tier Runway
+          <button class="btn btn-secondary btn-sm" style="float:right;margin-top:-4px;"
+                  onclick="switchPage('infra')">Open Infra &amp; Credits →</button>
+        </div>
+        <div class="services-control-grid" id="ov-infra-grid">
+          <div class="service-control-card">
+            <div class="service-info">
+              <span class="service-name">Netlify</span>
+              <span class="service-desc" id="ov-if-netlify">—</span>
+            </div>
+            <span class="status-pill" id="ov-if-netlify-pill">—</span>
+          </div>
+          <div class="service-control-card">
+            <div class="service-info">
+              <span class="service-name">Render</span>
+              <span class="service-desc" id="ov-if-render">—</span>
+            </div>
+            <span class="status-pill" id="ov-if-render-pill">—</span>
+          </div>
+          <div class="service-control-card">
+            <div class="service-info">
+              <span class="service-name">Neon</span>
+              <span class="service-desc" id="ov-if-neon">—</span>
+            </div>
+            <span class="status-pill" id="ov-if-neon-pill">—</span>
           </div>
         </div>
 
@@ -2914,6 +2956,255 @@ body {
         </div>
       </div>
 
+      <!-- ══════════ INFRA & CREDITS ══════════
+           How much runway is left on the three free plans.
+
+           Every outage this site has actually had was a quota outage, not a
+           bug: Netlify's usage cap 503'd every URL on 11 Aug (and Render was
+           healthy throughout, so every backend check stayed green), and Neon
+           flips its compute read-only at the storage cap while its own
+           dashboard still reports "All OK". /health cannot show any of this —
+           it is forbidden from calling a third-party API, because a status
+           page that burns a metered quota causes the outage it reports. So
+           the billing numbers live here.
+
+           The number to read is days_left, not the percentage. A bandwidth
+           meter at 60% that is barely moving is fine; a compute meter at 40%
+           burning four times as fast is the one that ends the month early. -->
+      <div class="page" id="page-infra">
+        <style>
+        .if-verdict {
+          display:flex; gap:14px; align-items:flex-start; padding:16px;
+          border:1px solid var(--border); border-left-width:5px;
+          border-radius:var(--radius-md); background:var(--surface); margin-bottom:18px;
+        }
+        .if-verdict.ok   { border-left-color:var(--primary); }
+        .if-verdict.warn { border-left-color:var(--accent); }
+        .if-verdict.down { border-left-color:var(--danger); }
+        .if-verdict.unknown { border-left-color:var(--muted); }
+        .if-verdict .if-dot { width:12px; height:12px; border-radius:50%; margin-top:6px; flex:none; }
+        .if-verdict.ok .if-dot   { background:var(--primary); }
+        .if-verdict.warn .if-dot { background:var(--accent); }
+        .if-verdict.down .if-dot { background:var(--danger); }
+        .if-verdict.unknown .if-dot { background:var(--muted); }
+        .if-vh { font-size:16px; font-weight:700; line-height:1.4; }
+        .if-vs { font-size:12.5px; color:var(--text-dim); margin-top:5px; line-height:1.65; }
+        .if-stamp { font-size:11px; color:var(--muted); font-family:var(--font-mono); margin-top:8px; }
+
+        .if-grid { display:grid; gap:14px; grid-template-columns:1fr; }
+        @media (min-width:900px) { .if-grid { grid-template-columns:repeat(2,1fr); } }
+
+        .if-card {
+          background:var(--surface); border:1px solid var(--border);
+          border-radius:var(--radius-md); overflow:hidden;
+        }
+        .if-head { display:flex; align-items:center; gap:10px; padding:14px 14px 0; flex-wrap:wrap; }
+        .if-ico { font-size:19px; line-height:1; }
+        .if-name { font-weight:700; font-size:14.5px; flex:1; min-width:120px; }
+        .if-detail { padding:9px 14px 0; font-size:12.5px; color:var(--text-dim); line-height:1.6; }
+        .if-body { padding:14px; }
+
+        /* The shared .status-pill has no neutral variant — only online/offline
+           — so "not configured" rendered as bare text next to the styled
+           platform chip and read as a rendering bug. */
+        .status-pill.if-idle {
+          background:var(--surface-hl); color:var(--text-dim);
+          border:1px solid var(--border-hl);
+        }
+
+        .if-plat {
+          font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px;
+          border:1px solid var(--border-hl); color:var(--text-dim); white-space:nowrap;
+        }
+        .if-plat.ok   { color:var(--primary); border-color:rgba(34,197,94,.35); }
+        .if-plat.warn { color:var(--accent);  border-color:rgba(234,179,8,.35); }
+        .if-plat.down { color:var(--danger);  border-color:rgba(239,68,68,.35); }
+
+        /* One metered allowance. The bar is the least important part — the
+           row under it (projection + runway) is what you act on. */
+        .if-meter { padding:12px 0; border-top:1px dashed var(--border); }
+        .if-meter:first-child { border-top:none; padding-top:0; }
+        .if-mtop { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+        .if-mlabel { font-size:12.5px; font-weight:600; flex:1; min-width:110px; }
+        .if-mnum { font-size:12px; font-family:var(--font-mono); color:var(--text-dim); }
+        .if-mpct { font-size:12px; font-weight:700; font-family:var(--font-mono); }
+        .if-track {
+          height:8px; background:var(--surface-hl); border-radius:5px;
+          overflow:hidden; margin:8px 0 6px; border:1px solid var(--border);
+        }
+        .if-fill { height:100%; border-radius:4px; transition:width .5s ease; }
+        .if-fill.ok   { background:var(--primary); }
+        .if-fill.warn { background:var(--accent); }
+        .if-fill.down { background:var(--danger); }
+        .if-fill.unknown { background:var(--muted); }
+        /* Where the burn rate says the period will land. A tick past 100%
+           means "on pace to run out before it resets". */
+        .if-proj {
+          position:relative; height:0;
+        }
+        .if-mfoot { display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
+        .if-chip {
+          font-family:var(--font-mono); padding:2px 7px; border-radius:6px;
+          border:1px solid var(--border); background:var(--surface-hl);
+        }
+        .if-chip.hot { color:var(--danger); border-color:rgba(239,68,68,.4); font-weight:700; }
+        .if-chip.warm { color:var(--accent); border-color:rgba(234,179,8,.4); }
+        .if-note {
+          font-size:11.5px; color:var(--text-dim); line-height:1.6; margin-top:7px;
+          padding-left:10px; border-left:2px solid var(--border-hl);
+        }
+
+        .if-facts {
+          margin-top:12px; padding-top:10px; border-top:1px dashed var(--border);
+          display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:11.5px;
+        }
+        .if-facts dt { color:var(--muted); white-space:nowrap; }
+        .if-facts dd { color:var(--text-dim); text-align:right; word-break:break-word; }
+
+        .if-setup {
+          margin-top:12px; padding:11px 12px; border-radius:var(--radius-sm);
+          background:var(--surface-hl); border:1px dashed var(--border-hl);
+          font-size:12px; line-height:1.65; color:var(--text-dim);
+        }
+        .if-setup b { color:var(--text); font-family:var(--font-mono); font-size:11.5px; }
+        .if-setup a { color:var(--primary); }
+        .if-links { margin-top:11px; display:flex; gap:8px; flex-wrap:wrap; }
+        .if-links a {
+          font-size:11.5px; color:var(--text-dim); text-decoration:none;
+          border:1px solid var(--border); border-radius:999px; padding:4px 10px;
+        }
+        .if-links a:hover { color:var(--primary); border-color:var(--primary); }
+        .if-err { color:var(--danger); font-size:12px; margin-top:10px; line-height:1.6; }
+        </style>
+
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Infra &amp; Credits</h2>
+            <p>Netlify · Render · Neon — कितना बचा है और किस रफ़्तार से खत्म हो रहा है • हर outage अब तक कोटा वाला रहा है, बग वाला नहीं</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadInfra(true)" id="if-refresh-btn">↻ Refresh</button>
+          </div>
+        </div>
+
+        <div id="if-verdict"></div>
+        <div class="if-grid" id="if-grid">
+          <div class="km-loader"><span class="km-spinner"></span> तीनों सेवाओं से हिसाब लिया जा रहा है…</div>
+        </div>
+      </div>
+
+      <!-- ══════════ कृषि मित्र BOOK ══════════
+           The operating manual: goal, standing rules, the mistakes that
+           already cost us, the commands, the free-tier arithmetic, the file
+           map. A rule you have to remember is a rule you break on the day you
+           are busy, so it lives on a page instead of in someone's head.
+
+           Content is backend/data/krashimitra_book.json, read live by mtime —
+           editing a rule is a file edit, not a deploy. The one computed field
+           is the deadline countdown, sourced from deadline_checklist.json so
+           this page and the Checklist page cannot disagree on the date. -->
+      <div class="page" id="page-book">
+        <style>
+        .bk-top {
+          display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+          padding:14px 16px; margin-bottom:16px; background:var(--surface);
+          border:1px solid var(--border); border-left:5px solid var(--primary);
+          border-radius:var(--radius-md);
+        }
+        .bk-top.hot { border-left-color:var(--danger); }
+        .bk-days { font-size:30px; font-weight:800; line-height:1; font-family:var(--font-mono); }
+        .bk-days.hot { color:var(--danger); }
+        .bk-topmeta { flex:1; min-width:180px; font-size:12.5px; color:var(--text-dim); line-height:1.6; }
+        .bk-topmeta b { color:var(--text); }
+
+        .bk-tools { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+        .bk-search {
+          flex:1; min-width:200px; padding:10px 12px; font-size:13px;
+          font-family:var(--font-sans); background:var(--surface);
+          border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);
+        }
+        .bk-search:focus { outline:none; border-color:var(--primary); }
+        .bk-jump { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px; }
+        .bk-jump button {
+          font-size:11.5px; font-weight:600; padding:6px 11px; cursor:pointer;
+          background:var(--surface); color:var(--text-dim);
+          border:1px solid var(--border); border-radius:999px;
+        }
+        .bk-jump button:hover, .bk-jump button.on { color:var(--primary); border-color:var(--primary); }
+
+        .bk-sec { margin-bottom:26px; }
+        .bk-sec-h { display:flex; align-items:baseline; gap:9px; margin-bottom:4px; }
+        .bk-sec-h h3 { font-size:15.5px; font-weight:700; }
+        .bk-sec-n { font-size:11px; color:var(--muted); font-family:var(--font-mono); }
+        .bk-sec-sub { font-size:12px; color:var(--text-dim); line-height:1.65; margin-bottom:12px; }
+
+        .bk-list { display:grid; gap:10px; }
+        .bk-item {
+          background:var(--surface); border:1px solid var(--border);
+          border-left:4px solid var(--border-hl);
+          border-radius:var(--radius-md); padding:13px 14px;
+        }
+        .bk-item.critical { border-left-color:var(--danger); }
+        .bk-item.warn     { border-left-color:var(--accent); }
+        .bk-item.info     { border-left-color:var(--info); }
+        .bk-t { font-size:13.5px; font-weight:700; line-height:1.45; }
+        .bk-b { font-size:12.5px; color:var(--text-dim); line-height:1.75; margin-top:7px; }
+        /* "Why" is the half that survives — a rule without its reason gets
+           argued away the first time it is inconvenient. */
+        .bk-w {
+          font-size:12px; color:var(--text-dim); line-height:1.7; margin-top:9px;
+          padding:8px 10px; border-radius:var(--radius-sm);
+          background:var(--surface-hl); border-left:2px solid var(--accent);
+        }
+        .bk-w::before { content:'क्यों — '; font-weight:700; color:var(--accent); }
+
+        .bk-cmd {
+          display:flex; align-items:center; gap:8px; margin-top:8px;
+          background:var(--surface-hl); border:1px solid var(--border);
+          border-radius:var(--radius-sm); padding:8px 9px;
+        }
+        .bk-cmd code {
+          flex:1; font-family:var(--font-mono); font-size:11.5px; color:var(--text);
+          word-break:break-all; line-height:1.6;
+        }
+        .bk-copy {
+          flex:none; font-size:11px; font-weight:600; cursor:pointer; padding:4px 9px;
+          background:transparent; color:var(--text-dim);
+          border:1px solid var(--border-hl); border-radius:6px;
+        }
+        .bk-copy:hover { color:var(--primary); border-color:var(--primary); }
+        .bk-copy.done { color:var(--primary); border-color:var(--primary); }
+
+        .bk-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:9px; }
+        .bk-tag {
+          font-size:10px; font-family:var(--font-mono); color:var(--muted);
+          border:1px solid var(--border); border-radius:5px; padding:2px 6px;
+        }
+        .bk-link { font-size:11.5px; margin-top:8px; color:var(--muted); font-family:var(--font-mono); }
+        .bk-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
+        </style>
+
+        <div class="page-header">
+          <div class="page-title">
+            <h2>krashimitra_book</h2>
+            <p>लक्ष्य · नियम · पुरानी गलतियाँ · कमांड · सीमाएँ — <span style="font-family:var(--font-mono);font-size:12px;" id="bk-ref">backend/data/krashimitra_book.json</span> से सीधे, deploy की ज़रूरत नहीं</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadBook()" id="bk-refresh-btn">↻ Refresh</button>
+          </div>
+        </div>
+
+        <div id="bk-top"></div>
+        <div class="bk-tools">
+          <input type="text" class="bk-search" id="bk-search" placeholder="ढूँढ़िए… (नियम, कमांड, गलती, tag)"
+                 oninput="renderBook()" autocomplete="off">
+        </div>
+        <div class="bk-jump" id="bk-jump"></div>
+        <div id="bk-body">
+          <div class="km-loader"><span class="km-spinner"></span> Loading…</div>
+        </div>
+      </div>
+
     </main>
 
     <!-- ══════════ UPI COLLECT ══════════
@@ -3487,6 +3778,11 @@ function _ovHealth(id, ok) {
   el.innerHTML = ok ? '<span class="pulse-dot"></span>Online' : 'Offline';
 }
 async function loadOverview() {
+  // Kicked off first and deliberately not awaited. It shares nothing with the
+  // queries below, and on a cold Neon those take tens of seconds — chaining
+  // the runway strip behind them meant the one panel that reports "the API is
+  // suspended" was the last thing on the page to appear.
+  loadInfra(false);
   try {
     const r = await fetch(`${API}/admin/orders?limit=500`, { headers: getAuthHeader() });
     if (r.status === 401) { logout(); return; }
@@ -3663,6 +3959,323 @@ async function triggerFetch(source, btn) {
   }
 }
 
+// ── Infra & Credits ──────────────────────────────────────────
+// Free-tier runway for Netlify, Render and Neon. The backend memoises for
+// five minutes because these are rate-limited billing APIs, not metrics
+// endpoints — so ↻ Refresh asks for a genuinely fresh read (refresh=1) while
+// simply opening the page is happy with the memo.
+
+const IF_LABEL = { ok:'ठीक', warn:'ध्यान दें', down:'गंभीर', off:'चालू नहीं', unknown:'पता नहीं' };
+const IF_PILL  = { ok:'online', warn:'warning', down:'offline', off:'if-idle', unknown:'if-idle' };
+
+let _infraTimer = null;
+
+function _ifChip(txt, cls) {
+  return `<span class="if-chip ${cls || ''}">${escapeHtml(txt)}</span>`;
+}
+
+function _ifMeter(m, i) {
+  const pct = m.pct == null ? null : Math.max(0, Math.min(100, m.pct));
+  const foot = [];
+  // Runway first, and only when there is one. The percentage says where you
+  // are; days_left says how long you have, and on Neon Free those two numbers
+  // routinely disagree by a fortnight — 100 CU-hours at 0.25 CU is gone in 16
+  // days, not 30. A meter that comfortably outlasts the period gets no runway
+  // chip at all; the projection chip below already tells that story, and a
+  // reassuring chip on every row is how a page stops being read.
+  if (m.days_left != null && m.exhausted_at) {
+    const d = m.days_left;
+    foot.push(_ifChip(`${d < 1 ? 'आज ही' : d.toFixed(0) + ' दिन'} में खत्म`,
+                      d <= 3 ? 'hot' : d <= 10 ? 'warm' : ''));
+  }
+  if (m.projected_pct != null) {
+    foot.push(_ifChip(`इस रफ़्तार से period-end ${m.projected_pct}%`,
+                      m.projected_pct >= 100 ? 'warm' : ''));
+  }
+  // Every metered allowance in a card shares one billing period, so print how
+  // far through it we are once — on the first meter that actually has one
+  // (Neon's storage meter has no period at all, it is a level, not a rate).
+  if (m.period_pct != null && i === 0) foot.push(_ifChip(`period ${m.period_pct}% बीता`));
+
+  return `<div class="if-meter">
+    <div class="if-mtop">
+      <span class="if-mlabel">${escapeHtml(m.label)}</span>
+      <span class="if-mnum">${escapeHtml(m.used_txt)} / ${escapeHtml(m.included_txt)}</span>
+      <span class="if-mpct" style="color:var(--${m.status === 'down' ? 'danger' : m.status === 'warn' ? 'accent' : m.status === 'ok' ? 'primary' : 'muted'})">${m.pct == null ? '—' : m.pct + '%'}</span>
+    </div>
+    <div class="if-track"><div class="if-fill ${m.status}" style="width:${pct == null ? 0 : pct}%"></div></div>
+    ${foot.length ? `<div class="if-mfoot">${foot.join('')}</div>` : ''}
+    ${m.note ? `<div class="if-note">${escapeHtml(m.note)}</div>` : ''}
+  </div>`;
+}
+
+// Index passed to _ifMeter counts only the meters that carry a billing period,
+// so the "period X% बीता" chip lands on the first one that has it rather than
+// being suppressed by a period-less meter (Neon's storage) sitting above.
+function _ifMeters(meters) {
+  let n = 0;
+  return meters.map(m => _ifMeter(m, m.period_pct == null ? -1 : n++)).join('');
+}
+
+function _ifCard(p) {
+  const plat = p.platform && p.platform.description
+    ? `<span class="if-plat ${p.platform.indicator === 'none' ? 'ok' : p.platform.indicator === 'minor' ? 'warn' : ['major','critical'].includes(p.platform.indicator) ? 'down' : ''}"
+             title="${escapeHtml(p.platform.url || '')}">${escapeHtml(p.platform.description)}</span>`
+    : '';
+
+  const setup = p.setup && p.setup.env ? `<div class="if-setup">
+      <b>${escapeHtml(p.setup.env)}</b> सेट कीजिए — ${escapeHtml(p.setup.how || '')}
+      ${p.setup.where ? `<br><a href="${escapeHtml(p.setup.where)}" target="_blank" rel="noopener">key यहाँ बनेगी →</a>` : ''}
+    </div>` : '';
+
+  const facts = (p.facts || []).length
+    ? `<dl class="if-facts">${p.facts.map(f =>
+        `<dt>${escapeHtml(f[0])}</dt><dd>${escapeHtml(String(f[1]))}</dd>`).join('')}</dl>`
+    : '';
+
+  const links = (p.links || []).length
+    ? `<div class="if-links">${p.links.map(l =>
+        `<a href="${escapeHtml(l[1])}" target="_blank" rel="noopener">${escapeHtml(l[0])} ↗</a>`).join('')}</div>`
+    : '';
+
+  return `<div class="if-card">
+    <div class="if-head">
+      <span class="if-ico">${escapeHtml(p.icon || '•')}</span>
+      <span class="if-name">${escapeHtml(p.label)}</span>
+      ${plat}
+      <span class="status-pill ${IF_PILL[p.status] || ''}">${IF_LABEL[p.status] || p.status}</span>
+    </div>
+    <div class="if-detail">${escapeHtml(p.detail || '')}</div>
+    <div class="if-body">
+      ${_ifMeters(p.meters || []) || '<div class="text-muted" style="font-size:12px;">कोई meter नहीं पढ़ा जा सका।</div>'}
+      ${facts}
+      ${setup}
+      ${p.error ? `<div class="if-err">${escapeHtml(p.error)}</div>` : ''}
+      ${links}
+    </div>
+  </div>`;
+}
+
+// The three-card strip on the Overview page. One line per provider, and the
+// line has to be the thing you would act on — never an average, which hides
+// exactly the number that is about to run out.
+//
+// Order matters here. A meter only earns the line if it is genuinely the
+// problem: projected to run out inside the period, or already past its
+// threshold. Otherwise the provider's own verdict line wins — Render's
+// instance-hours bar is the case that forced this, because it is the fullest
+// meter every month by arithmetic while the real warning that day was a
+// restart storm the bar knows nothing about.
+function _ovInfraStrip(providers) {
+  for (const p of providers) {
+    const desc = document.getElementById('ov-if-' + p.key);
+    const pill = document.getElementById('ov-if-' + p.key + '-pill');
+    if (!desc || !pill) continue;
+
+    const metered = (p.meters || []).filter(m => m.pct != null);
+    const urgent = metered
+      .filter(m => m.exhausted_at || ['warn', 'down'].includes(m.status))
+      .sort((a, b) => (a.days_left ?? 9e9) - (b.days_left ?? 9e9) || b.pct - a.pct)[0];
+    const fullest = metered.slice().sort((a, b) => b.pct - a.pct)[0];
+    const pick = urgent || (['ok', 'off'].includes(p.status) ? fullest : null);
+
+    desc.textContent = pick
+      ? `${pick.label} ${pick.pct}%` +
+        (pick.days_left != null && pick.exhausted_at
+          ? ` · ${pick.days_left.toFixed(0)} दिन बचे` : '')
+      : (p.status === 'off' && p.setup?.env ? p.setup.env + ' सेट नहीं'
+                                            : (p.detail || '—')).slice(0, 70);
+    pill.className = 'status-pill ' + (IF_PILL[p.status] || '');
+    pill.textContent = IF_LABEL[p.status] || p.status;
+  }
+}
+
+async function loadInfra(force) {
+  const btn = document.getElementById('if-refresh-btn');
+  const grid = document.getElementById('if-grid');
+  const vbox = document.getElementById('if-verdict');
+  if (!grid) return;
+  if (btn && force) { btn.disabled = true; btn.textContent = '⏳ पूछ रहे हैं…'; }
+
+  try {
+    const r = await fetch(`${API}/admin/infra${force ? '?refresh=1' : ''}`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+
+    const v = d.verdict || {};
+    vbox.innerHTML = `<div class="if-verdict ${v.status || 'unknown'}">
+      <span class="if-dot"></span>
+      <div style="flex:1;min-width:0;">
+        <div class="if-vh">${escapeHtml(v.headline || '—')}</div>
+        <div class="if-vs">${escapeHtml(v.sub || '')}</div>
+        <div class="if-stamp">${escapeHtml(d.checked_at || '')} · ${d.took_ms} ms${d.from_cache ? ` · cached ${d.cached_age_sec}s` : ''}</div>
+      </div>
+    </div>`;
+    grid.innerHTML = (d.providers || []).map(_ifCard).join('');
+
+    // A quota problem is worth seeing from any page — that is the whole
+    // lesson of 11 Aug, when every other indicator stayed green.
+    const badge = document.getElementById('if-nav-badge');
+    if (badge) {
+      const bad = ['warn', 'down'].includes(v.status);
+      badge.hidden = !bad;
+      badge.textContent = v.status === 'down' ? '!' : '•';
+    }
+    _ovInfraStrip(d.providers || []);
+  } catch (e) {
+    vbox.innerHTML = '';
+    grid.innerHTML = `<div class="if-card"><div class="if-body" style="color:var(--danger);font-size:13px;line-height:1.7;">
+      हिसाब नहीं मिल पाया — ${escapeHtml(e.message)}.<br>
+      <span class="text-muted" style="font-size:12px;">Backend चालू है या नहीं देखिए, फिर ↻ Refresh दबाइए।</span>
+    </div></div>`;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
+  }
+}
+
+// Poll only while somebody is actually looking at this page. These are three
+// providers' billing APIs behind a five-minute memo; a panel left open in a
+// background tab must not keep asking.
+function startInfraPolling() {
+  stopInfraPolling();
+  _infraTimer = setInterval(() => {
+    const live = document.getElementById('page-infra');
+    if (!live || !live.classList.contains('active') || document.visibilityState !== 'visible') return;
+    loadInfra(false);
+  }, 300000);
+}
+function stopInfraPolling() { if (_infraTimer) { clearInterval(_infraTimer); _infraTimer = null; } }
+
+// ── कृषि मित्र Book ───────────────────────────────────────────
+// The operating manual. Content comes from backend/data/krashimitra_book.json
+// read live by mtime, so adding a rule is a file edit — no deploy, no build
+// step, in line with the project's "everything automatic" rule.
+
+let _book = null;
+
+async function loadBook() {
+  const box = document.getElementById('bk-body');
+  const btn = document.getElementById('bk-refresh-btn');
+  if (!box) return;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const r = await fetch(`${API}/admin/book`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+    _book = d;
+
+    const ref = document.getElementById('bk-ref');
+    if (ref && d.ref) ref.textContent = d.ref;
+
+    const live = d.live || {};
+    const top = document.getElementById('bk-top');
+    if (top) {
+      const hot = live.days_left != null && live.days_left <= 14;
+      top.innerHTML = live.days_left == null ? '' : `<div class="bk-top ${hot ? 'hot' : ''}">
+        <span class="bk-days ${hot ? 'hot' : ''}">${live.passed ? '0' : live.days_left}</span>
+        <div class="bk-topmeta">
+          <b>${live.passed ? 'तारीख निकल चुकी है' : 'दिन बचे हैं'}</b> — ${escapeHtml(live.deadline_label || '')} तक
+          कम से कम एक भुगतान करने वाला चाहिए। ₹500 भी पास है; ₹0 फेल है.
+          <br><span style="color:var(--muted);font-family:var(--font-mono);font-size:11px;">${escapeHtml(live.ref || '')}</span>
+        </div>
+      </div>`;
+    }
+
+    const jump = document.getElementById('bk-jump');
+    if (jump) {
+      jump.innerHTML = d.sections.map(s =>
+        `<button onclick="jumpBook('${s.key}')">${escapeHtml(s.icon)} ${escapeHtml(s.title.split('—')[0].trim())} <span style="opacity:.6">${s.count}</span></button>`
+      ).join('');
+    }
+    if (d.error) showToast(d.error, 'error');
+    renderBook();
+  } catch (e) {
+    box.innerHTML = `<div class="bk-empty" style="color:var(--danger);">Book नहीं खुल पाई — ${escapeHtml(e.message)}</div>`;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
+  }
+}
+
+// The command is carried on a data-attribute and read back on click, never
+// interpolated into an inline onclick — a connection string with a quote or
+// an ampersand in it would break out of the attribute and silently produce a
+// copy button that copies the wrong thing.
+function _bkCmdBlock(cmd) {
+  return `<div class="bk-cmd">
+    <code>${escapeHtml(cmd)}</code>
+    <button class="bk-copy" data-cmd="${escapeHtml(cmd)}">कॉपी</button>
+  </div>`;
+}
+
+document.addEventListener('click', ev => {
+  const btn = ev.target.closest && ev.target.closest('.bk-copy');
+  if (btn) copyCmd(btn, btn.getAttribute('data-cmd') || '');
+});
+
+function copyCmd(btn, cmd) {
+  const done = () => {
+    btn.textContent = '✓ हो गया'; btn.classList.add('done');
+    setTimeout(() => { btn.textContent = 'कॉपी'; btn.classList.remove('done'); }, 1600);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(cmd).then(done, () => showToast('कॉपी नहीं हो पाया', 'error'));
+  } else {
+    // The panel is often opened over plain http on the LAN, where the async
+    // clipboard API is unavailable — fall back rather than silently do nothing.
+    const ta = document.createElement('textarea');
+    ta.value = cmd; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); }
+    catch (e) { showToast('कॉपी नहीं हो पाया', 'error'); }
+    document.body.removeChild(ta);
+  }
+}
+
+function renderBook() {
+  if (!_book) return;
+  const box = document.getElementById('bk-body');
+  const q = (document.getElementById('bk-search')?.value || '').trim().toLowerCase();
+
+  const hit = e => !q || [e.title, e.body, e.why, e.cmd, (e.cmds || []).join(' '),
+                          (e.tags || []).join(' ')].join(' ').toLowerCase().includes(q);
+
+  let shown = 0;
+  const html = _book.sections.map(s => {
+    const entries = s.entries.filter(hit);
+    if (!entries.length) return '';
+    shown += entries.length;
+    return `<div class="bk-sec" id="bk-sec-${escapeHtml(s.key)}">
+      <div class="bk-sec-h">
+        <h3>${escapeHtml(s.icon)} ${escapeHtml(s.title)}</h3>
+        <span class="bk-sec-n">${entries.length}${entries.length !== s.count ? '/' + s.count : ''}</span>
+      </div>
+      <div class="bk-sec-sub">${escapeHtml(s.sub || '')}</div>
+      <div class="bk-list">${entries.map(e => {
+        const cmds = e.cmds && e.cmds.length ? e.cmds : (e.cmd ? [e.cmd] : []);
+        return `<div class="bk-item ${escapeHtml(e.level || '')}">
+          <div class="bk-t">${escapeHtml(e.title)}</div>
+          ${e.body ? `<div class="bk-b">${escapeHtml(e.body)}</div>` : ''}
+          ${cmds.map(c => _bkCmdBlock(c)).join('')}
+          ${e.why ? `<div class="bk-w">${escapeHtml(e.why)}</div>` : ''}
+          ${e.link && e.link.label ? `<div class="bk-link">↳ ${escapeHtml(e.link.label)}</div>` : ''}
+          ${(e.tags || []).length ? `<div class="bk-tags">${e.tags.map(t => `<span class="bk-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+
+  box.innerHTML = html || `<div class="bk-empty">"${escapeHtml(q)}" पर कुछ नहीं मिला।</div>`;
+  const jump = document.getElementById('bk-jump');
+  if (jump) jump.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+}
+
+function jumpBook(key) {
+  const el = document.getElementById('bk-sec-' + key);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ── Mobile drawer toggle ─────────────────────────────────────
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
@@ -3703,6 +4316,8 @@ function switchPage(pageId, el) {
   if (pageId === 'locator') loadFarmerLocator();
   if (pageId === 'buyers') loadBuyers();
   if (pageId === 'checklist') { loadChecklist(); loadLeads(); }
+  if (pageId === 'infra') { loadInfra(false); startInfraPolling(); } else { stopInfraPolling(); }
+  if (pageId === 'book' && !_book) loadBook();
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)

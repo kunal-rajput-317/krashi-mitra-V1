@@ -81,16 +81,45 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# ── Response compression ─────────────────────────────────────────────
+# Added FIRST => innermost, so it sees a route's response as one whole body
+# message and can set a real Content-Length. Sitting it outside either
+# BaseHTTPMiddleware below would mean compressing an already-streaming
+# response, which drops Content-Length and forces chunked transfer on every
+# page Netlify's CDN caches.
+#
+# Why this exists at all: Render suspended the workspace on 16 Aug 2026 for
+# blowing the 5 GB/month bandwidth cap, and nothing here had ever compressed
+# a response. Hindi is the worst case for that — Devanagari is 3 bytes per
+# character in UTF-8, and _doc() inlines a 43 KB CSS blob into every
+# server-rendered page. A measured article page is 106,601 bytes raw against
+# 18,971 gzipped: a 5.6x multiplier applied to the whole /bhav + /naksha +
+# /ganna + /sawal + /product tree, all of which Netlify proxies to Render.
+#
+# Level 6 rather than the library default of 9: on a free instance CPU is the
+# scarce resource, and 9 buys a couple of percent for several times the work.
+# Images and PDFs off the static mounts get compressed too for no real gain,
+# which is a few wasted milliseconds on paths the production domain serves
+# from Netlify anyway — not worth a content-type allowlist to dodge.
+from fastapi.middleware.gzip import GZipMiddleware
+
+app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
+
 # ── CORS ─────────────────────────────────────────────────────────────
 from fastapi.middleware.cors import CORSMiddleware
 from urllib.parse import urlparse
+
+from backend.origin import backend_origin
 
 raw_origins = os.getenv(
     "CORS_ORIGINS",
     ",".join([
         "https://krashimitra.in",
         "https://www.krashimitra.in",
-        "https://krashi-mitra-v1-oxdc.onrender.com",
+        # Never hardcoded: Render reassigns this subdomain when the service is
+        # recreated, and a stale value here would reject the browser's calls
+        # from the app's own domain. See config/backend-origin.txt.
+        backend_origin(),
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",

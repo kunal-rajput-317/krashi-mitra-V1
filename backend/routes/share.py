@@ -22,7 +22,12 @@ from backend.database.db import BazarPost, User, UserProfile, get_db, acct
 router = APIRouter()
 
 SITE = "https://krashimitra.in"
-BACKEND = "https://krashi-mitra-v1-oxdc.onrender.com"
+# From config/backend-origin.txt — Render renames this host on every service
+# recreation, and a stale literal here silently breaks every shared link's
+# preview image.
+from backend.origin import backend_origin
+
+BACKEND = backend_origin()
 
 # commodity keyword → (Wikimedia file, md5 prefix)
 # same ordering the /bhav hub's photo-card grid uses

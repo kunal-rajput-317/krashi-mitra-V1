@@ -45,7 +45,7 @@
     try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
   }
   function apiBase() {
-    return window.KRASHIMITRA_API_BASE || "https://krashi-mitra-v1-oxdc.onrender.com";
+    return window.KRASHIMITRA_API_BASE || "https://krashi-mitra-v1-muup.onrender.com";
   }
   function token() {
     var t = localStorage.getItem("krishi_token");

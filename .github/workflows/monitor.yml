@@ -19,17 +19,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
+      # The URL is read from the repo, never pinned here. Render has renamed
+      # this service twice; the first time, this job was left pointing at the
+      # dead host and spent days alerting "site DOWN" while exiting before it
+      # ever reached the freshness check — which is how a stalled mandi feed
+      # went unnoticed from 29 Jul. One source of truth removes that failure
+      # mode for this job and for frontend/_redirects at the same time.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: config/backend-origin.txt
+          sparse-checkout-cone-mode: false
+
       - name: Check health + mandi freshness
         env:
-          # The service was renamed; krashi-mitra-v1.onrender.com now 404s, so
-          # this job spent days alerting "site DOWN" and exiting before it ever
-          # reached the freshness check — which is how a stalled mandi feed went
-          # unnoticed from 29 Jul. Keep this in step with frontend/_redirects.
-          BASE: https://krashi-mitra-v1-oxdc.onrender.com
           TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TG_CHAT:  ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           set -uo pipefail
+          BASE=$(grep -m1 -E '^https?://' config/backend-origin.txt)
+          echo "backend: $BASE"
 
           alert() {
             echo "::error::$1"

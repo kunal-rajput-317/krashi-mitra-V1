@@ -109,3 +109,36 @@ services:
       # Listing fee in whole rupees. Optional — services/upi.py defaults to 500.
       - key: KM_LISTING_FEE
         sync: false
+
+      # ── Free-tier runway (admin panel → Infra & Credits) ────
+      # Read-only billing API tokens for the three free plans the site runs
+      # on. All optional: without one, that provider's card says exactly which
+      # variable is missing and where to create the key, and the panel still
+      # works. Neon's storage and write-canary figures need NO token at all —
+      # they come straight out of Postgres.
+      #
+      # Why these exist: every outage this site has had was a quota outage.
+      # Netlify's usage cap 503'd every URL on 11 Aug while Render stayed
+      # perfectly healthy, and Neon flips its compute read-only at the storage
+      # cap while its own dashboard still reports "All OK". /health cannot
+      # surface any of it — it is forbidden from calling a third-party API.
+      #
+      #   NETLIFY_AUTH_TOKEN  app.netlify.com → User settings → Applications
+      #                       → Personal access tokens
+      #   RENDER_API_KEY      dashboard.render.com → Account settings → API Keys
+      #   NEON_API_KEY        console.neon.tech → Account settings → API keys
+      #
+      # Optional companions, only needed when the account holds more than one
+      # of a thing and auto-discovery would pick the wrong one:
+      #   NETLIFY_ACCOUNT_SLUG, NETLIFY_SITE_ID, RENDER_SERVICE_ID,
+      #   NEON_PROJECT_ID
+      # And the plan allowances, if a plan is ever upgraded (defaults are the
+      # free-tier numbers): NETLIFY_BANDWIDTH_GB, NETLIFY_BUILD_MINUTES,
+      #   RENDER_BANDWIDTH_GB, RENDER_INSTANCE_HOURS, NEON_COMPUTE_HOURS,
+      #   NEON_TRANSFER_GB, INFRA_WARN_PCT
+      - key: NETLIFY_AUTH_TOKEN
+        sync: false
+      - key: RENDER_API_KEY
+        sync: false
+      - key: NEON_API_KEY
+        sync: false

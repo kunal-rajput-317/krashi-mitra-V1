@@ -135,6 +135,47 @@ async def db_write_health(_: str = Depends(require_admin)):
     return {"success": True, **check()}
 
 
+# ── Free-tier runway: Netlify / Render / Neon ─────────────────
+
+@router.get("/infra")
+def infra(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require_admin)):
+    """How much is left on each of the three free plans.
+
+    Every outage this site has had was a quota outage, not a bug — Netlify's
+    usage cap took the whole front end down in August, and Neon's storage cap
+    flips the compute read-only while its own dashboard still says "All OK".
+    None of that shows up in /health, which is forbidden from calling a
+    third-party API at all, so the billing numbers live here instead.
+
+    Deliberately `def`, not `async def`: the probe makes up to a dozen
+    outbound HTTP calls, and running that on the event loop would stall every
+    other request for the duration. FastAPI puts a sync route on the
+    threadpool, where blocking is free.
+
+    `refresh=1` bypasses the 5-minute memo. Use it sparingly — these are
+    rate-limited billing APIs, not a metrics endpoint.
+    """
+    from backend.services import infra_service
+    return {"success": True, **infra_service.run(use_cache=not refresh)}
+
+
+# ── कृषि मित्र Book ────────────────────────────────────────────
+
+@router.get("/book")
+async def book(_: str = Depends(require_admin)):
+    """The operating manual: goal, standing rules, past mistakes, commands,
+    free-tier arithmetic, file map.
+
+    Content is backend/data/krashimitra_book.json, read live by mtime — add a
+    rule by editing the file and it is on the panel at the next load, with no
+    deploy and no migration. The only computed field is the deadline
+    countdown, which is sourced from deadline_checklist.json so the Book and
+    the Checklist page cannot drift apart on the date.
+    """
+    from backend.services.book_service import get_book
+    return {"success": True, **get_book()}
+
+
 # ── Manual data-fetch trigger ─────────────────────────────────
 
 # Each source's registered APScheduler job (module, job_id). Triggering runs

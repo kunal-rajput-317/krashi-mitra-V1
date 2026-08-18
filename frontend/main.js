@@ -1,6 +1,6 @@
 async function resetChat() {
     const crop = document.getElementById("crop").value;
-    await fetch(`https://krashi-mitra-v1-oxdc.onrender.com/reset?crop=${crop}`, { method: "POST" });
+    await fetch(`https://krashi-mitra-v1-muup.onrender.com/reset?crop=${crop}`, { method: "POST" });
     document.getElementById("chat").innerHTML = "";
 }
 
@@ -29,7 +29,7 @@ async function askQuestion() {
     : `${selectedDistrict} district`;
 
   try {
-    const res = await fetch("https://krashi-mitra-v1-oxdc.onrender.com/ask", {
+    const res = await fetch("https://krashi-mitra-v1-muup.onrender.com/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ q, crop, language: selectedLanguage, district: location })

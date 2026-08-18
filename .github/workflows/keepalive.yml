@@ -14,11 +14,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # One file, ~1 KB — the backend URL, which Render reassigns whenever the
+      # service is recreated. Reading it here instead of hardcoding is why the
+      # last rename could not leave this job pinging a dead host.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: config/backend-origin.txt
+          sparse-checkout-cone-mode: false
+
       - name: Ping backend /health
         run: |
+          BASE=$(grep -m1 -E '^https?://' config/backend-origin.txt)
+          echo "pinging $BASE"
           for i in 1 2 3; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 \
-              https://krashi-mitra-v1-oxdc.onrender.com/health || true)
+              "$BASE/health" || true)
             if [ "$code" = "200" ]; then
               echo "ok (attempt $i)"
               exit 0
