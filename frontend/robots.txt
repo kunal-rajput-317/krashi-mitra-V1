@@ -8,6 +8,19 @@ Disallow: /old_index.html
 Disallow: /articles/article_template.html
 Disallow: /assets/redirecting-animation.html
 
+# The village leaf pages under /naksha/<state>/<district>/gaon/<village>.
+# They render "noindex, follow" already, but noindex only stops indexing —
+# a crawler still downloads every one of them. There are up to ~44,000
+# (737 districts x ~60 villages), which is the largest tier on the site by
+# far, and it costs full origin bandwidth to hand Google pages that can
+# never rank. Worse, it self-expands: village data is fetched from Overpass
+# on first view, so crawling a district's /gaon index CREATES the next 60
+# URLs, which then appear in the gaon sitemap and get crawled too.
+# The trailing slash is load-bearing — it blocks the leaves while leaving
+# each district's /gaon index page (737 of them, indexable when it has real
+# villages) crawlable.
+Disallow: /naksha/*/gaon/
+
 # ── AI / LLM crawlers: explicitly welcome ─────────────────────────────
 # GEO (generative-engine optimization): we WANT to be crawled, indexed and
 # cited by AI search (ChatGPT, Perplexity, Claude, Gemini, Copilot).
@@ -30,6 +43,7 @@ Disallow: /old_chat.html
 Disallow: /old_index.html
 Disallow: /articles/article_template.html
 Disallow: /assets/redirecting-animation.html
+Disallow: /naksha/*/gaon/
 
 # Machine-readable site guide for LLMs (llmstxt.org)
 # https://krashimitra.in/llms.txt
@@ -38,5 +52,11 @@ Disallow: /assets/redirecting-animation.html
 Sitemap: https://krashimitra.in/sitemap.xml
 Sitemap: https://krashimitra.in/bhav/sitemap.xml
 Sitemap: https://krashimitra.in/product/sitemap.xml
-Sitemap: https://krashimitra.in/naksha/gaon-sitemap.xml
 Sitemap: https://krashimitra.in/ganna/sitemap.xml
+
+# /naksha/gaon-sitemap.xml is deliberately NOT listed here — see the
+# Disallow above. The route still builds (routes/sitemap.py::build_gaon_
+# sitemap) and can be fetched by hand, but robots.txt was its only means of
+# discovery, so nothing crawls it now. Re-list it only when village pages
+# carry real data and drop their noindex; advertising 44,000 noindex URLs
+# is what took the backend offline on 17 Aug 2026.

@@ -221,6 +221,70 @@
           "owner": "you"
         }
       ]
+    },
+
+    {
+      "key": "assigned",
+      "icon": "🤖",
+      "title": "Claude को दिया हुआ काम — queued, not started",
+      "sub": "Work I have handed to Claude and parked on purpose. None of it needs a phone call and none of it starts until I say so — the point of writing it here is that it stops living in my head.",
+      "tasks": [
+        {
+          "id": "ads-in-article-builder",
+          "title": "Put the AdSense unit back on the articles — from the builder, not by hand",
+          "note": "All 88 article pages currently serve zero ads. Ads were hand-added to urea-guide-up in 18a268e and the very next builder run (2b3deaf) wiped them, because article_builder.py has no ads code. Hand-patching the HTML loses again on the next regeneration — the unit has to come out of the builder. urea-guide-up alone is ~25% of all impressions, so this is the only revenue that arrives without me calling anyone.",
+          "owner": "code",
+          "critical": true
+        },
+        {
+          "id": "gsc-into-admin",
+          "title": "Pull GSC pages + queries into the admin panel with the service account",
+          "note": "The service account already has Owner on the property and drives the daily recrawl sweep. Same credentials can read Search Analytics. Do this and gsc-export / ctr-recheck above stop waiting on me remembering to run a manual export — which is the whole reason they have sat open.",
+          "owner": "code"
+        },
+        {
+          "id": "mandi-archive-job",
+          "title": "Mandi Phase 0.2 + 0.3 — nightly archive, auto-pushed to the data repo",
+          "note": "Dump the previous day's mandi_price_history to gzipped CSV after the 20:00 sweep and push it to MANDI_ARCHIVE_REPO over the GitHub Contents API (no git binary on Render). ~300KB/day. Neon stays at 30 days, so every day we do not archive is a day of history gone for good — this is the one task on the list that gets more expensive the longer it waits.",
+          "owner": "code"
+        },
+        {
+          "id": "mandi-archive-health",
+          "title": "Mandi Phase 0.6 — archive health check in the admin panel",
+          "note": "Last archived day, row count, gap detection, on the same page as everything else. An archive job that quietly stopped three weeks ago is exactly the kind of silent failure the whole 'keep it alive' section exists for. Ships with 0.2/0.3 or right behind it.",
+          "owner": "code"
+        },
+        {
+          "id": "net-price-transport",
+          "title": "Mandi Phase 1 — net भाव after transport (1.1 to 1.4)",
+          "note": "Freight estimates in a config JSON, extend /bhav/nearest, 'आपके पास सबसे अच्छा दाम' card using the km_geo opt-in, then the SEO wrap. Nobody else in this vertical answers 'after the tractor, which mandi actually pays me more' — it is the first thing on the roadmap a farmer would tell another farmer about.",
+          "owner": "code"
+        },
+        {
+          "id": "neon-migration-run",
+          "title": "Run the Neon migration once I have decided — do not start it before",
+          "note": "The dump/load scripts and the corrected 22-table scope are already written and committed. What is missing is my decision (neon-decision above), not the code. When I say go: install a pg_dump that matches the server version first, and respect the FKs — the old notes claiming there are none are wrong.",
+          "owner": "code"
+        },
+        {
+          "id": "readonly-db-guard",
+          "title": "Make every write path name a read-only database instead of 500-ing",
+          "note": "The checklist writes already do this through _checklist_write. Everything else — dealer rows, orders, lead logs, profile saves — still throws a bare 500 that looks like a bug in the feature. The compute can flap read-only per statement, so this is not a rare case, and during a hands-off week a wrong error message costs me days of wrong diagnosis.",
+          "owner": "code"
+        },
+        {
+          "id": "ganna-arrears-ocr",
+          "title": "गन्ना section, next phase — arrears OCR + mill deep links",
+          "note": "Phases A and B shipped in 454aa85. The remaining value is in the arrears scans, which is the number a cane farmer actually cares about and the reason no competitor covers this. Directory and SAP/FRP layers are already in place to hang it on.",
+          "owner": "code"
+        },
+        {
+          "id": "docs-reconcile",
+          "title": "Fix the stale claims in MARKET-AND-MONEY.md and MANDI-TASKS.md",
+          "note": "Both still say the dealer self-serve flow is not built; it shipped on 1 Aug, along with the UPI collect rail and the admin approve queue. On 31 Aug I will read these docs to judge the test — a doc that understates what exists makes that judgement wrong in the one direction that matters.",
+          "owner": "code"
+        }
+      ]
     }
   ]
 }

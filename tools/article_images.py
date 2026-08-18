@@ -65,6 +65,32 @@ IMAGES = {
     "sahjan-munga-ki-kheti": "Cultivos de moringa en el Vivero Forestal de Chimbote 02.jpg",
     "malabar-neem-melia-dubia": "Melia dubia at Periya (1).jpg",
 
+    # ── crops & practices ─────────────────────────────────────────────────
+    "kapas-ki-kheti-guide": "Woman picking cotton in Raichur, Karnataka.jpg",
+    "parali-prabandhan": "Burning of rice residues after harvest (9190).jpg",
+    "dhan-seedhi-buvai-dsr": "A Farmer Cultivating In Punjab.jpg",
+    "prakritik-kheti-jeevamrit": '"a Compost pit".jpg',
+    "kisan-pehchan-patra-agristack": "Aerial view of agricultural fields in Punjab, India.jpg",
+    "kharpatwarnashi-guide": "Cyperus rotundus by kadavoor.JPG",
+
+    # ── PENDING: curated and licence-checked, article not written yet ──────
+    # These ten were verified against Commons (exists, landscape, >=900px, not
+    # NonCommercial) but their articles were not written, so the image files
+    # were deleted rather than left unreferenced in the repo and listed on
+    # /articles/credits. The curation is the expensive part and it is kept here:
+    # to resume, write the content module and run
+    #     python tools/fetch_article_images.py <slug>
+    "moong-ki-kheti": "Green Gram field.jpg",
+    "urad-ki-kheti": "Black gram field, Maravanthe.jpg",
+    "til-ki-kheti": "Hidaka Kinchakuda Sesame Field 1.JPG",
+    "shree-anna-motanaj-millets": "Eleusine coracana (L.) Gaertn.jpg",
+    "kisan-drone-chhidkav": "DJI Agras T50 demonstrating sprayers in flight.jpg",
+    "dhan-nursery-ropai": "Rice Transplanter in India.jpg",
+    "makka-ethanol-maang": "2014-09 Nowaki (17) Zbiór kukurydzy.jpg",
+    "dairy-farming-doodh-utpadan": "Dairy Farm in Gurgaon.jpg",
+    "pashu-thanaila-mastitis": "India - Woman dairy entrepreneur (3975844335).jpg",
+    "hara-chara-napier-berseem": "Fodder for Buffaloes.jpeg",
+
     # ── pests & diseases (the actual organism, where one exists free) ──────
     "dhan-tana-chhedak": "Rice yellow stem borer.jpg",
     "makka-fall-armyworm": "Lagarta do Cartucho 01.jpg",
@@ -183,6 +209,13 @@ LOCAL = {
     "mirch-kala-thrips": "images/plants/chilli-rog-weak-leaf.webp",
     "nano-urea-nano-dap": "images/fertilizers/Urea.webp",
     "keet-niyantran": "images/Pesticides/neem-oil.webp",
+
+    # The straight-fertiliser guides — same product art as the shop, so the
+    # article and the product page a farmer lands on next show the same bag.
+    "ssp-khad-guide": "images/fertilizers/SSP.webp",
+    "npk-complex-khad-guide": "images/fertilizers/NPK.webp",
+    "zinc-ki-kami-fasal": "images/fertilizers/zinc_sulphate.jpg",
+    "sulphur-gandhak-ki-kami": "images/fertilizers/ammonium-sulphate.webp",
 
     # Hand-written articles that already showed their own picture but still
     # declared the site banner as og:image, and whose card loaded the full-size

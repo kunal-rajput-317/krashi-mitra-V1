@@ -28,6 +28,7 @@ import io
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 import requests
@@ -57,11 +58,28 @@ WEBP_QUALITY = 82
 MIN_SOURCE_W = 900
 
 
-def _api(params: dict) -> dict:
-    r = requests.get(API, params={**params, "format": "json"},
-                     headers={"User-Agent": UA}, timeout=45)
-    r.raise_for_status()
-    return r.json()
+def _api(params: dict, attempts: int = 4) -> dict:
+    """One Commons API call, retried on transient failure.
+
+    A --verify run now makes ~100 of these back to back, and Commons answers
+    the odd one with a 500 or a 429. Without a retry a single hiccup aborts the
+    whole check, which reads exactly like "the file is gone" — the one thing
+    this tool exists to tell you accurately.
+    """
+    for i in range(attempts):
+        try:
+            r = requests.get(API, params={**params, "format": "json"},
+                             headers={"User-Agent": UA}, timeout=45)
+            if r.status_code in (429, 500, 502, 503, 504) and i < attempts - 1:
+                time.sleep(2 ** i)
+                continue
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException:
+            if i == attempts - 1:
+                raise
+            time.sleep(2 ** i)
+    raise RuntimeError("unreachable")
 
 
 def commons_info(filename: str) -> dict | None:
