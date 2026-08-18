@@ -149,6 +149,40 @@ class TestSwitchingProviders:
                         f"stale {older} left behind after switching to {url}")
             assert self.run(sandbox, "--check").returncode == 0, "check disagrees with the rewrite"
 
+    def test_changing_the_origin_bumps_the_service_worker(self, sandbox):
+        """Rewriting api-config.js is not enough, and the gap is invisible.
+
+        The service worker serves assets cache-first with no revalidation, so a
+        browser that has loaded the site before keeps handing the page the OLD
+        backend address forever. After the last rename that meant every
+        returning visitor's profile came up empty against a dead host, while
+        the site tested perfectly in a fresh browser and in curl. The cache
+        version has to move with the origin, and nobody should have to remember
+        that.
+        """
+        import shutil
+        shutil.copy(REPO / "frontend" / "sw.js", sandbox / "frontend")
+        sw = sandbox / "frontend" / "sw.js"
+        before = re.search(r"krashimitra-v(\d+)", sw.read_text(encoding="utf-8"))
+        assert before, "sw.js should carry a versioned CACHE_NAME"
+
+        self.run(sandbox, "https://krashimitra-somewhere-else.onrender.com")
+
+        after = re.search(r"krashimitra-v(\d+)", sw.read_text(encoding="utf-8"))
+        assert int(after.group(1)) == int(before.group(1)) + 1, (
+            "CACHE_NAME must be bumped when the origin changes, or every "
+            "returning browser keeps calling the previous host")
+
+    def test_api_config_is_not_served_cache_first(self):
+        """The one asset that must always revalidate."""
+        sw = (REPO / "frontend" / "sw.js").read_text(encoding="utf-8")
+        assert "api-config.js" in sw, (
+            "sw.js must special-case api-config.js — it carries the backend "
+            "address, and cache-first freezes it across a backend move")
+        # the carve-out has to come before the generic cache-first branch
+        assert sw.index("api-config.js") < sw.index("isStaticAsset(request)", sw.index("function isStaticAsset") + 1), \
+            "the api-config.js branch must be reached before the cache-first branch"
+
     def test_history_accumulates_and_stays_truthful(self, sandbox):
         cfg = sandbox / "config" / "backend-origin.txt"
         first = next(l for l in cfg.read_text(encoding="utf-8").splitlines()

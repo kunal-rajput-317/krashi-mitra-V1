@@ -2,7 +2,7 @@
 // outage hold Netlify's `{"error":"usage_exceeded"}` 503 under the URL of a real
 // page or stylesheet, and the activate step deletes every cache that isn't the
 // current name.
-const CACHE_NAME = 'krashimitra-v7'; // v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
+const CACHE_NAME = 'krashimitra-v8'; // v8: backend moved to a new Render host — every returning browser held a cache-first api-config.js pointing at the dead one; v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './analytics.js',
@@ -122,6 +122,29 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone);
           });
+          return response;
+        })
+        .catch(() => lastKnownGood(request, null))
+    );
+    return;
+  }
+
+  // api-config.js is the one asset that must never be served stale. It carries
+  // the backend's address, and cache-first has no revalidation step — so when
+  // Render reassigned the subdomain, every browser that had ever loaded the
+  // site kept calling the dead host and every API-backed panel came up empty,
+  // with nothing on the page to suggest why. Bumping CACHE_NAME fixes that
+  // once; network-first stops it being possible.
+  //
+  // The cache is still written and still used, so an offline visit is exactly
+  // as good as before — the only change is that a reachable network wins.
+  if (requestUrl.pathname.endsWith('/api-config.js')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (!response.ok) return lastKnownGood(request, response);
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           return response;
         })
         .catch(() => lastKnownGood(request, null))

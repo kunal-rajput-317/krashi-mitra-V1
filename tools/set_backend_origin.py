@@ -147,6 +147,41 @@ def set_configured_origin(url: str) -> None:
     CONFIG.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
+SW = REPO / "frontend" / "sw.js"
+CACHE_NAME_RE = re.compile(r"(const CACHE_NAME = 'krashimitra-v)(\d+)(')")
+
+
+def bump_service_worker(url: str) -> str:
+    """Invalidate every browser's cached copy of api-config.js.
+
+    Rewriting api-config.js is not enough on its own, and the gap is invisible
+    from the outside: the service worker serves assets cache-first with no
+    revalidation, so a browser that has loaded the site before keeps handing
+    the page the *old* backend address indefinitely. After the last rename that
+    meant every returning visitor's profile, orders and alerts came up empty
+    against a dead host while the site looked fine to anyone testing with a
+    fresh browser or curl.
+
+    So the cache version moves with the origin, automatically. Relying on
+    someone remembering this step is how it got missed the first time.
+    """
+    try:
+        text = SW.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    m = CACHE_NAME_RE.search(text)
+    if not m:
+        return ""
+    new_version = int(m.group(2)) + 1
+    note = (f"v{new_version}: backend origin → {url}; "
+            "every browser holds a cache-first api-config.js pointing at the old one")
+    text = CACHE_NAME_RE.sub(rf"\g<1>{new_version}\g<3>", text, count=1)
+    # Keep the running history that already lives on that line.
+    text = re.sub(r"(const CACHE_NAME = '[^']+'; // )", rf"\g<1>{note}; ", text, count=1)
+    SW.write_text(text, encoding="utf-8", newline="")
+    return f"krashimitra-v{new_version}"
+
+
 def files() -> list[Path]:
     found = []
     for rel in TARGETS:
@@ -235,6 +270,13 @@ def main() -> int:
         total += stale[p]
         print(f"  {p.relative_to(REPO).as_posix():44s} {stale[p]:2d}×")
     print(f"\n✓ {total} occurrence(s) in {len(stale)} file(s) → {url}")
+    bumped = bump_service_worker(url)
+    if bumped:
+        print(f"✓ service worker cache → {bumped} "
+              "(without this, returning browsers keep the old address)")
+    else:
+        print("  ! could not bump CACHE_NAME in frontend/sw.js — check it by hand, "
+              "or returning visitors will keep calling the previous host")
     print("  Python and .github/workflows read config/backend-origin.txt "
           "directly — nothing to do there.")
     return 0
