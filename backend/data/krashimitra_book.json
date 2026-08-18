@@ -306,9 +306,19 @@
             "python tools/set_backend_origin.py --check"
           ],
           "body": "URL का एकमात्र मालिक config/backend-origin.txt है। पहला कमांड उसे बदलता है और साथ ही _redirects की 24 लाइनें, api-config.js और हर बाकी पेज — कुल 48 जगहें — एक साथ ठीक कर देता है। Python और GitHub workflows उस फ़ाइल को सीधे पढ़ते हैं, इसलिए उनमें कुछ बदलना ही नहीं पड़ता। दूसरा कमांड सिर्फ़ जाँचता है, लिखता कुछ नहीं। बदलने के बाद main पर push ज़रूरी है — असली फ़र्क़ तब पड़ता है जब Netlify नया _redirects deploy कर ले।",
-          "why": "यह URL 23 फ़ाइलों में हाथ से लिखा हुआ था। Render ने subdomain दो बार बदला और दोनों बार साइट बंद हुई — और दिखी नहीं, क्योंकि homepage Netlify से हरा आता रहा।",
+          "why": "यह URL 23 फ़ाइलों में हाथ से लिखा हुआ था। Render ने subdomain दो बार बदला और दोनों बार साइट बंद हुई — और दिखी नहीं, क्योंकि homepage Netlify से हरा आता रहा। कमांड किसी एक provider से बंधा नहीं है: config/backend-origin.txt में हर पुराना पता `#old` लाइन में दर्ज रहता है, इसलिए custom domain पर जाना, किसी और host पर जाना, या वापस आना — सब एक ही तरह काम करते हैं।",
           "tags": ["ops", "deploy", "render"],
           "link": {"label": "config/backend-origin.txt", "url": ""}
+        },
+        {
+          "id": "render-account-switch",
+          "level": "warn",
+          "title": "पूरा Render खाता बदलना हो तो — URL तो एक कमांड है, असली काम env vars हैं",
+          "cmd": "python -c \"import backend.main, backend.services.infra_service as s; print(chr(10).join(n for n,r in s._declared_env_vars() if r))\"",
+          "body": "render.yaml नए खाते पर build/start command, region, health check और env vars के *नाम* अपने आप ले आता है — पर हर *value* हाथ से डालनी पड़ती है, क्योंकि वे `sync: false` हैं। ऊपर वाला कमांड बताता है कि कौन-कौन सी ज़रूरी हैं (जिन पर render.yaml में `# optional` लिखा है उनके code में default मौजूद हैं)। deploy के बाद Infra & Credits पैनल खुद गिनकर दिखाता है — 'ज़रूरी secrets: n/n सेट' — और जो छूटा हो उसका नाम लिखता है। पूरा क्रम tools/RENDER-ACCOUNT-SWITCH.md में है।",
+          "why": "छूटी हुई env var deploy फेल नहीं करती — वह चुपचाप एक फ़ीचर बंद कर देती है, और पता हफ़्तों बाद चलता है। डेटाबेस बदलने की ज़रूरत नहीं, वही Neon चलता रहेगा। पुरानी service तब तक बंद मत कीजिए जब तक krashimitra.in/bhav पर 200 न आ जाए।",
+          "tags": ["ops", "deploy", "render"],
+          "link": {"label": "tools/RENDER-ACCOUNT-SWITCH.md", "url": ""}
         },
         {
           "id": "article-build",

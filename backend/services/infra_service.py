@@ -47,12 +47,15 @@ from __future__ import annotations
 import logging
 import os
 import time
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 
 import requests
 
 logger = logging.getLogger("krishi.infra")
+
+BASE_DIR = Path(__file__).resolve().parents[2]
 
 CACHE_TTL_SEC = 300          # 5 min — these are billing numbers, they crawl
 HTTP_TIMEOUT = 8
@@ -559,6 +562,55 @@ def _render_origin_probe() -> tuple[list, str, str]:
     return (facts, "ok", "")
 
 
+def _declared_env_vars() -> list[tuple[str, bool]]:
+    """Every `sync: false` var in render.yaml as (name, required).
+
+    A var is optional when its `sync: false` line carries a trailing
+    `# optional` comment. Declaring it there rather than in a list here is
+    deliberate: a second list in this file would drift from render.yaml the
+    first time a var is added, and then this check would either nag about
+    something that does not matter or stay silent about something that does.
+    Render ignores YAML comments, so the marker costs nothing.
+
+    Parsed with a two-line scan rather than a YAML dependency: the shape is
+    fixed (`- key: NAME` followed by `sync: false`) and pyyaml is not otherwise
+    required by this app.
+    """
+    path = BASE_DIR / "render.yaml"
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    out, pending = [], None
+    for line in lines:
+        s = line.strip()
+        if s.startswith("- key:"):
+            pending = s.split(":", 1)[1].strip()
+        elif s.startswith("sync:") and "false" in s and pending:
+            out.append((pending, "optional" not in s.lower()))
+            pending = None
+        elif s.startswith("value:"):
+            pending = None
+    return out
+
+
+def _missing_secrets() -> tuple[list[str], list[str]]:
+    """(missing and required, missing but optional).
+
+    This is the whole pain of moving to a new Render account: the blueprint
+    carries the build, the start command and the var *names*, but every value
+    has to be re-entered by hand in the new dashboard. Forgetting one does not
+    fail the deploy — it fails a feature, quietly, later. Naming them here
+    turns that into something you can read off a screen.
+    """
+    req, opt = [], []
+    for name, required in _declared_env_vars():
+        if os.getenv(name, "").strip():
+            continue
+        (req if required else opt).append(name)
+    return req, opt
+
+
 def _render() -> dict:
     key = os.getenv("RENDER_API_KEY", "").strip()
     links = [["Render dashboard", "https://dashboard.render.com"]]
@@ -566,6 +618,26 @@ def _render() -> dict:
     # Run before the token check on purpose. A suspension is exactly when the
     # billing API is least likely to help, and this needs no credentials.
     origin_facts, origin_status, origin_detail = _render_origin_probe()
+
+    # Moving to a new Render account re-creates every secret by hand. A missing
+    # one does not fail the deploy, it fails a feature quietly and later, so
+    # list them by name while somebody is looking.
+    declared = _declared_env_vars()
+    missing_req, missing_opt = _missing_secrets()
+    if declared:
+        need = [n for n, req in declared if req]
+        origin_facts.append(["ज़रूरी secrets",
+                             f"{len(need) - len(missing_req)}/{len(need)} सेट"])
+    if missing_opt:
+        origin_facts.append(["वैकल्पिक, सेट नहीं", ", ".join(missing_opt[:5])
+                             + (f" +{len(missing_opt) - 5}" if len(missing_opt) > 5 else "")])
+    if missing_req:
+        origin_facts.append(["⚠ गायब", ", ".join(missing_req)])
+        if origin_status == "ok":
+            origin_status = "warn"
+            origin_detail = (f"render.yaml में ज़रूरी बताए {len(missing_req)} env var "
+                             "इस service पर सेट नहीं — नया Render खाता बनाने के बाद "
+                             "अक्सर यही छूटता है")
 
     if not key:
         card = _off("render", "Render — API सर्वर", "⚙️", "RENDER_API_KEY",

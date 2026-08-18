@@ -67,21 +67,21 @@ services:
       - key: ADMIN_PASS
         sync: false
       - key: ADMIN_SECRET_KEY
-        sync: false
+        sync: false          # optional
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
-        sync: false
+        sync: false          # optional
       - key: OPENWEATHER_API_KEY
         sync: false
       - key: DATA_GOV_API_KEY
         sync: false
       - key: SMTP_EMAIL
-        sync: false
+        sync: false          # optional
       - key: SMTP_PASSWORD
-        sync: false
+        sync: false          # optional
       - key: SMTP_PORT
-        sync: false
+        sync: false          # optional
       - key: VAPID_PUBLIC_KEY
         sync: false
       - key: VAPID_PRIVATE_KEY
@@ -89,13 +89,13 @@ services:
       - key: VAPID_SUBJECT
         sync: false
       - key: DB_ALERT_EMAIL
-        sync: false
+        sync: false          # optional
       - key: MANDI_ARCHIVE_REPO
-        sync: false
+        sync: false          # optional
       - key: MANDI_ARCHIVE_TOKEN
-        sync: false
+        sync: false          # optional
       - key: CORS_ORIGINS
-        sync: false
+        sync: false          # optional
       # UPI listing-fee collection (services/upi.py). KM_UPI_ID is the
       # destination of real money, so it is never committed — an out-of-date or
       # mistyped VPA in git would silently route a dealer's ₹500 to a stranger.
@@ -103,12 +103,12 @@ services:
       # KM_UPI_NAME must match the name on the receiving account closely enough
       # that a trader recognises it on his confirmation screen.
       - key: KM_UPI_ID
-        sync: false
+        sync: false          # optional
       - key: KM_UPI_NAME
-        sync: false
+        sync: false          # optional
       # Listing fee in whole rupees. Optional — services/upi.py defaults to 500.
       - key: KM_LISTING_FEE
-        sync: false
+        sync: false          # optional
 
       # ── Free-tier runway (admin panel → Infra & Credits) ────
       # Read-only billing API tokens for the three free plans the site runs
@@ -137,8 +137,8 @@ services:
       #   RENDER_BANDWIDTH_GB, RENDER_INSTANCE_HOURS, NEON_COMPUTE_HOURS,
       #   NEON_TRANSFER_GB, INFRA_WARN_PCT
       - key: NETLIFY_AUTH_TOKEN
-        sync: false
+        sync: false          # optional
       - key: RENDER_API_KEY
-        sync: false
+        sync: false          # optional
       - key: NEON_API_KEY
-        sync: false
+        sync: false          # optional

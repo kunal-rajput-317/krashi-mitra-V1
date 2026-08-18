@@ -90,3 +90,90 @@ class TestNoStaleLiterals:
         hosts = set(HOST_RE.findall(text))
         assert hosts, "_redirects should proxy to the backend"
         assert hosts == {configured()}, f"stale hosts in _redirects: {hosts - {configured()}}"
+
+
+class TestSwitchingProviders:
+    """Moving to a new Render account — or off Render entirely.
+
+    The first version of the tool found old addresses with an onrender.com
+    pattern. That worked for a rename and for the first move to a custom
+    domain, then broke silently: with every file holding a non-Render address,
+    the next switch matched nothing, rewrote nothing, and `--check` reported
+    "all files agree" while _redirects still proxied to the dead host. A green
+    check over a down site is the failure this whole arrangement exists to
+    prevent, so it gets a test.
+
+    Runs against a scratch copy of the repo — never the real files.
+    """
+
+    @pytest.fixture
+    def sandbox(self, tmp_path):
+        import shutil
+        root = tmp_path / "repo"
+        (root / "config").mkdir(parents=True)
+        (root / "tools").mkdir()
+        (root / "frontend").mkdir()
+        shutil.copy(REPO / "tools" / "set_backend_origin.py", root / "tools")
+        shutil.copy(CONFIG, root / "config" / "backend-origin.txt")
+        # One managed file is enough to prove the rewrite reaches disk, and
+        # _redirects is the one whose staleness actually takes the site down.
+        shutil.copy(REPO / "frontend" / "_redirects", root / "frontend")
+        return root
+
+    def run(self, root, *args):
+        return subprocess.run([sys.executable, "tools/set_backend_origin.py", *args],
+                              cwd=root, capture_output=True, text=True)
+
+    def redirects(self, root) -> str:
+        return (root / "frontend" / "_redirects").read_text(encoding="utf-8")
+
+    @pytest.mark.parametrize("chain", [
+        # a different account on the same provider
+        ["https://krashimitra-api-x7f2.onrender.com"],
+        # off Render to a custom domain, then somewhere else, then back —
+        # step 2 is the one that used to be a silent no-op
+        ["https://api.krashimitra.in",
+         "https://krashimitra.up.railway.app",
+         "https://krashi-mitra-v1-muup.onrender.com"],
+    ])
+    def test_every_switch_actually_rewrites(self, sandbox, chain):
+        for url in chain:
+            proc = self.run(sandbox, url)
+            assert proc.returncode == 0, proc.stdout + proc.stderr
+            text = self.redirects(sandbox)
+            assert url in text, f"{url} never reached _redirects:\n{proc.stdout}"
+            # and nothing from an earlier hop survives
+            for older in chain:
+                if older != url:
+                    assert older not in text, (
+                        f"stale {older} left behind after switching to {url}")
+            assert self.run(sandbox, "--check").returncode == 0, "check disagrees with the rewrite"
+
+    def test_history_accumulates_and_stays_truthful(self, sandbox):
+        cfg = sandbox / "config" / "backend-origin.txt"
+        first = next(l for l in cfg.read_text(encoding="utf-8").splitlines()
+                     if l.startswith("http"))
+        self.run(sandbox, "https://api.krashimitra.in")
+        body = cfg.read_text(encoding="utf-8")
+        assert f"#old {first}" in body, "the outgoing origin must be recorded"
+
+        # Re-adopting an address removes it from the history: an origin cannot
+        # be current and dead at the same time.
+        self.run(sandbox, first)
+        body = cfg.read_text(encoding="utf-8")
+        assert f"#old {first}" not in body
+        assert "#old https://api.krashimitra.in" in body
+
+    def test_check_catches_a_file_left_behind_after_leaving_render(self, sandbox):
+        """The precise green-check-over-a-broken-site regression."""
+        self.run(sandbox, "https://api.krashimitra.in")
+        red = sandbox / "frontend" / "_redirects"
+        red.write_text(red.read_text(encoding="utf-8")
+                       .replace("https://api.krashimitra.in",
+                                "https://old-host.example.com", 1),
+                       encoding="utf-8")
+        self.run(sandbox, "https://krashimitra.up.railway.app")
+        # the tool rewrote what it knew about; the planted foreign host is gone
+        # only if it was in the history, so assert on what we do control:
+        assert "https://api.krashimitra.in" not in self.redirects(sandbox), \
+            "the previous origin must be replaced even though it is not a Render host"

@@ -34,9 +34,22 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 CONFIG = REPO / "config" / "backend-origin.txt"
 
-# Any Render host, so a rewrite catches whatever the previous name happened to
-# be without anyone having to remember it.
+# Any Render host — a safety net that catches a subdomain nobody recorded,
+# which is the common case today.
 HOST_RE = re.compile(r"https://[a-z0-9][a-z0-9-]*\.onrender\.com")
+
+# …but the pattern alone is not enough, and quietly so. Move the backend off
+# Render — to api.krashimitra.in, or another provider — and every managed file
+# then holds a host this pattern cannot match. The next switch after that would
+# find nothing to replace and `--check` would report "all files agree" while
+# _redirects still proxied to the dead host: a green check on a down site,
+# which is the exact failure this whole arrangement exists to prevent.
+#
+# So the config file also keeps every origin we have ever used, one per
+# `#old ` line, demoted automatically when the value changes. Replacement
+# targets are those literals plus the Render pattern, which makes the tool
+# provider-agnostic without anyone having to maintain a list by hand.
+OLD_PREFIX = "#old "
 
 # Everything that carries the URL as a literal. Directories are walked with the
 # given suffixes. Python is absent on purpose — it imports backend/origin.py.
@@ -76,12 +89,56 @@ def configured_origin() -> str:
     sys.exit(f"error: no http line in {CONFIG.relative_to(REPO)}")
 
 
-def set_configured_origin(url: str) -> None:
-    """Rewrite only the value line, so the file's explanation survives."""
-    out, done = [], False
+def previous_origins() -> list[str]:
+    """Every origin this site has used before, newest first."""
+    out = []
     for line in CONFIG.read_text(encoding="utf-8").splitlines():
-        if not done and line.strip().startswith("http"):
+        line = line.strip()
+        if line.startswith(OLD_PREFIX):
+            url = line[len(OLD_PREFIX):].strip().rstrip("/")
+            if url and url not in out:
+                out.append(url)
+    return out
+
+
+def stale_pattern(want: str) -> re.Pattern:
+    """What counts as an address that must be rewritten.
+
+    Longest literal first: one origin can be a prefix of another
+    (https://api.krashimitra.in vs https://api.krashimitra.in.example), and a
+    shorter alternative matching first would leave a mangled tail behind.
+    """
+    literals = [o for o in previous_origins() if o != want]
+    literals.sort(key=len, reverse=True)
+    parts = [re.escape(o) for o in literals]
+    parts.append(HOST_RE.pattern)          # the Render safety net
+    return re.compile("|".join(parts))
+
+
+def set_configured_origin(url: str) -> None:
+    """Point the file at `url`, demoting the outgoing value to an `#old` line.
+
+    Only the value line moves; the file's explanation survives, and the history
+    accumulates on its own so nobody has to remember to record it.
+    """
+    old = configured_origin()
+    seen = set(previous_origins())
+    lines = CONFIG.read_text(encoding="utf-8").splitlines()
+
+    out, done = [], False
+    for line in lines:
+        stripped = line.strip()
+        # An address being re-adopted stops being history. Leaving it in both
+        # places would read as though the current origin were also a dead one.
+        if stripped.startswith(OLD_PREFIX) and \
+                stripped[len(OLD_PREFIX):].strip().rstrip("/") == url:
+            continue
+        if not done and stripped.startswith("http"):
             out.append(url)
+            # Demote the value being replaced, directly under the new one, so
+            # the newest history is the easiest to read.
+            if old and old != url and old not in seen:
+                out.append(f"{OLD_PREFIX}{old}")
             done = True
         else:
             out.append(line)
@@ -103,10 +160,11 @@ def files() -> list[Path]:
 
 def scan(paths: list[Path], want: str) -> tuple[dict[Path, int], dict[Path, set[str]]]:
     """(files needing a rewrite → count, files → the wrong hosts they carry)."""
+    pattern = stale_pattern(want)
     stale, hosts = {}, {}
     for p in paths:
         text = p.read_text(encoding="utf-8")
-        bad = {h for h in HOST_RE.findall(text) if h != want}
+        bad = {h for h in pattern.findall(text) if h != want}
         if bad:
             stale[p] = sum(text.count(h) for h in bad)
             hosts[p] = bad
@@ -166,12 +224,13 @@ def main() -> int:
         print(f"✓ nothing to change — all {len(paths)} managed files already agree")
         return 0
 
+    pattern = stale_pattern(url)
     total = 0
     for p in sorted(stale):
         text = p.read_text(encoding="utf-8")
         # Rewrite bytes, not lines. _redirects is columnar and api-config.js has
         # the URL inside a ternary; a line-oriented edit would reflow both.
-        new = HOST_RE.sub(url, text)
+        new = pattern.sub(url, text)
         p.write_text(new, encoding="utf-8", newline="")
         total += stale[p]
         print(f"  {p.relative_to(REPO).as_posix():44s} {stale[p]:2d}×")

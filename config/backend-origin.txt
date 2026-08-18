@@ -21,6 +21,10 @@
 #   Change it:   python tools/set_backend_origin.py https://new-host.onrender.com
 #   Verify it:   python tools/set_backend_origin.py --check
 #
+# Moving to a whole new Render account is a longer job — the URL is one
+# command, but every `sync: false` value in render.yaml has to be re-entered by
+# hand on the new dashboard. The procedure is tools/RENDER-ACCOUNT-SWITCH.md.
+#
 # Python and the GitHub workflows read this file directly, so they need no
 # rewrite at all. Netlify's _redirects and the browser JS cannot read a file at
 # request time, so the tool rewrites those — and tests/test_backend_origin.py
@@ -30,6 +34,19 @@
 # after which Render can rename its subdomain freely and nothing here changes.
 # Until that DNS exists, this file is the single point of change.
 #
-# Format: the first line starting with http is the origin. No trailing slash.
+# Format
+# ------
+# The first line starting with http is the current origin. No trailing slash.
+# Every `#old ` line below it is an address this site used before. The tool
+# writes those itself — it demotes the outgoing value on each change — and
+# reads them back to know what to search for.
+#
+# That history is not decoration. Without it the tool could only recognise a
+# *.onrender.com address, so the first move to a custom domain or another
+# provider would work and the one after it would silently do nothing, while
+# --check reported "all files agree" over a site whose _redirects still pointed
+# at the dead host. Do not delete these lines.
 # ============================================================
 https://krashi-mitra-v1-muup.onrender.com
+#old https://krashi-mitra-v1-oxdc.onrender.com
+#old https://krashi-mitra-v1.onrender.com
