@@ -2,7 +2,7 @@
 // outage hold Netlify's `{"error":"usage_exceeded"}` 503 under the URL of a real
 // page or stylesheet, and the activate step deletes every cache that isn't the
 // current name.
-const CACHE_NAME = 'krashimitra-v8'; // v8: backend moved to a new Render host — every returning browser held a cache-first api-config.js pointing at the dead one; v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
+const CACHE_NAME = 'krashimitra-v9'; // v9: ads.js shipped, but drawer-menu.js (which bootstraps it) is referenced without a ?v= query from the articles and the static pages, so cache-first kept handing returning phones the pre-ads copy and no ad ever rendered for them; // v8: backend moved to a new Render host — every returning browser held a cache-first api-config.js pointing at the dead one; v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './analytics.js',
@@ -86,6 +86,11 @@ function lastKnownGood(request, fallback) {
     .then((hit) => hit || fallback || Response.error());
 }
 
+// Assets that must never be served from a stale cache: they carry the address
+// of something else (the backend) or load something else (the rest of the shell),
+// so a stale copy silently disables a whole feature instead of looking broken.
+const SHELL_SCRIPTS = /\/(api-config|drawer-menu|ads)\.js$/;
+
 // Fetch Event
 self.addEventListener('fetch', (event) => {
   const request    = event.request;
@@ -138,7 +143,14 @@ self.addEventListener('fetch', (event) => {
   //
   // The cache is still written and still used, so an offline visit is exactly
   // as good as before — the only change is that a reachable network wins.
-  if (requestUrl.pathname.endsWith('/api-config.js')) {
+  // The same trap catches the shell bootstrap scripts. drawer-menu.js is what
+  // injects ads.js (and krashibook.js) into every article and static page, and
+  // those pages reference it as a bare path with no ?v= — so under cache-first
+  // a browser that had loaded the site even once before ads shipped kept
+  // replaying the pre-ads copy and never rendered a single unit. /bhav was
+  // unaffected only because bhav.py's _asset() stamps a ?v=<mtime> that changed
+  // the URL. Anything that bootstraps the rest of the shell belongs here.
+  if (SHELL_SCRIPTS.test(requestUrl.pathname)) {
     event.respondWith(
       fetch(request)
         .then((response) => {
