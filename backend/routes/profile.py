@@ -527,13 +527,13 @@ def get_profile(
         # account email + signup name so the frontend can show them
         # (read-only email, name as prefill) and verify the session maps
         # to a real account.
-        acct = db.query(User).filter(User.id == user_id).first()
+        account = db.query(User).filter(User.id == user_id).first()
         return {
             "success": False,
             "message": "Profile नहीं मिला। पहले POST /profile से profile बनाएं।",
             "data": {
-                "email":     acct.email if acct else None,
-                "full_name": acct.name  if acct else None,
+                "email":     account.email if account else None,
+                "full_name": account.name  if account else None,
             },
         }
 
