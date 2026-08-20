@@ -86,7 +86,7 @@ BODY = r"""
   <div class="ad-slot responsive" aria-label="विज्ञापन">
     <div class="ad-slot-label">विज्ञापन</div>
     <div class="ad-slot-inner">
-      <div class="km-ad-slot" data-slot="5312478291" data-format="auto"></div>
+      <div class="km-ad-slot" data-slot="4489195916" data-format="auto"></div>
     </div>
   </div>
 

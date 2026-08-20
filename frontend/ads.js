@@ -167,8 +167,14 @@
 
   // How many units this page has earned. A short page gets none — three ads
   // around four paragraphs is what makes a site feel like a spam farm.
+  // Thresholds are mobile heights, because 390px is where 98% of the readers
+  // are and a phone page is naturally 2-3x the height of the same page on a
+  // desktop. The old 1600/3600/6800 ladder was desktop-shaped: it gave a
+  // 4,500px /bhav district page — a full price table, trend panel and FAQ —
+  // only two units, and put the zero-unit cliff at 1600px, right in the middle
+  // of where tier-1 and tier-2 crop pages actually land (measured: 1620-2776px).
   function budget(height) {
-    var n = height < 1600 ? 0 : height < 3600 ? 1 : height < 6800 ? 2 : MAX;
+    var n = height < 1400 ? 0 : height < 2600 ? 1 : height < 4200 ? 2 : MAX;
     var c = navigator.connection || {};
     if (c.saveData || /(^|-)2g$/.test(c.effectiveType || '')) n = Math.min(n, 1);
     return n;
@@ -363,9 +369,29 @@
 
   // Placement measures real geometry, so it waits for layout — fonts and images
   // change every offsetHeight this script reads.
+  //
+  // 'load' is necessary but not sufficient on /bhav: the location card and the
+  // nearest-mandi panel are injected by their own scripts after it fires, and
+  // lazy images resolve later still. Measuring once at 'load' read the page
+  // mid-growth, and since tier-1/tier-2 pages sit within a few hundred px of
+  // the zero-unit cliff, the SAME url placed 0 units on one visit and 1 on the
+  // next — coverage that looked random rather than broken. Wait for two
+  // consecutive equal heights (capped, so a page that never settles still gets
+  // its ads) and every visit measures the same page.
   function boot() {
-    if (document.readyState === 'complete') { init(); return; }
-    window.addEventListener('load', init, { once: true });
+    function start() {
+      var root = contentRoot();
+      if (!root) { init(); return; }
+      var last = -1, tries = 0;
+      (function settle() {
+        var h = root.offsetHeight;
+        if (h === last || ++tries > 12) { init(); return; }
+        last = h;
+        setTimeout(settle, 120);
+      })();
+    }
+    if (document.readyState === 'complete') { start(); return; }
+    window.addEventListener('load', start, { once: true });
   }
   boot();
 })();
