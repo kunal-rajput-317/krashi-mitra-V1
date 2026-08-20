@@ -45,7 +45,13 @@
   // a thousand clicks), anything behind a login, and the interactive tools that
   // are apps rather than articles. /product/* is NOT here — those are Google
   // landing pages, and the quote form itself lives on shop.html.
-  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|map|khoj|krashi_bajar|meri_fasal)(\.html)?(\/|$)/;
+  //
+  // /pay is the strongest case of all: it is the one page where the site is
+  // actually collecting money, so a competing ad is not a lost click, it is a
+  // lost payment. A third-party ad next to a UPI amount also reads as exactly
+  // the kind of page a farmer has been told to distrust. The segment match is
+  // whole-segment, so /payment (if it ever exists) is unaffected.
+  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|map|khoj|krashi_bajar|meri_fasal|pay)(\.html)?(\/|$)/;
 
   // Blocks an ad must never be wedged into or placed directly before.
   var SKIP = '.answer,.hero,.crumbs,.km-ad,.ad-slot-wrap,.ad-slot-pair,.lead-gen,' +
