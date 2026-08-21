@@ -2,21 +2,31 @@
 # backend/routes/alerts.py
 # KrashiMitra — Mandi price alerts (Web Push)
 #
-# The 🔔 toggle on a /bhav page subscribes the signed-in farmer to one
-# crop+mandi. /bhav pages are anonymous and edge-cached, so the toggle state
-# is hydrated client-side (never baked into the cached HTML) — but turning it
-# ON requires a login, so the alert belongs to the ACCOUNT and survives a
-# cleared browser or a new phone. The device's push endpoint is still stored;
-# it is the delivery address, not the identity.
+# The 🔔 toggle on a /bhav page subscribes a farmer to one crop+mandi. /bhav
+# pages are anonymous and edge-cached, so the toggle state is hydrated
+# client-side, never baked into the cached HTML.
 #
 #   GET  /alerts/vapid-key      → public key for pushManager.subscribe()
-#   GET  /alerts/mandi/status   → is this user (or legacy device) subscribed?
-#   POST /alerts/mandi          → subscribe — LOGIN REQUIRED
+#   GET  /alerts/mandi/status   → is this user (or this device) subscribed?
+#   POST /alerts/mandi          → subscribe — no login required
 #   POST /alerts/mandi/off      → unsubscribe
 #
-# Alerts created before the login gate have user_id NULL. They keep working and
-# stay cancellable without a token: an alert you cannot switch off is worse
-# than one created without an account.
+# Subscribing needed a login until 2026-08-21, on the reasoning that an alert
+# should belong to an account rather than to a browser a cache-clear can erase.
+# In practice it erased the feature instead: the whole site had ONE subscriber,
+# because the bell sits on the /bhav pages Google traffic lands on and asking a
+# stranger for an email OTP before his first price alert loses him.
+#
+# The reasoning was also weaker than it looked. A push subscription is bound to
+# the browser no matter who owns the row — clear it and the endpoint dies with
+# it, account or no account — and a new phone has to grant permission and
+# subscribe again regardless. So the gate protected almost nothing real.
+#
+# An account still helps once there IS one: /auth/claim-guest adopts this
+# browser's user_id-NULL alerts on the farmer's next login, after which they
+# fan out to all of his devices (see _devices_for in push_service). Anonymous
+# alerts stay pinned to the endpoint that created them, which is exactly where
+# the farmer who set one is standing.
 # ============================================================
 
 import os
@@ -36,7 +46,6 @@ router = APIRouter(prefix="/alerts", tags=["alerts"])
 
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "").strip()
 
-LOGIN_REQUIRED = "भाव अलर्ट पाने के लिए पहले लॉगिन करें।"
 
 
 class PushKeys(BaseModel):
@@ -79,13 +88,6 @@ def _user_id(authorization: Optional[str]) -> Optional[int]:
     if not authorization or not authorization.startswith("Bearer "):
         return None
     return resolve_token_user_id(authorization.split(" ", 1)[1].strip())
-
-
-def _require_user(authorization: Optional[str]) -> int:
-    uid = _user_id(authorization)
-    if uid is None:
-        raise HTTPException(401, LOGIN_REQUIRED)
-    return uid
 
 
 def display_name(db: Session, user_id: int) -> Optional[str]:
@@ -174,9 +176,13 @@ def mandi_alert_on(
     db:            Session       = Depends(get_db),
     authorization: Optional[str] = Header(None),
 ):
-    """Turn the bell on. Requires a login — an alert has to belong to a person,
-    not to a browser that a cache-clear can erase."""
-    uid = _require_user(authorization)
+    """Turn the bell on, with or without an account.
+
+    Anonymous is the common case by design: this is the first thing a farmer who
+    arrived from a Google search is asked to do, and it has to cost him one tap.
+    The row is pinned to his push endpoint and delivers exactly the same way; if
+    he ever logs in, /auth/claim-guest walks it over to the account."""
+    uid = _user_id(authorization)
 
     if not VAPID_PUBLIC_KEY:
         raise HTTPException(503, "पुश सूचना अभी उपलब्ध नहीं है।")
@@ -193,7 +199,12 @@ def mandi_alert_on(
     if sub:
         sub.p256dh     = body.subscription.keys.p256dh
         sub.auth       = body.subscription.keys.auth
-        sub.user_id    = uid
+        # Only ever ADD an owner here. An anonymous call on a device that is
+        # already signed in means the token expired between page load and tap,
+        # not that the farmer stopped owning his phone — writing None back would
+        # orphan every other alert that fans out through this endpoint.
+        if uid is not None:
+            sub.user_id = uid
         sub.active     = True
         sub.updated_at = datetime.utcnow()
     else:
@@ -215,7 +226,8 @@ def mandi_alert_on(
     # Reuse this account's existing alert for the crop+mandi if there is one —
     # subscribing again from a second phone must not create a second row, or the
     # farmer gets the same price pushed to him twice.
-    alert = db.query(MandiAlert).filter(MandiAlert.user_id == uid, *target).first()
+    alert = (db.query(MandiAlert).filter(MandiAlert.user_id == uid, *target).first()
+             if uid is not None else None)
     if alert is None:
         # Otherwise adopt whatever row already occupies this (device, crop, mandi)
         # slot — a legacy pre-login alert (user_id NULL), or one left behind by
@@ -232,11 +244,14 @@ def mandi_alert_on(
 
     # Rewritten on every subscribe, not just on create — that keeps the copy
     # current for anyone who renamed themselves and toggled the bell since.
-    name = display_name(db, uid)
+    name = display_name(db, uid) if uid is not None else None
 
     if alert:
-        alert.user_id         = uid
-        alert.user_name       = name
+        # Same rule as the device above: an anonymous tap re-arms the row it
+        # finds, it never un-owns one that already has a farmer behind it.
+        if uid is not None:
+            alert.user_id   = uid
+            alert.user_name = name
         alert.subscription_id = sub.id
         alert.active          = True
         alert.updated_at      = datetime.utcnow()

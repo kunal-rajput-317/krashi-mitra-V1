@@ -51,7 +51,14 @@
   // lost payment. A third-party ad next to a UPI amount also reads as exactly
   // the kind of page a farmer has been told to distrust. The segment match is
   // whole-segment, so /payment (if it ever exists) is unaffected.
-  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|map|khoj|krashi_bajar|meri_fasal|pay)(\.html)?(\/|$)/;
+  //
+  // /map is deliberately NOT here, though it reads like one of the tools. It is
+  // not a tool: naksha.py's up_map() renders it through the same _state_page()
+  // as every other state, and /naksha/uttar-pradesh 301s into it. Listing it
+  // meant the one state page every page's utility bar links to — Uttar Pradesh,
+  // which also carries the cluster's search history — was the single state of
+  // 36 that could not earn, while /naksha/bihar and the rest did.
+  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay)(\.html)?(\/|$)/;
 
   // Blocks an ad must never be wedged into or placed directly before.
   var SKIP = '.answer,.hero,.crumbs,.km-ad,.ad-slot-wrap,.ad-slot-pair,.lead-gen,' +
@@ -179,11 +186,19 @@
   // 4,500px /bhav district page — a full price table, trend panel and FAQ —
   // only two units, and put the zero-unit cliff at 1600px, right in the middle
   // of where tier-1 and tier-2 crop pages actually land (measured: 1620-2776px).
+  //
+  // There is deliberately no navigator.connection cap here any more. It used to
+  // drop a page to a single unit on saveData or a *2g effectiveType, which was
+  // written as a courtesy to farmers on weak rural signal — but measurement
+  // showed it firing on a real share of the audience (2 units -> 1) while being
+  // invisible in DevTools, which reports 4g and Save-Data off. That is the
+  // worst combination: a real revenue cost that no local test can reproduce.
+  // The cost it was avoiding is small in any case, because units are lazy and
+  // only request when they come near the viewport, and they are served from
+  // Google's CDN rather than our own origin, so a slow phone pays for the ads
+  // it actually reaches and nothing else.
   function budget(height) {
-    var n = height < 1400 ? 0 : height < 2600 ? 1 : height < 4200 ? 2 : MAX;
-    var c = navigator.connection || {};
-    if (c.saveData || /(^|-)2g$/.test(c.effectiveType || '')) n = Math.min(n, 1);
-    return n;
+    return height < 1400 ? 0 : height < 2600 ? 1 : height < 4200 ? 2 : MAX;
   }
 
   // An ad must never sit above the page's own conversion point. Only CTAs near

@@ -233,6 +233,19 @@ class TestFunnel:
             "added": 20, "called": 10, "free_live": 3, "paid": 1}
 
 
+# The QR's own wrapper (routes/pay.py builds `<div class="pay-qr">…`), and the
+# only thing on the page that means "a scannable code was offered".
+#
+# This used to assert `"<svg" not in r.text`, which was a fair proxy back when
+# the shared page shell contained no SVG at all. It stopped being one the day a
+# decorative phone icon landed in bhav.py::_header — every page that renders
+# through _doc() has carried an <svg> ever since, so both dead-end tests went
+# red while the behaviour they guard stayed correct. A test that fails for a
+# reason unrelated to what it protects is a test people learn to ignore, and
+# this one guards a money path.
+_PAY_QR = 'class="pay-qr"'
+
+
 class TestPayPage:
     """The public page. It may never claim payment happened."""
 
@@ -241,6 +254,11 @@ class TestPayPage:
         assert r.status_code == 200
         assert "Sharma Traders" in r.text
         assert "upi://pay?" in r.text
+        # Pins the marker the two dead-end tests below assert the ABSENCE of.
+        # Without this, a rename of .pay-qr would leave those two passing
+        # against a page that no longer contains what they are looking for —
+        # green, and guarding nothing.
+        assert _PAY_QR in r.text
 
     def test_is_noindex(self, upi, dealer, client):
         assert "noindex" in client.get(f"/pay?d={dealer.slug}").text
@@ -268,14 +286,14 @@ class TestPayPage:
         r = client.get("/pay?d=does-not-exist")
         assert r.status_code == 200          # still not a 404 in someone's face
         assert "upi://pay?" not in r.text, "an unattributable payment was offered"
-        assert "<svg" not in r.text, "a scannable QR was offered with no dealer"
+        assert _PAY_QR not in r.text, "a scannable QR was offered with no dealer"
         assert "अधूरा" in r.text
 
     def test_bare_pay_gets_no_payable_page(self, upi, client):
         r = client.get("/pay")
         assert r.status_code == 200
         assert "upi://pay?" not in r.text
-        assert "<svg" not in r.text
+        assert _PAY_QR not in r.text
 
     def test_the_vpa_is_not_leaked_without_a_dealer(self, upi, client):
         """The dead end must not become a copy-the-VPA-and-pay-anyway page."""

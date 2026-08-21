@@ -788,8 +788,38 @@ def fetch_and_store() -> dict:
             db.query(MandiPrice).filter(
                 MandiPrice.id.in_(stale_ids[i:i + CHUNK_IDS])
             ).delete(synchronize_session=False)
-        snapshot = []
+        # ONE snapshot row per market identity, carrying its newest date.
+        #
+        # `rows` is deduped on group_key + arrival_date (see the fetch loop),
+        # because history needs every date. The snapshot answers a different
+        # question — "what is this mandi charging now" — and group_key
+        # deliberately holds no date. Inserting straight from `rows` therefore
+        # wrote one snapshot row per date the feed still carried, while the
+        # delete above matched on group_key alone and so only ever cleared a
+        # single generation. The surplus compounded on every fetch.
+        #
+        # By 21 Aug 2026 that was 8,111 of 36,197 snapshot rows (22%)
+        # redundant. A farmer saw one mandi repeated up to 8 times in the table
+        # on its own /bhav page, and because the copies came from different
+        # dates they often disagreed: Sriganganagar (F&V) APMC listed four
+        # different rates for the same Amrapali mango. _stats() averages the
+        # rows it is given, so the headline district price was silently
+        # weighted by how many stale dates each mandi still had in the feed —
+        # Meerut wheat read ₹2,593 where the true average of its two distinct
+        # quotes was ₹2,595.
+        newest: dict = {}
         for x in rows:
+            k   = x["group_key"]
+            cur = newest.get(k)
+            if cur is None:
+                newest[k] = x
+                continue
+            d_new, d_cur = _parse_dt(x.get("arrival_date")), _parse_dt(cur.get("arrival_date"))
+            if d_cur is None or (d_new is not None and d_new > d_cur):
+                newest[k] = x
+
+        snapshot = []
+        for x in newest.values():
             prev = prev_map.get(x["group_key"])
             snapshot.append({
                 "state":            x["state"],

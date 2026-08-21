@@ -1089,6 +1089,11 @@ body {
         <span>खरीदार / Dealers</span>
         <span class="nav-badge" id="by-nav-badge" hidden>0</span>
       </div>
+      <div class="nav-item" onclick="switchPage('dukan', this)">
+        <span class="nav-icon">🏪</span>
+        <span>कृषि दुकान / Shops</span>
+        <span class="nav-badge" id="dk-nav-badge" hidden>0</span>
+      </div>
       <div class="nav-item" onclick="switchPage('checklist', this)">
         <span class="nav-icon">🎯</span>
         <span>Deadline Checklist</span>
@@ -2971,6 +2976,233 @@ body {
            The number to read is days_left, not the percentage. A bandwidth
            meter at 60% that is barely moving is fine; a compute meter at 40%
            burning four times as fast is the one that ends the month early. -->
+      <!-- कृषि दुकान — the local shop directory behind /krashi_dukan.
+           NOT the खरीदार page above: that sells an ad slot on a /bhav crop
+           page. This is a directory of real shops and what they stock, and it
+           is entirely admin-entered — there is no self-serve form yet, so the
+           plan is chosen here, on the call, while the shop is being typed in.
+           One shop = one row. Its whole catalogue hangs off it. -->
+      <div class="page" id="page-dukan">
+        <style>
+        .dk-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+        .dk-tab {
+          padding:9px 18px; border-radius:var(--radius-sm); cursor:pointer;
+          font-size:13px; font-weight:600; border:1px solid var(--border);
+          background:var(--surface); color:var(--text-dim); transition:var(--transition);
+        }
+        .dk-tab.on { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .dk-pane { display:none; }
+        .dk-pane.on { display:block; }
+        .dk-shop {
+          border:1px solid var(--border); border-radius:var(--radius-md);
+          background:var(--surface); margin-bottom:12px; overflow:hidden;
+        }
+        .dk-shop-head {
+          display:flex; gap:14px; align-items:center; padding:14px 18px;
+          cursor:pointer; flex-wrap:wrap;
+        }
+        .dk-shop-head:hover { background:rgba(255,255,255,0.02); }
+        .dk-shop-name { font-weight:700; font-size:14.5px; color:var(--text); }
+        .dk-shop-sub { font-size:12px; color:var(--muted); font-family:var(--font-mono); }
+        .dk-shop-grow { flex:1; min-width:180px; }
+        .dk-pill {
+          font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:11px;
+          font-family:var(--font-mono); letter-spacing:.4px; white-space:nowrap;
+        }
+        .dk-pill.live { background:rgba(34,197,94,.14); color:#4ade80; }
+        .dk-pill.dark { background:rgba(148,163,184,.14); color:#94a3b8; }
+        .dk-pill.lapsed { background:rgba(239,68,68,.13); color:#f87171; }
+        .dk-pill.plan { background:rgba(59,130,246,.13); color:#60a5fa; }
+        .dk-pill.uncalled { background:rgba(245,158,11,.14); color:#fbbf24; }
+        .dk-body { display:none; padding:0 18px 18px; border-top:1px solid var(--border); }
+        .dk-body.on { display:block; }
+        .dk-items { width:100%; border-collapse:collapse; margin-top:10px; }
+        .dk-items th {
+          font-size:10.5px; text-transform:uppercase; letter-spacing:.8px;
+          color:var(--muted); font-family:var(--font-mono); text-align:left;
+          padding:8px 10px; border-bottom:1px solid var(--border);
+        }
+        .dk-items td { padding:9px 10px; font-size:13px; border-bottom:1px solid var(--border); }
+        .dk-items tr:last-child td { border-bottom:none; }
+        .dk-mini { padding:5px 10px; font-size:11.5px; border-radius:var(--radius-sm); }
+        .dk-hint { font-size:12px; color:var(--muted); line-height:1.6; margin:6px 0 14px; }
+        .dk-collect { text-align:center; }
+        .dk-collect img, .dk-collect svg { max-width:200px; margin:10px auto; display:block; }
+        </style>
+
+        <div class="page-header">
+          <div class="page-title">
+            <h2>कृषि दुकान / Shops</h2>
+            <p>The directory behind <span class="text-mono" style="font-size:12px;">/krashi_dukan</span>
+               • one shop, one row, its whole stock underneath • a product no live shop carries is not shown at all</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadDukan()">↻ Refresh</button>
+          </div>
+        </div>
+
+        <div class="ld-grid mb-24">
+          <div class="stat-card accented">
+            <span class="stat-icon">✅</span>
+            <div class="stat-label">Live on the site</div>
+            <div class="stat-value ld-big" id="dk-live">—</div>
+            <div class="stat-sub">visible to farmers right now</div>
+          </div>
+          <div class="stat-card warning">
+            <span class="stat-icon">📞</span>
+            <div class="stat-label">Never called</div>
+            <div class="stat-value ld-big" id="dk-uncalled">—</div>
+            <div class="stat-sub">typed in but never rung</div>
+          </div>
+          <div class="stat-card info">
+            <span class="stat-icon">💰</span>
+            <div class="stat-label">Paying</div>
+            <div class="stat-value ld-big" id="dk-paying">—</div>
+            <div class="stat-sub">have sent money at least once</div>
+          </div>
+          <!-- A lapse nobody chases is revenue lost in silence. A shop that has
+               NEVER paid stays live on purpose (see krashi_dukan.is_live);
+               one that paid and ran out goes dark, and needs a call. -->
+          <div class="stat-card danger">
+            <span class="stat-icon">⏳</span>
+            <div class="stat-label">Lapsed — call them</div>
+            <div class="stat-value ld-big" id="dk-lapsed">—</div>
+            <div class="stat-sub">paid once, season ran out, now dark</div>
+          </div>
+        </div>
+
+        <div class="dk-tabs">
+          <div class="dk-tab on" id="dk-tab-shops" onclick="dkTab('shops')">🏪 दुकानें</div>
+          <div class="dk-tab" id="dk-tab-catalog" onclick="dkTab('catalog')">📦 कैटलॉग</div>
+        </div>
+
+        <!-- ── दुकानें ── -->
+        <div class="dk-pane on" id="dk-pane-shops">
+          <div class="sec-label">नई दुकान जोड़ें</div>
+          <p class="dk-hint">
+            लाइसेंस नंबर ज़रूरी है — यही एक सस्ती जाँच है जो नकली सामान बेचने वाली दुकान को
+            बाहर रखती है, और यह किसान को पेज पर दिखता भी है।
+            ज़िले से ही दूरी निकलती है, इसलिए वह भी ज़रूरी है.
+          </p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">दुकान का नाम *</label>
+              <input class="inp-text" id="dk-f-name" placeholder="किसान कृषि केंद्र">
+            </div>
+            <div class="form-group">
+              <label class="form-label">राज्य</label>
+              <input class="inp-text" id="dk-f-state" placeholder="Uttar Pradesh">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ज़िला *</label>
+              <input class="inp-text" id="dk-f-district" placeholder="Bareilly">
+            </div>
+            <div class="form-group">
+              <label class="form-label">लाइसेंस नंबर *</label>
+              <input class="inp-text" id="dk-f-license" placeholder="UP/BLY/FERT/2019/441">
+            </div>
+            <div class="form-group">
+              <label class="form-label">फ़ोन</label>
+              <input class="inp-text" id="dk-f-phone" placeholder="9870951001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">व्हाट्सऐप (91 सहित)</label>
+              <input class="inp-text" id="dk-f-whatsapp" placeholder="919870951001">
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label">पता</label>
+              <input class="inp-text" id="dk-f-address" placeholder="मंडी रोड, बरेली">
+            </div>
+            <div class="form-group">
+              <label class="form-label">कब से</label>
+              <input class="inp-text" id="dk-f-since" placeholder="2019 से">
+            </div>
+            <!-- The plan is set here, on the call. Both plans buy exactly the
+                 same listing — same items, same position. Only how the money
+                 arrives differs. -->
+            <div class="form-group">
+              <label class="form-label">प्लान *</label>
+              <select class="inp-select" id="dk-f-plan" onchange="dkPlanToggle()">
+                <option value="season">सीजन का — flat fee</option>
+                <option value="commission">कमीशन — % per sale</option>
+              </select>
+            </div>
+            <div class="form-group" id="dk-f-pct-wrap" hidden>
+              <label class="form-label">कमीशन % (0–30)</label>
+              <input class="inp-text" id="dk-f-pct" type="number" step="0.5" placeholder="5">
+            </div>
+          </div>
+          <div class="flex-row mb-24">
+            <button class="btn" onclick="dkAddShop()" id="dk-add-btn">+ दुकान जोड़ें</button>
+            <label class="toggle-switch" onclick="dkToggle('dk-f-active')">
+              <span class="sw-track on" id="dk-f-active-sw"><span class="sw-thumb"></span></span>
+              <span class="text-sm">तुरंत लाइव करें</span>
+            </label>
+            <label class="toggle-switch" onclick="dkToggle('dk-f-verified')">
+              <span class="sw-track" id="dk-f-verified-sw"><span class="sw-thumb"></span></span>
+              <span class="text-sm">जाँची हुई (कॉल के बाद)</span>
+            </label>
+          </div>
+
+          <div class="sec-label">दुकानें</div>
+          <div id="dk-shop-list"></div>
+        </div>
+
+        <!-- ── कैटलॉग ── -->
+        <div class="dk-pane" id="dk-pane-catalog">
+          <p class="dk-hint">
+            कैटलॉग हमारा है, दुकान का नहीं। दुकानदार अपने मन से नाम नहीं लिख सकता — वरना
+            दो दुकानें कभी एक ही पेज पर नहीं आतीं और <span class="text-mono">/krashi_dukan/urea</span>
+            जैसा पेज बन ही नहीं सकता। नया उत्पाद तभी जोड़ें जब वाक़ई नया हो।
+          </p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">हिंदी नाम *</label>
+              <input class="inp-text" id="dk-c-name-hi" placeholder="यूरिया खाद">
+            </div>
+            <div class="form-group">
+              <label class="form-label">English name</label>
+              <input class="inp-text" id="dk-c-name-en" placeholder="Urea Fertilizer">
+            </div>
+            <div class="form-group">
+              <label class="form-label">श्रेणी *</label>
+              <select class="inp-select" id="dk-c-cat"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">इकाई</label>
+              <input class="inp-text" id="dk-c-unit" placeholder="45 kg बैग">
+            </div>
+            <div class="form-group">
+              <label class="form-label">इमोजी</label>
+              <input class="inp-text" id="dk-c-emoji" placeholder="🧪">
+            </div>
+            <div class="form-group">
+              <label class="form-label">फोटो URL (या नीचे अपलोड करें)</label>
+              <input class="inp-text" id="dk-c-img" placeholder="/images/fertilizer/urea.webp">
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label">जानकारी</label>
+              <input class="inp-text" id="dk-c-desc" placeholder="नाइट्रोजन वाली खाद, हर फसल में काम आती है।">
+            </div>
+          </div>
+          <div class="flex-row mb-24">
+            <button class="btn" onclick="dkAddCatalog()" id="dk-cadd-btn">+ उत्पाद जोड़ें</button>
+          </div>
+
+          <div class="sec-label">कैटलॉग</div>
+          <div class="table-container">
+            <div class="table-responsive">
+              <table class="admin-table" id="dk-catalog-table">
+                <thead><tr>
+                  <th>उत्पाद</th><th>श्रेणी</th><th>इकाई</th><th>slug</th><th>फोटो</th><th></th>
+                </tr></thead>
+                <tbody id="dk-catalog-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="page" id="page-infra">
         <style>
         .if-verdict {
@@ -4315,6 +4547,7 @@ function switchPage(pageId, el) {
   }
   if (pageId === 'locator') loadFarmerLocator();
   if (pageId === 'buyers') loadBuyers();
+  if (pageId === 'dukan') loadDukan();
   if (pageId === 'checklist') { loadChecklist(); loadLeads(); }
   if (pageId === 'infra') { loadInfra(false); startInfraPolling(); } else { stopInfraPolling(); }
   if (pageId === 'book' && !_book) loadBook();
@@ -7682,6 +7915,441 @@ function focusFarmer(userId) {
   _flMap.setView(ll, 11, { animate: true });
   m.openPopup();
   document.getElementById('farmer-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ════════════════════════════════════════════════════════════
+   कृषि दुकान — /admin/dukan/*
+   The local shop directory behind /krashi_dukan. Separate from the खरीदार
+   page above in every way except the auth header and the UPI rail.
+   ════════════════════════════════════════════════════════════ */
+
+let _dkShops = [];        // last /shops response
+let _dkCatalog = [];      // last /catalog response
+let _dkCats = {};         // slug → label, straight from product.py's CAT_LABELS
+let _dkOpen = null;       // which shop's stock drawer is expanded
+let _dkUpi = { configured: false };
+
+async function dkApi(path, opts = {}) {
+  const r = await fetch(`${API}/admin/dukan${path}`, {
+    ...opts,
+    headers: { ...getAuthHeader(), 'Content-Type': 'application/json', ...(opts.headers || {}) },
+  });
+  if (r.status === 404 && !opts._quiet) {
+    throw new Error('endpoint missing — restart the backend so /admin/dukan is registered');
+  }
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}));
+    throw new Error(d.detail || `HTTP ${r.status}`);
+  }
+  return r.json();
+}
+
+function dkTab(which) {
+  ['shops', 'catalog'].forEach(t => {
+    document.getElementById('dk-tab-' + t).classList.toggle('on', t === which);
+    document.getElementById('dk-pane-' + t).classList.toggle('on', t === which);
+  });
+}
+
+/* The toggles are the panel's own two-state widgets — a class on the track is
+   the state, so there is no hidden checkbox to keep in sync with it. */
+function dkToggle(id) {
+  document.getElementById(id + '-sw').classList.toggle('on');
+}
+function dkOn(id) {
+  return document.getElementById(id + '-sw').classList.contains('on');
+}
+
+function dkPlanToggle() {
+  const commission = document.getElementById('dk-f-plan').value === 'commission';
+  document.getElementById('dk-f-pct-wrap').hidden = !commission;
+}
+
+async function loadDukan() {
+  const box = document.getElementById('dk-shop-list');
+  if (!box) return;
+  box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> Loading…</div>';
+  // Same two timers as loadBuyers(): a Neon cold start routinely outlasts what
+  // anyone will sit through without being told something is happening.
+  const slow = setTimeout(() => {
+    box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> ' +
+      'Still waiting — the backend or the database may be waking up…</div>';
+  }, 6000);
+  try {
+    const [shops, catalog] = await Promise.all([dkApi('/shops'), dkApi('/catalog')]);
+    _dkShops   = shops.shops || [];
+    _dkUpi     = shops.upi || { configured: false };
+    _dkCatalog = catalog.catalog || [];
+    _dkCats    = catalog.cats || {};
+    dkRenderCounts(shops.counts || {});
+    dkRenderShops();
+    dkRenderCatalog();
+    dkFillCatSelect();
+  } catch (e) {
+    box.innerHTML = `<p style="font-size:12.5px;color:var(--danger);line-height:1.6;">
+      Could not load shops — ${escapeHtml(e.message)}.<br>
+      <span style="color:var(--text-dim);">If the backend was just restarted, hit ↻ Refresh.
+      A read-only database (Neon plan limit) also fails here.</span></p>`;
+  } finally {
+    clearTimeout(slow);
+  }
+}
+
+function dkRenderCounts(c) {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+  set('dk-live', c.live); set('dk-uncalled', c.uncalled);
+  set('dk-paying', c.paying); set('dk-lapsed', c.lapsed);
+  const badge = document.getElementById('dk-nav-badge');
+  if (badge) { badge.textContent = c.live || 0; badge.hidden = !c.shops; }
+}
+
+function dkFillCatSelect() {
+  const sel = document.getElementById('dk-c-cat');
+  if (!sel || !Object.keys(_dkCats).length) return;
+  sel.innerHTML = Object.entries(_dkCats)
+    .map(([k, v]) => `<option value="${escapeHtml(k)}">${escapeHtml(v)}</option>`).join('');
+}
+
+function dkRenderShops() {
+  const box = document.getElementById('dk-shop-list');
+  if (!_dkShops.length) {
+    box.innerHTML = `<p class="dk-hint">अभी कोई दुकान नहीं जुड़ी। ऊपर वाले फ़ॉर्म से पहली दुकान जोड़ें —
+      जब तक एक भी लाइव दुकान नहीं है, <span class="text-mono">/krashi_dukan</span> noindex रहता है।</p>`;
+    return;
+  }
+  box.innerHTML = _dkShops.map(s => {
+    const pills = [];
+    if (s.live) pills.push('<span class="dk-pill live">LIVE</span>');
+    else if (s.lapsed) pills.push('<span class="dk-pill lapsed">LAPSED</span>');
+    else pills.push('<span class="dk-pill dark">OFF</span>');
+    pills.push(`<span class="dk-pill plan">${s.plan === 'commission'
+      ? (s.commission_pct || '?') + '% कमीशन' : 'सीजन'}</span>`);
+    if (!s.called_at) pills.push('<span class="dk-pill uncalled">कॉल नहीं किया</span>');
+    const where = [s.district, s.state].filter(Boolean).join(', ');
+    const open = _dkOpen === s.slug;
+    return `<div class="dk-shop">
+      <div class="dk-shop-head" onclick="dkOpenShop('${escapeHtml(s.slug)}')">
+        <div class="dk-shop-grow">
+          <div class="dk-shop-name">${escapeHtml(s.name)}</div>
+          <div class="dk-shop-sub">${escapeHtml(where || '—')} · ${s.items} आइटम${
+            s.license_no ? ' · ' + escapeHtml(s.license_no) : ''}</div>
+        </div>
+        ${pills.join(' ')}
+        <span style="color:var(--muted);">${open ? '▾' : '▸'}</span>
+      </div>
+      <div class="dk-body${open ? ' on' : ''}" id="dk-body-${escapeHtml(s.slug)}">
+        ${open ? dkShopBody(s) : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dkShopBody(s) {
+  const paid = s.paid_until
+    ? new Date(s.paid_until).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+  const options = _dkCatalog.filter(c => c.active)
+    .map(c => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name_hi)}</option>`).join('');
+  return `
+    <div class="flex-row" style="margin:14px 0;">
+      <button class="btn btn-secondary dk-mini" onclick="dkSetFlag('${s.slug}','active',${!s.active})">
+        ${s.active ? '⏸ लाइव से हटाएं' : '▶ लाइव करें'}</button>
+      <button class="btn btn-secondary dk-mini" onclick="dkSetFlag('${s.slug}','verified',${!s.verified})">
+        ${s.verified ? '✓ जाँच हटाएं' : '✓ जाँची हुई करें'}</button>
+      <button class="btn btn-secondary dk-mini" onclick="dkCall('${s.slug}')">📞 कॉल दर्ज करें</button>
+      <button class="btn btn-secondary dk-mini" onclick="dkCollect('${s.slug}')"
+        ${_dkUpi.configured ? '' : 'disabled title="KM_UPI_ID is not set in the environment"'}>
+        💰 पैसे मांगें</button>
+      <button class="btn btn-secondary dk-mini" onclick="dkPayment('${s.slug}')">🧾 पेमेंट दर्ज करें</button>
+      <button class="btn btn-danger dk-mini" onclick="dkDeleteShop('${s.slug}')">🗑 हटाएं</button>
+      <a class="btn btn-secondary dk-mini" target="_blank" rel="noopener"
+         href="https://krashimitra.in/krashi_dukan">↗ पेज देखें</a>
+    </div>
+    <div class="dk-hint">
+      प्लान: <b>${s.plan === 'commission' ? (s.commission_pct || '?') + '% कमीशन' : 'सीजन का'}</b> ·
+      सीजन खत्म: <b>${paid}</b> ·
+      कॉल: <b>${s.call_count || 0}</b>${s.call_result ? ' (' + escapeHtml(s.call_result) + ')' : ''} ·
+      ${s.lat ? 'दूरी के लिए जगह मिल गई' : '<span style="color:var(--danger);">ज़िले की जगह नहीं मिली — दूरी से क्रम नहीं लगेगा</span>'}
+    </div>
+    <div class="flex-row" style="margin-bottom:10px;">
+      <select class="inp-select" id="dk-i-prod-${s.slug}" style="min-width:200px;">${
+        options || '<option value="">पहले कैटलॉग में उत्पाद जोड़ें</option>'}</select>
+      <input class="inp-text" id="dk-i-price-${s.slug}" type="number" placeholder="कीमत ₹" style="max-width:130px;">
+      <input class="inp-text" id="dk-i-mrp-${s.slug}" type="number" placeholder="MRP ₹" style="max-width:130px;">
+      <input class="inp-text" id="dk-i-unit-${s.slug}" placeholder="इकाई (खाली = कैटलॉग वाली)" style="max-width:220px;">
+      <button class="btn dk-mini" onclick="dkAddItem('${s.slug}')">+ जोड़ें</button>
+    </div>
+    <div id="dk-items-${s.slug}"></div>`;
+}
+
+async function dkOpenShop(slug) {
+  _dkOpen = (_dkOpen === slug) ? null : slug;
+  dkRenderShops();
+  if (_dkOpen) await dkLoadItems(slug);
+}
+
+async function dkLoadItems(slug) {
+  const box = document.getElementById('dk-items-' + slug);
+  if (!box) return;
+  box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> Loading…</div>';
+  try {
+    const d = await dkApi(`/shops/${encodeURIComponent(slug)}/items`);
+    const rows = d.items || [];
+    if (!rows.length) {
+      box.innerHTML = '<p class="dk-hint">इस दुकान का कोई सामान नहीं जुड़ा। ऊपर से जोड़ें।</p>';
+      return;
+    }
+    box.innerHTML = `<table class="dk-items"><thead><tr>
+      <th>उत्पाद</th><th>कीमत</th><th>MRP</th><th>छूट</th><th>इकाई</th><th>स्टॉक</th><th></th>
+      </tr></thead><tbody>${rows.map(i => `<tr>
+        <td>${escapeHtml(i.name_hi)}<div class="dk-shop-sub">${escapeHtml(i.product_slug)}</div></td>
+        <td><input class="inp-text dk-mini" style="width:92px;" type="number" value="${i.price}"
+             onchange="dkSetPrice(${i.id},'${slug}',this.value)"></td>
+        <td>${i.mrp ? '₹' + i.mrp : '—'}</td>
+        <td>${i.off ? i.off + '%' : '—'}</td>
+        <td>${escapeHtml(i.unit_hi || '—')}</td>
+        <td><button class="btn btn-secondary dk-mini"
+             onclick="dkSetItem(${i.id},'${slug}',{in_stock:${!i.in_stock}})">${
+               i.in_stock ? '✓ है' : '✕ नहीं'}</button></td>
+        <td style="text-align:right;">
+          <button class="btn btn-secondary dk-mini"
+            onclick="dkSetItem(${i.id},'${slug}',{active:${!i.active}})">${i.active ? '👁 दिख रहा' : '🚫 छिपा'}</button>
+          <button class="btn btn-danger dk-mini" onclick="dkDeleteItem(${i.id},'${slug}')">🗑</button>
+        </td></tr>`).join('')}</tbody></table>`;
+  } catch (e) {
+    box.innerHTML = `<p style="color:var(--danger);font-size:12.5px;">${escapeHtml(e.message)}</p>`;
+  }
+}
+
+async function dkAddShop() {
+  const val = id => document.getElementById(id).value.trim();
+  const body = {
+    name: val('dk-f-name'), state: val('dk-f-state'), district: val('dk-f-district'),
+    license_no: val('dk-f-license'), phone: val('dk-f-phone'),
+    whatsapp: val('dk-f-whatsapp'), address: val('dk-f-address'), since: val('dk-f-since'),
+    plan: document.getElementById('dk-f-plan').value,
+    commission_pct: val('dk-f-pct'),
+    active: dkOn('dk-f-active'), verified: dkOn('dk-f-verified'),
+  };
+  const btn = document.getElementById('dk-add-btn');
+  btn.disabled = true;
+  try {
+    await dkApi('/shops', { method: 'POST', body: JSON.stringify(body) });
+    ['dk-f-name', 'dk-f-district', 'dk-f-license', 'dk-f-phone', 'dk-f-whatsapp',
+     'dk-f-address', 'dk-f-since', 'dk-f-pct'].forEach(id => document.getElementById(id).value = '');
+    showToast('दुकान जुड़ गई');
+    await loadDukan();
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function dkSetFlag(slug, field, value) {
+  try {
+    await dkApi(`/shops/${encodeURIComponent(slug)}`,
+      { method: 'PATCH', body: JSON.stringify({ [field]: value }) });
+    await loadDukan();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkDeleteShop(slug) {
+  // The cascade is real — the shop's whole price list goes with it.
+  if (!confirm('यह दुकान और इसका सारा सामान हट जाएगा। पक्का?')) return;
+  try {
+    await dkApi(`/shops/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+    _dkOpen = null;
+    showToast('दुकान हटा दी गई');
+    await loadDukan();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkCall(slug) {
+  const result = prompt('कॉल का नतीजा: interested / callback / no-answer / not-interested / wrong-number');
+  if (!result) return;
+  try {
+    await dkApi(`/shops/${encodeURIComponent(slug)}/call`,
+      { method: 'POST', body: JSON.stringify({ result: result.trim() }) });
+    showToast('कॉल दर्ज हो गई');
+    await loadDukan();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkCollect(slug) {
+  const amount = prompt('कितने रुपये मांगने हैं? (खाली = डिफ़ॉल्ट)', _dkUpi.amount || '');
+  if (amount === null) return;
+  try {
+    const d = await dkApi(`/shops/${encodeURIComponent(slug)}/collect` +
+      (amount ? `?amount=${encodeURIComponent(amount)}` : ''));
+    const c = d.collect || {};
+    // A request to pay, never a record of one — nothing here marks the shop
+    // paid. That only happens in dkPayment(), after a human sees the credit.
+    const w = window.open('', '_blank', 'width=460,height=680');
+    w.document.write(`<title>${escapeHtml(c.dealer_name || slug)} — पैसे मांगें</title>
+      <body style="font-family:system-ui;padding:24px;text-align:center;background:#111;color:#eee;">
+      <h3 style="margin:0 0 4px;">${escapeHtml(c.dealer_name || slug)}</h3>
+      <p style="color:#999;margin:0 0 16px;">₹${escapeHtml(String(c.amount || ''))} · ${
+        escapeHtml(c.purpose || '')}</p>
+      ${c.qr_svg || ''}
+      <p style="font-family:monospace;font-size:12px;word-break:break-all;color:#7dd3a0;">${
+        escapeHtml(c.vpa || '')}</p>
+      ${c.link ? `<p><a href="${escapeHtml(c.link)}" style="color:#7dd3a0;">UPI ऐप में खोलें</a></p>` : ''}
+      ${c.whatsapp_text ? `<textarea style="width:100%;height:150px;background:#1b1b1b;color:#ddd;
+        border:1px solid #333;border-radius:6px;padding:10px;font-size:13px;">${
+        escapeHtml(c.whatsapp_text)}</textarea>` : ''}
+      <p style="color:#888;font-size:12px;">पैसे आने के बाद पैनल में "पेमेंट दर्ज करें" ज़रूर दबाएं —
+      UPI लिंक कुछ वापस नहीं बताता।</p></body>`);
+    w.document.close();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkPayment(slug) {
+  const amount = prompt('कितने रुपये सच में आए? (बैंक ऐप से देखकर)');
+  if (!amount) return;
+  const ref = prompt('UPI reference (optional)') || '';
+  try {
+    await dkApi(`/shops/${encodeURIComponent(slug)}/payment`,
+      { method: 'POST', body: JSON.stringify({ amount, ref }) });
+    showToast('पेमेंट दर्ज — दुकान लाइव है');
+    await loadDukan();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkAddItem(slug) {
+  const g = id => document.getElementById(id + '-' + slug);
+  const body = {
+    product_slug: g('dk-i-prod').value,
+    price: g('dk-i-price').value,
+    mrp: g('dk-i-mrp').value,
+    unit_hi: g('dk-i-unit').value.trim(),
+  };
+  if (!body.product_slug || !body.price) { showToast('उत्पाद और कीमत ज़रूरी है', 'error'); return; }
+  try {
+    await dkApi(`/shops/${encodeURIComponent(slug)}/items`,
+      { method: 'POST', body: JSON.stringify(body) });
+    g('dk-i-price').value = ''; g('dk-i-mrp').value = ''; g('dk-i-unit').value = '';
+    showToast('सामान जुड़ गया');
+    await dkLoadItems(slug);
+    const shop = _dkShops.find(s => s.slug === slug);
+    if (shop) shop.items += 1;
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkSetPrice(id, slug, price) {
+  try {
+    await dkApi(`/items/${id}`, { method: 'PATCH', body: JSON.stringify({ price }) });
+    showToast('कीमत बदल गई');
+    await dkLoadItems(slug);
+  } catch (e) { showToast(e.message, 'error'); await dkLoadItems(slug); }
+}
+
+async function dkSetItem(id, slug, patch) {
+  try {
+    await dkApi(`/items/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+    await dkLoadItems(slug);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkDeleteItem(id, slug) {
+  if (!confirm('यह सामान हटा दें?')) return;
+  try {
+    await dkApi(`/items/${id}`, { method: 'DELETE' });
+    await dkLoadItems(slug);
+    const shop = _dkShops.find(s => s.slug === slug);
+    if (shop && shop.items > 0) shop.items -= 1;
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function dkRenderCatalog() {
+  const body = document.getElementById('dk-catalog-body');
+  if (!body) return;
+  if (!_dkCatalog.length) {
+    body.innerHTML = `<tr><td colspan="6" class="dk-hint" style="padding:18px;">
+      कैटलॉग खाली है। दुकान का सामान जोड़ने से पहले यहाँ उत्पाद बनाएं।</td></tr>`;
+    return;
+  }
+  body.innerHTML = _dkCatalog.map(c => `<tr>
+    <td>${escapeHtml(c.emoji || '')} <b>${escapeHtml(c.name_hi)}</b>
+      ${c.name_en ? `<div class="dk-shop-sub">${escapeHtml(c.name_en)}</div>` : ''}</td>
+    <td>${escapeHtml(_dkCats[c.cat] || c.cat)}</td>
+    <td>${escapeHtml(c.unit_hi || '—')}</td>
+    <td class="text-mono" style="font-size:12px;">${escapeHtml(c.slug)}</td>
+    <td>${c.has_image ? '📷 अपलोड' : (c.image_url ? '🔗 URL' : '—')}
+      <input type="file" accept="image/*" style="display:none" id="dk-up-${escapeHtml(c.slug)}"
+        onchange="dkUploadImage('${escapeHtml(c.slug)}', this)">
+      <button class="btn btn-secondary dk-mini"
+        onclick="document.getElementById('dk-up-${escapeHtml(c.slug)}').click()">⬆</button></td>
+    <td style="text-align:right;">
+      <button class="btn btn-secondary dk-mini"
+        onclick="dkSetCatalog('${escapeHtml(c.slug)}',{active:${!c.active}})">${
+          c.active ? '👁 दिख रहा' : '🚫 छिपा'}</button>
+      <button class="btn btn-danger dk-mini" onclick="dkDeleteCatalog('${escapeHtml(c.slug)}')">🗑</button>
+    </td></tr>`).join('');
+}
+
+async function dkAddCatalog() {
+  const val = id => document.getElementById(id).value.trim();
+  const body = {
+    name_hi: val('dk-c-name-hi'), name_en: val('dk-c-name-en'),
+    cat: document.getElementById('dk-c-cat').value,
+    unit_hi: val('dk-c-unit'), emoji: val('dk-c-emoji'),
+    image_url: val('dk-c-img'), desc_hi: val('dk-c-desc'),
+  };
+  const btn = document.getElementById('dk-cadd-btn');
+  btn.disabled = true;
+  try {
+    await dkApi('/catalog', { method: 'POST', body: JSON.stringify(body) });
+    ['dk-c-name-hi', 'dk-c-name-en', 'dk-c-unit', 'dk-c-emoji', 'dk-c-img', 'dk-c-desc']
+      .forEach(id => document.getElementById(id).value = '');
+    showToast('उत्पाद जुड़ गया');
+    await loadDukan();
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function dkSetCatalog(slug, patch) {
+  try {
+    await dkApi(`/catalog/${encodeURIComponent(slug)}`,
+      { method: 'PATCH', body: JSON.stringify(patch) });
+    await loadDukan();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkDeleteCatalog(slug) {
+  // Every shop's price for this product goes too — see krashi_dukan.catalog_delete.
+  if (!confirm('यह उत्पाद और हर दुकान की इसकी कीमत हट जाएगी। पक्का?')) return;
+  try {
+    await dkApi(`/catalog/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+    showToast('उत्पाद हटा दिया');
+    await loadDukan();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function dkUploadImage(slug, input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    // No Content-Type header here on purpose: the browser must set the
+    // multipart boundary itself, and dkApi() would override it with JSON.
+    const r = await fetch(`${API}/admin/dukan/catalog/${encodeURIComponent(slug)}/image`,
+      { method: 'POST', headers: getAuthHeader(), body: fd });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    showToast('फोटो अपलोड हो गई');
+    await loadDukan();
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    input.value = '';
+  }
 }
 </script>
 </body>

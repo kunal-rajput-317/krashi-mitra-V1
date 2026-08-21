@@ -333,6 +333,15 @@ app.include_router(pay_route.router)     # /pay — UPI listing-fee page sent to
 from backend.routes import product as product_route
 app.include_router(product_route.router)  # SEO shop-product pages (/product/*) + /product/sitemap.xml
 
+# Must follow product_route: krashi_dukan imports its card/hero CSS so the two
+# catalogues render identically. A different business from both /product (our
+# own catalogue) and /dukanlisting (/bhav ad slots) — see the module header.
+from backend.routes import krashi_dukan as krashi_dukan_route
+app.include_router(krashi_dukan_route.router)  # कृषि दुकान — local shop directory (/krashi_dukan/*)
+
+from backend.routes import admin_dukan as admin_dukan_route
+app.include_router(admin_dukan_route.router)   # /admin/dukan/* — shops, catalogue, prices, UPI collect
+
 from backend.routes import articles as articles_route
 app.include_router(articles_route.router)  # /articles/meta — live published/updated dates from article JSON-LD
 

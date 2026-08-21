@@ -1289,6 +1289,176 @@ class LeadClick(Base):
     __table_args__ = (Index("ix_lead_clicks_kind_created", "kind", "created_at"),)
 
 
+# ── कृषि दुकान (/krashi_dukan) — the local shop directory ────
+#
+# A DIFFERENT BUSINESS FROM /dukanlisting, ON PURPOSE. Buyer/DealerProduct
+# above sell an *advertisement* on a /bhav price page: the dealer pays to be
+# seen next to a crop rate. These three tables are a *directory*: real shops
+# near the farmer, their real stock, their real counter price. Nothing here
+# touches /shop or /product either — that catalogue stays exactly as it is.
+#
+# The split that makes the whole section work is DukanCatalog (what a thing
+# *is*) against DukanItem (what one shop charges for it). Merging them is what
+# would turn twelve shops selling urea into twelve near-identical pages; kept
+# apart, it is one page with twelve rows and price comparison is the feature.
+
+
+class DukanCatalog(Base):
+    """One canonical product — यूरिया 45kg, गेहूं बीज HD-2967.
+
+    WE OWN THIS LIST, SHOPS DO NOT. A shop cannot invent "Urea 45 Kg Bag" as
+    free text the way DealerProduct lets it, because then no two shops would
+    ever group onto one page and /krashi_dukan/urea could not exist. The admin
+    picks a catalogue row when entering a shop's stock, adding a new one only
+    when the product genuinely is new.
+
+    `slug` IS THE URL and therefore the join key — DukanItem points at it by
+    string rather than by id so a row read straight out of the DB is already
+    enough to build a link, and so re-seeding the catalogue can never silently
+    re-point a shop's price at a different product.
+
+    THE IMAGE HAS TWO SOURCES because the two ways it arrives are both real.
+    `image_url` is for a file already committed under frontend/images (what
+    shop.html's PRODUCTS array has always used); `image_data` is a base64 WebP
+    for one typed in from the admin panel, stored in Postgres for the reason
+    profile.py's avatars already learned — Render's free tier wipes uploads/ on
+    restart. deferred() so the blob never loads on a listing render.
+    """
+    __tablename__ = "dukan_catalog"
+
+    id       = Column(Integer, primary_key=True, index=True)
+    slug     = Column(String,  nullable=False, unique=True, index=True)  # "urea", "wheat-seed-hd-2967"
+    cat      = Column(String,  nullable=False, index=True)               # matches product.py's CAT_LABELS keys
+    emoji    = Column(String,  nullable=True)                            # "🧪" — the card's leading glyph
+    name_hi  = Column(String,  nullable=False)                           # "यूरिया खाद"
+    name_en  = Column(String,  nullable=True)                            # "Urea Fertilizer"
+    unit_hi  = Column(String,  nullable=True)                            # "45 kg बैग"
+    desc_hi  = Column(Text,    nullable=True)
+
+    image_url  = Column(String, nullable=True)                  # /images/... or an absolute URL
+    image_data = deferred(Column(Text, nullable=True))          # base64 WebP, admin upload
+    image_mime = Column(String, nullable=True)                  # cheap presence flag
+
+    active     = Column(Boolean, default=True,  nullable=False, index=True)
+    sort_order = Column(Integer, default=0,     nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DukanShop(Base):
+    """One physical shop in the directory.
+
+    ONE SLOT PER SHOP, MANY ITEMS UNDER IT. There is deliberately no second row
+    per district or per product: the shop is the account, and everything it
+    sells hangs off `slug` in DukanItem. That is the difference from Buyer,
+    where a dealer buying three districts genuinely owns three rows.
+
+    THE COLUMN SET COPIES Buyer BECAUSE Buyer'S SURVIVED REAL DEALERS —
+    verified/active/status, the called_at/call_count/call_result trio that the
+    call sheet reads, and the paid_at/paid_amount/payment_ref/paid_until block
+    that services/upi.py collects against. Copying rather than sharing keeps
+    the two businesses from leaking into each other: a crop trader must never
+    surface on a fertiliser page just because both live in `buyers`.
+
+    `plan` IS SET BY THE ADMIN, NEVER BY THE SHOP. "season" is a flat fee for a
+    season; "commission" is a percentage of what the farmer actually spends.
+    Both buy exactly the same listing — same items, same photos, same position
+    — because the moment paying moves a shop up the list, the price comparison
+    stops being trustworthy and there is nothing left worth selling.
+
+    `lat`/`lon` are the district centroid from services/district_geo.py unless
+    someone types something better. They exist so the product page can rank
+    shops by distance from the farmer, which is the *only* thing ranking is
+    ever allowed to depend on.
+    """
+    __tablename__ = "dukan_shops"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    slug          = Column(String,  nullable=False, unique=True, index=True)  # the URL segment
+    name          = Column(String,  nullable=False)
+    owner_user_id = Column(Integer, nullable=True, index=True)   # set if the owner ever gets a login
+
+    state    = Column(String, nullable=True)
+    district = Column(String, nullable=True, index=True)
+    address  = Column(String, nullable=True)
+    lat      = Column(Float,  nullable=True)
+    lon      = Column(Float,  nullable=True)
+
+    phone     = Column(String, nullable=True)
+    whatsapp  = Column(String, nullable=True)
+    # Mandatory in practice (services/krashi_dukan.py enforces it), nullable in
+    # the schema so an older row can never block a migration. "Only a connector"
+    # is a sound legal position and a worthless social one: if a listed shop
+    # sells a fake input, we wear it in that district whatever the disclaimer
+    # says. The licence number is the one cheap check that makes that unlikely,
+    # and it is printed on the listing where the farmer can read it.
+    license_no = Column(String, nullable=True)
+    gstin      = Column(String, nullable=True)
+    since      = Column(String, nullable=True)   # free text ("2016 से") — shopkeepers don't think in dates
+    note       = Column(String, nullable=True)
+
+    plan           = Column(String,  default="season", nullable=False)  # "season" | "commission"
+    commission_pct = Column(Float,   nullable=True)                     # only meaningful when plan=="commission"
+
+    verified = Column(Boolean, default=False, nullable=False)            # only after a call
+    active   = Column(Boolean, default=False, nullable=False, index=True)  # what the render path checks
+    status   = Column(String,  default="new",  nullable=False, index=True) # new/called/listed/rejected
+
+    called_at   = Column(DateTime, nullable=True)
+    call_count  = Column(Integer,  default=0, nullable=False)
+    call_result = Column(String,   nullable=True)
+
+    paid_at     = Column(DateTime, nullable=True)
+    paid_amount = Column(Integer,  nullable=True)     # whole rupees
+    payment_ref = Column(String,   nullable=True)     # UPI txn ref, typed from the statement
+    paid_until  = Column(DateTime, nullable=True)     # end of the paid season
+
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DukanItem(Base):
+    """One shop's price for one catalogue product.
+
+    `(shop_slug, product_slug)` IS UNIQUE. A shop quoting urea twice is a typo,
+    not a second offer, and the product page would render it as two rows from
+    the same counter at different prices — which reads as a bug to the one
+    person the page exists for.
+
+    `price` IS THE COUNTER PRICE, not ours. We never mark it up, never take a
+    cut inside it, and never show a number the shop would not honour. `mrp` is
+    optional because a shop quoting a loose rate has no MRP to strike through
+    — same reasoning as DealerProduct.mrp.
+
+    `active` is checked on every render alongside the parent shop's own gating,
+    so a shop going unpaid or unverified empties its rows without anything
+    having to remember to walk this table.
+    """
+    __tablename__ = "dukan_items"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    shop_slug    = Column(String,  nullable=False, index=True)   # DukanShop.slug
+    product_slug = Column(String,  nullable=False, index=True)   # DukanCatalog.slug
+
+    price        = Column(Integer, nullable=False)   # whole rupees, what the farmer pays at the counter
+    mrp          = Column(Integer, nullable=True)    # struck through when higher than price
+    unit_hi      = Column(String,  nullable=True)    # overrides the catalogue unit when this shop sells another size
+    in_stock     = Column(Boolean, default=True,  nullable=False)
+    active       = Column(Boolean, default=True,  nullable=False, index=True)
+    note         = Column(String,  nullable=True)    # "बोरी पर ₹20 कम, 10 बोरी से ऊपर"
+    sort_order   = Column(Integer, default=0, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("shop_slug", "product_slug", name="dukan_item_uidx"),
+        # Every product page runs exactly this filter: "active rows for this
+        # product". One index instead of a scan plus a filter per render.
+        Index("ix_dukan_items_product_active", "product_slug", "active"),
+    )
+
+
 # ── DB Helpers ───────────────────────────────────────────────
 
 _TABLE_RENAMES = [

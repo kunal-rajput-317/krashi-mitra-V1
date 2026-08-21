@@ -807,6 +807,12 @@ _BELL_JS = """
 var b=document.getElementById('bhav-bell');
 if(!b)return;
 var txt=b.querySelector('.bb-txt'),busy=false,KEY='',keyReq=null;
+/* The bell shipped blind: with one subscriber on the whole site there was no way
+   to tell "nobody taps it" from "everybody taps it and drops at the next step".
+   Every exit from the funnel now reports itself, tagged with the crop and mandi
+   the farmer was actually looking at when he tried. */
+function tr(n,x){try{x=x||{};x.commodity=T.commodity;x.state=T.state;x.district=T.district;
+ if(window.kmTrack)window.kmTrack(n,x);}catch(e){}}
 /* Web push needs all three. The bell is shown either way — a farmer should always
    be able to SEE that bhav alerts exist, which is the whole point of putting it on
    a page SEO traffic lands on. This flag only decides what a tap can do. */
@@ -870,17 +876,54 @@ if(PUSH_OK){
    .then(resume);
  }).catch(function(){});
 }
-/* Turning the bell ON needs a login — checked before Notification.requestPermission()
-   so a logged-out visitor never faces the browser's permission dialog for an
-   alert the server would refuse anyway. */
+/* Turning the bell ON no longer needs a login — see routes/alerts.py for why the
+   gate came off. This is now only the recovery path for a token that expired
+   mid-session, where the server has already answered 401. */
 function gate(){
  if(tok())return true;
+ tr('bhav_alert_login_required');
  if(window.KMRequireLogin)window.KMRequireLogin({
   title:'भाव अलर्ट के लिए लॉगिन करें',
   text:'लॉगिन करने पर यह अलर्ट आपके खाते से जुड़ जाएगा — फ़ोन बदलने या ब्राउज़र साफ़ करने पर भी भाव की सूचना आती रहेगी।',
   resume:'bhav-alert'});
  else location.href='/login.html';
  return false;
+}
+/* The alert is ON before this runs, and stays on whatever he does with it — the
+   tip only tells him what an account would add. Shown once a month at most.
+
+   The wording has to stay honest about what login actually buys. It does NOT
+   make notifications appear on a new phone by itself: a push subscription is
+   per-browser, so a new device still has to grant permission once. What it does
+   buy is that /auth/claim-guest moves this row onto the account, so his alert
+   list is not lost with the browser data. Promise that and nothing more. */
+var TIPKEY='km_alert_login_tip';
+function loginTip(){
+ if(tok())return;
+ try{if(Date.now()-(+localStorage.getItem(TIPKEY)||0)<30*24*3600*1000)return;}catch(e){}
+ var host=b.parentNode;
+ if(!host||host.querySelector('.bell-tip'))return;
+ try{localStorage.setItem(TIPKEY,String(Date.now()));}catch(e){}
+ var d=document.createElement('div');
+ d.className='bell-tip';d.setAttribute('role','status');
+ d.innerHTML='<b>🔔 अलर्ट चालू हो गया</b>'+
+  'अभी यह सिर्फ़ इसी ब्राउज़र में सेव है — ब्राउज़र का डेटा साफ़ हुआ तो मिट जाएगा। '+
+  'लॉगिन कर लें, अलर्ट आपके खाते में सुरक्षित रहेगा।'+
+  '<div class="bell-tip-row"><a class="bell-tip-go">लॉगिन करें</a>'+
+  '<button class="bell-tip-no" type="button">बाद में</button></div>';
+ host.appendChild(d);
+ var a=d.querySelector('.bell-tip-go');
+ /* No ?do= — the alert is already on, and a resume would only race the bell's
+    own hydration after the redirect. finishLogin() calls /auth/claim-guest with
+    this browser's endpoint, which is what actually adopts the row. */
+ a.href='/login.html?next='+encodeURIComponent(location.pathname+location.search);
+ a.onclick=function(){tr('bhav_alert_login_tip_click');};
+ requestAnimationFrame(function(){d.classList.add('in');});
+ tr('bhav_alert_login_tip_shown');
+ function bye(){if(!d.parentNode)return;d.classList.remove('in');
+  setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d);},220);}
+ d.querySelector('.bell-tip-no').onclick=function(){tr('bhav_alert_login_tip_dismissed');bye();};
+ setTimeout(bye,15000);
 }
 /* Came back from login with ?do=bhav-alert — finish what he originally tapped,
    instead of making him find the bell again. */
@@ -897,6 +940,7 @@ function resume(){
 }
 function go(){
  return Promise.resolve(Notification.requestPermission()).then(function(p){
+  tr('bhav_alert_permission',{outcome:p});
   if(p!=='granted')throw new Error('सूचना की अनुमति नहीं मिली — ब्राउज़र सेटिंग में चालू करें।');
   return navigator.serviceWorker.register('/sw.js');
  }).then(function(){return navigator.serviceWorker.ready;}).then(function(reg){
@@ -914,7 +958,8 @@ function go(){
      would just be noise. */
   if(r.status===401){gate();var q=new Error('login');q.quiet=true;throw q;}
   if(!r.ok)throw new Error('सूचना चालू नहीं हो सकी।');
-  paint(true);ring();});
+  tr('bhav_alert_on',{account:tok()?'yes':'no'});
+  paint(true);ring();loginTip();});
 }
 function off(){
  return navigator.serviceWorker.getRegistration().then(function(reg){
@@ -922,26 +967,29 @@ function off(){
  }).then(function(s){
   return fetch('/alerts/mandi/off',{method:'POST',headers:hdr(true),
    body:JSON.stringify({endpoint:(s&&s.endpoint)||'',commodity:T.commodity,state:T.state,
-   district:T.district})}).then(function(){paint(false);});
+   district:T.district})}).then(function(){tr('bhav_alert_off');paint(false);});
  });
 }
 /* The bell is always on screen, so every reason a tap can fail has to answer back
    in words. Silence was acceptable while the button hid itself; it isn't now. */
 window.toggleBhavAlert=function(){
  if(busy)return;
+ tr('bhav_alert_tap',{action:b.classList.contains('on')?'off':'on',
+                      account:tok()?'yes':'no'});
  function done(e){if(e&&!e.quiet)alert(e.message||'सूचना चालू नहीं हो सकी।');
   busy=false;b.classList.remove('loading');}
  if(b.classList.contains('on')){
   busy=true;b.classList.add('loading');
   off().then(function(){done();},done);return;
  }
- /* Browser can't do push at all — say so instead of pushing him through a login
-    that would dead-end anyway. */
- if(!PUSH_OK){alert('इस ब्राउज़र में सूचना की सुविधा नहीं है — Chrome में यह पेज खोलें।');return;}
- /* Login is the gate, checked before Notification.requestPermission() so a
-    logged-out visitor never faces the browser's permission dialog for an alert
-    the server would refuse anyway. */
- if(!gate())return;
+ /* Browser can't do push at all — say so plainly rather than starting a flow
+    that would dead-end at the last step. */
+ if(!PUSH_OK){tr('bhav_alert_unsupported');
+  alert('इस ब्राउज़र में सूचना की सुविधा नहीं है — Chrome में यह पेज खोलें।');return;}
+ /* No login check. The farmer reading this page arrived from a search a minute
+    ago; the browser's own permission dialog is the only thing he should have to
+    answer to get a price alert. If he signs in later, /auth/claim-guest moves
+    this alert onto the account. */
  busy=true;b.classList.add('loading');
  ensureKey().then(function(k){
   if(!k)throw new Error('भाव अलर्ट अभी उपलब्ध नहीं है — थोड़ी देर बाद फिर कोशिश करें।');
@@ -961,8 +1009,9 @@ def _alert_bell(commodity: str, state: str = "", district: str = "") -> str:
 
     Always rendered visible. The feature only earns signups if a farmer can see it
     exists, and these pages are where SEO traffic lands — so the bell advertises
-    itself to logged-out visitors too, and LOGIN is the gate on switching it on
-    (an alert has to belong to an account, not to a clearable browser).
+    itself to logged-out visitors, and a logged-out tap now switches the alert on
+    for real. Login used to be the gate; see routes/alerts.py for why it came off
+    (one subscriber sitewide) and what still binds an alert to an account.
 
     /bhav HTML is edge-cached and served to everyone alike, so the on/off state is
     never rendered server-side — the client hydrates it after load. Because the
@@ -975,6 +1024,65 @@ def _alert_bell(commodity: str, state: str = "", district: str = "") -> str:
             'onclick="toggleBhavAlert()" title="इस मंडी के भाव की सूचना पाएं">'
             f'{_BELL_SVG}<span class="bb-txt">भाव अलर्ट</span></button>'
             f'<script>(function(){{var T={target};{_BELL_JS}}})();</script>')
+
+
+_WA_ICON = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+            '<path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38'
+            'c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01'
+            'A9.816 9.816 0 0 0 12.04 2zm5.52 14.03c-.25.7-1.45 1.34-2.01 1.4-.54.06-1.03.29-3.42-.71'
+            '-2.9-1.17-4.75-4.14-4.9-4.33-.14-.19-1.16-1.54-1.16-2.94 0-1.4.73-2.09.99-2.37.26-.29'
+            '.57-.36.76-.36.19 0 .38 0 .55.01.18.01.42-.07.66.5.25.58.83 2 .9 2.15.07.14.12.31.02.5'
+            '-.09.19-.14.31-.28.47-.14.17-.29.37-.42.5-.14.14-.28.29-.12.57.16.28.72 1.18 1.54 1.91'
+            '1.06.94 1.95 1.24 2.23 1.38.28.14.44.12.6-.07.16-.19.69-.8.87-1.08.18-.28.36-.23.6-.14'
+            '.25.09 1.57.74 1.84.88.28.14.46.2.53.32.07.11.07.66-.18 1.36z"/></svg>')
+
+# The number is the published helpline (see _header) — one number, already on
+# every page, so a farmer who messages it reaches somewhere that is actually
+# staffed rather than a broadcast address nobody reads.
+_WA_NUMBER = "919870951001"
+
+
+def _next_update() -> str:
+    """The one line that gives a finished page a tomorrow.
+
+    A price page answers the question completely and then has nothing left to
+    say, which is exactly why a farmer reads it once and never comes back — the
+    number was useful, the site was incidental. Naming when the next number
+    lands turns a finished answer into an appointment, and points at the two
+    ways to keep it without having to remember us.
+
+    The hours are the real cron in services/mandi_scheduler.py (IST 8, 10, 13,
+    16, 20 and 23:11). If that schedule changes, change this sentence with it —
+    a promised update that does not arrive is worse than no promise."""
+    return ('<p class="next-up">🕗 <b>कल का भाव</b> कल सुबह 8 बजे से — '
+            'दिन भर अपडेट होता रहता है। भाव बदलते ही पता चले, '
+            'इसके लिए ऊपर 🔔 दबाएं या नीचे WhatsApp चुनें।</p>')
+
+
+def _wa_daily(hi: str, district: str) -> str:
+    """"Get this mandi's bhav on WhatsApp every day" — the return channel that
+    asks for no account, no email and no notification permission.
+
+    Web push is the better mechanism on paper and the worse one in this market:
+    it needs a permission dialog, dies with the browser profile, and never
+    reaches an iPhone that has not installed the site. WhatsApp is where these
+    farmers already are. The cost is that the list is worked by hand at first —
+    the message arrives pre-written and names the crop and mandi, so the reply
+    needs no interrogation to act on, and a request that is never answered
+    should never have been advertised. Keep the volume honest.
+
+    rel=nofollow because this is a contact action, not a link Google should
+    follow or pass weight through."""
+    msg = quote(f"नमस्ते! मुझे {district} मंडी का {hi} भाव रोज़ WhatsApp पर चाहिए।")
+    return (f'<div class="wa-daily">'
+            f'<span class="wa-daily-ic">{_WA_ICON}</span>'
+            f'<div class="wa-daily-t"><b>रोज़ का भाव WhatsApp पर</b>'
+            f'<span>{escape(district)} मंडी का {escape(hi)} भाव — बिना ऐप, बिना लॉगिन।</span></div>'
+            f'<a class="wa-daily-go" href="https://wa.me/{_WA_NUMBER}?text={msg}" '
+            f'target="_blank" rel="nofollow noopener" '
+            f'''onclick="try{{kmTrack('wa_daily_click',{{commodity:{_json.dumps(hi, ensure_ascii=False)},'''
+            f'''district:{_json.dumps(district, ensure_ascii=False)}}})}}catch(e){{}}">'''
+            f'भेजें</a></div>')
 
 
 def _crop_chip(href: str, label: str, commodity: str) -> str:
@@ -1299,6 +1407,46 @@ box-shadow:0 2px 10px rgba(0,0,0,.18);transition:background .15s,transform .15s}
 .answer-share:hover{background:#1eb958;transform:translateY(-1px)}
 .answer-share:active{transform:translateY(0)}
 .answer-share svg{width:18px;height:18px;flex-shrink:0}
+/* "get tomorrow's bhav on WhatsApp" — a RETURN channel, not the share pill
+   above it. Deliberately its own band under the price card so the two are never
+   read as the same button: one sends this price out, this one brings the farmer
+   back. WhatsApp is where this audience already is, and unlike web push it
+   costs no permission dialog and survives a cleared browser. */
+/* Shown only AFTER a guest's alert is already switched on — never before, and
+   never as a condition of anything. Anchored under the bell rather than in a
+   corner because that is where he just tapped, and because the two floating
+   cards (GPS, install) already compete for the bottom of the screen. */
+.bell-tip{position:absolute;top:58px;right:14px;z-index:4;
+width:min(258px,calc(100% - 28px));padding:12px 13px;border-radius:13px;
+background:rgba(8,32,18,.96);border:1px solid rgba(255,255,255,.18);
+box-shadow:0 10px 26px rgba(0,0,0,.34);color:#dcefe3;font-size:12.2px;line-height:1.5;
+opacity:0;transform:translateY(-6px);transition:opacity .2s ease,transform .2s ease}
+.bell-tip.in{opacity:1;transform:none}
+.bell-tip b{display:block;color:#fff;font-size:13px;font-weight:800;margin-bottom:3px}
+.bell-tip-row{display:flex;gap:8px;margin-top:11px}
+.bell-tip-go{flex:1 1 auto;text-align:center;background:var(--amber);color:#3a2c05;
+text-decoration:none;font-size:12.5px;font-weight:800;padding:8px 10px;border-radius:9px}
+.bell-tip-no{flex:0 0 auto;background:transparent;border:1px solid rgba(255,255,255,.25);
+color:#c4dbcd;font-family:inherit;font-size:12.5px;font-weight:700;padding:8px 12px;
+border-radius:9px;cursor:pointer}
+/* the appointment line — see _next_update() for why a price page needs one */
+.next-up{margin:14px 0 0;padding:10px 13px;border-radius:11px;
+background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);
+color:rgba(255,255,255,.88);font-size:12.5px;line-height:1.55}
+.next-up b{color:#fff;font-weight:800}
+.wa-daily{display:flex;align-items:center;gap:12px;margin:14px 0 0;
+padding:13px 15px;border-radius:14px;background:#f2fbf5;border:1px solid #cfeeda}
+.wa-daily-ic{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#25d366;
+color:#fff;display:flex;align-items:center;justify-content:center}
+.wa-daily-ic svg{width:21px;height:21px}
+.wa-daily-t{flex:1 1 auto;min-width:0}
+.wa-daily-t b{display:block;font-size:14.5px;font-weight:800;color:#14361f;line-height:1.3}
+.wa-daily-t span{display:block;font-size:12px;color:#4d6b58;line-height:1.4;margin-top:2px}
+.wa-daily-go{flex:0 0 auto;background:#25d366;color:#fff;text-decoration:none;
+font-size:13.5px;font-weight:800;padding:10px 16px;border-radius:11px;white-space:nowrap}
+.wa-daily-go:hover{background:#1eb958}
+@media(max-width:400px){.wa-daily{gap:9px;padding:11px 12px}
+.wa-daily-t b{font-size:13.5px}.wa-daily-go{padding:9px 13px;font-size:13px}}
 @media(max-width:640px){.answer-photo{opacity:.22;width:100%;
 -webkit-mask-image:linear-gradient(90deg,transparent,#000 90%);
 mask-image:linear-gradient(90deg,transparent,#000 90%)}
@@ -1937,6 +2085,151 @@ _FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
 
 _ICON = f'<link rel="icon" href="{SITE}/assets/krashimitra_logo.png" type="image/png">'
 
+# ── Add-to-home-screen ──────────────────────────────────────────────────────
+# Nearly all organic traffic lands HERE, not on index.html — a farmer arrives on
+# /bhav/{crop}/{state}/{district} straight from Google. The manifest used to be
+# linked only from the static frontend pages, which meant the one return channel
+# that costs him nothing (no account, no email, no notification permission) was
+# unavailable on every single entry page: Chrome will not offer to install a
+# document that declares no manifest, so the install banner sitting in
+# index.html could only ever be seen by someone who was already coming back.
+#
+# The icon on his home screen is the whole point. It is the only thing that
+# survives him closing the tab, and unlike the 🔔 bell it asks for nothing.
+_PWA = ('<link rel="manifest" href="/manifest.json">'
+        '<meta name="theme-color" content="#1b5e20">'
+        '<link rel="apple-touch-icon" href="/assets/logo-192.png">'
+        '<meta name="mobile-web-app-capable" content="yes">'
+        '<meta name="apple-mobile-web-app-title" content="कृषि मित्र">')
+
+# The install card itself. Deliberately NOT rendered in the server HTML: it is
+# built by script only after Chrome fires beforeinstallprompt, which it does
+# only when the page is genuinely installable AND not already installed — so
+# the card can never advertise something that would dead-end. Building it late
+# also keeps it out of the edge-cached markup and out of the LCP path, and
+# fixed positioning means it can never shift the prices under a reader's thumb.
+#
+# It waits for a sign the visitor actually stayed. Someone who bounced in four
+# seconds does not want an icon on his home screen, and asking him teaches him
+# to dismiss us; 15 seconds or a scroll into the price table is the filter.
+_INSTALL_JS = """<script>
+(function(){
+ var SNOOZE='km_pwa_snooze', ev=null, card=null, engaged=false, shown=false;
+
+ function tr(n,x){try{if(window.kmTrack)window.kmTrack(n,x||{});}catch(e){}}
+
+ /* Already running as an installed app — nothing to offer. */
+ function standalone(){
+  try{return window.matchMedia('(display-mode: standalone)').matches
+       ||window.navigator.standalone===true;}catch(e){return false;}
+ }
+ /* "अभी नहीं" is an answer, not an invitation to ask again tomorrow. */
+ function snoozed(){
+  try{return Date.now()-(+localStorage.getItem(SNOOZE)||0) < 30*24*3600*1000;}
+  catch(e){return false;}
+ }
+ function snooze(){try{localStorage.setItem(SNOOZE,String(Date.now()));}catch(e){}}
+
+ function close(why){
+  if(!card)return;
+  card.classList.remove('in');
+  setTimeout(function(){if(card&&card.parentNode)card.parentNode.removeChild(card);card=null;},220);
+  if(why)tr('pwa_prompt_dismissed',{how:why});
+ }
+
+ /* location.js may already be asking for GPS on this very page, from the same
+    corner and at a higher z-index — two asks at once is both rude and, because
+    that card covers this one, literally unclickable. Wait it out and take our
+    turn after he has answered it; never stack. */
+ function otherAskOpen(){return !!document.getElementById('km-loc-card');}
+
+ /* The GPS card can also arrive AFTER ours — location.js shows it about 1.5s in,
+    and a farmer who scrolls straight down beats it to the corner. Stand down if
+    it does, and come back once he has dealt with it. Withdrawing is not a
+    dismissal, so it must not burn the snooze. */
+ function watch(){
+  if(!card)return;
+  if(otherAskOpen()){shown=false;close('');setTimeout(build,3000);return;}
+  setTimeout(watch,1000);
+ }
+
+ function build(){
+  if(card||shown||standalone()||snoozed()||!ev)return;
+  if(otherAskOpen()){setTimeout(build,2000);return;}
+  shown=true;
+  var st=document.createElement('style');
+  st.textContent=
+   '.km-pwa{position:fixed;left:10px;right:10px;z-index:3499;'+
+   'bottom:calc(16px + env(safe-area-inset-bottom));'+
+   'display:flex;align-items:center;gap:11px;'+
+   'padding:12px 12px 12px 13px;border-radius:16px;'+
+   'background:#fff;border:1px solid #d7e6da;'+
+   'box-shadow:0 10px 30px rgba(20,60,35,.20);'+
+   'font-family:inherit;opacity:0;transform:translateY(14px);'+
+   'transition:opacity .22s ease,transform .22s ease}'+
+   'body.km-has-bn .km-pwa{bottom:calc(74px + env(safe-area-inset-bottom))}'+
+   '.km-pwa.in{opacity:1;transform:none}'+
+   '.km-pwa img{width:42px;height:42px;border-radius:11px;flex:0 0 auto}'+
+   '.km-pwa-t{flex:1 1 auto;min-width:0}'+
+   '.km-pwa-t b{display:block;font-size:14px;font-weight:800;color:#14361f;line-height:1.25}'+
+   '.km-pwa-t span{display:block;font-size:11.5px;color:#5d7466;line-height:1.35;margin-top:2px}'+
+   '.km-pwa-go{flex:0 0 auto;border:0;cursor:pointer;font-family:inherit;'+
+   'font-size:13.5px;font-weight:800;color:#fff;background:#1b5e20;'+
+   'padding:10px 15px;border-radius:11px}'+
+   '.km-pwa-x{position:absolute;top:-9px;right:-3px;width:26px;height:26px;'+
+   'border-radius:50%;border:1px solid #d7e6da;background:#fff;color:#7b8f81;'+
+   'font-size:15px;line-height:1;cursor:pointer;padding:0}'+
+   '@media(min-width:721px){.km-pwa{left:auto;right:20px;width:370px}}';
+  document.head.appendChild(st);
+
+  card=document.createElement('div');
+  card.className='km-pwa';
+  card.setAttribute('role','dialog');
+  card.setAttribute('aria-label','कृषि मित्र ऐप जोड़ें');
+  card.innerHTML=
+   '<button class="km-pwa-x" type="button" aria-label="बंद करें">&times;</button>'+
+   '<img src="/assets/logo-192.png" alt="" width="42" height="42">'+
+   '<div class="km-pwa-t"><b>भाव रोज़ बदलता है</b>'+
+   '<span>कृषि मित्र फ़ोन में जोड़ें — एक टैप में आज का भाव।</span></div>'+
+   '<button class="km-pwa-go" type="button">जोड़ें</button>';
+  document.body.appendChild(card);
+  requestAnimationFrame(function(){if(card)card.classList.add('in');});
+  tr('pwa_prompt_shown',{});
+  /* First look is quick — the GPS card arrives on its own timer and a full
+     second of the two overlapping reads as a glitch. */
+  setTimeout(watch,250);
+
+  card.querySelector('.km-pwa-x').onclick=function(){snooze();close('close');};
+  card.querySelector('.km-pwa-go').onclick=function(){
+   if(!ev){close('');return;}
+   tr('pwa_prompt_tap',{});
+   var e=ev;ev=null;close('');
+   e.prompt();
+   Promise.resolve(e.userChoice).then(function(r){
+    var out=(r&&r.outcome)||'unknown';
+    tr(out==='accepted'?'pwa_prompt_accepted':'pwa_prompt_declined',{outcome:out});
+    /* Declined at the browser's own dialog — do not come back next visit. */
+    if(out!=='accepted')snooze();
+   }).catch(function(){});
+  };
+ }
+
+ function engage(){if(engaged)return;engaged=true;build();}
+
+ window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();ev=e;
+  tr('pwa_installable',{});
+  if(engaged)build();
+ });
+ window.addEventListener('appinstalled',function(){tr('pwa_installed',{});close('');});
+
+ setTimeout(engage,15000);
+ window.addEventListener('scroll',function(){
+  if(window.scrollY>window.innerHeight*0.6)engage();
+ },{passive:true});
+})();
+</script>"""
+
 # GA4 + Clarity. The server-rendered clusters (/bhav, /product, /naksha) are
 # proxied under krashimitra.in, so the root-relative path resolves there; the
 # backend also mounts frontend/ at "/", so it works on the origin domain too.
@@ -2204,6 +2497,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <meta property="og:locale" content="hi_IN">
 <meta name="twitter:card" content="summary_large_image">
 {_ICON}
+{_PWA}
 {_FONTS}
 {head_extra}
 {ld}
@@ -2217,6 +2511,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {body}
 </div>
 {_footer(footer_note)}
+{_INSTALL_JS}
 </body>
 </html>""", headers=headers)
 
@@ -2555,6 +2850,48 @@ rec.start();
 </script>"""
 
 
+def _axis_band(lo: float, hi: float) -> tuple[float, float]:
+    """A drawable (lo, hi) for a price axis, given the range the data actually has.
+
+    A flat series is normal, not an edge case — a mandi that reports the same
+    modal price three days running is a mandi where nothing happened. But
+    `span = (hi - lo) or 1` turned that into a chart which lied twice over:
+    every point mapped to the bottom of the plot, so a steady price looked like
+    it had collapsed, and all three gridlines rounded to the same rupee value.
+    /bhav/wheat/uttar-pradesh/meerut shipped as a flat line on the floor under
+    an axis reading ₹2,636 / ₹2,636 / ₹2,636.
+
+    So the axis gets a minimum height, centred on the data: the labels come out
+    distinct and a flat line is drawn flat, through the middle, where it
+    belongs. The floor is 2% of the price or ₹4, whichever is larger — 2% keeps
+    three labels a rupee apart at any price level a mandi quotes, and the ₹4
+    covers the cheap per-kg crops where 2% rounds away to nothing.
+
+    Widening also fixes the quieter half of the same problem: the old axis
+    rescaled to whatever range it was handed, so a ₹6 wobble on a ₹2,600 crop
+    was stretched to full chart height and read as a cliff. Under this floor a
+    0.2% drift now looks like the 0.2% drift it is. Anything moving more than
+    2% is untouched — real moves still fill the chart.
+    """
+    floor = max(hi * 0.02, 4.0)
+    if hi - lo >= floor:
+        return lo, hi
+    mid = (hi + lo) / 2
+    return mid - floor / 2, mid + floor / 2
+
+
+def _trend_colour(vals: list[float]) -> str:
+    """Green up, red down, neutral for a price that did not move.
+
+    Flat used to take the up-colour off a `>=`, which put a rising green on a
+    chart whose whole message is that nothing rose."""
+    if vals[-1] > vals[0]:
+        return "#1b7a3d"
+    if vals[-1] < vals[0]:
+        return "#c0392b"
+    return "#5f7368"
+
+
 def _chart(vals: list[float]) -> str:
     """Full-width daily trend chart. The old page buried this in a 64px table cell —
     it is the one thing a farmer cannot get from a Google snippet, so it leads.
@@ -2571,8 +2908,8 @@ def _chart(vals: list[float]) -> str:
         return ""
     w, h = 600, 150
     pad_l, pad_r, pad_t, pad_b = 46, 12, 16, 24
-    lo, hi = min(vals), max(vals)
-    span = (hi - lo) or 1
+    lo, hi = _axis_band(min(vals), max(vals))
+    span = hi - lo
     n = len(vals)
 
     def x(i): return pad_l + i * (w - pad_l - pad_r) / (n - 1)
@@ -2583,8 +2920,7 @@ def _chart(vals: list[float]) -> str:
     area = (f"M{pts[0][0]:.1f},{h - pad_b:.1f} "
             + " ".join(f"L{px:.1f},{py:.1f}" for px, py in pts)
             + f" L{pts[-1][0]:.1f},{h - pad_b:.1f} Z")
-    rising = vals[-1] >= vals[0]
-    col    = "#1b7a3d" if rising else "#c0392b"
+    col    = _trend_colour(vals)
     dots   = "".join(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="3" fill="{col}"/>'
                      for px, py in pts)
     # Gridlines at the high, mid and low of the series, each labelled with its rupee
@@ -2621,13 +2957,15 @@ def _sparkline(points: list[str]) -> str:
     vals = [v for v in (_num(p) for p in points) if v is not None]
     if len(vals) < 2:
         return ""
-    lo, hi = min(vals), max(vals)
-    span = (hi - lo) or 1
+    # Same rule as _chart: an unchanged week is a flat line through the middle
+    # of the box, not one pinned to its floor.
+    lo, hi = _axis_band(min(vals), max(vals))
+    span = hi - lo
     w, h = 64, 18
     step = w / (len(vals) - 1)
     pts = " ".join(f"{i * step:.1f},{h - 2 - (v - lo) / span * (h - 4):.1f}"
                    for i, v in enumerate(vals))
-    color = "#1b7a3d" if vals[-1] >= vals[0] else "#c0392b"
+    color = _trend_colour(vals)
     return (f'<svg class="spark" width="{w}" height="{h}" viewBox="0 0 {w} {h}">'
             f'<polyline fill="none" stroke="{color}" stroke-width="1.5" points="{pts}"/></svg>')
 
@@ -4764,6 +5102,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <button class="answer-appeal" type="button" onclick="openCropAppeal()">🤝 खरीदें/बेचें</button>
 {_net_price_cta(hi, cs, state, district)}
 </div>
+{_next_update()}
+{_wa_daily(hi, district)}
 </div>
 </section>
 <script>

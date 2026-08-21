@@ -16,6 +16,14 @@
 /product     https://krashi-mitra-v1-muup.onrender.com/product/         200
 /product/*   https://krashi-mitra-v1-muup.onrender.com/product/:splat   200
 
+# कृषि दुकान — the local shop directory (routes/krashi_dukan.py). A different
+# thing from /product above: that is OUR catalogue, this is real shops near the
+# farmer listing their own counter prices. The splat rule also carries
+# /krashi_dukan/sitemap.xml and the catalogue photos at /krashi_dukan/img/*.webp,
+# so neither needs a line of its own.
+/krashi_dukan     https://krashi-mitra-v1-muup.onrender.com/krashi_dukan         200
+/krashi_dukan/*   https://krashi-mitra-v1-muup.onrender.com/krashi_dukan/:splat  200
+
 # Proxy the dealer UPI payment page to the backend (routes/pay.py). Kept on
 # krashimitra.in rather than the Render URL directly: this link goes to a
 # stranger being asked to send real money, and the branded domain he already
