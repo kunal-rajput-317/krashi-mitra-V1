@@ -1,0 +1,209 @@
+{
+  "_readme": [
+    "राज्यवार WhatsApp चैनल — one broadcast channel per state, linked from the",
+    "/bhav answer panel. Read live by backend/services/wa_channels.py (mtime-cached),",
+    "so pasting a link here is the whole job: no deploy step, no migration.",
+    "",
+    "To add a state:",
+    "  1. WhatsApp → Updates → + → New channel. Name it as `name` says (edit `name`",
+    "     here if you call it something else — this file is what the site prints).",
+    "  2. Channel → ⋮ → Channel info → copy the invite link",
+    "     (https://whatsapp.com/channel/XXXXXXXX).",
+    "  3. Paste it into `url` below. The card on every /bhav page for that state",
+    "     switches from 'message us' to 'join the channel' on the next page load.",
+    "",
+    "real channel exists. Only https:// links are used; anything else is ignored.",
+    "A state can also simply be absent from this list (Andaman & Nicobar and",
+    "Puducherry were dropped — no mandi audience worth a channel). Absent or blank,",
+    "the page falls back to the old message-us card; only https:// links are used.",
+    "Check what is live:  python -m backend.services.wa_channels"
+  ],
+  "channels": {
+    "uttar_pradesh": {
+      "state": "Uttar Pradesh",
+      "hi": "उत्तर प्रदेश",
+      "name": "krashimitra_uttar_pradesh",
+      "url": "https://whatsapp.com/channel/0029VbDnUY8IXnlvcsPcyD10"
+    },
+    "madhya_pradesh": {
+      "state": "Madhya Pradesh",
+      "hi": "मध्य प्रदेश",
+      "name": "krashimitra_madhya_pradesh",
+      "url": "https://whatsapp.com/channel/0029VbDTS1MBadmgEe64hU2r"
+    },
+    "maharashtra": {
+      "state": "Maharashtra",
+      "hi": "महाराष्ट्र",
+      "name": "krashimitra_maharashtra",
+      "url": "https://whatsapp.com/channel/0029Vb89eGJ1CYoP02hYlX1H"
+    },
+    "rajasthan": {
+      "state": "Rajasthan",
+      "hi": "राजस्थान",
+      "name": "krashimitra_rajasthan",
+      "url": "https://whatsapp.com/channel/0029VbDSM4Y9hXF99FZhzB3O"
+    },
+    "punjab": {
+      "state": "Punjab",
+      "hi": "पंजाब",
+      "name": "krashimitra_punjab",
+      "url": "https://whatsapp.com/channel/0029VbDrXjn9RZAZ6lEv5f0l"
+    },
+    "haryana": {
+      "state": "Haryana",
+      "hi": "हरियाणा",
+      "name": "krashimitra_haryana",
+      "url": "https://whatsapp.com/channel/0029Vb811IuGpLHPi8wjzq3z"
+    },
+    "bihar": {
+      "state": "Bihar",
+      "hi": "बिहार",
+      "name": "krashimitra_bihar",
+      "url": "https://whatsapp.com/channel/0029VbDiPnLFsn0fJWtSVk1h"
+    },
+    "gujarat": {
+      "state": "Gujarat",
+      "hi": "गुजरात",
+      "name": "krashimitra_gujarat",
+      "url": "https://whatsapp.com/channel/0029Vb8qMreEAKWFsv8h3O3V"
+    },
+    "karnataka": {
+      "state": "Karnataka",
+      "hi": "कर्नाटक",
+      "name": "krashimitra_karnataka",
+      "url": "https://whatsapp.com/channel/0029VbDMFKO0wajy5fso1T11"
+    },
+    "west_bengal": {
+      "state": "West Bengal",
+      "hi": "पश्चिम बंगाल",
+      "name": "krashimitra_west_bengal",
+      "url": "https://whatsapp.com/channel/0029VbD6l8T89inhEIGpWt3a"
+    },
+    "andhra_pradesh": {
+      "state": "Andhra Pradesh",
+      "hi": "आंध्र प्रदेश",
+      "name": "krashimitra_andhra_pradesh",
+      "url": "https://whatsapp.com/channel/0029VbDrHSUChq6WPL1aaf2F"
+    },
+    "arunachal_pradesh": {
+      "state": "Arunachal Pradesh",
+      "hi": "अरुणाचल प्रदेश",
+      "name": "krashimitra_arunachal_pradesh",
+      "url": "https://whatsapp.com/channel/0029Vb8f0CR3bbV3KjfEHM0S"
+    },
+    "assam": {
+      "state": "Assam",
+      "hi": "असम",
+      "name": "krashimitra_assam",
+      "url": "https://whatsapp.com/channel/0029VbDU0xdKgsNs52wRan1i"
+    },
+    "chandigarh": {
+      "state": "Chandigarh",
+      "hi": "चंडीगढ़",
+      "name": "krashimitra_chandigarh",
+      "url": "https://whatsapp.com/channel/0029VbDTQMy4dTnAojfvG90h"
+    },
+    "chhattisgarh": {
+      "state": "Chhattisgarh",
+      "hi": "छत्तीसगढ़",
+      "name": "krashimitra_chhattisgarh",
+      "url": "https://whatsapp.com/channel/0029VbDmgKOAu3aGyTbZ410t"
+    },
+    "goa": {
+      "state": "Goa",
+      "hi": "गोवा",
+      "name": "krashimitra_goa",
+      "url": "https://whatsapp.com/channel/0029VbD935n7oQhWfkSCjR0F"
+    },
+    "himachal_pradesh": {
+      "state": "Himachal Pradesh",
+      "hi": "हिमाचल प्रदेश",
+      "name": "krashimitra_himachal_pradesh",
+      "url": "https://whatsapp.com/channel/0029VbD7jt13AzNJgBlJC70S"
+    },
+    "jammu_and_kashmir": {
+      "state": "Jammu and Kashmir",
+      "hi": "जम्मू और कश्मीर",
+      "name": "krashimitra_jammu_and_kashmir",
+      "url": "https://whatsapp.com/channel/0029Vb8Ymb0IyPtaa7AMfG2v"
+    },
+    "jharkhand": {
+      "state": "Jharkhand",
+      "hi": "झारखंड",
+      "name": "krashimitra_jharkhand",
+      "url": "https://whatsapp.com/channel/0029VbDgIiw2f3EEke8bd83e"
+    },
+    "kerala": {
+      "state": "Kerala",
+      "hi": "केरल",
+      "name": "krashimitra_kerala",
+      "url": "https://whatsapp.com/channel/0029Vb8bj6EFSAt9OW40i33F"
+    },
+    "manipur": {
+      "state": "Manipur",
+      "hi": "मणिपुर",
+      "name": "krashimitra_manipur",
+      "url": "https://whatsapp.com/channel/0029VbDxYEGId7nKs1FyoI05"
+    },
+    "meghalaya": {
+      "state": "Meghalaya",
+      "hi": "मेघालय",
+      "name": "krashimitra_meghalaya",
+      "url": "https://whatsapp.com/channel/0029VbDSwCA2ER6fWRiDlJ1r"
+    },
+    "mizoram": {
+      "state": "Mizoram",
+      "hi": "मिजोरम",
+      "name": "krashimitra_mizoram",
+      "url": "https://whatsapp.com/channel/0029Vb9IrgoISTkFvYVDY41o"
+    },
+    "delhi": {
+      "state": "NCT of Delhi",
+      "hi": "दिल्ली",
+      "name": "krashimitra_delhi",
+      "url": "https://whatsapp.com/channel/0029Vb9KRGpDJ6Gs1tCerP25"
+    },
+    "nagaland": {
+      "state": "Nagaland",
+      "hi": "नागालैंड",
+      "name": "krashimitra_nagaland",
+      "url": "https://whatsapp.com/channel/0029Vb8oDAw8aKvCFe5KON2M"
+    },
+    "odisha": {
+      "state": "Odisha",
+      "hi": "ओडिशा",
+      "name": "krashimitra_odisha",
+      "url": "https://whatsapp.com/channel/0029Vb8o7Lm11ulU6yurym0N"
+    },
+    "sikkim": {
+      "state": "Sikkim",
+      "hi": "सिक्किम",
+      "name": "krashimitra_sikkim",
+      "url": "https://whatsapp.com/channel/0029Vb8y21uI7BeJp5JRRf13"
+    },
+    "tamil_nadu": {
+      "state": "Tamil Nadu",
+      "hi": "तमिलनाडु",
+      "name": "krashimitra_tamil_nadu",
+      "url": "https://whatsapp.com/channel/0029VbDAeEv4Crfa2TRU3R1E"
+    },
+    "telangana": {
+      "state": "Telangana",
+      "hi": "तेलंगाना",
+      "name": "krashimitra_telangana",
+      "url": "https://whatsapp.com/channel/0029Vb8xZTR1CYoWc7UJCO0p"
+    },
+    "tripura": {
+      "state": "Tripura",
+      "hi": "त्रिपुरा",
+      "name": "krashimitra_tripura",
+      "url": "https://whatsapp.com/channel/0029Vb9MpkT3mFY1hgaTqP0j"
+    },
+    "uttarakhand": {
+      "state": "Uttarakhand",
+      "hi": "उत्तराखंड",
+      "name": "krashimitra_uttarakhand",
+      "url": "https://whatsapp.com/channel/0029Vb8XqbUD38CQSyzqSP0d"
+    }
+  }
+}

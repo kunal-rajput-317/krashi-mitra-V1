@@ -1107,6 +1107,14 @@ body {
         <span class="nav-icon">📖</span>
         <span>krashimitra_book</span>
       </div>
+      <div class="nav-item" onclick="switchPage('wa-channels', this)">
+        <span class="nav-icon">📣</span>
+        <span>WhatsApp चैनल</span>
+      </div>
+      <div class="nav-item" onclick="switchPage('crop-types', this)">
+        <span class="nav-icon">🧮</span>
+        <span>फसल का प्रकार</span>
+      </div>
     </nav>
 
     <div class="sidebar-theme">
@@ -3437,6 +3445,165 @@ body {
         </div>
       </div>
 
+      <!-- ══════════ WHATSAPP चैनल — आज की पोस्ट ══════════
+           31 state channels, one post each, every morning. The send is manual
+           (WhatsApp has no channel API), so this page exists to make the send
+           the ONLY manual part: the text is written for you, the copy button
+           puts it on the clipboard, and the ✓ remembers which states you have
+           already done today so a 31-state routine can be interrupted. -->
+      <div class="page" id="page-wa-channels">
+        <style>
+        .wa-top {
+          display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+          padding:13px 16px; margin-bottom:16px; background:var(--surface);
+          border:1px solid var(--border); border-left:5px solid #25d366;
+          border-radius:var(--radius-md);
+        }
+        .wa-count { font-size:28px; font-weight:800; line-height:1; font-family:var(--font-mono); color:#25d366; }
+        .wa-topmeta { flex:1; min-width:200px; font-size:12.5px; color:var(--text-dim); line-height:1.65; }
+        .wa-topmeta b { color:var(--text); }
+
+        .wa-grid { display:grid; gap:12px; }
+        .wa-card {
+          background:var(--surface); border:1px solid var(--border);
+          border-left:4px solid var(--border-hl); border-radius:var(--radius-md);
+          padding:13px 14px;
+        }
+        .wa-card.done { border-left-color:#25d366; opacity:.55; }
+        .wa-h { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+        .wa-n { font-size:14.5px; font-weight:700; font-family:var(--font-hindi); }
+        .wa-ch {
+          font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
+          background:var(--surface-hl); border:1px solid var(--border);
+          border-radius:999px; padding:3px 9px;
+        }
+        .wa-mandis { font-size:11px; color:var(--muted); font-family:var(--font-mono); margin-left:auto; }
+        .wa-text {
+          margin-top:10px; padding:10px 12px; white-space:pre-wrap; word-break:break-word;
+          font-family:var(--font-hindi); font-size:12.5px; line-height:1.75; color:var(--text);
+          background:var(--surface-hl); border:1px solid var(--border);
+          border-radius:var(--radius-sm);
+        }
+        .wa-acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+        .wa-acts button, .wa-acts a {
+          font-size:12px; font-weight:600; padding:7px 12px; cursor:pointer;
+          text-decoration:none; border-radius:var(--radius-sm);
+          border:1px solid var(--border); background:var(--surface-hl); color:var(--text-dim);
+        }
+        .wa-acts .go { background:#25d366; border-color:#25d366; color:#04240f; }
+        .wa-acts button:hover, .wa-acts a:hover { border-color:var(--primary); color:var(--primary); }
+        .wa-acts .go:hover { color:#04240f; opacity:.88; }
+        .wa-acts .tick.on { border-color:#25d366; color:#25d366; }
+        .wa-empty { padding:26px; text-align:center; color:var(--muted); font-size:13px; }
+        </style>
+
+        <div class="page-header">
+          <div class="page-title">
+            <h2>WhatsApp चैनल — आज की पोस्ट</h2>
+            <p>हर राज्य के चैनल के लिए तैयार मैसेज। कॉपी करें → चैनल खोलें → पेस्ट।
+               लिंक <span style="font-family:var(--font-mono);font-size:12px;">backend/data/wa_channels.json</span> से आते हैं</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadWaPosts(true)" id="wa-refresh-btn">↻ नए भाव</button>
+          </div>
+        </div>
+
+        <div id="wa-top"></div>
+        <div class="wa-grid" id="wa-body">
+          <div class="km-loader"><span class="km-spinner"></span> Loading…</div>
+        </div>
+      </div>
+
+      <!-- ══════════ CROP TYPES ══════════
+           Which /bhav layout each crop's sale cadence earns it. The type is NOT
+           in the URL on purpose — 5,624 /bhav URLs already rank, and a path
+           segment would cost that many redirects to encode something no farmer
+           types. It is stamped on each page as data-crop-type/data-layout and
+           listed here. Read the "rule" rows first: those were guessed from a
+           keyword, and a bad keyword is the only way this can quietly mis-type
+           a crop. Source of truth is backend/data/crop_types.json, read live by
+           mtime — edit the JSON, no deploy. -->
+      <div class="page" id="page-crop-types">
+        <style>
+        .ct-top { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-bottom:16px; }
+        .ct-card {
+          background:var(--surface); border:1px solid var(--border);
+          border-left:5px solid var(--border-hl); border-radius:var(--radius-md);
+          padding:13px 15px; cursor:pointer;
+        }
+        .ct-card.on { border-color:var(--primary); }
+        .ct-card[data-t="perishable"] { border-left-color:#e5484d; }
+        .ct-card[data-t="storable"]   { border-left-color:#f0a020; }
+        .ct-card[data-t="staple"]     { border-left-color:#3fa65a; }
+        .ct-n { font-size:26px; font-weight:800; line-height:1; font-family:var(--font-mono); }
+        .ct-hi { font-size:14px; font-weight:700; font-family:var(--font-hindi); margin-top:5px; }
+        .ct-lay { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-top:3px; }
+        .ct-why { font-size:11.5px; color:var(--muted); line-height:1.6; margin-top:7px; }
+
+        .ct-bar { display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+        .ct-bar input, .ct-bar select {
+          font-size:12.5px; padding:7px 10px; border-radius:var(--radius-sm);
+          border:1px solid var(--border); background:var(--surface); color:var(--text);
+        }
+        .ct-bar input { min-width:190px; }
+        .ct-note { font-size:11.5px; color:var(--muted); margin-left:auto; }
+
+        .ct-t { width:100%; border-collapse:collapse; font-size:12.5px; }
+        .ct-t th, .ct-t td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--border); }
+        .ct-t th { font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim); }
+        .ct-t td.slug, .ct-t td.lay { font-family:var(--font-mono); font-size:11.5px; }
+        .ct-t td.hi { font-family:var(--font-hindi); }
+        .ct-pill { border-radius:999px; padding:2px 9px; font-size:11px; font-weight:600; white-space:nowrap; }
+        .ct-pill.perishable { background:rgba(229,72,77,.14); color:#e5484d; }
+        .ct-pill.storable   { background:rgba(240,160,32,.16); color:#f0a020; }
+        .ct-pill.staple     { background:rgba(63,166,90,.15); color:#3fa65a; }
+        .ct-src { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); }
+        .ct-src.rule    { color:#f0a020; }
+        .ct-src.default { color:var(--muted); }
+        .ct-empty { padding:26px; text-align:center; color:var(--muted); font-size:13px; }
+        </style>
+
+        <div class="page-header">
+          <div class="page-title">
+            <h2>फसल का प्रकार — कौन सी फसल, कौन सा layout</h2>
+            <p>बिक्री का फैसला कितनी बार लेना पड़ता है — रोज़, हफ़्ते में, या सीज़न में एक बार।
+               <span style="font-family:var(--font-mono);font-size:12px;">backend/data/crop_types.json</span> से सीधे, deploy की ज़रूरत नहीं</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadCropTypes(true)">↻ Reload</button>
+          </div>
+        </div>
+
+        <div class="ct-top" id="ct-top"></div>
+
+        <div class="ct-bar">
+          <input id="ct-q" placeholder="फसल खोजें…" oninput="renderCropTypes()">
+          <select id="ct-src" onchange="renderCropTypes()">
+            <option value="">कैसे तय हुआ — सभी</option>
+            <option value="explicit">explicit — हाथ से तय</option>
+            <option value="rule">rule — keyword से अनुमान</option>
+            <option value="default">default — किसी ने नहीं लिया</option>
+          </select>
+          <span class="ct-note" id="ct-note"></span>
+        </div>
+
+        <div class="table-container">
+          <div class="table-responsive">
+            <table class="ct-t">
+              <thead>
+                <tr>
+                  <th>फसल</th><th>slug</th><th>प्रकार</th>
+                  <th>layout</th><th>कैसे तय</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="ct-body">
+                <tr><td colspan="6"><div class="km-loader"><span class="km-spinner"></span> Loading…</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <!-- ══════════ UPI COLLECT ══════════
@@ -4465,6 +4632,94 @@ function copyCmd(btn, cmd) {
   }
 }
 
+// ── WhatsApp चैनल — आज की पोस्ट ─────────────────────────────
+// The panel cannot send: WhatsApp has no API for posting to a channel. So the
+// job here is to remove every step except the paste — write the text, put it
+// on the clipboard, open the right channel, and remember what is already done.
+let _waPosts = null;
+let _waQuiet = [];
+
+// Which states are already posted TODAY. localStorage, not the DB: it is a
+// scratch note for one morning on one device, it must survive a reload, and it
+// is worth nothing tomorrow. The date is in the key so it expires itself.
+function _waDoneKey() { return 'km_wa_posted_' + new Date().toISOString().slice(0, 10); }
+function _waDone() {
+  try { return new Set(JSON.parse(localStorage.getItem(_waDoneKey()) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function _waSaveDone(set) {
+  try { localStorage.setItem(_waDoneKey(), JSON.stringify([...set])); } catch (e) {}
+}
+
+async function loadWaPosts(refresh) {
+  const box = document.getElementById('wa-body');
+  const btn = document.getElementById('wa-refresh-btn');
+  if (!box) return;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const r = await fetch(`${API}/admin/wa-posts?refresh=${refresh ? 1 : 0}`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+    _waPosts = d.posts || [];
+    _waQuiet = d.quiet || [];
+    renderWaPosts();
+  } catch (e) {
+    box.innerHTML = `<div class="wa-empty" style="color:var(--danger);">पोस्ट नहीं बन पाईं — ${escapeHtml(e.message)}</div>`;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ नए भाव'; }
+  }
+}
+
+function renderWaPosts() {
+  const box = document.getElementById('wa-body');
+  const top = document.getElementById('wa-top');
+  if (!box || !_waPosts) return;
+
+  const done = _waDone();
+  if (top) {
+    top.innerHTML = `<div class="wa-top">
+      <span class="wa-count">${done.size}/${_waPosts.length}</span>
+      <div class="wa-topmeta">
+        <b>आज पोस्ट हो चुके</b> — बड़े राज्य पहले हैं, इसलिए समय कम पड़े तो
+        सिक्किम छूटे, उत्तर प्रदेश नहीं। भाव वही हैं जो /bhav पेज पर हैं।
+        <br><span style="color:var(--muted);">✓ सिर्फ इसी फ़ोन/ब्राउज़र पर याद रहता है, कल अपने आप मिट जाएगा।</span>
+        ${_waQuiet.length ? `<br><span style="color:var(--accent);">आज ${_waQuiet.length} चैनल खाली रहेंगे — ${_waQuiet.map(q => escapeHtml(q.hi_state)).join(', ')} में इतनी मंडियों की रिपोर्ट नहीं आई कि भाव बताया जा सके।</span>` : ''}
+      </div>
+    </div>`;
+  }
+
+  if (!_waPosts.length) {
+    box.innerHTML = `<div class="wa-empty">कोई चैनल लिंक नहीं मिला — backend/data/wa_channels.json में url भरें।</div>`;
+    return;
+  }
+
+  box.innerHTML = _waPosts.map(p => {
+    const isDone = done.has(p.state);
+    return `<div class="wa-card ${isDone ? 'done' : ''}" data-state="${escapeHtml(p.state)}">
+      <div class="wa-h">
+        <span class="wa-n">${escapeHtml(p.hi_state)}</span>
+        <span class="wa-ch">${escapeHtml(p.channel)}</span>
+        <span class="wa-mandis">${p.mandis} मंडियां · ${p.crops.length} फसल</span>
+      </div>
+      <div class="wa-text">${escapeHtml(p.text)}</div>
+      <div class="wa-acts">
+        <button class="bk-copy go" data-cmd="${escapeHtml(p.text)}">कॉपी</button>
+        <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">चैनल खोलें ↗</a>
+        <button class="tick ${isDone ? 'on' : ''}" onclick="waToggleDone('${escapeHtml(p.state)}')">
+          ${isDone ? '✓ पोस्ट हो गया' : 'पोस्ट हो गया?'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function waToggleDone(state) {
+  const done = _waDone();
+  done.has(state) ? done.delete(state) : done.add(state);
+  _waSaveDone(done);
+  renderWaPosts();
+}
+
 function renderBook() {
   if (!_book) return;
   const box = document.getElementById('bk-body');
@@ -4522,6 +4777,72 @@ function toggleSidebar() {
 }
 
 // ── Sidebar Switch Action ────────────────────────────────────
+// Crop types — which crop gets which /bhav layout.
+// Fetched once and filtered client-side: it is ~265 rows and the point of the
+// page is scanning them, not querying them.
+let _cropTypes = null;
+let _ctType = '';
+
+async function loadCropTypes(force) {
+  const body = document.getElementById('ct-body');
+  if (!body) return;
+  if (_cropTypes && !force) { renderCropTypes(); return; }
+  try {
+    const r = await fetch(`${API}/admin/crop-types`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+    _cropTypes = d;
+    renderCropTypes();
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="6"><div class="ct-empty">लोड नहीं हुआ — ${escapeHtml(e.message)}</div></td></tr>`;
+  }
+}
+
+function renderCropTypes() {
+  if (!_cropTypes) return;
+  const rows  = _cropTypes.crops || [];
+  const types = _cropTypes.types || {};
+
+  // Counts on the cards are over ALL crops, never the filtered view, so the
+  // totals stay a stable reference while you filter underneath them.
+  const totals = {};
+  rows.forEach(r => { totals[r.type] = (totals[r.type] || 0) + 1; });
+  document.getElementById('ct-top').innerHTML = Object.keys(types).map(k => {
+    const t = types[k] || {};
+    return `<div class="ct-card ${_ctType === k ? 'on' : ''}" data-t="${escapeHtml(k)}"
+                 onclick="_ctType = (_ctType === '${escapeHtml(k)}' ? '' : '${escapeHtml(k)}'); renderCropTypes();">
+              <div class="ct-n">${totals[k] || 0}</div>
+              <div class="ct-hi">${escapeHtml(t.hi || k)}</div>
+              <div class="ct-lay">${escapeHtml(k)} → ${escapeHtml(t.layout || '')} · ~${t.cadence_days}d</div>
+              <div class="ct-why">${escapeHtml(t.why || '')}</div>
+            </div>`;
+  }).join('');
+
+  const q   = (document.getElementById('ct-q').value || '').trim().toLowerCase();
+  const src = document.getElementById('ct-src').value;
+  const show = rows.filter(r =>
+    (!_ctType || r.type === _ctType) &&
+    (!src || r.source === src) &&
+    (!q || r.slug.includes(q) || (r.hi_crop || '').includes(q)));
+
+  const ruleN = show.filter(r => r.source === 'rule').length;
+  document.getElementById('ct-note').textContent =
+    `${show.length} / ${rows.length} फसल` +
+    (ruleN ? ` · ${ruleN} keyword से अनुमानित` : '');
+
+  document.getElementById('ct-body').innerHTML = show.length ? show.map(r => `
+    <tr>
+      <td class="hi">${escapeHtml(r.hi_crop || '')}</td>
+      <td class="slug">${escapeHtml(r.slug)}</td>
+      <td><span class="ct-pill ${escapeHtml(r.type)}">${escapeHtml(r.hi || r.type)}</span></td>
+      <td class="lay">${escapeHtml(r.layout)}</td>
+      <td><span class="ct-src ${escapeHtml(r.source)}">${escapeHtml(r.source)}${r.matched ? ` · '${escapeHtml(r.matched)}'` : ''}</span></td>
+      <td><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener" style="font-size:11.5px;">खोलें ↗</a></td>
+    </tr>`).join('')
+    : `<tr><td colspan="6"><div class="ct-empty">कोई फसल नहीं मिली</div></td></tr>`;
+}
+
 function switchPage(pageId, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -4551,6 +4872,8 @@ function switchPage(pageId, el) {
   if (pageId === 'checklist') { loadChecklist(); loadLeads(); }
   if (pageId === 'infra') { loadInfra(false); startInfraPolling(); } else { stopInfraPolling(); }
   if (pageId === 'book' && !_book) loadBook();
+  if (pageId === 'wa-channels') loadWaPosts(false);
+  if (pageId === 'crop-types' && !_cropTypes) loadCropTypes(false);
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)

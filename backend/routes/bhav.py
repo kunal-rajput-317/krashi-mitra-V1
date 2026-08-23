@@ -54,7 +54,8 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
                                  acct)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
-    buyers, district_geo, freight, lead_clicks, leads, msp, placements,
+    buyers, crop_types, district_geo, freight, lead_clicks, leads, msp,
+    placements, wa_channels as _wa_channels,
 )
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
@@ -1059,20 +1060,52 @@ def _next_update() -> str:
             'इसके लिए ऊपर 🔔 दबाएं या नीचे WhatsApp चुनें।</p>')
 
 
-def _wa_daily(hi: str, district: str) -> str:
-    """"Get this mandi's bhav on WhatsApp every day" — the return channel that
-    asks for no account, no email and no notification permission.
+def _wa_click(event: str, payload: dict) -> str:
+    """An onclick= attribute for kmTrack that survives being an HTML attribute.
+
+    The payload is JSON, so it carries double quotes, and the attribute is
+    double-quoted — written raw, the browser ended the attribute at the first
+    quote inside it and the rest of the call became stray markup. Every value
+    here is a crop, a district or a state name, so escaping the whole JS with
+    quote=True is enough: the browser HTML-decodes an attribute before the JS
+    engine ever sees it."""
+    js = f"try{{kmTrack('{event}',{_json.dumps(payload, ensure_ascii=False)})}}catch(e){{}}"
+    return f'onclick="{escape(js, quote=True)}"'
+
+
+def _wa_daily(hi: str, district: str, state: str = "") -> str:
+    """The return channel that asks for no account, no email and no notification
+    permission — the state's WhatsApp channel, or a message to us if it has none.
 
     Web push is the better mechanism on paper and the worse one in this market:
     it needs a permission dialog, dies with the browser profile, and never
     reaches an iPhone that has not installed the site. WhatsApp is where these
-    farmers already are. The cost is that the list is worked by hand at first —
-    the message arrives pre-written and names the crop and mandi, so the reply
-    needs no interrogation to act on, and a request that is never answered
-    should never have been advertised. Keep the volume honest.
+    farmers already are.
+
+    This began as "message us and we'll send you this mandi's bhav daily" — a
+    list worked by hand, per farmer, per day, which cannot grow past the person
+    working it, and a request that is never answered should never have been
+    advertised. A channel inverts that: the farmer joins in one tap, we post
+    once, and the whole state gets the number. State-wise because a Raisen
+    farmer will not read Punjab's rates, and one national channel would have to
+    post 36 states' prices to serve anybody — the fastest way to be muted.
+
+    Links come from services/wa_channels (data/wa_channels.json). A state with
+    no channel yet keeps the old message-us card: never invite a farmer into a
+    room that does not exist.
 
     rel=nofollow because this is a contact action, not a link Google should
     follow or pass weight through."""
+    chan = _wa_channels.channel_for(state) if state else None
+    if chan:
+        click = _wa_click("wa_channel_click", {"state": state, "channel": chan["name"]})
+        return (f'<div class="wa-daily">'
+                f'<span class="wa-daily-ic">{_WA_ICON}</span>'
+                f'<div class="wa-daily-t"><b>{escape(_hindi_state(state))} का भाव WhatsApp चैनल पर</b>'
+                f'<span>{escape(chan["name"])} — रोज़ भाव, फ्री। बिना ऐप, बिना लॉगिन।</span></div>'
+                f'<a class="wa-daily-go" href="{escape(chan["url"])}" '
+                f'target="_blank" rel="nofollow noopener" {click}>जुड़ें</a></div>')
+
     msg = quote(f"नमस्ते! मुझे {district} मंडी का {hi} भाव रोज़ WhatsApp पर चाहिए।")
     return (f'<div class="wa-daily">'
             f'<span class="wa-daily-ic">{_WA_ICON}</span>'
@@ -1080,8 +1113,7 @@ def _wa_daily(hi: str, district: str) -> str:
             f'<span>{escape(district)} मंडी का {escape(hi)} भाव — बिना ऐप, बिना लॉगिन।</span></div>'
             f'<a class="wa-daily-go" href="https://wa.me/{_WA_NUMBER}?text={msg}" '
             f'target="_blank" rel="nofollow noopener" '
-            f'''onclick="try{{kmTrack('wa_daily_click',{{commodity:{_json.dumps(hi, ensure_ascii=False)},'''
-            f'''district:{_json.dumps(district, ensure_ascii=False)}}})}}catch(e){{}}">'''
+            f'{_wa_click("wa_daily_click", {"commodity": hi, "district": district})}>'
             f'भेजें</a></div>')
 
 
@@ -2440,7 +2472,7 @@ _CACHE_HEADERS = {
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
          extra_css: str = "", robots: str = "", head_extra: str = "",
-         updated: str = "", footer_note: str = "") -> HTMLResponse:
+         updated: str = "", footer_note: str = "", crop: str = "") -> HTMLResponse:
     """One page shell for all four tiers — head, header, crumbs, body, footer.
     `active` defaults to "bhav" for this module's own pages; other SEO routes
     (e.g. product.py) that reuse this shell pass their own nav key/"" so they
@@ -2463,8 +2495,23 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     "" (the default) for pages with no per-page number to go stale — omitting
     the signal costs nothing; a wrong one costs trust in every date after it.
     `footer_note` replaces the footer's standing "prices update daily from
-    Agmarknet" line for a caller where that is not true — see _footer."""
+    Agmarknet" line for a caller where that is not true — see _footer.
+    `crop` is the crop SLUG (not the display name) for a page about one crop.
+    It only stamps data-crop-type/data-layout on <body> — the crop's sale
+    cadence, from services/crop_types.py. Nothing reads those yet; they exist
+    so the perishable/storable layouts can diverge later without a URL change,
+    and so "which layout does this crop get" is answerable by looking at the
+    page. Callers with no single crop (the hub, the state pages, /find) pass
+    nothing and get no attributes at all."""
     og = og_img or f"{SITE}/images/og-banner.webp"
+    # Resolved here rather than at each call site so all four crop tiers are
+    # guaranteed to agree — a page whose type differs from its sibling tier's
+    # would be worse than no marker.
+    body_attrs = ""
+    if crop:
+        _ct = crop_types.crop_type(crop)
+        body_attrs = (f' data-crop-type="{escape(_ct, quote=True)}"'
+                      f' data-layout="{escape(crop_types.type_meta(_ct)["layout"], quote=True)}"')
     # /bhav pages (active=="bhav") ship NO visible breadcrumb — the trail lives
     # only as BreadcrumbList JSON-LD in `ld` (still feeds SERP breadcrumbs).
     # Reused callers (e.g. product.py, active=="shop") keep their visible one.
@@ -2504,7 +2551,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {date_ld}
 <style>{_CSS}{extra_css}</style>
 </head>
-<body>
+<body{body_attrs}>
 {_header(active)}
 {crumbs_nav}
 <div class="wrap">
@@ -4766,7 +4813,7 @@ def bhav_crop(c_slug: str):
 {_lazy_script([('/bhav/api/tier2-extras/{cs}'.format(cs=cs), 'bhav-lazy-t2')])}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS + _DKP_CSS)
+                extra_css=_LAZY_CSS + _DKP_CSS, crop=cs)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4854,7 +4901,8 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › {escape(hi_state)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                extra_css=_LAZY_CSS + _BP_CSS + _DKP_CSS + _PRODUCT_CSS)
+                extra_css=_LAZY_CSS + _BP_CSS + _DKP_CSS + _PRODUCT_CSS,
+                crop=cs)
 
 
 # ════════════════════════════════════════════════════════════
@@ -5103,7 +5151,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_net_price_cta(hi, cs, state, district)}
 </div>
 {_next_update()}
-{_wa_daily(hi, district)}
+{_wa_daily(hi, district, state)}
 </div>
 </section>
 <script>
@@ -5165,7 +5213,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                 # carries the paid dealer panel too (the metered product), which
                 # it never used to.
                 extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS + _BP_CSS + _PRODUCT_CSS,
-                updated=fresh_iso)
+                updated=fresh_iso, crop=cs)
 
 
 # ════════════════════════════════════════════════════════════
@@ -6064,4 +6112,4 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}{price_url}">{escape(district)}</a> › खरीदार')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 extra_css=_KH_CSS + _PRODUCT_CSS, robots=robots,
-                updated=fresh_iso if st["avg"] else "")
+                updated=fresh_iso if st["avg"] else "", crop=cs)

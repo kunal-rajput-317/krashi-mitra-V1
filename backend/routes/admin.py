@@ -159,6 +159,66 @@ def infra(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require_admin)):
     return {"success": True, **infra_service.run(use_cache=not refresh)}
 
 
+# ── Crop types (which crop gets which /bhav layout) ───────────
+
+@router.get("/crop-types")
+def crop_types_view(
+    type:   str = "",
+    source: str = "",
+    q:      str = "",
+    _: str = Depends(require_admin),
+):
+    """Every crop /bhav serves, and the layout its sale cadence earns it.
+
+    This is the answer to "which crop type stays on which layout". The type is
+    NOT in the URL and deliberately so — 5,624 /bhav URLs already rank, and a
+    path segment would cost that many redirects to encode something no farmer
+    types. It lives in data/crop_types.json, is stamped on each page as
+    data-crop-type/data-layout, and is listed here.
+
+    `source` is the honest part: "explicit" means someone classified the crop
+    by hand, "rule" means a keyword guessed it (and `matched` shows which
+    keyword), "default" means nothing claimed it and the page renders exactly
+    as it does today. Sort by impressions and read the rule rows first — a bad
+    keyword is the only way this registry can quietly mis-type a crop.
+
+    Filters are all optional and combine: ?type=perishable&source=rule.
+    """
+    from backend.routes import bhav
+    from backend.services import crop_types as _ct
+
+    idx = bhav._get_index()
+    slugs = sorted((idx.get("crops") or {}).keys())
+    rows = _ct.classify(slugs)
+    for r in rows:
+        r["hi_crop"] = bhav._hindi_name((idx.get("crops") or {}).get(r["slug"], r["slug"]))
+        r["url"] = f"{SITE}/bhav/{r['slug']}"
+
+    if type:
+        rows = [r for r in rows if r["type"] == type]
+    if source:
+        rows = [r for r in rows if r["source"] == source]
+    if q:
+        needle = q.strip().lower()
+        rows = [r for r in rows if needle in r["slug"] or needle in r["hi_crop"]]
+
+    counts: dict = {}
+    for r in rows:
+        counts[r["type"]] = counts.get(r["type"], 0) + 1
+    by_source: dict = {}
+    for r in rows:
+        by_source[r["source"]] = by_source.get(r["source"], 0) + 1
+
+    return {
+        "success": True,
+        "types": _ct.all_types(),
+        "counts": counts,
+        "by_source": by_source,
+        "total": len(rows),
+        "crops": rows,
+    }
+
+
 # ── कृषि मित्र Book ────────────────────────────────────────────
 
 @router.get("/book")
@@ -175,6 +235,25 @@ async def book(_: str = Depends(require_admin)):
     from backend.services.book_service import get_book
     return {"success": True, **get_book()}
 
+
+# ── WhatsApp चैनल — आज की पोस्ट ────────────────────────────────
+
+@router.get("/wa-posts")
+async def wa_posts(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require_admin)):
+    """Today's ready-to-paste bhav post for every state that has a channel.
+
+    WhatsApp has no API for posting to a channel, so this cannot send — it
+    writes. The morning job is 31 posts, and the difference between a routine
+    that survives and one that dies in week two is whether each post is a paste
+    or a piece of composition. Ordered biggest-state-first so a morning that
+    runs out of time runs out on Sikkim, not Uttar Pradesh.
+
+    Channels come from data/wa_channels.json (see services/wa_channels); a state
+    with no link there is skipped rather than listed empty.
+    """
+    from backend.services import wa_post
+    cov = wa_post.coverage(refresh=bool(refresh))
+    return {"success": True, "count": len(cov["posts"]), **cov}
 
 # ── Manual data-fetch trigger ─────────────────────────────────
 
