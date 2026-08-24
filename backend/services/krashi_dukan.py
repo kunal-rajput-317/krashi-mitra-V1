@@ -18,15 +18,30 @@
 # and the ordering is the only thing we actually have to sell.
 # ============================================================
 
+import math
 import re
 from datetime import datetime, timedelta
 
 from backend.database.db import DukanCatalog, DukanItem, DukanShop
-from backend.services import district_geo
+from backend.services import district_geo, free_month
 
 # A season, not a month — the unit a shopkeeper actually thinks in, and the
 # same span services/placements.py already collects /dukanlisting fees over.
+# It is the fallback only: the term that actually applies is the shop's own
+# `plan_months`, agreed on the call and settable per shop.
 SEASON_MONTHS = 3
+
+# What a listing may be sold in. Not a free integer: every extra length is a
+# renewal date the admin has to remember and a sentence the caller has to say,
+# and four options already cover "try it for a month" through "leave me alone
+# for a year". 1 and 12 are also the two ends the guard clamps to everywhere.
+PLAN_MONTHS = (1, 3, 6, 12)
+MIN_PLAN_MONTHS, MAX_PLAN_MONTHS = 1, 12
+
+# How near an expiry has to be before the panel says so. A shopkeeper needs
+# time to find the money and a reason to bother; two weeks is long enough to
+# ring twice and short enough that the call is still about *this* season.
+EXPIRING_SOON_DAYS = 14
 
 PLANS = ("season", "commission")
 
@@ -169,7 +184,33 @@ def validate_shop(data: dict) -> str:
             return "कमीशन प्रतिशत एक संख्या होनी चाहिए"
         if not (0 < pct <= 30):
             return "कमीशन 0 से 30% के बीच होना चाहिए"
+    if str(data.get("plan_months") or "").strip():
+        try:
+            months = int(float(str(data["plan_months"]).strip()))
+        except (TypeError, ValueError):
+            return "प्लान की अवधि महीनों में लिखें"
+        if not (MIN_PLAN_MONTHS <= months <= MAX_PLAN_MONTHS):
+            return (f"प्लान की अवधि {MIN_PLAN_MONTHS} से {MAX_PLAN_MONTHS} "
+                    "महीने के बीच होनी चाहिए")
     return ""
+
+
+def clean_months(value, default: int = SEASON_MONTHS) -> int:
+    """A month count that is always sane, from anything a form or a JSON body
+    can hand over. Clamped rather than rejected: this runs after validation, on
+    the write path, where a silently-wrong expiry date is worse than a blunt
+    one — a 0 would list a shop that is dark the moment it pays."""
+    try:
+        months = int(float(str(value).strip()))
+    except (TypeError, ValueError):
+        return default
+    return max(MIN_PLAN_MONTHS, min(MAX_PLAN_MONTHS, months))
+
+
+def plan_months_of(row) -> int:
+    """The shop's agreed term. Rows written before the column existed read NULL
+    and were on the 3-month season by default, so that is what they get."""
+    return clean_months(getattr(row, "plan_months", None), SEASON_MONTHS)
 
 
 def _apply_shop(row: DukanShop, data: dict) -> None:
@@ -189,6 +230,8 @@ def _apply_shop(row: DukanShop, data: dict) -> None:
     # would show a commission rate on a receipt for a flat fee.
     if row.plan == "season":
         row.commission_pct = None
+    if "plan_months" in data:
+        row.plan_months = clean_months(data["plan_months"], plan_months_of(row))
     for flag in ("verified", "active"):
         if flag in data:
             setattr(row, flag, bool(data[flag]))
@@ -304,12 +347,17 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     Paying also lists the shop. The admin who just watched the money land has
     already made the trust decision; making them tick `active` separately only
     creates a shop that paid and never appeared.
+
+    `months` is the override for this one payment — half a season taken as a
+    part payment, a free month added to close a haggle. Left out, the shop's
+    own agreed term applies, which is what a plain renewal wants: the caller
+    types the amount and the date moves by exactly what was sold.
     """
     row = shop_get(db, slug)
     if not row:
         return None
     now  = datetime.utcnow()
-    span = SEASON_MONTHS if months is None else max(1, min(12, int(months)))
+    span = plan_months_of(row) if months is None else clean_months(months)
     # Renewals extend from whichever is later: paying early adds a season
     # rather than throwing away days already bought, and a lapsed shop's new
     # season starts today rather than backdated into a gap it was dark for.
@@ -326,15 +374,51 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     return row
 
 
+# ── the free first month ────────────────────────────────────
+#
+# The offer itself — how long it runs, who may take it, what the page promises
+# — lives in services/free_month.py, shared with /rental so a shopkeeper and a
+# tractor owner are told the same thing. These three are the doorway, so that
+# routes/admin_dukan.py keeps talking to this module about shops and never has
+# to know how the offer is stored.
+
+def may_free_month(row) -> bool:
+    """Whether this shop can still be given its free month — never paid, never
+    granted one. See free_month.may_grant on why it is once per shop."""
+    return free_month.may_grant(row)
+
+
+def on_free_month(row) -> bool:
+    """On a free month, or on the far side of one that ran out. Distinguishes a
+    gifted listing from a paid one everywhere the panel says "वैधता"."""
+    return free_month.on_free_month(row)
+
+
+def start_free_month(db, slug: str, months: int | None = None):
+    """Grant the free month. None when the shop is unknown OR not eligible —
+    the caller separates the two by checking `may_free_month` first, because
+    "यह दुकान नहीं मिली" and "इसे मुफ़्त महीना पहले ही मिल चुका है" are
+    different sentences for the person on the phone.
+
+    Nothing here touches `paid_at`: a free month is not a payment, and the
+    `paying` count below must keep meaning "money actually arrived".
+    """
+    row = shop_get(db, slug)
+    if not row:
+        return None
+    return free_month.grant(db, row, months or free_month.FREE_MONTHS)
+
+
 def is_live(row) -> bool:
     """Whether this shop may be rendered to a farmer.
 
     `active` is the admin's switch. The second clause is the whole of billing
-    enforcement and it is deliberately asymmetric: a shop that has NEVER paid
-    stays visible, because during onboarding an empty directory is worth less
-    than an unbilled listing and there is nothing to show a shopkeeper on a
-    phone. A shop that paid and then lapsed goes dark, because that one has
-    already agreed what the listing is worth.
+    enforcement and it is deliberately asymmetric: a shop with NO clock running
+    at all stays visible, because during onboarding an empty directory is worth
+    less than an unbilled listing and there is nothing to show a shopkeeper on
+    a phone. A shop whose clock has run out goes dark — whether that clock was
+    a paid season or the free first month, because both were agreed as having
+    an end, and a free month that never ends is not an offer.
     """
     if not row or not row.active:
         return False
@@ -344,8 +428,42 @@ def is_live(row) -> bool:
 
 
 def is_lapsed(row) -> bool:
-    """Paid once, ran out. What the admin panel flags for a renewal call."""
+    """Had a term, ran out — a paid season or the free first month. Either way
+    it is what the admin panel flags for a call, and `on_free_month` says which
+    call it is: a renewal, or the first ask for money."""
     return bool(row and row.paid_until and row.paid_until < datetime.utcnow())
+
+
+def days_left(row) -> int | None:
+    """Whole days until the listing goes dark, negative once it already has.
+
+    None means no clock is running — the shop has neither paid nor taken the
+    free month, and under `is_live`'s onboarding grace it stays visible until
+    one of those happens. That is a different state from "0 days left" and the
+    panel must not render it as one.
+
+    Rounded DOWN, so the number never promises time that is not there: eleven
+    hours to run reads as 0, which the panel says as "आज आखिरी दिन" — true, and
+    the day the call has to happen. Rounding up would print "1 दिन बाकी" on a
+    listing that dies before the shopkeeper picks up.
+
+    The same floor makes an expired listing read as at least -1, so a shop that
+    went dark an hour ago can never be reported as having 0 days left.
+    """
+    if not row or not row.paid_until:
+        return None
+    return math.floor((row.paid_until - datetime.utcnow()).total_seconds() / 86400)
+
+
+def expiring_soon(row, within_days: int = EXPIRING_SOON_DAYS) -> bool:
+    """Still live, but not for long. The renewal call worth making today.
+
+    Gated on `is_live`, not on `active`: after the expiry there is nothing left
+    to save, only to win back, and that shop belongs under `is_lapsed`. Two
+    warnings about one shop read as two problems.
+    """
+    left = days_left(row)
+    return bool(row and is_live(row) and left is not None and 0 <= left <= within_days)
 
 
 # ── items ───────────────────────────────────────────────────
@@ -574,7 +692,12 @@ def counts(db) -> dict:
         "shops":     len(shops),
         "live":      sum(1 for s in shops if is_live(s)),
         "lapsed":    sum(1 for s in shops if is_lapsed(s)),
+        "expiring":  sum(1 for s in shops if expiring_soon(s)),
         "uncalled":  sum(1 for s in shops if not s.called_at),
+        # Counted apart from `paying` on purpose: a free month is not revenue,
+        # and a header that folded the two together would report a month of
+        # giveaways as a month of sales.
+        "free":      sum(1 for s in shops if on_free_month(s)),
         "paying":    sum(1 for s in shops if s.paid_at),
         "catalog":   db.query(DukanCatalog).count(),
         "items":     db.query(DukanItem).count(),

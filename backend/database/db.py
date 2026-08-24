@@ -1399,6 +1399,14 @@ class DukanShop(Base):
 
     plan           = Column(String,  default="season", nullable=False)  # "season" | "commission"
     commission_pct = Column(Float,   nullable=True)                     # only meaningful when plan=="commission"
+    # HOW LONG ONE PAYMENT BUYS, IN MONTHS. Per shop, not global, because the
+    # length is part of what was agreed on the call — a shop that would not pay
+    # for a season will often pay for a month, and one that trusts us takes the
+    # year. It is the default `record_payment` extends by, so a renewal never
+    # has to re-litigate the term; the admin may still override it per payment.
+    # A commission shop has one too: the percentage says what is owed, this says
+    # how long the listing survives without a settlement.
+    plan_months    = Column(Integer, default=3, nullable=False)
 
     verified = Column(Boolean, default=False, nullable=False)            # only after a call
     active   = Column(Boolean, default=False, nullable=False, index=True)  # what the render path checks
@@ -1457,6 +1465,170 @@ class DukanItem(Base):
         # product". One index instead of a scan plus a filter per render.
         Index("ix_dukan_items_product_active", "product_slug", "active"),
     )
+
+
+class RentalProvider(Base):
+    """One machine owner, CHC or FPO that hires equipment out — /rental's supply.
+
+    THE COLUMN SET COPIES DukanShop BECAUSE DukanShop'S SURVIVED REAL SHOPS —
+    verified/active/status, the called_at/call_count/call_result trio the call
+    sheet reads, and the paid_at/paid_amount/payment_ref/paid_until block that
+    services/upi.py collects against. Copying rather than sharing keeps the two
+    businesses from leaking into each other: a fertiliser shop must never
+    surface on a tractor-hire page because both happen to be "listings".
+
+    NO LICENCE COLUMN, unlike DukanShop. A fertiliser shop needs one because
+    selling a fake input is the risk that licence check exists to price. Hiring
+    a tractor out needs no licence in any state, so demanding one would exclude
+    every genuine owner and prove nothing. `verified` — a human rang the number
+    — is the trust signal this directory actually has.
+
+    `lat`/`lon` are the district centroid from services/district_geo.py unless
+    someone types something better. They exist so the equipment page can rank
+    owners by distance from the farmer, which is the *only* thing ranking is
+    ever allowed to depend on.
+    """
+    __tablename__ = "rental_providers"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    slug          = Column(String,  nullable=False, unique=True, index=True)
+    name          = Column(String,  nullable=False)
+    owner_user_id = Column(Integer, nullable=True, index=True)
+
+    # What kind of supplier this is. It is shown to the farmer because it
+    # changes what he should expect: a government CHC has published rates and a
+    # counter, a neighbour with a tractor has neither.
+    kind     = Column(String, default="owner", nullable=False)  # owner | chc | fpo | dealer
+
+    state    = Column(String, nullable=True)
+    district = Column(String, nullable=True, index=True)
+    address  = Column(String, nullable=True)
+    lat      = Column(Float,  nullable=True)
+    lon      = Column(Float,  nullable=True)
+
+    phone     = Column(String, nullable=True)
+    whatsapp  = Column(String, nullable=True)
+    since     = Column(String, nullable=True)   # free text ("2016 से")
+    note      = Column(String, nullable=True)
+
+    plan           = Column(String,  default="season", nullable=False)
+    commission_pct = Column(Float,   nullable=True)
+    plan_months    = Column(Integer, default=3, nullable=False)
+
+    verified = Column(Boolean, default=False, nullable=False)
+    active   = Column(Boolean, default=False, nullable=False, index=True)
+    status   = Column(String,  default="new",  nullable=False, index=True)
+
+    called_at   = Column(DateTime, nullable=True)
+    call_count  = Column(Integer,  default=0, nullable=False)
+    call_result = Column(String,   nullable=True)
+
+    paid_at     = Column(DateTime, nullable=True)
+    paid_amount = Column(Integer,  nullable=True)
+    payment_ref = Column(String,   nullable=True)
+    paid_until  = Column(DateTime, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class RentalListing(Base):
+    """One owner's hire rate for one machine.
+
+    `(provider_slug, equipment_slug)` IS UNIQUE, for DukanItem's reason: an
+    owner quoting a tractor twice is a typo, and the page would render it as
+    two rows from the same yard at different rates.
+
+    `equipment_slug` POINTS AT THE JSON REGISTRY, NOT A TABLE. The equipment
+    catalogue lives in backend/data/rental_equipment.json because those rows
+    are editorial — a machine carries a summary, a "क्या जाँचें" checklist and
+    tips, which are content to be written, not data to be typed into a form.
+    That is the one deliberate difference from DukanItem→DukanCatalog, and it
+    means services/rental.py validates the slug against the registry on write.
+
+    `rate` IS THE OWNER'S RATE, not ours. We never mark it up and never take a
+    cut inside it. `rate_unit_hi` travels with it always: "₹1800" is a
+    different deal per hour than per acre, and the registry's own ranges are
+    quoted in whichever unit that machine is normally hired by.
+
+    `with_operator` / `fuel_included` are the two terms every hire argument is
+    actually about — the tractor page's own checklist opens with "किराये में
+    डीज़ल शामिल है या नहीं — यही सबसे बड़ा झगड़ा है". Storing them as flags
+    rather than leaving them to free text is what makes two quotes comparable.
+    """
+    __tablename__ = "rental_listings"
+
+    id             = Column(Integer, primary_key=True, index=True)
+    provider_slug  = Column(String,  nullable=False, index=True)   # RentalProvider.slug
+    equipment_slug = Column(String,  nullable=False, index=True)   # rental_equipment.json slug
+
+    rate          = Column(Integer, nullable=False)   # whole rupees
+    rate_unit_hi  = Column(String,  nullable=False)   # "प्रति घंटा" / "प्रति एकड़"
+    min_charge    = Column(Integer, nullable=True)    # minimum booking, e.g. 2 घंटे worth
+    with_operator = Column(Boolean, default=True,  nullable=False)
+    fuel_included = Column(Boolean, default=False, nullable=False)
+    available     = Column(Boolean, default=True,  nullable=False)  # free right now?
+    active        = Column(Boolean, default=True,  nullable=False, index=True)
+    note          = Column(String,  nullable=True)
+    sort_order    = Column(Integer, default=0, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("provider_slug", "equipment_slug", name="rental_listing_uidx"),
+        # Every equipment page runs exactly this filter.
+        Index("ix_rental_listings_equipment_active", "equipment_slug", "active"),
+    )
+
+
+class PublishedArticle(Base):
+    """An article written in the admin panel instead of committed to git.
+
+    THE ROW IS THE ORIGINAL, THE FILE IS A COPY. frontend/articles/<slug>.html
+    is what every reader and every crawler actually gets, and it is also the
+    first thing Render throws away: the free tier replaces the filesystem with
+    a fresh checkout on each restart. So the page is re-laid from this table at
+    boot (services/article_publish.py::restore_all), for the same reason
+    profile avatars stopped living in uploads/ and moved into Postgres.
+
+    `payload` IS THE SOURCE, `html` IS THE LAST GOOD RENDER. Keeping the short
+    authoring payload means an admin article picks up a change to the shared
+    page shell on its next render, exactly like the committed ones do when
+    tools/article_builder.py --all runs. Keeping the rendered HTML as well
+    means a page that fails to re-render serves its previous self instead of
+    404ing — one release out of date beats gone.
+
+    The image is base64 WebP in two cuts, 1200×675 and 480×270, matching what
+    tools/fetch_article_images.py writes so /articles/meta's card-cut lookup
+    finds the small one. deferred() so listing the panel never drags the blobs
+    across the wire.
+
+    `problems` records what the builder's validator complained about when a
+    page was published with force. A forced page is allowed; a silently forced
+    page is not.
+    """
+    __tablename__ = "published_articles"
+
+    id   = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, nullable=False, unique=True, index=True)  # the URL segment, lowercase
+
+    title      = Column(String, nullable=True)
+    cat        = Column(String, nullable=True, index=True)   # a filter chip on /articles/
+    word_count = Column(Integer, nullable=True)
+
+    payload = deferred(Column(Text, nullable=True))   # JSON — what the panel submitted
+    html    = deferred(Column(Text, nullable=True))   # last successfully rendered page
+
+    image_data      = deferred(Column(Text, nullable=True))   # base64 WebP 1200×675
+    image_card_data = deferred(Column(Text, nullable=True))   # base64 WebP 480×270
+    image_mime      = Column(String, nullable=True)           # cheap presence flag
+
+    status   = Column(String, default="live", nullable=False, index=True)  # "live" | "draft"
+    problems = deferred(Column(Text, nullable=True))          # JSON list, set when force-published
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 # ── DB Helpers ───────────────────────────────────────────────
@@ -1780,6 +1952,12 @@ def _ensure_postgres_columns():
             # dealer never made and put a wrong number in front of the caller.
             ("plan",          "VARCHAR"),
             ("plan_crops",    "VARCHAR"),
+        ],
+        # Added 2026-08-23 with the plan-validity control. Every dukan_shops row
+        # written before it was implicitly on the 3-month season, so the DEFAULT
+        # backfills the truth rather than inventing a term nobody agreed to.
+        "dukan_shops": [
+            ("plan_months", "INTEGER DEFAULT 3"),
         ],
     }
 

@@ -1,8 +1,9 @@
 # ============================================================
 # routes/articles.py
-# Krishi Mitra — article metadata (published / updated dates)
+# Krishi Mitra — article metadata (published / updated dates) + article pages
 #
-# GET /articles/meta → { "<slug>": {"published": "...", "modified": "..."} }
+# GET /articles/meta   → { "<slug>": {"published": "...", "modified": "..."} }
+# GET /articles/<slug> → the page (see the second half of this file)
 #
 # The dates live in each article's own JSON-LD (`datePublished` /
 # `dateModified`) — that file is the single source of truth. We parse them
@@ -16,10 +17,14 @@
 # section still renders correct dates if this endpoint is unreachable.
 # ============================================================
 
+import logging
 import re
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse
+
+log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -129,3 +134,73 @@ def _get_meta() -> dict:
 @router.get("/articles/meta")
 def articles_meta():
     return _get_meta()
+
+
+# ── the article page itself ────────────────────────────────────────────────
+#
+# Netlify serves the 98 committed articles as static files and never asks us.
+# This route exists for the ones that were never committed: an article written
+# in the admin panel lives in Postgres, is laid down in frontend/articles/ at
+# boot, and has no file on Netlify's disk — so /articles/<slug> falls through
+# its redirect rules to the backend proxy and lands here.
+#
+# It also makes extensionless article URLs work on the backend at all, which
+# they never did: StaticFiles does not try "<path>.html", so /articles/foo was
+# a 404 in local dev while working perfectly in production. Anything that only
+# breaks on localhost gets debugged eventually — at the worst moment.
+
+_ARTICLE_CACHE = {
+    # 5 min in the browser, 30 min at Netlify's edge with a day of
+    # stale-while-revalidate. Same reasoning as bhav.py's headers: a proxied
+    # response is only cached when the origin opts in, and Googlebot crawling
+    # through Render's cold starts is what caps how fast a page gets indexed.
+    "Cache-Control": "public, max-age=300",
+    "Netlify-CDN-Cache-Control":
+        "public, durable, max-age=1800, stale-while-revalidate=86400",
+}
+
+
+def _serve(path: Path) -> HTMLResponse:
+    return HTMLResponse(path.read_text(encoding="utf-8"), headers=_ARTICLE_CACHE)
+
+
+@router.get("/articles/{slug}")
+def article_page(slug: str):
+    # One URL per article: the canonical is the lowercase extensionless form,
+    # and sitemap.py serves every article at stem.lower(). Netlify already 301s
+    # the .html form for committed articles; panel-published ones have no such
+    # rule, so the redirect has to live here too or the page would answer at
+    # two URLs and split its own signals.
+    canon = slug[:-5] if slug.lower().endswith(".html") else slug
+    canon = canon.lower()
+    if canon in ("index", ""):
+        return RedirectResponse("/articles/", status_code=301)
+    if canon != slug:
+        return RedirectResponse(f"/articles/{canon}", status_code=301)
+
+    path = _ARTICLES_DIR / f"{slug}.html"
+    if path.is_file():
+        return _serve(path)
+
+    # Missing file, live row: the boot restore did not run or failed, and this
+    # URL is 404ing right now. Lay it down and answer — being self-healing here
+    # is worth more than being tidy, because the alternative is a soft-404 in
+    # Google's index for however long it takes anyone to notice.
+    try:
+        from backend.database.db import SessionLocal
+        from backend.services import article_publish as ap
+        db = SessionLocal()
+        try:
+            row = ap.get(db, slug)
+            if row is not None and row.status == "live":
+                log.warning("[articles] %s was missing on disk — re-laid from DB", slug)
+                return _serve(ap.materialize(row))
+        finally:
+            db.close()
+    except Exception as e:                      # never turn a 404 into a 500
+        log.warning("[articles] DB lookup for %s failed: %s", slug, e)
+
+    fallback = _FRONTEND_DIR / "404.html"
+    if fallback.is_file():
+        return HTMLResponse(fallback.read_text(encoding="utf-8"), status_code=404)
+    raise HTTPException(404, "article not found")

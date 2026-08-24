@@ -95,6 +95,9 @@ def get_book() -> dict:
         "title": spec.get("title", "कृषि मित्र Book"),
         "sub": spec.get("sub", ""),
         "ref": spec.get("ref", "backend/data/krashimitra_book.json"),
+        # The cover — name, logo and author. Authored, never computed: whose
+        # book it is is not something this module gets to decide.
+        "cover": spec.get("cover", {}),
         "error": spec.get("error", ""),
         "live": _deadline(),
         "total": sum(s["count"] for s in sections),

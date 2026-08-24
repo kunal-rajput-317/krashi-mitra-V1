@@ -42,6 +42,36 @@ builder). Change the site design there, run `--all`, and every article follows.
 
 ---
 
+## The other way in: the admin panel
+
+`/admin` → **लेख — लिखें व Publish** writes an article without a git commit or a
+deploy. It is the same pipeline, not a second one: the panel collects the same
+content payload, `backend/services/article_publish.py` hands it to
+`tools/article_builder.py`, and the page it renders is byte-identical to one
+built here. The same validator decides whether it may ship.
+
+Two things are different, and both are on purpose:
+
+- **The body is markdown**, converted to the site's section markup
+  (`## 🐛 heading` → a section, `>!` → a `tip-box warning`, `|` → an
+  `article-table`). Nobody hand-types HTML into a textarea — that is how an
+  unclosed `<div>` blanks the whole page on mobile.
+- **Postgres is the original, `frontend/articles/<slug>.html` is a copy.**
+  Render's free tier replaces the filesystem on every restart, so the page is
+  re-laid at boot. That copy is what `sitemap.xml`, `llms.txt`, `/articles/meta`
+  and the hub read, so nothing else had to learn about panel articles.
+
+Netlify serves the 98 committed articles off its own CDN and only proxies a
+path it has no file for, which is what makes a panel article reachable at
+`krashimitra.in/articles/<slug>` with nothing deployed. Those proxy rules are in
+`frontend/_redirects` and had to ship once.
+
+An article born in the panel can still be moved into git later: write the
+content module, run the builder, delete the panel copy from `/admin`. It then
+serves off Netlify like any other.
+
+---
+
 ## Picking the topic
 
 Rank candidates on all four. A topic that only scores on one is not worth

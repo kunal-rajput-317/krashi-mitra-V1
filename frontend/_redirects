@@ -24,6 +24,14 @@
 /krashi_dukan     https://krashi-mitra-v1-muup.onrender.com/krashi_dukan         200
 /krashi_dukan/*   https://krashi-mitra-v1-muup.onrender.com/krashi_dukan/:splat  200
 
+# किराये की मशीनें — the farm-equipment hire section (routes/rental.py). The
+# splat also carries /rental/sitemap.xml, which robots.txt declares, so that
+# needs no line of its own. Without these two lines every /rental URL falls
+# through to the catch-all below and 404s on krashimitra.in while answering
+# 200 on Render — exactly how /ganna shipped, so it is written down here too.
+/rental     https://krashi-mitra-v1-muup.onrender.com/rental         200
+/rental/*   https://krashi-mitra-v1-muup.onrender.com/rental/:splat  200
+
 # Proxy the dealer UPI payment page to the backend (routes/pay.py). Kept on
 # krashimitra.in rather than the Render URL directly: this link goes to a
 # stranger being asked to send real money, and the branded domain he already
@@ -153,6 +161,26 @@
 /articles/up-agriculture-guide.html   /articles/up-agriculture-guide   301!
 /articles/urea-guide-up.html   /articles/urea-guide-up   301!
 /articles/zinc-ki-kami-fasal.html   /articles/zinc-ki-kami-fasal   301!
+
+# ── Articles published from the admin panel (no deploy) ──────────────────
+#
+# The 98 committed articles are real files on this disk, and a rule may not
+# shadow an existing file unless it is forced — so every one of them keeps
+# being served straight off Netlify's CDN and never touches Render. An article
+# written in /admin has no file here (it lives in Postgres and is laid down on
+# Render's disk at boot), so it falls through to this rule and the backend
+# answers. That is the whole no-deploy mechanism: one rule, shipped once.
+# The hub is FORCED first, because /articles/index.html does exist here and
+# would otherwise win — and the hub is the page carrying the card for every new
+# article. The backend serves that same file with the new cards inserted.
+/articles/  https://krashi-mitra-v1-muup.onrender.com/articles/  200!
+/articles/*  https://krashi-mitra-v1-muup.onrender.com/articles/:splat  200
+
+# Hero photos for those articles, same story: committed images are served from
+# here, a panel upload only exists on the backend. Worth a rule of its own
+# because a missing image does not fail loudly — og:image and the hub card
+# would simply come up blank and nobody would hear about it.
+/images/articles/*  https://krashi-mitra-v1-muup.onrender.com/images/articles/:splat  200
 
 # Canonical core-page URLs: 301 the .html forms to extensionless so Google
 # consolidates signals onto the canonical (internal links may still say .html —

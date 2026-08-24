@@ -54,8 +54,8 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
                                  acct)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
-    buyers, crop_types, district_geo, freight, lead_clicks, leads, msp,
-    placements, wa_channels as _wa_channels,
+    buyers, crop_types, district_geo, freight, index_gate, lead_clicks, leads,
+    msp, placements, wa_channels as _wa_channels,
 )
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
@@ -338,6 +338,15 @@ def _fresh_iso(idx: dict, cs: str, ss: str, ds: str) -> str:
     <lastmod> for this exact URL — reused here (not reparsed from `prices`) so
     a page's dateModified can never disagree with its own sitemap entry."""
     return idx.get("dates", {}).get(cs, {}).get(ss, {}).get(ds, "")
+
+
+def _fresh_iso_state(idx: dict, cs: str, ss: str) -> str:
+    """The newest reported date anywhere in one crop×state — the same rollup
+    /bhav/sitemap.xml uses for a state's <lastmod> ("a state page is as fresh
+    as its newest district"). Kept next to _fresh_iso so the two can never
+    drift into disagreeing about what freshness means."""
+    return max((idx.get("dates", {}).get(cs, {}).get(ss, {}) or {}).values(),
+               default="")
 
 
 def _as_of_hi(fresh_iso: str) -> str:
@@ -2279,6 +2288,7 @@ _DRAWER_ITEMS = [("home", f"{SITE}/", "🏠", "मुख्य"),
                   ("bhav", f"{SITE}/bhav", "📈", "सभी भाव सूची"),
                   ("bazar", f"{SITE}/krashi_bajar", "🧺", "कृषि बाज़ार"),
                   ("shop", f"{SITE}/shop", "🛒", "दुकान"),
+                  ("rental", f"{SITE}/rental", "⚙️", "किराये की मशीन"),
                   ("khoj", f"{SITE}/khoj", "🔍", "कृषि खोज"),
                   ("map", f"{SITE}/map", "🗺️", "कृषि मानचित्र"),
                   ("articles", f"{SITE}/articles/", "📰", "कृषि लेख"),
@@ -4902,7 +4912,8 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › {escape(hi_state)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 extra_css=_LAZY_CSS + _BP_CSS + _DKP_CSS + _PRODUCT_CSS,
-                crop=cs)
+                crop=cs,
+                robots=index_gate.robots_for(_fresh_iso_state(idx, cs, ss)))
 
 
 # ════════════════════════════════════════════════════════════
@@ -5213,7 +5224,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                 # carries the paid dealer panel too (the metered product), which
                 # it never used to.
                 extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS + _BP_CSS + _PRODUCT_CSS,
-                updated=fresh_iso, crop=cs)
+                updated=fresh_iso, crop=cs,
+                robots=index_gate.robots_for(fresh_iso))
 
 
 # ════════════════════════════════════════════════════════════

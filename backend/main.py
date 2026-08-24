@@ -252,6 +252,27 @@ async def startup():
         log.info("✅ Krishi Mitra database initialized.")
     except Exception as e:
         log.warning(f"⚠️ DB startup error (non-fatal): {e}")
+    # Articles written in the admin panel live in Postgres; the file under
+    # frontend/articles/ is a copy, and Render replaces the filesystem with a
+    # fresh git checkout on every restart. Re-lay them now, before the first
+    # request — sitemap.py, llms.txt, /articles/meta and the article hub all
+    # read the directory, so a page that is not on disk is a page that has
+    # silently left the site.
+    try:
+        from backend.database.db import SessionLocal
+        from backend.services.article_publish import restore_all
+        _db = SessionLocal()
+        try:
+            _r = restore_all(_db)
+        finally:
+            _db.close()
+        if _r["restored"]:
+            log.info(f"📰 {len(_r['restored'])} panel article(s) re-laid on disk: "
+                     f"{', '.join(_r['restored'])}")
+        for _f in _r["failed"]:
+            log.warning(f"⚠️ Panel article not restored — {_f}")
+    except Exception as e:
+        log.warning(f"⚠️ Article restore skipped (non-fatal): {e}")
     # Warm up embedding models in the background so the first question is fast
     asyncio.create_task(_warm_up_models())
     try:
@@ -339,14 +360,30 @@ app.include_router(product_route.router)  # SEO shop-product pages (/product/*) 
 from backend.routes import krashi_dukan as krashi_dukan_route
 app.include_router(krashi_dukan_route.router)  # कृषि दुकान — local shop directory (/krashi_dukan/*)
 
+# Must follow product_route for the same reason krashi_dukan does: rental
+# imports its card/hero CSS so the equipment cards render identically to the
+# product cards. No DB of its own — the registry is data/rental_equipment.json,
+# read live by mtime (services/rental.py).
+from backend.routes import rental as rental_route
+app.include_router(rental_route.router)  # किराये की मशीनें — farm equipment hire (/rental/*)
+
 from backend.routes import admin_dukan as admin_dukan_route
 app.include_router(admin_dukan_route.router)   # /admin/dukan/* — shops, catalogue, prices, UPI collect
 
-from backend.routes import articles as articles_route
-app.include_router(articles_route.router)  # /articles/meta — live published/updated dates from article JSON-LD
+from backend.routes import admin_rental as admin_rental_route
+app.include_router(admin_rental_route.router)   # /admin/rental/* — machine owners, rates, UPI collect
+
+from backend.routes import admin_articles as admin_articles_route
+app.include_router(admin_articles_route.router)  # /admin/articles/* — write and publish an article with no deploy
 
 from backend.routes import credits as credits_route
 app.include_router(credits_route.router)  # /articles/credits — Commons photo attribution the licences require (noindex)
+
+# MUST follow credits: articles.py owns /articles/{slug}, which would otherwise
+# swallow /articles/credits — FastAPI matches routes in registration order, and
+# a path parameter matches anything.
+from backend.routes import articles as articles_route
+app.include_router(articles_route.router)  # /articles/meta + the article pages themselves
 
 from backend.routes import naksha as naksha_route
 app.include_router(naksha_route.router)  # /naksha, /naksha/{state}[/jile] + /map — state district maps

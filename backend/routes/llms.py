@@ -50,6 +50,7 @@ _CORE = [
     ("/sarkari_yojana", "सरकारी योजना",    "Government agriculture schemes explained in Hindi (PM-Kisan etc.)."),
     ("/chat",           "AI चैट",          "Hindi agriculture Q&A assistant."),
     ("/khoj",           "खोज",            "Quick agri knowledge lookup."),
+    ("/rental",         "किराये की मशीनें", "Farm equipment hire rates: what a tractor, rotavator, pump set, combine harvester, sprayer or baler typically costs to rent in India, per hour / per acre / per quintal, plus what to inspect before hiring and how to book via a government Custom Hiring Centre (CHC) or the FARMS app. Where local machine owners, Custom Hiring Centres or FPOs have listed with us, the page shows their real rates, contact details and whether diesel and an operator are included, ranked by distance from the reader. Where none have, the page shows an editorial rate range compiled from CHC rate cards — an estimate, not a quote. Nothing is bookable through this site; we connect the farmer to the owner and stop. Full URL list in /rental/sitemap.xml."),
     ("/articles/",      "लेख",            "Hindi farming guides and crop analytics articles (full list below)."),
 ]
 

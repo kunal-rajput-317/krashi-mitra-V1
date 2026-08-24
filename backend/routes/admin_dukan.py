@@ -14,14 +14,22 @@
 # may set paid_at" rule. Same rail, separate books.
 #
 # EVERYTHING HERE IS ADMIN-ENTERED. There is no self-serve form yet, by design:
-# shops are found and typed in by hand, and that is also when the plan is set.
+# shops are found and typed in by hand, and that is also when the plan and its
+# term are set — both on the same call, because a shopkeeper agrees to "इतना,
+# इतने महीने का" in one sentence and never to one half of it.
+#
+# THE TERM IS ENFORCED BY THE READ PATHS, NOT BY A SWEEP. Nothing here expires a
+# shop on a schedule; `krashi_dukan.is_live` is consulted on every render, so a
+# listing whose `paid_until` has passed is simply absent from the next request.
+# That is why there is no "expire now" endpoint and why a renewal needs no
+# repair step: recording the payment moves the date, and the items are back.
 # ============================================================
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from backend.routes.admin import admin_db, require_admin
-from backend.services import krashi_dukan as dukan
+from backend.services import free_month, krashi_dukan as dukan
 
 router = APIRouter(prefix="/admin/dukan", tags=["admin-dukan"])
 
@@ -50,9 +58,9 @@ def _write(fn, *args, **kwargs):
 
 
 def _shop_dict(db, row) -> dict:
-    """One shop as the panel wants it: the row, plus the two things it can only
-    learn by looking elsewhere — how many items it lists, and whether its paid
-    season has run out."""
+    """One shop as the panel wants it: the row, plus the things it can only
+    learn by looking elsewhere — how many items it lists, how long its paid
+    term still has to run, and whether that term has already run out."""
     return {
         "slug": row.slug, "name": row.name,
         "state": row.state or "", "district": row.district or "",
@@ -61,6 +69,7 @@ def _shop_dict(db, row) -> dict:
         "gstin": row.gstin or "", "since": row.since or "", "note": row.note or "",
         "lat": row.lat, "lon": row.lon,
         "plan": row.plan, "commission_pct": row.commission_pct,
+        "plan_months": dukan.plan_months_of(row),
         "verified": bool(row.verified), "active": bool(row.active),
         "status": row.status, "owner_user_id": row.owner_user_id,
         "called_at": row.called_at.isoformat() if row.called_at else None,
@@ -68,6 +77,17 @@ def _shop_dict(db, row) -> dict:
         "paid_at": row.paid_at.isoformat() if row.paid_at else None,
         "paid_amount": row.paid_amount, "payment_ref": row.payment_ref or "",
         "paid_until": row.paid_until.isoformat() if row.paid_until else None,
+        # None here is "no clock is running", NOT "0 days left" — a shop that
+        # has never paid is live under the onboarding grace and the panel says
+        # so differently. See krashi_dukan.days_left.
+        "days_left": dukan.days_left(row),
+        "expiring": dukan.expiring_soon(row),
+        # The free first month, and whether this shop can still be offered it.
+        # `free_month` stays true after it runs out, so the panel can say "the
+        # free month ended" instead of reporting a renewal on a shop that never
+        # paid a rupee — a different call, with a different opening sentence.
+        "free_month": dukan.on_free_month(row),
+        "may_free_month": dukan.may_free_month(row),
         "live": dukan.is_live(row), "lapsed": dukan.is_lapsed(row),
         "items": len(dukan.items_for_shop(db, row.slug, only_active=False)),
         "created_at": row.created_at.isoformat() if row.created_at else None,
@@ -87,7 +107,16 @@ async def list_shops(
             "shops":  [_shop_dict(db, r) for r in rows],
             "counts": dukan.counts(db),
             "plans":  list(dukan.PLANS),
+            # The lengths a listing may be sold in, and the window the panel
+            # calls "expiring soon" — sent rather than hardcoded in the HTML so
+            # the rate card and the warning threshold have one home.
+            "plan_months": list(dukan.PLAN_MONTHS),
+            "default_months": dukan.SEASON_MONTHS,
+            "expiring_soon_days": dukan.EXPIRING_SOON_DAYS,
             "call_results": list(dukan.CALL_RESULTS),
+            # The public offer's own term, so the button in the panel and the
+            # card on /krashi_dukan can never advertise different months.
+            "free_months": free_month.FREE_MONTHS,
             # So the panel can grey out collect and say why, instead of
             # generating a QR that points nowhere.
             "upi": {"configured": upi.configured(), "vpa": upi.vpa(),
@@ -123,7 +152,7 @@ async def update_shop(
     # Validate only when the payload carries a field validate_shop judges — a
     # lone {"active": true} must not be rejected for having no name in it.
     if any(k in payload for k in ("name", "district", "license_no",
-                                  "plan", "commission_pct")):
+                                  "plan", "commission_pct", "plan_months")):
         merged = _shop_dict(db, current)
         merged.update(payload)
         problem = dukan.validate_shop(merged)
@@ -146,6 +175,39 @@ async def delete_shop(
     if not _write(dukan.shop_delete, db, slug):
         raise HTTPException(404, "Unknown shop")
     return {"success": True, "counts": dukan.counts(db)}
+
+
+@router.post("/shops/{slug}/free-month")
+async def start_free_month(
+    slug: str,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Give this shop the free first month — the offer /krashi_dukan advertises.
+
+    NOT A PAYMENT ROUTE. It never touches `paid_at`, so the panel's `paying`
+    count keeps meaning "money actually arrived" and a gifted month can never
+    be mistaken for a sale. What it does set is `paid_until`, which is what
+    turns the offer into an actual month rather than an open-ended freebie:
+    `krashi_dukan.is_live` reads that date on every render, so the month ends
+    itself and hands the caller a reason to ring back.
+
+    Once per shop, refused with a sentence rather than a 500 — see
+    free_month.may_grant on why re-granting is not an option.
+    """
+    row = dukan.shop_get(db, slug)
+    if not row:
+        raise HTTPException(404, "Unknown shop")
+    if not dukan.may_free_month(row):
+        raise HTTPException(
+            400,
+            "इस दुकान का मुफ़्त महीना पहले ही शुरू हो चुका है (या यह पैसे दे चुकी है) — "
+            "आगे बढ़ाने के लिए पेमेंट दर्ज करें।"
+        )
+    row = _write(dukan.start_free_month, db, slug)
+    if not row:
+        raise HTTPException(404, "Unknown shop")
+    return {"success": True, "shop": _shop_dict(db, row), "counts": dukan.counts(db)}
 
 
 @router.post("/shops/{slug}/call")
@@ -211,11 +273,12 @@ async def record_payment(
         raise HTTPException(
             400,
             f"Enter the amount actually received (₹{upi.MIN_AMOUNT}–₹{upi.MAX_AMOUNT})")
+    # None on purpose when nothing was sent: record_payment then extends by the
+    # shop's own agreed term, which is what a plain renewal means. A number here
+    # is a deliberate one-off override for this payment only — it does not
+    # change what the next renewal is worth.
     months = payload.get("months")
-    try:
-        months = max(1, min(12, int(months))) if months else None
-    except (TypeError, ValueError):
-        months = None
+    months = dukan.clean_months(months) if str(months or "").strip() else None
     row = _write(dukan.record_payment, db, slug, amount,
                  (payload.get("ref") or ""), months)
     if not row:

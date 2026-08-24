@@ -1,0 +1,20 @@
+{
+  "_comment": "Which /bhav price pages are allowed into Google's index. Read live and cached by mtime (see services/index_gate.py) — change a threshold by editing this file, never by a deploy.",
+
+  "_why": "The site renders ~14,000 /bhav URLs. 5,624 have ever earned an impression; of those, 51% earn 5 or fewer and 38 clicks between them, while the top 10% carry 64%. Google forms one opinion of a site from all of it, and thousands of near-empty pages is why the strong pages sit at the BOTTOM of page one (72% of impressions are at positions 4-10, converting at 0.42%, against 3.03% for positions 1-3). This gate stops advertising the thin tail so the strong pages are judged on their own.",
+
+  "_signal": "Freshness, and only freshness. A price page whose newest reading is months old is worthless to a farmer no matter how it is laid out, and the last-reported date is already in the page index (idx['dates']) — so the whole ~14k URL set can be judged with no extra database work. Mandi count was considered and dropped: counting rows per district would need a query per URL.",
+
+  "_sequence": "STEP 1 of 3, and the sitemap is deliberately NOT touched yet. Google only obeys a noindex if it comes back and reads the page; pulling these URLs from the sitemap at the same time removes the main reason for it to revisit, and the noindex would sit unread for months. Keep them in the sitemap until they actually drop out of the index (weeks), THEN remove them.",
+
+  "enabled": false,
+  "_enabled_note": "Starts OFF on purpose. While false the verdict is still computed and reported at /admin/index-gate, so the blast radius is visible before anything changes for Google. Flip to true when the pass/fail split looks right.",
+
+  "max_age_days": 30,
+  "_max_age_note": "A district page is index-worthy if its newest reported price is this recent. 30 days is a starting point, not a finding — open /admin/index-gate, look at how the ~14k URLs split, and tune.",
+
+  "robots": "noindex, follow",
+  "_robots_note": "follow, never nofollow. The page stays fully usable for a farmer who lands on it and its outbound links keep feeding the rest of the site — the only thing being withdrawn is its claim on the index. Never 404 or 301 these: they are real crop-and-district pages with real (if old) data, not duplicates to merge.",
+
+  "_no_date_note": "A combo with no last-reported date at all keeps its index place. Those are pre-migration rows; absence of a date is not evidence of staleness, and the safe default is always today's behaviour."
+}

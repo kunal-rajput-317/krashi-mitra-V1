@@ -159,6 +159,34 @@ def infra(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require_admin)):
     return {"success": True, **infra_service.run(use_cache=not refresh)}
 
 
+# ── Index gate (which /bhav pages Google is allowed to keep) ───
+
+@router.get("/index-gate")
+def index_gate_view(_: str = Depends(require_admin)):
+    """Blast radius of the thin-page gate, BEFORE it is switched on.
+
+    The site renders ~14,000 /bhav URLs. 5,624 have ever earned an impression;
+    half of those earn five or fewer and 38 clicks between the lot, while the
+    top tenth carries 64%. That tail is why the strong pages sit at the bottom
+    of page one instead of the top. The gate withdraws the tail's claim on the
+    index — noindex, follow; the pages stay live and usable, nothing is
+    deleted or redirected.
+
+    `enabled` in data/index_gate.json starts false, and this endpoint is the
+    reason: the verdict is computed for every URL and counted here whether or
+    not it is being applied, so the split can be read and the threshold tuned
+    before Google sees anything. Flip `enabled` when the numbers look right.
+
+    Read `buckets` before changing `max_age_days` — it is the age histogram the
+    threshold is cutting, so it shows what a different cut would cost.
+    """
+    from backend.routes import bhav
+    from backend.services import index_gate as _gate
+
+    idx = bhav._get_index()
+    return {"success": True, **_gate.split(idx.get("dates", {}))}
+
+
 # ── Crop types (which crop gets which /bhav layout) ───────────
 
 @router.get("/crop-types")

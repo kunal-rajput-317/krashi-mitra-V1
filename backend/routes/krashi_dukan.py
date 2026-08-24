@@ -38,7 +38,8 @@ from backend.routes.bhav import (
     _fit, _footer, _header, _ld,
 )
 from backend.routes.product import CAT_LABELS, _EXTRA_CSS as _PRODUCT_CSS
-from backend.services import krashi_dukan as dukan
+from backend.routes.rental import CROSS_CSS as _RENTAL_CSS, cross_link as _rental_link
+from backend.services import free_month, krashi_dukan as dukan
 
 router = APIRouter()
 
@@ -51,7 +52,7 @@ DISCLAIMER = ("कृषि मित्र सिर्फ़ जोड़न�
               "कीमत दुकानदार की है। हम न सामान बेचते हैं, न डिलीवरी करते हैं, "
               "न किसी सामान की गारंटी लेते हैं। दुकान पर जाकर सामान ज़रूर जाँच लें।")
 
-_EXTRA_CSS = _PRODUCT_CSS + """
+_EXTRA_CSS = _PRODUCT_CSS + _RENTAL_CSS + free_month.CSS + """
 /* ── shop rows under a product ── */
 .dukan-shops{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .dukan-shop{display:flex;gap:14px;align-items:stretch;background:var(--white);
@@ -350,7 +351,8 @@ def dukan_hub(db: Session = Depends(get_db)):
         sections.append(
             '<h2>अभी कोई दुकान नहीं जुड़ी है</h2>'
             '<p class="desc">हम अभी आपके ज़िले की दुकानें जोड़ रहे हैं। '
-            'दुकान चलाते हैं और अपना सामान यहाँ दिखाना चाहते हैं? नीचे दिए नंबर पर संपर्क करें।</p>')
+            'दुकान चलाते हैं और अपना सामान यहाँ दिखाना चाहते हैं? नीचे वाला ऑफ़र देखिए — '
+            f'पहला {escape(free_month.months_hi())} बिल्कुल मुफ़्त है।</p>')
 
     title = _fit(f"कृषि दुकान — नज़दीकी दुकानों में बीज, खाद व दवा के भाव",
                  "कृषि दुकान — नज़दीकी दुकानों के भाव",
@@ -371,6 +373,8 @@ def dukan_hub(db: Session = Depends(get_db)):
 {"".join(jump_chips)}
 </div>
 {"".join(sections)}
+{free_month.card("dukan")}
+{_rental_link()}
 <div class="dukan-disclaimer"><b>ध्यान दें:</b> {escape(DISCLAIMER)}</div>"""
 
     return _doc(title, desc, BASE,
@@ -415,7 +419,11 @@ def dukan_product(product_slug: str, db: Session = Depends(get_db)):
     else:
         shops_html = ('<h2>अभी किसी दुकान ने यह सामान नहीं जोड़ा</h2>'
                       '<p class="desc">हम आपके इलाके की दुकानें जोड़ रहे हैं। '
-                      'थोड़े दिन बाद फिर देखें।</p>')
+                      # "सबसे पहले जोड़िए", never "सबसे ऊपर": nothing we say to a
+                      # shopkeeper may hint that listing buys position. Order is
+                      # distance, always — see the module header.
+                      'थोड़े दिन बाद फिर देखें — और अगर आपकी अपनी दुकान है, तो नीचे वाले '
+                      'ऑफ़र से इस सामान का भाव यहाँ सबसे पहले जोड़िए।</p>')
 
     faqs = [
         (f"{row.name_hi} का भाव कितना है?",
@@ -488,6 +496,8 @@ def dukan_product(product_slug: str, db: Session = Depends(get_db)):
 </section>
 {desc_html}
 {shops_html}
+{free_month.card("dukan", row.name_hi)}
+{_rental_link(f"{row.name_hi} के साथ जो मशीन चाहिए, वह खरीदने के बजाय किराये पर भी ली जा सकती है — रेट यहाँ देखें।")}
 <div class="dukan-disclaimer"><b>ध्यान दें:</b> {escape(DISCLAIMER)}</div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}

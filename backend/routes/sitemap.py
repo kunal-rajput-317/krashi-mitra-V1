@@ -90,8 +90,12 @@ CORE = [
 # /ganna is "yearly" on purpose: cane price is announced once a season, so
 # claiming anything faster is the same false-freshness signal /bhav's own
 # sitemap comment warns about.
+# /rental is "monthly" for the same honesty reason /ganna is "yearly": the
+# rate ranges are reviewed editorially, not fed from anywhere, so claiming a
+# faster cadence would be the false-freshness signal /bhav's sitemap warns of.
 HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
-        ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly")]
+        ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly"),
+        ("/rental", 0.7, "monthly")]
 
 _ARTICLE_PRIORITY = 0.8
 _ARTICLE_CHANGEFREQ = "weekly"
