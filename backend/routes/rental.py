@@ -41,6 +41,7 @@
 
 import re
 from html import escape
+from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends
@@ -96,36 +97,132 @@ _FARMS_URL = "https://play.google.com/store/apps/details?id=com.cdac.farms"
 # them at once. Callers append CROSS_CSS to their own extra_css; they cannot
 # reach this module's _CSS closure (see _doc's note on extra_css).
 CROSS_CSS = """
-.km-cross{display:flex;align-items:center;gap:14px;margin:22px 0 0;padding:14px 16px;
-border-radius:14px;background:var(--white);border:1px solid var(--border);
-border-left:4px solid var(--green-light);box-shadow:var(--shadow-sm);
-text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s}
-.km-cross:hover{border-color:var(--green-light);box-shadow:var(--shadow-md)}
+.km-cross{margin:22px 0 0;padding:15px 16px 14px;border-radius:14px;background:var(--white);
+border:1px solid var(--border);border-left:4px solid var(--green-light);box-shadow:var(--shadow-sm)}
+.km-cross-head{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit}
 .km-cross-ic{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--green-pale);
 display:flex;align-items:center;justify-content:center;font-size:20px}
 .km-cross-t{flex:1 1 auto;min-width:0}
 .km-cross-t b{display:block;font-size:14.5px;font-weight:800;color:var(--text-dark);line-height:1.3}
 .km-cross-t span{display:block;font-size:12px;color:var(--text-mid);line-height:1.45;margin-top:2px}
 .km-cross-go{flex:0 0 auto;font-size:13px;font-weight:800;color:var(--green-dark);white-space:nowrap}
-@media(max-width:560px){.km-cross{gap:10px;padding:12px 13px}
-.km-cross-t b{font-size:13.5px}.km-cross-go{font-size:12.5px}}
+.km-cross-head:hover .km-cross-go{text-decoration:underline}
+
+/* the machines themselves — the whole point of the expanded card */
+.km-cross-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:13px}
+@media(min-width:560px){.km-cross-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:900px){.km-cross-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.km-chip{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:10px;
+background:var(--cream);border:1px solid var(--border);text-decoration:none;color:inherit;
+transition:background .15s,border-color .15s}
+.km-chip:hover{background:var(--green-pale);border-color:var(--green-light)}
+.km-chip-e{font-size:17px;line-height:1}
+.km-chip b{font-size:12.5px;font-weight:700;color:var(--text-dark);line-height:1.28}
+.km-chip i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--green-dark);line-height:1.25}
+.km-chip i span{display:block;font-weight:400;font-size:10px;color:var(--text-soft);margin-top:1px}
+.km-cross-all{display:inline-block;margin-top:12px;font-size:12.5px;font-weight:700;
+color:var(--green-dark);text-decoration:none}
+.km-cross-all:hover{text-decoration:underline}
+@media(max-width:560px){.km-cross{padding:13px 13px 12px}
+.km-cross-head{gap:10px}.km-cross-t b{font-size:13.5px}.km-cross-go{font-size:12.5px}}
 """
+
+
+def _cross_picks(limit: int = 6) -> list[dict]:
+    """One machine from each category, in file order.
+
+    Breadth is the message. Six chips running जुताई → ढुलाई say "there is a
+    whole section behind this card" in a way the six most popular machines
+    never could — those would all be tillage, and the card would read as a
+    tractor advert. Tops up from the flat registry if the file ever ships
+    fewer categories than `limit`.
+    """
+    picks = [items[0] for _, items in rental.by_category() if items][:limit]
+    if len(picks) < limit:
+        seen = {e["slug"] for e in picks}
+        picks += [e for e in rental.equipment()
+                  if e["slug"] not in seen][:limit - len(picks)]
+    return picks
+
+
+def _cross_chip(item: dict) -> str:
+    """One machine, its emoji, and the rate a farmer would actually be quoted.
+
+    The unit keeps its parenthetical off — "प्रति घंटा (चालक सहित)" is right on
+    the machine's own page, but in a 160px chip it wraps to three lines and
+    buries the number that makes the card worth reading.
+    """
+    r    = rental.headline_rate(item)
+    unit = (r or {}).get("unit_hi", "").split("(")[0].strip()
+    return (f'<a class="km-chip" href="{BASE}/{escape(item["slug"])}">'
+            f'<span class="km-chip-e">{escape(item.get("emoji", ""))}</span>'
+            f'<b>{escape(item["name_hi"])}</b>'
+            f'<i>{escape(rental.rate_text(r))}'
+            + (f'<span>{escape(unit)}</span>' if unit else "")
+            + "</i></a>")
 
 
 def cross_link(sub: str = "") -> str:
     """A card pointing at /rental, for another section to render.
 
+    THE CARD NAMES REAL MACHINES ON PURPOSE. A one-line teaser asks the farmer
+    to take it on faith that a hire section exists; six machines with six real
+    rates prove it before he taps, and each chip is a direct link into the tree
+    rather than a second hop through the hub. That also gives /rental the
+    static internal links its pages need to get crawled at all — the same gap
+    that kept /bhav out of the index until July.
+
     `sub` lets the host page say why it is showing this — a product page can
     name the job the farmer is already there for. Default copy works anywhere.
     """
-    return f"""<a class="km-cross" href="{BASE}">
-<div class="km-cross-ic">🚜</div>
+    n     = len(rental.equipment())
+    chips = "".join(_cross_chip(e) for e in _cross_picks())
+    return cross_card(
+        BASE, "🚜", "मशीन खरीदनी नहीं, किराये पर चाहिए?",
+        sub or "खेत के हर काम की मशीन — जुताई से कटाई तक, हर एक का सही किराया।",
+        extra=f'<div class="km-cross-grid">{chips}</div>'
+              f'<a class="km-cross-all" href="{BASE}">'
+              f'पूरी सूची — {n} मशीनों का किराया देखें →</a>')
+
+
+def cross_card(href: str, icon: str, head: str, sub: str, extra: str = "") -> str:
+    """The shell EVERY cross-section card is built from — both directions.
+
+    It exists because the alternative already broke once: the card pointing at
+    कृषि दुकान was hand-written at its call site, and when this card grew a
+    `.km-cross-head` row (so the container could hold chips underneath), the
+    stylesheet and the copy moved together while the hand-written twin did not.
+    It kept the container's border and lost `display:flex` and
+    `text-decoration:none`, so it rendered as a tall empty box with a blue
+    underlined heading — styled enough to look deliberate, wrong enough to look
+    broken.
+
+    So: one renderer beside the one stylesheet. A caller supplies what differs
+    and nothing else, and `extra` carries whatever sits under the head row.
+    """
+    return f"""<div class="km-cross">
+<a class="km-cross-head" href="{href}">
+<div class="km-cross-ic">{icon}</div>
 <div class="km-cross-t">
-<b>मशीन खरीदनी नहीं, किराये पर चाहिए?</b>
-<span>{escape(sub or "ट्रैक्टर, रोटावेटर, पंप सेट, हार्वेस्टर — किस मशीन का किराया कितना होना चाहिए, यहाँ देखें।")}</span>
+<b>{escape(head)}</b>
+<span>{escape(sub)}</span>
 </div>
 <span class="km-cross-go">देखें →</span>
-</a>"""
+</a>
+{extra}
+</div>"""
+
+
+def dukan_link(sub: str = "") -> str:
+    """A card pointing at कृषि दुकान, for /rental to render.
+
+    It lives here rather than in krashi_dukan.py only because that module
+    already imports this one — the reverse import would be a cycle. The CSS it
+    needs is this module's CROSS_CSS, which /rental already carries.
+    """
+    return cross_card(
+        f"{SITE}/krashi_dukan", "🏪", "बीज, खाद या दवा चाहिए?",
+        sub or "कृषि दुकान पर अपने ज़िले की दुकानों के आज के भाव देखें और सीधे दुकान से खरीदें।")
 
 
 # ── the supply side, rendered ───────────────────────────────
@@ -182,6 +279,28 @@ border-radius:var(--radius-md);padding:16px 18px;box-shadow:var(--shadow-sm);mar
 # server renders a default order, the client swaps to nearest once km_geo is
 # known, because the server has no farmer to measure from.
 _EXTRA_CSS = _PRODUCT_CSS + CROSS_CSS + _OWNER_CSS + free_month.CSS + """
+/* ── photo tiles ──
+   product.py's card art is a product cut-out on white, so it is sized to sit
+   INSIDE the band with padding (object-fit:contain). These are photographs of
+   machines in fields — they must fill the band edge to edge, or the card shows
+   a small picture floating in a cream box. Only tiles that actually carry a
+   photo are touched: an emoji tile still needs its padding, and /product's own
+   cards are not affected because this sheet is this section's alone. */
+.prod-card-photo.has-photo{padding:0}
+.prod-card-photo.has-photo img{display:block;width:100%;height:100%;
+max-width:none;max-height:none;object-fit:cover}
+.answer-prod-photo-lg.has-photo{padding:0;background:var(--cream)}
+.answer-prod-photo-lg.has-photo img{width:100%;height:100%;object-fit:cover}
+@media(max-width:560px){
+.prod-card-photo.has-photo{padding:0}
+.prod-card-photo.has-photo img{object-fit:cover}
+/* The hero keeps `cover` on a phone as well. product.py switches to `contain`
+   there because a portrait bag or bottle gets its label cropped off; a machine
+   photographed in a field is landscape and still reads as that machine when
+   cropped square, whereas `contain` shrinks it to a stamp inside a 104px box. */
+.answer-prod-photo-lg.has-photo img{object-fit:cover}
+}
+
 /* ── rate table on an equipment page ── */
 .rent-rates{display:flex;flex-direction:column;gap:9px;margin-top:14px}
 .rent-rate{display:flex;align-items:center;gap:14px;background:var(--white);
@@ -235,14 +354,67 @@ _CSS = _BASE_CSS + _EXTRA_CSS
 
 # ── small helpers ───────────────────────────────────────────
 
-def _tile(item: dict, cls: str, size: int) -> str:
-    """An emoji tile where the product pages put a photo.
+# Photographs live in frontend/images/rental/, fetched and licence-checked by
+# tools/fetch_rental_images.py, and credited on /articles/credits.
+_IMG_DIR = Path(__file__).resolve().parents[2] / "frontend" / "images" / "rental"
+_IMG_URL = "/images/rental"
+_img_cache: dict = {"mtime": -1.0, "slugs": frozenset()}
 
-    There is deliberately no <img> anywhere in this section: we own no photo of
-    a hired tractor, and a wrong src fails SILENTLY on this site — a missing
-    static file returns 200 with the SPA's HTML, not a 404, so a broken tile
-    would render as an empty grey box nobody would ever hear about.
+
+def _photo_slugs() -> frozenset:
+    """Which machines actually have a committed photo, read off the DIRECTORY.
+
+    Scanned rather than assumed from a list, because a missing static file on
+    this site answers 200 with the SPA's HTML instead of 404 — so a wrong src
+    does not fail loudly, it renders an empty grey box that nobody ever hears
+    about. If the file is not on disk, the emoji tile is used and the page is
+    still complete.
+
+    Re-scanned when the directory's mtime changes, so dropping a new photo in
+    needs no restart ("everything automatic"). A missing directory is a normal
+    state, not an error — every tile simply stays an emoji.
     """
+    try:
+        m = _IMG_DIR.stat().st_mtime
+    except OSError:
+        return frozenset()
+    if m != _img_cache["mtime"]:
+        try:
+            _img_cache["slugs"] = frozenset(
+                f.stem for f in _IMG_DIR.glob("*.webp"))
+            _img_cache["mtime"] = m
+        except OSError:
+            return _img_cache["slugs"]
+    return _img_cache["slugs"]
+
+
+def _tile(item: dict, cls: str, size: int, eager: bool = False) -> str:
+    """A photograph of the machine, or an emoji where we have none.
+
+    The alt text names the machine in Hindi AND English and says it is for
+    hire, because these tiles are the only images this section has and image
+    search is a real entry point for "ट्रैक्टर किराया".
+
+    `width`/`height` are the file's true size, so the box reserves its space
+    before the image lands and nothing shifts under a farmer's thumb on a slow
+    connection.
+
+    `eager` is for the ONE image above the fold — an equipment page's hero.
+    That image is the page's LCP element, and `loading="lazy"` on an LCP image
+    defers the very fetch the metric is timing. Everything else stays lazy:
+    the hub grid is 24 photos and a farmer on mobile data must not pay for the
+    ones he never scrolls to.
+    """
+    slug = item.get("slug") or ""
+    if slug in _photo_slugs():
+        name_en = item.get("name_en") or ""
+        alt = f"{item['name_hi']} किराये पर" + (f" — {name_en} on rent" if name_en else "")
+        loading = "eager" if eager else "lazy"
+        priority = ' fetchpriority="high"' if eager else ""
+        return (f'<div class="{cls} has-photo">'
+                f'<img src="{_IMG_URL}/{escape(slug)}.webp" alt="{escape(alt)}" '
+                f'loading="{loading}"{priority} decoding="async" '
+                f'width="400" height="300"></div>')
     return (f'<div class="{cls}" style="display:flex;align-items:center;'
             f'justify-content:center;font-size:{size}px">{escape(item.get("emoji") or "🚜")}</div>')
 
@@ -329,6 +501,10 @@ def _own_machine(equipment_hi: str = "") -> str:
     flow they will abandon halfway.
     """
     return free_month.card("rental", equipment_hi or "")
+
+
+_CTA_ARTICLE = "📰 इससे जुड़ा पूरा लेख पढ़ें"
+_CTA_LABELS = {"/bhav/net-price": "🧮 भाड़ा जोड़कर नेट भाव निकालिए"}
 
 
 def _how_to_book(item: dict | None = None, has_owners: bool = False) -> str:
@@ -640,14 +816,7 @@ def rental_hub(db: Session = Depends(get_db)):
 </div>
 {"".join(sections)}
 {_own_machine()}
-<a class="km-cross" href="{SITE}/krashi_dukan">
-<div class="km-cross-ic">🏪</div>
-<div class="km-cross-t">
-<b>बीज, खाद या दवा चाहिए?</b>
-<span>कृषि दुकान पर अपने ज़िले की दुकानों के आज के भाव देखें और सीधे दुकान से खरीदें।</span>
-</div>
-<span class="km-cross-go">देखें →</span>
-</a>
+{dukan_link()}
 {_how_to_book()}
 <div class="rent-note"><b>ध्यान दें:</b> {escape(DISCLAIMER)}</div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
@@ -697,12 +866,17 @@ def rental_equipment(equipment_slug: str, db: Session = Depends(get_db)):
         tips_html = (f'<h2>काम की बात</h2>'
                      f'<ul class="rent-list tips">{items}</ul>')
 
+    # A machine's `article` is usually a guide, but the haulage rows point at
+    # the net-भाव calculator instead, and a button promising a लेख that opens a
+    # calculator is a small lie the farmer catches on the tap. Keyed by target
+    # so the registry stays free of a label column nobody would keep in sync;
+    # test_netprice_hauliers.py fails if a non-article target has no label.
     article = item.get("article") or ""
     article_html = ""
     if article:
         article_html = (f'<div class="cta-row">'
                         f'<a class="btn btn-kh" href="{SITE}{escape(article)}">'
-                        f'📰 इससे जुड़ा पूरा लेख पढ़ें</a></div>')
+                        f'{escape(_CTA_LABELS.get(article, _CTA_ARTICLE))}</a></div>')
 
     others = rental.siblings(item)
     others_html = ""
@@ -753,7 +927,7 @@ def rental_equipment(equipment_slug: str, db: Session = Depends(get_db)):
 
     body = f"""<section class="answer">
 <div class="answer-prod-split">
-{_tile(item, "answer-prod-photo-lg", 72)}
+{_tile(item, "answer-prod-photo-lg", 72, eager=True)}
 <div class="answer-prod-info">
 <h1>{escape(item.get('emoji') or '🚜')} {escape(name)} किराया</h1>
 <p class="answer-sub">{escape(cat.get('label_hi') or '')}{f" · {escape(item['name_en'])}" if item.get('name_en') else ""}</p>
@@ -889,7 +1063,7 @@ def rental_offer(equipment_slug: str, provider_slug: str,
 
     body = f"""<section class="answer">
 <div class="answer-prod-split">
-{_tile(item, "answer-prod-photo-lg", 72)}
+{_tile(item, "answer-prod-photo-lg", 72, eager=True)}
 <div class="answer-prod-info">
 <h1>{escape(item.get('emoji') or '🚜')} {escape(name)} किराया</h1>
 <p class="answer-sub">🚜 {escape(provider.name)}{f" · {escape(where)}" if where else ""}</p>

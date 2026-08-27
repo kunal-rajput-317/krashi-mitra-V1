@@ -222,14 +222,19 @@ def test_pages_are_indexable_and_carry_their_own_canonical(client, path):
     assert f'<link rel="canonical" href="https://krashimitra.in{path}">' in html
 
 
-def test_no_img_tag_in_the_body(client):
-    """A missing static file returns 200 with the SPA's HTML on this site, not a
-    404, so a wrong <img> src fails silently and invisibly. This section renders
-    emoji tiles instead — asserted, because "add a photo" is the obvious future
-    edit that would reintroduce the failure mode."""
+def test_every_body_image_is_a_rental_photo_we_actually_ship(client):
+    """This section used to ban <img> outright, because a missing static file
+    answers 200 with the SPA's HTML here and a wrong src fails invisibly. It now
+    ships real photographs, so the rule became narrower rather than weaker: any
+    <img> in the body must come out of /images/rental, and
+    test_a_page_never_points_at_an_image_that_is_not_there proves each one
+    resolves to a real image. An <img> from anywhere else is the old bug back.
+    """
+    import re
     html = client.get("/rental/tractor").text
     body = html.split('<div class="wrap">')[1].split("<footer")[0]
-    assert "<img" not in body
+    for src in re.findall(r'<img[^>]+src="([^"]+)"', body):
+        assert src.startswith("/images/rental/"), f"unexpected image source {src}"
 
 
 def test_a_dropped_machine_sends_the_farmer_back_to_the_directory(client):
@@ -352,3 +357,151 @@ def test_rental_leaf_pages_do_not_link_to_themselves(client):
     the farmer is already standing in."""
     html = client.get("/rental/tractor").text
     assert CROSS_MARKUP not in html
+
+
+# ── the photographs, and what their licences oblige ─────────
+
+def _rental_images():
+    from backend.routes.rental import _IMG_DIR
+    return sorted(f.stem for f in _IMG_DIR.glob("*.webp")) if _IMG_DIR.exists() else []
+
+
+def test_every_photo_belongs_to_a_machine_that_exists():
+    """A stray .webp would be served, credited and attached to nothing."""
+    slugs = {e["slug"] for e in rental.equipment()}
+    for name in _rental_images():
+        assert name in slugs, f"{name}.webp matches no equipment slug"
+
+
+def test_every_photo_is_credited(client):
+    """CC BY and CC BY-SA licence these files to us ONLY while the author, the
+    licence and the fact we modified the file are stated. /articles/credits is
+    that statement, so a photo shipped without an entry there is a licence
+    breach — and a silent one, because the image still renders perfectly.
+    """
+    import json
+    from backend.routes.rental import _IMG_DIR
+
+    images = _rental_images()
+    if not images:
+        pytest.skip("no rental photos committed")
+    credits = json.loads((_IMG_DIR / "CREDITS.json").read_text(encoding="utf-8"))
+    page = client.get("/articles/credits").text
+    for name in images:
+        assert name in credits, f"{name}.webp has no CREDITS.json entry"
+        row = credits[name]
+        assert row.get("author"), f"{name}: no author recorded"
+        assert row.get("licence"), f"{name}: no licence recorded"
+        assert f"images/rental/{name}.webp" in page, f"{name} is not on the credits page"
+
+
+def test_no_photo_carries_a_noncommercial_licence():
+    """This site runs AdSense, so every use of these images is commercial. An
+    NC-licensed file is not licensed for it however well attributed."""
+    import json
+    from backend.routes.rental import _IMG_DIR
+    if not _rental_images():
+        pytest.skip("no rental photos committed")
+    credits = json.loads((_IMG_DIR / "CREDITS.json").read_text(encoding="utf-8"))
+    for name, row in credits.items():
+        lic = (row.get("licence") or "").lower()
+        assert "-nc" not in lic and "noncommercial" not in lic, f"{name}: {row['licence']}"
+
+
+def test_photos_stay_small_enough_for_mobile_data():
+    """98% of visits are phones, and this site has already blown a 5GB/month
+    bandwidth cap once. The hub lazy-loads 24 of these, so a file creeping up
+    to article-hero size costs real money and real load time.
+    """
+    from backend.routes.rental import _IMG_DIR
+    for name in _rental_images():
+        kb = (_IMG_DIR / f"{name}.webp").stat().st_size / 1024
+        assert kb <= 40, f"{name}.webp is {kb:.0f} KB — re-encode it smaller"
+
+
+@pytest.mark.parametrize("slug", SLUGS)
+def test_a_page_never_points_at_an_image_that_is_not_there(client, slug):
+    """The failure this guards is invisible: a missing static file on this site
+    answers 200 with the SPA's HTML rather than 404, so a wrong src renders an
+    empty grey box and nothing anywhere reports it. Assert on content-type, not
+    on status.
+    """
+    import re
+    html = client.get(f"/rental/{slug}").text
+    for src in set(re.findall(r'src="(/images/rental/[^"]+)"', html)):
+        r = client.get(src)
+        assert r.status_code == 200, f"{src} → {r.status_code}"
+        assert "image" in r.headers.get("content-type", ""), \
+            f"{src} served {r.headers.get('content-type')} — the file is missing"
+
+
+def test_the_hero_image_is_not_lazy_loaded(client):
+    """The hero is the equipment page's LCP element. `loading="lazy"` on an LCP
+    image defers the very fetch Core Web Vitals is timing."""
+    html = client.get("/rental/tractor").text
+    # Anchor on the MARKUP, not the class name — the same string appears in the
+    # stylesheet far earlier in the document.
+    hero = html[html.index('<div class="answer-prod-photo-lg has-photo">'):]
+    hero = hero[:hero.index("</div>")]
+    assert 'loading="eager"' in hero, "the hero image is lazy-loaded"
+    assert 'fetchpriority="high"' in hero
+
+
+def test_the_hub_grid_stays_lazy(client):
+    """The hub is 24 photos. Eager-loading them would hand a farmer on mobile
+    data the whole 450 KB before he has scrolled anywhere."""
+    html = client.get("/rental").text
+    assert 'loading="eager"' not in html
+    assert html.count('loading="lazy"') >= 20
+
+
+# ── the cross-section cards ─────────────────────────────────
+
+@pytest.mark.parametrize("url", ["/rental", "/krashi_dukan"])
+def test_every_cross_card_matches_the_stylesheet_it_depends_on(client, url):
+    """A `.km-cross` that has no `.km-cross-head` inside it is the bug this
+    test was written for, and it is invisible to every other check.
+
+    CROSS_CSS moved the flex row out of `.km-cross` and into `.km-cross-head`
+    so the container could hold machine chips underneath. One call site
+    hand-wrote its own `<a class="km-cross">` instead of using the helper, so
+    it kept the container's border and lost `display:flex` and
+    `text-decoration:none` — a tall empty box with a blue underlined heading.
+    Valid HTML, present CSS, right classes, wrong shape.
+    """
+    import re
+    html = client.get(url).text
+    body = html.split('<div class="wrap">')[1].split("<footer")[0]
+
+    # The container is a <div>, never an <a> — an <a> gets the UA's inline +
+    # underline defaults, which is exactly how the broken one rendered.
+    assert '<a class="km-cross"' not in body, \
+        "a cross card is still hand-written as an anchor"
+
+    for m in re.finditer(r'<div class="km-cross">', body):
+        chunk = body[m.start():m.start() + 1200]
+        assert 'class="km-cross-head"' in chunk, \
+            "a .km-cross card has no .km-cross-head — it will render unstyled"
+        assert 'class="km-cross-ic"' in chunk
+        assert 'class="km-cross-t"' in chunk
+
+
+def test_both_cross_directions_come_from_one_renderer():
+    """The card pointing at /rental and the card pointing at कृषि दुकान must be
+    built by the same function, or the next stylesheet change breaks whichever
+    one nobody remembered."""
+    from backend.routes import rental as R
+    for html in (R.cross_link(), R.dukan_link()):
+        assert html.startswith('<div class="km-cross">')
+        assert 'class="km-cross-head"' in html
+        assert html.rstrip().endswith("</div>")
+
+
+def test_the_dukan_card_points_at_dukan_and_the_rental_card_at_rental():
+    """One renderer, two destinations — a swapped href would send a farmer
+    looking for urea into a tractor directory."""
+    from backend.routes import rental as R
+    assert "/krashi_dukan" in R.dukan_link()
+    assert "बीज, खाद या दवा" in R.dukan_link()
+    assert "/rental" in R.cross_link()
+    assert "किराये पर चाहिए" in R.cross_link()

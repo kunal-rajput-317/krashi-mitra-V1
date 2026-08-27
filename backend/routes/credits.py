@@ -28,7 +28,13 @@ from backend.routes.bhav import _doc, _ld
 router = APIRouter()
 
 SITE = "https://krashimitra.in"
-_CREDITS = Path(__file__).resolve().parents[2] / "frontend" / "images" / "articles" / "CREDITS.json"
+_IMAGES = Path(__file__).resolve().parents[2] / "frontend" / "images"
+_CREDITS = _IMAGES / "articles" / "CREDITS.json"
+# The /rental machine photographs are the same deal from the same place —
+# Commons files, mostly CC BY / CC BY-SA, self-hosted. They are listed on THIS
+# page rather than one of their own because the obligation is identical and a
+# second credits page is a second thing to remember to link.
+_RENTAL_CREDITS = _IMAGES / "rental" / "CREDITS.json"
 
 _cache: dict = {"mtime": None, "rows": []}
 
@@ -51,18 +57,54 @@ _EXTRA_CSS = """
 """
 
 
+def _rental_rows() -> list[dict]:
+    """Credits for the /rental machine photographs.
+
+    Same shape the article rows use, so the page renders one list. A credit
+    whose .webp is not on disk is skipped for the article set's reason: the
+    entry describes a file we are publishing, and one we are not needs no
+    attribution.
+    """
+    try:
+        data = json.loads(_RENTAL_CREDITS.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    rows = []
+    for name, c in sorted(data.items()):
+        if not (_RENTAL_CREDITS.parent / f"{name}.webp").is_file():
+            continue
+        rows.append({
+            "name": name,
+            "section": "किराये की मशीनें",
+            "thumb": f"images/rental/{name}.webp",
+            "file": c.get("file", ""),
+            "source": c.get("descriptionurl", ""),
+            "author": c.get("author", "unknown"),
+            "licence": c.get("licence", ""),
+            "licence_url": c.get("licence_url", ""),
+        })
+    return rows
+
+
 def _rows() -> list[dict]:
     """Credits, newest file state. Re-read only when CREDITS.json changes."""
-    try:
-        mtime = _CREDITS.stat().st_mtime
-    except OSError:
+    def _stamp(path: Path) -> float:
+        try:
+            return path.stat().st_mtime
+        except OSError:
+            return 0.0
+
+    # Either file changing must re-read both — a single mtime would leave a
+    # newly added machine photo uncredited until an article happened to change.
+    mtime = (_stamp(_CREDITS), _stamp(_RENTAL_CREDITS))
+    if mtime == (0.0, 0.0):
         return _cache["rows"]
     if mtime != _cache["mtime"]:
         try:
             data = json.loads(_CREDITS.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            return _cache["rows"]
-        rows = []
+            data = {}
+        rows = _rental_rows()
         for name, c in sorted(data.items()):
             # Only heroes and in-body illustrations are recorded here — the
             # 480px card cuts never get their own credit entry. Do NOT filter on
@@ -73,6 +115,7 @@ def _rows() -> list[dict]:
                 continue
             rows.append({
                 "name": name,
+                "section": "लेख",
                 "thumb": f"images/articles/{name}-card.webp"
                          if (_CREDITS.parent / f"{name}-card.webp").is_file()
                          else f"images/articles/{name}.webp",
@@ -82,6 +125,7 @@ def _rows() -> list[dict]:
                 "licence": c.get("licence", ""),
                 "licence_url": c.get("licence_url", ""),
             })
+        rows.sort(key=lambda r: (r["section"], r["name"]))
         _cache.update(mtime=mtime, rows=rows)
     return _cache["rows"]
 
@@ -109,10 +153,11 @@ def credits_page():
 
     body = (
         '<h1>चित्र स्रोत और श्रेय</h1>'
-        '<p class="cred-intro">कृषि मित्र के लेखों में इस्तेमाल हुई तस्वीरें '
+        '<p class="cred-intro">कृषि मित्र के लेखों और किराये की मशीनों के पेजों पर इस्तेमाल हुई तस्वीरें '
         '<a href="https://commons.wikimedia.org/" rel="nofollow noopener" target="_blank">'
         'Wikimedia Commons</a> से ली गई हैं और हमारे अपने सर्वर से दिखाई जाती हैं। '
-        'हर तस्वीर को 1200×675 पर काटा गया है और WebP में बदला गया है। '
+        'लेख की तस्वीरें 1200×675 पर और मशीनों की तस्वीरें 400×300 पर काटी गई हैं, '
+        'और सभी WebP में बदली गई हैं। '
         'नीचे हर तस्वीर का मूल फ़ाइल नाम, बनाने वाले का नाम और लाइसेंस दिया गया है, '
         'जैसा कि उन लाइसेंस की शर्तें माँगती हैं।</p>'
         f'<ul class="cred-list">{"".join(items)}</ul>'

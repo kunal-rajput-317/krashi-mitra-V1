@@ -55,7 +55,7 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
     buyers, crop_types, district_geo, freight, index_gate, lead_clicks, leads,
-    msp, placements, wa_channels as _wa_channels,
+    msp, placements, rental as rental_svc, wa_channels as _wa_channels,
 )
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
@@ -4067,7 +4067,8 @@ def _money(n) -> str:
     return f"₹{n:,}"
 
 
-def _net_price_html(cs: str, hi: str, ranked: list, qty: float, tier: str) -> str:
+def _net_price_html(cs: str, hi: str, ranked: list, qty: float, tier: str,
+                    haul: str = "") -> str:
     """Results list for the net-price calculator. Highest net first; the nearest
     mandi is tagged so the farmer sees when 'closest' and 'best net' differ."""
     if not ranked:
@@ -4122,8 +4123,101 @@ def _net_price_html(cs: str, hi: str, ranked: list, qty: float, tier: str) -> st
 
     return (f'{take}'
             f'<div class="np-list">{"".join(cards)}</div>'
+            f'{haul}'
             '<p class="np-fine">भाड़ा सिर्फ अनुमान है — असली खर्च डीज़ल, रास्ते और '
             'ट्रांसपोर्टर पर निर्भर करता है। भाव सरकारी Agmarknet रिपोर्ट से।</p>')
+
+
+# ════════════════════════════════════════════════════════════
+# AND WHO WILL ACTUALLY HAUL IT — the /rental supply, under the answer
+#
+# The freight figure above is an estimate of a trip NOBODY HAS BOOKED. This is
+# the half that makes it bookable: every vehicle in the picker is also a machine
+# in the /rental registry (freight_rates.json names it per tier), so the owners
+# listed there can be ranked from the same lat/lon the mandis were ranked from.
+# It is the one screen on the site where a farmer has already decided to move
+# produce AND told us in what — spending that intent on a dead-end number was
+# the waste.
+#
+# WE DO NOT BROKER THE TRIP — no cut of it, no matching, no promise a vehicle
+# turns up. A per-trip commission needs both sides of one district on one day
+# and stops being collectable the first time the two swap numbers; the moment we
+# guaranteed the trip we would own the dispute. The money here is the owner's
+# monthly listing fee, which /rental already sells, bills and expires.
+#
+# ORDERING IS DISTANCE AND NOTHING ELSE, inherited from services/rental.py
+# rather than re-decided. That is the rule that section refuses to sell, and a
+# panel that quietly re-sorted by who paid would break it from the outside.
+# ════════════════════════════════════════════════════════════
+def _haul_html(tier: str, lat: float, lon: float, limit: int = 3) -> str:
+    """Owners of the vehicle the farmer just picked, nearest to him first.
+
+    With no owner listed this still renders ONE line into /rental instead of
+    nothing: that page answers what the haul should cost and routes to a
+    government CHC, and a farmer who has just been shown ~₹X/क्विंटल of freight
+    is precisely the reader who needs it. (Contrast services/rental.py's
+    _owners_block, which renders nothing — it is already on that page.)
+
+    Every failure — no slug for the tier, a machine dropped from the registry, a
+    database that is down — returns "" and costs the calculator nothing. The
+    net भाव is the answer this endpoint owes; this panel is a bonus and must
+    never be able to take the answer down with it.
+    """
+    slug = freight.rental_slug(tier)
+    item = rental_svc.by_slug(slug) if slug else None
+    if not item:
+        return ""
+    name = escape(item.get("name_hi") or "")
+    icon = escape(item.get("emoji") or "🚚")
+
+    offers, db = [], None
+    try:
+        db = SessionLocal()
+        offers = rental_svc.sort_by_distance(
+            rental_svc.offers_for_equipment(db, slug), lat, lon)[:limit]
+    except Exception:
+        logger.warning("net-price: haulier lookup failed", exc_info=True)
+    finally:
+        if db is not None:
+            db.close()
+
+    if not offers:
+        # "Nobody is listed" and "we could not look" deliberately land on the
+        # same line, because the line promises only what /rental keeps with or
+        # without a database — what this haul should cost, and the government
+        # CHC route. It never says no owner exists, which is precisely what a
+        # failed lookup does not know.
+        return (f'<a class="np-haul-lone" href="/rental/{escape(slug)}">'
+                f'<span>{icon} <b>{name}</b> का किराया कितना होना चाहिए, और '
+                f'किराये पर कहाँ से लें</span>'
+                f'<span class="np-haul-go">देखें →</span></a>')
+
+    rows = []
+    for o in offers:
+        # Hindi state name, as the mandi cards above already render it — one
+        # results list must not mix "Uttar Pradesh" with "उत्तर प्रदेश".
+        bits = [x for x in (o["district"], _hindi_state(o["state"])) if x]
+        if o.get("distance_km") is not None:
+            bits.append(_fmt_km(o["distance_km"]))
+        if o["kind_label"]:
+            bits.append(o["kind_label"])
+        rows.append(
+            f'<a class="np-haul-row" '
+            f'href="/rental/{escape(slug)}/{escape(o["provider_slug"])}">'
+            f'<span class="np-haul-main">'
+            f'<span class="np-haul-name">{escape(o["provider_name"])}</span>'
+            f'<span class="np-haul-where">📍 {escape(" · ".join(bits))}</span>'
+            f'</span>'
+            f'<span class="np-haul-rate"><b>₹{o["rate"]:,}</b>'
+            f'<span>{escape(o["rate_unit_hi"])}</span></span>'
+            f'</a>')
+
+    return (f'<div class="np-haul">'
+            f'<div class="np-haul-head">{icon} यह माल ले जाने के लिए <b>{name}</b> '
+            f'किराये पर देने वाले — आपके सबसे पास वाले पहले</div>'
+            f'{"".join(rows)}'
+            f'<a class="np-haul-all" href="/rental/{escape(slug)}">'
+            f'सभी मालिक व किराये की सही रेंज देखें →</a></div>')
 
 
 @router.get("/bhav/net-price-calc")
@@ -4138,8 +4232,11 @@ def bhav_net_price(crop: str, lat: float, lon: float,
     tier = tier if tier in freight.tiers() else freight.default_tier()
     qty = min(max(float(qty or 1), 1.0), 100000.0)     # clamp to sane range
     ranked = _net_rank(commodity, lat, lon, qty, tier)
+    # Only under a real answer — a farmer told there is no mandi within reach
+    # has no trip to hire a vehicle for.
+    haul = _haul_html(tier, lat, lon) if ranked else ""
     html = _net_price_html((crop or "").lower(), _hindi_name(commodity),
-                           ranked, qty, tier)
+                           ranked, qty, tier, haul)
     return JSONResponse({"ok": True, "html": html, "count": len(ranked)},
                         headers={"Cache-Control": "no-store"})
 
@@ -4241,6 +4338,28 @@ line-height:1.55;color:var(--text-dark)}
 .np-steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:24px;height:24px;
 border-radius:50%;background:var(--green-pale);color:var(--green-dark);font-weight:800;font-size:12.5px;
 display:flex;align-items:center;justify-content:center}
+/* ── who will haul it: the /rental owners of the chosen vehicle ── */
+.np-haul{margin-top:14px;background:var(--white);border:1px solid var(--border);
+border-radius:14px;padding:13px 14px 11px}
+.np-haul-head{font-size:13px;color:var(--text-mid);line-height:1.5;padding-bottom:10px}
+.np-haul-head b{color:var(--text-dark);font-weight:800}
+.np-haul-row{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
+padding:10px 0;border-top:1px solid var(--border)}
+.np-haul-main{display:flex;flex-direction:column;min-width:0;flex:1}
+.np-haul-name{font-weight:700;font-size:14px;color:var(--text-dark);line-height:1.3}
+.np-haul-where{font-size:11.5px;color:var(--text-soft);margin-top:2px;line-height:1.45}
+.np-haul-rate{display:flex;flex-direction:column;align-items:flex-end;text-align:right;flex:0 0 auto}
+.np-haul-rate b{font-size:16px;font-weight:800;color:var(--green-dark);line-height:1.1}
+.np-haul-rate span{font-size:10.5px;color:var(--text-soft);margin-top:2px}
+.np-haul-all{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;
+color:var(--green-dark);text-decoration:none}
+/* no owner listed yet — /rental still answers what the haul should cost */
+.np-haul-lone{display:flex;align-items:center;justify-content:space-between;gap:12px;
+margin-top:14px;background:var(--green-pale);border:1px solid var(--green-light);
+border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--text-dark);
+font-size:13.5px;line-height:1.45}
+.np-haul-lone b{font-weight:800}
+.np-haul-go{font-weight:800;color:var(--green-dark);white-space:nowrap}
 @media(max-width:420px){.np-net b{font-size:16px}.np-mkt{font-size:14px}}
 @media(max-width:640px){
 .np-ex{padding:4px 14px 10px}

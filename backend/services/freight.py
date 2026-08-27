@@ -30,10 +30,13 @@ _FALLBACK = {
     "max_radius_km": 150,
     "tiers": {
         "trolley": {"label": "ट्रैक्टर-ट्रॉली", "hint": "पास की मंडी",
+                    "rental_slug": "tractor-trolley",
                     "fixed_inr": 200, "per_km_inr": 15, "capacity_q": 25},
         "mini":    {"label": "मिनी-ट्रक", "hint": "मध्यम दूरी",
+                    "rental_slug": "mini-truck",
                     "fixed_inr": 400, "per_km_inr": 22, "capacity_q": 40},
         "truck":   {"label": "ट्रक", "hint": "दूर की मंडी",
+                    "rental_slug": "truck",
                     "fixed_inr": 1200, "per_km_inr": 40, "capacity_q": 120},
     },
 }
@@ -71,6 +74,17 @@ def max_radius_km() -> float:
 def tiers() -> dict:
     """{key: {label, hint, ...}} — for building the vehicle selector."""
     return load_rates().get("tiers", _FALLBACK["tiers"])
+
+
+def rental_slug(tier: str) -> str:
+    """The /rental machine that IS this vehicle tier, or "" when none is named.
+
+    The mapping lives in freight_rates.json beside the tier it describes, so a
+    renamed machine is one data edit and never a deploy. "" is a normal answer,
+    not an error: a tier nobody hires out yet simply shows no owners, exactly as
+    a machine with no listings shows none on /rental.
+    """
+    return str(_tier_cfg(tier).get("rental_slug") or "").strip().lower()
 
 
 def _tier_cfg(tier: str) -> dict:
