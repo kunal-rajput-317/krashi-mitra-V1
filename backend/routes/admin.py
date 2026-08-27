@@ -276,8 +276,11 @@ async def wa_posts(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require
     or a piece of composition. Ordered biggest-state-first so a morning that
     runs out of time runs out on Sikkim, not Uttar Pradesh.
 
-    Channels come from data/wa_channels.json (see services/wa_channels); a state
-    with no link there is skipped rather than listed empty.
+    Returns every channel, in one of two lists: `posts` (with a भरोसा score out
+    of 100 and the reasons it is not higher — read before pasting, since one
+    wrong number costs more trust than a week of right ones buys) and `quiet`
+    (channels with nothing honest to say today, and why). Channels come from
+    data/wa_channels.json; a state with no link there is in neither list.
     """
     from backend.services import wa_post
     cov = wa_post.coverage(refresh=bool(refresh))
