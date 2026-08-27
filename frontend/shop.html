@@ -1423,54 +1423,126 @@
        FILTER / CATEGORY ROW
     ══════════════════════════════════════ */
     .shop-filter-row {
+      margin-bottom: 22px;
+    }
+    .shop-filter-row .shop-search-wrap {
+      display: block;
+      margin-bottom: 18px;
+    }
+
+    /* Heading strip above the tiles */
+    .cat-strip-head {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
     }
-    .shop-filter-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
-      color: var(--text-mid);
-      cursor: pointer;
-      transition: all 0.18s;
-      box-shadow: var(--shadow);
-      white-space: nowrap;
-    }
-    .shop-filter-btn:hover {
-      border-color: var(--green-light);
-      color: var(--green-mid);
-    }
-    .shop-filter-btn.active {
-      background: var(--green-dark);
-      border-color: var(--green-dark);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(26,60,46,0.25);
-    }
-    .shop-filter-btn.cat-extra {
-      display: none;
-    }
-    .shop-filter-btn.cat-extra.cat-extra-show {
-      display: inline-flex;
+    .cat-strip-title {
+      font-family: 'Noto Serif Devanagari', 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-dark);
     }
     .cat-more-btn {
-      background: var(--green-pale);
-      border-color: var(--green-light);
-      color: var(--green-mid);
+      background: none;
+      border: none;
+      padding: 2px 0;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      font-size: 13px;
       font-weight: 700;
+      color: var(--green-mid);
+      border-bottom: 1.5px solid var(--green-light);
+      cursor: pointer;
+      white-space: nowrap;
     }
     .cat-more-btn:hover {
-      background: var(--green-light);
-      color: #fff;
+      color: var(--green-dark);
+      border-bottom-color: var(--green-dark);
+    }
+
+    /* Category tiles — a picture per category, not a word. The photo fills the
+       circle; when it fails to load the img removes itself and the tinted
+       circle + emoji underneath shows through. */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px 6px;
+    }
+    .shop-filter-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cat-tile-circle {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: var(--tint, var(--green-pale));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(26,60,46,0.12);
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      transition: transform 0.18s, box-shadow 0.18s, outline-color 0.18s;
+    }
+    .cat-tile-circle img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .cat-tile-emoji {
+      font-size: 27px;
+      line-height: 1;
+    }
+    .cat-tile-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: var(--text-mid);
+      text-align: center;
+      max-width: 84px;
+    }
+    .shop-filter-btn:hover .cat-tile-circle {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 18px rgba(26,60,46,0.20);
+    }
+    .shop-filter-btn:hover .cat-tile-label { color: var(--green-mid); }
+    .shop-filter-btn.active .cat-tile-circle {
+      outline-color: var(--green-dark);
+      box-shadow: 0 5px 16px rgba(26,60,46,0.24);
+    }
+    .shop-filter-btn.active .cat-tile-label {
+      color: var(--green-dark);
+      font-weight: 800;
+    }
+    .shop-filter-btn.cat-extra { display: none; }
+    .shop-filter-btn.cat-extra.cat-extra-show { display: flex; }
+
+    @media screen and (max-width: 359px) {
+      .cat-tile-circle { width: 58px; height: 58px; }
+      .cat-tile-emoji { font-size: 24px; }
+      .cat-tile-label { font-size: 10.5px; }
+    }
+    @media screen and (min-width: 721px) {
+      .cat-grid { grid-template-columns: repeat(6, 1fr); gap: 22px 10px; }
+      .cat-tile-circle { width: 86px; height: 86px; }
+      .cat-tile-emoji { font-size: 34px; }
+      .cat-tile-label { font-size: 13px; max-width: 112px; }
+      .cat-strip-title { font-size: 20px; }
     }
 
     /* Search bar */
@@ -2700,26 +2772,110 @@
     </div>
   </div>
 
-  <!-- Filter Row -->
+  <!-- Search + category tiles -->
   <div class="shop-filter-row">
     <div class="shop-search-wrap">
       <span class="shop-search-icon">🔍</span>
       <input type="text" id="shop-search" placeholder="उत्पाद खोजें..." oninput="filterProducts()" data-t-placeholder="search_placeholder" />
     </div>
-    <button class="shop-filter-btn active" data-cat="all" onclick="setCategory('all', this)" data-t="cat_all">सभी</button>
-    <button class="shop-filter-btn" data-cat="seeds" onclick="setCategory('seeds', this)" data-t="cat_seeds">🌱 बीज</button>
-    <button class="shop-filter-btn" data-cat="fertilizer" onclick="setCategory('fertilizer', this)" data-t="cat_fertilizer">🧪 खाद</button>
-    <button class="shop-filter-btn cat-extra" data-cat="pesticide" onclick="setCategory('pesticide', this)" data-t="cat_pesticide">🌿 कीटनाशक</button>
-    <button class="shop-filter-btn cat-extra" data-cat="tools" onclick="setCategory('tools', this)" data-t="cat_tools">🔧 उपकरण</button>
-    <button class="shop-filter-btn cat-extra" data-cat="pashu_aahaar" onclick="setCategory('pashu_aahaar', this)" data-t="cat_pashu_aahaar">🐄 पशु आहार</button>
-    <button class="shop-filter-btn cat-extra" data-cat="sprayers" onclick="setCategory('sprayers', this)">🔵 स्प्रेयर</button>
-    <button class="shop-filter-btn cat-extra" data-cat="irrigation" onclick="setCategory('irrigation', this)">💧 सिंचाई</button>
-    <button class="shop-filter-btn cat-extra" data-cat="soil" onclick="setCategory('soil', this)">🧪 मिट्टी / ग्रोथ</button>
-    <button class="shop-filter-btn cat-extra" data-cat="protection" onclick="setCategory('protection', this)">🛡️ फसल सुरक्षा</button>
-    <button class="shop-filter-btn cat-extra" data-cat="structures" onclick="setCategory('structures', this)">🏗️ नेट व संरचनाएं</button>
-    <button class="shop-filter-btn cat-extra" data-cat="machinery" onclick="setCategory('machinery', this)">⚙️ मशीनरी</button>
-    <button class="shop-filter-btn cat-extra" data-cat="misc" onclick="setCategory('misc', this)">📦 अन्य</button>
-    <button class="shop-filter-btn cat-more-btn" id="cat-more-btn" onclick="toggleMoreCats(this)" data-expanded="0">और देखें</button>
+
+    <div class="cat-strip-head">
+      <span class="cat-strip-title">श्रेणियाँ</span>
+      <button class="cat-more-btn" id="cat-more-btn" onclick="toggleMoreCats(this)" data-expanded="0">सभी देखें</button>
+    </div>
+
+    <!-- A photo per category — a farmer recognises the packet faster than the word -->
+    <div class="cat-grid">
+      <button class="shop-filter-btn active" data-cat="all" onclick="setCategory('all', this)" aria-label="सभी">
+        <span class="cat-tile-circle" style="--tint:#e6f4ea">
+          <span class="cat-tile-emoji" aria-hidden="true">🛒</span>
+          <img src="images/shop-hero.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label" data-t="cat_all">सभी</span>
+      </button>
+      <button class="shop-filter-btn" data-cat="seeds" onclick="setCategory('seeds', this)" aria-label="बीज">
+        <span class="cat-tile-circle" style="--tint:#dff2e1">
+          <span class="cat-tile-emoji" aria-hidden="true">🌱</span>
+          <img src="images/seeds/wheat-seed-HD-2967.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label" data-t="cat_seeds">बीज</span>
+      </button>
+      <button class="shop-filter-btn" data-cat="fertilizer" onclick="setCategory('fertilizer', this)" aria-label="खाद">
+        <span class="cat-tile-circle" style="--tint:#fff1d6">
+          <span class="cat-tile-emoji" aria-hidden="true">🧪</span>
+          <img src="images/fertilizers/Urea.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label" data-t="cat_fertilizer">खाद</span>
+      </button>
+      <button class="shop-filter-btn" data-cat="pesticide" onclick="setCategory('pesticide', this)" aria-label="कीटनाशक">
+        <span class="cat-tile-circle" style="--tint:#e9f5e0">
+          <span class="cat-tile-emoji" aria-hidden="true">🌿</span>
+          <img src="images/Pesticides/chlorocil.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label" data-t="cat_pesticide">कीटनाशक</span>
+      </button>
+      <button class="shop-filter-btn" data-cat="tools" onclick="setCategory('tools', this)" aria-label="उपकरण">
+        <span class="cat-tile-circle" style="--tint:#eef0f4">
+          <span class="cat-tile-emoji" aria-hidden="true">🔧</span>
+          <img src="images/tools/khurpa.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label" data-t="cat_tools">उपकरण</span>
+      </button>
+      <button class="shop-filter-btn" data-cat="pashu_aahaar" onclick="setCategory('pashu_aahaar', this)" aria-label="पशु आहार">
+        <span class="cat-tile-circle" style="--tint:#fde9e0">
+          <span class="cat-tile-emoji" aria-hidden="true">🐄</span>
+          <img src="images/animal_food/kapila.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label" data-t="cat_pashu_aahaar">पशु आहार</span>
+      </button>
+      <button class="shop-filter-btn" data-cat="sprayers" onclick="setCategory('sprayers', this)" aria-label="स्प्रेयर">
+        <span class="cat-tile-circle" style="--tint:#e2eefb">
+          <span class="cat-tile-emoji" aria-hidden="true">🔵</span>
+          <img src="images/tools/battery-sprayer-12V.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label">स्प्रेयर</span>
+      </button>
+      <button class="shop-filter-btn" data-cat="irrigation" onclick="setCategory('irrigation', this)" aria-label="सिंचाई">
+        <span class="cat-tile-circle" style="--tint:#dff0fb">
+          <span class="cat-tile-emoji" aria-hidden="true">💧</span>
+          <img src="images/tools/drip-irrigation-kit_1_acre.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label">सिंचाई</span>
+      </button>
+      <button class="shop-filter-btn cat-extra" data-cat="soil" onclick="setCategory('soil', this)" aria-label="मिट्टी / ग्रोथ">
+        <span class="cat-tile-circle" style="--tint:#f1e8dc">
+          <span class="cat-tile-emoji" aria-hidden="true">🪴</span>
+          <img src="images/tools/mrada-parikshan-kit.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label">मिट्टी / ग्रोथ</span>
+      </button>
+      <button class="shop-filter-btn cat-extra" data-cat="protection" onclick="setCategory('protection', this)" aria-label="फसल सुरक्षा">
+        <span class="cat-tile-circle" style="--tint:#e6f2df">
+          <span class="cat-tile-emoji" aria-hidden="true">🛡️</span>
+          <img src="images/Pesticides/neem-oil.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label">फसल सुरक्षा</span>
+      </button>
+      <button class="shop-filter-btn cat-extra" data-cat="structures" onclick="setCategory('structures', this)" aria-label="नेट व संरचनाएं">
+        <span class="cat-tile-circle" style="--tint:#ebeef3">
+          <span class="cat-tile-emoji" aria-hidden="true">🏗️</span>
+        </span>
+        <span class="cat-tile-label">नेट व संरचनाएं</span>
+      </button>
+      <button class="shop-filter-btn cat-extra" data-cat="machinery" onclick="setCategory('machinery', this)" aria-label="मशीनरी">
+        <span class="cat-tile-circle" style="--tint:#fbe7e3">
+          <span class="cat-tile-emoji" aria-hidden="true">⚙️</span>
+          <img src="images/rental/rotavator.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+        </span>
+        <span class="cat-tile-label">मशीनरी</span>
+      </button>
+      <button class="shop-filter-btn cat-extra" data-cat="misc" onclick="setCategory('misc', this)" aria-label="अन्य">
+        <span class="cat-tile-circle" style="--tint:#f0ebf8">
+          <span class="cat-tile-emoji" aria-hidden="true">📦</span>
+        </span>
+        <span class="cat-tile-label">अन्य</span>
+      </button>
+    </div>
   </div>
 
   <!-- Section heading -->
@@ -3168,7 +3324,12 @@
     const tr = TRANSLATIONS[lang] || TRANSLATIONS.hi;
     document.querySelectorAll('[data-t]').forEach(el => {
       const key = el.getAttribute('data-t');
-      if (tr[key]) el.textContent = tr[key];
+      if (!tr[key]) return;
+      // A category tile already shows a photo — the emoji prefix that the blue
+      // quick-nav strings carry would only repeat it, so drop it on tiles.
+      el.textContent = el.classList.contains('cat-tile-label')
+        ? tr[key].replace(/^[^\p{L}\p{N}]+/u, '')
+        : tr[key];
     });
     // update search placeholder
     const si = document.getElementById('shop-search');
@@ -4209,12 +4370,19 @@
       b.classList.toggle('cat-extra-show', !expanded);
     });
     btn.setAttribute('data-expanded', expanded ? '0' : '1');
-    btn.textContent = expanded ? 'और देखें' : '← वापस';
+    btn.textContent = expanded ? 'सभी देखें' : 'कम देखें';
   }
 
   function setCategory(cat, btn) {
     activeCategory = cat;
-    // Keep the chip row AND the blue quick-nav bar in sync via data-cat
+    // A category picked from the blue bar or a ?cat= deep link may be one of the
+    // tiles folded away behind "सभी देखें" — open the grid so it can show active.
+    const tile = document.querySelector(`.shop-filter-btn[data-cat="${cat}"]`);
+    const moreBtn = document.getElementById('cat-more-btn');
+    if (tile && moreBtn && tile.classList.contains('cat-extra') && !tile.classList.contains('cat-extra-show')) {
+      toggleMoreCats(moreBtn);
+    }
+    // Keep the tile grid AND the blue quick-nav bar in sync via data-cat
     document.querySelectorAll('.shop-filter-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-cat') === cat));
     document.querySelectorAll('.cnav-item').forEach(i => i.classList.toggle('active', i.getAttribute('data-cat') === cat));
 
