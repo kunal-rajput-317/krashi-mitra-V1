@@ -59,6 +59,24 @@
     (document.head || document.documentElement).appendChild(s);
   })();
 
+  // ---- Shell bootstrap: km-social.js ----------------------------------
+  // Our own WhatsApp / Facebook / Instagram channels: the stickers in the
+  // utility bar beside संपर्क, the same three in this drawer, and the
+  // once-a-week invite popup. Bootstrapped here for the same reason as the two
+  // above — this is the only script every page already loads, so the links
+  // reach all 148 static pages and bhav.py's ~14k server pages from one edit
+  // instead of 148. km-social.js self-guards against a double include.
+  (function bootSocial() {
+    if (document.querySelector('script[src*="km-social.js"]')) return;
+    var me = document.currentScript ||
+             document.querySelector('script[src*="drawer-menu.js"]');
+    if (!me || !me.src) return;
+    var s = document.createElement('script');
+    s.src = new URL('km-social.js', me.src).href;   // resolves ../drawer-menu.js too
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  })();
+
   var OLIVE = '#6f7f3a', LEAF = '#b3c47f', CREAM = '#eef3e0';
 
   // Menu tiers are colour-coded so depth is readable at a glance: forest green
@@ -629,6 +647,11 @@
     initHeaderLang();
     applyMenuLang(getLang());
     applyHeaderLang(getLang());
+    // build() empties .sidebar-drawer-links and re-appends it, so anything that
+    // wants to add a row to the finished drawer has to wait for this moment.
+    // km-social.js listens for it; it is deliberately a plain DOM event so a
+    // future component can too, without this file knowing about it.
+    try { document.dispatchEvent(new CustomEvent('km:drawer-ready')); } catch (e) {}
   }
 
   if (document.readyState === 'loading') {

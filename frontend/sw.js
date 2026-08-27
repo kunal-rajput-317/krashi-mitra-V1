@@ -2,7 +2,7 @@
 // outage hold Netlify's `{"error":"usage_exceeded"}` 503 under the URL of a real
 // page or stylesheet, and the activate step deletes every cache that isn't the
 // current name.
-const CACHE_NAME = 'krashimitra-v9'; // v9: ads.js shipped, but drawer-menu.js (which bootstraps it) is referenced without a ?v= query from the articles and the static pages, so cache-first kept handing returning phones the pre-ads copy and no ad ever rendered for them; // v8: backend moved to a new Render host — every returning browser held a cache-first api-config.js pointing at the dead one; v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
+const CACHE_NAME = 'krashimitra-v10'; // v10: km-social.js ships (channel stickers + invite popup) and carries the channel URLs, so a stale copy would keep showing yesterday's links — or none; // v9: ads.js shipped, but drawer-menu.js (which bootstraps it) is referenced without a ?v= query from the articles and the static pages, so cache-first kept handing returning phones the pre-ads copy and no ad ever rendered for them; // v8: backend moved to a new Render host — every returning browser held a cache-first api-config.js pointing at the dead one; v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './analytics.js',
@@ -89,7 +89,12 @@ function lastKnownGood(request, fallback) {
 // Assets that must never be served from a stale cache: they carry the address
 // of something else (the backend) or load something else (the rest of the shell),
 // so a stale copy silently disables a whole feature instead of looking broken.
-const SHELL_SCRIPTS = /\/(api-config|drawer-menu|ads)\.js$/;
+// km-social.js belongs here for the same reason api-config.js does: it carries
+// an address (the channel invite links) rather than just behaviour. Under
+// cache-first, pasting a new Facebook or Instagram URL into it would never
+// reach a phone that had already loaded the site — the exact failure mode that
+// put api-config.js and drawer-menu.js on this list.
+const SHELL_SCRIPTS = /\/(api-config|drawer-menu|ads|km-social)\.js$/;
 
 // Fetch Event
 self.addEventListener('fetch', (event) => {

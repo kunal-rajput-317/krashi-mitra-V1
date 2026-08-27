@@ -2417,6 +2417,7 @@ window.addEventListener('pageshow',window.kmHideLoading);
 <script src="{_asset('location.js')}" defer></script>
 <script src="{_asset('bhav-nearest.js')}" defer></script>
 <script src="{_asset('ads.js')}" defer></script>
+<script src="{_asset('km-social.js')}" defer></script>
 <div class="topbar-spacer" id="topbar-spacer"></div>
 <script src="{_asset('header-scroll.js')}"></script>"""
 
