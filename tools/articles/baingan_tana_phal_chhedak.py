@@ -301,7 +301,7 @@ ARTICLE = {
     "related": [
         (f"{SITE}/articles/bhindi-pila-mozek", "#4d7c0f", "🥬", "भिंडी · रोग",
          "भिंडी में पीला मोज़ेक — पत्ती पीली क्यों होती है"),
-        (f"{SITE}/articles/tomato-guide-up", "#d32f2f", "🍅", "टमाटर · फसल गाइड",
+        (f"{SITE}/articles/tomato-guide-karnataka", "#d32f2f", "🍅", "टमाटर · फसल गाइड",
          "टमाटर की उन्नत खेती — उत्तर प्रदेश मार्गदर्शिका"),
         (f"{SITE}/articles/mirch-kala-thrips", "#b91c1c", "🌶️", "मिर्च · कीट",
          "मिर्च में काला थ्रिप्स — फूल झड़ना और असरदार दवा"),

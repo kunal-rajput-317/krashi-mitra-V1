@@ -72,6 +72,63 @@ REQUIRED_CARD_KEYS = "emoji bg accent tag tag_bg tag_color title cats keywords".
 FALLBACK_OG = f"{SITE}/images/og-banner.jpg"
 
 
+# Everything on the page that has to agree about what language it is in.
+#
+# The builder used to hardcode Hindi in five separate places — <html lang>,
+# hreflang, og:locale, schema inLanguage and the breadcrumb words. The two
+# Kannada Karnataka articles predate the builder and set all five by hand,
+# which is the only reason they were right; anything built here would have
+# declared itself Hindi while showing Kannada, and a page whose declared
+# language contradicts its text is not eligible for the query family it was
+# written for. So the five are one table, keyed by ARTICLE["lang"].
+#
+# `fonts` is the Google Fonts family list: a Devanagari webfont does not carry
+# Kannada glyphs, so a kn page without this falls back to whatever the phone
+# happens to have.
+LOCALES = {
+    "hi": {
+        "fonts": "family=Noto+Serif+Devanagari:wght@400;600;700",
+        "home": "मुख्य", "articles": "लेख", "all_prices": "सभी फसलों के भाव →",
+        "read": "मिनट पढ़ें", "share": "शेयर", "print": "प्रिंट",
+        "copied": "लिंक कॉपी हो गया!", "ad": "विज्ञापन",
+        "faq_h2": "अक्सर पूछे जाने वाले सवाल",
+        "cta_h3": "KrashiMitra.in — आपका विश्वसनीय कृषि साथी",
+        "cta_p": "मंडी भाव, सरकारी योजनाएं, बीज-खाद की जानकारी और फसल रोग उपचार — सब कुछ हिंदी में।",
+        "cta_a": "KrashiMitra.in पर जाएं →",
+        "related_h": "संबंधित लेख", "all_articles": "सभी लेख देखें →",
+        "bhav_h2": "📊 आज का ताज़ा मंडी भाव",
+        "wa_share": "📲 यह लेख WhatsApp पर भेजें",
+    },
+    "kn": {
+        "fonts": "family=Tiro+Kannada&family=Noto+Serif+Kannada:wght@400;600;700",
+        "home": "ಮುಖ್ಯ", "articles": "ಲೇಖನಗಳು", "all_prices": "ಎಲ್ಲಾ ಬೆಳೆಗಳ ದರ →",
+        "read": "ನಿಮಿಷ ಓದು", "share": "ಹಂಚಿ", "print": "ಮುದ್ರಿಸಿ",
+        "copied": "ಲಿಂಕ್ ನಕಲಾಗಿದೆ!", "ad": "ಜಾಹೀರಾತು",
+        "faq_h2": "ಪದೇ ಪದೇ ಕೇಳುವ ಪ್ರಶ್ನೆಗಳು",
+        "cta_h3": "KrashiMitra.in — ನಿಮ್ಮ ವಿಶ್ವಾಸಾರ್ಹ ಕೃಷಿ ಸಂಗಾತಿ",
+        "cta_p": "ಮಾರುಕಟ್ಟೆ ದರ, ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು, ಬಿತ್ತನೆ ಬೀಜ ಮತ್ತು ಗೊಬ್ಬರದ ಮಾಹಿತಿ, ಬೆಳೆ ರೋಗ ಚಿಕಿತ್ಸೆ — ಎಲ್ಲವೂ ಕನ್ನಡದಲ್ಲಿ.",
+        "cta_a": "KrashiMitra.in ಗೆ ಹೋಗಿ →",
+        "related_h": "ಸಂಬಂಧಿತ ಲೇಖನಗಳು", "all_articles": "ಎಲ್ಲಾ ಲೇಖನಗಳು →",
+        "bhav_h2": "📊 ಇಂದಿನ ಮಾರುಕಟ್ಟೆ ದರ",
+        "wa_share": "📲 ಈ ಲೇಖನವನ್ನು WhatsApp ನಲ್ಲಿ ಕಳುಹಿಸಿ",
+    },
+    "ta": {
+        "fonts": "family=Noto+Serif+Tamil:wght@400;600;700",
+        "home": "முகப்பு", "articles": "கட்டுரைகள்",
+        "all_prices": "அனைத்துப் பயிர் விலைகள் →",
+        "read": "நிமிடம் படிக்க", "share": "பகிர்", "print": "அச்சிடு",
+        "copied": "இணைப்பு நகலெடுக்கப்பட்டது!", "ad": "விளம்பரம்",
+        "faq_h2": "அடிக்கடி கேட்கப்படும் கேள்விகள்",
+        "cta_h3": "KrashiMitra.in — உங்கள் நம்பகமான வேளாண் நண்பன்",
+        "cta_p": "சந்தை விலை, அரசுத் திட்டங்கள், விதை-உரத் தகவல், பயிர் நோய்க்கான தீர்வு — அனைத்தும் தமிழில்.",
+        "cta_a": "KrashiMitra.in-க்குச் செல்லுங்கள் →",
+        "related_h": "தொடர்புடைய கட்டுரைகள்", "all_articles": "அனைத்துக் கட்டுரைகள் →",
+        "bhav_h2": "📊 இன்றைய சந்தை விலை",
+        "wa_share": "📲 இந்தக் கட்டுரையை WhatsApp-இல் அனுப்பு",
+    },
+}
+
+
 # ── shared chunks, lifted from the live shell source ────────────────────────
 
 def _chunk(text: str, start: str, end: str, keep_end: bool = True) -> str:
@@ -183,6 +240,13 @@ def render(a: dict) -> str:
     if a["slug"] != a["slug"].lower():
         raise SystemExit(f"article_builder: slug must be lowercase: {a['slug']}")
 
+    lang = a.get("lang", "hi")
+    if lang not in LOCALES:
+        raise SystemExit(f"article_builder: {a['slug']} has lang={lang!r}, which "
+                         f"has no entry in LOCALES (have: {', '.join(LOCALES)}). "
+                         f"Add one rather than letting the page declare Hindi.")
+    loc = LOCALES[lang]
+
     shell = _load_shell()
     url = _canonical(a["slug"])
     faqs = a["faqs"]
@@ -222,7 +286,7 @@ def render(a: dict) -> str:
         "@context": "https://schema.org", "@type": "Article",
         "headline": a["headline"], "alternativeHeadline": a["headline_en"],
         "description": a["schema_desc"], "image": og_image, "url": url,
-        "inLanguage": "hi",
+        "inLanguage": lang,
         "datePublished": a["date"], "dateModified": a.get("date_modified", a["date"]),
         "author": {"@type": "Person", "@id": f"{SITE}/about#kunal-rajput",
                    "name": "Kunal Rajput", "url": f"{SITE}/about"},
@@ -237,8 +301,9 @@ def render(a: dict) -> str:
     breadcrumb_schema = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
         "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "मुख्य", "item": SITE},
-            {"@type": "ListItem", "position": 2, "name": "लेख", "item": f"{SITE}/articles/"},
+            {"@type": "ListItem", "position": 1, "name": loc["home"], "item": SITE},
+            {"@type": "ListItem", "position": 2, "name": loc["articles"],
+             "item": f"{SITE}/articles/"},
             {"@type": "ListItem", "position": 3, "name": a["cat_label"],
              "item": f"{SITE}/articles/?cat={a['cat_query']}"},
             {"@type": "ListItem", "position": 4, "name": a["breadcrumb_leaf"]},
@@ -263,7 +328,7 @@ def render(a: dict) -> str:
         for s, label in a["bhav_links"])
     chips += (f'<a href="{SITE}/bhav/" style="display:inline-block;background:#1b7a3d;'
               f'border-radius:16px;padding:4px 12px;margin:3px 6px 3px 0;'
-              f'text-decoration:none;color:#fff">सभी फसलों के भाव →</a>')
+              f'text-decoration:none;color:#fff">{loc["all_prices"]}</a>')
 
     wa = quote(f"{a['share_title']} | KrashiMitra\n{url}", safe="")
 
@@ -279,7 +344,7 @@ def render(a: dict) -> str:
         for href, accent, thumb, tag, title in a["related"])
 
     return f"""<!DOCTYPE html>
-<html lang="hi">
+<html lang="{lang}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -292,7 +357,7 @@ def render(a: dict) -> str:
   <meta name="author" content="Kunal Rajput — KrashiMitra" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href="{url}" />
-  <link rel="alternate" hreflang="hi" href="{url}" />
+  <link rel="alternate" hreflang="{lang}" href="{url}" />
   <link rel="alternate" hreflang="x-default" href="{url}" />
   <meta name="theme-color" content="#1a4d2e" />
 
@@ -304,7 +369,7 @@ def render(a: dict) -> str:
   <meta property="og:image" content="{og_image}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:locale" content="hi_IN" />
+  <meta property="og:locale" content="{lang}_IN" />
   <meta property="og:site_name" content="KrashiMitra" />
 
   <!-- Twitter Card -->
@@ -316,7 +381,7 @@ def render(a: dict) -> str:
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?{loc['fonts']}&family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap">
 
   <!-- Universal page shell (header / drawer / blue bar / footer) -->
   <link rel="stylesheet" href="../km-shell.css">
@@ -348,9 +413,9 @@ def render(a: dict) -> str:
 
 <!-- Breadcrumb -->
 <div class="breadcrumb">
-  <a href="{SITE}">🏠 मुख्य</a>
+  <a href="{SITE}">🏠 {loc['home']}</a>
   <span class="sep">›</span>
-  <a href="{SITE}/articles/">📰 लेख</a>
+  <a href="{SITE}/articles/">📰 {loc['articles']}</a>
   <span class="sep">›</span>
   <a href="{SITE}/articles/?cat={a['cat_query']}">{a['cat_label']}</a>
   <span class="sep">›</span>
@@ -377,13 +442,13 @@ def render(a: dict) -> str:
 
     <div class="hero-meta">
       <span>✍️ <a href="/about" style="color:inherit;">Kunal Rajput</a> — KrashiMitra</span>
-      <span class="read-time">⏱️ {a['read_time']} मिनट पढ़ें</span>
+      <span class="read-time">⏱️ {a['read_time']} {loc['read']}</span>
       <span>📅 {a['date_label']}</span>
       <div class="hero-share">
-        <button class="share-btn" onclick="if(navigator.share){{navigator.share({{title:'{a['share_title']}',url:window.location.href}})}}else{{navigator.clipboard.writeText(window.location.href);alert('लिंक कॉपी हो गया!')}}">
-          📤 शेयर
+        <button class="share-btn" onclick="if(navigator.share){{navigator.share({{title:'{a['share_title']}',url:window.location.href}})}}else{{navigator.clipboard.writeText(window.location.href);alert('{loc["copied"]}')}}">
+          📤 {loc['share']}
         </button>
-        <button class="share-btn" onclick="window.print()">🖨️ प्रिंट</button>
+        <button class="share-btn" onclick="window.print()">🖨️ {loc['print']}</button>
       </div>
     </div>
   </div>
@@ -405,8 +470,8 @@ def render(a: dict) -> str:
 {a['body']}
 
   <!-- ── AD SLOT : before FAQ ── -->
-  <div class="ad-slot responsive" aria-label="विज्ञापन">
-    <div class="ad-slot-label">विज्ञापन</div>
+  <div class="ad-slot responsive" aria-label="{loc['ad']}">
+    <div class="ad-slot-label">{loc['ad']}</div>
     <div class="ad-slot-inner">
       <div class="km-ad-slot" data-slot="7350859053" data-format="auto"></div>
     </div>
@@ -416,7 +481,7 @@ def render(a: dict) -> str:
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">❓</span>
-      <h2>अक्सर पूछे जाने वाले सवाल</h2>
+      <h2>{loc['faq_h2']}</h2>
     </div>
 {faq_markup}
   </section>
@@ -424,9 +489,9 @@ def render(a: dict) -> str:
   <!-- CTA -->
   <div class="cta-block">
     <div class="cta-icon">🌾</div>
-    <h3>KrashiMitra.in — आपका विश्वसनीय कृषि साथी</h3>
-    <p>मंडी भाव, सरकारी योजनाएं, बीज-खाद की जानकारी और फसल रोग उपचार — सब कुछ हिंदी में।</p>
-    <a href="{SITE}">KrashiMitra.in पर जाएं →</a>
+    <h3>{loc['cta_h3']}</h3>
+    <p>{loc['cta_p']}</p>
+    <a href="{SITE}">{loc['cta_a']}</a>
   </div>
 
   <!-- ════════════════════════════════════════
@@ -435,8 +500,8 @@ def render(a: dict) -> str:
   <div class="relevant-articles">
     <div class="section-title">
       <span class="title-icon">📰</span>
-      संबंधित लेख
-      <a href="{SITE}/articles/">सभी लेख देखें →</a>
+      {loc['related_h']}
+      <a href="{SITE}/articles/">{loc['all_articles']}</a>
     </div>
 
     <div class="articles-grid">
@@ -451,9 +516,9 @@ def render(a: dict) -> str:
 
 <!-- bhav-links: live mandi-price pages + share -->
 <section class="bhav-links" style="max-width:860px;margin:28px auto;padding:18px 20px;background:#f0f7f0;border:1px solid #cfe3cf;border-radius:12px;font-family:inherit">
-  <h2 style="font-size:1.05rem;margin:0 0 10px;color:#1b5a2d">📊 आज का ताज़ा मंडी भाव</h2>
+  <h2 style="font-size:1.05rem;margin:0 0 10px;color:#1b5a2d">{loc['bhav_h2']}</h2>
   <p style="margin:0 0 12px;line-height:2">{chips}</p>
-  <a href="https://wa.me/?text={wa}" style="display:inline-block;background:#25d366;color:#fff;font-weight:700;padding:9px 16px;border-radius:22px;text-decoration:none">📲 यह लेख WhatsApp पर भेजें</a>
+  <a href="https://wa.me/?text={wa}" style="display:inline-block;background:#25d366;color:#fff;font-weight:700;padding:9px 16px;border-radius:22px;text-decoration:none">{loc['wa_share']}</a>
 </section>
 {shell['tail']}"""
 

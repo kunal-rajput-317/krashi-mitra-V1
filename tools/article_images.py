@@ -21,7 +21,6 @@
 
 import re
 
-
 def body_name(original: str) -> str:
     """Local basename for an in-body illustration, from its old hotlink name.
 
@@ -32,7 +31,6 @@ def body_name(original: str) -> str:
     stem = original.rsplit(".", 1)[0]
     slug = re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-")
     return f"body-{slug}"
-
 
 IMAGES = {
     # ── crops & cultivation ────────────────────────────────────────────────
@@ -73,6 +71,21 @@ IMAGES = {
     "kisan-pehchan-patra-agristack": "Aerial view of agricultural fields in Punjab, India.jpg",
     "kharpatwarnashi-guide": "Cyperus rotundus by kadavoor.JPG",
 
+    # ── Maharashtra series (10 articles, Aug 2026) ────────────────────────
+    # Five are state schemes, where Commons has no photograph of the scheme
+    # itself — so each takes a Maharashtra farm scene the caption describes
+    # honestly, the same way kisan-credit-card takes a photograph of banknotes.
+    "namo-shetkari-mahasanman-nidhi": "Along Dhule - Sholapur Road (50755081057).jpg",
+    "e-pik-pahani-nondani": "Tomato farming at Gondegaon.jpg",
+    "mahadbt-shetkari-yojana": "Baramati, Maharashtra, India. 20 agriculture equipment.jpg",
+    "magel-tyala-saur-krushi-pump": "Solar panels in India.jpg",
+    "kanda-chal-anudan-yojana": "Baramati, Maharashtra, India. 17 onions.jpg",
+    "nagpuri-santra-falgal": "Nagpur orange article.JPG",
+    "rabi-jowar-shalu-lagvad": "Sorghum crop Chinawal 04.jpg",
+    "haldi-lagvad-sangli": "Turmeric field.jpg",
+    "dalimb-telya-rog": "Pomegranate in India 01.jpg",
+    "drakhsh-downy-mildew": "Grapes. Nasik.jpg",
+
     # ── PENDING: curated and licence-checked, article not written yet ──────
     # These ten were verified against Commons (exists, landscape, >=900px, not
     # NonCommercial) but their articles were not written, so the image files
@@ -90,6 +103,62 @@ IMAGES = {
     "dairy-farming-doodh-utpadan": "Dairy Farm in Gurgaon.jpg",
     "pashu-thanaila-mastitis": "India - Woman dairy entrepreneur (3975844335).jpg",
     "hara-chara-napier-berseem": "Fodder for Buffaloes.jpeg",
+
+    # ── तमिलनाडु cluster ───────────────────────────────────────────────────
+    "tamil-nadu-krishi-guide": "Paddy cultivation Kolli hills JEG3087.jpg",
+    "samba-dhan-tamil-nadu": "Paddy Fields Thanjavur.jpg",
+    "nariyal-kheti-tamil-nadu": "Lush Green Pollachi.jpg",
+    "haldi-kheti-erode-tamil-nadu": "Turmeric field visit.jpg",
+    "tapioca-maravalli-tamil-nadu": "Manihot esculenta Cassava plantation in Kalvarayan hills JEG3597.jpg",
+    "ragi-kheti-tamil-nadu": "Finger Millet Field at Peddamunagalachedu Village.jpg",
+    "moongfali-tikka-rog-tamil-nadu": "Cultivation of peanut crop in Junagadh region of Western India.jpg",
+    "madurai-malli-jasmine-kheti": "HiH - Enterprise - 53 - Jasmine Cultivation (3063468166).jpg",
+    "tamil-nadu-uttar-poorvi-mansoon": "India - Chennai - Monsoon - 01 (3058208937).jpg",
+    "uzhavar-sandhai-tamil-nadu": "Sandhai.jpg",
+    "kela-kheti-tamil-nadu": "Banana Fields near Kallanai.jpg",
+    "mundu-mirch-ramnad-tamil-nadu": "India - Colours of India - Pepper cultivation (2492156360).jpg",
+    "dhan-ke-baad-urad-tamil-nadu": "Black gram field, Maravanthe.jpg",
+
+    # ── ಕರ್ನಾಟಕ cluster ────────────────────────────────────────────────────
+    # Karnataka subjects wherever Commons has one: Coorg for coffee, a Raichur
+    # sowing for the registry article. Ragi deliberately does NOT reuse
+    # "Finger Millet Field at Peddamunagalachedu Village.jpg" — that is already
+    # the hero of ragi-kheti-tamil-nadu, and one photograph fronting two
+    # articles reads as the same page twice.
+    "ragi-guide-karnataka": "View of Ragi crop from the peek of the village.jpg",
+    "arecanut-guide-karnataka": "Arecanut plantations.JPG",
+    "coffee-guide-karnataka": "Road Coffee Estate Inakanahalli Coorg Jun24 A7CR 01542.jpg",
+    "maize-guide-karnataka": "Maize crop in rural India.jpg",
+    "tur-guide-karnataka": "New farm technology and extension support leads to bumper crop production. Photo shows a farmer's arhar (pigeonpea) field at village Guma.jpg",
+    "sericulture-guide-karnataka": "Silkworm cocoons.jpg",
+    "coconut-guide-karnataka": "Coconut Plantation2.jpg",
+    "fruits-id-karnataka": "Women Farmers Sowing in Karnataka, India.jpg",
+    "raitha-siri-karnataka": "Kaun rice (01).jpg",
+    "krishi-bhagya-karnataka": "Farm pond.jpg",
+
+    # ── मध्य प्रदेश cluster ────────────────────────────────────────────────
+    # MP subject matter wherever Commons has it: a Harda chickpea field, a
+    # Raisen wheat field, a Hoshangabad moong field. Where it does not (garlic,
+    # coriander seed, kodo, linseed), the nearest Indian photograph of the crop
+    # itself, and the caption says what it actually shows.
+    #
+    # None of these reuses a file another article already fronts:
+    # "Garlic.jpg" belongs to garlic-farming-guide, "Champ de soja.jpg" to
+    # soyabean-MP-guide, and the "ggia version" Raisen crop to
+    # gehuu-price-analytic-up — one photograph on two pages reads as the same
+    # page served twice.
+    "soyabean-illi-chakra-bhring-mp": "Soyabean field.jpg",
+    "chana-fali-chhedak-illi": "Chickpea field Visit in Harda.jpg",
+    "sharbati-gehun-mp": "Wheat field, Raisen district, Madhya Pradesh, India.jpg",
+    "dhaniya-ki-kheti-mp": "Coriander Seeds.jpg",
+    "lahsun-thrips-baingani-dhabba": "Garlic in Salem.jpg",
+    "kodo-kutki-ki-kheti-mp": "Paspalum scrobiculatum (4987845638).jpg",
+    "alsi-ki-kheti-mp": "Linum usitatissimum-1-xavier cottage-yercaud-salem-India.jpg",
+    "mp-mukhyamantri-kisan-kalyan-yojana":
+        "Moong crop in a field in Hoshangabad, Madhya Pradesh, on May 28, 2013.jpg",
+    "mp-e-uparjan-panjiyan": "Grain Market, Bhawanigarh.jpg",
+    "mp-rbc-6-4-fasal-muavza":
+        "Flood waters flooding the fields in Fatehabad District, Haryana, India, 2023.jpg",
 
     # ── pests & diseases (the actual organism, where one exists free) ──────
     "dhan-tana-chhedak": "Rice yellow stem borer.jpg",
@@ -141,7 +210,7 @@ IMAGES = {
     "paddy-guide-karnataka": "Paddy nursery in Raichur, Karnataka.jpg",
     "sarso-guide-up": "Mustard flower in Assam.jpg",
     "soyabean-MP-guide": "Champ de soja.jpg",
-    "tomato-guide-up": "20160831Solanum lycopersicum4.jpg",
+    "tomato-guide-karnataka": "20160831Solanum lycopersicum4.jpg",
     "tomato-leaf-curl": "20160810Solanum lycopersicum1.jpg",
     "up-agriculture-guide": "A view of landscape pre with harvest wheat crop in Punjab.jpg",
     "gehuu-price-analytic-up": "Woman harvesting wheat, Raisen district, Madhya Pradesh, India ggia version.jpg",
@@ -151,8 +220,26 @@ IMAGES = {
     # out to a named person — not something to serve as a hero or an og:image.
     "potato_guide_up": "Aardappelveld bij Heusden.jpg",
     "PM-kisan-samman-nidhi": "1. Mera Gaon Mera Gaurav yojna of GOI implemented in villages by IARI New Delhi.jpg",
+    # ── मुंबई / वाशी APMC cluster ─────────────────────────────────────────
+    # Selling into the Mumbai wholesale market. Indian subject matter
+    # throughout; where no photograph of the Vashi yards themselves is free,
+    # another Indian wholesale market stands in and the caption says so.
+    "vashi-apmc-mandi-guide": "Vegetable market in Mumbai.jpg",
+    "mumbai-mandi-adat-kanoon": "Buying groceries in Mumbai (1109).jpg",
+    "mumbai-mandi-kharcha-hisab": "Mumbai vegetables.JPG",
+    "apmc-adatiya-license-guide": "Colourful vegetables Mumbai market.jpg",
+    "apmc-bahar-seedhi-bikri": "Sri ganesh wholesale vegetables in rajahmundry night.jpg",
+    "pyaj-nashik-se-vashi-bhav": "Onion Mandi.jpg",
+    "batata-aloo-vashi-mandi": "Potatofarmer.jpg",
+    "tamatar-mumbai-mandi-bhav": "Potato Bean Tomato Veg Stall Ooty Market Nilgiris Aug25 A7CR 07103.jpg",
+    "bhindi-mirch-vashi-sabji": "India - Koyambedu Market - Market 06 (3986891340).jpg",
+    "hapus-aam-mumbai-market": "Ratnagiri Alphonso Tree.jpg",
+    "kela-mumbai-mandi-ganesh": "India - Koyambedu Market - Banana 01 (3986186559).jpg",
+    "anaaj-dal-vashi-masala": "Spices Mandi.jpg",
+    "mumbai-mandi-transport-vahan": "Unloading onion.jpg",
+    "sabji-packing-grading-mumbai": "India - Koyambedu Market - Market 03 (3987093932).jpg",
+    "mumbai-mandi-payment-suraksha": "India - Koyambedu Market - Market 08 (3986141067).jpg",
 }
-
 
 # In-body illustrations on the hand-written articles.
 #
@@ -193,7 +280,6 @@ BODY = {
     "Table_grapes_on_vine.jpg": "Grape Garden.JPG",
     "Tomaten_am_Strauch.jpg": "20180518Solanum lycopersicum1.jpg",
 }
-
 
 # Images already in the repo that were sitting unused (or used only by the shop)
 # while the matching article showed an emoji. They go through the same pipeline
