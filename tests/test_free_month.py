@@ -412,3 +412,124 @@ class TestTheAdminAPI:
                            ("/admin/rental/providers", provider_slug)):
             r = client.post(f"{base}/{slug}/free-month")
             assert r.status_code in (401, 403), r.text
+
+
+# ── the preview card that fills the offer's empty half ──────
+
+def test_both_sections_show_a_preview_of_the_listing_being_offered():
+    """The offer card's copy column has a natural reading width, so on a wide
+    screen its right half was empty. It now carries a mock-up of the listing
+    the reader is being offered — the same ₹0 message, plus the thing being
+    sold. Both sections must have one: a section whose `prev` block went
+    missing would render the offer with a hole in it again.
+    """
+    for kind in ("dukan", "rental"):
+        html = free_month.card(kind)
+        assert "km-offer-prev" in html, f"{kind}: no preview card"
+        assert "आपकी लिस्टिंग ऐसी दिखेगी" in html, f"{kind}: no caption"
+        assert f"पहला {free_month.months_hi()} ₹0" in html, f"{kind}: ₹0 not stated"
+
+
+def test_the_preview_is_filled_in_for_the_section_it_belongs_to():
+    """A shopkeeper must see a shop, a machine owner must see a machine. The
+    two share one renderer, so a copy-paste would silently show every tractor
+    owner a bag of urea."""
+    dukan = free_month.card("dukan")
+    rental = free_month.card("rental")
+    assert "आपकी दुकान का नाम" in dukan and "आपका काउंटर रेट" in dukan
+    assert "प्रति एकड़" in rental and "ट्रैक्टर" in rental
+    assert "आपका काउंटर रेट" not in rental, "the shop preview leaked onto /rental"
+
+
+def test_the_preview_invents_no_price_to_strike_through():
+    """THE honesty rule for this card. There is no published listing price, so
+    a struck-through "regular price" next to ₹0 would be a fabricated anchor —
+    on a page whose entire pitch is that we do not play those games, and to an
+    audience being asked to trust us with their phone number.
+    """
+    import re
+    for kind in ("dukan", "rental"):
+        html = free_month.card(kind)
+        assert "<s>" not in html and "<del>" not in html, f"{kind}: struck-through price"
+        assert "line-through" not in html, f"{kind}: struck-through price"
+        # No "was ₹X" / "₹X से घटकर" style anchor either.
+        assert not re.search(r"(पहले|था|घटकर|की जगह)\s*₹", html), f"{kind}: price anchor"
+
+
+def test_the_preview_does_not_overflow_a_phone(client, shop):
+    """It floats beside the copy on a phone rather than hiding, so it is inside
+    the one layout that actually matters. A fixed width wider than the card
+    would push the page sideways — the failure that has bitten this site before
+    and is invisible on a desktop."""
+    css = free_month.CSS
+    # Whatever width it takes on a phone, it must be a share of the card, not a
+    # desktop pixel count that a 390px screen cannot hold.
+    import re
+    assert "float:right" in css or "flex" in css
+    # Element widths only — `min-width:`/`max-width:` here are media-query
+    # breakpoints, not boxes, and matching them was this test's own first bug.
+    for m in re.findall(r"(?<!min-)(?<!max-)width:(\d+)px", css):
+        assert int(m) <= 260, f"{m}px is too wide for a 390px card"
+
+
+# ── the offer in three languages ────────────────────────────
+
+def test_the_offer_speaks_all_three_languages_without_changing_the_deal():
+    """One promise, three scripts.
+
+    कृषि दुकान and /rental order by distance and take listings from any
+    district, so the supply side is not Hindi-only — a Coimbatore shopkeeper
+    who cannot read the pitch is a lost listing. But a card that translates its
+    COPY must not translate its TERMS: the months, the helpline and the
+    ordering rule are what the admin panel will actually honour, and three
+    cards quietly offering three different deals is exactly the divergence
+    free_month.py exists to prevent.
+    """
+    for kind in ("dukan", "rental"):
+        card = free_month.card(kind)
+
+        for lang in free_month.LANGS:
+            # Every language carries its own pitch, its own CTA and a WhatsApp
+            # link — a half-translated card is worse than an untranslated one.
+            pitch = free_month._pitch(kind, lang)
+            assert pitch["head"] in card, f"{kind}/{lang}: no pitch"
+            assert pitch["cta"] in card, f"{kind}/{lang}: no CTA"
+            assert f"wa.me/{free_month.HELPLINE}" in free_month.wa_url(kind, "", lang), (
+                f"{kind}/{lang}: CTA does not reach our number")
+
+            # The month count is the deal. It must be the same count in every
+            # language, whatever word each one uses for "month".
+            assert free_month.months_in(lang).startswith(str(free_month.FREE_MONTHS)), (
+                f"{kind}/{lang}: advertises a different number of months")
+
+            # ...and the ordering promise must survive translation, or one
+            # language is selling placement the ranking will never honour.
+            assert len(free_month.TERMS[lang]) == len(free_month.TERMS["hi"]), (
+                f"{lang}: dropped a term")
+
+        # The switch has to be reachable, and label each language in its own
+        # script — the reader who needs it is the one who cannot read the card.
+        for lang, label in free_month.LANG_LABEL.items():
+            assert f'data-km-set="{lang}"' in card, f"{kind}: no {lang} switch"
+            assert label in card, f"{kind}: {lang} not labelled in its own script"
+
+
+def test_only_hindi_is_served_so_the_index_does_not_grow():
+    """Three languages, one indexable page.
+
+    Translated URL variants were measured at 0 impressions and would multiply
+    an index this site is actively pruning. So the other two languages are
+    hidden in CSS and revealed by a button — a crawler, and a phone with JS
+    off, see exactly the Hindi card that shipped before. If this ever inverts,
+    the offer starts generating duplicate content on ~every product page.
+    """
+    css = free_month.CSS
+    assert ".km-offer [data-km-l]{display:none}" in css, "no language is hidden by default"
+    assert '.km-offer [data-km-l="hi"]{display:block}' in css, "Hindi is not the served language"
+
+    card = free_month.card("dukan")
+    # Hindi must not be the one carrying a hidden marker's default state.
+    assert 'data-km-l="hi"' in card and 'data-km-l="ta"' in card and 'data-km-l="kn"' in card
+    # The switch is a button, never a link: a link would be a crawlable URL.
+    assert "<a" not in card.split('km-offer-langs')[1].split("</div>")[0], (
+        "the language switch emits links — that is a ?lang= URL by another name")
