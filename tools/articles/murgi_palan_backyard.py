@@ -351,8 +351,8 @@ ARTICLE = {
     "related": [
         (f"{SITE}/articles/bakri-palan-guide", "#9f1239", "🐐", "बकरी · पालन",
          "बकरी पालन — नस्ल, टीकाकरण और कमाई की पूरी गाइड"),
-        (f"{SITE}/articles/madhumakhi-palan-guide", "#d97706", "🐝", "मधुमक्खी · पालन",
-         "मधुमक्खी पालन — बक्से, शहद और NBHM सब्सिडी"),
+        (f"{SITE}/articles/murgi-ranikhet-rog", "#dc2626", "🐔", "मुर्गी · रोग",
+         "रानीखेत रोग — मुर्गी में लक्षण, टीका और बचाव"),
         (f"{SITE}/articles/pashu-lumpy-skin-rog", "#dc2626", "🐄", "पशुपालन · रोग",
          "लंपी स्किन रोग — गाय-भैंस में गाँठ दिखे तो क्या करें"),
         (f"{SITE}/articles/kisan-credit-card", "#4f46e5", "💳", "योजना · KCC",

@@ -112,6 +112,7 @@
     '🛒':  { hi: 'दुकान',         en: 'Shop',        kn: 'ಅಂಗಡಿ' },
     '🤝':  { hi: 'व्यापारी लिस्टिंग', en: 'List Your Business', kn: 'ವ್ಯಾಪಾರಿ ನೋಂದಣಿ' },
     '⚙️':  { hi: 'किराये की मशीन', en: 'Rent Equipment', kn: 'ಬಾಡಿಗೆ ಯಂತ್ರ' },
+    '🥚':  { hi: 'अंडे का रेट',   en: 'Egg Rate',    kn: 'ಮೊಟ್ಟೆ ದರ' },
     '🔍':  { hi: 'कृषि खोज',      en: 'Search',      kn: 'ಹುಡುಕಿ' },
     '🗺️': { hi: 'कृषि मानचित्र',  en: 'Map',         kn: 'ನಕ್ಷೆ' },
     '🧺':  { hi: 'कृषि बाज़ार',    en: 'Bazaar',      kn: 'ಬಜಾರ್' },
@@ -131,6 +132,7 @@
     '🛒': '<svg viewBox="0 0 24 24"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.6" fill="currentColor"/><circle cx="16.5" cy="19" r="1.6" fill="currentColor"/></svg>',
     '⚙️': '<svg viewBox="0 0 24 24"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 13.9a7.7 7.7 0 0 0 0-3.8l1.9-1.4-1.9-3.3-2.2.9a7.7 7.7 0 0 0-3.3-1.9L13.6 2h-3.2l-.3 2.4a7.7 7.7 0 0 0-3.3 1.9l-2.2-.9L2.7 8.7l1.9 1.4a7.7 7.7 0 0 0 0 3.8l-1.9 1.4 1.9 3.3 2.2-.9a7.7 7.7 0 0 0 3.3 1.9l.3 2.4h3.2l.3-2.4a7.7 7.7 0 0 0 3.3-1.9l2.2.9 1.9-3.3-1.9-1.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
     '🤝': '<svg viewBox="0 0 24 24"><path d="M12.6 3.4 20 10.8a2 2 0 0 1 0 2.8l-6.4 6.4a2 2 0 0 1-2.8 0L4.4 13.6A2 2 0 0 1 3.8 12V5.4A2 2 0 0 1 5.8 3.4H12a2 2 0 0 1 .6 0Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="8.3" cy="8.3" r="1.6" fill="currentColor"/></svg>',
+    '🥚': '<svg viewBox="0 0 24 24"><path d="M12 2.6c3.4 0 6.2 5.3 6.2 9.5a6.2 6.2 0 0 1-12.4 0C5.8 7.9 8.6 2.6 12 2.6Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.3 13.4a2.7 2.7 0 0 0 2.7 2.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
     '🔍': '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="' + LEAF + '" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
     '🗺️': '<svg viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.6"/></svg>',
     '🧺': '<svg viewBox="0 0 24 24"><path d="M8 10 10.6 5M16 10 13.4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4.3 10.2 5.6 18a1.5 1.5 0 0 0 1.48 1.25h9.84A1.5 1.5 0 0 0 18.4 18l1.3-7.8Z" fill="currentColor"/><path d="M3 10.2h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 13v3.4M12 13v3.4M15 13v3.4" stroke="' + LEAF + '" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -216,7 +218,7 @@
   var FOOTER = ['💬', '👤'];
   var GROUPS = [
     { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '🗺️', '🗺'] }, // मौसम · मेरी फसल · कृषि मानचित्र
-    { key: 'industry', ico: 'industry', set: ['🏪', '🚜', '🛒', '⚙️', '🤝'] },
+    { key: 'industry', ico: 'industry', set: ['🏪', '🥚', '🚜', '🛒', '⚙️', '🤝'] },
     { key: 'news',     ico: 'news',     set: ['📰', '🏛️', '🏛'] },
     { key: 'other',    ico: 'other',    set: ['🔍', '🧺'] } // कृषि खोज · कृषि बाज़ार
   ];
@@ -265,6 +267,7 @@
     { k: '🚜',  href: '/bhav/net-price',      at: /^\/bhav\/net-price/ },
     { k: '🛒',  href: '/shop.html',           at: /^\/shop(\.html)?$/ },
     { k: '⚙️',  href: '/rental',              at: /^\/rental(\/|$)/ },
+    { k: '🥚',  href: '/farm/poultry',       at: /^\/farm(\/|$)/ },
     { k: '🤝',  href: '/dukanlisting',        at: /^\/dukanlisting/ },
     { k: '🔍',  href: '/khoj.html',           at: /^\/khoj(\.html)?$/ },
     { k: '🧺',  href: '/krashi_bajar.html',   at: /^\/krashi_bajar(\.html)?$/ },

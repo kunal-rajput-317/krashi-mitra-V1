@@ -48,7 +48,7 @@
   var LINKS = {
     wa: { url: 'https://whatsapp.com/channel/0029Vb97bUkFCCoV2dSa5P1y' },
     fb: { url: 'https://www.facebook.com/share/g/1DpF16q6Cd/' },
-    ig: { url: 'https://www.instagram.com/krashimitra.in?igsi=anA0bXlleTU1dnNq' }
+    ig: { url: 'https://www.instagram.com/krashimitra.in' }
   };
 
   // ══════════════════════════════════════════════════════════
@@ -99,17 +99,26 @@
   // A Kannada reader on the Karnataka cluster is a real audience here (those
   // pages out-earn most of the site), so the popup speaks whatever km_lang the
   // drawer's language picker last stored.
+  //
+  // THE CHANNEL DOES NOT CARRY PRICES. The first draft led with "रोज़ का भाव,
+  // सीधे आपके फ़ोन पर" and then repeated it in the body and in the first
+  // bullet — three promises of a daily number the channel was never going to
+  // post. A farmer who follows for a price he never receives unfollows, and
+  // the invite has spent its one shot per device getting him there. The
+  // numbers stay on /bhav, where they are actually updated every day; the
+  // channel is what tells him there is something new. Do not put भाव back
+  // into this copy without changing what the channel actually posts.
   var T = {
     hi: {
       follow: 'हमें फ़ॉलो करें',
       eyebrow: '📣 नया — कृषि मित्र चैनल',
-      title: 'रोज़ का भाव, सीधे आपके फ़ोन पर',
-      body: 'मंडी भाव, मौसम की चेतावनी और सरकारी योजना की खबर — हमारे चैनल पर हर दिन। कोई ग्रुप नहीं, कोई मैसेज की भीड़ नहीं।',
-      b1: 'रोज़ सुबह भाव अपडेट',
+      title: 'मौसम और योजना की खबर, सीधे आपके फ़ोन पर',
+      body: 'मौसम की चेतावनी, सरकारी योजना और नए लेख — सब हमारे चैनल पर। कोई ग्रुप नहीं, कोई मैसेज की भीड़ नहीं।',
+      b1: 'नए लेख और अपडेट सबसे पहले',
       b2: 'बिल्कुल मुफ़्त — जब चाहें छोड़ दें',
       b3: 'आपका नंबर किसी को नहीं दिखेगा',
       wa: 'WhatsApp चैनल जॉइन करें',
-      fb: 'Facebook पेज फ़ॉलो करें',
+      fb: 'Facebook पर जुड़ें',
       ig: 'Instagram पर फ़ॉलो करें',
       no: 'अभी नहीं',
       close: 'बंद करें'
@@ -117,13 +126,13 @@
     en: {
       follow: 'Follow us',
       eyebrow: '📣 New — the KrashiMitra channel',
-      title: 'Every day\u2019s mandi rate, straight to your phone',
-      body: 'Mandi prices, weather warnings and scheme news on our channel, every day. No group, no pile of messages.',
-      b1: 'Rate update every morning',
+      title: 'Weather and scheme news, straight to your phone',
+      body: 'Weather warnings, government schemes and new guides — all on our channel. No group, no pile of messages.',
+      b1: 'New guides and updates first',
       b2: 'Free — leave whenever you like',
       b3: 'Nobody can see your number',
       wa: 'Join the WhatsApp channel',
-      fb: 'Follow the Facebook page',
+      fb: 'Join us on Facebook',
       ig: 'Follow us on Instagram',
       no: 'Not now',
       close: 'Close'
@@ -131,13 +140,13 @@
     kn: {
       follow: 'ನಮ್ಮನ್ನು ಫಾಲೋ ಮಾಡಿ',
       eyebrow: '📣 ಹೊಸತು — ಕೃಷಿ ಮಿತ್ರ ಚಾನೆಲ್',
-      title: 'ಪ್ರತಿದಿನದ ಮಾರುಕಟ್ಟೆ ದರ, ನೇರವಾಗಿ ನಿಮ್ಮ ಫೋನ್‌ಗೆ',
-      body: 'ಮಾರುಕಟ್ಟೆ ದರ, ಹವಾಮಾನ ಎಚ್ಚರಿಕೆ ಮತ್ತು ಸರ್ಕಾರಿ ಯೋಜನೆಗಳ ಸುದ್ದಿ — ನಮ್ಮ ಚಾನೆಲ್‌ನಲ್ಲಿ ಪ್ರತಿದಿನ. ಗುಂಪು ಇಲ್ಲ, ಸಂದೇಶಗಳ ಗದ್ದಲ ಇಲ್ಲ.',
-      b1: 'ಪ್ರತಿ ಬೆಳಿಗ್ಗೆ ದರ ಅಪ್‌ಡೇಟ್',
+      title: 'ಹವಾಮಾನ ಮತ್ತು ಯೋಜನೆ ಸುದ್ದಿ, ನೇರವಾಗಿ ನಿಮ್ಮ ಫೋನ್‌ಗೆ',
+      body: 'ಹವಾಮಾನ ಎಚ್ಚರಿಕೆ, ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು ಮತ್ತು ಹೊಸ ಲೇಖನಗಳು — ಎಲ್ಲವೂ ನಮ್ಮ ಚಾನೆಲ್‌ನಲ್ಲಿ. ಗುಂಪು ಇಲ್ಲ, ಸಂದೇಶಗಳ ಗದ್ದಲ ಇಲ್ಲ.',
+      b1: 'ಹೊಸ ಲೇಖನ ಮತ್ತು ಅಪ್‌ಡೇಟ್ ಮೊದಲು',
       b2: 'ಉಚಿತ — ಯಾವಾಗ ಬೇಕಾದರೂ ಬಿಡಬಹುದು',
       b3: 'ನಿಮ್ಮ ಸಂಖ್ಯೆ ಯಾರಿಗೂ ಕಾಣಿಸುವುದಿಲ್ಲ',
       wa: 'WhatsApp ಚಾನೆಲ್ ಸೇರಿ',
-      fb: 'Facebook ಪುಟ ಫಾಲೋ ಮಾಡಿ',
+      fb: 'Facebook ನಲ್ಲಿ ಸೇರಿ',
       ig: 'Instagram ನಲ್ಲಿ ಫಾಲೋ ಮಾಡಿ',
       no: 'ಈಗ ಬೇಡ',
       close: 'ಮುಚ್ಚಿ'

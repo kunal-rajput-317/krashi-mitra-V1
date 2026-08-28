@@ -51,6 +51,8 @@ _CORE = [
     ("/chat",           "AI चैट",          "Hindi agriculture Q&A assistant."),
     ("/khoj",           "खोज",            "Quick agri knowledge lookup."),
     ("/rental",         "किराये की मशीनें", "Farm equipment hire rates: what a tractor, rotavator, pump set, combine harvester, sprayer or baler typically costs to rent in India, per hour / per acre / per quintal, plus what to inspect before hiring and how to book via a government Custom Hiring Centre (CHC) or the FARMS app. Where local machine owners, Custom Hiring Centres or FPOs have listed with us, the page shows their real rates, contact details and whether diesel and an operator are included, ranked by distance from the reader. Where none have, the page shows an editorial rate range compiled from CHC rate cards — an estimate, not a quote. Nothing is bookable through this site; we connect the farmer to the owner and stop. Full URL list in /rental/sitemap.xml."),
+    ("/farm/poultry",   "अंडे का रेट",     "Daily egg rate (anda rate) for ~34 Indian cities and production/consumption zones, sourced from the National Egg Co-ordination Committee (NECC) and refreshed every morning. Quoted both ways the trade uses — rupees per egg and rupees per 100 eggs — with the previous day's change, a 30-day trend and a same-week-last-year comparison per zone. The sheet distinguishes NECC SUGGESTED prices from PREVAILING (actually trading) prices and so do these pages; NECC states its suggested prices are advisory and not mandatory, and that clarification is reproduced on every page. Not a farm-gate price and not an offer from us. Full URL list in /farm/poultry/sitemap.xml."),
+    ("/farm",           "पशुपालन",        "Livestock hub: the daily egg rate above, plus Hindi guides to dairy/milk production, goat rearing, fish farming, beekeeping and lumpy skin disease. Only poultry carries a daily price, because only the egg rate is published nationally each day."),
     ("/articles/",      "लेख",            "Hindi farming guides and crop analytics articles (full list below)."),
 ]
 
@@ -167,8 +169,10 @@ def _build() -> str:
         "",
         f"- [Crop price hub]({SITE}/bhav): tap-through to every crop / state / district price page",
         *_top_crop_lines(),
+        f"- [Egg rate hub]({SITE}/farm/poultry): today's NECC egg rate in every listed city, and a page per zone",
         f"- [Full price-page URL list]({SITE}/bhav/sitemap.xml)",
         f"- [Product page URL list]({SITE}/product/sitemap.xml)",
+        f"- [Egg rate URL list]({SITE}/farm/poultry/sitemap.xml)",
         "",
         "## लेख (farming guides)",
         "",

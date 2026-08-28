@@ -119,3 +119,120 @@ class TestPromoCopy:
         on_disk = Path(__file__).resolve().parents[1] / "frontend" / src.lstrip("/")
         assert on_disk.is_file(), f"{src} is referenced but not committed"
         assert on_disk.read_bytes()[:4] == b"RIFF", "not a real WebP"
+
+
+# ── The same block on the articles ─────────────────────────────────────────
+#
+# An article earns the promo on the /bhav test, not on traffic: has the reader
+# just been told he needs to BUY something? So it goes on pest, disease,
+# fertiliser, seed, weed and crop-guide pages and stays off schemes, livestock,
+# forestry and the selling side. The two ways that goes wrong are both silent —
+# the block quietly stops being emitted, or it turns up on a page it argues
+# with — so both are asserted here.
+
+import importlib.util
+import re
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "tools"))
+
+PLACEHOLDER = "<div data-dukan-promo></div>"
+PROMO_JS = '<script src="../dukan-promo.js" defer></script>'
+
+
+def _articles():
+    """(ARTICLE dict, built html path) for every content module."""
+    import article_builder as ab
+
+    out = []
+    for f in sorted((REPO / "tools" / "articles").glob("*.py")):
+        if f.name.startswith("_"):
+            continue
+        spec = importlib.util.spec_from_file_location(f.stem, f)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        out.append((mod.ARTICLE, ab.ARTICLES / f"{mod.ARTICLE['slug']}.html"))
+    return out
+
+
+class TestArticlePromoSelection:
+    def test_the_promo_reaches_a_real_number_of_articles(self):
+        """A rule that silently matches nothing still passes every other test
+        here — the pages just quietly stop carrying the site's only
+        supply-side ask."""
+        import article_builder as ab
+
+        picked = [a for a, _ in _articles() if ab.wants_dukan_promo(a)]
+        assert len(picked) >= 30, f"only {len(picked)} articles carry the promo"
+
+    def test_never_on_a_page_written_in_another_language(self):
+        """dukan-promo.js ships one hardcoded Hindi string set, and
+        /dukanlisting behind its button is Hindi-only. An untranslated ad on a
+        Kannada or Tamil page undoes the reason those pages were rewritten."""
+        import article_builder as ab
+
+        for a, _ in _articles():
+            if a.get("lang", "hi") != "hi":
+                assert not ab.wants_dukan_promo(a), a["slug"]
+
+    def test_never_where_it_argues_with_the_article(self):
+        """A सरकारी योजना reader wants a subsidy; a पशुपालन reader wants a vet;
+        पेड़ व वानिकी is a ten-year cycle; मंडी और बिक्री is the opposite trade;
+        and जैविक व प्राकृतिक खेती tells him to make his inputs at home."""
+        import article_builder as ab
+
+        banned = {"सरकारी योजना", "पशुपालन", "पेड़ व वानिकी",
+                  "मंडी और बिक्री", "जैविक व प्राकृतिक खेती"}
+        for a, _ in _articles():
+            if a.get("section") in banned:
+                assert not ab.wants_dukan_promo(a), a["slug"]
+
+
+class TestArticlePromoIsActuallyOnDisk:
+    def test_every_selected_article_carries_the_block_exactly_once(self):
+        """Built pages, not the render function: the selection can be right
+        while the pages on disk were never rebuilt, and it is the files that
+        ship."""
+        import article_builder as ab
+
+        for a, page in _articles():
+            if not (ab.wants_dukan_promo(a) and page.is_file()):
+                continue
+            doc = page.read_text(encoding="utf-8")
+            assert doc.count(PLACEHOLDER) == 1, a["slug"]
+            assert doc.count(PROMO_JS) == 1, a["slug"]
+
+    def test_unselected_articles_carry_neither(self):
+        import article_builder as ab
+
+        for a, page in _articles():
+            if ab.wants_dukan_promo(a) or not page.is_file():
+                continue
+            doc = page.read_text(encoding="utf-8")
+            assert PLACEHOLDER not in doc, a["slug"]
+            assert "dukan-promo.js" not in doc, a["slug"]
+
+    def test_the_block_sits_between_the_advice_and_the_faq(self):
+        """Same reasoning as the /bhav placement: "कहां से लूं?" occurs to the
+        reader when the article has just told him what he needs, not after a
+        FAQ he may never reach."""
+        import article_builder as ab
+
+        checked = 0
+        for a, page in _articles():
+            if not (ab.wants_dukan_promo(a) and page.is_file()):
+                continue
+            doc = page.read_text(encoding="utf-8")
+            faq = doc.find(a.get("faq_h2", "अक्सर पूछे जाने वाले सवाल"))
+            assert 0 < doc.find(PLACEHOLDER) < faq, a["slug"]
+            checked += 1
+        assert checked, "no built promo articles were checked"
+
+    def test_the_script_it_loads_is_committed(self):
+        """A missing static file answers 200 with HTML on this site, so a bad
+        path would leave an empty placeholder on 40 pages and 404 nowhere."""
+        js = REPO / "frontend" / "dukan-promo.js"
+        assert js.is_file()
+        assert "data-dukan-promo" in js.read_text(encoding="utf-8")

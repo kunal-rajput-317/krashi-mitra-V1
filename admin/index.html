@@ -5842,15 +5842,35 @@ async function loadOverview() {
       </tr>`).join('') : '<tr><td colspan="5" class="text-muted" style="text-align:center;padding:16px;">No orders yet.</td></tr>';
     }
   } catch (e) {
-    // Rich Fallback Mock Data for Standalone/Offline Preview
+    /* A backend that answered with an error is NOT the same thing as there
+       being no backend, and this panel must never paint one as the other. It
+       used to: any failure in the block above — including the ReferenceError
+       from the missing statusPillClass(), which fired AFTER the real orders
+       had arrived — landed here and overwrote the real KPIs with 1,428 / 18 /
+       42 / 1,368 and five invented orders, with the health lights forced
+       green. The panel looked healthy and was showing fiction. */
+    const unreachable = (e instanceof TypeError) ||
+                        /Failed to fetch|NetworkError|Load failed/i.test(e.message || '');
+    _ovHealth('health-backend', false);
+    _ovHealth('health-db', false);
+    const tb = document.getElementById('overview-recent-orders');
+
+    if (!unreachable) {
+      ['kpi-total', 'kpi-pending', 'kpi-quoted', 'kpi-delivered'].forEach(id => _ovSet(id, '—'));
+      if (tb) tb.innerHTML = `<tr><td colspan="5" style="color:var(--danger);text-align:center;padding:16px;">
+        Could not load orders — ${escapeHtml(e.message || String(e))}<br>
+        <span class="text-muted" style="font-size:11px;">A read-only database (Neon plan limit) fails here too.</span></td></tr>`;
+      showToast('Overview could not load orders: ' + (e.message || e), 'error');
+    } else {
+
+    /* Nothing on the other end at all — the standalone design preview. The
+       numbers below are made up, so they ship with the lights red and a row
+       that says so; they must never be readable as live figures. */
     _ovSet('kpi-total', '1,428');
     _ovSet('kpi-pending', '18');
     _ovSet('kpi-quoted', '42');
     _ovSet('kpi-delivered', '1,368');
-    _ovHealth('health-backend', true);
-    _ovHealth('health-db', true);
-    _ovHealth('health-ai', true);
-    const tb = document.getElementById('overview-recent-orders');
+    _ovHealth('health-ai', false);
     if (tb) {
       const mockOrders = [
         { tracking_code: 'ORD-88219', customer_name: 'रामेश पटेल', product_name: 'एनपीके उर्वरक 50 किग्रा (NPK 19-19-19)', status: 'delivered', created_at: Date.now() - 3600000 },
@@ -5859,7 +5879,9 @@ async function loadOverview() {
         { tracking_code: 'ORD-88222', customer_name: 'अनिल कुमार', product_name: 'जैविक कीट नियंत्रण दवा (नीम तेल 1L)', status: 'delivered', created_at: Date.now() - 14400000 },
         { tracking_code: 'ORD-88223', customer_name: 'दीपक शर्मा', product_name: 'मृदा परीक्षण किट डिजिटल (KM-V3)', status: 'prebook', created_at: Date.now() - 18000000 }
       ];
-      tb.innerHTML = mockOrders.map(x => `<tr>
+      tb.innerHTML = `<tr><td colspan="5" style="color:var(--accent);text-align:center;padding:10px;font-size:12px;">
+          ⚠ DEMO DATA — the backend did not answer. Nothing below is real.</td></tr>` +
+        mockOrders.map(x => `<tr style="opacity:.6;">
         <td class="text-mono">${escapeHtml(x.tracking_code)}</td>
         <td>${escapeHtml(x.customer_name)}</td>
         <td>${escapeHtml(x.product_name)}</td>
@@ -5867,12 +5889,18 @@ async function loadOverview() {
         <td class="text-muted text-mono" style="font-size:11px;">${new Date(x.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
       </tr>`).join('');
     }
+    }
   }
   try {
     const r = await fetch(`${API}/admin/status`, { headers: getAuthHeader() });
     const d = await r.json().catch(() => ({}));
     _ovHealth('health-ai', !!(r.ok && d.gemini_configured));
-  } catch (e) { _ovHealth('health-ai', true); }
+  } catch (e) {
+    // A health light that goes green when its own probe failed is worse than
+    // no light at all — this used to report the AI as up whenever the call
+    // that was meant to check it threw.
+    _ovHealth('health-ai', false);
+  }
 
   loadSyncLog();
 }
@@ -7745,37 +7773,17 @@ async function fetchMandiPrices() {
   }
 }
 
+/* The terminal's `mandi fetch`. It used to POST /admin/reindex — the RAG
+   re-indexer, nothing to do with mandi prices — and then announce success on
+   a 1.5s timer whether the call had come back 200, 401 or 500, writing its
+   detail into a #mandi-log element that no longer exists in the page. It now
+   delegates to the same triggerFetch() the Data Sync panel's button uses:
+   the right endpoint, and it waits for a genuinely new run in the sync log
+   before it claims anything finished. */
 async function triggerMandiFetch() {
-  const btn = document.getElementById('mandi-sync-btn');
-  const log = document.getElementById('mandi-log');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = '⚡ Syncing...';
-  }
-  if (log) log.innerHTML = `<span class="log-entry-warn">Starting on-demand Mandi data fetching schedule...</span>\n`;
-  printTerminalLog('Executing: mandi fetch scheduled job...');
-  
-  try {
-    await fetch(`${API}/admin/reindex`, { method: 'POST', headers: getAuthHeader() });
-    setTimeout(() => {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '⚡ Sync Mandi Data';
-      }
-      if (log) {
-        log.innerHTML += `<span class="log-entry-ok">✓ Mandi fetching service successfully completed.</span>\n`;
-        log.innerHTML += `<span class="log-entry-info">Synced 124 Mandi Markets in UP. Added 18 commodities records.</span>\n`;
-      }
-      showToast('Mandi prices updated.');
-      printTerminalLog('Success: Mandi database records re-synced.');
-    }, 1500);
-  } catch (e) {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = '⚡ Sync Mandi Data';
-    }
-    if (log) log.innerHTML += `<span class="log-entry-err">❌ Sync process failed: ${e.message}</span>\n`;
-  }
+  printTerminalLog('Executing: POST /admin/fetch/mandi ...');
+  await triggerFetch('mandi');
+  printTerminalLog('mandi fetch: result is in the toast and the Data Sync log.');
 }
 
 // ── Weather Panel Logic ──────────────────────────────────────
@@ -8349,6 +8357,14 @@ const NEXT_STEP = {
   dispatched: { label: 'Mark Delivered',  status: 'Delivered' },
 };
 const TERMINAL_STAGES = new Set(['delivered', 'cancelled', 'unavailable', 'out of stock']);
+
+/* The Overview page's recent-orders table paints the same pills as this page,
+   so it reads the same map — a second hand-written status→colour list is how
+   the two tables drift apart. Missing entirely until now, which threw and left
+   Overview's recent-orders table empty on both the live and the mock path. */
+function statusPillClass(status) {
+  return (STAGE_META[normalizeStage(status)] || { cls: 'offline' }).cls;
+}
 // Legacy DB rows predating a rename — normalize so old orders still get actions.
 // 'out of order' described a broken machine, not an empty shelf; rows written
 // before the rename still carry it, so fold it onto the replacement.
@@ -9212,6 +9228,11 @@ function selectDensityMode(density) {
   applyAdminLayout(_activeLayout, _activeTheme, _activeWidth, _activeDensity);
 }
 
+/* Declared here, not with the rest of the farmer-locator state further down:
+   applyAdminLayout() runs once at load, before that section is reached, and a
+   `let` read before its declaration is a ReferenceError, not `undefined`. */
+let _flMap = null;
+
 function applyAdminLayout(layout, theme, width, density) {
   const app = document.getElementById('admin-app');
   if (!app) return;
@@ -9255,8 +9276,13 @@ function applyAdminLayout(layout, theme, width, density) {
     printTerminalLog(`Layout Engine: Active Layout=${_activeLayout}, Theme=${_activeTheme}, Width=${_activeWidth}, Density=${_activeDensity}`);
   }
 
-  // Invalidate Leaflet map size if initialized
-  if (typeof _flMap !== 'undefined' && _flMap) {
+  // Invalidate Leaflet map size if initialized. `typeof` does NOT shield a
+  // `let` from the temporal dead zone — this function is called at the bottom
+  // of this section, while the script is still executing, and reading _flMap
+  // there threw and aborted every declaration below it (the dealers panel's
+  // "Cannot access '_byFilter' before initialization" was this bug). Hence the
+  // declaration sits just above this function instead.
+  if (_flMap) {
     setTimeout(() => _flMap.invalidateSize(), 150);
   }
 }
@@ -9396,7 +9422,7 @@ function escapeHtml(s) {
 // ══════════════════════════════════════════════════════════════
 // FARMER LOCATOR — map of where our farmers are + demand clusters
 // ══════════════════════════════════════════════════════════════
-let _flMap = null;
+/* _flMap is declared up beside applyAdminLayout() — it is read there at load. */
 let _flMarkers = null;              // L.layerGroup of farmer pins
 let _flMarkerById = {};            // user_id → marker (for list → map focus)
 let _flData = [];

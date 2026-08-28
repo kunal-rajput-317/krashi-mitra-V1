@@ -108,13 +108,20 @@ def _ref(text: str) -> str:
     return _REF_SAFE.sub("", (text or "").strip())[:_REF_MAX]
 
 
-def link(amount=None, note: str = "", ref: str = "") -> str:
+def link(amount=None, note: str = "", ref: str = "",
+         open_amount: bool = False) -> str:
     """The `upi://pay?…` deep link. "" when no VPA is configured.
 
     Every value is percent-encoded with a `safe=""` quote, including `@` in the
     VPA. The note carries a dealer-supplied firm name, so an unencoded `&` would
     let that name append its own parameters — an `&am=` in a firm name would
     rewrite the amount on the confirmation screen the dealer is looking at.
+
+    `open_amount=True` omits `am=` entirely, so the payer's own app asks him
+    what to send. That is wrong for a listing fee — the fee is a number we
+    quoted and he should not have to retype it — and right for a donation,
+    where naming a figure is not ours to do. Default False, so every existing
+    caller is byte-identical.
     """
     if not configured():
         return ""
@@ -123,8 +130,8 @@ def link(amount=None, note: str = "", ref: str = "") -> str:
         f"pn={quote(payee_name(), safe='')}",
         "cu=INR",
     ]
-    amt = clean_amount(amount)
-    parts.append(f"am={amt}")
+    if not open_amount:
+        parts.append(f"am={clean_amount(amount)}")
     n = _note(note)
     if n:
         parts.append(f"tn={quote(n, safe='')}")

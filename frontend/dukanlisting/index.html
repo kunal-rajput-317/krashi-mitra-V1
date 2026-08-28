@@ -1138,6 +1138,35 @@
     cropListEl.appendChild(label);
   });
 
+  // Tick the chips for a known list of crop slugs; an empty list means "सभी
+  // फसलें", which is how the submit body encodes it too.
+  //
+  // Two callers need this. loadMine() reopening the form for a dealer adding a
+  // district has ALWAYS called it — but the function was never defined, so that
+  // path threw a ReferenceError and silently lost the scrollIntoView after it.
+  // restoreDraft() below is the new one: putting back the form a dealer filled
+  // before he was asked to log in.
+  function setCrops(list) {
+    var want = {};
+    (list || []).forEach(function (s) { want[s] = 1; });
+    allBox.checked = !(list || []).length;
+    allChip.classList.toggle('on', allBox.checked);
+    cropListEl.querySelectorAll('input').forEach(function (i) {
+      i.checked = !!want[i.value];
+      i.closest('.dk-chip').classList.toggle('on', i.checked);
+    });
+  }
+
+  // ── Funnel instrumentation ──
+  // This page had exactly one event on it — dukan_product_signup, fired on
+  // success — so a dealer who arrived and left was indistinguishable from one
+  // who never arrived. With the listing count at zero that is the difference
+  // between "the form is too hard" and "nobody is reaching the page", and the
+  // fix for those two is not remotely the same. Every step reports now.
+  function track(name, params) {
+    try { if (window.gtag) window.gtag('event', name, params || {}); } catch (e) {}
+  }
+
   // ── District picker ──
   var selectedDistricts = [];
   var stateSel  = document.getElementById('dp-state');
@@ -1201,14 +1230,17 @@
   // district on its own and the call sorts the crops out.
   var cropsPickable = false;
 
+  // No login check here any more, and that is the point. This used to bounce an
+  // anonymous dealer straight to /login.html — so a shopkeeper was asked to
+  // invent an email and a password before he had seen a single field of the
+  // form, or knew what it wanted. The account is not what makes this row
+  // useful; the phone number in the form is, and login is now asked for at
+  // submit (see the handler below), once he has something to lose by walking
+  // away. owner_user_id is still set on every row, because the POST still
+  // happens with a token — only its timing moved.
   window.choosePlan = function () {
     plan = 'metered';
-    if (!(window.KMIsLoggedIn && window.KMIsLoggedIn())) {
-      try { localStorage.setItem('km_dukan_plan', plan); } catch (e) {}
-      location.href = '/login.html?next=' + encodeURIComponent(location.pathname) +
-                      '&do=dukan-product';
-      return;
-    }
+    track('dukan_plan_open', { logged_in: !!(window.KMIsLoggedIn && window.KMIsLoggedIn()) });
     document.getElementById('dp-plan-line').innerHTML =
       'हर जिला <b>₹' + RATE_DISTRICT + '</b> + हर फसल का पेज <b>₹' + RATE_CROP +
       '</b> — प्रति सीज़न (3 महीने)। नीचे जिला चुनें, फिर फसलें।';
@@ -1617,11 +1649,18 @@
   }
 
   function init() {
-    if (window.KMIsLoggedIn && window.KMIsLoggedIn()) {
+    var in_ = !!(window.KMIsLoggedIn && window.KMIsLoggedIn());
+    track('dukan_view', { logged_in: in_ });
+    if (in_) {
       loadMine();
-    } else {
-      only(gateEl);   // never logged in here — nothing to clear
+      return;
     }
+    // An anonymous visitor is not an error state. He gets the pitch and the
+    // price, exactly as a logged-in one does, and can open the form and fill
+    // it; the login is asked for when he presses send. #dp-gate still exists
+    // and showGate() still uses it — but only for a token the SERVER refused,
+    // which is a different thing from never having had one.
+    only(plansEl);
   }
 
   // api-config.js (KMIsLoggedIn/KMRequireLogin/KMTakeResume) loads via a
@@ -1629,20 +1668,38 @@
   // DOMContentLoaded so it has already run by the time this fires, rather
   // than racing it by calling straight into this IIFE.
   document.addEventListener('DOMContentLoaded', function () {
-    init();
-    // Resume straight into the form after a login redirect, instead of
-    // landing back on the gate — same pattern as shop.html's
-    // requireLoginForOrder/resumePendingOrder and bhav.py's alert-bell
-    // gate()/resume().
-    if (window.KMTakeResume) {
-      var resumed = window.KMTakeResume();
-      if (resumed === 'dukan-product') init();
+    var resume = window.KMTakeResume ? window.KMTakeResume() : '';
+    var draft  = (resume === 'dukan-product') ? takeDraft() : null;
+
+    // Back from login with a form he had already filled and sent. Finishing
+    // that send is what he expects to find waiting — not a blank form.
+    //
+    // init() is deliberately NOT called on this path. loadMine() is async, and
+    // its callback lands a moment later calling only(plansEl) or only(mineEl) —
+    // which would hide the restored form behind the pitch, with his typing
+    // still in it and no way back to it. Resuming owns the screen.
+    if (draft) {
+      track('dukan_view', { logged_in: true, resumed: true });
+      // On screen before the request goes out, so a server error or a sleeping
+      // dyno leaves him looking at his own filled form and a working retry
+      // button rather than at nothing.
+      restoreDraft(draft);
+      if (window.KMIsLoggedIn && window.KMIsLoggedIn()) {
+        track('dukan_resume', { districts: (draft.districts || []).length });
+        send(draft);
+      }
+      // No session despite the round trip — the login did not take. The form is
+      // back on screen; pressing send again re-runs the gate.
+      return;
     }
+    init();
   });
 
   // ── Submit ──
-  formEl.addEventListener('submit', function (e) {
-    e.preventDefault();
+  // Read the form, or show the first thing wrong with it and return null.
+  // Split out of the submit handler so the same object can be stashed and
+  // replayed after a login round trip — see send() and restoreDraft().
+  function collectForm() {
     errEl.hidden = true;
     formEl.querySelectorAll('.dk-bad').forEach(function (el) { el.classList.remove('dk-bad'); });
 
@@ -1650,16 +1707,15 @@
     var phone = document.getElementById('dp-phone');
     var wa    = document.getElementById('dp-wa');
 
-    if (name.value.trim().length < 2) return fail('फर्म या दुकान का नाम डालें।', name);
-    if (!validPhone(phone.value)) return fail('सही 10 अंकों का मोबाइल नंबर डालें।', phone);
-    if (wa.value.trim() && !validPhone(wa.value)) return fail('WhatsApp नंबर सही नहीं लग रहा।', wa);
-    if (!selectedDistricts.length) {
-      return fail('कम से कम एक जिला जोड़ें।');
-    }
+    if (name.value.trim().length < 2) { fail('फर्म या दुकान का नाम डालें।', name); return null; }
+    if (!validPhone(phone.value)) { fail('सही 10 अंकों का मोबाइल नंबर डालें।', phone); return null; }
+    if (wa.value.trim() && !validPhone(wa.value)) { fail('WhatsApp नंबर सही नहीं लग रहा।', wa); return null; }
+    if (!selectedDistricts.length) { fail('कम से कम एक जिला जोड़ें।'); return null; }
     // Same condition as gateSubmit(): only a dealer who HAS a list to pick from
     // is held back for picking nothing off it.
     if (cropsPickable && !pageCrops.length) {
-      return fail('कम से कम एक फसल चुनें जिसके पेज पर दिखना है।');
+      fail('कम से कम एक फसल चुनें जिसके पेज पर दिखना है।');
+      return null;
     }
 
     var crops = [];
@@ -1667,7 +1723,7 @@
       cropListEl.querySelectorAll('input:checked').forEach(function (i) { crops.push(i.value); });
     }
 
-    var body = {
+    return {
       name: name.value.trim(),
       kind: document.getElementById('dp-kind').value,
       phone: validPhone(phone.value),
@@ -1682,7 +1738,83 @@
       plan: plan,
       plan_crops: pageCrops
     };
+  }
 
+  // The half-finished form, parked across a login redirect.
+  //
+  // Deliberately NOT one of api-config.js's USER_KEYS: those are wiped by
+  // KMClearUserData(), which login.html::setToken() calls on the way IN as well
+  // as out. A draft stored under one of those names would be deleted by the
+  // very login it is waiting for. (shop.html's km_pending_order IS in that
+  // list, and is silently lost the same way — worth fixing there separately.)
+  //
+  // Stamped and short-lived: it holds a phone number, it is consumed the moment
+  // it is replayed, and a draft older than an hour is a different visit — quite
+  // possibly a different person on a shared phone — so it is dropped unread.
+  var DRAFT_KEY = 'km_dukan_draft';
+  var DRAFT_TTL = 60 * 60 * 1000;
+
+  function saveDraft(body) {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ at: Date.now(), body: body }));
+    } catch (e) {}
+  }
+
+  function takeDraft() {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(DRAFT_KEY);
+      localStorage.removeItem(DRAFT_KEY);      // consumed either way
+    } catch (e) { return null; }
+    if (!raw) return null;
+    try {
+      var d = JSON.parse(raw);
+      if (!d || !d.body || (Date.now() - (d.at || 0)) > DRAFT_TTL) return null;
+      return d.body;
+    } catch (e) { return null; }
+  }
+
+  // Put a stashed draft back on screen, so a failed send leaves him looking at
+  // his own filled form rather than an empty one.
+  function restoreDraft(body) {
+    document.getElementById('dp-name').value  = body.name || '';
+    document.getElementById('dp-kind').value  = body.kind || 'trader';
+    document.getElementById('dp-phone').value = body.phone || '';
+    document.getElementById('dp-wa').value    = body.whatsapp || '';
+    document.getElementById('dp-desc').value  = body.description || '';
+    document.getElementById('dp-since').value = body.since || '';
+    setCrops(body.commodities);
+    plan = body.plan || 'metered';
+    selectedDistricts = body.districts || [];
+    pageCrops = body.plan_crops || [];
+    // The crop picker is per-district and loads from the server; whatever he
+    // ticked is already in plan_crops, so nothing is re-fetched and nothing is
+    // gated on a list that has not arrived yet.
+    cropsPickable = false;
+    renderDistrictChips();
+    only(formCardEl);
+  }
+
+  formEl.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var body = collectForm();
+    if (!body) return;
+
+    // THE GATE, and this is the only place it fires for a new listing. He has
+    // just filled eight fields and pressed send; asking now costs him a login
+    // he is already invested in, where asking at the door cost us the dealer.
+    // The draft rides across the redirect so he never retypes any of it.
+    if (!(window.KMIsLoggedIn && window.KMIsLoggedIn())) {
+      saveDraft(body);
+      track('dukan_submit_login_required', { districts: body.districts.length });
+      location.href = '/login.html?next=' + encodeURIComponent(location.pathname) +
+                      '&do=dukan-product';
+      return;
+    }
+    send(body);
+  });
+
+  function send(body) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'भेजा जा रहा है…';
 
@@ -1708,13 +1840,13 @@
         (price ? ' कुल सब्सक्रिप्शन: ₹' + price + '/सीज़न।' : '');
       formEl.hidden = true;
       doneEl.hidden = false;
-      if (window.gtag) window.gtag('event', 'dukan_product_signup', { districts: selectedDistricts.length });
+      track('dukan_product_signup', { districts: (body.districts || []).length });
     }).catch(function () {
       submitBtn.disabled = false;
       submitBtn.textContent = 'जानकारी भेजें';
       fail('इंटरनेट या सर्वर की दिक्कत लग रही है। थोड़ी देर बाद दोबारा कोशिश करें।');
     });
-  });
+  }
 })();
 
 // ── SCROLL HEADER ──

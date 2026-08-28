@@ -59,7 +59,13 @@ def site(tmp_path, monkeypatch, repo_root):
     # The validator asserts every ../asset on the page exists on disk, because
     # a missing static file is served as 200-HTML here and fails silently.
     shell = (front / "articles" / "tomato-leaf-curl.html").read_text(encoding="utf-8")
-    for rel in set(re.findall(r'(?:src|href)="\.\./([^"?#]+)"', shell)):
+    assets = set(re.findall(r'(?:src|href)="\.\./([^"?#]+)"', shell))
+    # dukan-promo.js is not discoverable from the shell: the builder emits it
+    # per-article, only for the sections that carry the दुकान block
+    # (article_builder.wants_dukan_promo), so a promo-eligible article
+    # references an asset the shell source never mentions.
+    assets.add("dukan-promo.js")
+    for rel in assets:
         p = front / rel
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(b"")

@@ -2289,6 +2289,7 @@ _DRAWER_ITEMS = [("home", f"{SITE}/", "🏠", "मुख्य"),
                   ("bazar", f"{SITE}/krashi_bajar", "🧺", "कृषि बाज़ार"),
                   ("shop", f"{SITE}/shop", "🛒", "दुकान"),
                   ("rental", f"{SITE}/rental", "⚙️", "किराये की मशीन"),
+                  ("poultry", f"{SITE}/farm/poultry", "🥚", "अंडे का रेट"),
                   ("khoj", f"{SITE}/khoj", "🔍", "कृषि खोज"),
                   ("map", f"{SITE}/map", "🗺️", "कृषि मानचित्र"),
                   ("articles", f"{SITE}/articles/", "📰", "कृषि लेख"),
@@ -2461,6 +2462,7 @@ def _footer(note: str = "") -> str:
 <a href="{SITE}/bhav">सभी भाव</a>
 <a href="{SITE}/weather">मौसम</a>
 <a href="{SITE}/chat">AI सहायक</a>
+<a href="{SITE}/donate">सहयोग करें</a>
 </nav>
 {crops_nav}
 <div class="km-footer-note">{escape(note or _FOOTER_NOTE)}</div>

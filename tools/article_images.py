@@ -100,7 +100,7 @@ IMAGES = {
     "kisan-drone-chhidkav": "DJI Agras T50 demonstrating sprayers in flight.jpg",
     "dhan-nursery-ropai": "Rice Transplanter in India.jpg",
     "makka-ethanol-maang": "2014-09 Nowaki (17) Zbiór kukurydzy.jpg",
-    "dairy-farming-doodh-utpadan": "Dairy Farm in Gurgaon.jpg",
+    "dairy-farming-doodh-utpadan": "Sahiwal cows at the dairy unit attached to Bhai Ram Singh Memorial (Gurudwara) Bhaini Sahib, Ludhyana ,Punjab, India.JPG",
     "pashu-thanaila-mastitis": "India - Woman dairy entrepreneur (3975844335).jpg",
     "hara-chara-napier-berseem": "Fodder for Buffaloes.jpeg",
 
@@ -173,6 +173,7 @@ IMAGES = {
     "bakri-palan-guide": "Goat rearing rural woman India village livestock management.jpg",
     "murgi-palan-guide": "Broiler Chickens 001.jpg",
     "murgi-palan-backyard": "Free range chicken flock.jpg",
+    "murgi-ranikhet-rog": "Poultry Farm in Namakkal, Tamil Nadu.jpg",
     "machhli-palan-guide": "Aeration systems in an Aqua pond near Eluru.jpg",
     "madhumakhi-palan-guide": "Apiary in the valley.jpg",
     "pashu-lumpy-skin-rog": "Rural women and cattle on a village road in Raichur.jpg",
@@ -192,6 +193,13 @@ IMAGES = {
     "kisan-credit-card": "INR.JPG",
     "pm-fasal-bima-yojana-2026": "Verse champ de blé01.jpg",
     "pmksy-drip-sinchai-subsidy": "Driprication.jpg",
+
+    # ── यूरिया cluster (Aug 2026) ─────────────────────────────────────────
+    # No free photograph exists of neem oil being sprayed onto urea prills, so
+    # the neem article uses the raw material the coating is made from and the
+    # caption says exactly that.
+    "neem-coated-urea-guide": "Collected fruits and seeds of (Azadirachta indica) Neem tree in Visakhapatnam.jpg",
+    "urea-ke-baad-pani-kab": "Agricultural irrigation pump set with borewell, Vrindavan, Uttar Pradesh, India.jpg",
 
     # ── replacing the Commons hotlinks the legacy articles used ───────────
     "aam-utpadan-up": "Anish nellickal 25 .jpg",
@@ -302,6 +310,14 @@ LOCAL = {
     "npk-complex-khad-guide": "images/fertilizers/NPK.webp",
     "zinc-ki-kami-fasal": "images/fertilizers/zinc_sulphate.jpg",
     "sulphur-gandhak-ki-kami": "images/fertilizers/ammonium-sulphate.webp",
+
+    # The यूरिया cluster's three remaining heroes. The rate article is about the
+    # bag itself, the spray article about the pump the solution goes into, and
+    # the comparison article about the other nitrogen bag on the shelf — each
+    # picture is the actual subject, so they come from art already in the repo.
+    "urea-bori-rate-subsidy": "images/fertilizers/Urea.webp",
+    "urea-chhidkav-ghol-matra": "images/tools/battery-sprayer-12V.webp",
+    "urea-ammonium-sulphate-can-tulna": "images/fertilizers/ammonium-sulphate.webp",
 
     # Hand-written articles that already showed their own picture but still
     # declared the site banner as og:image, and whose card loaded the full-size

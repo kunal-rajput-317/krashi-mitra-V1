@@ -620,6 +620,61 @@ class MandiSeasonSlice(Base):
     built_at     = Column(DateTime, nullable=True)
 
 
+# ── अंडे का रेट (NECC) ───────────────────────────────────────
+
+class PoultryRate(Base):
+    """Latest egg rate per zone — one row per zone, upserted every fetch.
+
+    The /farm/poultry snapshot. Shaped like MandiPrice and kept for the same
+    reason: a page must be able to answer "what is the rate" with one indexed
+    read, without walking history. Unlike mandi there is no aging-out rule —
+    NECC publishes ~34 zones every single day, so a zone that goes quiet is
+    news rather than noise, and `rate_date` says exactly how stale it is.
+
+    prev_paise/change_paise/spark are derived at write time from the month
+    sheet we already hold in memory, so rendering a delta or a sparkline costs
+    the page nothing.
+    """
+    __tablename__ = "poultry_rates"
+    id           = Column(Integer,  primary_key=True)
+    zone_slug    = Column(String,   nullable=False, unique=True)  # our URL slug
+    zone_name    = Column(String,   nullable=False)   # NECC's own label, verbatim
+    section      = Column(String,   nullable=False, index=True)  # necc | prevailing
+    paise        = Column(Integer,  nullable=False)   # paise per egg (550 = Rs 5.50)
+    rate_date    = Column(Date,     nullable=False, index=True)
+    prev_paise   = Column(Integer,  nullable=True)    # previous reported day
+    change_paise = Column(Integer,  nullable=True)    # paise - prev_paise
+    spark        = Column(String,   nullable=True)    # comma-joined last ~15, oldest first
+    month_avg    = Column(Integer,  nullable=True)    # NECC's own month-to-date average
+    fetched_at   = Column(DateTime, default=datetime.utcnow)
+
+
+class PoultryRateHistory(Base):
+    """Append-only daily egg rate, deduped by row_key.
+
+    Deliberately NOT trimmed the way mandi history is. One fetch returns a
+    whole month for every zone, so a year of the entire country is ~34 x 365
+    = 12.4k rows — three orders of magnitude below the mandi feed that forced
+    a 15-day cap, and small enough that "इस समय पिछले साल" needs no separate
+    monthly summary table. Retention is set by POULTRY_HISTORY_DAYS in the
+    service so the ceiling is a decision someone made, not an accident.
+    """
+    __tablename__ = "poultry_rate_history"
+    id         = Column(Integer,  primary_key=True)
+    zone_slug  = Column(String,   nullable=False, index=True)
+    section    = Column(String,   nullable=True)
+    paise      = Column(Integer,  nullable=False)
+    rate_date  = Column(Date,     nullable=False, index=True)
+    row_key    = Column(String,   nullable=False, unique=True)  # zone_slug|YYYY-MM-DD
+    fetched_at = Column(DateTime, default=datetime.utcnow)
+
+    # Every read is "this zone, ordered by date" — the composite serves the
+    # zone page's trend, the last-year lookup and the hub's delta in one.
+    __table_args__ = (
+        Index("poultry_hist_zone_date_idx", "zone_slug", "rate_date"),
+    )
+
+
 # ── किसान कॉल सेंटर सवाल-जवाब (KCC) ──────────────────────────
 
 class KccQA(Base):

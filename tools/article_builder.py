@@ -71,6 +71,49 @@ REQUIRED_CARD_KEYS = "emoji bg accent tag tag_bg tag_color title cats keywords".
 # image at all.
 FALLBACK_OG = f"{SITE}/images/og-banner.jpg"
 
+# ── The दुकान promo, and which articles earn it ────────────────────────────
+#
+# frontend/dukan-promo.js renders "अपनी दुकान किसानों तक पहुंचाएं" wherever it
+# finds a <div data-dukan-promo>. It is the site's only supply-side ask, and on
+# /bhav it sits directly under the price because the question that follows a
+# rate is "खाद-बीज कहां से लूं?". An article earns it on the same test, not on
+# traffic: does the reader, having finished this page, now need to BUY
+# something from a village shop?
+#
+# So it goes on pest, disease, fertiliser, seed, weed and crop-guide pages —
+# where the article's own advice ends in a product — and stays off the rest.
+# A सरकारी योजना reader wants a subsidy, not a dealer. A पशुपालन reader needs a
+# vet or a feed supplier, which is not who this sells to. पेड़ व वानिकी runs on
+# a ten-year cycle. मंडी और बिक्री is the selling side, the opposite trade.
+# जैविक व प्राकृतिक खेती is left out on purpose: that article's whole argument
+# is that you can make your inputs at home, and a खाद-बीज ad under it argues
+# with the page it is printed on.
+#
+# Matched on the exact `section` string rather than keywords, and unlisted
+# sections simply do not get it. That is the safe direction for an ad: a new
+# article silently missing the promo costs a little reach, while a keyword rule
+# quietly matching "पशुपालन ... रोग" would put a fertiliser pitch under an
+# article about a sick goat.
+DUKAN_PROMO_SECTIONS = frozenset({
+    "फसल कीट", "फसल रोग", "फसल गाइड", "फसल प्रबंधन",
+    "सब्जी कीट", "सब्जी रोग", "सब्ज़ी की खेती", "सब्ज़ी फसल",
+    "फल रोग", "फल बाग़",
+    "खाद व उर्वरक", "खाद और पोषण",
+    "अनाज व दलहन", "दलहन फसल",
+    "खरपतवार नियंत्रण", "कटाई के बाद प्रबंधन", "कृषि तकनीक",
+})
+
+
+def wants_dukan_promo(a: dict) -> bool:
+    """Hindi-only, and only on a section whose reader ends up needing a shop.
+
+    The language half is not a nicety: dukan-promo.js ships one hardcoded Hindi
+    string set, and /dukanlisting behind its button is Hindi-only too (see
+    routes/sitemap.py::CORE). Dropping that block onto the Kannada or Tamil
+    articles would put an untranslated ad on a page whose whole point is that it
+    is written in the reader's own language."""
+    return a.get("lang", "hi") == "hi" and a.get("section", "") in DUKAN_PROMO_SECTIONS
+
 
 # Everything on the page that has to agree about what language it is in.
 #
@@ -343,6 +386,21 @@ def render(a: dict) -> str:
         f'      </a>\n'
         for href, accent, thumb, tag, title in a["related"])
 
+    # The दुकान promo: a placeholder and the script that fills it, or neither.
+    # It sits between the body and the ad slot — the reader has just been told
+    # which spray or which fertiliser he needs, which is the moment "कहां से
+    # लूं?" occurs to him, and the same moment the /bhav placement is chosen
+    # for. dukan-promo.js self-guards and no-ops when it finds no placeholder,
+    # but the <script> is emitted only alongside one anyway: an article that
+    # does not carry the block should not pay for the request either.
+    if wants_dukan_promo(a):
+        dukan_promo = ('\n  <!-- दुकान promo — markup + styles from '
+                       '../dukan-promo.js -->\n  <div data-dukan-promo></div>\n')
+        dukan_promo_js = '<script src="../dukan-promo.js" defer></script>\n'
+    else:
+        dukan_promo = ""
+        dukan_promo_js = ""
+
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -468,7 +526,7 @@ def render(a: dict) -> str:
   </div>
 
 {a['body']}
-
+{dukan_promo}
   <!-- ── AD SLOT : before FAQ ── -->
   <div class="ad-slot responsive" aria-label="{loc['ad']}">
     <div class="ad-slot-label">{loc['ad']}</div>
@@ -520,7 +578,7 @@ def render(a: dict) -> str:
   <p style="margin:0 0 12px;line-height:2">{chips}</p>
   <a href="https://wa.me/?text={wa}" style="display:inline-block;background:#25d366;color:#fff;font-weight:700;padding:9px 16px;border-radius:22px;text-decoration:none">{loc['wa_share']}</a>
 </section>
-{shell['tail']}"""
+{dukan_promo_js}{shell['tail']}"""
 
 
 # ── site wiring ────────────────────────────────────────────────────────────

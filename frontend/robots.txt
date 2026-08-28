@@ -54,6 +54,7 @@ Sitemap: https://krashimitra.in/bhav/sitemap.xml
 Sitemap: https://krashimitra.in/product/sitemap.xml
 Sitemap: https://krashimitra.in/ganna/sitemap.xml
 Sitemap: https://krashimitra.in/rental/sitemap.xml
+Sitemap: https://krashimitra.in/farm/poultry/sitemap.xml
 
 # /naksha/gaon-sitemap.xml is deliberately NOT listed here — see the
 # Disallow above. The route still builds (routes/sitemap.py::build_gaon_

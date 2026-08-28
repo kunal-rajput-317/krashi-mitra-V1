@@ -294,8 +294,8 @@ ARTICLE = {
     "related": [
         (f"{SITE}/articles/kisan-credit-card", "#4f46e5", "💳", "सरकारी योजना",
          "किसान क्रेडिट कार्ड (KCC) 2026 — ब्याज सिर्फ 4%, ₹5 लाख तक लोन"),
-        (f"{SITE}/articles/pm-kusum-solar-pump-yojana", "#b45309", "☀️", "सरकारी योजना",
-         "PM-KUSUM सोलर पंप योजना — 60% तक सब्सिडी"),
+        (f"{SITE}/articles/dairy-farming-doodh-utpadan", "#1d4ed8", "🐄", "डेयरी · पालन",
+         "डेयरी फार्म कैसे शुरू करें — नस्ल, चारा और दूध का हिसाब"),
         (f"{SITE}/articles/murgi-palan-backyard", "#c2410c", "🐓", "मुर्गी · पालन",
          "बैकयार्ड मुर्गी पालन — कम लागत में हर हफ्ते कमाई"),
         (f"{SITE}/articles/pashu-lumpy-skin-rog", "#dc2626", "🐄", "पशुपालन · रोग",

@@ -74,6 +74,7 @@ from backend.services.weather_scheduler import start_scheduler  # WEATHER CACHE
 from backend.services.mandi_scheduler   import start_scheduler as start_mandi_scheduler  # MANDI CACHE
 from backend.services.gsc_scheduler     import start_scheduler as start_gsc_scheduler  # GSC RECRAWL SWEEP
 from backend.services.ganna_mill_scheduler import start_scheduler as start_mill_scheduler  # SUGAR-MILL REGISTER
+from backend.services.poultry_scheduler   import start_scheduler as start_poultry_scheduler  # NECC EGG RATES
 
 app = FastAPI(
     title="KrashiMitra API",
@@ -291,6 +292,10 @@ async def startup():
         await start_mill_scheduler()  # /ganna — weekly sugar-mill register refresh
     except Exception as e:
         log.warning(f"⚠️ Mill register scheduler startup error (non-fatal): {e}")
+    try:
+        await start_poultry_scheduler()  # /farm/poultry — daily NECC egg-rate fetch
+    except Exception as e:
+        log.warning(f"⚠️ Poultry scheduler startup error (non-fatal): {e}")
     # MSP hides any crop it can't vouch for (unconfirmed figure, or a marketing
     # season past its valid_until). That silence is correct but invisible, so say
     # it out loud once at boot — otherwise a lapsed season is discovered by a
@@ -351,6 +356,9 @@ app.include_router(dukanlisting_route.router)   # अपनी दुकान �
 from backend.routes import pay as pay_route
 app.include_router(pay_route.router)     # /pay — UPI listing-fee page sent to a dealer over WhatsApp (noindex)
 
+from backend.routes import donate as donate_route
+app.include_router(donate_route.router)  # /donate — public UPI page for anyone who wants to support the site
+
 from backend.routes import product as product_route
 app.include_router(product_route.router)  # SEO shop-product pages (/product/*) + /product/sitemap.xml
 
@@ -366,6 +374,9 @@ app.include_router(krashi_dukan_route.router)  # कृषि दुकान �
 # read live by mtime (services/rental.py).
 from backend.routes import rental as rental_route
 app.include_router(rental_route.router)  # किराये की मशीनें — farm equipment hire (/rental/*)
+
+from backend.routes import poultry as poultry_route
+app.include_router(poultry_route.router)  # पशुपालन — /farm + अंडे का रेट (/farm/poultry/*)
 
 from backend.routes import admin_dukan as admin_dukan_route
 app.include_router(admin_dukan_route.router)   # /admin/dukan/* — shops, catalogue, prices, UPI collect
