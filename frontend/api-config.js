@@ -34,7 +34,7 @@
   // synchronously, before any page script runs, so it cannot await a fetch.
   window.KRASHIMITRA_API_BASE = isLocal
     ? location.protocol + '//' + (host || 'localhost') + ':' + defaultPort
-    : 'https://krashi-mitra-v1-muup.onrender.com';
+    : 'https://krashi-mitra-v1-mrp4.onrender.com';
   window.KRASHIMITRA_IS_LOCAL = isLocal;
 
   console.log('[KrashiMitra] API base =', window.KRASHIMITRA_API_BASE);
@@ -271,7 +271,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Keep href in sync for hover/middle-click/right-click UX
     btn.href = "/profile.html";
 
-    const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1-muup.onrender.com';
+    const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1-mrp4.onrender.com';
     const cachedAvatar = localStorage.getItem("user_avatar_url");
     if (cachedAvatar && cachedAvatar !== "null") {
       const src = cachedAvatar.startsWith("/") ? apiBase + cachedAvatar : cachedAvatar;

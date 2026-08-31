@@ -1,10 +1,39 @@
+# ── International Country Landing Pages ──────────────────────────────────────
+# These serve static HTML files at krashimitra.in/{country-code} and /international/{country-code}
+# File: frontend/international/{country-code}.html → URL: /bd, /ng, /id, /np, /lk, /us, /uk
+/bd   /international/bd.html   200
+/ng   /international/ng.html   200
+/id   /international/id.html   200
+/np   /international/np.html   200
+/lk   /international/lk.html   200
+/us   /international/us.html   200
+/uk   /international/uk.html   200
+/international/bd   /international/bd.html   200
+/international/ng   /international/ng.html   200
+/international/id   /international/id.html   200
+/international/np   /international/np.html   200
+/international/lk   /international/lk.html   200
+/international/us   /international/us.html   200
+/international/uk   /international/uk.html   200
+
+# Force 301 redirect any direct legacy root html references to international folder
+/bd.html   /international/bd.html   301!
+/ng.html   /international/ng.html   301!
+/id.html   /international/id.html   301!
+/np.html   /international/np.html   301!
+/lk.html   /international/lk.html   301!
+/us.html   /international/us.html   301!
+/uk.html   /international/uk.html   301!
+
+
+
 # Proxy share-preview pages to the backend (crop-specific OG tags for WhatsApp)
-/share/*  https://krashi-mitra-v1-muup.onrender.com/share/:splat  200
-/alerts/*  https://krashi-mitra-v1-muup.onrender.com/alerts/:splat  200
+/share/*  https://krashi-mitra-v1-mrp4.onrender.com/share/:splat  200
+/alerts/*  https://krashi-mitra-v1-mrp4.onrender.com/alerts/:splat  200
 
 # Proxy SEO price pages to the backend (server-rendered "aaj ka bhav" pages)
-/bhav     https://krashi-mitra-v1-muup.onrender.com/bhav/         200
-/bhav/*   https://krashi-mitra-v1-muup.onrender.com/bhav/:splat   200
+/bhav     https://krashi-mitra-v1-mrp4.onrender.com/bhav/         200
+/bhav/*   https://krashi-mitra-v1-mrp4.onrender.com/bhav/:splat   200
 
 # frontend/mandi.html (the old JS-only mandi app) is retired — all mandi data
 # now lives on the server-rendered /bhav tree above. Old bookmarks/backlinks/
@@ -13,24 +42,24 @@
 /mandi        /bhav   301!
 
 # Proxy SEO shop-product pages to the backend (server-rendered product pages)
-/product     https://krashi-mitra-v1-muup.onrender.com/product/         200
-/product/*   https://krashi-mitra-v1-muup.onrender.com/product/:splat   200
+/product     https://krashi-mitra-v1-mrp4.onrender.com/product/         200
+/product/*   https://krashi-mitra-v1-mrp4.onrender.com/product/:splat   200
 
 # कृषि दुकान — the local shop directory (routes/krashi_dukan.py). A different
 # thing from /product above: that is OUR catalogue, this is real shops near the
 # farmer listing their own counter prices. The splat rule also carries
 # /krashi_dukan/sitemap.xml and the catalogue photos at /krashi_dukan/img/*.webp,
 # so neither needs a line of its own.
-/krashi_dukan     https://krashi-mitra-v1-muup.onrender.com/krashi_dukan         200
-/krashi_dukan/*   https://krashi-mitra-v1-muup.onrender.com/krashi_dukan/:splat  200
+/krashi_dukan     https://krashi-mitra-v1-mrp4.onrender.com/krashi_dukan         200
+/krashi_dukan/*   https://krashi-mitra-v1-mrp4.onrender.com/krashi_dukan/:splat  200
 
 # किराये की मशीनें — the farm-equipment hire section (routes/rental.py). The
 # splat also carries /rental/sitemap.xml, which robots.txt declares, so that
 # needs no line of its own. Without these two lines every /rental URL falls
 # through to the catch-all below and 404s on krashimitra.in while answering
 # 200 on Render — exactly how /ganna shipped, so it is written down here too.
-/rental     https://krashi-mitra-v1-muup.onrender.com/rental         200
-/rental/*   https://krashi-mitra-v1-muup.onrender.com/rental/:splat  200
+/rental     https://krashi-mitra-v1-mrp4.onrender.com/rental         200
+/rental/*   https://krashi-mitra-v1-mrp4.onrender.com/rental/:splat  200
 
 # पशुपालन — /farm, and the daily अंडा रेट under it (routes/poultry.py). The
 # splat also carries /farm/poultry/sitemap.xml, which robots.txt declares, so
@@ -38,15 +67,15 @@
 # through to the catch-all below and 404s on krashimitra.in while answering
 # 200 on Render — exactly how /ganna shipped once and /rental nearly shipped
 # again. They are written in the same commit as the routes for that reason.
-/farm     https://krashi-mitra-v1-muup.onrender.com/farm         200
-/farm/*   https://krashi-mitra-v1-muup.onrender.com/farm/:splat  200
+/farm     https://krashi-mitra-v1-mrp4.onrender.com/farm         200
+/farm/*   https://krashi-mitra-v1-mrp4.onrender.com/farm/:splat  200
 
 # Proxy the dealer UPI payment page to the backend (routes/pay.py). Kept on
 # krashimitra.in rather than the Render URL directly: this link goes to a
 # stranger being asked to send real money, and the branded domain he already
 # knows from mandi pages reads as far less scam-shaped than an onrender.com
 # link. Query string (?d=<slug>&amount=<n>) rides through the proxy as-is.
-/pay   https://krashi-mitra-v1-muup.onrender.com/pay   200
+/pay   https://krashi-mitra-v1-mrp4.onrender.com/pay   200
 
 # /donate — the public "support this site" page (routes/donate.py). Server-
 # rendered like /pay because the UPI ID lives only in the environment and the
@@ -54,29 +83,29 @@
 # destination into the repo. Without this line it falls through to the 404
 # catch-all at the bottom while answering 200 on Render — exactly how /ganna
 # shipped once already.
-/donate   https://krashi-mitra-v1-muup.onrender.com/donate   200
+/donate   https://krashi-mitra-v1-mrp4.onrender.com/donate   200
 
 # Root sitemap is generated by the backend from the pages/articles on disk
 # (routes/sitemap.py) — the hand-written frontend/sitemap.xml it replaced kept
 # going stale. Forced (200!) so it wins even if a stale copy is ever restored.
-/sitemap.xml  https://krashi-mitra-v1-muup.onrender.com/sitemap.xml  200!
+/sitemap.xml  https://krashi-mitra-v1-mrp4.onrender.com/sitemap.xml  200!
 
 # llms.txt (AI-agent site guide) is generated by the backend the same way
 # (routes/llms.py) — no static file exists, so proxy it or it hits the 404.
-/llms.txt  https://krashi-mitra-v1-muup.onrender.com/llms.txt  200!
+/llms.txt  https://krashi-mitra-v1-mrp4.onrender.com/llms.txt  200!
 
 # Feature-by-feature status page (routes/health.py) — so the answer to "is
 # anything broken?" lives on the main domain too, not only on the Render URL.
 # Sends noindex itself. The keep-alive/monitor workflows still ping Render
 # directly, so a Netlify outage can never look like a backend outage.
-/health    https://krashi-mitra-v1-muup.onrender.com/health         200!
-/health/*  https://krashi-mitra-v1-muup.onrender.com/health/:splat  200!
+/health    https://krashi-mitra-v1-mrp4.onrender.com/health         200!
+/health/*  https://krashi-mitra-v1-mrp4.onrender.com/health/:splat  200!
 
 # Photo attribution for the article images (routes/credits.py), rendered from
 # CREDITS.json so it cannot fall behind what is actually published. The CC BY /
 # CC BY-SA files we self-host are only licensed to us while this page exists.
 # Exact path, so it does not shadow any /articles/<slug> static file.
-/articles/credits  https://krashi-mitra-v1-muup.onrender.com/articles/credits  200!
+/articles/credits  https://krashi-mitra-v1-mrp4.onrender.com/articles/credits  200!
 
 # Canonical article URLs: 301 old .html forms to extensionless
 # (Netlify already lowercases mixed-case paths with its own 301)
@@ -247,14 +276,14 @@
 # The hub is FORCED first, because /articles/index.html does exist here and
 # would otherwise win — and the hub is the page carrying the card for every new
 # article. The backend serves that same file with the new cards inserted.
-/articles/  https://krashi-mitra-v1-muup.onrender.com/articles/  200!
-/articles/*  https://krashi-mitra-v1-muup.onrender.com/articles/:splat  200
+/articles/  https://krashi-mitra-v1-mrp4.onrender.com/articles/  200!
+/articles/*  https://krashi-mitra-v1-mrp4.onrender.com/articles/:splat  200
 
 # Hero photos for those articles, same story: committed images are served from
 # here, a panel upload only exists on the backend. Worth a rule of its own
 # because a missing image does not fail loudly — og:image and the hub card
 # would simply come up blank and nobody would hear about it.
-/images/articles/*  https://krashi-mitra-v1-muup.onrender.com/images/articles/:splat  200
+/images/articles/*  https://krashi-mitra-v1-mrp4.onrender.com/images/articles/:splat  200
 
 # Canonical core-page URLs: 301 the .html forms to extensionless so Google
 # consolidates signals onto the canonical (internal links may still say .html —
@@ -290,8 +319,8 @@
 # /kharidar/go — the dealer-contact/WhatsApp buttons on /bhav and kharidar
 # pages link here with a root-relative href, so these were 404ing in prod
 # instead of redirecting; this is the monetized click path, not cosmetic)
-/go/*            https://krashi-mitra-v1-muup.onrender.com/go/:splat            200
-/kharidar/go/*   https://krashi-mitra-v1-muup.onrender.com/kharidar/go/:splat   200
+/go/*            https://krashi-mitra-v1-mrp4.onrender.com/go/:splat            200
+/kharidar/go/*   https://krashi-mitra-v1-mrp4.onrender.com/kharidar/go/:splat   200
 
 # A paying dealer's product photos, same bug as /go above and found the same
 # way — on the live site, not in a test. The photo lives in Postgres and is
@@ -304,17 +333,17 @@
 # Proxied rather than switched to an absolute onrender.com src so the URL stays
 # same-origin: it keeps the 7-day cache header working per-domain and avoids a
 # CORS round trip on an <img> a farmer is waiting for.
-/dukanlisting/product-image/*  https://krashi-mitra-v1-muup.onrender.com/dukanlisting/product-image/:splat  200
+/dukanlisting/product-image/*  https://krashi-mitra-v1-mrp4.onrender.com/dukanlisting/product-image/:splat  200
 # The old path, for HTML Google or a CDN cached before the /dukan rename.
-/dukan/product-image/*         https://krashi-mitra-v1-muup.onrender.com/dukanlisting/product-image/:splat  200
+/dukan/product-image/*         https://krashi-mitra-v1-mrp4.onrender.com/dukanlisting/product-image/:splat  200
 
 # Proxy site search to the backend (routes/bhav.py /find — the search form on
 # product hub pages posts here; it was missing and 404ing in prod)
-/find   https://krashi-mitra-v1-muup.onrender.com/find   200
+/find   https://krashi-mitra-v1-mrp4.onrender.com/find   200
 
 # Proxy the Kisan Call Centre Q&A pages to the backend (routes/sawal.py)
-/sawal      https://krashi-mitra-v1-muup.onrender.com/sawal         200
-/sawal/*    https://krashi-mitra-v1-muup.onrender.com/sawal/:splat  200
+/sawal      https://krashi-mitra-v1-mrp4.onrender.com/sawal         200
+/sawal/*    https://krashi-mitra-v1-mrp4.onrender.com/sawal/:splat  200
 
 # The गन्ना cluster is server-rendered too (backend/routes/ganna.py): the hub,
 # the state SAP/FRP pages and the per-district mill directory. It shipped
@@ -323,15 +352,15 @@
 # /ganna, which sitemap.py lists as a hub. We were handing Google a 404.
 # The splat also covers /ganna/sitemap.xml (declared in robots.txt); ganna.py
 # registers that route above its /ganna/{slug} catch-all, so it resolves there.
-/ganna      https://krashi-mitra-v1-muup.onrender.com/ganna         200
-/ganna/*    https://krashi-mitra-v1-muup.onrender.com/ganna/:splat  200
+/ganna      https://krashi-mitra-v1-mrp4.onrender.com/ganna         200
+/ganna/*    https://krashi-mitra-v1-mrp4.onrender.com/ganna/:splat  200
 
 # The नक्शा cluster is server-rendered (backend/routes/naksha.py), like /bhav —
 # there are no per-state HTML files any more. One rule covers all 36 states and
 # both page types.
-/naksha      https://krashi-mitra-v1-muup.onrender.com/naksha         200
-/naksha/*    https://krashi-mitra-v1-muup.onrender.com/naksha/:splat  200
-/map         https://krashi-mitra-v1-muup.onrender.com/map            200
+/naksha      https://krashi-mitra-v1-mrp4.onrender.com/naksha         200
+/naksha/*    https://krashi-mitra-v1-mrp4.onrender.com/naksha/:splat  200
+/map         https://krashi-mitra-v1-mrp4.onrender.com/map            200
 
 # The flat URLs the static build used, before /naksha/<state> replaced them.
 # Only rajasthan ever shipped; the rest are here because a short form is the

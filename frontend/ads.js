@@ -50,7 +50,24 @@
   // actually collecting money, so a competing ad is not a lost click, it is a
   // lost payment. A third-party ad next to a UPI amount also reads as exactly
   // the kind of page a farmer has been told to distrust. The segment match is
-  // whole-segment, so /payment (if it ever exists) is unaffected.
+  // whole-segment, so /payment (if it ever exists) is unaffected. /donate is
+  // here for exactly the same reason, from the other side: it is the page
+  // asking a well-wisher for money, and an ad beside that ask both competes
+  // with it and cheapens it.
+  //
+  // /dukanlisting is here for the same reason as the quote flow, and it is the
+  // one entry whose cost is visible rather than theoretical. The page sells the
+  // listing itself — a district a season at a time — so a dealer who finishes
+  // the form is worth more than every ad impression the page will ever serve.
+  // What forced it was desktop: the account has Auto ads on, and Auto ads'
+  // anchor renders 1005x275 centred over the lower third of a 1366px window —
+  // landing squarely on the login card and the plan tiles — while its in-page
+  // unit is injected at the full body width, 1424px against this page's 760px
+  // column. Neither is ours to place or to size: they arrive with the
+  // adsbygoogle.js loader, and the only page-level switch for them is not
+  // loading it. Dropping the ?client= from the loader does NOT help — measured
+  // 2026-08-28, both units still appeared. On a phone the anchor is a thin bar,
+  // which is why the page looked fine everywhere we normally check.
   //
   // /map is deliberately NOT here, though it reads like one of the tools. It is
   // not a tool: naksha.py's up_map() renders it through the same _state_page()
@@ -58,7 +75,7 @@
   // meant the one state page every page's utility bar links to — Uttar Pradesh,
   // which also carries the cluster's search history — was the single state of
   // 36 that could not earn, while /naksha/bihar and the rest did.
-  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay)(\.html)?(\/|$)/;
+  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay|donate|dukanlisting)(\.html)?(\/|$)/;
 
   // Blocks an ad must never be wedged into or placed directly before.
   var SKIP = '.answer,.hero,.crumbs,.km-ad,.ad-slot-wrap,.ad-slot-pair,.lead-gen,' +
@@ -77,7 +94,7 @@
     // padding and the label, so our box must not stack a second set on top.
     '.km-ad-slot .km-ad{margin:0}' +
     // Belt-and-braces for the JS collapse below: an unfilled unit never leaves a gap.
-    '.km-ad ins[data-ad-status="unfilled"]{display:none!important}';
+    '.km-ad ins[data-ad-status^="unfill"]{display:none!important}';
 
   function css() {
     if (document.getElementById(STYLE_ID)) return;
@@ -136,7 +153,12 @@
     var settled = false;
     function verdict() {
       var st = ins.getAttribute('data-ad-status');
-      if (st === 'unfilled') { settled = true; collapse(ins); return true; }
+      // Not just 'unfilled': AdSense also answers 'unfill-optimized' when it
+      // declines to request the slot at all. Matching the exact string meant that
+      // verdict fell through to the GIVE_UP timeout, which sees the stub iframe
+      // AdSense leaves behind and therefore keeps the box — so a dead slot stood
+      // for nine seconds as a ~350px hole under a live 'विज्ञापन' label.
+      if (st && st.indexOf('unfill') === 0) { settled = true; collapse(ins); return true; }
       if (st === 'filled')   { settled = true; return true; }
       return false;
     }

@@ -1,4 +1,6 @@
 .env
+*.env
+krashi-mitra-V1.env
 __pycache__
 .vscode
 rag/chroma_db
