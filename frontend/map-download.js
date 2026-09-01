@@ -47,7 +47,7 @@
       districts: 75, region: 'उत्तर भारत',
       png:  abs('images/up-ka-naksha-district-map.png'),
       file: 'up-ka-naksha-75-jile.png',
-      page: '/map'
+      page: '/naksha/uttar-pradesh'
     },
     'rajasthan': {
       hi: 'राजस्थान', en: 'Rajasthan', kn: 'ರಾಜಸ್ಥಾನ',

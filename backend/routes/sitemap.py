@@ -83,6 +83,15 @@ CORE = [
     ("terms.html",          "/terms",           0.3, "yearly", (), ()),
     # login.html is deliberately absent — the page is noindex.
     ("articles/index.html", "/articles/",       0.9, "daily",  ("hi", "en", "kn"), ()),
+    # International Hub & Dedicated Country Portals
+    ("international/index.html", "/international", 0.9, "weekly", (), ()),
+    ("international/us.html",    "/us",            0.8, "weekly", (), ()),
+    ("international/uk.html",    "/uk",            0.8, "weekly", (), ()),
+    ("international/np.html",    "/np",            0.8, "weekly", (), ()),
+    ("international/bd.html",    "/bd",            0.8, "weekly", (), ()),
+    ("international/id.html",    "/id",            0.8, "weekly", (), ()),
+    ("international/ng.html",    "/ng",            0.8, "weekly", (), ()),
+    ("international/lk.html",    "/lk",            0.8, "weekly", (), ()),
 ]
 
 # Hubs only. The full lists live in /bhav/sitemap.xml, /product/sitemap.xml,

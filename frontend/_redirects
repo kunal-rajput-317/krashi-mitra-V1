@@ -15,6 +15,9 @@
 /international/lk   /international/lk.html   200
 /international/us   /international/us.html   200
 /international/uk   /international/uk.html   200
+/international      /international/index.html 200
+/international/*    /international/index.html 200
+/global             /international/index.html 200
 
 # Force 301 redirect any direct legacy root html references to international folder
 /bd.html   /international/bd.html   301!

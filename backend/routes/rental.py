@@ -415,6 +415,17 @@ def _tile(item: dict, cls: str, size: int, eager: bool = False) -> str:
                 f'<img src="{_IMG_URL}/{escape(slug)}.webp" alt="{escape(alt)}" '
                 f'loading="{loading}"{priority} decoding="async" '
                 f'width="400" height="300"></div>')
+    # Fall back to a Wikimedia Commons URL when the item carries one
+    wiki_img = item.get("wiki_img") or ""
+    if wiki_img:
+        name_en = item.get("name_en") or ""
+        alt = f"{item['name_hi']} किराये पर" + (f" — {name_en} on rent" if name_en else "")
+        loading = "eager" if eager else "lazy"
+        priority = ' fetchpriority="high"' if eager else ""
+        return (f'<div class="{cls} has-photo">'
+                f'<img src="{escape(wiki_img)}" alt="{escape(alt)}" '
+                f'loading="{loading}"{priority} decoding="async" '
+                f'width="400" height="300" referrerpolicy="no-referrer"></div>')
     return (f'<div class="{cls}" style="display:flex;align-items:center;'
             f'justify-content:center;font-size:{size}px">{escape(item.get("emoji") or "🚜")}</div>')
 

@@ -4,32 +4,32 @@
   "categories": [
     {
       "key": "tillage",
-      "label_hi": "🚜 जुताई व भूमि तैयारी",
+      "label_hi": "जुताई व भूमि तैयारी",
       "intro_hi": "खेत तैयार करने की मशीनें — ट्रैक्टर से लेकर लेज़र लेवलर तक। इनका किराया ज़्यादातर प्रति घंटा या प्रति एकड़ लिया जाता है।"
     },
     {
       "key": "sowing",
-      "label_hi": "🌱 बुवाई व रोपाई",
+      "label_hi": "बुवाई व रोपाई",
       "intro_hi": "बीज बोने और पौध रोपने की मशीनें। इनका किराया लगभग हमेशा प्रति एकड़ होता है, और सीज़न के 15–20 दिन में ही पूरी माँग निकलती है।"
     },
     {
       "key": "irrigation",
-      "label_hi": "💧 सिंचाई",
+      "label_hi": "सिंचाई",
       "intro_hi": "पानी चलाने के पंप और छिड़काव सेट। पंप का किराया घंटे के हिसाब से चलता है और डीज़ल आमतौर पर किसान का अपना लगता है।"
     },
     {
       "key": "protection",
-      "label_hi": "🛡️ छिड़काव व फसल सुरक्षा",
+      "label_hi": "छिड़काव व फसल सुरक्षा",
       "intro_hi": "दवा और खाद के छिड़काव की मशीनें, हाथ के स्प्रेयर से लेकर ड्रोन तक। किराया प्रति एकड़ चलता है, दवा किसान की अपनी।"
     },
     {
       "key": "harvest",
-      "label_hi": "🌾 कटाई, मड़ाई व चारा",
+      "label_hi": "कटाई, मड़ाई व चारा",
       "intro_hi": "फसल काटने, दाना निकालने और भूसा-चारा बनाने की मशीनें। सीज़न में इनकी बुकिंग सबसे पहले भरती है।"
     },
     {
       "key": "haulage",
-      "label_hi": "🚛 ढुलाई व मिट्टी का काम",
+      "label_hi": "ढुलाई व मिट्टी का काम",
       "intro_hi": "माल ढोने और खेत-मेड़ का काम करने वाली मशीनें। किराया ट्रिप, किलोमीटर या घंटे — तीनों तरह से चलता है।"
     }
   ],
@@ -248,6 +248,8 @@
       "slug": "super-seeder",
       "cat": "sowing",
       "emoji": "🔁",
+      "wiki_img": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Agriculture_in_India_tractor_farming_Punjab_preparing_field_for_a_wheat_crop_without_burning_previous_crop_stalk.jpg/1280px-Agriculture_in_India_tractor_farming_Punjab_preparing_field_for_a_wheat_crop_without_burning_previous_crop_stalk.jpg",
+      "wiki_credit": "Yann Forget / Wikimedia Commons / CC BY-SA 3.0",
       "name_hi": "सुपर सीडर",
       "name_en": "Super Seeder",
       "spec_hi": "55+ HP ट्रैक्टर चाहिए",
@@ -644,6 +646,8 @@
       "slug": "mini-truck",
       "cat": "haulage",
       "emoji": "🛻",
+      "wiki_img": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Tata_Ace_Mini_Truck_%281%29.JPG",
+      "wiki_credit": "Biswarup Ganguly / Wikimedia Commons / CC BY 3.0",
       "name_hi": "छोटा टेम्पो / मिनी-ट्रक",
       "name_en": "Mini Truck / Pickup",
       "spec_hi": "1–4 टन",
@@ -673,6 +677,8 @@
       "slug": "truck",
       "cat": "haulage",
       "emoji": "🚚",
+      "wiki_img": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Tata_Super_Ace_display.jpg/1280px-Tata_Super_Ace_display.jpg",
+      "wiki_credit": "Biswarup Ganguly / Wikimedia Commons / CC BY 3.0",
       "name_hi": "ट्रक",
       "name_en": "Truck",
       "spec_hi": "9–16 टन",

@@ -118,6 +118,7 @@
     '🧺':  { hi: 'कृषि बाज़ार',    en: 'Bazaar',      kn: 'ಬಜಾರ್' },
     '📰':  { hi: 'कृषि लेख',      en: 'Articles',    kn: 'ಲೇಖನಗಳು' },
     '🏛️': { hi: 'सरकारी योजना',   en: 'Govt Schemes', kn: 'ಸರ್ಕಾರಿ ಯೋಜನೆ' },
+    '🌐':  { hi: 'ग्लोबल कृषि',    en: 'Global Edition', kn: 'ಗ್ಲೋಬಲ್ ಕೃಷಿ' },
     '💬':  { hi: 'सहायता',        en: 'Help',        kn: 'ಸಹಾಯ' },
     '👤':  { hi: 'प्रोफ़ाइल',      en: 'Profile',     kn: 'ಪ್ರೊಫೈಲ್' }
   };
@@ -136,6 +137,7 @@
     '🔍': '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="' + LEAF + '" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
     '🗺️': '<svg viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.6"/></svg>',
     '🧺': '<svg viewBox="0 0 24 24"><path d="M8 10 10.6 5M16 10 13.4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4.3 10.2 5.6 18a1.5 1.5 0 0 0 1.48 1.25h9.84A1.5 1.5 0 0 0 18.4 18l1.3-7.8Z" fill="currentColor"/><path d="M3 10.2h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 13v3.4M12 13v3.4M15 13v3.4" stroke="' + LEAF + '" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    '🌐': '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 12h17M12 3.5c2.2 2.4 2.2 14.6 0 17M12 3.5c-2.2 2.4-2.2 14.6 0 17" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
     '📰': '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="13.5" height="14" rx="1.5" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6"/><path d="M17.5 8H20v9a2 2 0 0 1-2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 9h5M7 12h7.5M7 15h7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
     '🏛️': '<svg viewBox="0 0 24 24"><path d="M12 3 3.5 7.4V9h17V7.4L12 3Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 10.5v6.5M10 10.5v6.5M14 10.5v6.5M18 10.5v6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 19.5h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
     '💬': '<svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9.5L5 19.5V16a2 2 0 0 1-1-2V6Z" fill="currentColor"/><path d="M8.5 9h7M8.5 12h4.5" stroke="' + CREAM + '" stroke-width="1.7" stroke-linecap="round"/></svg>',
@@ -205,13 +207,18 @@
     'border-radius:16px;padding:5px 9px;font-family:inherit;font-size:12px;font-weight:700;color:#2d3748;cursor:pointer}' +
     '.km-lang-btn svg{width:14px;height:14px;color:' + OLIVE + '}' +
     '.km-lang-caret{font-size:9px;color:#8a958f}' +
-    '.km-lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:132px;background:#fff;' +
-    'border:1px solid #e6ece8;border-radius:12px;box-shadow:0 8px 24px rgba(20,40,30,.14);padding:5px;z-index:20;flex-direction:column;gap:2px}' +
+    '.km-lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:160px;background:#fff;' +
+    'border:1px solid #e6ece8;border-radius:12px;box-shadow:0 8px 24px rgba(20,40,30,.14);padding:6px;z-index:20;flex-direction:column;gap:2px}' +
     '.km-lang-menu.open{display:flex}' +
-    '.km-lang-menu button{text-align:left;background:none;border:none;border-radius:8px;padding:8px 10px;' +
+    '.km-lang-menu button{text-align:left;background:none;border:none;border-radius:8px;padding:7px 10px;' +
     'font-family:inherit;font-size:13px;font-weight:600;color:#2d3748;cursor:pointer}' +
     '.km-lang-menu button:hover{background:#f2f8f4}' +
-    '.km-lang-menu button.active{background:#eaf6ed;color:#2d6a4f;font-weight:800}';
+    '.km-lang-menu button.active{background:#eaf6ed;color:#2d6a4f;font-weight:800}' +
+    '.km-lang-sep{height:1px;background:#eef2ef;margin:5px 2px}' +
+    '.km-lang-sectitle{font-size:10px;font-weight:800;color:#718096;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;margin-top:2px}' +
+    '.km-lang-menu a, .km-hlang-menu a{display:flex;align-items:center;gap:6px;text-align:left;text-decoration:none;border-radius:8px;padding:6px 9px;font-family:inherit;font-size:12px;font-weight:600;color:#2d3748;transition:background .15s}' +
+    '.km-lang-menu a:hover, .km-hlang-menu a:hover{background:#f2f8f4;color:#1a3c2e}' +
+    '.km-lang-menu a.active, .km-hlang-menu a.active{background:#eaf6ed;color:#2d6a4f;font-weight:800}';
 
   // Canonical order + category for every known drawer item, keyed by its emoji.
   var HOME = ['🏠'];
@@ -220,7 +227,7 @@
     { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '🗺️', '🗺'] }, // मौसम · मेरी फसल · कृषि मानचित्र
     { key: 'industry', ico: 'industry', set: ['🏪', '🥚', '🚜', '🛒', '⚙️', '🤝'] },
     { key: 'news',     ico: 'news',     set: ['📰', '🏛️', '🏛'] },
-    { key: 'other',    ico: 'other',    set: ['🔍', '🧺'] } // कृषि खोज · कृषि बाज़ार
+    { key: 'other',    ico: 'other',    set: ['🔍', '🧺', '🌐'] } // कृषि खोज · कृषि बाज़ार · ग्लोबल कृषि
   ];
 
   // Items retired from the menu, mapped to the item that inherits their
@@ -237,27 +244,6 @@
   var HREF = { '🏪': '/bhav' };
 
   // ---- The canonical menu, in full -----------------------------------
-  // The drawer used to be only as complete as whatever flat links each page
-  // happened to ship, and no two page generations shipped the same set: the
-  // /bhav + /product trees carry no मेरी फसल and no प्रोफ़ाइल, /dukanlisting
-  // carries no मंडी भाव at all, and 404/login/terms/privacy/articles-index are
-  // each missing something else. Same hamburger, different menu — the farmer
-  // couldn't learn where anything was.
-  //
-  // So this file now guarantees the whole set instead of merely regrouping
-  // what it finds: anything a page didn't ship gets synthesised here, which is
-  // how 🚜 net-price and 🤝 dukanlisting already reached all ~44 static pages
-  // plus the server-rendered trees from one edit. Pages written later inherit
-  // a complete menu by shipping the standard shell.
-  //
-  // `at` marks the page the link points at, so a synthesised entry can still
-  // show "you are here" (only reachable when the page itself omitted the link
-  // — e.g. /dukanlisting, whose own drawer has no 🤝).
-  //
-  // Hrefs are root-absolute, and keep the .html suffix for the static pages:
-  // the extensionless forms are the prod canonicals (Netlify 301s .html → them,
-  // see frontend/_redirects) but only .html resolves under Live Server in dev,
-  // and every page's own drawer already links the .html form.
   var INVENTORY = [
     { k: '🏠',  href: '/index.html',          at: /^\/(index\.html)?$/ },
     { k: '🌤️', href: '/weather.html',        at: /^\/weather(\.html)?$/ },
@@ -271,6 +257,7 @@
     { k: '🤝',  href: '/dukanlisting',        at: /^\/dukanlisting/ },
     { k: '🔍',  href: '/khoj.html',           at: /^\/khoj(\.html)?$/ },
     { k: '🧺',  href: '/krashi_bajar.html',   at: /^\/krashi_bajar(\.html)?$/ },
+    { k: '🌐',  href: '/international',       at: /^\/(international|global)(\.html)?(\/|$)/ },
     { k: '📰',  href: '/articles/',           at: /^\/articles(\/|$)/ },
     { k: '🏛️', href: '/sarkari_yojana.html', at: /^\/sarkari_yojana(\.html)?$/ },
     { k: '💬',  href: '/chat.html',           at: /^\/chat(\.html)?$/ },
@@ -587,7 +574,43 @@
           chooseLang(o.getAttribute('data-lang'));
         });
       });
+      appendCountrySection(menu);
       document.addEventListener('click', function () { menu.classList.remove('open'); });
+    });
+  }
+
+  var COUNTRIES = [
+    { name: '🌐 Global Hub', href: '/international' },
+    { name: '🇺🇸 United States', href: '/us' },
+    { name: '🇬🇧 United Kingdom', href: '/uk' },
+    { name: '🇳🇵 Nepal (नेपाल)', href: '/np' },
+    { name: '🇧🇩 Bangladesh (বাংলা)', href: '/bd' },
+    { name: '🇮🇩 Indonesia', href: '/id' },
+    { name: '🇳🇬 Nigeria', href: '/ng' },
+    { name: '🇱🇰 Sri Lanka', href: '/lk' },
+    { name: '🇮🇳 India (भारत)', href: '/' }
+  ];
+
+  function appendCountrySection(menuEl) {
+    if (!menuEl || menuEl.querySelector('.km-lang-sectitle')) return;
+    var sep = document.createElement('div');
+    sep.className = 'km-lang-sep';
+    menuEl.appendChild(sep);
+
+    var title = document.createElement('div');
+    title.className = 'km-lang-sectitle';
+    title.textContent = 'Country Editions';
+    menuEl.appendChild(title);
+
+    var currentPath = location.pathname;
+    COUNTRIES.forEach(function (c) {
+      var a = document.createElement('a');
+      a.href = c.href;
+      a.textContent = c.name;
+      if (c.href === '/' ? (currentPath === '/' || currentPath === '/index.html') : currentPath.indexOf(c.href) === 0) {
+        a.classList.add('active');
+      }
+      menuEl.appendChild(a);
     });
   }
 
@@ -616,7 +639,7 @@
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'km-lang-btn';
-    btn.setAttribute('aria-label', 'Language');
+    btn.setAttribute('aria-label', 'Language & Country');
     btn.innerHTML = ICONS.globe + '<span class="km-lang-cur"></span><span class="km-lang-caret">▾</span>';
 
     var menu = document.createElement('div');
@@ -633,6 +656,7 @@
       });
       menu.appendChild(o);
     });
+    appendCountrySection(menu);
 
     btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
     document.addEventListener('click', function () { menu.classList.remove('open'); });

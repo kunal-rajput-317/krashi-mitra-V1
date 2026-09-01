@@ -411,6 +411,9 @@ app.include_router(sitemap_route.router)  # /sitemap.xml — generated from the 
 from backend.routes import llms as llms_route
 app.include_router(llms_route.router)   # /llms.txt — AI-agent site guide, generated like the sitemap
 
+from backend.routes import international as international_route
+app.include_router(international_route.router)  # /international, /us, /uk, /np, /bd, /id, /ng, /lk
+
 from backend.routes import health as health_route
 app.include_router(health_route.router)  # /health (page + liveness), /health/checks, /health/data
 
