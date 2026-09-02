@@ -64,6 +64,8 @@ CORE = [
     ("index.html",          "/",                1.0, "daily",  ("hi",),
      ("/assets/hero-section-photo.webp",)),
     ("meri_fasal.html",     "/meri_fasal",      0.9, "weekly", ("hi",), ()),
+    ("krashi_news.html",    "/krashi_news",     0.9, "daily",  ("hi",),
+     ("/images/og-banner.jpg",)),
     ("shop.html",           "/shop",            0.9, "daily",  ("hi", "en", "kn"),
      ("/images/shop-hero.webp",)),
     ("krashi_bajar.html",   "/krashi_bajar",    0.9, "daily",  ("hi", "en", "kn"), ()),

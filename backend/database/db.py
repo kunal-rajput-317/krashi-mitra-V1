@@ -2907,8 +2907,33 @@ def _ensure_foreign_keys():
 # Postgres only infers a partial index as the arbiter when the INSERT repeats
 # that predicate. Dropping the full index here without repeating it in the
 # insert is what broke every mandi fetch on 30 Jul 2026 with
-# InvalidColumnReference. mandi_fetch_service now passes the matching
-# index_where — keep the two in step if either side ever changes.
+# ── KRASHI NEWS COMMUNITY MODELS (LIKES & COMMENTS) ─────────
+
+class NewsComment(Base):
+    __tablename__ = "news_comments"
+
+    id           = Column(Integer,  primary_key=True, index=True)
+    news_id      = Column(String(64), nullable=False, index=True)
+    author_name  = Column(String(80), nullable=False)
+    location     = Column(String(100), nullable=True)
+    comment_text = Column(Text, nullable=False)
+    created_at   = Column(DateTime, default=datetime.utcnow, index=True)
+    is_approved  = Column(Boolean, default=True)
+
+
+class NewsLike(Base):
+    __tablename__ = "news_likes"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    news_id         = Column(String(64), nullable=False, index=True)
+    user_identifier = Column(String(128), nullable=False)
+    created_at      = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("news_id", "user_identifier", name="uq_news_user_like"),
+    )
+
+
 _DEAD_INDEXES = [
     "ix_mandi_price_history_row_key",
     "mandi_history_group_dt_idx",

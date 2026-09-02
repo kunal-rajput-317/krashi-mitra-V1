@@ -77,6 +77,20 @@
     (document.head || document.documentElement).appendChild(s);
   })();
 
+  // ---- Shell bootstrap: km-gamify.js ----------------------------------
+  // Gamification & streak engine: records daily Mandi Bhav check streak,
+  // Meri Fasal crop logging, badge awards and farmer levels across all pages.
+  (function bootGamify() {
+    if (document.querySelector('script[src*="km-gamify.js"]')) return;
+    var me = document.currentScript ||
+             document.querySelector('script[src*="drawer-menu.js"]');
+    if (!me || !me.src) return;
+    var s = document.createElement('script');
+    s.src = new URL('km-gamify.js', me.src).href;
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  })();
+
   var OLIVE = '#6f7f3a', LEAF = '#b3c47f', CREAM = '#eef3e0';
 
   // Menu tiers are colour-coded so depth is readable at a glance: forest green
@@ -105,6 +119,7 @@
     '🏠':  { hi: 'मुख्य',          en: 'Home',        kn: 'ಮುಖ್ಯ' },
     '🌤️': { hi: 'मौसम',          en: 'Weather',     kn: 'ಹವಾಮಾನ' },
     '🌱':  { hi: 'मेरी फसल',      en: 'My Crop',     kn: 'ನನ್ನ ಬೆಳೆ' },
+    '📐':  { hi: 'खेत नापें',      en: 'Field Measure', kn: 'ಹೊಲ ಅಳತೆ' },
     '🏪':  { hi: 'मंडी भाव',      en: 'Mandi Rates', kn: 'ಮಂಡಿ ದರ' },
     // '📈' सभी भाव सूची is retired — see DROP below. No label/icon needed: a
     // dropped link never reaches claim() or applyMenuLang().
@@ -116,6 +131,7 @@
     '🔍':  { hi: 'कृषि खोज',      en: 'Search',      kn: 'ಹುಡುಕಿ' },
     '🗺️': { hi: 'कृषि मानचित्र',  en: 'Map',         kn: 'ನಕ್ಷೆ' },
     '🧺':  { hi: 'कृषि बाज़ार',    en: 'Bazaar',      kn: 'ಬಜಾರ್' },
+    '📢':  { hi: 'कृषि न्यूज़',    en: 'Krashi News', kn: 'ಕೃಷಿ ಸುದ್ದಿ' },
     '📰':  { hi: 'कृषि लेख',      en: 'Articles',    kn: 'ಲೇಖನಗಳು' },
     '🏛️': { hi: 'सरकारी योजना',   en: 'Govt Schemes', kn: 'ಸರ್ಕಾರಿ ಯೋಜನೆ' },
     '🌐':  { hi: 'ग्लोबल कृषि',    en: 'Global Edition', kn: 'ಗ್ಲೋಬಲ್ ಕೃಷಿ' },
@@ -128,6 +144,7 @@
     '🏠': '<svg viewBox="0 0 24 24"><path d="M11.3 3.5 3.6 10a1 1 0 0 0 .65 1.76H5.5V19A1.5 1.5 0 0 0 7 20.5h3v-4.2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.2h3A1.5 1.5 0 0 0 18.5 19v-7.24h1.25A1 1 0 0 0 20.4 10l-7.7-6.5a1.1 1.1 0 0 0-1.4 0Z" fill="currentColor"/></svg>',
     '🌤️': '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="' + LEAF + '"/><g stroke="' + LEAF + '" stroke-width="1.6" stroke-linecap="round"><path d="M9 2.5v1.4M9 12.1v1.4M2.9 8h1.4M13.7 8h1.4M4.7 3.7l1 1M12.3 11.3l1 1M13.3 3.7l-1 1M5.7 11.3l-1 1"/></g><path d="M9.2 19a3.4 3.4 0 0 1 .2-6.8 4.4 4.4 0 0 1 8.4 1.3A2.9 2.9 0 0 1 17.4 19H9.2Z" fill="currentColor"/></svg>',
     '🌱': '<svg viewBox="0 0 24 24"><path d="M12 20.5V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12.3 13.5c0-3 2.4-5.2 5.7-5.2 0 3-2.4 5.2-5.7 5.2Z" fill="' + LEAF + '"/><path d="M11.7 12c0-2.9-2.3-4.8-5.2-4.8 0 2.9 2.3 4.8 5.2 4.8Z" fill="currentColor"/><path d="M9 20.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    '📐': '<svg viewBox="0 0 24 24"><path d="M4 19.5V5a1 1 0 0 1 1.7-.7l14.8 14.8a1 1 0 0 1-.7 1.7H5a1 1 0 0 1-1-.8Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 16.5l7-7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="1.5 2"/><path d="M4 8.5h2.5M4 12h4M4 15.5h2.5M12 19.5v-2.5M15.5 19.5v-4M8.5 19.5v-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
     '🏪': '<svg viewBox="0 0 24 24"><path d="M4 9h16l-1.1-4.2A1 1 0 0 0 17.94 4H6.06a1 1 0 0 0-.96.8L4 9Z" fill="' + LEAF + '"/><path d="M5.2 9v9.5A1.5 1.5 0 0 0 6.7 20h10.6a1.5 1.5 0 0 0 1.5-1.5V9" fill="currentColor"/><rect x="9" y="13" width="6" height="7" rx="0.6" fill="' + LEAF + '"/></svg>',
     '🚜': '<svg viewBox="0 0 24 24"><path d="M5 7.5h4.2a1 1 0 0 1 .95.68L11.6 12H5a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1Z" fill="' + LEAF + '"/><path d="M12.4 12l-1-3h4.3a1 1 0 0 1 .94.66L17.7 12Z" fill="currentColor"/><path d="M3 13.2h16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="17" r="3.9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.2" cy="18" r="2.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
     '🛒': '<svg viewBox="0 0 24 24"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.6" fill="currentColor"/><circle cx="16.5" cy="19" r="1.6" fill="currentColor"/></svg>',
@@ -137,6 +154,7 @@
     '🔍': '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="' + LEAF + '" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
     '🗺️': '<svg viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.6"/></svg>',
     '🧺': '<svg viewBox="0 0 24 24"><path d="M8 10 10.6 5M16 10 13.4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4.3 10.2 5.6 18a1.5 1.5 0 0 0 1.48 1.25h9.84A1.5 1.5 0 0 0 18.4 18l1.3-7.8Z" fill="currentColor"/><path d="M3 10.2h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 13v3.4M12 13v3.4M15 13v3.4" stroke="' + LEAF + '" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    '📢': '<svg viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1Z" fill="currentColor"/><path d="M17 9a4.5 4.5 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11" stroke="' + LEAF + '" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>',
     '🌐': '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 12h17M12 3.5c2.2 2.4 2.2 14.6 0 17M12 3.5c-2.2 2.4-2.2 14.6 0 17" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
     '📰': '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="13.5" height="14" rx="1.5" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6"/><path d="M17.5 8H20v9a2 2 0 0 1-2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 9h5M7 12h7.5M7 15h7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
     '🏛️': '<svg viewBox="0 0 24 24"><path d="M12 3 3.5 7.4V9h17V7.4L12 3Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 10.5v6.5M10 10.5v6.5M14 10.5v6.5M18 10.5v6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 19.5h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
@@ -224,9 +242,9 @@
   var HOME = ['🏠'];
   var FOOTER = ['💬', '👤'];
   var GROUPS = [
-    { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '🗺️', '🗺'] }, // मौसम · मेरी फसल · कृषि मानचित्र
+    { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '📐', '🗺️', '🗺'] }, // मौसम · मेरी फसल · खेत नापें · कृषि मानचित्र
     { key: 'industry', ico: 'industry', set: ['🏪', '🥚', '🚜', '🛒', '⚙️', '🤝'] },
-    { key: 'news',     ico: 'news',     set: ['📰', '🏛️', '🏛'] },
+    { key: 'news',     ico: 'news',     set: ['📢', '📰', '🏛️', '🏛'] },
     { key: 'other',    ico: 'other',    set: ['🔍', '🧺', '🌐'] } // कृषि खोज · कृषि बाज़ार · ग्लोबल कृषि
   ];
 
@@ -241,14 +259,15 @@
   // the same reason INVENTORY below is: drawer markup lives at several
   // directory depths and /bhav is served by the backend, so a relative path
   // would resolve wrong from /articles/ or from inside the /bhav tree.
-  var HREF = { '🏪': '/bhav' };
+  var HREF = { '🏪': '/bhav', '📐': '/naksha' };
 
   // ---- The canonical menu, in full -----------------------------------
   var INVENTORY = [
     { k: '🏠',  href: '/index.html',          at: /^\/(index\.html)?$/ },
     { k: '🌤️', href: '/weather.html',        at: /^\/weather(\.html)?$/ },
     { k: '🌱',  href: '/meri_fasal.html',     at: /^\/meri_fasal(\.html)?$/ },
-    { k: '🗺️', href: '/map.html',            at: /^\/(map|naksha)(\.html)?(\/|$)/ },
+    { k: '📐',  href: '/naksha',              at: /^\/naksha(\/|$)/ },
+    { k: '🗺️', href: '/map.html',            at: /^\/(map)(\.html)?(\/|$)/ },
     { k: '🏪',  href: '/bhav',                at: /^\/bhav(\/(?!net-price)|$)/ },
     { k: '🚜',  href: '/bhav/net-price',      at: /^\/bhav\/net-price/ },
     { k: '🛒',  href: '/shop.html',           at: /^\/shop(\.html)?$/ },
@@ -258,6 +277,7 @@
     { k: '🔍',  href: '/khoj.html',           at: /^\/khoj(\.html)?$/ },
     { k: '🧺',  href: '/krashi_bajar.html',   at: /^\/krashi_bajar(\.html)?$/ },
     { k: '🌐',  href: '/international',       at: /^\/(international|global)(\.html)?(\/|$)/ },
+    { k: '📢',  href: '/krashi_news.html',    at: /^\/krashi_news(\.html)?$/ },
     { k: '📰',  href: '/articles/',           at: /^\/articles(\/|$)/ },
     { k: '🏛️', href: '/sarkari_yojana.html', at: /^\/sarkari_yojana(\.html)?$/ },
     { k: '💬',  href: '/chat.html',           at: /^\/chat(\.html)?$/ },

@@ -26,6 +26,7 @@
     })();
   </script>
   <script src="api-config.js" defer></script>
+  <script src="km-gamify.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>किसान प्रोफाइल | KrashiMitra</title>
   <link rel="icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/png">
@@ -812,6 +813,152 @@
     transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
   .sidebar-lang-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+
+  /* ── ACHIEVEMENTS & GAMIFICATION TAB ── */
+  .ach-level-card {
+    background: linear-gradient(135deg, #1a3c2e 0%, #2d6a4f 100%);
+    color: #ffffff;
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: var(--shadow);
+  }
+  .ach-level-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .ach-level-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ach-level-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid #52b788;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+  }
+  .ach-level-title { font-size: 20px; font-weight: 800; color: #ffffff; }
+  .ach-level-sub { font-size: 13px; color: #d8f3dc; margin-top: 2px; }
+  .ach-xp-pill {
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 800;
+    font-size: 14px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ach-progress-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .ach-progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: #d8f3dc; font-weight: 600; }
+  .ach-progress-track {
+    height: 10px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .ach-progress-fill {
+    height: 100%;
+    background: #52b788;
+    border-radius: 6px;
+    transition: width 0.4s ease;
+  }
+
+  .ach-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .ach-stat-box {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .ach-stat-ico { font-size: 28px; }
+  .ach-stat-num { font-size: 18px; font-weight: 800; color: var(--green-dark); }
+  .ach-stat-lbl { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+  .ach-badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .ach-badge-card {
+    background: #ffffff;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s;
+  }
+  .ach-badge-card.unlocked {
+    border-color: #52b788;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+    box-shadow: 0 4px 14px rgba(45,106,79,0.08);
+  }
+  .ach-badge-card.locked {
+    opacity: 0.65;
+    background: #f8fafc;
+    border-style: dashed;
+  }
+  .ach-badge-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .ach-badge-ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #eaf6ed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .ach-badge-card.locked .ach-badge-ico { background: #e2e8f0; filter: grayscale(1); }
+  .ach-badge-name { font-size: 15px; font-weight: 800; color: var(--green-dark); }
+  .ach-badge-desc { font-size: 12px; color: #64748b; line-height: 1.4; margin-top: 2px; }
+  .ach-badge-bottom {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ach-badge-status { font-size: 11.5px; font-weight: 700; color: #15803d; }
+  .ach-badge-card.locked .ach-badge-status { color: #94a3b8; }
+  .ach-badge-share {
+    background: #25D366;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
 </style>
 </head>
 <body>
@@ -1024,6 +1171,7 @@
     <button class="tab-btn active" role="tab" onclick="switchTab('personal', event)">👤 व्यक्तिगत</button>
     <button class="tab-btn" role="tab" onclick="switchTab('farm', event)">🌾 खेत</button>
     <button class="tab-btn" role="tab" onclick="switchTab('crops', event)">🌱 फसल</button>
+    <button class="tab-btn" role="tab" onclick="switchTab('achievements', event)">🏆 उपलब्धियां व स्ट्रीक</button>
     <button class="tab-btn" role="tab" onclick="switchTab('schemes', event)">🏛️ योजना</button>
     <button class="tab-btn" role="tab" onclick="switchTab('prefs', event)">⚙️ सेटिंग</button>
   </div>
@@ -1105,6 +1253,81 @@
           <div class="field full"><div class="info-box"><span class="info-box-icon">💡</span><span>फसल की जानकारी भरने से AI सहायक आपको <strong>सटीक और व्यक्तिगत कृषि सलाह</strong> दे पाएगा।</span></div></div>
         </div>
       </div>
+    </div>
+
+    <!-- ── Tab: Achievements & Gamification ── -->
+    <div class="tab-panel" id="tab-achievements">
+      
+      <!-- Farmer Level & XP Card -->
+      <div class="ach-level-card">
+        <div class="ach-level-header">
+          <div class="ach-level-info">
+            <div class="ach-level-icon" id="ach-level-icon">🌱</div>
+            <div>
+              <div class="ach-level-title" id="ach-level-name">नौसिखिया किसान</div>
+              <div class="ach-level-sub" id="ach-level-sub">नियमित टूल्स उपयोग से अपना स्तर बढ़ाएं</div>
+            </div>
+          </div>
+          <div class="ach-xp-pill" id="ach-xp-display">⚡ 20 XP</div>
+        </div>
+
+        <div class="ach-progress-wrap">
+          <div class="ach-progress-labels">
+            <span id="ach-prog-cur">स्तर प्रगति</span>
+            <span id="ach-prog-pct">20%</span>
+          </div>
+          <div class="ach-progress-track">
+            <div class="ach-progress-fill" id="ach-progress-fill" style="width: 20%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="ach-stats-grid">
+        <div class="ach-stat-box">
+          <div class="ach-stat-ico">🔥</div>
+          <div>
+            <div class="ach-stat-num" id="ach-stat-streak">1 दिन</div>
+            <div class="ach-stat-lbl">वर्तमान स्ट्रीक</div>
+          </div>
+        </div>
+        <div class="ach-stat-box">
+          <div class="ach-stat-ico">🏪</div>
+          <div>
+            <div class="ach-stat-num" id="ach-stat-mandi">0 बार</div>
+            <div class="ach-stat-lbl">मंडी भाव चेक</div>
+          </div>
+        </div>
+        <div class="ach-stat-box">
+          <div class="ach-stat-ico">🌱</div>
+          <div>
+            <div class="ach-stat-num" id="ach-stat-fasal">0 बार</div>
+            <div class="ach-stat-lbl">फसल कैलेंडर चेक</div>
+          </div>
+        </div>
+        <div class="ach-stat-box">
+          <div class="ach-stat-ico">🏆</div>
+          <div>
+            <div class="ach-stat-num" id="ach-stat-badges">0 / 10</div>
+            <div class="ach-stat-lbl">अनलॉक बैज</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Badges Gallery -->
+      <div class="form-card">
+        <div class="form-card-head">
+          <div class="form-card-icon">🎖️</div>
+          <div>
+            <div class="form-card-title">उपलब्धियां व बैज (Badges)</div>
+            <div class="form-card-sub">मंडी भाव, मेरी फसल व अन्य टूल्स का उपयोग करके बैज जीतें</div>
+          </div>
+        </div>
+        <div class="ach-badges-grid" id="ach-badges-container">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
     </div>
 
     <!-- ── Tab: Schemes ── -->
@@ -1516,6 +1739,67 @@
       }
     }
 
+    /* ── Render Gamification & Badges ── */
+    function renderProfileGamification() {
+      if (!window.KrashiGamify) return;
+      const st = window.KrashiGamify.getState();
+      const lvl = window.KrashiGamify.getLevelInfo();
+      const bDefs = window.KrashiGamify.getBadgesDef();
+
+      // Level Card
+      const nameEl = document.getElementById("ach-level-name");
+      const iconEl = document.getElementById("ach-level-icon");
+      const xpEl   = document.getElementById("ach-xp-display");
+      const pctEl  = document.getElementById("ach-prog-pct");
+      const fillEl = document.getElementById("ach-progress-fill");
+
+      if (nameEl) nameEl.textContent = lvl.current.name_hi;
+      if (iconEl) iconEl.textContent = lvl.current.emoji;
+      if (xpEl) xpEl.textContent = `⚡ ${st.xp || 0} XP`;
+      if (pctEl) pctEl.textContent = `${lvl.progressPct}%`;
+      if (fillEl) fillEl.style.width = `${lvl.progressPct}%`;
+
+      // Stats
+      const streakEl = document.getElementById("ach-stat-streak");
+      const mandiEl  = document.getElementById("ach-stat-mandi");
+      const fasalEl  = document.getElementById("ach-stat-fasal");
+      const badgeCountEl = document.getElementById("ach-stat-badges");
+
+      if (streakEl) streakEl.textContent = `${st.mandiStreak || st.streak || 0} दिन`;
+      if (mandiEl) mandiEl.textContent = `${st.mandiTotalChecks || 0} बार`;
+      if (fasalEl) fasalEl.textContent = `${st.fasalLogs || 0} बार`;
+
+      const unlockedKeys = Object.keys(st.badges || {});
+      const totalKeys = Object.keys(bDefs);
+      if (badgeCountEl) badgeCountEl.textContent = `${unlockedKeys.length} / ${totalKeys.length}`;
+
+      // Badges Grid
+      const container = document.getElementById("ach-badges-container");
+      if (container) {
+        let html = "";
+        totalKeys.forEach(k => {
+          const b = bDefs[k];
+          const isUnlocked = !!(st.badges && st.badges[k]);
+          html += `
+            <div class="ach-badge-card ${isUnlocked ? 'unlocked' : 'locked'}">
+              <div class="ach-badge-top">
+                <div class="ach-badge-ico">${b.emoji}</div>
+                <div>
+                  <div class="ach-badge-name">${b.title}</div>
+                  <div class="ach-badge-desc">${b.desc}</div>
+                </div>
+              </div>
+              <div class="ach-badge-bottom">
+                <span class="ach-badge-status">${isUnlocked ? '✅ अनलॉक (+'+b.xp+' XP)' : '🔒 लॉक (+'+b.xp+' XP)'}</span>
+                ${isUnlocked ? `<button class="ach-badge-share" onclick="window.KrashiGamify.shareBadge('${k}')"><span>📲</span> <span>शेयर</span></button>` : ''}
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+    }
+
     function focusFirstIncomplete() {
       // Fields to check and their tabs
       const fields = [
@@ -1658,6 +1942,7 @@
         // Clear the skeleton shimmer once loading resolves (success/empty/offline)
         const hero = document.getElementById("profile-hero");
         if (hero) hero.classList.remove("is-loading");
+        renderProfileGamification();
       }
     }
 

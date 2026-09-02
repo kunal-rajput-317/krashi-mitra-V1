@@ -299,6 +299,7 @@
 /sarkari_yojana.html   /sarkari_yojana    301!
 /khoj.html             /khoj              301!
 /meri_fasal.html       /meri_fasal        301!
+/krashi_news.html      /krashi_news       301!
 # The dealer sign-up page. It needs NO rule of its own: it is a real directory
 # (frontend/dukanlisting/index.html), so Netlify, the FastAPI static mount and
 # any other static host all resolve it natively — a flat file plus a rewrite

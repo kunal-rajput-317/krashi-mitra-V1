@@ -75,6 +75,8 @@ from backend.services.mandi_scheduler   import start_scheduler as start_mandi_sc
 from backend.services.gsc_scheduler     import start_scheduler as start_gsc_scheduler  # GSC RECRAWL SWEEP
 from backend.services.ganna_mill_scheduler import start_scheduler as start_mill_scheduler  # SUGAR-MILL REGISTER
 from backend.services.poultry_scheduler   import start_scheduler as start_poultry_scheduler  # NECC EGG RATES
+from backend.services.news_auto_scheduler import start_scheduler as start_news_scheduler  # AI NEWS AUTO-PILOT
+from backend.routes.news_curate import router as news_curate_router  # AI NEWS AUTO-PILOT & FUNNEL
 
 app = FastAPI(
     title="KrashiMitra API",
@@ -124,6 +126,8 @@ raw_origins = os.getenv(
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ]),
 ).split(",")
 
@@ -296,6 +300,10 @@ async def startup():
         await start_poultry_scheduler()  # /farm/poultry — daily NECC egg-rate fetch
     except Exception as e:
         log.warning(f"⚠️ Poultry scheduler startup error (non-fatal): {e}")
+    try:
+        await start_news_scheduler()  # AI NEWS AUTO-PILOT — 3-4 day staging & Day 5 fallback
+    except Exception as e:
+        log.warning(f"⚠️ News auto-pilot scheduler startup error (non-fatal): {e}")
     # MSP hides any crop it can't vouch for (unconfirmed figure, or a marketing
     # season past its valid_until). That silence is correct but invisible, so say
     # it out loud once at boot — otherwise a lapsed season is discovered by a
@@ -325,6 +333,7 @@ app.include_router(profile_router)
 app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
 app.include_router(order_router)    # ORDER
+app.include_router(news_curate_router) # AI NEWS AUTO-PILOT & FUNNEL
 # NOTE: chat.py router deliberately NOT registered — chatbot.py has the full
 # pipeline (Cache→RAG→Gemini→Ollama). chat.py was an older simplified version
 # that duplicated POST /ask and caused routing conflicts.

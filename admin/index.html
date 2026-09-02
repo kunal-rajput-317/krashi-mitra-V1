@@ -1720,6 +1720,11 @@ body {
         <span>लेख — लिखें व Publish</span>
         <span class="nav-badge" id="ar-nav-badge" hidden>0</span>
       </div>
+      <div class="nav-item" onclick="switchPage('news-funnel', this)" id="nav-news-funnel">
+        <span class="nav-icon">🤖</span>
+        <span>कृषि न्यूज़ ऑटो-पायलट</span>
+        <span class="nav-badge" id="nf-nav-badge" style="background:#f59e0b; color:#fff;" hidden>0</span>
+      </div>
     </nav>
 
     <div class="sidebar-theme">
@@ -5140,6 +5145,301 @@ body {
         </div>
       </div>
 
+      <!-- ══════════ PAGE: KRASHI NEWS AUTO-PILOT FUNNEL ══════════ -->
+      <div class="page" id="page-news-funnel">
+        <style>
+        .nf-cycle-banner {
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(245, 158, 11, 0.12));
+          border: 1px solid var(--border-hl);
+          border-radius: var(--radius-md);
+          padding: 20px 24px;
+          margin-bottom: 24px;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+        }
+        .nf-cycle-steps {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 8px;
+        }
+        .nf-step-pill {
+          font-size: 11.5px;
+          font-weight: 700;
+          padding: 6px 14px;
+          border-radius: 20px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          color: var(--text-dim);
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .nf-step-pill.active {
+          background: #22c55e;
+          color: #04240f;
+          border-color: #22c55e;
+          box-shadow: 0 0 14px rgba(34, 197, 94, 0.4);
+        }
+        .nf-step-pill.warning-active {
+          background: #f59e0b;
+          color: #241400;
+          border-color: #f59e0b;
+          box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+        }
+        .nf-curator-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 22px 24px;
+          margin-bottom: 24px;
+        }
+        .nf-url-input-row {
+          display: flex;
+          gap: 12px;
+          margin-top: 12px;
+          flex-wrap: wrap;
+        }
+        .nf-url-input-row input {
+          flex: 1;
+          min-width: 280px;
+        }
+        .nf-preview-box {
+          background: var(--bg);
+          border: 1px solid var(--border-hl);
+          border-radius: var(--radius-sm);
+          padding: 16px;
+          margin-top: 16px;
+          display: none;
+        }
+        .nf-post-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 18px 20px;
+          margin-bottom: 14px;
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          transition: var(--transition);
+        }
+        .nf-post-card:hover {
+          border-color: var(--border-hl);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .nf-thumb {
+          width: 130px;
+          height: 90px;
+          border-radius: 8px;
+          object-fit: cover;
+          flex-shrink: 0;
+          border: 1px solid var(--border);
+        }
+        .nf-post-content {
+          flex: 1;
+          min-width: 0;
+        }
+        .nf-post-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 6px;
+          flex-wrap: wrap;
+        }
+        .nf-bullets-preview {
+          list-style: none;
+          margin-top: 8px;
+          padding-left: 0;
+          font-size: 13px;
+          color: var(--text-dim);
+          line-height: 1.5;
+        }
+        .nf-bullets-preview li {
+          margin-bottom: 4px;
+          display: flex;
+          align-items: flex-start;
+          gap: 6px;
+        }
+        .nf-bullets-preview li::before {
+          content: '⚡';
+          font-size: 12px;
+          flex-shrink: 0;
+        }
+        .nf-acts-row {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+          flex-wrap: wrap;
+        }
+        .nf-badge-seed {
+          background: rgba(245, 158, 11, 0.15);
+          color: #f59e0b;
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+        </style>
+
+        <div class="page-header">
+          <div class="page-title">
+            <h2>📰 कृषि न्यूज़ ऑटो-पायलट फ़नल</h2>
+            <p>Gemini AI द्वारा 3-4 दिवसीय स्वचालित समाचार संकलन, समीक्षा व Day 5 ऑटो-पब्लिश सिस्टम</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadNewsFunnel(true)">↻ रिफ्रेश</button>
+            <button class="btn btn-secondary" onclick="triggerAiNewsSweep()" id="btn-ai-sweep">🪄 तुरंत समाचार खोजें</button>
+            <button class="btn btn-primary" onclick="confirmBulkPush()" id="btn-bulk-publish">🚀 सभी फ़नल पोस्ट लाइव करें</button>
+          </div>
+        </div>
+
+        <!-- Funnel Progression Status Banner -->
+        <div class="nf-cycle-banner">
+          <div>
+            <div style="font-size: 16px; font-weight: 800; color: var(--text);" id="nf-stage-title">
+              दिन 1-3: AI एकत्रीकरण व ड्राफ्टिंग (Staging)
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-dim); margin-top: 4px;" id="nf-stage-desc">
+              Gemini प्रतिदिन शाम 5:00 बजे 2-3 ताज़ा कृषि समाचार खोजकर फ़नल में ड्राफ्ट करता है।
+            </div>
+            <div class="nf-cycle-steps">
+              <span class="nf-step-pill" id="nf-pill-1">1 · दिन 1-3: रोज़ शाम 5 बजे (2-3 पोस्ट)</span>
+              <span class="nf-step-pill" id="nf-pill-2">2 · दिन 4: समीक्षा अवधि (Manual Review)</span>
+              <span class="nf-step-pill" id="nf-pill-3">3 · दिन 5: स्वतः लाइव (Watchdog Fallback)</span>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 11px; color: var(--muted); font-family: var(--font-mono);">वर्तमान चक्र शुरू:</span>
+            <div style="font-size: 14px; font-weight: 700; color: var(--primary);" id="nf-cycle-date">—</div>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="grid-cards" style="margin-bottom: 24px;">
+          <div class="stat-card accented">
+            <span class="stat-icon">🔄</span>
+            <div class="stat-label">वर्तमान चक्र</div>
+            <div class="stat-value" id="nf-kpi-cycle">1</div>
+            <div class="stat-sub" id="nf-kpi-day">दिन 1 पर सक्रिय</div>
+          </div>
+          <div class="stat-card warning">
+            <span class="stat-icon">📋</span>
+            <div class="stat-label">फ़नल में ड्राफ्ट (Staged)</div>
+            <div class="stat-value" id="nf-kpi-staged">0</div>
+            <div class="stat-sub">समीक्षा व अनुमोदन हेतु तैयार</div>
+          </div>
+          <div class="stat-card info">
+            <span class="stat-icon">🚀</span>
+            <div class="stat-label">सार्वजनिक लाइव न्यूज़</div>
+            <div class="stat-value text-primary" id="nf-kpi-published">0</div>
+            <div class="stat-sub">krashi_news.html पर दृश्यमान</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">❤️</span>
+            <div class="stat-label">ऑर्गेनिक लाइक सीड</div>
+            <div class="stat-value text-accent">260 – 580</div>
+            <div class="stat-sub">कमेंट्स strictly 0 से शुरू</div>
+          </div>
+        </div>
+
+        <!-- Smart URL Curator Tool -->
+        <div class="nf-curator-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h3 style="font-size: 17px; font-weight: 800; color: var(--text);">🔗 स्मार्ट URL क्यूरेटर (Smart URL Curator)</h3>
+              <p style="font-size: 12.5px; color: var(--muted); margin-top: 2px;">
+                किसी भी कृषि समाचार, PIB प्रेस नोट या लेख का वेब लिंक पेस्ट करें — Gemini AI शीर्षक, 3 मुख्य बिंदु व फ़ोटो स्वतः बना देगा!
+              </p>
+            </div>
+            <span class="status-pill online">Gemini 2.5 Flash</span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px; margin: 12px 0 10px; flex-wrap:wrap;">
+            <span style="font-size:12.5px; font-weight:700; color:var(--text);">🌐 पोस्ट भाषा चुनें (Language):</span>
+            <div class="nf-lang-group" id="curate-lang-group" style="display:inline-flex; gap:6px;">
+              <button type="button" class="btn btn-sm btn-lang active" data-lang="hi" onclick="setCurateLang('hi', this)" style="border-radius:20px; font-size:12px; font-weight:700; padding:4px 12px; background:#10b981; color:#fff; border-color:#059669;">🇮🇳 हिंदी (Hindi)</button>
+              <button type="button" class="btn btn-sm btn-lang" data-lang="en" onclick="setCurateLang('en', this)" style="border-radius:20px; font-size:12px; font-weight:700; padding:4px 12px; background:var(--bg-card); color:var(--text); border:1px solid var(--border);">🇬🇧 English</button>
+              <button type="button" class="btn btn-sm btn-lang" data-lang="hinglish" onclick="setCurateLang('hinglish', this)" style="border-radius:20px; font-size:12px; font-weight:700; padding:4px 12px; background:var(--bg-card); color:var(--text); border:1px solid var(--border);">🇮🇳 Hinglish (हिंग्लिश)</button>
+            </div>
+          </div>
+
+          <div class="nf-url-input-row">
+            <input type="url" id="nf-curate-url-input" class="inp-text" placeholder="https://pib.gov.in/... या किसी भी अख़बार का लिंक">
+            <button class="btn btn-primary" onclick="curateFromExternalUrl()" id="btn-curate-url">🪄 AI से पोस्ट बनाएं</button>
+          </div>
+
+          <!-- URL Extraction Preview Area -->
+          <div id="nf-curate-preview" class="nf-preview-box">
+            <div style="display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap;">
+              <div style="display:flex; flex-direction:column; gap:8px; width:140px; flex-shrink:0;">
+                <img id="nf-prev-img" src="/images/articles/dhan-nursery-ropai-card.webp" referrerpolicy="no-referrer" onerror="handleCoverImgError(this)" style="width:140px; height:95px; object-fit:cover; border-radius:8px; border:1px solid var(--border);" alt="Cover Preview">
+                <button class="btn btn-secondary btn-sm" type="button" onclick="promptChangeCoverImage()" style="font-size:11px; padding:4px 6px;">🎨 फोटो लिंक बदलें</button>
+              </div>
+              <div style="flex:1; min-width:240px;">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
+                  <span class="status-pill info" id="nf-prev-cat">🌾 कृषि न्यूज़</span>
+                  <span class="status-pill" id="nf-prev-lang" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">🇮🇳 हिंदी</span>
+                  <span class="nf-badge-seed" id="nf-prev-likes">❤️ 420 लाइक्स सीड</span>
+                </div>
+                <h4 style="font-size:15px; font-weight:700; color:var(--text);" id="nf-prev-title">शीर्षक</h4>
+                <p style="font-size:13px; color:var(--text-dim); margin-top:4px;" id="nf-prev-excerpt">सारांश</p>
+                <ul class="nf-bullets-preview" id="nf-prev-bullets"></ul>
+
+                <!-- 1-Click Cover Presets -->
+                <div style="margin-top:10px; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:6px;">
+                  <div style="font-size:11.5px; font-weight:700; color:var(--text); margin-bottom:6px;">🖼️ 1-क्लिक से उपयुक्त कवर फोटो चुनें:</div>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:3px 7px;" onclick="setPreviewCover('/images/articles/dhan-nursery-ropai-card.webp')">🌾 धान (Paddy)</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:3px 7px;" onclick="setPreviewCover('/images/articles/gehuu-price-analytic-up-card.webp')">🌾 गेहूं (Wheat)</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:3px 7px;" onclick="setPreviewCover('/images/articles/pm-kusum-solar-pump-yojana-card.webp')">🏛️ सरकारी योजना</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:3px 7px;" onclick="setPreviewCover('/images/articles/kisan-drone-chhidkav-card.webp')">🚜 तकनीक/ड्रोन</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:3px 7px;" onclick="setPreviewCover('/images/articles/ganna-pricing-analytics-up-card.webp')">🎋 गन्ना</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:3px 7px;" onclick="setPreviewCover('/images/articles/urea-guide-up-card.webp')">🧪 खाद/उर्वरक</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:3px 7px;" onclick="setPreviewCover('/images/articles/dairy-farming-doodh-utpadan-card.webp')">🐄 डेयरी/पशु</button>
+                  </div>
+                </div>
+
+                <div style="margin-top:12px; display:flex; gap:10px;">
+                  <button class="btn btn-primary btn-sm" onclick="saveCuratedDraft(false)">📥 फ़नल में सुरक्षित करें</button>
+                  <button class="btn btn-secondary btn-sm" onclick="confirmDirectPush()">⚡ सीधे लाइव प्रकाशित करें</button>
+                  <button class="btn btn-secondary btn-sm" onclick="document.getElementById('nf-curate-preview').style.display='none'">✕ बंद करें</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Staged Posts Queue Section -->
+        <div class="dashboard-panel" style="margin-bottom: 24px;">
+          <div class="panel-header">
+            <span class="panel-title">📋 फ़नल में ड्राफ्ट किए गए समाचार (Staged Drafts)</span>
+            <span class="text-muted" style="font-size: 12px;" id="nf-staged-count-label">0 ड्राफ्ट</span>
+          </div>
+          <div class="panel-body" id="nf-staged-container">
+            <div class="km-loader"><span class="km-spinner"></span> समाचार लोड हो रहे हैं…</div>
+          </div>
+        </div>
+
+        <!-- Published Live Posts Section -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <span class="panel-title">✅ सार्वजनिक लाइव समाचार (Published Feed)</span>
+            <span class="text-muted" style="font-size: 12px;" id="nf-published-count-label">0 लेख लाइव</span>
+          </div>
+          <div class="panel-body" id="nf-published-container">
+            <div class="text-muted" style="font-size: 13px; text-align: center; padding: 16px;">कोई प्रकाशित पोस्ट नहीं है।</div>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <!-- ══════════ UPI COLLECT ══════════
@@ -5456,6 +5756,66 @@ body {
   </div>
 </div>
 
+<!-- ════════════ KRASHI NEWS PUSH CONFIRMATION MODAL ════════════ -->
+<div id="nf-push-confirm-modal" class="layout-modal-overlay hidden" onclick="if(event.target===this) closePushConfirmModal()">
+  <div class="layout-modal-card" style="max-width: 580px; padding: 26px;">
+    <div class="layout-modal-header" style="margin-bottom: 16px; padding-bottom: 12px; display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:24px;">🚀</span>
+        <div>
+          <span class="layout-modal-title" style="font-size:17px; font-weight:800;" id="nf-confirm-modal-title">पोस्ट लाइव प्रकाशित करने की पुष्टि</span>
+          <div style="font-size:12px; color:var(--muted); margin-top:2px;">Confirm Push to KrashiMitra Live News Pages</div>
+        </div>
+      </div>
+      <button class="layout-modal-close" onclick="closePushConfirmModal()" style="font-size:24px; background:none; border:none; color:var(--muted); cursor:pointer;">×</button>
+    </div>
+
+    <!-- Alert / Notice Box -->
+    <div style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+      <div style="display:flex; gap:10px; align-items:flex-start;">
+        <span style="font-size:20px; line-height:1;">📢</span>
+        <div style="font-size:12.5px; line-height:1.5; color:var(--text);">
+          <b id="nf-confirm-notice-head">क्या आप इस समाचार को KrashiMitra की मुख्य लाइव वेबसाइट पर प्रकाशित करना चाहते हैं?</b>
+          <div style="color:var(--muted); font-size:11.5px; margin-top:2px;">
+            पुष्टि करते ही यह पोस्ट <code style="font-family:var(--font-mono); color:#10b981;">krashi_news.html</code> पर सभी किसान भाइयों के लिए तुरंत लाइव हो जाएगी।
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Container -->
+    <div id="nf-confirm-preview-content" style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:16px;">
+      <!-- Populated dynamically via JavaScript -->
+    </div>
+
+    <!-- 2-Step Security Verification Box -->
+    <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px dashed rgba(239, 68, 68, 0.45); border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <span style="font-size:18px;">🔐</span>
+        <span style="font-size:13px; font-weight:800; color:var(--text);">2-Step Production Security Lock</span>
+        <span style="font-size:10.5px; background:rgba(239,68,68,0.2); color:#ef4444; padding:2px 8px; border-radius:12px; font-weight:700; margin-left:auto;">Mandatory</span>
+      </div>
+      <label for="nf-confirm-security-input" style="font-size:12px; color:var(--text-dim); display:block; margin-bottom:8px; line-height:1.4;">
+        गलती से लाइव होने से रोकने हेतु, पुष्टि करने के लिए नीचे दिए गए बॉक्स में 
+        <code style="font-family:var(--font-mono); color:#ef4444; font-weight:800; background:rgba(239,68,68,0.15); padding:3px 7px; border-radius:4px; font-size:12px; border:1px solid rgba(239,68,68,0.3);">push to production</code> 
+        टाइप करें:
+      </label>
+      <input type="text" id="nf-confirm-security-input" class="inp-text" placeholder="Type: push to production" autocomplete="off" spellcheck="false" style="font-family:var(--font-mono); font-size:13px; width:100%; border:1.5px solid var(--border); padding:9px 12px; border-radius:6px; background:var(--surface); color:var(--text); box-sizing:border-box; transition:all 0.2s ease;" oninput="validatePushSecurityInput()" onkeydown="if(event.key==='Enter'&&!document.getElementById('btn-confirm-push-execute').disabled) document.getElementById('btn-confirm-push-execute').click()">
+      <div id="nf-confirm-security-hint" style="font-size:11px; color:var(--muted); margin-top:6px; display:flex; align-items:center; gap:5px; transition:color 0.2s;">
+        <span>🔒</span> <span>पुष्टि बटन अनलॉक करने के लिए 'push to production' लिखें।</span>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding-top:16px;">
+      <button type="button" class="btn btn-secondary" onclick="closePushConfirmModal()">✕ रद्द करें (Cancel)</button>
+      <button type="button" class="btn btn-primary" id="btn-confirm-push-execute" disabled style="background:#10b981; border-color:#059669; font-weight:700; opacity:0.4; cursor:not-allowed; transition:all 0.2s ease;">
+        🚀 हां, लाइव प्रकाशित करें (Confirm & Push)
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════ APPEARANCE & LAYOUT MODAL ════════════ -->
 <div id="layout-modal" class="layout-modal-overlay hidden" onclick="if(event.target===this) closeLayoutModal()">
   <div class="layout-modal-card">
@@ -5565,9 +5925,10 @@ body {
 <script>
 // ── App Configuration ───────────────────────────────────────
 const API = (() => {
-  const h = window.location.hostname;
-  if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:8000';
-  return window.location.origin;
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    return window.location.origin;
+  }
+  return 'http://localhost:8000';
 })();
 document.getElementById('api-base-display').textContent = API;
 
@@ -7453,6 +7814,7 @@ function switchPage(pageId, el) {
   if (pageId === 'crop-types' && !_cropTypes) loadCropTypes(false);
   if (pageId === 'index-gate') loadIndexGate();
   if (pageId === 'articles') loadArticles();
+  if (pageId === 'news-funnel') loadNewsFunnel();
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)
@@ -13043,6 +13405,577 @@ async function dkUploadImage(slug, input) {
     showToast(e.message, 'error');
   } finally {
     input.value = '';
+  }
+}
+// ══════════════════════════════════════════════════════════════
+// KRASHI NEWS AUTO-PILOT FUNNEL CONTROLLER
+// ══════════════════════════════════════════════════════════════
+let _curatedTempDraft = null;
+
+async function loadNewsFunnel(showToastNotice = false) {
+  const stagedBox = document.getElementById('nf-staged-container');
+  const pubBox = document.getElementById('nf-published-container');
+  if (!stagedBox) return;
+
+  stagedBox.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> समाचार लोड हो रहे हैं…</div>';
+
+  try {
+    const [funnelRes, feedRes] = await Promise.all([
+      fetch(`${API}/api/news/funnel`),
+      fetch(`${API}/api/news/feed`)
+    ]);
+
+    const funnelData = await funnelRes.json();
+    const feedData = await feedRes.json();
+
+    if (funnelData.success) {
+      const cyc = funnelData.cycle || {};
+      document.getElementById('nf-kpi-cycle').textContent = cyc.current_cycle || 1;
+      document.getElementById('nf-kpi-day').textContent = `दिन ${cyc.cycle_day || 1} पर सक्रिय`;
+      document.getElementById('nf-kpi-staged').textContent = cyc.staged_count || 0;
+      document.getElementById('nf-kpi-published').textContent = feedData.count || 0;
+      document.getElementById('nf-cycle-date').textContent = cyc.cycle_start_date || '—';
+
+      document.getElementById('nf-stage-title').textContent = cyc.stage_name || 'दिन 1-3: AI एकत्रीकरण व ड्राफ्टिंग';
+      document.getElementById('nf-stage-desc').textContent = cyc.stage_desc || '';
+
+      // Update Funnel Badge
+      const badge = document.getElementById('nf-nav-badge');
+      if (badge) {
+        badge.textContent = cyc.staged_count || 0;
+        badge.hidden = (cyc.staged_count || 0) === 0;
+      }
+
+      // Step pills active styling
+      const d = cyc.cycle_day || 1;
+      const p1 = document.getElementById('nf-pill-1');
+      const p2 = document.getElementById('nf-pill-2');
+      const p3 = document.getElementById('nf-pill-3');
+
+      p1.className = 'nf-step-pill' + (d <= 3 ? ' active' : '');
+      p2.className = 'nf-step-pill' + (d === 4 ? ' warning-active' : '');
+      p3.className = 'nf-step-pill' + (d >= 5 ? ' active' : '');
+
+      renderStagedPosts(funnelData.staged_posts || []);
+    }
+
+    if (feedData.success) {
+      renderPublishedFeed(feedData.articles || []);
+    }
+
+    if (showToastNotice) showToast('कृषि न्यूज़ फ़नल डेटा अपडेट हो गया');
+  } catch (e) {
+    stagedBox.innerHTML = `<div style="color:var(--danger); padding:16px;">फ़नल लोड नहीं हो पाया: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderStagedPosts(posts) {
+  window._stagedFunnelPosts = posts || [];
+  const container = document.getElementById('nf-staged-container');
+  const countLabel = document.getElementById('nf-staged-count-label');
+  if (countLabel) countLabel.textContent = `${posts.length} ड्राफ्ट तैयार`;
+
+  if (!posts || posts.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:32px 16px; color:var(--muted);">
+        <span style="font-size:32px; display:block; margin-bottom:8px;">🌾</span>
+        फ़नल में कोई ड्राफ्ट लंबित नहीं है। ऊपर दिए गए <b>'🪄 तुरंत समाचार खोजें'</b> बटन से Gemini को सक्रिय करें या कोई लिंक पेस्ट करें।
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = posts.map(p => {
+    const bulletsHtml = (p.bullets || []).map(b => `<li>${escapeHtml(b)}</li>`).join('');
+    return `
+      <div class="nf-post-card" id="nf-card-${escapeHtml(p.id)}">
+        <img src="${escapeHtml(p.image || '/images/articles/dhan-nursery-ropai-card.webp')}" class="nf-thumb" alt="News Image" referrerpolicy="no-referrer" onerror="this.src='/images/articles/dhan-nursery-ropai-card.webp'">
+        <div class="nf-post-content">
+          <div class="nf-post-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="status-pill info">${escapeHtml(p.catLabel || '🌾 कृषि')}</span>
+              <span class="nf-badge-seed">❤️ ${p.seed_likes || 350} लाइक्स सीड</span>
+              <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono);">💬 0 कमेंट्स (आरंभिक)</span>
+            </div>
+            <span style="font-size:11.5px; color:var(--muted);">${p.time || 'ताज़ा'}</span>
+          </div>
+
+          <h4 style="font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px;">${escapeHtml(p.title)}</h4>
+          <p style="font-size:13px; color:var(--text-dim); line-height:1.4;">${escapeHtml(p.excerpt)}</p>
+
+          <ul class="nf-bullets-preview">${bulletsHtml}</ul>
+
+          <div class="nf-acts-row">
+            <button class="btn btn-primary btn-sm" onclick="confirmPushPost('${escapeHtml(p.id)}')">✅ स्वीकृत व लाइव करें</button>
+            <button class="btn btn-secondary btn-sm" onclick="editFunnelDraftPrompt('${escapeHtml(p.id)}')">✏️ संपादित करें</button>
+            <button class="btn btn-danger btn-sm" onclick="discardFunnelPost('${escapeHtml(p.id)}')">🗑️ हटाएं</button>
+            ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🔗 मूल स्रोत ↗</a>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPublishedFeed(posts) {
+  const container = document.getElementById('nf-published-container');
+  const countLabel = document.getElementById('nf-published-count-label');
+  if (countLabel) countLabel.textContent = `${posts.length} लेख लाइव`;
+
+  if (!posts || posts.length === 0) {
+    container.innerHTML = '<div class="text-muted" style="font-size:13px; text-align:center; padding:16px;">कोई पोस्ट लाइव नहीं है।</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>तस्वीर</th>
+            <th>शीर्षक</th>
+            <th>श्रेणी</th>
+            <th>लाइक्स (सीड)</th>
+            <th>प्रकाशन विधि</th>
+            <th>तारीख़</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${posts.map(p => `
+            <tr>
+              <td><img src="${escapeHtml(p.image || '/images/articles/dhan-nursery-ropai-card.webp')}" style="width:48px;height:32px;object-fit:cover;border-radius:4px;" referrerpolicy="no-referrer" onerror="this.src='/images/articles/dhan-nursery-ropai-card.webp'"></td>
+              <td><b>${escapeHtml(p.title)}</b></td>
+              <td><span class="status-pill info">${escapeHtml(p.catLabel || p.category)}</span></td>
+              <td><span class="nf-badge-seed">❤️ ${p.seed_likes || 350}</span></td>
+              <td><span class="status-pill online">${p.published_by === 'auto_pilot_day5_fallback' ? '⚡ Day 5 Auto' : '✅ Admin Push'}</span></td>
+              <td class="text-mono" style="font-size:11px;">${p.published_at ? new Date(p.published_at).toLocaleDateString('hi-IN') : 'आज'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ── Push Confirmation Modal Logic ──────────────────────────────
+let _pendingPushAction = null;
+
+function openPushConfirmModal(opts) {
+  const modal = document.getElementById('nf-push-confirm-modal');
+  const preview = document.getElementById('nf-confirm-preview-content');
+  const titleEl = document.getElementById('nf-confirm-modal-title');
+  const noticeHead = document.getElementById('nf-confirm-notice-head');
+  const execBtn = document.getElementById('btn-confirm-push-execute');
+  if (!modal || !preview) return;
+
+  _pendingPushAction = opts;
+
+  if (opts.type === 'single') {
+    const post = (window._stagedFunnelPosts || []).find(p => p.id === opts.id) || {};
+    titleEl.textContent = 'पोस्ट लाइव प्रकाशित करने की पुष्टि';
+    noticeHead.textContent = 'क्या आप इस समाचार को KrashiMitra लाइव वेबसाइट पर प्रकाशित करना चाहते हैं?';
+    if (execBtn) execBtn.textContent = '🚀 हां, लाइव प्रकाशित करें (Confirm & Push)';
+    
+    const bulletsHtml = (post.bullets || []).map(b => `<li>${escapeHtml(b)}</li>`).join('');
+    preview.innerHTML = `
+      <div style="display:flex; gap:14px; align-items:flex-start;">
+        <img src="${escapeHtml(post.image || '/images/articles/dhan-nursery-ropai-card.webp')}" style="width:110px; height:75px; object-fit:cover; border-radius:6px; flex-shrink:0; border:1px solid var(--border);" alt="Thumbnail" referrerpolicy="no-referrer" onerror="this.src='/images/articles/dhan-nursery-ropai-card.webp'">
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+            <span class="status-pill info">${escapeHtml(post.catLabel || '🌾 कृषि')}</span>
+            <span class="nf-badge-seed">❤️ ${post.seed_likes || 350} लाइक्स</span>
+          </div>
+          <h4 style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3; margin:0 0 4px;">${escapeHtml(post.title || '')}</h4>
+          <p style="font-size:12px; color:var(--text-dim); margin:0 0 6px; line-height:1.4;">${escapeHtml(post.excerpt || '')}</p>
+          <ul class="nf-bullets-preview" style="margin:0; padding-left:16px; font-size:11.5px;">${bulletsHtml}</ul>
+        </div>
+      </div>
+    `;
+  } else if (opts.type === 'bulk') {
+    const posts = window._stagedFunnelPosts || [];
+    titleEl.textContent = `सभी ${posts.length} ड्राफ्ट एक साथ लाइव करने की पुष्टि`;
+    noticeHead.textContent = `क्या आप फ़नल के सभी ${posts.length} ड्राफ्ट समाचारों को तुरंत KrashiMitra की मुख्य लाइव वेबसाइट पर प्रकाशित करना चाहते हैं?`;
+    if (execBtn) execBtn.textContent = `🚀 सभी ${posts.length} पोस्ट लाइव करें (Confirm All)`;
+
+    const titlesList = posts.map((p, idx) => `<div style="font-size:12.5px; color:var(--text); margin-bottom:5px; padding-bottom:4px; border-bottom:1px solid var(--border-subtle, #f1f5f9);"><b>${idx+1}.</b> ${escapeHtml(p.title)}</div>`).join('');
+    preview.innerHTML = `
+      <div style="margin-bottom:10px; font-size:13px; font-weight:700; color:#10b981;">
+        📦 कुल ${posts.length} समाचार एक साथ live feed (krashi_news.html) पर प्रकाशित होंगे:
+      </div>
+      <div style="max-height:180px; overflow-y:auto; padding-right:6px;">${titlesList}</div>
+    `;
+  } else if (opts.type === 'direct') {
+    const post = _curatedTempDraft || {};
+    titleEl.textContent = 'सीधे लाइव प्रकाशित करने की पुष्टि';
+    noticeHead.textContent = 'क्या आप इस क्यूरेटेड समाचार को सीधे मुख्य वेबसाइट पर प्रकाशित करना चाहते हैं?';
+    if (execBtn) execBtn.textContent = '🚀 हां, सीधे लाइव करें (Confirm & Push)';
+
+    const bulletsHtml = (post.bullets || []).map(b => `<li>${escapeHtml(b)}</li>`).join('');
+    preview.innerHTML = `
+      <div style="display:flex; gap:14px; align-items:flex-start;">
+        <img src="${escapeHtml(post.image || '/images/articles/dhan-nursery-ropai-card.webp')}" style="width:110px; height:75px; object-fit:cover; border-radius:6px; flex-shrink:0; border:1px solid var(--border);" alt="Thumbnail" referrerpolicy="no-referrer">
+        <div style="flex:1; min-width:0;">
+          <span class="status-pill info">${escapeHtml(post.catLabel || '🌾 कृषि')}</span>
+          <h4 style="font-size:14px; font-weight:700; color:var(--text); margin:4px 0;">${escapeHtml(post.title || '')}</h4>
+          <p style="font-size:12px; color:var(--text-dim); margin:0 0 6px;">${escapeHtml(post.excerpt || '')}</p>
+          <ul class="nf-bullets-preview" style="margin:0; padding-left:16px; font-size:11.5px;">${bulletsHtml}</ul>
+        </div>
+      </div>
+    `;
+  }
+
+  // 2-Step verification reset
+  const secInput = document.getElementById('nf-confirm-security-input');
+  if (secInput) {
+    secInput.value = '';
+    secInput.style.borderColor = 'var(--border)';
+    secInput.style.background = 'var(--surface)';
+  }
+  const secHint = document.getElementById('nf-confirm-security-hint');
+  if (secHint) {
+    secHint.innerHTML = '<span>🔒</span> <span>पुष्टि बटन अनलॉक करने के लिए "push to production" लिखें।</span>';
+  }
+
+  if (execBtn) {
+    execBtn.disabled = true;
+    execBtn.style.opacity = '0.4';
+    execBtn.style.cursor = 'not-allowed';
+    execBtn.style.boxShadow = 'none';
+
+    execBtn.onclick = async () => {
+      // Final security check guard
+      const typed = (document.getElementById('nf-confirm-security-input')?.value || '').trim().toLowerCase();
+      if (typed !== 'push to production') {
+        showToast('कृपया पहले "push to production" लिखें!', 'error');
+        return;
+      }
+
+      execBtn.disabled = true;
+      execBtn.textContent = '⏳ प्रकाशित हो रहा है…';
+      try {
+        if (_pendingPushAction.type === 'single') {
+          await approveFunnelPost(_pendingPushAction.id);
+        } else if (_pendingPushAction.type === 'bulk') {
+          await bulkPublishFunnel(true);
+        } else if (_pendingPushAction.type === 'direct') {
+          await saveCuratedDraft(true);
+        }
+      } finally {
+        execBtn.disabled = false;
+        closePushConfirmModal();
+      }
+    };
+  }
+
+  modal.classList.remove('hidden');
+
+  setTimeout(() => {
+    if (secInput) secInput.focus();
+  }, 120);
+}
+
+function validatePushSecurityInput() {
+  const inp = document.getElementById('nf-confirm-security-input');
+  const btn = document.getElementById('btn-confirm-push-execute');
+  const hint = document.getElementById('nf-confirm-security-hint');
+  if (!inp || !btn) return;
+
+  const val = inp.value.trim().toLowerCase();
+  const isValid = (val === 'push to production');
+
+  if (isValid) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.4)';
+    inp.style.borderColor = '#10b981';
+    inp.style.background = 'rgba(16, 185, 129, 0.08)';
+    if (hint) {
+      hint.innerHTML = '<span style="color:#10b981; font-weight:700;">✓ वाक्यांश सत्यापित! पुष्टि बटन अनलॉक हो गया है (Enter दबाएं या क्लिक करें)।</span>';
+    }
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+    btn.style.cursor = 'not-allowed';
+    btn.style.boxShadow = 'none';
+    inp.style.borderColor = 'var(--border)';
+    inp.style.background = 'var(--surface)';
+    if (hint) {
+      if (val.length > 0) {
+        hint.innerHTML = '<span style="color:#ef4444;">⚠️ कृपया ठीक <b>"push to production"</b> लिखें।</span>';
+      } else {
+        hint.innerHTML = '<span>🔒 पुष्टि बटन अनलॉक करने के लिए "push to production" लिखें।</span>';
+      }
+    }
+  }
+}
+
+function closePushConfirmModal() {
+  const modal = document.getElementById('nf-push-confirm-modal');
+  if (modal) modal.classList.add('hidden');
+  const secInput = document.getElementById('nf-confirm-security-input');
+  if (secInput) secInput.value = '';
+  _pendingPushAction = null;
+}
+
+function confirmPushPost(id) {
+  openPushConfirmModal({ type: 'single', id: id });
+}
+
+function confirmBulkPush() {
+  const count = (window._stagedFunnelPosts || []).length;
+  if (count === 0) {
+    showToast('फ़नल में कोई ड्राफ्ट लंबित नहीं है', 'error');
+    return;
+  }
+  openPushConfirmModal({ type: 'bulk' });
+}
+
+function confirmDirectPush() {
+  if (!_curatedTempDraft) {
+    showToast('पहले कोई URL क्यूरेट करें', 'error');
+    return;
+  }
+  openPushConfirmModal({ type: 'direct' });
+}
+
+// ── Funnel Actions ────────────────────────────────────────────
+
+async function approveFunnelPost(id) {
+  try {
+    const r = await fetch(`${API}/api/news/funnel/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast('समाचार सार्वजनिक फीड में लाइव कर दिया गया! 🚀');
+      loadNewsFunnel(false);
+    } else {
+      showToast(d.detail || 'स्वीकृति विफल', 'error');
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function bulkPublishFunnel(skipConfirm = false) {
+  if (!skipConfirm && !confirm('क्या आप फ़नल के सभी लंबित ड्राफ्ट को तुरंत लाइव करना चाहते हैं?')) return;
+  const btn = document.getElementById('btn-bulk-publish');
+  if (btn) btn.disabled = true;
+
+  try {
+    const r = await fetch(`${API}/api/news/funnel/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publish_all: true })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast(d.message || 'सभी समाचार लाइव प्रकाशित हो गए! 🚀');
+      loadNewsFunnel(false);
+    } else {
+      showToast(d.detail || 'प्रकाशन विफल', 'error');
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function discardFunnelPost(id) {
+  if (!confirm('क्या आप इस ड्राफ्ट को फ़नल से हटाना चाहते हैं?')) return;
+  try {
+    const r = await fetch(`${API}/api/news/funnel/discard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast('ड्राफ्ट फ़नल से हटा दिया गया');
+      loadNewsFunnel(false);
+    } else {
+      showToast(d.detail || 'हटाने में त्रुटि', 'error');
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function triggerAiNewsSweep() {
+  const btn = document.getElementById('btn-ai-sweep');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Gemini खोज रहा है…'; }
+  showToast('Gemini कृषि समाचार खोज कर ड्राफ्ट तैयार कर रहा है…');
+
+  try {
+    const r = await fetch(`${API}/api/news/trigger-discovery`, { method: 'POST' });
+    const d = await r.json();
+    if (d.success) {
+      showToast(d.message || 'नए समाचार फ़नल में सुरक्षित कर दिए गए!');
+      loadNewsFunnel(false);
+    } else {
+      showToast(d.detail || 'AI खोज विफल', 'error');
+    }
+  } catch (e) {
+    showToast('AI खोज विफल: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🪄 तुरंत समाचार खोजें'; }
+  }
+}
+
+let _curateSelectedLang = 'hi';
+
+function setCurateLang(lang, btn) {
+  _curateSelectedLang = lang;
+  document.querySelectorAll('#curate-lang-group .btn-lang').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = 'var(--bg-card)';
+    b.style.color = 'var(--text)';
+    b.style.borderColor = 'var(--border)';
+  });
+  if (btn) {
+    btn.classList.add('active');
+    btn.style.background = '#10b981';
+    btn.style.color = '#ffffff';
+    btn.style.borderColor = '#059669';
+  }
+}
+
+async function curateFromExternalUrl() {
+  const inp = document.getElementById('nf-curate-url-input');
+  const url = (inp.value || '').trim();
+  if (!url || !url.startsWith('http')) {
+    showToast('कृपया मान्य वेब लिंक (URL) दर्ज करें', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-curate-url');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Gemini पढ़ रहा है…'; }
+
+  try {
+    const r = await fetch(`${API}/api/news/curate-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, language: _curateSelectedLang })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.detail || 'URL से पढ़ने में विफल');
+
+    _curatedTempDraft = d.article;
+    const prev = document.getElementById('nf-curate-preview');
+    document.getElementById('nf-prev-title').textContent = d.article.title || '';
+    document.getElementById('nf-prev-excerpt').textContent = d.article.excerpt || '';
+    document.getElementById('nf-prev-cat').textContent = d.article.catLabel || '🌾 कृषि';
+    document.getElementById('nf-prev-likes').textContent = `❤️ ${d.article.seed_likes || 360} लाइक्स सीड`;
+    
+    const langBadge = document.getElementById('nf-prev-lang');
+    if (langBadge) {
+      const l = d.article.language || _curateSelectedLang;
+      if (l === 'en') {
+        langBadge.textContent = '🇬🇧 English';
+        langBadge.style.background = '#e0f2fe';
+        langBadge.style.color = '#0369a1';
+        langBadge.style.borderColor = '#bae6fd';
+      } else if (l === 'hinglish') {
+        langBadge.textContent = '🇮🇳 Hinglish';
+        langBadge.style.background = '#f3e8ff';
+        langBadge.style.color = '#6b21a8';
+        langBadge.style.borderColor = '#e9d5ff';
+      } else {
+        langBadge.textContent = '🇮🇳 हिंदी';
+        langBadge.style.background = '#fef3c7';
+        langBadge.style.color = '#92400e';
+        langBadge.style.borderColor = '#fde68a';
+      }
+    }
+
+    const imgEl = document.getElementById('nf-prev-img');
+    const imgSrc = d.article.image || '/images/articles/dhan-nursery-ropai-card.webp';
+    _curatedTempDraft.image = imgSrc;
+    if (imgEl) imgEl.src = imgSrc;
+
+    const bulletsList = document.getElementById('nf-prev-bullets');
+    bulletsList.innerHTML = (d.article.bullets || []).map(b => `<li>${escapeHtml(b)}</li>`).join('');
+
+    prev.style.display = 'block';
+    showToast('Gemini ने पोस्ट सफलतापूर्वक बना दी!');
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🪄 AI से पोस्ट बनाएं'; }
+  }
+}
+
+async function saveCuratedDraft(publishNow = false) {
+  if (!_curatedTempDraft) return;
+  try {
+    const r = await fetch(`${API}/api/news/publish-direct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post: _curatedTempDraft, publish_now: publishNow })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast(publishNow ? 'पोस्ट सीधे लाइव प्रकाशित हो गई! 🚀' : 'पोस्ट फ़नल में सुरक्षित कर दी गई! 📥');
+      document.getElementById('nf-curate-preview').style.display = 'none';
+      document.getElementById('nf-curate-url-input').value = '';
+      _curatedTempDraft = null;
+      loadNewsFunnel(false);
+    } else {
+      showToast(d.detail || 'सहेजने में विफल', 'error');
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function setPreviewCover(src) {
+  if (_curatedTempDraft) _curatedTempDraft.image = src;
+  const imgEl = document.getElementById('nf-prev-img');
+  if (imgEl) imgEl.src = src;
+  showToast('कवर फोटो चुनी गई! 🖼️');
+}
+
+function promptChangeCoverImage() {
+  const current = (_curatedTempDraft && _curatedTempDraft.image) || '';
+  const val = prompt('कवर फोटो का वेब लिंक (URL) दर्ज करें:', current);
+  if (val && val.trim()) {
+    setPreviewCover(val.trim());
+  }
+}
+
+function handleCoverImgError(img) {
+  img.onerror = null;
+  // Automatic fallback to high-res scheme card
+  img.src = '/images/articles/dhan-nursery-ropai-card.webp';
+}
+
+async function editFunnelDraftPrompt(id) {
+  const newTitle = prompt('शीर्षक संपादित करें:');
+  if (newTitle === null) return;
+  const newImage = prompt('कवर फोटो URL (बदलने के लिए दर्ज करें, अन्यथा खाली छोड़ें):');
+  
+  const updates = { title: newTitle.trim() };
+  if (newImage && newImage.trim()) updates.image = newImage.trim();
+
+  try {
+    const r = await fetch(`${API}/api/news/funnel/edit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, updates })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast('ड्राफ्ट अपडेट हो गया');
+      loadNewsFunnel(false);
+    } else {
+      showToast(d.detail || 'अपडेट विफल', 'error');
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
   }
 }
 </script>

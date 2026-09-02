@@ -554,6 +554,82 @@
     }
     .fasal-note { font-size: 12.5px; color: var(--text-mid); margin-bottom: 10px; line-height: 1.6; }
 
+    /* ── STREAK & GAMIFICATION CARD ── */
+    .streak-gamify-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+      border: 1.5px solid #bbf7d0;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 16px rgba(26,60,46,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .sgc-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .sgc-flame-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #fef3c7;
+      border: 2px solid #fde68a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 2px 8px rgba(233,168,37,0.25);
+      flex-shrink: 0;
+    }
+    .sgc-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--green-dark);
+    }
+    .sgc-desc {
+      font-size: 13px;
+      color: #4b5563;
+      margin-top: 2px;
+    }
+    .sgc-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .sgc-level-pill {
+      background: #eaf6ed;
+      border: 1px solid #cce8d6;
+      color: #2d6a4f;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sgc-share-btn {
+      background: #25D366;
+      color: #ffffff;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.15s;
+    }
+    .sgc-share-btn:hover { opacity: 0.92; }
+
     /* ── ADD PANEL ── */
     .add-fasal-btn {
       display: inline-flex; align-items: center; gap: 8px;
@@ -954,6 +1030,21 @@
       🔑 आपकी फसलें अभी सिर्फ इसी फ़ोन/ब्राउज़र में सेव हैं। <a href="login.html">लॉगिन करें</a> — तो हर जगह और 📒 KrashiBook में भी दिखेंगी।
     </div>
 
+    <!-- ── Gamified Streak & Badge Card ── -->
+    <div class="streak-gamify-card" id="fasal-streak-card">
+      <div class="sgc-left">
+        <div class="sgc-flame-box" id="sgc-flame-icon">🔥</div>
+        <div>
+          <div class="sgc-title" id="sgc-streak-title">फसल व मंडी स्ट्रीक: 1 दिन लगातार 🌾</div>
+          <div class="sgc-desc" id="sgc-streak-desc">नियमित फसल निगरानी और मंडी भाव चेक करने से आप बनते हैं बाज़ार के सच्चे पारखी!</div>
+        </div>
+      </div>
+      <div class="sgc-right">
+        <span class="sgc-level-pill" id="sgc-level-badge">🌱 नौसिखिया किसान · 20 XP</span>
+        <button class="sgc-share-btn" onclick="shareFasalStreak()"><span>📲</span> <span>स्ट्रीक शेयर करें</span></button>
+      </div>
+    </div>
+
     <!-- My crops -->
     <div class="fasal-section-title">🧑‍🌾 मेरी फसलें</div>
     <div id="crops-container">
@@ -1345,6 +1436,10 @@ function submitAddCrop() {
     selectedCropKey = null;
     document.getElementById("sowing-hint").style.display = "none";
     document.querySelectorAll(".crop-tile.selected").forEach(function (el) { el.classList.remove("selected"); });
+    if (window.KrashiGamify) {
+      window.KrashiGamify.record('fasal_add');
+      updateStreakUi();
+    }
     loadMyCrops();
   }
 
@@ -1442,6 +1537,39 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+function updateStreakUi() {
+  if (!window.KrashiGamify) return;
+  var st = window.KrashiGamify.getState();
+  var streak = st.mandiStreak || st.streak || 1;
+  var lvl = window.KrashiGamify.getLevelInfo();
+
+  var titleEl = document.getElementById("sgc-streak-title");
+  if (titleEl) {
+    titleEl.textContent = "फसल व भाव स्ट्रीक: " + streak + " दिन लगातार 🌾";
+  }
+  var descEl = document.getElementById("sgc-streak-desc");
+  if (descEl) {
+    if (streak >= 7) {
+      descEl.textContent = "शानदार! आपने लगातार " + streak + " दिन फसल व मंडी भाव ट्रैक किया — आप हैं सच्चे कृषि पारखी!";
+    } else {
+      descEl.textContent = "रोज़ाना फसल निगरानी और भाव चेक करने से 7-दिन का भाव पारखी बैज हासिल करें!";
+    }
+  }
+  var badgeEl = document.getElementById("sgc-level-badge");
+  if (badgeEl) {
+    badgeEl.innerHTML = lvl.current.emoji + " " + lvl.current.name_hi + " · " + (st.xp || 0) + " XP";
+  }
+}
+
+function shareFasalStreak() {
+  if (!window.KrashiGamify) return;
+  var st = window.KrashiGamify.getState();
+  var streak = st.mandiStreak || st.streak || 1;
+  var text = "🌱 मैंने KrashiMitra पर लगातार " + streak + " दिन फसल कैलेंडर व मंडी भाव ट्रैक किया! 🌾🚜\n\nआप भी अपनी फसल का बुवाई-कटाई कैलेंडर व लाइव भाव देखें: https://krashimitra.in/meri_fasal";
+  var waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+  window.open(waUrl, "_blank");
+}
+
 // ── Init ────────────────────────────────────────────────────
 (function init() {
   var dateInput = document.getElementById("sowing-date-input");
@@ -1454,6 +1582,7 @@ if ('serviceWorker' in navigator) {
 
   fetchCropDefs(function (ok) { if (ok) renderCropGrid(true); });
   loadMyCrops();
+  updateStreakUi();
 })();
 </script>
 

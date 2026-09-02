@@ -323,7 +323,7 @@ async def call_claude(prompt: str) -> str:
 
 
 # ── Gemini with multi-key rotation (ASYNC) ───────────────────
-async def call_gemini(prompt: str) -> str:
+async def call_gemini(prompt: str, max_tokens: int = 1500) -> str:
     """
     Try all configured Gemini keys in order — fully async via httpx.
     Reads model/timeout from runtime config (admin-controllable).
@@ -354,7 +354,7 @@ async def call_gemini(prompt: str) -> str:
     # generationConfig — disable thinking for models that support it, to save quota
     gen_config: dict = {
         "temperature":     0.3,
-        "maxOutputTokens": 500,
+        "maxOutputTokens": max_tokens,
         "topP":            0.8,
     }
     if "2.5" in model or "3.5" in model:
@@ -433,7 +433,7 @@ async def call_ollama(prompt: str) -> str:
 
 
 # ── Smart call: Claude (toggle) → Gemini → Ollama (ASYNC) ─────
-async def call_ai(prompt: str) -> tuple[str, str]:
+async def call_ai(prompt: str, max_tokens: int = 1500) -> tuple[str, str]:
     """
     Returns: (answer, source)
     source = "claude" | "gemini" | "ollama" | "error"
@@ -456,7 +456,7 @@ async def call_ai(prompt: str) -> tuple[str, str]:
 
     # ── Try Gemini ────────────────────────────────────────────
     try:
-        answer = await call_gemini(prompt)
+        answer = await call_gemini(prompt, max_tokens=max_tokens)
         if is_good_answer(answer):
             return answer, "gemini"
         # Gemini gave a valid but very short or borderline answer.
