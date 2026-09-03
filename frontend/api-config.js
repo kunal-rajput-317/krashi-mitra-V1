@@ -14,7 +14,10 @@
     /^10\./.test(host) ||
     /^172\.(1[6-9]|2\d|3[01])\./.test(host);
 
-  var defaultPort = location.port || '8000';
+  var defaultPort = '8000';
+  if (location.port && location.port !== '5500' && location.port !== '3000' && location.port !== '5173' && location.port !== '8080') {
+    defaultPort = location.port;
+  }
   // Production is served two ways: krashimitra.in (Netlify static + a handful
   // of proxied paths in _redirects — bhav/product/share/alerts/sitemap/llms
   // ONLY) and the Render host below (the FastAPI app serving its own

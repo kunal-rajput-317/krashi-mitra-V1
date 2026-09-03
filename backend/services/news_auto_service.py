@@ -534,6 +534,9 @@ def edit_staged_post(post_id: str, updates: dict) -> Optional[dict]:
     staged = data.get("staged_posts", [])
     target = next((p for p in staged if p["id"] == post_id), None)
     if not target:
+        published = data.get("published_posts", [])
+        target = next((p for p in published if p["id"] == post_id), None)
+    if not target:
         return None
 
     for k in ["title", "excerpt", "bullets", "category", "image"]:

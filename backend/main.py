@@ -347,6 +347,9 @@ app.include_router(share_route.router)  # OG link previews for shared mandi link
 from backend.routes import bhav as bhav_route
 app.include_router(bhav_route.router)   # SEO price pages (/bhav/*) + /bhav/sitemap.xml
 
+from backend.routes import news_page as news_page_route
+app.include_router(news_page_route.router)  # SSR Krashi News hub (/krashi_news, /krashi_news.html, /news)
+
 from backend.routes import bazar as bazar_route
 app.include_router(bazar_route.router)  # KRASHI BAZAR — social crop marketplace
 

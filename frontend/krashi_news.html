@@ -2807,6 +2807,23 @@
       return userLikes[id] ? base + 1 : base;
     }
 
+    function getApiBase() {
+      if (window.KRASHIMITRA_API_BASE) {
+        if (window.KRASHIMITRA_API_BASE.includes(':5500') || window.KRASHIMITRA_API_BASE.includes(':3000') || window.KRASHIMITRA_API_BASE.includes(':5173') || window.KRASHIMITRA_API_BASE.includes(':8080')) {
+          return 'http://localhost:8000';
+        }
+        return window.KRASHIMITRA_API_BASE;
+      }
+      var p = location.port;
+      if (p === '5500' || p === '3000' || p === '5173' || p === '8080' || location.protocol === 'file:') {
+        return 'http://localhost:8000';
+      }
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        return 'http://localhost:8000';
+      }
+      return '';
+    }
+
     function ensureLoggedIn(opts) {
       if (window.KMRequireLogin) {
         return window.KMRequireLogin(opts);
@@ -2850,45 +2867,48 @@
         currentCount++;
         if (window.KrashiGamify) window.KrashiGamify.record('like');
         showToast('👍 आपको यह समाचार पसंद आया!');
-
-        // Sync with backend PostgreSQL database with JWT auth
-        var token = localStorage.getItem('krishi_token');
-        var headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-
-        try {
-          fetch('/api/news/' + encodeURIComponent(id) + '/like', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ user_id: localStorage.getItem('km_user_uid') || 'user' })
-          }).then(function(r) {
-            if (r.status === 401) {
-              ensureLoggedIn({
-                title: "लाइक करने के लिए लॉगिन करें",
-                text: "सत्र समाप्त हो गया है। कृपया दोबारा लॉगिन करें।",
-                resume: "like"
-              });
-              return null;
-            }
-            return r.json();
-          }).then(function(res) {
-            if (res && res.success && res.total_likes) {
-              likeCounts[id] = res.total_likes;
-              localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
-              if (btn) {
-                var cEl = btn.querySelector('.like-count');
-                if (cEl) cEl.textContent = res.total_likes;
-              }
-            }
-          }).catch(function(){});
-        } catch (e) {}
       } else {
         currentCount = Math.max(0, currentCount - 1);
+        showToast('लाइक हटा दिया गया');
       }
 
       likeCounts[id] = currentCount;
       localStorage.setItem('km_news_likes', JSON.stringify(userLikes));
       localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
+
+      // Sync with backend PostgreSQL database with JWT auth
+      var token = localStorage.getItem('krishi_token');
+      var headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      try {
+        fetch(getApiBase() + '/api/news/' + encodeURIComponent(id) + '/like', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ is_liked: isLiked, user_id: localStorage.getItem('km_user_uid') || 'user' })
+        }).then(function(r) {
+          if (r.status === 401 || r.status === 403) {
+            userLikes[id] = false;
+            localStorage.setItem('km_news_likes', JSON.stringify(userLikes));
+            ensureLoggedIn({
+              title: "लाइक करने के लिए लॉगिन करें",
+              text: "सत्र समाप्त हो गया है। कृपया दोबारा लॉगिन करें।",
+              resume: "like"
+            });
+            return null;
+          }
+          return r.json();
+        }).then(function(res) {
+          if (res && res.success && res.total_likes) {
+            likeCounts[id] = res.total_likes;
+            localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
+            if (btn) {
+              var cEl = btn.querySelector('.like-count');
+              if (cEl) cEl.textContent = res.total_likes;
+            }
+          }
+        }).catch(function(){});
+      } catch (e) {}
 
       if (btn) {
         btn.classList.toggle('liked', isLiked);
@@ -2951,10 +2971,10 @@
       document.body.style.overflow = 'hidden';
 
       // Pull real community comments from PostgreSQL backend
-      fetch('/api/news/' + encodeURIComponent(id) + '/social')
+      fetch(getApiBase() + '/api/news/' + encodeURIComponent(id) + '/social')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (data.success && Array.isArray(data.comments)) {
+          if (data && data.success && Array.isArray(data.comments)) {
             var dbComments = data.comments.map(function(c) {
               return {
                 author: c.author_name,
@@ -3043,7 +3063,7 @@
       var headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = 'Bearer ' + token;
 
-      fetch('/api/news/' + encodeURIComponent(id) + '/comment', {
+      fetch(getApiBase() + '/api/news/' + encodeURIComponent(id) + '/comment', {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -3051,12 +3071,35 @@
           comment_text: textVal
         })
       }).then(function(r) {
-        if (r.status === 401) {
+        if (r.status === 401 || r.status === 403) {
           ensureLoggedIn({
             title: "टिप्पणी दर्ज करने के लिए लॉगिन करें",
             text: "सत्र समाप्त हो गया है। कृपया दोबारा लॉगिन करें।",
             resume: "comment"
           });
+          return null;
+        }
+        return r.json();
+      }).then(function(res) {
+        if (res && res.success) {
+          // Re-fetch social for fresh DB list
+          fetch(getApiBase() + '/api/news/' + encodeURIComponent(id) + '/social')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data && data.success && Array.isArray(data.comments)) {
+                var dbComments = data.comments.map(function(c) {
+                  return {
+                    author: c.author_name,
+                    village: c.location || '',
+                    text: c.comment_text,
+                    time: c.created_at || 'हाल ही में'
+                  };
+                });
+                localStorage.setItem('km_news_comments_' + id, JSON.stringify(dbComments));
+                renderCommentsList(id);
+                renderNewsList();
+              }
+            }).catch(function(){});
         }
       }).catch(function(){});
 
@@ -3660,7 +3703,7 @@
       if (!list) return;
       list.innerHTML = '<div style="font-size:12.5px;color:var(--news-muted);padding:8px 0;">टिप्पणियां लोड हो रही हैं…</div>';
       try {
-        var r = await fetch('/api/news/' + encodeURIComponent(newsId) + '/social');
+        var r = await fetch(getApiBase() + '/api/news/' + encodeURIComponent(newsId) + '/social');
         var d = await r.json();
         var comments = (d && d.comments) || [];
         if (!comments.length) {
@@ -3702,12 +3745,12 @@
         var headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = 'Bearer ' + token;
 
-        var r = await fetch('/api/news/' + encodeURIComponent(_activeReaderStory.id) + '/comment', {
+        var r = await fetch(getApiBase() + '/api/news/' + encodeURIComponent(_activeReaderStory.id) + '/comment', {
           method: 'POST',
           headers: headers,
           body: JSON.stringify({ author_name: author, comment_text: text })
         });
-        if (r.status === 401) {
+        if (r.status === 401 || r.status === 403) {
           ensureLoggedIn({
             title: "टिप्पणी दर्ज करने के लिए लॉगिन करें",
             text: "सत्र समाप्त हो गया है। कृपया दोबारा लॉगिन करें।",
@@ -3725,10 +3768,37 @@
           var curr = parseInt((badge && badge.textContent) || '0', 10) || 0;
           if (badge) badge.textContent = (curr + 1) + ' टिप्पणियां';
           if (countBtn) countBtn.textContent = (curr + 1) + ' टिप्पणियां';
+          syncSocialBatch();
         }
       } catch (e) {
         showToast('टिप्पणी भेजने में त्रुटि', 'error');
       }
+    }
+
+    function syncSocialBatch() {
+      if (!ALL_NEWS || !ALL_NEWS.length) return;
+      var ids = ['news-lead'].concat(ALL_NEWS.map(function(n) { return n.id; }).slice(0, 30)).join(',');
+      fetch(getApiBase() + '/api/news/social/batch?ids=' + encodeURIComponent(ids))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d && d.success && d.stats) {
+            var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts') || '{}');
+            Object.keys(d.stats).forEach(function(nid) {
+              likeCounts[nid] = d.stats[nid].total_likes;
+            });
+            localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
+            renderNewsList();
+
+            // Update lead story if stats present
+            if (d.stats['news-lead']) {
+              var leadCount = document.getElementById('lead-like-count');
+              if (leadCount) leadCount.textContent = d.stats['news-lead'].total_likes;
+              var leadCommEl = document.getElementById('lead-comment-count');
+              if (leadCommEl) leadCommEl.textContent = d.stats['news-lead'].comment_count;
+            }
+          }
+        })
+        .catch(function(){});
     }
 
     // ── Init ──
@@ -3742,7 +3812,7 @@
       }
 
       function loadDynamicAutoPilotFeed() {
-        fetch('/api/news/feed')
+        fetch(getApiBase() + '/api/news/feed')
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data.success && Array.isArray(data.articles) && data.articles.length) {
@@ -3755,8 +3825,11 @@
                 if (b) b.textContent = ALL_NEWS.length + '+ खबरें';
               }
             }
+            syncSocialBatch();
           })
-          .catch(function () {});
+          .catch(function () {
+            syncSocialBatch();
+          });
       }
       loadDynamicAutoPilotFeed();
 

@@ -7,12 +7,13 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.database.db import NewsComment, NewsLike, get_db
-from backend.utils.auth_utils import get_current_user
+from backend.utils.auth_utils import decode_access_token, resolve_token_user
 from backend.services.news_auto_service import (
     add_direct_post,
     curate_from_url,
@@ -29,6 +30,52 @@ from backend.services.news_auto_service import (
 logger = logging.getLogger("krishi.news_curate_route")
 
 router = APIRouter(prefix="/api/news", tags=["Krashi News Auto-Pilot"])
+
+oauth2_scheme = HTTPBearer(auto_error=False)
+
+
+def get_news_auth_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Strictly requires user login for like & comment actions, while safely accepting valid JWT tokens."""
+    if not credentials or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="कृपया लाइक या कमेंट करने के लिए पहले लॉगिन करें।",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials.strip()
+    if not token or token in ["null", "undefined"]:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="कृपया लाइक या कमेंट करने के लिए पहले लॉगिन करें।",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 1. Full DB user lookup
+    try:
+        user = resolve_token_user(db, token)
+        if user:
+            name = getattr(user, "name", None) or getattr(user, "full_name", None) or (user.email.split("@")[0] if getattr(user, "email", None) else "किसान भाई")
+            return {"user_id": user.id, "name": name, "email": getattr(user, "email", "")}
+    except Exception as e:
+        logger.warning(f"resolve_token_user warning: {e}")
+
+    # 2. JWT token decode fallback (valid cryptographically, even if verification flag was pending)
+    payload = decode_access_token(token)
+    if payload:
+        uid = payload.get("sub") or payload.get("user_id") or payload.get("email") or "user"
+        email = payload.get("email") or f"{uid}@krashimitra.in"
+        name = payload.get("name") or str(uid)
+        return {"user_id": uid, "name": name, "email": email}
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="आपका लॉगिन सत्र (Token) समाप्त हो गया है। कृपया दोबारा लॉगिन करें।",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 # ── Pydantic Request Models ────────────────────────────────────
@@ -59,12 +106,13 @@ class DirectPublishRequest(BaseModel):
 
 class LikeRequest(BaseModel):
     user_id: Optional[str] = "anon"
+    is_liked: Optional[bool] = True
 
 
 class CommentRequest(BaseModel):
-    author_name: str = Field(..., min_length=2, max_length=80)
-    location: Optional[str] = Field(None, max_length=100)
-    comment_text: str = Field(..., min_length=3, max_length=400)
+    author_name: Optional[str] = "किसान भाई"
+    location: Optional[str] = None
+    comment_text: str = Field(..., min_length=1, max_length=1000)
 
 
 # ── Public Feed ────────────────────────────────────────────────
@@ -216,15 +264,34 @@ async def get_news_social(news_id: str, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/social/batch")
+async def get_batch_news_social(ids: str = "", db: Session = Depends(get_db)):
+    """
+    Returns live like counts and comment counts for multiple news IDs in 1 request.
+    Example: GET /api/news/social/batch?ids=news-lead,km-auto-1,news-1
+    """
+    news_id_list = [i.strip() for i in ids.split(",") if i.strip()]
+    res = {}
+    for nid in news_id_list:
+        base_seed = _calc_seed_likes(nid)
+        db_likes = db.query(NewsLike).filter(NewsLike.news_id == nid).count()
+        comm_count = db.query(NewsComment).filter(NewsComment.news_id == nid, NewsComment.is_approved == True).count()
+        res[nid] = {
+            "total_likes": base_seed + db_likes,
+            "comment_count": comm_count,
+        }
+    return {"success": True, "stats": res}
+
+
 @router.post("/{news_id}/like")
 async def add_news_like(
     news_id: str,
     payload: LikeRequest,
     req: Request,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_news_auth_user),
     db: Session = Depends(get_db),
 ):
-    """Records an authenticated user like in the database and prevents duplicates."""
+    """Records an authenticated user like in the database and supports toggle/unlike."""
     user_ident = f"user-{current_user.get('user_id')}"
 
     existing = (
@@ -233,31 +300,44 @@ async def add_news_like(
         .first()
     )
 
-    if not existing:
-        new_like = NewsLike(news_id=news_id, user_identifier=user_ident)
-        db.add(new_like)
-        try:
-            db.commit()
-        except Exception:
-            db.rollback()
+    is_liked = payload.is_liked if payload.is_liked is not None else True
+
+    if is_liked:
+        if not existing:
+            new_like = NewsLike(news_id=news_id, user_identifier=user_ident)
+            db.add(new_like)
+            try:
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.warning(f"Like commit warning: {e}")
+    else:
+        # User unliked
+        if existing:
+            db.delete(existing)
+            try:
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.warning(f"Unlike commit warning: {e}")
 
     base_seed = _calc_seed_likes(news_id)
     total_likes = base_seed + db.query(NewsLike).filter(NewsLike.news_id == news_id).count()
 
-    return {"success": True, "total_likes": total_likes}
+    return {"success": True, "total_likes": total_likes, "is_liked": is_liked}
 
 
 @router.post("/{news_id}/comment")
 async def post_news_comment(
     news_id: str,
     payload: CommentRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_news_auth_user),
     db: Session = Depends(get_db),
 ):
     """Submits an authenticated farmer comment and makes it visible to all visitors."""
-    author_name = payload.author_name.strip()
-    if not author_name:
-        author_name = current_user.get("email", "").split("@")[0] or "किसान भाई"
+    author_name = (payload.author_name or "").strip()
+    if not author_name or author_name in ["किसान भाई", "किसान साथी"]:
+        author_name = current_user.get("name") or (current_user.get("email", "").split("@")[0] if current_user.get("email") else "किसान भाई")
 
     comment = NewsComment(
         news_id=news_id,
