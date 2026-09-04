@@ -19,6 +19,7 @@ from backend.services.news_auto_service import (
     curate_from_url,
     discard_post,
     edit_staged_post,
+    generate_ai_agri_image,
     get_current_cycle_info,
     get_published_posts,
     get_staged_posts,
@@ -97,6 +98,13 @@ class FunnelDiscardRequest(BaseModel):
 class FunnelEditRequest(BaseModel):
     id: str
     updates: dict
+
+
+class GenerateImageRequest(BaseModel):
+    post_id: Optional[str] = None
+    title: str
+    category: Optional[str] = "crop"
+    custom_prompt: Optional[str] = None
 
 
 class DirectPublishRequest(BaseModel):
@@ -211,9 +219,28 @@ async def curate_news_from_url(payload: CurateUrlRequest):
 @router.post("/publish-direct")
 async def publish_news_direct(payload: DirectPublishRequest):
     """Saves a post directly or adds it to the staging queue."""
-    saved = add_direct_post(payload.post, publish_now=payload.publish_now)
-    msg = "समाचार प्रकाशित हो गया!" if payload.publish_now else "समाचार फ़नल में जोड़ दिया गया!"
-    return {"success": True, "message": msg, "article": saved}
+    try:
+        saved = add_direct_post(payload.post, publish_now=payload.publish_now)
+        msg = "समाचार प्रकाशित हो गया!" if payload.publish_now else "समाचार फ़नल में जोड़ दिया गया!"
+        return {"success": True, "message": msg, "article": saved}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@router.post("/generate-image")
+async def generate_news_image_route(payload: GenerateImageRequest):
+    """Generates a relevant, high-resolution agricultural image using Gemini + Imagen 3 / Pollinations."""
+    try:
+        res = await generate_ai_agri_image(
+            title=payload.title,
+            category=payload.category or "crop",
+            custom_prompt=payload.custom_prompt,
+            post_id=payload.post_id,
+        )
+        return res
+    except Exception as e:
+        logger.error(f"Image generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"इमेज तैयार करने में त्रुटि: {str(e)}")
 
 
 # ── Social Community: Real DB Likes & Comments ─────────────────
@@ -223,6 +250,31 @@ def _calc_seed_likes(news_id: str) -> int:
     for ch in news_id:
         h = ((h << 5) - h) + ord(ch)
     return 260 + (abs(h) % 321)  # 260 to 580 likes
+
+
+# ⚠️  /social/batch MUST be defined BEFORE /{news_id}/social,
+#     otherwise FastAPI treats "social" as a {news_id} path param
+#     and the batch endpoint is never reached.
+@router.get("/social/batch")
+async def get_batch_news_social(ids: str = "", db: Session = Depends(get_db)):
+    """
+    Returns live like counts and comment counts for multiple news IDs in 1 request.
+    Example: GET /api/news/social/batch?ids=news-lead,km-auto-1,news-1
+
+    Response is a flat dict keyed by news_id with `likes` and `comments` fields
+    so the frontend can iterate Object.keys(response) directly.
+    """
+    news_id_list = [i.strip() for i in ids.split(",") if i.strip()]
+    res = {}
+    for nid in news_id_list:
+        base_seed = _calc_seed_likes(nid)
+        db_likes = db.query(NewsLike).filter(NewsLike.news_id == nid).count()
+        comm_count = db.query(NewsComment).filter(NewsComment.news_id == nid, NewsComment.is_approved == True).count()
+        res[nid] = {
+            "likes": base_seed + db_likes,
+            "comments": comm_count,
+        }
+    return res
 
 
 @router.get("/{news_id}/social")
@@ -262,25 +314,6 @@ async def get_news_social(news_id: str, db: Session = Depends(get_db)):
         "comment_count": len(comments_list),
         "comments": comments_list,
     }
-
-
-@router.get("/social/batch")
-async def get_batch_news_social(ids: str = "", db: Session = Depends(get_db)):
-    """
-    Returns live like counts and comment counts for multiple news IDs in 1 request.
-    Example: GET /api/news/social/batch?ids=news-lead,km-auto-1,news-1
-    """
-    news_id_list = [i.strip() for i in ids.split(",") if i.strip()]
-    res = {}
-    for nid in news_id_list:
-        base_seed = _calc_seed_likes(nid)
-        db_likes = db.query(NewsLike).filter(NewsLike.news_id == nid).count()
-        comm_count = db.query(NewsComment).filter(NewsComment.news_id == nid, NewsComment.is_approved == True).count()
-        res[nid] = {
-            "total_likes": base_seed + db_likes,
-            "comment_count": comm_count,
-        }
-    return {"success": True, "stats": res}
 
 
 @router.post("/{news_id}/like")

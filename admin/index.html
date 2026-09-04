@@ -1725,6 +1725,11 @@ body {
         <span>कृषि न्यूज़ ऑटो-पायलट</span>
         <span class="nav-badge" id="nf-nav-badge" style="background:#f59e0b; color:#fff;" hidden>0</span>
       </div>
+      <div class="nav-item" onclick="switchPage('festival-wishes', this)" id="nav-festival-wishes">
+        <span class="nav-icon">🪔</span>
+        <span>त्योहार शुभकामनाएं (Festival)</span>
+        <span class="nav-badge" id="fest-nav-badge" style="background:#10b981; color:#fff;" hidden>LIVE</span>
+      </div>
     </nav>
 
     <div class="sidebar-theme">
@@ -5473,6 +5478,195 @@ body {
         </div>
       </div>
 
+      <!-- ══════════ PAGE: FESTIVAL WISHES & POP-UP CONTROL ══════════ -->
+      <div class="page" id="page-festival-wishes">
+        <!-- Header Banner & Live Status -->
+        <div class="nf-cycle-banner" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(16, 185, 129, 0.12)); border: 1.5px solid rgba(245, 158, 11, 0.4);">
+          <div style="flex: 1; min-width: 280px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+              <span style="font-size:26px;">🪔</span>
+              <div>
+                <h3 style="font-size:18px; font-weight:800; color:var(--text); margin:0;">त्योहार शुभकामनाएं व पॉप-अप कंट्रोल (Festival Wishes)</h3>
+                <p style="font-size:12.5px; color:var(--text-dim); margin:2px 0 0;">वेबसाइट के हर पेज पर दिखने वाले पावन पर्व के पॉप-अप, फोटो, समय-सीमा (Duration) और संदेश को नियंत्रित करें।</p>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px; margin-top:8px;">
+            <div id="fest-live-indicator-badge" class="status-pill online" style="font-size:13px; font-weight:700; padding:6px 14px;">
+              🟢 लोड हो रहा है…
+            </div>
+            <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:30px; font-size:13px; font-weight:700;">
+              <input type="checkbox" id="fest-active-toggle" style="width:16px; height:16px; cursor:pointer;" onchange="toggleFestivalActiveState(this.checked)">
+              <span>पॉप-अप चालू रखें (Active)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 1-Click Festival Presets -->
+        <div class="dashboard-panel" style="margin-bottom:20px;">
+          <div class="panel-header">
+            <span class="panel-title">⚡ 1-क्लिक पावन पर्व प्रीसेट (Quick Festival Presets)</span>
+            <span class="text-muted" style="font-size:12px;">एक क्लिक में पूरा त्योहार सेटअप लोड करें</span>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyFestivalPreset('krishna_janmashtami')" style="font-weight:700;">🪶 श्री कृष्ण जन्माष्टमी</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyFestivalPreset('diwali')" style="font-weight:700;">🪔 दीपावली व धनतेरस</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyFestivalPreset('makar_sankranti')" style="font-weight:700;">🌾 मकर संक्रांति व पोंगल</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyFestivalPreset('holi')" style="font-weight:700;">🎨 होली व रंगोत्सव</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyFestivalPreset('chhath_puja')" style="font-weight:700;">☀️ छठ महापर्व</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyFestivalPreset('kisan_diwas')" style="font-weight:700;">🚜 राष्ट्रीय किसान दिवस</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Configuration Grid -->
+        <div style="display:grid; grid-template-columns: 1.15fr 1fr; gap:20px; margin-bottom:24px;">
+          <!-- Left Column: Image Controls & Timing -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <!-- Image Card -->
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <span class="panel-title">🖼️ उत्सव फोटो / इमेज नियंत्रण (Image Control)</span>
+              </div>
+              <div class="panel-body">
+                <!-- Live Preview in 4:3 -->
+                <div style="width:100%; height:230px; background:#071410; border:2px solid rgba(245,158,11,0.5); border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:14px; box-shadow:0 8px 25px rgba(0,0,0,0.4);">
+                  <img id="fest-img-preview" src="/images/krishna-janmashtami.webp" alt="Festival Preview" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/images/krishna-janmashtami.jpg'">
+                  <div id="fest-img-loading" style="display:none; position:absolute; inset:0; background:rgba(7,20,16,0.85); backdrop-filter:blur(3px); color:#fef08a; font-size:13px; font-weight:700; align-items:center; justify-content:center; gap:8px;">
+                    <span class="km-spinner"></span> AI उत्सव फोटो तैयार हो रही है…
+                  </div>
+                </div>
+
+                <!-- Image URL Input -->
+                <div style="margin-bottom:12px;">
+                  <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">इमेज एड्रेस या वेब लिंक (Image Path / URL):</label>
+                  <input type="text" id="fest-image-url" class="search-input" style="width:100%; box-sizing:border-box; font-family:var(--font-mono); font-size:12px; padding:9px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text);" oninput="updateFestImgPreview(this.value)">
+                </div>
+
+                <!-- Action buttons: Upload & AI Generation -->
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                  <label class="btn btn-secondary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                    <span>📁 नई फोटो अपलोड करें</span>
+                    <input type="file" id="fest-file-input" accept="image/*" style="display:none;" onchange="handleFestImgUpload(this)">
+                  </label>
+                  <button type="button" class="btn btn-primary btn-sm" id="btn-fest-ai-gen" onclick="generateFestiveAiImage()" style="background:linear-gradient(135deg, #10b981, #059669); border:none; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                    <span>🪄 Gemini AI से फोटो बनाएं</span>
+                  </button>
+                </div>
+                <div id="fest-ai-status" style="font-size:11.5px; color:var(--muted);">त्योहार के नाम व कृषि परिवेश के अनुसार 4K HD फोटो</div>
+              </div>
+            </div>
+
+            <!-- Duration & Timing Card -->
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <span class="panel-title">⏱️ समय-सीमा व अवधि (Duration & Expiry)</span>
+              </div>
+              <div class="panel-body">
+                <!-- Quick Duration Presets -->
+                <div style="margin-bottom:14px;">
+                  <div style="font-size:11.5px; font-weight:700; color:var(--muted); margin-bottom:6px;">त्वरित अवधि चयन (Quick Duration Presets):</div>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <button type="button" class="btn btn-secondary btn-xs" onclick="setDurationPreset('tomorrow')">🌙 कल रात 12 बजे तक (Till Tomorrow)</button>
+                    <button type="button" class="btn btn-secondary btn-xs" onclick="setDurationPreset('today')">☀️ सिर्फ आज रात तक (Today Only)</button>
+                    <button type="button" class="btn btn-secondary btn-xs" onclick="setDurationPreset('3days')">📅 अगले 3 दिन (3 Days)</button>
+                    <button type="button" class="btn btn-secondary btn-xs" onclick="setDurationPreset('7days')">📅 पूरे 7 दिन (1 Week)</button>
+                  </div>
+                </div>
+
+                <!-- Custom Datetime Range -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">शुरू होने की तिथि व समय (Start Time):</label>
+                    <input type="datetime-local" id="fest-start-time" style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px;">
+                  </div>
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">समाप्ति तिथि व समय (Expiry / End Time):</label>
+                    <input type="datetime-local" id="fest-end-time" style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px;">
+                  </div>
+                </div>
+
+                <!-- Cooldown Interval -->
+                <div>
+                  <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">दोबारा दिखने का अंतराल (Dismissal Cooldown):</label>
+                  <select id="fest-cooldown" style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px;">
+                    <option value="1">1 घंटा (1 hour after user closes)</option>
+                    <option value="2">2 घंटे</option>
+                    <option value="3" selected>3 घंटे (अनुशंसित / Recommended)</option>
+                    <option value="6">6 घंटे</option>
+                    <option value="12">12 घंटे</option>
+                    <option value="24">24 घंटे (दिन में सिर्फ 1 बार)</option>
+                  </select>
+                  <div style="font-size:11px; color:var(--muted); margin-top:4px;">यदि किसान पॉप-अप बंद करता है तो इतने समय तक आंतरिक पेजों पर दोबारा नहीं खुलेगा।</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Content, Headings & Blessings -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="dashboard-panel" style="flex:1;">
+              <div class="panel-header">
+                <span class="panel-title">✍️ संदेश, शीर्षक व मंगलकामना (Content & Blessings)</span>
+              </div>
+              <div class="panel-body">
+                <!-- Festival Name & Top Pill -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">त्योहार का नाम (Festival Name):</label>
+                    <input type="text" id="fest-name" placeholder="उदा. श्री कृष्ण जन्माष्टमी" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px; font-weight:600;">
+                  </div>
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">ऊपरी मंत्र / पिल (Top Pill Text):</label>
+                    <input type="text" id="fest-top-pill" placeholder="उदा. 🪶 ॥ हरे कृष्ण हरे राम ॥ 🪈" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px;">
+                  </div>
+                </div>
+
+                <!-- Heading Title -->
+                <div style="margin-bottom:14px;">
+                  <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">मुख्य शीर्षक (Main Greeting Heading) *:</label>
+                  <input type="text" id="fest-title" placeholder="उदा. श्री कृष्ण जन्माष्टमी की हार्दिक शुभकामनाएं" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:14px; font-weight:700;">
+                </div>
+
+                <!-- Subtitle / Summary -->
+                <div style="margin-bottom:14px;">
+                  <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">संक्षिप्त मंगलकामना (Blessing Summary) *:</label>
+                  <textarea id="fest-summary" rows="2" placeholder="उदा. कृषि मित्र परिवार की ओर से आपको एवं आपके पूरे परिवार को पावन पर्व की मंगलकामनाएं!" style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px; line-height:1.4; resize:vertical;"></textarea>
+                </div>
+
+                <!-- 2 Blessing Points for Farmers -->
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:14px;">
+                  <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:8px;">🌾 किसान आशीर्वाद बिंदु (Agricultural Blessing Points):</label>
+                  <div style="margin-bottom:8px;">
+                    <span style="font-size:11px; color:var(--muted); display:block; margin-bottom:3px;">बिंदु 1 (फसल व खेत):</span>
+                    <input type="text" id="fest-bullet-1" placeholder="भगवान का आशीर्वाद आपके खेत-खलिहान में लहलहाती फसल और समृद्धि लाए।" style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12px;">
+                  </div>
+                  <div>
+                    <span style="font-size:11px; color:var(--muted); display:block; margin-bottom:3px;">बिंदु 2 (पशुधन व परिवार):</span>
+                    <input type="text" id="fest-bullet-2" placeholder="गौमाता और पशुधन सदैव स्वस्थ रहें एवं घर-आंगन में सुख-शांति बनी रहे।" style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12px;">
+                  </div>
+                </div>
+
+                <!-- CTA Button Text -->
+                <div style="margin-bottom:16px;">
+                  <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">मुख्य बटन टेक्स्ट (CTA Button Label):</label>
+                  <input type="text" id="fest-cta-text" placeholder="🙏 जय श्री कृष्ण (शुभकामनाएं स्वीकारें)" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px; font-weight:600;">
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding-top:14px;">
+                  <button type="button" class="btn btn-secondary" onclick="testFestivalPreviewModal()" style="font-weight:700;">👁️ लाइव प्रीव्यू टेस्ट करें</button>
+                  <button type="button" class="btn btn-primary" id="btn-save-fest-config" onclick="saveFestivalConfig()" style="background:#10b981; border-color:#059669; font-weight:800; padding:8px 20px;">
+                    💾 सेटिंग्स सहेजें (Save Festival)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <!-- ══════════ UPI COLLECT ══════════
@@ -5851,7 +6045,7 @@ body {
 
 <!-- ════════════ KRASHI NEWS CHANGE IMAGE MODAL ════════════ -->
 <div id="nf-change-image-modal" class="layout-modal-overlay hidden" onclick="if(event.target===this) closeChangeImageModal()">
-  <div class="layout-modal-card" style="max-width: 560px; padding: 24px;">
+  <div class="layout-modal-card" style="max-width: 580px; padding: 24px;">
     <div class="layout-modal-header" style="margin-bottom: 16px; padding-bottom: 12px; display:flex; align-items:center; justify-content:space-between;">
       <div style="display:flex; align-items:center; gap:10px;">
         <span style="font-size:24px;">🖼️</span>
@@ -5866,8 +6060,36 @@ body {
     <!-- Live Preview Box -->
     <div style="margin-bottom:14px;">
       <div style="font-size:12px; font-weight:700; color:var(--text-dim); margin-bottom:6px;">लाइव प्रीव्यू (Live Preview):</div>
-      <div style="width:100%; height:190px; background:#0f172a; border-radius:8px; overflow:hidden; border:1px solid var(--border); display:flex; align-items:center; justify-content:center;">
+      <div style="width:100%; height:200px; background:#0f172a; border-radius:8px; overflow:hidden; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; position:relative;">
         <img id="nf-img-modal-preview" src="" alt="Preview" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/images/articles/dhan-nursery-ropai-card.webp'">
+        <span id="nf-img-modal-loading-badge" style="display:none; position:absolute; inset:0; background:rgba(15,23,42,0.85); backdrop-filter:blur(3px); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span class="km-spinner"></span> Gemini AI इमेज तैयार कर रहा है…
+        </span>
+      </div>
+    </div>
+
+    <!-- ✨ Gemini AI Image Creator Box -->
+    <div style="background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08)); border:1.5px solid rgba(16,185,129,0.35); border-radius:8px; padding:12px 14px; margin-bottom:16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:800; color:var(--text);">
+          <span style="font-size:16px;">✨</span>
+          <span>Gemini AI से संबंधित इमेज बनाएं (Generate with AI)</span>
+        </div>
+        <button type="button" class="btn btn-xs" id="nf-btn-toggle-prompt" onclick="toggleAiPromptInput()" style="background:transparent; border:1px solid var(--border); color:var(--text-dim); font-size:11px; padding:2px 8px;">
+          ✏️ प्रॉम्प्ट कस्टमाइज़ करें
+        </button>
+      </div>
+      
+      <!-- Optional custom prompt textarea -->
+      <div id="nf-ai-prompt-wrap" style="display:none; margin-bottom:10px;">
+        <textarea id="nf-ai-prompt-input" rows="2" placeholder="विशेष इमेज प्रॉम्प्ट दर्ज करें (या खाली छोड़ें, Gemini समाचार शीर्षक से स्वयं 4K एचडी प्रॉम्प्ट बनाएगा)..." style="width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:11.5px; font-family:inherit; resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <button type="button" class="btn btn-primary btn-sm" id="btn-generate-ai-img" onclick="generateAiImageForCurrentPost()" style="background:linear-gradient(135deg, #10b981, #059669); border:none; font-weight:700; display:inline-flex; align-items:center; gap:6px; padding:6px 14px; box-shadow:0 2px 8px rgba(16,185,129,0.3);">
+          <span>🪄 AI फोटो तैयार करें</span>
+        </button>
+        <span id="nf-ai-img-status" style="font-size:11.5px; color:var(--muted);">शीर्षक व फसल के अनुसार 4K एचडी फोटो</span>
       </div>
     </div>
 
@@ -5899,6 +6121,88 @@ body {
     <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding-top:14px;">
       <button type="button" class="btn btn-secondary" onclick="closeChangeImageModal()">✕ रद्द करें</button>
       <button type="button" class="btn btn-primary" onclick="saveChangeImageModal()" style="background:#10b981; border-color:#059669; font-weight:700;">💾 फोटो सहेजें (Save Image)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ KRASHI NEWS FULL EDIT POST MODAL ════════════ -->
+<div id="nf-edit-post-modal" class="layout-modal-overlay hidden" onclick="if(event.target===this) closeEditPostModal()">
+  <div class="layout-modal-card" style="max-width: 680px; max-height: 90vh; display:flex; flex-direction:column; padding: 24px;">
+    <div class="layout-modal-header" style="margin-bottom: 14px; padding-bottom: 10px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:24px;">✏️</span>
+        <div>
+          <span class="layout-modal-title" style="font-size:17px; font-weight:800;">समाचार पोस्ट संपादित करें (Edit News Post)</span>
+          <div style="font-size:11.5px; color:var(--muted); margin-top:2px;" id="nf-edit-modal-subtitle">लाइव समाचार या ड्राफ्ट विवरण बदलें</div>
+        </div>
+      </div>
+      <button class="layout-modal-close" onclick="closeEditPostModal()" style="font-size:22px; background:none; border:none; color:var(--muted); cursor:pointer;">×</button>
+    </div>
+
+    <div style="overflow-y:auto; flex:1; padding-right:4px;">
+      <!-- Title -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">शीर्षक (Title) *:</label>
+        <input type="text" id="nf-edit-title" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13.5px; font-weight:600;">
+      </div>
+
+      <!-- Category & Seed Likes Grid -->
+      <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:12px; margin-bottom:14px;">
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">श्रेणी (Category) *:</label>
+          <select id="nf-edit-category" style="width:100%; box-sizing:border-box; padding:9px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px;">
+            <option value="mandi">🏪 मंडी व भाव</option>
+            <option value="yojana">🏛️ सरकारी योजना</option>
+            <option value="weather">🌤️ मौसम व अलर्ट</option>
+            <option value="crop">🌾 फसल व कीट</option>
+            <option value="khad">🧪 खाद व पोषण</option>
+            <option value="pashu">🐄 पशुपालन व डेयरी</option>
+            <option value="tech">🚜 आधुनिक तकनीक</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">सीड लाइक्स (Seed Likes):</label>
+          <input type="number" id="nf-edit-likes" min="0" style="width:100%; box-sizing:border-box; padding:9px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px;">
+        </div>
+      </div>
+
+      <!-- Excerpt -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">संक्षिप्त सारांश (Short Excerpt) *:</label>
+        <textarea id="nf-edit-excerpt" rows="2" style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px; line-height:1.4; resize:vertical;"></textarea>
+      </div>
+
+      <!-- Full Story -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">विस्तृत समाचार (Full Story Article):</label>
+        <textarea id="nf-edit-story" rows="5" style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px; line-height:1.5; resize:vertical;"></textarea>
+      </div>
+
+      <!-- Takeaway Bullets (3 items) -->
+      <div style="margin-bottom:14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px;">
+        <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:8px;">📌 3 मुख्य टेकअवे बिंदु (Takeaway Bullets):</label>
+        <input type="text" id="nf-edit-bullet-0" placeholder="बिंदु 1: मुख्य फैसला/घोषणा" style="width:100%; box-sizing:border-box; padding:7px 10px; margin-bottom:6px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12px;">
+        <input type="text" id="nf-edit-bullet-1" placeholder="बिंदु 2: किसान लाभ/असर" style="width:100%; box-sizing:border-box; padding:7px 10px; margin-bottom:6px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12px;">
+        <input type="text" id="nf-edit-bullet-2" placeholder="बिंदु 3: ज़रूरी कदम/सलाह" style="width:100%; box-sizing:border-box; padding:7px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12px;">
+      </div>
+
+      <!-- Image URL & Preview -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+          <label style="font-size:12px; font-weight:700; color:var(--text);">कवर फोटो URL (Image Address):</label>
+          <button type="button" class="btn btn-secondary btn-xs" onclick="openChangeImageFromEditModal()">🖼️ AI इमेज / फोटो बदलें</button>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <img id="nf-edit-img-preview" src="" style="width:68px; height:45px; object-fit:cover; border-radius:4px; border:1px solid var(--border);" onerror="this.src='/images/articles/dhan-nursery-ropai-card.webp'">
+          <input type="text" id="nf-edit-image" style="flex:1; box-sizing:border-box; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12px; font-family:var(--font-mono);" oninput="document.getElementById('nf-edit-img-preview').src=this.value;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding-top:14px; margin-top:8px; flex-shrink:0;">
+      <button type="button" class="btn btn-secondary" onclick="closeEditPostModal()">✕ रद्द करें</button>
+      <button type="button" class="btn btn-primary" id="btn-save-post-edit" onclick="submitPostEditModal()" style="background:#10b981; border-color:#059669; font-weight:700;">💾 बदलाव सहेजें (Save Changes)</button>
     </div>
   </div>
 </div>
@@ -7906,6 +8210,7 @@ function switchPage(pageId, el) {
   if (pageId === 'index-gate') loadIndexGate();
   if (pageId === 'articles') loadArticles();
   if (pageId === 'news-funnel') loadNewsFunnel();
+  if (pageId === 'festival-wishes') loadFestivalWishes();
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)
@@ -13605,7 +13910,7 @@ function renderStagedPosts(posts) {
           <div class="nf-acts-row">
             <button class="btn btn-primary btn-sm" onclick="confirmPushPost('${escapeHtml(p.id)}')">✅ स्वीकृत व लाइव करें</button>
             <button class="btn btn-secondary btn-sm" onclick="openChangeImageModal('${escapeHtml(p.id)}', '${escapeHtml(p.image || '')}')" style="font-weight:700;">🖼️ फोटो बदलें</button>
-            <button class="btn btn-secondary btn-sm" onclick="editFunnelDraftPrompt('${escapeHtml(p.id)}')">✏️ संपादित करें</button>
+            <button class="btn btn-secondary btn-sm" onclick="openEditPostModal('${escapeHtml(p.id)}', 'staged')" style="font-weight:700;">✏️ संपादित करें</button>
             <button class="btn btn-danger btn-sm" onclick="discardFunnelPost('${escapeHtml(p.id)}')">🗑️ हटाएं</button>
             ${p.source_url ? `<a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🔗 मूल स्रोत ↗</a>` : ''}
           </div>
@@ -13616,6 +13921,7 @@ function renderStagedPosts(posts) {
 }
 
 function renderPublishedFeed(posts) {
+  window._publishedFeedPosts = posts || [];
   const container = document.getElementById('nf-published-container');
   const countLabel = document.getElementById('nf-published-count-label');
   if (countLabel) countLabel.textContent = `${posts.length} लेख लाइव`;
@@ -13636,11 +13942,12 @@ function renderPublishedFeed(posts) {
             <th>लाइक्स (सीड)</th>
             <th>प्रकाशन विधि</th>
             <th>तारीख़</th>
+            <th>कार्य (Actions)</th>
           </tr>
         </thead>
         <tbody>
           ${posts.map(p => `
-            <tr>
+            <tr id="nf-pub-row-${escapeHtml(p.id)}">
               <td>
                 <div style="position:relative; width:52px; height:36px; border-radius:4px; overflow:hidden; cursor:pointer;" onclick="openChangeImageModal('${escapeHtml(p.id)}', '${escapeHtml(p.image || '')}')" title="कवर फोटो बदलें">
                   <img src="${escapeHtml(p.image || '/images/articles/dhan-nursery-ropai-card.webp')}" style="width:100%;height:100%;object-fit:cover;" referrerpolicy="no-referrer" onerror="this.src='/images/articles/dhan-nursery-ropai-card.webp'">
@@ -13652,6 +13959,12 @@ function renderPublishedFeed(posts) {
               <td><span class="nf-badge-seed">❤️ ${p.seed_likes || 350}</span></td>
               <td><span class="status-pill online">${p.published_by === 'auto_pilot_day5_fallback' ? '⚡ Day 5 Auto' : '✅ Admin Push'}</span></td>
               <td class="text-mono" style="font-size:11px;">${p.published_at ? new Date(p.published_at).toLocaleDateString('hi-IN') : 'आज'}</td>
+              <td>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <button type="button" class="btn btn-secondary btn-xs" onclick="openEditPostModal('${escapeHtml(p.id)}', 'published')" title="पोस्ट संपादित करें" style="font-weight:700;">✏️ संपादित करें</button>
+                  <button type="button" class="btn btn-danger btn-xs" onclick="confirmDeletePublishedPost('${escapeHtml(p.id)}')" title="हटाएं">🗑️</button>
+                </div>
+              </td>
             </tr>
           `).join('')}
         </tbody>
@@ -14126,7 +14439,6 @@ function setChangeImagePreset(url) {
 }
 
 async function saveChangeImageModal() {
-  if (!_currentChangeImgPostId) return;
   const input = document.getElementById('nf-img-modal-input');
   const newUrl = input ? input.value.trim() : '';
   if (!newUrl) {
@@ -14134,27 +14446,694 @@ async function saveChangeImageModal() {
     return;
   }
 
+  // If edit post modal is open, reflect the new URL into its inputs
+  const editImgInput = document.getElementById('nf-edit-image');
+  const editImgPrev = document.getElementById('nf-edit-img-preview');
+  if (editImgInput) editImgInput.value = newUrl;
+  if (editImgPrev) editImgPrev.src = newUrl;
+
+  if (_currentChangeImgPostId) {
+    try {
+      const r = await fetch(`${API}/api/news/funnel/edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: _currentChangeImgPostId,
+          updates: { image: newUrl }
+        })
+      });
+      const d = await r.json();
+      if (d.success) {
+        showToast('✓ फोटो एड्रेस सफलतापूर्वक अपडेट हो गया! 🖼️');
+        closeChangeImageModal();
+        loadNewsFunnel(false);
+      } else {
+        showToast(d.detail || 'फोटो बदलना विफल', 'error');
+      }
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  } else {
+    closeChangeImageModal();
+    showToast('✓ फोटो चुनी गई! (बदलाव सहेजने के लिए Save Changes पर क्लिक करें)');
+  }
+}
+
+// ── Gemini AI Image Generation Controls ──────────────────────────
+function toggleAiPromptInput() {
+  const wrap = document.getElementById('nf-ai-prompt-wrap');
+  const btn = document.getElementById('nf-btn-toggle-prompt');
+  if (!wrap) return;
+  if (wrap.style.display === 'none' || !wrap.style.display) {
+    wrap.style.display = 'block';
+    if (btn) btn.textContent = '✕ प्रॉम्प्ट छिपाएं';
+    setTimeout(() => document.getElementById('nf-ai-prompt-input')?.focus(), 60);
+  } else {
+    wrap.style.display = 'none';
+    if (btn) btn.textContent = '✏️ प्रॉम्प्ट कस्टमाइज़ करें';
+  }
+}
+
+async function generateAiImageForCurrentPost() {
+  let title = '';
+  let category = 'crop';
+  const postId = _currentChangeImgPostId || _editingPostId || '';
+
+  // Check cached posts
+  const allPosts = [...(window._stagedFunnelPosts || []), ...(window._publishedFeedPosts || [])];
+  const found = allPosts.find(p => p.id === postId);
+  if (found) {
+    title = found.title || '';
+    category = found.category || 'crop';
+  }
+
+  // If edit modal inputs have text, prioritize them
+  const editTitleVal = document.getElementById('nf-edit-title')?.value?.trim();
+  if (editTitleVal) {
+    title = editTitleVal;
+    category = document.getElementById('nf-edit-category')?.value || category;
+  }
+
+  if (!title) {
+    title = 'भारतीय आधुनिक खेती व किसान';
+  }
+
+  const customPrompt = (document.getElementById('nf-ai-prompt-input')?.value || '').trim();
+  const btn = document.getElementById('btn-generate-ai-img');
+  const badge = document.getElementById('nf-img-modal-loading-badge');
+  const statusEl = document.getElementById('nf-ai-img-status');
+
+  if (btn) btn.disabled = true;
+  if (badge) badge.style.display = 'flex';
+  if (statusEl) statusEl.innerHTML = '<span style="color:#10b981; font-weight:700;">⏳ Gemini AI फोटो बना रहा है… (3-5 सेकंड)</span>';
+
+  try {
+    const res = await fetch(`${API}/api/news/generate-image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        category,
+        custom_prompt: customPrompt,
+        post_id: postId
+      })
+    });
+    const d = await res.json();
+    if (d.success && d.image_url) {
+      // Update image input and preview in change image modal
+      const input = document.getElementById('nf-img-modal-input');
+      const preview = document.getElementById('nf-img-modal-preview');
+      if (input) input.value = d.image_url;
+      if (preview) preview.src = d.image_url;
+
+      // Also sync edit modal fields if open
+      const editImg = document.getElementById('nf-edit-image');
+      const editPrev = document.getElementById('nf-edit-img-preview');
+      if (editImg) editImg.value = d.image_url;
+      if (editPrev) editPrev.src = d.image_url;
+
+      if (statusEl) {
+        statusEl.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ AI फोटो तैयार (${d.source || 'AI'})!</span>`;
+      }
+      showToast('✨ Gemini AI ने संबंधित उच्च-गुणवत्ता फोटो तैयार कर दी!');
+    } else {
+      throw new Error(d.detail || 'इमेज तैयार नहीं हो पाई');
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:#ef4444;">त्रुटि: ${escapeHtml(err.message)}</span>`;
+    }
+    showToast('AI फोटो निर्माण विफल: ' + err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (badge) badge.style.display = 'none';
+  }
+}
+
+// ── Full Post Edit Modal Logic ────────────────────────────────────
+let _editingPostId = null;
+let _editingPostSource = null; // 'staged' or 'published'
+
+function openEditPostModal(id, source = 'staged') {
+  _editingPostId = id;
+  _editingPostSource = source;
+
+  let post = null;
+  if (source === 'staged') {
+    post = (window._stagedFunnelPosts || []).find(p => p.id === id);
+  } else {
+    post = (window._publishedFeedPosts || []).find(p => p.id === id);
+  }
+
+  if (!post) {
+    post = (window._stagedFunnelPosts || []).find(p => p.id === id) || (window._publishedFeedPosts || []).find(p => p.id === id);
+  }
+
+  if (!post) {
+    showToast('पोस्ट नहीं मिली', 'error');
+    return;
+  }
+
+  const modal = document.getElementById('nf-edit-post-modal');
+  const titleInput = document.getElementById('nf-edit-title');
+  const catSelect = document.getElementById('nf-edit-category');
+  const likesInput = document.getElementById('nf-edit-likes');
+  const excerptInput = document.getElementById('nf-edit-excerpt');
+  const storyInput = document.getElementById('nf-edit-story');
+  const b0 = document.getElementById('nf-edit-bullet-0');
+  const b1 = document.getElementById('nf-edit-bullet-1');
+  const b2 = document.getElementById('nf-edit-bullet-2');
+  const imageInput = document.getElementById('nf-edit-image');
+  const imgPreview = document.getElementById('nf-edit-img-preview');
+  const subtitle = document.getElementById('nf-edit-modal-subtitle');
+
+  if (subtitle) {
+    subtitle.textContent = source === 'published' 
+      ? 'लाइव वेबसाइट पर प्रदर्शित पोस्ट का विवरण बदलें (Live Article: ' + (post.id || '') + ')'
+      : 'फ़नल में सुरक्षित ड्राफ्ट का विवरण बदलें (Staged Draft: ' + (post.id || '') + ')';
+  }
+
+  if (titleInput) titleInput.value = post.title || '';
+  if (catSelect) catSelect.value = post.category || 'mandi';
+  if (likesInput) likesInput.value = post.seed_likes !== undefined ? post.seed_likes : 350;
+  if (excerptInput) excerptInput.value = post.excerpt || '';
+  if (storyInput) storyInput.value = post.full_story || post.content || '';
+
+  const bullets = post.bullets || [];
+  if (b0) b0.value = bullets[0] || '';
+  if (b1) b1.value = bullets[1] || '';
+  if (b2) b2.value = bullets[2] || '';
+
+  const imgSrc = post.image || '/images/articles/dhan-nursery-ropai-card.webp';
+  if (imageInput) imageInput.value = imgSrc;
+  if (imgPreview) imgPreview.src = imgSrc;
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeEditPostModal() {
+  const modal = document.getElementById('nf-edit-post-modal');
+  if (modal) modal.classList.add('hidden');
+  _editingPostId = null;
+  _editingPostSource = null;
+}
+
+function openChangeImageFromEditModal() {
+  const curImg = document.getElementById('nf-edit-image')?.value || '';
+  openChangeImageModal(_editingPostId, curImg);
+}
+
+async function submitPostEditModal() {
+  if (!_editingPostId) return;
+
+  const title = (document.getElementById('nf-edit-title')?.value || '').trim();
+  const category = document.getElementById('nf-edit-category')?.value || 'mandi';
+  const likes = parseInt(document.getElementById('nf-edit-likes')?.value, 10) || 350;
+  const excerpt = (document.getElementById('nf-edit-excerpt')?.value || '').trim();
+  const full_story = (document.getElementById('nf-edit-story')?.value || '').trim();
+  const b0 = (document.getElementById('nf-edit-bullet-0')?.value || '').trim();
+  const b1 = (document.getElementById('nf-edit-bullet-1')?.value || '').trim();
+  const b2 = (document.getElementById('nf-edit-bullet-2')?.value || '').trim();
+  const image = (document.getElementById('nf-edit-image')?.value || '').trim();
+
+  if (!title) {
+    showToast('कृपया समाचार का शीर्षक दर्ज करें', 'warning');
+    return;
+  }
+  if (!excerpt) {
+    showToast('कृपया समाचार का संक्षिप्त सारांश दर्ज करें', 'warning');
+    return;
+  }
+
+  const bullets = [b0, b1, b2].filter(Boolean);
+
+  const updates = {
+    title,
+    category,
+    seed_likes: likes,
+    excerpt,
+    full_story,
+    bullets,
+    image: image || '/images/articles/dhan-nursery-ropai-card.webp'
+  };
+
+  const btn = document.getElementById('btn-save-post-edit');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ सहेजा जा रहा है…';
+  }
+
   try {
     const r = await fetch(`${API}/api/news/funnel/edit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: _currentChangeImgPostId,
-        updates: { image: newUrl }
-      })
+      body: JSON.stringify({ id: _editingPostId, updates })
     });
     const d = await r.json();
     if (d.success) {
-      showToast('✓ फोटो एड्रेस सफलतापूर्वक अपडेट हो गया! 🖼️');
-      closeChangeImageModal();
+      showToast('✓ समाचार पोस्ट सफलतापूर्वक अपडेट हो गई! 📝');
+      closeEditPostModal();
       loadNewsFunnel(false);
     } else {
-      showToast(d.detail || 'फोटो बदलना विफल', 'error');
+      showToast(d.detail || 'पोस्ट सहेजना विफल', 'error');
+    }
+  } catch (e) {
+    showToast('त्रुटि: ' + e.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '💾 बदलाव सहेजें (Save Changes)';
+    }
+  }
+}
+
+async function confirmDeletePublishedPost(id) {
+  if (!confirm('क्या आप इस लाइव समाचार को हटाना चाहते हैं?')) return;
+  try {
+    const r = await fetch(`${API}/api/news/funnel/discard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast('समाचार लाइव फीड से हटा दिया गया');
+      loadNewsFunnel(false);
+    } else {
+      showToast(d.detail || 'हटाने में त्रुटि', 'error');
     }
   } catch (e) {
     showToast(e.message, 'error');
   }
 }
+
+// ════════════ FESTIVAL WISHES MANAGEMENT LOGIC ════════════
+let _currentFestConfig = null;
+
+const FESTIVAL_PRESETS = {
+  krishna_janmashtami: {
+    id: 'krishna_janmashtami',
+    name: 'श्री कृष्ण जन्माष्टमी',
+    pill: '🪶 ॥ हरे कृष्ण हरे राम ॥ 🪈',
+    title: 'श्री कृष्ण जन्माष्टमी की हार्दिक शुभकामनाएं',
+    summary: 'कृषि मित्र परिवार की ओर से आपको एवं आपके पूरे परिवार को पावन पर्व की कोटि-कोटि मंगलकामनाएं!',
+    b1: 'भगवान श्री कृष्ण का आशीर्वाद आपके खेत-खलिहान में लहलहाती फसल और समृद्धि लाए।',
+    b2: 'गौमाता और पशुधन सदैव स्वस्थ रहें एवं घर-आंगन में सुख-शांति बनी रहे।',
+    image: '/images/krishna-janmashtami.webp',
+    cta: '🙏 जय श्री कृष्ण (शुभकामनाएं स्वीकारें)'
+  },
+  diwali: {
+    id: 'diwali',
+    name: 'दीपावली व धनतेरस',
+    pill: '🪔 ॥ शुभ दीपावली ॥ 🪔',
+    title: 'दीपावली व धनतेरस की हार्दिक शुभकामनाएं',
+    summary: 'मां लक्ष्मी और गणेश जी की कृपा से आपका घर-आंगन धन, धान्य और खुशहाली से परिपूर्ण रहे!',
+    b1: 'खेतों में बंपर पैदावार हो और फसलों का सर्वोत्तम मूल्य प्राप्त हो।',
+    b2: 'किसान भाई-बहनों के जीवन में समृद्धि व खुशियों का दीप सदा प्रज्वलित रहे।',
+    image: '/images/articles/pm-kusum-solar-pump-yojana-card.webp',
+    cta: '🪔 शुभ दीपावली (स्वीकारें)'
+  },
+  makar_sankranti: {
+    id: 'makar_sankranti',
+    name: 'मकर संक्रांति व पोंगल',
+    pill: '🪁 ॥ शुभ मकर संक्रांति ॥ 🌾',
+    title: 'मकर संक्रांति व पोंगल की हार्दिक शुभकामनाएं',
+    summary: 'सूर्य देव के उत्तरायण होने पर नई फसल का उल्लास और जीवन में नई ऊर्जा का संचार हो!',
+    b1: 'रबी की फसलें भरपूर पैदावार दें और खलिहानों में खुशहाली आए।',
+    b2: 'तिल-गुड़ जैसी मिठास आपके परिवार व समाज में सदैव घुली रहे।',
+    image: '/images/articles/gehuu-price-analytic-up-card.webp',
+    cta: '🪁 मकर संक्रांति की बधाई'
+  },
+  holi: {
+    id: 'holi',
+    name: 'होली व रंगोत्सव',
+    pill: '🎨 ॥ बुरा न मानो होली है ॥ 🌺',
+    title: 'होली के पावन पर्व की हार्दिक शुभकामनाएं',
+    summary: 'रंग, उमंग और उल्लास का यह पावन पर्व आपके जीवन में सुख, शांति और संपन्नता लाए!',
+    b1: 'फसलों की भरपूर पैदावार से आपके जीवन में खुशियों के सुंदर रंग भरें।',
+    b2: 'प्रकृति के रंगों की तरह आपके परिवार में सदैव प्रेम और उल्लास बना रहे।',
+    image: '/images/articles/dhan-nursery-ropai-card.webp',
+    cta: '🎨 होली की शुभकामनाएं'
+  },
+  chhath_puja: {
+    id: 'chhath_puja',
+    name: 'छठ महापर्व',
+    pill: '☀️ ॥ जय छठी मैया ॥ 🌊',
+    title: 'लोक आस्था के महापर्व छठ पूजा की शुभकामनाएं',
+    summary: 'भगवान भास्कर और छठी मैया की कृपा से आपके घर में सुख, शांति, समृद्धि और आरोग्य का वास हो!',
+    b1: 'प्रकृति और छठी मैया का आशीर्वाद खेतों में धन-धान्य का भंडार भरे।',
+    b2: 'समस्त किसान परिवारों पर सूर्य देव की अलौकिक ऊर्जा और कृपा सदैव बनी रहे।',
+    image: '/images/articles/dhan-nursery-ropai-card.webp',
+    cta: '☀️ जय छठी मैया (स्वीकारें)'
+  },
+  kisan_diwas: {
+    id: 'kisan_diwas',
+    name: 'राष्ट्रीय किसान दिवस',
+    pill: '🚜 ॥ जय जवान जय किसान ॥ 🇮🇳',
+    title: 'राष्ट्रीय किसान दिवस की हार्दिक शुभकामनाएं',
+    summary: 'देश के अन्नदाता किसान भाइयों-बहनों के अथक परिश्रम, त्याग और समर्पण को कोटि-कोटि नमन!',
+    b1: 'हर खेत को पर्याप्त पानी, सही पोषण और फसलों का लाभकारी मूल्य मिले।',
+    b2: 'आधुनिक तकनीक और कृषि मित्र के साथ देश का हर किसान समृद्ध और सशक्त बने।',
+    image: '/images/articles/kisan-drone-chhidkav-card.webp',
+    cta: '🌾 जय किसान (सादर नमन)'
+  }
+};
+
+function formatIsoToDatetimeLocal(isoStr) {
+  if (!isoStr) return '';
+  try {
+    const d = new Date(isoStr);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch (e) {
+    return '';
+  }
+}
+
+function formatDatetimeLocalToIso(localStr) {
+  if (!localStr) return new Date().toISOString();
+  try {
+    const d = new Date(localStr);
+    return d.toISOString();
+  } catch (e) {
+    return localStr;
+  }
+}
+
+async function loadFestivalWishes() {
+  try {
+    const res = await fetch(`${API}/api/festival/config`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.detail || 'कॉन्फ़िगरेशन लोड नहीं हो सका');
+
+    const cfg = data.config || {};
+    _currentFestConfig = cfg;
+    const isLive = data.is_live;
+
+    // Populate inputs
+    const activeToggle = document.getElementById('fest-active-toggle');
+    if (activeToggle) activeToggle.checked = !!cfg.active;
+
+    const nameInp = document.getElementById('fest-name');
+    if (nameInp) nameInp.value = cfg.festival_name || '';
+
+    const pillInp = document.getElementById('fest-top-pill');
+    if (pillInp) pillInp.value = cfg.top_pill || '';
+
+    const titleInp = document.getElementById('fest-title');
+    if (titleInp) titleInp.value = cfg.title || '';
+
+    const summaryInp = document.getElementById('fest-summary');
+    if (summaryInp) summaryInp.value = cfg.blessing_summary || '';
+
+    const b1Inp = document.getElementById('fest-bullet-1');
+    if (b1Inp) b1Inp.value = cfg.bullet_1 || '';
+
+    const b2Inp = document.getElementById('fest-bullet-2');
+    if (b2Inp) b2Inp.value = cfg.bullet_2 || '';
+
+    const imgInp = document.getElementById('fest-image-url');
+    if (imgInp) imgInp.value = cfg.image_url || '/images/krishna-janmashtami.webp';
+
+    const ctaInp = document.getElementById('fest-cta-text');
+    if (ctaInp) ctaInp.value = cfg.cta_text || '🙏 शुभकामनाएं स्वीकारें';
+
+    const startInp = document.getElementById('fest-start-time');
+    if (startInp) startInp.value = formatIsoToDatetimeLocal(cfg.start_time);
+
+    const endInp = document.getElementById('fest-end-time');
+    if (endInp) endInp.value = formatIsoToDatetimeLocal(cfg.end_time);
+
+    const coolSelect = document.getElementById('fest-cooldown');
+    if (coolSelect) coolSelect.value = String(cfg.cooldown_hours || 3);
+
+    // Update Preview
+    updateFestImgPreview(cfg.image_url || '/images/krishna-janmashtami.webp');
+
+    // Update Status Pill
+    const badge = document.getElementById('fest-live-indicator-badge');
+    const navBadge = document.getElementById('fest-nav-badge');
+    if (badge) {
+      if (isLive) {
+        badge.className = 'status-pill online';
+        badge.textContent = '🟢 अभी लाइव है (Live)';
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        badge.style.color = '#10b981';
+      } else if (!cfg.active) {
+        badge.className = 'status-pill';
+        badge.textContent = '🔴 बंद है (Disabled)';
+        badge.style.background = 'rgba(239, 68, 68, 0.15)';
+        badge.style.color = '#ef4444';
+      } else {
+        badge.className = 'status-pill';
+        badge.textContent = '⏳ समय सीमा समाप्त / प्रतीक्षारत';
+        badge.style.background = 'rgba(245, 158, 11, 0.15)';
+        badge.style.color = '#f59e0b';
+      }
+    }
+
+    if (navBadge) {
+      if (isLive) {
+        navBadge.hidden = false;
+        navBadge.textContent = 'LIVE';
+        navBadge.style.background = '#10b981';
+      } else {
+        navBadge.hidden = true;
+      }
+    }
+  } catch (err) {
+    showToast('त्योहार सेटिंग्स लोड नहीं हो सकी: ' + err.message, 'error');
+  }
+}
+
+function updateFestImgPreview(url) {
+  const prev = document.getElementById('fest-img-preview');
+  if (prev && url) {
+    prev.src = url.trim();
+  }
+}
+
+function toggleFestivalActiveState(checked) {
+  const badge = document.getElementById('fest-live-indicator-badge');
+  if (badge) {
+    if (checked) {
+      badge.className = 'status-pill online';
+      badge.textContent = '🟡 सहेजने पर सक्रिय होगा';
+      badge.style.color = '#f59e0b';
+    } else {
+      badge.className = 'status-pill';
+      badge.textContent = '🔴 बंद (Disabled)';
+      badge.style.color = '#ef4444';
+    }
+  }
+}
+
+function applyFestivalPreset(presetKey) {
+  const p = FESTIVAL_PRESETS[presetKey];
+  if (!p) return;
+
+  document.getElementById('fest-name').value = p.name;
+  document.getElementById('fest-top-pill').value = p.pill;
+  document.getElementById('fest-title').value = p.title;
+  document.getElementById('fest-summary').value = p.summary;
+  document.getElementById('fest-bullet-1').value = p.b1;
+  document.getElementById('fest-bullet-2').value = p.b2;
+  document.getElementById('fest-image-url').value = p.image;
+  document.getElementById('fest-cta-text').value = p.cta;
+
+  updateFestImgPreview(p.image);
+  showToast(`⚡ ${p.name} का प्रीसेट लोड हो गया!`);
+}
+
+function setDurationPreset(preset) {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+
+  let start = new Date(now);
+  let end = new Date(now);
+
+  if (preset === 'today') {
+    end.setHours(23, 59, 59, 999);
+  } else if (preset === 'tomorrow') {
+    end.setDate(end.getDate() + 1);
+    end.setHours(23, 59, 59, 999);
+  } else if (preset === '3days') {
+    end.setDate(end.getDate() + 3);
+    end.setHours(23, 59, 59, 999);
+  } else if (preset === '7days') {
+    end.setDate(end.getDate() + 7);
+    end.setHours(23, 59, 59, 999);
+  }
+
+  const formatLocal = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  
+  document.getElementById('fest-start-time').value = formatLocal(start);
+  document.getElementById('fest-end-time').value = formatLocal(end);
+
+  showToast('अवधि सेट हो गई!');
+}
+
+async function handleFestImgUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const loader = document.getElementById('fest-img-loading');
+  if (loader) loader.style.display = 'flex';
+
+  try {
+    const res = await fetch(`${API}/api/festival/upload-image`, {
+      method: 'POST',
+      body: formData
+    });
+    const d = await res.json();
+    if (d.success && d.image_url) {
+      document.getElementById('fest-image-url').value = d.image_url;
+      updateFestImgPreview(d.image_url);
+      showToast('✓ नई फोटो सफलतापूर्वक अपलोड हो गई! 🖼️');
+    } else {
+      throw new Error(d.detail || 'अपलोड विफल');
+    }
+  } catch (e) {
+    showToast('अपलोड त्रुटि: ' + e.message, 'error');
+  } finally {
+    if (loader) loader.style.display = 'none';
+  }
+}
+
+async function generateFestiveAiImage() {
+  const festName = (document.getElementById('fest-name')?.value || '').trim() || 'भारतीय त्योहार व उत्सव';
+  const btn = document.getElementById('btn-fest-ai-gen');
+  const loader = document.getElementById('fest-img-loading');
+  const statusEl = document.getElementById('fest-ai-status');
+
+  if (btn) btn.disabled = true;
+  if (loader) loader.style.display = 'flex';
+  if (statusEl) statusEl.innerHTML = '<span style="color:#10b981; font-weight:700;">⏳ Gemini AI उत्सव फोटो तैयार कर रहा है… (3-6 सेकंड)</span>';
+
+  try {
+    const res = await fetch(`${API}/api/festival/generate-image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        festival_name: festName,
+        theme_prompt: document.getElementById('fest-summary')?.value || ''
+      })
+    });
+    const d = await res.json();
+    if (d.success && d.image_url) {
+      document.getElementById('fest-image-url').value = d.image_url;
+      updateFestImgPreview(d.image_url);
+      if (statusEl) statusEl.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ AI फोटो तैयार: ${escapeHtml(d.message)}</span>`;
+      showToast('✨ मनमोहक उत्सव फोटो तैयार हो गई!');
+    } else {
+      throw new Error(d.detail || 'इमेज तैयार नहीं हो पाई');
+    }
+  } catch (err) {
+    if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444;">त्रुटि: ${escapeHtml(err.message)}</span>`;
+    showToast('AI इमेज निर्माण विफल: ' + err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (loader) loader.style.display = 'none';
+  }
+}
+
+async function saveFestivalConfig() {
+  const btn = document.getElementById('btn-save-fest-config');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ सहेजा जा रहा है…';
+  }
+
+  const active = document.getElementById('fest-active-toggle')?.checked ?? true;
+  const festival_name = (document.getElementById('fest-name')?.value || '').trim();
+  const top_pill = (document.getElementById('fest-top-pill')?.value || '').trim();
+  const title = (document.getElementById('fest-title')?.value || '').trim();
+  const blessing_summary = (document.getElementById('fest-summary')?.value || '').trim();
+  const bullet_1 = (document.getElementById('fest-bullet-1')?.value || '').trim();
+  const bullet_2 = (document.getElementById('fest-bullet-2')?.value || '').trim();
+  const image_url = (document.getElementById('fest-image-url')?.value || '').trim();
+  const cta_text = (document.getElementById('fest-cta-text')?.value || '').trim();
+  const start_local = document.getElementById('fest-start-time')?.value;
+  const end_local = document.getElementById('fest-end-time')?.value;
+  const cooldown_hours = parseInt(document.getElementById('fest-cooldown')?.value, 10) || 3;
+
+  if (!title) {
+    showToast('कृपया मुख्य शीर्षक दर्ज करें', 'warning');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 सेटिंग्स सहेजें (Save Festival)'; }
+    return;
+  }
+  if (!image_url) {
+    showToast('कृपया इमेज एड्रेस या URL दर्ज करें', 'warning');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 सेटिंग्स सहेजें (Save Festival)'; }
+    return;
+  }
+
+  const payload = {
+    active,
+    festival_id: festival_name.toLowerCase().replace(/[\s\W]+/g, '_'),
+    festival_name: festival_name || 'त्योहार',
+    top_pill: top_pill || '✨ पावन पर्व ✨',
+    title,
+    blessing_summary,
+    bullet_1,
+    bullet_2,
+    image_url,
+    cta_text: cta_text || '🙏 शुभकामनाएं स्वीकारें',
+    start_time: formatDatetimeLocalToIso(start_local),
+    end_time: formatDatetimeLocalToIso(end_local),
+    cooldown_hours
+  };
+
+  try {
+    const res = await fetch(`${API}/api/festival/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    if (d.success) {
+      showToast('✓ त्योहार शुभकामनाएं सेटिंग्स सफलतापूर्वक सहेज दी गईं! 🪔');
+      loadFestivalWishes();
+    } else {
+      showToast(d.detail || 'सहेजने में विफल', 'error');
+    }
+  } catch (err) {
+    showToast('त्रुटि: ' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '💾 सेटिंग्स सहेजें (Save Festival)';
+    }
+  }
+}
+
+function testFestivalPreviewModal() {
+  const pill = document.getElementById('fest-top-pill')?.value || '🪶 ॥ हरे कृष्ण ॥ 🪈';
+  const img = document.getElementById('fest-image-url')?.value || '/images/krishna-janmashtami.webp';
+  const title = document.getElementById('fest-title')?.value || 'त्योहार शुभकामनाएं';
+  const summary = document.getElementById('fest-summary')?.value || 'कृषि मित्र परिवार की ओर से मंगलकामनाएं!';
+  const b1 = document.getElementById('fest-bullet-1')?.value || '';
+  const b2 = document.getElementById('fest-bullet-2')?.value || '';
+  const cta = document.getElementById('fest-cta-text')?.value || '🙏 शुभकामनाएं स्वीकारें';
+
+  if (typeof window.previewFestivalPopup === 'function') {
+    window.previewFestivalPopup({
+      top_pill: pill,
+      image_url: img,
+      title: title,
+      blessing_summary: summary,
+      bullet_1: b1,
+      bullet_2: b2,
+      cta_text: cta
+    });
+    showToast('👁️ लाइव प्रीव्यू खुला — इसे बंद करने के लिए ✕ पर क्लिक करें');
+  } else {
+    showToast('प्रीव्यू स्क्रिप्ट लोड नहीं हुई');
+  }
+}
 </script>
+<script src="/festival-popup.js"></script>
 </body>
 </html>

@@ -18,7 +18,8 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from urllib.parse import urljoin
+from urllib.parse import quote, urljoin
+import base64
 
 import httpx
 
@@ -27,6 +28,9 @@ from backend.services.chatbot_service import call_ai
 logger = logging.getLogger("krishi.news_auto_service")
 
 DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "news_funnel.json"
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+ARTICLES_IMAGE_DIR = FRONTEND_DIR / "images" / "articles"
+NEWS_DATA_FILE = FRONTEND_DIR / "krashi_news_data.js"
 
 
 def _parse_iso_dt(val: Optional[str]) -> datetime:
@@ -68,6 +72,276 @@ def _strip_tags(text: str) -> str:
         return ""
     clean = re.sub(r"<[^>]+>", " ", text)
     return html.unescape(clean).strip()
+
+
+# ── Master Articles & Deduplication Engine ─────────────────────
+
+_MASTER_CACHE = {"articles": [], "mtime": 0}
+
+
+def _load_master_articles() -> List[dict]:
+    """Reads and caches 55+ master articles from krashi_news_data.js for duplicate checks."""
+    if not NEWS_DATA_FILE.exists():
+        return []
+    try:
+        mt = NEWS_DATA_FILE.stat().st_mtime
+        if _MASTER_CACHE["articles"] and _MASTER_CACHE["mtime"] == mt:
+            return _MASTER_CACHE["articles"]
+        text = NEWS_DATA_FILE.read_text(encoding="utf-8", errors="ignore")
+        chunks = text.split("id: '")
+        items = []
+        for c in chunks[1:]:
+            obj = {}
+            id_val = c.split("'", 1)[0]
+            obj["id"] = id_val
+            for f in ("slug", "title", "excerpt", "category", "catLabel", "time", "readTime", "image", "link"):
+                m = re.search(rf"\b{f}:\s*['\"]([^'\"]*)['\"]", c)
+                if m:
+                    obj[f] = m.group(1)
+            if obj.get("title"):
+                items.append(obj)
+        _MASTER_CACHE["articles"] = items
+        _MASTER_CACHE["mtime"] = mt
+        return items
+    except Exception as e:
+        logger.warning(f"Error loading master articles for deduplication: {e}")
+        return _MASTER_CACHE.get("articles", [])
+
+
+STOP_WORDS = {
+    "का", "के", "की", "में", "से", "पर", "और", "व", "ने", "को", "है", "हैं",
+    "लिए", "अब", "हुए", "गए", "गई", "हुआ", "हुई", "नया", "नए", "नई", "तक",
+    "भी", "तो", "या", "इस", "इन", "ये", "वह", "वे", "था", "थे", "थी",
+    "कर", "रहा", "रहे", "रही", "हो", "सकते", "सकता", "सकती", "बड़ा", "बड़ी",
+    "दाम", "भाव", "मिला", "मिली", "मिले", "जाएगा", "जाएगी", "किया", "किए",
+    "the", "a", "an", "in", "on", "for", "and", "to", "of", "is", "are",
+    "with", "by", "at", "new", "latest", "update", "news"
+}
+
+
+def _extract_keywords(text: str) -> set:
+    if not text:
+        return set()
+    cleaned = re.sub(r"[^\w\s\u0900-\u097f]", " ", text.lower())
+    words = [w.strip() for w in cleaned.split() if len(w.strip()) >= 2]
+    return {w for w in words if w not in STOP_WORDS}
+
+
+def _normalize_url(url: str) -> str:
+    if not url:
+        return ""
+    clean = re.sub(r"[?&](?:utm_[^&]+|oc=\d+|ref=[^&]+|fbclid=[^&]+|gclid=[^&]+)", "", url, flags=re.I)
+    clean = clean.rstrip("?&/").lower()
+    clean = re.sub(r"^https?://", "", clean)
+    return clean.strip()
+
+
+def _calc_token_overlap(kw1: set, kw2: set) -> float:
+    if not kw1 or not kw2:
+        return 0.0
+    inter = len(kw1 & kw2)
+    return inter / min(len(kw1), len(kw2))
+
+
+def is_duplicate_story(title: str, url: str = "", content: str = "") -> Tuple[bool, str]:
+    """
+    Multi-barrier duplicate check against:
+    1. Staged posts
+    2. Published posts
+    3. Seen URLs history
+    4. Master 55+ articles in krashi_news_data.js
+    Returns (is_duplicate: bool, reason: str)
+    """
+    if not title and not url:
+        return False, ""
+
+    data = _load_data()
+    staged = data.get("staged_posts", [])
+    published = data.get("published_posts", [])
+    seen_urls = set(data.get("seen_urls", []))
+    all_current = staged + published
+
+    # 1. Exact / Normalized URL Matching
+    norm_u = _normalize_url(url)
+    if norm_u:
+        if norm_u in seen_urls:
+            return True, "यह समाचार लिंक (URL) पहले ही संसाधित हो चुका है"
+        for p in all_current:
+            p_u = _normalize_url(p.get("source_url") or p.get("link") or "")
+            if p_u and (p_u == norm_u or norm_u in p_u or p_u in norm_u):
+                return True, f"समान लिंक पहले से मौजूद है: '{p.get('title', '')[:40]}'"
+
+    # 2. Title Exact / Normalized Substring Matching
+    if title:
+        norm_t = re.sub(r"[^\w\u0900-\u097f]", "", title.lower())
+        if len(norm_t) > 6:
+            for p in all_current:
+                existing_t = re.sub(r"[^\w\u0900-\u097f]", "", p.get("title", "").lower())
+                if existing_t and (norm_t == existing_t or (len(norm_t) > 15 and norm_t in existing_t) or (len(existing_t) > 15 and existing_t in norm_t)):
+                    return True, f"समान शीर्षक का लेख पहले से मौजूद है: '{p.get('title', '')[:45]}'"
+
+        # 3. Token Overlap Matching against Active & Master Articles
+        in_kw = _extract_keywords(title + " " + (content[:200] if content else ""))
+        if len(in_kw) >= 3:
+            # Check active posts
+            for p in all_current:
+                p_kw = _extract_keywords(p.get("title", "") + " " + p.get("excerpt", ""))
+                overlap = _calc_token_overlap(in_kw, p_kw)
+                if overlap >= 0.58:
+                    return True, f"समान विषय का लेख पहले से मौजूद है: '{p.get('title', '')[:45]}' (साम्यता: {int(overlap*100)}%)"
+
+            # Check master articles
+            masters = _load_master_articles()
+            for m in masters:
+                m_kw = _extract_keywords(m.get("title", "") + " " + m.get("excerpt", ""))
+                overlap = _calc_token_overlap(in_kw, m_kw)
+                if overlap >= 0.65:
+                    return True, f"यह विषय मास्टर समाचार में पहले से शामिल है: '{m.get('title', '')[:45]}'"
+
+    return False, ""
+
+
+def get_recent_headlines(limit: int = 30) -> List[str]:
+    """Returns the most recent unique headlines from published, staged, and master datasets."""
+    data = _load_data()
+    titles = []
+    seen = set()
+    for p in data.get("published_posts", []) + data.get("staged_posts", []):
+        t = p.get("title", "").strip()
+        if t and t not in seen:
+            seen.add(t)
+            titles.append(t)
+    masters = _load_master_articles()
+    for m in masters:
+        t = m.get("title", "").strip()
+        if t and t not in seen:
+            seen.add(t)
+            titles.append(t)
+    return titles[:limit]
+
+
+# ── Gemini AI Agricultural Image Generation ───────────────────
+
+async def generate_ai_agri_image(
+    title: str,
+    category: str = "crop",
+    custom_prompt: Optional[str] = None,
+    post_id: Optional[str] = None
+) -> dict:
+    """
+    Generates a relevant, cinematic agricultural cover image:
+    1. Synthesizes an ultra-realistic photography prompt using Gemini.
+    2. Generates the image via Google Imagen 3 or Pollinations Flux.
+    3. Persists it locally under frontend/images/articles/ and returns permanent URL.
+    4. Seamless contextual fallback if offline.
+    """
+    images_dir = ARTICLES_IMAGE_DIR
+    images_dir.mkdir(parents=True, exist_ok=True)
+    safe_slug = re.sub(r'[^a-zA-Z0-9_-]', '', (post_id or 'ai-post'))[:22]
+    ts = int(datetime.utcnow().timestamp())
+    filename = f"ai_gen_{safe_slug}_{ts}.webp"
+    out_path = images_dir / filename
+
+    # 1. Synthesize Prompt with Gemini
+    ai_prompt = (custom_prompt or "").strip()
+    if not ai_prompt or len(ai_prompt) < 10:
+        craft_prompt = f"""You are a professional visual prompt director for KrashiMitra, an Indian agricultural portal.
+Create an English image generation prompt for this Hindi agricultural news:
+Headline: "{title}"
+Category: "{category}"
+
+Requirements:
+- Authentic Indian farmland, crops, farmers, or modern agricultural setup.
+- Realistic professional photography, 4K resolution, natural morning or golden hour lighting, 16:9 cinematic framing.
+- Absolutely NO text, NO words, NO letters, NO watermarks, NO artificial logos.
+- Output ONLY the prompt string (25-35 words), nothing else."""
+        try:
+            raw_craft, _ = await call_ai(craft_prompt, max_tokens=100)
+            cleaned = raw_craft.strip().replace('"', '').replace('\n', ' ')
+            if len(cleaned) >= 12 and not any(bad in cleaned.lower() for bad in ["i cannot", "sorry", "unavailable"]):
+                ai_prompt = cleaned
+        except Exception as e:
+            logger.warning(f"Error synthesizing prompt with Gemini: {e}")
+
+    if not ai_prompt or len(ai_prompt) < 10:
+        ai_prompt = f"Photorealistic 4k photo of thriving {category} agricultural field in rural India, bright natural sunlight, lush green crops, cinematic 16:9 ratio"
+
+    # 2. Try Google Imagen 3 via configured GEMINI_API_KEY
+    for env_k in ["GEMINI_API_KEY", "GEMINI_API_KEY2", "GEMINI_API_KEY3"]:
+        api_k = os.getenv(env_k, "").strip()
+        if not api_k:
+            continue
+        try:
+            imagen_url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={api_k}"
+            payload = {
+                "instances": [{"prompt": ai_prompt}],
+                "parameters": {"sampleCount": 1, "aspectRatio": "16:9"}
+            }
+            async with httpx.AsyncClient(timeout=22.0) as client:
+                resp = await client.post(imagen_url, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    preds = data.get("predictions", [])
+                    if preds and "bytesBase64Encoded" in preds[0]:
+                        img_bytes = base64.b64decode(preds[0]["bytesBase64Encoded"])
+                        out_path.write_bytes(img_bytes)
+                        logger.info(f"✅ Generated AI image via Google Imagen 3: {filename}")
+                        return {
+                            "success": True,
+                            "image_url": f"/images/articles/{filename}",
+                            "prompt_used": ai_prompt,
+                            "source": "google_imagen_3"
+                        }
+        except Exception as e:
+            logger.warning(f"Imagen 3 try on {env_k} error: {e}")
+
+    # 3. Try Pollinations AI Flux engine
+    try:
+        encoded_p = quote(ai_prompt)
+        seed = random.randint(1000, 999999)
+        poll_url = f"https://image.pollinations.ai/prompt/{encoded_p}?width=800&height=450&model=flux&nologo=true&seed={seed}"
+        async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
+            resp = await client.get(poll_url, headers={"User-Agent": "Mozilla/5.0 KrashiMitra/2.0"})
+            if resp.status_code == 200 and len(resp.content) > 6000:
+                out_path.write_bytes(resp.content)
+                logger.info(f"✅ Generated AI image via Pollinations Flux: {filename}")
+                return {
+                    "success": True,
+                    "image_url": f"/images/articles/{filename}",
+                    "prompt_used": ai_prompt,
+                    "source": "pollinations_flux"
+                }
+    except Exception as e:
+        logger.warning(f"Pollinations generation error: {e}")
+
+    # 4. Contextual smart matching fallback from local curated library
+    low = (title + " " + category).lower()
+    fallback_img = DEFAULT_CATEGORY_IMAGES.get(category, "/images/articles/dhan-nursery-ropai-card.webp")
+    if any(k in low for k in ["आलू", "potato"]):
+        fallback_img = "/images/articles/potato_guide_up-card.webp"
+    elif any(k in low for k in ["गन्ना", "sugar", "cane"]):
+        fallback_img = "/images/articles/ganna-pricing-analytics-up-card.webp"
+    elif any(k in low for k in ["गेहूं", "wheat"]):
+        fallback_img = "/images/articles/gehuu-price-analytic-up-card.webp"
+    elif any(k in low for k in ["धान", "rice", "paddy", "कुरुवई"]):
+        fallback_img = "/images/articles/dhan-nursery-ropai-card.webp"
+    elif any(k in low for k in ["सोलर", "solar", "कुसुम", "kusum"]):
+        fallback_img = "/images/articles/pm-kusum-solar-pump-yojana-card.webp"
+    elif any(k in low for k in ["खाद", "यूरिया", "dap"]):
+        fallback_img = "/images/articles/urea-guide-up-card.webp"
+    elif any(k in low for k in ["सरसों", "mustard"]):
+        fallback_img = "/images/articles/sarso-guide-up-card.webp"
+    elif any(k in low for k in ["डेयरी", "दूध", "dairy"]):
+        fallback_img = "/images/articles/dairy-farming-doodh-utpadan-card.webp"
+    elif any(k in low for k in ["ड्रोन", "तकनीक", "drone"]):
+        fallback_img = "/images/articles/kisan-drone-chhidkav-card.webp"
+
+    return {
+        "success": True,
+        "image_url": fallback_img,
+        "prompt_used": ai_prompt,
+        "source": "curated_contextual"
+    }
 
 
 def _load_data() -> dict:
@@ -179,11 +453,21 @@ Under NO CIRCUMSTANCES should the title, excerpt, bullets, or full_story remain 
             "ज़रूरी कदम: नजदीकी कृषि रक्षा इकाई अथवा आधिकारिक पोर्टल पर जानकारी सत्यापित करें।"
         ]
 
+    recent_headlines = get_recent_headlines(limit=25)
+    headlines_formatted = "\n".join([f"- {h}" for h in recent_headlines]) if recent_headlines else "None"
+
     prompt = f"""
 You are an expert Chief Agricultural Journalist for KrashiMitra (कृषि मित्र), India's leading digital platform for farmers.
 Convert the following news/advisory into an impressive, highly engaging news post for Indian farmers.
 
 {lang_directive}
+
+ACTIVE RECENT HEADLINES ON KRASHIMITRA (CRITICAL: DO NOT REPLICATE OR DUPLICATE THESE TOPICS):
+{headlines_formatted}
+
+CRITICAL ANTI-DUPLICATION RULE:
+If the given raw news covers the EXACT SAME agricultural scheme, announcement, crop policy, or specific news story already represented in the active headlines above, respond STRICTLY with:
+{{"duplicate": true, "reason": "Already published or staged on KrashiMitra"}}
 
 RAW NEWS HEADLINE:
 {raw_title}
@@ -212,6 +496,9 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
         cleaned = re.sub(r"^```\s*", "", cleaned.strip(), flags=re.MULTILINE)
         cleaned = cleaned.rstrip("`").strip()
         parsed = json.loads(cleaned)
+        if parsed.get("duplicate") is True:
+            logger.info(f"🚫 Gemini flagged story as duplicate: {parsed.get('reason')}")
+            return None
     except Exception as e:
         logger.warning(f"⚠️ Gemini news generation fallback due to error: {e}")
         cat = "crop"
@@ -248,12 +535,38 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
             "readTime": "3 मिनट"
         }
 
+    final_title = parsed.get("title", raw_title).strip()
+    is_dup, reason = is_duplicate_story(final_title, url=source_url, content=parsed.get("excerpt", ""))
+    if is_dup:
+        logger.info(f"🚫 Formatted post rejected by duplicate check: '{final_title[:45]}' ({reason})")
+        return None
+
     category = parsed.get("category", "crop")
     if category not in CATEGORY_LABELS:
         category = "crop"
 
-    # Assign image
-    img = DEFAULT_CATEGORY_IMAGES.get(category, "/images/articles/dhan-nursery-ropai-card.webp")
+    # Contextual Smart Image matching
+    low_text = (final_title + " " + raw_title).lower()
+    if any(k in low_text for k in ["आलू", "potato"]):
+        img = "/images/articles/potato_guide_up-card.webp"
+    elif any(k in low_text for k in ["गन्ना", "sugar", "cane"]):
+        img = "/images/articles/ganna-pricing-analytics-up-card.webp"
+    elif any(k in low_text for k in ["गेहूं", "wheat"]):
+        img = "/images/articles/gehuu-price-analytic-up-card.webp"
+    elif any(k in low_text for k in ["धान", "rice", "paddy", "कुरुवई"]):
+        img = "/images/articles/dhan-nursery-ropai-card.webp"
+    elif any(k in low_text for k in ["सोलर", "solar", "कुसुम", "kusum"]):
+        img = "/images/articles/pm-kusum-solar-pump-yojana-card.webp"
+    elif any(k in low_text for k in ["खाद", "यूरिया", "dap"]):
+        img = "/images/articles/urea-guide-up-card.webp"
+    elif any(k in low_text for k in ["सरसों", "mustard"]):
+        img = "/images/articles/sarso-guide-up-card.webp"
+    elif any(k in low_text for k in ["डेयरी", "दूध", "dairy"]):
+        img = "/images/articles/dairy-farming-doodh-utpadan-card.webp"
+    elif any(k in low_text for k in ["ड्रोन", "तकनीक", "drone"]):
+        img = "/images/articles/kisan-drone-chhidkav-card.webp"
+    else:
+        img = DEFAULT_CATEGORY_IMAGES.get(category, "/images/articles/dhan-nursery-ropai-card.webp")
 
     # Organic Likes Seed: 260 to 580 likes!
     seed_likes = random.randint(260, 580)
@@ -267,7 +580,7 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
 
     return {
         "id": post_id,
-        "title": parsed.get("title", raw_title),
+        "title": final_title,
         "excerpt": parsed.get("excerpt", ""),
         "full_story": full_story,
         "bullets": parsed.get("bullets", [])[:3],
@@ -354,21 +667,37 @@ async def run_discovery_and_stage(target_count: int = 3, check_cycle: bool = Fal
             return []
 
     staged = data.get("staged_posts", [])
-    existing_titles = set(p.get("title", "") for p in staged + data.get("published_posts", []))
-
     raw_stories = await fetch_external_agri_stories()
     newly_staged = []
 
     for story in raw_stories:
-        # Check title duplication
-        if any(story["title"][:20] in et for et in existing_titles):
+        s_title = story.get("title", "")
+        s_url = story.get("url", "")
+        s_content = story.get("content", "")
+
+        is_dup, reason = is_duplicate_story(s_title, url=s_url, content=s_content)
+        if is_dup:
+            logger.info(f"⏭️ Skipping duplicate raw story: '{s_title[:45]}' ({reason})")
             continue
 
         try:
-            formatted_post = await format_agri_post_with_ai(story["title"], story["content"], story.get("url", ""))
+            formatted_post = await format_agri_post_with_ai(s_title, s_content, s_url)
+            if not formatted_post:
+                continue
+
+            gen_title = formatted_post.get("title", "")
+            is_dup_gen, reason_gen = is_duplicate_story(gen_title, url=s_url)
+            if is_dup_gen:
+                logger.info(f"⏭️ Skipping duplicate AI-generated post: '{gen_title[:45]}' ({reason_gen})")
+                continue
+
             staged.append(formatted_post)
             newly_staged.append(formatted_post)
-            existing_titles.add(formatted_post["title"])
+            if s_url:
+                norm_u = _normalize_url(s_url)
+                if norm_u and norm_u not in data.setdefault("seen_urls", []):
+                    data["seen_urls"].append(norm_u)
+
             if len(newly_staged) >= target_count:
                 break
         except Exception as e:
@@ -376,7 +705,7 @@ async def run_discovery_and_stage(target_count: int = 3, check_cycle: bool = Fal
 
     data["staged_posts"] = staged
     _save_data(data)
-    logger.info(f"✅ Staged {len(newly_staged)} new posts into Krashi News Funnel (Daily 5 PM sweep, target: {target_count})")
+    logger.info(f"✅ Staged {len(newly_staged)} new distinct posts into Krashi News Funnel (target: {target_count})")
     return newly_staged
 
 
@@ -385,10 +714,14 @@ async def run_discovery_and_stage(target_count: int = 3, check_cycle: bool = Fal
 async def curate_from_url(url: str, language: str = "hi") -> dict:
     """
     Fetches an external article URL, extracts text/image using pure stdlib regex,
-    and runs Gemini to create a 3-bullet news post in the selected language.
+    and runs Gemini to create a 3-bullet news post in the selected language with deduplication.
     """
     if not url or not url.startswith("http"):
         raise ValueError("मान्य वेब लिंक (URL) दर्ज करें")
+
+    is_dup_u, reason_u = is_duplicate_story("", url=url)
+    if is_dup_u:
+        raise ValueError(f"यह वेब लिंक पहले से फ़नल या लाइव वेबसाइट में मौजूद है ({reason_u})")
 
     async with httpx.AsyncClient(timeout=14, follow_redirects=True) as client:
         resp = await client.get(url, headers={
@@ -432,7 +765,13 @@ async def curate_from_url(url: str, language: str = "hi") -> dict:
     full_body = "\n".join(clean_p[:8])
     combined_content = f"{meta_desc}\n{full_body}" if meta_desc else full_body
 
+    is_dup_t, reason_t = is_duplicate_story(title, url=url, content=combined_content)
+    if is_dup_t:
+        raise ValueError(f"यह समाचार पहले से मौजूद है ({reason_t})")
+
     curated = await format_agri_post_with_ai(title, combined_content, url, language=language)
+    if not curated:
+        raise ValueError("Gemini ने पाया कि यह विषय पहले से ही फ़नल या वेबसाइट पर प्रकाशित खबरों में मौजूद है (Duplicate topic blocked by AI).")
     if hero_image:
         curated["image"] = hero_image
     else:
@@ -518,39 +857,73 @@ def publish_all_staged() -> int:
 
 
 def discard_post(post_id: str) -> bool:
+    """Discards a post from either staged funnel drafts OR published feed."""
     data = _load_data()
     staged = data.get("staged_posts", [])
-    orig_len = len(staged)
-    staged = [p for p in staged if p["id"] != post_id]
-    if len(staged) < orig_len:
+    orig_len_staged = len(staged)
+    staged = [p for p in staged if p.get("id") != post_id]
+    if len(staged) < orig_len_staged:
         data["staged_posts"] = staged
         _save_data(data)
+        logger.info(f"🗑️ Discarded staged draft: {post_id}")
         return True
+
+    published = data.get("published_posts", [])
+    orig_len_pub = len(published)
+    published = [p for p in published if p.get("id") != post_id]
+    if len(published) < orig_len_pub:
+        data["published_posts"] = published
+        _save_data(data)
+        logger.info(f"🗑️ Removed published post: {post_id}")
+        return True
+
     return False
 
 
 def edit_staged_post(post_id: str, updates: dict) -> Optional[dict]:
+    """Edits any field of a staged draft or live published post."""
     data = _load_data()
     staged = data.get("staged_posts", [])
-    target = next((p for p in staged if p["id"] == post_id), None)
+    target = next((p for p in staged if p.get("id") == post_id), None)
     if not target:
         published = data.get("published_posts", [])
-        target = next((p for p in published if p["id"] == post_id), None)
+        target = next((p for p in published if p.get("id") == post_id), None)
     if not target:
         return None
 
-    for k in ["title", "excerpt", "bullets", "category", "image"]:
-        if k in updates:
-            target[k] = updates[k]
-    if "category" in updates:
-        target["catLabel"] = CATEGORY_LABELS.get(updates["category"], target.get("catLabel"))
+    allowed_keys = [
+        "title", "excerpt", "full_story", "bullets", "category",
+        "image", "seed_likes", "time", "readTime"
+    ]
+    for k in allowed_keys:
+        if k in updates and updates[k] is not None:
+            if k == "seed_likes":
+                try:
+                    target[k] = int(updates[k])
+                except (ValueError, TypeError):
+                    pass
+            elif k == "bullets" and isinstance(updates[k], list):
+                target[k] = [str(b).strip() for b in updates[k] if str(b).strip()]
+            else:
+                target[k] = updates[k]
 
+    if "category" in updates and updates["category"] in CATEGORY_LABELS:
+        target["catLabel"] = CATEGORY_LABELS[updates["category"]]
+
+    target["updated_at"] = datetime.utcnow().isoformat()
     _save_data(data)
+    logger.info(f"✏️ Successfully updated post: {post_id} - '{target.get('title')[:40]}'")
     return target
 
 
 def add_direct_post(post: dict, publish_now: bool = False) -> dict:
-    """Adds a new post either to the staging queue or publishes directly."""
+    """Adds a new post either to the staging queue or publishes directly, preventing duplicates."""
+    p_title = post.get("title", "")
+    p_url = post.get("source_url", "")
+    is_dup, reason = is_duplicate_story(p_title, url=p_url)
+    if is_dup:
+        raise ValueError(f"डुप्लीकेट पोस्ट अस्वीकृत: {reason}")
+
     data = _load_data()
     if publish_now:
         post["status"] = "published"
@@ -560,6 +933,11 @@ def add_direct_post(post: dict, publish_now: bool = False) -> dict:
     else:
         post["status"] = "staged"
         data.setdefault("staged_posts", []).append(post)
+
+    if p_url:
+        norm_u = _normalize_url(p_url)
+        if norm_u and norm_u not in data.setdefault("seen_urls", []):
+            data["seen_urls"].append(norm_u)
 
     _save_data(data)
     return post

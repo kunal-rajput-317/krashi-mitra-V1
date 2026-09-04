@@ -230,6 +230,204 @@
       transform: translateY(-2px);
       border-color: #000000;
     }
+
+    /* ── Recent Posts Tab / Slider (Top 3 News) ── */
+    .recent-posts-tab-card {
+      background: var(--news-card);
+      border: 1.5px solid #111827;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      position: relative;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .recent-posts-tab-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      border-color: #000000;
+    }
+
+    .recent-tab-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #f8fafc;
+      border-bottom: 1.5px solid var(--news-border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .recent-tab-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .recent-tab-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--news-dark);
+      letter-spacing: 0.01em;
+    }
+    .recent-badge-sub {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--news-muted);
+    }
+    .recent-live-dot {
+      width: 8px;
+      height: 8px;
+      background: #16a34a;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
+      animation: recentPulseDot 1.8s infinite;
+    }
+    @keyframes recentPulseDot {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+    }
+
+    .recent-tab-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .recent-tab-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .recent-tab-pill {
+      border: 1px solid var(--news-border);
+      background: #ffffff;
+      color: var(--news-muted);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+    .recent-tab-pill .pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #94a3b8;
+      transition: background 0.2s;
+    }
+    .recent-tab-pill:hover {
+      border-color: var(--news-green);
+      color: var(--news-green);
+    }
+    .recent-tab-pill.active {
+      background: var(--news-dark);
+      border-color: var(--news-dark);
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(26, 60, 46, 0.2);
+    }
+    .recent-tab-pill.active .pill-dot {
+      background: #4ade80;
+    }
+
+    .recent-arrow-btns {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .recent-arrow-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid var(--news-border);
+      background: #ffffff;
+      color: var(--news-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      padding: 0;
+    }
+    .recent-arrow-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+      color: #000;
+    }
+
+    .recent-slider-viewport {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      touch-action: pan-y; /* Crucial for native fluid vertical scrolling on mobile */
+      -webkit-overflow-scrolling: touch;
+      contain: content; /* Isolates layout reflows for peak mobile rendering speed */
+    }
+    .recent-slider-track {
+      display: flex;
+      width: 100%;
+      will-change: transform;
+      transform: translate3d(0, 0, 0); /* Forces GPU compositing layer on mobile */
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      perspective: 1000px;
+      transition: transform 0.42s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .recent-slide {
+      min-width: 100%;
+      width: 100%;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      contain: layout paint;
+    }
+
+    .recent-slide-meta-badge {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      z-index: 2;
+    }
+    .recent-post-number-tag {
+      background: rgba(15, 23, 42, 0.78);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 12px;
+      backdrop-filter: blur(4px);
+      letter-spacing: 0.02em;
+    }
+
+    .recent-progress-bar-wrap {
+      width: 100%;
+      height: 3px;
+      background: #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    .recent-progress-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--news-green);
+      transform-origin: left;
+      transform: scaleX(0);
+      will-change: transform;
+    }
     .lead-media {
       position: relative;
       height: 290px;
@@ -375,21 +573,24 @@
     /* ── Audio Bulletin Digest Strip & Radio Voice Controls ── */
     .bulletin-strip {
       background: #ffffff;
-      border: 1.5px solid #111827;
+      border: 1.5px solid var(--news-border, #cbd5e1);
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      padding: 12px 20px;
-      margin-bottom: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 10px 16px;
+      margin-bottom: 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
+      gap: 12px;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
     }
-    .bulletin-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 260px; }
-    .bulletin-icon { font-size: 22px; }
-    .bulletin-heading { font-size: 14px; font-weight: 700; color: var(--news-dark); }
-    .bulletin-sub { font-size: 12px; color: var(--news-muted); }
+    .bulletin-left { display: flex; align-items: center; gap: 10px; flex: 1 1 240px; min-width: 0; max-width: 100%; overflow: hidden; }
+    .bulletin-icon { font-size: 22px; flex-shrink: 0; }
+    .bulletin-heading { font-size: 13.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bulletin-sub { font-size: 11.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
     .bulletin-equalizer {
       display: inline-flex;
@@ -397,10 +598,11 @@
       gap: 3px;
       height: 18px;
       padding: 0 4px;
+      flex-shrink: 0;
     }
     .eq-bar {
       width: 3px;
-      background: var(--news-green);
+      background: var(--news-green, #15803d);
       border-radius: 2px;
       animation: eqPulse 1s ease-in-out infinite alternate;
     }
@@ -418,38 +620,124 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .bulletin-settings-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .bulletin-select {
       background: #f8faf8;
-      border: 1px solid var(--news-border);
+      border: 1px solid var(--news-border, #cbd5e1);
       border-radius: 16px;
-      padding: 6px 12px;
+      padding: 5px 10px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--news-dark);
+      color: #0f172a;
       font-family: inherit;
       outline: none;
       cursor: pointer;
+      max-width: 190px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
       transition: border-color 0.15s;
     }
-    .bulletin-select:focus { border-color: var(--news-green); }
+    .bulletin-select:focus { border-color: var(--news-green, #15803d); }
 
     .btn-bulletin-play {
-      background: var(--news-green);
+      background: var(--news-green, #15803d);
       color: #ffffff;
       border: none;
-      padding: 7px 18px;
+      padding: 7px 16px;
       border-radius: 20px;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
       transition: background 0.15s;
     }
-    .btn-bulletin-play:hover { background: var(--news-dark); }
+    .btn-bulletin-play:hover { background: var(--news-dark, #1a3c2e); }
+
+    @media (max-width: 960px) {
+      .bulletin-strip {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+          "left play"
+          "settings settings";
+        gap: 8px 10px;
+        padding: 9px 12px;
+        margin-bottom: 20px;
+        border: 1.5px solid var(--news-border, #cbd5e1);
+        border-radius: 12px;
+      }
+      .bulletin-left {
+        grid-area: left;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .bulletin-icon { font-size: 20px; }
+      .bulletin-heading {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .bulletin-sub {
+        font-size: 11px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 1px;
+      }
+      .bulletin-controls { display: contents; }
+      .btn-bulletin-play {
+        grid-area: play;
+        align-self: center;
+        padding: 6px 14px;
+        font-size: 12px;
+        border-radius: 20px;
+        height: 32px;
+        white-space: nowrap;
+        gap: 5px;
+      }
+      .bulletin-settings-group {
+        grid-area: settings;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        border-top: 1px dashed #e2e8f0;
+        padding-top: 6px;
+      }
+      .bulletin-select {
+        flex: 1 1 50%;
+        max-width: none;
+        height: 28px;
+        padding: 2px 8px;
+        font-size: 11.5px;
+        border-radius: 6px;
+        background: #f8fafc;
+      }
+    }
+    @media (max-width: 480px) {
+      .bulletin-strip { padding: 8px 10px; gap: 6px 8px; }
+      .bulletin-heading { font-size: 12.5px; }
+      .bulletin-sub { display: none; }
+      .btn-bulletin-play { padding: 5px 12px; font-size: 11.5px; height: 30px; }
+      .bulletin-select { font-size: 11px; height: 26px; padding: 2px 6px; }
+    }
 
     /* ── Minimal Filter Chips & Search ── */
     .filter-bar {
@@ -1621,6 +1909,61 @@
       .cards-grid { grid-template-columns: 1fr; }
       .search-input-box { width: 100%; min-width: auto; }
     }
+
+    @media (max-width: 640px) {
+      .page-container { padding: 12px 10px 60px; }
+      .recent-posts-tab-card { border-radius: 10px; }
+      .recent-tab-header { padding: 8px 12px; gap: 6px; }
+      .recent-tab-badge { font-size: 12.5px; }
+      .recent-badge-sub { display: none; }
+      .recent-tab-pills { gap: 4px; }
+      .recent-tab-pill {
+        padding: 5px 9px;
+        font-size: 11px;
+        min-height: 30px;
+        touch-action: manipulation;
+      }
+      .recent-arrow-btn {
+        width: 28px;
+        height: 28px;
+        touch-action: manipulation;
+      }
+      .recent-slide .lead-media { height: 195px; }
+      .recent-slide .lead-body { padding: 14px 14px 12px; }
+      .recent-slide .lead-title {
+        font-size: 17.5px;
+        line-height: 1.35;
+        margin-bottom: 6px;
+      }
+      .recent-slide .lead-excerpt {
+        font-size: 12.5px;
+        line-height: 1.5;
+        margin-bottom: 10px;
+        -webkit-line-clamp: 2;
+      }
+      .recent-slide .lead-footer {
+        padding-top: 10px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .recent-slide .lead-actions {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .recent-slide .lead-actions::-webkit-scrollbar { display: none; }
+      .recent-slide .news-action-btn {
+        touch-action: manipulation;
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1773,46 +2116,239 @@
     <!-- ── Spotlight Section (Lead + Top List) ── -->
     <section class="spotlight-grid">
 
-      <!-- Featured Story -->
-      <article class="lead-story">
-        <div class="lead-media">
-          <img src="images/articles/ganna-pricing-analytics-up-card.webp" alt="गन्ने का मूल्य विश्लेषण" class="lead-img" onerror="this.src='images/og-banner.jpg'">
-        </div>
-        <div class="lead-body">
-          <div>
-            <div><span class="lead-tag">🔥 मुख्य समाचार</span></div>
-            <h2 class="lead-title">गन्ने का मूल्य विश्लेषण 2026: SAP, FRP व चीनी मिलों के नए भुगतान नियम</h2>
-            <p class="lead-excerpt">
-              उत्तर प्रदेश, महाराष्ट्र व हरियाणा सहित प्रमुख गन्ना उत्पादक राज्यों में नई खरीद दर, चीनी परता रिकवरी और मिलों द्वारा 14 दिनों के भीतर अनिवार्य भुगतान पर सरकारी दिशा-निर्देश।
-            </p>
+      <!-- ══ Recent Posts Tab (Top 3 News Sliding Carousel) ══ -->
+      <div class="recent-posts-tab-card" id="recent-posts-tab-card">
+        <!-- Tab Bar Header -->
+        <div class="recent-tab-header">
+          <div class="recent-tab-title-wrap">
+            <span class="recent-tab-badge">
+              <span class="recent-live-dot" aria-hidden="true"></span>
+              ताज़ा खबरें <span class="recent-badge-sub">(Recent Posts)</span>
+            </span>
           </div>
-          <div class="lead-footer">
-            <button class="news-action-btn audio-btn" id="btn-lead-audio" onclick="playNewsAudio(this, 'news-lead')" title="खबर सुनें">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              <span>खबर सुनें</span>
-            </button>
-            <div class="lead-actions" style="display:flex;align-items:center;gap:14px;">
-              <button class="news-action-btn like-btn" id="lead-like-btn" onclick="toggleLike('news-lead', this)" title="पसंद करें">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-                <span class="like-count" id="lead-like-count">342</span>
+
+          <div class="recent-tab-nav">
+            <!-- Clickable Tab Pills for the Top 3 Posts -->
+            <div class="recent-tab-pills" id="recent-tab-pills" role="tablist" aria-label="ताज़ा समाचार स्लाइड">
+              <button type="button" class="recent-tab-pill active" data-slide="0" onclick="goToRecentSlide(0)" role="tab" aria-selected="true" title="पोस्ट 1: गन्ने का मूल्य विश्लेषण">
+                <span class="pill-dot"></span> 1
               </button>
-              <button class="news-action-btn comment-btn" onclick="openCommentDrawer('news-lead')" title="किसान चर्चा">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <span class="comment-count" id="lead-comment-count">48</span>
+              <button type="button" class="recent-tab-pill" data-slide="1" onclick="goToRecentSlide(1)" role="tab" aria-selected="false" title="पोस्ट 2: गेहूं MSP व मंडी दर">
+                <span class="pill-dot"></span> 2
               </button>
-              <button class="news-action-btn share-btn" onclick="openShareMenu('news-lead', 'गन्ने का मूल्य विश्लेषण 2026: SAP, FRP व भुगतान नियम', 'articles/ganna-pricing-analytics-up')" title="शेयर करें">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                <span>शेयर</span>
+              <button type="button" class="recent-tab-pill" data-slide="2" onclick="goToRecentSlide(2)" role="tab" aria-selected="false" title="पोस्ट 3: पीएम कुसुम सोलर पंप">
+                <span class="pill-dot"></span> 3
               </button>
-              <button class="news-action-btn bookmark-btn" id="lead-bookmark-btn" onclick="toggleBookmark('news-lead', this)" title="सहेजें">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                <span class="bookmark-label">सहेजें</span>
+            </div>
+
+            <!-- Minimal Prev / Next Arrows -->
+            <div class="recent-arrow-btns">
+              <button type="button" class="recent-arrow-btn" onclick="prevRecentSlide()" title="पिछला समाचार (Prev)" aria-label="पिछला समाचार">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
               </button>
-              <a href="articles/ganna-pricing-analytics-up" class="card-full-link" onclick="trackRead()">विस्तार से पढ़ें →</a>
+              <button type="button" class="recent-arrow-btn" onclick="nextRecentSlide()" title="अगला समाचार (Next)" aria-label="अगला समाचार">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
           </div>
         </div>
-      </article>
+
+        <!-- Slider Viewport -->
+        <div class="recent-slider-viewport" id="recent-slider-viewport" onmouseenter="pauseRecentSlider()" onmouseleave="resumeRecentSlider()">
+          <div class="recent-slider-track" id="recent-slider-track">
+
+            <!-- Slide 1: गन्ने का मूल्य विश्लेषण 2026 -->
+            <article class="recent-slide" data-index="0" data-news-id="news-lead">
+              <div class="lead-media">
+                <img src="images/articles/ganna-pricing-analytics-up-card.webp" alt="गन्ने का मूल्य विश्लेषण" class="lead-img" width="600" height="338" fetchpriority="high" decoding="async" onerror="this.src='images/og-banner.jpg'">
+                <div class="recent-slide-meta-badge">
+                  <span class="recent-post-number-tag">पोस्ट 1 · ताज़ा</span>
+                </div>
+              </div>
+              <div class="lead-body">
+                <div>
+                  <div><span class="lead-tag">🔥 मुख्य समाचार · मंडी बुलेटिन</span></div>
+                  <h2 class="lead-title">
+                    <a href="articles/ganna-pricing-analytics-up" onclick="trackRead()">गन्ने का मूल्य विश्लेषण 2026: SAP, FRP व चीनी मिलों के नए भुगतान नियम</a>
+                  </h2>
+                  <p class="lead-excerpt">
+                    उत्तर प्रदेश, महाराष्ट्र व हरियाणा सहित प्रमुख गन्ना उत्पादक राज्यों में नई खरीद दर, चीनी परता रिकवरी और मिलों द्वारा 14 दिनों के भीतर अनिवार्य भुगतान पर सरकारी दिशा-निर्देश।
+                  </p>
+                </div>
+                <div class="lead-footer">
+                  <button type="button" class="news-action-btn audio-btn" id="btn-lead-audio" onclick="playNewsAudio(this, 'news-lead')" title="खबर सुनें">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>खबर सुनें</span>
+                  </button>
+                  <div class="lead-actions">
+                    <button type="button" class="news-action-btn like-btn" id="lead-like-btn" onclick="toggleLike('news-lead', this)" title="पसंद करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                      <span class="like-count" id="lead-like-count">342</span>
+                    </button>
+                    <button type="button" class="news-action-btn comment-btn" onclick="openCommentDrawer('news-lead')" title="किसान चर्चा">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <span class="comment-count" id="lead-comment-count">48</span>
+                    </button>
+                    <button type="button" class="news-action-btn share-btn" onclick="openShareMenu('news-lead', 'गन्ने का मूल्य विश्लेषण 2026: SAP, FRP व भुगतान नियम', 'articles/ganna-pricing-analytics-up')" title="शेयर करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      <span>शेयर</span>
+                    </button>
+                    <button type="button" class="news-action-btn bookmark-btn" id="lead-bookmark-btn" onclick="toggleBookmark('news-lead', this)" title="सहेजें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                      <span class="bookmark-label">सहेजें</span>
+                    </button>
+                    <a href="articles/ganna-pricing-analytics-up" class="card-full-link" onclick="trackRead()">विस्तार से पढ़ें →</a>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- Slide 2: गेहूं MSP व मंडी दर 2026 -->
+            <article class="recent-slide" data-index="1" data-news-id="news-1">
+              <div class="lead-media">
+                <img src="images/articles/gehuu-price-analytic-up-card.webp" alt="गेहूं MSP व मंडी दर 2026" class="lead-img" width="600" height="338" decoding="async" onerror="this.src='images/og-banner.jpg'">
+                <div class="recent-slide-meta-badge">
+                  <span class="recent-post-number-tag">पोस्ट 2 · ताज़ा</span>
+                </div>
+              </div>
+              <div class="lead-body">
+                <div>
+                  <div><span class="lead-tag">🌾 मंडी विश्लेषण · ताज़ा रिपोर्ट</span></div>
+                  <h2 class="lead-title">
+                    <a href="articles/gehuu-price-analytic-up" onclick="trackRead()">गेहूं MSP व मंडी दर 2026: इस सीज़न में बिक्री का सबसे सही समय कब?</a>
+                  </h2>
+                  <p class="lead-excerpt">
+                    मंडियों में गेहूं के ताज़ा आवक रुझान, सरकारी खरीद केंद्रों पर रजिस्ट्रेशन और व्यापारियों के भाव का सम्पूर्ण तुलनात्मक विश्लेषण।
+                  </p>
+                </div>
+                <div class="lead-footer">
+                  <button type="button" class="news-action-btn audio-btn" id="btn-audio-news-1" onclick="playNewsAudio(this, 'news-1')" title="खबर सुनें">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>खबर सुनें</span>
+                  </button>
+                  <div class="lead-actions">
+                    <button type="button" class="news-action-btn like-btn" id="news-1-like-btn" onclick="toggleLike('news-1', this)" title="पसंद करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                      <span class="like-count" id="news-1-like-count">284</span>
+                    </button>
+                    <button type="button" class="news-action-btn comment-btn" onclick="openCommentDrawer('news-1')" title="किसान चर्चा">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <span class="comment-count" id="news-1-comment-count">36</span>
+                    </button>
+                    <button type="button" class="news-action-btn share-btn" onclick="openShareMenu('news-1', 'गेहूं MSP व मंडी दर 2026: बिक्री का सही समय', 'articles/gehuu-price-analytic-up')" title="शेयर करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      <span>शेयर</span>
+                    </button>
+                    <button type="button" class="news-action-btn bookmark-btn" id="news-1-bookmark-btn" onclick="toggleBookmark('news-1', this)" title="सहेजें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                      <span class="bookmark-label">सहेजें</span>
+                    </button>
+                    <a href="articles/gehuu-price-analytic-up" class="card-full-link" onclick="trackRead()">विस्तार से पढ़ें →</a>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- Slide 3: पीएम कुसुम सोलर पंप योजना -->
+            <article class="recent-slide" data-index="2" data-news-id="news-2">
+              <div class="lead-media">
+                <img src="images/articles/pm-kusum-solar-pump-yojana-card.webp" alt="पीएम कुसुम सोलर पंप योजना" class="lead-img" width="600" height="338" decoding="async" onerror="this.src='images/og-banner.jpg'">
+                <div class="recent-slide-meta-badge">
+                  <span class="recent-post-number-tag">पोस्ट 3 · ताज़ा</span>
+                </div>
+              </div>
+              <div class="lead-body">
+                <div>
+                  <div><span class="lead-tag">☀️ सरकारी योजना · 60% सब्सिडी</span></div>
+                  <h2 class="lead-title">
+                    <a href="articles/pm-kusum-solar-pump-yojana" onclick="trackRead()">पीएम कुसुम सोलर पंप योजना: 60% सब्सिडी के साथ खेत में लगाएं सोलर पंप</a>
+                  </h2>
+                  <p class="lead-excerpt">
+                    बिजली कटौती और भारी डीज़ल खर्च से मुक्ति। सोलर पंप योजना के लिए ऑनलाइन आवेदन प्रक्रिया, पात्रता और आवश्यक दस्तावेज।
+                  </p>
+                </div>
+                <div class="lead-footer">
+                  <button type="button" class="news-action-btn audio-btn" id="btn-audio-news-2" onclick="playNewsAudio(this, 'news-2')" title="खबर सुनें">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>खबर सुनें</span>
+                  </button>
+                  <div class="lead-actions">
+                    <button type="button" class="news-action-btn like-btn" id="news-2-like-btn" onclick="toggleLike('news-2', this)" title="पसंद करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                      <span class="like-count" id="news-2-like-count">319</span>
+                    </button>
+                    <button type="button" class="news-action-btn comment-btn" onclick="openCommentDrawer('news-2')" title="किसान चर्चा">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <span class="comment-count" id="news-2-comment-count">42</span>
+                    </button>
+                    <button type="button" class="news-action-btn share-btn" onclick="openShareMenu('news-2', 'पीएम कुसुम सोलर पंप: 60% सब्सिडी गाइड', 'articles/pm-kusum-solar-pump-yojana')" title="शेयर करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      <span>शेयर</span>
+                    </button>
+                    <button type="button" class="news-action-btn bookmark-btn" id="news-2-bookmark-btn" onclick="toggleBookmark('news-2', this)" title="सहेजें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                      <span class="bookmark-label">सहेजें</span>
+                    </button>
+                    <a href="articles/pm-kusum-solar-pump-yojana" class="card-full-link" onclick="trackRead()">विस्तार से पढ़ें →</a>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- Slide 4: Seamless clone of Slide 1 for infinite slide-left animation -->
+            <article class="recent-slide clone" data-index="3" data-news-id="news-lead" aria-hidden="true">
+              <div class="lead-media">
+                <img src="images/articles/ganna-pricing-analytics-up-card.webp" alt="गन्ने का मूल्य विश्लेषण" class="lead-img" width="600" height="338" decoding="async" onerror="this.src='images/og-banner.jpg'">
+                <div class="recent-slide-meta-badge">
+                  <span class="recent-post-number-tag">पोस्ट 1 · ताज़ा</span>
+                </div>
+              </div>
+              <div class="lead-body">
+                <div>
+                  <div><span class="lead-tag">🔥 मुख्य समाचार · मंडी बुलेटिन</span></div>
+                  <h2 class="lead-title">
+                    <a href="articles/ganna-pricing-analytics-up" onclick="trackRead()">गन्ने का मूल्य विश्लेषण 2026: SAP, FRP व चीनी मिलों के नए भुगतान नियम</a>
+                  </h2>
+                  <p class="lead-excerpt">
+                    उत्तर प्रदेश, महाराष्ट्र व हरियाणा सहित प्रमुख गन्ना उत्पादक राज्यों में नई खरीद दर, चीनी परता रिकवरी और मिलों द्वारा 14 दिनों के भीतर अनिवार्य भुगतान पर सरकारी दिशा-निर्देश।
+                  </p>
+                </div>
+                <div class="lead-footer">
+                  <button type="button" class="news-action-btn audio-btn" onclick="playNewsAudio(this, 'news-lead')" title="खबर सुनें">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>खबर सुनें</span>
+                  </button>
+                  <div class="lead-actions">
+                    <button type="button" class="news-action-btn like-btn" onclick="toggleLike('news-lead', this)" title="पसंद करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                      <span class="like-count">342</span>
+                    </button>
+                    <button type="button" class="news-action-btn comment-btn" onclick="openCommentDrawer('news-lead')" title="किसान चर्चा">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <span class="comment-count">48</span>
+                    </button>
+                    <button type="button" class="news-action-btn share-btn" onclick="openShareMenu('news-lead', 'गन्ने का मूल्य विश्लेषण 2026: SAP, FRP व भुगतान नियम', 'articles/ganna-pricing-analytics-up')" title="शेयर करें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      <span>शेयर</span>
+                    </button>
+                    <button type="button" class="news-action-btn bookmark-btn" onclick="toggleBookmark('news-lead', this)" title="सहेजें">
+                      <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                      <span class="bookmark-label">सहेजें</span>
+                    </button>
+                    <a href="articles/ganna-pricing-analytics-up" class="card-full-link" onclick="trackRead()">विस्तार से पढ़ें →</a>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+          </div>
+
+          <!-- Bottom Auto-Advance Progress Line -->
+          <div class="recent-progress-bar-wrap">
+            <div class="recent-progress-bar" id="recent-progress-bar"></div>
+          </div>
+        </div>
+      </div>
 
       <!-- Trending List -->
       <aside class="trending-box">
@@ -1899,17 +2435,19 @@
         </div>
       </div>
       <div class="bulletin-controls">
-        <select class="bulletin-select" id="voice-select" onchange="onVoiceChange(this.value)" title="समाचार वाचक की आवाज़ चुनें">
-          <option value="swara">👩 स्वाति (नेचुरल न्यूज़ एंकर)</option>
-          <option value="madhur">👨 मधुर (आकाशवाणी बुलेटिन)</option>
-          <option value="google">✨ गूगल हिन्दी (क्लियर वॉइस)</option>
-          <option value="auto">🌐 डिवाइस डिफ़ॉल्ट</option>
-        </select>
-        <select class="bulletin-select" id="speed-select" onchange="onSpeedChange(this.value)" title="बोलने की गति">
-          <option value="0.88">0.9x गति (शांत)</option>
-          <option value="0.96" selected>1.0x गति (सामान्य)</option>
-          <option value="1.1">1.1x गति (तेज़)</option>
-        </select>
+        <div class="bulletin-settings-group">
+          <select class="bulletin-select" id="voice-select" onchange="onVoiceChange(this.value)" title="समाचार वाचक की आवाज़ चुनें">
+            <option value="swara">👩 स्वाति (नेचुरल न्यूज़ एंकर)</option>
+            <option value="madhur">👨 मधुर (आकाशवाणी बुलेटिन)</option>
+            <option value="google">✨ गूगल हिन्दी (क्लियर वॉइस)</option>
+            <option value="auto">🌐 डिवाइस डिफ़ॉल्ट</option>
+          </select>
+          <select class="bulletin-select" id="speed-select" onchange="onSpeedChange(this.value)" title="बोलने की गति">
+            <option value="0.88">0.9x गति (शांत)</option>
+            <option value="0.96" selected>1.0x गति (सामान्य)</option>
+            <option value="1.1">1.1x गति (तेज़)</option>
+          </select>
+        </div>
         <button class="btn-bulletin-play" id="btn-daily-bulletin" onclick="toggleDailyBulletin(this)">
           <span id="adb-play-icon">▶️</span>
           <span id="adb-play-text">पूरा बुलेटिन सुनें</span>
@@ -2651,6 +3189,9 @@
         window.speechSynthesis.cancel();
         activeSpeechId = null;
         updateAudioButtonsUi();
+        if (window.recentSlider && window.recentSlider.isInViewport && !document.hidden) {
+          window.recentSlider.resume();
+        }
         return;
       }
 
@@ -2658,6 +3199,7 @@
       isBulletinPlaying = false;
       activeSpeechId = id;
       updateAudioButtonsUi();
+      if (window.recentSlider) window.recentSlider.pause();
 
       pickBestVoice();
 
@@ -2671,10 +3213,16 @@
       utter.onend = function () {
         activeSpeechId = null;
         updateAudioButtonsUi();
+        if (window.recentSlider && window.recentSlider.isInViewport && !document.hidden) {
+          window.recentSlider.resume();
+        }
       };
       utter.onerror = function () {
         activeSpeechId = null;
         updateAudioButtonsUi();
+        if (window.recentSlider && window.recentSlider.isInViewport && !document.hidden) {
+          window.recentSlider.resume();
+        }
       };
 
       window.speechSynthesis.speak(utter);
@@ -2690,6 +3238,17 @@
           ? '<svg class="action-icon" viewBox="0 0 24 24" fill="#15803d"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>रोकें</span>'
           : '<svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>खबर सुनें</span>';
       }
+
+      ['news-1', 'news-2'].forEach(function(sid) {
+        var btn = document.getElementById('btn-audio-' + sid);
+        if (btn) {
+          var isPlaying = (activeSpeechId === sid);
+          btn.classList.toggle('playing', isPlaying);
+          btn.innerHTML = isPlaying
+            ? '<svg class="action-icon" viewBox="0 0 24 24" fill="#15803d"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>रोकें</span>'
+            : '<svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>खबर सुनें</span>';
+        }
+      });
 
       var eq = document.getElementById('bulletin-equalizer');
       if (eq) {
@@ -3777,28 +4336,268 @@
 
     function syncSocialBatch() {
       if (!ALL_NEWS || !ALL_NEWS.length) return;
-      var ids = ['news-lead'].concat(ALL_NEWS.map(function(n) { return n.id; }).slice(0, 30)).join(',');
+      var ids = ['news-lead', 'news-1', 'news-2'].concat(ALL_NEWS.map(function(n) { return n.id; }).slice(0, 30)).join(',');
       fetch(getApiBase() + '/api/news/social/batch?ids=' + encodeURIComponent(ids))
         .then(function(r) { return r.json(); })
         .then(function(d) {
-          if (d && d.success && d.stats) {
-            var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts') || '{}');
-            Object.keys(d.stats).forEach(function(nid) {
-              likeCounts[nid] = d.stats[nid].total_likes;
-            });
-            localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
-            renderNewsList();
+          if (!d) return;
+          var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts') || '{}');
+          Object.keys(d).forEach(function(nid) {
+            var s = d[nid];
+            if (!s || typeof s !== 'object') return;
+            likeCounts[nid] = s.likes || s.total_likes || 0;
+          });
+          localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
+          renderNewsList();
 
-            // Update lead story if stats present
-            if (d.stats['news-lead']) {
-              var leadCount = document.getElementById('lead-like-count');
-              if (leadCount) leadCount.textContent = d.stats['news-lead'].total_likes;
-              var leadCommEl = document.getElementById('lead-comment-count');
-              if (leadCommEl) leadCommEl.textContent = d.stats['news-lead'].comment_count;
+          // Update recent top stories if stats present
+          ['news-lead', 'news-1', 'news-2'].forEach(function(sid) {
+            var stats = d[sid];
+            if (stats) {
+              var isLead = (sid === 'news-lead');
+              var leadCount = document.getElementById(isLead ? 'lead-like-count' : sid + '-like-count');
+              if (leadCount) leadCount.textContent = stats.likes || stats.total_likes || 0;
+              var leadCommEl = document.getElementById(isLead ? 'lead-comment-count' : sid + '-comment-count');
+              if (leadCommEl) leadCommEl.textContent = stats.comments || stats.comment_count || 0;
             }
-          }
+          });
         })
         .catch(function(){});
+    }
+
+    // ── Ultra-Optimized Recent Posts Slider (Mobile First, 0-Polling Battery Saver) ──
+    var recentSlider = {
+      currentIndex: 0,
+      totalSlides: 3,
+      slideDuration: 3000,
+      slideTimer: null,
+      startTime: 0,
+      remainingTime: 3000,
+      isPaused: false,
+      isInViewport: true,
+      track: null,
+      pills: [],
+      progressBar: null,
+      observer: null,
+
+      init: function() {
+        this.track = document.getElementById('recent-slider-track');
+        this.progressBar = document.getElementById('recent-progress-bar');
+        this.pills = Array.from(document.querySelectorAll('#recent-tab-pills .recent-tab-pill'));
+        if (!this.track) return;
+
+        var self = this;
+
+        // Continuous Left Loop: When transition ends on clone (index 3), instantly jump back to index 0
+        this.track.addEventListener('transitionend', function(e) {
+          if (e.target !== self.track) return;
+          if (self.currentIndex === self.totalSlides) {
+            self.track.style.transition = 'none';
+            self.currentIndex = 0;
+            self.track.style.transform = 'translate3d(0%, 0, 0)';
+            void self.track.offsetHeight; // Force reflow
+            self.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+            self.updatePills(0);
+          }
+        });
+
+        // Directional touch gestures (prioritize fluid native vertical scrolling on mobile)
+        var viewport = document.getElementById('recent-slider-viewport');
+        if (viewport) {
+          var touchStartX = 0;
+          var touchStartY = 0;
+          var touchStartTime = 0;
+
+          viewport.addEventListener('touchstart', function(e) {
+            if (e.touches && e.touches[0]) {
+              touchStartX = e.touches[0].clientX;
+              touchStartY = e.touches[0].clientY;
+              touchStartTime = Date.now();
+              self.pause();
+            }
+          }, { passive: true });
+
+          viewport.addEventListener('touchend', function(e) {
+            if (e.changedTouches && e.changedTouches[0]) {
+              var diffX = e.changedTouches[0].clientX - touchStartX;
+              var diffY = e.changedTouches[0].clientY - touchStartY;
+              var touchElapsed = Date.now() - touchStartTime;
+
+              // Only trigger slide navigation if gesture was intentionally horizontal (> 35px, 1.2x vertical)
+              if (Math.abs(diffX) > Math.abs(diffY) * 1.2 && Math.abs(diffX) > 35 && touchElapsed < 800) {
+                if (diffX < 0) {
+                  self.next();
+                } else {
+                  self.prev();
+                }
+              }
+            }
+            // Small reading cushion before resuming autoplay
+            setTimeout(function() {
+              if (self.isInViewport && !document.hidden) {
+                self.resume();
+              }
+            }, 600);
+          }, { passive: true });
+        }
+
+        // IntersectionObserver: 0% battery/CPU drain when farmer scrolls down the feed
+        if ('IntersectionObserver' in window) {
+          this.observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+              self.isInViewport = entry.isIntersecting;
+              if (entry.isIntersecting) {
+                if (!document.hidden && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {
+                  self.resume();
+                }
+              } else {
+                self.pause();
+              }
+            });
+          }, { threshold: 0.15 });
+
+          var card = document.getElementById('recent-posts-tab-card') || viewport;
+          if (card) this.observer.observe(card);
+        }
+
+        // Page Visibility API: Stop animation completely when phone is locked or app in background
+        document.addEventListener('visibilitychange', function() {
+          if (document.hidden) {
+            self.pause();
+          } else if (self.isInViewport) {
+            self.resume();
+          }
+        });
+
+        this.startCycle(this.slideDuration);
+      },
+
+      startCycle: function(duration) {
+        clearTimeout(this.slideTimer);
+        this.remainingTime = duration;
+        this.startTime = Date.now();
+
+        if (this.progressBar) {
+          // GPU-accelerated linear progress bar transition with 0 polling intervals
+          this.progressBar.style.transition = 'none';
+          this.progressBar.style.transform = 'scaleX(0)';
+          void this.progressBar.offsetWidth; // Force reflow
+          if (!this.isPaused && this.isInViewport && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {
+            this.progressBar.style.transition = 'transform ' + duration + 'ms linear';
+            this.progressBar.style.transform = 'scaleX(1)';
+          }
+        }
+
+        var self = this;
+        this.slideTimer = setTimeout(function() {
+          if (!self.isPaused && self.isInViewport && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {
+            self.next();
+          } else {
+            self.startCycle(self.slideDuration);
+          }
+        }, duration);
+      },
+
+      goTo: function(index) {
+        if (!this.track) return;
+        this.currentIndex = index;
+        this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+        this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+        this.updatePills(this.currentIndex % this.totalSlides);
+        this.startCycle(this.slideDuration);
+      },
+
+      next: function() {
+        if (!this.track) return;
+        this.currentIndex++;
+        this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+        this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+        this.updatePills(this.currentIndex % this.totalSlides);
+        this.startCycle(this.slideDuration);
+      },
+
+      prev: function() {
+        if (!this.track) return;
+        if (this.currentIndex === 0) {
+          // Instant jump to clone at index 3, then slide to index 2
+          this.track.style.transition = 'none';
+          this.currentIndex = this.totalSlides;
+          this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+          void this.track.offsetHeight;
+          this.currentIndex = this.totalSlides - 1;
+          this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+          this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+        } else {
+          this.currentIndex--;
+          this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+          this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+        }
+        this.updatePills(this.currentIndex % this.totalSlides);
+        this.startCycle(this.slideDuration);
+      },
+
+      updatePills: function(activeIdx) {
+        this.pills.forEach(function(pill, idx) {
+          var isActive = (idx === activeIdx);
+          pill.classList.toggle('active', isActive);
+          pill.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+      },
+
+      pause: function() {
+        if (this.isPaused) return;
+        this.isPaused = true;
+        clearTimeout(this.slideTimer);
+
+        if (this.progressBar) {
+          var elapsed = Date.now() - this.startTime;
+          this.remainingTime = Math.max(200, this.remainingTime - elapsed);
+          var currentScale = Math.min(1, Math.max(0, (this.slideDuration - this.remainingTime) / this.slideDuration));
+          this.progressBar.style.transition = 'none';
+          this.progressBar.style.transform = 'scaleX(' + currentScale + ')';
+        }
+      },
+
+      resume: function() {
+        if (!this.isPaused) return;
+        if (window.speechSynthesis && window.speechSynthesis.speaking && activeSpeechId) return;
+        this.isPaused = false;
+        this.startTime = Date.now();
+
+        var self = this;
+        var rem = Math.max(200, this.remainingTime);
+
+        if (this.progressBar) {
+          void this.progressBar.offsetWidth;
+          this.progressBar.style.transition = 'transform ' + rem + 'ms linear';
+          this.progressBar.style.transform = 'scaleX(1)';
+        }
+
+        clearTimeout(this.slideTimer);
+        this.slideTimer = setTimeout(function() {
+          if (!self.isPaused && self.isInViewport && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {
+            self.next();
+          } else {
+            self.startCycle(self.slideDuration);
+          }
+        }, rem);
+      }
+    };
+
+    function goToRecentSlide(idx) {
+      if (recentSlider) recentSlider.goTo(idx);
+    }
+    function nextRecentSlide() {
+      if (recentSlider) recentSlider.next();
+    }
+    function prevRecentSlide() {
+      if (recentSlider) recentSlider.prev();
+    }
+    function pauseRecentSlider() {
+      if (recentSlider) recentSlider.pause();
+    }
+    function resumeRecentSlider() {
+      if (recentSlider) recentSlider.resume();
     }
 
     // ── Init ──
@@ -3839,36 +4638,41 @@
       initFarmerPoll();
       updateBookmarkCountBadge();
 
-      // Lead story social state
-      var leadLikes = getNewsLikes('news-lead');
-      var isLeadLiked = isNewsLiked('news-lead');
-      var leadBtn = document.getElementById('lead-like-btn');
-      if (leadBtn) {
-        leadBtn.classList.toggle('liked', isLeadLiked);
-        var leadCount = document.getElementById('lead-like-count');
-        if (leadCount) leadCount.textContent = leadLikes;
-        var leadSvg = leadBtn.querySelector('svg');
-        if (leadSvg) {
-          leadSvg.setAttribute('fill', isLeadLiked ? '#688a24' : 'none');
-          leadSvg.setAttribute('stroke', isLeadLiked ? '#688a24' : 'currentColor');
+      // Initialize Recent Posts Slider
+      recentSlider.init();
+
+      // Recent top stories social state
+      ['news-lead', 'news-1', 'news-2'].forEach(function(sid) {
+        var isLead = (sid === 'news-lead');
+        var likes = getNewsLikes(sid);
+        var isLiked = isNewsLiked(sid);
+        var likeBtn = document.getElementById(isLead ? 'lead-like-btn' : sid + '-like-btn');
+        if (likeBtn) {
+          likeBtn.classList.toggle('liked', isLiked);
+          var countEl = document.getElementById(isLead ? 'lead-like-count' : sid + '-like-count');
+          if (countEl) countEl.textContent = likes;
+          var svg = likeBtn.querySelector('svg');
+          if (svg) {
+            svg.setAttribute('fill', isLiked ? '#688a24' : 'none');
+            svg.setAttribute('stroke', isLiked ? '#688a24' : 'currentColor');
+          }
         }
-      }
 
-      // Lead story bookmark state
-      var isLeadBookmarked = isNewsBookmarked('news-lead');
-      var leadBm = document.getElementById('lead-bookmark-btn');
-      if (leadBm) {
-        leadBm.classList.toggle('bookmarked', isLeadBookmarked);
-        var leadBmSvg = leadBm.querySelector('svg');
-        var leadBmLbl = leadBm.querySelector('.bookmark-label');
-        if (leadBmSvg) leadBmSvg.setAttribute('fill', isLeadBookmarked ? '#15803d' : 'none');
-        if (leadBmLbl) leadBmLbl.textContent = isLeadBookmarked ? 'सहेजा' : 'सहेजें';
-      }
+        var isBm = isNewsBookmarked(sid);
+        var bmBtn = document.getElementById(isLead ? 'lead-bookmark-btn' : sid + '-bookmark-btn');
+        if (bmBtn) {
+          bmBtn.classList.toggle('bookmarked', isBm);
+          var bmSvg = bmBtn.querySelector('svg');
+          var bmLbl = bmBtn.querySelector('.bookmark-label');
+          if (bmSvg) bmSvg.setAttribute('fill', isBm ? '#15803d' : 'none');
+          if (bmLbl) bmLbl.textContent = isBm ? 'सहेजा' : 'सहेजें';
+        }
 
-      var leadCommEl = document.getElementById('lead-comment-count');
-      if (leadCommEl) {
-        leadCommEl.textContent = getNewsCommentCount('news-lead');
-      }
+        var commEl = document.getElementById(isLead ? 'lead-comment-count' : sid + '-comment-count');
+        if (commEl) {
+          commEl.textContent = getNewsCommentCount(sid);
+        }
+      });
 
       // Check for deep linked story URL query ?story=id
       try {

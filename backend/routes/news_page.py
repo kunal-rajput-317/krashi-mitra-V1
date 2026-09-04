@@ -49,7 +49,11 @@ img{max-width:100%}
 .pre-topbar-phone-icon{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;font-size:10px}
 .top-utility-bar{background:var(--white);border-bottom:1px solid var(--border);padding:6px 0;font-size:12px}
 .top-utility-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 40px}
-@media(max-width:768px){.top-utility-inner{padding:0 14px}}
+@media(max-width:768px){.top-utility-bar{display:none!important}}
+.topbar-spacer{height:135px}
+@media(max-width:768px){.topbar-spacer{height:88px!important}}
+.crumbs{max-width:1240px;margin:0 auto;padding:12px 24px 0;box-sizing:border-box;font-size:13px;color:var(--text-soft)}
+@media(max-width:768px){.crumbs{padding:8px 14px 0!important;font-size:11.5px}}
 .top-utility-left,.top-utility-right{display:flex;align-items:center;gap:12px}
 .top-utility-link{color:var(--text-mid);text-decoration:none;font-weight:600}
 .top-utility-link:hover{color:var(--green-mid)}
@@ -241,6 +245,188 @@ NEWS_EXTRA_CSS = """
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   transform: translateY(-2px);
   border-color: #000000;
+}
+.recent-posts-tab-card {
+  background: var(--news-card);
+  border: 1.5px solid #111827;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  position: relative;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.recent-posts-tab-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  border-color: #000000;
+}
+.recent-tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-bottom: 1.5px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.recent-tab-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.recent-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-dark);
+  letter-spacing: 0.01em;
+}
+.recent-badge-sub {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.recent-live-dot {
+  width: 8px;
+  height: 8px;
+  background: #16a34a;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
+  animation: recentPulseDot 1.8s infinite;
+}
+@keyframes recentPulseDot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+.recent-tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.recent-tab-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.recent-tab-pill {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+.recent-tab-pill .pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition: background 0.2s;
+}
+.recent-tab-pill:hover {
+  border-color: var(--green-mid);
+  color: var(--green-mid);
+}
+.recent-tab-pill.active {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(26, 60, 46, 0.2);
+}
+.recent-tab-pill.active .pill-dot {
+  background: #4ade80;
+}
+.recent-arrow-btns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.recent-arrow-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  padding: 0;
+}
+.recent-arrow-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #000;
+}
+.recent-slider-viewport {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.recent-slider-track {
+  display: flex;
+  width: 100%;
+  will-change: transform;
+  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.recent-slide {
+  min-width: 100%;
+  width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+.recent-slide-meta-badge {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 2;
+}
+.recent-post-number-tag {
+  background: rgba(15, 23, 42, 0.78);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.02em;
+}
+.recent-progress-bar-wrap {
+  width: 100%;
+  height: 3px;
+  background: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+.recent-progress-bar {
+  height: 100%;
+  width: 100%;
+  background: var(--green-mid);
+  transform-origin: left;
+  transform: scaleX(0);
+  will-change: transform;
 }
 .lead-media {
   position: relative;
@@ -590,10 +776,10 @@ NEWS_EXTRA_CSS = """
 /* ── Audio Bulletin Digest Strip & Voice Controls ── */
 .bulletin-strip {
   background: #ffffff;
-  border: 1.5px solid #111827;
+  border: 1.5px solid var(--news-border, #cbd5e1);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 12px 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 10px 16px;
   margin-bottom: 24px;
   display: flex;
   align-items: center;
@@ -614,7 +800,7 @@ NEWS_EXTRA_CSS = """
   overflow: hidden;
 }
 .bulletin-icon {
-  font-size: 24px;
+  font-size: 22px;
   flex-shrink: 0;
 }
 .bulletin-text-group {
@@ -665,13 +851,17 @@ NEWS_EXTRA_CSS = """
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  flex-wrap: wrap;
+}
+.bulletin-settings-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .bulletin-select {
   background: #f8faf8;
   border: 1px solid #cbd5e1;
   border-radius: 16px;
-  padding: 6px 10px;
+  padding: 5px 10px;
   font-size: 12px;
   font-weight: 600;
   color: #0f172a;
@@ -705,24 +895,238 @@ NEWS_EXTRA_CSS = """
 
 @media (max-width: 960px) {
   .bulletin-strip {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "left play"
+      "settings settings";
+    gap: 8px 10px;
+    padding: 9px 12px;
+    margin-bottom: 20px;
+    border: 1.5px solid var(--news-border, #cbd5e1);
+    border-radius: 12px;
+  }
+  .bulletin-left {
+    grid-area: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .bulletin-icon {
+    font-size: 20px;
+  }
+  .bulletin-heading {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bulletin-sub {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
   }
   .bulletin-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    width: 100%;
-  }
-  .bulletin-select {
-    flex: 1 1 130px;
-    max-width: none;
+    display: contents;
   }
   .btn-bulletin-play {
+    grid-area: play;
+    align-self: center;
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    height: 32px;
+    white-space: nowrap;
+    gap: 5px;
+  }
+  .bulletin-settings-group {
+    grid-area: settings;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     width: 100%;
-    justify-content: center;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 6px;
+  }
+  .bulletin-select {
+    flex: 1 1 50%;
+    max-width: none;
+    height: 28px;
+    padding: 2px 8px;
+    font-size: 11.5px;
+    border-radius: 6px;
+    background: #f8fafc;
+  }
+}
+@media (max-width: 480px) {
+  .bulletin-strip {
+    padding: 8px 10px;
+    gap: 6px 8px;
+  }
+  .bulletin-heading {
+    font-size: 12.5px;
+  }
+  .bulletin-sub {
+    display: none;
+  }
+  .btn-bulletin-play {
+    padding: 5px 12px;
+    font-size: 11.5px;
+    height: 30px;
+  }
+  .bulletin-select {
+    font-size: 11px;
+    height: 26px;
+    padding: 2px 6px;
+  }
+}
+
+/* ── Mobile Layout Polish (98% Audience) ── */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 8px 12px 85px !important;
+  }
+  .news-header-title-row {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    gap: 4px;
+  }
+  .news-page-title {
+    font-size: 20px;
+  }
+  .news-count-pill {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+  .news-page-date {
+    font-size: 11px;
+  }
+  .spotlight-grid {
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .recent-posts-tab-card {
+    border-radius: 12px;
+  }
+  .recent-tab-header {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .recent-tab-badge {
+    font-size: 12px;
+  }
+  .recent-badge-sub {
+    font-size: 10px;
+  }
+  .recent-tab-pills {
+    gap: 4px;
+  }
+  .recent-tab-pill {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 12px;
+  }
+  .recent-arrow-btns {
+    gap: 3px;
+  }
+  .recent-arrow-btn {
+    width: 24px;
+    height: 24px;
+  }
+  .lead-media {
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    max-height: 205px !important;
+    width: 100% !important;
+    background: #f1f5f9;
+  }
+  .lead-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .lead-body {
+    padding: 12px 14px 10px !important;
+  }
+  .lead-tag {
+    font-size: 10.5px;
+    padding: 2px 7px;
+    margin-bottom: 5px;
+  }
+  .lead-title {
+    font-size: 15.5px !important;
+    line-height: 1.35 !important;
+    margin: 0 0 6px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .lead-excerpt {
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    margin: 0 0 10px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .lead-footer {
+    padding-top: 8px;
+    gap: 8px;
+  }
+  .lead-footer .action-btn {
+    padding: 4px 8px !important;
+    font-size: 11px;
+  }
+  .card-read-link {
+    font-size: 11.5px;
+  }
+  .trending-box {
+    padding: 12px 14px;
+  }
+  .trending-box-title {
+    font-size: 13.5px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+  .trending-item {
+    padding: 7px 0;
+    gap: 10px;
+  }
+  .trending-idx {
+    font-size: 16px;
+  }
+  .trending-item-title {
+    font-size: 12.5px;
+    line-height: 1.35;
+    margin-bottom: 2px;
+  }
+  .trending-item-meta {
+    font-size: 10.5px;
+  }
+  .news-filter-card {
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .news-search-row {
+    height: 38px;
+    padding: 0 10px;
+    margin-bottom: 8px;
+  }
+  .news-search-input {
+    font-size: 13px;
+  }
+  .news-chip {
+    padding: 5px 11px;
+    font-size: 11.5px;
   }
 }
 """
@@ -801,7 +1205,7 @@ def _news_header() -> str:
 <button class="sidebar-drawer-close" onclick="document.getElementById('km-drawer').classList.remove('open')" aria-label="Close menu">✕</button></div>
 <div class="sidebar-drawer-links">{drawer_html}</div>
 </div></div>
-<div class="topbar-spacer" id="topbar-spacer" style="height:135px;"></div>
+<div class="topbar-spacer" id="topbar-spacer"></div>
 """
 
 
@@ -847,7 +1251,7 @@ def _news_doc(title: str, desc: str, body: str, ld: str = "") -> HTMLResponse:
 </head>
 <body>
 {_news_header()}
-<nav class="crumbs" style="max-width:1240px;margin:0 auto;padding:16px 24px 0;box-sizing:border-box;"><a href="{SITE}/">कृषि मित्र</a> › <span class="current">कृषि समाचार</span></nav>
+<nav class="crumbs"><a href="{SITE}/">कृषि मित्र</a> › <span class="current">कृषि समाचार</span></nav>
 {body}
 {_news_footer()}
 <script src="/api-config.js"></script>
@@ -971,6 +1375,105 @@ def krashi_news_hub(request: Request):
     lead_excerpt_esc = escape(lead_story.get("excerpt") or "")
     lead_click = f"openStoryReader('{escape(lead_id)}'); return false;"
 
+    # Prepare Top 3 Stories for Recent Posts Tab Slider
+    top3_stories = all_stories[:3] if len(all_stories) >= 3 else (all_stories + [lead_story] * (3 - len(all_stories)))
+    recent_slides_html = ""
+    for idx, s in enumerate(top3_stories):
+        sid = s.get("id", f"news-{idx}")
+        s_likes = db_likes.get(sid, _calc_seed_likes(sid))
+        s_comm = db_comments.get(sid, 0)
+        s_img = s.get("image") or "/images/og-banner.webp"
+        if not s_img.startswith("http") and not s_img.startswith("/"):
+            s_img = "/" + s_img
+        s_title = escape(s.get("title") or "")
+        s_excerpt = escape(s.get("excerpt") or "")
+        s_cat = escape(s.get("catLabel") or "कृषि समाचार")
+        s_click = f"openStoryReader('{escape(sid)}'); return false;"
+        fp_attr = 'fetchpriority="high"' if idx == 0 else 'decoding="async"'
+        recent_slides_html += f"""
+        <article class="recent-slide" data-index="{idx}" data-news-id="{escape(sid)}">
+          <div class="lead-media" onclick="{s_click}" style="cursor:pointer;">
+            <img src="{escape(s_img)}" alt="{s_title}" class="lead-img" width="600" height="338" {fp_attr} onerror="this.src='/images/og-banner.webp'; this.onerror=null;">
+            <div class="recent-slide-meta-badge">
+              <span class="recent-post-number-tag">पोस्ट {idx + 1} · ताज़ा</span>
+            </div>
+          </div>
+          <div class="lead-body">
+            <div>
+              <div><span class="lead-tag">🔥 {s_cat}</span></div>
+              <h2 class="lead-title" onclick="{s_click}" style="cursor:pointer;">{s_title}</h2>
+              <p class="lead-excerpt">{s_excerpt}</p>
+            </div>
+            <div class="lead-footer">
+              <button class="action-btn" id="btn-audio-{escape(sid)}" onclick="playNewsAudio(this, '{escape(sid)}')" style="background:#e0f2fe;color:#0369a1;padding:6px 12px;border-radius:20px;">
+                <span>▶️ खबर सुनें</span>
+              </button>
+              <div style="display:flex;align-items:center;gap:14px;">
+                <button class="action-btn" id="{escape(sid)}-like-btn" onclick="toggleLike('{escape(sid)}', this)" title="पसंद करें">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                  <span class="like-count" id="{escape(sid)}-like-count">{s_likes}</span>
+                </button>
+                <button class="action-btn" onclick="openCommentDrawer('{escape(sid)}')" title="किसान चर्चा">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span class="comment-count" id="{escape(sid)}-comment-count">{s_comm}</span>
+                </button>
+                <button class="action-btn" onclick="openShareMenu('{escape(sid)}', '{s_title}')" title="शेयर">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                </button>
+                <a href="#" class="card-read-link" onclick="{s_click}">विस्तार से पढ़ें →</a>
+              </div>
+            </div>
+          </div>
+        </article>"""
+
+    if top3_stories:
+        s0 = top3_stories[0]
+        sid0 = s0.get("id", "news-0")
+        s0_likes = db_likes.get(sid0, _calc_seed_likes(sid0))
+        s0_comm = db_comments.get(sid0, 0)
+        s0_img = s0.get("image") or "/images/og-banner.webp"
+        if not s0_img.startswith("http") and not s0_img.startswith("/"):
+            s0_img = "/" + s0_img
+        s0_title = escape(s0.get("title") or "")
+        s0_excerpt = escape(s0.get("excerpt") or "")
+        s0_cat = escape(s0.get("catLabel") or "कृषि समाचार")
+        s0_click = f"openStoryReader('{escape(sid0)}'); return false;"
+        recent_slides_html += f"""
+        <article class="recent-slide clone" data-index="3" data-news-id="{escape(sid0)}" aria-hidden="true">
+          <div class="lead-media" onclick="{s0_click}" style="cursor:pointer;">
+            <img src="{escape(s0_img)}" alt="{s0_title}" class="lead-img" width="600" height="338" decoding="async" onerror="this.src='/images/og-banner.webp'; this.onerror=null;">
+            <div class="recent-slide-meta-badge">
+              <span class="recent-post-number-tag">पोस्ट 1 · ताज़ा</span>
+            </div>
+          </div>
+          <div class="lead-body">
+            <div>
+              <div><span class="lead-tag">🔥 {s0_cat}</span></div>
+              <h2 class="lead-title" onclick="{s0_click}" style="cursor:pointer;">{s0_title}</h2>
+              <p class="lead-excerpt">{s0_excerpt}</p>
+            </div>
+            <div class="lead-footer">
+              <button class="action-btn" onclick="playNewsAudio(this, '{escape(sid0)}')" style="background:#e0f2fe;color:#0369a1;padding:6px 12px;border-radius:20px;">
+                <span>▶️ खबर सुनें</span>
+              </button>
+              <div style="display:flex;align-items:center;gap:14px;">
+                <button class="action-btn" onclick="toggleLike('{escape(sid0)}', this)" title="पसंद करें">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                  <span class="like-count">{s0_likes}</span>
+                </button>
+                <button class="action-btn" onclick="openCommentDrawer('{escape(sid0)}')" title="किसान चर्चा">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span class="comment-count">{s0_comm}</span>
+                </button>
+                <button class="action-btn" onclick="openShareMenu('{escape(sid0)}', '{s0_title}')" title="शेयर">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                </button>
+                <a href="#" class="card-read-link" onclick="{s0_click}">विस्तार से पढ़ें →</a>
+              </div>
+            </div>
+          </div>
+        </article>"""
+
     # Trending list (items 2 to 5)
     trending_items_html = ""
     for idx, s in enumerate(grid_stories[:4], 1):
@@ -1025,6 +1528,53 @@ def krashi_news_hub(request: Request):
     <div class="news-page-date">आज ताज़ा · {now_hi} · KrashiMitra Auto-Pilot &amp; Editorial</div>
   </div>
 
+  <!-- Editorial Spotlight (Top 3 Recent Posts Slider & Trending) -->
+  <div class="spotlight-grid">
+    <!-- Recent Posts Tab Card (Top 3 News Sliding Carousel) -->
+    <div class="recent-posts-tab-card" id="recent-posts-tab-card">
+      <div class="recent-tab-header">
+        <div class="recent-tab-title-wrap">
+          <span class="recent-tab-badge">
+            <span class="recent-live-dot" aria-hidden="true"></span>
+            ताज़ा खबरें <span class="recent-badge-sub">(Recent Posts)</span>
+          </span>
+        </div>
+        <div class="recent-tab-nav">
+          <div class="recent-tab-pills" id="recent-tab-pills" role="tablist" aria-label="ताज़ा समाचार स्लाइड">
+            <button type="button" class="recent-tab-pill active" data-slide="0" onclick="goToRecentSlide(0)" role="tab" aria-selected="true" title="पोस्ट 1"><span class="pill-dot"></span> 1</button>
+            <button type="button" class="recent-tab-pill" data-slide="1" onclick="goToRecentSlide(1)" role="tab" aria-selected="false" title="पोस्ट 2"><span class="pill-dot"></span> 2</button>
+            <button type="button" class="recent-tab-pill" data-slide="2" onclick="goToRecentSlide(2)" role="tab" aria-selected="false" title="पोस्ट 3"><span class="pill-dot"></span> 3</button>
+          </div>
+          <div class="recent-arrow-btns">
+            <button type="button" class="recent-arrow-btn" onclick="prevRecentSlide()" title="पिछला समाचार" aria-label="पिछला समाचार">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button type="button" class="recent-arrow-btn" onclick="nextRecentSlide()" title="अगला समाचार" aria-label="अगला समाचार">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="recent-slider-viewport" id="recent-slider-viewport" onmouseenter="pauseRecentSlider()" onmouseleave="resumeRecentSlider()">
+        <div class="recent-slider-track" id="recent-slider-track">
+          {recent_slides_html}
+        </div>
+        <div class="recent-progress-bar-wrap">
+          <div class="recent-progress-bar" id="recent-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="trending-box">
+      <div class="trending-box-title">
+        <span>⚡ शीर्ष सुर्खियां (Trending)</span>
+      </div>
+      <div class="trending-list">
+        {trending_items_html}
+      </div>
+    </aside>
+  </div>
+
   <!-- Audio Bulletin Digest Strip & Voice Controls -->
   <div class="bulletin-strip" id="audio-bulletin-section">
     <div class="bulletin-left">
@@ -1042,66 +1592,24 @@ def krashi_news_hub(request: Request):
       </div>
     </div>
     <div class="bulletin-controls">
-      <select class="bulletin-select" id="voice-select" onchange="onVoiceChange(this.value)" title="समाचार वाचक की आवाज़ चुनें">
-        <option value="swara">👩 स्वाति (नेचुरल न्यूज़ एंकर)</option>
-        <option value="madhur">👨 मधुर (आकाशवाणी बुलेटिन)</option>
-        <option value="google">✨ गूगल हिन्दी (क्लियर वॉइस)</option>
-        <option value="auto">🌐 डिवाइस डिफ़ॉल्ट</option>
-      </select>
-      <select class="bulletin-select" id="speed-select" onchange="onSpeedChange(this.value)" title="बोलने की गति">
-        <option value="0.88">0.9x गति (शांत)</option>
-        <option value="0.96" selected>1.0x गति (सामान्य)</option>
-        <option value="1.1">1.1x गति (तेज़)</option>
-      </select>
+      <div class="bulletin-settings-group">
+        <select class="bulletin-select" id="voice-select" onchange="onVoiceChange(this.value)" title="समाचार वाचक की आवाज़ चुनें">
+          <option value="swara">👩 स्वाति (नेचुरल न्यूज़ एंकर)</option>
+          <option value="madhur">👨 मधुर (आकाशवाणी बुलेटिन)</option>
+          <option value="google">✨ गूगल हिन्दी (क्लियर वॉइस)</option>
+          <option value="auto">🌐 डिवाइस डिफ़ॉल्ट</option>
+        </select>
+        <select class="bulletin-select" id="speed-select" onchange="onSpeedChange(this.value)" title="बोलने की गति">
+          <option value="0.88">0.9x गति (शांत)</option>
+          <option value="0.96" selected>1.0x गति (सामान्य)</option>
+          <option value="1.1">1.1x गति (तेज़)</option>
+        </select>
+      </div>
       <button class="btn-bulletin-play" id="btn-daily-bulletin" onclick="toggleDailyBulletin(this)">
         <span id="adb-play-icon">▶️</span>
         <span id="adb-play-text">पूरा बुलेटिन सुनें</span>
       </button>
     </div>
-  </div>
-
-  <!-- Editorial Spotlight -->
-  <div class="spotlight-grid">
-    <article class="lead-story" id="lead-story-card">
-      <div class="lead-media" onclick="{lead_click}" style="cursor:pointer;">
-        <img src="{escape(lead_img)}" alt="{lead_title_esc}" class="lead-img" fetchpriority="high">
-      </div>
-      <div class="lead-body">
-        <div>
-          <div><span class="lead-tag">🔥 मुख्य समाचार</span></div>
-          <h2 class="lead-title" onclick="{lead_click}" style="cursor:pointer;">{lead_title_esc}</h2>
-          <p class="lead-excerpt">{lead_excerpt_esc}</p>
-        </div>
-        <div class="lead-footer">
-          <button class="action-btn" onclick="playNewsAudio(this, '{escape(lead_id)}')" style="background:#e0f2fe;color:#0369a1;padding:6px 12px;border-radius:20px;">
-            <span>▶️ खबर सुनें</span>
-          </button>
-          <div style="display:flex;align-items:center;gap:14px;">
-            <button class="action-btn" onclick="toggleLike('{escape(lead_id)}', this)" title="पसंद करें">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-              <span class="like-count" id="lead-like-count">{lead_likes}</span>
-            </button>
-            <button class="action-btn" onclick="openCommentDrawer('{escape(lead_id)}')" title="किसान चर्चा">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span class="comment-count" id="lead-comment-count">{lead_comments}</span>
-            </button>
-            <button class="action-btn" onclick="openShareMenu('{escape(lead_id)}', '{lead_title_esc}')" title="शेयर">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            </button>
-            <a href="#" class="card-read-link" onclick="{lead_click}">विस्तार से पढ़ें →</a>
-          </div>
-        </div>
-      </div>
-    </article>
-
-    <aside class="trending-box">
-      <div class="trending-box-title">
-        <span>⚡ शीर्ष सुर्खियां (Trending)</span>
-      </div>
-      <div class="trending-list">
-        {trending_items_html}
-      </div>
-    </aside>
   </div>
 
   <!-- Filter & Search Card -->
@@ -1440,12 +1948,16 @@ function playNewsAudio(btn, id) {{
     window.speechSynthesis.cancel();
     activeSpeechId = null;
     updateAudioButtonsUi();
+    if (window.recentSlider && window.recentSlider.isInViewport && !document.hidden) {{
+      window.recentSlider.resume();
+    }}
     return;
   }}
 
   window.speechSynthesis.cancel();
   activeSpeechId = id;
   updateAudioButtonsUi();
+  if (window.recentSlider) window.recentSlider.pause();
 
   pickBestVoice();
 
@@ -1459,10 +1971,16 @@ function playNewsAudio(btn, id) {{
   utter.onend = function () {{
     activeSpeechId = null;
     updateAudioButtonsUi();
+    if (window.recentSlider && window.recentSlider.isInViewport && !document.hidden) {{
+      window.recentSlider.resume();
+    }}
   }};
   utter.onerror = function () {{
     activeSpeechId = null;
     updateAudioButtonsUi();
+    if (window.recentSlider && window.recentSlider.isInViewport && !document.hidden) {{
+      window.recentSlider.resume();
+    }}
   }};
 
   window.speechSynthesis.speak(utter);
@@ -1574,9 +2092,244 @@ function openShareMenu(id, title) {{
   }}
 }}
 
+const recentSlider = {{
+  currentIndex: 0,
+  totalSlides: 3,
+  slideDuration: 3000,
+  slideTimer: null,
+  startTime: 0,
+  remainingTime: 3000,
+  isPaused: false,
+  isInViewport: true,
+  track: null,
+  pills: [],
+  progressBar: null,
+  observer: null,
+
+  init: function() {{
+    this.track = document.getElementById('recent-slider-track');
+    this.progressBar = document.getElementById('recent-progress-bar');
+    this.pills = Array.from(document.querySelectorAll('#recent-tab-pills .recent-tab-pill'));
+    if (!this.track) return;
+
+    var self = this;
+
+    // Continuous Left Loop: When transition ends on clone (index 3), instantly jump back to index 0
+    this.track.addEventListener('transitionend', function(e) {{
+      if (e.target !== self.track) return;
+      if (self.currentIndex === self.totalSlides) {{
+        self.track.style.transition = 'none';
+        self.currentIndex = 0;
+        self.track.style.transform = 'translate3d(0%, 0, 0)';
+        void self.track.offsetHeight;
+        self.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+        self.updatePills(0);
+      }}
+    }});
+
+    // Directional touch gestures (prioritize fluid native vertical scrolling on mobile)
+    var viewport = document.getElementById('recent-slider-viewport');
+    if (viewport) {{
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var touchStartTime = 0;
+
+      viewport.addEventListener('touchstart', function(e) {{
+        if (e.touches && e.touches[0]) {{
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          touchStartTime = Date.now();
+          self.pause();
+        }}
+      }}, {{ passive: true }});
+
+      viewport.addEventListener('touchend', function(e) {{
+        if (e.changedTouches && e.changedTouches[0]) {{
+          var diffX = e.changedTouches[0].clientX - touchStartX;
+          var diffY = e.changedTouches[0].clientY - touchStartY;
+          var touchElapsed = Date.now() - touchStartTime;
+
+          // Only trigger slide navigation if gesture was intentionally horizontal (> 35px, 1.2x vertical)
+          if (Math.abs(diffX) > Math.abs(diffY) * 1.2 && Math.abs(diffX) > 35 && touchElapsed < 800) {{
+            if (diffX < 0) {{
+              self.next();
+            }} else {{
+              self.prev();
+            }}
+          }}
+        }}
+        // Small reading cushion before resuming autoplay
+        setTimeout(function() {{
+          if (self.isInViewport && !document.hidden) {{
+            self.resume();
+          }}
+        }}, 600);
+      }}, {{ passive: true }});
+    }}
+
+    // IntersectionObserver: 0% battery/CPU drain when farmer scrolls down the feed
+    if ('IntersectionObserver' in window) {{
+      this.observer = new IntersectionObserver(function(entries) {{
+        entries.forEach(function(entry) {{
+          self.isInViewport = entry.isIntersecting;
+          if (entry.isIntersecting) {{
+            if (!document.hidden && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {{
+              self.resume();
+            }}
+          }} else {{
+            self.pause();
+          }}
+        }});
+      }}, {{ threshold: 0.15 }});
+
+      var card = document.getElementById('recent-posts-tab-card') || viewport;
+      if (card) this.observer.observe(card);
+    }}
+
+    // Page Visibility API: Stop animation completely when phone is locked or app in background
+    document.addEventListener('visibilitychange', function() {{
+      if (document.hidden) {{
+        self.pause();
+      }} else if (self.isInViewport) {{
+        self.resume();
+      }}
+    }});
+
+    this.startCycle(this.slideDuration);
+  }},
+
+  startCycle: function(duration) {{
+    clearTimeout(this.slideTimer);
+    this.remainingTime = duration;
+    this.startTime = Date.now();
+
+    if (this.progressBar) {{
+      // GPU-accelerated linear progress bar transition with 0 polling intervals
+      this.progressBar.style.transition = 'none';
+      this.progressBar.style.transform = 'scaleX(0)';
+      void this.progressBar.offsetWidth;
+      if (!this.isPaused && this.isInViewport && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {{
+        this.progressBar.style.transition = 'transform ' + duration + 'ms linear';
+        this.progressBar.style.transform = 'scaleX(1)';
+      }}
+    }}
+
+    var self = this;
+    this.slideTimer = setTimeout(function() {{
+      if (!self.isPaused && self.isInViewport && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {{
+        self.next();
+      }} else {{
+        self.startCycle(self.slideDuration);
+      }}
+    }}, duration);
+  }},
+
+  goTo: function(index) {{
+    if (!this.track) return;
+    this.currentIndex = index;
+    this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+    this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+    this.updatePills(this.currentIndex % this.totalSlides);
+    this.startCycle(this.slideDuration);
+  }},
+
+  next: function() {{
+    if (!this.track) return;
+    this.currentIndex++;
+    this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+    this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+    this.updatePills(this.currentIndex % this.totalSlides);
+    this.startCycle(this.slideDuration);
+  }},
+
+  prev: function() {{
+    if (!this.track) return;
+    if (this.currentIndex === 0) {{
+      // Instant jump to clone at index 3, then slide to index 2
+      this.track.style.transition = 'none';
+      this.currentIndex = this.totalSlides;
+      this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+      void this.track.offsetHeight;
+      this.currentIndex = this.totalSlides - 1;
+      this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+      this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+    }} else {{
+      this.currentIndex--;
+      this.track.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
+      this.track.style.transform = 'translate3d(-' + (this.currentIndex * 100) + '%, 0, 0)';
+    }}
+    this.updatePills(this.currentIndex % this.totalSlides);
+    this.startCycle(this.slideDuration);
+  }},
+
+  updatePills: function(activeIdx) {{
+    this.pills.forEach(function(pill, idx) {{
+      var isActive = (idx === activeIdx);
+      pill.classList.toggle('active', isActive);
+      pill.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }});
+  }},
+
+  pause: function() {{
+    if (this.isPaused) return;
+    this.isPaused = true;
+    clearTimeout(this.slideTimer);
+
+    if (this.progressBar) {{
+      var elapsed = Date.now() - this.startTime;
+      this.remainingTime = Math.max(200, this.remainingTime - elapsed);
+      var currentScale = Math.min(1, Math.max(0, (this.slideDuration - this.remainingTime) / this.slideDuration));
+      this.progressBar.style.transition = 'none';
+      this.progressBar.style.transform = 'scaleX(' + currentScale + ')';
+    }}
+  }},
+
+  resume: function() {{
+    if (!this.isPaused) return;
+    if (window.speechSynthesis && window.speechSynthesis.speaking && activeSpeechId) return;
+    this.isPaused = false;
+    this.startTime = Date.now();
+
+    var self = this;
+    var rem = Math.max(200, this.remainingTime);
+
+    if (this.progressBar) {{
+      void this.progressBar.offsetWidth;
+      this.progressBar.style.transition = 'transform ' + rem + 'ms linear';
+      this.progressBar.style.transform = 'scaleX(1)';
+    }}
+
+    clearTimeout(this.slideTimer);
+    this.slideTimer = setTimeout(function() {{
+      if (!self.isPaused && self.isInViewport && (!window.speechSynthesis || !window.speechSynthesis.speaking)) {{
+        self.next();
+      }} else {{
+        self.startCycle(self.slideDuration);
+      }}
+    }}, rem);
+  }}
+}};
+
+function goToRecentSlide(idx) {{
+  if (recentSlider) recentSlider.goTo(idx);
+}}
+function nextRecentSlide() {{
+  if (recentSlider) recentSlider.next();
+}}
+function prevRecentSlide() {{
+  if (recentSlider) recentSlider.prev();
+}}
+function pauseRecentSlider() {{
+  if (recentSlider) recentSlider.pause();
+}}
+function resumeRecentSlider() {{
+  if (recentSlider) recentSlider.resume();
+}}
+
 // Deep link check ?story=... and background PostgreSQL social sync
 document.addEventListener('DOMContentLoaded', () => {{
   initSpeechEngine();
+  recentSlider.init();
   const params = new URLSearchParams(window.location.search);
   const deepId = params.get('story');
   if (deepId) openStoryReader(deepId);
@@ -1590,6 +2343,7 @@ document.addEventListener('DOMContentLoaded', () => {{
         if (!batch) return;
         Object.keys(batch).forEach(nid => {{
           const stats = batch[nid];
+          if (!stats || typeof stats !== 'object') return;
           if (nid === 'news-lead' || (window.KRASHI_ALL_NEWS[0] && window.KRASHI_ALL_NEWS[0].id === nid)) {{
             const ll = document.getElementById('lead-like-count');
             const lc = document.getElementById('lead-comment-count');

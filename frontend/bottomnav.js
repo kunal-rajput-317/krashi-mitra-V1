@@ -37,26 +37,28 @@
   // KM_FORCE_ABS_NAV: set by 404.html, which Netlify serves at whatever
   // unknown URL was requested — relative links would resolve inside it.
   var SEO = window.KM_FORCE_ABS_NAV ||
-    /^\/(bhav|product)(\/|$)/.test(path) || /\/articles\//.test(path);
+    /^\/(bhav|product)(\/|$)/.test(path) || /\/articles\//.test(path) || /^\/krashi_news(\/|$)/.test(path);
 
   var LABELS = {
-    mandi: { hi: 'मंडी भाव', en: 'Mandi Bhav', kn: 'ಮಂಡಿ ದರ' },
-    shop:  { hi: 'दुकान',    en: 'Shop',       kn: 'ಅಂಗಡಿ' },
-    news:  { hi: 'समाचार',   en: 'News',       kn: 'ಸುದ್ದಿ' },
-    more:  { hi: 'अन्य',     en: 'More',       kn: 'ಇನ್ನಷ್ಟು' }
+    mandi:       { hi: 'मंडी भाव',    en: 'Mandi Bhav', kn: 'ಮಂಡಿ ದರ' },
+    shop:        { hi: 'दुकान',       en: 'Shop',       kn: 'ಅಂಗಡಿ' },
+    krashi_news: { hi: 'कृषि न्यूज़', en: 'News',       kn: 'ಸುದ್ದಿ' },
+    news:        { hi: 'कृषि न्यूज़', en: 'News',       kn: 'ಸುದ್ದಿ' },
+    more:        { hi: 'अन्य',        en: 'More',       kn: 'ಇನ್ನಷ್ಟು' }
   };
 
   var ICONS = {
-    mandi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 9l1.05-4.2a1 1 0 0 1 .97-.8h11.96a1 1 0 0 1 .97.8L20 9M5.2 9v9.5A1.5 1.5 0 0 0 6.7 20h10.6a1.5 1.5 0 0 0 1.5-1.5V9M9.4 20v-5.2h5.2V20"/></svg>',
-    shop:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1"/><circle cx="9.5" cy="19" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.5" cy="19" r="1.4" fill="currentColor" stroke="none"/></svg>',
-    news:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="13.5" height="14" rx="1.5"/><path d="M17.5 8H20v9a2 2 0 0 1-2 2"/><path d="M7 9h5M7 12h7.5M7 15h7.5"/></svg>',
-    more:  '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="1.8"/><rect x="13" y="4" width="7" height="7" rx="1.8"/><rect x="4" y="13" width="7" height="7" rx="1.8"/><rect x="13" y="13" width="7" height="7" rx="1.8"/></svg>'
+    mandi:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 9l1.05-4.2a1 1 0 0 1 .97-.8h11.96a1 1 0 0 1 .97.8L20 9M5.2 9v9.5A1.5 1.5 0 0 0 6.7 20h10.6a1.5 1.5 0 0 0 1.5-1.5V9M9.4 20v-5.2h5.2V20"/></svg>',
+    shop:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1"/><circle cx="9.5" cy="19" r="1.4" fill="currentColor" stroke="none"/><circle cx="16.5" cy="19" r="1.4" fill="currentColor" stroke="none"/></svg>',
+    krashi_news: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>',
+    news:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>',
+    more:        '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="1.8"/><rect x="13" y="4" width="7" height="7" rx="1.8"/><rect x="4" y="13" width="7" height="7" rx="1.8"/><rect x="13" y="13" width="7" height="7" rx="1.8"/></svg>'
   };
 
   var TABS = [
-    { key: 'mandi', rel: '/bhav',               abs: '/bhav',      match: /^\/bhav(\/|$)/ },
-    { key: 'shop',  rel: 'shop.html',           abs: '/product/',  match: /^\/(product|shop)(\/|$)|\/shop\.html$/ },
-    { key: 'news',  rel: 'articles/index.html', abs: '/articles/', match: /\/articles(\/|$)/ },
+    { key: 'mandi',       rel: '/bhav',            abs: '/bhav',        match: /^\/bhav(\/|$)/ },
+    { key: 'shop',        rel: 'shop.html',        abs: '/product/',    match: /^\/(product|shop)(\/|$)|\/shop\.html$/ },
+    { key: 'krashi_news', rel: 'krashi_news.html', abs: '/krashi_news', match: /(krashi_news|news)(\.html)?(\/|$)|^\/articles(\/|$)/ },
     { key: 'more' } // button — opens the sidebar drawer
   ];
 

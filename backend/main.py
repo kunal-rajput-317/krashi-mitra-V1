@@ -55,6 +55,25 @@ APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = int(os.getenv("APP_PORT", "8000"))
 DEBUG    = os.getenv("DEBUG", "true").lower() == "true"
 
+# Ensure festival image is present in frontend/images
+try:
+    _f_src = Path(r"C:\Users\krdhm\.gemini\antigravity-ide\brain\d5cb4e0a-cbb9-42b0-972e-a9e9d1175222\krishna_janmashtami_1788514442626.jpg")
+    _f_dst_jpg = BASE_DIR / "frontend" / "images" / "krishna-janmashtami.jpg"
+    _f_dst_webp = BASE_DIR / "frontend" / "images" / "krishna-janmashtami.webp"
+    if _f_src.exists():
+        import shutil
+        if not _f_dst_jpg.exists():
+            shutil.copyfile(_f_src, _f_dst_jpg)
+        if not _f_dst_webp.exists():
+            try:
+                from PIL import Image
+                with Image.open(_f_src) as img:
+                    img.save(_f_dst_webp, "WEBP", quality=88)
+            except Exception:
+                shutil.copyfile(_f_src, _f_dst_webp)
+except Exception as _fe:
+    pass
+
 from backend.database.db import MandiPrice, get_db, init_db
 
 from backend.database.db import engine, Base
@@ -77,6 +96,7 @@ from backend.services.ganna_mill_scheduler import start_scheduler as start_mill_
 from backend.services.poultry_scheduler   import start_scheduler as start_poultry_scheduler  # NECC EGG RATES
 from backend.services.news_auto_scheduler import start_scheduler as start_news_scheduler  # AI NEWS AUTO-PILOT
 from backend.routes.news_curate import router as news_curate_router  # AI NEWS AUTO-PILOT & FUNNEL
+from backend.routes.festival import router as festival_router  # FESTIVAL WISHES MANAGEMENT
 
 app = FastAPI(
     title="KrashiMitra API",
@@ -334,6 +354,7 @@ app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
 app.include_router(order_router)    # ORDER
 app.include_router(news_curate_router) # AI NEWS AUTO-PILOT & FUNNEL
+app.include_router(festival_router)    # FESTIVAL WISHES DYNAMIC CONTROL
 # NOTE: chat.py router deliberately NOT registered — chatbot.py has the full
 # pipeline (Cache→RAG→Gemini→Ollama). chat.py was an older simplified version
 # that duplicated POST /ask and caused routing conflicts.
