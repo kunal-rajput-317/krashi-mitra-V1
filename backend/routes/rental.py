@@ -415,8 +415,17 @@ def _tile(item: dict, cls: str, size: int, eager: bool = False) -> str:
                 f'<img src="{_IMG_URL}/{escape(slug)}.webp" alt="{escape(alt)}" '
                 f'loading="{loading}"{priority} decoding="async" '
                 f'width="400" height="300"></div>')
-    # Fall back to a Wikimedia Commons URL when the item carries one
+    # A machine with no self-hosted photo keeps its emoji tile. This used to
+    # fall back to a hotlinked Commons URL, which served someone else's
+    # bandwidth and credited nobody — CC BY / CC BY-SA both require it. The
+    # three items that used it (super-seeder, mini-truck, truck) have no
+    # accurate free-licensed photograph on Commons, and this tool's own rule
+    # is that an approximate photo is worse than none: a "super seeder" page
+    # showing an ordinary tractor teaches the farmer the wrong machine.
+    # Same-origin only, so a pasted URL can never reintroduce the problem.
     wiki_img = item.get("wiki_img") or ""
+    if wiki_img.startswith("http") or wiki_img.startswith("//"):
+        wiki_img = ""
     if wiki_img:
         name_en = item.get("name_en") or ""
         alt = f"{item['name_hi']} किराये पर" + (f" — {name_en} on rent" if name_en else "")

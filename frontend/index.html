@@ -2793,7 +2793,7 @@
 
     <a class="article-card" href="articles/paddy-guide-karnataka">
       <div class="article-thumb">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Rice_grains_%28IRRI%29.jpg/500px-Rice_grains_%28IRRI%29.jpg"
+        <img src="/images/crops/rice-grains-irri.webp"
              alt="ಭತ್ತ / Paddy" loading="lazy">
       </div>
       <div class="article-body">
@@ -3152,19 +3152,19 @@
 
   // Same slugify as backend routes/bhav.py (_slugify), so rows deep-link to the real price page
   const mandiSlug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  // Wikimedia thumb path: h is the first two chars of the md5 of the underscored
-  // filename. The width is not free-choice — upload.wikimedia.org serves a fixed set
-  // of buckets and 400s the rest (640 fails; 330, 500, 960 and 1280 all resolve —
-  // verified against every file below, including Chickpea.jpg whose original is only
-  // 350px wide). 500px covers the 190px card photo at 2x DPR at ~60 KB, lazy-loaded;
-  // the old 120px was sized for the 42px icon tile and went blurry once the photos
-  // grew into full card images.
-  const MANDI_THUMB_W = 500;
+  // These used to be built into upload.wikimedia.org thumb URLs at render time.
+  // That hotlinked Commons from every card in the grid, credited nobody (CC BY
+  // and CC BY-SA both require it), and eleven of the files turned out to be
+  // under licences an ad-supported site may not use at all. The photos are now
+  // fetched, licence-checked and self-hosted by tools/fetch_crop_images.py,
+  // credited on /articles/credits, and served from our own origin at 800x450.
+  // The `h` argument (the old md5 CDN shard) is kept in the call signature so
+  // the caller tables below need no edit, and is simply unused.
+  const mandiSlugFromFile = f => f.replace(/\.[a-z0-9]+$/i, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const mandiThumb = (file, h) => {
-    if (!file || !h) return '';
-    const n = encodeURIComponent(file.replace(/ /g, '_'))
-      .replace(/\(/g, '%28').replace(/\)/g, '%29');
-    return `https://upload.wikimedia.org/wikipedia/commons/thumb/${h[0]}/${h}/${n}/${MANDI_THUMB_W}px-${n}`;
+    if (!file) return '';
+    return `/images/crops/${mandiSlugFromFile(file)}.webp`;
   };
   const mandiNum  = v => {
     const n = parseFloat(String(v ?? '').replace(/,/g, ''));

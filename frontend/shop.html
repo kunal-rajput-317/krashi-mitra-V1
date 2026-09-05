@@ -2931,7 +2931,7 @@
     <div class="order-choice-label">कैसे मंगाएं?</div>
     <div class="order-choice-btns">
       <button class="order-choice-wa" id="order-choice-wa-btn" onclick="openWAFromOrderModal()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:20px;height:20px;flex-shrink:0"> हमसे प्री-बुक करें
+        <img src="/assets/whatsapp.svg" alt="WhatsApp" style="width:20px;height:20px;flex-shrink:0"> हमसे प्री-बुक करें
       </button>
       <a class="order-choice-amazon" id="order-choice-amazon-btn" target="_blank" rel="noopener sponsored">
         🛒 Amazon पर खरीदें
@@ -3039,7 +3039,7 @@
   <div class="wa-modal-box">
     <button class="wa-modal-close" onclick="closeWAModal()">✕</button>
     <div class="wa-modal-header">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="wa-modal-icon" style="width:40px;height:40px;flex-shrink:0">
+      <img src="/assets/whatsapp.svg" alt="WhatsApp" class="wa-modal-icon" style="width:40px;height:40px;flex-shrink:0">
       <div>
         <div class="wa-modal-title" id="wa-modal-product-name">उत्पाद का नाम</div>
         <div class="wa-modal-subtitle">प्री-बुक करें — हम dealer ढूँढकर पूरा दाम भेजेंगे</div>
@@ -3081,7 +3081,7 @@
         onkeydown="if(event.key==='Enter')confirmWAOrder()" />
     </div>
     <button class="wa-confirm-btn" onclick="confirmWAOrder()">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> प्री-बुक करें
+      <img src="/assets/whatsapp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> प्री-बुक करें
     </button>
     <div class="wa-modal-note">हम आपके क्षेत्र में dealer ढूँढकर पूरा दाम (delivery सहित) 🔔 सूचना पर भेजेंगे। अभी कोई भुगतान नहीं।</div>
   </div>
@@ -3150,7 +3150,7 @@
     <div class="notavail-sub" id="notavail-product-name">यह उत्पाद Amazon/Flipkart पर अभी उपलब्ध नहीं है।<br>हमसे प्री-बुक करें या सहायता लें।</div>
     <div class="notavail-actions">
       <button class="notavail-wa-btn" id="notavail-wa-btn" onclick="notAvailWAOrder()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> हमसे प्री-बुक करें
+        <img src="/assets/whatsapp.svg" alt="WhatsApp" style="width:18px;height:18px;vertical-align:middle;flex-shrink:0"> हमसे प्री-बुक करें
       </button>
       <a class="notavail-help-btn" href="help.html">
         ❓ सहायता / Help
@@ -4595,7 +4595,7 @@
       <!-- dealer_name intentionally NOT shown here — farmers must go through us, not around us -->
       ${o.quote_note ? `<div class="notif-line">📝 ${_clean(o.quote_note)}</div>` : ''}
       <button class="notif-accept-btn" onclick="acceptQuote('${_clean(o.tracking_code)}')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WA" style="width:17px;height:17px;flex-shrink:0"> WhatsApp पर पक्का करें
+        <img src="/assets/whatsapp.svg" alt="WA" style="width:17px;height:17px;flex-shrink:0"> WhatsApp पर पक्का करें
       </button>
     </div>`;
   }

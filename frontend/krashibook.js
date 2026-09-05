@@ -221,7 +221,7 @@
       (o.delivery_info ? '<div class="km-book-line">🚚 ' + clean(o.delivery_info) + '</div>' : "") +
       (o.quote_note ? '<div class="km-book-line">📝 ' + clean(o.quote_note) + '</div>' : "") +
       '<button class="km-book-accept-btn" data-accept="' + clean(o.tracking_code) + '">' +
-        '<img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WA" style="width:17px;height:17px;flex-shrink:0"> WhatsApp पर पक्का करें' +
+        '<img src="/assets/whatsapp.svg" alt="WA" style="width:17px;height:17px;flex-shrink:0"> WhatsApp पर पक्का करें' +
       '</button>' +
     '</div>';
   }

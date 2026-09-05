@@ -35,6 +35,12 @@ _CREDITS = _IMAGES / "articles" / "CREDITS.json"
 # page rather than one of their own because the obligation is identical and a
 # second credits page is a second thing to remember to link.
 _RENTAL_CREDITS = _IMAGES / "rental" / "CREDITS.json"
+# The crop photographs behind the mandi grid thumbnails and the og:image on
+# every share card. Until 2026-09-04 these were the one set that was still
+# hotlinked from upload.wikimedia.org with no credit anywhere — and eleven of
+# them were under licences an ad-supported site may not use at all. They are
+# now self-hosted like the other two sets, so they are credited like them.
+_CROP_CREDITS = _IMAGES / "crops" / "CREDITS.json"
 
 _cache: dict = {"mtime": None, "rows": []}
 
@@ -86,6 +92,29 @@ def _rental_rows() -> list[dict]:
     return rows
 
 
+def _crop_rows() -> list[dict]:
+    """Credits for the mandi/share crop photographs. Same shape as the others."""
+    try:
+        data = json.loads(_CROP_CREDITS.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    rows = []
+    for name, c in sorted(data.items()):
+        if not (_CROP_CREDITS.parent / f"{name}.webp").is_file():
+            continue
+        rows.append({
+            "name": name,
+            "section": "फसल चित्र",
+            "thumb": f"images/crops/{name}.webp",
+            "file": c.get("file", ""),
+            "source": c.get("descriptionurl", ""),
+            "author": c.get("author", "unknown"),
+            "licence": c.get("licence", ""),
+            "licence_url": c.get("licence_url", ""),
+        })
+    return rows
+
+
 def _rows() -> list[dict]:
     """Credits, newest file state. Re-read only when CREDITS.json changes."""
     def _stamp(path: Path) -> float:
@@ -96,15 +125,15 @@ def _rows() -> list[dict]:
 
     # Either file changing must re-read both — a single mtime would leave a
     # newly added machine photo uncredited until an article happened to change.
-    mtime = (_stamp(_CREDITS), _stamp(_RENTAL_CREDITS))
-    if mtime == (0.0, 0.0):
+    mtime = (_stamp(_CREDITS), _stamp(_RENTAL_CREDITS), _stamp(_CROP_CREDITS))
+    if not any(mtime):
         return _cache["rows"]
     if mtime != _cache["mtime"]:
         try:
             data = json.loads(_CREDITS.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             data = {}
-        rows = _rental_rows()
+        rows = _rental_rows() + _crop_rows()
         for name, c in sorted(data.items()):
             # Only heroes and in-body illustrations are recorded here — the
             # 480px card cuts never get their own credit entry. Do NOT filter on

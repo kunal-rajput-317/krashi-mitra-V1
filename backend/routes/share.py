@@ -9,6 +9,7 @@
 # ============================================================
 
 import re
+from pathlib import Path
 from html import escape
 from urllib.parse import quote
 
@@ -372,6 +373,53 @@ _MAX_ORIG_WIDTH = {
 }
 
 
+_CROP_DIR = Path(__file__).resolve().parents[2] / "frontend" / "images" / "crops"
+
+
+# Commons filenames that are not in Latin script. The ASCII slug rule below
+# reduces each of these to an empty string, and four different crops
+# (sapota, pineapple, broomstick, tulip) therefore collapsed onto ONE file
+# that each overwrote in turn. Named explicitly rather than hashed, because
+# the slug has to be reproducible by hand from share.py's table and a hash
+# is not readable in a URL.
+_SLUG_ALIASES = {
+    "സപ്പോട്ട.jpg": "sapota",
+    "കൈതച്ചക്ക.jpg": "pineapple",
+    "अम्रिसो.jpg": "broomstick-grass",
+    "צבעונים.JPG": "tulip",
+}
+
+
+def _crop_slug(filename: str) -> str:
+    """Must match tools/fetch_crop_images.crop_slug exactly — it is what named
+    the file on disk."""
+    if filename in _SLUG_ALIASES:
+        return _SLUG_ALIASES[filename]
+    return re.sub(r"[^a-z0-9]+", "-", filename.rsplit(".", 1)[0].lower()).strip("-")
+
+
+def _local_crop(filename: str) -> str:
+    """Absolute URL of our self-hosted copy, or "" if we do not have it.
+
+    These photos used to be built into upload.wikimedia.org thumb URLs at
+    request time. That hotlinked Commons on every share card and every mandi
+    tile, credited nobody — CC BY / CC BY-SA both require it — and eleven of
+    the files were under licences an ad-supported site may not use at all.
+    They are now fetched, licence-checked and self-hosted by
+    tools/fetch_crop_images.py, and credited on /articles/credits.
+
+    Checked on disk rather than assumed: a handful of Commons originals are
+    too small to publish, and a crop we have no photo for must fall back to
+    the site's own banner, never to a hotlink.
+    """
+    if not filename:
+        return ""
+    slug = _crop_slug(filename)
+    if (_CROP_DIR / f"{slug}.webp").is_file():
+        return f"{SITE}/images/crops/{slug}.webp"
+    return ""
+
+
 def _crop_image(commodity: str, width: int = 330) -> str:
     """Photo for a commodity, matched on WHOLE WORDS and by the MOST SPECIFIC
     keyword. Plain substring matching gave "Turnip" the अरहर photo ("tur") and
@@ -384,14 +432,10 @@ def _crop_image(commodity: str, width: int = 330) -> str:
             if re.search(rf"\b{re.escape(k)}\b", cl) and len(k) > best_len:
                 best, best_len = (file, h), len(k)
     if best:
-        file, h = best
-        cap = min(width, _MAX_ORIG_WIDTH.get(file, 10**6))
-        w = max([a for a in _ALLOWED_WIDTHS if a <= cap] or [330])
-        n = quote(file.replace(" ", "_"))
-        return (
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/"
-            f"{h[0]}/{h}/{n}/{w}px-{n}"
-        )
+        file, _h = best
+        local = _local_crop(file)
+        if local:
+            return local
     return _FALLBACK_IMAGE
 
 

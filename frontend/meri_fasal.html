@@ -1122,7 +1122,12 @@ var CROP_IMAGES = {
 function getCropImgHtml(key, emoji, name) {
   var file = CROP_IMAGES[key];
   if (file) {
-    var url = "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file) + "?width=180";
+    // Self-hosted since 2026-09-04. These were hotlinked from Commons with no
+    // credit; the photos now come from tools/fetch_crop_images.py, which
+    // licence-checks them, and are credited on /articles/credits.
+    var slug = file.replace(/\.[a-z0-9]+$/i, "").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    var url = "/images/crops/" + slug + ".webp";
     return '<div class="ct-imgwrap">' +
       '<img class="ct-img" src="' + url + '" alt="' + esc(name) + '" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'inline-block\';">' +
       '<span class="ct-emoji" style="display:none;">' + esc(emoji) + '</span>' +
