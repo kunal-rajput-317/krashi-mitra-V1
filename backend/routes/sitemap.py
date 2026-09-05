@@ -236,6 +236,39 @@ def _gaon_entries() -> list:
     return out
 
 
+def _news_entries() -> list:
+    """Every auto-pilot news story that has its own page.
+
+    Master articles are deliberately absent: their card points at
+    /articles/<slug>, which the article loop above already lists. Listing
+    them twice would be two sitemap entries for one piece of content.
+
+    Imported lazily so a failure inside the news module can never take the
+    whole sitemap down with it — /sitemap.xml is load-bearing for the
+    ~14k /bhav URLs and must render even if the news feed is broken.
+    """
+    try:
+        from backend.routes.news_page import _all_stories, _story_url
+    except Exception:
+        return []
+    out = []
+    for s in _all_stories():
+        try:
+            url = _story_url(s)
+            if not url.startswith("/krashi_news/"):
+                continue
+            when = str(s.get("published_at") or s.get("created_at") or "")[:10]
+            # _safe_image, not s["image"]: a hotlinked third-party URL must
+            # never be declared as one of our images in our own sitemap.
+            from backend.routes.news_page import _safe_image
+            img = _safe_image(s)
+            out.append(_entry(f"{SITE}{url}", when, "weekly", 0.7, ("hi",),
+                              (img,) if img else ()))
+        except Exception:
+            continue
+    return out
+
+
 def _build() -> str:
     urls = []
 
@@ -262,6 +295,8 @@ def _build() -> str:
         urls.append(_entry(f"{SITE}/articles/{slug}", _page_date(f),
                            _ARTICLE_CHANGEFREQ, _ARTICLE_PRIORITY, ("hi",),
                            (img,) if img else ()))
+
+    urls.extend(_news_entries())
 
     for path_, priority, changefreq in HUBS:
         urls.append(_entry(f"{SITE}{path_}", "", changefreq, priority))

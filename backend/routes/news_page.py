@@ -15,7 +15,7 @@ from typing import Dict, List, Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.services.news_auto_service import get_published_posts
 
@@ -148,6 +148,237 @@ def _load_master_articles() -> List[dict]:
     except Exception as e:
         logger.warning(f"Error reading master news articles: {e}")
         return _articles_cache.get("articles", [])
+
+
+# ============================================================
+# Per-story URLs
+# ------------------------------------------------------------
+# The hub renders every story with onclick="openStoryReader(id)" and
+# href="#", so until now the whole section lived at ONE address. Googlebot
+# does not run those handlers: it saw a single page whose content changed
+# under it every time the auto-pilot published, and could not rank a single
+# story. A news section earns its traffic from stories ("गेहूं MSP 2026
+# बढ़ा"), never from the word "न्यूज़" — so each story needs its own URL.
+#
+# Master articles already carry `slug` and a `link` into /articles/<slug>;
+# those keep pointing at the real article page, which is the stronger URL.
+# Auto-pilot posts have the body (`full_story` + `bullets`) but no slug at
+# all, so one is derived from the title here and served at
+# /krashi_news/<slug>.
+#
+# The slug is transliterated Devanagari, not percent-encoded Devanagari:
+# it survives a WhatsApp paste intact (the site's main sharing surface),
+# it matches the lowercase-ASCII convention every other URL on the site
+# uses, and ~40% of the site's search impressions are already romanised
+# Hindi typed exactly this way. Derivation is deterministic — the same
+# title always yields the same slug — so a link shared today still
+# resolves after a restart, with no slug column to migrate.
+# ============================================================
+
+# Devanagari → Latin. Consonants carry an inherent 'a' which a matra
+# replaces and a halant (्) suppresses; that rule is what makes the output
+# readable rather than a run of consonants.
+_DEV_VOWELS = {
+    "अ": "a", "आ": "aa", "इ": "i", "ई": "ee", "उ": "u", "ऊ": "oo",
+    "ऋ": "ri", "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au", "ऑ": "o",
+}
+_DEV_MATRAS = {
+    "ा": "aa", "ि": "i", "ी": "ee", "ु": "u", "ू": "oo", "ृ": "ri",
+    "े": "e", "ै": "ai", "ो": "o", "ौ": "au", "ॉ": "o",
+}
+_DEV_CONS = {
+    "क": "k", "ख": "kh", "ग": "g", "घ": "gh", "ङ": "n",
+    "च": "ch", "छ": "chh", "ज": "j", "झ": "jh", "ञ": "n",
+    "ट": "t", "ठ": "th", "ड": "d", "ढ": "dh", "ण": "n",
+    "त": "t", "थ": "th", "द": "d", "ध": "dh", "न": "n",
+    "प": "p", "फ": "ph", "ब": "b", "भ": "bh", "म": "m",
+    "य": "y", "र": "r", "ल": "l", "व": "v", "ळ": "l",
+    "श": "sh", "ष": "sh", "स": "s", "ह": "h",
+    "क़": "q", "ख़": "kh", "ग़": "g", "ज़": "z", "ड़": "r", "ढ़": "rh",
+    "फ़": "f", "य़": "y",
+}
+_DEV_DIGITS = {"०": "0", "१": "1", "२": "2", "३": "3", "४": "4",
+               "५": "5", "६": "6", "७": "7", "८": "8", "९": "9"}
+_HALANT = "्"
+_NASALS = {"ं": "n", "ँ": "n", "ः": "h"}
+
+
+def _translit(text: str) -> str:
+    """'गेहूं का भाव' → 'gehoon kaa bhaav'. Best-effort and lossy by design —
+    the output is a URL slug, not a reversible romanisation."""
+    out = []
+    chars = list(text or "")
+    i = 0
+    while i < len(chars):
+        ch = chars[i]
+        nxt = chars[i + 1] if i + 1 < len(chars) else ""
+        # Nukta forms arrive as two code points (ज + ़); fold them first.
+        if nxt == "़" and (ch + nxt) in _DEV_CONS:
+            ch, i = ch + nxt, i + 1
+            nxt = chars[i + 1] if i + 1 < len(chars) else ""
+        if ch in _DEV_CONS:
+            out.append(_DEV_CONS[ch])
+            if nxt == _HALANT:
+                i += 2               # halant: no inherent vowel
+                continue
+            if nxt in _DEV_MATRAS:
+                out.append(_DEV_MATRAS[nxt])
+                i += 2
+                continue
+            out.append("a")          # inherent vowel
+            i += 1
+            continue
+        if ch in _DEV_VOWELS:
+            out.append(_DEV_VOWELS[ch])
+        elif ch in _NASALS:
+            out.append(_NASALS[ch])
+        elif ch in _DEV_DIGITS:
+            out.append(_DEV_DIGITS[ch])
+        elif ch in _DEV_MATRAS:
+            out.append(_DEV_MATRAS[ch])   # stray matra, no base consonant
+        elif ch == "़":
+            pass                          # bare nukta
+        else:
+            out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+_SLUG_MAX = 70
+
+
+def _slugify(text: str) -> str:
+    """Transliterate, then reduce to the site's lowercase-ASCII slug form."""
+    s = _translit(text or "").lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    if len(s) > _SLUG_MAX:                     # cut on a word boundary
+        s = s[:_SLUG_MAX].rsplit("-", 1)[0]
+    return s.strip("-")
+
+
+def _story_slug(item: dict) -> str:
+    """The slug a story is addressed by. Stored `slug` wins so a master
+    article keeps the slug its /articles/ page already uses."""
+    if item.get("slug"):
+        return str(item["slug"]).strip("/")
+    s = _slugify(item.get("title") or "")
+    if s:
+        return s
+    # No title worth slugging — fall back to the id, which is always unique.
+    return re.sub(r"[^a-z0-9-]+", "-", str(item.get("id") or "khabar").lower()).strip("-")
+
+
+def _story_url(item: dict) -> str:
+    """Where a story card should point.
+
+    A master article already HAS a full page at /articles/<slug> — that page
+    is longer, older and better linked, so the card points there and the
+    news hub feeds it rather than competing with it. Auto-pilot posts have
+    no such page, so they get one here.
+    """
+    link = (item.get("link") or "").strip()
+    # Auto-pilot posts ship link="#story-<id>" — an in-page anchor for the
+    # modal, not an address. Anything anchor-shaped is not a page.
+    if link.startswith("#") or link.startswith("/#"):
+        link = ""
+    if link.startswith("http"):
+        return link
+    if link:
+        return "/" + link.lstrip("/")
+    return f"/krashi_news/{_story_slug(item)}"
+
+
+# ── Images must be ours ──────────────────────────────────────
+# A story's `image` can arrive as a third-party URL (the admin image
+# updater accepts a pasted link, and two published posts were hotlinking
+# upload.wikimedia.org). Rendering one is three separate problems at once:
+#
+#   1. Licence. Wikimedia Commons files are mostly CC-BY-SA, which REQUIRES
+#      visible author + licence credit. We display none, so every such
+#      render is a licence breach.
+#   2. Personality rights. One live post illustrated a Tamil Nadu paddy
+#      compensation story with a portrait of a named public figure who has
+#      nothing to do with it — a photo of a real person implying an
+#      involvement that does not exist.
+#   3. Hotlinking. It serves someone else's bandwidth from our pages,
+#      against Wikimedia's policy, and the image dies whenever they move it.
+#
+# So the rule is structural rather than editorial: only a same-origin path
+# is ever rendered. Anything external falls back to our own category art.
+# That way a bad paste in the admin panel cannot reach a reader, and no
+# future story can reintroduce the problem by accident.
+_FALLBACK_IMAGE = "/images/og-banner.webp"
+
+
+def _safe_image(story: dict) -> str:
+    """The image to render for `story` — guaranteed to be one of ours."""
+    img = (story.get("image") or "").strip()
+    if img and not img.startswith("http") and not img.startswith("//"):
+        return img if img.startswith("/") else "/" + img
+    try:
+        from backend.services.news_auto_service import DEFAULT_CATEGORY_IMAGES
+        return DEFAULT_CATEGORY_IMAGES.get(story.get("category") or "", _FALLBACK_IMAGE)
+    except Exception:
+        return _FALLBACK_IMAGE
+
+
+def _client_stories(stories: List[dict]) -> List[dict]:
+    """The story list handed to the browser as window.KRASHI_ALL_NEWS.
+
+    Every client-side consumer — the modal reader, the share sheet, the
+    audio player — reads `image` straight off this payload, so sanitising
+    it server-side here is what stops a hotlinked third-party image from
+    reaching a reader through the modal after _safe_image already kept it
+    out of the server-rendered card. Copies, never mutation: the master
+    article list is cached in memory and shared across requests.
+
+    `url` is added so client code has the story's real address without
+    having to re-derive the slug in JavaScript.
+    """
+    out = []
+    for s in stories:
+        c = dict(s)
+        c["image"] = _safe_image(s)
+        c["url"] = _story_url(s)
+        out.append(c)
+    return out
+
+
+def _is_auto_post(item: dict) -> bool:
+    return str(item.get("id") or "").startswith("km-auto-") or bool(item.get("is_gemini_post"))
+
+
+def _all_stories() -> List[dict]:
+    """Auto-pilot posts first (they are the fresh ones), then the master
+    dataset, de-duplicated by id. The hub and every story page read the
+    same list, so a card and its page can never disagree."""
+    stories: List[dict] = []
+    seen = set()
+    for p in get_published_posts():
+        if p.get("id") and p["id"] not in seen:
+            seen.add(p["id"])
+            stories.append(p)
+    for m in _load_master_articles():
+        if m.get("id") and m["id"] not in seen:
+            seen.add(m["id"])
+            stories.append(m)
+    return stories
+
+
+def _find_story(slug: str) -> Optional[dict]:
+    """Resolve /krashi_news/<slug>. Slug first, then id, so an older link
+    built on the raw id keeps working."""
+    want = (slug or "").strip("/").lower()
+    if not want:
+        return None
+    stories = _all_stories()
+    for s in stories:
+        if _story_slug(s).lower() == want:
+            return s
+    for s in stories:
+        if str(s.get("id") or "").lower() == want:
+            return s
+    return None
 
 
 NEWS_EXTRA_CSS = """
@@ -1129,6 +1360,72 @@ NEWS_EXTRA_CSS = """
     font-size: 11.5px;
   }
 }
+
+/* ── Story page (/krashi_news/<slug>) ──────────────────────────
+   Built mobile-first: 98% of readers are on a ~390px phone, so the
+   measure, type scale and tap targets are set there and the desktop
+   look is the min-width variant. */
+.story-page { max-width: 760px; }
+.story-article { background: var(--news-card); border: 1px solid var(--news-border);
+  border-radius: 16px; padding: 20px 18px 24px; }
+.story-tagrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 10px; }
+.story-cat { background: #15803d; color: #fff; font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px; }
+.story-meta { font-size: 12.5px; color: var(--news-muted); font-weight: 600; }
+.story-title { font-family: var(--font-serif); font-size: 26px; line-height: 1.32;
+  font-weight: 800; color: var(--news-dark); margin: 0 0 10px; }
+.story-standfirst { font-size: 16px; line-height: 1.65; color: var(--news-muted);
+  font-weight: 500; margin-bottom: 16px; }
+.story-figure { margin: 0 0 18px; }
+.story-figure img { width: 100%; height: auto; border-radius: 12px; display: block;
+  background: var(--news-bg); }
+.story-h2 { font-family: var(--font-serif); font-size: 19px; font-weight: 800;
+  color: var(--news-dark); margin: 22px 0 10px; }
+.story-keypoints { background: var(--news-bg); border: 1px solid var(--news-border);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; }
+.story-keypoints .story-h2 { margin-top: 0; }
+.story-keypoint-list { margin: 0; padding-left: 20px; }
+.story-keypoint-list li { font-size: 15px; line-height: 1.6; color: var(--news-text);
+  margin-bottom: 8px; }
+.story-keypoint-list li:last-child { margin-bottom: 0; }
+.story-body { font-size: 16.5px; line-height: 1.85; color: var(--news-text); }
+.story-para { margin-bottom: 16px; }
+.story-source { font-size: 13.5px; color: var(--news-muted); margin: 18px 0 0;
+  padding-top: 12px; border-top: 1px dashed var(--news-border); }
+.story-source a { color: var(--news-accent); font-weight: 700; }
+
+/* The disclosure is deliberately visible, not a faint footnote: a farmer
+   deciding whether to act on a subsidy figure has to see it. */
+.story-disclosure { display: block; margin: 16px 0 0; padding: 12px 14px;
+  background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #e9a825;
+  border-radius: 10px; font-size: 13px; line-height: 1.65; color: #713f12; }
+.story-disclosure strong { color: #78350f; }
+
+.story-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--news-border); }
+.story-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.story-cta-btn { display: inline-block; background: var(--news-dark); color: #fff;
+  text-decoration: none; font-weight: 700; font-size: 14.5px; padding: 11px 18px;
+  border-radius: 999px; }
+.story-cta-btn.ghost { background: transparent; color: var(--news-dark);
+  border: 1.5px solid var(--news-border); }
+.story-rel { margin-top: 30px; }
+.story-rel-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.story-rel-card { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px;
+  background: var(--news-card); border: 1px solid var(--news-border);
+  border-radius: 12px; text-decoration: none; }
+.story-rel-tag { font-size: 11.5px; font-weight: 700; color: var(--news-accent);
+  text-transform: uppercase; letter-spacing: .3px; }
+.story-rel-title { font-size: 15px; font-weight: 700; line-height: 1.5;
+  color: var(--news-text); }
+.story-rel-card:hover { border-color: var(--news-accent); }
+
+@media (min-width: 721px) {
+  .story-article { padding: 32px 36px 36px; }
+  .story-title { font-size: 34px; }
+  .story-rel-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+}
 """
 
 
@@ -1224,9 +1521,13 @@ def _news_footer() -> str:
 </div></footer>"""
 
 
-def _news_doc(title: str, desc: str, body: str, ld: str = "") -> HTMLResponse:
-    canon = f"{SITE}/krashi_news"
-    og = f"{SITE}/images/og-banner.webp"
+def _news_doc(title: str, desc: str, body: str, ld: str = "",
+              canon: str = "", og: str = "", og_type: str = "website",
+              crumbs: str = "", published: str = "", modified: str = "") -> HTMLResponse:
+    """The shared news shell. Defaults render the hub exactly as before;
+    a story page passes its own canonical, image and article timestamps."""
+    canon = canon or f"{SITE}/krashi_news"
+    og = og or f"{SITE}/images/og-banner.webp"
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -1236,7 +1537,7 @@ def _news_doc(title: str, desc: str, body: str, ld: str = "") -> HTMLResponse:
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
 <link rel="canonical" href="{canon}">
-<meta property="og:type" content="website">
+<meta property="og:type" content="{og_type}">
 <meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
 <meta property="og:title" content="{escape(title)}">
 <meta property="og:description" content="{escape(desc)}">
@@ -1244,6 +1545,9 @@ def _news_doc(title: str, desc: str, body: str, ld: str = "") -> HTMLResponse:
 <meta property="og:url" content="{canon}">
 <meta property="og:locale" content="hi_IN">
 <meta name="twitter:card" content="summary_large_image">
+{f'<meta property="article:published_time" content="{escape(published)}">' if published else ''}{f'<meta property="article:modified_time" content="{escape(modified)}">' if modified else ''}
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a3c2e">
 {_ICON}
 {_FONTS}
 {f'<script type="application/ld+json">{ld}</script>' if ld else ''}
@@ -1251,7 +1555,7 @@ def _news_doc(title: str, desc: str, body: str, ld: str = "") -> HTMLResponse:
 </head>
 <body>
 {_news_header()}
-<nav class="crumbs"><a href="{SITE}/">कृषि मित्र</a> › <span class="current">कृषि समाचार</span></nav>
+{crumbs or f'<nav class="crumbs"><a href="{SITE}/">कृषि मित्र</a> › <span class="current">कृषि समाचार</span></nav>'}
 {body}
 {_news_footer()}
 <script src="/api-config.js"></script>
@@ -1260,6 +1564,293 @@ def _news_doc(title: str, desc: str, body: str, ld: str = "") -> HTMLResponse:
 <script src="/header-scroll.js" defer></script>
 </body>
 </html>""", headers=_CACHE_HEADERS)
+
+
+# ── SERP copy budgets ────────────────────────────────────────
+# Same limits the article builder enforces (memory: serp-length-budgets):
+# Google truncates titles past ~68 chars and descriptions past ~162, and a
+# "| KrashiMitra" suffix spends characters on a brand nobody searches for.
+# A news headline is already the keyword, so it becomes the title nearly
+# verbatim.
+_TITLE_MAX = 68
+_DESC_MAX = 162
+
+
+def _fit(text: str, limit: int) -> str:
+    """Trim to `limit` on a word boundary."""
+    t = " ".join((text or "").split())
+    if len(t) <= limit:
+        return t
+    cut = t[:limit - 1]
+    if " " in cut:
+        cut = cut.rsplit(" ", 1)[0]
+    return cut.rstrip(" ,.।:;-") + "…"
+
+
+def _story_body_paras(story: dict) -> List[str]:
+    """The story text as paragraphs. `full_story` arrives as one blob from
+    the generator; a 30-line wall of Devanagari on a 390px phone is unread,
+    so an over-long blob is split on sentence ends (। ! ?) as well."""
+    raw = (story.get("full_story") or story.get("excerpt") or "").strip()
+    if not raw:
+        return []
+    out = []
+    for para in [x.strip() for x in re.split(r"\n\s*\n", raw) if x.strip()]:
+        if len(para) <= 420:
+            out.append(para)
+            continue
+        buf = ""
+        for s in re.split(r"(?<=[।!?])\s+", para):
+            if len(buf) + len(s) > 380 and buf:
+                out.append(buf.strip())
+                buf = s
+            else:
+                buf = (buf + " " + s).strip()
+        if buf:
+            out.append(buf.strip())
+    return out
+
+
+def _related_stories(story: dict, limit: int = 6) -> List[dict]:
+    """Same category first, then anything else recent. A story page with no
+    way onward is a dead end; this is what turns one story into a session."""
+    sid = story.get("id")
+    cat = story.get("category")
+    same, other = [], []
+    for s in _all_stories():
+        if s.get("id") == sid:
+            continue
+        (same if s.get("category") == cat else other).append(s)
+    return (same + other)[:limit]
+
+
+# ── Publishing disclosure ────────────────────────────────────
+# This section republishes agricultural news that an AI has rewritten from
+# a source headline and RSS summary. Three things therefore appear on every
+# story, and none of them is decoration:
+#
+#   • The source is named and linked (rel="nofollow noopener"). Only the
+#     headline and the feed's own summary are ever ingested — never the
+#     body of someone else's article — and crediting the outlet is both
+#     the honest thing and the thing that keeps aggregation defensible.
+#   • The AI's involvement is stated plainly. The generator EXPANDS a short
+#     summary into full paragraphs, which means specifics (subsidy
+#     percentages, dates, eligibility) can be produced that were never in
+#     the source. A farmer must not mistake that for verified reporting.
+#   • Readers are told to confirm on the official portal before acting.
+#     This is the one that actually protects a farmer, and it is why the
+#     notice sits with the story rather than in a footer nobody opens.
+#
+# Do not remove or soften these. They are the difference between an
+# aggregator and a publisher making unverified financial claims about
+# government schemes to people who act on them.
+_AI_DISCLOSURE = (
+    '<aside class="story-disclosure">'
+    '<strong>ज़रूरी सूचना:</strong> यह समाचार सार्वजनिक समाचार स्रोतों की हेडलाइन व सारांश से '
+    'AI की सहायता से हिंदी में तैयार किया गया है। यह मूल पत्रकारिता नहीं है। '
+    'योजना, सब्सिडी, तारीख या भाव से जुड़ा कोई भी फैसला लेने से पहले कृपया संबंधित '
+    'सरकारी विभाग या आधिकारिक पोर्टल पर जानकारी की पुष्टि अवश्य करें। '
+    'कृषि मित्र किसी भी निर्णय के परिणाम के लिए उत्तरदायी नहीं है।'
+    '</aside>'
+)
+
+
+@router.get("/krashi_news/{slug}", response_class=HTMLResponse)
+def krashi_news_story(slug: str, request: Request):
+    """One published story, at its own address.
+
+    Only auto-pilot posts are served here. A master article's card points at
+    its /articles/<slug> page instead (see _story_url), so this route never
+    creates a second URL for content that already has a page — the duplicate
+    that would cost both of them their ranking.
+    """
+    story = _find_story(slug)
+    if not story:
+        return _news_not_found(slug)
+
+    # A master article lives at /articles/<slug>. If one is reached here,
+    # send the reader — and the link equity — to the real page.
+    target = _story_url(story)
+    if not target.startswith("/krashi_news/"):
+        return RedirectResponse(target, status_code=301)
+
+    canonical_slug = _story_slug(story)
+    if canonical_slug.lower() != (slug or "").strip("/").lower():
+        # Reached by raw id or a stale slug: one address per story.
+        return RedirectResponse("/krashi_news/" + canonical_slug, status_code=301)
+
+    sid = escape(str(story.get("id") or ""))
+    title = (story.get("title") or "कृषि समाचार").strip()
+    excerpt = (story.get("excerpt") or "").strip()
+    cat_label = story.get("catLabel") or "कृषि समाचार"
+    read_time = story.get("readTime") or "3 मिनट"
+    published_at = str(story.get("published_at") or story.get("created_at") or "")
+
+    img = _safe_image(story)
+    og_img = SITE + img
+
+    canon = SITE + "/krashi_news/" + canonical_slug
+    seo_title = _fit(title, _TITLE_MAX)
+    seo_desc = _fit(excerpt or title, _DESC_MAX)
+
+    bullets = [b for b in (story.get("bullets") or []) if str(b).strip()]
+    bullets_html = ""
+    if bullets:
+        items = "".join("<li>" + escape(str(b)) + "</li>" for b in bullets)
+        bullets_html = ('<div class="story-keypoints"><h2 class="story-h2">एक नज़र में</h2>'
+                        '<ul class="story-keypoint-list">' + items + '</ul></div>')
+
+    paras = _story_body_paras(story)
+    body_html = "".join('<p class="story-para">' + escape(x) + '</p>' for x in paras)
+    if not body_html:
+        body_html = '<p class="story-para">' + escape(excerpt) + '</p>'
+
+    source_url = (story.get("source_url") or "").strip()
+    source_html = ""
+    if source_url.startswith("http"):
+        try:
+            host = re.sub(r"^www\.", "", source_url.split("/")[2])
+        except Exception:
+            host = "मूल स्रोत"
+        source_html = ('<p class="story-source">स्रोत: <a href="' + escape(source_url) +
+                       '" rel="nofollow noopener" target="_blank">' + escape(host) +
+                       ' पर मूल खबर पढ़ें ↗</a></p>')
+
+    rel = _related_stories(story)
+    rel_html = ""
+    if rel:
+        cards = "".join(
+            '<a class="story-rel-card" href="' + escape(_story_url(r)) + '">'
+            '<span class="story-rel-tag">' + escape(r.get("catLabel") or "समाचार") + '</span>'
+            '<span class="story-rel-title">' + escape(r.get("title") or "") + '</span></a>'
+            for r in rel)
+        rel_html = ('<section class="story-rel"><h2 class="story-h2">और पढ़ें</h2>'
+                    '<div class="story-rel-grid">' + cards + '</div></section>')
+
+    likes = int(story.get("seed_likes") or _calc_seed_likes(story.get("id") or ""))
+    comments = int(story.get("comment_count") or 0)
+
+    disp_date = ""
+    if published_at:
+        try:
+            disp_date = datetime.fromisoformat(published_at.replace("Z", "")).strftime("%d-%m-%Y")
+        except Exception:
+            disp_date = ""
+
+    # Organization, never a fabricated human byline — the story is machine
+    # written and the schema must not claim otherwise.
+    ld = json.dumps({
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": _fit(title, 110),
+        "description": seo_desc,
+        "image": [og_img],
+        "datePublished": published_at or None,
+        "dateModified": published_at or None,
+        "inLanguage": "hi-IN",
+        "isAccessibleForFree": True,
+        "mainEntityOfPage": {"@type": "WebPage", "@id": canon},
+        "articleSection": cat_label,
+        "author": {"@type": "Organization", "name": "कृषि मित्र (KrashiMitra)", "url": SITE},
+        "publisher": {"@type": "Organization", "name": "कृषि मित्र (KrashiMitra)", "url": SITE,
+                      "logo": {"@type": "ImageObject",
+                               "url": SITE + "/assets/krashimitra_logo.png"}},
+    }, ensure_ascii=False)
+
+    crumb_ld = json.dumps({
+        "@context": "https://schema.org", "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "कृषि मित्र", "item": SITE},
+            {"@type": "ListItem", "position": 2, "name": "कृषि न्यूज़", "item": SITE + "/krashi_news"},
+            {"@type": "ListItem", "position": 3, "name": _fit(title, 80), "item": canon},
+        ]}, ensure_ascii=False)
+
+    crumbs = ('<nav class="crumbs"><a href="' + SITE + '/">कृषि मित्र</a> › '
+              '<a href="' + SITE + '/krashi_news">कृषि न्यूज़</a> › '
+              '<span class="current">' + escape(_fit(title, 46)) + '</span></nav>')
+
+    title_js = escape(title).replace("'", "&#39;")
+    meta_line = escape(read_time) + ((" · " + disp_date) if disp_date else "")
+
+    body = """
+<main class="page-container story-page">
+  <article class="story-article">
+    <div class="story-tagrow">
+      <span class="story-cat">""" + escape(cat_label) + """</span>
+      <span class="story-meta">⏱️ """ + meta_line + """</span>
+    </div>
+    <h1 class="story-title">""" + escape(title) + """</h1>
+    """ + ('<p class="story-standfirst">' + escape(excerpt) + '</p>' if excerpt else '') + """
+    <figure class="story-figure">
+      <img src=\"""" + escape(img) + """\" alt=\"""" + escape(_fit(title, 90)) + """\"
+           width="1200" height="675" fetchpriority="high"
+           onerror="this.src='/images/og-banner.webp'; this.onerror=null;">
+    </figure>
+    """ + bullets_html + """
+    <div class="story-body">""" + body_html + """</div>
+    """ + source_html + _AI_DISCLOSURE + """
+    <div class="story-actions">
+      <button class="action-btn" id="btn-audio-""" + sid + """" onclick="playNewsAudio(this, '""" + sid + """')"
+              style="background:#e0f2fe;color:#0369a1;padding:8px 14px;border-radius:20px;">
+        <span>▶️ खबर सुनें</span>
+      </button>
+      <button class="action-btn" id=\"""" + sid + """-like-btn" onclick="toggleLike('""" + sid + """', this)" title="पसंद करें">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+        <span class="like-count" id=\"""" + sid + """-like-count">""" + str(likes) + """</span>
+      </button>
+      <button class="action-btn" onclick="openCommentDrawer('""" + sid + """')" title="किसान चर्चा">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="comment-count" id=\"""" + sid + """-comment-count">""" + str(comments) + """</span>
+      </button>
+      <button class="action-btn" onclick="openShareMenu('""" + sid + """', '""" + title_js + """')" title="शेयर करें">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+    </div>
+    <div class="story-cta">
+      <a class="story-cta-btn" href=\"""" + SITE + """/bhav">आज का मंडी भाव देखें →</a>
+      <a class="story-cta-btn ghost" href=\"""" + SITE + """/krashi_news">सभी कृषि समाचार</a>
+    </div>
+  </article>
+  """ + rel_html + """
+</main>
+<script type="application/ld+json">""" + crumb_ld + """</script>
+"""
+    return _news_doc(seo_title, seo_desc, body, ld, canon=canon, og=og_img,
+                     og_type="article", crumbs=crumbs,
+                     published=published_at, modified=published_at)
+
+
+def _news_not_found(slug: str) -> HTMLResponse:
+    """A missing story still gets the shell and a way onward — but it also
+    gets a real 404 status, so Google drops the URL instead of indexing a
+    soft error. (Memory: the static host answers 200 for missing files;
+    this is exactly the trap that hides.)"""
+    recent = _all_stories()[:8]
+    items = "".join(
+        '<a class="story-rel-card" href="' + escape(_story_url(r)) + '">'
+        '<span class="story-rel-tag">' + escape(r.get("catLabel") or "समाचार") + '</span>'
+        '<span class="story-rel-title">' + escape(r.get("title") or "") + '</span></a>'
+        for r in recent)
+    body = """
+<main class="page-container story-page">
+  <article class="story-article">
+    <h1 class="story-title">यह खबर अब उपलब्ध नहीं है</h1>
+    <p class="story-standfirst">हो सकता है यह खबर हटा दी गई हो या लिंक बदल गया हो।
+       नीचे आज की ताज़ा कृषि खबरें पढ़ें।</p>
+    <div class="story-cta">
+      <a class="story-cta-btn" href=\"""" + SITE + """/krashi_news">सभी कृषि समाचार</a>
+      <a class="story-cta-btn ghost" href=\"""" + SITE + """/bhav">आज का मंडी भाव</a>
+    </div>
+  </article>
+  <section class="story-rel"><h2 class="story-h2">ताज़ा खबरें</h2>
+    <div class="story-rel-grid">""" + items + """</div>
+  </section>
+</main>"""
+    res = _news_doc("यह खबर अब उपलब्ध नहीं है",
+                    "यह कृषि समाचार अब उपलब्ध नहीं है। ताज़ा मंडी भाव और कृषि खबरें कृषि मित्र पर पढ़ें।",
+                    body, canon=SITE + "/krashi_news")
+    res.status_code = 404
+    return res
 
 
 def _generate_article_card_html(item: dict, live_likes: int, live_comments: int) -> str:
@@ -1271,11 +1862,12 @@ def _generate_article_card_html(item: dict, live_likes: int, live_comments: int)
     cat_label = escape(item.get("catLabel") or "समाचार")
     time_str = escape(item.get("time") or "आज ताज़ा")
     read_time = escape(item.get("readTime") or "3 मिनट")
-    img_url = item.get("image") or "/images/og-banner.jpg"
-    if not img_url.startswith("http") and not img_url.startswith("/"):
-        img_url = "/" + img_url
-    img_url = escape(img_url)
+    img_url = escape(_safe_image(item))
 
+    # A real, crawlable address for the story. The modal reader stays exactly
+    # as it was on the image and headline — this is the link Googlebot follows
+    # and the one a reader who wants the whole story lands on.
+    story_href = escape(_story_url(item))
     is_auto = str(item_id).startswith("km-auto-") or item.get("is_gemini_post")
     badge_html = f'<span class="card-category-pill" style="background:#15803d;color:#fff;">⚡ ताज़ा खबर</span>' if is_auto else f'<span class="card-category-pill">{cat_label}</span>'
     click_action = f"openStoryReader('{item_id}'); return false;"
@@ -1305,7 +1897,7 @@ def _generate_article_card_html(item: dict, live_likes: int, live_comments: int)
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
     </div>
-    <a href="#" class="card-read-link" onclick="{click_action}">विस्तार से पढ़ें →</a>
+    <a href="{story_href}" class="card-read-link">विस्तार से पढ़ें →</a>
   </div>
 </article>
 """
@@ -1367,9 +1959,7 @@ def krashi_news_hub(request: Request):
     lead_id = lead_story.get("id", "news-lead")
     lead_likes = db_likes.get(lead_id, _calc_seed_likes(lead_id))
     lead_comments = db_comments.get(lead_id, 0)
-    lead_img = lead_story.get("image") or "/images/og-banner.jpg"
-    if not lead_img.startswith("http") and not lead_img.startswith("/"):
-        lead_img = "/" + lead_img
+    lead_img = _safe_image(lead_story)
 
     lead_title_esc = escape(lead_story.get("title") or "")
     lead_excerpt_esc = escape(lead_story.get("excerpt") or "")
@@ -1382,13 +1972,12 @@ def krashi_news_hub(request: Request):
         sid = s.get("id", f"news-{idx}")
         s_likes = db_likes.get(sid, _calc_seed_likes(sid))
         s_comm = db_comments.get(sid, 0)
-        s_img = s.get("image") or "/images/og-banner.webp"
-        if not s_img.startswith("http") and not s_img.startswith("/"):
-            s_img = "/" + s_img
+        s_img = _safe_image(s)
         s_title = escape(s.get("title") or "")
         s_excerpt = escape(s.get("excerpt") or "")
         s_cat = escape(s.get("catLabel") or "कृषि समाचार")
         s_click = f"openStoryReader('{escape(sid)}'); return false;"
+        s_href = escape(_story_url(s))
         fp_attr = 'fetchpriority="high"' if idx == 0 else 'decoding="async"'
         recent_slides_html += f"""
         <article class="recent-slide" data-index="{idx}" data-news-id="{escape(sid)}">
@@ -1420,7 +2009,7 @@ def krashi_news_hub(request: Request):
                 <button class="action-btn" onclick="openShareMenu('{escape(sid)}', '{s_title}')" title="शेयर">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 </button>
-                <a href="#" class="card-read-link" onclick="{s_click}">विस्तार से पढ़ें →</a>
+                <a href="{s_href}" class="card-read-link">विस्तार से पढ़ें →</a>
               </div>
             </div>
           </div>
@@ -1431,13 +2020,12 @@ def krashi_news_hub(request: Request):
         sid0 = s0.get("id", "news-0")
         s0_likes = db_likes.get(sid0, _calc_seed_likes(sid0))
         s0_comm = db_comments.get(sid0, 0)
-        s0_img = s0.get("image") or "/images/og-banner.webp"
-        if not s0_img.startswith("http") and not s0_img.startswith("/"):
-            s0_img = "/" + s0_img
+        s0_img = _safe_image(s0)
         s0_title = escape(s0.get("title") or "")
         s0_excerpt = escape(s0.get("excerpt") or "")
         s0_cat = escape(s0.get("catLabel") or "कृषि समाचार")
         s0_click = f"openStoryReader('{escape(sid0)}'); return false;"
+        s0_href = escape(_story_url(s0))
         recent_slides_html += f"""
         <article class="recent-slide clone" data-index="3" data-news-id="{escape(sid0)}" aria-hidden="true">
           <div class="lead-media" onclick="{s0_click}" style="cursor:pointer;">
@@ -1468,7 +2056,7 @@ def krashi_news_hub(request: Request):
                 <button class="action-btn" onclick="openShareMenu('{escape(sid0)}', '{s0_title}')" title="शेयर">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 </button>
-                <a href="#" class="card-read-link" onclick="{s0_click}">विस्तार से पढ़ें →</a>
+                <a href="{s0_href}" class="card-read-link">विस्तार से पढ़ें →</a>
               </div>
             </div>
           </div>
@@ -1641,7 +2229,7 @@ def krashi_news_hub(request: Request):
     <div id="reader-modal-body">
       <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px;" id="reader-cat-tag">🏛️ सरकारी योजना</div>
       <h2 style="font-size:22px;color:#0f172a;line-height:1.35;margin:0 0 12px;" id="reader-title">समाचार शीर्षक</h2>
-      <img id="reader-img" src="" alt="" style="width:100%;max-height:280px;object-fit:cover;border-radius:8px;margin-bottom:14px;">
+      <img id="reader-img" alt="" style="width:100%;max-height:280px;object-fit:cover;border-radius:8px;margin-bottom:14px;">
       <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:12px 14px;border-radius:4px;margin-bottom:16px;" id="reader-bullets-box">
         <div style="font-weight:800;color:#166534;font-size:13px;margin-bottom:6px;">⚡ मुख्य 3 बातें (Takeaways):</div>
         <div id="reader-bullets" style="font-size:13px;line-height:1.6;color:#14532d;"></div>
@@ -1671,7 +2259,7 @@ def krashi_news_hub(request: Request):
 
 <!-- Embedded Master Dataset for Instant Client Search & Modals -->
 <script>
-window.KRASHI_ALL_NEWS = {json.dumps(all_stories, ensure_ascii=False)};
+window.KRASHI_ALL_NEWS = {json.dumps(_client_stories(all_stories), ensure_ascii=False)};
 let currentStoryId = null;
 let activeCommentNewsId = null;
 
@@ -2365,8 +2953,10 @@ document.addEventListener('DOMContentLoaded', () => {{
 """
 
     return _news_doc(
-        title="कृषि समाचार — ताज़ा खबरें, मंडी विश्लेषण व सरकारी योजनाएं | KrashiMitra",
-        desc="भारत के किसानों के लिए ताज़ा कृषि समाचार, मंडी भाव, मौसम चेतावनी, सरकारी योजनाएं और विशेषज्ञ सलाह। हिंदी में रोज़ाना ताज़ा अपडेट।",
+        # 61 chars, no brand suffix — Google truncates past ~68 and the
+        # brand is not what anyone searches for (memory: serp-length-budgets).
+        title="कृषि समाचार: आज की ताज़ा किसान खबरें, मंडी भाव व सरकारी योजना",
+        desc="किसानों के लिए आज की ताज़ा कृषि खबरें — मंडी भाव, सरकारी योजना, मौसम चेतावनी और फसल सलाह, सरल हिंदी में रोज़ाना अपडेट।",
         body=body_html,
         ld=ld_json,
     )

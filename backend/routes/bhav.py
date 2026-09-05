@@ -333,6 +333,24 @@ def _hindi_data_date(s: str) -> str:
     return f"{day} {_HI_MONTHS[month - 1]}" if 1 <= month <= 12 else s
 
 
+def _row_date_iso(s: str) -> str:
+    """'11/07/2026' → '2026-07-11', so rendered rows can be compared and
+    ordered by date. Anything unparseable sorts first (empty string)."""
+    m = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{4})$", (s or "").strip())
+    return f"{m.group(3)}-{int(m.group(2)):02d}-{int(m.group(1)):02d}" if m else ""
+
+
+def _newest_row_date(prices: list) -> str:
+    """The newest 'DD/MM/YYYY' among rendered rows, or '-' if none parse."""
+    best_iso, best_raw = "", "-"
+    for p in prices:
+        raw = p.get("date") or ""
+        iso = _row_date_iso(raw)
+        if iso and iso > best_iso:
+            best_iso, best_raw = iso, raw
+    return best_raw
+
+
 def _fresh_iso(idx: dict, cs: str, ss: str, ds: str) -> str:
     """The same 'YYYY-MM-DD' idx["dates"] already gives /bhav/sitemap.xml's
     <lastmod> for this exact URL — reused here (not reparsed from `prices`) so
@@ -370,6 +388,56 @@ def _as_of_hi(fresh_iso: str) -> str:
         return _hindi_date(date.fromisoformat(fresh_iso))
     except (TypeError, ValueError):
         return _hindi_date(date.today())
+
+
+def _fresh_iso_crop(idx: dict, cs: str) -> str:
+    """The newest reported date anywhere in one crop — the same rollup
+    /bhav/sitemap.xml uses for a crop's <lastmod> ("a crop is as fresh as its
+    newest state"). Completes the _fresh_iso/_fresh_iso_state pair so all
+    three tiers date themselves from the same numbers the sitemap publishes."""
+    return max((d for s_map in (idx.get("dates", {}).get(cs) or {}).values()
+                for d in s_map.values()), default="")
+
+
+# A price reported yesterday is the NORMAL case, not a fault: Agmarknet's live
+# resource is wiped overnight and the 08:00 IST fetch legitimately rebuilds the
+# snapshot from yesterday's archived day (see mandi_fetch_service). Saying
+# "1 दिन पुराना" on half the site every morning would train farmers to ignore
+# the badge, so it stays quiet for one day and speaks from two.
+_AGE_QUIET_DAYS = 1
+
+
+def _age_days(fresh_iso: str) -> int | None:
+    """Calendar days between a page's newest reported price and today.
+    None when the page carries no reported date at all."""
+    try:
+        return (date.today() - date.fromisoformat(fresh_iso)).days
+    except (TypeError, ValueError):
+        return None
+
+
+def _age_note(fresh_iso: str) -> str:
+    """The plain-Hindi "how old is this number", or "" while it is current.
+
+    Carrying a quiet mandi's last known price forward is deliberate — a farmer
+    wants a number, not a blank page — but nothing on tiers 2 and 3 ever said
+    the number was carried. Those tiers dated themselves from the CLOCK
+    (`_hindi_date(date.today())`) while the real date sat unused two lines away
+    in idx["dates"], so on 4 Sep 2026 /bhav/cardamom/keralam printed
+    "📅 4 सितंबर 2026 · ताजा भाव" over prices last reported on 17 अगस्त.
+
+    This is the common case, not a corner: Agmarknet reports ~18k of the ~34k
+    mandi×crop pairs the snapshot holds, so on that same day only 926 of 1,859
+    crop×state combos had a price from today and 140 were over a week old.
+    """
+    n = _age_days(fresh_iso)
+    return "" if n is None or n <= _AGE_QUIET_DAYS else f"{n} दिन पुराना भाव"
+
+
+def _age_badge(fresh_iso: str) -> str:
+    """_age_note as the amber pill the tier pages print beside their date."""
+    note = _age_note(fresh_iso)
+    return f'<span class="stale-pill">⏳ {note}</span>' if note else ""
 
 
 # Agmarknet's commodity list carries a few non-crop items (livestock, fuel).
@@ -1426,6 +1494,14 @@ mask-image:linear-gradient(90deg,transparent,#000 65%)}
 .answer-in{position:relative;z-index:1;max-width:640px}
 .answer h1{font-size:23px}
 .answer-sub{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:5px;font-weight:500}
+/* The stale pill again, this time on the dark green price panel — the light
+   amber fill from the tier-2/3 rule is invisible there. */
+.answer-sub .stale-pill{background:rgba(255,196,84,.18);border-color:rgba(255,196,84,.45);color:#ffd489}
+/* Date stamp on a mandi card whose price is older than the newest on the page.
+   A district's cards routinely span several days (Nashik onion: 49 rows over
+   4 days) and used to be rendered identically, so a carried-forward rate was
+   indistinguishable from one reported this morning. */
+.mkt-date{display:block;margin-top:3px;font-size:11px;font-weight:600;color:#8a5a00}
 .answer-lead{font-size:13.5px;color:rgba(255,255,255,.92);margin-top:12px;line-height:1.65;max-width:600px}
 .answer-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px;margin-top:16px}
 .answer-rupee{font-size:46px;font-weight:700;letter-spacing:-1.5px;line-height:1}
@@ -1768,6 +1844,13 @@ padding:14px 16px;margin:8px 0;box-shadow:var(--shadow-sm)}
 .mandi-page-heading{text-align:center;font-family:var(--font-body);font-size:22px;
 font-weight:800;color:#1a56db;padding:10px 16px 4px}
 .mandi-page-sub{text-align:center;font-size:12.5px;color:var(--text-soft);font-weight:500;margin:0 auto 14px}
+/* "N दिन पुराना भाव" — see _age_note. Amber, not red: a carried-forward price
+   is the honest best answer we have, not an error. Sits inline with the 📅 date
+   on tiers 2/3 and inside the dark price panel on tier 4, so it is declared
+   once here and restyled for the dark panel next to .answer-sub. */
+.stale-pill{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
+  background:#fdf0d5;color:#8a5a00;border:1px solid #f0d9a8;font-size:11.5px;font-weight:700;
+  white-space:nowrap;vertical-align:middle}
 @media(max-width:640px){.mandi-page-heading{font-size:18px;padding:8px 12px 4px}}
 
 /* ── फसल / राज्य tab switcher + commodity grid — ported 1:1 from mandi.html
@@ -2277,7 +2360,13 @@ _INSTALL_JS = """<script>
 _ANALYTICS = '<script src="/analytics.js"></script>'
 
 
+# The SSR twin of the shared shell's nav. /krashi_news is here because the
+# news hub was reachable from the static pages' drawer but from NONE of the
+# ~14k server-rendered /bhav pages — which are ~85% of the site's search
+# traffic. Every farmer the site actually has was on a page that did not
+# know the news section existed.
 _NAV_ITEMS = [("bhav", f"{SITE}/bhav", "मंडी भाव"),
+              ("news", f"{SITE}/krashi_news", "कृषि समाचार"),
               ("bazar", f"{SITE}/krashi_bajar", "कृषि बाज़ार"),
               ("weather", f"{SITE}/weather", "मौसम देखें"),
               ("shop", f"{SITE}/product/", "कृषि दुकान")]
@@ -2293,6 +2382,7 @@ _DRAWER_ITEMS = [("home", f"{SITE}/", "🏠", "मुख्य"),
                   ("khoj", f"{SITE}/khoj", "🔍", "कृषि खोज"),
                   ("map", f"{SITE}/naksha", "🗺️", "कृषि मानचित्र"),
                   ("naksha", f"{SITE}/naksha", "📐", "खेत नापें"),
+                  ("news", f"{SITE}/krashi_news", "📢", "कृषि समाचार"),
                   ("articles", f"{SITE}/articles/", "📰", "कृषि लेख"),
                   ("yojana", f"{SITE}/sarkari_yojana", "🏛️", "सरकारी योजना"),
                   ("chat", f"{SITE}/chat", "💬", "AI सहायता")]
@@ -2602,9 +2692,68 @@ def _ld(*blocks) -> str:
         for b in blocks)
 
 
-def _not_found() -> HTMLResponse:
+def _nf_alternatives(idx: dict | None, cs: str, ss: str) -> str:
+    """What to offer when a crop×place combination does not exist.
+
+    Agmarknet covers a crop in the states that actually trade it, so plenty of
+    plausible URLs have no data and never will: /bhav/wheat/keralam,
+    /bhav/apple/bihar, /bhav/cardamom/uttar-pradesh. Those stay 404 on purpose
+    — publishing an empty page for every crop×state pair would add ~10,000
+    thin URLs to an index we decided on 23 Aug 2026 to PRUNE, not grow.
+
+    But 404 is a status code, not an excuse for a dead end. The old page said
+    only "यह भाव पेज अभी उपलब्ध नहीं है" and linked the hub, so a farmer who
+    asked for wheat in Kerala had to start over and guess again. When we know
+    the crop, we know exactly which states do report it; when we know the
+    place, we know which crops it reports. Show that.
+    """
+    if not idx:
+        return ""
+    crops = idx.get("crops", {})
+    blocks = []
+
+    commodity = crops.get(cs)
+    if commodity:
+        hi = _hindi_name(commodity)
+        states = sorted(idx.get("states", {}).get(cs, {}).items(), key=lambda kv: kv[1])
+        if states:
+            cards = "".join(
+                _state_card(f"/bhav/{cs}/{s}", sn,
+                            len(idx.get("dists", {}).get(cs, {}).get(s, {})), "जिले")
+                for s, sn in states)
+            blocks.append(
+                f'<h2>{escape(hi)} का भाव इन {len(states)} राज्यों में मिलता है</h2>'
+                f'<div class="place-grid">{cards}</div>')
+
+    # The place half. `ss` is only a real state slug when some crop reports it,
+    # which is exactly what _states_all knows — a typo'd slug simply yields
+    # nothing here and the crop block above still carries the page.
+    state_name = _state_name(idx, ss) if ss else ""
+    if state_name:
+        here = sorted(_crops_in(idx, ss, "").items(),
+                      key=lambda kv: (_tile_rank(kv[1]), _hindi_name(kv[1])))[:36]
+        if here:
+            chips = "".join(
+                _crop_chip(f"/bhav/{c}/{ss}", _hindi_name(cn), cn) for c, cn in here)
+            blocks.append(
+                f'<h2>{escape(_hindi_state(state_name))} की मंडियों में ये फसलें बिक रही हैं</h2>'
+                f'<div class="chips">{chips}</div>')
+
+    return "\n".join(blocks)
+
+
+def _not_found(idx: dict | None = None, cs: str = "", ss: str = "") -> HTMLResponse:
     """A crop can drop out of the feed (mandi stops reporting) while Google still
-    holds the URL — send that farmer into the app instead of a dead end."""
+    holds the URL — send that farmer into the app instead of a dead end.
+
+    Pass `idx` plus whatever of the URL resolved (`cs` crop slug, `ss` state
+    slug) and the page lists the real alternatives — see _nf_alternatives.
+    Still a 404: the URL genuinely has no data, and we are not adding it to the
+    index. It just stops being a dead end for the farmer who reached it."""
+    alts = _nf_alternatives(idx, cs, ss)
+    sub = ("हो सकता है इस मंडी ने हाल में इस फसल की रिपोर्ट न भेजी हो। नीचे से चुनें —"
+           if alts else
+           "हो सकता है इस मंडी ने हाल में इस फसल की रिपोर्ट न भेजी हो।")
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -2623,9 +2772,10 @@ def _not_found() -> HTMLResponse:
 <div class="hero nophoto">
 <div class="hero-body">
 <h1>यह भाव पेज अभी उपलब्ध नहीं है</h1>
-<p class="hero-sub">हो सकता है इस मंडी ने हाल में इस फसल की रिपोर्ट न भेजी हो।</p>
+<p class="hero-sub">{sub}</p>
 </div>
 </div>
+{alts}
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav">सभी मंडी भाव देखें</a>
 </div>
@@ -3499,7 +3649,7 @@ def bhav_state_hub(state: str):
 
     crops_here = _crops_in(idx, ss)
     if not crops_here:
-        return _not_found()
+        return _not_found(idx, "", ss)
 
     # Canonical display spelling of the state (from any crop that reports it).
     sn = _state_name(idx, ss)
@@ -3602,7 +3752,7 @@ def bhav_district_hub(state: str, district: str):
 
     crops_here = _crops_in(idx, ss, ds)
     if not crops_here:
-        return _not_found()
+        return _not_found(idx, "", ss)
 
     dn = _dist_name(idx, ss, ds)
     sn = _state_name(idx, ss)
@@ -4889,7 +5039,11 @@ def bhav_crop(c_slug: str):
         return _not_found()
 
     hi = _hindi_name(commodity)
-    today_hi = _hindi_date(date.today())
+    # Dated by the DATA, not the clock — see _age_note. `today_hi` is
+    # deliberately gone from this function so a future edit cannot bring the
+    # mismatch back; tier 4 dropped it for the same reason on 2 Aug 2026.
+    fresh_iso = _fresh_iso_crop(idx, cs)
+    as_of_hi  = _as_of_hi(fresh_iso)
     canon = f"{SITE}/bhav/{cs}"
     state_map = idx["states"].get(cs, {})
 
@@ -4921,14 +5075,15 @@ def bhav_crop(c_slug: str):
         f"{t_hi} का भाव आज — {t_en} Price Today",
         f"{t_hi} का भाव आज — सभी राज्य")
     desc = _fit(
-        f"{today_hi}: {t_hi} ({t_en}) का ताजा मंडी भाव — "
+        f"{as_of_hi}: {t_hi} ({t_en}) का ताजा मंडी भाव — "
         f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
-        f"{today_hi}: {t_hi} का ताजा मंडी भाव — "
+        f"{as_of_hi}: {t_hi} का ताजा मंडी भाव — "
         f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
         limit=162)
 
     head_h1 = f"आज का {escape(hi)} भाव — राज्य चुनें"
-    head_sub = f"📅 {today_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
+    head_sub = (f"📅 {as_of_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
+                f"{_age_badge(fresh_iso)}")
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, seed_ss, "", idx, known_crop=True)}
 {_msp_html(commodity)}
@@ -4973,7 +5128,10 @@ def bhav_crop_or_state(c_slug: str, x_slug: str):
     if owners:                              # legacy /bhav/{crop}/{district}
         return RedirectResponse(f"/bhav/{cs}/{owners[0]}/{xs}", status_code=301)
 
-    return _not_found()
+    # The commonest miss on the whole tree: a real crop in a state that does not
+    # report it (/bhav/wheat/keralam). Both halves are known, so both lists are
+    # offered — this crop's real states, and this state's real crops.
+    return _not_found(idx, cs, xs)
 
 
 def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
@@ -4981,7 +5139,12 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     cached index. Heavy content (top mandis, stats) is lazy-loaded."""
     state = idx["states"][cs][ss]
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
-    today_hi = _hindi_date(date.today())
+    # Dated by the DATA, not the clock. This page used to open
+    # "📅 4 सितंबर 2026 · ताजा भाव" over Cardamom prices last reported in Kerala
+    # on 17 अगस्त — the honest date was already being computed one line down
+    # for the robots gate and thrown away. See _age_note.
+    fresh_iso = _fresh_iso_state(idx, cs, ss)
+    as_of_hi  = _as_of_hi(fresh_iso)
     canon = f"{SITE}/bhav/{cs}/{ss}"
     dist_map = idx["dists"].get(cs, {}).get(ss, {})
 
@@ -4995,8 +5158,9 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 
     faqs = [
         (f"आज {hi_state} में {hi} का भाव क्या है?",
-         f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। सटीक भाव जानने के लिए "
-         f"नीचे अपना जिला चुनें — वहां आज का पूरा भाव दिख जाएगा।"),
+         f"{hi_state} की मंडियों में {hi} का भाव जिले के अनुसार अलग-अलग है। यहां की सबसे नई सरकारी "
+         f"रिपोर्ट {as_of_hi} की है। सटीक भाव जानने के लिए "
+         f"नीचे अपना जिला चुनें — वहां पूरा भाव दिख जाएगा।"),
         (f"{hi_state} में {hi} सबसे महंगा कहां बिक रहा है?",
          "जिलेवार भाव के लिए नीचे अपना जिला चुनें।"),
     ] + _msp_faqs(commodity)
@@ -5010,11 +5174,12 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
         f"{hi_state} में {t_hi} का भाव आज — {t_en} Price {state}",
         f"{hi_state} में {t_hi} का भाव आज — {t_en} Price",
         f"{hi_state} में {t_hi} का भाव आज")
-    desc = (f"{today_hi}: {hi_state} की मंडियों में {hi} का ताजा भाव — "
+    desc = (f"{as_of_hi}: {hi_state} की मंडियों में {hi} का ताजा भाव — "
             f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
 
     head_h1 = f"{escape(hi_state)} में {escape(hi)} का भाव आज"
-    head_sub = f"📅 {today_hi} · {len(dist_map)} जिले · स्रोत: data.gov.in (Agmarknet)"
+    head_sub = (f"📅 {as_of_hi} · {len(dist_map)} जिले · स्रोत: data.gov.in (Agmarknet)"
+                f"{_age_badge(fresh_iso)}")
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {_msp_html(commodity)}
@@ -5036,7 +5201,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 extra_css=_LAZY_CSS + _BP_CSS + _DKP_CSS + _PRODUCT_CSS,
                 crop=cs,
-                robots=index_gate.robots_for(_fresh_iso_state(idx, cs, ss)))
+                robots=index_gate.robots_for(fresh_iso))
 
 
 # ════════════════════════════════════════════════════════════
@@ -5051,7 +5216,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     state     = idx.get("states", {}).get(cs, {}).get(ss)
     district  = idx.get("dists", {}).get(cs, {}).get(ss, {}).get(ds)
     if not (commodity and state and district):
-        return _not_found()
+        return _not_found(idx, cs, ss)
 
     # Scoped by STATE as well as district. Without the state, the four district
     # names shared by two states (pratapgarh, bilaspur, hamirpur, balrampur)
@@ -5060,10 +5225,15 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     if not prices:                      # raw-name miss or aged-out snapshot
         prices = _rows_for_district(idx, cs, ss, ds)
     if not prices:                      # never reported within the history window
-        return _not_found()
+        return _not_found(idx, cs, ss)
 
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
-    data_date = prices[0].get("date", "-")
+    # The NEWEST date among the rows actually rendered, not prices[0]'s — row
+    # order is whatever Postgres returned. A district's rows routinely span
+    # several days (Nashik onion on 4 Sep 2026: 49 rows across 4 dates), so
+    # prices[0] made the "… तक" in the header a coin toss that could contradict
+    # the as_of date printed beside it in the same line.
+    data_date = _newest_row_date(prices)
     fresh_iso = _fresh_iso(idx, cs, ss, ds)
     # Every sentence on this page that sits next to a price is dated by the
     # price, not by the clock — see _as_of_hi. `today_hi` is deliberately not
@@ -5073,6 +5243,12 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     st = _stats(prices)
 
     # ── mandi-wise cards ──
+    # Cards are dated INDIVIDUALLY where they disagree with the page's headline
+    # date. The snapshot carries a quiet mandi's last price forward, so this
+    # list mixes days as a matter of course — Meerut wheat on 4 Sep 2026 was 2
+    # rows from 2 सितंबर and 8 from 31 अगस्त, rendered identically. A farmer
+    # comparing two mandis was comparing two different days without being told.
+    newest_iso = _row_date_iso(data_date)
     cards_html = []
     for p in prices:
         arrow = ""
@@ -5086,9 +5262,13 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         except (TypeError, ValueError):
             pass
         variety = p.get("variety") or ""
+        row_iso = _row_date_iso(p.get("date") or "")
+        stamp = (f'<span class="mkt-date">📅 {escape(_hindi_data_date(p.get("date") or ""))} '
+                 f'का भाव</span>'
+                 if row_iso and newest_iso and row_iso < newest_iso else "")
         cards_html.append(f"""<article class="mkt">
 <div class="mkt-name">{escape(p.get('market', '-'))}</div>
-<div class="mkt-var">{escape(variety) if variety and variety != '-' else '—'}</div>
+<div class="mkt-var">{escape(variety) if variety and variety != '-' else '—'}{stamp}</div>
 <div class="mkt-price"><b>{_rupee(p.get('modal_price'))}</b><small>/क्विंटल</small>{arrow}</div>
 <div class="mkt-foot">
 <span class="mkt-range">{_rupee(p.get('min_price'))} – {_rupee(p.get('max_price'))}</span>
@@ -5165,7 +5345,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
          f"{as_of_hi} को {district} ({hi_state}) की मंडियों में {hi} का भाव {price_txt} है। "
          f"यह भाव {_mandis_gen(st['n'])} की सरकारी रिपोर्ट पर आधारित है।"),
         (f"{district} में {hi} का न्यूनतम और अधिकतम रेट कितना है?",
-         (f"आज {district} में {hi} का न्यूनतम भाव ₹{st['lo']:,} और अधिकतम भाव "
+         (f"{as_of_hi} को {district} में {hi} का न्यूनतम भाव ₹{st['lo']:,} और अधिकतम भाव "
           f"₹{st['hi']:,} प्रति क्विंटल दर्ज हुआ है।"
           if st["lo"] and st["hi"] else "मंडीवार न्यूनतम/अधिकतम भाव नीचे दिए गए हैं।")),
         ("यह भाव कब और कहां से अपडेट होता है?",
@@ -5268,7 +5448,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_alert_bell(commodity, state, district)}
 <div class="answer-in">
 <h1>आज का {escape(hi)} भाव — {escape(district)} मंडी</h1>
-<p class="answer-sub">📅 {as_of_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट · {escape(_hindi_data_date(data_date))} तक</p>
+<p class="answer-sub">📅 {as_of_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट{_age_badge(fresh_iso)}</p>
 <div class="answer-price">
 <div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
 {delta_html}
@@ -6078,7 +6258,7 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
     state     = idx.get("states", {}).get(cs, {}).get(ss)
     district  = idx.get("dists", {}).get(cs, {}).get(ss, {}).get(ds)
     if not (commodity and state and district):
-        return _not_found()
+        return _not_found(idx, cs, ss)
 
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
     canon = f"{SITE}/bhav/{cs}/{ss}/{ds}/kharidar"
