@@ -201,6 +201,16 @@ IMAGES = {
     "neem-coated-urea-guide": "Collected fruits and seeds of (Azadirachta indica) Neem tree in Visakhapatnam.jpg",
     "urea-ke-baad-pani-kab": "Agricultural irrigation pump set with borewell, Vrindavan, Uttar Pradesh, India.jpg",
 
+    # ── यूरिया cluster round 2 (Sep 2026) ─────────────────────────────────
+    # Each of the three is the literal subject: a farmer broadcasting
+    # fertiliser by hand for the per-acre dose article, a UP paddy field for
+    # the धान schedule, and a UP field for the फायदे-नुकसान piece — where the
+    # damage being described (excess N) leaves no photographable signature, so
+    # the caption says it is a field and does not claim to show the harm.
+    "ek-acre-bigha-kitna-urea": "An Indian farmer spreading fertilizer over a crop.jpg",
+    "dhan-me-urea-kab-kitna": "Rice fields Uttar Pradesh (1).jpg",
+    "urea-ke-fayde-aur-nuksan": "Farmland in Allahabad,India.jpg",
+
     # ── replacing the Commons hotlinks the legacy articles used ───────────
     "aam-utpadan-up": "Anish nellickal 25 .jpg",
     "aam-utpadan-mp": "Anish nellickal 27 .jpg",
