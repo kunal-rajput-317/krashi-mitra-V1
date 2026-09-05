@@ -254,6 +254,19 @@ Requirements:
 - Authentic Indian farmland, crops, farmers, or modern agricultural setup.
 - Realistic professional photography, 4K resolution, natural morning or golden hour lighting, 16:9 cinematic framing.
 - Absolutely NO text, NO words, NO letters, NO watermarks, NO artificial logos.
+
+HARD PROHIBITIONS (the headline may name a real person or a company — never
+let that reach the image):
+- NEVER depict a real, identifiable or named person. No politicians, no
+  ministers, no officials, no celebrities, no likeness of anyone named in the
+  headline. Generic, non-identifiable farmers only, and prefer wide shots,
+  from behind, or hands-and-crop framing over recognisable faces.
+- NEVER include a brand, trademark, company logo, vehicle badge, product
+  packaging, government emblem, seal, flag or uniform.
+- NEVER depict distress, disaster, injury, protest, violence or a damaged
+  or dead animal. This is an ad-supported page read by anxious people.
+- Describe a SCENE (crop, field, machinery, soil, market produce), never an
+  event involving named parties.
 - Output ONLY the prompt string (25-35 words), nothing else."""
         try:
             raw_craft, _ = await call_ai(craft_prompt, max_tokens=100)
@@ -406,6 +419,96 @@ def get_current_cycle_info() -> dict:
 
 # ── AI Formatting with Gemini ─────────────────────────────────
 
+# ── What the generator must never do ─────────────────────────
+# The model is handed a HEADLINE and an RSS SUMMARY — often under 300
+# characters — and was previously asked for "2-3 detailed paragraphs
+# covering the background and the full process". There is only one way to
+# satisfy that from a snippet: invent. That is how a subsidy percentage, an
+# application deadline or an eligibility rule that exists nowhere in the
+# source ends up on a page a farmer acts on.
+#
+# These rules are the fix at the root. The on-page disclosure in
+# routes/news_page.py (_AI_DISCLOSURE) tells the reader the text is machine
+# written; this stops the machine writing the dangerous parts in the first
+# place. The two are a pair — do not remove either believing the other
+# covers it.
+#
+# The ordering matters: the hard prohibitions come LAST in the prompt,
+# closest to the output contract, because that is the instruction the model
+# is most likely to still be honouring when it starts generating.
+_EDITORIAL_RULES = """
+════════════════════════════════════════════════════════════
+ABSOLUTE RULES — these override every other instruction above.
+Breaking any one of them makes the output unusable.
+════════════════════════════════════════════════════════════
+
+1. NEVER INVENT A FACT OR A NUMBER.
+   Percentages, rupee amounts, subsidy rates, dates, deadlines, quantities,
+   eligibility conditions, application steps, phone numbers and mandi prices
+   may appear in your output ONLY if they appear in the RAW CONTENT above.
+   If the raw content does not give a number, write the sentence WITHOUT one
+   and tell the reader to check the official portal for the exact figure.
+   Never estimate, never infer "typically", never fill a gap with a
+   plausible value. A farmer will act on these numbers.
+
+2. IF THE SOURCE IS THIN, WRITE LESS.
+   A short, accurate story is correct. Padding to reach a length by adding
+   invented background, process detail or benefits is the single worst
+   failure you can produce here. full_story may be ONE short paragraph if
+   that is all the source supports.
+
+3. NAMED PEOPLE.
+   Do not name, describe or characterise any private individual. A public
+   official, minister or organisation may be named ONLY if the raw content
+   names them, and ONLY for what the raw content actually says they did or
+   said. Never allege wrongdoing, corruption, arrest, failure or misconduct
+   by any named person, company, department or brand — even if the source
+   hints at it. Never attribute a quote to anyone.
+
+4. NO GUARANTEES OR PROMISES.
+   Never state or imply that a farmer is guaranteed a profit, a yield, a
+   price, an approval, a loan or a payout. Use "पात्र किसानों को" /
+   "आवेदन करने पर" framing, never "आपको मिलेगा".
+
+5. NO PRESCRIPTIVE CHEMICAL, MEDICAL OR VETERINARY INSTRUCTION.
+   Do not give pesticide, herbicide, fertiliser or medicine dosages,
+   spray concentrations, mixing ratios or brand-name product
+   recommendations. Point the reader to their कृषि विज्ञान केंद्र, block
+   agriculture officer or a qualified veterinarian instead.
+
+6. NEVER IMPERSONATE AUTHORITY.
+   You are writing for KrashiMitra, a private information website. Never
+   write as though this is a government notice, an official circular, or an
+   announcement issued by any department. Never use a government emblem,
+   seal or letterhead phrasing. Never say "सरकार ने कृषि मित्र के माध्यम से".
+
+7. WRITE ORIGINAL PROSE.
+   Do not reproduce sentences from the raw content word for word. Restate
+   the facts in your own simple Hindi. You are summarising a news report,
+   not republishing it.
+
+8. ATTRIBUTE CLAIMS THAT ARE NOT YOURS.
+   Where a claim comes from the source, mark it: "रिपोर्ट के अनुसार",
+   "सरकारी घोषणा के अनुसार", "मीडिया रिपोर्ट्स के मुताबिक". Never present a
+   sourced claim as an established fact verified by KrashiMitra.
+
+9. NO POLITICS, RELIGION, CASTE OR ALARM.
+   No party praise or criticism, no political framing of a scheme, no
+   religious or caste references, and no sensational or frightening
+   language ("तबाही", "बर्बाद हो जाएंगे") — the site carries advertising
+   and serves anxious people making money decisions.
+
+10. NO CONTACT DETAILS OR OUTBOUND LINKS.
+    Never put a phone number, WhatsApp number, bank account, UPI id, email
+    or third-party URL in any field. Refer to "आधिकारिक पोर्टल" generically.
+
+11. EVERY STORY ENDS BY SENDING THE READER TO VERIFY.
+    The third bullet must always tell the farmer to confirm the details
+    with the relevant government department, official portal or their
+    nearest कृषि कार्यालय before acting.
+"""
+
+
 async def format_agri_post_with_ai(raw_title: str, raw_content: str, source_url: str = "", language: str = "hi") -> dict:
     """
     Uses Gemini to transform raw press releases, news text, or web articles into
@@ -475,15 +578,17 @@ RAW NEWS HEADLINE:
 RAW CONTENT:
 {raw_content[:2500]}
 
+{_EDITORIAL_RULES}
+
 OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
 {{
   "title": "आकर्षक व संक्षिप्त शीर्षक (अधिकतम 70 अक्षर)",
   "excerpt": "2 वाक्यों का स्पष्ट व आसान सारांश जो किसान की भाषा में हो।",
-  "full_story": "2-3 विस्तृत पैराग्राफ की पूरी रिपोर्ट जिसमें पृष्ठभूमि, किसानों को मिलने वाली सहायता, मंडी भाव या फसल पर असर, और पूरी प्रक्रिया विस्तार से लिखी हो।",
+  "full_story": "1-3 पैराग्राफ, केवल उतना ही जितना RAW CONTENT वास्तव में बताता है। स्रोत में जो तथ्य नहीं है उसे कभी न जोड़ें — स्रोत छोटा हो तो कहानी भी छोटी रखें।",
   "bullets": [
     "मुख्य फैसला / बिंदु: क्या निर्णय या घोषणा हुई।",
     "किसान लाभ / प्रभाव: किसान की जेब, फसल या मंडी पर सीधा असर।",
-    "ज़रूरी कदम / सलाह: किसान को अब क्या करना चाहिए या क्या सावधानी बरतनी है।"
+    "ज़रूरी कदम: किसान संबंधित सरकारी विभाग या आधिकारिक पोर्टल पर जानकारी की पुष्टि करें (यह बुलेट हमेशा सत्यापन की सलाह दे)।"
   ],
   "category": "mandi | yojana | weather | crop | khad | pashu | tech",
   "catLabel": "मंडी भाव | सरकारी योजना | मौसम अलर्ट | फसल सुरक्षा | खाद सलाह | डेयरी व पशु | आधुनिक तकनीक",
@@ -593,6 +698,9 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
         "is_gemini_post": True,
         "language": lang_code,
         "source_url": source_url,
+        # Kept so review_flags() can tell an invented figure from a reported
+        # one. Truncated: it is a comparison corpus, not an archive.
+        "source_raw": f"{raw_title} {raw_content}"[:2500],
         "seed_likes": seed_likes,
         "comment_count": 0,  # Strictly 0 initially as instructed!
         "status": "staged",
@@ -943,6 +1051,92 @@ def add_direct_post(post: dict, publish_now: bool = False) -> dict:
     return post
 
 
+# ── Pre-publication review gate ──────────────────────────────
+# _EDITORIAL_RULES tells the model what not to write. This checks whether it
+# listened, because a prompt is a request and not a guarantee.
+#
+# It exists because of the Day 5 watchdog below: a staged post that nobody
+# reviews publishes ITSELF after 96 hours. That is the path by which an
+# invented subsidy percentage or an allegation against a named person
+# reaches farmers with no human ever having read it. So a post that trips
+# any check here is never auto-published — it stays staged until a person
+# approves it by hand. Manual publishing is deliberately still allowed:
+# the flags are advice to a human, not a veto over one.
+#
+# The strongest check by far is FABRICATED FIGURES. Every number in the
+# generated story is compared against the raw source text the story was
+# built from (stored as `source_raw` at generation time). A rupee amount or
+# a percentage that appears in our copy but nowhere in the source did not
+# come from the news — it came from the model.
+_CONTACT_RE = re.compile(
+    r"(?:\+?91[\-\s]?)?[6-9]\d{9}"          # Indian mobile number
+    r"|[\w.\-]+@[\w\-]+\.[a-z]{2,}"          # email / UPI handle
+    r"|https?://|www\.",                     # bare link
+    re.I)
+
+# "गारंटी", "100% मिलेगा" — promises of an outcome we cannot make.
+_GUARANTEE_WORDS = ("गारंटी", "गारन्टी", "निश्चित लाभ", "पक्का मिलेगा",
+                    "जरूर मिलेगा", "ज़रूर मिलेगा", "100% लाभ", "गारंटीड")
+
+# Allegations against a named party — defamation exposure.
+_ALLEGATION_WORDS = ("घोटाला", "भ्रष्टाचार", "गिरफ्तार", "धोखाधड़ी", "फर्जीवाड़ा",
+                     "आरोपी", "जालसाजी", "रिश्वत", "अवैध वसूली")
+
+# Dosage / chemical prescription.
+_DOSAGE_RE = re.compile(
+    r"\d+\s*(?:मिली|ml|ग्राम|gram|gm|किलो|लीटर|litre|liter)\s*(?:प्रति|/|per)\s*"
+    r"(?:लीटर|एकड़|हेक्टेयर|बीघा|acre|hectare|litre)", re.I)
+
+_POLITICAL_WORDS = ("भाजपा", "बीजेपी", "कांग्रेस", "सपा", "बसपा", "आप पार्टी",
+                    "विपक्ष", "चुनाव प्रचार")
+
+# ₹1,20,000 / 60% / 2.5 लाख — the shapes a claim-bearing figure takes.
+_NUMBER_RE = re.compile(r"\d[\d,]*\.?\d*\s*(?:%|प्रतिशत|लाख|करोड़|हज़ार|हजार)?")
+
+
+def _numbers(text: str) -> set:
+    """Comparable numeric tokens in `text`, punctuation-normalised."""
+    out = set()
+    for m in _NUMBER_RE.findall(text or ""):
+        n = m.replace(",", "").strip()
+        n = re.sub(r"\s+", "", n)
+        digits = re.sub(r"[^\d.]", "", n)
+        # Single digits and years carry no claim; "3 योजनाएं" or "2026" is noise.
+        if digits and len(digits.rstrip(".")) >= 2 and not re.fullmatch(r"(19|20)\d{2}", digits):
+            out.add(digits.rstrip("."))
+    return out
+
+
+def review_flags(post: dict) -> list:
+    """Reasons this post should not publish unreviewed. Empty list = clean."""
+    flags = []
+    body = " ".join([
+        str(post.get("title") or ""), str(post.get("excerpt") or ""),
+        str(post.get("full_story") or ""), " ".join(post.get("bullets") or []),
+    ])
+
+    if _CONTACT_RE.search(body):
+        flags.append("इसमें फ़ोन नंबर, ईमेल या लिंक है")
+    if any(w in body for w in _GUARANTEE_WORDS):
+        flags.append("इसमें लाभ की गारंटी जैसा दावा है")
+    if any(w in body for w in _ALLEGATION_WORDS):
+        flags.append("इसमें किसी पर आरोप/अपराध का ज़िक्र है")
+    if _DOSAGE_RE.search(body):
+        flags.append("इसमें दवा/रसायन की मात्रा बताई गई है")
+    if any(w in body for w in _POLITICAL_WORDS):
+        flags.append("इसमें राजनीतिक दल का ज़िक्र है")
+
+    # The fabrication check. Only meaningful when we kept the source text.
+    raw = str(post.get("source_raw") or "")
+    if raw:
+        invented = _numbers(body) - _numbers(raw)
+        if invented:
+            shown = ", ".join(sorted(invented)[:5])
+            flags.append(f"स्रोत में न होने वाले आंकड़े: {shown}")
+
+    return flags
+
+
 # ── Day 5 Auto-Push Fallback Engine ───────────────────────────
 
 def check_and_run_day5_fallback() -> List[dict]:
@@ -970,7 +1164,18 @@ def check_and_run_day5_fallback() -> List[dict]:
         created_dt = _parse_iso_dt(p.get("created_at", data.get("cycle_start_date")))
         age_hours = (now - created_dt).total_seconds() / 3600.0
 
-        if diff_days >= 5 or age_hours >= 96.0:
+        due = diff_days >= 5 or age_hours >= 96.0
+        flags = review_flags(p) if due else []
+        if flags:
+            # Never auto-publish something that tripped a check. It stays
+            # staged for a human — see review_flags() for why this gate
+            # exists at all.
+            p["review_flags"] = flags
+            p["held_for_review"] = True
+            logger.warning(f"🛑 Held from auto-publish ({p.get('title','')[:50]}): {flags}")
+            remaining_staged.append(p)
+            continue
+        if due:
             p["status"] = "published"
             p["published_at"] = now.isoformat()
             p["published_by"] = "auto_pilot_day5_fallback"
