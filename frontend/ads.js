@@ -36,9 +36,37 @@
   var SLOT  = '7350859053';   // default in-content responsive unit
   var LABEL = 'विज्ञापन · Advertisement';
 
-  var MIN_GAP = 700;    // px of real content required between two units
+  // Lowered from 700 on request, to fit 4+ units on ordinary-length pages.
+  // This is the number that decides how crowded the site feels: at 700 a page
+  // needed ~3,000px of content below the fold to hold four units legitimately;
+  // at 450 it needs ~1,800px. Raise it back first if the site starts reading
+  // as an ad farm - it is the gentlest lever here, and the one that costs the
+  // least revenue per unit of restraint.
+  var MIN_GAP = 450;    // px of real content required between two units
   var FOLD    = 1.05;   // first unit sits at least this × viewport down
-  var MAX     = 3;      // never more than this many on one page
+  var MAX     = 6;      // never more than this many on one page
+  // Clear space required between a unit and the nearest CONTROL - a chip, a
+  // pill, a button, a card people tap. Every other rule here spaces ads from
+  // each other or from the fold; none of them knew where a thumb was going.
+  // On 390px that is the whole ballgame: measured 5 Sept, a /krashi_news unit
+  // sat 36px under the sub-filter pills, which is a miss away from a click
+  // nobody meant. AdSense reads those as invalid traffic, and on 4 Sept it
+  // limited the account for exactly that. Inline links inside prose are NOT
+  // counted - a farmer reading a paragraph is not aiming at them; a row of
+  // filter chips is where the thumb actually lands.
+  var CLEAR   = 80;
+  // The floor clearance never traded away, chosen from the measured spread
+  // rather than picked. On /krashi_news the 20 candidate slots clear
+  // 57/33x12/22/11/10/9/9/4/0/0 px: the twelve between-card slots all sit at
+  // 33px because every card carries its own action button, and the genuinely
+  // dangerous slots sit at 22 and below. /sarkari_yojana clusters the same way
+  // at 27px. So 30 is the line that takes the card grids and refuses the rest.
+  // At 45 a 7,131px page could seat one unit; at 30 it seats its full budget.
+  //
+  // 30px is not the separation a reader sees: .km-ad adds 26px of margin and a
+  // 17px 'विज्ञापन' label above the slot, so the ad frame itself lands ~75px
+  // below the button. Below 30 that stops being true - do not lower it.
+  var CLEAR_MIN = 30;
   var GIVE_UP = 9000;   // ms before an unanswered slot collapses itself
 
   // Pages where an ad costs more than it earns: the quote flow (one lead beats
@@ -79,7 +107,13 @@
 
   // Blocks an ad must never be wedged into or placed directly before.
   var SKIP = '.answer,.hero,.crumbs,.km-ad,.ad-slot-wrap,.ad-slot-pair,.lead-gen,' +
-             '.topbar-spacer,script,style,link,noscript,template,br,hr';
+             '.topbar-spacer,script,style,link,noscript,template,br,hr,' +
+             // The shared shell. These matter now that contentRoot() can fall
+             // back to <body>: without them a page whose sections are direct
+             // children of body could take a unit between the header and the
+             // first section, or — worse — below the footer, where it is
+             // rendered, requested, and never once seen.
+             'header,footer,nav,.km-header,.km-footer,.site-footer,.bottomnav,.drawer';
   // A heading belongs to what follows it, so an ad never goes straight after one.
   var HEAD = 'h1,h2,h3';
 
@@ -122,6 +156,9 @@
   function build(opt) {
     var box = document.createElement('div');
     box.className = 'km-ad';
+    // Harmless in normal flow, and required inside a grid: without it the box
+    // becomes a grid item sized to one track instead of spanning the row.
+    box.style.gridColumn = '1 / -1';
     if (opt.label !== false) {
       var lbl = document.createElement('span');
       lbl.className = 'km-ad-lbl';
@@ -219,8 +256,30 @@
   // only request when they come near the viewport, and they are served from
   // Google's CDN rather than our own origin, so a slow phone pays for the ads
   // it actually reaches and nothing else.
+  // The old ladder topped out at 3 units and then stopped caring how long a
+  // page was, so /krashi_news at 25,320px earned exactly what a 4,200px article
+  // did. Above the old ceiling this keeps roughly one unit per 4,000px, which
+  // MIN_GAP (700px of real content between units) would permit many times over
+  // - the spacing rules, not this number, are what actually protect the reader.
+  // The zero-cliff stays at 1400px: three ads around four paragraphs is what
+  // makes a site feel like a spam farm, and that has not changed.
+  // Raised on request: at least 4 units on any page long enough to seat them,
+  // 5-6 on the long ones. The floor stays a hard 0 under 1,200px because four
+  // ads around three paragraphs is not a denser page, it is a worse one - and
+  // MIN_GAP would refuse to place them anyway.
+  //
+  // These are ceilings, not quotas. spread() still refuses any position closer
+  // than MIN_GAP to another unit, and clearOfTaps() still refuses one that
+  // crowds a control, so a page that cannot seat its budget safely simply
+  // places fewer. That is deliberate: the number below says how many are
+  // ALLOWED, and the geometry decides how many are EARNED.
   function budget(height) {
-    return height < 1400 ? 0 : height < 2600 ? 1 : height < 4200 ? 2 : MAX;
+    return height <  1200 ? 0
+         : height <  1800 ? 2
+         : height <  2600 ? 3
+         : height <  4000 ? 4
+         : height <  7000 ? 5
+         : MAX;
   }
 
   // An ad must never sit above the page's own conversion point. Only CTAs near
@@ -246,18 +305,114 @@
 
   function hide(el) { if (el && el.style) el.style.display = 'none'; }
 
+  // Chunky, deliberately-tapped things. A 32px minimum height is what separates
+  // a filter chip or a card from an <a> in the middle of a sentence.
+  var TAPPY = 'button,[role=button],input,select,summary,.btn,.news-action-btn,' +
+              '.sub-pill,.topic-card,.faq-q,.ccard-btn,.cnav-item,.km-bn-item';
+
+  // Size is what makes a control dangerous, and the danger is SMALLNESS. A row
+  // of filter chips is a thumb-sized target in a dense row, and a miss lands
+  // on whatever is next to it. A 427px article card is an enormous unambiguous
+  // target that nobody misses - and treating cards as hazards was measurably
+  // wrong: at CLEAR=110 counting every card link, /krashi_news (221 tappables,
+  // 7,588px) placed zero units, which trades a real revenue loss for a risk
+  // that was not there. So: only controls between 20 and 72px tall count.
+  var TAP_MIN = 20, TAP_MAX = 72;
+
+  var _taps = null;
+  function tapBands() {
+    if (_taps) return _taps;
+    _taps = [];
+    [].forEach.call(document.querySelectorAll(TAPPY + ',a'), function (el) {
+      var h = el.offsetHeight;
+      if (h < TAP_MIN || h > TAP_MAX) return;
+      // Prose links are noise - a reader is not aiming at them.
+      if (el.tagName === 'A' && !el.matches(TAPPY) && h < 32) return;
+      if (el.closest('header,footer,nav,.km-footer,.site-footer,.bottomnav')) return;
+      var t = topOf(el);
+      _taps.push([t, t + h]);
+    });
+    return _taps;
+  }
+
+  // How far y sits from the nearest control, in either direction.
+  function clearOfTaps(y) {
+    var best = Infinity;
+    var bands = tapBands();
+    for (var i = 0; i < bands.length; i++) {
+      var d = y < bands[i][0] ? bands[i][0] - y
+            : y > bands[i][1] ? y - bands[i][1] : 0;
+      if (d < best) best = d;
+      if (!best) break;
+    }
+    return best;
+  }
+
+  // Which selector matches is a far weaker signal than how tall the match is,
+  // and the old first-match-wins chain got both halves wrong. Measured at 390px
+  // on 2026-09-05:
+  //
+  //   terms.html (5,192px), privacy-policy.html (9,479px), np.html (6,527px)
+  //     match NONE of the selectors — their content sits in .main-content — so
+  //     contentRoot() returned null and init() exited. Zero ads, permanently.
+  //   help.html (4,756px) has three sibling .wrap sections; querySelector took
+  //     the first (1,383px), which the budget ladder rounds down to zero ads.
+  //   krashi_news.html matches `article` seventeen times, every one of them a
+  //     427px card, against the 7,653px <main> that holds them all.
+  //
+  // So: an explicit opt-in always wins, otherwise take the TALLEST candidate,
+  // and if nothing plausible matches, look for the tallest block container on
+  // the page before giving up on <body>. Anything containing the shared header
+  // or footer is not a content root, it is the page.
+  function chrome(el) {
+    return !!el.querySelector('header,footer,.km-footer,.site-footer,.bottomnav');
+  }
+
+  function tallest(list) {
+    var best = null;
+    [].forEach.call(list, function (el) {
+      if (!el.offsetHeight || chrome(el)) return;
+      if (!best || el.offsetHeight > best.offsetHeight) best = el;
+    });
+    return best;
+  }
+
   function contentRoot() {
-    return document.querySelector('[data-km-ads-root]') ||
-           document.querySelector('.article-wrapper') ||
-           document.querySelector('.wrap') ||
-           document.querySelector('main') ||
-           document.querySelector('article');
+    var explicit = document.querySelector('[data-km-ads-root]');
+    if (explicit) return explicit;
+
+    var best = tallest(document.querySelectorAll(
+      '.article-wrapper,main,.main-content,.page-container,.wrap,article'));
+    if (best && best.offsetHeight >= 1400) return best;
+
+    // Nothing named the content, so find it by shape: the tallest vertical
+    // stack that is not the page chrome. Keeps the never-null contract that
+    // <body> alone would give while still preferring a real container.
+    var shaped = tallest([].filter.call(
+      document.body.querySelectorAll('div,section'),
+      function (el) { return el.children.length > 1 && el.offsetHeight > 1400; }));
+    var root = shaped || best;
+
+    // A root far shorter than the page means the content is not in one box at
+    // all: help.html stacks three sibling .wrap sections of 1,383/1,173/951px
+    // across a 4,756px document, so the tallest single container is under the
+    // zero-ad cliff while the page itself is comfortably a two-unit page.
+    // Falling back to <body> measures and uses the whole stack. That is only
+    // safe because SKIP now excludes the header, footer and bottom nav.
+    if (!root || root.offsetHeight < document.body.scrollHeight * 0.55) {
+      return document.body;
+    }
+    return root;
   }
 
   // Where the units already on the page sit — the anchors everything else has
   // to keep its distance from.
   function placedY() {
-    return units.map(function (ins) { return topOf(ins); });
+    var ys = units.map(function (ins) { return topOf(ins); });
+    // Hand-placed units are anchors we never touch but must never crowd.
+    [].forEach.call(document.querySelectorAll('ins.adsbygoogle[data-km-ad="page"]'),
+      function (ins) { ys.push(topOf(ins)); });
+    return ys;
   }
 
   // Choose positions that sit as far as possible from everything already
@@ -296,7 +451,8 @@
     var last = floor - MIN_GAP;
     marks.forEach(function (m) {
       var y = topOf(m);
-      if (units.length >= n || y < floor || y - last < MIN_GAP) {
+      if (units.length >= n || y < floor || y - last < MIN_GAP ||
+          clearOfTaps(y) < CLEAR_MIN) {
         hide(m.closest('.ad-slot-wrap,.ad-slot-pair') || m);
         return;
       }
@@ -324,9 +480,28 @@
     if (CLOSED.test(el.tagName)) return false;
     var d = getComputedStyle(el);
     if (d.display === 'block' || d.display === 'flow-root') return true;
-    // A column flex container still stacks; anything else (grid, table, rows,
-    // inline, list-item) does not, so leave it alone.
-    return d.display.indexOf('flex') !== -1 && d.flexDirection.indexOf('column') === 0;
+    // A column flex container still stacks.
+    if (d.display.indexOf('flex') !== -1) return d.flexDirection.indexOf('column') === 0;
+    // A grid stacks too when it has resolved to a SINGLE column - which is what
+    // every card grid on this site does at 390px, where 98% of the readers are.
+    // Refusing all grids outright was the single biggest cause of missing
+    // inventory: /krashi_news holds its 12 story cards in a 5,299px .cards-grid
+    // and /sarkari_yojana holds 14 in a 4,298px one, and both offered ads.js
+    // exactly zero places to put anything. Multi-column grids are still off
+    // limits - dropping a full-width box into one shoves a card onto its own
+    // row and wrecks the layout.
+    // Any grid is fine, one column or several, because build() gives the box
+    // grid-column: 1 / -1 - it becomes its own full-width row and the cards
+    // reflow around it instead of one being shoved onto a line of its own.
+    // That is what the original "never split a grid" rule was protecting
+    // against, and spanning the row removes the danger entirely.
+    //
+    // A wrapping flex ROW is still off limits and always will be: it has no
+    // equivalent of grid-column, so a block dropped into one breaks the wrap.
+    // /bhav's .chips is exactly that - 280 chips over 5,992px - and it is the
+    // last place an ad belongs anyway, being a dense field of small tap targets.
+    if (d.display.indexOf('grid') !== -1) return true;
+    return false;
   }
 
   // Most of a page's content usually lives inside one tall wrapper — /bhav's
@@ -354,18 +529,57 @@
   function autoMode(root, n, floor) {
     var gaps = [];
     if (splittable(root)) collect(root, 0, gaps);
-    gaps.push({ parent: root, before: null, y: topOf(root) + root.offsetHeight, brk: true });
+
+    // Where the content actually ends. Appending to the root was fine while the
+    // root was always an article wrapper, but the root can now be <body>, whose
+    // last children are the footer and the bottom nav — a unit appended there
+    // renders, requests, and sits below everything a reader will ever scroll
+    // to. Anchor to the last real child instead and insert before whatever
+    // chrome follows it.
+    var kids = [].slice.call(root.children), tail = null;
+    for (var i = kids.length - 1; i >= 0; i--) {
+      var k = kids[i];
+      if (k.matches && !k.matches(SKIP) && k.offsetHeight) { tail = k; break; }
+    }
+    var endY = tail ? topOf(tail) + tail.offsetHeight
+                    : topOf(root) + root.offsetHeight;
+    gaps.push({ parent: root, before: tail ? tail.nextElementSibling : null,
+                y: endY, brk: true });
 
     // Prefer section breaks (a heading) — an ad between two sections reads as a
     // divider; an ad between two paragraphs reads as an interruption.
-    var breaks = gaps.filter(function (g) { return g.brk && g.y >= floor; });
-    var pool = breaks.length >= n ? breaks : gaps.filter(function (g) { return g.y >= floor; });
+    // Clearance is applied before the fold/heading preference, so a page never
+    // trades a safe position for a prettier one.
+    var safe = gaps.filter(function (g) { return clearOfTaps(g.y) >= CLEAR; });
+    if (safe.length < n) {
+      // Nothing comfortable: take whatever clears the hard floor, roomiest
+      // first, so the page still earns and still puts the ad in the safest
+      // place that exists on it.
+      // Keep EVERY position that clears the floor, in document order. Sorting
+      // by roominess and slicing looked smarter and was measurably worse: the
+      // roomiest positions on /krashi_news all sit in the same sparse stretch,
+      // so spread() ran out of candidates that were MIN_GAP apart and placed a
+      // single unit on a 7,835px page. spread() already maximises distance
+      // from what is placed - it needs breadth of choice, not a shortlist.
+      safe = gaps.filter(function (g) { return clearOfTaps(g.y) >= CLEAR_MIN; });
+    }
+    var breaks = safe.filter(function (g) { return g.brk && g.y >= floor; });
+    var pool = breaks.length >= n ? breaks
+             : safe.filter(function (g) { return g.y >= floor; });
     if (!pool.length) return;
 
     // The fold and the end of the content bracket the usable stretch; sitting
     // MIN_GAP outside it keeps a unit at either extreme legal.
-    var bottom = topOf(root) + root.offsetHeight;
-    var anchors = [floor - MIN_GAP, bottom + MIN_GAP].concat(placedY());
+    var anchors = [floor - MIN_GAP, endY + MIN_GAP].concat(placedY());
+
+    // Placement is geometry, and geometry is invisible in a bug report. This
+    // records what the page offered and what survived each rule, so an audit
+    // can tell "no room" apart from "a rule rejected everything" without
+    // rebuilding the algorithm in the probe. Costs one object per pageview.
+    window.__kmAdsDbg = {
+      rootH: root.offsetHeight, want: n, gaps: gaps.length,
+      clear: safe.length, breaks: breaks.length, pool: pool.length, floor: floor
+    };
 
     spread(pool, anchors, n).forEach(function (g) {
       var box = build({});
@@ -380,15 +594,41 @@
 
     var marks = [].slice.call(document.querySelectorAll('.km-ad-slot'));
     // A page that already hand-places its own units keeps its own layout —
-    // index/mandi/weather/sarkari_yojana were laid out deliberately.
-    if (!marks.length && document.querySelector('ins.adsbygoogle')) return;
+    // index/weather/sarkari_yojana were laid out deliberately.
+    //
+    // The test is data-km-ad="page", NOT a bare ins.adsbygoogle, and that
+    // distinction is the whole point. init() runs at load + a settle loop, by
+    // which time Auto ads has usually injected <ins class="adsbygoogle"> of its
+    // own — so the bare test read Google's injected markup as "this page places
+    // its own ads" and stood down. Measured on the live site 2026-09-05, at
+    // 390px, after a full scroll: /krashi_news is a 25,320px document, easily
+    // MAX budget, and carried ZERO ads.js units; the /bhav hub placed only 2,
+    // both inside a clipped container. That is the missing coverage behind the
+    // site-wide 1.06 ads per pageview when the budget ladder should be giving
+    // 2-3. It is also a race — /bhav won it, /krashi_news lost it — which is
+    // why the shortfall looked random rather than broken.
+    //
+    // An authored unit is one WE wrote into the HTML, so it can say so. Nothing
+    // Google injects at runtime carries this attribute, so Auto ads can never
+    // silence this script again, whatever the account setting is doing.
+    // Hand-placed units keep their positions, but a page no longer stops
+    // earning just because someone once put two units on it. index.html is
+    // 8,585px and shipped 2; weather.html is 1,919px and shipped 2. The
+    // authored units are treated as fixed anchors and the remaining budget is
+    // filled around them, MIN_GAP away, under the same clearance rules.
+    //
+    // They are anchors, never managed units: each one carries its own
+    // adsbygoogle.push() in the page, so pushing them again here would request
+    // the same slot twice.
+    var authored = [].slice.call(
+      document.querySelectorAll('ins.adsbygoogle[data-km-ad="page"]'));
 
     var root = contentRoot();
     if (!root) return;
 
     var floor = floorY(window.innerHeight || 800);
-    var n = budget(root.offsetHeight);
-    if (!n) {
+    var n = budget(root.offsetHeight) - authored.length;
+    if (n <= 0) {
       marks.forEach(function (m) { hide(m.closest('.ad-slot-wrap,.ad-slot-pair') || m); });
       return;
     }

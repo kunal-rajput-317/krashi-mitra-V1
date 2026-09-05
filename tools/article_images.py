@@ -211,6 +211,15 @@ IMAGES = {
     "dhan-me-urea-kab-kitna": "Rice fields Uttar Pradesh (1).jpg",
     "urea-ke-fayde-aur-nuksan": "Farmland in Allahabad,India.jpg",
 
+    # ── रबी round (Sep 2026) ──────────────────────────────────────────────
+    # The wheat piece is about the fertiliser that goes in at sowing, so its
+    # picture is a field being prepared for wheat, not a ripe crop. Late blight
+    # is one of the few diseases Commons has a real, correctly-identified
+    # photograph of, so that article shows the actual pathogen.
+    "gehun-me-khad-kab-kitni": "Agriculture in India tractor farming Punjab preparing field for a wheat crop without burning previous crop stalk.jpg",
+    "sarson-ki-unnat-kheti": "Mustard field.jpg",
+    "aloo-pachheti-jhulsa": "Phytophthora infestans on potato leaf.jpg",
+
     # ── replacing the Commons hotlinks the legacy articles used ───────────
     "aam-utpadan-up": "Anish nellickal 25 .jpg",
     "aam-utpadan-mp": "Anish nellickal 27 .jpg",
