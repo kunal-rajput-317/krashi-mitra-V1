@@ -72,6 +72,8 @@ TARGETS: list[str] = [
     "frontend/sarkari_yojana.html",
     "frontend/articles/index.html",
     "frontend/dukanlisting/index.html",
+    "frontend/krashi_news.html",
+    "frontend/festival-popup.js",
     "backend/data/krashimitra_book.json",
 ]
 

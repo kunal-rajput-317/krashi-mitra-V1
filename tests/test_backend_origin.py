@@ -24,6 +24,20 @@ REPO = Path(__file__).resolve().parents[1]
 CONFIG = REPO / "config" / "backend-origin.txt"
 HOST_RE = re.compile(r"https://[a-z0-9][a-z0-9-]*\.onrender\.com")
 
+# Any absolute origin, whoever hosts it. HOST_RE only knows Render, which was
+# fine while Render was the only answer - but the whole point of the config
+# file is that the backend can move to a custom domain or another provider,
+# and a test that can only see .onrender.com goes blind the moment it does.
+# That is exactly what happened on the move to api.krashimitra.in: _redirects
+# was correct and the test still failed, because it found zero hosts and
+# concluded there was no proxy at all.
+ORIGIN_RE = re.compile(r"https://[^/\s]+")
+
+# A stand-in origin for tests that need "some address other than the real one".
+# Never write the live origin here: the day it becomes the configured value,
+# the test silently stops testing a move and starts testing a no-op.
+OTHER_ORIGIN = "https://test-origin.example.com"
+
 # `python -m` so this works regardless of how the repo is checked out.
 TOOL = ["-m", "tools.set_backend_origin"]
 
@@ -87,9 +101,10 @@ class TestNoStaleLiterals:
     def test_redirects_proxy_the_configured_host(self):
         """_redirects is the one that takes the site down when it goes stale."""
         text = (REPO / "frontend" / "_redirects").read_text(encoding="utf-8")
-        hosts = set(HOST_RE.findall(text))
-        assert hosts, "_redirects should proxy to the backend"
-        assert hosts == {configured()}, f"stale hosts in _redirects: {hosts - {configured()}}"
+        want = configured()
+        hosts = set(ORIGIN_RE.findall(text))
+        assert want in hosts, "_redirects should proxy to the configured backend"
+        assert hosts == {want}, f"stale hosts in _redirects: {hosts - {want}}"
 
 
 class TestSwitchingProviders:
@@ -187,7 +202,7 @@ class TestSwitchingProviders:
         cfg = sandbox / "config" / "backend-origin.txt"
         first = next(l for l in cfg.read_text(encoding="utf-8").splitlines()
                      if l.startswith("http"))
-        self.run(sandbox, "https://api.krashimitra.in")
+        self.run(sandbox, OTHER_ORIGIN)
         body = cfg.read_text(encoding="utf-8")
         assert f"#old {first}" in body, "the outgoing origin must be recorded"
 
@@ -196,15 +211,14 @@ class TestSwitchingProviders:
         self.run(sandbox, first)
         body = cfg.read_text(encoding="utf-8")
         assert f"#old {first}" not in body
-        assert "#old https://api.krashimitra.in" in body
+        assert f"#old {OTHER_ORIGIN}" in body
 
     def test_check_catches_a_file_left_behind_after_leaving_render(self, sandbox):
         """The precise green-check-over-a-broken-site regression."""
-        self.run(sandbox, "https://api.krashimitra.in")
+        self.run(sandbox, OTHER_ORIGIN)
         red = sandbox / "frontend" / "_redirects"
         red.write_text(red.read_text(encoding="utf-8")
-                       .replace("https://api.krashimitra.in",
-                                "https://old-host.example.com", 1),
+                       .replace(OTHER_ORIGIN, "https://old-host.example.com", 1),
                        encoding="utf-8")
         self.run(sandbox, "https://krashimitra.up.railway.app")
         # the tool rewrote what it knew about; the planted foreign host is gone

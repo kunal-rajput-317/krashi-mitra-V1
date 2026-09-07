@@ -47,6 +47,9 @@
 # --check reported "all files agree" over a site whose _redirects still pointed
 # at the dead host. Do not delete these lines.
 # ============================================================
-https://krashi-mitra-v1-muup.onrender.com
+https://krashi-mitra-v1-p099.onrender.com
+#old https://api.krashimitra.in
+#old https://krashi-mitra-v1-mrp4.onrender.com
+#old https://krashi-mitra-v1-muup.onrender.com
 #old https://krashi-mitra-v1-oxdc.onrender.com
 #old https://krashi-mitra-v1.onrender.com
