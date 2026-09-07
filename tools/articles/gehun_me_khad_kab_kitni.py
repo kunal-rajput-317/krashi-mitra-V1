@@ -330,6 +330,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/gehun-me-sinchai-kab", "#0369a1", "💧", "गेहूं · सिंचाई",
+         "गेहूं में सिंचाई कब करें — छह सिंचाई का कार्यक्रम"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#a16207", "🌾", "गेहूं · खेती",
          "गेहूं की उन्नत खेती — बुवाई 1–25 नवंबर, नई किस्में"),
         (f"{SITE}/articles/ek-acre-bigha-kitna-urea", "#16a34a", "📐", "यूरिया · मात्रा",

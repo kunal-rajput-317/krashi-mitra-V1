@@ -302,6 +302,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/tarbandi-yojana-subsidy", "#1d4ed8", "🚧", "योजना · अनुदान",
+         "तारबंदी योजना — 70% तक अनुदान और आवेदन का तरीका"),
+        (f"{SITE}/articles/nilgai-awara-pashu-fasal-bachav", "#15803d", "🦌", "फसल · सुरक्षा",
+         "नीलगाय और आवारा पशु से फसल कैसे बचाएँ — 8 उपाय"),
         (f"{SITE}/articles/fpo-kisan-utpadak-sangathan", "#0284c7", "🤝", "योजना · FPO",
          "FPO क्या है — कैसे बनाएँ और ₹15 लाख इक्विटी ग्रांट"),
         (f"{SITE}/articles/pm-kusum-solar-pump-yojana", "#f59e0b", "☀️", "योजना · सोलर",

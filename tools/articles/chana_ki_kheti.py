@@ -324,6 +324,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/chana-fali-chhedak-illi", "#c2410c", "🐛", "चना · कीट",
+         "चने में फली छेदक इल्ली की दवा — मात्रा और सही समय"),
         (f"{SITE}/articles/arhar-tur-kheti-guide", "#a16207", "🌿", "अरहर · फसल गाइड",
          "अरहर (तुअर) की खेती — किस्में, निपिंग और उकठा"),
         (f"{SITE}/articles/masoor-ki-kheti", "#b45309", "🫘", "मसूर · फसल गाइड",

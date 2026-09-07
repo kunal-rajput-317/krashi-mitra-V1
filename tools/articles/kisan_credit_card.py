@@ -383,6 +383,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pm-dhan-dhaanya-krishi-yojana", "#1d4ed8", "🏛️", "योजना · केंद्र",
+         "पीएम धन-धान्य कृषि योजना — 100 ज़िले, ₹24,000 करोड़"),
         (f"{SITE}/articles/pm-kisan-samman-nidhi", "#4f46e5", "🏛️", "योजना · जानकारी",
          "पीएम किसान सम्मान निधि — ₹6,000 सालाना, पूरी जानकारी"),
         (f"{SITE}/sarkari_yojana", "#4f46e5", "📋", "सरकारी · योजनाएं",

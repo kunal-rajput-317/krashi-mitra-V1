@@ -253,6 +253,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/dhan-nami-mandi-rejection", "#0f766e", "⚖️", "मंडी · बिक्री",
+         "धान में नमी कितनी होनी चाहिए? 17% का पूरा नियम"),
         (f"{SITE}/bhav/wheat", "#b45309", "💰", "मंडी · आज के भाव",
          "गेहूं का आज का मंडी भाव — राज्यवार LIVE रेट"),
         (f"{SITE}/bhav/paddy-common", "#1b7a3d", "💰", "मंडी · आज के भाव",

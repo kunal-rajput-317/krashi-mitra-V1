@@ -292,6 +292,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/hara-chara-napier-berseem", "#15803d", "🌿", "पशुपालन · चारा",
+         "साल भर हरा चारा — बरसीम, नेपियर और जई का कैलेंडर"),
         (f"{SITE}/articles/kisan-credit-card", "#4f46e5", "💳", "सरकारी योजना",
          "किसान क्रेडिट कार्ड (KCC) 2026 — ब्याज सिर्फ 4%, ₹5 लाख तक लोन"),
         (f"{SITE}/articles/dairy-farming-doodh-utpadan", "#1d4ed8", "🐄", "डेयरी · पालन",

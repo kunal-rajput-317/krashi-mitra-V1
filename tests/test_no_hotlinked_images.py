@@ -205,3 +205,71 @@ def test_every_self_hosted_image_has_attribution(credits_rel):
         "(run the matching fetch tool, or declare them in "
         f"article_images.LOCAL if they are ours):{listed}"
     )
+
+
+# ============================================================
+# The news auto-pilot's covers
+# ------------------------------------------------------------
+# _safe_image() in routes/news_page.py refuses to RENDER a third-party
+# image, which is the last line. This is the first one: the curator must
+# never STORE one either. It used to lift the source publisher's
+# og:image straight onto the post, so a licence breach was one admin
+# paste away and only the renderer stood between it and a reader.
+# ============================================================
+
+def test_curator_does_not_lift_the_source_image():
+    """The URL curator must not read an image out of the page it fetches."""
+    src = (ROOT / "backend" / "services" / "news_auto_service.py").read_text(encoding="utf-8")
+    curator = src[src.index("async def curate_from_url"):]
+    offenders = [
+        tok for tok in ("og:image", "twitter:image", "<img")
+        if tok in curator
+    ]
+    assert not offenders, (
+        "curate_from_url extracts an image from the source page "
+        f"({', '.join(offenders)}). The publisher's photograph is theirs — "
+        "use pick_our_image() instead."
+    )
+
+
+def test_pick_our_image_always_returns_one_of_ours():
+    """Whatever the story, the cover is a file we serve ourselves."""
+    sys.path.insert(0, str(ROOT))
+    from backend.services.news_auto_service import pick_our_image
+
+    stories = [
+        ("गेहूं का MSP बढ़ा", "mandi"),
+        ("सरसों में सफेद रतुआ का प्रकोप", "crop"),
+        ("पीएम कुसुम सोलर पंप पर अनुदान", "yojana"),
+        ("दूध उत्पादन बढ़ाने की सलाह", "pashu"),
+        ("", "crop"),
+        ("something with no agricultural keyword at all", "tech"),
+        ("अज्ञात श्रेणी की खबर", "not-a-category"),
+    ]
+    for text, category in stories:
+        got = pick_our_image(text, category, seed=text)
+        assert got.startswith("/images/"), f"{text!r} → {got}"
+        assert (ROOT / "frontend" / got.lstrip("/")).is_file(), (
+            f"{text!r} → {got}, which is not on disk"
+        )
+
+
+def test_category_default_does_not_repeat_across_posts():
+    """Consecutive stories that all fall through must not share one photo.
+
+    Five auto-pilot posts once went live wearing the same solar-pump
+    picture, because every unmatched story in a category got one fixed
+    image. The rotation is keyed on the post id, so it is stable per
+    post but different between posts.
+    """
+    sys.path.insert(0, str(ROOT))
+    from backend.services.news_auto_service import pick_our_image
+
+    seeds = [f"km-auto-178840518{i}-{100 + i * 37}" for i in range(6)]
+    text = "कोई सामान्य सरकारी घोषणा"          # matches no keyword row
+    chosen = {pick_our_image(text, "yojana", seed=s) for s in seeds}
+    assert len(chosen) > 1, f"every post got the same cover: {chosen}"
+
+    # ...and stable: the same post always gets the same photo.
+    assert pick_our_image(text, "yojana", seed=seeds[0]) == \
+        pick_our_image(text, "yojana", seed=seeds[0])

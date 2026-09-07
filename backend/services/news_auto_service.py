@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from urllib.parse import quote, urljoin
+from urllib.parse import quote
 import base64
 
 import httpx
@@ -55,6 +55,142 @@ DEFAULT_CATEGORY_IMAGES = {
     "pashu":   "/images/articles/dairy-farming-doodh-utpadan-card.webp",
     "tech":    "/images/articles/kisan-drone-chhidkav-card.webp",
 }
+
+# ============================================================
+# Cover images: ours, or none
+# ------------------------------------------------------------
+# A news post never carries the source publisher's photograph. Their
+# og:image is their copyright — reproducing it on an AdSense-carrying
+# site is a licence breach whichever way the link is written, and
+# hotlinking it also breaks the card the day they rename the file.
+# (On 2026-09-04 an audit found exactly this live: two published posts
+# pulled photos from someone else's server, one of them a portrait of a
+# named public figure who had nothing to do with the story.)
+#
+# So the cover always comes from the ~190 card images we fetched,
+# licence-checked, self-hosted and credited on /articles/credits. This
+# table is what makes that a real choice rather than a stand-in: it maps
+# what the story is ABOUT to the photograph of that crop or subject we
+# already own. Only when nothing matches does the category default
+# apply, and even that rotates deterministically per post — five stories
+# in a row must not all wear the same solar-pump photo, which is what
+# the old nine-branch if/elif chain (copied into three functions)
+# produced.
+#
+# Adding a row: the slug must be an existing frontend/images/articles/
+# <slug>-card.webp, i.e. an image already credited. _own() drops any row
+# whose file is missing, so a typo degrades to the category default
+# instead of a broken image.
+# ============================================================
+
+# (keywords, article slug whose card art we own). First match wins, so the
+# specific rows sit above the general ones.
+_IMAGE_KEYWORDS: List[Tuple[Tuple[str, ...], str]] = [
+    # -- field crops -------------------------------------------------
+    (("गेहूं", "गेहूँ", "wheat", "gehun", "gehu"),                "gehuu-price-analytic-up"),
+    (("धान", "चावल", "paddy", "rice", "dhan", "कुरुवई", "samba"), "dhan-nursery-ropai"),
+    (("गन्ना", "गन्ने", "sugarcane", "sugar", "cane", "चीनी मिल"), "ganna-guide-up"),
+    (("सरसों", "सरसो", "mustard", "sarso", "रतुआ"),               "sarso-guide-up"),
+    (("चना", "चने", "gram", "chana"),                             "chana-unnat-kheti"),
+    (("मसूर", "lentil", "masoor"),                                "masoor-ki-kheti"),
+    (("मटर", "pea", "matar"),                                     "matar-ki-kheti"),
+    (("जौ", "barley", "जई", "oat"),                               "jau-ki-kheti"),
+    (("मक्का", "maize", "corn", "makka"),                         "makka-guide-up"),
+    (("बाजरा", "bajra", "millet", "ज्वार", "jowar"),              "bajra-jogiya-rog-rajasthan"),
+    (("रागी", "ragi", "finger millet"),                           "ragi-guide-karnataka"),
+    (("सोयाबीन", "soya", "soybean"),                              "soyabean-MP-guide"),
+    (("कपास", "cotton", "नरमा", "kapas"),                         "kapas-ki-kheti-guide"),
+    (("मूंगफली", "groundnut", "peanut", "moongfali"),             "moongfali-guide-rajisthan"),
+    (("आलू", "potato", "aloo"),                                   "potato_guide_up"),
+    (("प्याज", "कांदा", "onion", "kanda"),                        "kanda-chal-anudan-yojana"),
+    (("टमाटर", "tomato"),                                         "tomato-guide-karnataka"),
+    (("मिर्च", "chilli", "chili", "मिरची"),                       "chilli-guide-karnataka"),
+    (("हल्दी", "turmeric", "haldi"),                              "haldi-kheti-erode-tamil-nadu"),
+    (("अदरक", "ginger", "adrak"),                                 "adrak-haldi-kand-sadan"),
+    # -- horticulture ------------------------------------------------
+    (("आम ", "mango", "आम्र"),                                    "aam-utpadan-up"),
+    (("केला", "banana", "kela"),                                  "kela-kheti-tamil-nadu"),
+    (("अंगूर", "grape", "द्राक्ष"),                               "grapes-maharastra"),
+    (("अनार", "pomegranate", "डाळिंब"),                           "anaar-maharastra"),
+    (("सेब", "apple", "बागवानी"),                                 "apple-kashmir"),
+    (("नारियल", "coconut", "नारळ"),                               "nariyal-kheti-tamil-nadu"),
+    (("कॉफी", "coffee", "कॉफ़ी"),                                 "coffee-guide-karnataka"),
+    # -- inputs ------------------------------------------------------
+    (("dap", "डीएपी"),                                            "DAP-guide-up"),
+    (("यूरिया", "urea", "खाद", "उर्वरक", "fertilizer", "नैनो"),   "urea-guide-up"),
+    (("जैविक", "organic", "गोबर", "कम्पोस्ट", "vermi"),           "jaivik-khad"),
+    (("खरपतवार", "weed", "नींदा", "herbicide"),                   "kharpatwarnashi-guide"),
+    (("कीट", "इल्ली", "सुंडी", "रोग", "pest", "disease",
+      "कीटनाशक", "फफूंद", "blight", "झुलसा"),                     "keet-niyantran"),
+    # -- water, weather, land ----------------------------------------
+    (("सोलर", "solar", "कुसुम", "kusum", "पंप", "pump"),          "pm-kusum-solar-pump-yojana"),
+    (("मौसम", "बारिश", "मानसून", "weather", "monsoon", "rain",
+      "ओलावृष्टि", "पाला", "तापमान", "सूखा", "बाढ़"),             "mausam-guide"),
+    (("तारबंदी", "फेंसिंग", "fencing", "नीलगाय", "आवारा"),        "tarbandi-yojana-subsidy"),
+    # -- livestock ---------------------------------------------------
+    (("चारा", "बरसीम", "नेपियर", "fodder"),                       "hara-chara-napier-berseem"),
+    (("दूध", "डेयरी", "dairy", "गाय", "भैंस", "milk", "पशु"),     "dairy-farming-doodh-utpadan"),
+    (("मुर्गी", "अंडा", "poultry", "murgi", "चूजा"),              "murgi-palan-guide"),
+    (("बकरी", "goat", "bakri"),                                   "bakri-palan-guide"),
+    (("मछली", "fish", "मत्स्य"),                                  "machhli-palan-guide"),
+    # -- money, schemes, tech ----------------------------------------
+    (("बीमा", "insurance", "मुआवजा", "क्षतिपूर्ति"),              "pm-fasal-bima-yojana-2026"),
+    (("kcc", "क्रेडिट कार्ड", "लोन", "loan", "कर्ज", "ऋण"),       "kisan-credit-card"),
+    (("fpo", "उत्पादक संगठन", "समूह"),                            "fpo-kisan-utpadak-sangathan"),
+    (("किसान आईडी", "agristack", "farmer id", "पहचान पत्र",
+      "डिजिटल"),                                                  "kisan-pehchan-patra-agristack"),
+    (("ड्रोन", "drone", "तकनीक", "मशीन", "यंत्र"),                "kisan-drone-chhidkav"),
+    (("मंडी", "apmc", "नीलामी", "e-nam", "enam", "भाव", "msp"),   "vashi-apmc-mandi-guide"),
+]
+
+# Category defaults, several per category so consecutive posts differ.
+_CATEGORY_POOL: Dict[str, Tuple[str, ...]] = {
+    "mandi":   ("gehuu-price-analytic-up", "vashi-apmc-mandi-guide", "ganna-pricing-analytics-up"),
+    "yojana":  ("pm-fasal-bima-yojana-2026", "pm-kusum-solar-pump-yojana", "kisan-credit-card"),
+    "weather": ("mausam-guide", "karnataka-monsoon"),
+    "crop":    ("dhan-nursery-ropai", "keet-niyantran", "makka-guide-up"),
+    "khad":    ("urea-guide-up", "DAP-guide-up", "jaivik-khad"),
+    "pashu":   ("dairy-farming-doodh-utpadan", "murgi-palan-guide", "hara-chara-napier-berseem"),
+    "tech":    ("kisan-drone-chhidkav", "kisan-pehchan-patra-agristack"),
+}
+
+
+def _own(slug: str) -> Optional[str]:
+    """The served path for one of our card images, or None if it is not there."""
+    if (ARTICLES_IMAGE_DIR / f"{slug}-card.webp").is_file():
+        return f"/images/articles/{slug}-card.webp"
+    return None
+
+
+def _stable_index(seed: str, n: int) -> int:
+    """A per-post index that never moves — the same post keeps the same photo."""
+    h = 0
+    for ch in seed:
+        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+    return h % max(n, 1)
+
+
+def pick_our_image(text: str, category: str = "crop", seed: str = "") -> str:
+    """Choose a self-hosted cover for a story from what the story is about.
+
+    `text` is anything descriptive — title, excerpt, source body. `seed` is
+    any stable per-post string (its id) so two posts in the same category
+    that both fall through to the default still differ.
+    """
+    low = (text or "").lower()
+    for keys, slug in _IMAGE_KEYWORDS:
+        if any(k in low for k in keys):
+            path = _own(slug)
+            if path:
+                return path
+
+    pool = [p for p in (_own(s) for s in _CATEGORY_POOL.get(category, ())) if p]
+    if not pool:
+        pool = [p for p in (_own(s) for s in _CATEGORY_POOL["crop"]) if p]
+    if pool:
+        return pool[_stable_index(seed or low, len(pool))]
+    return "/images/og-banner.webp"
+
 
 CATEGORY_LABELS = {
     "mandi":   "🏪 मंडी व भाव",
@@ -327,27 +463,9 @@ let that reach the image):
     except Exception as e:
         logger.warning(f"Pollinations generation error: {e}")
 
-    # 4. Contextual smart matching fallback from local curated library
-    low = (title + " " + category).lower()
-    fallback_img = DEFAULT_CATEGORY_IMAGES.get(category, "/images/articles/dhan-nursery-ropai-card.webp")
-    if any(k in low for k in ["आलू", "potato"]):
-        fallback_img = "/images/articles/potato_guide_up-card.webp"
-    elif any(k in low for k in ["गन्ना", "sugar", "cane"]):
-        fallback_img = "/images/articles/ganna-pricing-analytics-up-card.webp"
-    elif any(k in low for k in ["गेहूं", "wheat"]):
-        fallback_img = "/images/articles/gehuu-price-analytic-up-card.webp"
-    elif any(k in low for k in ["धान", "rice", "paddy", "कुरुवई"]):
-        fallback_img = "/images/articles/dhan-nursery-ropai-card.webp"
-    elif any(k in low for k in ["सोलर", "solar", "कुसुम", "kusum"]):
-        fallback_img = "/images/articles/pm-kusum-solar-pump-yojana-card.webp"
-    elif any(k in low for k in ["खाद", "यूरिया", "dap"]):
-        fallback_img = "/images/articles/urea-guide-up-card.webp"
-    elif any(k in low for k in ["सरसों", "mustard"]):
-        fallback_img = "/images/articles/sarso-guide-up-card.webp"
-    elif any(k in low for k in ["डेयरी", "दूध", "dairy"]):
-        fallback_img = "/images/articles/dairy-farming-doodh-utpadan-card.webp"
-    elif any(k in low for k in ["ड्रोन", "तकनीक", "drone"]):
-        fallback_img = "/images/articles/kisan-drone-chhidkav-card.webp"
+    # 4. Neither generator answered — fall back to the photograph we own
+    # that matches this headline, rather than to one fixed image.
+    fallback_img = pick_our_image(f"{title} {category}", category, seed=post_id or title)
 
     return {
         "success": True,
@@ -650,33 +768,19 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
     if category not in CATEGORY_LABELS:
         category = "crop"
 
-    # Contextual Smart Image matching
-    low_text = (final_title + " " + raw_title).lower()
-    if any(k in low_text for k in ["आलू", "potato"]):
-        img = "/images/articles/potato_guide_up-card.webp"
-    elif any(k in low_text for k in ["गन्ना", "sugar", "cane"]):
-        img = "/images/articles/ganna-pricing-analytics-up-card.webp"
-    elif any(k in low_text for k in ["गेहूं", "wheat"]):
-        img = "/images/articles/gehuu-price-analytic-up-card.webp"
-    elif any(k in low_text for k in ["धान", "rice", "paddy", "कुरुवई"]):
-        img = "/images/articles/dhan-nursery-ropai-card.webp"
-    elif any(k in low_text for k in ["सोलर", "solar", "कुसुम", "kusum"]):
-        img = "/images/articles/pm-kusum-solar-pump-yojana-card.webp"
-    elif any(k in low_text for k in ["खाद", "यूरिया", "dap"]):
-        img = "/images/articles/urea-guide-up-card.webp"
-    elif any(k in low_text for k in ["सरसों", "mustard"]):
-        img = "/images/articles/sarso-guide-up-card.webp"
-    elif any(k in low_text for k in ["डेयरी", "दूध", "dairy"]):
-        img = "/images/articles/dairy-farming-doodh-utpadan-card.webp"
-    elif any(k in low_text for k in ["ड्रोन", "तकनीक", "drone"]):
-        img = "/images/articles/kisan-drone-chhidkav-card.webp"
-    else:
-        img = DEFAULT_CATEGORY_IMAGES.get(category, "/images/articles/dhan-nursery-ropai-card.webp")
+    post_id = f"km-auto-{int(datetime.utcnow().timestamp())}-{random.randint(100, 999)}"
+
+    # Cover: the photograph we own that matches what the story is about.
+    # Never the source publisher's — see pick_our_image.
+    img = pick_our_image(
+        f"{final_title} {raw_title} {parsed.get('excerpt', '')}",
+        category,
+        seed=post_id,
+    )
 
     # Organic Likes Seed: 260 to 580 likes!
     seed_likes = random.randint(260, 580)
 
-    post_id = f"km-auto-{int(datetime.utcnow().timestamp())}-{random.randint(100, 999)}"
     
     full_story = parsed.get("full_story", "").strip()
     if not full_story or len(full_story) < 60:
@@ -849,23 +953,8 @@ async def curate_from_url(url: str, language: str = "hi") -> dict:
         m_desc = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:name=["\']description["\']|property=["\']og:description["\'])', html_text, re.I)
     meta_desc = html.unescape(m_desc.group(1).strip()) if m_desc else ""
 
-    # Hero Image: og:image, twitter:image, or featured image
-    hero_image = ""
-    m_img = re.search(r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image|twitter:image:src)["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
-    if not m_img:
-        m_img = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'](?:og:image|twitter:image|twitter:image:src)["\']', html_text, re.I)
-    if m_img:
-        hero_image = m_img.group(1).strip()
-
-    if not hero_image:
-        m_post_img = re.search(r'<img[^>]+src=["\']([^"\']+(?:jpg|jpeg|png|webp)[^"\']*)["\']', html_text, re.I)
-        if m_post_img:
-            cand = m_post_img.group(1).strip()
-            if not any(ign in cand.lower() for ign in ["logo", "icon", "avatar", "advert", "banner"]):
-                hero_image = cand
-
-    if hero_image:
-        hero_image = urljoin(url, hero_image)
+    # No hero image is taken from the page. The publisher's photograph is
+    # theirs; what we render is our own — see pick_our_image.
 
     # Paragraphs
     p_tags = re.findall(r"<p[^>]*>(.*?)</p>", html_text, re.I | re.S)
@@ -880,25 +969,11 @@ async def curate_from_url(url: str, language: str = "hi") -> dict:
     curated = await format_agri_post_with_ai(title, combined_content, url, language=language)
     if not curated:
         raise ValueError("Gemini ने पाया कि यह विषय पहले से ही फ़नल या वेबसाइट पर प्रकाशित खबरों में मौजूद है (Duplicate topic blocked by AI).")
-    if hero_image:
-        curated["image"] = hero_image
-    else:
-        # Contextual intelligent crop image fallback
-        low = (title + " " + combined_content).lower()
-        if any(k in low for k in ["धान", "rice", "paddy", "kuruvai", "कुरुवई"]):
-            curated["image"] = "/images/articles/dhan-nursery-ropai-card.webp"
-        elif any(k in low for k in ["गन्ना", "sugar", "cane"]):
-            curated["image"] = "/images/articles/ganna-pricing-analytics-up-card.webp"
-        elif any(k in low for k in ["सोलर", "solar", "कुसुम", "kusum", "योजना"]):
-            curated["image"] = "/images/articles/pm-kusum-solar-pump-yojana-card.webp"
-        elif any(k in low for k in ["गेहूं", "wheat", "मंडी"]):
-            curated["image"] = "/images/articles/gehuu-price-analytic-up-card.webp"
-        elif any(k in low for k in ["खाद", "यूरिया", "dap"]):
-            curated["image"] = "/images/articles/urea-guide-up-card.webp"
-        elif any(k in low for k in ["दूध", "डेयरी", "dairy"]):
-            curated["image"] = "/images/articles/dairy-farming-doodh-utpadan-card.webp"
-        elif any(k in low for k in ["ड्रोन", "drone", "तकनीक"]):
-            curated["image"] = "/images/articles/kisan-drone-chhidkav-card.webp"
+    curated["image"] = pick_our_image(
+        f"{curated.get('title', '')} {title} {combined_content}",
+        curated.get("category") or "crop",
+        seed=curated.get("id") or title,
+    )
 
     return curated
 

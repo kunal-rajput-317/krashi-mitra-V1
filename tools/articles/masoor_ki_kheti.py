@@ -302,6 +302,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/jau-ki-kheti", "#a16207", "🌾", "जौ · खेती",
+         "जौ की खेती — गेहूं से आधे पानी में रबी की फसल"),
         (f"{SITE}/articles/chana-ki-kheti", "#a16207", "🫘", "चना · फसल गाइड",
          "चने की खेती — किस्म, बीज दर और उकठा से बचाव"),
         (f"{SITE}/articles/arhar-tur-kheti-guide", "#a16207", "🌿", "अरहर · फसल गाइड",

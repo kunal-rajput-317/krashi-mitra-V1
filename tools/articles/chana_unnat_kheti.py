@@ -375,6 +375,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/chana-fali-chhedak-illi", "#c2410c", "🐛", "चना · कीट",
+         "चने में फली छेदक इल्ली की दवा — मात्रा और सही समय"),
         (f"{SITE}/articles/masoor-ki-kheti", "#a16207", "🫘", "रबी दलहन",
          "मसूर की खेती — कम पानी में सबसे भरोसेमंद रबी दलहन"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#ca8a04", "🌾", "रबी · अनाज",

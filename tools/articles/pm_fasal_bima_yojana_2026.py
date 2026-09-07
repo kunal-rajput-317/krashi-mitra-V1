@@ -302,6 +302,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pala-tushar-se-fasal-bachav", "#0369a1", "❄️", "मौसम · पाला",
+         "पाले से फसल कैसे बचाएँ — सिंचाई, धुआँ और छिड़काव"),
         (f"{SITE}/articles/pmksy-drip-sinchai-subsidy", "#0284c7", "💧", "सरकारी योजना",
          "PMKSY ड्रिप सिंचाई सब्सिडी — 55% अनुदान, आवेदन कैसे करें"),
         (f"{SITE}/articles/kisan-credit-card", "#4f46e5", "💳", "सरकारी योजना",

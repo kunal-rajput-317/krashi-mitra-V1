@@ -494,6 +494,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pashu-thanaila-mastitis", "#be185d", "🐄", "पशुपालन · रोग",
+         "गाय-भैंस में थनैला रोग — पहचान और बचाव का तरीका"),
+        (f"{SITE}/articles/hara-chara-napier-berseem", "#15803d", "🌿", "पशुपालन · चारा",
+         "साल भर हरा चारा — बरसीम, नेपियर और जई का कैलेंडर"),
         (f"{SITE}/articles/pashu-lumpy-skin-rog", "#dc2626", "🐄", "पशुपालन · रोग",
          "लंपी स्किन रोग — गाय-भैंस में गाँठ दिखे तो क्या करें"),
         (f"{SITE}/articles/bakri-palan-guide", "#9f1239", "🐐", "बकरी · पालन",

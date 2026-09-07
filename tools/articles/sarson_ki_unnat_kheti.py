@@ -347,6 +347,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/sarso-safed-ratua", "#ca8a04", "🦠", "सरसों · रोग",
+         "सरसों में सफेद रतुआ — पहचान और दवा की सही मात्रा"),
         (f"{SITE}/articles/sarso-mahu-chepa", "#b91c1c", "🐛", "सरसों · कीट",
          "सरसों में माहू (चेपा) — पहचान और रोकथाम"),
         (f"{SITE}/articles/gehun-me-khad-kab-kitni", "#a16207", "🌾", "गेहूं · खाद",

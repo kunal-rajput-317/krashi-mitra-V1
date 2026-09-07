@@ -31,7 +31,7 @@
 .header-wrapper{position:fixed;top:0;left:0;right:0;z-index:200;
   transition:transform .28s cubic-bezier(.4,0,.2,1)}
 
-/* ── amber helpline strip ── */
+/* ── amber contact strip ── */
 .pre-topbar{background:var(--km-amber);color:#1a2e1e;display:flex;align-items:center;
   justify-content:center;gap:10px;padding:7px 16px;font-size:13px;font-weight:600;
   text-align:center;font-family:var(--km-font-body);box-sizing:border-box}

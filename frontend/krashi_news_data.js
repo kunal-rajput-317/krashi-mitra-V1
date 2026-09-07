@@ -1,4 +1,4 @@
-// KrashiMitra News Hub - Master Articles & News Dataset (55+ Real Agricultural Stories)
+// KrashiMitra News Hub - Master Articles & News Dataset (58 Real Agricultural Stories)
 window.KRASHI_NEWS_ARTICLES = [
   {
     id: 'news-lead',
@@ -11,6 +11,150 @@ window.KRASHI_NEWS_ARTICLES = [
     readTime: '4 मिनट',
     image: 'images/articles/ganna-pricing-analytics-up-card.webp',
     link: 'articles/ganna-pricing-analytics-up'
+  },
+  {
+    id: 'news-46',
+    slug: 'gehun-me-khad-kab-kitni',
+    title: 'गेहूं में खाद कब और कितनी डालें? 1 एकड़ का पूरा हिसाब',
+    excerpt: 'सिंचित गेहूं में एक एकड़ पर 1 बोरी DAP, 85 किलो यूरिया और 27 किलो पोटाश। DAP व पोटाश बुवाई के दिन, यूरिया तीन किश्तों में — पूरा कैलेंडर।',
+    category: 'khad',
+    catLabel: 'उर्वरक सलाह',
+    time: 'आज ताज़ा',
+    readTime: '7 मिनट',
+    image: 'images/articles/gehun-me-khad-kab-kitni-card.webp',
+    link: 'articles/gehun-me-khad-kab-kitni'
+  },
+  {
+    id: 'news-47',
+    slug: 'sarson-ki-unnat-kheti',
+    title: 'सरसों की उन्नत खेती: बुवाई 10–25 अक्टूबर, गंधक के बिना तेल नहीं',
+    excerpt: 'सिंचित सरसों में बीज 2 किलो प्रति एकड़ और खाद 80:40:40 के साथ 40 किलो गंधक। दो सिंचाई का समय, किस्मों का चुनाव और पूरा बुवाई कैलेंडर।',
+    category: 'crop',
+    catLabel: 'रबी बुवाई',
+    time: 'आज ताज़ा',
+    readTime: '7 मिनट',
+    image: 'images/articles/sarson-ki-unnat-kheti-card.webp',
+    link: 'articles/sarson-ki-unnat-kheti'
+  },
+  {
+    id: 'news-48',
+    slug: 'gehun-me-sinchai-kab',
+    title: 'गेहूं में सिंचाई कब करें — छह सिंचाई का पूरा कार्यक्रम',
+    excerpt: 'पहली सिंचाई 20–25 दिन पर ताजमूल अवस्था में — यही सबसे कीमती है। फिर 40–45, 60–65, 80–85, 100–105 और 115–120 दिन पर, हर बार 5–6 सेमी पानी।',
+    category: 'crop',
+    catLabel: 'सिंचाई प्रबंधन',
+    time: 'आज',
+    readTime: '7 मिनट',
+    image: 'images/articles/gehun-me-sinchai-kab-card.webp',
+    link: 'articles/gehun-me-sinchai-kab'
+  },
+  {
+    id: 'news-49',
+    slug: 'matar-ki-kheti',
+    title: 'मटर की खेती: जल्दी वाली किस्म से सबसे ऊंचा भाव कैसे पकड़ें',
+    excerpt: 'जल्दी किस्म 15–31 अक्टूबर में बोएं, 60–70 दिन में तुड़ाई और मंडी में सबसे ऊंचा भाव। बीज दर, खाद, चूर्णिल आसिता का इलाज और तुड़ाई का सही समय।',
+    category: 'crop',
+    catLabel: 'नकदी फसल',
+    time: 'आज',
+    readTime: '7 मिनट',
+    image: 'images/articles/matar-ki-kheti-card.webp',
+    link: 'articles/matar-ki-kheti'
+  },
+  {
+    id: 'news-50',
+    slug: 'chana-fali-chhedak-illi',
+    title: 'चने में फली छेदक इल्ली की दवा — मात्रा और छिड़काव का सही समय',
+    excerpt: 'एक मीटर कतार में 1 इल्ली दिखते ही छिड़काव करें — इमामेक्टिन बेंजोएट 100 ग्राम या क्लोरएंट्रानिलिप्रोल 60 मि.ली. प्रति एकड़, और 5 फेरोमोन ट्रैप।',
+    category: 'crop',
+    catLabel: 'कीट नियंत्रण',
+    time: 'कल',
+    readTime: '7 मिनट',
+    image: 'images/articles/chana-fali-chhedak-illi-card.webp',
+    link: 'articles/chana-fali-chhedak-illi'
+  },
+  {
+    id: 'news-51',
+    slug: 'sarso-safed-ratua',
+    title: 'सरसों में सफेद रतुआ: पहचान और दवा की सही मात्रा',
+    excerpt: 'पत्ती के नीचे सफेद फफोले और फूल की मुड़ी डंडी इसकी पहचान है। बीज उपचार मेटालैक्सिल 6 ग्राम/किलो, छिड़काव मैंकोजेब 2 ग्राम/लीटर, 15 दिन बाद दोहराएँ।',
+    category: 'crop',
+    catLabel: 'रोग नियंत्रण',
+    time: 'कल',
+    readTime: '7 मिनट',
+    image: 'images/articles/sarso-safed-ratua-card.webp',
+    link: 'articles/sarso-safed-ratua'
+  },
+  {
+    id: 'news-52',
+    slug: 'gehun-deemak-niyantran',
+    title: 'गेहूं में दीमक का इलाज: कौन सी दवा, कितनी मात्रा',
+    excerpt: 'बीज उपचार में क्लोरपायरीफॉस 4 मि.ली. या फिप्रोनिल 6 मि.ली. प्रति किलो बीज। खड़ी फसल में सिंचाई के पानी के साथ 1 लीटर प्रति एकड़ — पूरा तरीका।',
+    category: 'crop',
+    catLabel: 'कीट नियंत्रण',
+    time: '2 दिन पहले',
+    readTime: '8 मिनट',
+    image: 'images/articles/gehun-deemak-niyantran-card.webp',
+    link: 'articles/gehun-deemak-niyantran'
+  },
+  {
+    id: 'news-53',
+    slug: 'masoor-ki-kheti',
+    title: 'मसूर की खेती: बुवाई, बीज दर और उकठा रोग से बचाव',
+    excerpt: 'बुवाई अक्टूबर मध्य से नवंबर मध्य तक, बीज दर 40–45 किग्रा प्रति हेक्टेयर। दो हल्की सिंचाई, बीज उपचार का सही क्रम और उकठा-रोधी किस्म का चुनाव।',
+    category: 'crop',
+    catLabel: 'दलहन फसल',
+    time: '2 दिन पहले',
+    readTime: '7 मिनट',
+    image: 'images/articles/masoor-ki-kheti-card.webp',
+    link: 'articles/masoor-ki-kheti'
+  },
+  {
+    id: 'news-54',
+    slug: 'jau-ki-kheti',
+    title: 'जौ की खेती: गेहूं से आधे पानी में तैयार होने वाली रबी फसल',
+    excerpt: 'सिंचित जौ में सिर्फ़ 2 सिंचाई और लगभग 40 किलो बीज प्रति एकड़। माल्ट के लिए बोना हो तो नाइट्रोजन जानबूझकर घटानी पड़ती है — पूरा कार्यक्रम।',
+    category: 'crop',
+    catLabel: 'कम पानी की फसल',
+    time: '3 दिन पहले',
+    readTime: '7 मिनट',
+    image: 'images/articles/jau-ki-kheti-card.webp',
+    link: 'articles/jau-ki-kheti'
+  },
+  {
+    id: 'news-55',
+    slug: 'hara-chara-napier-berseem',
+    title: 'साल भर हरा चारा: बरसीम, नेपियर और जई का कटाई कैलेंडर',
+    excerpt: 'बरसीम अक्टूबर में बोइए — 5–7 कटाई; नेपियर एक बार लगाकर 3–4 साल, हर 40–45 दिन कटाई। दुधारू पशु को रोज़ 25–30 किलो हरा चारा चाहिए।',
+    category: 'pashu',
+    catLabel: 'हरा चारा',
+    time: '3 दिन पहले',
+    readTime: '7 मिनट',
+    image: 'images/articles/hara-chara-napier-berseem-card.webp',
+    link: 'articles/hara-chara-napier-berseem'
+  },
+  {
+    id: 'news-56',
+    slug: 'pashu-thanaila-mastitis',
+    title: 'गाय-भैंस में थनैला रोग: पहचान और बचाव का सही तरीका',
+    excerpt: 'दोहन के बाद 20–30 मिनट तक थन का छेद खुला रहता है — संक्रमण वहीं घुसता है। काला प्याला, CMT जाँच और 0.5–1% पोविडोन आयोडीन के टीट डिप से बचाव।',
+    category: 'pashu',
+    catLabel: 'पशु स्वास्थ्य',
+    time: '4 दिन पहले',
+    readTime: '7 मिनट',
+    image: 'images/articles/pashu-thanaila-mastitis-card.webp',
+    link: 'articles/pashu-thanaila-mastitis'
+  },
+  {
+    id: 'news-57',
+    slug: 'tarbandi-yojana-subsidy',
+    title: 'तारबंदी योजना: 70% तक अनुदान और आवेदन का तरीका',
+    excerpt: 'लघु-सीमांत किसान को 60% या ₹48,000, सामान्य को 50% या ₹40,000, और 10 किसानों के सामूहिक आवेदन पर 70% या ₹56,000 — 400 रनिंग मीटर तक।',
+    category: 'yojana',
+    catLabel: 'सरकारी अनुदान',
+    time: '4 दिन पहले',
+    readTime: '7 मिनट',
+    image: 'images/articles/tarbandi-yojana-subsidy-card.webp',
+    link: 'articles/tarbandi-yojana-subsidy'
   },
   {
     id: 'news-1',

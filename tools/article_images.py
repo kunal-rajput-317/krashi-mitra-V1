@@ -243,8 +243,10 @@ IMAGES = {
     "gehuu-price-analytic-up": "Woman harvesting wheat, Raisen district, Madhya Pradesh, India ggia version.jpg",
     # These two had their own art, but it was unusable: frontend/images/
     # articles/potato.webp carries the same baked-in transparency checkerboard,
-    # and images/yojana/pmkisan.png is a mock Government of India cheque made
+    # and the yojana/pmkisan art was a mock Government of India cheque made
     # out to a named person — not something to serve as a hero or an og:image.
+    # (That file, and the other unusable yojana exports, have since been
+    # deleted; this note stays so the picks are not revisited.)
     "potato_guide_up": "Aardappelveld bij Heusden.jpg",
     "PM-kisan-samman-nidhi": "1. Mera Gaon Mera Gaurav yojna of GOI implemented in villages by IARI New Delhi.jpg",
     # ── मुंबई / वाशी APMC cluster ─────────────────────────────────────────
@@ -266,6 +268,25 @@ IMAGES = {
     "mumbai-mandi-transport-vahan": "Unloading onion.jpg",
     "sabji-packing-grading-mumbai": "India - Koyambedu Market - Market 03 (3987093932).jpg",
     "mumbai-mandi-payment-suraksha": "India - Koyambedu Market - Market 08 (3986141067).jpg",
+
+    # ── रबी batch, सितंबर 2026 (12 articles) ──────────────────────────────
+    # Three of the twelve already had a hero on disk from an earlier batch
+    # (chana-fali-chhedak-illi, hara-chara-napier-berseem,
+    # pashu-thanaila-mastitis) and keep the entries above.
+    #
+    # Two are deliberately not photographs of the thing the article treats,
+    # because no free one exists: the सफेद रतुआ page takes a healthy mustard
+    # crop and the पाला page takes a foggy winter morning over a mustard field.
+    # Both captions say so — neither claims the reader is looking at the damage.
+    "gehun-deemak-niyantran": "Odontotermes obesus Termites Isoptera (1) 22.jpg",
+    "sarso-safed-ratua": "Mustard plant flowers in India (2016).jpg",
+    "nilgai-awara-pashu-fasal-bachav": "Nilgai, Lakeshwari, Gwalior district, India.jpg",
+    "pala-tushar-se-fasal-bachav": "A winter morning in my village (25733868476).jpg",
+    "gehun-me-sinchai-kab": "Agricultural irrigation pump set with borewell, Vrindavan, Uttar Pradesh, India 02.jpg",
+    "jau-ki-kheti": "Fields of barley (29040669486).jpg",
+    "tarbandi-yojana-subsidy": "Paddy field and barbed wire fence in Bundelkhand.jpg",
+    "pm-dhan-dhaanya-krishi-yojana": "Apna Khet Village Malasar Farm View.jpg",
+    "dhan-nami-mandi-rejection": "Farmer manually harvesting rice in Raichur, Karnataka.jpg",
 }
 
 # In-body illustrations on the hand-written articles.

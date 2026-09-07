@@ -297,6 +297,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/gehun-deemak-niyantran", "#b45309", "🐜", "गेहूं · कीट",
+         "गेहूं में दीमक का इलाज — कौन सी दवा, कितनी मात्रा"),
+        (f"{SITE}/articles/gehun-me-sinchai-kab", "#0369a1", "💧", "गेहूं · सिंचाई",
+         "गेहूं में सिंचाई कब करें — छह सिंचाई का कार्यक्रम"),
         (f"{SITE}/articles/gehun-ratua-rog", "#b45309", "🌾", "गेहूं · रोग",
          "गेहूं का रतुआ (रस्ट) रोग — पहचान और नियंत्रण"),
         (f"{SITE}/articles/urea-guide-up", "#0369a1", "🧪", "खाद · यूरिया",
