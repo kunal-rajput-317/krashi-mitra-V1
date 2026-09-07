@@ -2839,7 +2839,15 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
     hi, n = s["hi"], s["n"]
     span = f"{s['north']} से {s['south']} तक"
 
+    # "<State> Map" earns its place ahead of "मुफ्त डाउनलोड": these pages rank
+    # 7.2 on average for the Latin spelling — better than the 8.9 they hold for
+    # the Devanagari one — and still took 6 clicks from 2,034 impressions
+    # (0.29%) against 0.79% from the Hindi searchers. A title with no Latin
+    # word in it is not a result an "assam map" searcher recognises as theirs.
     title = _fit(
+        f"{hi} का नक्शा – {n} जिलों का HD मानचित्र | {s['en']} Map",
+        f"{hi} का नक्शा – {n} जिलों का मानचित्र | {s['en']} Map",
+        f"{hi} का नक्शा – {n} जिले | {s['en']} Map",
         f"{hi} का नक्शा – {n} जिलों का HD मानचित्र | मुफ्त डाउनलोड",
         f"{hi} का नक्शा – {n} जिलों का HD मानचित्र (मुफ्त)",
         f"{hi} का नक्शा – {n} जिलों का HD मानचित्र")
@@ -3191,7 +3199,19 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
     village_service.request(key, dslug, {"geojson": s["geojson"], "en": en, "hi": hi})
     villages = village_service.load(key, dslug) or []
 
-    title = f"{hi} का नक्शा – {shi} | जिला मानचित्र, गांव व सैटेलाइट व्यू"
+    # Same split as the state page above, and the one title on this route that
+    # was still a single f-string rather than a _fit ladder. The English name
+    # was already in the description ("Ahmedabad district map") and only ever
+    # in the description — which is why "ahmedabad map" sat at position 4.7
+    # with no clicks at all.
+    title = _fit(
+        f"{hi} का नक्शा – {shi} | {en} District Map, गांव व सैटेलाइट व्यू",
+        f"{hi} का नक्शा – {shi} | {en} District Map, सैटेलाइट व्यू",
+        f"{hi} का नक्शा – {shi} | {en} District Map",
+        f"{hi} का नक्शा – {shi} | {en} Map",
+        f"{hi} का नक्शा – {shi} | जिला मानचित्र, गांव व सैटेलाइट व्यू",
+        f"{hi} का नक्शा – {shi} | जिला मानचित्र",
+        f"{hi} का नक्शा – {shi}")
     desc = (f"{hi} जिले का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
             f"सैटेलाइट व्यू में अपना गांव और तहसील देखें, जिले की सीमा नक्शे पर "
             f"हाइलाइट, और {shi} का पूरा HD नक्शा मुफ्त डाउनलोड करें।")

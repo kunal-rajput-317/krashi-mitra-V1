@@ -143,6 +143,75 @@ _EN_HI.update({
     "pegeon pea(arhar fali)": "अरहर फली",
 })
 
+# The long tail, filled in from Search Console rather than from a dictionary.
+# _hindi_name falls back to the raw Agmarknet string, so a crop missing from the
+# tables above was titled in English on all four tiers — "Sugar का भाव आज Mumbai
+# मंडी में" for a farmer who searched "साखर भाव आज". 215 of the 323 commodities
+# that earned an impression in the 28 days to 3 Sep 2026 had no Hindi name, and
+# they converted at 0.54% against 0.74% for the ones that did: same template,
+# same positions, the crop word was the only difference. Sugar alone was 10,740
+# impressions at 0.22%.
+#
+# Ordering is load-bearing — the fallback scan below returns the FIRST keyword
+# that matches, so a specific name has to be inserted before the general one it
+# contains: "guar seed" before "guar", "elephant yam" before "yam", "methi
+# seeds" before "methi", "cluster beans"/"french beans" before "beans". The
+# same rule is why "sugar beet" is listed even though the feed has never sent
+# it: "sugar" now resolves to चीनी, and a beet titled "चीनी" is the Turnip →
+# अरहर bug again.
+#
+# Only names that are certain are here. A crop whose Hindi name could not be
+# established (Gulli, Kakada, Chena, Buttery) keeps its English title, because
+# a confidently wrong crop name costs more than an English one.
+_EN_HI.update({
+    # specific-before-general (see note above)
+    "guar seed": "ग्वार बीज", "cluster beans": "ग्वार",
+    "elephant yam": "सूरन (जिमीकंद)",
+    "methi seeds": "मेथी दाना",
+    "french beans": "फ्रेंच बीन्स",
+    "sugar beet": "चुकंदर",
+    "rab": "राब (तरल गुड़)",
+
+    # the volume: >300 impressions/month each
+    "sugar": "चीनी", "mentha oil": "मेंथा तेल",
+    "khandsari": "खांडसारी (देसी खांड)",
+    "wood": "लकड़ी", "firewood": "जलाऊ लकड़ी",
+    "guar": "ग्वार",
+    "cucumbar": "खीरा", "cucumber": "खीरा",
+    "jaggery": "गुड़", "jute": "जूट", "ragi": "रागी",
+    "tinda": "टिंडा", "makhana": "मखाना",
+    "pointed gourd": "परवल", "methi": "मेथी",
+    "fish": "मछली", "mahua": "महुआ", "pineapple": "अनानास",
+    "almond": "बादाम", "taramira": "तारामीरा",
+    "cummin seed": "जीरा", "cumin": "जीरा",
+    "little gourd": "कुंदरू", "amla": "आंवला",
+    "beetroot": "चुकंदर", "colacasia": "अरबी", "kiwi": "कीवी",
+
+    # the tail — smaller, but the same defect
+    "gokhru": "गोखरू", "arecanut": "सुपारी", "betelnuts": "सुपारी",
+    "dhaincha": "ढैंचा", "chiaseeds": "चिया बीज",
+    "linseed": "अलसी", "kutki": "कुटकी", "kodo millet": "कोदो",
+    "quinoa": "क्विनोआ", "soanf": "सौंफ", "sponge gourd": "नेनुआ",
+    "cherry": "चेरी", "maida": "मैदा", "dal mix": "मिक्स दाल",
+    "chicory": "कासनी", "tobacco": "तंबाकू", "yam": "रतालू",
+    "ajwan": "अजवाइन", "castor seed": "अरंडी", "niger seed": "रामतिल",
+    "long melon": "ककड़ी", "mashrooms": "मशरूम", "mushroom": "मशरूम",
+    "ghee": "घी", "water melon": "तरबूज", "watermelon": "तरबूज",
+    "rajgir": "राजगीरा", "plum": "आलूबुखारा",
+    "asalia": "हलीम (चंद्रशूर)", "chandrashoor": "चंद्रशूर",
+    "teora": "खेसारी (लाख)",
+    "ridge gourd": "तोरई", "water chestnut": "सिंघाड़ा",
+    "walnut": "अखरोट", "cloves": "लौंग", "bay leaf": "तेजपत्ता",
+    "asparagus": "शतावरी", "apricot": "खुबानी", "tamarind": "इमली",
+    "blueberry": "ब्लूबेरी", "cashewnuts": "काजू",
+    "pepper garbled": "काली मिर्च", "pepper ungarbled": "काली मिर्च",
+    "tube rose": "रजनीगंधा", "tulip": "ट्यूलिप",
+    "heena": "मेहंदी", "mahedi": "मेहंदी", "nagarmotha": "नागरमोथा",
+    "harrah": "हरड़", "karanja seeds": "करंज बीज", "gond": "गोंद",
+    "amranthas": "चौलाई", "amaranthus": "चौलाई",
+    "field bean": "सेम", "beans": "सेम",
+})
+
 # Agmarknet spells a few of these its own way ("Chattisgarh", "Uttrakhand") —
 # key on exactly what the feed sends, not the correct spelling.
 _HI_STATES = {
@@ -204,6 +273,122 @@ def _hindi_name(commodity: str) -> str:
 
 def _hindi_state(state: str) -> str:
     return _HI_STATES.get(state, state)
+
+
+# ── Hindi district names ─────────────────────────────────────
+# Measured, not assumed. Over the 28 days to 3 Sep 2026, district pages whose
+# searcher spelled the district in Latin ("sehore mandi lahsun bhav") clicked at
+# 0.97%; the ones who spelled it in Devanagari ("सीहोर मंडी लहसुन भाव आज का")
+# clicked at 0.36% — at the SAME average position, 7.7 to 7.7. Position was not
+# the variable. The title was: it said "Sehore", and 17,618 of the 25,168
+# attributed impressions came from people who had typed सीहोर.
+#
+# The names themselves already existed — naksha_states.json carries {hi, en} for
+# all 737 districts, built for the map pages — so this is a lookup that /bhav
+# never did, not new data.
+#
+# The two feeds disagree on spelling (Agmarknet sends "Pillibhit", "Bulandshahar",
+# "Khiri (Lakhimpur)"), so names are folded onto a loose key: brackets dropped,
+# doubled vowels collapsed, aspirates flattened, h removed. That is deliberately
+# aggressive, which makes a false MATCH the risk worth guarding — labelling
+# Bilaspur "बालाघाट" is the Turnip → अरहर bug with a place name. So the builder
+# drops any key two different districts in one state fold onto, and an unmatched
+# district keeps its Latin name. Wrong is worse than English; English is what
+# the page said yesterday.
+_NAKSHA_STATE_KEY = {
+    "chattisgarh": "chhattisgarh", "keralam": "kerala", "nct-of-delhi": "delhi",
+    "uttrakhand": "uttarakhand", "pondicherry": "puducherry",
+    "andaman-and-nicobar": "andaman-and-nicobar-islands",
+}
+
+# Districts Agmarknet names differently enough that the fold cannot reach them —
+# renamed cities (Gurgaon → गुरुग्राम, Bengaluru, Ahilyanagar), districts sent as
+# their headquarters town (Chhapra for Saran, Orai for Jalaun, Narnaul for
+# Mahendragarh), and the bare "Kanpur"/"Lakhimpur" the census splits in two.
+_HI_DIST_ALIAS = {
+    ("uttar-pradesh", "kanpur"): "कानपुर",
+    ("uttar-pradesh", "khiri-lakhimpur"): "लखीमपुर खीरी",
+    ("uttar-pradesh", "lakhimpur"): "लखीमपुर खीरी",
+    ("uttar-pradesh", "badaun"): "बदायूं",
+    ("uttar-pradesh", "mau-maunathbhanjan"): "मऊ",
+    ("uttar-pradesh", "kannuj"): "कन्नौज",
+    ("uttar-pradesh", "jalaun-orai"): "जालौन",
+    ("haryana", "gurgaon"): "गुरुग्राम",
+    ("haryana", "mahendragarh-narnaul"): "महेंद्रगढ़",
+    ("karnataka", "bengaluru"): "बेंगलुरु",
+    ("maharashtra", "ahilyanagar"): "अहिल्यानगर",
+    ("maharashtra", "amarawati"): "अमरावती",
+    ("bihar", "chhapra"): "छपरा",
+    ("bihar", "east-champaran-motihari"): "पूर्वी चंपारण",
+    ("rajasthan", "swai-madhopur"): "सवाई माधोपुर",
+    ("punjab", "mohali"): "मोहाली",
+    ("madhya-pradesh", "badwani"): "बड़वानी",
+    ("gujarat", "vadodara-baroda"): "वडोदरा",
+    ("gujarat", "banaskanth"): "बनासकांठा",
+    ("gujarat", "junagarh"): "जूनागढ़",
+    ("rajasthan", "deeg"): "डीग",
+    ("rajasthan", "beawar"): "ब्यावर",
+    ("punjab", "nawanshahr"): "नवांशहर",
+    ("punjab", "ropar-rupnagar"): "रूपनगर",
+    ("punjab", "ferozpur"): "फिरोजपुर",
+    ("karnataka", "bengaluru-south"): "बेंगलुरु दक्षिण",
+    ("maharashtra", "dharashiv"): "धाराशिव",
+    ("keralam", "kozhikode-calicut"): "कोझिकोड",
+}
+
+
+def _dist_key(name: str) -> str:
+    """Fold one district name to a key both feeds' spellings land on."""
+    s = re.sub(r"\(.*?\)", " ", name or "").lower()
+    s = re.sub(r"[^a-z]+", "", s)
+    for a, b in (("ee", "i"), ("oo", "u"), ("aa", "a"), ("bh", "b"), ("dh", "d"),
+                 ("kh", "k"), ("gh", "g"), ("ph", "f"), ("th", "t"), ("sh", "s"),
+                 ("z", "j"), ("w", "v"), ("y", "i")):
+        s = s.replace(a, b)
+    # Doubled letters last: it is what joins "Pillibhit" to "Pilibhit" and
+    # "Raebarelli" to "Rae Bareli". Checked against all 737 districts — no two
+    # in one state collide on it, so it costs nothing to fold.
+    return re.sub(r"(.)\1+", r"\1", s.replace("h", ""))
+
+
+@lru_cache(maxsize=1)
+def _dist_hi_map() -> dict:
+    """(state slug, folded district key) → Hindi name, from naksha_states.json.
+
+    Ambiguous keys are dropped rather than guessed at — see the note above."""
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "data", "naksha_states.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            states = _json.load(fh).get("states", {})
+    except (OSError, ValueError):
+        logger.warning("naksha_states.json unreadable — districts stay in Latin")
+        return {}
+
+    out, dropped = {}, set()
+    for s_key, st in states.items():
+        for d in st.get("districts", []):
+            k = (s_key, _dist_key(d.get("en", "")))
+            if not k[1]:
+                continue
+            if k in out and out[k] != d.get("hi"):
+                dropped.add(k)                  # two districts, one key — unusable
+            out[k] = d.get("hi", "")
+    for k in dropped:
+        out.pop(k, None)
+    return out
+
+
+def _hindi_district(state: str, district: str) -> str:
+    """Hindi name for a district, or the name unchanged when there is no match."""
+    if not district:
+        return district
+    ss = _slugify(state)
+    ss = _NAKSHA_STATE_KEY.get(ss, ss)
+    alias = _HI_DIST_ALIAS.get((_slugify(state), _slugify(district)))
+    if alias:
+        return alias
+    return _dist_hi_map().get((ss, _dist_key(district))) or district
 
 
 def _en_short(commodity: str) -> str:
@@ -2433,7 +2618,7 @@ def _header(active: str = "") -> str:
         for key, href, icon, label in _DRAWER_ITEMS)
     return f"""<div class="header-wrapper" id="header-wrapper">
 <div class="pre-topbar">
-<a href="https://wa.me/919870951001" target="_blank" rel="noopener" class="pre-topbar-helpline" title="कृषिमित्र हेल्पलाइन — व्हाट्सऐप पर मैसेज करें"><span class="pre-topbar-phone-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg></span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+<a href="mailto:krashimitra038@gmail.com" class="pre-topbar-helpline" title="कृषिमित्र से ईमेल पर संपर्क करें"><span class="pre-topbar-phone-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></span> कृषिमित्र ईमेल: krashimitra038@gmail.com</a>
 </div>
 <div class="top-utility-bar"><div class="top-utility-inner">
 <div class="top-utility-left">
@@ -3756,6 +3941,10 @@ def bhav_district_hub(state: str, district: str):
 
     dn = _dist_name(idx, ss, ds)
     sn = _state_name(idx, ss)
+    # Same split as the crop district pages: Hindi everywhere the page speaks
+    # Hindi, and the Latin spelling kept in the <title> beside it, because the
+    # two spellings are two different searches — see _hindi_district.
+    dn_hi = _hindi_district(sn, dn)
     hi_state = _hindi_state(sn)
     today_hi = _hindi_date(date.today())
     canon = f"{SITE}/bhav/rajya/{ss}/{ds}"
@@ -3773,38 +3962,40 @@ def bhav_district_hub(state: str, district: str):
 <div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
 <h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
 <div class="crop-card-body">
-<span class="lbl">{escape(dn)}</span><span class="rate">भाव देखें →</span>
+<span class="lbl">{escape(dn_hi)}</span><span class="rate">भाव देखें →</span>
 </div></a>""")
 
     faqs = [
-        (f"{dn} मंडी में आज किन फसलों का भाव है?",
-         f"{today_hi} को {dn} ({hi_state}) की मंडियों में {len(crops_here)} फसलों के भाव सरकारी "
+        (f"{dn_hi} मंडी में आज किन फसलों का भाव है?",
+         f"{today_hi} को {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों के भाव सरकारी "
          f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। नीचे अपनी फसल चुनकर आज का पूरा भाव देखें।"),
-        (f"{dn} मंडी का आज का भाव कैसे देखें?",
-         f"नीचे अपनी फसल चुनें — {dn} की मंडियों का आज का न्यूनतम, अधिकतम और मॉडल भाव "
+        (f"{dn_hi} मंडी का आज का भाव कैसे देखें?",
+         f"नीचे अपनी फसल चुनें — {dn_hi} की मंडियों का आज का न्यूनतम, अधिकतम और मॉडल भाव "
          f"प्रति क्विंटल दिख जाएगा, साथ में पिछले दिनों का रुझान भी।"),
     ]
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
-        (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn, canon)]))
+        (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn_hi, canon)]))
 
-    title = _fit(f"{dn} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}",
-                 f"{dn} मंडी भाव आज — सभी फसलों के ताजा रेट",
-                 f"{dn} मंडी भाव आज — {hi_state}",
-                 f"{dn} मंडी भाव आज")
+    title = _fit(*(([f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav {date.today().year}",
+                     f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav"] if dn_hi != dn else []) + [
+                 f"{dn_hi} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}",
+                 f"{dn_hi} मंडी भाव आज — सभी फसलों के ताजा रेट",
+                 f"{dn_hi} मंडी भाव आज — {hi_state}",
+                 f"{dn_hi} मंडी भाव आज"]))
     desc = _fit(
-        f"{today_hi}: {dn} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का ताजा भाव — "
+        f"{today_hi}: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का ताजा भाव — "
         f"अपनी फसल चुनकर आज का न्यूनतम, अधिकतम और मॉडल रेट देखें। रोज़ अपडेट (data.gov.in)।",
-        f"{today_hi}: {dn} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
+        f"{today_hi}: {dn_hi} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
         f"फसल चुनकर आज का रेट देखें। रोज़ अपडेट (data.gov.in)।",
         limit=162)
 
-    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(dn)} ({escape(hi_state)}) की मंडियों में '
+    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(dn_hi)} ({escape(hi_state)}) की मंडियों में '
                    f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
                    f'दर्ज हुआ। नीचे अपनी फसल चुनकर उस फसल का पूरा भाव देखें।</p>')
 
-    head_h1 = f"{escape(dn)} मंडी भाव आज — फसल चुनें"
+    head_h1 = f"{escape(dn_hi)} मंडी भाव आज — फसल चुनें"
     head_sub = (f"📅 {today_hi} · {escape(hi_state)} · {len(crops_here)} फसलें · "
                 f"स्रोत: data.gov.in (Agmarknet)")
     body = f"""{_tier_head(head_h1, head_sub)}
@@ -3812,16 +4003,16 @@ def bhav_district_hub(state: str, district: str):
 <a class="btn btn-app" href="{SITE}/bhav/rajya/{ss}">← {escape(hi_state)} के सभी जिले</a>
 </div>
 {_hub_selector("", ss, ds, idx, known_state=True, known_dist=True)}
-<h2>{escape(dn)} में फसल चुनें</h2>
+<h2>{escape(dn_hi)} में फसल चुनें</h2>
 {_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)')}
 <div class="crop-grid" id="tier-grid">{"".join(cards)}</div>
 {answer_lead}
-{_dukan_pitch(dn)}
+{_dukan_pitch(dn_hi)}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
-              f'<a href="{SITE}/bhav/rajya/{ss}">{escape(hi_state)}</a> › {escape(dn)}')
+              f'<a href="{SITE}/bhav/rajya/{ss}">{escape(hi_state)}</a> › {escape(dn_hi)}')
     return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS)
 
 
@@ -5228,6 +5419,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         return _not_found(idx, cs, ss)
 
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
+    # Devanagari name where one is known, the Latin name where it is not — see
+    # _hindi_district. Every Hindi sentence on this page uses d_hi; the <title>
+    # and the breadcrumb keep the Latin name too, because Latin-spelled queries
+    # are the half that already converts.
+    d_hi = _hindi_district(state, district)
     # The NEWEST date among the rows actually rendered, not prices[0]'s — row
     # order is whatever Postgres returned. A district's rows routinely span
     # several days (Nashik onion on 4 Sep 2026: 49 rows across 4 dates), so
@@ -5334,63 +5530,82 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     signal_html = _sell_signal(series, st["avg"], avg_pct)
     chart_svg = _chart(series)
     chart_html = (f"""<section class="card-w">
-<div class="card-w-h"><h2>{escape(hi)} का {len(series)}-दिन रुझान</h2><em>{escape(district)} · ₹/क्विंटल</em></div>
+<div class="card-w-h"><h2>{escape(hi)} का {len(series)}-दिन रुझान</h2><em>{escape(d_hi)} · ₹/क्विंटल</em></div>
 {chart_svg}
 </section>""" if chart_svg else "")
 
     price_txt = (f"औसतन ₹{st['avg']:,} प्रति क्विंटल (₹{st['lo']:,} से ₹{st['hi']:,} तक)"
                  if st["avg"] and st["lo"] and st["hi"] else "नीचे मंडीवार भाव देखें")
     faqs = [
-        (f"आज {district} में {hi} का भाव क्या है?",
-         f"{as_of_hi} को {district} ({hi_state}) की मंडियों में {hi} का भाव {price_txt} है। "
+        (f"आज {d_hi} में {hi} का भाव क्या है?",
+         f"{as_of_hi} को {d_hi} ({hi_state}) की मंडियों में {hi} का भाव {price_txt} है। "
          f"यह भाव {_mandis_gen(st['n'])} की सरकारी रिपोर्ट पर आधारित है।"),
-        (f"{district} में {hi} का न्यूनतम और अधिकतम रेट कितना है?",
-         (f"{as_of_hi} को {district} में {hi} का न्यूनतम भाव ₹{st['lo']:,} और अधिकतम भाव "
+        (f"{d_hi} में {hi} का न्यूनतम और अधिकतम रेट कितना है?",
+         (f"{as_of_hi} को {d_hi} में {hi} का न्यूनतम भाव ₹{st['lo']:,} और अधिकतम भाव "
           f"₹{st['hi']:,} प्रति क्विंटल दर्ज हुआ है।"
           if st["lo"] and st["hi"] else "मंडीवार न्यूनतम/अधिकतम भाव नीचे दिए गए हैं।")),
         ("यह भाव कब और कहां से अपडेट होता है?",
          "भाव रोज़ सुबह भारत सरकार के data.gov.in (Agmarknet) से अपडेट होते हैं। "
          "जिन मंडियों की रिपोर्ट आज नहीं आई, उनका पिछला भाव दिखता है।"),
-    ] + _msp_faqs(commodity, st["avg"], district)
+    ] + _msp_faqs(commodity, st["avg"], d_hi)
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
         (hi, f"{SITE}/bhav/{cs}"), (hi_state, f"{SITE}/bhav/{cs}/{ss}"),
-        (district, canon)]))
+        (d_hi, canon)]))
 
-    # The district name is Latin in both halves, so printing it twice was the same
-    # token repeated — it only ate the character budget. Once is enough to rank.
     t_hi, t_en, same = _title_names(commodity)
     # The state joins the title ONLY where the district name is shared with
     # another state — see _ambiguous_district. The other ~98% keep the shorter,
     # punchier version, because a title that spends 14 characters disambiguating
     # something that was never ambiguous is just a worse title.
-    place = f"{district}, {hi_state}" if _ambiguous_district(idx, cs, ds) else district
+    place = f"{d_hi}, {hi_state}" if _ambiguous_district(idx, cs, ds) else d_hi
+    # The two halves of the title used to carry the same token — "Sehore" twice —
+    # so the second was dropped as waste. Now the Hindi clause spells the district
+    # सीहोर and the English clause spells it Sehore, and they are two different
+    # queries: 0.36% CTR from the searchers who typed Devanagari, 0.97% from the
+    # ones who typed Latin, at the same average position. Where no Hindi name is
+    # known the two collapse back to one string and the richest variant is simply
+    # not offered, which is the old behaviour exactly.
+    en_d = "" if d_hi == district else district
     title = _fit(*(
         # No real Hindi name for this commodity: t_hi IS t_en, so a bilingual
         # template would print one long string twice.
-        (f"{t_hi} का भाव आज {place} मंडी में",
+        ([f"{t_hi} का भाव आज {place} मंडी में — {en_d} Mandi"] if en_d else []) + [
+         f"{t_hi} का भाव आज {place} मंडी में",
          f"{place} में {t_hi} का भाव आज",
          f"{t_hi} भाव — {place}",
-         f"{t_hi} भाव — {district}")
+         f"{t_hi} भाव — {district}"]
         if same else
         # The English name owns the "<crop> price today" query space, so it is
         # the last thing to go, not the first: every variant that still fits
         # keeps it, and only the final fallbacks give it up.
-        (f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price Today",
+        ([f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price {en_d}"] if en_d else []) + [
+         f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price Today",
          f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price",
          f"{t_hi} का भाव आज {place} — {t_en} Price",
          f"{place} में {t_hi} भाव — {t_en}",
          f"{place} में {t_hi} का भाव आज",
-         f"{t_hi} का भाव — {district}")))
+         f"{t_hi} का भाव — {district}"]))
     _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
+    # About a third of titles are too long to hold both spellings of the
+    # district, and the one dropped is the Latin one — which is the half of
+    # this page's searchers that ALREADY converts (0.97% against 0.36%). So
+    # where the title had to give it up, the description picks it up: between
+    # the two, every district page names itself in both scripts.
+    d_both = d_hi if (d_hi == district or district in title) else f"{d_hi} ({district})"
+    # One bracket, not two: "आगरा (Agra, उत्तर प्रदेश)", never "आगरा (Agra) (उत्तर प्रदेश)".
+    d_state = (f"{d_hi} ({hi_state})" if d_both == d_hi
+               else f"{d_hi} ({district}, {hi_state})")
     desc  = _fit(
-        f"{as_of_hi}: {district} ({hi_state}) में {hi} का ताजा भाव — {_avg}"
+        f"{as_of_hi}: {d_state} में {hi} का ताजा भाव — {_avg}"
         # No "7-दिन" here: the chart's window is however many days this district
         # actually has history for, so a hard-coded number is a claim the page
         # cannot keep.
         f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और भाव का रुझान।",
-        f"{as_of_hi}: {district} में {hi} का ताजा भाव — {_avg}"
+        f"{as_of_hi}: {d_both} में {hi} का ताजा भाव — {_avg}"
+        f"{_mandis_gen(st['n'])} के रेट और भाव का रुझान।",
+        f"{as_of_hi}: {d_hi} में {hi} का ताजा भाव — {_avg}"
         f"{_mandis_gen(st['n'])} के रेट और भाव का रुझान।",
         limit=162)
 
@@ -5429,7 +5644,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # carry them all: date, place, average, range, source. One quotable passage.
     lead_range = (f" (न्यूनतम ₹{st['lo']:,} — अधिकतम ₹{st['hi']:,})"
                   if st["lo"] and st["hi"] else "")
-    answer_lead = ((f'<p class="lead-out">{as_of_hi} को {escape(district)} ({escape(hi_state)}) की '
+    answer_lead = ((f'<p class="lead-out">{as_of_hi} को {escape(d_hi)} ({escape(hi_state)}) की '
                     f'{_mandis_gen(st["n"])} में {escape(hi)} का औसत मॉडल भाव ₹{st["avg"]:,} प्रति क्विंटल '
                     f'दर्ज हुआ{lead_range}। स्रोत: भारत सरकार का Agmarknet (data.gov.in) पोर्टल, '
                     f'{escape(_hindi_data_date(data_date))} तक।</p>')
@@ -5440,14 +5655,14 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # thin-content liability for the whole /bhav tree.
     kharidar_cta = (
         f'<a class="btn btn-kh" href="/bhav/{cs}/{ss}/{ds}/kharidar">'
-        f'🧾 {escape(district)} में {escape(hi)} कौन खरीदेगा?</a>'
+        f'🧾 {escape(d_hi)} में {escape(hi)} कौन खरीदेगा?</a>'
         if _has_kharidar(cs, state, district) else "")
 
     body = f"""<section class="answer">
 {answer_photo}
 {_alert_bell(commodity, state, district)}
 <div class="answer-in">
-<h1>आज का {escape(hi)} भाव — {escape(district)} मंडी</h1>
+<h1>आज का {escape(hi)} भाव — {escape(d_hi)} मंडी</h1>
 <p class="answer-sub">📅 {as_of_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट{_age_badge(fresh_iso)}</p>
 <div class="answer-price">
 <div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
@@ -5521,7 +5736,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
-              f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(district)}')
+              f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(d_hi)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 # _BP_CSS + _PRODUCT_CSS are new here: the district page now
                 # carries the paid dealer panel too (the metered product), which
