@@ -297,6 +297,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/sharbati-gehun-mp", "#b45309", "🌾", "गेहूं · मध्य प्रदेश",
+         "शरबती गेहूं (C-306) — बुवाई, सीमित सिंचाई और ऊँचे भाव का हिसाब"),
         (f"{SITE}/articles/gehun-deemak-niyantran", "#b45309", "🐜", "गेहूं · कीट",
          "गेहूं में दीमक का इलाज — कौन सी दवा, कितनी मात्रा"),
         (f"{SITE}/articles/gehun-me-sinchai-kab", "#0369a1", "💧", "गेहूं · सिंचाई",

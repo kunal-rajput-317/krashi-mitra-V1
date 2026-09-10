@@ -253,6 +253,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/apmc-bahar-seedhi-bikri", "#1d4ed8", "🤝", "मंडी · बिक्री",
+         "मंडी के बाहर सीधे बेचना — नियम, फ़ायदे और जोखिम"),
+        (f"{SITE}/articles/mumbai-mandi-payment-suraksha", "#c2410c", "🧾", "मंडी · भुगतान",
+         "मंडी में माल बेचा पर पैसा नहीं मिला — क्या करें"),
         (f"{SITE}/articles/dhan-nami-mandi-rejection", "#0f766e", "⚖️", "मंडी · बिक्री",
          "धान में नमी कितनी होनी चाहिए? 17% का पूरा नियम"),
         (f"{SITE}/bhav/wheat", "#b45309", "💰", "मंडी · आज के भाव",

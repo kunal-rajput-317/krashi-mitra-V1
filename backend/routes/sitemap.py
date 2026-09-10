@@ -85,15 +85,25 @@ CORE = [
     ("terms.html",          "/terms",           0.3, "yearly", (), ()),
     # login.html is deliberately absent — the page is noindex.
     ("articles/index.html", "/articles/",       0.9, "daily",  ("hi", "en", "kn"), ()),
-    # International Hub & Dedicated Country Portals
-    ("international/index.html", "/international", 0.9, "weekly", (), ()),
-    ("international/us.html",    "/us",            0.8, "weekly", (), ()),
-    ("international/uk.html",    "/uk",            0.8, "weekly", (), ()),
-    ("international/np.html",    "/np",            0.8, "weekly", (), ()),
-    ("international/bd.html",    "/bd",            0.8, "weekly", (), ()),
-    ("international/id.html",    "/id",            0.8, "weekly", (), ()),
-    ("international/ng.html",    "/ng",            0.8, "weekly", (), ()),
-    ("international/lk.html",    "/lk",            0.8, "weekly", (), ()),
+    # International country pages — one row per COUNTRIES entry in
+    # tools/build_international.py. A page missing here is a page Google
+    # only finds by luck, so a test asserts the two lists match.
+    ("international/index.html", "/international", 0.7, "weekly", (), ()),
+    ("international/us.html",      "/us",             0.5, "weekly", (), ()),
+    ("international/uk.html",      "/uk",             0.5, "weekly", (), ()),
+    ("international/ae.html",      "/ae",             0.5, "weekly", (), ()),
+    ("international/sa.html",      "/sa",             0.5, "weekly", (), ()),
+    ("international/kw.html",      "/kw",             0.5, "weekly", (), ()),
+    ("international/qa.html",      "/qa",             0.5, "weekly", (), ()),
+    ("international/om.html",      "/om",             0.5, "weekly", (), ()),
+    ("international/np.html",      "/np",             0.5, "weekly", (), ()),
+    ("international/bd.html",      "/bd",             0.5, "weekly", (), ()),
+    ("international/ca.html",      "/ca",             0.5, "weekly", (), ()),
+    ("international/de.html",      "/de",             0.5, "weekly", (), ()),
+    ("international/my.html",      "/my",             0.5, "weekly", (), ()),
+    ("international/id.html",      "/id",             0.5, "weekly", (), ()),
+    ("international/ng.html",      "/ng",             0.5, "weekly", (), ()),
+    ("international/lk.html",      "/lk",             0.5, "weekly", (), ()),
 ]
 
 # Hubs only. The full lists live in /bhav/sitemap.xml, /product/sitemap.xml,

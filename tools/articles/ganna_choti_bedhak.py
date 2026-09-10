@@ -315,6 +315,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/sharadkalin-ganna-buvai", "#15803d", "🎋", "गन्ना · बुवाई",
+         "शरदकालीन गन्ना बुवाई — समय, बीज दर और सहफसल"),
         (f"{SITE}/articles/ganna-rog", "#047857", "🎋", "गन्ना · रोग",
          "गन्ने का लाल सड़न (Red Rot) रोग — पहचान और रोकथाम"),
         (f"{SITE}/articles/ganna-guide-up", "#047857", "🌱", "गन्ना · फसल गाइड",

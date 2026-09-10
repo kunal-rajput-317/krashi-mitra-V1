@@ -302,6 +302,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/mp-rbc-6-4-fasal-muavza", "#dc2626", "🏛️", "योजना · मुआवज़ा",
+         "RBC 6-4 — फसल क्षति पर मुआवज़ा कैसे और कितना मिलता है"),
         (f"{SITE}/articles/pala-tushar-se-fasal-bachav", "#0369a1", "❄️", "मौसम · पाला",
          "पाले से फसल कैसे बचाएँ — सिंचाई, धुआँ और छिड़काव"),
         (f"{SITE}/articles/pmksy-drip-sinchai-subsidy", "#0284c7", "💧", "सरकारी योजना",

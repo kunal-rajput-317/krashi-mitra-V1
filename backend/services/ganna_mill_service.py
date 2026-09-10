@@ -142,6 +142,58 @@ def parse(page: str) -> tuple[list[dict], list[str]]:
     return unique, rejects
 
 
+# ── the address hiding inside the name ──────────────────────────────────────
+# The register has no location columns, but its mill NAME is an address:
+#   "भोगावती सहकारी साखर कारखाना लि. परिते, ता. करवीर, जि.कोल्हापूर 416211"
+#     ↑ mill                        ↑ village ↑ taluka  ↑ district  ↑ PIN
+# The taluka is the unit a cane farmer actually thinks in — his मिल is "the one
+# at करवीर", not "one of Kolhapur's fifty" — so pulling it out is the difference
+# between a district list of 50 names and a page that can say where each is.
+# Parsed at LOAD, not at fetch, so the register already on disk gains these
+# fields with no refetch and no manual step.
+#
+# 222 of 234 names yield a taluka. The other twelve genuinely do not carry one
+# (or run two words together, "कसबाबावडाता.करवीर"), and they get no taluka
+# rather than a guessed one — same rule the district parser above follows.
+#
+# THE TRAP, found by counting: matching a bare "ता" anywhere produced 170
+# "talukas" including fragments like "ंदूळवाडी", because ता occurs inside
+# ordinary words (तात्यासाहेब, तालुका). Both markers must therefore start a
+# token AND be followed by a separator. And `\b` is no help here: Devanagari
+# vowel signs are not word characters to Python's `re`, so "जि\b" does not
+# match "जि." at all. Hence the explicit separator classes.
+_PIN = re.compile(r"(?<!\d)([1-9]\d{2})\s?(\d{3})(?!\d)")
+_JIL = re.compile(r"(?:^|[\s,;(.])जि(?:ल्हा)?\s*[.,\-:]")
+_TAL = re.compile(r"(?:^|[\s,;(.])ता(?:लुका)?\s*[.,\-:]\s*")
+
+
+def split_name(raw: str, district: str = "") -> dict:
+    """{'taluka', 'pin'} pulled out of a register name. Never raises.
+
+    Right to left, because the tail is the reliable end: strip the PIN, cut
+    everything from जि onwards (the district, which the row already told us),
+    and whatever follows ता in what is left is the taluka.
+    """
+    s = " " + (raw or "").strip()
+    pin = ""
+    mp = _PIN.search(s)
+    if mp:
+        pin = mp.group(1) + mp.group(2)
+        s = s[:mp.start()] + " " + s[mp.end():]
+
+    mj = _JIL.search(s)
+    head = s[:mj.start()] if mj else s
+    taluka = ""
+    mt = _TAL.search(head)
+    if mt:
+        taluka = head[mt.end():].strip(" .,-:")
+    if not taluka and mj and _TAL.search(s[:mj.end()]):
+        # "ता.जि.सातारा" — one word doing duty for both, meaning the mill sits
+        # in the taluka of the same name as its district.
+        taluka = district
+    return {"taluka": taluka, "pin": pin}
+
+
 def _mill_slug(name: str, district_slug: str) -> str:
     """A stable, URL-safe id for a Devanagari mill name.
 
@@ -203,9 +255,15 @@ def load() -> dict:
         return {}
     if _mem["mtime"] != mtime:
         try:
-            _mem["data"] = json.loads(_CACHE.read_text(encoding="utf-8"))
+            data = json.loads(_CACHE.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
+        # Derived on read rather than written into the cache: the parse can be
+        # improved by a deploy without a refetch, and a cache written before
+        # split_name() existed is upgraded the first time it is read.
+        for m in data.get("mills", []):
+            m.update(split_name(m.get("name", ""), m.get("district", "")))
+        _mem["data"] = data
         _mem["mtime"] = mtime
     return _mem["data"] or {}
 
@@ -226,3 +284,123 @@ def by_district(state_slug: str) -> dict[str, list[dict]]:
 def meta(state_slug: str) -> dict:
     data = load()
     return data if data.get("state") == state_slug else {}
+
+
+# ── one mill ────────────────────────────────────────────────────────────────
+# What makes a per-mill page worth having, given a register that carries only a
+# name, a capacity and a registration date. The answer is not more fields — it
+# is the COMPARISON, which the register can support and a single row cannot:
+# where this mill ranks among its neighbours, how much of the district's daily
+# crushing it accounts for, how long it has been running, and which mills a
+# farmer could take his cane to instead. All of that is derived from rows we
+# already hold, so it needs no second source and cannot go stale separately.
+
+_SEASON_DAYS = 150      # see season_tonnes()
+
+
+def season_tonnes(tcd: int, days: int = _SEASON_DAYS) -> int:
+    """Rough tonnes a mill crushes in one season, at `days` of crushing.
+
+    Deliberately ONE derivation deep. Capacity × season length is arithmetic on
+    a published number with a stated assumption, which the page shows; going
+    further — dividing by a yield per acre to print "serves N acres" — would
+    multiply two estimates and dress the result as a fact. The season length is
+    the assumption, so it is a parameter and it is printed, not buried.
+    """
+    return int(tcd) * int(days) if tcd else 0
+
+
+def age_years(registered: str, today=None) -> int | None:
+    """Years since registration, or None when the date is missing or unreadable.
+
+    The register writes DD-MM-YYYY. Anything else returns None rather than a
+    guessed year: "स्थापना 1955" is a fact worth printing and a wrong one is a
+    fact worth nothing.
+    """
+    import datetime
+    m = re.fullmatch(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", (registered or "").strip())
+    if not m:
+        return None
+    d, mo, y = (int(x) for x in m.groups())
+    if not (1 <= mo <= 12 and 1 <= d <= 31 and 1800 < y <= 2100):
+        return None
+    today = today or datetime.date.today()
+    years = today.year - y - ((today.month, today.day) < (mo, d))
+    return years if years >= 0 else None
+
+
+def all_mills(state_slug: str) -> list[dict]:
+    data = load()
+    return data.get("mills", []) if data.get("state") == state_slug else []
+
+
+def by_slug(state_slug: str, mill_slug: str) -> dict | None:
+    return next((m for m in all_mills(state_slug) if m["slug"] == mill_slug), None)
+
+
+def indexable(m: dict, district_mills: list[dict]) -> bool:
+    """Whether one mill's page may claim a place in the index.
+
+    The standing judgement on this cluster was that a name, a capacity and a
+    date cannot carry 234 pages. That is right about a page with nothing else
+    on it, so the gate asks for what makes the page comparative rather than
+    descriptive: a capacity to rank, at least one neighbour to rank it against,
+    and one fact of its own beyond the name — where it is, or when it started.
+    A mill that fails still gets a page (it is a real mill, and someone may
+    land on it); it is just not advertised.
+
+    On Maharashtra's register this excludes only five of 234, because that
+    register is close to complete. That is not the gate being useless — it is
+    this source being good. The next state's adapter is where it earns its
+    keep, and the rule was written to be applied per-state for exactly that
+    reason: a register that yields names and nothing else gets no mill pages
+    in the index at all.
+    """
+    return (bool(m.get("tcd"))
+            and len(district_mills) >= 2
+            and bool(m.get("registered") or m.get("taluka")))
+
+
+def profile(state_slug: str, mill_slug: str) -> dict:
+    """Everything one mill page renders, or {} when there is no such mill.
+
+    Ranks are computed here rather than at the call site so the page, the
+    sitemap and any future admin view cannot disagree about which mill is the
+    district's biggest.
+    """
+    mill = by_slug(state_slug, mill_slug)
+    if not mill:
+        return {}
+    state_mills = all_mills(state_slug)
+    d_slug = mill["district_slug"]
+    peers = sorted((m for m in state_mills if m["district_slug"] == d_slug),
+                   key=lambda m: (-m["tcd"], m["name"]))
+    ranked = [m for m in peers if m["tcd"]]
+    state_ranked = sorted((m for m in state_mills if m["tcd"]),
+                          key=lambda m: (-m["tcd"], m["name"]))
+    d_total = sum(m["tcd"] for m in peers)
+
+    tal = (mill.get("taluka") or "").strip()
+    # Same-taluka mills are the ones a farmer could actually choose between —
+    # a mill 150km away in the same district is not an alternative.
+    near = [m for m in peers
+            if m["slug"] != mill["slug"] and (m.get("taluka") or "").strip() == tal] if tal else []
+
+    def _rank(seq):
+        return next((i + 1 for i, m in enumerate(seq) if m["slug"] == mill["slug"]), None)
+
+    return {
+        "mill": mill,
+        "peers": peers,
+        "near": near,
+        "rank_district": _rank(ranked),
+        "of_district": len(ranked),
+        "rank_state": _rank(state_ranked),
+        "of_state": len(state_ranked),
+        "district_tcd": d_total,
+        "share": round(mill["tcd"] / d_total * 100) if d_total and mill["tcd"] else 0,
+        "season_tonnes": season_tonnes(mill["tcd"]),
+        "season_days": _SEASON_DAYS,
+        "age": age_years(mill.get("registered", "")),
+        "indexable": indexable(mill, peers),
+    }

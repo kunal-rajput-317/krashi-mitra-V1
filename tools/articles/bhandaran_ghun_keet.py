@@ -305,6 +305,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/makka-ethanol-maang", "#d97706", "🌽", "मक्का · बाज़ार",
+         "मक्के का भाव और एथेनॉल — नया खरीदार कहाँ से आया"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#b45309", "🌾", "गेहूं · फसल गाइड",
          "गेहूं की उन्नत खेती — किस्में, बुवाई और सिंचाई"),
         (f"{SITE}/articles/enam-online-fasal-bechna", "#0284c7", "🛒", "e-NAM · बिक्री",

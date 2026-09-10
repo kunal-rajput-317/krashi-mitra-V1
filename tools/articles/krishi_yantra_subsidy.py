@@ -302,6 +302,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/kisan-drone-chhidkav", "#2563eb", "🚁", "तकनीक · ड्रोन",
+         "ड्रोन से छिड़काव — खर्च ₹300–700 प्रति एकड़, नियम और सब्सिडी"),
         (f"{SITE}/articles/tarbandi-yojana-subsidy", "#1d4ed8", "🚧", "योजना · अनुदान",
          "तारबंदी योजना — 70% तक अनुदान और आवेदन का तरीका"),
         (f"{SITE}/articles/nilgai-awara-pashu-fasal-bachav", "#15803d", "🦌", "फसल · सुरक्षा",

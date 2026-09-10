@@ -1,0 +1,273 @@
+{
+  "_note": "Per-state page language for /bhav. A Maharashtra farmer searches बाजार भाव, not मंडी भाव, and गहू, not गेहूं. Same script, different word — so the page ranks and then loses the click to a title the searcher does not recognise as his own language. Read live and cached by mtime (services/state_lang.py): fix a wording without a deploy.",
+  "_measured": "GSC 28d to 2026-09-03. Marathi queries: 99 queries, 2,709 impressions, 43 clicks = 1.59% CTR, against 0.57% site-wide — this audience converts ~3x better than average. But that number is carried almost entirely by महाडीबीटी (1,536 impr, 30 clicks), an ARTICLE. The Marathi mandi queries — अकोला सोयाबीन बाजार भाव आजचे, सोयाबीन बाजार भाव जालना, गहू बाजार भाव आजचे सोलापूर, मका बाजार भाव सोलापूर — sit at positions 6-10 and earn ZERO clicks between them. Those pages exist and rank; they just answer in the wrong dialect.",
+  "_why_only_devanagari": "The 2026-08-24 decision rejected expanding into more languages, and its evidence was that 0 of 1,841 queries used any non-Devanagari Indic script. Marathi is Devanagari, so that finding never covered it — which is why this file exists and why the loader REFUSES a language whose script is not Devanagari. Tamil and Kannada are settled: they get articles, not /bhav variants. Do not add them here.",
+  "_no_new_urls": "This changes what an existing page SAYS, never its address. The 23 Aug diagnosis was that the site has too many URLs, not too few — a /mr/ prefix or a ?lang= would multiply 14,000 URLs by two and make the exact problem worse. One URL, worded for the state it is about.",
+  "_grammar_rule": "Templates stack nouns and never inflect. Marathi possessives and locatives are irregular and crop-dependent (गहू → गव्हाचा, not गहूचा; महाराष्ट्र → महाराष्ट्रात, not महाराष्ट्रमध्ये), and a wrong ending reads as illiterate to precisely the reader being courted. Noun-stacking is also what the searchers themselves type — 'अकोला सोयाबीन बाजार भाव आजचे' is a real query, verbatim — so the safe form and the high-demand form are the same form. Keep it that way when editing.",
+  "_placeholders": "{crop} {en} {place} {district} {district_en} {en_d} {state} {state_en} {n} {n_dist} {date} {year} {avg}. Place names: {district} and {place} are ALWAYS the Devanagari spelling, {district_en} and {en_d} always the Latin one ({en_d} is empty when the two are identical, so it is only for a variant that should vanish in that case). An unknown placeholder does not raise — the variant is silently skipped and the next one is tried, so a typo costs one wording, never a page.",
+  "languages": {
+    "mr": {
+      "label": "मराठी",
+      "script": "Devanagari",
+      "html_lang": "mr",
+      "og_locale": "mr_IN",
+      "states": [
+        "Maharashtra"
+      ],
+      "months": [
+        "जानेवारी",
+        "फेब्रुवारी",
+        "मार्च",
+        "एप्रिल",
+        "मे",
+        "जून",
+        "जुलै",
+        "ऑगस्ट",
+        "सप्टेंबर",
+        "ऑक्टोबर",
+        "नोव्हेंबर",
+        "डिसेंबर"
+      ],
+      "_states_note": "Keyed on exactly what the Agmarknet feed sends, the same rule _HI_STATES follows. Goa is Konkani-in-Devanagari and would qualify on script, but it reports too few mandis to learn anything from — leave it out until there is demand to measure.",
+      "titles": {
+        "crop_district": [
+          "{place} {crop} बाजार भाव आजचे — {en} Price {en_d}",
+          "{place} {crop} बाजार भाव आजचे — {en} Price Today",
+          "{place} {crop} बाजार भाव आजचे — {en} Price",
+          "{place} {crop} बाजार भाव आजचे",
+          "{place} {crop} बाजार भाव",
+          "{crop} बाजार भाव — {district_en}"
+        ],
+        "crop_state": [
+          "{state} {crop} बाजार भाव आजचे — {en} Price {state_en}",
+          "{state} {crop} बाजार भाव आजचे — {en} Price",
+          "{state} {crop} बाजार भाव आजचे",
+          "{crop} बाजार भाव — {state}"
+        ],
+        "district_all": [
+          "{district} बाजार भाव आजचे — {district_en} Bajar Bhav {year}",
+          "{district} बाजार भाव आजचे — सर्व पिकांचे ताजे दर {year}",
+          "{district} बाजार भाव आजचे — सर्व पिकांचे ताजे दर",
+          "{district} बाजार भाव आजचे — {state}",
+          "{district} बाजार भाव आजचे"
+        ],
+        "state_all": [
+          "{state} बाजार भाव आजचे — सर्व पिकांचे ताजे दर {year}",
+          "{state} बाजार भाव आजचे — सर्व पिकांचे ताजे दर",
+          "{state} बाजार भाव आजचे"
+        ],
+        "kharidar": [
+          "{place} {crop} खरेदीदार — व्यापारी आणि आजचा भाव",
+          "{place} {crop} खरेदीदार आणि भाव",
+          "{place} {crop} खरेदीदार",
+          "{crop} खरेदीदार — {district_en}"
+        ]
+      },
+      "descs": {
+        "crop_district": [
+          "{date}: {place} {crop} बाजार भाव — {avg}{n} बाजार समित्यांचे दर, कालच्या तुलनेत बदल आणि भावाचा कल.",
+          "{date}: {place} {crop} बाजार भाव — {avg}{n} बाजार समित्यांचे दर आणि भावाचा कल.",
+          "{date}: {district} {crop} बाजार भाव — {avg}भावाचा कल."
+        ],
+        "crop_state": [
+          "{date}: {state} {crop} बाजार भाव — {n_dist} जिल्ह्यांचे दर आणि सर्वाधिक भाव देणाऱ्या बाजार समित्या. रोज अपडेट.",
+          "{date}: {state} {crop} बाजार भाव — {n_dist} जिल्ह्यांचे दर. रोज अपडेट."
+        ],
+        "district_all": [
+          "{date}: {district} ({state}) बाजार समित्यांमधील {n} पिकांचे ताजे दर — पीक निवडून आजचा किमान, कमाल आणि सरासरी भाव पहा. रोज अपडेट (data.gov.in).",
+          "{date}: {district} बाजार समित्यांमधील {n} पिकांचा ताजा बाजार भाव — पीक निवडून आजचा दर पहा. रोज अपडेट (data.gov.in)."
+        ],
+        "state_all": [
+          "{date}: {state} बाजार समित्यांमधील {n} पिकांचा ताजा बाजार भाव — गहू, कांदा, सोयाबीनसह. पीक निवडून आपल्या जिल्ह्याचा दर पहा. रोज अपडेट (data.gov.in).",
+          "{date}: {state} बाजार समित्यांमधील {n} पिकांचा ताजा बाजार भाव — पीक निवडून जिल्ह्याचा दर पहा. रोज अपडेट."
+        ],
+        "kharidar": [
+          "{district} ({state}) येथे {crop} खरेदी करणारे व्यापारी आणि डीलर — नाव, पीक आणि थेट संपर्क. आजचा बाजार भाव सोबतच.",
+          "{district} येथे {crop} खरेदी करणारे व्यापारी आणि डीलर — नाव आणि थेट संपर्क. आजचा बाजार भाव सोबतच."
+        ]
+      },
+      "h1": {
+        "crop_district": "{place} — {crop} बाजार भाव आजचे",
+        "crop_state": "{state} — {crop} बाजार भाव आजचे",
+        "district_all": "{district} बाजार भाव आजचे — पीक निवडा",
+        "state_all": "{state} बाजार भाव आजचे — पीक निवडा",
+        "kharidar": "{district} — {crop} कोण खरेदी करेल?"
+      },
+      "words": {
+        "bhav": "बाजार भाव",
+        "mandi": "बाजार समिती",
+        "mandis": "बाजार समित्या",
+        "crops": "पिके",
+        "districts": "जिल्हे",
+        "states": "राज्ये",
+        "source": "स्रोत",
+        "search_district": "जिल्हा शोधा...",
+        "search_state": "राज्य शोधा... (पुणे, नाशिक)",
+        "see_bhav": "भाव पहा →",
+        "faq_h2": "वारंवार विचारले जाणारे प्रश्न",
+        "_price_note": "Two wordings for one slot. Which one a page uses is a data question the caller answers; how each reads is a language question answered here.",
+        "price_avg": "सरासरी ₹{avg}/क्विंटल (₹{lo} ते ₹{hi})",
+        "price_none": "खाली बाजार समितीनुसार दिलेला"
+      },
+      "wa": {
+        "_note": "WhatsApp चैनल की पोस्ट — the tone and format wordings for services/wa_style. Keys are <tone>.<slot> and label.<slot>; anything absent falls back to that module's Hindi, per string, so a half-written block costs one line and never a post. NOUN-STACKED THROUGHOUT, per _grammar_rule above: no template inflects around a placeholder, because गहू becomes गव्हाचा and महाराष्ट्र becomes महाराष्ट्रात, and a wrong ending reads as illiterate to exactly the farmer this is written for. Where Hindi says '{market} की रिपोर्ट', this says '{market} — सरकारी अहवाल'.",
+        "seedha.src_avg": "सरासरी मॉडेल भाव ₹/क्विंटल · {n} बाजार समित्यांचा सरकारी अहवाल",
+        "seedha.src_one": "मॉडेल भाव ₹/क्विंटल · {market} — सरकारी अहवाल",
+        "seedha.cta": "तुमच्या जिल्ह्याचे संपूर्ण भाव 👇",
+        "bazaari.title": "🌾 *{state} — आजचा बाजार, {date}*",
+        "bazaari.open": "आजची स्थिती —",
+        "bazaari.src_avg": "भाव ₹/क्विंटल · {n} बाजार समित्यांची सरासरी, सरकारी अहवालातून",
+        "bazaari.src_one": "भाव ₹/क्विंटल · {market} बाजार समिती — सरकारी अहवाल",
+        "bazaari.cta": "तुमच्या बाजार समितीचे भाव इथे 👇",
+        "saathi.open": "नमस्कार! आजचे भाव बघून घ्या —",
+        "saathi.src_avg": "ही {n} बाजार समित्यांच्या सरकारी अहवालाची सरासरी आहे, ₹/क्विंटल",
+        "saathi.src_one": "{market} — सरकारी अहवाल, ₹/क्विंटल",
+        "saathi.cta": "तुमच्या जिल्ह्याचे संपूर्ण भाव या लिंकवर 👇",
+        "report.title": "📋 *{state} बाजार अहवाल — {date}*",
+        "report.open": "सरकारी अहवालानुसार आजचे मॉडेल भाव —",
+        "report.src_avg": "{n} बाजार समित्यांची सरासरी · ₹/क्विंटल",
+        "report.src_one": "{market} · ₹/क्विंटल",
+        "report.credit": "स्रोत: Agmarknet (data.gov.in), भारत सरकार",
+        "report.cta": "जिल्हानिहाय संपूर्ण अहवाल 👇",
+        "sankshipt.src_avg": "₹/क्विंटल · {n} बाजार समित्या · Agmarknet (data.gov.in)",
+        "sankshipt.src_one": "₹/क्विंटल · {market} · Agmarknet (data.gov.in)",
+        "sankshipt.cta": "संपूर्ण भाव 👇",
+        "label.up": "📈 वाढले",
+        "label.down": "📉 घटले",
+        "label.flat": "➖ स्थिर",
+        "label.same": "— काल एवढाच",
+        "label.top_market": "सर्वाधिक {market} ₹{hi}",
+        "label.week": "आठवड्यात ₹{lo}–₹{hi}",
+        "label.ask": "❓ आज {state} — {crop} बाजार भाव किती?",
+        "label.ans": "👉 ₹{price} प्रति क्विंटल",
+        "label.also": "इतर पिके —",
+        "label.rest": "इतर भाव —",
+        "label.big_up": "*{crop} ₹{price}* — कालपेक्षा {pct}% वर",
+        "label.big_down": "*{crop} ₹{price}* — कालपेक्षा {pct}% खाली"
+      },
+      "faqs": {
+        "_crop_district_note": "Pair 2 names {lo}/{hi}, which the caller passes ONLY when that district actually reported a min and a max. When it did not, the placeholders go unfilled, faqs() drops that pair whole, and the Marathi page shows two questions instead of three — which is the honest outcome. Never paper over it with a filler sentence: an FAQ answer that answers nothing is still an FAQ answer to Google.",
+        "crop_district": [
+          [
+            "{district} {crop} बाजार भाव आज किती आहे?",
+            "{date} रोजी {district} ({state}) येथील बाजार समित्यांमध्ये {crop} भाव {price} होता. हा भाव {n} बाजार समित्यांच्या सरकारी अहवालावर आधारित आहे."
+          ],
+          [
+            "{district} येथे {crop} किमान आणि कमाल दर किती आहे?",
+            "{date} रोजी {district} येथे {crop} किमान भाव ₹{lo} आणि कमाल भाव ₹{hi} प्रति क्विंटल नोंदवला गेला."
+          ],
+          [
+            "हा भाव कधी आणि कुठून अपडेट होतो?",
+            "भाव रोज सकाळी भारत सरकारच्या data.gov.in (Agmarknet) वरून अपडेट होतात. ज्या बाजार समित्यांचा अहवाल आज आलेला नाही, त्यांचा मागील भाव दाखवला जातो."
+          ]
+        ],
+        "crop_state": [
+          [
+            "{state} {crop} बाजार भाव आज किती आहे?",
+            "{state} येथे {crop} भाव जिल्ह्यानुसार वेगळा आहे. इथली सर्वात नवी सरकारी नोंद {date} रोजीची आहे. नेमका भाव पाहण्यासाठी खाली आपला जिल्हा निवडा."
+          ],
+          [
+            "{state} येथे {crop} सर्वात जास्त भाव कुठे मिळतो?",
+            "जिल्हानिहाय भावासाठी खाली आपला जिल्हा निवडा."
+          ]
+        ],
+        "district_all": [
+          [
+            "{district} येथे आज कोणत्या पिकांचे बाजार भाव आहेत?",
+            "{date} रोजी {district} ({state}) येथील बाजार समित्यांमध्ये {n} पिकांचे भाव सरकारी अहवालात (data.gov.in / Agmarknet) नोंदवले आहेत. खाली आपले पीक निवडून आजचा पूर्ण भाव पहा."
+          ],
+          [
+            "{district} बाजार समितीतील आजचा भाव कसा पहावा?",
+            "खाली आपले पीक निवडा — {district} येथील बाजार समित्यांचा आजचा किमान, कमाल आणि सरासरी भाव प्रति क्विंटल दिसेल, सोबत मागील दिवसांचा कलही."
+          ]
+        ],
+        "state_all": [
+          [
+            "{state} येथे आज कोणत्या पिकांचे बाजार भाव आहेत?",
+            "{date} रोजी {state} येथील {n_dist} जिल्ह्यांतील बाजार समित्यांमध्ये {n} पिकांचे भाव सरकारी अहवालात (data.gov.in / Agmarknet) नोंदवले आहेत. खाली आपले पीक निवडा."
+          ],
+          [
+            "आपल्या जिल्ह्यातील बाजार समितीचे आजचे भाव कसे पहावे?",
+            "खाली 'जिल्हा निवडा' मध्ये आपला जिल्हा निवडा — त्या जिल्ह्यात आज ज्या पिकांचा भाव नोंदवला आहे त्यांची यादी एकत्र उघडेल."
+          ]
+        ]
+      },
+      "_districts_note": "Keyed on the Hindi district name _hindi_district() produces (from naksha_states.json), which is Devanagari but Hindi-spelled. Thirteen of Maharashtra's thirty-five are spelled differently in Marathi and the difference is exactly the kind the searcher types: GSC has 'गहू बाजार भाव आजचे सोलापूर' with the long ऊ, while the page said सोलापुर. The rest are identical in both languages and are omitted, the same rule the crop table follows. Two patterns dominate — the -पुर/-पूर ending, and the retroflex ळ that Hindi does not have (जळगाव, धुळे, यवतमाळ) — plus the nuqta Hindi adds and Marathi does not (गड़चिरोली, नांदेड़, रायगढ़).",
+      "districts": {
+        "कोल्हापुर": "कोल्हापूर",
+        "गड़चिरोली": "गडचिरोली",
+        "चंद्रपुर": "चंद्रपूर",
+        "छत्रपति संभाजीनगर": "छत्रपती संभाजीनगर",
+        "जलगांव": "जळगाव",
+        "धुले": "धुळे",
+        "नांदेड़": "नांदेड",
+        "नागपुर": "नागपूर",
+        "नासिक": "नाशिक",
+        "यवतमाल": "यवतमाळ",
+        "रायगढ़": "रायगड",
+        "सोलापुर": "सोलापूर"
+      },
+      "_crops_note": "Keyed on the HINDI display name, not the English commodity, because _hindi_name() has already folded every Agmarknet spelling variant onto one Hindi string by the time this is called — so one entry here covers 'Wheat', 'Wheat(Desi)' and whatever the feed invents next. A crop absent from this table keeps its Hindi name, which a Marathi reader still understands; a crop translated WRONG does not. Names identical in both languages (गाजर, पालक, मसूर, सोयाबीन) are deliberately omitted — the fallback already returns them unchanged.",
+      "_omitted_on_purpose": "धनिया. Marathi splits what Hindi merges: कोथिंबीर is the leaf, धणे the seed, and _hindi_name() maps BOTH 'Coriander' and 'Coriander(Leaves)' to धनिया. Translating would assert 'leaf' on the seed page. Split it here only if the commodity key is ever split upstream.",
+      "crops": {
+        "गेहूं": "गहू",
+        "प्याज": "कांदा",
+        "हरी प्याज": "हिरवा कांदा",
+        "ज्वार": "ज्वारी",
+        "बाजरा": "बाजरी",
+        "मक्का": "मका",
+        "चावल": "तांदूळ",
+        "धान": "भात",
+        "जौ": "जव",
+        "चना": "हरभरा",
+        "अरहर": "तूर",
+        "मूंग": "मूग",
+        "उड़द": "उडीद",
+        "मूंगफली": "भुईमूग",
+        "सरसों": "मोहरी",
+        "तिल": "तीळ",
+        "कपास": "कापूस",
+        "गन्ना": "ऊस",
+        "चीनी": "साखर",
+        "हल्दी": "हळद",
+        "आलू": "बटाटा",
+        "शकरकंद": "रताळे",
+        "टमाटर": "टोमॅटो",
+        "भिंडी": "भेंडी",
+        "बैंगन": "वांगी",
+        "पत्तागोभी": "कोबी",
+        "फूलगोभी": "फुलकोबी",
+        "मूली": "मुळा",
+        "मटर": "वाटाणा",
+        "हरी मटर": "हिरवा वाटाणा",
+        "लौकी": "दुधी भोपळा",
+        "कद्दू": "भोपळा",
+        "करेला": "कारले",
+        "तोरई": "दोडका",
+        "खीरा": "काकडी",
+        "मिर्च": "मिरची",
+        "हरी मिर्च": "हिरवी मिरची",
+        "लाल मिर्च": "लाल मिरची",
+        "सूखी मिर्च": "सुकी मिरची",
+        "शिमला मिर्च": "ढोबळी मिरची",
+        "लहसुन": "लसूण",
+        "अदरक": "आले",
+        "सहजन": "शेवगा",
+        "पुदीना": "पुदिना",
+        "केला": "केळी",
+        "आम": "आंबा",
+        "अंगूर": "द्राक्षे",
+        "अनार": "डाळिंब",
+        "संतरा": "संत्रा",
+        "मौसंबी": "मोसंबी",
+        "नींबू": "लिंबू",
+        "सेब": "सफरचंद",
+        "अमरूद": "पेरू",
+        "पपीता": "पपई",
+        "तरबूज": "कलिंगड",
+        "नारियल": "नारळ",
+        "जीरा": "जिरे"
+      }
+    }
+  }
+}

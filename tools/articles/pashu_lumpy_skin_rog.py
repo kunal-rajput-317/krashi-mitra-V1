@@ -300,6 +300,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pashu-khurpaka-muhpaka-fmd", "#b91c1c", "🐄", "पशुपालन · रोग",
+         "खुरपका-मुँहपका रोग — टीका, लक्षण और बचाव"),
         (f"{SITE}/articles/bakri-palan-guide", "#9f1239", "🐐", "बकरी · पालन",
          "बकरी पालन — नस्ल, टीकाकरण और कमाई की पूरी गाइड"),
         (f"{SITE}/articles/murgi-palan-backyard", "#c2410c", "🐓", "मुर्गी · पालन",

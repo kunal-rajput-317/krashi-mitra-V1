@@ -343,6 +343,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/drakhsh-downy-mildew", "#7e22ce", "🍇", "अंगूर · रोग",
+         "अंगूर में डाउनी मिल्ड्यू — पहचान, दवा और छिड़काव का सही समय"),
         (f"{SITE}/articles/anaar-maharastra", "#c62828", "🍎", "अनार · खेती",
          "अनार की खेती महाराष्ट्र — किस्में, लागत और मुनाफ़ा"),
         (f"{SITE}/articles/nagpuri-santra-falgal", "#e65100", "🍊", "संत्रा · फळगळ",

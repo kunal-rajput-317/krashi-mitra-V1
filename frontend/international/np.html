@@ -1,631 +1,315 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ne">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KrashiMitra Nepal (कृषि मित्र) – Smart Farming Platform for Nepal</title>
-  <meta name="description" content="KrashiMitra Nepal (कृषि मित्र नेपाल) is the smart farming platform for Nepal. बाली सल्लाह, कालीमाटी तरकारी बजार भाउ, रोग पहिचान र पहाडी मौसम अलर्ट। Instant crop advice, mountain weather forecasts, and Kalimati market prices in Nepali (नेपाली) &amp; English.">
-  <meta name="keywords" content="KrashiMitra Nepal, कृषि मित्र नेपाल, Krishi Mitra Nepal, krashimitra np, nepal krishi app, nepal smart farming, nepal crop disease detection, kalimati mandi bhav, kalimati vegetable price, कालीमाटी बजार दर, nepali farming platform, terai crop advisory, cardamom farming nepal, nepali agriculture platform">
-  <meta name="author" content="KrashiMitra">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-  <link rel="canonical" href="https://krashimitra.in/np">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="/analytics.js"></script>
+<title>नेपालबाट भारतको मण्डी भाउ, नक्सा र किसान योजना</title>
+<meta name="description" content="नेपालमा बसेर भारतको आजको मण्डी भाउ, जिल्लाको नक्सा र सरकारी किसान योजना हेर्नुहोस्। ६५०+ मण्डीको डेटा, दैनिक अपडेट, नि:शुल्क।">
+<link rel="canonical" href="https://krashimitra.in/np">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
+<meta property="og:title" content="नेपालबाट भारतको मण्डी भाउ, नक्सा र किसान योजना">
+<meta property="og:description" content="नेपालमा बसेर भारतको आजको मण्डी भाउ, जिल्लाको नक्सा र सरकारी किसान योजना हेर्नुहोस्। ६५०+ मण्डीको डेटा, दैनिक अपडेट, नि:शुल्क।">
+<meta property="og:url" content="https://krashimitra.in/np">
+<meta property="og:locale" content="ne">
+<meta property="og:image" content="https://krashimitra.in/images/og-banner.webp">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/assets/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/km-shell.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Devanagari:wght@700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "@id": "https://krashimitra.in/np#page", "url": "https://krashimitra.in/np", "name": "नेपालबाट भारतको मण्डी भाउ, नक्सा र किसान योजना", "description": "नेपालमा बसेर भारतको आजको मण्डी भाउ, जिल्लाको नक्सा र सरकारी किसान योजना हेर्नुहोस्। ६५०+ मण्डीको डेटा, दैनिक अपडेट, नि:शुल्क।", "inLanguage": "ne", "isPartOf": {"@type": "WebSite", "name": "KrashiMitra", "url": "https://krashimitra.in"}, "about": {"@type": "Thing", "name": "Indian agricultural market prices"}, "publisher": {"@type": "Organization", "name": "KrashiMitra", "url": "https://krashimitra.in", "logo": "https://krashimitra.in/assets/krashimitra_logo.png"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "KrashiMitra", "item": "https://krashimitra.in"}, {"@type": "ListItem", "position": 2, "name": "International", "item": "https://krashimitra.in/international"}, {"@type": "ListItem", "position": 3, "name": "Nepal", "item": "https://krashimitra.in/np"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "के नेपालबाट भारतको मण्डी भाउ हेर्न सकिन्छ?", "acceptedAnswer": {"@type": "Answer", "text": "सकिन्छ। KrashiMitra जुनसुकै देशबाट खुल्छ र लगइन माग्दैन। भाउ भारत सरकारको Agmarknet फिडबाट आउँछ र हरेक दिन आफैं अपडेट हुन्छ।"}}, {"@type": "Question", "name": "भाउ कुन एकाइमा हुन्छ?", "acceptedAnswer": {"@type": "Answer", "text": "सबै भाउ ₹ प्रति क्विन्टलमा छन्। १ क्विन्टल = १०० किलो = करिब २२०.५ पाउन्ड। अर्थात् ₹२,४०० प्रति क्विन्टल भनेको ₹२४ प्रति किलो हो।"}}, {"@type": "Question", "name": "भाउ कहिले अपडेट हुन्छ?", "acceptedAnswer": {"@type": "Answer", "text": "मण्डीहरू भारतीय समय (IST) मा कारोबार गर्छन् र दिनको भाउ दिउँसोदेखि साँझको बीचमा आउँछ। माथिको घडीमा भारतको अहिलेको समय देखिन्छ, ताकि घर फोन गर्ने ठीक बेला थाहा होस्।"}}, {"@type": "Question", "name": "के यसले नेपालको खेतीका लागि सल्लाह दिन्छ?", "acceptedAnswer": {"@type": "Answer", "text": "दिँदैन। यहाँको सबै डेटा भारतको हो — भारतीय मण्डी, भारतीय जिल्ला र भारत सरकारका योजना। नेपालको माटो, मौसम वा बालीका लागि त्यहीँको स्थानीय कृषि सेवासँग सल्लाह लिनुहोस्।"}}, {"@type": "Question", "name": "के यसको कुनै शुल्क छ?", "acceptedAnswer": {"@type": "Answer", "text": "छैन। मण्डी भाउ, नक्सा, योजनाको जानकारी र खेतीका गाइड — सबै नि:शुल्क छन्।"}}]}</script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:var(--km-cream,#f5f7f4);color:var(--km-text-dark,#1a2e23);
+  font-family:var(--km-font-body,'DM Sans','Noto Sans Devanagari',sans-serif);
+  -webkit-font-smoothing:antialiased}
+.iw{max-width:1100px;margin:0 auto;padding:0 18px}
+.ihero{background:linear-gradient(160deg,#1a3c2e 0%,#2d6a4f 60%,#35795a 100%);
+  color:#fff;padding:38px 0 34px;margin-top:0}
+.ihero h1{font-family:var(--km-font-serif,'Noto Serif Devanagari',serif);
+  font-size:27px;line-height:1.28;margin:0 0 12px;font-weight:800}
+.ihero p{margin:0;font-size:15.5px;line-height:1.68;color:#dbeee2;max-width:62ch}
+.ibadge{display:inline-block;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);
+  color:#d8f3dc;font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;margin-bottom:14px}
+.istats{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.istat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;padding:10px 14px;min-width:96px}
+.istat b{display:block;font-size:19px;font-weight:800;color:#fff}
+.istat span{font-size:11.5px;color:#c6e3d2}
+.iclock{background:#fff;border:1px solid var(--km-border,#e5e9e6);border-radius:14px;
+  padding:14px 16px;margin:-22px 0 0;position:relative;box-shadow:0 6px 22px rgba(26,60,46,.09);
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.iclock .ct{flex:1 1 130px;min-width:130px}
+.iclock .cl{font-size:11.5px;color:var(--km-text-soft,#7c8983);font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px}
+.iclock .cv{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--km-green-dark,#1a3c2e)}
+.iclock .cn{flex:2 1 240px;font-size:12.5px;color:var(--km-text-mid,#4a5a52);line-height:1.55}
+section.isec{padding:34px 0 6px}
+.ih2{font-family:var(--km-font-serif,serif);font-size:20px;font-weight:800;margin:0 0 4px}
+.isub{font-size:13.5px;color:var(--km-text-mid,#4a5a52);margin:0 0 16px;line-height:1.6}
+.igrid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:620px){.igrid{grid-template-columns:1fr 1fr}
+  .ihero h1{font-size:34px}.iw{padding:0 24px}}
+@media(min-width:900px){.igrid.three{grid-template-columns:1fr 1fr 1fr}}
+.icard{display:block;background:#fff;border:1px solid var(--km-border,#e5e9e6);
+  border-radius:14px;padding:16px 17px;text-decoration:none;color:inherit;
+  transition:border-color .16s,transform .16s,box-shadow .16s}
+.icard:hover{border-color:var(--km-green-light,#52b788);transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(26,60,46,.08)}
+.icard b{display:block;font-size:16px;font-weight:700;color:var(--km-green-dark,#1a3c2e);
+  margin-bottom:4px}
+.icard span{font-size:13px;color:var(--km-text-mid,#4a5a52);line-height:1.55}
+.ichips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.ichip{background:#fff;border:1px solid var(--km-border,#e5e9e6);border-radius:999px;
+  padding:8px 14px;font-size:13.5px;font-weight:600;text-decoration:none;
+  color:var(--km-green-dark,#1a3c2e)}
+.ichip:hover{border-color:var(--km-green-light,#52b788);background:var(--km-green-pale,#d8f3dc)}
+.inote{background:#fff;border:1px solid var(--km-border,#e5e9e6);border-left:4px solid var(--km-amber,#e9a825);
+  border-radius:12px;padding:15px 17px;font-size:14px;line-height:1.7;color:var(--km-text-mid,#4a5a52)}
+.inote b{color:var(--km-text-dark,#1a2e23)}
+.ifaq{background:#fff;border:1px solid var(--km-border,#e5e9e6);border-radius:12px;
+  padding:15px 17px;margin-bottom:10px}
+.ifaq h3{margin:0 0 6px;font-size:15px;font-weight:700;color:var(--km-green-dark,#1a3c2e)}
+.ifaq p{margin:0;font-size:14px;line-height:1.7;color:var(--km-text-mid,#4a5a52)}
+.iflags{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.iflag{background:#fff;border:1px solid var(--km-border,#e5e9e6);border-radius:10px;
+  padding:8px 12px;font-size:13.5px;text-decoration:none;color:var(--km-text-dark,#1a2e23);font-weight:600}
+.iflag:hover{border-color:var(--km-green-light,#52b788)}
+.iend{margin:34px 0 44px;padding:22px 18px;background:var(--km-green-dark,#1a3c2e);
+  border-radius:16px;color:#fff;text-align:center}
+.iend h2{font-family:var(--km-font-serif,serif);font-size:20px;margin:0 0 8px}
+.iend p{margin:0 0 16px;font-size:14px;color:#c6e3d2;line-height:1.6}
+.ibtn{display:inline-block;background:var(--km-amber,#e9a825);color:#1a2e1e;font-weight:800;
+  text-decoration:none;padding:12px 26px;border-radius:999px;font-size:15px}
 
-  <!-- Alternate & Hreflang for Multi-Language SEO -->
-  <link rel="alternate" hreflang="ne" href="https://krashimitra.in/np">
-  <link rel="alternate" hreflang="ne-NP" href="https://krashimitra.in/np">
-  <link rel="alternate" hreflang="en-NP" href="https://krashimitra.in/np">
-  <link rel="alternate" hreflang="en-US" href="https://krashimitra.in/us">
-  <link rel="alternate" hreflang="en-GB" href="https://krashimitra.in/uk">
-  <link rel="alternate" hreflang="bn-BD" href="https://krashimitra.in/bd">
-  <link rel="alternate" hreflang="id-ID" href="https://krashimitra.in/id">
-  <link rel="alternate" hreflang="en-NG" href="https://krashimitra.in/ng">
-  <link rel="alternate" hreflang="si-LK" href="https://krashimitra.in/lk">
-  <link rel="alternate" hreflang="x-default" href="https://krashimitra.in/international">
-
-  <!-- Open Graph / Facebook / WhatsApp -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="KrashiMitra Nepal (कृषि मित्र)">
-  <meta property="og:title" content="KrashiMitra Nepal (कृषि मित्र) – Smart Farming Platform">
-  <meta property="og:description" content="Free digital agricultural companion for Nepal. Crop disease diagnosis, Himalayan weather alerts and Kalimati market prices in Nepali (नेपाली) &amp; English.">
-  <meta property="og:url" content="https://krashimitra.in/np">
-  <meta property="og:image" content="https://krashimitra.in/assets/krashimitra_logo.png">
-  <meta property="og:image:alt" content="KrashiMitra Nepal Logo">
-  <meta property="og:locale" content="ne_NP">
-  <meta property="og:locale:alternate" content="en_US">
-
-  <!-- Twitter Cards -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="KrashiMitra Nepal (कृषि मित्र) – Smart Farming Platform">
-  <meta name="twitter:description" content="Free smart farming assistant for Nepal. Crop protection, mountain weather intelligence, and Kalimati rates in Nepali &amp; English.">
-  <meta name="twitter:image" content="https://krashimitra.in/assets/krashimitra_logo.png">
-
-  <!-- Geo Meta Tags for Nepal Search Targeting -->
-  <meta name="geo.region" content="NP">
-  <meta name="geo.placename" content="Kathmandu, Nepal">
-  <meta name="geo.position" content="27.7172;85.3240">
-  <meta name="ICBM" content="27.7172, 85.3240">
-
-  <link rel="icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- JSON-LD Structured Data for Rich Search Results -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebApplication",
-        "@id": "https://krashimitra.in/np#webapp",
-        "name": "KrashiMitra Nepal",
-        "alternateName": ["कृषि मित्र नेपाल", "Krishi Mitra Nepal", "KrashiMitra NP"],
-        "url": "https://krashimitra.in/np",
-        "applicationCategory": "AgriculturalApplication",
-        "operatingSystem": "All (Web, Android, iOS)",
-        "inLanguage": ["ne", "en"],
-        "description": "Nepal's free smart farming platform providing real-time crop disease detection, localized Himalayan and Terai weather forecasts, and Kalimati market prices in Nepali.",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "NPR"
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "KrashiMitra",
-          "url": "https://krashimitra.in",
-          "logo": "https://krashimitra.in/assets/krashimitra_logo.png"
-        }
-      },
-      {
-        "@type": "BreadcrumbList",
-        "@id": "https://krashimitra.in/np#breadcrumbs",
-        "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "KrashiMitra Home",
-            "item": "https://krashimitra.in"
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Nepal (नेपाल)",
-            "item": "https://krashimitra.in/np"
-          }
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "@id": "https://krashimitra.in/np#faq",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "Is KrashiMitra available in Nepali language?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes, KrashiMitra provides full support for the Nepali language (देवनागरी लिपि). Farmers can ask crop questions, check disease diagnoses, and read weather alerts in Nepali."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Is KrashiMitra free for Nepali farmers?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes, KrashiMitra is 100% free for all farmers across Nepal's 77 districts with no hidden fees or subscriptions."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Which Nepali crops are supported by KrashiMitra?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "KrashiMitra supports all major Nepali crops including rice (धान), wheat (गहुँ), maize (मकै), millet (कोदो), large cardamom (अलैँची), ginger (अदुवा), tea (चिया), and high-altitude vegetables across Terai, Hill, and Mountain zones."
-            }
-          }
-        ]
-      }
-    ]
-  }
-  </script>
-
-  <style>
-    :root {
-      --p:#C0392B; --p-dark:#922B21; --p-mid:#E74C3C; --p-light:#F1948A; --p-pale:#FDEDEC;
-      --acc:#2471A3; --acc-pale:#D6EAF8;
-      --cream:#FDF6F6; --white:#FFFFFF;
-      --td:#2C0A0A; --tm:#7B241C; --ts:#A93226; --bdr:#FADBD8;
-      --sh1:0 1px 4px rgba(192,57,43,.07); --sh2:0 6px 24px rgba(192,57,43,.12);
-      --r1:10px; --r2:16px; --r3:24px;
-      --serif:'Playfair Display',serif;
-      --body:'DM Sans','Noto Sans Devanagari',sans-serif;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-    body{font-family:var(--body);background:var(--cream);color:var(--td);overflow-x:hidden;line-height:1.6}
-
-    /* HEADER */
-    header{position:sticky;top:0;z-index:200;background:var(--white);border-bottom:1px solid var(--bdr);box-shadow:var(--sh1)}
-    .hdr{max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:10px}
-    .logo{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
-    .logo img{width:36px;height:36px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px var(--p-pale)}
-    .logo-name{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--p-dark);line-height:1}
-    .logo-tag{font-size:10px;color:var(--ts);font-weight:600;margin-top:1px}
-    .hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-    .country-pill{background:var(--p-pale);color:var(--p-dark);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
-
-    /* LANGUAGE TOGGLE */
-    .lang-toggle{display:flex;align-items:center;background:var(--p-pale);border-radius:24px;padding:3px;gap:2px;border:1px solid var(--bdr)}
-    .lang-btn{padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--tm);border-radius:20px;transition:all .15s;font-family:var(--body);letter-spacing:.3px;white-space:nowrap}
-    .lang-btn.active{background:var(--p);color:white;box-shadow:0 1px 4px rgba(0,0,0,.15)}
-    .lang-btn:hover:not(.active){background:rgba(0,0,0,.06)}
-
-    .hdr-cta{background:var(--p);color:white;padding:8px 18px;border-radius:30px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .15s}
-    .hdr-cta:hover{background:var(--p-dark)}
-
-    /* HERO */
-    .hero{background:linear-gradient(150deg,var(--p-dark) 0%,var(--p) 45%,var(--acc) 100%);padding:64px 20px 80px;text-align:center;position:relative;overflow:hidden}
-    .hero::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:48px;background:var(--cream);border-radius:48px 48px 0 0}
-    .hero-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
-    .hero-label{display:inline-block;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.88);font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:30px;margin-bottom:18px}
-    .hero h1{font-family:var(--serif);font-size:clamp(1.75rem,6vw,3rem);font-weight:800;color:white;line-height:1.2;margin-bottom:14px}
-    .hero-sub{font-size:clamp(15px,2.5vw,17px);color:rgba(255,255,255,.82);margin-bottom:28px}
-    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn-solid{background:white;color:var(--p-dark);padding:13px 26px;border-radius:40px;font-size:14px;font-weight:800;text-decoration:none;transition:box-shadow .2s,transform .2s;box-shadow:0 4px 16px rgba(0,0,0,.12)}
-    .btn-solid:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.18)}
-    .btn-ghost{background:transparent;color:white;padding:13px 26px;border:1.5px solid rgba(255,255,255,.4);border-radius:40px;font-size:14px;font-weight:700;text-decoration:none;transition:border-color .15s}
-    .btn-ghost:hover{border-color:white}
-    .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:44px;padding-top:28px;border-top:1px solid rgba(255,255,255,.15)}
-    .hstat{text-align:center;padding:0 8px}
-    .hstat+.hstat{border-left:1px solid rgba(255,255,255,.15)}
-    .hstat-n{font-size:22px;font-weight:800;color:white;line-height:1}
-    .hstat-l{font-size:11px;color:rgba(255,255,255,.65);font-weight:600;margin-top:4px}
-
-    /* SECTIONS */
-    .sec{padding:60px 20px}
-    .sec-inner{max-width:1100px;margin:0 auto}
-    .sec-tag{display:inline-block;background:var(--p-pale);color:var(--p-dark);font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:12px}
-    .sec-h{font-family:var(--serif);font-size:clamp(1.5rem,3.5vw,2.2rem);font-weight:700;color:var(--td);margin-bottom:12px;line-height:1.25}
-    .sec-p{font-size:16px;color:var(--tm);line-height:1.75;max-width:580px}
-
-    /* ABOUT */
-    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-    .about-cards{display:flex;flex-direction:column;gap:12px}
-    .visual-card{border-radius:var(--r2);overflow:hidden;border:1px solid var(--bdr);box-shadow:var(--sh2);background:white;margin-bottom:6px}
-    .about-img{width:100%;height:190px;object-fit:cover;display:block;transition:transform .3s ease}
-    .visual-card:hover .about-img{transform:scale(1.02)}
-    .img-caption{padding:7px 12px;font-size:11px;color:var(--ts);background:var(--cream);border-top:1px solid var(--bdr);font-weight:600}
-    .acard{background:white;border:1px solid var(--bdr);border-radius:var(--r2);padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:box-shadow .2s}
-    .acard:hover{box-shadow:var(--sh2)}
-    .acard-icon{width:40px;height:40px;border-radius:var(--r1);background:var(--p-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .acard-icon svg{width:18px;height:18px;stroke:var(--p-dark);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .acard-t{font-size:14px;font-weight:700;color:var(--td);margin-bottom:2px}
-    .acard-d{font-size:13px;color:var(--ts);line-height:1.55}
-    .about-points{display:flex;flex-direction:column;gap:18px;margin-top:24px}
-    .apoint{display:flex;gap:14px;align-items:flex-start}
-    .apoint-dot{width:36px;height:36px;border-radius:50%;background:var(--p-pale);flex-shrink:0;display:flex;align-items:center;justify-content:center}
-    .apoint-dot svg{width:16px;height:16px;stroke:var(--p-dark);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .apoint-t{font-size:15px;font-weight:700;color:var(--td);margin-bottom:3px}
-    .apoint-d{font-size:13.5px;color:var(--tm);line-height:1.6}
-
-    /* SERVICES */
-    .sec-white{background:white}
-    .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
-    .scard{background:var(--cream);border:1px solid var(--bdr);border-radius:var(--r2);padding:22px 20px;transition:all .2s;position:relative;overflow:hidden}
-    .scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--p),var(--acc));transform:scaleX(0);transform-origin:left;transition:transform .3s}
-    .scard:hover::before{transform:scaleX(1)}
-    .scard:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
-    .scard-ico{width:38px;height:38px;border-radius:10px;background:var(--p-pale);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
-    .scard-ico svg{width:18px;height:18px;stroke:var(--p-dark);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .scard-t{font-size:15px;font-weight:700;color:var(--td);margin-bottom:6px}
-    .scard-d{font-size:13px;color:var(--tm);line-height:1.6}
-    .badge{display:inline-block;margin-top:12px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
-    .badge-live{background:#D1FAE5;color:#065F46}
-    .badge-soon{background:#EBF5FB;color:#1A5276}
-
-    /* FIELD & CROP GALLERY */
-    .gallery-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:36px}
-    .gallery-item{background:white;border-radius:var(--r2);overflow:hidden;border:1px solid var(--bdr);box-shadow:var(--sh1);transition:all .2s}
-    .gallery-item:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
-    .gallery-thumb{width:100%;height:150px;object-fit:cover;display:block}
-    .gallery-meta{padding:10px 12px}
-    .gallery-tag{font-size:9.5px;font-weight:800;color:var(--ts);text-transform:uppercase;letter-spacing:.6px}
-    .gallery-title{font-size:13px;font-weight:700;color:var(--td);margin-top:2px}
-
-    /* WHY */
-    .sec-dark{background:linear-gradient(135deg,var(--p-dark) 0%,var(--p) 50%,var(--acc) 100%)}
-    .sec-dark .sec-tag{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9)}
-    .sec-dark .sec-h{color:white}
-    .sec-dark .sec-p{color:rgba(255,255,255,.72)}
-    .why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:36px}
-    .wcard{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:var(--r2);padding:24px 18px;text-align:center;transition:background .2s,transform .2s}
-    .wcard:hover{background:rgba(255,255,255,.15);transform:translateY(-2px)}
-    .wcard-ico{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
-    .wcard-ico svg{width:20px;height:20px;stroke:rgba(255,255,255,.9);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .wcard-t{font-size:14px;font-weight:700;color:white;margin-bottom:6px}
-    .wcard-d{font-size:12.5px;color:rgba(255,255,255,.68);line-height:1.6}
-
-    /* QUOTE */
-    .sec-acc{background:var(--acc-pale)}
-    .quote-box{background:white;border-radius:var(--r3);padding:40px;max-width:720px;margin:0 auto;box-shadow:var(--sh2);text-align:center}
-    .qmark{font-family:var(--serif);font-size:52px;color:var(--p-light);line-height:.6;display:block;margin-bottom:18px}
-    .qtext{font-family:var(--serif);font-size:clamp(1rem,2.4vw,1.3rem);color:var(--td);line-height:1.7;margin-bottom:18px}
-    .qauth{font-size:13px;font-weight:700;color:var(--p)}
-
-    /* CTA */
-    .cta-banner{background:linear-gradient(135deg,var(--p) 0%,var(--p-dark) 50%,var(--acc) 100%);padding:60px 20px;text-align:center}
-    .cta-banner h2{font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.4rem);color:white;margin-bottom:10px}
-    .cta-banner p{font-size:16px;color:rgba(255,255,255,.8);margin-bottom:28px}
-
-    /* FOOTER */
-    footer{background:var(--p-dark);color:rgba(255,255,255,.65);padding:28px 20px}
-    .ftr{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;font-size:13px}
-    .ftr-brand{font-family:var(--serif);font-size:15px;font-weight:700;color:white}
-    .ftr-links{display:flex;gap:18px;flex-wrap:wrap}
-    .ftr-links a{color:rgba(255,255,255,.65);text-decoration:none;font-weight:600;transition:color .15s}
-    .ftr-links a:hover{color:white}
-    .ftr-note{width:100%;font-size:11.5px;color:rgba(255,255,255,.38);border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:6px}
-
-    /* RESPONSIVE */
-    @media(max-width:900px){.svc-grid{grid-template-columns:repeat(2,1fr)}.why-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:680px){
-      .hdr{padding:10px 14px;gap:6px}
-      .logo-tag,.country-pill{display:none}
-      .sec{padding:44px 16px}
-      .hero{padding:48px 16px 68px}
-      .about-grid{grid-template-columns:1fr;gap:28px}
-      .svc-grid{grid-template-columns:1fr}
-      .why-grid{grid-template-columns:1fr 1fr}
-      .hero-stats{grid-template-columns:repeat(2,1fr);row-gap:16px}
-      .hstat+.hstat{border-left:none}
-      .hstat:nth-child(odd){border-right:1px solid rgba(255,255,255,.15)}
-      .hero-btns{flex-direction:column;align-items:center}
-      .btn-solid,.btn-ghost{width:100%;max-width:280px;text-align:center}
-      .quote-box{padding:28px 18px}
-      .cta-banner{padding:44px 16px}
-      .lang-btn{padding:5px 9px;font-size:10px}
-      .hdr-cta{padding:7px 14px;font-size:12px}
-    }
-  </style>
+.ilang{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 16px}
+.ilang-l{font-size:11px;font-weight:700;color:#a7cbb8;text-transform:uppercase;letter-spacing:.5px}
+.ilang-b{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.24);color:#eaf6ee;
+  font-family:inherit;font-size:13px;font-weight:700;padding:6px 14px;border-radius:999px;
+  cursor:pointer;line-height:1.4}
+.ilang-b:hover{background:rgba(255,255,255,.2)}
+.ilang-b.active{background:#fff;color:#1a3c2e;border-color:#fff}
+[dir=rtl] .inote{border-left:none;border-right:4px solid var(--km-amber,#e9a825)}
+[dir=rtl] .iclock .cn{text-align:right}
+</style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <div class="hdr">
-    <a href="https://krashimitra.in" class="logo">
-      <img src="https://krashimitra.in/assets/krashimitra_logo.png" alt="KrashiMitra">
-      <div>
-        <div class="logo-name">KrashiMitra</div>
-        <div class="logo-tag" data-en="Farming Assistant" data-np="कृषि सहायक">Farming Assistant</div>
-      </div>
-    </a>
-    <div class="hdr-right">
-      <a href="/international" class="country-pill" style="text-decoration:none;" title="View all international country hubs">🌐 All Countries · Nepal</a>
-      <div class="lang-toggle" role="group" aria-label="Language">
-        <button class="lang-btn active" data-lang="en" onclick="setLang('en', true)">EN</button>
-        <button class="lang-btn" data-lang="np" onclick="setLang('np', true)">नेपाली</button>
-      </div>
-      <a href="https://krashimitra.in/chat" class="hdr-cta" data-en="Get Advice" data-np="सल्लाह लिनुहोस्">Get Advice</a>
+<div class="header-wrapper" id="header-wrapper">
+<div class="pre-topbar">
+  <a href="mailto:krashimitra038@gmail.com" class="pre-topbar-helpline"
+     data-i18n="email_line">कृषिमित्र इमेल: krashimitra038@gmail.com</a>
+</div>
+<div class="top-utility-bar"><div class="top-utility-inner">
+  <div class="top-utility-left"><a class="top-utility-link" href="/" data-i18n="l:/">गृहपृष्ठ</a><span class="top-utility-divider">|</span><a class="top-utility-link" href="/naksha" data-i18n="l:/naksha">भारतका जिल्लाको नक्सा</a><span class="top-utility-divider">|</span><a class="top-utility-link" href="/articles/" data-i18n="l:/articles/">खेतीका सबै जानकारी</a><span class="top-utility-divider">|</span><a class="top-utility-link" href="/sarkari_yojana" data-i18n="l:/sarkari_yojana">सरकारी किसान योजना</a></div>
+  <div class="top-utility-right">
+    <a href="/international" class="top-utility-link">🌍 International</a>
+  </div>
+</div></div>
+<header class="main-header"><div class="main-header-inner">
+  <button class="hamburger-btn" onclick="document.getElementById('km-drawer').classList.add('open')" aria-label="Menu">☰</button>
+  <div class="header-left-group">
+    <a class="header-logo-link" href="/">
+      <img src="/assets/krashimitra_logo.png" alt="कृषि मित्र" class="header-logo-circle" width="38" height="38">
+      <span class="header-logo-text">कृषि मित्र</span></a>
+  </div>
+  <nav class="header-nav"><a class="header-nav-link" href="/bhav" data-i18n="l:/bhav">आजको मण्डी भाउ</a><a class="header-nav-link" href="/naksha" data-i18n="l:/naksha">भारतका जिल्लाको नक्सा</a><a class="header-nav-link" href="/sarkari_yojana" data-i18n="l:/sarkari_yojana">सरकारी किसान योजना</a><a class="header-nav-link" href="/articles/" data-i18n="l:/articles/">खेतीका सबै जानकारी</a></nav>
+  <div class="header-right-group">
+    <a href="/login" class="header-avatar-btn" id="header-avatar-btn">👤</a>
+  </div>
+</div></header>
+<div class="commodity-navbar"><div class="cnav-inner"><a class="cnav-item" href="/bhav" data-i18n="l:/bhav">आजको मण्डी भाउ</a><a class="cnav-item" href="/naksha" data-i18n="l:/naksha">भारतका जिल्लाको नक्सा</a><a class="cnav-item" href="/sarkari_yojana" data-i18n="l:/sarkari_yojana">सरकारी किसान योजना</a><a class="cnav-item" href="/articles/" data-i18n="l:/articles/">खेतीका सबै जानकारी</a><a class="cnav-item" href="/krashi_news" data-i18n="l:/krashi_news">कृषि समाचार</a></div></div>
+</div><!-- /.header-wrapper -->
+<div class="sidebar-drawer-overlay" id="km-drawer" onclick="this.classList.remove('open')">
+  <div class="sidebar-drawer" onclick="event.stopPropagation()">
+    <div class="sidebar-drawer-header"><span class="sidebar-drawer-title">मेनु</span>
+      <button class="sidebar-drawer-close" onclick="document.getElementById('km-drawer').classList.remove('open')" aria-label="Close menu">✕</button></div>
+    <div class="sidebar-drawer-links"></div>
+  </div>
+</div>
+<div class="topbar-spacer" id="topbar-spacer"></div>
+
+<div id="km-i18n-root" dir="ltr">
+<header class="ihero">
+  <div class="iw">
+    <div class="ilang" id="km-lang-pick"><span class="ilang-l" data-i18n="lang_label">भाषा</span><button type="button" class="ilang-b active" data-lang="ne">नेपाली</button><button type="button" class="ilang-b" data-lang="en">English</button><button type="button" class="ilang-b" data-lang="hi">हिन्दी</button></div>
+    <span class="ibadge">🇳🇵 Nepal</span>
+    <h1 data-i18n="h1">नेपालबाट — भारतको मण्डी, नक्सा र योजना</h1>
+    <p data-i18n="hero_sub">घर भारतमा छ, तपाईं यहाँ हुनुहुन्छ। बेच्नुअघि आजको भाउ हेर्नुहोस्, जिल्लाको नक्सा खोल्नुहोस्, र कुन सरकारी योजना चलिरहेको छ थाहा पाउनुहोस्।</p>
+    <div class="istats">
+      <div class="istat"><b>650+</b><span data-i18n="stat_mandis">मण्डी — दैनिक</span></div>
+      <div class="istat"><b>20+</b><span data-i18n="stat_states">राज्य</span></div>
+      <div class="istat"><b>150+</b><span data-i18n="stat_crops">बाली</span></div>
+      <div class="istat"><b>₹0</b><span data-i18n="stat_free">नि:शुल्क</span></div>
     </div>
   </div>
 </header>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-inner">
-    <span class="hero-label" data-en="Now Available in Nepal" data-np="नेपालमा अहिले उपलब्ध">Now Available in Nepal</span>
-    <h1 data-en="Smart Farming Companion for Nepal's Farmers" data-np="नेपालका किसानका लागि स्मार्ट कृषि सहायक">Smart Farming Companion for Nepal's Farmers</h1>
-    <p class="hero-sub" data-en="Crop advice, mountain weather alerts and market prices — all free" data-np="बाली सल्लाह, पहाडी मौसम अलर्ट र बजार मूल्य — सबै निःशुल्क">Crop advice, mountain weather alerts and market prices — all free</p>
-    <div class="hero-btns">
-      <a href="https://krashimitra.in/chat" class="btn-solid" data-en="Get Started Free" data-np="सुरु गर्नुहोस् — निःशुल्क">Get Started Free</a>
-      <a href="https://krashimitra.in" class="btn-ghost" data-en="Explore KrashiMitra" data-np="KrashiMitra हेर्नुहोस्">Explore KrashiMitra</a>
-    </div>
-    <div class="hero-stats">
-      <div class="hstat"><div class="hstat-n">5M+</div><div class="hstat-l" data-en="Nepali Farmers" data-np="नेपाली किसान">Nepali Farmers</div></div>
-      <div class="hstat"><div class="hstat-n">24/7</div><div class="hstat-l" data-en="Always Available" data-np="सधैं उपलब्ध">Always Available</div></div>
-      <div class="hstat"><div class="hstat-n" data-en="Free" data-np="निःशुल्क">Free</div><div class="hstat-l" data-en="Always" data-np="सधैंका लागि">Always</div></div>
-      <div class="hstat"><div class="hstat-n">77</div><div class="hstat-l" data-en="Districts" data-np="जिल्लाहरू">Districts</div></div>
-    </div>
+<div class="iw">
+  <div class="iclock" id="km-clock">
+    <div class="ct"><div class="cl" data-i18n="clock_in">भारतमा अहिले</div><div class="cv" id="km-ist">--:--</div></div>
+    <div class="ct"><div class="cl" data-i18n="clock_here">तपाईंको समय</div><div class="cv" id="km-here">--:--</div></div>
+    <div class="cn" data-i18n="clock_note">मण्डी भारतीय समयमा चल्छन् र दिनको भाउ दिउँसोपछि आउँछ — घर फोन गर्नुअघि यो हेर्नुहोस्।</div>
   </div>
-</section>
+</div>
 
-<!-- ABOUT -->
-<section class="sec">
-  <div class="sec-inner">
-    <div class="about-grid">
-      <div>
-        <span class="sec-tag" data-en="Who We Are" data-np="हाम्रो बारेमा">Who We Are</span>
-        <h2 class="sec-h" data-en="What is KrashiMitra?" data-np="KrashiMitra के हो?">What is KrashiMitra?</h2>
-        <p class="sec-p" data-en="KrashiMitra — &quot;Farmer's Friend&quot; — is a free digital farming platform. Originally built for India's Hindi-speaking farmers, Nepal shares the same Devanagari script, making it immediately accessible to every Nepali farmer with zero language barrier." data-np="KrashiMitra — &quot;किसानको साथी&quot; — नि:शुल्क डिजिटल कृषि प्लेटफर्म हो। भारतका हिन्दीभाषी किसानका लागि बनाइएको, नेपालले उही देवनागरी लिपि प्रयोग गर्दछ — जसले हर नेपाली किसानलाई कुनै भाषा अवरोध बिना तुरुन्त उपलब्ध छ।">KrashiMitra — "Farmer's Friend" — is a free digital farming platform. Originally built for India's Hindi-speaking farmers, Nepal shares the same Devanagari script, making it immediately accessible to every Nepali farmer with zero language barrier.</p>
-        <div class="about-points">
-          <div class="apoint">
-            <div class="apoint-dot"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
-            <div>
-              <div class="apoint-t" data-en="Crop Advisory in Nepali" data-np="नेपालीमा बाली सल्लाह">Crop Advisory in Nepali</div>
-              <div class="apoint-d" data-en="Ask about rice blight, potato disease or cardamom cultivation — expert answers in Nepali instantly." data-np="चामल झुलसा, आलु रोग वा अलैँची खेतीबारे सोध्नुहोस् — नेपालीमा तुरुन्त विशेषज्ञ जवाफ।">Ask about rice blight, potato disease or cardamom cultivation — expert answers in Nepali instantly.</div>
-            </div>
-          </div>
-          <div class="apoint">
-            <div class="apoint-dot"><svg viewBox="0 0 24 24"><path d="M3 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM3 21v-6"/></svg></div>
-            <div>
-              <div class="apoint-t" data-en="Mountain-Aware Weather" data-np="पहाडी मौसम जानकारी">Mountain-Aware Weather</div>
-              <div class="apoint-d" data-en="Zone-wise forecasts for Terai, Hills and the High Himalayas — each with different agricultural windows." data-np="तराई, पहाड र उच्च हिमाल क्षेत्रको मौसम पूर्वानुमान — हरेकको फरक कृषि मौसम।">Zone-wise forecasts for Terai, Hills and the High Himalayas — each with different agricultural windows.</div>
-            </div>
-          </div>
-          <div class="apoint">
-            <div class="apoint-dot"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
-            <div>
-              <div class="apoint-t" data-en="Live Market Prices" data-np="लाइभ बजार मूल्य">Live Market Prices</div>
-              <div class="apoint-d" data-en="Crop prices from Asan, Kalimati and local haats — know when to sell for maximum profit." data-np="आसन, कालीमाटी र स्थानीय हाटबाट बाली मूल्य — अधिकतम नाफाका लागि कहिले बेच्ने जानौं।">Crop prices from Asan, Kalimati and local haats — know when to sell for maximum profit.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="about-cards">
-        <div class="visual-card">
-          <img src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1280&q=80" alt="Terraced Agriculture in Nepal" loading="lazy" class="about-img">
-          <div class="img-caption" data-en="Terraced farming landscape in Nepal" data-np="नेपालको सिँढीदार कृषि दृश्य">Terraced farming landscape in Nepal</div>
-        </div>
-        <div class="acard">
-          <div class="acard-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-          <div>
-            <div class="acard-t" data-en="Rice, Wheat, Cardamom &amp; More" data-np="चामल, गहुँ, अलैँची र थप">Rice, Wheat, Cardamom &amp; More</div>
-            <div class="acard-d" data-en="Nepal's crops fully supported across all ecological zones" data-np="नेपालका सबै पारिस्थितिक क्षेत्रका बाली समर्थित">Nepal's crops fully supported across all ecological zones</div>
-          </div>
-        </div>
-        <div class="acard">
-          <div class="acard-icon"><svg viewBox="0 0 24 24"><path d="M3 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM3 21v-6"/></svg></div>
-          <div>
-            <div class="acard-t" data-en="Terai to Himalaya" data-np="तराई देखि हिमाल">Terai to Himalaya</div>
-            <div class="acard-d" data-en="All three ecological zones — Terai, Hills and High Mountain" data-np="तीनवटै क्षेत्र — तराई, पहाड र उच्च हिमाल">All three ecological zones — Terai, Hills and High Mountain</div>
-          </div>
-        </div>
-        <div class="acard">
-          <div class="acard-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-          <div>
-            <div class="acard-t" data-en="Nepali Language Support" data-np="नेपाली भाषा समर्थन">Nepali Language Support</div>
-            <div class="acard-d" data-en="Same Devanagari script — works in Nepali with no changes" data-np="उही देवनागरी लिपि — कुनै भाषा अवरोध छैन, तुरुन्त काम गर्छ">Same Devanagari script — works in Nepali with no changes</div>
-          </div>
-        </div>
-        <div class="acard">
-          <div class="acard-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-          <div>
-            <div class="acard-t" data-en="Zero Cost, Forever" data-np="शून्य लागत, सधैंका लागि">Zero Cost, Forever</div>
-            <div class="acard-d" data-en="No subscription, no hidden charges — completely free" data-np="कुनै शुल्क छैन, कुनै सदस्यता छैन — बिल्कुल निःशुल्क">No subscription, no hidden charges — completely free</div>
-          </div>
-        </div>
-      </div>
+<main class="iw">
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_top_h">विदेशबाट सबैभन्दा बढी खोलिने तीन कुरा</h2>
+    <p class="isub" data-i18n="s_top_sub">भाउ, जिल्लाको नक्सा र योजनाको सूची।</p>
+    <div class="igrid three"><a class="icard" href="/bhav"><b data-i18n="l:/bhav">आजको मण्डी भाउ</b><span data-i18n="s:/bhav">आज का मंडी भाव</span></a><a class="icard" href="/naksha"><b data-i18n="l:/naksha">भारतका जिल्लाको नक्सा</b><span data-i18n="s:/naksha">भारत के जिलों का नक्शा</span></a><a class="icard" href="/sarkari_yojana"><b data-i18n="l:/sarkari_yojana">सरकारी किसान योजना</b><span data-i18n="s:/sarkari_yojana">सरकारी किसान योजनाएँ</span></a></div>
+  </section>
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_price_h">आजको भाउ — बाली छान्नुहोस्</h2>
+    <p class="isub" data-i18n="s_price_sub">भाउ भारत सरकारको Agmarknet फिडबाट आउँछ। हरेक दिन आफैं अपडेट।</p>
+    <div class="ichips"><a class="ichip" href="/bhav/wheat" data-i18n="l:/bhav/wheat">गहुँको भाउ</a><a class="ichip" href="/bhav/paddy-common" data-i18n="l:/bhav/paddy-common">धानको भाउ</a><a class="ichip" href="/bhav/mustard" data-i18n="l:/bhav/mustard">तोरीको भाउ</a><a class="ichip" href="/bhav/potato" data-i18n="l:/bhav/potato">आलुको भाउ</a><a class="ichip" href="/bhav/onion" data-i18n="l:/bhav/onion">प्याजको भाउ</a><a class="ichip" href="/bhav/cotton" data-i18n="l:/bhav/cotton">कपासको भाउ</a><a class="ichip" href="/bhav/maize" data-i18n="l:/bhav/maize">मकैको भाउ</a><a class="ichip" href="/bhav/sugarcane" data-i18n="l:/bhav/sugarcane">उखुको भाउ</a></div>
+  </section>
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_unit_h">₹ प्रति क्विन्टलको अर्थ</h2>
+    <p class="isub" data-i18n="s_unit_sub">नेपालबाट भारतको भाउ पढ्ने तरिका।</p>
+    <div class="inote">
+      <span data-i18n="unit_note">भारतमा भाउ <b>₹ प्रति क्विन्टल</b>मा लेखिन्छ। <b>१ क्विन्टल = १०० किलो = करिब २२०.५ पाउन्ड</b>। त्यसैले ₹२,४०० प्रति क्विन्टल भनेको ₹२४ प्रति किलो हो।</span>
+      <br><span style="opacity:.75" data-i18n="unit_note2">Nepali Rupee (NPR)मा बदल्न आफ्नो बैंकको दर प्रयोग गर्नुहोस् — हामी विनिमय दर छाप्दैनौं, किनभने पुरानो दर गलत अंक हुनेछ।</span>
     </div>
+  </section>
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_seen_h">नेपालबाट सबैभन्दा बढी हेरिएका पृष्ठ</h2>
+    <p class="isub" data-i18n="s_seen_sub">नेपालबाट आउनेहरूले वास्तवमा यही पढ्छन्।</p>
+    <div class="inote" data-i18n="note">नेपालबाट मेन्था तेल, मकै र प्याजको भाउ अनि युरियाको जानकारी सबैभन्दा बढी हेरिन्छ।</div>
+    <div style="height:12px"></div>
+    <div class="igrid"><a class="icard" href="/bhav/mentha-oil"><b data-i18n="l:/bhav/mentha-oil">मेन्था तेलको भाउ</b><span data-i18n="s:/bhav/mentha-oil">मेंथा ऑयल भाव</span></a><a class="icard" href="/bhav/maize"><b data-i18n="l:/bhav/maize">मकैको भाउ</b><span data-i18n="s:/bhav/maize">मक्का का भाव</span></a><a class="icard" href="/bhav/onion"><b data-i18n="l:/bhav/onion">प्याजको भाउ</b><span data-i18n="s:/bhav/onion">प्याज का भाव</span></a><a class="icard" href="/articles/urea-guide-up"><b data-i18n="l:/articles/urea-guide-up">युरिया मलको पूरा गाइड</b><span data-i18n="s:/articles/urea-guide-up">यूरिया खाद की पूरी गाइड</span></a></div>
+  </section>
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_maps_h">जिल्लाको नक्सा</h2>
+    <p class="isub" data-i18n="s_maps_sub">भारतको हरेक जिल्ला, डाउनलोड गर्न मिल्ने नक्सासहित — विदेशबाट फारम भर्दा काम लाग्छ।</p>
+    <div class="ichips"><a class="ichip" href="/naksha" data-i18n="l:/naksha">भारतका जिल्लाको नक्सा</a><a class="ichip" href="/naksha/uttar-pradesh/jile" data-i18n="l:/naksha/uttar-pradesh/jile">उत्तर प्रदेशका जिल्ला</a><a class="ichip" href="/naksha/rajasthan/jile" data-i18n="l:/naksha/rajasthan/jile">राजस्थानका जिल्ला</a><a class="ichip" href="/naksha/west-bengal/jile" data-i18n="l:/naksha/west-bengal/jile">पश्चिम बंगालका जिल्ला</a><a class="ichip" href="/naksha/punjab" data-i18n="l:/naksha/punjab">पञ्जाबको नक्सा</a></div>
+  </section>
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_read_h">पढ्नका लागि</h2>
+    <p class="isub" data-i18n="s_read_sub">भारतीय किसानले सबैभन्दा बढी पढ्ने गाइड।</p>
+    <div class="igrid"><a class="icard" href="/articles/urea-guide-up"><b data-i18n="l:/articles/urea-guide-up">युरिया मलको पूरा गाइड</b><span data-i18n="s:/articles/urea-guide-up">यूरिया खाद की पूरी गाइड</span></a><a class="icard" href="/articles/ganna-rog"><b data-i18n="l:/articles/ganna-rog">उखुका रोग र उपचार</b><span data-i18n="s:/articles/ganna-rog">गन्ने के रोग और इलाज</span></a><a class="icard" href="/articles/land-price-up"><b data-i18n="l:/articles/land-price-up">UP मा जग्गाको भाउ</b><span data-i18n="s:/articles/land-price-up">UP में ज़मीन के दाम</span></a><a class="icard" href="/articles/dap-guide-up"><b data-i18n="l:/articles/dap-guide-up">DAP मलको गाइड</b><span data-i18n="s:/articles/dap-guide-up">DAP खाद गाइड</span></a></div>
+  </section>
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_faq_h">सामान्य प्रश्न · FAQ</h2>
+    <div class="ifaq"><h3 data-i18n="fq0">के नेपालबाट भारतको मण्डी भाउ हेर्न सकिन्छ?</h3><p data-i18n="fa0">सकिन्छ। KrashiMitra जुनसुकै देशबाट खुल्छ र लगइन माग्दैन। भाउ भारत सरकारको Agmarknet फिडबाट आउँछ र हरेक दिन आफैं अपडेट हुन्छ।</p></div><div class="ifaq"><h3 data-i18n="fq1">भाउ कुन एकाइमा हुन्छ?</h3><p data-i18n="fa1">सबै भाउ ₹ प्रति क्विन्टलमा छन्। १ क्विन्टल = १०० किलो = करिब २२०.५ पाउन्ड। अर्थात् ₹२,४०० प्रति क्विन्टल भनेको ₹२४ प्रति किलो हो।</p></div><div class="ifaq"><h3 data-i18n="fq2">भाउ कहिले अपडेट हुन्छ?</h3><p data-i18n="fa2">मण्डीहरू भारतीय समय (IST) मा कारोबार गर्छन् र दिनको भाउ दिउँसोदेखि साँझको बीचमा आउँछ। माथिको घडीमा भारतको अहिलेको समय देखिन्छ, ताकि घर फोन गर्ने ठीक बेला थाहा होस्।</p></div><div class="ifaq"><h3 data-i18n="fq3">के यसले नेपालको खेतीका लागि सल्लाह दिन्छ?</h3><p data-i18n="fa3">दिँदैन। यहाँको सबै डेटा भारतको हो — भारतीय मण्डी, भारतीय जिल्ला र भारत सरकारका योजना। नेपालको माटो, मौसम वा बालीका लागि त्यहीँको स्थानीय कृषि सेवासँग सल्लाह लिनुहोस्।</p></div><div class="ifaq"><h3 data-i18n="fq4">के यसको कुनै शुल्क छ?</h3><p data-i18n="fa4">छैन। मण्डी भाउ, नक्सा, योजनाको जानकारी र खेतीका गाइड — सबै नि:शुल्क छन्।</p></div>
+  </section>
+
+  <section class="isec">
+    <h2 class="ih2" data-i18n="s_other_h">अन्य देश</h2>
+    <p class="isub" data-i18n="s_other_sub">तपाईं जहाँ हुनुहुन्छ त्यो देश छान्नुहोस्।</p>
+    <div class="iflags"><a class="iflag" href="/international">🌍 <span data-i18n="all_countries">सबै देश</span></a><a class="iflag" href="/us">🇺🇸 United States</a><a class="iflag" href="/uk">🇬🇧 United Kingdom</a><a class="iflag" href="/ae">🇦🇪 United Arab Emirates</a><a class="iflag" href="/sa">🇸🇦 Saudi Arabia</a><a class="iflag" href="/kw">🇰🇼 Kuwait</a><a class="iflag" href="/qa">🇶🇦 Qatar</a><a class="iflag" href="/om">🇴🇲 Oman</a><a class="iflag" href="/bd">🇧🇩 Bangladesh</a><a class="iflag" href="/ca">🇨🇦 Canada</a><a class="iflag" href="/de">🇩🇪 Germany</a><a class="iflag" href="/my">🇲🇾 Malaysia</a><a class="iflag" href="/id">🇮🇩 Indonesia</a><a class="iflag" href="/ng">🇳🇬 Nigeria</a><a class="iflag" href="/lk">🇱🇰 Sri Lanka</a></div>
+  </section>
+
+  <div class="iend">
+    <h2 data-i18n="cta_h">घरको मण्डी, यहीँबाट</h2>
+    <p data-i18n="cta_p">कुनै लगइन छैन, कुनै शुल्क छैन। भाउ हरेक दिन आफैं अपडेट हुन्छ।</p>
+    <a class="ibtn" href="/bhav" data-i18n="cta_btn">आजको भाउ हेर्नुहोस्</a>
   </div>
-</section>
 
-<!-- SERVICES -->
-<section class="sec sec-white">
-  <div class="sec-inner">
-    <span class="sec-tag" data-en="Our Services" data-np="हाम्रा सेवाहरू">Our Services</span>
-    <h2 class="sec-h" data-en="What We Offer Nepali Farmers" data-np="नेपाली किसानका लागि हाम्रा सेवाहरू">What We Offer Nepali Farmers</h2>
-    <p class="sec-p" data-en="From the Terai plains to the high hills — everything your farm needs, in Nepali, for free." data-np="तराईको मैदानदेखि उच्च पहाडसम्म — तपाईंको खेतलाई चाहिने सबै, नेपालीमा, निःशुल्क।">From the Terai plains to the high hills — everything your farm needs, in Nepali, for free.</p>
-    <div class="svc-grid">
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
-        <div class="scard-t" data-en="Crop Advisory" data-np="बाली सल्लाह">Crop Advisory</div>
-        <div class="scard-d" data-en="Expert advice for rice, wheat, maize, millet, cardamom, ginger and tea — pests, diseases, fertilizers and harvest timing in Nepali." data-np="चामल, गहुँ, मकै, कोदो, अलैँची, अदुवा र चियाका लागि विशेषज्ञ सल्लाह — कीरा, रोग, मल र फसल समय नेपालीमा।">Expert advice for rice, wheat, maize, millet, cardamom, ginger and tea — pests, diseases, fertilizers and harvest timing in Nepali.</div>
-        <span class="badge badge-live" data-en="Live Now" data-np="उपलब्ध">Live Now</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><path d="M3 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM3 21v-6"/></svg></div>
-        <div class="scard-t" data-en="Weather Intelligence" data-np="मौसम जानकारी">Weather Intelligence</div>
-        <div class="scard-d" data-en="District-wise forecasts for all 77 districts. Monsoon timing alerts critical for Nepal's rain-fed agriculture." data-np="सबै ७७ जिल्लाको मौसम पूर्वानुमान। नेपालको वर्षामा आश्रित कृषिका लागि मनसुन समय अलर्ट।">District-wise forecasts for all 77 districts. Monsoon timing alerts critical for Nepal's rain-fed agriculture.</div>
-        <span class="badge badge-live" data-en="Live Now" data-np="उपलब्ध">Live Now</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
-        <div class="scard-t" data-en="Market Price Tracker" data-np="बजार मूल्य ट्र्याकर">Market Price Tracker</div>
-        <div class="scard-d" data-en="Live prices from Kalimati, Asan market, Pokhara and border mandis. Know the best time to sell." data-np="कालीमाटी, आसन बजार, पोखरा र सीमाना मण्डीबाट लाइभ मूल्य। सबैभन्दा राम्रो समयमा बेच्नुहोस्।">Live prices from Kalimati, Asan market, Pokhara and border mandis. Know the best time to sell.</div>
-        <span class="badge badge-soon" data-en="Coming Soon" data-np="आउँदैछ">Coming Soon</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
-        <div class="scard-t" data-en="Disease Detection" data-np="रोग पहिचान">Disease Detection</div>
-        <div class="scard-d" data-en="Upload a photo of your crop. Identifies late blight, blast disease, cardamom fungus and more with treatment advice." data-np="आफ्नो बालीको फोटो अपलोड गर्नुहोस्। ढिलो झुलसा, ब्लास्ट रोग, अलैँची ढुसी पहिचान गरी उपचार सल्लाह।">Upload a photo of your crop. Identifies late blight, blast disease, cardamom fungus and more with treatment advice.</div>
-        <span class="badge badge-live" data-en="Live Now" data-np="उपलब्ध">Live Now</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div>
-        <div class="scard-t" data-en="Fertilizer &amp; Soil Guide" data-np="मल र माटो गाइड">Fertilizer &amp; Soil Guide</div>
-        <div class="scard-d" data-en="Recommendations for Terai alluvial soils, mid-hill red soils and high-altitude alpine soils of Nepal." data-np="तराईको जलोढ माटो, मध्यपहाड र उच्च पर्वतीय माटोका लागि मल सिफारिस।">Recommendations for Terai alluvial soils, mid-hill red soils and high-altitude alpine soils of Nepal.</div>
-        <span class="badge badge-live" data-en="Live Now" data-np="उपलब्ध">Live Now</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <div class="scard-t" data-en="Government Schemes" data-np="सरकारी योजनाहरू">Government Schemes</div>
-        <div class="scard-d" data-en="Agricultural Development Bank Nepal loans, PM Krishi Modernization Project and MoALD subsidies simplified." data-np="कृषि विकास बैंक नेपाल ऋण, PM कृषि आधुनिकीकरण परियोजना र MoALD अनुदान सरल भाषामा।">Agricultural Development Bank Nepal loans, PM Krishi Modernization Project and MoALD subsidies simplified.</div>
-        <span class="badge badge-soon" data-en="Coming Soon" data-np="आउँदैछ">Coming Soon</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <div class="scard-t" data-en="Hill Farming Guide" data-np="पहाडी खेती गाइड">Hill Farming Guide</div>
-        <div class="scard-d" data-en="Terraced farming, cardamom, ginger, tea and high-altitude vegetable guides specific to Nepal's unique topography." data-np="सोपान खेती, अलैँची, अदुवा, चिया र उच्च पर्वतीय तरकारी गाइड — नेपालको अनौठो भूगोलका लागि।">Terraced farming, cardamom, ginger, tea and high-altitude vegetable guides specific to Nepal's unique topography.</div>
-        <span class="badge badge-soon" data-en="Coming Soon" data-np="आउँदैछ">Coming Soon</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
-        <div class="scard-t" data-en="Livestock Advisory" data-np="पशुपालन सल्लाह">Livestock Advisory</div>
-        <div class="scard-d" data-en="Yak, goat and cattle farming guidance for Nepal's mountain and hill regions with cold climate considerations." data-np="नेपालको पर्वत र पहाड क्षेत्रमा याक, बाख्रा र गाई पालन — चिसो मौसम विशेष विचार सहित।">Yak, goat and cattle farming guidance for Nepal's mountain and hill regions with cold climate considerations.</div>
-        <span class="badge badge-soon" data-en="Coming Soon" data-np="आउँदैछ">Coming Soon</span>
-      </div>
-      <div class="scard">
-        <div class="scard-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-        <div class="scard-t" data-en="Seasonal Crop Calendar" data-np="मौसमी बाली क्यालेन्डर">Seasonal Crop Calendar</div>
-        <div class="scard-d" data-en="Planting and harvesting calendars calibrated for Nepal's distinct Terai, Hill and Mountain zone growing seasons." data-np="नेपालको तराई, पहाड र पर्वत क्षेत्रका लागि बाली रोप्ने र काट्ने क्यालेन्डर।">Planting and harvesting calendars calibrated for Nepal's distinct Terai, Hill and Mountain zone growing seasons.</div>
-        <span class="badge badge-soon" data-en="Coming Soon" data-np="आउँदैछ">Coming Soon</span>
-      </div>
-    </div>
+</main>
+</div><!-- /#km-i18n-root -->
 
-    <!-- GALLERY OF NEPALI CROPS & MOUNTAINS -->
-    <div style="margin-top: 48px;">
-      <span class="sec-tag" data-en="Nepali Crops &amp; Landscapes" data-np="नेपाली बाली तथा कृषि दृश्य">Nepali Crops &amp; Landscapes</span>
-      <h3 style="font-family: var(--serif); font-size: 20px; font-weight: 700; color: var(--td); margin-top: 4px;" data-en="Supported Crops &amp; Ecological Belts" data-np="समर्थित बाली तथा पारिस्थितिक क्षेत्रहरू">Supported Crops &amp; Ecological Belts</h3>
-      <div class="gallery-strip">
-        <div class="gallery-item">
-          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=640&q=80" alt="Terraced Hills of Nepal" loading="lazy" class="gallery-thumb">
-          <div class="gallery-meta">
-            <span class="gallery-tag" data-en="Hill Zone" data-np="पहाडी क्षेत्र">Hill Zone</span>
-            <div class="gallery-title" data-en="Terraced Mountain Farming" data-np="पहाडी सिँढीदार खेती">Terraced Mountain Farming</div>
-          </div>
-        </div>
-        <div class="gallery-item">
-          <img src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=640&q=80" alt="Paddy Cultivation Nepal" loading="lazy" class="gallery-thumb">
-          <div class="gallery-meta">
-            <span class="gallery-tag" data-en="Paddy Crop" data-np="धान बाली">Paddy Crop</span>
-            <div class="gallery-title" data-en="Terai &amp; Valley Rice Fields" data-np="तराई र उपत्यकाको धानखेती">Terai &amp; Valley Rice Fields</div>
-          </div>
-        </div>
-        <div class="gallery-item">
-          <img src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=640&q=80" alt="Wheat and Grains Nepal" loading="lazy" class="gallery-thumb">
-          <div class="gallery-meta">
-            <span class="gallery-tag" data-en="Grain" data-np="अन्न बाली">Grain</span>
-            <div class="gallery-title" data-en="Wheat, Millet &amp; Maize" data-np="गहुँ, कोदो तथा मकै">Wheat, Millet &amp; Maize</div>
-          </div>
-        </div>
-        <div class="gallery-item">
-          <img src="https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?auto=format&fit=crop&w=640&q=80" alt="Tea & Cardamom Nepal" loading="lazy" class="gallery-thumb">
-          <div class="gallery-meta">
-            <span class="gallery-tag" data-en="Cash Crop" data-np="नगदे बाली">Cash Crop</span>
-            <div class="gallery-title" data-en="Cardamom, Ginger &amp; Tea" data-np="अलैँची, अदुवा तथा चिया">Cardamom, Ginger &amp; Tea</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- WHY -->
-<section class="sec sec-dark">
-  <div class="sec-inner">
-    <span class="sec-tag" data-en="Why KrashiMitra" data-np="किन KrashiMitra">Why KrashiMitra</span>
-    <h2 class="sec-h" data-en="Built Understanding Nepal's Diverse Agriculture" data-np="नेपालको विविध कृषि बुझेर बनाइएको">Built Understanding Nepal's Diverse Agriculture</h2>
-    <p class="sec-p" data-en="We understand the unique challenges of Nepal's three ecological zones — from flat Terai rice to Himalayan cardamom." data-np="हामी नेपालका तीन पारिस्थितिक क्षेत्रका विशेष चुनौतीहरू बुझ्छौं — तराईको धानदेखि हिमाली अलैँचीसम्म।">We understand the unique challenges of Nepal's three ecological zones — from flat Terai rice to Himalayan cardamom.</p>
-    <div class="why-grid">
-      <div class="wcard">
-        <div class="wcard-ico"><svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>
-        <div class="wcard-t" data-en="Mountain to Terai" data-np="हिमाल देखि तराई">Mountain to Terai</div>
-        <div class="wcard-d" data-en="Advice adapted for Nepal's altitude-based farming — from Terai plains to high hills at 4,000m." data-np="नेपालको उचाइ-आधारित खेतीका लागि — तराईका मैदानदेखि ४,०००मि उचाइसम्म।">Advice adapted for Nepal's altitude-based farming — from Terai plains to high hills at 4,000m.</div>
-      </div>
-      <div class="wcard">
-        <div class="wcard-ico"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
-        <div class="wcard-t" data-en="Works Anywhere" data-np="जहाँ पनि काम गर्छ">Works Anywhere</div>
-        <div class="wcard-d" data-en="Designed for remote areas with limited connectivity. Works on basic phones with slow internet." data-np="सीमित इन्टरनेट भएका दुर्गम क्षेत्रका लागि। सस्तो फोनमा ढिलो इन्टरनेटमा पनि काम गर्छ।">Designed for remote areas with limited connectivity. Works on basic phones with slow internet.</div>
-      </div>
-      <div class="wcard">
-        <div class="wcard-ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-        <div class="wcard-t" data-en="Nepali Language" data-np="नेपाली भाषा">Nepali Language</div>
-        <div class="wcard-d" data-en="Same Devanagari script as Hindi — works in Nepal with zero language barrier, immediately." data-np="हिन्दी जस्तै उही देवनागरी लिपि — नेपालमा कुनै भाषा बाधा बिना, तुरुन्त।">Same Devanagari script as Hindi — works in Nepal with zero language barrier, immediately.</div>
-      </div>
-      <div class="wcard">
-        <div class="wcard-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-        <div class="wcard-t" data-en="Always Free" data-np="सधैं निःशुल्क">Always Free</div>
-        <div class="wcard-d" data-en="No subscription, no hidden charges. Built for every Nepali farmer, everywhere." data-np="कुनै शुल्क छैन, कुनै सदस्यता छैन। हर नेपाली किसानका लागि, जहाँ भए पनि।">No subscription, no hidden charges. Built for every Nepali farmer, everywhere.</div>
-      </div>
-    </div>
-  </div>
-</section>
+<footer class="km-footer"><div class="km-footer-inner">
+  <div class="km-footer-brand">🌾 कृषि मित्र</div>
+  <nav class="km-footer-nav"><a class="" href="/" data-i18n="l:/">गृहपृष्ठ</a><a class="" href="/bhav" data-i18n="l:/bhav">आजको मण्डी भाउ</a><a class="" href="/naksha" data-i18n="l:/naksha">भारतका जिल्लाको नक्सा</a><a class="" href="/sarkari_yojana" data-i18n="l:/sarkari_yojana">सरकारी किसान योजना</a>
+    <a href="/international">🌍 International</a><a class="" href="/about" data-i18n="l:/about">हाम्रो बारेमा</a><a class="" href="/privacy-policy" data-i18n="l:/privacy-policy">गोपनीयता</a>
+  </nav>
+  <div class="km-footer-note" data-i18n="footer_note">© 2026 KrashiMitra.in — भारतीय किसानका लागि बनाइएको। मण्डी भाउ भारत सरकारको Agmarknet (data.gov.in) फिडबाट, हरेक दिन आफैं अपडेट।</div>
+</div></footer>
 
-<!-- QUOTE -->
-<section class="sec sec-acc">
-  <div class="sec-inner">
-    <div class="quote-box">
-      <span class="qmark">"</span>
-      <p class="qtext" data-en="Nepal's farmers cultivate the most challenging landscapes on Earth — from the hot Terai plains to mountain terraces at breathtaking altitude. Every one of them deserves the best farming intelligence available. KrashiMitra is here to provide exactly that, in their own language, for free." data-np="नेपालका किसानहरू पृथ्वीका सबैभन्दा कठिन भूमि जोत्छन् — तातो तराईको मैदानदेखि अचम्मको उचाइमा पर्वतीय सिँढी खेतसम्म। उनीहरू सबैले सर्वोत्तम कृषि ज्ञान पाउनु पर्छ। KrashiMitra उनकै भाषामा, निःशुल्क — त्यही प्रदान गर्न यहाँ छ।">Nepal's farmers cultivate the most challenging landscapes on Earth — from the hot Terai plains to mountain terraces at breathtaking altitude. Every one of them deserves the best farming intelligence available. KrashiMitra is here to provide exactly that, in their own language, for free.</p>
-      <div class="qauth" data-en="— KrashiMitra Team, for Nepal" data-np="— KrashiMitra टिम, नेपालका लागि">— KrashiMitra Team, for Nepal</div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta-banner">
-  <h2 data-en="Start Farming Smarter Today" data-np="आज स्मार्ट खेती सुरु गर्नुहोस्">Start Farming Smarter Today</h2>
-  <p data-en="Join thousands of farmers already using KrashiMitra — it works in Nepali and it's built for you." data-np="हजारौं किसानहरू KrashiMitra प्रयोग गर्दैछन् — नेपालीमा काम गर्छ, तपाईंका लागि बनाइएको।">Join thousands of farmers already using KrashiMitra — it works in Nepali and it's built for you.</p>
-  <a href="https://krashimitra.in/chat" class="btn-solid" data-en="Get Started — It's Free" data-np="सुरु गर्नुहोस् — निःशुल्क">Get Started — It's Free</a>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="ftr">
-    <div class="ftr-brand">KrashiMitra · Nepal</div>
-    <div class="ftr-links">
-      <a href="/international">🌍 Global Hub</a>
-      <a href="https://krashimitra.in">Home</a>
-      <a href="https://krashimitra.in/chat">Get Advice</a>
-      <a href="https://krashimitra.in/about">About</a>
-      <a href="https://krashimitra.in/privacy-policy.html">Privacy</a>
-    </div>
-    <div class="ftr-note">© 2025 KrashiMitra — Smart agriculture for every farmer. Made by Kunal Rajput. &nbsp;|&nbsp; krashimitra.in/np</div>
-  </div>
-</footer>
-
+<script type="application/json" id="km-i18n">{"def": "ne", "langs": ["ne", "en", "hi"], "meta": {"ne": {"dir": "ltr", "html": "ne", "title": "नेपालबाट भारतको मण्डी भाउ, नक्सा र किसान योजना"}, "en": {"dir": "ltr", "html": "en", "title": "India Mandi Bhav, District Maps & Kisan Yojana from Nepal"}, "hi": {"dir": "ltr", "html": "hi", "title": "नेपाल से भारत का मंडी भाव, नक्शा और किसान योजना"}}, "s": {"en": {"lang_label": "Language", "hero_sub": "Your family farms in India; you are here. Check today&#x27;s rate before they sell, open the district map, and see which government scheme is running.", "stat_mandis": "mandis — daily", "stat_states": "states", "stat_crops": "crops", "stat_free": "no charge", "clock_in": "Now in India", "clock_here": "Your time", "clock_note": "Mandis run on Indian time and the day&#x27;s rate lands after midday — check this before you call home.", "s_top_h": "The three things people abroad open most", "s_top_sub": "Prices, district maps, and the scheme list.", "s_price_h": "Today&#x27;s rate — pick a crop", "s_price_sub": "Live rates from Agmarknet, the Government of India feed. Updated every day.", "s_unit_h": "What ₹ per quintal means", "s_unit_sub": "Reading an Indian price from Nepal.", "unit_note": "Indian rates are quoted in <b>₹ per quintal<\/b>. <b>1 quintal = 100 kg = about 220.5 lb<\/b>. So ₹2,400 per quintal means ₹24 per kg.", "unit_note2": "Convert to Nepali Rupee (NPR) at your bank&#x27;s rate — we do not publish an exchange rate, because a stale one would be a wrong number.", "s_seen_h": "Most-opened pages from Nepal", "s_seen_sub": "What visitors from Nepal actually read.", "s_maps_h": "District maps", "s_maps_sub": "Every district of India, with a downloadable map — useful when you are filling a form from abroad.", "s_read_h": "Worth reading", "s_read_sub": "The guides Indian farmers read most.", "s_faq_h": "Common questions · FAQ", "s_other_h": "Other countries", "s_other_sub": "Pick where you are.", "all_countries": "All countries", "cta_h": "Your home mandi, from right here", "cta_p": "No login, no charge. Rates update themselves every day.", "cta_btn": "See today&#x27;s rate", "menu": "Menu", "email_line": "KrashiMitra email: krashimitra038@gmail.com", "footer_note": "© 2026 KrashiMitra.in — built for Indian farmers. Mandi prices come from the Government of India&#x27;s Agmarknet (data.gov.in) feed and update themselves every day.", "l:/": "Home", "s:/": "मुख्य", "l:/bhav": "Today&#x27;s mandi prices", "s:/bhav": "आज का मंडी भाव", "l:/naksha": "District maps of India", "s:/naksha": "भारत के जिलों का नक्शा", "l:/sarkari_yojana": "Government schemes for farmers", "s:/sarkari_yojana": "सरकारी किसान योजनाएँ", "l:/articles/": "All farming guides", "s:/articles/": "खेती की सारी जानकारी", "l:/krashi_news": "Farm news", "s:/krashi_news": "कृषि समाचार", "l:/about": "About us", "s:/about": "हमारे बारे में", "l:/privacy-policy": "Privacy", "s:/privacy-policy": "प्राइवेसी", "l:/bhav/wheat": "Wheat", "s:/bhav/wheat": "गेहूं का भाव", "l:/bhav/paddy-common": "Paddy", "s:/bhav/paddy-common": "धान का भाव", "l:/bhav/mustard": "Mustard", "s:/bhav/mustard": "सरसों का भाव", "l:/bhav/potato": "Potato", "s:/bhav/potato": "आलू का भाव", "l:/bhav/onion": "Onion", "s:/bhav/onion": "प्याज का भाव", "l:/bhav/cotton": "Cotton", "s:/bhav/cotton": "कपास का भाव", "l:/bhav/maize": "Maize", "s:/bhav/maize": "मक्का का भाव", "l:/bhav/sugarcane": "Sugarcane", "s:/bhav/sugarcane": "गन्ने का भाव", "l:/articles/urea-guide-up": "Urea guide", "s:/articles/urea-guide-up": "यूरिया खाद की पूरी गाइड", "l:/articles/ganna-rog": "Sugarcane diseases", "s:/articles/ganna-rog": "गन्ने के रोग और इलाज", "l:/articles/land-price-up": "UP land prices", "s:/articles/land-price-up": "UP में ज़मीन के दाम", "l:/articles/dap-guide-up": "DAP guide", "s:/articles/dap-guide-up": "DAP खाद गाइड", "l:/naksha/uttar-pradesh/jile": "UP districts", "s:/naksha/uttar-pradesh/jile": "उत्तर प्रदेश के जिले", "l:/naksha/rajasthan/jile": "Rajasthan districts", "s:/naksha/rajasthan/jile": "राजस्थान के जिले", "l:/naksha/west-bengal/jile": "West Bengal districts", "s:/naksha/west-bengal/jile": "पश्चिम बंगाल के जिले", "l:/naksha/punjab": "Punjab map", "s:/naksha/punjab": "पंजाब का नक्शा", "l:/bhav/mentha-oil": "Mentha oil", "s:/bhav/mentha-oil": "मेंथा ऑयल भाव", "h1": "India&#x27;s mandi rates, maps and schemes — from Nepal", "note": "Mentha oil, maize and onion rates and urea guidance lead from Nepal.", "fq0": "Can I check India&#x27;s mandi prices from Nepal?", "fa0": "Yes. KrashiMitra opens from any country and never asks for a login. Prices come from the Government of India&#x27;s Agmarknet feed and update themselves every day.", "fq1": "What unit are the prices in?", "fa1": "All prices are in ₹ per quintal. 1 quintal = 100 kg = about 220.5 lb. So ₹2,400 per quintal means ₹24 per kg.", "fq2": "When do the prices update?", "fa2": "Mandis trade on Indian Standard Time and the day&#x27;s rates arrive between afternoon and evening. The clock above shows India&#x27;s time right now, so you know when to call home.", "fq3": "Does this give advice for farming in Nepal?", "fa3": "No. Every figure here is Indian — Indian mandis, Indian districts and Government of India schemes. For soil, weather or crops in Nepal, ask the local agricultural service there.", "fq4": "Is there any charge?", "fa4": "No. Mandi prices, maps, scheme information and farming guides are all free."}, "hi": {"lang_label": "भाषा", "hero_sub": "घर भारत में है, आप यहाँ हैं। बिकवाली से पहले आज का भाव देख लीजिए, जिले का नक्शा खोलिए, और कौन-सी सरकारी योजना चल रही है यह जान लीजिए।", "stat_mandis": "मंडियाँ — रोज़", "stat_states": "राज्य", "stat_crops": "फसलें", "stat_free": "कोई शुल्क नहीं", "clock_in": "भारत में अभी", "clock_here": "आपके यहाँ", "clock_note": "मंडियाँ भारतीय समय में चलती हैं और दिन का भाव दोपहर के बाद आता है — घर फ़ोन करने से पहले यह देख लीजिए।", "s_top_h": "तीन चीज़ें जो लोग यहाँ से सबसे ज़्यादा देखते हैं", "s_top_sub": "भाव, जिलों के नक्शे और योजनाओं की सूची।", "s_price_h": "आज का भाव — फसल चुनिए", "s_price_sub": "भाव भारत सरकार के Agmarknet फ़ीड से आता है। हर दिन अपने आप अपडेट।", "s_unit_h": "₹ प्रति क्विंटल का मतलब", "s_unit_sub": "नेपाल से भारत का भाव पढ़ना।", "unit_note": "भारत में भाव <b>₹ प्रति क्विंटल<\/b> में लिखा जाता है। <b>1 क्विंटल = 100 किलो = लगभग 220.5 पाउंड<\/b>। तो ₹2,400 प्रति क्विंटल का मतलब है ₹24 प्रति किलो।", "unit_note2": "Nepali Rupee (NPR) में बदलने के लिए अपने बैंक की दर लगाइए — हम विनिमय दर नहीं छापते, क्योंकि पुरानी दर गलत आँकड़ा होगी।", "s_seen_h": "नेपाल से सबसे ज़्यादा देखे गए पन्ने", "s_seen_sub": "नेपाल से आने वाले लोग असल में यही पढ़ते हैं।", "s_maps_h": "जिलों का नक्शा", "s_maps_sub": "भारत का हर जिला, डाउनलोड होने वाले नक्शे के साथ — विदेश से फ़ॉर्म भरते वक़्त काम आता है।", "s_read_h": "पढ़ने के लिए", "s_read_sub": "भारतीय किसान सबसे ज़्यादा यही गाइड पढ़ते हैं।", "s_faq_h": "आम सवाल · FAQ", "s_other_h": "दूसरे देश", "s_other_sub": "आप जहाँ हैं वह देश चुनिए।", "all_countries": "सभी देश", "cta_h": "घर की मंडी, यहीं से", "cta_p": "कोई लॉगिन नहीं, कोई शुल्क नहीं। भाव रोज़ अपने आप अपडेट होता है।", "cta_btn": "आज का भाव देखिए", "menu": "मेनु", "email_line": "कृषिमित्र ईमेल: krashimitra038@gmail.com", "footer_note": "© 2026 KrashiMitra.in — भारतीय किसानों के लिए बनाया गया। मंडी भाव भारत सरकार के Agmarknet (data.gov.in) फ़ीड से, हर दिन अपने आप अपडेट।", "l:/": "मुख्य", "s:/": "Home", "l:/bhav": "आज का मंडी भाव", "s:/bhav": "Today&#x27;s mandi prices", "l:/naksha": "भारत के जिलों का नक्शा", "s:/naksha": "District maps of India", "l:/sarkari_yojana": "सरकारी किसान योजनाएँ", "s:/sarkari_yojana": "Government schemes for farmers", "l:/articles/": "खेती की सारी जानकारी", "s:/articles/": "All farming guides", "l:/krashi_news": "कृषि समाचार", "s:/krashi_news": "Farm news", "l:/about": "हमारे बारे में", "s:/about": "About us", "l:/privacy-policy": "प्राइवेसी", "s:/privacy-policy": "Privacy", "l:/bhav/wheat": "गेहूं का भाव", "s:/bhav/wheat": "Wheat", "l:/bhav/paddy-common": "धान का भाव", "s:/bhav/paddy-common": "Paddy", "l:/bhav/mustard": "सरसों का भाव", "s:/bhav/mustard": "Mustard", "l:/bhav/potato": "आलू का भाव", "s:/bhav/potato": "Potato", "l:/bhav/onion": "प्याज का भाव", "s:/bhav/onion": "Onion", "l:/bhav/cotton": "कपास का भाव", "s:/bhav/cotton": "Cotton", "l:/bhav/maize": "मक्का का भाव", "s:/bhav/maize": "Maize", "l:/bhav/sugarcane": "गन्ने का भाव", "s:/bhav/sugarcane": "Sugarcane", "l:/articles/urea-guide-up": "यूरिया खाद की पूरी गाइड", "s:/articles/urea-guide-up": "Urea guide", "l:/articles/ganna-rog": "गन्ने के रोग और इलाज", "s:/articles/ganna-rog": "Sugarcane diseases", "l:/articles/land-price-up": "UP में ज़मीन के दाम", "s:/articles/land-price-up": "UP land prices", "l:/articles/dap-guide-up": "DAP खाद गाइड", "s:/articles/dap-guide-up": "DAP guide", "l:/naksha/uttar-pradesh/jile": "उत्तर प्रदेश के जिले", "s:/naksha/uttar-pradesh/jile": "UP districts", "l:/naksha/rajasthan/jile": "राजस्थान के जिले", "s:/naksha/rajasthan/jile": "Rajasthan districts", "l:/naksha/west-bengal/jile": "पश्चिम बंगाल के जिले", "s:/naksha/west-bengal/jile": "West Bengal districts", "l:/naksha/punjab": "पंजाब का नक्शा", "s:/naksha/punjab": "Punjab map", "l:/bhav/mentha-oil": "मेंथा ऑयल भाव", "s:/bhav/mentha-oil": "Mentha oil", "h1": "नेपाल से — भारत की मंडी, नक्शा और योजना", "note": "नेपाल से मेंथा ऑयल, मक्का और प्याज़ के भाव और यूरिया की जानकारी सबसे ज़्यादा देखी जाती है।", "fq0": "क्या नेपाल से भारत का मंडी भाव देखा जा सकता है?", "fa0": "हाँ। KrashiMitra किसी भी देश से खुलता है और कोई लॉगिन नहीं माँगता। भाव भारत सरकार के Agmarknet फ़ीड से आता है और हर दिन अपने आप अपडेट होता है।", "fq1": "भाव किस इकाई में होता है?", "fa1": "सारे भाव ₹ प्रति क्विंटल में हैं। 1 क्विंटल = 100 किलोग्राम = लगभग 220.5 पाउंड। यानी ₹2,400 प्रति क्विंटल का मतलब ₹24 प्रति किलो है।", "fq2": "भाव कब अपडेट होता है?", "fa2": "मंडियाँ भारतीय समय (IST) में कारोबार करती हैं और दिन के भाव दोपहर से शाम के बीच आते हैं। ऊपर दी गई घड़ी में भारत का अभी का समय दिख रहा है, ताकि घर फ़ोन करने का सही वक़्त पता चले।", "fq3": "क्या यह नेपाल की खेती के लिए सलाह देता है?", "fa3": "नहीं। यहाँ का सारा डेटा भारत का है — भारतीय मंडियाँ, भारतीय जिले और भारत सरकार की योजनाएँ। नेपाल की मिट्टी, मौसम या फसल के लिए वहाँ की स्थानीय कृषि सेवा से ही सलाह लें।", "fq4": "क्या इसका कोई शुल्क है?", "fa4": "नहीं। मंडी भाव, नक्शे, योजनाओं की जानकारी और खेती की गाइड — सब मुफ़्त हैं।"}}}</script>
 <script>
-  // ── Smart Geo & Language Detection for Nepal vs International Visitors ──
-  function detectInitialLang() {
-    // 1. Explicit user preference if already chosen previously
-    const saved = localStorage.getItem('km-lang-np');
-    if (saved === 'np' || saved === 'en') return saved;
-
-    // 2. Detect if visitor is in Nepal or uses Nepali language
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-      const isNepalTz = (tz === 'Asia/Kathmandu' || tz === 'Asia/Katmandu');
-      
-      const langs = (navigator.languages || [navigator.language || '']).map(l => l.toLowerCase());
-      const isNepaliLang = langs.some(l => l.startsWith('ne') || l.includes('nepal') || l === 'ne-np');
-      
-      if (isNepalTz || isNepaliLang) {
-        return 'np'; // Nepali for people visiting from Nepal
-      }
-    } catch (e) {}
-
-    // 3. For visitors from other countries (USA, UK, India, Europe, etc.), default to English
-    return 'en';
+(function(){
+  // Two live clocks: India, and wherever the reader is. The IST one is read
+  // from the browser with an explicit Asia/Kolkata timezone rather than a
+  // hard-coded +5:30 offset, so it stays right without anything to maintain.
+  // If Intl is missing or throws, the strip removes itself rather than
+  // showing a wrong time — a wrong clock is worse than no clock.
+  var box = document.getElementById('km-clock');
+  if (!box) return;
+  function fmt(tz){
+    try { return new Intl.DateTimeFormat('en-GB', {hour:'2-digit', minute:'2-digit',
+      hour12:false, timeZone:tz}).format(new Date()); }
+    catch(e){ return null; }
   }
-
-  let currentLang = detectInitialLang();
-
-  function setLang(lang, userExplicit = false) {
-    currentLang = lang;
-    document.querySelectorAll('[data-en]').forEach(el => {
-      const val = el.getAttribute('data-' + lang);
-      if (val !== null) el.innerHTML = val;
-    });
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
-    document.documentElement.lang = lang === 'np' ? 'ne' : 'en';
-    if (userExplicit) {
-      localStorage.setItem('km-lang-np', lang);
-    }
+  function tick(){
+    var ist = fmt('Asia/Kolkata'), here = fmt(undefined);
+    if (!ist || !here){ box.remove(); return; }
+    document.getElementById('km-ist').textContent = ist;
+    document.getElementById('km-here').textContent = here;
   }
-
-  // Fast reverse-geolocation check for visitors whose timezone or browser language isn't explicitly set to Nepal
-  function checkClientGeo() {
-    if (localStorage.getItem('km-lang-np')) return; // Respect manual toggle
-    if (currentLang === 'np') return; // Already in Nepali
-
-    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
-      .then(r => r.json())
-      .then(data => {
-        if (data && (data.countryCode === 'NP' || (data.countryName && data.countryName.toLowerCase() === 'nepal'))) {
-          setLang('np', false);
-        }
-      })
-      .catch(() => {});
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    setLang(currentLang, false);
-    checkClientGeo();
-  });
+  tick();
+  setInterval(tick, 30000);
+})();
 </script>
+<script>
+(function(){
+  var el = document.getElementById('km-i18n');
+  if (!el) return;
+  var CFG;
+  try { CFG = JSON.parse(el.textContent); } catch(e){ return; }
+  var root = document.getElementById('km-i18n-root');
+  var pick = document.getElementById('km-lang-pick');
+  if (!root || !pick) return;
 
+  function nodes(){ return document.querySelectorAll('[data-i18n]'); }
+
+  function apply(lang){
+    if (CFG.langs.indexOf(lang) < 0) return;
+    var tbl = CFG.s[lang] || null;   // null for the default: restore instead
+    [].forEach.call(nodes(), function(n){
+      if (n.getAttribute('data-i18n-o') === null || n.getAttribute('data-i18n-o') === undefined) {
+        n.setAttribute('data-i18n-o', n.innerHTML);
+      }
+      var k = n.getAttribute('data-i18n');
+      var v = tbl ? tbl[k] : n.getAttribute('data-i18n-o');
+      if (v !== undefined && v !== null) n.innerHTML = v;
+    });
+    var meta = CFG.meta[lang] || {};
+    root.setAttribute('dir', meta.dir || 'ltr');
+    document.documentElement.setAttribute('lang', meta.html || lang);
+    if (meta.title) document.title = meta.title;
+    else if (CFG.meta[CFG.def] && lang === CFG.def && CFG.meta[CFG.def].title)
+      document.title = CFG.meta[CFG.def].title;
+    [].forEach.call(pick.querySelectorAll('[data-lang]'), function(b){
+      b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+    });
+    try { localStorage.setItem('km_intl_lang', lang); } catch(e){}
+  }
+
+  [].forEach.call(pick.querySelectorAll('[data-lang]'), function(b){
+    b.addEventListener('click', function(){ apply(b.getAttribute('data-lang')); });
+  });
+
+  // What the reader chose on this page wins. Failing that, the site-wide
+  // picker's choice is honoured when this page offers that language, so a
+  // reader who set English in the drawer does not land back in Nepali.
+  var want = null;
+  try { want = localStorage.getItem('km_intl_lang'); } catch(e){}
+  if (!want || CFG.langs.indexOf(want) < 0) {
+    try { want = localStorage.getItem('km_lang'); } catch(e){}
+  }
+  if (want && want !== CFG.def && CFG.langs.indexOf(want) >= 0) apply(want);
+})();
+</script>
+<script src="/header-scroll.js"></script>
+<script src="/drawer-menu.js"></script>
+<script src="/bottomnav.js" defer></script>
 </body>
 </html>

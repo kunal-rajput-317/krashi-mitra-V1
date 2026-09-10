@@ -302,6 +302,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pashu-khurpaka-muhpaka-fmd", "#b91c1c", "🐄", "पशुपालन · रोग",
+         "खुरपका-मुँहपका रोग — टीका, लक्षण और बचाव"),
+        (f"{SITE}/articles/rabi-jowar-shalu-lagvad", "#ca8a04", "🌾", "ज्वार · महाराष्ट्र",
+         "रबी ज्वार (शालू) — बुवाई 15 सितंबर से 15 अक्टूबर तक"),
         (f"{SITE}/articles/dairy-farming-doodh-utpadan", "#be185d", "🥛", "पशुपालन · डेयरी",
          "डेयरी फार्मिंग — दूध उत्पादन बढ़ाने का पूरा तरीका"),
         (f"{SITE}/articles/pashu-thanaila-mastitis", "#be185d", "🐄", "पशुपालन · रोग",

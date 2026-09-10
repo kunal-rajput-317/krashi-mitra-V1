@@ -295,6 +295,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/lahsun-thrips-baingani-dhabba", "#7c3aed", "🧄", "लहसुन · कीट-रोग",
+         "लहसुन-प्याज़ में थ्रिप्स और बैंगनी धब्बा — पहचान और सही दवा"),
         (f"{SITE}/articles/chilli-guide-karnataka", "#b91c1c", "🌶️", "मिर्च · फसल गाइड",
          "मिर्च की उन्नत खेती — कर्नाटक मार्गदर्शिका"),
         (f"{SITE}/articles/pyaj-kharif-kheti-bhandaran", "#be185d", "🧅", "प्याज · फसल गाइड",

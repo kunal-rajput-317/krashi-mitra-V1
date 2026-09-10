@@ -347,6 +347,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/sharadkalin-ganna-buvai", "#15803d", "🎋", "गन्ना · बुवाई",
+         "शरदकालीन गन्ना बुवाई — समय, बीज दर और सहफसल"),
+        (f"{SITE}/articles/alsi-ki-kheti-mp", "#2563eb", "🌾", "अलसी · खेती",
+         "अलसी की खेती — उतेरा से बुवाई और कली मक्खी से बचाव"),
         (f"{SITE}/articles/sarso-safed-ratua", "#ca8a04", "🦠", "सरसों · रोग",
          "सरसों में सफेद रतुआ — पहचान और दवा की सही मात्रा"),
         (f"{SITE}/articles/sarso-mahu-chepa", "#b91c1c", "🐛", "सरसों · कीट",

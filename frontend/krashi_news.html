@@ -2852,6 +2852,17 @@
         var cardLinkHref = isGeminiPost ? 'javascript:void(0)' : item.link;
         var cardLinkClick = isGeminiPost ? 'openStoryReader(\'' + item.id + '\'); return false;' : 'trackRead()';
 
+        // The story's real address. Auto-pilot posts have a server-rendered
+        // page at /krashi_news/<slug>; the feed hands us that as `url` so this
+        // file never has to transliterate a Devanagari title into a slug.
+        // Master stories keep pointing at the /articles/ page they already
+        // have. Without this the only way into a story page was an onclick
+        // handler, which Googlebot does not run — so no story page was
+        // reachable by a crawler from the one hub that links to them all.
+        var storyHref = item.url || (isArticlePost ? item.link : '');
+        var readMoreHref = storyHref || cardLinkHref;
+        var readMoreClick = storyHref ? 'trackRead()' : cardLinkClick;
+
         html += '<article class="article-card">' +
           '<div class="card-content-side">' +
             '<div class="card-meta-row">' +
@@ -2901,7 +2912,7 @@
               '<svg class="action-icon" viewBox="0 0 24 24" fill="' + (isBookmarked ? '#15803d' : 'none') + '" stroke="' + (isBookmarked ? '#15803d' : 'currentColor') + '" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>' +
               '<span>' + (isBookmarked ? 'सहेजा' : 'सहेजें') + '</span>' +
             '</button>' +
-            '<a href="' + cardLinkHref + '" class="card-full-link" onclick="' + cardLinkClick + '">' + (isGeminiPost ? 'विस्तार से पढ़ें →' : 'पढ़ें →') + '</a>' +
+            '<a href="' + readMoreHref + '" class="card-full-link" onclick="' + readMoreClick + '">' + (isGeminiPost ? 'विस्तार से पढ़ें →' : 'पढ़ें →') + '</a>' +
           '</div>' +
         '</article>';
       });
@@ -4087,7 +4098,10 @@
         story = window.KRASHI_NEWS_ARTICLES.find(function(n) { return n.id === storyId; });
       }
       if (!story) {
-        fetch('/api/news/feed')
+        // Absolute, via getApiBase(). A relative /api/... works only when the
+        // page is served by the backend itself; on krashimitra.in Netlify has
+        // no /api/* proxy, so this silently 404'd and the reader stayed empty.
+        fetch(getApiBase() + '/api/news/feed')
           .then(function(r) { return r.json(); })
           .then(function(d) {
             if (d.success && Array.isArray(d.articles)) {

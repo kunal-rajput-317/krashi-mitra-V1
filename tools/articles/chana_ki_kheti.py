@@ -324,6 +324,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/dhaniya-ki-kheti-mp", "#16a34a", "🌿", "धनिया · खेती",
+         "धनिया की खेती — बुवाई अक्टूबर से, बीज 4.5 किलो प्रति एकड़"),
         (f"{SITE}/articles/chana-fali-chhedak-illi", "#c2410c", "🐛", "चना · कीट",
          "चने में फली छेदक इल्ली की दवा — मात्रा और सही समय"),
         (f"{SITE}/articles/arhar-tur-kheti-guide", "#a16207", "🌿", "अरहर · फसल गाइड",

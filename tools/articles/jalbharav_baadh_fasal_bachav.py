@@ -258,6 +258,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/mp-rbc-6-4-fasal-muavza", "#dc2626", "🏛️", "योजना · मुआवज़ा",
+         "RBC 6-4 — फसल क्षति पर मुआवज़ा कैसे और कितना मिलता है"),
         (f"{SITE}/articles/pm-fasal-bima-yojana-2026", "#4338ca", "🛡️", "सरकारी योजना",
          "फसल बीमा 2026 — आखिरी तारीख 31 जुलाई, प्रीमियम सिर्फ 2%"),
         (f"{SITE}/articles/mausam-guide", "#0891b2", "🌦️", "मौसम · खेती",

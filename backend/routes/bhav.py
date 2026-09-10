@@ -55,7 +55,7 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
     buyers, crop_types, district_geo, freight, index_gate, lead_clicks, leads,
-    msp, placements, rental as rental_svc, wa_channels as _wa_channels,
+    msp, placements, rental as rental_svc, state_lang, wa_channels as _wa_channels,
 )
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
@@ -2761,7 +2761,8 @@ _CACHE_HEADERS = {
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
          extra_css: str = "", robots: str = "", head_extra: str = "",
-         updated: str = "", footer_note: str = "", crop: str = "") -> HTMLResponse:
+         updated: str = "", footer_note: str = "", crop: str = "",
+         lang: str = "hi") -> HTMLResponse:
     """One page shell for all four tiers — head, header, crumbs, body, footer.
     `active` defaults to "bhav" for this module's own pages; other SEO routes
     (e.g. product.py) that reuse this shell pass their own nav key/"" so they
@@ -2791,7 +2792,12 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     so the perishable/storable layouts can diverge later without a URL change,
     and so "which layout does this crop get" is answerable by looking at the
     page. Callers with no single crop (the hub, the state pages, /find) pass
-    nothing and get no attributes at all."""
+    nothing and get no attributes at all.
+    `lang` is the page's own language code from services/state_lang, and it
+    reaches only <html lang> and og:locale. Any caller that rendered its title
+    in that language must pass it: a Marathi title on a page still declaring
+    lang="hi" tells Google the two disagree, and the tag is believed over the
+    prose. Default "hi" leaves every other caller byte-identical."""
     og = og_img or f"{SITE}/images/og-banner.webp"
     # Resolved here rather than at each call site so all four crop tiers are
     # guaranteed to agree — a page whose type differs from its sibling tier's
@@ -2815,7 +2821,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
                    "Last-Modified": formatdate(
                        calendar.timegm(date(y, m, d).timetuple()), usegmt=True)}
     return HTMLResponse(f"""<!DOCTYPE html>
-<html lang="hi">
+<html lang="{state_lang.html_lang(lang)}">
 <head>
 {_ANALYTICS}
 <meta charset="utf-8">
@@ -2830,7 +2836,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:image" content="{escape(og)}">
 <meta property="og:url" content="{canon}">
-<meta property="og:locale" content="hi_IN">
+<meta property="og:locale" content="{state_lang.og_locale(lang)}">
 <meta name="twitter:card" content="summary_large_image">
 {_ICON}
 {_PWA}
@@ -3899,7 +3905,30 @@ def bhav_state_hub(state: str):
                    f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
                    f'दर्ज हुआ। नीचे अपनी फसल चुनकर जिलेवार पूरा भाव देखें।</p>')
 
-    head_h1 = f"{escape(hi_state)} में आज के मंडी भाव — फसल चुनें"
+
+    # State-language pass — services/state_lang.py. `sn` is the feed's spelling,
+    # which is what lang_for keys on.
+    lang = state_lang.lang_for(sn)
+    _td = date.today()
+    _lv = {"state": hi_state, "state_en": sn, "n": len(crops_here),
+           "n_dist": n_dist, "year": _td.year,
+           "date": state_lang.date_str(_td.day, _td.month, _td.year, lang, today_hi)}
+    _lt = state_lang.variants("titles", "state_all", lang, _lv)
+    if _lt:
+        title = _fit(*_lt)
+    _ldc = state_lang.variants("descs", "state_all", lang, _lv)
+    if _ldc:
+        desc = _fit(*_ldc, limit=162)
+    head_h1 = escape(state_lang.h1("state_all", lang, _lv,
+                                   f"{hi_state} में आज के मंडी भाव — फसल चुनें"))
+    _lf = state_lang.faqs("state_all", lang, _lv)
+    if _lf:
+        faq_html, faq_ld = _faq(_lf)
+        ld = _ld(faq_ld, _crumb_ld([
+            ("कृषि मित्र", f"{SITE}/"),
+            (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
+            (hi_state, canon)]))
+
     head_sub = f"📅 {today_hi} · {len(crops_here)} फसलें · {n_dist} जिले · स्रोत: data.gov.in (Agmarknet)"
     body = f"""{_tier_head(head_h1, head_sub)}
 <div class="cta-row">
@@ -3918,7 +3947,7 @@ def bhav_state_hub(state: str):
 {faq_html}
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi_state)}')
-    return _doc(title, desc, canon, crumbs, body, ld)
+    return _doc(title, desc, canon, crumbs, body, ld, lang=lang)
 
 
 # ════════════════════════════════════════════════════════════
@@ -3995,7 +4024,32 @@ def bhav_district_hub(state: str, district: str):
                    f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
                    f'दर्ज हुआ। नीचे अपनी फसल चुनकर उस फसल का पूरा भाव देखें।</p>')
 
-    head_h1 = f"{escape(dn_hi)} मंडी भाव आज — फसल चुनें"
+    # State-language pass — services/state_lang.py. This page carries no crop
+    # name, so it is the cheapest of the five: place, count and date only.
+    # `sn`, not `state` — the path segment here is the URL slug ("maharashtra"),
+    # and lang_for keys on the feed's own spelling the way _HI_STATES does.
+    lang = state_lang.lang_for(sn)
+    _td = date.today()
+    _lv = {"district": state_lang.district(dn_hi, lang), "district_en": dn,
+           "en_d": dn if dn_hi != dn else "",
+           "state": hi_state, "state_en": sn, "n": len(crops_here),
+           "year": _td.year,
+           "date": state_lang.date_str(_td.day, _td.month, _td.year, lang, today_hi)}
+    _lt = state_lang.variants("titles", "district_all", lang, _lv)
+    if _lt:
+        title = _fit(*_lt)
+    _ldc = state_lang.variants("descs", "district_all", lang, _lv)
+    if _ldc:
+        desc = _fit(*_ldc, limit=162)
+    head_h1 = escape(state_lang.h1("district_all", lang, _lv,
+                                   f"{dn_hi} मंडी भाव आज — फसल चुनें"))
+    _lf = state_lang.faqs("district_all", lang, _lv)
+    if _lf:
+        faq_html, faq_ld = _faq(_lf)
+        ld = _ld(faq_ld, _crumb_ld([
+            ("कृषि मित्र", f"{SITE}/"),
+            (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
+            (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn_hi, canon)]))
     head_sub = (f"📅 {today_hi} · {escape(hi_state)} · {len(crops_here)} फसलें · "
                 f"स्रोत: data.gov.in (Agmarknet)")
     body = f"""{_tier_head(head_h1, head_sub)}
@@ -4013,7 +4067,7 @@ def bhav_district_hub(state: str, district: str):
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/rajya/{ss}">{escape(hi_state)}</a> › {escape(dn_hi)}')
-    return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS)
+    return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS, lang=lang)
 
 
 # ════════════════════════════════════════════════════════════
@@ -5368,7 +5422,37 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
     desc = (f"{as_of_hi}: {hi_state} की मंडियों में {hi} का ताजा भाव — "
             f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
 
-    head_h1 = f"{escape(hi_state)} में {escape(hi)} का भाव आज"
+
+    # State-language pass — see the same block on the district page below and
+    # services/state_lang.py. Hindi is built first and kept wherever the JSON
+    # says nothing, so this can only ever add a wording, never remove one.
+    lang = state_lang.lang_for(state)
+    hi_loc = state_lang.crop(hi, lang)
+    as_of_loc = as_of_hi
+    try:
+        _d = date.fromisoformat(fresh_iso)
+        as_of_loc = state_lang.date_str(_d.day, _d.month, _d.year, lang, as_of_hi)
+    except (TypeError, ValueError):
+        pass
+    _lv = {"crop": state_lang.crop(t_hi, lang), "en": t_en, "state": hi_state,
+           "state_en": state, "date": as_of_loc, "n_dist": len(dist_map)}
+    _lt = state_lang.variants("titles", "crop_state", lang, _lv)
+    if _lt:
+        title = _fit(*_lt)
+    _ldc = state_lang.variants("descs", "crop_state", lang, _lv)
+    if _ldc:
+        desc = _fit(*_ldc, limit=162)
+    _lfq = {**_lv, "crop": hi_loc}
+    head_h1 = escape(state_lang.h1("crop_state", lang, _lfq,
+                                   f"{hi_state} में {hi} का भाव आज"))
+    _lf = state_lang.faqs("crop_state", lang, _lfq)
+    if _lf:
+        faqs = _lf + _msp_faqs(commodity)
+        faq_html, faq_ld = _faq(faqs)
+        ld = _ld(faq_ld, _crumb_ld([
+            ("कृषि मित्र", f"{SITE}/"),
+            (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
+            (hi_loc, f"{SITE}/bhav/{cs}"), (hi_state, canon)]))
     head_sub = (f"📅 {as_of_hi} · {len(dist_map)} जिले · स्रोत: data.gov.in (Agmarknet)"
                 f"{_age_badge(fresh_iso)}")
     body = f"""{_tier_head(head_h1, head_sub)}
@@ -5391,7 +5475,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › {escape(hi_state)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 extra_css=_LAZY_CSS + _BP_CSS + _DKP_CSS + _PRODUCT_CSS,
-                crop=cs,
+                crop=cs, lang=lang,
                 robots=index_gate.robots_for(fresh_iso))
 
 
@@ -5547,11 +5631,54 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         ("यह भाव कब और कहां से अपडेट होता है?",
          "भाव रोज़ सुबह भारत सरकार के data.gov.in (Agmarknet) से अपडेट होते हैं। "
          "जिन मंडियों की रिपोर्ट आज नहीं आई, उनका पिछला भाव दिखता है।"),
-    ] + _msp_faqs(commodity, st["avg"], d_hi)
+    ]
+    # MSP pairs stay in Hindi even on a Marathi page, and that is a known seam,
+    # not an oversight: they are built inside services/msp.py against the MSP
+    # table's own wording, and translating them means translating that module
+    # too. The premise of this whole change is that Hindi is understood here and
+    # merely not SEARCHED in — so a Hindi MSP answer below a Marathi one costs
+    # polish, while a missing MSP answer would cost a farmer the floor price.
+    msp_faqs = _msp_faqs(commodity, st["avg"], d_hi)
+
+    # ── The page's own language, decided by the state it is about ──────────
+    # Everywhere but Maharashtra this resolves to "hi" and every line from here
+    # down behaves exactly as it did. There, `बाजार भाव` and `गहू` replace
+    # `मंडी भाव` and `गेहूं` — the words that state's farmers actually type, and
+    # the reason those queries rank at position 6-10 and take no clicks. The
+    # Hindi copy above is still built first and still stands wherever the JSON
+    # defines nothing, so the fallback is the old behaviour itself rather than a
+    # promise about it. See services/state_lang.py.
+    lang = state_lang.lang_for(state)
+    hi_loc = state_lang.crop(hi, lang)
+    # The reported date in the page's own month names. It leads the meta
+    # description, so a Hindi "सितंबर" on a Marathi page is the tell a reader
+    # sees before anything else.
+    as_of_loc = as_of_hi
+    try:
+        _d = date.fromisoformat(fresh_iso)
+        as_of_loc = state_lang.date_str(_d.day, _d.month, _d.year, lang, as_of_hi)
+    except (TypeError, ValueError):
+        pass
+    # {lo}/{hi} are passed only when this district really reported both — the
+    # min/max FAQ is then dropped whole rather than answered vaguely.
+    d_loc = state_lang.district(d_hi, lang)
+    _lfq = {"crop": hi_loc, "district": d_loc, "district_en": district,
+            "state": hi_state, "date": as_of_loc, "n": st["n"],
+            "price": state_lang.fill(
+                "price_avg" if (st["avg"] and st["lo"] and st["hi"]) else "price_none",
+                lang, {"avg": f"{st['avg']:,}" if st["avg"] else "",
+                       "lo": f"{st['lo']:,}" if st["lo"] else "",
+                       "hi": f"{st['hi']:,}" if st["hi"] else ""})}
+    if st["lo"] and st["hi"]:
+        _lfq["lo"], _lfq["hi"] = f"{st['lo']:,}", f"{st['hi']:,}"
+    _lf = state_lang.faqs("crop_district", lang, _lfq)
+    faqs = (_lf or faqs) + msp_faqs
+
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
-        ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
-        (hi, f"{SITE}/bhav/{cs}"), (hi_state, f"{SITE}/bhav/{cs}/{ss}"),
+        ("कृषि मित्र", f"{SITE}/"),
+        (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
+        (hi_loc, f"{SITE}/bhav/{cs}"), (hi_state, f"{SITE}/bhav/{cs}/{ss}"),
         (d_hi, canon)]))
 
     t_hi, t_en, same = _title_names(commodity)
@@ -5587,6 +5714,21 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
          f"{place} में {t_hi} भाव — {t_en}",
          f"{place} में {t_hi} का भाव आज",
          f"{t_hi} का भाव — {district}"]))
+
+    # Same `lang` resolved above the FAQs. `t_hi` rather than `hi` here: the
+    # title falls back to the English name for the ~13 commodity groups with no
+    # Hindi one, and crop() returns those unchanged, so the English name stays.
+    # `place` rebuilt on the local spelling — it is the district name plus the
+    # state only where two states share it, so it must move with the district.
+    place_loc = f"{d_loc}, {hi_state}" if _ambiguous_district(idx, cs, ds) else d_loc
+    _lv = {"crop": state_lang.crop(t_hi, lang), "en": t_en, "place": place_loc,
+           "district": d_loc, "district_en": district, "en_d": en_d,
+           "state": hi_state, "state_en": state, "date": as_of_loc,
+           "n": st["n"]}
+    _lt = state_lang.variants("titles", "crop_district", lang, _lv)
+    if _lt:
+        title = _fit(*_lt)
+
     _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
     # About a third of titles are too long to hold both spellings of the
     # district, and the one dropped is the Latin one — which is the half of
@@ -5608,6 +5750,13 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         f"{as_of_hi}: {d_hi} में {hi} का ताजा भाव — {_avg}"
         f"{_mandis_gen(st['n'])} के रेट और भाव का रुझान।",
         limit=162)
+
+    # Same override as the title, and it has to move with it: a Marathi title
+    # over a Hindi snippet is a mismatched pair in one SERP result.
+    _lv["avg"] = f"सरासरी ₹{st['avg']:,}/क्विंटल. " if st["avg"] else ""
+    _ld_ = state_lang.variants("descs", "crop_district", lang, _lv)
+    if _ld_:
+        desc = _fit(*_ld_, limit=162)
 
     # WhatsApp share — share THIS bhav page's own URL, not the /share/mandi deep
     # link (which unfurls the same preview but bounces the recipient into the mandi
@@ -5658,11 +5807,19 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         f'🧾 {escape(d_hi)} में {escape(hi)} कौन खरीदेगा?</a>'
         if _has_kharidar(cs, state, district) else "")
 
+    # The headline moves with the title or neither should: a Marathi result that
+    # wins the click and opens onto "आज का गेहूं भाव" has spent the click telling
+    # the farmer he is in the wrong place. `hi` rather than `t_hi` — this is the
+    # visible name, which keeps the Hindi word even where the title had to fall
+    # back to English to fit.
+    page_h1 = state_lang.h1("crop_district", lang, {**_lv, "crop": hi_loc},
+                            f"आज का {hi} भाव — {d_hi} मंडी")
+
     body = f"""<section class="answer">
 {answer_photo}
 {_alert_bell(commodity, state, district)}
 <div class="answer-in">
-<h1>आज का {escape(hi)} भाव — {escape(d_hi)} मंडी</h1>
+<h1>{escape(page_h1)}</h1>
 <p class="answer-sub">📅 {as_of_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट{_age_badge(fresh_iso)}</p>
 <div class="answer-price">
 <div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
@@ -5742,7 +5899,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                 # carries the paid dealer panel too (the metered product), which
                 # it never used to.
                 extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS + _BP_CSS + _PRODUCT_CSS,
-                updated=fresh_iso, crop=cs,
+                updated=fresh_iso, crop=cs, lang=lang,
                 robots=index_gate.robots_for(fresh_iso))
 
 
@@ -6619,7 +6776,25 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
         f"नाम, फसल और सीधा संपर्क। आज का मंडी भाव भी साथ में।",
         limit=162)
 
-    body = f"""{_tier_head(f"{escape(district)} में {escape(hi)} कौन खरीदेगा?",
+    # State-language pass — services/state_lang.py. Included for consistency
+    # rather than for traffic: with buyers.json still holding one inactive row,
+    # every one of these pages is noindex today, so this is what makes the
+    # Marathi wording already correct on the day a district is seeded.
+    lang = state_lang.lang_for(state)
+    _lv = {"crop": state_lang.crop(t_hi, lang), "place": kh_place,
+           "district": district, "district_en": district, "state": hi_state,
+           "state_en": state}
+    _lt = state_lang.variants("titles", "kharidar", lang, _lv)
+    if _lt:
+        title = _fit(*_lt)
+    _ldc = state_lang.variants("descs", "kharidar", lang, _lv)
+    if _ldc:
+        desc = _fit(*_ldc, limit=162)
+    kh_h1 = state_lang.h1("kharidar", lang,
+                          {**_lv, "crop": state_lang.crop(hi, lang)},
+                          f"{district} में {hi} कौन खरीदेगा?")
+
+    body = f"""{_tier_head(escape(kh_h1),
                            f"📅 {as_of_hi} · {escape(hi_state)} · {n_txt}")}
 {price_note}
 {listing}
@@ -6642,4 +6817,4 @@ def bhav_kharidar(c_slug: str, s_slug: str, d_slug: str):
               f'<a href="{SITE}{price_url}">{escape(district)}</a> › खरीदार')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
                 extra_css=_KH_CSS + _PRODUCT_CSS, robots=robots,
-                updated=fresh_iso if st["avg"] else "", crop=cs)
+                updated=fresh_iso if st["avg"] else "", crop=cs, lang=lang)

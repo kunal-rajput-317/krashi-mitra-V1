@@ -320,6 +320,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/kodo-kutki-ki-kheti-mp", "#a16207", "🌾", "मोटा अनाज · MP",
+         "कोदो-कुटकी की खेती — बुवाई, उपज और ₹1,000 प्रति क्विंटल बोनस"),
+        (f"{SITE}/articles/sharbati-gehun-mp", "#b45309", "🌾", "गेहूं · मध्य प्रदेश",
+         "शरबती गेहूं (C-306) — बुवाई, सीमित सिंचाई और ऊँचे भाव का हिसाब"),
         (f"{SITE}/articles/mp-mukhyamantri-kisan-kalyan-yojana", "#1b7a3d", "💰", "MP · योजना",
          "मुख्यमंत्री किसान कल्याण योजना — MP के किसान को ₹12,000 सालाना"),
         (f"{SITE}/articles/enam-online-fasal-bechna", "#7c3aed", "🛒", "मंडी · ऑनलाइन",

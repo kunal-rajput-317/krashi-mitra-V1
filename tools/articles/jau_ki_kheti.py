@@ -316,6 +316,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/alsi-ki-kheti-mp", "#2563eb", "🌾", "अलसी · खेती",
+         "अलसी की खेती — उतेरा से बुवाई और कली मक्खी से बचाव"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#a16207", "🌾", "गेहूं · खेती",
          "गेहूं की उन्नत खेती — बुवाई 1–25 नवंबर, नई किस्में"),
         (f"{SITE}/articles/gehun-me-sinchai-kab", "#0369a1", "💧", "गेहूं · सिंचाई",

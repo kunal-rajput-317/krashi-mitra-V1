@@ -2697,6 +2697,19 @@ body {
         .fl-row-link:hover { background: var(--surface-hl); }
         .fl-pop-name { font-weight: 800; font-size: 14px; margin-bottom: 2px; color: #14351f; }
         .leaflet-popup-content { margin: 12px 14px; font-family: var(--font-sans); line-height: 1.5; }
+        /* The base-layer switcher, in the panel's own colours rather than
+           Leaflet's white card — which glares on the obsidian theme. */
+        .leaflet-control-layers {
+          background: var(--surface); color: var(--text);
+          border: 1px solid var(--border-hl); border-radius: 10px;
+          box-shadow: 0 4px 14px rgba(0,0,0,.28);
+        }
+        .leaflet-control-layers-expanded { padding: 8px 12px 8px 8px; }
+        .leaflet-control-layers label {
+          font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+          margin-bottom: 2px; cursor: pointer;
+        }
+        .leaflet-control-layers-toggle { background-color: var(--surface); }
         .leaflet-popup-content b { color: #14351f; }
         .fl-pop-row { font-size: 12.5px; color: #33513f; }
         .fl-pop-actions { margin-top: 8px; display: flex; gap: 8px; }
@@ -4681,11 +4694,17 @@ body {
         /* 31 channels is more than fits on a screen, and the one you want is
            the one a farmer just asked about. Search is how you get to it
            without scrolling past the other 30. */
+        /* Same field treatment as the two bars above and the card controls
+           below — a hard var(--border-hl) edge on anything you can type in or
+           pick from. Left on the soft var(--border), these sat one row under
+           the सब पर लागू dropdowns looking like a different class of thing. */
         .wa-bar { display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
         .wa-bar input, .wa-bar select {
-          font-size:12.5px; padding:7px 10px; border-radius:var(--radius-sm);
-          border:1px solid var(--border); background:var(--surface); color:var(--text);
+          font-size:12.5px; padding:7px 11px; border-radius:var(--radius-sm);
+          border:1px solid var(--border-hl); background:var(--surface); color:var(--text);
         }
+        .wa-bar select { font-family:var(--font-hindi); font-weight:600; cursor:pointer; }
+        .wa-bar input:focus, .wa-bar select:focus { outline:none; border-color:var(--primary); }
         .wa-bar input { min-width:220px; flex:1; max-width:380px; font-family:var(--font-hindi); }
         .wa-found { font-size:11.5px; color:var(--muted); font-family:var(--font-mono); margin-left:auto; }
 
@@ -4740,23 +4759,197 @@ body {
         }
         .wa-flag::before { content:'!'; position:absolute; left:3px; font-weight:800; color:var(--accent); }
         .wa-why { margin-top:9px; font-family:var(--font-hindi); font-size:12px; color:var(--muted); }
+        /* The message itself — the one thing on the card that leaves the
+           building. It shares var(--surface-hl) with the buttons, so it takes
+           the WhatsApp-green spine to say which of the two it is: this is the
+           paste, everything else is a control that changes it. */
         .wa-text {
-          margin-top:10px; padding:10px 12px; white-space:pre-wrap; word-break:break-word;
+          margin-top:12px; padding:11px 13px; white-space:pre-wrap; word-break:break-word;
           font-family:var(--font-hindi); font-size:12.5px; line-height:1.75; color:var(--text);
           background:var(--surface-hl); border:1px solid var(--border);
+          border-left:3px solid #25d366;
+          border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+        }
+        /* Same rule as the control row: pressable things are bold, hard-edged
+           and they move. कॉपी is the one action this whole page exists for, so
+           it is the only filled button on the card. */
+        .wa-acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+        .wa-acts button, .wa-acts a {
+          font-size:12px; font-weight:600; padding:7px 13px; cursor:pointer;
+          text-decoration:none; border-radius:var(--radius-sm); line-height:1.35;
+          border:1px solid var(--border-hl); background:var(--surface-hl); color:var(--text);
+          box-shadow:0 1px 0 var(--border-hl);
+        }
+        .wa-acts .go {
+          background:#25d366; border-color:#1eb257; color:#04240f; font-weight:700;
+          box-shadow:0 1px 0 #1a9c4c;
+        }
+        .wa-acts button:hover, .wa-acts a:hover {
+          border-color:var(--primary); color:var(--primary); background:var(--primary-glow);
+        }
+        .wa-acts .go:hover { color:#04240f; background:#2ee070; border-color:#1eb257; }
+        .wa-acts button:active, .wa-acts a:active { transform:translateY(1px); box-shadow:none; }
+        .wa-acts .tick.on { border-color:#25d366; color:#0f7a3d; background:rgba(37,211,102,.12); }
+        .wa-acts button:focus-visible, .wa-acts a:focus-visible {
+          outline:2px solid var(--primary); outline-offset:1px;
+        }
+
+        /* The header badges are readouts. No hard edge, no bold, no hover —
+           so the eye sorts them from the controls without being told. */
+        .wa-ch, .wa-thin, .wa-novel, .wa-mandis, .wa-score { cursor:default; }
+        .wa-empty { padding:26px; text-align:center; color:var(--muted); font-size:13px; }
+
+        /* ── नयापन — did anything actually change since yesterday? ──
+           भरोसा answers "are these numbers right"; this answers the other
+           question, "is there any reason to send this at all". Only the
+           bad case is coloured: if every card shouted, none of them would. */
+        .wa-novel {
+          font-family:var(--font-hindi); font-size:10.5px; font-weight:600;
+          border-radius:999px; padding:3px 9px; white-space:nowrap;
+          border:1px solid var(--border); color:var(--text-dim); background:var(--surface-hl);
+        }
+        .wa-novel.same { border-color:var(--accent); color:var(--accent); background:transparent; }
+
+        /* ── the controls — one row, above the text it rewrites ──
+           Above and not below, because every one of them changes the message
+           in the box: a control under its own output reads as a footnote.
+
+           FIVE KINDS OF THING SIT ON THIS CARD, and the first build gave four
+           of them the same clothes: buttons, dropdowns, crop chips, the 7-day
+           plan and the post itself were all var(--surface-hl) inside a
+           var(--border), 11-12px, same weight. On a light theme that is one
+           pale block after another and nothing announces itself as pressable.
+           So each now has its own treatment, and they differ on the two things
+           the eye reads before it reads words — WEIGHT and EDGE:
+
+             • a button   — tinted fill, hard var(--border-hl) edge, bold,
+                            lifts on hover and presses down on click
+             • a dropdown — flat var(--surface) fill like a form field, same
+                            hard edge, bold: "pick a value" not "do a thing"
+             • a chip     — a button, pill-shaped, because it is one
+             • the plan   — no edge, no fill, muted: it is a readout
+             • the note   — no edge, no fill, muted, smaller: it is prose
+
+           Anything that can be clicked is bold and has a hard edge. Anything
+           that cannot has neither. That is the whole rule. */
+        .wa-ctl {
+          display:flex; gap:7px; flex-wrap:wrap; align-items:center;
+          margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);
+        }
+        /* Says what the row is, so the controls are not mistaken for a caption
+           on the post below them. */
+        .wa-ctl .lead {
+          font-family:var(--font-hindi); font-size:10.5px; font-weight:700;
+          letter-spacing:.04em; color:var(--muted); text-transform:uppercase;
+          padding-right:2px;
+        }
+        .wa-ctl select, .wa-ctl button {
+          font-family:var(--font-hindi); font-size:11.5px; font-weight:600;
+          padding:6px 10px; border-radius:var(--radius-sm); cursor:pointer;
+          color:var(--text); border:1px solid var(--border-hl);
+          line-height:1.35;
+        }
+        /* Pressable: tinted, and it moves. */
+        .wa-ctl button {
+          background:var(--surface-hl);
+          box-shadow:0 1px 0 var(--border-hl);
+        }
+        .wa-ctl button:hover {
+          border-color:var(--primary); color:var(--primary);
+          background:var(--primary-glow);
+        }
+        .wa-ctl button:active { transform:translateY(1px); box-shadow:none; }
+        /* A field you choose from: flat, sits IN the card rather than on it. */
+        .wa-ctl select {
+          background:var(--surface); max-width:200px;
+        }
+        .wa-ctl select:hover { border-color:var(--primary); }
+        .wa-ctl select:focus-visible, .wa-ctl button:focus-visible {
+          outline:2px solid var(--primary); outline-offset:1px;
+        }
+        .wa-ctl .on {
+          border-color:var(--primary); color:var(--primary);
+          background:var(--primary-glow);
+        }
+        .wa-ctl .sep { flex:1; }
+        /* A status word, not a control — so it keeps the edge off. */
+        .wa-ctl .edited {
+          font-family:var(--font-hindi); font-size:10.5px; font-weight:700;
+          color:var(--accent); cursor:default; border:0; background:none;
+          padding:0; box-shadow:none; letter-spacing:.02em;
+        }
+        .wa-ctl .edited::before { content:'● '; font-size:9px; }
+        .wa-note {
+          margin-top:8px; font-family:var(--font-hindi); font-size:11px;
+          color:var(--muted); line-height:1.65;
+        }
+        .wa-note b { color:var(--text-dim); font-weight:700; }
+
+        /* फसल चुनें — one chip per crop in the pool. Struck-through means it
+           is out of today's post; the rest of the pool is what it can be
+           swapped for. Hidden until asked for: five states' worth of chips
+           open at once is a wall. */
+        /* Chips are buttons that happen to be pills — so they carry a button's
+           weight and edge, and the same hover. */
+        .wa-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+        .wa-chip {
+          font-family:var(--font-hindi); font-size:11px; font-weight:600;
+          padding:5px 11px; cursor:pointer; line-height:1.35;
+          border:1px solid var(--border-hl); border-radius:999px;
+          background:var(--surface); color:var(--text-dim);
+        }
+        .wa-chip.in {
+          border-color:#25d366; color:#0f7a3d; background:rgba(37,211,102,.12);
+        }
+        .wa-chip.out {
+          opacity:.55; text-decoration:line-through; background:transparent;
+          border-style:dashed;
+        }
+        .wa-chip:hover { border-color:var(--primary); color:var(--primary); }
+        .wa-chip:active { transform:translateY(1px); }
+        .wa-chip small { font-family:var(--font-mono); font-weight:400; opacity:.7; margin-left:5px; }
+
+        /* आगे के 7 दिन — the rotation is a pure function of (state, date), so
+           this is not a forecast, it is the same arithmetic run early. It is
+           here to answer "is this actually varying?" with something readable.
+
+           A READOUT, NOT CONTROLS. It used to be a row of bordered pills sitting
+           directly under a row of bordered chips that ARE clickable, which made
+           seven dates look like seven buttons. No edge and no fill now, so the
+           hand never goes to it. */
+        .wa-plan {
+          display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;
+          padding:8px 10px; border-left:2px solid var(--border);
+        }
+        .wa-plan span {
+          font-family:var(--font-hindi); font-size:10.5px; color:var(--muted);
+          background:none; border:0; padding:0; white-space:nowrap;
+        }
+        .wa-plan span.now { color:var(--text-dim); font-weight:600; }
+        .wa-plan span b { font-family:var(--font-mono); font-weight:400; opacity:.75; margin-right:3px; }
+        .wa-plan span i { font-style:normal; opacity:.7; }
+
+        /* सब पर लागू — the same two dropdowns, once, for all 31. Separate row
+           from the search box: filtering the list and rewriting every post in
+           it are different kinds of act and should not sit in one strip. */
+        .wa-glob {
+          display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;
+          padding:9px 12px; background:var(--surface); border:1px solid var(--border);
           border-radius:var(--radius-sm);
         }
-        .wa-acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-        .wa-acts button, .wa-acts a {
-          font-size:12px; font-weight:600; padding:7px 12px; cursor:pointer;
-          text-decoration:none; border-radius:var(--radius-sm);
-          border:1px solid var(--border); background:var(--surface-hl); color:var(--text-dim);
+        .wa-glob label {
+          font-family:var(--font-hindi); font-size:10.5px; font-weight:700;
+          letter-spacing:.04em; text-transform:uppercase; color:var(--muted);
         }
-        .wa-acts .go { background:#25d366; border-color:#25d366; color:#04240f; }
-        .wa-acts button:hover, .wa-acts a:hover { border-color:var(--primary); color:var(--primary); }
-        .wa-acts .go:hover { color:#04240f; opacity:.88; }
-        .wa-acts .tick.on { border-color:#25d366; color:#25d366; }
-        .wa-empty { padding:26px; text-align:center; color:var(--muted); font-size:13px; }
+        /* Same rule as the card: a field is flat and sits in the bar, a button
+           is tinted and sits on it. */
+        .wa-glob select {
+          font-family:var(--font-hindi); font-size:11.5px; font-weight:600;
+          padding:6px 10px; border-radius:var(--radius-sm); cursor:pointer;
+          border:1px solid var(--border-hl); background:var(--surface); color:var(--text);
+        }
+        .wa-glob select:hover { border-color:var(--primary); }
+        .wa-glob .busy { font-family:var(--font-mono); font-size:11px; color:var(--muted); }
         </style>
 
         <div class="page-header">
@@ -4771,7 +4964,31 @@ body {
         </div>
 
         <div id="wa-top"></div>
-        <p class="if-detail" style="padding:0 0 12px;">आज कितने भेजे <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_count',event)">?</button> · तैयार मैसेज <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_text',event)">?</button> · भरोसा <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_score',event)">?</button> · ✓ का निशान <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_tick',event)">?</button> · चैनल का लिंक <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_link',event)">?</button></p>
+        <p class="if-detail" style="padding:0 0 12px;">आज कितने भेजे <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_count',event)">?</button> · तैयार मैसेज <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_text',event)">?</button> · भरोसा <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_score',event)">?</button> · नयापन <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_novel',event)">?</button> · रूप और अंदाज़ <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_style',event)">?</button> · फसल चुनें <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_crops',event)">?</button> · आगे के 7 दिन <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_plan',event)">?</button> · ✓ का निशान <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_tick',event)">?</button> · चैनल का लिंक <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_link',event)">?</button></p>
+
+        <!-- सब पर लागू — the per-card controls, once, for all 31 channels.
+             "अपने आप" is the default and it is not the absence of a choice: it
+             is the rotation, which already gives every state a different shape
+             from its neighbour and a different one from yesterday. Picking a
+             single format here makes the whole country read alike today, which
+             is occasionally what you want (a festival, a scheme, a test) and
+             is exactly what you do not want by accident. -->
+        <div class="wa-glob">
+          <label>सब पर लागू <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_all',event)">?</button></label>
+          <select id="wa-g-format" onchange="waApplyAll()"><option value="">रूप — अपने आप</option></select>
+          <select id="wa-g-tone" onchange="waApplyAll()"><option value="">अंदाज़ — अपने आप</option></select>
+          <select id="wa-g-n" onchange="waApplyAll()">
+            <option value="0">कितनी फसल — 5</option>
+            <option value="3">3 फसल</option>
+            <option value="4">4 फसल</option>
+            <option value="5">5 फसल</option>
+            <option value="6">6 फसल</option>
+            <option value="7">7 फसल</option>
+            <option value="8">8 फसल</option>
+          </select>
+          <button class="btn btn-secondary" style="font-size:11.5px;padding:5px 10px;" onclick="waResetAll()">↺ सब अपने आप पर</button>
+          <span class="busy" id="wa-busy"></span>
+        </div>
 
         <div class="wa-bar">
           <input type="search" id="wa-q" placeholder="राज्य, चैनल या फसल ढूँढ़िए — गेहूं, बिहार, delhi…"
@@ -4781,6 +4998,7 @@ body {
             <option value="todo">जो बाकी हैं</option>
             <option value="done">जो हो गए</option>
             <option value="low">कम भरोसे वाले</option>
+            <option value="stale">जिनमें कुछ नया नहीं</option>
             <option value="quiet">जिनके पास आज कुछ नहीं</option>
           </select>
           <span class="wa-found" id="wa-found"></span>
@@ -5287,6 +5505,31 @@ body {
           gap: 10px;
           margin-bottom: 6px;
           flex-wrap: wrap;
+        }
+        .nf-review-flags {
+          margin-top: 10px;
+          padding: 9px 11px;
+          border: 1px solid #fcd34d;
+          border-left-width: 3px;
+          border-radius: 6px;
+          background: #fffbeb;
+          color: #92400e;
+          font-size: 12.5px;
+          line-height: 1.5;
+        }
+        .nf-review-flags-head { font-weight: 700; margin-bottom: 4px; }
+        .nf-review-flags ul { margin: 0; padding-left: 18px; }
+        .nf-review-flags li { margin-bottom: 2px; }
+        .nf-live-url {
+          margin-top: 8px;
+          font-size: 11.5px;
+          color: var(--muted);
+        }
+        .nf-live-url code {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          color: var(--text-dim);
+          word-break: break-all;
         }
         .nf-bullets-preview {
           list-style: none;
@@ -7118,6 +7361,30 @@ function copyCmd(btn, cmd) {
 let _waPosts = null;
 let _waQuiet = [];
 let _waChannels = 0;         // every channel in wa_channels.json — posts + quiet
+let _waCat = { formats: [], tones: [] };   // what the two dropdowns offer
+
+// Which cards the owner has opened the crop chips / 7-day plan on. Kept out of
+// the post objects: it is view state for this screen, not something the server
+// decided, and folding it in would make "has this post been edited?" ambiguous.
+const _waOpen = { crops: new Set(), plan: new Set() };
+
+// Per-state overrides, and the "सब पर लागू" defaults underneath them. Both are
+// scratch state for one morning — nothing here is saved, and reloading the
+// page puts every card back on the rotation, which is the right default to
+// return to.
+const _waOver = {};                        // state -> {format, tone, n, drop:[]}
+let _waGlobal = { format: '', tone: '', n: 0 };
+
+function _waOv(state) {
+  return (_waOver[state] ||= { format: '', tone: '', n: 0, drop: [] });
+}
+
+// Is this card still on the rotation? Used to show the "बदला हुआ" marker and
+// to decide whether ↺ अपने आप does anything.
+function _waEdited(state) {
+  const o = _waOver[state];
+  return !!o && (o.format || o.tone || o.n || (o.drop || []).length);
+}
 
 // Which states are already posted TODAY. localStorage, not the DB: it is a
 // scratch note for one morning on one device, it must survive a reload, and it
@@ -7144,6 +7411,8 @@ async function loadWaPosts(refresh) {
     _waPosts = d.posts || [];
     _waQuiet = d.quiet || [];
     _waChannels = d.channels || (_waPosts.length + _waQuiet.length);
+    _waCat = d.catalog || { formats: [], tones: [] };
+    _waFillGlobal();
     renderWaPosts();
   } catch (e) {
     box.innerHTML = `<div class="wa-empty" style="color:var(--danger);">पोस्ट नहीं बन पाईं — ${escapeHtml(e.message)}</div>`;
@@ -7179,6 +7448,8 @@ function renderWaPosts() {
   const done  = _waDone();
   const total = _waChannels || (_waPosts.length + _waQuiet.length);
   const low   = _waPosts.filter(p => (p.score || 0) < WA_LOW).length;
+  const stale = _waPosts.filter(p => (p.novelty || {}).key === 'same').length;
+  const shapes = new Set(_waPosts.map(p => p.format)).size;
 
   if (top) {
     top.innerHTML = `<div class="wa-top">
@@ -7186,8 +7457,9 @@ function renderWaPosts() {
       <div class="wa-topmeta">
         <b>आज पोस्ट हो चुके</b> — बड़े राज्य पहले हैं, इसलिए समय कम पड़े तो
         सिक्किम छूटे, उत्तर प्रदेश नहीं। भाव वही हैं जो /bhav पेज पर हैं।
-        <br><span style="color:var(--muted);">कुल ${total} चैनल — ${_waPosts.length} के पास आज पोस्ट है${_waQuiet.length ? `, ${_waQuiet.length} के पास कुछ नहीं (सूची में सबसे नीचे)` : ''}। ✓ सिर्फ इसी फ़ोन/ब्राउज़र पर याद रहता है, कल अपने आप मिट जाएगा।</span>
+        <br><span style="color:var(--muted);">कुल ${total} चैनल — ${_waPosts.length} के पास आज पोस्ट है${_waQuiet.length ? `, ${_waQuiet.length} के पास कुछ नहीं (सूची में सबसे नीचे)` : ''}। आज ${shapes} अलग-अलग रूप जा रहे हैं, और हर चैनल का रूप कल से अलग है। ✓ सिर्फ इसी फ़ोन/ब्राउज़र पर याद रहता है, कल अपने आप मिट जाएगा।</span>
         ${low ? `<br><span style="color:var(--accent);">${low} पोस्ट का भरोसा ${WA_LOW} से कम है — भेजने से पहले उनके भाव /bhav पर देख लें। एक बार गलत भाव जाने पर फॉलोअर लौटकर नहीं आता।</span>` : ''}
+        ${stale ? `<br><span style="color:var(--accent);">${stale} चैनल पर आज किसी फसल का भाव नहीं बदला — वह पोस्ट कल जैसी ही है। रूप बदलने से पढ़ने में नई लगेगी, पर बात नई नहीं होगी; ऐसे चैनल आज छोड़ देना भी एक ठीक जवाब है।</span>` : ''}
       </div>
     </div>`;
   }
@@ -7208,6 +7480,7 @@ function renderWaPosts() {
       if (mode === 'todo' && isDone) continue;
       if (mode === 'done' && !isDone) continue;
       if (mode === 'low' && (p.score || 0) >= WA_LOW) continue;
+      if (mode === 'stale' && (p.novelty || {}).key !== 'same') continue;
       if (_waMatch(p, terms)) rows.push(_waPostCard(p, isDone));
     }
   }
@@ -7222,17 +7495,82 @@ function renderWaPosts() {
     : `<div class="wa-empty">इस खोज से कोई चैनल नहीं मिला।</div>`;
 }
 
+// The label a format/tone id renders as. The server sends the catalogue once
+// rather than repeating "सूची"/"मंडी की भाषा" inside all 31 posts.
+function _waLabel(kind, id) {
+  return (_waCat[kind] || []).find(x => x.id === id)?.hi || id || '';
+}
+function _waNote(kind, id) {
+  return (_waCat[kind] || []).find(x => x.id === id)?.note || '';
+}
+
 function _waPostCard(p, isDone) {
   const b = p.band || {};
-  return `<div class="wa-card ${isDone ? 'done' : (b.key || '')}" data-state="${escapeHtml(p.state)}">
+  const nv = p.novelty || {};
+  const st = escapeHtml(p.state);
+  const ov = _waOver[p.state] || {};
+  const dropped = new Set(ov.drop || []);
+
+  // A format today's rows cannot honestly carry is shown disabled, not hidden.
+  // "Why is दायरा missing?" is a fair question and the answer — this state has
+  // one market — is worth a greyed-out row rather than a silence.
+  const fmtOpts = (_waCat.formats || []).map(f =>
+    `<option value="${f.id}" ${f.id === p.format ? 'selected' : ''} ${
+      (p.can || []).includes(f.id) ? '' : 'disabled'}>रूप — ${escapeHtml(f.hi)}${
+      (p.can || []).includes(f.id) ? '' : ' (आज नहीं)'}</option>`).join('');
+  const toneOpts = (_waCat.tones || []).map(t =>
+    `<option value="${t.id}" ${t.id === p.tone ? 'selected' : ''}>अंदाज़ — ${escapeHtml(t.hi)}</option>`).join('');
+
+  const chips = _waOpen.crops.has(p.state) ? `<div class="wa-chips">${
+    (p.pool || []).map(c => {
+      const out = dropped.has(c.commodity);
+      const inPost = !out && (p.crops || []).some(x => x.commodity === c.commodity);
+      // The commodity travels in a data attribute, not inside the onclick
+      // string. escapeHtml turns ' into &#039;, which the parser decodes back
+      // before the JS is compiled — so an Agmarknet name carrying an
+      // apostrophe would close the argument early and break the chip. The
+      // feed's name list is not ours to police; this is.
+      return `<button class="wa-chip ${out ? 'out' : (inPost ? 'in' : '')}"
+        data-crop="${escapeHtml(c.commodity)}"
+        onclick="waToggleCrop('${st}', this.dataset.crop)"
+        title="${out ? 'इस पोस्ट से बाहर — वापस डालने के लिए दबाइए' : 'हटाने के लिए दबाइए'}"
+        >${escapeHtml(c.name)}<small>₹${(c.avg || 0).toLocaleString('en-IN')}</small></button>`;
+    }).join('')}</div>` : '';
+
+  const plan = _waOpen.plan.has(p.state) ? `<div class="wa-plan">${
+    (p.schedule || []).map((s, i) => `<span class="${i === 0 ? 'now' : ''}"><b>${
+      escapeHtml(s.date.slice(8) + '/' + s.date.slice(5, 7))}</b> ${
+      escapeHtml(_waLabel('formats', s.format))} <i>· ${
+      escapeHtml(_waLabel('tones', s.tone))}</i></span>`).join('')}</div>` : '';
+
+  return `<div class="wa-card ${isDone ? 'done' : (b.key || '')}" data-state="${st}">
     <div class="wa-h">
       <span class="wa-n">${escapeHtml(p.hi_state)}</span>
       <span class="wa-ch">${escapeHtml(p.channel)}</span>
       ${p.thin ? `<span class="wa-thin">एक ही मंडी</span>` : ''}
-      <span class="wa-mandis">${p.mandis} मंडियां · ${p.crops.length} फसल</span>
+      ${nv.hi ? `<span class="wa-novel ${nv.key === 'same' ? 'same' : ''}"
+        title="कितनी फसलों के भाव कल से बदले">${escapeHtml(nv.hi)} · ${nv.moved}/${nv.total}</span>` : ''}
+      <span class="wa-mandis">${p.mandis} मंडियां · ${(p.crops || []).length} फसल</span>
       <span class="wa-score ${b.key || ''}" title="भरोसा — इन भावों के सही होने का स्कोर">
         <b>${p.score}</b><i>/100</i><s>${escapeHtml(b.hi || '')}</s></span>
     </div>
+
+    <div class="wa-ctl">
+      <span class="lead">बदलिए</span>
+      <select onchange="waSet('${st}','format',this.value)">${fmtOpts}</select>
+      <select onchange="waSet('${st}','tone',this.value)">${toneOpts}</select>
+      <button onclick="waShuffle('${st}')" title="अगला रूप और अगला अंदाज़">🎲 दूसरा रूप</button>
+      <button class="${_waOpen.crops.has(p.state) ? 'on' : ''}" onclick="waToggle('crops','${st}')">🌾 फसल चुनें</button>
+      <button class="${_waOpen.plan.has(p.state) ? 'on' : ''}" onclick="waToggle('plan','${st}')">📅 आगे के 7 दिन</button>
+      <span class="sep"></span>
+      ${_waEdited(p.state) ? `<span class="edited">बदला हुआ</span>
+        <button onclick="waAuto('${st}')" title="इस चैनल को दोबारा रोटेशन पर छोड़ दीजिए">↺ अपने आप</button>` : ''}
+    </div>
+    <div class="wa-note"><b>${escapeHtml(_waLabel('formats', p.format))}</b> — ${
+      escapeHtml(_waNote('formats', p.format))} · <b>${escapeHtml(_waLabel('tones', p.tone))}</b> — ${
+      escapeHtml(_waNote('tones', p.tone))}</div>
+    ${chips}${plan}
+
     <div class="wa-text">${escapeHtml(p.text)}</div>
     ${(p.flags || []).length ? `<div class="wa-flags">${
       p.flags.map(f => `<div class="wa-flag">${escapeHtml(f)}</div>`).join('')}</div>` : ''}
@@ -7240,10 +7578,131 @@ function _waPostCard(p, isDone) {
       <button class="bk-copy go" data-cmd="${escapeHtml(p.text)}">कॉपी</button>
       <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">चैनल खोलें ↗</a>
       <a href="https://krashimitra.in/bhav/rajya/${escapeHtml(p.slug)}" target="_blank" rel="noopener">भाव जाँचें ↗</a>
-      <button class="tick ${isDone ? 'on' : ''}" onclick="waToggleDone('${escapeHtml(p.state)}')">
+      <button class="tick ${isDone ? 'on' : ''}" onclick="waToggleDone('${st}')">
         ${isDone ? '✓ पोस्ट हो गया' : 'पोस्ट हो गया?'}</button>
     </div>
   </div>`;
+}
+
+// ── the controls ────────────────────────────────────────────
+// Every one of them ends in the same place: ask the server to rewrite this
+// state's post under the current overrides, and swap the answer in. The text
+// is never edited in the browser — it is composed in services/wa_style, and a
+// second composer in JS would be a second thing to keep true.
+
+function _waFillGlobal() {
+  const f = document.getElementById('wa-g-format');
+  const t = document.getElementById('wa-g-tone');
+  if (f && f.options.length <= 1) {
+    for (const x of (_waCat.formats || [])) f.add(new Option('रूप — ' + x.hi, x.id));
+  }
+  if (t && t.options.length <= 1) {
+    for (const x of (_waCat.tones || [])) t.add(new Option('अंदाज़ — ' + x.hi, x.id));
+  }
+}
+
+function _waBusy(msg) {
+  const el = document.getElementById('wa-busy');
+  if (el) el.textContent = msg || '';
+}
+
+// Rewrite one state and repaint only its card. Repainting the whole grid would
+// scroll a 31-row list back to the top every time a dropdown moved.
+async function waRefit(state) {
+  const i = _waPosts.findIndex(p => p.state === state);
+  if (i < 0) return;
+  const o = _waOv(state);
+  const q = new URLSearchParams({ state });
+  if (o.format) q.set('format', o.format);
+  if (o.tone) q.set('tone', o.tone);
+  if (o.n) q.set('n', o.n);
+  if ((o.drop || []).length) q.set('drop', o.drop.join(','));
+  try {
+    const r = await fetch(`${API}/admin/wa-post?${q}`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+    _waPosts[i] = d.post;
+    const card = document.querySelector(`.wa-card[data-state="${CSS.escape(state)}"]`);
+    if (card) card.outerHTML = _waPostCard(d.post, _waDone().has(state));
+    else renderWaPosts();
+  } catch (e) {
+    _waBusy('नहीं बदल पाया — ' + e.message);
+  }
+}
+
+function waSet(state, key, value) {
+  const o = _waOv(state);
+  o[key] = value;
+  waRefit(state);
+}
+
+// The next format AND the next tone — the two rotate on separate keys, so
+// stepping only one of them is how you end up with the same voice all week.
+function waShuffle(state) {
+  const p = _waPosts.find(x => x.state === state);
+  if (!p) return;
+  const o = _waOv(state);
+  const can = (_waCat.formats || []).filter(f => (p.can || []).includes(f.id)).map(f => f.id);
+  const tones = (_waCat.tones || []).map(t => t.id);
+  if (can.length) o.format = can[(can.indexOf(p.format) + 1) % can.length];
+  if (tones.length) o.tone = tones[(tones.indexOf(p.tone) + 1) % tones.length];
+  waRefit(state);
+}
+
+function waAuto(state) {
+  delete _waOver[state];
+  waRefit(state);
+}
+
+function waToggle(which, state) {
+  const set = _waOpen[which];
+  set.has(state) ? set.delete(state) : set.add(state);
+  const p = _waPosts.find(x => x.state === state);
+  const card = document.querySelector(`.wa-card[data-state="${CSS.escape(state)}"]`);
+  if (p && card) card.outerHTML = _waPostCard(p, _waDone().has(state));
+}
+
+// Dropping a crop is the sharpest control on the page: the भरोसा score comes
+// back recomputed on what is left, so taking out the one line whose price is
+// three days old visibly raises it.
+function waToggleCrop(state, commodity) {
+  const o = _waOv(state);
+  o.drop = o.drop || [];
+  const i = o.drop.indexOf(commodity);
+  i >= 0 ? o.drop.splice(i, 1) : o.drop.push(commodity);
+  waRefit(state);
+}
+
+// सब पर लागू — same choice on every card. Sequential, not 31 parallel fetches:
+// the free-tier backend answers these off one cached snapshot and firing them
+// all at once is how a panel that works becomes a panel that times out.
+async function waApplyAll() {
+  _waGlobal = {
+    format: document.getElementById('wa-g-format')?.value || '',
+    tone:   document.getElementById('wa-g-tone')?.value || '',
+    n:      parseInt(document.getElementById('wa-g-n')?.value || '0', 10) || 0,
+  };
+  for (const p of _waPosts) {
+    const o = _waOv(p.state);
+    o.format = _waGlobal.format; o.tone = _waGlobal.tone; o.n = _waGlobal.n;
+  }
+  let done = 0;
+  for (const p of [..._waPosts]) {
+    _waBusy(`${++done}/${_waPosts.length} बदल रहे हैं…`);
+    await waRefit(p.state);
+  }
+  _waBusy('');
+  renderWaPosts();
+}
+
+function waResetAll() {
+  for (const k of Object.keys(_waOver)) delete _waOver[k];
+  const f = document.getElementById('wa-g-format'); if (f) f.value = '';
+  const t = document.getElementById('wa-g-tone');   if (t) t.value = '';
+  const n = document.getElementById('wa-g-n');      if (n) n.value = '0';
+  _waGlobal = { format: '', tone: '', n: 0 };
+  loadWaPosts(false);
 }
 
 // A channel with nothing to say still gets a row. Leaving it off the page was
@@ -10190,9 +10649,29 @@ function ensureFarmerMap() {
   if (typeof L === 'undefined') return false;   // Leaflet CDN blocked
   _flMap = L.map('farmer-map', { scrollWheelZoom: true, zoomControl: true })
             .setView([25.5, 80.9], 5);           // centred on the Indo-Gangetic plain
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+  // Satellite is the default view. A pin on a street map only says 'near
+  // Bijnor'; on imagery it says whether the farmer sits on irrigated cropland,
+  // a canal command area or the edge of a town — which is the question this
+  // panel exists to answer. Esri's World Imagery needs no API key.
+  //
+  // Imagery carries no place names, so the reference layer rides on top of it.
+  // Without that overlay the map is unreadable for the one thing it is read
+  // for: which district a cluster is in.
+  const flSat = L.layerGroup([
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Imagery © Esri, Maxar, Earthstar Geographics', maxZoom: 18
+    }),
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18
+    })
+  ]);
+  const flStreets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors', maxZoom: 14
-  }).addTo(_flMap);
+  });
+  flSat.addTo(_flMap);
+  L.control.layers({ '🛰️ Satellite': flSat, '🗺️ Map': flStreets },
+                   null, { position: 'topright' }).addTo(_flMap);
   _flMarkers = L.layerGroup().addTo(_flMap);
   return true;
 }
@@ -12146,7 +12625,14 @@ const KM_HELP = {
   wa_page: { t: '📣 WhatsApp चैनल',
     d: `हर राज्य के चैनल के लिए आज का तैयार मैसेज।<br><br>
         WhatsApp चैनल की कोई API नहीं है, इसलिए भेजना हाथ से ही होगा। यह पेज बाकी सब अपने
-        आप कर देता है — भाव, भाषा, लिंक — ताकि हाथ का काम सिर्फ़ पेस्ट करना रह जाए।` },
+        आप कर देता है — भाव, भाषा, रूप, लिंक — ताकि हाथ का काम सिर्फ़ पेस्ट करना रह जाए।<br><br>
+        हर कार्ड तीन सवालों का जवाब देता है, और तीनों अलग-अलग हैं:<br>
+        • <b>भरोसा</b> — ये भाव सही हैं?<br>
+        • <b>नयापन</b> — आज कुछ नया है भी?<br>
+        • <b>रूप और अंदाज़</b> — यह मैसेज कल जैसा तो नहीं पढ़ा जाएगा?<br><br>
+        नीचे के बटन हर जवाब को बदल सकते हैं — <b>सिवाय भाव के</b>। कोई भी रूप, कोई भी
+        अंदाज़, कोई भी भाषा चुन लीजिए, आँकड़ा वही रहेगा जो /bhav पेज पर छपा है। पूरा पेज
+        इसी एक शर्त पर खड़ा है।` },
   wa_count: { t: 'आज कितने भेजे',
     d: `जिन चैनलों के पास आज पोस्ट है, उनमें से कितने हो चुके। गिनती इसी फोन में रखी जाती
         है, ताकि पूरे देश का काम बीच में छोड़कर बाद में वहीं से उठाया जा सके।<br><br>
@@ -12154,7 +12640,60 @@ const KM_HELP = {
         है कि क्यों नहीं है।` },
   wa_text: { t: 'तैयार मैसेज',
     d: `आज के असली भाव से बना मैसेज। इसे बदलकर भेज सकते हैं, पर <b>भाव न बदलें</b> — वे
-        सीधे डेटाबेस से आए हैं और साइट पर भी वही छपे हैं।` },
+        सीधे डेटाबेस से आए हैं और साइट पर भी वही छपे हैं।<br><br>
+        जिस राज्य की अपनी भाषा है, मैसेज उसी में बनता है। महाराष्ट्र की पोस्ट
+        <b>बाजार भाव</b> और <b>गहू</b> कहती है — क्योंकि जिस /bhav पेज का लिंक नीचे लगा है,
+        वह पेज भी यही कहता है। पोस्ट और पेज अलग-अलग शब्द बोलें तो किसान के पास यह जानने
+        का कोई तरीका नहीं कि सही कौन-सा है।` },
+  wa_novel: { t: 'नयापन',
+    d: `<b>भरोसा</b> बताता है कि भाव सही हैं या नहीं। <b>नयापन</b> दूसरी बात बताता है —
+        आज भेजने लायक कुछ नया है भी या नहीं।<br><br>
+        गिनती है, अंक नहीं: इस पोस्ट की कितनी फसलों का भाव कल से सच में बदला। जिस फसल का
+        कल का भाव ही नहीं मिला, वह "नहीं बदली" में गिनी जाती है — बिना जाँचे बदलाव बताना
+        ठीक उल्टा काम है।<br><br>
+        <b>कल जैसी ही पोस्ट</b> का मतलब है कि कोई भाव नहीं हिला। रूप बदलने से वह पढ़ने में
+        नई लगेगी, पर बात नई नहीं होगी। ऐसे चैनल पर आज कुछ न भेजना भी एक ठीक जवाब है —
+        रोज़ कुछ भेजने की मजबूरी ही वह चीज़ है जिससे लोग चैनल म्यूट करते हैं।` },
+  wa_style: { t: 'रूप और अंदाज़',
+    d: `एक ही मैसेज, हर दिन, हर राज्य में — यही चैनल को मारता है। तीन हफ़्ते बाद फॉलोअर
+        मैसेज पढ़ता नहीं, पहचानकर आगे बढ़ जाता है।<br><br>
+        इसलिए हर चैनल को हर सुबह अपने आप <b>6 में से एक रूप</b> और <b>5 में से एक अंदाज़</b>
+        मिलता है:<br>
+        • <b>सूची</b> — सीधी लिस्ट, जो अब तक जाती रही है<br>
+        • <b>चढ़े–गिरे</b> — ऊपर, नीचे और टिके अलग-अलग<br>
+        • <b>सबसे बड़ी हलचल</b> — दिन का सबसे बड़ा बदलाव सबसे ऊपर<br>
+        • <b>कहाँ सबसे ऊँचा</b> — किस मंडी में सबसे ज़्यादा मिल रहा है<br>
+        • <b>हफ़्ते का हाल</b> — आज का भाव, हफ़्ते के दायरे में<br>
+        • <b>सवाल–जवाब</b> — जो सवाल किसान Google में लिखता है<br><br>
+        चुनाव <b>रैंडम नहीं</b> है: यह राज्य और तारीख़ से बनता है, और ऐसे बनता है कि छह दिन
+        में छहों रूप एक-एक बार आएँ, कोई दोबारा नहीं। इसीलिए "आगे के 7 दिन" पहले से दिखाए
+        जा सकते हैं, और पेज दोबारा खोलने पर पोस्ट बदल नहीं जाती।<br><br>
+        जो रूप आज सच में नहीं बन सकता, वह अपने आप छूट जाता है — <b>हफ़्ते का हाल</b> को
+        हफ़्ते भर का डेटा चाहिए, <b>कहाँ सबसे ऊँचा</b> को एक से ज़्यादा मंडी। लिस्ट में वह
+        धुँधला दिखता है, छिपाया नहीं जाता।<br><br>
+        <b>अंदाज़ सिर्फ़ शब्द बदलता है</b> — सलाह, दावा या कोई नया आँकड़ा नहीं जोड़ता। किसी
+        भी रूप और किसी भी अंदाज़ में भाव के आँकड़े बिलकुल वही रहते हैं।` },
+  wa_crops: { t: 'फसल चुनें',
+    d: `पोस्ट में जो 5 फसलें छपती हैं, वे 12 की एक सूची में से चुनी जाती हैं। यहाँ किसी
+        फसल पर दबाकर उसे आज की पोस्ट से बाहर कर सकते हैं — उसकी जगह अगली फसल आ जाएगी।<br><br>
+        यह पेज का सबसे धारदार बटन है: <b>भरोसा दोबारा उन्हीं लाइनों पर गिना जाता है जो बचीं।</b>
+        जिस एक फसल का भाव तीन दिन पुराना है, उसे हटाते ही अंक ऊपर जाता दिखेगा। अगर न जाए,
+        तो दिक्कत उस फसल में नहीं थी।` },
+  wa_plan: { t: 'आगे के 7 दिन',
+    d: `इस चैनल पर अगले सात दिन कौन-सा रूप और कौन-सा अंदाज़ जाएगा।<br><br>
+        यह अनुमान नहीं है — रूप का चुनाव सिर्फ़ राज्य और तारीख़ से बनता है, तो यह वही
+        हिसाब है जो उस सुबह चलेगा, बस पहले चला दिया गया। एक ही सवाल का जवाब देने के लिए
+        है: <i>सच में बदल भी रहा है या नहीं।</i><br><br>
+        इतना ध्यान रहे — यह रोटेशन का इरादा दिखाता है, नतीजा नहीं। जिस दिन डेटा उस रूप को
+        सहारा न दे पाए, उस दिन वह अपने आप छूट जाएगा।` },
+  wa_all: { t: 'सब पर लागू',
+    d: `वही दो चुनाव, एक बार में सारे 31 चैनलों पर।<br><br>
+        <b>अपने आप</b> कोई चुनाव न होना नहीं है — वही रोटेशन है, जो हर राज्य को उसके
+        पड़ोसी से अलग और कल से अलग रूप देता है। यहाँ एक रूप चुन लेने का मतलब है कि आज पूरा
+        देश एक जैसा पढ़ेगा। कभी-कभी यही चाहिए (कोई त्योहार, कोई योजना, या जाँचने के लिए) —
+        पर ग़लती से ऐसा हो जाना ठीक वह चीज़ है जिससे बचना है। <b>↺ सब अपने आप पर</b> इसे
+        वापस रोटेशन पर छोड़ देता है।<br><br>
+        कुछ भी सेव नहीं होता। पेज दोबारा खोलते ही हर कार्ड फिर से अपने आप पर आ जाता है।` },
   wa_score: { t: 'भरोसा — 100 में से',
     d: `इस पोस्ट के भाव कितने पक्के हैं। <b>एक बार गलत भाव जाने पर फॉलोअर लौटकर नहीं आता</b>,
         इसलिए यह अंक कॉपी दबाने से <i>पहले</i> पढ़ने के लिए है।<br><br>
@@ -13817,7 +14356,7 @@ async function loadNewsFunnel(showToastNotice = false) {
 
   try {
     const [funnelRes, feedRes] = await Promise.all([
-      fetch(`${API}/api/news/funnel`),
+      fetch(`${API}/api/news/funnel`, { headers: getAuthHeader() }),
       fetch(`${API}/api/news/feed`)
     ]);
 
@@ -13883,6 +14422,20 @@ function renderStagedPosts(posts) {
 
   container.innerHTML = posts.map(p => {
     const bulletsHtml = (p.bullets || []).map(b => `<li>${escapeHtml(b)}</li>`).join('');
+
+    // The review gate, shown to the person it was written for. A flagged
+    // draft is never auto-published on Day 5 — it waits here for a human.
+    // Publishing it by hand stays allowed on purpose: these are warnings to
+    // read, not a veto. The number check is the important one — a figure that
+    // is in our copy but nowhere in the source came from the model.
+    const flags = p.review_flags || [];
+    const flagsHtml = flags.length ? `
+      <div class="nf-review-flags">
+        <div class="nf-review-flags-head">⚠️ प्रकाशन से पहले जाँच लें — यह ड्राफ़्ट स्वतः लाइव नहीं होगा</div>
+        <ul>${flags.map(f => `<li>${escapeHtml(f)}</li>`).join('')}</ul>
+      </div>
+    ` : '';
+
     return `
       <div class="nf-post-card" id="nf-card-${escapeHtml(p.id)}">
         <div class="nf-thumb-wrap" onclick="openChangeImageModal('${escapeHtml(p.id)}', '${escapeHtml(p.image || '')}')" title="कवर फोटो / इमेज एड्रेस बदलें">
@@ -13905,7 +14458,11 @@ function renderStagedPosts(posts) {
           <h4 style="font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px;">${escapeHtml(p.title)}</h4>
           <p style="font-size:13px; color:var(--text-dim); line-height:1.4;">${escapeHtml(p.excerpt)}</p>
 
+          ${flagsHtml}
+
           <ul class="nf-bullets-preview">${bulletsHtml}</ul>
+
+          ${p.url ? `<div class="nf-live-url">प्रकाशन के बाद पता: <code>${escapeHtml(p.url)}</code></div>` : ''}
 
           <div class="nf-acts-row">
             <button class="btn btn-primary btn-sm" onclick="confirmPushPost('${escapeHtml(p.id)}')">✅ स्वीकृत व लाइव करें</button>
@@ -13962,6 +14519,7 @@ function renderPublishedFeed(posts) {
               <td>
                 <div style="display:flex; gap:6px; align-items:center;">
                   <button type="button" class="btn btn-secondary btn-xs" onclick="openEditPostModal('${escapeHtml(p.id)}', 'published')" title="पोस्ट संपादित करें" style="font-weight:700;">✏️ संपादित करें</button>
+                  ${p.url ? `<a href="${escapeHtml(p.url.startsWith('http') ? p.url : 'https://krashimitra.in' + p.url)}" target="_blank" rel="noopener" class="btn btn-secondary btn-xs" title="किसान को जो पेज दिखता है">🔗 लाइव पेज</a>` : ''}
                   <button type="button" class="btn btn-danger btn-xs" onclick="confirmDeletePublishedPost('${escapeHtml(p.id)}')" title="हटाएं">🗑️</button>
                 </div>
               </td>
@@ -14164,7 +14722,7 @@ async function approveFunnelPost(id) {
   try {
     const r = await fetch(`${API}/api/news/funnel/publish`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ id })
     });
     const d = await r.json();
@@ -14187,7 +14745,7 @@ async function bulkPublishFunnel(skipConfirm = false) {
   try {
     const r = await fetch(`${API}/api/news/funnel/publish`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ publish_all: true })
     });
     const d = await r.json();
@@ -14209,7 +14767,7 @@ async function discardFunnelPost(id) {
   try {
     const r = await fetch(`${API}/api/news/funnel/discard`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ id })
     });
     const d = await r.json();
@@ -14230,7 +14788,7 @@ async function triggerAiNewsSweep() {
   showToast('Gemini कृषि समाचार खोज कर ड्राफ्ट तैयार कर रहा है…');
 
   try {
-    const r = await fetch(`${API}/api/news/trigger-discovery`, { method: 'POST' });
+    const r = await fetch(`${API}/api/news/trigger-discovery`, { method: 'POST', headers: getAuthHeader() });
     const d = await r.json();
     if (d.success) {
       showToast(d.message || 'नए समाचार फ़नल में सुरक्षित कर दिए गए!');
@@ -14277,7 +14835,7 @@ async function curateFromExternalUrl() {
   try {
     const r = await fetch(`${API}/api/news/curate-url`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ url, language: _curateSelectedLang })
     });
     const d = await r.json();
@@ -14333,7 +14891,7 @@ async function saveCuratedDraft(publishNow = false) {
   try {
     const r = await fetch(`${API}/api/news/publish-direct`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ post: _curatedTempDraft, publish_now: publishNow })
     });
     const d = await r.json();
@@ -14384,7 +14942,7 @@ async function editFunnelDraftPrompt(id) {
   try {
     const r = await fetch(`${API}/api/news/funnel/edit`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ id, updates })
     });
     const d = await r.json();
@@ -14456,7 +15014,7 @@ async function saveChangeImageModal() {
     try {
       const r = await fetch(`${API}/api/news/funnel/edit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify({
           id: _currentChangeImgPostId,
           updates: { image: newUrl }
@@ -14530,7 +15088,7 @@ async function generateAiImageForCurrentPost() {
   try {
     const res = await fetch(`${API}/api/news/generate-image`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({
         title,
         category,
@@ -14686,7 +15244,7 @@ async function submitPostEditModal() {
   try {
     const r = await fetch(`${API}/api/news/funnel/edit`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ id: _editingPostId, updates })
     });
     const d = await r.json();
@@ -14712,7 +15270,7 @@ async function confirmDeletePublishedPost(id) {
   try {
     const r = await fetch(`${API}/api/news/funnel/discard`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ id })
     });
     const d = await r.json();

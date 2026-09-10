@@ -287,6 +287,17 @@ IMAGES = {
     "tarbandi-yojana-subsidy": "Paddy field and barbed wire fence in Bundelkhand.jpg",
     "pm-dhan-dhaanya-krishi-yojana": "Apna Khet Village Malasar Farm View.jpg",
     "dhan-nami-mandi-rejection": "Farmer manually harvesting rice in Raichur, Karnataka.jpg",
+
+    # ── सितंबर 2026, दूसरा बैच ────────────────────────────────────────────
+    # The गन्ना file is categorised on Commons under "Fields in Uttar Pradesh",
+    # which is the state the शरदकालीन article is written for. The मक्का one is
+    # an actual winter maize crop (Udaipur, Rajasthan) — the caption says where.
+    # The FMD page takes healthy village cattle: no free photograph of the
+    # mouth or hoof lesions exists that we may use commercially, and the caption
+    # never implies the reader is looking at the disease.
+    "sharadkalin-ganna-buvai": "Sugarcane Agriculture.jpg",
+    "rabi-makka-ki-kheti": "A winter crop of maize near Sei dam in Kotra tehsil, Udaipur district, Rajasthan, in May 2019.jpg",
+    "pashu-khurpaka-muhpaka-fmd": "Dairy Project at Kasturbagram Rural Institute, Indore.jpg",
 }
 
 # In-body illustrations on the hand-written articles.

@@ -302,6 +302,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/dhaniya-ki-kheti-mp", "#16a34a", "🌿", "धनिया · खेती",
+         "धनिया की खेती — बुवाई अक्टूबर से, बीज 4.5 किलो प्रति एकड़"),
         (f"{SITE}/articles/jau-ki-kheti", "#a16207", "🌾", "जौ · खेती",
          "जौ की खेती — गेहूं से आधे पानी में रबी की फसल"),
         (f"{SITE}/articles/chana-ki-kheti", "#a16207", "🫘", "चना · फसल गाइड",

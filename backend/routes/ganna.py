@@ -38,10 +38,25 @@
 # headed "your district's mills" that quietly omits the private half is wrong by
 # omission.
 #
-# The per-mill tier is still absent on purpose. Name, capacity and a
-# registration date is not enough to carry 234 pages, and the thing that would
-# make a mill page worth having — what it owes its farmers — is the fortnightly
-# arrears report, which is a scanned PDF and needs OCR.
+# THE PER-MILL TIER (added 2026-09-08). It was held back on the view that a
+# name, a capacity and a registration date cannot carry 234 pages. Two things
+# changed that. First, the register's NAME turned out to be an address — the
+# taluka is in there, and 222 of 234 yield one (services/ganna_mill_service
+# .split_name), which is the unit a cane farmer actually picks a mill by.
+# Second, the page that earns its place is not a description of one mill but a
+# COMPARISON of it against its neighbours: rank by capacity in the taluka, the
+# district and the state, its share of the district's daily crushing, its age,
+# and the mills he could take the cane to instead. All of that comes from rows
+# already held, so it needs no second source.
+#
+# What is still NOT claimed here is arrears — what the mill owes its farmers —
+# which remains the fortnightly scanned PDF that needs OCR. A mill page says
+# what the mill IS, never what it has paid.
+#
+# mills.indexable() gates the tier per-state: capacity, a neighbour to rank
+# against, and one fact of its own. Maharashtra's register clears it almost
+# everywhere; a thinner state's register will not, and then it gets no mill
+# pages in the index rather than a worse version of this one.
 # ============================================================
 
 import json
@@ -132,6 +147,21 @@ a.chip{text-decoration:none}
 .gn-note{font-size:12px;color:var(--text-mid);line-height:1.65;background:var(--white);
   border:1px solid var(--border);border-radius:var(--radius-sm);
   padding:12px 14px;margin:14px 0}
+
+/* The mill page's derived facts. A list, not prose: each line is one number
+   and the arithmetic it came from, and a farmer scans rather than reads. */
+.gn-facts{margin:0;padding:0 0 0 18px;font-size:13px;color:var(--text-mid);
+  line-height:1.75}
+.gn-facts li{margin:0 0 7px}
+.gn-facts li:last-child{margin-bottom:0}
+.gn-facts b{color:var(--text-dark);font-weight:800}
+
+/* A peer row is tappable; the plain .gn-bar rows above it are not, so it needs
+   to say so on a phone where there is no hover to discover it with. */
+.gn-bar-link .gn-bar-name{color:var(--green-dark);text-decoration:underline;
+  text-decoration-color:rgba(21,94,54,.25);text-underline-offset:3px}
+.gn-bar-link:active{background:var(--green-pale)}
+@media (hover:hover){.gn-bar-link:hover{background:var(--green-pale)}}
 
 /* ── one-line notice, replacing a paragraph in a box ── */
 .gn-flag{display:flex;gap:11px;align-items:flex-start;background:#fffaf0;
@@ -292,25 +322,34 @@ def _faq_ui(faqs: list[tuple[str, str]]) -> tuple[str, dict]:
     return html, ld
 
 
-def _mill_rows(ms: list[dict]) -> str:
+def _mill_rows(state_slug: str, ms: list[dict]) -> str:
     """The district's mills as capacity bars — biggest crusher first.
 
     Capacity IS comparable across mills in a way a cane rate is not (the rate
     is the same for all of them by law), so unlike the state bars these scale
-    from zero honestly."""
+    from zero honestly.
+
+    Each row is now a link into that mill's own page, which is also the only
+    crawlable path to the tier — a mill URL carries an opaque hash slug, so
+    nothing would ever discover one that this list did not point at."""
     top = max((m["tcd"] for m in ms), default=0) or 1
     out = []
     for m in ms:
         pct = max(6, round(m["tcd"] / top * 100)) if m["tcd"] else 0
         cap = (f'{m["tcd"]:,} TCD' if m["tcd"] else "क्षमता दर्ज नहीं")
+        # The taluka is the useful half of the address; the registration date
+        # was there before it existed and stays as the fallback.
+        tail = m.get("taluka") or (m["registered"] and "नोंदणी " + m["registered"] or "")
+        href = f'{SITE}/ganna/{state_slug}/{m["district_slug"]}/{m["slug"]}'
         out.append(
-            f'<div class="gn-bar">'
-            f'<div class="gn-bar-top"><span class="gn-bar-name">{escape(m["name"])}</span></div>'
+            f'<a class="gn-bar gn-bar-link" href="{href}">'
+            f'<div class="gn-bar-top"><span class="gn-bar-name">'
+            f'{escape(_short_name(m["name"]))}</span></div>'
             + (f'<div class="gn-bar-track"><i class="gn-bar-fill" style="width:{pct}%"></i></div>'
                if pct else '<div style="height:6px"></div>')
             + f'<div class="gn-bar-sub"><span>{escape(cap)}</span>'
-              f'<span>{escape(m["registered"] and "नोंदणी " + m["registered"] or "")}</span>'
-              f'</div></div>')
+              f'<span>{escape(tail)}</span>'
+              f'</div></a>')
     return f'<div class="gn-bars">{"".join(out)}</div>'
 
 
@@ -346,6 +385,16 @@ def ganna_sitemap():
             if len(ms) < 2:          # single-mill districts render noindex
                 continue
             rows.append((f"{SITE}/ganna/{st['slug']}/{d_slug}", src.get("fetched", "")))
+            # Mill pages, and only the ones that render indexable — the same
+            # rule this loop already applies one tier up. A mill URL is an
+            # opaque hash, so the sitemap and the district list are the only
+            # two ways one is ever found; submitting a noindex mill would
+            # spend crawl budget to be told to ignore it.
+            for m in sorted(ms, key=lambda x: x["slug"]):
+                if not mills.indexable(m, ms):
+                    continue
+                rows.append((f"{SITE}/ganna/{st['slug']}/{d_slug}/{m['slug']}",
+                             src.get("fetched", "")))
     body = "\n".join(
         "  <url>\n    <loc>" + escape(u) + "</loc>"
         + (f"\n    <lastmod>{lm}</lastmod>" if lm else "")
@@ -864,7 +913,7 @@ def ganna_district(state_slug: str, dist_slug: str):
 <h2 class="gn-panel-h">मिलें — पेराई क्षमता के हिसाब से</h2>
 <p class="gn-panel-s">पट्टी की लंबाई = मिल की रोज़ की पेराई क्षमता (TCD)।
 सबसे बड़ी मिल सबसे ऊपर।</p>
-{_mill_rows(ms)}
+{_mill_rows(state_slug, ms)}
 </div>
 
 <h2 class="shop-section-title">{escape(hi)} के दूसरे जिले</h2>
@@ -879,4 +928,284 @@ def ganna_district(state_slug: str, dist_slug: str):
     return _doc(title, desc, f"{SITE}/ganna/{state_slug}/{dist_slug}", crumbs, body,
                 ld=ld, active="ganna", extra_css=_EXTRA_CSS,
                 footer_note=_FOOTER_NOTE, robots=robots,
+                updated=src.get("fetched", ""))
+
+
+# ── tier 4 : one mill ───────────────────────────────────────────────────────
+def _short_name(raw: str) -> str:
+    """The mill's own name, without the address trailing it.
+
+    The register writes name and address as one string. That address is what
+    split_name() mines the taluka out of, but repeated in a heading it just
+    pushes the name off a phone screen, so the display name is cut at the first
+    address marker. Cut only where a marker actually is — a name carrying no
+    address comes back whole, never chopped to a length.
+    """
+    s = (raw or "").strip()
+    for mark in ("ता.", "ता,", "जि.", "जि,", "मु.पो", "पो."):
+        i = s.find(mark)
+        if i > 12:
+            s = s[:i]
+    return s.strip(" ,.-") or (raw or "").strip()
+
+
+# Boilerplate that sits in almost every name in the register. Ordered longest
+# first so "सहकारी साखर कारखाना" wins over the bare "साखर कारखाना" inside it.
+# "साख्रर" is the register's own typo for साखर and is in there twice.
+_BOILER = ("शेतकरी सहकारी साखर कारखाना", "सहकारी साखर कारखाना", "सहकारी साख्रर कारखाना",
+           "सहकारी साखर", "साखर कारखाना", "साख्रर कारखाना",
+           "ॲग्रो इंडस्ट्रीज", "अँग्रो इंडस्ट्रिज", "ॲग्रो प्रोडक्ट",
+           "शुगर्स", "शुगर")
+
+
+def _brand_name(raw: str) -> str:
+    """The distinctive half of a mill's name — what a person would call it.
+
+    Every entry in the register carries "सहकारी साखर कारखाना लि." and the
+    formal name runs to 62 characters, which is a whole SERP title spent on
+    words shared with 233 other pages. Cutting the boilerplate leaves a median
+    of 11 characters and room for the taluka and the capacity — the parts that
+    differ, and the parts someone would actually type.
+
+    Only cuts when at least six characters of real name come first, so a mill
+    whose name IS the boilerplate keeps it rather than becoming empty.
+    """
+    s = _short_name(raw)
+    for c in _BOILER:
+        i = s.find(c)
+        if i >= 6:
+            return s[:i].strip(" ,.-") or s
+    return s
+
+
+# "3वें नंबर पर" is not how the first ten are spoken — a Hindi reader hears
+# तीसरे. The digit form is right from eleven on, where the word forms stop
+# being common, so the table stops there rather than inventing उन्नीसवें.
+_ORD_HI = ("", "पहले", "दूसरे", "तीसरे", "चौथे", "पांचवें",
+           "छठे", "सातवें", "आठवें", "नौवें", "दसवें")
+
+
+def _ord_hi(n: int) -> str:
+    """Oblique ordinal for "... में {} नंबर पर"."""
+    return _ORD_HI[n] if 1 <= n < len(_ORD_HI) else f"{n}वें"
+
+
+def _cap_label(m: dict) -> str:
+    return f"{m['tcd']:,} TCD" if m["tcd"] else "क्षमता दर्ज नहीं"
+
+
+def _mill_peers(state_slug: str, ms: list[dict], current: str,
+                heading: str, sub: str) -> str:
+    """Sibling mills as links — the "where else could I take it" answer."""
+    rows = []
+    for m in ms:
+        if m["slug"] == current:
+            continue
+        href = f"{SITE}/ganna/{state_slug}/{m['district_slug']}/{m['slug']}"
+        rows.append(
+            f'<a class="gn-bar gn-bar-link" href="{href}">'
+            f'<div class="gn-bar-top"><span class="gn-bar-name">'
+            f'{escape(_short_name(m["name"]))}</span></div>'
+            f'<div class="gn-bar-sub"><span>{escape(_cap_label(m))}</span>'
+            f'<span>{escape(m.get("taluka") or "")}</span></div></a>')
+    if not rows:
+        return ""
+    return (f'<div class="gn-panel"><h2 class="gn-panel-h">{escape(heading)}</h2>'
+            f'<p class="gn-panel-s">{escape(sub)}</p>'
+            f'<div class="gn-bars">{"".join(rows)}</div></div>')
+
+
+@router.get("/ganna/{state_slug}/{dist_slug}/{mill_slug}", response_class=HTMLResponse)
+def ganna_mill(state_slug: str, dist_slug: str, mill_slug: str):
+    """One sugar mill: where it is, how big, how old, and what stands near it.
+
+    A wrong district in the path 301s to the right one instead of 404ing. The
+    mill slug already carries its own district, so the canonical address is
+    knowable — and a stale link should land rather than die.
+    """
+    st = _state(state_slug)
+    p = mills.profile(state_slug, mill_slug) if st else {}
+    if not st or not p:
+        if st and mills.by_district(state_slug).get(dist_slug):
+            back = f"{SITE}/ganna/{state_slug}/{dist_slug}"
+        else:
+            back = f"{SITE}/ganna/{state_slug}" if st else f"{SITE}/ganna"
+        return RedirectResponse(back, status_code=302)
+
+    m = p["mill"]
+    if m["district_slug"] != dist_slug:
+        return RedirectResponse(
+            f"{SITE}/ganna/{state_slug}/{m['district_slug']}/{mill_slug}",
+            status_code=301)
+
+    src = mills.meta(state_slug)
+    data = _load()
+    season = _season_for(date.today())
+    nxt = data.get("next_season", "")
+    show = data.get("frp", {}).get(nxt, {}) or _frp(season)
+    show_season = nxt if data.get("frp", {}).get(nxt) else season
+
+    hi, d_hi = st["hi"], m["district"]
+    name = _short_name(m["name"])
+    # The SERP copy and the FAQ stems use the short brand, not the 62-character
+    # registered name — see _brand_name. The H1 keeps the fuller form, because
+    # by then the reader has already chosen this page and wants to be sure it
+    # is the right mill.
+    brand = _brand_name(m["name"])
+    tal = (m.get("taluka") or "").strip()
+    rate = _headline(st, show)
+    canon = f"{SITE}/ganna/{state_slug}/{dist_slug}/{mill_slug}"
+    where = f"{tal}, {d_hi}" if tal else d_hi
+    tcd_txt = f"{m['tcd']:,}" if m["tcd"] else "—"
+    rank_txt = (f"{p['rank_district']}/{p['of_district']}"
+                if p["rank_district"] else "—")
+
+    stats = _stats([
+        (tcd_txt, "पेराई क्षमता (TCD)"),
+        (rank_txt, f"{d_hi} जिले में क्रम"),
+        (rate, f"गन्ना रेट · {show_season}"),
+    ])
+
+    # Every derived line names the arithmetic behind it. A farmer can check
+    # 12,000 × 150 for himself; he cannot check a number that merely appeared.
+    facts = []
+    if m["tcd"]:
+        facts.append(
+            f'<li><b>रोज़ की पेराई:</b> {m["tcd"]:,} टन गन्ना — {d_hi} जिले की कुल '
+            f'सहकारी क्षमता ({p["district_tcd"]:,} TCD) का {p["share"]}%।</li>')
+        facts.append(
+            f'<li><b>पूरे सीजन में (अनुमान):</b> करीब {p["season_tonnes"]:,} टन — '
+            f'यानी {m["tcd"]:,} TCD × {p["season_days"]} दिन का पेराई सीजन। सीजन '
+            f'छोटा-बड़ा होने पर यह आंकड़ा बदलेगा। यह मिल का दावा नहीं, सीधा गुणा है।</li>')
+    if p["rank_state"]:
+        facts.append(
+            f'<li><b>राज्य में क्रम:</b> {hi} की {p["of_state"]} सहकारी मिलों में '
+            f'क्षमता के हिसाब से {_ord_hi(p["rank_state"])} नंबर पर।</li>')
+    if p["age"] is not None and m.get("registered"):
+        facts.append(
+            f'<li><b>कब से चालू:</b> {escape(m["registered"])} को रजिस्टर्ड — करीब '
+            f'{p["age"]} साल पुरानी सहकारी मिल।</li>')
+    if tal:
+        facts.append(
+            f'<li><b>जगह:</b> {escape(tal)} तालुका, {escape(d_hi)} जिला'
+            + (f' — पिन {escape(m["pin"])}' if m.get("pin") else "") + '।</li>')
+
+    scope = (
+        '<div class="gn-flag"><span class="gn-flag-ic">ℹ️</span>'
+        '<span><span class="gn-flag-t">यह जानकारी सहकारी रजिस्टर से है</span>'
+        f'<span class="gn-flag-d">{escape(src.get("source", ""))} के सहकारी साखर '
+        f'कारखाना रजिस्टर में दर्ज नाम, पेराई क्षमता और रजिस्ट्रेशन तारीख। मिल का '
+        f'बकाया, पर्ची या तौल का रिकॉर्ड उस रजिस्टर में नहीं होता — इसलिए इस पेज पर '
+        f'भी नहीं है।</span></span></div>')
+
+    # Richest first: brand, the words someone searches ("साखर कारखाना"), the
+    # place, then the capacity. _fit drops from the right as the name grows.
+    if m["tcd"]:
+        title = _fit(f"{brand} साखर कारखाना — {where}, {m['tcd']:,} TCD",
+                     f"{brand} साखर कारखाना — {where}",
+                     f"{brand} — {where}, {m['tcd']:,} TCD",
+                     f"{brand} — {where}",
+                     f"{brand} — {d_hi} की चीनी मिल",
+                     f"{brand} — चीनी मिल")
+    else:
+        title = _fit(f"{brand} साखर कारखाना — {where}",
+                     f"{brand} — {where}",
+                     f"{brand} — {d_hi} की चीनी मिल",
+                     f"{brand} — चीनी मिल")
+
+    if m["tcd"] and p["rank_district"]:
+        desc_rich = (f"{brand} साखर कारखाना ({where}) — पेराई क्षमता {m['tcd']:,} TCD, {d_hi} जिले की "
+                     f"{p['of_district']} सहकारी मिलों में {_ord_hi(p['rank_district'])} नंबर पर। "
+                     f"गन्ना रेट {rate} प्रति क्विंटल।")
+    else:
+        desc_rich = (f"{brand} साखर कारखाना ({where}) — {hi} की सहकारी चीनी मिल। "
+                     f"गन्ना रेट {rate} प्रति क्विंटल।")
+    if m["tcd"] and p["rank_district"]:
+        desc_mid = (f"{brand} ({where}) — पेराई क्षमता {m['tcd']:,} TCD, {d_hi} जिले की "
+                    f"{p['of_district']} मिलों में {_ord_hi(p['rank_district'])} नंबर पर। "
+                    f"गन्ना रेट {rate} प्रति क्विंटल।")
+    else:
+        desc_mid = desc_rich
+    desc = _fit(desc_rich, desc_mid,
+                f"{brand} ({where}) — सहकारी चीनी मिल, गन्ना रेट {rate} प्रति क्विंटल।",
+                limit=162)
+
+    src_name = src.get("source", "राज्य साखर आयुक्तालय")
+    if m["tcd"] and p["rank_district"]:
+        a_cap = (f"{src_name} के रजिस्टर के अनुसार इस मिल की क्षमता {m['tcd']:,} TCD है — "
+                 f"यानी एक दिन में {m['tcd']:,} टन गन्ना। {d_hi} जिले की "
+                 f"{p['of_district']} सहकारी मिलों में यह क्षमता के हिसाब से "
+                 f"{_ord_hi(p['rank_district'])} नंबर पर आती है।")
+    else:
+        a_cap = "इस मिल की पेराई क्षमता सहकारी रजिस्टर में दर्ज नहीं है।"
+    a_where = (f"यह मिल {tal} तालुका, {d_hi} जिले ({hi}) में है। पता रजिस्टर में दर्ज "
+               f"नाम से ही लिया गया है।" if tal else
+               f"रजिस्टर में इस मिल का तालुका अलग से दर्ज नहीं है — यह {d_hi} जिले "
+               f"({hi}) की सहकारी मिल है।")
+
+    faq_html, faq_ld = _faq_ui([
+        (f"{brand} साखर कारखाना की पेराई क्षमता कितनी है?", a_cap),
+        (f"{brand} साखर कारखाना किस तालुका में है?", a_where),
+        ("इस मिल पर गन्ने का रेट क्या मिलेगा?",
+         f"{hi} में गन्ने का दाम {rate} प्रति क्विंटल है और यह हर मिल पर एक जैसा लागू "
+         f"होता है — मिल बदलने से रेट नहीं बदलता। क्षमता से यह तय होता है कि सीजन में "
+         f"पर्ची और तौल का नंबर कितनी जल्दी आता है।"),
+        ("मिल भुगतान न करे तो कहां शिकायत करें?",
+         "गन्ना नियंत्रण आदेश के तहत मिल को तौल के 14 दिन के भीतर भुगतान करना होता है। "
+         "देर होने पर जिला गन्ना अधिकारी या राज्य के साखर आयुक्त कार्यालय में शिकायत "
+         "दर्ज कराई जा सकती है।"),
+    ])
+
+    crumbs = (f'<a href="{SITE}/">होम</a> › <a href="{SITE}/ganna">गन्ना मूल्य</a> › '
+              f'<a href="{SITE}/ganna/{state_slug}">{escape(hi)}</a> › '
+              f'<a href="{SITE}/ganna/{state_slug}/{dist_slug}">{escape(d_hi)}</a> › '
+              f'<span>{escape(name)}</span>')
+    ld = _ld(_crumb_ld([("होम", f"{SITE}/"), ("गन्ना मूल्य", f"{SITE}/ganna"),
+                        (hi, f"{SITE}/ganna/{state_slug}"),
+                        (d_hi, f"{SITE}/ganna/{state_slug}/{dist_slug}"),
+                        (name, canon)]), faq_ld)
+
+    facts_html = (f'<div class="gn-panel"><h2 class="gn-panel-h">इस मिल के बारे में</h2>'
+                  f'<ul class="gn-facts">{"".join(facts)}</ul></div>' if facts else "")
+    near_html = _mill_peers(
+        state_slug, p["near"], mill_slug,
+        f"{tal} तालुका की दूसरी सहकारी मिलें",
+        "इतनी ही दूर — गन्ना यहां भी दिया जा सकता है।") if tal else ""
+    # Sliced AFTER dropping this mill, not before — taking the top 12 and then
+    # removing one of them is how the list quietly became eleven.
+    dist_html = _mill_peers(
+        state_slug, [x for x in p["peers"] if x["slug"] != mill_slug][:12], mill_slug,
+        f"{d_hi} जिले की बड़ी सहकारी मिलें",
+        "पेराई क्षमता के हिसाब से — सबसे बड़ी सबसे ऊपर।")
+
+    body = f"""
+<section class="answer">
+<div class="answer-in">
+<h1>{escape(name)}</h1>
+<div class="answer-sub">{escape(where)} · {escape(hi)} · सहकारी रजिस्टर</div>
+<div class="answer-price">
+<span class="answer-rupee">{escape(tcd_txt)}</span>
+<span class="answer-delta">TCD पेराई क्षमता</span>
+</div>
+<p class="answer-lead">गन्ने का दाम {escape(hi)} की हर मिल पर एक ही है — {rate} प्रति
+क्विंटल। मिल बदलने से रेट नहीं बदलता; क्षमता से यह बदलता है कि सीजन में नंबर कब आता है।</p>
+</div>
+</section>
+
+{stats}
+{scope}
+{facts_html}
+{near_html}
+{dist_html}
+
+<div class="cta-row">
+<a class="btn btn-app" href="{SITE}/ganna/{state_slug}/{dist_slug}">← {escape(d_hi)} की सभी मिलें</a>
+</div>
+
+<h2 class="shop-section-title">अक्सर पूछे जाने वाले सवाल</h2>
+{faq_html}
+"""
+    robots = "" if p["indexable"] else "noindex,follow"
+    return _doc(title, desc, canon, crumbs, body, ld=ld, active="ganna",
+                extra_css=_EXTRA_CSS, footer_note=_FOOTER_NOTE, robots=robots,
                 updated=src.get("fetched", ""))

@@ -599,15 +599,28 @@
     });
   }
 
+  // The country editions. Each page ships in that country's own language and
+  // carries its own toggle, so the language shown here is what the reader
+  // lands in — keep it in step with `langs[0]` in tools/build_international.py.
+  // Seven of these were missing until 2026-09-10; a country that has a page
+  // and is not listed here is a page nobody can reach from the menu.
   var COUNTRIES = [
     { name: '🌐 Global Hub', href: '/international' },
-    { name: '🇺🇸 United States', href: '/us' },
-    { name: '🇬🇧 United Kingdom', href: '/uk' },
-    { name: '🇳🇵 Nepal (नेपाल)', href: '/np' },
+    { name: '🇺🇸 United States (English)', href: '/us' },
+    { name: '🇬🇧 United Kingdom (English)', href: '/uk' },
+    { name: '🇨🇦 Canada (English)', href: '/ca' },
+    { name: '🇦🇪 UAE (العربية)', href: '/ae' },
+    { name: '🇸🇦 Saudi Arabia (العربية)', href: '/sa' },
+    { name: '🇰🇼 Kuwait (العربية)', href: '/kw' },
+    { name: '🇶🇦 Qatar (العربية)', href: '/qa' },
+    { name: '🇴🇲 Oman (العربية)', href: '/om' },
+    { name: '🇳🇵 Nepal (नेपाली)', href: '/np' },
     { name: '🇧🇩 Bangladesh (বাংলা)', href: '/bd' },
-    { name: '🇮🇩 Indonesia', href: '/id' },
-    { name: '🇳🇬 Nigeria', href: '/ng' },
-    { name: '🇱🇰 Sri Lanka', href: '/lk' },
+    { name: '🇱🇰 Sri Lanka (සිංහල)', href: '/lk' },
+    { name: '🇩🇪 Germany (Deutsch)', href: '/de' },
+    { name: '🇲🇾 Malaysia (Melayu)', href: '/my' },
+    { name: '🇮🇩 Indonesia (Bahasa)', href: '/id' },
+    { name: '🇳🇬 Nigeria (English)', href: '/ng' },
     { name: '🇮🇳 India (भारत)', href: '/' }
   ];
 

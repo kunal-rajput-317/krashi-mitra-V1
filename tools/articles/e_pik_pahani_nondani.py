@@ -327,6 +327,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/rabi-jowar-shalu-lagvad", "#ca8a04", "🌾", "ज्वार · महाराष्ट्र",
+         "रबी ज्वार (शालू) — बुवाई 15 सितंबर से 15 अक्टूबर तक"),
         (f"{SITE}/articles/namo-shetkari-mahasanman-nidhi", "#2e7d32", "💰", "महाराष्ट्र · योजना",
          "नमो शेतकरी महासन्मान निधी — ₹12,000 सालाना"),
         (f"{SITE}/articles/mahadbt-shetkari-yojana", "#1565c0", "🖥️", "महाराष्ट्र · योजना",

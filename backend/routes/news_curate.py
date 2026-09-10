@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.database.db import NewsComment, NewsLike, get_db
+from backend.routes.admin import require_admin
 from backend.utils.auth_utils import decode_access_token, resolve_token_user
 from backend.services.news_auto_service import (
     add_direct_post,
@@ -25,6 +26,7 @@ from backend.services.news_auto_service import (
     get_staged_posts,
     publish_all_staged,
     publish_post,
+    review_flags,
     run_discovery_and_stage,
 )
 
@@ -123,6 +125,36 @@ class CommentRequest(BaseModel):
     comment_text: str = Field(..., min_length=1, max_length=1000)
 
 
+# ── Where a story actually lives ───────────────────────────────
+
+def _with_urls(posts: List[dict]) -> List[dict]:
+    """`posts`, each with the `url` its page is served at.
+
+    The slug is derived from the title by transliteration, so news_page.py is
+    the only place that knows how to build it. Handing it to the client here
+    means neither the admin panel nor krashi_news.html has to re-derive a
+    Devanagari→ASCII slug in JavaScript — and it is what lets the panel link
+    to the live page, the absence of which is how /krashi_news/<slug> went on
+    404ing in production unnoticed.
+
+    Imported lazily and defensively: news_page imports this module's service
+    layer, and a fault in the renderer must never take the public feed down.
+    """
+    try:
+        from backend.routes.news_page import _story_url
+    except Exception as e:  # pragma: no cover — import guard
+        logger.warning(f"story URL helper unavailable: {e}")
+        return posts
+
+    out = []
+    for p in posts:
+        try:
+            out.append({**p, "url": _story_url(p)})
+        except Exception:
+            out.append(p)
+    return out
+
+
 # ── Public Feed ────────────────────────────────────────────────
 
 @router.get("/feed")
@@ -131,7 +163,7 @@ async def get_public_news_feed():
     Returns all published auto-pilot & curated agricultural news articles.
     Consumed directly by frontend/krashi_news.html.
     """
-    published = get_published_posts()
+    published = _with_urls(get_published_posts())
     return {
         "success": True,
         "count": len(published),
@@ -142,19 +174,30 @@ async def get_public_news_feed():
 # ── Admin Staging Funnel Endpoints ─────────────────────────────
 
 @router.get("/funnel")
-async def get_funnel_status():
-    """Returns the current 3-4 day cycle information and staged posts waiting for review."""
+async def get_funnel_status(_: str = Depends(require_admin)):
+    """Returns the current 3-4 day cycle information and staged posts waiting for review.
+
+    `review_flags` is recomputed on every read rather than passed through from
+    disk. The stored copy is written only when the Day-5 watchdog runs, so a
+    draft an admin reviews on day 4 — the whole point of the review window —
+    carried no warnings at all. The gate is advice to a human; the human has
+    to be able to see it.
+    """
     cycle_info = get_current_cycle_info()
-    staged = get_staged_posts()
+    staged = []
+    for p in get_staged_posts():
+        flags = review_flags(p)
+        staged.append({**p, "review_flags": flags, "held_for_review": bool(flags)})
+
     return {
         "success": True,
         "cycle": cycle_info,
-        "staged_posts": staged,
+        "staged_posts": _with_urls(staged),
     }
 
 
 @router.post("/funnel/publish")
-async def publish_funnel_item(payload: FunnelPublishRequest):
+async def publish_funnel_item(payload: FunnelPublishRequest, _: str = Depends(require_admin)):
     """Publishes a single post or bulk publishes all staged posts."""
     if payload.publish_all:
         count = publish_all_staged()
@@ -171,7 +214,7 @@ async def publish_funnel_item(payload: FunnelPublishRequest):
 
 
 @router.post("/funnel/discard")
-async def discard_funnel_item(payload: FunnelDiscardRequest):
+async def discard_funnel_item(payload: FunnelDiscardRequest, _: str = Depends(require_admin)):
     """Discards an unwanted draft from the staging funnel."""
     ok = discard_post(payload.id)
     if not ok:
@@ -180,7 +223,7 @@ async def discard_funnel_item(payload: FunnelDiscardRequest):
 
 
 @router.post("/funnel/edit")
-async def edit_funnel_item(payload: FunnelEditRequest):
+async def edit_funnel_item(payload: FunnelEditRequest, _: str = Depends(require_admin)):
     """Edits a staged draft in the funnel."""
     updated = edit_staged_post(payload.id, payload.updates)
     if not updated:
@@ -189,7 +232,7 @@ async def edit_funnel_item(payload: FunnelEditRequest):
 
 
 @router.post("/trigger-discovery")
-async def trigger_ai_discovery():
+async def trigger_ai_discovery(_: str = Depends(require_admin)):
     """Triggers an on-demand Gemini news discovery sweep (Days 1-3 simulation)."""
     new_items = await run_discovery_and_stage()
     return {
@@ -203,7 +246,7 @@ async def trigger_ai_discovery():
 # ── Smart URL Curator ─────────────────────────────────────────
 
 @router.post("/curate-url")
-async def curate_news_from_url(payload: CurateUrlRequest):
+async def curate_news_from_url(payload: CurateUrlRequest, _: str = Depends(require_admin)):
     """
     Takes any agricultural news web link, scrapes it, and uses Gemini to create
     a complete news post with 3 takeaway bullets in the selected language.
@@ -217,7 +260,7 @@ async def curate_news_from_url(payload: CurateUrlRequest):
 
 
 @router.post("/publish-direct")
-async def publish_news_direct(payload: DirectPublishRequest):
+async def publish_news_direct(payload: DirectPublishRequest, _: str = Depends(require_admin)):
     """Saves a post directly or adds it to the staging queue."""
     try:
         saved = add_direct_post(payload.post, publish_now=payload.publish_now)
@@ -228,7 +271,7 @@ async def publish_news_direct(payload: DirectPublishRequest):
 
 
 @router.post("/generate-image")
-async def generate_news_image_route(payload: GenerateImageRequest):
+async def generate_news_image_route(payload: GenerateImageRequest, _: str = Depends(require_admin)):
     """Generates a relevant, high-resolution agricultural image using Gemini + Imagen 3 / Pollinations."""
     try:
         res = await generate_ai_agri_image(

@@ -324,6 +324,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pyaj-nashik-se-vashi-bhav", "#c2410c", "🧅", "प्याज़ · मंडी",
+         "नासिक और वाशी में प्याज़ का भाव अलग क्यों होता है"),
+        (f"{SITE}/articles/lahsun-thrips-baingani-dhabba", "#7c3aed", "🧄", "लहसुन · कीट-रोग",
+         "लहसुन-प्याज़ में थ्रिप्स और बैंगनी धब्बा — पहचान और सही दवा"),
         (f"{SITE}/articles/garlic-farming-guide", "#7c3aed", "🧄", "लहसुन · फसल गाइड",
          "लहसुन की उन्नत खेती — बुवाई से भंडारण तक"),
         (f"{SITE}/articles/potato_guide_up", "#795548", "🥔", "आलू · फसल गाइड",

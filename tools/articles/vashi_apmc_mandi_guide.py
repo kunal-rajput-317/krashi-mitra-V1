@@ -299,6 +299,14 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/kela-mumbai-mandi-ganesh", "#eab308", "🍌", "फल · बाज़ार",
+         "गणेशोत्सव में केले का भाव — कटाई, वाशी और नेट भाव"),
+        (f"{SITE}/articles/mumbai-mandi-transport-vahan", "#15803d", "🚚", "मंडी · ढुलाई",
+         "मंडी तक माल भेजने का वाहन — कौन सा और कितना खर्च"),
+        (f"{SITE}/articles/sabji-packing-grading-mumbai", "#15803d", "📦", "मंडी · बिक्री",
+         "सब्ज़ी की ग्रेडिंग और पैकिंग — मंडी में भाव बढ़ाने का तरीक़ा"),
+        (f"{SITE}/articles/mumbai-mandi-payment-suraksha", "#c2410c", "🧾", "मंडी · भुगतान",
+         "मंडी में माल बेचा पर पैसा नहीं मिला — क्या करें"),
         (f"{SITE}/articles/enam-online-fasal-bechna", "#0284c7", "🏛️", "मंडी · बिक्री",
          "e-NAM पर फसल कैसे बेचें — पंजीकरण से भुगतान तक"),
         (f"{SITE}/articles/pyaj-kharif-kheti-bhandaran", "#c2410c", "🧅", "प्याज़ · भंडारण",

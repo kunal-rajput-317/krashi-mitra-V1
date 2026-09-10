@@ -7,9 +7,11 @@ printed as a farmer's crop, and the day-on-day move is computed on a paired
 basis rather than against a different set of mandis.
 """
 
+import re
+
 import pytest
 
-from backend.services import wa_channels, wa_post
+from backend.services import wa_channels, wa_post, wa_style
 
 
 @pytest.fixture(autouse=True)
@@ -104,11 +106,20 @@ class TestCropLines:
         his = [l["hi"] for l in wa_post._crop_lines(rows)]
         assert len(his) == len(set(his))
 
-    def test_caps_at_five(self):
+    def test_the_pool_is_wider_than_the_post(self):
+        """_crop_lines returns a POOL, not the post. The formats pick their own
+        lines out of it — सबसे बड़ी हलचल wants the day's biggest mover, which is
+        often the ninth staple — and the panel's chips swap one for another.
+        Both need more crops than the five that get printed."""
         rows = {c: agg([1000] * 4, mandis=list("abcd"))
                 for c in ["Wheat", "Paddy(Dhan)(Common)", "Onion", "Potato",
                           "Tomato", "Maize", "Soyabean"]}
-        assert len(wa_post._crop_lines(rows)) == wa_post._CROPS_PER_POST
+        pool = wa_post._crop_lines(rows)
+        assert len(pool) == 7 > wa_post._CROPS_PER_POST
+
+    def test_the_pool_itself_is_capped(self):
+        rows = {f"Crop{i}": agg([1000] * 4, mandis=list("abcd")) for i in range(40)}
+        assert len(wa_post._crop_lines(rows)) <= wa_post._POOL
 
     def test_mill_output_never_reaches_a_post(self):
         rows = {"Rice":  agg([3300] * 9, mandis=list("abcdefghi")),
@@ -117,23 +128,74 @@ class TestCropLines:
 
 
 class TestText:
-    def test_post_carries_price_date_and_one_deep_link(self):
-        lines = [{"hi": "गेहूं", "avg": 2501, "pct": -0.2},
-                 {"hi": "धान", "avg": 2609, "pct": 0.8}]
-        txt = wa_post._text("उत्तर प्रदेश", "uttar-pradesh", lines, 251)
-        assert "उत्तर प्रदेश मंडी भाव" in txt
-        assert "गेहूं — ₹2,501 ▼ 0.2%" in txt
-        assert "251 मंडियों" in txt
-        # The number is IN the post — a post that withholds it to force a click
-        # is the kind that gets muted.
-        assert txt.count("https://") == 1
-        assert "/bhav/rajya/uttar-pradesh?utm_source=wa" in txt
+    """What every post must carry, whatever shape the rotation gave it.
+
+    These used to test one function that built one shape. There are now thirty
+    shapes, so each of these asserts across all of them — which is the stronger
+    claim anyway: it is not "the post has a link", it is "there is no format
+    and no tone that can drop the link".
+    """
+
+    def _ctx(self, mandis=251, market=""):
+        return {"state": "उत्तर प्रदेश", "slug": "uttar-pradesh", "lang": "hi",
+                "bhav": "मंडी भाव", "date": "9 सितंबर 2026",
+                "mandis": mandis, "market": market,
+                "url": f"{wa_post.SITE}/bhav/rajya/uttar-pradesh{wa_post._LINK_Q}"}
+
+    def _lines(self):
+        return [{"name": "गेहूं", "hi": "गेहूं", "avg": 2501, "pct": -0.2,
+                 "move": "▼ 0.2%", "rank": 0, "top_market": "कानपुर", "p_hi": 2600,
+                 "w_lo": 2400, "w_hi": 2600},
+                {"name": "धान", "hi": "धान", "avg": 2609, "pct": 0.8,
+                 "move": "▲ 0.8%", "rank": 1, "top_market": "गोरखपुर", "p_hi": 2700,
+                 "w_lo": 2500, "w_hi": 2700}]
+
+    def _every(self, ctx=None, lines=None):
+        ctx, lines = ctx or self._ctx(), lines or self._lines()
+        for f in wa_style.FORMATS:
+            for t in wa_style.TONES:
+                yield f["id"], t["id"], wa_style.compose(ctx, lines, f["id"], t["id"])
+
+    def test_every_post_carries_price_and_exactly_one_deep_link(self):
+        for fid, tid, txt in self._every():
+            # The number is IN the post — a post that withholds it to force a
+            # click is the kind that gets muted.
+            assert "₹2,501" in txt, (fid, tid)
+            assert txt.count("https://") == 1, (fid, tid)
+            assert "/bhav/rajya/uttar-pradesh?utm_source=wa" in txt, (fid, tid)
+
+    def test_every_post_says_how_many_mandis_are_behind_it(self):
+        for fid, tid, txt in self._every():
+            assert "251" in txt, (fid, tid)
 
     def test_link_is_tagged_for_ga4(self):
         """WhatsApp in-app clicks arrive with no referrer; without utm they are
         indistinguishable from direct traffic and the channel cannot be judged."""
-        txt = wa_post._text("बिहार", "bihar", [{"hi": "धान", "avg": 2000, "pct": None}], 10)
-        assert "utm_source=wa" in txt and "utm_medium=channel" in txt
+        for fid, tid, txt in self._every():
+            assert "utm_source=wa" in txt and "utm_medium=channel" in txt, (fid, tid)
+
+    def test_no_format_or_tone_can_change_a_price(self):
+        """The whole reason services/wa_style is a separate module: it may
+        arrange words around the figures, never recompute one. If this ever
+        fails, the channel and the /bhav page have stopped agreeing — which is
+        the single thing wa_post exists to prevent.
+
+        Two halves, and the second is the one that bites. Every combination
+        must print every headline average — and it must print NOTHING ELSE
+        that wa_post did not put in the line. दायरा and हफ़्ता legitimately
+        carry extra figures (a top market's price, a week's band), so the test
+        is not "the same numbers" but "no invented ones": every ₹ in the post
+        has to be traceable to a field of a line dict."""
+        allowed = set()
+        for line in self._lines():
+            for k in ("avg", "p_hi", "p_lo", "w_lo", "w_hi"):
+                if line.get(k):
+                    allowed.add(f"₹{line[k]:,}")
+        for fid, tid, txt in self._every():
+            for line in self._lines():
+                assert f"₹{line['avg']:,}" in txt, (fid, tid, line["name"])
+            printed = set(re.findall(r"₹[\d,]+", txt))
+            assert printed <= allowed, (fid, tid, printed - allowed)
 
 
 class TestPosts:
@@ -237,8 +299,13 @@ class TestThinStates:
             "NCT of Delhi": {"Onion": agg([2500], mandis=["APMC Azadpur"])},
         })
         post, = wa_post.posts(refresh=True)
-        assert "APMC Azadpur की सरकारी रिपोर्ट" in post["text"]
-        assert "औसत" not in post["text"], "one trader's quote is not a state average"
+        # The wording is a tone's business and rotates; that the market is
+        # NAMED and that the word औसत is nowhere near it are this module's,
+        # and hold in every voice.
+        for t in wa_style.TONES:
+            txt = wa_post.recompose("NCT of Delhi", tone=t["id"])["text"]
+            assert "APMC Azadpur" in txt, t["id"]
+            assert "औसत" not in txt, (t["id"], "one trader's quote is not a state average")
 
     def test_the_strict_bar_still_wins_where_the_state_can_clear_it(self, monkeypatch, wired):
         """The fallback is a last resort, not a second opinion: a crop with 3
@@ -363,3 +430,180 @@ class TestConfidenceScore:
         l, = wa_post._crop_lines(rows)
         assert l["avg"] == 2200 and l["score"] < 70
 
+
+class TestWeekBand:
+    """हफ़्ते का हाल — ₹2,645 means one thing after a week at ₹2,600 and the
+    opposite after a week at ₹2,900, and a single-day post never said which.
+    The band is the state average recomputed on earlier reports, so it is the
+    same kind of number as the headline and can be printed beside it."""
+
+    def test_a_flat_week_reports_a_flat_band(self):
+        """Equal ends are honest here; it is the FORMAT that declines to print
+        'हफ़्ते में ₹4,450–₹4,450', which would read as a bug."""
+        assert wa_post._week(["4450,4450,4450,4450"] * 3) == (4450, 4450)
+
+    def test_one_mandi_is_not_a_week(self):
+        assert wa_post._week(["2600,2610,2620,2630"]) == (None, None)
+
+    def test_two_points_are_not_a_week(self):
+        assert wa_post._week(["2600,2610", "2650,2660"]) == (None, None)
+
+    def test_the_band_is_the_state_average_not_the_widest_mandi(self):
+        """Min/max across every mandi's every reading would print the spread
+        BETWEEN markets as if it were movement over TIME — Madhya Pradesh onion
+        would claim a ₹700–₹5,000 'week'."""
+        assert wa_post._week(["1000,1000,1000,1000",
+                              "3000,3000,3000,3000"]) == (2000, 2000)
+
+    def test_it_tracks_the_average_moving(self):
+        lo, hi = wa_post._week(["2400,2500,2600,2700", "2600,2700,2800,2900"])
+        assert (lo, hi) == (2500, 2800)
+
+    def test_junk_in_a_spark_cannot_reach_a_price(self):
+        assert wa_post._week(["a,b,c,d", "x,y,z,w"]) == (None, None)
+
+
+class TestTopMarket:
+    """कहाँ सबसे ऊँचा — the only thing on the card that answers "so where do I
+    take it?". An average never can."""
+
+    def test_it_names_the_market_paying_most(self):
+        rows = {"Wheat": agg([2500, 2600, 2700], mandis=["a", "b", "Kanpur"])}
+        rows["Wheat"]["top"] = (2700, "Kanpur")
+        line, = wa_post._crop_lines(rows)
+        assert line["top_market"] == "Kanpur" and line["p_hi"] == 2700
+
+    def test_it_stays_quiet_when_the_mandis_disagree(self):
+        """On a crop whose prices run ₹700 to ₹5,000 the "highest" market is a
+        different variety under the same name. Naming it sends a farmer 200km
+        for a premium his sack does not qualify for — so the EXTRA fact is
+        withheld, while the average, which /bhav also prints, is not."""
+        rows = {"Onion": agg([700, 900, 5000], mandis=["a", "b", "Lasalgaon"])}
+        rows["Onion"]["top"] = (5000, "Lasalgaon")
+        line, = wa_post._crop_lines(rows)
+        assert line["top_market"] == ""
+        assert line["avg"] == 2200, "the average itself is untouched"
+
+
+class TestNovelty:
+    """भरोसा asks whether the numbers are right. नयापन asks the other question:
+    whether there is any reason to send this at all."""
+
+    def test_a_day_where_nothing_moved_says_so(self):
+        n = wa_post.novelty([{"pct": 0.0}, {"pct": None}, {"pct": 0.2}])
+        assert n["moved"] == 0 and n["key"] == "same"
+
+    def test_an_unverifiable_move_counts_as_no_move(self):
+        """A crop with no yesterday to compare against cannot be reported as
+        having moved — the same care 'कल जैसा' takes elsewhere in this module."""
+        assert wa_post.novelty([{"pct": None}] * 5)["moved"] == 0
+
+    def test_a_real_move_is_counted(self):
+        n = wa_post.novelty([{"pct": 2.8}, {"pct": -3.1}, {"pct": 0.0}])
+        assert n["moved"] == 2 and n["key"] == "fresh"
+
+    def test_it_agrees_with_what_the_format_calls_a_move(self):
+        """चढ़े–गिरे and नयापन must not disagree on one card about which crops
+        moved — two thresholds would be two answers to one question."""
+        lines = [{"pct": 0.4}, {"pct": 0.6}]
+        assert wa_post.novelty(lines)["moved"] == len(wa_style.moved(lines)) == 1
+
+
+class TestRecompose:
+    """The panel's controls. Each overrides one of the rotation's decisions and
+    nothing else, and none of them may touch a price."""
+
+    @pytest.fixture
+    def wired(self, monkeypatch, tmp_path):
+        import json
+        p = tmp_path / "wa_channels.json"
+        p.write_text(json.dumps({"channels": {
+            "uttar_pradesh": {"state": "Uttar Pradesh", "name": "km_up",
+                              "url": "https://whatsapp.com/channel/UP"},
+        }}, ensure_ascii=False), encoding="utf-8")
+        monkeypatch.setattr(wa_channels, "_PATH", p)
+        monkeypatch.setattr(wa_channels, "_cache", None)
+        monkeypatch.setattr(wa_channels, "_mtime", -1.0)
+        monkeypatch.setattr(wa_post, "_snapshot", lambda: {"Uttar Pradesh": {
+            "Wheat":  agg([2500, 2550, 2600], mandis=list("abc"),
+                          prev=[(2500, 2400), (2550, 2450), (2600, 2500)]),
+            "Onion":  agg([3800, 3900, 4000], mandis=list("def"),
+                          prev=[(3800, 3800), (3900, 3900), (4000, 4000)]),
+            "Potato": agg([1100, 1150, 1200], mandis=list("ghi"),
+                          prev=[(1100, 1200), (1150, 1250), (1200, 1300)]),
+            "Maize":  agg([1900, 1950, 2000], mandis=list("jkl"),
+                          prev=[(1900, 1900), (1950, 1950), (2000, 2000)]),
+        }})
+
+    def test_sending_nothing_gives_back_the_rotation(self, wired):
+        auto = wa_post.post_for("Uttar Pradesh", refresh=True)
+        again = wa_post.recompose("Uttar Pradesh")
+        assert (again["format"], again["tone"], again["text"]) == \
+               (auto["format"], auto["tone"], auto["text"])
+
+    def test_the_crop_count_is_clamped_to_something_readable(self, wired):
+        wa_post.posts(refresh=True)
+        assert wa_post.recompose("Uttar Pradesh", n=99)["n"] == wa_post._MAX_CROPS
+        assert wa_post.recompose("Uttar Pradesh", n=1)["n"] == wa_post._MIN_CROPS
+
+    def test_a_format_the_data_cannot_carry_is_refused_not_faked(self, wired):
+        """The panel greys these out, but the service is the boundary that has
+        to hold: asking for हफ़्ता on a state with no history must fall back to
+        the rotation's choice rather than print an empty band."""
+        r = wa_post.recompose("Uttar Pradesh", fmt="hafta")
+        assert r["format"] != "hafta" and "हफ़्ते में" not in r["text"]
+
+    def test_an_unknown_format_falls_back_rather_than_raising(self, wired):
+        wa_post.posts(refresh=True)
+        r = wa_post.recompose("Uttar Pradesh", fmt="nonsense", tone="nonsense")
+        assert r["format"] in {f["id"] for f in wa_style.FORMATS}
+        assert r["tone"] in {t["id"] for t in wa_style.TONES}
+
+    def test_dropping_a_crop_takes_it_out_and_fills_the_gap(self, wired):
+        """The sharpest control on the page, and it has to be honest: the score
+        comes back recomputed on the lines that survive, or it is decoration."""
+        wa_post.posts(refresh=True)
+        before = wa_post.recompose("Uttar Pradesh", fmt="suchi", n=3)
+        names = [l["commodity"] for l in before["crops"]]
+        after = wa_post.recompose("Uttar Pradesh", fmt="suchi", n=3, drop={names[0]})
+        assert names[0] not in [l["commodity"] for l in after["crops"]]
+        assert after["dropped"] == [names[0]]
+        assert len(after["crops"]) == 3, "the gap is filled from the pool"
+
+    def test_dropping_every_crop_still_returns_a_post(self, wired):
+        """A control that can empty the message is a control that can hand the
+        owner a post with no prices in it. Falling back to the whole pool is
+        the honest floor — better a post he did not ask for than a blank one he
+        pastes without looking."""
+        wa_post.posts(refresh=True)
+        every = {l["commodity"] for l in wa_post.post_for("Uttar Pradesh")["pool"]}
+        r = wa_post.recompose("Uttar Pradesh", drop=every)
+        assert r and r["crops"] and "₹" in r["text"]
+
+    def test_an_unknown_state_is_no_post_not_an_error(self, wired):
+        wa_post.posts(refresh=True)
+        assert wa_post.recompose("Atlantis") is None
+
+    def test_no_override_can_change_a_price(self, wired):
+        """The invariant the whole panel rests on, driven through the real
+        override path rather than through wa_style directly."""
+        wa_post.posts(refresh=True)
+        base = {l["commodity"]: l["avg"]
+                for l in wa_post.recompose("Uttar Pradesh", n=8)["crops"]}
+        for f in wa_style.FORMATS:
+            for t in wa_style.TONES:
+                r = wa_post.recompose("Uttar Pradesh", fmt=f["id"], tone=t["id"], n=8)
+                for l in r["crops"]:
+                    assert l["avg"] == base[l["commodity"]], (f["id"], t["id"])
+
+    def test_dropping_the_movers_drops_the_movement_format(self, wired):
+        """सबसे बड़ी हलचल built on a pool that no longer moves would headline
+        "कल से 0% ऊपर" — an announcement that nothing happened. The format has
+        to fit what is LEFT, not what the morning started with."""
+        wa_post.posts(refresh=True)
+        movers = {l["commodity"] for l in wa_post._cache["pools"]["uttar_pradesh"]
+                  if l["pct"] and abs(l["pct"]) >= wa_style._REAL_MOVE}
+        assert movers, "fixture must have something that moved"
+        r = wa_post.recompose("Uttar Pradesh", fmt="bada", drop=movers)
+        assert r["format"] not in ("bada", "chadha")
+        assert "0% ऊपर" not in r["text"] and "0% नीचे" not in r["text"]

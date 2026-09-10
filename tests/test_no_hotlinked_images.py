@@ -63,12 +63,34 @@ EXEMPT_PARTS = {
 EXEMPT_FILES = {
     ROOT / "backend" / "routes" / "credits.py",       # links to commons.wikimedia.org
 }
+
+# KNOWN, DATED, AND STILL BROKEN — not an approval.
+# frontend/index.html hotlinks seven images.unsplash.com photographs: the hero
+# background (line ~462), three crop cards and three scheme cards. Found
+# 2026-09-10 while rewriting /international, which had 43 of the same and no
+# longer has any. The homepage is the busiest page on the site and its hero is
+# the first paint, so replacing those seven is a deliberate change with a
+# visual decision in it, not a drive-by edit — it needs its own round.
+# Removing this line without self-hosting the seven files just hides them
+# again. Fix: fetch once, licence-check, self-host under /images, credit on
+# /articles/credits, then delete this entry.
+KNOWN_BROKEN = {
+    ROOT / "frontend" / "index.html",
+}
 EXEMPT_NAMES = {"CREDITS.json"}                        # provenance records
 
 # Image-serving hosts we have actually been caught hotlinking.
+# Image-serving hosts we have actually been caught hotlinking. Wikimedia was
+# the 2026-09-04 audit; the stock-photo hosts were added on 2026-09-10, when
+# /international turned out to be serving 43 photographs from
+# images.unsplash.com. The rule at the top of this file is host-agnostic —
+# "someone else's server" — and a permissive licence does not change that a
+# third party decides whether the image still loads tomorrow.
 BANNED = re.compile(
     r"https?://(?:upload\.wikimedia\.org|commons\.wikimedia\.org/wiki/Special:FilePath)"
-    r"|//upload\.wikimedia\.org",
+    r"|//upload\.wikimedia\.org"
+    r"|https?://(?:[a-z0-9-]+\.)?(?:unsplash\.com|pexels\.com|pixabay\.com"
+    r"|imgur\.com|freepik\.com|shutterstock\.com)",
     re.I,
 )
 
@@ -80,7 +102,7 @@ def _files():
         for f in base.rglob("*"):
             if not f.is_file() or f.suffix.lower() not in SCAN_SUFFIXES:
                 continue
-            if f.name in EXEMPT_NAMES or f in EXEMPT_FILES:
+            if f.name in EXEMPT_NAMES or f in EXEMPT_FILES or f in KNOWN_BROKEN:
                 continue
             if any(part in f.parents for part in EXEMPT_PARTS):
                 continue
@@ -273,3 +295,53 @@ def test_category_default_does_not_repeat_across_posts():
     # ...and stable: the same post always gets the same photo.
     assert pick_our_image(text, "yojana", seed=seeds[0]) == \
         pick_our_image(text, "yojana", seed=seeds[0])
+
+
+# ============================================================
+# The cover Gemini is allowed to choose
+# ------------------------------------------------------------
+# The model now names the photograph for each post. The safety of that
+# rests entirely on the catalogue: it picks a row from a list of images
+# we already own, and anything else it says is thrown away. These tests
+# are that guarantee — without them, "let the model choose the picture"
+# is one hallucinated URL away from being the old problem again.
+# ============================================================
+
+def _service():
+    sys.path.insert(0, str(ROOT))
+    from backend.services import news_auto_service
+    return news_auto_service
+
+
+def test_cover_catalogue_only_lists_images_we_serve():
+    svc = _service()
+    catalogue = svc.image_catalogue()
+    assert catalogue, "no covers offered to the model at all"
+    for slug in catalogue:
+        assert (ROOT / "frontend" / "images" / "articles" / f"{slug}-card.webp").is_file(), (
+            f"catalogue offers {slug}, which is not on disk"
+        )
+
+
+@pytest.mark.parametrize("slug", [
+    "",
+    "made-up-slug-the-model-invented",
+    "https://www.example-news.com/uploads/photo.jpg",
+    "//upload.wikimedia.org/x.jpg",
+    "../../../etc/passwd",
+])
+def test_a_slug_that_is_not_ours_is_discarded(slug):
+    """Whatever the model returns, only a real catalogue row survives."""
+    assert _service().cover_from_slug(slug) is None
+
+
+def test_the_model_is_not_shown_covers_the_feed_just_used():
+    """Repeats are prevented by omission — it cannot pick what it cannot see."""
+    svc = _service()
+    catalogue = svc.image_catalogue()
+    used_slug = next(iter(catalogue))
+    used = f"/images/articles/{used_slug}-card.webp"
+
+    library = svc.cover_library_prompt([used])
+    assert f"- {used_slug} :" not in library
+    assert library.strip(), "excluding one cover emptied the whole library"

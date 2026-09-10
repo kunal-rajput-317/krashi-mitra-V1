@@ -281,10 +281,51 @@ async def wa_posts(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require
     wrong number costs more trust than a week of right ones buys) and `quiet`
     (channels with nothing honest to say today, and why). Channels come from
     data/wa_channels.json; a state with no link there is in neither list.
+
+    Each post also carries the day's chosen `format` and `tone`, the `can` list
+    of formats today's rows could honestly support, a `pool` of swappable
+    crops, a नयापन count, and the next seven days of the rotation. `catalog`
+    names every format and tone once, at the top, rather than repeating the
+    labels inside 31 posts.
     """
-    from backend.services import wa_post
+    from backend.services import wa_post, wa_style
     cov = wa_post.coverage(refresh=bool(refresh))
-    return {"success": True, "count": len(cov["posts"]), **cov}
+    return {"success": True, "count": len(cov["posts"]),
+            "catalog": wa_style.catalog(), **cov}
+
+
+@router.get("/wa-post")
+async def wa_post_one(state: str = Query(..., min_length=2, max_length=60),
+                      format: str = Query("", max_length=24),
+                      tone: str = Query("", max_length=24),
+                      n: int = Query(0, ge=0, le=8),
+                      drop: str = Query("", max_length=600),
+                      _: str = Depends(require_admin)):
+    """One state's post, rewritten under the panel's overrides.
+
+    The rotation picks a shape and a voice for every channel every morning, and
+    that is the right default — but the person about to paste is the one who
+    can see that today's biggest mover is a crop nobody in the state grows for
+    sale, or that four of the five lines are three days old. So each control
+    here overrides one of the rotation's decisions and nothing else:
+    `format`/`tone` the shape and voice, `n` how many crops, `drop` a
+    comma-separated list of commodities to leave out.
+
+    Omitted arguments fall back to what the rotation chose, so sending none of
+    them is how the panel gets a post back to अपने आप.
+
+    The भरोसा score comes back recomputed on the lines that survived — dropping
+    a stale crop has to visibly move it, or the control is decoration. What
+    cannot change through any combination of these is a price: services/wa_style
+    only arranges words around figures services/wa_post has already decided.
+    """
+    from backend.services import wa_post as svc
+    dropped = {c.strip() for c in drop.split(",") if c.strip()}
+    row = svc.recompose(state, fmt=format.strip(), tone=tone.strip(),
+                        n=n, drop=dropped)
+    if not row:
+        raise HTTPException(status_code=404, detail="इस राज्य की आज कोई पोस्ट नहीं है")
+    return {"success": True, "post": row}
 
 # ── Manual data-fetch trigger ─────────────────────────────────
 

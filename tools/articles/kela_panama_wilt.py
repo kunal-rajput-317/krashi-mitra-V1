@@ -261,6 +261,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/kela-mumbai-mandi-ganesh", "#eab308", "🍌", "फल · बाज़ार",
+         "गणेशोत्सव में केले का भाव — कटाई, वाशी और नेट भाव"),
         (f"{SITE}/articles/litchi-guide-bihar", "#ea580c", "🍒", "लीची · बिहार",
          "लीची की खेती — मुज़फ़्फ़रपुर, बिहार मार्गदर्शिका"),
         (f"{SITE}/articles/aam-utpadan-up", "#f59e0b", "🥭", "आम · उत्तर प्रदेश",

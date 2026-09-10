@@ -494,6 +494,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pashu-khurpaka-muhpaka-fmd", "#b91c1c", "🐄", "पशुपालन · रोग",
+         "खुरपका-मुँहपका रोग — टीका, लक्षण और बचाव"),
         (f"{SITE}/articles/pashu-thanaila-mastitis", "#be185d", "🐄", "पशुपालन · रोग",
          "गाय-भैंस में थनैला रोग — पहचान और बचाव का तरीका"),
         (f"{SITE}/articles/hara-chara-napier-berseem", "#15803d", "🌿", "पशुपालन · चारा",

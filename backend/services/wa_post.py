@@ -12,8 +12,7 @@
 # pages read, so the number in the channel and the number on the page can never
 # disagree. Nothing here writes, schedules or sends anything — it returns text.
 #
-# Shape of the post (deliberate, and worth keeping stable — a follower learns
-# to recognise it):
+# WHAT NEVER CHANGES, whatever shape the post takes:
 #   • the numbers are IN the post, not behind the link. A post that withholds
 #     the price to force a click is the kind farmers mute.
 #   • one deep link, to /bhav/rajya/<state> — the crop-less state hub, which is
@@ -21,6 +20,25 @@
 #   • utm_source=wa so GA4 can separate channel traffic from SEO traffic. That
 #     is the only way to answer "is the channel working": in-app WhatsApp
 #     clicks arrive with no referrer and would otherwise count as direct.
+#
+# WHAT DOES CHANGE is the layout and the voice, and that is deliberate. The
+# post used to have exactly one shape, sent 365 mornings a year; a message a
+# follower can recognise without reading is a message he stops reading. The
+# rotation lives in services/wa_style, which may only arrange words around the
+# figures this module computes — see that file's header for the split. Nothing
+# there can move a price, and a test holds it to that.
+#
+# THIS FILE OWNS THE FACTS. Three of them are newer than the original post and
+# exist because one day's average, alone, is not enough to act on:
+#   • `top_market` — which market in the state is paying the most today, named
+#     only when the mandis broadly agree (otherwise the "highest" price is a
+#     different variety under the same name, and naming it sends a farmer
+#     200km for a premium his sack does not qualify for).
+#   • `w_lo`/`w_hi` — the state average across its last week of reports, so
+#     ₹2,645 can be read against the week it sits in.
+#   • novelty() — how many of today's crops actually moved. A post where
+#     nothing moved is yesterday's post, and the panel says so rather than
+#     letting a rearranged copy go out looking new.
 #
 # Two things every reader of this file should know:
 #
@@ -55,7 +73,7 @@ import time
 from datetime import date, datetime
 
 from backend.database.db import SessionLocal, MandiPrice
-from backend.services import wa_channels
+from backend.services import state_lang, wa_channels, wa_style
 
 SITE = "https://krashimitra.in"
 _TTL = 300.0                      # seconds; the fetch cron runs ~6×/day
@@ -67,6 +85,25 @@ _LINK_Q = "?utm_source=wa&utm_medium=channel&utm_campaign=daily_bhav"
 # an average at all rather than one trader's quote.
 _CROPS_PER_POST = 5
 _MIN_MANDIS = 3
+
+# How many crops the POOL holds. The formats in services/wa_style pick their
+# own lines out of it — सबसे बड़ी हलचल wants the day's biggest mover, which is
+# often the ninth staple rather than the first — and the panel's "फसल चुनें"
+# chips let the owner swap a crop he does not trust for one he does. Both need
+# more than the five that get printed. Twelve is where the curated tile order
+# stops being staples and starts being whatever else the state reported.
+_POOL = 12
+
+# Crops per post, as the panel may change it. Three fits a glance, five is the
+# default that fits a phone screen, eight is as much as anyone reads standing
+# in a field.
+_MIN_CROPS, _MAX_CROPS = 3, 8
+
+# हफ़्ते का हाल — how far back `spark` is read, and the floor below which a
+# "week" is not a week. See _week().
+_WEEK_DAYS = 7
+_WEEK_MIN_POINTS = 3
+_WEEK_MIN_MANDIS = 2
 
 # The fallback bar, used only when a state clears nothing at _MIN_MANDIS. One
 # mandi's price is still a real, checkable, useful number — it just is not an
@@ -105,6 +142,21 @@ def _farm_gate(commodity: str) -> bool:
     return not (_MILLED_RE.search(c) or c in _MILLED_NAMES or c in _LIVESTOCK)
 
 
+def _market_name(state: str, market: str, lang: str) -> str:
+    """A market's name in the post's language, or the feed's spelling unchanged.
+
+    Agmarknet sends markets in English ("Lasalgaon"), and most of them are
+    named after the district they sit in — so the district table already knows
+    the great majority of them, and the ones it does not fall through unchanged
+    exactly as the one-market source line has always printed them. Never
+    raises, never invents: an unknown market prints as the feed spells it,
+    which is at worst what a follower saw yesterday."""
+    from backend.routes import bhav
+    if not market:
+        return ""
+    return state_lang.district(bhav._hindi_district(state, market), lang)
+
+
 _cache: dict = {}
 _cache_ts: float = 0.0
 
@@ -132,8 +184,44 @@ def _age_days(raw, today: date):
     return None
 
 
+def _week(sparks: list) -> tuple:
+    """(low, high) of the STATE AVERAGE over its recent reports, or (None, None).
+
+    `spark` is one mandi's last ~8 modal prices, chronological, with no dates
+    on them — so the only alignment available is position-from-the-end, which
+    is "each mandi's k-th most recent report". For mandis reporting daily that
+    is a date; for the rest it is close enough, and the aggregate is an average
+    across mandis either way.
+
+    The number this produces is therefore the same *kind* of number as the
+    headline: the state's average, computed the same way, on an earlier report.
+    Min and max across those is what हफ़्ते का हाल prints, and the wording
+    ("हफ़्ते में ₹lo–₹hi") claims exactly that and nothing more.
+
+    Two guards, because a range built on one mandi or two points is not a
+    week: at least _WEEK_MIN_MANDIS mandis have to carry a spark, and at least
+    _WEEK_MIN_POINTS positions have to be usable. Below either, the caller
+    gets (None, None) and हफ़्ता is simply not offered for that crop."""
+    series = []
+    for s in sparks:
+        vals = [v for v in (_num(x) for x in str(s or "").split(",")) if v]
+        if len(vals) >= _WEEK_MIN_POINTS:
+            series.append(vals[-_WEEK_DAYS:])
+    if len(series) < _WEEK_MIN_MANDIS:
+        return None, None
+    avgs = []
+    for k in range(1, _WEEK_DAYS + 1):                 # k-th from the end
+        at_k = [s[-k] for s in series if len(s) >= k]
+        if len(at_k) >= _WEEK_MIN_MANDIS:
+            avgs.append(sum(at_k) / len(at_k))
+    if len(avgs) < _WEEK_MIN_POINTS:
+        return None, None
+    return round(min(avgs)), round(max(avgs))
+
+
 def _snapshot() -> dict:
-    """{state: {commodity: {modals, prev_pairs, mandis, ages}}} for the whole country.
+    """{state: {commodity: {modals, prev_pairs, mandis, ages, sparks, top}}}
+    for the whole country.
 
     One query for every state rather than one per state: the admin page asks
     for all 31 at once, and 31 round trips to Neon for what is a single index
@@ -142,26 +230,37 @@ def _snapshot() -> dict:
 
     `ages` carries each row's arrival_date in days-old form. It never touches
     an average — it is the raw material for the freshness part of the
-    confidence score, and nothing else reads it."""
+    confidence score, and nothing else reads it.
+
+    `sparks` and `top` are the two facts the older single-day post had no way
+    to carry, and both are read straight off the row we were already fetching:
+    where in the state today's highest price is being paid, and what the last
+    week looked like. A price with neither is a number; with them it is
+    something a farmer can act on."""
     db = SessionLocal()
     try:
         rows = db.query(MandiPrice.state, MandiPrice.commodity, MandiPrice.market,
                         MandiPrice.modal_price, MandiPrice.prev_modal_price,
-                        MandiPrice.arrival_date).all()
+                        MandiPrice.arrival_date, MandiPrice.spark).all()
     finally:
         db.close()
 
     today = date.today()
     out: dict = {}
-    for state, commodity, market, modal, prev, arrival in rows:
+    for state, commodity, market, modal, prev, arrival, spark in rows:
         m = _num(modal)
         if not (state and commodity and m):
             continue
         slot = out.setdefault(state, {}).setdefault(
-            commodity, {"modals": [], "prev_pairs": [], "mandis": set(), "ages": []})
+            commodity, {"modals": [], "prev_pairs": [], "mandis": set(),
+                        "ages": [], "sparks": [], "top": None})
         slot["modals"].append(m)
         slot["mandis"].add(market or "")
         slot["ages"].append(_age_days(arrival, today))
+        if spark:
+            slot["sparks"].append(spark)
+        if market and (slot["top"] is None or m > slot["top"][0]):
+            slot["top"] = (m, market)
         p = _num(prev)
         if p:
             slot["prev_pairs"].append((m, p))
@@ -191,7 +290,7 @@ def _score_line(l: dict) -> tuple:
     The kind travels with the reason so that _flags() can roll five identical
     complaints up into one — a card that says "सिर्फ़ 1 मंडी से" five times is
     read as decoration, and the sixth thing it says gets skipped with it."""
-    name = l["hi"]
+    name = l.get("name") or l["hi"]
     flags = []
 
     # 1. ताज़गी — today's price, or a market's last known price kept warm?
@@ -302,13 +401,24 @@ def _flags(lines: list) -> list:
     return out
 
 
-def _crop_lines(state_rows: dict, min_mandis: int = _MIN_MANDIS) -> list:
-    """The crops this state's post will name, most-important first.
+def _crop_lines(state_rows: dict, min_mandis: int = _MIN_MANDIS,
+                limit: int = _POOL, lang: str = "hi", state: str = "") -> list:
+    """The crops this state's post could name, most-important first.
 
     Ordered by _tile_rank — the same curated staple order the mandi grid and
     the /bhav hub use — so a state's post opens on गेहूं/धान rather than on
     whatever sorts first alphabetically. Ties break on how many mandis
-    reported, because that is how confident the number is."""
+    reported, because that is how confident the number is.
+
+    This returns a POOL, not the post: the formats in services/wa_style pick
+    their own lines out of it and the panel can swap one for another. What each
+    line carries is decided here and only here — a format may rearrange these
+    strings but never recompute them, which is what makes "the same numbers in
+    every format" a property of the code rather than a promise.
+
+    `lang` localises the crop and market names onto whatever the /bhav page
+    this post links to is written in. A Maharashtra post that says गेहूं while
+    the page it points at says गहू is two answers to one question."""
     from backend.routes import bhav          # lazy: bhav is a heavy module
 
     picks = []
@@ -336,9 +446,13 @@ def _crop_lines(state_rows: dict, min_mandis: int = _MIN_MANDIS) -> list:
         # move a printed price — see note 2 in the file header.
         ages = [a for a in agg.get("ages", []) if a is not None]
         mean = sum(modals) / len(modals)
+        hi = bhav._hindi_name(commodity)
+        top = agg.get("top")
+        w_lo, w_hi = _week(agg.get("sparks") or [])
         line = {
             "commodity": commodity,
-            "hi": bhav._hindi_name(commodity),
+            "hi": hi,
+            "name": state_lang.crop(hi, lang),
             "avg": avg, "pct": pct, "mandis": mandis,
             "rank": bhav._tile_rank(commodity),
             "dated": len(ages),
@@ -347,68 +461,179 @@ def _crop_lines(state_rows: dict, min_mandis: int = _MIN_MANDIS) -> list:
             "cv": (statistics.pstdev(modals) / mean) if (len(modals) > 1 and mean) else 0.0,
             "p_lo": round(min(modals)), "p_hi": round(max(modals)),
             "paired_share": len(agg["prev_pairs"]) / len(modals) if modals else 0.0,
+            # Where the day's highest price is being paid — but only when the
+            # state's mandis broadly agree. On a crop whose prices already run
+            # ₹700 to ₹5,000 the "highest" market is a different variety under
+            # the same name, and naming it would send a farmer 200km for a
+            # premium his sack does not qualify for.
+            "top_market": _market_name(state, top[1], lang) if (
+                top and len(modals) > 1
+                and (statistics.pstdev(modals) / mean if mean else 1.0) <= _CV_FLAG) else "",
+            "w_lo": w_lo, "w_hi": w_hi,
         }
+        line["move"] = _move(pct, lang)
         line["score"], line["flag_kinds"] = _score_line(line)
         line["flags"] = [t for _, t in line["flag_kinds"]]
         picks.append(line)
 
     picks.sort(key=lambda p: (p["rank"], -p["mandis"]))
-    # One line per Hindi name: Agmarknet ships several commodities that render
-    # to the same word (three pumpkins are all कद्दू), and a post listing कद्दू
-    # three times at three prices reads like a mistake.
+    # One line per display name: Agmarknet ships several commodities that
+    # render to the same word (three pumpkins are all कद्दू), and a post listing
+    # कद्दू three times at three prices reads like a mistake.
     seen, out = set(), []
     for p in picks:
-        if p["hi"] in seen:
+        if p["name"] in seen:
             continue
-        seen.add(p["hi"])
+        seen.add(p["name"])
         out.append(p)
-        if len(out) >= _CROPS_PER_POST:
+        if len(out) >= limit:
             break
     return out
 
 
-def _move(pct) -> str:
-    """The arrow already says which way — a '-' after a ▼ is the same word twice."""
-    if pct is None or pct == 0:
-        return "— कल जैसा"
-    return f"{'▲' if pct > 0 else '▼'} {abs(pct):g}%"
+def _move(pct, lang: str = state_lang.HINDI) -> str:
+    """How a day-on-day change reads. The direction is data and is decided
+    here; the words for "no change" are language and live in wa_style, which is
+    where every other wording in the post already lives."""
+    return wa_style.move_text(pct, lang)
 
 
-def _text(hi_state: str, s_slug: str, lines: list, mandis: int, market: str = "") -> str:
-    """The post itself. WhatsApp bolds *between asterisks*.
+def _ctx(state: str, lang: str, mandis: int, market: str) -> dict:
+    """The facts a post is written around, all of them already decided.
 
-    A one-market state names its market and drops the word औसत: calling one
-    trader's quote a state average is exactly the small dishonesty a follower
-    catches once and never forgets."""
+    services/wa_style receives this and may only arrange words around it — so
+    everything that involves a lookup, a date, a slug or a count is settled
+    here, where it can be tested, rather than inside a wording."""
     from backend.routes import bhav
 
-    body = "\n".join(f"{l['hi']} — ₹{l['avg']:,} {_move(l['pct'])}" for l in lines)
-    if mandis == 1:
-        source = f"मॉडल भाव ₹/क्विंटल · {market or 'एक मंडी'} की सरकारी रिपोर्ट"
-    else:
-        source = f"औसत मॉडल भाव ₹/क्विंटल · {mandis} मंडियों की सरकारी रिपोर्ट"
-    return (f"🌾 *{hi_state} मंडी भाव — {bhav._hindi_date(date.today())}*\n\n"
-            f"{body}\n\n"
-            f"{source}\n"
-            f"स्रोत: Agmarknet (data.gov.in)\n\n"
-            f"अपने जिले का पूरा भाव 👇\n"
-            f"{SITE}/bhav/rajya/{s_slug}{_LINK_Q}")
+    today = date.today()
+    hi_state = bhav._hindi_state(state)
+    slug = bhav._slugify(state)
+    return {
+        "state":  hi_state,
+        "slug":   slug,
+        "lang":   lang,
+        # Maharashtra's /bhav pages are headed बाजार भाव, not मंडी भाव. A post
+        # that links to a page and disagrees with its first two words is two
+        # answers to one question, and the follower has no way to tell which
+        # of them is the site.
+        "bhav":   state_lang.word("bhav", lang, "मंडी भाव"),
+        "date":   state_lang.date_str(today.day, today.month, today.year, lang,
+                                      bhav._hindi_date(today)),
+        "mandis": mandis,
+        "market": market,
+        "url":    f"{SITE}/bhav/rajya/{slug}{_LINK_Q}",
+    }
 
 
-def posts(refresh: bool = False) -> list:
-    """One entry per state that has a channel and something true to say.
+# नयापन — is there anything new in today's post at all?
+#
+# The भरोसा score answers "are these numbers right". This answers the other
+# question, the one that decides whether the post is worth sending: "has
+# anything changed since the last one?" A state where no crop moved produces
+# the same five figures a follower already read yesterday, and a channel that
+# says the same thing twice teaches people to stop opening it. The formats
+# rotate regardless, which changes how it reads — but rearranging yesterday's
+# numbers is not news, and the panel should not pretend otherwise.
+#
+# Deliberately NOT a score out of 100. It is a count, because a count is
+# checkable and a composite would be a made-up number sitting next to real ones.
+_NOVEL = {
+    "fresh": "आज के भाव बदले हैं",
+    "some":  "थोड़ा-बहुत बदला है",
+    "same":  "कल जैसी ही पोस्ट",
+}
+
+
+def novelty(lines: list) -> dict:
+    """{moved, total, key, hi} — how many of this post's crops actually moved.
+
+    "Moved" means the paired day-on-day comparison found a real change, so a
+    crop with no yesterday to compare against counts as not moved. That is the
+    conservative reading and the right one: an unverifiable move is exactly
+    what a follower should not be told about twice."""
+    total = len(lines)
+    n = len(wa_style.moved(lines))
+    key = "same" if not n else ("fresh" if n >= max(2, total // 2) else "some")
+    return {"moved": n, "total": total, "key": key, "hi": _NOVEL[key]}
+
+
+def _slim(l: dict) -> dict:
+    """One pool line as the panel needs it — for the फसल चुनें chips.
+
+    The full line carries the scoring internals (cv, paired_share, flag_kinds);
+    those are 31 states × 12 crops of payload that no chip renders."""
+    return {k: l[k] for k in ("commodity", "hi", "name", "avg", "move", "score")}
+
+
+def _build(state: str, state_rows: dict, chan: dict, today: date):
+    """(row, pool, ctx) for one state, or None when there is nothing honest to say.
+
+    The pool and ctx come back with the row because recompose() needs the same
+    two objects this used, down to the identical line dicts. Rebuilding them on
+    the way past would be a second source of truth for the same post, and the
+    day the two drifted, the panel's preview would stop being the thing that
+    gets pasted.
 
     A state whose every market is thin is retried at one mandi rather than
     dropped (note 1 in the file header): Delhi's Azadpur is a bigger mandi than
     most states have, and silence there was a rule misfiring, not a data gap."""
+    markets = {m for agg in state_rows.values() for m in agg["mandis"] if m}
+    lang = state_lang.lang_for(state)
+
+    thin = False
+    pool = _crop_lines(state_rows, lang=lang, state=state)
+    if not pool:
+        pool = _crop_lines(state_rows, min_mandis=_THIN_MIN_MANDIS, lang=lang, state=state)
+        thin = bool(pool)
+    if not pool:
+        return None
+
+    key = wa_channels._key(state)
+    mandis = len(markets)
+    ctx = _ctx(state, lang, mandis, next(iter(markets)) if mandis == 1 else "")
+
+    fmt, tone = wa_style.plan(key, today, pool)
+    lines = wa_style.pick_lines(fmt["id"], pool, _CROPS_PER_POST)
+    score = _score_post(lines)
+    row = {
+        "state":    state,
+        "key":      key,
+        "hi_state": ctx["state"],
+        "slug":     ctx["slug"],
+        "lang":     lang,
+        "channel":  chan["name"],
+        "url":      chan["url"],
+        "crops":    lines,
+        "pool":     [_slim(l) for l in pool],
+        "mandis":   mandis,
+        "thin":     thin,
+        "score":    score,
+        "band":     band(score),
+        "flags":    _flags(lines),
+        "novelty":  novelty(lines),
+        "format":   fmt["id"],
+        "tone":     tone["id"],
+        # Which of the six could be written honestly from today's rows. The
+        # panel greys out the rest rather than hiding them: "why is दायरा
+        # missing today?" is a question worth answering on the card.
+        "can":      [f["id"] for f in wa_style.FORMATS if wa_style.fits(f["id"], pool)],
+        "schedule": wa_style.schedule(key, today),
+        "text":     wa_style.compose(ctx, lines, fmt["id"], tone["id"]),
+    }
+    return row, pool, ctx
+
+
+def posts(refresh: bool = False) -> list:
+    """One entry per state that has a channel and something true to say."""
     global _cache, _cache_ts
-    from backend.routes import bhav
 
     if not refresh and _cache and (time.time() - _cache_ts) < _TTL:
         return _cache.get("posts", [])
 
+    today = date.today()
     snap = _snapshot()
-    out, seen = [], {}
+    out, seen, pools, ctxs = [], {}, {}, {}
     for state, state_rows in snap.items():
         markets = {m for agg in state_rows.values() for m in agg["mandis"] if m}
         # Kept for coverage(), which has to tell "no market reported" apart
@@ -418,38 +643,69 @@ def posts(refresh: bool = False) -> list:
         chan = wa_channels.channel_for(state)
         if not chan:
             continue
-        thin = False
-        lines = _crop_lines(state_rows)
-        if not lines:
-            lines = _crop_lines(state_rows, min_mandis=_THIN_MIN_MANDIS)
-            thin = bool(lines)
-        if not lines:
+        built = _build(state, state_rows, chan, today)
+        if not built:
             continue
-        hi_state = bhav._hindi_state(state)
-        s_slug = bhav._slugify(state)
-        mandis = len(markets)
-        score = _score_post(lines)
-        out.append({
-            "state":    state,
-            "hi_state": hi_state,
-            "slug":     s_slug,
-            "channel":  chan["name"],
-            "url":      chan["url"],
-            "crops":    lines,
-            "mandis":   mandis,
-            "thin":     thin,
-            "score":    score,
-            "band":     band(score),
-            "flags":    _flags(lines),
-            "text":     _text(hi_state, s_slug, lines, mandis,
-                              next(iter(markets)) if mandis == 1 else ""),
-        })
+        row, pool, ctx = built
+        # The full pool and ctx are kept out of the response and in the cache:
+        # recompose() needs every field of every line, and shipping 31 states ×
+        # 12 crops × 20 keys to a browser that renders six of them is the kind
+        # of payload that makes a free-tier page feel broken.
+        pools[row["key"]], ctxs[row["key"]] = pool, ctx
+        out.append(row)
 
     # Biggest first — that is the order they should be posted in on a morning
     # where there is not time for all 31.
     out.sort(key=lambda p: -p["mandis"])
-    _cache, _cache_ts = {"posts": out, "seen": seen}, time.time()
+    _cache = {"posts": out, "seen": seen, "pools": pools, "ctxs": ctxs}
+    _cache_ts = time.time()
     return out
+
+
+def recompose(state: str, fmt: str = "", tone: str = "",
+              n: int = 0, drop: set | None = None, refresh: bool = False) -> dict | None:
+    """One state's post rewritten under the panel's overrides. None if no post.
+
+    Every argument is optional and every one of them falls back to what the
+    rotation chose, so this is also how the panel gets a post back to
+    "अपने आप" — send nothing and you get today's plan.
+
+    The भरोसा score is recomputed on the lines that SURVIVE the overrides, not
+    on the ones the rotation picked. That is the whole point of letting the
+    owner drop a crop: dropping the one line whose price is three days old must
+    visibly raise the score, or the control is decoration."""
+    key = wa_channels._key(state)
+    posts(refresh)
+    pool = (_cache.get("pools") or {}).get(key)
+    ctx = (_cache.get("ctxs") or {}).get(key)
+    base = next((p for p in _cache.get("posts", []) if p["key"] == key), None)
+    if not (pool and ctx and base):
+        return None
+
+    drop = drop or set()
+    kept = [l for l in pool if l["commodity"] not in drop] or pool
+
+    # The format has to fit what is LEFT, not what the morning started with.
+    # Dropping crops can take the last real mover out of a state, and सबसे बड़ी
+    # हलचल built on a pool that no longer moves prints "कल से 0% ऊपर" — a
+    # headline announcing that nothing happened. So an override that no longer
+    # fits, and a rotation pick invalidated by the drops, both fall back
+    # through plan(), which is the same walk _build() does.
+    if not wa_style.fits(fmt, kept):
+        fmt = base["format"] if wa_style.fits(base["format"], kept) \
+            else wa_style.plan(key, date.today(), kept)[0]["id"]
+    tone = tone if any(t["id"] == tone for t in wa_style.TONES) else base["tone"]
+    n = min(_MAX_CROPS, max(_MIN_CROPS, n or _CROPS_PER_POST))
+
+    lines = wa_style.pick_lines(fmt, kept, n)
+    score = _score_post(lines)
+    return {**base,
+            "crops": lines, "format": fmt, "tone": tone, "n": n,
+            "dropped": sorted(drop),
+            "can": [f["id"] for f in wa_style.FORMATS if wa_style.fits(f["id"], kept)],
+            "score": score, "band": band(score), "flags": _flags(lines),
+            "novelty": novelty(lines),
+            "text": wa_style.compose(ctx, lines, fmt, tone)}
 
 
 # Why a channel has nothing today. Both are honest answers and they are not the
@@ -492,22 +748,34 @@ def post_for(state: str, refresh: bool = False):
 
 if __name__ == "__main__":  # pragma: no cover
     import sys
-    if len(sys.argv) > 1:
-        p = post_for(" ".join(sys.argv[1:]))
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    every = "--all" in sys.argv          # every format for one state, side by side
+    if args:
+        p = post_for(" ".join(args))
         if not p:
             print("no post for that state (no channel, or no prices)")
         else:
             print(f"-- भरोसा {p['score']}/100 · {p['band']['hi']}"
+                  f" · नयापन {p['novelty']['moved']}/{p['novelty']['total']}"
+                  f" · {p['format']}/{p['tone']} · {p['lang']}"
                   + (" · thin" if p["thin"] else ""))
             for f in p["flags"]:
                 print("   ! " + f)
-            print()
-            print(p["text"])
+            for v in (wa_style.FORMATS if every else []):
+                if v["id"] not in p["can"]:
+                    print(f"\n===== {v['id']}: आज नहीं बन सकता =====")
+                    continue
+                r = recompose(p["state"], fmt=v["id"], tone=p["tone"])
+                print(f"\n===== {v['id']} / {p['tone']} =====\n{r['text']}")
+            if not every:
+                print()
+                print(p["text"])
     else:
         cov = coverage()
         for p in cov["posts"]:
             print(f"-- {p['hi_state']} ({p['channel']}) · {p['mandis']} mandis "
-                  f"· भरोसा {p['score']}/100 {p['band']['hi']}"
+                  f"· भरोसा {p['score']}/100 {p['band']['hi']} "
+                  f"· {p['format']}/{p['tone']} · नयापन {p['novelty']['hi']}"
                   + (" · thin" if p["thin"] else ""))
             for f in p["flags"]:
                 print("   ! " + f)

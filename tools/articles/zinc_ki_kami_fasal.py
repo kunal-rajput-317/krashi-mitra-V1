@@ -267,6 +267,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/rabi-makka-ki-kheti", "#ca8a04", "🌽", "मक्का · रबी",
+         "रबी मक्का की खेती — समय, बीज दर, खाद और सिंचाई"),
         (f"{SITE}/articles/sulphur-gandhak-ki-kami", "#ca8a04", "⚗️", "खाद · गंधक",
          "गंधक (सल्फर) की कमी — पहचान और सुधार"),
         (f"{SITE}/articles/mitti-jaanch-soil-health-card", "#15803d", "🧪", "खाद · मिट्टी",

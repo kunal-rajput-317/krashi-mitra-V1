@@ -170,12 +170,22 @@ def _stable_index(seed: str, n: int) -> int:
     return h % max(n, 1)
 
 
-def pick_our_image(text: str, category: str = "crop", seed: str = "") -> str:
+def pick_our_image(
+    text: str,
+    category: str = "crop",
+    seed: str = "",
+    avoid: Optional[List[str]] = None,
+) -> str:
     """Choose a self-hosted cover for a story from what the story is about.
 
-    `text` is anything descriptive — title, excerpt, source body. `seed` is
-    any stable per-post string (its id) so two posts in the same category
-    that both fall through to the default still differ.
+    The fallback for when the model declines to choose, or names a slug
+    that is not ours. `text` is anything descriptive — title, excerpt,
+    source body. `seed` is any stable per-post string (its id) so two
+    posts in the same category that both fall through to the default
+    still differ. `avoid` is the covers the newest posts already use;
+    honoured for the category default, but never for a keyword match —
+    a wheat story wants the wheat photograph even if the last post used
+    it, and a wrong picture is worse than a repeated one.
     """
     low = (text or "").lower()
     for keys, slug in _IMAGE_KEYWORDS:
@@ -184,12 +194,143 @@ def pick_our_image(text: str, category: str = "crop", seed: str = "") -> str:
             if path:
                 return path
 
+    avoid_set = set(avoid or [])
     pool = [p for p in (_own(s) for s in _CATEGORY_POOL.get(category, ())) if p]
     if not pool:
         pool = [p for p in (_own(s) for s in _CATEGORY_POOL["crop"]) if p]
+    unused = [p for p in pool if p not in avoid_set]
+    pool = unused or pool          # everything used? then repeating is fine
     if pool:
         return pool[_stable_index(seed or low, len(pool))]
     return "/images/og-banner.webp"
+
+
+# ------------------------------------------------------------
+# Letting Gemini choose the cover
+# ------------------------------------------------------------
+# pick_our_image() below is keyword matching, and keywords only reach as
+# far as the words someone thought to list: a story about "पाले से बचाव"
+# or "मिट्टी की जाँच" matches no row and lands on the category default,
+# so consecutive stories wear the same photograph. The model already
+# reads the whole story to write it — it is in a far better position to
+# say which photograph pictures it.
+#
+# So the prompt carries our own library and the post asks for a slug
+# back. Two things make that safe:
+#
+#   • The library IS the constraint. Gemini never supplies a URL, only
+#     picks a row from a list built by scanning frontend/images/articles
+#     — every entry already fetched, licence-checked and credited. A
+#     slug that is not in the catalogue is discarded, so a hallucinated
+#     or invented filename falls through to pick_our_image() instead of
+#     reaching a reader.
+#   • Covers used by the last few posts are removed from the list before
+#     the model sees it, which is what actually stops the repeats: the
+#     model cannot pick what it is not shown.
+#
+# The catalogue is built by reading the <title> of each card's article,
+# so a new article published tomorrow is offered to the model tomorrow
+# with no list to maintain and no rebuild step.
+# ------------------------------------------------------------
+
+ARTICLES_DIR = FRONTEND_DIR / "articles"
+
+# How many recent covers to withhold from the model. Roughly a screen of
+# the feed: far enough back that a reader scrolling the hub never sees
+# the same photograph twice, short enough that the library never empties.
+_AVOID_RECENT = 15
+
+_catalogue_cache: Dict[str, object] = {"stamp": None, "items": {}}
+
+
+def _card_subject(slug: str) -> str:
+    """What the card for `slug` is a photograph of, from its article title."""
+    path = ARTICLES_DIR / f"{slug}.html"
+    if not path.is_file():
+        return ""
+    try:
+        with path.open("r", encoding="utf-8", errors="ignore") as fh:
+            head = fh.read(4096)
+    except OSError:
+        return ""
+    m = re.search(r"<title[^>]*>(.*?)</title>", head, re.I | re.S)
+    if not m:
+        return ""
+    subject = html.unescape(_strip_tags(m.group(1)))
+    # Titles are written for search results ("गेहूं में दीमक का इलाज —
+    # कौन सी दवा"); the half before the dash is the subject.
+    subject = re.split(r"\s+[—–|]\s+", subject)[0].strip()
+    return subject[:70]
+
+
+def image_catalogue() -> Dict[str, str]:
+    """Every cover we may publish: slug → what it shows.
+
+    Rebuilt when the image directory changes, so an image added by a
+    fetch tool becomes available to the model without a restart.
+    """
+    try:
+        stamp = ARTICLES_IMAGE_DIR.stat().st_mtime if ARTICLES_IMAGE_DIR.is_dir() else 0
+    except OSError:
+        stamp = 0
+    if _catalogue_cache["stamp"] == stamp and _catalogue_cache["items"]:
+        return _catalogue_cache["items"]  # type: ignore[return-value]
+
+    items: Dict[str, str] = {}
+    if ARTICLES_IMAGE_DIR.is_dir():
+        for f in sorted(ARTICLES_IMAGE_DIR.glob("*-card.webp")):
+            slug = f.name[: -len("-card.webp")]
+            subject = _card_subject(slug)
+            if subject:          # no article, no way to say what it shows
+                items[slug] = subject
+
+    _catalogue_cache["stamp"] = stamp
+    _catalogue_cache["items"] = items
+    logger.info(f"🖼️ Cover library: {len(items)} self-hosted images available")
+    return items
+
+
+def recently_used_covers(limit: int = _AVOID_RECENT) -> List[str]:
+    """The covers of the newest posts, newest first.
+
+    Published posts are prepended as they go live, so slicing the front
+    of the list is slicing the top of the feed.
+    """
+    try:
+        data = _load_data()
+    except Exception:
+        return []
+    posts = (data.get("published_posts") or []) + (data.get("staged_posts") or [])
+    seen: List[str] = []
+    for p in posts[:limit]:
+        img = (p.get("image") or "").strip()
+        if img and img not in seen:
+            seen.append(img)
+    return seen
+
+
+def cover_library_prompt(avoid: Optional[List[str]] = None) -> str:
+    """The library, as the model sees it — minus what the feed just used."""
+    avoid_set = set(avoid or [])
+    rows = [
+        f"- {slug} : {subject}"
+        for slug, subject in image_catalogue().items()
+        if f"/images/articles/{slug}-card.webp" not in avoid_set
+    ]
+    return "\n".join(rows)
+
+
+def cover_from_slug(slug: str) -> Optional[str]:
+    """The served path for a slug the model returned, or None if it is not ours.
+
+    This is the check that makes handing the choice to a model safe: a
+    slug it invented, a filename from someone else's site, or a full URL
+    all fail the catalogue lookup and get discarded.
+    """
+    slug = (slug or "").strip().strip("/")
+    if not slug or slug not in image_catalogue():
+        return None
+    return _own(slug)
 
 
 CATEGORY_LABELS = {
@@ -677,6 +818,12 @@ Under NO CIRCUMSTANCES should the title, excerpt, bullets, or full_story remain 
     recent_headlines = get_recent_headlines(limit=25)
     headlines_formatted = "\n".join([f"- {h}" for h in recent_headlines]) if recent_headlines else "None"
 
+    # The cover library, minus what the newest posts already wear — see
+    # the note above image_catalogue(). Choosing from a list is what
+    # keeps the photograph both ours and non-repeating.
+    avoid_covers = recently_used_covers()
+    cover_library = cover_library_prompt(avoid_covers)
+
     prompt = f"""
 You are an expert Chief Agricultural Journalist for KrashiMitra (कृषि मित्र), India's leading digital platform for farmers.
 Convert the following news/advisory into an impressive, highly engaging news post for Indian farmers.
@@ -698,6 +845,19 @@ RAW CONTENT:
 
 {_EDITORIAL_RULES}
 
+COVER PHOTOGRAPH — CHOOSE ONE FROM THIS LIBRARY:
+KrashiMitra may NEVER republish the source website's photograph, so the cover
+must come from our own picture library, listed below as "slug : what it shows".
+Return the slug of the ONE picture that best shows what THIS story is about —
+the crop, animal, input, machine or scheme at the centre of it. Judge by
+subject, not by mood: a story about wheat irrigation wants a wheat picture.
+Return "" for image_slug if nothing in the list genuinely fits — a wrong
+picture is worse than a generic one. Never invent a slug, a filename or a URL;
+anything not in this list is discarded.
+
+LIBRARY:
+{cover_library}
+
 OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
 {{
   "title": "आकर्षक व संक्षिप्त शीर्षक (अधिकतम 70 अक्षर)",
@@ -710,7 +870,8 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
   ],
   "category": "mandi | yojana | weather | crop | khad | pashu | tech",
   "catLabel": "मंडी भाव | सरकारी योजना | मौसम अलर्ट | फसल सुरक्षा | खाद सलाह | डेयरी व पशु | आधुनिक तकनीक",
-  "readTime": "3 मिनट"
+  "readTime": "3 मिनट",
+  "image_slug": "ऊपर दी गई LIBRARY में से चुना हुआ एक slug, या \"\" अगर कोई सही न बैठे"
 }}
 """
     try:
@@ -770,12 +931,14 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
 
     post_id = f"km-auto-{int(datetime.utcnow().timestamp())}-{random.randint(100, 999)}"
 
-    # Cover: the photograph we own that matches what the story is about.
-    # Never the source publisher's — see pick_our_image.
-    img = pick_our_image(
+    # Cover: the picture Gemini chose out of our own library, if it named
+    # one that is really ours; keyword matching otherwise. Never the source
+    # publisher's photograph — see image_catalogue().
+    img = cover_from_slug(parsed.get("image_slug", "")) or pick_our_image(
         f"{final_title} {raw_title} {parsed.get('excerpt', '')}",
         category,
         seed=post_id,
+        avoid=avoid_covers,
     )
 
     # Organic Likes Seed: 260 to 580 likes!
@@ -969,11 +1132,16 @@ async def curate_from_url(url: str, language: str = "hi") -> dict:
     curated = await format_agri_post_with_ai(title, combined_content, url, language=language)
     if not curated:
         raise ValueError("Gemini ने पाया कि यह विषय पहले से ही फ़नल या वेबसाइट पर प्रकाशित खबरों में मौजूद है (Duplicate topic blocked by AI).")
-    curated["image"] = pick_our_image(
-        f"{curated.get('title', '')} {title} {combined_content}",
-        curated.get("category") or "crop",
-        seed=curated.get("id") or title,
-    )
+    # format_agri_post_with_ai already chose a cover from our library. This
+    # is the belt to that braces: whatever reaches a post here is one of
+    # ours, never something lifted off the page we just fetched.
+    if not str(curated.get("image", "")).startswith("/images/"):
+        curated["image"] = pick_our_image(
+            f"{curated.get('title', '')} {title} {combined_content}",
+            curated.get("category") or "crop",
+            seed=curated.get("id") or title,
+            avoid=recently_used_covers(),
+        )
 
     return curated
 
@@ -990,6 +1158,36 @@ def get_published_posts() -> List[dict]:
     return data.get("published_posts", [])
 
 
+def _freeze_slug(post: dict) -> None:
+    """Pin the address a post is published at, once, at publish time.
+
+    A story page's URL is derived from its title (news_page._story_slug) and
+    nothing ever stored it. So editing the title of a LIVE post silently moved
+    its page: the indexed URL, the sitemap entry and every WhatsApp-shared link
+    started 404ing, with no redirect left behind. _story_slug prefers a stored
+    slug, so pinning it here keeps the title editable and the address still.
+
+    Only auto-pilot posts need one — a master story's card points at the
+    /articles/ page it already has, through `link`.
+    """
+    if post.get("slug"):
+        return
+
+    link = (post.get("link") or "").strip()
+    if link and not link.startswith("#") and not link.startswith("/#"):
+        return  # already has a real page somewhere else
+
+    try:
+        from backend.routes.news_page import _slugify
+    except Exception as e:  # pragma: no cover — import guard
+        logger.warning(f"⚠️ slug helper unavailable, URL not pinned: {e}")
+        return
+
+    s = _slugify(post.get("title") or "")
+    if s:
+        post["slug"] = s
+
+
 def publish_post(post_id: str) -> Optional[dict]:
     """Manually publishes a staged post to the public news feed."""
     data = _load_data()
@@ -1001,6 +1199,7 @@ def publish_post(post_id: str) -> Optional[dict]:
         return None
 
     target = staged.pop(idx)
+    _freeze_slug(target)
     target["status"] = "published"
     target["published_at"] = datetime.utcnow().isoformat()
     target["published_by"] = "manual_admin"
@@ -1024,6 +1223,7 @@ def publish_all_staged() -> int:
     now_iso = datetime.utcnow().isoformat()
 
     for p in staged:
+        _freeze_slug(p)
         p["status"] = "published"
         p["published_at"] = now_iso
         p["published_by"] = "manual_admin_bulk"
@@ -1109,6 +1309,7 @@ def add_direct_post(post: dict, publish_now: bool = False) -> dict:
 
     data = _load_data()
     if publish_now:
+        _freeze_slug(post)
         post["status"] = "published"
         post["published_at"] = datetime.utcnow().isoformat()
         post["published_by"] = "admin_direct"
@@ -1251,6 +1452,7 @@ def check_and_run_day5_fallback() -> List[dict]:
             remaining_staged.append(p)
             continue
         if due:
+            _freeze_slug(p)
             p["status"] = "published"
             p["published_at"] = now.isoformat()
             p["published_by"] = "auto_pilot_day5_fallback"
