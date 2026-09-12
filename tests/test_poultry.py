@@ -398,20 +398,29 @@ def test_every_old_url_is_a_301_to_its_new_one(client, stored, old, new):
     assert r.headers["location"].endswith(new), f"{old} -> {r.headers['location']}"
 
 
-def _edge_rule_for(rules: str, path: str) -> str | None:
-    """The FIRST _redirects line that would match `path` — which is the one
-    Netlify applies. Returns the whole line, or None if the path would fall
-    through to the site catch-all."""
+def _edge_resolve(rules: str, path: str) -> tuple[str, str] | None:
+    """Where Netlify would actually send `path`, and with what status.
+
+    Applies the FIRST matching rule, which is what Netlify does, and expands
+    :splat — so this answers "where does the farmer land", not merely "is
+    there a line for it". Returns None if the path falls through to the site
+    catch-all.
+    """
     for line in rules.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        src = line.split()[0]
+        parts = line.split()
+        src, dest, status = parts[0], parts[1], (parts[2] if len(parts) > 2 else "200")
         if src.endswith("/*"):
-            if path == src[:-2] or path.startswith(src[:-1]):
-                return line
+            stem = src[:-2]
+            if path == stem or path.startswith(stem + "/"):
+                # A splat matches its own parent with an EMPTY splat — which is
+                # how /farm/poultry/anda-rate once landed on a trailing slash.
+                splat = path[len(stem) + 1:] if path != stem else ""
+                return dest.replace(":splat", splat), status
         elif src == path:
-            return line
+            return dest, status
     return None
 
 
@@ -420,14 +429,20 @@ def test_the_old_urls_301_at_the_edge_too(repo_root, old, new):
     """A 301 served by Render costs a cold start; one served by Netlify does
     not. /ganna taught this repo that a missing _redirects line is invisible
     locally and fatal in production, so the edge half is asserted rather than
-    remembered — including WHERE it lands, because Netlify applies the first
-    matching rule and /farm/* sits below five more specific ones."""
+    remembered.
+
+    The assertion is on the EXACT landing URL, not on "a rule exists". Netlify
+    applies the first match and a splat matches its own parent with an empty
+    :splat, so with /anda-rate/* listed above /anda-rate the old index URL
+    301'd to /pashupalan/anda-rate/ — a second URL for one answer that only a
+    canonical tag was cleaning up after. A 301 has to land ON the canonical.
+    """
     rules = (repo_root / "frontend" / "_redirects").read_text(encoding="utf-8")
-    rule = _edge_rule_for(rules, old)
-    assert rule, f"{old} falls through to the site catch-all"
-    parts = rule.split()
-    assert parts[-1].startswith("301"), rule
-    assert parts[1].replace(":splat", "").rstrip("/") in new, rule
+    got = _edge_resolve(rules, old)
+    assert got, f"{old} falls through to the site catch-all"
+    dest, status = got
+    assert status.startswith("301"), f"{old} -> {dest} ({status})"
+    assert dest == new, f"{old} -> {dest}, expected exactly {new}"
 
 
 @pytest.mark.parametrize("old,_new", OLD_TO_NEW)

@@ -100,9 +100,16 @@
 # Most specific first — Netlify takes the FIRST matching rule, so the /farm/*
 # splat has to stay last: above the others it would swallow all five and drop
 # every farmer onto the section hub, whatever city he was looking for.
+#
+# And an EXACT path goes above its own splat, not below it. A Netlify splat
+# matches its parent with an empty :splat, so with the /anda-rate/* line first,
+# /farm/poultry/anda-rate 301'd to /pashupalan/anda-rate/ — trailing slash, a
+# second URL for one answer that only a canonical tag was cleaning up after.
+# A 301 has to land ON the canonical, not next to it. (Seen live 2026-09-12,
+# after the first deploy of this block.)
 /farm/poultry/sitemap.xml      /pashupalan/sitemap.xml          301!
-/farm/poultry/anda-rate/*      /pashupalan/anda-rate/:splat     301!
 /farm/poultry/anda-rate        /pashupalan/anda-rate            301!
+/farm/poultry/anda-rate/*      /pashupalan/anda-rate/:splat     301!
 /farm/poultry                  /pashupalan/anda-rate            301!
 /farm                          /pashupalan                      301!
 /farm/*                        /pashupalan                      301!
