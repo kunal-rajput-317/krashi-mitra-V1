@@ -1,6 +1,6 @@
 # ============================================================
 # services/poultry.py
-# अंडे का रेट — the zone registry and the rate store behind /farm/poultry
+# अंडे का रेट — the zone registry and the rate store behind /pashupalan
 #
 # TWO LAYERS, TWO STORES — the same split rental.py makes, for the same
 # reasons.

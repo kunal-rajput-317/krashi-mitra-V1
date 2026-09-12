@@ -893,8 +893,11 @@
       gap: 16px;
       margin: 16px 0;
     }
+    /* auto-fit, not repeat(3): the grid was pinned to exactly three columns,
+       so adding a fourth card stranded it alone on a second row. Now the
+       section can grow (पशुपालन was the fourth) without a layout decision. */
     @media (min-width: 700px) {
-      .showcase-grid { grid-template-columns: repeat(3, 1fr); }
+      .showcase-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
     }
 
     .showcase-card {
@@ -2432,6 +2435,22 @@
         <div class="showcase-title">फसल प्रबंधन</div>
         <div class="showcase-desc">बुवाई से कटाई तक — हर चरण पर सही समय और सही सलाह पाएं।</div>
         <span class="showcase-cta">फसल कैलेंडर →</span>
+      </div>
+    </a>
+
+    <a class="showcase-card" href="/pashupalan/anda-rate">
+      <div class="showcase-imgwrap">
+        <span class="showcase-fallback">🥚</span>
+        <span class="showcase-badge">रोज़ का भाव</span>
+        <img class="showcase-img" loading="lazy" decoding="async"
+             src="images/articles/murgi-palan-guide-card.webp"
+             alt="मुर्गी फार्म में दाना-पानी के बर्तनों के बीच ब्रॉयलर मुर्गियाँ"
+             onerror="this.remove()">
+      </div>
+      <div class="showcase-body">
+        <div class="showcase-title">आज का अंडा रेट</div>
+        <div class="showcase-desc">34 शहरों का NECC अंडा रेट — रोज़ सुबह अपने आप अपडेट, और पूरा पशुपालन गाइड।</div>
+        <span class="showcase-cta">अंडा रेट देखें →</span>
       </div>
     </a>
 

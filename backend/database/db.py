@@ -625,7 +625,7 @@ class MandiSeasonSlice(Base):
 class PoultryRate(Base):
     """Latest egg rate per zone — one row per zone, upserted every fetch.
 
-    The /farm/poultry snapshot. Shaped like MandiPrice and kept for the same
+    The /pashupalan/anda-rate snapshot. Shaped like MandiPrice and kept for the same
     reason: a page must be able to answer "what is the rate" with one indexed
     read, without walking history. Unlike mandi there is no aging-out rule —
     NECC publishes ~34 zones every single day, so a zone that goes quiet is

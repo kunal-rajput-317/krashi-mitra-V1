@@ -1,4 +1,4 @@
-"""/farm/poultry must never print an egg rate it cannot stand behind.
+"""/pashupalan must never print an egg rate it cannot stand behind.
 
 This section republishes someone else's numbers under someone else's terms, so
 three things are pinned here that a 200-OK smoke test would sail straight past:
@@ -19,9 +19,14 @@ Plus the two mechanical things this repo has actually been bitten by: the
 the lowercase-slug convention.
 
 The page tests run against the real app via conftest's `client` fixture rather
-than a bare router — /farm borrows /bhav's shell, whose header builds the
+than a bare router — /pashupalan borrows /bhav's shell, whose header builds the
 quick-nav from the mandi index, so mounting the router alone would render a 500
 that no assertion here would catch, and would miss a missing include_router.
+
+The section moved from /farm/* to /pashupalan/* on 2026-09-12, while
+/farm/poultry was earning ~1,800 impressions a month at position 8. THE OLD
+URLs ARE PINNED HERE TOO: a rename that quietly starts 404ing is the one way
+this change can cost more than it gains.
 """
 
 import re
@@ -217,7 +222,7 @@ def test_history_trim_respects_the_declared_ceiling(stored):
 
 # ── the pages ───────────────────────────────────────────────
 
-PAGES = ["/farm", "/farm/poultry", "/farm/poultry/anda-rate/lucknow"]
+PAGES = ["/pashupalan", "/pashupalan/anda-rate", "/pashupalan/anda-rate/lucknow"]
 
 
 @pytest.mark.parametrize("path", PAGES)
@@ -273,7 +278,7 @@ def test_a_stale_snapshot_dates_itself_honestly(client, stored):
     row.rate_date = real_date - timedelta(days=7)
     stored.commit()
     try:
-        body = client.get("/farm/poultry/anda-rate/lucknow").text
+        body = client.get("/pashupalan/anda-rate/lucknow").text
         assert f'"dateModified": "{(real_date - timedelta(days=7)).isoformat()}"' in body
         assert date.today().isoformat() not in body.split("</head>")[0]
     finally:
@@ -295,7 +300,7 @@ def test_serp_budgets(client, stored, path):
 def test_both_units_appear_together(client, stored):
     """"₹5.50" and "₹550" are the same price. Printing one without the other is
     how a farmer reads a per-100 rate as a per-egg rate."""
-    body = client.get("/farm/poultry/anda-rate/lucknow").text
+    body = client.get("/pashupalan/anda-rate/lucknow").text
     assert "प्रति अंडा" in body and "प्रति 100" in body
 
 
@@ -303,30 +308,30 @@ def test_zone_page_states_which_kind_of_price_it_is(client, stored):
     """Suggested and prevailing are different claims and the page has to say
     which one the number is."""
     assert "बाज़ार में चल रहा दाम" in client.get(
-        "/farm/poultry/anda-rate/lucknow").text          # a prevailing zone
+        "/pashupalan/anda-rate/lucknow").text          # a prevailing zone
     assert "NECC का सुझाया दाम" in client.get(
-        "/farm/poultry/anda-rate/ludhiana").text          # a suggested zone
+        "/pashupalan/anda-rate/ludhiana").text          # a suggested zone
 
 
 def test_unknown_zone_goes_to_the_table_not_a_404(client, stored):
-    r = client.get("/farm/poultry/anda-rate/nowhere", follow_redirects=False)
+    r = client.get("/pashupalan/anda-rate/nowhere", follow_redirects=False)
     assert r.status_code == 302
-    assert r.headers["location"].endswith("/farm/poultry")
+    assert r.headers["location"].endswith("/pashupalan/anda-rate")
 
 
 def test_the_guessable_index_url_is_a_301_not_a_second_page(client, stored):
     """Two URLs for one answer is how an index gets diluted."""
-    r = client.get("/farm/poultry/anda-rate", follow_redirects=False)
+    r = client.get("/pashupalan/poultry", follow_redirects=False)
     assert r.status_code == 301
-    assert r.headers["location"].endswith("/farm/poultry")
+    assert r.headers["location"].endswith("/pashupalan/anda-rate")
 
 
 # ── the plumbing that has been forgotten before ─────────────
 
 def test_sitemap_lists_only_zones_that_have_a_rate(client, stored):
-    xml = client.get("/farm/poultry/sitemap.xml").text
+    xml = client.get("/pashupalan/sitemap.xml").text
     locs = re.findall(r"<loc>(.*?)</loc>", xml)
-    assert "https://krashimitra.in/farm/poultry" in locs
+    assert "https://krashimitra.in/pashupalan/anda-rate" in locs
     zone_locs = [u for u in locs if "/anda-rate/" in u]
     assert len(zone_locs) == 34
     for u in zone_locs:
@@ -335,23 +340,27 @@ def test_sitemap_lists_only_zones_that_have_a_rate(client, stored):
     assert "/anda-rate/kurnool" not in xml
 
 
-def test_redirects_proxies_the_whole_farm_tree(repo_root):
+def test_redirects_proxies_the_whole_section(repo_root):
     """/ganna shipped once answering 200 on Render and 404 on krashimitra.in
     because this line was missing. It is asserted, not remembered."""
     rules = (repo_root / "frontend" / "_redirects").read_text(encoding="utf-8")
-    assert re.search(r"^/farm\s+https://\S+/farm\s+200", rules, re.M)
-    assert re.search(r"^/farm/\*\s+https://\S+/farm/:splat\s+200", rules, re.M)
+    assert re.search(r"^/pashupalan\s+https://\S+/pashupalan\s+200", rules, re.M)
+    assert re.search(r"^/pashupalan/\*\s+https://\S+/pashupalan/:splat\s+200",
+                     rules, re.M)
 
 
 def test_robots_declares_the_section_sitemap(repo_root):
     robots = (repo_root / "frontend" / "robots.txt").read_text(encoding="utf-8")
-    assert "Sitemap: https://krashimitra.in/farm/poultry/sitemap.xml" in robots
+    assert "Sitemap: https://krashimitra.in/pashupalan/sitemap.xml" in robots
 
 
 def test_root_sitemap_lists_the_hubs(client, stored):
     xml = client.get("/sitemap.xml").text
-    assert "<loc>https://krashimitra.in/farm</loc>" in xml
-    assert "<loc>https://krashimitra.in/farm/poultry</loc>" in xml
+    assert "<loc>https://krashimitra.in/pashupalan</loc>" in xml
+    assert "<loc>https://krashimitra.in/pashupalan/anda-rate</loc>" in xml
+    # A sitemap lists canonicals only. The old tree 301s, and advertising a
+    # redirect asks Google to pick between two URLs for one answer.
+    assert "/farm" not in xml
 
 
 def test_drawer_link_exists_on_both_sides(repo_root):
@@ -360,6 +369,187 @@ def test_drawer_link_exists_on_both_sides(repo_root):
     on half the site."""
     js = (repo_root / "frontend" / "drawer-menu.js").read_text(encoding="utf-8")
     py = (repo_root / "backend" / "routes" / "bhav.py").read_text(encoding="utf-8")
-    assert "'/farm/poultry'" in js
+    assert "'/pashupalan/anda-rate'" in js
     assert "🥚" in js and "🥚" in py
-    assert "/farm/poultry" in py
+    assert "/pashupalan/anda-rate" in py
+
+
+# ── the rename: every old address still answers ─────────────
+#
+# The section was /farm/* until 2026-09-12. /farm/poultry was the only URL in
+# it earning anything — ~1,800 impressions a month at position 8 — so a 404
+# here would cost more than the rename gains. Both halves are pinned: the
+# backend routes (for a request that reaches Render directly) and the Netlify
+# edge rules (for everyone else).
+
+OLD_TO_NEW = [
+    ("/farm", "/pashupalan"),
+    ("/farm/poultry", "/pashupalan/anda-rate"),
+    ("/farm/poultry/anda-rate", "/pashupalan/anda-rate"),
+    ("/farm/poultry/anda-rate/lucknow", "/pashupalan/anda-rate/lucknow"),
+    ("/farm/poultry/sitemap.xml", "/pashupalan/sitemap.xml"),
+]
+
+
+@pytest.mark.parametrize("old,new", OLD_TO_NEW)
+def test_every_old_url_is_a_301_to_its_new_one(client, stored, old, new):
+    r = client.get(old, follow_redirects=False)
+    assert r.status_code == 301, old
+    assert r.headers["location"].endswith(new), f"{old} -> {r.headers['location']}"
+
+
+def _edge_rule_for(rules: str, path: str) -> str | None:
+    """The FIRST _redirects line that would match `path` — which is the one
+    Netlify applies. Returns the whole line, or None if the path would fall
+    through to the site catch-all."""
+    for line in rules.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        src = line.split()[0]
+        if src.endswith("/*"):
+            if path == src[:-2] or path.startswith(src[:-1]):
+                return line
+        elif src == path:
+            return line
+    return None
+
+
+@pytest.mark.parametrize("old,new", OLD_TO_NEW)
+def test_the_old_urls_301_at_the_edge_too(repo_root, old, new):
+    """A 301 served by Render costs a cold start; one served by Netlify does
+    not. /ganna taught this repo that a missing _redirects line is invisible
+    locally and fatal in production, so the edge half is asserted rather than
+    remembered — including WHERE it lands, because Netlify applies the first
+    matching rule and /farm/* sits below five more specific ones."""
+    rules = (repo_root / "frontend" / "_redirects").read_text(encoding="utf-8")
+    rule = _edge_rule_for(rules, old)
+    assert rule, f"{old} falls through to the site catch-all"
+    parts = rule.split()
+    assert parts[-1].startswith("301"), rule
+    assert parts[1].replace(":splat", "").rstrip("/") in new, rule
+
+
+@pytest.mark.parametrize("old,_new", OLD_TO_NEW)
+def test_a_redirect_cannot_be_pointed_somewhere_else(client, stored, old, _new):
+    """These 301s are built by a factory, and the obvious way to bind the
+    target — `def handler(to: str = to)` — makes FastAPI read `to` as a QUERY
+    PARAMETER. /farm?to=https://evil.example.com then 301s off our own domain,
+    from a URL Google still has indexed. Caught 2026-09-12 before it shipped."""
+    r = client.get(f"{old}?to=https://evil.example.com/x&url=https://evil.example.com",
+                   follow_redirects=False)
+    assert r.status_code in (301, 302), old
+    assert "evil.example.com" not in r.headers["location"], (
+        f"{old} is an open redirect: {r.headers['location']}")
+    assert r.headers["location"].startswith("https://krashimitra.in/"), old
+
+
+def test_the_farm_splat_rule_stays_last(repo_root):
+    """Netlify takes the FIRST matching rule. /farm/* would swallow every more
+    specific /farm/poultry line above it and drop a farmer looking for his
+    city's rate onto the section hub instead."""
+    rules = (repo_root / "frontend" / "_redirects").read_text(encoding="utf-8")
+    lines = [ln for ln in rules.splitlines() if ln.startswith("/farm")]
+    assert lines, "the old tree has no redirect rules at all"
+    assert lines[-1].startswith("/farm/*"), lines
+
+
+# ── the shell: this section is not a stranger inside it ─────
+
+@pytest.mark.parametrize("path", PAGES)
+def test_the_drawer_says_you_are_here(client, stored, path):
+    """Every page here shipped with active="", so the 🥚 drawer entry never
+    lit up — on the one section whose pages a farmer returns to daily.
+    drawer-menu.js cannot rescue it: it only marks links it ADDS, and bhav.py's
+    server drawer already ships this one."""
+    body = client.get(path).text
+    assert 'sidebar-drawer-link active' in body, path
+    assert re.search(r'class="sidebar-drawer-link active"[^>]*>\s*'
+                     r'<span class="sidebar-drawer-link-icon">🥚', body), path
+
+
+@pytest.mark.parametrize("path", PAGES)
+def test_the_blue_bar_belongs_to_this_section(client, stored, path):
+    """bhav.py's _header builds the blue bar from the mandi index, so a section
+    that borrows the shell and leaves it alone advertises गेहूं/धान/प्याज on
+    top of an egg rate. These pages pass their own."""
+    body = client.get(path).text
+    bar = body.split('<div class="commodity-navbar">')[1].split("</div>")[0]
+    assert "की कीमत" not in bar, f"{path}: still showing the mandi crop bar"
+    assert "/pashupalan/anda-rate" in bar, path
+
+
+@pytest.mark.parametrize("path", PAGES)
+def test_pages_carry_a_real_image_not_the_generic_banner(client, stored, path):
+    """/bhav's leaves ship a crop photo; every page here fell back to the site
+    banner, so a share of "लखनऊ अंडा रेट" looked like a share of the homepage."""
+    body = client.get(path).text
+    og = re.search(r'property="og:image" content="(.*?)"', body).group(1)
+    assert og.endswith(".webp") and "og-banner" not in og, f"{path}: {og}"
+
+
+def test_the_rate_table_can_be_searched(client, stored):
+    """34 rows with no filter meant a farmer whose city sat 28 down had to
+    scroll for it, on a page whose whole job is answering fast. Same component
+    /bhav's hub filters its crop tiles with."""
+    body = client.get("/pashupalan/anda-rate").text
+    assert 'id="egg-search"' in body
+    assert 'class="ctile-search-row"' in body          # the site's own search box
+    # …and every row has to be findable by Hindi name, English slug or state.
+    assert re.search(r'class="egg-row"[^>]*data-name="[^"]*lucknow[^"]*"', body)
+    assert re.search(r'class="egg-row"[^>]*data-name="[^"]*लखनऊ[^"]*"', body)
+    # eggFilter() hides with el.hidden, and the UA's [hidden]{display:none} is
+    # a (0,1,0) rule that loses to .egg-row{display:flex}. Without this line
+    # the filter hid nothing it was asked to: searching one city left the
+    # other section's 24 rows on screen, looking like results for the query.
+    assert ".egg-row[hidden]" in body and ".shop-section-title[hidden]" in body
+
+
+@pytest.mark.parametrize("path", PAGES)
+def test_headings_use_the_sites_own_component(client, stored, path):
+    """This module shipped a 12.5px grey `.egg-sec` heading that existed
+    nowhere else on the site, so a farmer arriving from /bhav met a page that
+    did not look like the one he left."""
+    body = client.get(path).text
+    assert "egg-sec" not in body, f"{path}: the local heading style is back"
+    assert "shop-section-title" in body, path
+
+
+def test_the_homepage_links_into_the_section(repo_root):
+    """The section was reachable only from the hamburger drawer — the one page
+    on the site that answers a question DAILY was invisible from the front
+    door, which is the opposite of what a return-visit surface needs."""
+    home = (repo_root / "frontend" / "index.html").read_text(encoding="utf-8")
+    assert "/pashupalan" in home
+
+
+def test_the_bottom_bar_does_not_break_on_a_nested_path(repo_root):
+    """bottomnav.js decided relative-vs-absolute links from a hand-kept list of
+    backend trees. Every section added after it was written inherited a broken
+    bar: on /farm/poultry/anda-rate/lucknow, दुकान pointed at a sibling
+    shop.html and कृषि न्यूज़ at another — two of four tabs 404ing on every
+    page in this section. The fallback below cannot go stale, so it must stay:
+    a relative link is only ever correct when the page's directory IS the root.
+    """
+    js = (repo_root / "frontend" / "bottomnav.js").read_text(encoding="utf-8")
+    assert "path.replace(/[^/]*$/, '') !== '/'" in js, (
+        "the relative/absolute rule is back to being a hand-kept allow-list")
+
+
+def test_the_feed_grain_hubs_link_back():
+    """/pashupalan links out to मक्का and सोयाबीन because feed is two-thirds of
+    what a poultry farm spends. Nothing linked back, so the only routes into
+    this section were the sitemap and the hamburger drawer — which is how 34
+    zone pages spent their first fortnight earning zero impressions.
+
+    Tier 2 only: the same link on the ~2,000 maize district pages would be
+    spam, and the crop hub is the page in that tree that ranks.
+    """
+    from backend.routes.bhav import _poultry_cta
+
+    for crop in ("maize", "soyabean"):
+        assert "/pashupalan/anda-rate" in _poultry_cta(crop), crop
+    # …and nowhere else, so every other crop hub renders byte-identically to
+    # before. (Asserted on the helper, not a rendered page: /bhav/{crop} needs
+    # the mandi index, which this suite's throwaway SQLite DB has no rows for.)
+    assert _poultry_cta("wheat") == ""

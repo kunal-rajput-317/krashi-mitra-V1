@@ -80,14 +80,32 @@
 /rental     https://krashi-mitra-v1-p099.onrender.com/rental         200
 /rental/*   https://krashi-mitra-v1-p099.onrender.com/rental/:splat  200
 
-# पशुपालन — /farm, and the daily अंडा रेट under it (routes/poultry.py). The
-# splat also carries /farm/poultry/sitemap.xml, which robots.txt declares, so
-# that needs no line of its own. WITHOUT THESE TWO LINES every /farm URL falls
-# through to the catch-all below and 404s on krashimitra.in while answering
-# 200 on Render — exactly how /ganna shipped once and /rental nearly shipped
-# again. They are written in the same commit as the routes for that reason.
-/farm     https://krashi-mitra-v1-p099.onrender.com/farm         200
-/farm/*   https://krashi-mitra-v1-p099.onrender.com/farm/:splat  200
+# पशुपालन — /pashupalan, and the daily अंडा रेट under it (routes/poultry.py).
+# The splat also carries /pashupalan/sitemap.xml, which robots.txt declares, so
+# that needs no line of its own. WITHOUT THESE TWO LINES every /pashupalan URL
+# falls through to the catch-all below and 404s on krashimitra.in while
+# answering 200 on Render — exactly how /ganna shipped once and /rental nearly
+# shipped again. They are written in the same commit as the routes.
+/pashupalan     https://krashi-mitra-v1-p099.onrender.com/pashupalan         200
+/pashupalan/*   https://krashi-mitra-v1-p099.onrender.com/pashupalan/:splat  200
+
+# The section lived at /farm/* until 2026-09-12, and /farm/poultry was earning
+# ~1,800 impressions a month at position 8 when it moved. These send the old
+# tree to the new one AT THE EDGE, so a farmer following an old link (or
+# Googlebot re-crawling one) gets the 301 immediately instead of waiting on a
+# Render cold start to be told where the page went.
+#
+# routes/poultry.py answers the same redirects itself, for a request that
+# reaches Render directly and because these lines cannot be tested from pytest.
+# Most specific first — Netlify takes the FIRST matching rule, so the /farm/*
+# splat has to stay last: above the others it would swallow all five and drop
+# every farmer onto the section hub, whatever city he was looking for.
+/farm/poultry/sitemap.xml      /pashupalan/sitemap.xml          301!
+/farm/poultry/anda-rate/*      /pashupalan/anda-rate/:splat     301!
+/farm/poultry/anda-rate        /pashupalan/anda-rate            301!
+/farm/poultry                  /pashupalan/anda-rate            301!
+/farm                          /pashupalan                      301!
+/farm/*                        /pashupalan                      301!
 
 # Proxy the dealer UPI payment page to the backend (routes/pay.py). Kept on
 # krashimitra.in rather than the Render URL directly: this link goes to a

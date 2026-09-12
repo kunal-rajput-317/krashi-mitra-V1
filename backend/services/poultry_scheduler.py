@@ -1,6 +1,6 @@
 # ============================================================
 # backend/services/poultry_scheduler.py
-# KrashiMitra — keeps /farm/poultry's egg rates current.
+# KrashiMitra — keeps /pashupalan/anda-rate's egg rates current.
 #
 # Own singleton, like the mandi, weather, GSC and mill schedulers.
 #

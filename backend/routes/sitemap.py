@@ -114,17 +114,19 @@ CORE = [
 # /rental is "monthly" for the same honesty reason /ganna is "yearly": the
 # rate ranges are reviewed editorially, not fed from anywhere, so claiming a
 # faster cadence would be the false-freshness signal /bhav's sitemap warns of.
-# /farm/poultry is "daily" and that is the honest cadence, not an optimistic
-# one: NECC publishes a new egg rate every morning and the fetch stores it, so
-# the page genuinely changes daily. Its ~34 zone URLs are NOT listed here —
-# they live in /farm/poultry/sitemap.xml with their own real lastmod.
+# /pashupalan/anda-rate is "daily" and that is the honest cadence, not an
+# optimistic one: NECC publishes a new egg rate every morning and the fetch
+# stores it, so the page genuinely changes daily. Its ~34 zone URLs are NOT
+# listed here — they live in /pashupalan/sitemap.xml with their own real
+# lastmod. (The section was /farm/* until 2026-09-12; the old URLs 301 and are
+# deliberately absent from every sitemap, which must only list canonicals.)
 # /donate is not a hub, but it is server-rendered (routes/donate.py) so it has
 # no file in CORE to take a date from. "yearly" is the honest cadence: the
 # page changes only when the copy does.
 HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
         ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly"),
         ("/rental", 0.7, "monthly"), ("/donate", 0.3, "yearly"),
-        ("/farm", 0.7, "weekly"), ("/farm/poultry", 0.9, "daily")]
+        ("/pashupalan", 0.7, "weekly"), ("/pashupalan/anda-rate", 0.9, "daily")]
 
 _ARTICLE_PRIORITY = 0.8
 _ARTICLE_CHANGEFREQ = "weekly"

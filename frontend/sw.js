@@ -2,7 +2,7 @@
 // outage hold Netlify's `{"error":"usage_exceeded"}` 503 under the URL of a real
 // page or stylesheet, and the activate step deletes every cache that isn't the
 // current name.
-const CACHE_NAME = 'krashimitra-v12'; // v12: backend origin → https://krashi-mitra-v1-p099.onrender.com; every browser holds a cache-first api-config.js pointing at the old one; v11: backend origin → https://api.krashimitra.in; every browser holds a cache-first api-config.js pointing at the old one; v10: km-social.js ships (channel stickers + invite popup) and carries the channel URLs, so a stale copy would keep showing yesterday's links — or none; // v9: ads.js shipped, but drawer-menu.js (which bootstraps it) is referenced without a ?v= query from the articles and the static pages, so cache-first kept handing returning phones the pre-ads copy and no ad ever rendered for them; // v8: backend moved to a new Render host — every returning browser held a cache-first api-config.js pointing at the dead one; v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
+const CACHE_NAME = 'krashimitra-v13'; // v13: bottomnav.js was cache-first and its link rule changed — a stale copy keeps sending दुकान and कृषि न्यूज़ to a sibling of whatever nested page the farmer is on (two of four tabs 404ing across /pashupalan, /naksha and /rental); it joins SHELL_SCRIPTS below so this cannot recur; v12: backend origin → https://krashi-mitra-v1-p099.onrender.com; every browser holds a cache-first api-config.js pointing at the old one; v11: backend origin → https://api.krashimitra.in; every browser holds a cache-first api-config.js pointing at the old one; v10: km-social.js ships (channel stickers + invite popup) and carries the channel URLs, so a stale copy would keep showing yesterday's links — or none; // v9: ads.js shipped, but drawer-menu.js (which bootstraps it) is referenced without a ?v= query from the articles and the static pages, so cache-first kept handing returning phones the pre-ads copy and no ad ever rendered for them; // v8: backend moved to a new Render host — every returning browser held a cache-first api-config.js pointing at the dead one; v7: never cache a failed response; v6: never cache authenticated API responses; v5: mandi.html retired, mandi data lives on /bhav; v4: shared analytics.js (GA4 + Clarity); v3: web push (mandi bhav alerts); v2: bell → KrashiBook
 const ASSETS_TO_CACHE = [
   './',
   './analytics.js',
@@ -94,7 +94,12 @@ function lastKnownGood(request, fallback) {
 // cache-first, pasting a new Facebook or Instagram URL into it would never
 // reach a phone that had already loaded the site — the exact failure mode that
 // put api-config.js and drawer-menu.js on this list.
-const SHELL_SCRIPTS = /\/(api-config|drawer-menu|ads|km-social)\.js$/;
+// bottomnav.js carries addresses too — it DECIDES the href of every tab in the
+// bar, from the page's own path. When that rule was corrected (2026-09-12,
+// nested sections were sending दुकान and कृषि न्यूज़ to a sibling of the
+// current page), a cache-first copy would have kept every returning phone on
+// the broken one, on the tab bar the whole site navigates by.
+const SHELL_SCRIPTS = /\/(api-config|drawer-menu|ads|km-social|bottomnav)\.js$/;
 
 // Fetch Event
 self.addEventListener('fetch', (event) => {

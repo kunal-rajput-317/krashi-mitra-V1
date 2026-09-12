@@ -272,7 +272,7 @@
     { k: '🚜',  href: '/bhav/net-price',      at: /^\/bhav\/net-price/ },
     { k: '🛒',  href: '/shop.html',           at: /^\/shop(\.html)?$/ },
     { k: '⚙️',  href: '/rental',              at: /^\/rental(\/|$)/ },
-    { k: '🥚',  href: '/farm/poultry',       at: /^\/farm(\/|$)/ },
+    { k: '🥚',  href: '/pashupalan/anda-rate', at: /^\/(pashupalan|farm)(\/|$)/ },
     { k: '🤝',  href: '/dukanlisting',        at: /^\/dukanlisting/ },
     { k: '🔍',  href: '/khoj.html',           at: /^\/khoj(\.html)?$/ },
     { k: '🧺',  href: '/krashi_bajar.html',   at: /^\/krashi_bajar(\.html)?$/ },

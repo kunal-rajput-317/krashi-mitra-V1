@@ -1,11 +1,19 @@
 # ============================================================
 # routes/poultry.py
-# अंडे का रेट — /farm/poultry, the second daily-price engine
+# पशुपालन — /pashupalan, and the daily अंडे का रेट under it
 #
-# TWO TIERS, ~35 URLS. THAT IS THE WHOLE POINT.
-#   /farm                             the पशुपालन section hub
-#   /farm/poultry                     today's egg rate in every NECC zone
-#   /farm/poultry/anda-rate/{zone}    one zone: today, trend, last year
+# TWO TIERS, ~36 URLS. THAT IS THE WHOLE POINT.
+#   /pashupalan                       the पशुपालन section hub
+#   /pashupalan/anda-rate             today's egg rate in every NECC zone
+#   /pashupalan/anda-rate/{zone}      one zone: today, trend, last year
+#
+# THE URL SAYS WHAT THE PAGE ANSWERS. This section shipped at /farm/poultry/
+# anda-rate/{zone} — four segments in which "poultry" and "anda-rate" said the
+# same thing twice, under an English section word on a site whose sections are
+# /bhav, /naksha, /khoj, /sawal. Renamed 2026-09-12. The old tree still answers,
+# as 301s, at the bottom of this file: /farm/poultry was earning ~1,800
+# impressions a month at position 8 when it moved, and that equity has to
+# travel with the page rather than evaporate.
 #
 # DELIBERATELY NOT A TREE. /bhav multiplies crop x state x district into ~14k
 # URLs, and the 2026-08-23 read of that index found 72% of impressions stuck
@@ -22,10 +30,21 @@
 # this answers one he asks daily, and that is the difference between ~200 new
 # visitors a day and visitors who come back.
 #
-# THE LAYOUT IS /bhav's, NOT A COPY OF IT. Shell, tokens, header, footer, FAQ
-# and breadcrumb JSON-LD are imported from bhav.py exactly the way product.py,
-# krashi_dukan.py and rental.py import them. _EXTRA_CSS here adds only the
-# rate list, which nothing else on the site has.
+# THE LAYOUT IS THE SITE'S, NOT A SECOND ONE. Shell, tokens, header, footer,
+# FAQ and breadcrumb JSON-LD are imported from bhav.py exactly the way
+# product.py, krashi_dukan.py and rental.py import them — and so are the layout
+# COMPONENTS: _tier_head for a hub top, .shop-section-title for a section
+# heading, .ctile-search-row for a search box, .crop-card/.crop-grid for a
+# photo card. This module first shipped with its own .egg-sec/.shelf pair that
+# existed nowhere else on the site, so a farmer arriving from /bhav met
+# headings and cards he had never seen. _EXTRA_CSS now adds only the rate list
+# itself, which nothing else on the site has.
+#
+# THE BLUE BAR IS THIS SECTION'S, TOO. bhav.py's _header builds it from the
+# mandi index, so borrowing the shell and leaving it alone put गेहूं/धान/प्याज
+# on top of an egg rate. _section_nav() passes the zones a poultry farmer would
+# actually tap — built from what has a rate today, so it cannot link to an
+# empty page.
 #
 # NECC'S CLARIFICATION TRAVELS WITH THE NUMBERS. The source permits
 # republication on the condition that its clarification is reproduced
@@ -48,55 +67,95 @@ from sqlalchemy.orm import Session
 
 from backend.database.db import get_db
 from backend.routes.bhav import (
-    _axis_band, _crumb_ld, _doc, _faq, _fit, _lead_gen_html, _ld, _sparkline,
-    _trend_colour,
+    _MIC_SVG_HTML, _axis_band, _crumb_ld, _doc, _faq, _fit, _lead_gen_html,
+    _ld, _sparkline, _tier_head, _trend_colour,
 )
 from backend.services import poultry, poultry_necc
 
 router = APIRouter()
 
 SITE = "https://krashimitra.in"
-BASE = f"{SITE}/farm/poultry"
+SECTION = f"{SITE}/pashupalan"          # the पशुपालन hub
+BASE = f"{SECTION}/anda-rate"           # the egg-rate table + its zone pages
+
+# The section's own face in a SERP and on WhatsApp. Every page here fell back
+# to the generic site banner while /bhav's leaves shipped a real crop photo.
+# Both files are already self-hosted and credited on /articles/credits, so this
+# costs nothing but the line (see tests/test_no_hotlinked_images.py).
+OG_POULTRY = f"{SITE}/images/articles/murgi-palan-guide.webp"
+OG_FARM = f"{SITE}/images/articles/dairy-farming-doodh-utpadan.webp"
 
 _HI_MONTHS = ("जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई",
               "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर")
+
+# The blue bar's zone links, in editorial order — the cities a poultry farmer
+# actually types, not the dearest six, which would reshuffle the navigation
+# every morning. Filtered against what has a rate before it renders.
+_NAV_ZONES = ("delhi", "mumbai", "kolkata", "hyderabad", "chennai", "lucknow")
 
 # The three poultry guides already on the site. Listed here rather than
 # discovered from disk because the order is editorial — a farmer looking up a
 # rate is most likely to want the disease page next, not the setup guide.
 _GUIDES = [
-    ("murgi-ranikhet-rog", "रानीखेत रोग — पहचान, टीका और बचाव",
+    ("murgi-ranikhet-rog", "रानीखेत रोग", "टीका और बचाव",
      "मुर्गियों की सबसे बड़ी जानलेवा बीमारी, और लासोटा/R2B टीके का पूरा शेड्यूल।"),
-    ("murgi-palan-guide", "मुर्गी पालन — पूरी गाइड",
+    ("murgi-palan-guide", "मुर्गी पालन", "पूरी गाइड",
      "ब्रॉयलर, लेयर और देसी — नस्ल चुनाव, ब्रूडिंग, फीड और FCR का हिसाब।"),
-    ("murgi-palan-backyard", "बैकयार्ड मुर्गी पालन — कम लागत में शुरुआत",
+    ("murgi-palan-backyard", "बैकयार्ड मुर्गी पालन", "कम लागत में शुरुआत",
      "10-50 पक्षियों से घर के पिछवाड़े शुरू करने का तरीका और असली खर्च।"),
 ]
 
-# The rest of the पशुपालन shelf — real pages that already exist. /farm is the
-# hub they have never had, not a placeholder for pages nobody has written.
+# The rest of the पशुपालन shelf — real pages that already exist, each with the
+# hero image the article itself ships, so the hub reads like the rest of the
+# site instead of a list of emoji. /pashupalan is the hub these guides never
+# had, not a placeholder for pages nobody has written.
 _FARM_SHELF = [
-    ("poultry", f"{SITE}/farm/poultry", "🐓", "पोल्ट्री — अंडे का रेट",
-     "हर दिन का NECC अंडा रेट, 34 शहरों का, और मुर्गी पालन की गाइड।"),
-    ("dairy", f"{SITE}/articles/dairy-farming-doodh-utpadan", "🐄",
-     "डेयरी — दूध उत्पादन", "नस्ल, हरा चारा, ब्यांत का प्रबंधन और दूध बढ़ाने का गणित।"),
-    ("lumpy", f"{SITE}/articles/pashu-lumpy-skin-rog", "🩺",
-     "पशु रोग — लंपी स्किन", "पहचान, फैलाव रोकना और टीकाकरण।"),
-    ("bakri", f"{SITE}/articles/bakri-palan-guide", "🐐", "बकरी पालन",
+    ("अंडे का रेट", "रोज़ का NECC भाव", BASE, "murgi-palan-guide", "रोज़ अपडेट",
+     "हर दिन का NECC अंडा रेट — 34 शहरों का — और मुर्गी पालन की गाइड।"),
+    ("डेयरी — दूध उत्पादन", "नस्ल से दुहाई तक",
+     f"{SITE}/articles/dairy-farming-doodh-utpadan",
+     "dairy-farming-doodh-utpadan", "गाइड",
+     "नस्ल, हरा चारा, ब्यांत का प्रबंधन और दूध बढ़ाने का पूरा गणित।"),
+    ("बकरी पालन", "कम पूँजी का पालन", f"{SITE}/articles/bakri-palan-guide",
+     "bakri-palan-guide", "गाइड",
      "कम ज़मीन और कम पूँजी में शुरू होने वाला पालन — नस्ल से बिक्री तक।"),
-    ("machhli", f"{SITE}/articles/machhli-palan-guide", "🐟", "मत्स्य पालन",
-     "तालाब तैयारी, बीज संचय और फीड — मछली पालन की बुनियाद।"),
-    ("madhumakhi", f"{SITE}/articles/madhumakhi-palan-guide", "🐝", "मधुमक्खी पालन",
-     "बक्सा, कॉलोनी और शहद निकालने का मौसमी चक्र।"),
+    ("मत्स्य पालन", "तालाब से बाज़ार तक", f"{SITE}/articles/machhli-palan-guide",
+     "machhli-palan-guide", "गाइड",
+     "तालाब की तैयारी, बीज संचय और फीड — मछली पालन की बुनियाद।"),
+    ("मधुमक्खी पालन", "शहद का मौसमी चक्र", f"{SITE}/articles/madhumakhi-palan-guide",
+     "madhumakhi-palan-guide", "गाइड",
+     "बक्सा, कॉलोनी और शहद निकालने का पूरा मौसमी चक्र।"),
+    ("पशु रोग — लंपी स्किन", "पहचान और टीका", f"{SITE}/articles/pashu-lumpy-skin-rog",
+     "pashu-lumpy-skin-rog", "रोग",
+     "लंपी स्किन रोग की पहचान, फैलाव रोकना और टीकाकरण।"),
+    ("हरा चारा — नेपियर, बरसीम", "दूध की असली लागत",
+     f"{SITE}/articles/hara-chara-napier-berseem", "hara-chara-napier-berseem",
+     "चारा", "साल भर हरा चारा कैसे मिले — नेपियर, बरसीम और ज्वार का चक्र।"),
 ]
 
+# Only the rate list is local now. Everything else on these pages is a
+# component the rest of the site already uses (see the module header).
 _EXTRA_CSS = """
 .desc{font-size:14px;color:var(--text-mid);margin:14px 0;line-height:1.7}
+/* Section headings are .shop-section-title — serif, amber rule — like every
+   other hub on the site. This only teaches that component the quiet sub-label
+   the headings here carry ("NECC का घोषित दाम" beside "NECC सुझाया रेट"). */
+.shop-section-title{margin-top:26px;flex-wrap:wrap}
+.shop-section-title em{font-style:normal;font-weight:600;font-size:11.5px;
+color:var(--text-soft);font-family:var(--font-body)}
+.crop-card .note{padding:0 14px 13px;margin:0}
+
 .egg-list{margin-top:12px;border:1px solid var(--border);border-radius:var(--radius-md);
 overflow:hidden;background:var(--white);box-shadow:var(--shadow-sm)}
 .egg-row{display:flex;align-items:center;gap:10px;padding:11px 14px;text-decoration:none;
 color:inherit;border-top:1px solid var(--border)}
 .egg-row:first-child{border-top:none}
+/* eggFilter() hides with el.hidden, and the UA's [hidden]{display:none} is a
+   (0,1,0) rule that LOSES to the display:flex above and to .shop-section-title
+   in the shell — so without these three the search box hid nothing but the
+   list it had emptied, and a query for one city left the other section's 24
+   rows on screen looking like results. */
+.egg-row[hidden],.egg-list[hidden],.shop-section-title[hidden]{display:none}
 .egg-row:hover{background:var(--green-pale)}
 .egg-z{flex:1;min-width:0}
 .egg-n{display:block;font-size:14px;font-weight:700;color:var(--text-dark);line-height:1.25}
@@ -105,30 +164,83 @@ color:inherit;border-top:1px solid var(--border)}
 .egg-r{display:block;font-size:16px;font-weight:700;color:var(--green-dark);line-height:1.2;white-space:nowrap}
 .egg-r small{font-size:10.5px;font-weight:600;color:var(--text-soft);margin-left:2px}
 .egg-h{display:block;font-size:10.5px;color:var(--text-soft);font-weight:600;margin-top:1px;white-space:nowrap}
-.egg-sec{font-size:12.5px;font-weight:700;color:var(--text-mid);margin:22px 0 0;
-display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.egg-sec em{font-style:normal;font-weight:600;font-size:11px;color:var(--text-soft)}
+/* The "no city matched" line the search box reveals. Hidden until it has
+   something to say, so the page never ships an empty state it does not need. */
+.egg-none{display:none;padding:16px 14px;font-size:13px;color:var(--text-soft);
+line-height:1.65;background:var(--white);border:1px solid var(--border);
+border-radius:var(--radius-md);margin-top:12px}
+
 .egg-stat{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .egg-stat div{flex:1;min-width:132px;background:var(--white);border:1px solid var(--border);
 border-radius:var(--radius-sm);padding:10px 13px;box-shadow:var(--shadow-sm)}
 .egg-stat b{display:block;font-size:17px;font-weight:700;color:var(--green-dark);line-height:1.2}
 .egg-stat span{font-size:11px;color:var(--text-soft);font-weight:600}
-.necc-note{margin-top:22px;padding:13px 15px;border:1px solid var(--border);
+
+/* The hub's live-rate card. .next-up — the strip this replaced — is
+   white-on-transparent and only legible inside the dark .answer panel; the hub
+   now opens with _tier_head on the cream ground, the way /bhav's hub does. */
+.egg-live{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0 8px;
+padding:16px 18px;background:var(--white);border:1px solid var(--border);
+border-left:4px solid var(--amber);border-radius:var(--radius-md);box-shadow:var(--shadow-sm)}
+.egg-live-n{font-size:32px;font-weight:700;color:var(--green-dark);line-height:1;letter-spacing:-1px}
+.egg-live-n small{font-size:13px;font-weight:600;color:var(--text-soft);letter-spacing:0;margin-left:4px}
+.egg-live-t{flex:1;min-width:180px}
+.egg-live-t b{display:block;font-size:13.5px;font-weight:700;color:var(--text-dark);line-height:1.4}
+.egg-live-t span{font-size:11.5px;color:var(--text-soft);font-weight:600}
+.egg-live-go{background:var(--green-mid);color:#fff;font-size:13px;font-weight:700;
+text-decoration:none;padding:10px 16px;border-radius:var(--radius-sm);white-space:nowrap}
+.egg-live-go:hover{background:var(--green-dark)}
+
+.necc-note{margin-top:26px;padding:13px 15px;border:1px solid var(--border);
 border-left:3px solid var(--amber);border-radius:var(--radius-sm);background:var(--cream)}
 .necc-note h3{font-size:12.5px;font-weight:700;color:var(--text-dark);margin-bottom:5px}
 .necc-note p{font-size:11.5px;color:var(--text-mid);line-height:1.65;margin-bottom:7px}
 .necc-note p:last-child{margin-bottom:0}
 .necc-note .en{font-size:10.5px;color:var(--text-soft);line-height:1.6}
-.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px}
-.shelf a{display:flex;gap:11px;background:var(--white);border:1px solid var(--border);
-border-radius:var(--radius-md);padding:13px 15px;text-decoration:none;color:inherit;
-box-shadow:var(--shadow-sm);transition:transform .15s,border-color .15s}
-.shelf a:hover{transform:translateY(-2px);border-color:var(--green-light)}
-.shelf .ic{font-size:21px;line-height:1}
-.shelf b{display:block;font-size:13.5px;font-weight:700;color:var(--text-dark);line-height:1.3}
-.shelf small{display:block;font-size:11.5px;color:var(--text-soft);line-height:1.55;margin-top:3px}
-@media(max-width:640px){.egg-row{padding:10px 12px}.egg-n{font-size:13.5px}}
+@media(max-width:640px){.egg-row{padding:10px 12px}.egg-n{font-size:13.5px}
+.egg-live{gap:12px;padding:14px}.egg-live-n{font-size:27px}
+.egg-live-go{width:100%;text-align:center}}
 """
+
+# Filters both rate lists at once and tells the farmer when nothing matched.
+# Same interaction /bhav's hub ships (bhavFilterTiles), namespaced so the two
+# could never collide if a page ever carried both.
+_SEARCH_JS = """<script>
+function eggFilter(){
+  var i=document.getElementById('egg-search');
+  var q=(i&&i.value||'').trim().toLowerCase();
+  var shown=0;
+  document.querySelectorAll('.egg-list .egg-row').forEach(function(r){
+    var hit=(!q||(r.dataset.name||'').indexOf(q)>=0);
+    r.hidden=!hit;
+    if(hit){shown++;}
+  });
+  /* A section whose rows all filtered out takes its heading with it —
+     otherwise the page shows "NECC सुझाया रेट" over nothing. */
+  document.querySelectorAll('.egg-list').forEach(function(l){
+    var any=!!l.querySelector('.egg-row:not([hidden])');
+    l.hidden=!any;
+    var h=l.previousElementSibling;
+    if(h&&h.classList.contains('shop-section-title')){h.hidden=!any;}
+  });
+  var none=document.getElementById('egg-none');
+  if(none){none.style.display=shown?'none':'block';}
+}
+function eggVoice(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){return;}
+  var mic=document.getElementById('egg-mic');
+  var r=new SR();r.lang='hi-IN';r.interimResults=false;r.maxAlternatives=1;
+  if(mic){mic.classList.add('listening');}
+  r.onresult=function(e){
+    var i=document.getElementById('egg-search');
+    if(i){i.value=e.results[0][0].transcript;eggFilter();}
+  };
+  r.onend=function(){if(mic){mic.classList.remove('listening');}};
+  r.onerror=function(){if(mic){mic.classList.remove('listening');}};
+  try{r.start();}catch(_){}
+}
+</script>"""
 
 
 # ── small shared bits ───────────────────────────────────────
@@ -144,6 +256,24 @@ def _delta_html(change) -> str:
     return (f'<span class="{cls}">{sign} ₹{abs(change) / 100:.2f}</span>')
 
 
+def _section_nav(rows: list[dict]) -> str:
+    """This section's blue bar, replacing the mandi crop links the shell would
+    otherwise put on top of an egg rate (see the module header).
+
+    Built from zones that HAVE a rate, so — like _quicknav, which it mirrors —
+    it can never link to a page that would render empty.
+    """
+    have = {r["slug"]: r["hi"] for r in rows}
+    items = "".join(
+        f'<a class="cnav-item" href="{BASE}/{s}">{escape(have[s])} अंडा रेट</a>'
+        for s in _NAV_ZONES if s in have)
+    return (f'<div class="commodity-navbar"><div class="cnav-inner">'
+            f'<a class="cnav-item" href="{SECTION}">पशुपालन</a>'
+            f'<a class="cnav-item" href="{BASE}">आज का अंडा रेट</a>{items}'
+            f'<a class="cnav-item" href="{SITE}/articles/murgi-palan-guide">'
+            f'मुर्गी पालन</a></div></div>')
+
+
 def _clarification() -> str:
     """NECC's condition for republishing its numbers. Hindi first because that
     is who reads the page; the English is the text the permission is actually
@@ -156,6 +286,14 @@ def _clarification() -> str:
         f'<p class="en">Source: National Egg Co-ordination Committee (NECC) — '
         f'<a href="{poultry_necc.NECC_URL}" rel="nofollow noopener" target="_blank">'
         'e2necc.com</a></p></section>')
+
+
+def _sec_title(label: str, sub: str = "") -> str:
+    """The site's section heading — serif, amber rule — the same component
+    /bhav's hub puts over its crop grid. This section used to declare its own
+    12.5px grey `.egg-sec`, which appeared nowhere else on the site."""
+    em = f"<em>{escape(sub)}</em>" if sub else ""
+    return f'<div class="shop-section-title"><span>{escape(label)}</span>{em}</div>'
 
 
 def _trend_chart(series: list[dict]) -> str:
@@ -220,8 +358,11 @@ def _rows_html(rows: list[dict]) -> str:
         spark = _sparkline([str(p) for p in r["spark"]]) if len(r["spark"]) > 1 else ""
         where = " · ".join(x for x in (r["state_hi"],
                                        "खपत केंद्र" if r["centre"] == "CC" else "") if x)
+        # What the search box matches on: Hindi name, slug and state, so
+        # "lucknow", "लखनऊ" and "उत्तर प्रदेश" all find the same row.
+        hay = f'{r["hi"]} {r["slug"].replace("-", " ")} {r["state_hi"]}'.lower()
         out.append(
-            f'<a class="egg-row" href="{BASE}/anda-rate/{r["slug"]}">'
+            f'<a class="egg-row" href="{BASE}/{r["slug"]}" data-name="{escape(hay, quote=True)}">'
             f'<span class="egg-z"><span class="egg-n">{escape(r["hi"])}</span>'
             f'<span class="egg-s">{escape(where)}</span></span>'
             f'{spark}'
@@ -232,39 +373,90 @@ def _rows_html(rows: list[dict]) -> str:
     return f'<div class="egg-list">{"".join(out)}</div>'
 
 
+def _search_box() -> str:
+    """The city filter over the 34 rows. The section shipped without one, so a
+    farmer whose city sat 28 rows down had to scroll for it — on a page whose
+    whole job is answering one question fast. Same component /bhav's hub uses
+    to filter its crop tiles, down to the voice button."""
+    return (
+        '<div class="mandi-toolbar"><div class="ctile-search-row">'
+        '<span class="cs-icon">🔍</span>'
+        '<input id="egg-search" type="text" autocomplete="off" '
+        'placeholder="अपना शहर खोजें... (लखनऊ, दिल्ली, Hyderabad)" oninput="eggFilter()">'
+        '<button class="mn-mic-btn" id="egg-mic" type="button" '
+        'onmousedown="event.preventDefault()" onclick="eggVoice()" '
+        f'title="बोलकर खोजें">{_MIC_SVG_HTML}</button>'
+        '</div></div>')
+
+
+def _card(href: str, img: str, title: str, kicker: str, tag: str, sub: str,
+          heading: bool = True) -> str:
+    """One photo card in the site's .crop-card shape — the component /bhav's
+    state hub uses for its crop cards.
+
+    `heading` renders the name as an <h2> the way that grid does. The guide
+    strip at the foot of a rate page passes False, so those pages keep one <h1>
+    and a flat run of section <h2>s instead of ten.
+    """
+    name_tag = "h2" if heading else "span"
+    return (
+        f'<a class="crop-card" href="{href}">'
+        f'<div class="crop-card-photo">'
+        f'<img src="{SITE}/images/articles/{img}-card.webp" alt="{escape(title)}" '
+        f'loading="lazy" decoding="async" width="240" height="120">'
+        f'<{name_tag} class="crop-card-name">{escape(title)}'
+        f'<span class="crop-card-en">{escape(kicker)}</span></{name_tag}></div>'
+        f'<div class="crop-card-body"><span class="lbl">{escape(tag)}</span>'
+        f'<span class="rate">देखें →</span></div>'
+        f'<p class="note">{escape(sub)}</p></a>')
+
+
 def _guides_html() -> str:
     cards = "".join(
-        f'<a href="{SITE}/articles/{slug}"><span class="ic">📗</span>'
-        f'<span><b>{escape(title)}</b><small>{escape(sub)}</small></span></a>'
-        for slug, title, sub in _GUIDES)
-    return ('<h2 class="egg-sec">मुर्गी पालन की गाइड</h2>'
-            f'<div class="shelf">{cards}</div>')
+        _card(f"{SITE}/articles/{slug}", slug, title, kicker, "गाइड", sub,
+              heading=False)
+        for slug, title, kicker, sub in _GUIDES)
+    return (_sec_title("मुर्गी पालन की गाइड", "रेट देखने के बाद का अगला सवाल")
+            + f'<div class="crop-grid">{cards}</div>')
 
 
 def _feed_links_html() -> str:
     """Feed is roughly two-thirds of what a poultry farm spends, and both feed
     grains already have live /bhav pages. So this is the honest next question
-    after "what is the egg rate" — and it is the link that ties the new section
-    to the engine that already ranks."""
+    after "what is the egg rate" — and it is the link that ties this section to
+    the engine that already ranks."""
     return (
-        '<h2 class="egg-sec">दाने का खर्च <em>अंडे के रेट से ज़्यादा यही तय करता है कि '
-        'कमाई बचेगी या नहीं</em></h2>'
-        '<div class="shelf">'
-        f'<a href="{SITE}/bhav/maize"><span class="ic">🌽</span><span>'
-        '<b>मक्का का आज का भाव</b><small>पोल्ट्री फीड का सबसे बड़ा हिस्सा — '
-        'हर मंडी का रेट।</small></span></a>'
-        f'<a href="{SITE}/bhav/soyabean"><span class="ic">🫘</span><span>'
-        '<b>सोयाबीन का आज का भाव</b><small>फीड का प्रोटीन हिस्सा — खली का दाम '
-        'यहीं से चलता है।</small></span></a>'
-        f'<a href="{SITE}/product/#cat-pashu_aahaar"><span class="ic">🛒</span><span>'
-        '<b>पशु व पोल्ट्री आहार</b><small>लेयर फीड, ब्रॉयलर फीड और मिनरल '
-        'मिक्सचर।</small></span></a>'
-        '</div>')
+        _sec_title("दाने का खर्च",
+                   "अंडे के रेट से ज़्यादा यही तय करता है कि कमाई बचेगी या नहीं")
+        + '<div class="dlinks" style="margin-top:12px">'
+          f'<a href="{SITE}/bhav/maize">🌽 मक्का का आज का भाव</a>'
+          f'<a href="{SITE}/bhav/soyabean">🫘 सोयाबीन का आज का भाव</a>'
+          f'<a href="{SITE}/product/#cat-pashu_aahaar">🛒 पशु व पोल्ट्री आहार</a>'
+          f'<a href="{SITE}/articles/hara-chara-napier-berseem">🌱 हरा चारा</a>'
+          '</div>')
 
 
-# ── /farm/poultry/sitemap.xml ───────────────────────────────
+def _peers(db: Session, me: dict) -> list[dict]:
+    """Other zones worth showing at the foot of one zone's page — its own state
+    first, then the big consumption centres.
 
-@router.get("/farm/poultry/sitemap.xml")
+    This used to be `latest(db)[:6]`, i.e. the six dearest zones — the SAME six
+    on all 34 pages, and none of them near the reader. State-first gives each
+    page a tail of its own and puts the comparison a farmer would actually make
+    (the next mandi over) above the one he would not (Kolkata, from Ajmer).
+    """
+    rows = [r for r in poultry.latest(db) if r["slug"] != me["slug"]]
+    same = [r for r in rows if r["state_hi"] and r["state_hi"] == me["state_hi"]]
+    seen = {r["slug"] for r in same}
+    big = [r for r in rows if r["slug"] in _NAV_ZONES and r["slug"] not in seen]
+    seen |= {r["slug"] for r in big}
+    rest = [r for r in rows if r["slug"] not in seen]
+    return (same + big + rest)[:6]
+
+
+# ── /pashupalan/sitemap.xml ─────────────────────────────────
+
+@router.get("/pashupalan/sitemap.xml")
 def poultry_sitemap(db: Session = Depends(get_db)):
     """The two hubs and every zone that has a rate — nothing speculative.
 
@@ -274,12 +466,12 @@ def poultry_sitemap(db: Session = Depends(get_db)):
     """
     day = poultry.updated(db)
     lastmod = f"<lastmod>{day.isoformat()}</lastmod>" if day else ""
-    urls = [f"  <url><loc>{SITE}/farm</loc>{lastmod}<changefreq>weekly</changefreq></url>",
+    urls = [f"  <url><loc>{SECTION}</loc>{lastmod}<changefreq>weekly</changefreq></url>",
             f"  <url><loc>{BASE}</loc>{lastmod}<changefreq>daily</changefreq>"
             f"<priority>0.9</priority></url>"]
     for r in poultry.latest(db):
         urls.append(
-            f'  <url><loc>{BASE}/anda-rate/{r["slug"]}</loc>'
+            f'  <url><loc>{BASE}/{r["slug"]}</loc>'
             f'<lastmod>{r["date"].isoformat()}</lastmod>'
             f"<changefreq>daily</changefreq><priority>0.8</priority></url>")
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -289,83 +481,82 @@ def poultry_sitemap(db: Session = Depends(get_db)):
                     headers={"Cache-Control": "public, max-age=3600"})
 
 
-# ── /farm — the पशुपालन hub ─────────────────────────────────
+# ── /pashupalan — the section hub ───────────────────────────
 
-@router.get("/farm", response_class=HTMLResponse)
-@router.get("/farm/", response_class=HTMLResponse)
+@router.get("/pashupalan", response_class=HTMLResponse)
+@router.get("/pashupalan/", response_class=HTMLResponse)
 def farm_hub(db: Session = Depends(get_db)):
     """The section landing for पशुपालन.
 
-    It exists because /farm/poultry cannot hang off a 404, and it earns its
-    own place by being the only page that gathers the livestock guides that
+    It exists because /pashupalan/anda-rate cannot hang off a 404, and it earns
+    its own place by being the only page that gathers the livestock guides that
     were scattered across /articles. When a second vertical gets a daily
     number, this is where it goes — the shelf is a list, not a redirect.
+
+    Laid out like /bhav's hub — centred heading, then the live number, then a
+    photo-card grid — rather than with the dark price panel, which belongs on a
+    page whose whole subject IS one price.
     """
     day = poultry.updated(db)
     rows = poultry.latest(db, section="necc")
+    all_rows = poultry.latest(db)
     # The average is over the NECC-suggested zones only (mixing in prevailing
     # prices would average two different claims), but the LINK counts every
     # zone the table actually shows — promising 24 and landing on 34 is a
     # small lie the farmer notices immediately.
-    total = len(poultry.latest(db))
+    total = len(all_rows)
     live = ""
     if rows and day:
         avg = round(sum(r["paise"] for r in rows) / len(rows))
-        live = (f'<div class="next-up">आज ({escape(_hi_date(day))}) का औसत NECC अंडा रेट — '
-                f'<b>₹{poultry.rupees(avg)} प्रति अंडा</b> '
-                f'(₹{poultry.per_hundred(avg)} प्रति 100)। '
-                f'<a href="{BASE}" style="color:#fff;text-decoration:underline">'
-                f'सभी {total} शहरों का रेट देखें →</a></div>')
+        live = (
+            '<div class="egg-live">'
+            f'<span class="egg-live-n">₹{poultry.rupees(avg)}<small>प्रति अंडा</small></span>'
+            '<span class="egg-live-t">'
+            f'<b>आज का औसत NECC अंडा रेट — ₹{poultry.per_hundred(avg)} प्रति 100</b>'
+            f'<span>{escape(_hi_date(day))} · {total} शहर / ज़ोन</span></span>'
+            f'<a class="egg-live-go" href="{BASE}">सभी {total} शहरों का रेट देखें →</a>'
+            '</div>')
 
     cards = "".join(
-        f'<a href="{href}"><span class="ic">{ic}</span><span><b>{escape(title)}</b>'
-        f'<small>{escape(sub)}</small></span></a>'
-        for _, href, ic, title, sub in _FARM_SHELF)
+        _card(href, img, title, kicker, tag, sub)
+        for title, kicker, href, img, tag, sub in _FARM_SHELF)
 
-    body = f"""<section class="answer">
-<h1>पशुपालन — दूध, अंडा, बकरी, मछली और मधुमक्खी</h1>
-<p class="answer-sub">खेती के साथ चलने वाली कमाई, और उसके रोज़ बदलते दाम</p>
-<p class="answer-lead">पशुपालन की कमाई खेती से एक बात में अलग है — यह रोज़ आती है।
-अंडा रोज़ बिकता है, दूध रोज़ बिकता है, और दाना रोज़ खरीदना पड़ता है। इसीलिए यहाँ भाव
-भी रोज़ का है, सीज़न का नहीं।</p>
+    body = f"""{_tier_head("पशुपालन — दूध, अंडा, बकरी, मछली और मधुमक्खी",
+                           "खेती के साथ चलने वाली कमाई, और उसके रोज़ बदलते दाम")}
 {live}
-</section>
+<p class="desc">पशुपालन की कमाई खेती से एक बात में अलग है — यह रोज़ आती है। अंडा रोज़
+बिकता है, दूध रोज़ बिकता है, और दाना रोज़ खरीदना पड़ता है। इसीलिए यहाँ भाव भी रोज़ का
+है, सीज़न का नहीं।</p>
 
-<h2 class="egg-sec">पशुपालन के विषय</h2>
-<div class="shelf">{cards}</div>
+{_sec_title("पशुपालन के विषय", f"{len(_FARM_SHELF)} हिस्से")}
+<div class="crop-grid">{cards}</div>
 
 <p class="desc">अभी इस हिस्से में रोज़ का भाव सिर्फ़ पोल्ट्री (अंडे) का है, क्योंकि
 अंडे का ही रोज़ का राष्ट्रीय रेट प्रकाशित होता है। दूध, बकरी और मछली के दाम इलाके
 और सौदे पर तय होते हैं — उनके लिए यहाँ गाइड हैं, झूठा "आज का रेट" नहीं।</p>
+{_lead_gen_html()}
 """
-    crumbs = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", f"{SITE}/farm")])
+    crumbs = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", SECTION)])
     return _doc(
         title=_fit("पशुपालन — अंडा रेट, डेयरी, बकरी, मछली व मधुमक्खी पालन",
                    "पशुपालन — अंडा रेट, डेयरी, बकरी व मछली पालन",
                    "पशुपालन — अंडा रेट, डेयरी और बकरी पालन"),
         desc=_fit("रोज़ का अंडा रेट और पशुपालन की पूरी जानकारी — डेयरी, बकरी पालन, "
                   "मत्स्य पालन, मधुमक्खी पालन और पशु रोग की हिंदी गाइड।", limit=162),
-        canon=f"{SITE}/farm",
+        canon=SECTION,
         crumbs=f'<a href="{SITE}/">होम</a> › <span>पशुपालन</span>',
-        body=body, ld=_ld(crumbs),
-        active="", extra_css=_EXTRA_CSS,
+        body=body, ld=_ld(crumbs), og_img=OG_FARM,
+        active="poultry", extra_css=_EXTRA_CSS,
+        quicknav=_section_nav(all_rows),
         updated=day.isoformat() if day else "",
         footer_note="अंडे के दाम NECC से रोज़ अपडेट होते हैं। "
                     "बेचने से पहले अपने व्यापारी से रेट की पुष्टि करें।")
 
 
-# ── /farm/poultry — today's rate, everywhere ────────────────
+# ── /pashupalan/anda-rate — today's rate, everywhere ────────
 
-@router.get("/farm/poultry/anda-rate", response_class=HTMLResponse)
-def anda_rate_index():
-    """The national table IS the hub, so this guessable URL is a 301 rather
-    than a second page saying the same thing — two URLs for one answer is how
-    the /bhav index got diluted."""
-    return RedirectResponse(BASE, status_code=301)
-
-
-@router.get("/farm/poultry", response_class=HTMLResponse)
-@router.get("/farm/poultry/", response_class=HTMLResponse)
+@router.get("/pashupalan/anda-rate", response_class=HTMLResponse)
+@router.get("/pashupalan/anda-rate/", response_class=HTMLResponse)
 def poultry_hub(db: Session = Depends(get_db)):
     necc = poultry.latest(db, section="necc")
     prevailing = poultry.latest(db, section="prevailing")
@@ -381,10 +572,11 @@ def poultry_hub(db: Session = Depends(get_db)):
                 + _clarification())
         return _doc(title="आज का अंडा रेट — NECC egg rate today",
                     desc="भारत के सभी प्रमुख शहरों का आज का अंडा रेट (NECC egg rate).",
-                    canon=BASE, crumbs="", body=body,
-                    active="", extra_css=_EXTRA_CSS, robots="noindex, follow")
+                    canon=BASE, crumbs="", body=body, og_img=OG_POULTRY,
+                    active="poultry", extra_css=_EXTRA_CSS, robots="noindex, follow")
 
     rows = necc or prevailing
+    all_rows = necc + prevailing
     avg = round(sum(r["paise"] for r in rows) / len(rows))
     high, low = rows[0], rows[-1]
     changed = [r for r in rows if r["change"]]
@@ -398,17 +590,20 @@ def poultry_hub(db: Session = Depends(get_db)):
         f'<span>सबसे ऊँचा — {escape(high["hi"])}</span></div>'
         f'<div><b>₹{poultry.rupees(low["paise"])}</b>'
         f'<span>सबसे कम — {escape(low["hi"])}</span></div>'
-        f'<div><b>{len(necc) + len(prevailing)}</b><span>शहर / ज़ोन</span></div>'
+        f'<div><b>{len(all_rows)}</b><span>शहर / ज़ोन</span></div>'
         '</div>')
 
     sections = ""
     if necc:
-        sections += ('<h2 class="egg-sec">NECC सुझाया रेट '
-                     '<em>NECC का घोषित दाम</em></h2>' + _rows_html(necc))
+        sections += (_sec_title("NECC सुझाया रेट", "NECC का घोषित दाम")
+                     + _rows_html(necc))
     if prevailing:
-        sections += ('<h2 class="egg-sec">बाज़ार में चल रहा रेट '
-                     '<em>Prevailing — जहाँ सौदा असल में हो रहा है</em></h2>'
+        sections += (_sec_title("बाज़ार में चल रहा रेट",
+                                "Prevailing — जहाँ सौदा असल में हो रहा है")
                      + _rows_html(prevailing))
+    sections += ('<div class="egg-none" id="egg-none">इस नाम का कोई शहर इस सूची में '
+                 'नहीं है। NECC सिर्फ़ इन्हीं ज़ोन का रेट घोषित करता है — अपने सबसे '
+                 'नज़दीकी शहर का रेट देखें।</div>')
 
     faq_html, faq_ld = _faq([
         ("आज अंडे का रेट क्या है?",
@@ -436,7 +631,7 @@ def poultry_hub(db: Session = Depends(get_db)):
 
     body = f"""<section class="answer">
 <h1>आज का अंडा रेट — {escape(_hi_date(day))}</h1>
-<p class="answer-sub">NECC egg rate today · {len(necc) + len(prevailing)} शहर</p>
+<p class="answer-sub">NECC egg rate today · {len(all_rows)} शहर</p>
 <div class="answer-price"><span class="answer-rupee">₹{poultry.rupees(avg)}
 <small>प्रति अंडा</small></span>
 {f'<span class="answer-delta {"up" if avg_change > 0 else "dn"}">'
@@ -448,17 +643,19 @@ def poultry_hub(db: Session = Depends(get_db)):
 </section>
 
 {stats}
+{_search_box()}
 {sections}
 
-<h2 class="egg-sec">अकसर पूछे जाने वाले सवाल</h2>
+<h2>अकसर पूछे जाने वाले सवाल</h2>
 {faq_html}
 
 {_feed_links_html()}
 {_guides_html()}
 {_lead_gen_html()}
 {_clarification()}
+{_SEARCH_JS}
 """
-    crumbs_ld = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", f"{SITE}/farm"),
+    crumbs_ld = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", SECTION),
                            ("अंडे का रेट", BASE)])
     return _doc(
         title=_fit(f"आज का अंडा रेट {_hi_date(day)} — NECC egg rate today",
@@ -466,23 +663,24 @@ def poultry_hub(db: Session = Depends(get_db)):
                    "आज का अंडा रेट — NECC egg rate today"),
         desc=_fit(f"आज का अंडा रेट: औसत ₹{poultry.rupees(avg)} प्रति अंडा "
                   f"(₹{poultry.per_hundred(avg)} प्रति 100)। "
-                  f"{len(necc) + len(prevailing)} शहरों का NECC egg rate today — "
+                  f"{len(all_rows)} शहरों का NECC egg rate today — "
                   f"{high['hi']} सबसे ऊँचा, {low['hi']} सबसे कम।",
                   f"आज का अंडा रेट: औसत ₹{poultry.rupees(avg)} प्रति अंडा। "
-                  f"{len(necc) + len(prevailing)} शहरों का NECC egg rate today।",
+                  f"{len(all_rows)} शहरों का NECC egg rate today।",
                   limit=162),
         canon=BASE,
-        crumbs=f'<a href="{SITE}/">होम</a> › <a href="{SITE}/farm">पशुपालन</a> '
+        crumbs=f'<a href="{SITE}/">होम</a> › <a href="{SECTION}">पशुपालन</a> '
                '› <span>अंडे का रेट</span>',
-        body=body, ld=_ld(crumbs_ld, faq_ld),
-        active="", extra_css=_EXTRA_CSS, updated=day.isoformat(),
+        body=body, ld=_ld(crumbs_ld, faq_ld), og_img=OG_POULTRY,
+        active="poultry", extra_css=_EXTRA_CSS,
+        quicknav=_section_nav(all_rows), updated=day.isoformat(),
         footer_note="अंडे के दाम NECC से रोज़ अपडेट होते हैं। "
                     "बेचने से पहले अपने व्यापारी से रेट की पुष्टि करें।")
 
 
-# ── /farm/poultry/anda-rate/{zone} — one zone ───────────────
+# ── /pashupalan/anda-rate/{zone} — one zone ─────────────────
 
-@router.get("/farm/poultry/anda-rate/{zone_slug}", response_class=HTMLResponse)
+@router.get("/pashupalan/anda-rate/{zone_slug}", response_class=HTMLResponse)
 def zone_page(zone_slug: str, db: Session = Depends(get_db)):
     z = poultry.zone(db, zone_slug)
     if not z:
@@ -495,9 +693,10 @@ def zone_page(zone_slug: str, db: Session = Depends(get_db)):
     en = zone_slug.replace("-", " ").title()
     series = poultry.series(db, zone_slug, days=30)
     ly = poultry.last_year(db, zone_slug, day)
-    all_rows = poultry.latest(db, section=z["section"])
-    rank = next((i + 1 for i, r in enumerate(all_rows) if r["slug"] == zone_slug), 0)
-    peers = [r for r in poultry.latest(db) if r["slug"] != zone_slug][:6]
+    section_rows = poultry.latest(db, section=z["section"])
+    all_rows = poultry.latest(db)
+    rank = next((i + 1 for i, r in enumerate(section_rows) if r["slug"] == zone_slug), 0)
+    peers = _peers(db, z)
 
     month_vals = [p["paise"] for p in series]
     facts = ['<div class="egg-stat">'
@@ -514,7 +713,7 @@ def zone_page(zone_slug: str, db: Session = Depends(get_db)):
         # list would invent a comparison the source does not make.
         rank_lbl = ("NECC ज़ोन में महँगाई का क्रम" if z["section"] == "necc"
                     else "इन शहरों में महँगाई का क्रम")
-        facts.append(f'<div><b>{rank} / {len(all_rows)}</b>'
+        facts.append(f'<div><b>{rank} / {len(section_rows)}</b>'
                      f'<span>{rank_lbl}</span></div>')
     facts.append("</div>")
 
@@ -540,7 +739,8 @@ def zone_page(zone_slug: str, db: Session = Depends(get_db)):
 
     peers_html = ""
     if peers:
-        peers_html = ('<h2 class="egg-sec">दूसरे शहरों का आज का रेट</h2>'
+        near = f"{z['state_hi']} और आसपास" if z["state_hi"] else "दूसरे शहरों"
+        peers_html = (_sec_title(f"{near} का आज का रेट", "एक टैप में तुलना")
                       + _rows_html(peers)
                       + f'<p class="note"><a href="{BASE}">सभी शहरों का अंडा रेट '
                         'देखें →</a></p>')
@@ -586,7 +786,7 @@ def zone_page(zone_slug: str, db: Session = Depends(get_db)):
 {chart_html}
 {ly_html}
 
-<h2 class="egg-sec">अकसर पूछे जाने वाले सवाल</h2>
+<h2>अकसर पूछे जाने वाले सवाल</h2>
 {faq_html}
 
 {peers_html}
@@ -595,9 +795,9 @@ def zone_page(zone_slug: str, db: Session = Depends(get_db)):
 {_lead_gen_html()}
 {_clarification()}
 """
-    crumbs_ld = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", f"{SITE}/farm"),
+    crumbs_ld = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", SECTION),
                            ("अंडे का रेट", BASE),
-                           (hi, f"{BASE}/anda-rate/{zone_slug}")])
+                           (hi, f"{BASE}/{zone_slug}")])
     return _doc(
         title=_fit(f"{hi} अंडा रेट आज ₹{poultry.rupees(paise)} — {en} egg rate today",
                    f"{hi} में आज का अंडा रेट — {en} egg rate today",
@@ -609,10 +809,71 @@ def zone_page(zone_slug: str, db: Session = Depends(get_db)):
                   f"{hi} में आज अंडे का रेट ₹{poultry.rupees(paise)} प्रति अंडा। "
                   f"{en} egg rate today और 30 दिन का रुझान।",
                   limit=162),
-        canon=f"{BASE}/anda-rate/{zone_slug}",
-        crumbs=f'<a href="{SITE}/">होम</a> › <a href="{SITE}/farm">पशुपालन</a> '
+        canon=f"{BASE}/{zone_slug}",
+        crumbs=f'<a href="{SITE}/">होम</a> › <a href="{SECTION}">पशुपालन</a> '
                f'› <a href="{BASE}">अंडे का रेट</a> › <span>{escape(hi)}</span>',
-        body=body, ld=_ld(crumbs_ld, faq_ld),
-        active="", extra_css=_EXTRA_CSS, updated=day.isoformat(),
+        body=body, ld=_ld(crumbs_ld, faq_ld), og_img=OG_POULTRY,
+        active="poultry", extra_css=_EXTRA_CSS,
+        quicknav=_section_nav(all_rows), updated=day.isoformat(),
         footer_note="अंडे के दाम NECC से रोज़ अपडेट होते हैं। "
                     "बेचने से पहले अपने व्यापारी से रेट की पुष्टि करें।")
+
+
+# ════════════════════════════════════════════════════════════
+# THE OLD ADDRESSES
+#
+# This section lived at /farm/* until 2026-09-12. /farm/poultry was earning
+# ~1,800 impressions a month at position 8 when it moved, so every old URL 301s
+# to its new one rather than 404ing or falling through to the site catch-all —
+# the equity has to travel with the page.
+#
+# Netlify's _redirects carries the same rules at the edge, so a farmer on an
+# old link is never made to wait for a Render cold start just to be told where
+# the page went. These routes exist anyway: the edge rules cannot be tested
+# from here, a request that reaches Render directly still has to be answered,
+# and a section that ever moves again should find the pattern written down.
+#
+# /pashupalan/poultry is not an old URL — it is the one a farmer guesses from
+# the drawer label. It lands on the table for the same reason /farm/poultry/
+# anda-rate used to: two URLs for one answer is how an index gets diluted.
+# ════════════════════════════════════════════════════════════
+
+_MOVED = {
+    "/farm": SECTION,
+    "/farm/": SECTION,
+    "/farm/poultry": BASE,
+    "/farm/poultry/": BASE,
+    "/farm/poultry/anda-rate": BASE,
+    "/pashupalan/poultry": BASE,
+}
+
+
+def _moved_route(to: str):
+    """One handler per old path.
+
+    `to` is captured by the factory's own scope, NOT as a default argument on
+    the handler. FastAPI reads a handler's signature to build its parameters,
+    so `def handler(to: str = to)` — the obvious way to avoid the late-binding
+    loop-variable trap — turns `to` into a QUERY PARAMETER, and
+    `/farm?to=https://evil.example.com` becomes a 301 to evil.example.com off
+    our own domain. A factory closure has no late-binding problem to solve in
+    the first place: each call gets its own cell.
+    """
+    def handler() -> RedirectResponse:
+        return RedirectResponse(to, status_code=301)
+    return handler
+
+
+for _old, _new in _MOVED.items():
+    router.add_api_route(_old, _moved_route(_new), methods=["GET"],
+                         include_in_schema=False)
+
+
+@router.get("/farm/poultry/anda-rate/{zone_slug}", include_in_schema=False)
+def zone_moved(zone_slug: str):
+    return RedirectResponse(f"{BASE}/{zone_slug}", status_code=301)
+
+
+@router.get("/farm/poultry/sitemap.xml", include_in_schema=False)
+def sitemap_moved():
+    return RedirectResponse(f"{SECTION}/sitemap.xml", status_code=301)

@@ -317,7 +317,7 @@ async def startup():
     except Exception as e:
         log.warning(f"⚠️ Mill register scheduler startup error (non-fatal): {e}")
     try:
-        await start_poultry_scheduler()  # /farm/poultry — daily NECC egg-rate fetch
+        await start_poultry_scheduler()  # /pashupalan — daily NECC egg-rate fetch
     except Exception as e:
         log.warning(f"⚠️ Poultry scheduler startup error (non-fatal): {e}")
     try:
@@ -409,7 +409,7 @@ from backend.routes import rental as rental_route
 app.include_router(rental_route.router)  # किराये की मशीनें — farm equipment hire (/rental/*)
 
 from backend.routes import poultry as poultry_route
-app.include_router(poultry_route.router)  # पशुपालन — /farm + अंडे का रेट (/farm/poultry/*)
+app.include_router(poultry_route.router)  # पशुपालन — /pashupalan/* (+ 301s from the old /farm/*)
 
 from backend.routes import admin_dukan as admin_dukan_route
 app.include_router(admin_dukan_route.router)   # /admin/dukan/* — shops, catalogue, prices, UPI collect

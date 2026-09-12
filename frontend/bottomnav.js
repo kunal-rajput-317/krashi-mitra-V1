@@ -36,8 +36,21 @@
   var path = location.pathname;
   // KM_FORCE_ABS_NAV: set by 404.html, which Netlify serves at whatever
   // unknown URL was requested — relative links would resolve inside it.
-  var SEO = window.KM_FORCE_ABS_NAV ||
-    /^\/(bhav|product)(\/|$)/.test(path) || /\/articles\//.test(path) || /^\/krashi_news(\/|$)/.test(path);
+  //
+  // The named trees come first because they also decide WHICH page a tab goes
+  // to (/bhav's दुकान tab means /product/, not /shop). The final clause is the
+  // one that cannot go stale: a relative "shop.html" resolves against the
+  // page's DIRECTORY, so it is only ever correct when that directory is the
+  // site root. The list used to be the whole test, and every section added
+  // after it was written inherited a broken bar — on /pashupalan/anda-rate/
+  // lucknow, दुकान pointed at /pashupalan/anda-rate/shop.html and कृषि न्यूज़
+  // at its sibling, so two of the four tabs 404'd on every page in the
+  // section. Anything nested now gets root-absolute links whether or not
+  // someone remembered to add it here.
+  var SEO = !!window.KM_FORCE_ABS_NAV ||
+    /^\/(bhav|product)(\/|$)/.test(path) || /\/articles\//.test(path) ||
+    /^\/krashi_news(\/|$)/.test(path) ||
+    path.replace(/[^/]*$/, '') !== '/';
 
   var LABELS = {
     mandi:       { hi: 'मंडी भाव',    en: 'Mandi Bhav', kn: 'ಮಂಡಿ ದರ' },

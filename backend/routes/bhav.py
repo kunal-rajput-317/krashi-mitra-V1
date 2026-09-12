@@ -2563,7 +2563,7 @@ _DRAWER_ITEMS = [("home", f"{SITE}/", "🏠", "मुख्य"),
                   ("bazar", f"{SITE}/krashi_bajar", "🧺", "कृषि बाज़ार"),
                   ("shop", f"{SITE}/shop", "🛒", "दुकान"),
                   ("rental", f"{SITE}/rental", "⚙️", "किराये की मशीन"),
-                  ("poultry", f"{SITE}/farm/poultry", "🥚", "अंडे का रेट"),
+                  ("poultry", f"{SITE}/pashupalan/anda-rate", "🥚", "अंडे का रेट"),
                   ("khoj", f"{SITE}/khoj", "🔍", "कृषि खोज"),
                   ("map", f"{SITE}/naksha", "🗺️", "कृषि मानचित्र"),
                   ("naksha", f"{SITE}/naksha", "📐", "खेत नापें"),
@@ -2604,11 +2604,18 @@ def _quicknav() -> str:
 </div></div>"""
 
 
-def _header(active: str = "") -> str:
+def _header(active: str = "", quicknav: str | None = None) -> str:
     """Same pre-topbar/topbar/main-header/blue-bar stack as mandi.html, so a
     page reached from Google reads as the same product as the app, not a
     stripped-down doorway. Hamburger drawer uses a couple of inline onclick
-    handlers rather than the app's JS bundle — these pages must stay light."""
+    handlers rather than the app's JS bundle — these pages must stay light.
+
+    `quicknav` replaces the blue bar's contents for a caller whose section is
+    not the mandi tree. The bar is the one navigation strip on these pages that
+    is ABOUT something, so a section that borrows this shell and leaves it
+    alone ends up advertising गेहूं/धान/प्याज on top of an egg rate — which is
+    what /pashupalan did until it passed its own. Default None keeps the crop
+    links, so every existing caller renders byte-identical."""
     nav = "".join(
         f'<a class="header-nav-link{" active" if key == active else ""}" href="{href}">{label}</a>'
         for key, href, label in _NAV_ITEMS)
@@ -2652,7 +2659,7 @@ def _header(active: str = "") -> str:
 </div>
 <a href="{SITE}/login" class="header-avatar-btn" id="header-avatar-btn">👤</a></div>
 </div></header>
-{_quicknav()}
+{_quicknav() if quicknav is None else quicknav}
 </div><!-- /.header-wrapper -->
 <div class="sidebar-drawer-overlay" id="km-drawer" onclick="this.classList.remove('open')">
 <div class="sidebar-drawer" onclick="event.stopPropagation()">
@@ -2734,8 +2741,8 @@ def _footer(note: str = "") -> str:
 <div class="km-footer-brand">🌾 कृषि मित्र</div>
 <nav class="km-footer-nav">
 <a href="{SITE}/">होम</a>
-<a href="{SITE}/bhav">मंडी ऐप</a>
 <a href="{SITE}/bhav">सभी भाव</a>
+<a href="{SITE}/pashupalan">पशुपालन</a>
 <a href="{SITE}/weather">मौसम</a>
 <a href="{SITE}/chat">AI सहायक</a>
 <a href="{SITE}/donate">सहयोग करें</a>
@@ -2762,7 +2769,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
          extra_css: str = "", robots: str = "", head_extra: str = "",
          updated: str = "", footer_note: str = "", crop: str = "",
-         lang: str = "hi") -> HTMLResponse:
+         lang: str = "hi", quicknav: str | None = None) -> HTMLResponse:
     """One page shell for all four tiers — head, header, crumbs, body, footer.
     `active` defaults to "bhav" for this module's own pages; other SEO routes
     (e.g. product.py) that reuse this shell pass their own nav key/"" so they
@@ -2793,6 +2800,8 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     and so "which layout does this crop get" is answerable by looking at the
     page. Callers with no single crop (the hub, the state pages, /find) pass
     nothing and get no attributes at all.
+    `quicknav` is raw markup replacing the blue bar's crop links, for a caller
+    whose section is not the mandi tree — see _header. Default None keeps them.
     `lang` is the page's own language code from services/state_lang, and it
     reaches only <html lang> and og:locale. Any caller that rendered its title
     in that language must pass it: a Marathi title on a page still declaring
@@ -2847,7 +2856,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <style>{_CSS}{extra_css}</style>
 </head>
 <body{body_attrs}>
-{_header(active)}
+{_header(active, quicknav)}
 {crumbs_nav}
 <div class="wrap">
 {body}
@@ -4182,6 +4191,27 @@ def _net_price_cta(hi: str, cs: str = "", state: str = "", district: str = "") -
             f'🚜 {escape(hi)} — भाड़ा जोड़कर नेट भाव देखें</a>')
 
 
+# The two feed grains, and the one page on this site that is ABOUT what they
+# are fed to. /pashupalan already links out to both of these crop hubs, and
+# nothing linked back — so the only route into the egg-rate section was the
+# sitemap and the hamburger drawer, which is how its 34 zone pages spent their
+# first fortnight earning zero impressions.
+#
+# Tier 2 only. Repeating this on the ~2,000 maize district pages underneath
+# would be link spam, and the crop hub is the page in that tree that actually
+# ranks.
+_FEED_CROPS = {"maize": "मक्का", "soyabean": "सोयाबीन"}
+
+
+def _poultry_cta(cs: str) -> str:
+    """Egg-rate link for a feed grain. Empty for every other crop, so the
+    cta-row on the other ~200 crop hubs is byte-identical to before."""
+    if cs not in _FEED_CROPS:
+        return ""
+    return (f'<a class="btn btn-kh" href="{SITE}/pashupalan/anda-rate">'
+            f'🥚 {_FEED_CROPS[cs]} खिलाने वाले — आज का अंडा रेट</a>')
+
+
 # ── MSP — the floor the price table never shows ──────────────
 # "गेहूं ₹2,410" is only half an answer; the half that decides what a farmer
 # does is that MSP is ₹2,585. Tier 4 has a real district average, so it gets
@@ -5339,6 +5369,7 @@ def bhav_crop(c_slug: str):
 <div class="place-grid" id="tier-grid">{"".join(cards)}</div>
 <div class="cta-row">
 {_net_price_cta(hi, cs)}
+{_poultry_cta(cs)}
 </div>
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
