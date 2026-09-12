@@ -4929,6 +4929,123 @@ body {
         .wa-plan span b { font-family:var(--font-mono); font-weight:400; opacity:.75; margin-right:3px; }
         .wa-plan span i { font-style:normal; opacity:.7; }
 
+        /* ── तस्वीर — the picture that goes out with the post ──────────
+           The prompt is EDITABLE and shown before anything is generated,
+           because every image is billed. Reading what is about to be asked
+           for costs nothing; re-rolling a bad prompt after paying for it does.
+
+           What the canvas draws is a composite: the picture underneath, the
+           prices over it, drawn in JS from the same line dicts the caption
+           used. The model is never asked for a number — see the header of
+           backend/services/wa_image.py for why that is a rule and not a
+           preference. */
+        .wa-img { margin-top:10px; padding:10px 12px; border-left:2px solid var(--border); }
+        .wa-img .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .wa-img select, .wa-img button {
+          font-family:var(--font-hindi); font-size:11.5px; font-weight:600;
+          padding:5px 10px; border-radius:var(--radius-sm); cursor:pointer;
+          border:1px solid var(--border-hl); background:var(--surface); color:var(--text);
+        }
+        .wa-img button:hover, .wa-img select:hover { border-color:var(--primary); }
+        .wa-img button:active { transform:translateY(1px); }
+        .wa-img button[disabled] { opacity:.5; cursor:default; transform:none; }
+        .wa-img .go { border-color:#25d366; color:#0f7a3d; background:rgba(37,211,102,.12); }
+        .wa-img textarea {
+          width:100%; margin-top:8px; min-height:54px; resize:vertical;
+          font-family:var(--font-hindi); font-size:11.5px; line-height:1.6;
+          padding:8px 10px; border-radius:var(--radius-sm);
+          border:1px solid var(--border); background:var(--surface); color:var(--text);
+        }
+        .wa-img textarea:focus { outline:none; border-color:var(--primary); }
+        .wa-img .hint {
+          font-family:var(--font-hindi); font-size:10.5px; color:var(--muted);
+          line-height:1.65; margin-top:6px;
+        }
+        .wa-img .warn { color:var(--accent); }
+        .wa-img .bad  { color:var(--danger); }
+        /* The preview is a real <canvas>, sized down by CSS. Drawing it at the
+           full 1080px and scaling in the browser is what keeps the copied PNG
+           sharp on a phone — a canvas sized to its preview would go out at
+           360px wide and look like a screenshot of a screenshot. */
+        .wa-img canvas {
+          display:block; margin-top:10px; width:100%; max-width:290px;
+          height:auto; border-radius:var(--radius-sm); border:1px solid var(--border);
+          background:var(--bg);
+        }
+
+        /* ── और क्या डालें — one line beyond the भाव ─────────────────
+           Two tiers, and the order on screen is the order of trust: the पक्की
+           lines are built from our own MSP table and our own headlines and
+           need no model at all; the AI's rewordings sit under them, each with
+           its own complaints attached. Nothing here is applied automatically —
+           every row is a button the owner has to press. */
+        .wa-ex { margin-top:10px; padding:10px 12px; border-left:2px solid var(--border); }
+        .wa-ex .lab {
+          font-family:var(--font-hindi); font-size:10px; font-weight:700;
+          letter-spacing:.05em; text-transform:uppercase; color:var(--muted);
+          margin:2px 0 6px;
+        }
+        .wa-ex .opt {
+          display:block; width:100%; text-align:left; margin-bottom:6px;
+          font-family:var(--font-hindi); font-size:11.5px; line-height:1.6;
+          padding:7px 10px; cursor:pointer;
+          border:1px solid var(--border-hl); border-radius:var(--radius-sm);
+          background:var(--surface); color:var(--text-dim);
+        }
+        .wa-ex .opt:hover { border-color:var(--primary); color:var(--primary); }
+        .wa-ex .opt:active { transform:translateY(1px); }
+        .wa-ex .opt.sure { border-color:#25d366; color:#0f7a3d; background:rgba(37,211,102,.10); }
+        .wa-ex .opt.on   { border-color:var(--primary); box-shadow:inset 3px 0 0 var(--primary); }
+        /* A flagged suggestion is shown, not hidden — "why is there only one
+           option?" deserves an answer, and the flag IS the answer. It cannot
+           be clicked: recompose() would refuse it anyway, and a button that
+           silently does nothing is worse than a button that is visibly off. */
+        .wa-ex .opt.bad { opacity:.6; cursor:not-allowed; border-style:dashed; }
+        .wa-ex .opt.bad:hover { border-color:var(--border-hl); color:var(--text-dim); }
+        .wa-ex .opt small {
+          display:block; margin-top:4px; font-family:var(--font-hindi);
+          font-size:10px; color:var(--danger); font-weight:600;
+        }
+
+        /* ── पक्कापन — the AI meter ──────────────────────────────────
+           A BAR, not a badge. The number beside a price on this page is the
+           भरोसा score and means "is this figure right"; this one means
+           something narrower — how much of the sentence came from our facts —
+           and giving it the same shape would invite the two to be read as one
+           scale. A bar reads as a proportion, which is exactly what it is.
+
+           It is NOT the model's own confidence. That would be more text from
+           the same source, highest precisely when the model is fluently wrong.
+           Every point here is computed from the line against the facts. */
+        .wa-ex .met { display:flex; align-items:center; gap:7px; margin-top:6px; }
+        .wa-ex .met .bar {
+          flex:0 0 74px; height:5px; border-radius:999px; overflow:hidden;
+          background:var(--border); position:relative;
+        }
+        .wa-ex .met .bar i { display:block; height:100%; border-radius:999px; }
+        .wa-ex .met .num {
+          font-family:var(--font-mono); font-size:10px; color:var(--text-dim);
+          font-weight:600; letter-spacing:-.01em;
+        }
+        .wa-ex .met .word {
+          font-family:var(--font-hindi); font-size:10px; font-weight:700;
+        }
+        .wa-ex .met.sure i { background:#25d366; } .wa-ex .met.sure .word { color:#0f7a3d; }
+        .wa-ex .met.ok   i { background:#52b788; } .wa-ex .met.ok   .word { color:#2d6a4f; }
+        .wa-ex .met.read i { background:var(--accent); } .wa-ex .met.read .word { color:var(--accent); }
+        .wa-ex .met.thin i { background:var(--danger); } .wa-ex .met.thin .word { color:var(--danger); }
+        /* The reasons the meter is not higher. Muted, because unlike a flag
+           they do not stop the line going out — they are what to re-read. */
+        .wa-ex .why {
+          margin-top:4px; font-family:var(--font-hindi); font-size:10px;
+          color:var(--muted); line-height:1.6;
+        }
+        .wa-ex .why b { color:var(--accent); font-weight:600; }
+        .wa-ex .src {
+          font-family:var(--font-mono); font-size:9.5px; color:var(--muted);
+          font-weight:400; float:right; opacity:.8;
+        }
+
         /* सब पर लागू — the same two dropdowns, once, for all 31. Separate row
            from the search box: filtering the list and rewriting every post in
            it are different kinds of act and should not sit in one strip. */
@@ -4964,7 +5081,7 @@ body {
         </div>
 
         <div id="wa-top"></div>
-        <p class="if-detail" style="padding:0 0 12px;">आज कितने भेजे <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_count',event)">?</button> · तैयार मैसेज <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_text',event)">?</button> · भरोसा <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_score',event)">?</button> · नयापन <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_novel',event)">?</button> · रूप और अंदाज़ <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_style',event)">?</button> · फसल चुनें <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_crops',event)">?</button> · आगे के 7 दिन <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_plan',event)">?</button> · ✓ का निशान <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_tick',event)">?</button> · चैनल का लिंक <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_link',event)">?</button></p>
+        <p class="if-detail" style="padding:0 0 12px;">आज कितने भेजे <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_count',event)">?</button> · तैयार मैसेज <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_text',event)">?</button> · भरोसा <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_score',event)">?</button> · नयापन <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_novel',event)">?</button> · रूप और अंदाज़ <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_style',event)">?</button> · फसल चुनें <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_crops',event)">?</button> · तस्वीर <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_img',event)">?</button> · और क्या डालें <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_extra',event)">?</button> · आगे के 7 दिन <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_plan',event)">?</button> · ✓ का निशान <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_tick',event)">?</button> · चैनल का लिंक <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('wa_link',event)">?</button></p>
 
         <!-- सब पर लागू — the per-card controls, once, for all 31 channels.
              "अपने आप" is the default and it is not the absence of a choice: it
@@ -7363,10 +7480,23 @@ let _waQuiet = [];
 let _waChannels = 0;         // every channel in wa_channels.json — posts + quiet
 let _waCat = { formats: [], tones: [] };   // what the two dropdowns offer
 
-// Which cards the owner has opened the crop chips / 7-day plan on. Kept out of
-// the post objects: it is view state for this screen, not something the server
-// decided, and folding it in would make "has this post been edited?" ambiguous.
-const _waOpen = { crops: new Set(), plan: new Set() };
+// Which cards the owner has opened each drawer on. Kept out of the post
+// objects: it is view state for this screen, not something the server decided,
+// and folding it in would make "has this post been edited?" ambiguous.
+const _waOpen = { crops: new Set(), img: new Set(), extra: new Set(), plan: new Set() };
+
+// तस्वीर — per state: {mode, prompt, image, warnings, error, busy}.
+// The BROWSER is the real store for a generated picture, not the server: the
+// backend keeps a four-entry cache purely so a double-click does not bill
+// twice, and holding 31 states' worth of ~1.5MB data URIs in a 512MB box would
+// be the panel eating the site. Here they cost nothing and last the morning,
+// which is exactly as long as they are worth anything.
+const _waImg = {};
+// और क्या डालें — per state: {facts, suggestions, error, busy}. Same reasoning.
+const _waSug = {};
+// What the picture's mode dropdown offers, and what the canvas draws with
+// (the emblem and the palette). Sent once with the post list.
+let _waImgCat = { modes: [], logo: '', palette: {} };
 
 // Per-state overrides, and the "सब पर लागू" defaults underneath them. Both are
 // scratch state for one morning — nothing here is saved, and reloading the
@@ -7376,14 +7506,14 @@ const _waOver = {};                        // state -> {format, tone, n, drop:[]
 let _waGlobal = { format: '', tone: '', n: 0 };
 
 function _waOv(state) {
-  return (_waOver[state] ||= { format: '', tone: '', n: 0, drop: [] });
+  return (_waOver[state] ||= { format: '', tone: '', n: 0, drop: [], extra: '' });
 }
 
 // Is this card still on the rotation? Used to show the "बदला हुआ" marker and
 // to decide whether ↺ अपने आप does anything.
 function _waEdited(state) {
   const o = _waOver[state];
-  return !!o && (o.format || o.tone || o.n || (o.drop || []).length);
+  return !!o && (o.format || o.tone || o.n || (o.drop || []).length || o.extra);
 }
 
 // Which states are already posted TODAY. localStorage, not the DB: it is a
@@ -7412,6 +7542,7 @@ async function loadWaPosts(refresh) {
     _waQuiet = d.quiet || [];
     _waChannels = d.channels || (_waPosts.length + _waQuiet.length);
     _waCat = d.catalog || { formats: [], tones: [] };
+    _waImgCat = d.image || { modes: [], logo: '', palette: {} };
     _waFillGlobal();
     renderWaPosts();
   } catch (e) {
@@ -7493,6 +7624,14 @@ function renderWaPosts() {
 
   box.innerHTML = rows.length ? rows.join('')
     : `<div class="wa-empty">इस खोज से कोई चैनल नहीं मिला।</div>`;
+
+  // innerHTML gives every open picture panel a fresh, blank <canvas>. Redraw
+  // them: a card that goes empty when the search box is typed in reads as a
+  // bug, and the owner would regenerate the picture — which costs money.
+  for (const state of _waOpen.img) {
+    const p = _waPosts.find(x => x.state === state);
+    if (p) waDrawCard(p);
+  }
 }
 
 // The label a format/tone id renders as. The server sends the catalogue once
@@ -7561,6 +7700,8 @@ function _waPostCard(p, isDone) {
       <select onchange="waSet('${st}','tone',this.value)">${toneOpts}</select>
       <button onclick="waShuffle('${st}')" title="अगला रूप और अगला अंदाज़">🎲 दूसरा रूप</button>
       <button class="${_waOpen.crops.has(p.state) ? 'on' : ''}" onclick="waToggle('crops','${st}')">🌾 फसल चुनें</button>
+      <button class="${_waOpen.img.has(p.state) ? 'on' : ''}" onclick="waToggle('img','${st}')">🖼️ तस्वीर</button>
+      <button class="${_waOpen.extra.has(p.state) ? 'on' : ''}" onclick="waToggle('extra','${st}')">✨ और क्या डालें</button>
       <button class="${_waOpen.plan.has(p.state) ? 'on' : ''}" onclick="waToggle('plan','${st}')">📅 आगे के 7 दिन</button>
       <span class="sep"></span>
       ${_waEdited(p.state) ? `<span class="edited">बदला हुआ</span>
@@ -7569,9 +7710,12 @@ function _waPostCard(p, isDone) {
     <div class="wa-note"><b>${escapeHtml(_waLabel('formats', p.format))}</b> — ${
       escapeHtml(_waNote('formats', p.format))} · <b>${escapeHtml(_waLabel('tones', p.tone))}</b> — ${
       escapeHtml(_waNote('tones', p.tone))}</div>
-    ${chips}${plan}
+    ${chips}${_waImgPanel(p)}${_waExtraPanel(p)}${plan}
 
     <div class="wa-text">${escapeHtml(p.text)}</div>
+    ${(p.extra_flags || []).length ? `<div class="wa-flags">${
+      p.extra_flags.map(f => `<div class="wa-flag">वह लाइन नहीं डाली जा सकी — ${
+        escapeHtml(f)}</div>`).join('')}</div>` : ''}
     ${(p.flags || []).length ? `<div class="wa-flags">${
       p.flags.map(f => `<div class="wa-flag">${escapeHtml(f)}</div>`).join('')}</div>` : ''}
     <div class="wa-acts">
@@ -7582,6 +7726,402 @@ function _waPostCard(p, isDone) {
         ${isDone ? '✓ पोस्ट हो गया' : 'पोस्ट हो गया?'}</button>
     </div>
   </div>`;
+}
+
+// ── तस्वीर — the picture panel ──────────────────────────────
+// A channel post with a picture gets opened; a wall of text gets swiped past.
+// But the picture is also the easiest place on this page to print something
+// nobody checked, so the split backend/services/wa_image.py draws is kept all
+// the way out here: THE MODEL MAKES THE BACKDROP, THE CANVAS MAKES THE NUMBERS.
+// The prices drawn onto the card below come from p.crops — the same array the
+// caption was composed from — so the figure in the picture and the figure in
+// the message are one variable and cannot drift.
+
+function _waImgPanel(p) {
+  if (!_waOpen.img.has(p.state)) return '';
+  const st = escapeHtml(p.state);
+  const s = _waImg[p.state] || {};
+  const mode = s.mode || 'scene';
+  const modes = (_waImgCat.modes || []).map(m =>
+    `<option value="${m.id}" ${m.id === mode ? 'selected' : ''}>${escapeHtml(m.hi)}</option>`).join('');
+  const note = (_waImgCat.modes || []).find(m => m.id === mode)?.note || '';
+
+  // कॉपी and सेव are always live: the card draws on a brand ground whether or
+  // not a picture was ever generated, so there is always something to send.
+  return `<div class="wa-img">
+    <div class="row">
+      <select onchange="waImgMode('${st}', this.value)">${modes}</select>
+      <button class="go" onclick="waMakeImage('${st}')" ${s.busy ? 'disabled' : ''}>
+        ${s.busy ? '⏳ बन रही है…' : '🎨 AI से तस्वीर बनाइए'}</button>
+      <button onclick="waCopyImage('${st}')">📋 तस्वीर कॉपी</button>
+      <button onclick="waSaveImage('${st}')">⬇ सेव</button>
+      ${s.image ? `<button onclick="waDropImage('${st}')" title="AI तस्वीर हटाकर सादे कार्ड पर वापस">↺ सादा</button>` : ''}
+    </div>
+    <textarea placeholder="जो दृश्य चाहिए वह लिखिए…"
+      oninput="waImgPrompt('${st}', this.value)"
+      ${mode === 'custom' ? '' : 'readonly'}>${escapeHtml(s.prompt || '')}</textarea>
+    <div class="hint">${escapeHtml(note)}
+      ${mode === 'custom' ? '' : ' यह प्रॉम्प्ट अपने आप बना है — बदलने के लिए “अपना प्रॉम्प्ट” चुनिए।'}
+      <br>तस्वीर सिर्फ़ पीछे का दृश्य है। भाव उसके ऊपर यहीं लिखे जाते हैं, उसी लाइन से जो मैसेज में है —
+      इसलिए तस्वीर का भाव और मैसेज का भाव कभी अलग नहीं हो सकते।
+      ${(s.warnings || []).map(w => `<br><span class="warn">${escapeHtml(w)}</span>`).join('')}
+      ${s.error ? `<br><span class="bad">${escapeHtml(s.error)}</span>` : ''}
+      ${!s.image ? '<br><span class="warn">अभी सादा कार्ड बना है — यह अपने आप तैयार है, बिना AI के। तस्वीर बनाना ज़रूरी नहीं।</span>' : ''}
+    </div>
+    <canvas id="wa-cv-${escapeHtml(p.slug)}" width="1080" height="1350"></canvas>
+  </div>`;
+}
+
+// The dropdown only re-asks for the PROMPT (dry=1), never for a picture.
+// Every image is billed; reading what is about to be asked for should not be.
+async function waImgMode(state, mode) {
+  const s = (_waImg[state] ||= {});
+  s.mode = mode;
+  await _waImgFetch(state, true);
+}
+
+function waImgPrompt(state, text) {
+  (_waImg[state] ||= {}).prompt = text;
+}
+
+function waDropImage(state) {
+  const s = _waImg[state] || {};
+  s.image = ''; s.error = '';
+  _waRepaint(state);
+}
+
+async function _waImgFetch(state, dry) {
+  const s = (_waImg[state] ||= {});
+  const q = new URLSearchParams({ state, mode: s.mode || 'scene', dry: dry ? 1 : 0 });
+  if ((s.mode || '') === 'custom' && s.prompt) q.set('prompt', s.prompt);
+  if (!dry) { s.busy = true; _waRepaint(state); }
+  try {
+    const r = await fetch(`${API}/admin/wa-image?${q}`, { method: 'POST', headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+    s.mode = d.mode;
+    // A prompt the owner is editing is not overwritten by the server's echo of
+    // it — that would delete a half-typed sentence on every keystroke's reply.
+    if (d.mode !== 'custom' || !s.prompt) s.prompt = d.prompt;
+    s.warnings = d.warnings || [];
+    s.error = d.error || '';
+    if (d.image) s.image = d.image;
+  } catch (e) {
+    s.error = e.message;
+  } finally {
+    s.busy = false;
+    _waRepaint(state);
+  }
+}
+
+function waMakeImage(state) { return _waImgFetch(state, false); }
+
+// ── the card itself ─────────────────────────────────────────
+// 1080×1350 — WhatsApp's portrait slot, which is the most feed height a single
+// image gets. Drawn at full size and scaled down by CSS for the preview, so
+// what lands on the clipboard is sharp on a phone rather than a scaled-up
+// thumbnail of a preview.
+const WA_CARD_W = 1080, WA_CARD_H = 1350;
+const WA_FONT = "'Nirmala UI','Noto Sans Devanagari','Mangal',sans-serif";
+
+function _waLoad(src) {
+  return new Promise(res => {
+    if (!src) { res(null); return; }
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = () => res(null);
+    im.src = src;                       // always a data: URI — see wa_image.py
+  });
+}
+
+// Cover-fit: fill the frame, crop the overflow, never squash. A stretched
+// photograph is the single loudest "this was made by a machine" signal there is.
+function _waCover(ctx, im, w, h) {
+  const k = Math.max(w / im.width, h / im.height);
+  const dw = im.width * k, dh = im.height * k;
+  ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+}
+
+// The backdrop when there is no generated picture — and the default state of
+// this panel, so it has to stand on its own rather than look like a failure.
+//
+// It is drawn, not fetched. The state's नक्शा og card was the obvious
+// candidate and was tried: it is a 1200×630 landscape card carrying its own
+// "कृषि मित्र" lockup and its own "मध्य प्रदेश का नक्शा" title, so cover-fitting
+// it to portrait sliced its lettering at the edge, and fitting it whole put a
+// second wordmark and a second title directly behind the crop names. A price
+// card wants a clean ground; the state is already named on it in 62px type.
+function _waGround(ctx, w, h, pal) {
+  const dark = pal.green_dark || '#1a3c2e';
+  const mid = pal.green_mid || '#2d6a4f';
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, mid);
+  g.addColorStop(0.55, dark);
+  g.addColorStop(1, '#0d2318');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  // A soft highlight off the top-right, so a flat fill does not read as a
+  // rectangle someone forgot to put a picture in.
+  const r = ctx.createRadialGradient(w * 0.82, h * 0.10, 0, w * 0.82, h * 0.10, w * 0.95);
+  r.addColorStop(0, 'rgba(82,183,136,.30)');
+  r.addColorStop(1, 'rgba(82,183,136,0)');
+  ctx.fillStyle = r;
+  ctx.fillRect(0, 0, w, h);
+}
+
+async function waDrawCard(p) {
+  const cv = document.getElementById('wa-cv-' + p.slug);
+  if (!cv) return null;
+  const s = _waImg[p.state] || {};
+  const pal = _waImgCat.palette || {};
+  const AMBER = pal.amber || '#e9a825';
+  const ctx = cv.getContext('2d');
+  const W = WA_CARD_W, H = WA_CARD_H, PAD = 72;
+
+  ctx.clearRect(0, 0, W, H);
+  _waGround(ctx, W, H, pal);
+
+  const ai = await _waLoad(s.image || '');
+  if (ai) {
+    _waCover(ctx, ai, W, H);
+    // The scrim, over a photograph only. Without it a bright sky puts white
+    // text on white and the card is unreadable exactly on the mornings the
+    // picture came out best. The drawn ground needs no scrim — it was built
+    // dark enough to read on.
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, 'rgba(10,26,18,.88)');
+    g.addColorStop(0.34, 'rgba(10,26,18,.62)');
+    g.addColorStop(0.62, 'rgba(10,26,18,.80)');
+    g.addColorStop(1, 'rgba(6,18,12,.96)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // ── the mark. Every image this project generates carries it; the नक्शा
+  // downloads do it through make_state_maps.brand_mark(), this does it here.
+  const logo = await _waLoad(_waImgCat.logo || '');
+  let x = PAD;
+  if (logo) {
+    const R = 46;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(PAD + R, PAD + R, R, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    // _waCover fits into a box anchored at the origin, so move the origin to
+    // the circle's corner first — clipping alone would not have positioned it.
+    ctx.translate(PAD, PAD);
+    _waCover(ctx, logo, 2 * R, 2 * R);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,.28)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(PAD + R, PAD + R, R, 0, Math.PI * 2);
+    ctx.stroke();
+    x = PAD + 2 * R + 22;
+  }
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `700 34px ${WA_FONT}`;
+  ctx.fillText('कृषि मित्र', x, PAD + 42);
+  ctx.fillStyle = AMBER;
+  ctx.font = `700 24px ${WA_FONT}`;
+  ctx.fillText('krashimitra.in', x, PAD + 76);
+
+  // ── heading
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `800 62px ${WA_FONT}`;
+  ctx.fillText(`${p.hi_state}`, PAD, 300);
+  ctx.fillStyle = 'rgba(255,255,255,.82)';
+  ctx.font = `600 32px ${WA_FONT}`;
+  ctx.fillText(p.date || '', PAD, 348);
+
+  // ── the prices. p.crops — the SAME array the caption was composed from.
+  //
+  // The block is CENTRED in the band rather than stacked from the top. The
+  // panel lets the owner post three crops as readily as eight, and top-aligned
+  // rows left a three-crop card two-thirds empty — which reads as a card that
+  // failed to load rather than a short one.
+  const rows = p.crops || [];
+  const band0 = 430, band1 = H - 150;
+  const rowH = rows.length ? Math.min(112, (band1 - band0) / rows.length) : 0;
+  const top = band0 + ((band1 - band0) - rowH * rows.length) / 2;
+  const fs = Math.max(28, Math.min(44, rowH * 0.40));
+  rows.forEach((c, i) => {
+    const y = top + rowH * i + rowH / 2;
+    ctx.strokeStyle = 'rgba(255,255,255,.14)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(PAD, y + rowH / 2 - 1);
+    ctx.lineTo(W - PAD, y + rowH / 2 - 1);
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `700 ${fs}px ${WA_FONT}`;
+    ctx.fillText(c.name || c.hi || '', PAD, y + fs * 0.34);
+
+    // The move keeps the arrow it already carries — c.move is built once, in
+    // wa_post, and printed identically by every format. Recomputing "▲ 2.1%"
+    // here from c.pct would be a second opinion about the same fact.
+    const price = '₹' + Number(c.avg || 0).toLocaleString('en-IN');
+    ctx.textAlign = 'right';
+    ctx.font = `800 ${fs * 1.06}px ${WA_FONT}`;
+    ctx.fillStyle = AMBER;
+    ctx.fillText(price, W - PAD, y + fs * 0.34);
+    const mv = (c.move || '').trim();
+    if (mv) {
+      const wPrice = ctx.measureText(price).width;
+      ctx.font = `600 ${fs * 0.62}px ${WA_FONT}`;
+      ctx.fillStyle = mv.startsWith('▲') ? '#7ce8a4'
+        : (mv.startsWith('▼') ? '#ff9b9b' : 'rgba(255,255,255,.62)');
+      ctx.fillText(mv, W - PAD - wPrice - 18, y + fs * 0.30);
+    }
+  });
+
+  // ── footer. The unit and the source, because a number with neither is a
+  // rumour — the same line the message itself carries.
+  ctx.textAlign = 'left';
+  ctx.font = `600 25px ${WA_FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,.72)';
+  const src = p.mandis === 1
+    ? `₹/क्विंटल · एक मंडी की सरकारी रिपोर्ट`
+    : `₹/क्विंटल · ${p.mandis} मंडियों का औसत`;
+  ctx.fillText(src, PAD, H - 84);
+  ctx.font = `500 23px ${WA_FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.fillText('स्रोत: Agmarknet (data.gov.in)', PAD, H - 50);
+  return cv;
+}
+
+// Straight onto the clipboard as a PNG — WhatsApp Web takes a pasted image, so
+// this keeps the whole job at कॉपी → चैनल खोलें → पेस्ट, with no file to find
+// in a downloads folder. Falls back to a download where the browser refuses.
+async function waCopyImage(state) {
+  const p = _waPosts.find(x => x.state === state);
+  if (!p) return;
+  const cv = await waDrawCard(p);
+  if (!cv) return;
+  try {
+    const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    _waBusy('तस्वीर कॉपी हो गई — चैनल में पेस्ट कीजिए');
+    setTimeout(() => _waBusy(''), 2500);
+  } catch (e) {
+    _waBusy('क्लिपबोर्ड ने मना कर दिया — सेव करके भेजिए');
+    waSaveImage(state);
+  }
+}
+
+async function waSaveImage(state) {
+  const p = _waPosts.find(x => x.state === state);
+  if (!p) return;
+  const cv = await waDrawCard(p);
+  if (!cv) return;
+  const a = document.createElement('a');
+  a.download = `${p.slug}-bhav-${new Date().toISOString().slice(0, 10)}.png`;
+  a.href = cv.toDataURL('image/png');
+  a.click();
+}
+
+// ── और क्या डालें — the extra line ──────────────────────────
+// The पक्की lines come first and come from our own MSP table and our own
+// headlines; the model's rewordings sit under them. Nothing is applied on its
+// own — every row is a button, and a flagged one is shown but not clickable,
+// because recompose() would refuse it anyway and a button that silently does
+// nothing is worse than one that is visibly off.
+
+function _waExtraPanel(p) {
+  if (!_waOpen.extra.has(p.state)) return '';
+  const st = escapeHtml(p.state);
+  const s = _waSug[p.state];
+  const cur = (_waOver[p.state] || {}).extra || '';
+
+  if (!s) {
+    return `<div class="wa-ex">
+      <div class="wa-img row"><button class="go" onclick="waAskExtra('${st}')">✨ सुझाव माँगिए</button></div>
+      <div class="lab" style="margin-top:8px;">भाव के अलावा एक लाइन — MSP, या आज की अपनी खबर। पहले पक्की लाइनें आती हैं, AI के सुझाव उसके बाद।</div>
+    </div>`;
+  }
+  // The meter. Drawn for the पक्की lines too, where it reads 100 — a scale
+  // whose top is only ever theoretical teaches nobody what a good number looks
+  // like, and here the owner sees 100 sitting directly above whatever the AI
+  // earned, in the same units.
+  const meter = m => !m ? '' : `<span class="met ${m.band}">
+      <span class="bar"><i style="width:${Math.max(3, Math.min(100, m.score))}%"></i></span>
+      <span class="num">${m.score}/100</span>
+      <span class="word">${escapeHtml(m.hi || '')}</span></span>`;
+
+  const opt = (text, cls, flags, src, m) => `<button class="opt ${cls}"
+      data-line="${escapeHtml(text)}" ${flags.length ? 'disabled' : ''}
+      onclick="waUseExtra('${st}', this.dataset.line)">${
+      src ? `<span class="src">${escapeHtml(src)}</span>` : ''}${escapeHtml(text)}${
+      flags.map(f => `<small>${escapeHtml(f)}</small>`).join('')}${meter(m)}${
+      // The meter's reasons only when the line is not already blocked. A
+      // blocked line's flag has said the same thing in red directly above,
+      // and the tone failure is exactly the case that raises both — printing
+      // it twice in two wordings is one fact pretending to be two.
+      (!flags.length && m && (m.reasons || []).length)
+        ? `<span class="why">${m.reasons.map(r => escapeHtml(r)).join(' · ')}</span>` : ''}</button>`;
+
+  const facts = (s.facts || []).map(f =>
+    opt(f.text, 'sure' + (f.text === cur ? ' on' : ''), [], f.source, f.surety));
+  const sug = (s.suggestions || []).map(x =>
+    opt(x.text, (x.ok ? '' : 'bad') + (x.text === cur ? ' on' : ''),
+        x.flags || [], 'AI', x.surety));
+
+  return `<div class="wa-ex">
+    ${facts.length ? `<div class="lab">पक्की लाइनें — हमारे अपने आंकड़ों से</div>${facts.join('')}` : ''}
+    ${sug.length ? `<div class="lab">AI के सुझाव — पक्कापन के हिसाब से, सबसे ऊपर सबसे भरोसे वाला <button class="km-q" type="button" aria-label="यह क्या है?" onclick="event.stopPropagation();kmHelp('wa_surety',event)">?</button></div>${sug.join('')}` : ''}
+    <div class="wa-img row" style="margin-top:8px;">
+      <button onclick="waAskExtra('${st}')" ${s.busy ? 'disabled' : ''}>${
+        s.busy ? '⏳ पूछ रहे हैं…' : '↻ और सुझाव'}</button>
+      ${cur ? `<button onclick="waUseExtra('${st}','')">✕ लाइन हटाइए</button>` : ''}
+    </div>
+    ${s.error ? `<div class="lab" style="color:var(--accent);text-transform:none;letter-spacing:0;">${escapeHtml(s.error)}</div>` : ''}
+    <div class="lab" style="text-transform:none;letter-spacing:0;">AI सिर्फ़ ऊपर की पक्की बातों को दोबारा लिख सकता है। कोई नया आंकड़ा, लिंक या नंबर जोड़ा तो वह लाइन अपने आप रोक दी जाती है।</div>
+  </div>`;
+}
+
+async function waAskExtra(state) {
+  const s = (_waSug[state] ||= {});
+  s.busy = true;
+  _waRepaint(state);
+  try {
+    const r = await fetch(`${API}/admin/wa-extra?state=${encodeURIComponent(state)}`,
+                          { method: 'POST', headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+    s.facts = d.facts || [];
+    s.suggestions = d.suggestions || [];
+    s.error = d.error || '';
+  } catch (e) {
+    s.error = e.message;
+  } finally {
+    s.busy = false;
+    _waRepaint(state);
+  }
+}
+
+// Clicking the line already in the post takes it out again — the same toggle
+// the crop chips use, so there is one gesture for "include this or not".
+function waUseExtra(state, line) {
+  const o = _waOv(state);
+  o.extra = (o.extra === line) ? '' : line;
+  waRefit(state);
+}
+
+// Repaint one card in place and redraw its canvas if the picture panel is
+// open. Repainting the whole grid would scroll a 31-row list back to the top.
+function _waRepaint(state) {
+  const p = _waPosts.find(x => x.state === state);
+  const card = document.querySelector(`.wa-card[data-state="${CSS.escape(state)}"]`);
+  if (!p || !card) return;
+  card.outerHTML = _waPostCard(p, _waDone().has(state));
+  if (_waOpen.img.has(state)) waDrawCard(p);
 }
 
 // ── the controls ────────────────────────────────────────────
@@ -7617,6 +8157,7 @@ async function waRefit(state) {
   if (o.tone) q.set('tone', o.tone);
   if (o.n) q.set('n', o.n);
   if ((o.drop || []).length) q.set('drop', o.drop.join(','));
+  if (o.extra) q.set('extra', o.extra);
   try {
     const r = await fetch(`${API}/admin/wa-post?${q}`, { headers: getAuthHeader() });
     if (r.status === 401) { logout(); return; }
@@ -7624,8 +8165,13 @@ async function waRefit(state) {
     if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
     _waPosts[i] = d.post;
     const card = document.querySelector(`.wa-card[data-state="${CSS.escape(state)}"]`);
-    if (card) card.outerHTML = _waPostCard(d.post, _waDone().has(state));
-    else renderWaPosts();
+    if (card) {
+      card.outerHTML = _waPostCard(d.post, _waDone().has(state));
+      // The card carries the prices, so anything that rewrites the post has to
+      // redraw it — dropping a crop must change the picture too, or the two
+      // halves of one message would disagree about what went out.
+      if (_waOpen.img.has(state)) waDrawCard(d.post);
+    } else renderWaPosts();
   } catch (e) {
     _waBusy('नहीं बदल पाया — ' + e.message);
   }
@@ -7657,10 +8203,13 @@ function waAuto(state) {
 
 function waToggle(which, state) {
   const set = _waOpen[which];
-  set.has(state) ? set.delete(state) : set.add(state);
-  const p = _waPosts.find(x => x.state === state);
-  const card = document.querySelector(`.wa-card[data-state="${CSS.escape(state)}"]`);
-  if (p && card) card.outerHTML = _waPostCard(p, _waDone().has(state));
+  const opening = !set.has(state);
+  opening ? set.add(state) : set.delete(state);
+  _waRepaint(state);
+  // Opening the picture panel asks for the PROMPT only (dry=1) — never for an
+  // image. Generating on open would bill every state whose panel was opened to
+  // look at, which is how a useful button becomes an expensive one.
+  if (which === 'img' && opening && !(_waImg[state] || {}).prompt) _waImgFetch(state, true);
 }
 
 // Dropping a crop is the sharpest control on the page: the भरोसा score comes
@@ -12679,6 +13228,52 @@ const KM_HELP = {
         यह पेज का सबसे धारदार बटन है: <b>भरोसा दोबारा उन्हीं लाइनों पर गिना जाता है जो बचीं।</b>
         जिस एक फसल का भाव तीन दिन पुराना है, उसे हटाते ही अंक ऊपर जाता दिखेगा। अगर न जाए,
         तो दिक्कत उस फसल में नहीं थी।` },
+  wa_img: { t: '🖼️ तस्वीर',
+    d: `तस्वीर वाली पोस्ट खोली जाती है, सिर्फ़ लिखी हुई पोस्ट स्क्रॉल कर दी जाती है। इसीलिए
+        यह बटन है।<br><br>
+        <b>AI सिर्फ़ पीछे का दृश्य बनाता है — भाव कभी नहीं।</b> भाव उसके ऊपर यहीं, इसी पेज पर,
+        उन्हीं लाइनों से लिखे जाते हैं जो मैसेज में जा रही हैं। दो वजहें, दोनों अकेले काफ़ी हैं:
+        कोई भी AI देवनागरी ठीक से नहीं लिख पाता — "मध्य प्रदेश" ऐसा आता है जो पढ़ने वाले को
+        गलती दिखे; और तस्वीर के अंदर छपा भाव किसी जाँच के दायरे में नहीं आता — न भरोसा स्कोर
+        उसे देखता है, न कोई टेस्ट। इसलिए आप जो भी प्रॉम्प्ट लिखें, "तस्वीर में कोई अक्षर या
+        अंक नहीं" हर बार अपने आप जुड़ जाता है।<br><br>
+        <b>तीन तरीके</b> — <i>आज के हिसाब से</i>: राज्य, महीना और जिस फसल पर पोस्ट खुलती है,
+        उससे प्रॉम्प्ट अपने आप बनता है। <i>कुछ भी</i>: तैयार दृश्यों में से एक, हर चैनल को अलग।
+        <i>अपना प्रॉम्प्ट</i>: जो आप लिखें।<br><br>
+        प्रॉम्प्ट पहले दिखता है, तस्वीर बाद में बनती है — हर तस्वीर का पैसा लगता है, पढ़ने का
+        नहीं। बिना बनाए भी कार्ड तैयार रहता है: पीछे राज्य का अपना नक्शा लग जाता है, जो मुफ़्त
+        है और पहले से हमारा है।<br><br>
+        <b>📋 तस्वीर कॉपी</b> सीधे क्लिपबोर्ड पर PNG रखता है — WhatsApp Web में पेस्ट हो जाएगी,
+        फाइल ढूँढ़नी नहीं पड़ेगी।` },
+  wa_extra: { t: '✨ और क्या डालें',
+    d: `भाव के अलावा एक लाइन, भावों के नीचे। यही एक हिस्सा है पूरी पोस्ट का जिसके शब्द
+        भाव वाली मशीन से नहीं आते — इसलिए इस पर चार बंदिशें हैं और चारों कोड में हैं, याद
+        रखने पर नहीं छोड़ी गईं।<br><br>
+        <b>पक्की लाइनें</b> ऊपर आती हैं और उनके लिए किसी AI की ज़रूरत नहीं — वे हमारे अपने
+        MSP टेबल और अपनी खबरों से बनती हैं। सबसे काम की अक्सर यही होती है: <i>"कौन-सी फसल आज
+        सरकारी दाम से नीचे बिक रही है"</i> वह बात है जो भावों की सूची कभी नहीं बताती, और जिस पर
+        किसान कुछ कर सकता है।<br><br>
+        <b>AI के सुझाव</b> उसके नीचे आते हैं और वे सिर्फ़ ऊपर वाली पक्की बातों को दूसरे शब्दों
+        में लिख सकते हैं। अगर उनमें कोई ऐसा आंकड़ा आ गया जो हमारे पास नहीं है, या कोई लिंक या
+        फ़ोन नंबर, तो वह लाइन दबाई ही नहीं जा सकती — और कारण उसी पर लाल में लिखा दिखता है।<br><br>
+        कुछ भी अपने आप नहीं जुड़ता। कोई लाइन न चुनना ठीक जवाब है और वही डिफ़ॉल्ट है।` },
+  wa_surety: { t: '📊 पक्कापन — AI का मीटर',
+    d: `हर AI सुझाव के नीचे 100 में से एक अंक। <b>यह AI का अपना भरोसा नहीं है</b> — वह
+        किसी काम का नहीं होता, क्योंकि वह उसी मशीन से आया एक और वाक्य है, और सबसे ऊँचा
+        ठीक तब होता है जब मशीन आत्मविश्वास से गलत लिख रही हो।<br><br>
+        यह नापता है कि <b>लाइन में कितना हमारा है</b> — तीन चीज़ों से, तीनों गिनी जा सकती हैं:<br>
+        <b>45 अंक — कितने शब्द हमारी पक्की बातों से आए।</b> जो वाक्य ज़्यादातर बाहर के शब्दों
+        का है, वह मशीन ने अपनी समझ से लिखा है, और मंडी के भाव पर उसकी समझ कोई स्रोत नहीं।<br>
+        <b>35 अंक — हर आंकड़े पर उसका लेबल बचा या नहीं।</b> यही असली पकड़ है। एक बार सुझाव आया:
+        <i>"सोयाबीन (₹5,328) ... MSP से नीचे"</i> — अंक हमारा ही था, इसलिए कोई रोक नहीं लगी, पर
+        <b>MSP</b> शब्द अंक के पास से हट गया था और ₹5,328 अब सोयाबीन का भाव पढ़ा जाता, जबकि वह
+        MSP है। मीटर इसी पर गिरता है और कारण नीचे लिख देता है।<br>
+        <b>20 अंक — लहजा।</b> गारंटी, आरोप, राजनीति, दवा की मात्रा — इनमें से कुछ भी हो तो मीटर
+        नीचे की पट्टी में चला जाता है और लाइन दबाई ही नहीं जा सकती।<br><br>
+        <b>पक्की लाइनों पर यह 100 दिखता है</b> — वे खुद ही वे बातें हैं जिनसे तुलना हो रही है।
+        वह 100 इसलिए दिखाया जाता है ताकि पता रहे कि अच्छा अंक दिखता कैसा है।<br><br>
+        और एक बात साफ़ रहे: यह अंक <i>सही होने</i> का नहीं है, <i>हमारा होने</i> का है। 90 पर भी
+        वाक्य अटपटा हो सकता है — बस अटपटापन जोड़-तोड़ में होगा, बात में नहीं।` },
   wa_plan: { t: 'आगे के 7 दिन',
     d: `इस चैनल पर अगले सात दिन कौन-सा रूप और कौन-सा अंदाज़ जाएगा।<br><br>
         यह अनुमान नहीं है — रूप का चुनाव सिर्फ़ राज्य और तारीख़ से बनता है, तो यह वही

@@ -323,6 +323,28 @@ async def call_claude(prompt: str) -> str:
 
 
 # ── Gemini with multi-key rotation (ASYNC) ───────────────────
+
+def gemini_keys() -> list:
+    """[(env name, key)] for every Gemini key configured, in order, deduped.
+
+    Public because the chat pipeline is no longer the only caller — the
+    WhatsApp panel's picture and suggestion features rotate through the same
+    keys (services/wa_image, services/wa_extra). One list, so a key added for
+    one and not the other cannot happen; that is a bug that would only surface
+    under quota pressure, which is the worst time to find it."""
+    keys, seen = [], set()
+    for key_name in [
+        "GEMINI_API_KEY",
+        "GEMINI_API_KEY2", "GEMINI_API_KEY_2",
+        "GEMINI_API_KEY3", "GEMINI_API_KEY_3",
+    ]:
+        k = os.getenv(key_name, "").strip()
+        if k and k not in seen:
+            keys.append((key_name, k))
+            seen.add(k)
+    return keys
+
+
 async def call_gemini(prompt: str, max_tokens: int = 1500) -> str:
     """
     Try all configured Gemini keys in order — fully async via httpx.
@@ -335,18 +357,7 @@ async def call_gemini(prompt: str, max_tokens: int = 1500) -> str:
     model   = get_setting("gemini_model",   "gemini-2.5-flash")
     timeout = get_setting("gemini_timeout", 15.0)
 
-    # Collect all configured keys (dedup, preserve order)
-    keys = []
-    seen = set()
-    for key_name in [
-        "GEMINI_API_KEY",
-        "GEMINI_API_KEY2", "GEMINI_API_KEY_2",
-        "GEMINI_API_KEY3", "GEMINI_API_KEY_3",
-    ]:
-        k = os.getenv(key_name, "").strip()
-        if k and k not in seen:
-            keys.append((key_name, k))
-            seen.add(k)
+    keys = gemini_keys()
 
     if not keys:
         raise ValueError("No Gemini API key configured in environment")

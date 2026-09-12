@@ -602,6 +602,12 @@ def _build(state: str, state_rows: dict, chan: dict, today: date):
         "hi_state": ctx["state"],
         "slug":     ctx["slug"],
         "lang":     lang,
+        # The date string the post itself is headed with, already in the
+        # state's own language. Carried on the row so the panel's picture card
+        # can print it without formatting a second one in JS — a Marathi post
+        # under a Hindi date would be the same two-answers-to-one-question
+        # problem state_lang exists to prevent.
+        "date":     ctx["date"],
         "channel":  chan["name"],
         "url":      chan["url"],
         "crops":    lines,
@@ -663,7 +669,8 @@ def posts(refresh: bool = False) -> list:
 
 
 def recompose(state: str, fmt: str = "", tone: str = "",
-              n: int = 0, drop: set | None = None, refresh: bool = False) -> dict | None:
+              n: int = 0, drop: set | None = None, extra: str = "",
+              refresh: bool = False) -> dict | None:
     """One state's post rewritten under the panel's overrides. None if no post.
 
     Every argument is optional and every one of them falls back to what the
@@ -673,7 +680,15 @@ def recompose(state: str, fmt: str = "", tone: str = "",
     The भरोसा score is recomputed on the lines that SURVIVE the overrides, not
     on the ones the rotation picked. That is the whole point of letting the
     owner drop a crop: dropping the one line whose price is three days old must
-    visibly raise the score, or the control is decoration."""
+    visibly raise the score, or the control is decoration.
+
+    `extra` is the one override that adds words rather than rearranging them —
+    the optional line from services/wa_extra. THIS IS THE ONLY DOOR IT COMES
+    THROUGH, which is why the meaning guards are enforced right here rather
+    than at the route: a line carrying a second link, a phone number, or a
+    figure that is not in the day's facts is dropped, and the reason comes back
+    on the row as `extra_flags` so the panel can say what happened instead of
+    silently posting something shorter than what was clicked."""
     key = wa_channels._key(state)
     posts(refresh)
     pool = (_cache.get("pools") or {}).get(key)
@@ -699,13 +714,34 @@ def recompose(state: str, fmt: str = "", tone: str = "",
 
     lines = wa_style.pick_lines(fmt, kept, n)
     score = _score_post(lines)
+
+    # The extra line, screened against the day's own facts. `known` is rebuilt
+    # from the post as it now stands rather than from what the panel was
+    # looking at when it asked — dropping the crop a suggestion quoted has to
+    # invalidate that suggestion, or the drop control and the extra line would
+    # be able to contradict each other inside one post.
+    extra_flags = []
+    extra = " ".join(str(extra or "").split())
+    if extra:
+        from backend.services import wa_extra
+        known = set()
+        for f in wa_extra.facts({**base, "crops": lines}):
+            known |= f["numbers"]
+        # The printed prices are ours by construction, so a line quoting one
+        # back is quoting us, not inventing.
+        known |= {str(l["avg"]) for l in lines}
+        extra_flags = wa_extra.check(extra, known)
+        if extra_flags:
+            extra = ""
+
     return {**base,
             "crops": lines, "format": fmt, "tone": tone, "n": n,
             "dropped": sorted(drop),
             "can": [f["id"] for f in wa_style.FORMATS if wa_style.fits(f["id"], kept)],
             "score": score, "band": band(score), "flags": _flags(lines),
             "novelty": novelty(lines),
-            "text": wa_style.compose(ctx, lines, fmt, tone)}
+            "extra": extra, "extra_flags": extra_flags,
+            "text": wa_style.compose(ctx, lines, fmt, tone, extra=extra)}
 
 
 # Why a channel has nothing today. Both are honest answers and they are not the

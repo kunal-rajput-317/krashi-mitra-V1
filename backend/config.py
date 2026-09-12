@@ -10,6 +10,12 @@ import os
 _settings: dict = {
     "gemini_model":           os.getenv("GEMINI_MODEL",        "gemini-2.5-flash"),
     "gemini_timeout":         float(os.getenv("GEMINI_TIMEOUT",  "15")),
+    # Image generation for the WhatsApp channel card (services/wa_image).
+    # Separate model and a much longer timeout: drawing a picture takes tens of
+    # seconds where a text answer takes two, and sharing gemini_timeout would
+    # have meant every image "timed out" at 15s having already been billed.
+    "gemini_image_model":     os.getenv("GEMINI_IMAGE_MODEL",   "gemini-2.5-flash-image"),
+    "gemini_image_timeout":   float(os.getenv("GEMINI_IMAGE_TIMEOUT", "60")),
     "cache_semantic_enabled": os.getenv("CACHE_SEMANTIC_ENABLED", "true").lower() == "true",
     "ollama_enabled":         os.getenv("OLLAMA_ENABLED",      "false").lower() == "true",
     "ollama_model":           os.getenv("OLLAMA_MODEL",        "gemma3:4b"),
@@ -29,6 +35,14 @@ _settings: dict = {
 ALLOWED_GEMINI_MODELS = [
     "gemini-2.5-flash",
     "gemini-3.5-flash",
+]
+
+# Image models are billed PER IMAGE, not per token, so this list is short and
+# deliberate: an unrecognised name here is an unbounded bill on a project whose
+# whole infrastructure runs on free tiers.
+ALLOWED_GEMINI_IMAGE_MODELS = [
+    "gemini-2.5-flash-image",
+    "gemini-3-pro-image",
 ]
 
 ALLOWED_CLAUDE_MODELS = [

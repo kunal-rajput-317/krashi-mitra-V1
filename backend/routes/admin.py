@@ -288,10 +288,14 @@ async def wa_posts(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require
     names every format and tone once, at the top, rather than repeating the
     labels inside 31 posts.
     """
-    from backend.services import wa_post, wa_style
+    from backend.services import wa_image, wa_post, wa_style
     cov = wa_post.coverage(refresh=bool(refresh))
     return {"success": True, "count": len(cov["posts"]),
-            "catalog": wa_style.catalog(), **cov}
+            "catalog": wa_style.catalog(),
+            # The picture's prompt modes, sent once at the top for the same
+            # reason the format/tone labels are: repeating three fixed
+            # descriptions inside 31 posts is payload with no information in it.
+            "image": wa_image.catalog(), **cov}
 
 
 @router.get("/wa-post")
@@ -300,6 +304,7 @@ async def wa_post_one(state: str = Query(..., min_length=2, max_length=60),
                       tone: str = Query("", max_length=24),
                       n: int = Query(0, ge=0, le=8),
                       drop: str = Query("", max_length=600),
+                      extra: str = Query("", max_length=400),
                       _: str = Depends(require_admin)):
     """One state's post, rewritten under the panel's overrides.
 
@@ -309,7 +314,8 @@ async def wa_post_one(state: str = Query(..., min_length=2, max_length=60),
     sale, or that four of the five lines are three days old. So each control
     here overrides one of the rotation's decisions and nothing else:
     `format`/`tone` the shape and voice, `n` how many crops, `drop` a
-    comma-separated list of commodities to leave out.
+    comma-separated list of commodities to leave out, `extra` one line of
+    non-price content chosen from /admin/wa-extra.
 
     Omitted arguments fall back to what the rotation chose, so sending none of
     them is how the panel gets a post back to अपने आप.
@@ -318,14 +324,92 @@ async def wa_post_one(state: str = Query(..., min_length=2, max_length=60),
     a stale crop has to visibly move it, or the control is decoration. What
     cannot change through any combination of these is a price: services/wa_style
     only arranges words around figures services/wa_post has already decided.
+
+    `extra` is the single exception to that — words from outside wa_post — and
+    it is the one argument that can be REFUSED. recompose() screens it against
+    the day's own facts and drops it if it carries a second link, a contact
+    detail, or a figure we did not supply; `extra_flags` on the response says
+    which, so the panel reports it rather than quietly posting a shorter post.
     """
     from backend.services import wa_post as svc
     dropped = {c.strip() for c in drop.split(",") if c.strip()}
     row = svc.recompose(state, fmt=format.strip(), tone=tone.strip(),
-                        n=n, drop=dropped)
+                        n=n, drop=dropped, extra=extra.strip())
     if not row:
         raise HTTPException(status_code=404, detail="इस राज्य की आज कोई पोस्ट नहीं है")
     return {"success": True, "post": row}
+
+
+@router.post("/wa-image")
+async def wa_image_make(state: str = Query(..., min_length=2, max_length=60),
+                        mode: str = Query("scene", max_length=16),
+                        prompt: str = Query("", max_length=600),
+                        dry: int = Query(0, ge=0, le=1),
+                        _: str = Depends(require_admin)):
+    """The picture for one state's card — and the prompt that made it.
+
+    Three modes, all defined in services/wa_image: `scene` builds the prompt
+    from today's post (state, month, opening crop), `random` takes one of the
+    curated scenes on the same (state, date) rotation the post itself uses, and
+    `custom` uses what the owner typed. Whichever it is, the model is asked for
+    a BACKDROP and never for text — the prices are drawn over it by the panel's
+    canvas from the same line dicts the caption used, so the figure in the
+    picture and the figure in the message are one variable.
+
+    `dry=1` returns the prompt without generating, which is what the panel
+    calls when the mode dropdown moves. Every image is billed, so showing the
+    owner what will be asked for costs nothing and re-rolling a bad prompt
+    after paying for it costs money.
+
+    Generating is optional. With no picture the panel still draws a complete
+    card — the prices on a brand-coloured ground — so a failure here is never
+    the reason a channel goes without one.
+    """
+    from backend.services import wa_image, wa_post as svc
+
+    post = svc.post_for(state)
+    if not post:
+        raise HTTPException(status_code=404, detail="इस राज्य की आज कोई पोस्ट नहीं है")
+
+    built = wa_image.build_prompt(post, mode=mode.strip(), custom=prompt.strip())
+    out = {"success": True, "state": post["state"], "mode": built["mode"],
+           "prompt": built["prompt"], "warnings": built["warnings"],
+           "image": "", "error": ""}
+    if dry:
+        return out
+
+    try:
+        made = await wa_image.generate(built["full"])
+        out.update(image=made["image"], cached=made["cached"], model=made["model"])
+    except Exception as e:                               # noqa: BLE001
+        # Not a 500. The card renders without a picture, and a button that
+        # errors out is a button that gets pressed once and never again.
+        out["error"] = str(e)
+    return out
+
+
+@router.post("/wa-extra")
+async def wa_extra_suggest(state: str = Query(..., min_length=2, max_length=60),
+                           _: str = Depends(require_admin)):
+    """और क्या डालें — candidate lines for this state's post beyond the भाव.
+
+    Two tiers, and the order matters. `facts` are built by services/wa_extra
+    from our own data — today's prices against their MSP floor, our own latest
+    headline — and need no model, no key and no network; they are offered
+    first and are usually the better line. `suggestions` are the model's
+    rewordings of exactly those facts, each carrying its own `flags`.
+
+    Nothing here changes a post. The owner reads, picks one or none, and the
+    chosen line goes back through /admin/wa-post as `extra`, where it is
+    screened again before it can reach the text. Never 500s: an empty
+    suggestion list with a readable `error` is a normal morning.
+    """
+    from backend.services import wa_extra, wa_post as svc
+
+    post = svc.post_for(state)
+    if not post:
+        raise HTTPException(status_code=404, detail="इस राज्य की आज कोई पोस्ट नहीं है")
+    return {"success": True, "state": post["state"], **await wa_extra.suggest(post)}
 
 # ── Manual data-fetch trigger ─────────────────────────────────
 
@@ -394,12 +478,20 @@ async def update_settings(payload: dict, _: str = Depends(require_admin)):
     Changes take effect immediately (no restart needed).
     Changes are lost on server restart — set env vars for persistence.
     """
-    from backend.config import update_setting, get_all_settings, ALLOWED_GEMINI_MODELS, ALLOWED_CLAUDE_MODELS
+    from backend.config import (update_setting, get_all_settings, ALLOWED_GEMINI_MODELS,
+                                ALLOWED_GEMINI_IMAGE_MODELS, ALLOWED_CLAUDE_MODELS)
 
     if "gemini_model" in payload:
         model = payload["gemini_model"]
         if model not in ALLOWED_GEMINI_MODELS:
             raise HTTPException(400, f"Unknown model. Allowed: {ALLOWED_GEMINI_MODELS}")
+
+    # Billed per image, not per token — an unrecognised name here is an
+    # unbounded bill, so it is checked the same way the text model is.
+    if "gemini_image_model" in payload:
+        model = payload["gemini_image_model"]
+        if model not in ALLOWED_GEMINI_IMAGE_MODELS:
+            raise HTTPException(400, f"Unknown image model. Allowed: {ALLOWED_GEMINI_IMAGE_MODELS}")
 
     if "claude_model" in payload:
         model = payload["claude_model"]

@@ -69,6 +69,13 @@ _EPOCH = date(2026, 1, 1)
 # and the "biggest mover" headline refuse to call it a move.
 _REAL_MOVE = 0.5
 
+# The hard ceiling on compose()'s optional `extra` line. Public because
+# services/wa_extra checks against the same number when it builds and screens
+# candidates — a suggestion the panel shows as acceptable must be a suggestion
+# that survives composition intact, or the owner picks a line and gets a
+# different one.
+EXTRA_MAX = 160
+
 
 # ── the rotation ─────────────────────────────────────────────
 
@@ -415,12 +422,26 @@ def schedule(state_key: str, day: date, days: int = 7) -> list:
 
 # ── composing ────────────────────────────────────────────────
 
-def compose(ctx: dict, lines: list, fmt_id: str, tone_id: str) -> str:
+def compose(ctx: dict, lines: list, fmt_id: str, tone_id: str,
+            extra: str = "") -> str:
     """The post. WhatsApp bolds *between asterisks*.
 
     `ctx` carries the already-decided facts — state name, date string, mandi
     count, link — and `lines` the already-computed prices. Nothing here does
-    arithmetic; the day it needs to, that number belongs in wa_post instead."""
+    arithmetic; the day it needs to, that number belongs in wa_post instead.
+
+    `extra` is the one string in this function that did not come from wa_post:
+    an optional line the owner chose on the panel, from services/wa_extra. It
+    is placed BETWEEN the prices and the source line, so it can never be read
+    as part of a crop row or as part of the attribution.
+
+    Two levels of guard, and they are split on purpose. Here, where every
+    format×tone test runs, the guard is structural and unconditional: one
+    line, length-capped. It cannot break the shape of a post whatever it
+    contains. The guards about MEANING — no second link, no contact detail, no
+    figure we did not supply — live in wa_extra.check() and are enforced once,
+    at wa_post.recompose(), which is the only door the panel can come through.
+    Putting them here too would be a second answer to the same question."""
     f = _FMT.get(fmt_id) or FORMATS[0]
     t = _TONE.get(tone_id) or TONES[0]
     pack = _pack(ctx.get("lang") or state_lang.HINDI)
@@ -444,6 +465,8 @@ def compose(ctx: dict, lines: list, fmt_id: str, tone_id: str) -> str:
     if open_:
         parts.append(open_)
     parts.append(body)
+    if extra:
+        parts.append(" ".join(str(extra).split())[:EXTRA_MAX])
     parts.append("\n".join(x for x in (src, credit) if x))
     parts.append(f"{cta}\n{ctx['url']}")
     return "\n\n".join(p for p in parts if p)
