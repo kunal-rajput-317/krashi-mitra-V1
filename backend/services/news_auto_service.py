@@ -23,6 +23,7 @@ import base64
 
 import httpx
 
+from backend.config import get_setting
 from backend.services.chatbot_service import call_ai
 
 logger = logging.getLogger("krishi.news_auto_service")
@@ -512,6 +513,21 @@ async def generate_ai_agri_image(
     3. Persists it locally under frontend/images/articles/ and returns permanent URL.
     4. Seamless contextual fallback if offline.
     """
+    # The admin switch, checked before anything is spent. Off returns the
+    # same owned photograph step 4 below falls back to — so the caller gets a
+    # real cover either way and nothing downstream has to know the difference.
+    # Gated here rather than at the route, because the auto-pilot reaches this
+    # function without passing through one.
+    if not get_setting("news_ai_enabled", True):
+        logger.info("📴 कृषि न्यूज़ AI is switched OFF — using our own library cover")
+        return {
+            "success": True,
+            "image_url": pick_our_image(f"{title} {category}", category,
+                                        seed=post_id or title),
+            "prompt_used": "",
+            "source": "switched_off",
+        }
+
     images_dir = ARTICLES_IMAGE_DIR
     images_dir.mkdir(parents=True, exist_ok=True)
     safe_slug = re.sub(r'[^a-zA-Z0-9_-]', '', (post_id or 'ai-post'))[:22]
@@ -874,17 +890,31 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
   "image_slug": "ऊपर दी गई LIBRARY में से चुना हुआ एक slug, या \"\" अगर कोई सही न बैठे"
 }}
 """
-    try:
-        response_text, source = await call_ai(prompt, max_tokens=1500)
-        cleaned = re.sub(r"^```json\s*", "", response_text.strip(), flags=re.MULTILINE)
-        cleaned = re.sub(r"^```\s*", "", cleaned.strip(), flags=re.MULTILINE)
-        cleaned = cleaned.rstrip("`").strip()
-        parsed = json.loads(cleaned)
-        if parsed.get("duplicate") is True:
-            logger.info(f"🚫 Gemini flagged story as duplicate: {parsed.get('reason')}")
-            return None
-    except Exception as e:
-        logger.warning(f"⚠️ Gemini news generation fallback due to error: {e}")
+    # The admin switch (config.news_ai_enabled). Off means we never call a
+    # model here — we take the SAME path the pipeline already takes when
+    # Gemini errors, which is the one below: source text as written, category
+    # by keyword, cover from our own library. So "off" is a road already
+    # driven and tested, not a second code path that only runs when the bill
+    # arrives.
+    parsed = None
+    if not get_setting("news_ai_enabled", True):
+        logger.info("📴 कृषि न्यूज़ AI is switched OFF — building the post from "
+                    "the source text, no model call")
+    else:
+        try:
+            response_text, source = await call_ai(prompt, max_tokens=1500)
+            cleaned = re.sub(r"^```json\s*", "", response_text.strip(), flags=re.MULTILINE)
+            cleaned = re.sub(r"^```\s*", "", cleaned.strip(), flags=re.MULTILINE)
+            cleaned = cleaned.rstrip("`").strip()
+            parsed = json.loads(cleaned)
+            if parsed.get("duplicate") is True:
+                logger.info(f"🚫 Gemini flagged story as duplicate: {parsed.get('reason')}")
+                return None
+        except Exception as e:
+            logger.warning(f"⚠️ Gemini news generation fallback due to error: {e}")
+            parsed = None
+
+    if parsed is None:
         cat = "crop"
         lowered = (raw_title + " " + raw_content).lower()
         if any(w in lowered for w in ["भाव", "मंडी", "msp", "दाम", "rate", "price"]):
@@ -962,6 +992,9 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
         "time": "आज ताज़ा",
         "image": img,
         "link": f"#story-{post_id}",
+        # "auto-pilot post", not "a model wrote this" — it pairs with the
+        # km-auto- id prefix everywhere it is read, and stays True when the
+        # AI switch is off and the text came straight from the source.
         "is_gemini_post": True,
         "language": lang_code,
         "source_url": source_url,

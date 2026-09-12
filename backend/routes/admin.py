@@ -97,6 +97,7 @@ async def system_status(_: str = Depends(require_admin)):
         "allowed_models":       ALLOWED_GEMINI_MODELS,
         # Claude cache-seeder (admin-only, paid API)
         "claude_configured":    bool(os.getenv("ANTHROPIC_API_KEY", "").strip()),
+        "news_ai_enabled":      settings.get("news_ai_enabled"),
         "claude_enabled":       settings.get("claude_enabled"),
         "claude_model":         settings.get("claude_model"),
         "allowed_claude_models": ALLOWED_CLAUDE_MODELS,

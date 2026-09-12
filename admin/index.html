@@ -5753,11 +5753,33 @@ body {
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <div>
               <h3 style="font-size: 17px; font-weight: 800; color: var(--text);">🔗 स्मार्ट URL क्यूरेटर (Smart URL Curator)</h3>
-              <p style="font-size: 12.5px; color: var(--muted); margin-top: 2px;">
+              <p style="font-size: 12.5px; color: var(--muted); margin-top: 2px;" id="nf-curator-desc">
                 किसी भी कृषि समाचार, PIB प्रेस नोट या लेख का वेब लिंक पेस्ट करें — Gemini AI शीर्षक, 3 मुख्य बिंदु व फ़ोटो स्वतः बना देगा!
               </p>
             </div>
-            <span class="status-pill online">Gemini 2.5 Flash</span>
+            <!-- The AI switch for this whole section — panel button AND the
+                 auto-pilot scheduler behind it. Put here rather than in the
+                 AI settings tab because this is the page where the spend is
+                 visible, and the page where you would think to stop it. -->
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="status-pill online" id="nf-ai-pill">Gemini 2.5 Flash</span>
+              <button class="sw-track on" id="sw-news-ai" title="कृषि न्यूज़ का AI चालू / बंद"
+                      onclick="toggleNewsAi()">
+                <div class="sw-thumb"></div>
+              </button>
+            </div>
+          </div>
+          <div id="nf-ai-off-note"
+               style="display:none; margin-top:10px; padding:10px 13px; border-radius:8px;
+                      background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.35);
+                      font-size:12.5px; line-height:1.7; color:var(--text);">
+            <b>AI बंद है — कोई Gemini कॉल नहीं होगी, न यहाँ से, न अपने आप चलने वाले
+            ऑटो-पायलट से।</b><br>
+            पोस्ट बनना बंद नहीं हुआ: शीर्षक और सारांश सीधे स्रोत से लिए जाएंगे और कवर फोटो
+            हमारी अपनी लाइब्रेरी से आएगी। आप हर पोस्ट को हाथ से लिख और सुधार भी सकते हैं।
+            <span style="color:var(--muted);">सर्वर दोबारा चालू होने पर यह स्विच अपने आप
+            वापस चालू हो जाएगा — पक्का बंद रखने के लिए Render पर
+            <code>NEWS_AI_ENABLED=false</code> सेट करें।</span>
           </div>
 
           <div style="display:flex; align-items:center; gap:10px; margin: 12px 0 10px; flex-wrap:wrap;">
@@ -14942,6 +14964,76 @@ async function dkUploadImage(slug, input) {
 // ══════════════════════════════════════════════════════════════
 let _curatedTempDraft = null;
 
+// ── कृषि न्यूज़ AI switch ────────────────────────────────────
+// One switch for the whole section: the 🪄 button on this page AND the
+// auto-pilot scheduler that stages stories on its own every few days. A
+// switch that only disarmed the button would leave the quota being spent by
+// the half nobody is watching — which is the half that matters when the
+// reason for switching off is a bill.
+//
+// OFF does not stop the section. Posts are still staged, still editable,
+// still publishable; the title and summary come from the source text as
+// written and the cover from our own photo library. That is the same path
+// the pipeline already takes whenever Gemini errors.
+function applyNewsAiState(on) {
+  const sw = document.getElementById('sw-news-ai');
+  const pill = document.getElementById('nf-ai-pill');
+  const note = document.getElementById('nf-ai-off-note');
+  const btn = document.getElementById('btn-curate-url');
+  if (!sw) return;
+  window.newsAiOn = !!on;
+  sw.classList.toggle('on', !!on);
+  if (pill) {
+    pill.textContent = on ? 'Gemini 2.5 Flash' : 'AI बंद';
+    pill.className = on ? 'status-pill online' : 'status-pill warning';
+  }
+  if (note) note.style.display = on ? 'none' : 'block';
+  // The blurb promises what the model does. Leaving it up with the switch off
+  // is the panel contradicting itself on the same line of pixels.
+  const desc = document.getElementById('nf-curator-desc');
+  if (desc) {
+    desc.textContent = on
+      ? 'किसी भी कृषि समाचार, PIB प्रेस नोट या लेख का वेब लिंक पेस्ट करें — Gemini AI शीर्षक, 3 मुख्य बिंदु व फ़ोटो स्वतः बना देगा!'
+      : 'किसी भी कृषि समाचार या लेख का लिंक पेस्ट करें — शीर्षक और सारांश स्रोत से लिए जाएंगे, कवर हमारी लाइब्रेरी से। आप इन्हें हाथ से सुधार सकते हैं।';
+  }
+  // The button stays live with AI off — it still builds the post, just from
+  // the source text. Disabling it would read as "this page is broken" when
+  // the page is working exactly as the switch asks.
+  if (btn) btn.textContent = on ? '🪄 AI से पोस्ट बनाएं' : '📄 लिंक से पोस्ट बनाएं (बिना AI)';
+}
+
+async function toggleNewsAi() {
+  const next = !window.newsAiOn;
+  applyNewsAiState(next);                       // optimistic, reverted below on failure
+  try {
+    const r = await fetch(`${API}/admin/settings`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ news_ai_enabled: next })
+    });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    // Trust the server's echo, not our guess — if the key were ever renamed
+    // the POST would 200 with it in `skipped` and the switch would lie.
+    const real = d && d.settings && d.settings.news_ai_enabled;
+    applyNewsAiState(real);
+    showToast(real ? 'कृषि न्यूज़ AI चालू — Gemini से पोस्ट बनेंगी।'
+                   : 'कृषि न्यूज़ AI बंद — अब कोई Gemini कॉल नहीं होगी।');
+  } catch (e) {
+    applyNewsAiState(!next);
+    showToast('स्विच बदला नहीं जा सका — दोबारा कोशिश करें।', 'error');
+  }
+}
+
+async function loadNewsAiState() {
+  try {
+    const r = await fetch(`${API}/admin/settings`, { headers: getAuthHeader() });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d && d.settings) applyNewsAiState(d.settings.news_ai_enabled !== false);
+  } catch (e) { /* leave the switch as the markup shipped it */ }
+}
+
 async function loadNewsFunnel(showToastNotice = false) {
   const stagedBox = document.getElementById('nf-staged-container');
   const pubBox = document.getElementById('nf-published-container');
@@ -14957,6 +15049,7 @@ async function loadNewsFunnel(showToastNotice = false) {
 
     const funnelData = await funnelRes.json();
     const feedData = await feedRes.json();
+    loadNewsAiState();   // the switch reflects the SERVER, never the markup
 
     if (funnelData.success) {
       const cyc = funnelData.cycle || {};

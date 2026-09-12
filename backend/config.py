@@ -24,6 +24,21 @@ _settings: dict = {
     # to run cache-only (no ChromaDB index in memory, no Gemini/Ollama calls).
     "rag_enabled":            os.getenv("RAG_ENABLED",          "true").lower() == "true",
     "ai_enabled":             os.getenv("AI_RESPONSE_ENABLED",   "true").lower() == "true",
+    # कृषि न्यूज़ auto-pilot — the AI half of it, as one switch.
+    #
+    # OFF means the news pipeline makes NO model call anywhere: no Gemini for
+    # the headline and bullets, none for the image prompt, no Imagen, no
+    # Pollinations. Staging still runs, the post is still built — from the
+    # source text as written and a cover from our OWN photo library, which is
+    # the same path the pipeline already takes whenever Gemini errors. So the
+    # switch turns off spend, never the section.
+    #
+    # It gates the SCHEDULER too, not just the admin button. The auto-pilot
+    # stages stories on its own every few days; a switch that only disarmed
+    # the panel would leave the quota being spent by the half nobody is
+    # watching, which is the half that matters when the reason for switching
+    # off is a bill.
+    "news_ai_enabled":        os.getenv("NEWS_AI_ENABLED",     "true").lower() == "true",
     # Claude (Anthropic) — OFF by default. Admin toggles it on only while
     # seeding the semantic cache with premium answers, then off again
     # (paid API — not meant for regular user traffic).
