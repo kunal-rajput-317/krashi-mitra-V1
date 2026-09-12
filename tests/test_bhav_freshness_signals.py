@@ -126,9 +126,14 @@ class TestTierPagesAreDatedByData:
 
     def test_neither_tier_reintroduces_today_hi(self):
         """The mismatch came back once already. `today_hi` is deliberately not
-        defined in any of the three tier renderers — keep it that way."""
+        defined in any of the renderers that print a price — keep it that way.
+
+        The two /bhav/rajya place hubs joined this list the day they started
+        carrying prices: until then they stated no rupee figure, so there was
+        nothing there for a render-time date to contradict."""
         import inspect
-        for fn in (bhav.bhav_crop, bhav._state_page, bhav.bhav_page):
+        for fn in (bhav.bhav_crop, bhav._state_page, bhav.bhav_page,
+                   bhav.bhav_state_hub, bhav.bhav_district_hub):
             src = inspect.getsource(fn)
             assert "_hindi_date(date.today())" not in src, (
                 f"{fn.__name__} dates itself from the clock again")

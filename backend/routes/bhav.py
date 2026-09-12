@@ -584,6 +584,26 @@ def _fresh_iso_crop(idx: dict, cs: str) -> str:
                 for d in s_map.values()), default="")
 
 
+def _fresh_iso_place(idx: dict, ss: str, ds: str = "") -> str:
+    """The newest reported date anywhere in one state (or one district of it),
+    across EVERY crop — the crop-less counterpart of _fresh_iso_state, for the
+    /bhav/rajya place hubs, which have no single crop to date themselves from.
+
+    Rolled up exactly the way /bhav/sitemap.xml rolls up a place hub's
+    <lastmod> (same _is_crop filter, same max over idx["dates"]), for the
+    reason given on _fresh_iso: a page's dateModified must never disagree with
+    its own sitemap entry."""
+    best = ""
+    for cs, cn in idx.get("crops", {}).items():
+        if not _is_crop(cn):
+            continue
+        d_map = idx.get("dates", {}).get(cs, {}).get(ss, {}) or {}
+        got = d_map.get(ds, "") if ds else max(d_map.values(), default="")
+        if got > best:
+            best = got
+    return best
+
+
 # A price reported yesterday is the NORMAL case, not a fault: Agmarknet's live
 # resource is wiped overnight and the 08:00 IST fetch legitimately rebuilds the
 # snapshot from yesterday's archived day (see mandi_fetch_service). Saying
@@ -3052,6 +3072,79 @@ def _dist_name(idx: dict, ss: str, ds: str) -> str:
     return ""
 
 
+# ── आज का भाव, जगह के हिसाब से — the number ON the place hubs ────
+#
+# The place hubs used to be the only pages under /bhav that carried no price
+# at all: every crop card said "भाव देखें →" and the farmer had to guess which
+# of 105 crops was worth a tap. That was survivable while the hubs were only a
+# crawl path — it stopped being survivable the day the WhatsApp channel post
+# started linking here. The post prints five prices under "अपनी मंडी का भाव
+# यहाँ 👇", and the page it pointed at printed none; a follower who tapped it
+# landed on a picker and two more taps from the number he had just been shown.
+#
+# THE ARITHMETIC IS DELIBERATELY services/wa_post._crop_lines': the plain mean
+# of every row's modal price for that crop in that place. The channel post and
+# this page are then one calculation over one snapshot and cannot disagree —
+# which is the invariant wa_post's own file header exists to protect. Anything
+# cleverer here (trimmed means, distinct-market weighting) would make the post
+# wrong instead of making the page better.
+#
+# Python, not SQL AVG(): mandi_prices.modal_price is a String column carrying
+# whatever Agmarknet sent, commas and blanks included, so _num decides what is
+# a number — the same gate every other price on the site passes through.
+#
+# One grouped read per place, TTL-cached under the 30-minute edge cache the
+# hubs already ship with (_CACHE_HEADERS), because Netlify serves ~all of this
+# traffic from the edge and Render's free tier is the thing being protected.
+_place_rates: dict = {}
+_PLACE_RATES_TTL = 900
+
+
+def _rates_in(idx: dict, ss: str, ds: str = "") -> dict:
+    """{crop slug → {avg, mandis}} for every crop reported in one state, or in
+    one district of it. Empty dict when the place has nothing priced — every
+    caller must keep working without a number, because a crop can be in the
+    index (it reported once, so its URL exists forever) and absent from
+    today's snapshot."""
+    key = (ss, ds)
+    now = time.time()
+    hit = _place_rates.get(key)
+    if hit and (now - hit[0]) < _PLACE_RATES_TTL:
+        return hit[1]
+
+    sn, dn = _state_name(idx, ss), (_dist_name(idx, ss, ds) if ds else "")
+    if not sn or (ds and not dn):
+        return {}
+
+    db = SessionLocal()
+    try:
+        q = (db.query(MandiPrice.commodity, MandiPrice.market, MandiPrice.modal_price)
+               .filter(MandiPrice.state.ilike(sn)))
+        if dn:
+            q = q.filter(MandiPrice.district.ilike(dn))
+        rows = q.all()
+    finally:
+        db.close()
+
+    agg: dict = {}
+    for commodity, market, modal in rows:
+        m = _num(modal)
+        if not (commodity and m and _is_crop(commodity)):
+            continue
+        # Slugified, because the card being labelled is keyed by slug and
+        # several raw spellings collapse onto one (see idx["raws"]) — keeping
+        # them apart here would print one of three कद्दू prices at random.
+        slot = agg.setdefault(_slugify(commodity), {"modals": [], "mandis": set()})
+        slot["modals"].append(m)
+        slot["mandis"].add(market or "")
+
+    out = {cs: {"avg": round(sum(v["modals"]) / len(v["modals"])),
+                "mandis": len([m for m in v["mandis"] if m]) or len(v["modals"])}
+           for cs, v in agg.items() if v["modals"]}
+    _place_rates[key] = (now, out)
+    return out
+
+
 def _crops_in(idx: dict, ss: str = "", ds: str = "") -> dict:
     """{crop slug → commodity} actually reported in one district (ss+ds), one
     state (ss), or anywhere (neither). Membership is what makes a place-scoped
@@ -3854,8 +3947,14 @@ def bhav_state_hub(state: str):
     # Canonical display spelling of the state (from any crop that reports it).
     sn = _state_name(idx, ss)
     hi_state = _hindi_state(sn)
-    today_hi = _hindi_date(date.today())
     canon = f"{SITE}/bhav/rajya/{ss}"
+
+    # Dated by the DATA, not the clock — see _as_of_hi. This page had nothing
+    # to date while it carried no price; now that every card shows one, it
+    # falls under the same rule as tiers 2-4, and `today_hi` is deliberately
+    # not defined here so the old mismatch cannot be typed back in.
+    fresh = _fresh_iso_place(idx, ss)
+    as_of_hi = _as_of_hi(fresh)
 
     # Every district reporting anything in this state — an honest size cue AND
     # the जिला grid below (no per-crop DB round-trips, so cheap enough for a
@@ -3865,6 +3964,10 @@ def bhav_state_hub(state: str):
 
     # Staples first (same ranking as the hub grid), long tail after — one
     # crawlable crop card each, linking into the existing crop×state page.
+    # Today's state average per crop, so the page the channel post links to
+    # opens on the same numbers the post just printed — see _rates_in.
+    rates = _rates_in(idx, ss)
+
     ordered = sorted(crops_here.items(),
                      key=lambda kv: (_tile_rank(kv[1]), _hindi_name(kv[1])))
     cards = []
@@ -3875,11 +3978,13 @@ def bhav_state_hub(state: str):
         photo = (f'<img src="{escape(_crop_image(cn, 500))}" alt="{escape(hi)}" '
                  f'loading="lazy" width="240" height="120">' if has_photo else "")
         en = f'<span class="crop-card-en">{escape(cn)}</span>' if hi != cn else ""
+        r = rates.get(c)
+        rate = _rupee(r["avg"]) if r else "भाव देखें →"
         cards.append(f"""<a class="crop-card" href="/bhav/{c}/{ss}" data-name="{escape(f'{hi} {cn}'.lower())}">
 <div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
 <h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
 <div class="crop-card-body">
-<span class="lbl">{c_dist} जिले</span><span class="rate">भाव देखें →</span>
+<span class="lbl">{c_dist} जिले</span><span class="rate">{rate}</span>
 </div></a>""")
 
     # One crawlable link per district → the district hub, which asks for the
@@ -3893,7 +3998,7 @@ def bhav_state_hub(state: str):
 
     faqs = [
         (f"{hi_state} में आज कौन-कौन सी फसलों का भाव मिलता है?",
-         f"{today_hi} को {hi_state} की मंडियों में {len(crops_here)} फसलों के ताजा भाव सरकारी "
+         f"{as_of_hi} को {hi_state} की मंडियों में {len(crops_here)} फसलों के ताजा भाव सरकारी "
          f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। नीचे अपनी फसल चुनकर जिलेवार भाव देखें।"),
         (f"{hi_state} में अपनी फसल का भाव कैसे देखें?",
          f"नीचे अपनी फसल चुनें — फिर {hi_state} के सभी जिलों की मंडियों का न्यूनतम, अधिकतम और "
@@ -3907,10 +4012,10 @@ def bhav_state_hub(state: str):
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"), (hi_state, canon)]))
 
     title = f"{hi_state} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}"
-    desc = (f"{today_hi}: {hi_state} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
+    desc = (f"{as_of_hi}: {hi_state} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
             f"गेहूं, धान, प्याज समेत। फसल चुनकर अपने जिले का रेट देखें। रोज़ अपडेट (data.gov.in)।")
 
-    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi_state)} के {n_dist} जिलों की मंडियों में '
+    answer_lead = (f'<p class="lead-out">{as_of_hi} को {escape(hi_state)} के {n_dist} जिलों की मंडियों में '
                    f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
                    f'दर्ज हुआ। नीचे अपनी फसल चुनकर जिलेवार पूरा भाव देखें।</p>')
 
@@ -3918,10 +4023,14 @@ def bhav_state_hub(state: str):
     # State-language pass — services/state_lang.py. `sn` is the feed's spelling,
     # which is what lang_for keys on.
     lang = state_lang.lang_for(sn)
-    _td = date.today()
+    as_of_loc = as_of_hi
+    try:
+        _d = date.fromisoformat(fresh)
+        as_of_loc = state_lang.date_str(_d.day, _d.month, _d.year, lang, as_of_hi)
+    except (TypeError, ValueError):
+        pass
     _lv = {"state": hi_state, "state_en": sn, "n": len(crops_here),
-           "n_dist": n_dist, "year": _td.year,
-           "date": state_lang.date_str(_td.day, _td.month, _td.year, lang, today_hi)}
+           "n_dist": n_dist, "year": date.today().year, "date": as_of_loc}
     _lt = state_lang.variants("titles", "state_all", lang, _lv)
     if _lt:
         title = _fit(*_lt)
@@ -3938,7 +4047,9 @@ def bhav_state_hub(state: str):
             (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
             (hi_state, canon)]))
 
-    head_sub = f"📅 {today_hi} · {len(crops_here)} फसलें · {n_dist} जिले · स्रोत: data.gov.in (Agmarknet)"
+    head_sub = (f"📅 {as_of_hi} · {len(crops_here)} फसलें · {n_dist} जिले · "
+                f"औसत भाव ₹/क्विंटल · स्रोत: data.gov.in (Agmarknet)"
+                f"{_age_badge(fresh)}")
     body = f"""{_tier_head(head_h1, head_sub)}
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav">← सभी राज्य</a>
@@ -3956,7 +4067,7 @@ def bhav_state_hub(state: str):
 {faq_html}
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › {escape(hi_state)}')
-    return _doc(title, desc, canon, crumbs, body, ld, lang=lang)
+    return _doc(title, desc, canon, crumbs, body, ld, lang=lang, updated=fresh)
 
 
 # ════════════════════════════════════════════════════════════
@@ -3984,8 +4095,15 @@ def bhav_district_hub(state: str, district: str):
     # two spellings are two different searches — see _hindi_district.
     dn_hi = _hindi_district(sn, dn)
     hi_state = _hindi_state(sn)
-    today_hi = _hindi_date(date.today())
     canon = f"{SITE}/bhav/rajya/{ss}/{ds}"
+
+    # Dated by the DATA, not the clock — same rule and same reason as the
+    # state hub above. `today_hi` is deliberately not defined here.
+    fresh = _fresh_iso_place(idx, ss, ds)
+    as_of_hi = _as_of_hi(fresh)
+
+    # Today's district average per crop — same reason as the state hub above.
+    rates = _rates_in(idx, ss, ds)
 
     ordered = sorted(crops_here.items(),
                      key=lambda kv: (_tile_rank(kv[1]), _hindi_name(kv[1])))
@@ -3996,16 +4114,18 @@ def bhav_district_hub(state: str, district: str):
         photo = (f'<img src="{escape(_crop_image(cn, 500))}" alt="{escape(hi)}" '
                  f'loading="lazy" width="240" height="120">' if has_photo else "")
         en = f'<span class="crop-card-en">{escape(cn)}</span>' if hi != cn else ""
+        r = rates.get(c)
+        rate = _rupee(r["avg"]) if r else "भाव देखें →"
         cards.append(f"""<a class="crop-card" href="/bhav/{c}/{ss}/{ds}" data-name="{escape(f'{hi} {cn}'.lower())}">
 <div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
 <h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
 <div class="crop-card-body">
-<span class="lbl">{escape(dn_hi)}</span><span class="rate">भाव देखें →</span>
+<span class="lbl">{escape(dn_hi)}</span><span class="rate">{rate}</span>
 </div></a>""")
 
     faqs = [
         (f"{dn_hi} मंडी में आज किन फसलों का भाव है?",
-         f"{today_hi} को {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों के भाव सरकारी "
+         f"{as_of_hi} को {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों के भाव सरकारी "
          f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। नीचे अपनी फसल चुनकर आज का पूरा भाव देखें।"),
         (f"{dn_hi} मंडी का आज का भाव कैसे देखें?",
          f"नीचे अपनी फसल चुनें — {dn_hi} की मंडियों का आज का न्यूनतम, अधिकतम और मॉडल भाव "
@@ -4023,13 +4143,13 @@ def bhav_district_hub(state: str, district: str):
                  f"{dn_hi} मंडी भाव आज — {hi_state}",
                  f"{dn_hi} मंडी भाव आज"]))
     desc = _fit(
-        f"{today_hi}: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का ताजा भाव — "
+        f"{as_of_hi}: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का ताजा भाव — "
         f"अपनी फसल चुनकर आज का न्यूनतम, अधिकतम और मॉडल रेट देखें। रोज़ अपडेट (data.gov.in)।",
-        f"{today_hi}: {dn_hi} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
+        f"{as_of_hi}: {dn_hi} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
         f"फसल चुनकर आज का रेट देखें। रोज़ अपडेट (data.gov.in)।",
         limit=162)
 
-    answer_lead = (f'<p class="lead-out">{today_hi} को {escape(dn_hi)} ({escape(hi_state)}) की मंडियों में '
+    answer_lead = (f'<p class="lead-out">{as_of_hi} को {escape(dn_hi)} ({escape(hi_state)}) की मंडियों में '
                    f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
                    f'दर्ज हुआ। नीचे अपनी फसल चुनकर उस फसल का पूरा भाव देखें।</p>')
 
@@ -4038,12 +4158,16 @@ def bhav_district_hub(state: str, district: str):
     # `sn`, not `state` — the path segment here is the URL slug ("maharashtra"),
     # and lang_for keys on the feed's own spelling the way _HI_STATES does.
     lang = state_lang.lang_for(sn)
-    _td = date.today()
+    as_of_loc = as_of_hi
+    try:
+        _d = date.fromisoformat(fresh)
+        as_of_loc = state_lang.date_str(_d.day, _d.month, _d.year, lang, as_of_hi)
+    except (TypeError, ValueError):
+        pass
     _lv = {"district": state_lang.district(dn_hi, lang), "district_en": dn,
            "en_d": dn if dn_hi != dn else "",
            "state": hi_state, "state_en": sn, "n": len(crops_here),
-           "year": _td.year,
-           "date": state_lang.date_str(_td.day, _td.month, _td.year, lang, today_hi)}
+           "year": date.today().year, "date": as_of_loc}
     _lt = state_lang.variants("titles", "district_all", lang, _lv)
     if _lt:
         title = _fit(*_lt)
@@ -4059,8 +4183,9 @@ def bhav_district_hub(state: str, district: str):
             ("कृषि मित्र", f"{SITE}/"),
             (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
             (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn_hi, canon)]))
-    head_sub = (f"📅 {today_hi} · {escape(hi_state)} · {len(crops_here)} फसलें · "
-                f"स्रोत: data.gov.in (Agmarknet)")
+    head_sub = (f"📅 {as_of_hi} · {escape(hi_state)} · {len(crops_here)} फसलें · "
+                f"औसत भाव ₹/क्विंटल · स्रोत: data.gov.in (Agmarknet)"
+                f"{_age_badge(fresh)}")
     body = f"""{_tier_head(head_h1, head_sub)}
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav/rajya/{ss}">← {escape(hi_state)} के सभी जिले</a>
@@ -4076,7 +4201,8 @@ def bhav_district_hub(state: str, district: str):
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/rajya/{ss}">{escape(hi_state)}</a> › {escape(dn_hi)}')
-    return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS, lang=lang)
+    return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS, lang=lang,
+                updated=fresh)
 
 
 # ════════════════════════════════════════════════════════════
