@@ -3588,7 +3588,8 @@ def find(q: str = ""):
 </div>
 {"".join(sections)}"""
 
-    title = f'{escape(q)} खोज परिणाम | कृषि मित्र' if query else 'फसल या उत्पाद खोजें | कृषि मित्र'
+    title = (f'{escape(q)} — खोज परिणाम, मंडी भाव व कृषि जानकारी' if query
+             else 'फसल या उत्पाद खोजें — मंडी भाव, खाद-बीज व लेख')
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -3823,7 +3824,20 @@ def bhav_hub():
     today_hi = _hindi_date(date.today())
 
     if not crops:
-        return _doc("आज का मंडी भाव | कृषि मित्र", "मंडी भाव लोड हो रहे हैं।",
+        # The cold-index branch. It fires whenever the slug index is empty —
+        # a cold cache, or the DB unreachable, which this site has had happen
+        # (see the Neon read-only episodes) — and it used to answer with the
+        # title "आज का मंडी भाव | कृषि मित्र" and the description "मंडी भाव लोड
+        # हो रहे हैं।". If Googlebot took its snapshot during one of those
+        # minutes, the site's second-biggest page sat in the SERP advertising
+        # that it was still loading. The page genuinely has no data to show,
+        # but the snippet describes what the page is *for*, which does not
+        # depend on the index being warm.
+        return _doc(_fit(f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट "
+                         f"| Mandi Bhav Today",
+                         f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट"),
+                    "गेहूं, धान, गन्ना, प्याज, आलू समेत सैकड़ों फसलों का आज का मंडी भाव "
+                    "(mandi bhav today) — फसल, राज्य और जिला चुनकर देखें। रोज़ अपडेट।",
                     f"{SITE}/bhav", f'<a href="{SITE}/">कृषि मित्र</a> › मंडी भाव',
                     '<div class="hero nophoto"><div class="hero-body">'
                     '<h1>डेटा लोड हो रहा है</h1></div></div>')
@@ -3882,9 +3896,26 @@ def bhav_hub():
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav")]))
 
-    title = f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट"
-    desc = (f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
-            f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।")
+    # The tier-3 and tier-4 templates were taught to carry both spellings on
+    # 2026-09-06; this hub was missed and still had no Latin character in it at
+    # all. It is the site's second-biggest page — 16,957 impressions at
+    # position 7.4 in the 28 days to 9 Sep 2026 — and the single query "bhav"
+    # is 1,900 of them at position 9.6 for FOUR clicks (0.21%), against 2-6%
+    # from the same phrase typed in Devanagari. Nothing the romanised searcher
+    # typed appeared anywhere in the result.
+    title = _fit(
+        f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट | Mandi Bhav Today",
+        f"आज का मंडी भाव {date.today().year} — सभी फसलों के रेट | Mandi Bhav Today",
+        f"आज का मंडी भाव {date.today().year} | Mandi Bhav Today — सभी फसलों के रेट",
+        f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट")
+    desc = _fit(
+        f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का आज का "
+        f"मंडी भाव (mandi bhav today)। फसल, राज्य और जिला चुनें — रोज़ अपडेट।",
+        f"{today_hi}: गेहूं, धान, प्याज, आलू समेत {len(crops)} फसलों का आज का मंडी भाव "
+        f"(mandi bhav today)। फसल, राज्य व जिला चुनें — रोज़ अपडेट।",
+        f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
+        f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।",
+        limit=162)
 
     body = f"""<h1 class="mandi-page-heading">कृषि मंडी भाव</h1>
 <div class="bhav-tabs" role="tablist">

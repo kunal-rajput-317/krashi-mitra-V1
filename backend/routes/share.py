@@ -487,7 +487,7 @@ def share_bazar(post_id: int, db: Session = Depends(get_db)):
     """OG preview card for a Krashi Bazar post — photo + price + details."""
     target = f"{SITE}/krashi_bajar.html?post={post_id}"
 
-    title = "कृषि बाज़ार — किसान से सीधे खरीदें व बेचें | कृषि मित्र"
+    title = "कृषि बाज़ार — किसान से सीधे फसल खरीदें व बेचें"
     desc  = "फसल की फोटो/वीडियो, सीधा भाव और ऑफर — सीधे किसान से जुड़ें। KrashiMitra पर देखें।"
     image = _FALLBACK_IMAGE
 
@@ -567,7 +567,7 @@ def share_mandi(state: str = "", commodity: str = "", district: str = ""):
     from backend.routes.bhav import _hindi_name, _rupee, _slugify
 
     hi_commodity = _hindi_name(commodity) if commodity else "मंडी भाव"
-    title = f"{hi_commodity} — आज का मंडी भाव | कृषि मित्र"
+    title = f"{hi_commodity} का आज का मंडी भाव — सभी मंडियों के रेट"
     desc = "ताजा मंडी भाव, रुझान और सरकारी दरें — कृषि मित्र, किसान का डिजिटल साथी"
 
     try:

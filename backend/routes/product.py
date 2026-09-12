@@ -30,7 +30,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from backend.routes.bhav import (
     _CSS as _BASE_CSS, _FONTS, _ICON, _ANALYTICS, _header, _footer, _doc, _faq,
-    _crumb_ld, _ld,
+    _crumb_ld, _fit, _ld,
 )
 
 router = APIRouter()
@@ -45,6 +45,13 @@ CAT_LABELS = {
     "protection": "🛡️ फसल सुरक्षा", "structures": "🏗️ नेट व संरचनाएं",
     "machinery": "⚙️ मशीनरी", "misc": "📦 अन्य",
 }
+
+def _bare_name(name: str) -> str:
+    """'SSP (सिंगल सुपर फॉस्फेट)' → 'SSP'. The bracket holds the expansion of
+    the name in front of it, so dropping it never loses the searched term —
+    and for the long ones it is the only way the title fits at all."""
+    return re.sub(r"\s*\([^)]*\)\s*$", "", name).strip() or name
+
 
 # PRODUCTS entries are flat object literals — scalar string/number values
 # only (verified: no braces, apostrophes or newlines inside any value), so
@@ -284,7 +291,7 @@ def product_hub():
             f'<h2 id="cat-{cat}">{escape(label)} ({len(rows)})</h2>'
             f'<div class="prod-grid">{cards}</div>')
 
-    title = "बीज, खाद, कीटनाशक व उपकरण — सभी उत्पाद | कृषि मित्र दुकान"
+    title = "बीज, खाद, कीटनाशक व उपकरण ऑनलाइन — कीमत व Cash on Delivery"
     desc = (f"कृषि मित्र दुकान के {len(products)} उत्पाद — बीज, खाद, कीटनाशक, उपकरण, पशु आहार व "
             f"सिंचाई सामान। कीमत देखें, Cash on Delivery के साथ ऑनलाइन ऑर्डर करें।")
 
@@ -355,9 +362,53 @@ def product_page(slug: str):
     canon = f"{SITE}/product/{p['slug']}"
     off_pct = _off_pct(p)
 
-    title = f"{p['name_hi']} ({p['name_en']}) खरीदें ₹{p['price']} | कृषि मित्र दुकान"
-    desc = (f"{p['name_hi']} ({p['unit_hi']}) अभी ₹{p['price']} में ऑर्डर करें — "
-            f"{p['desc_hi']} Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी उपलब्ध।")
+    # Measured against production 2026-09-12: 89 of the 94 product titles ran
+    # over Google's 68-char window (median 83) and 40 of 94 descriptions over
+    # 162. The cause was a fixed f-string that printed the same product twice —
+    # "SSP (सिंगल सुपर फॉस्फेट) (SSP (Single Super Phosphate)) खरीदें ₹460 |
+    # कृषि मित्र दुकान", 86 chars — because name_hi and name_en are parallel
+    # names, each already carrying its own expansion in brackets. /product is
+    # the site's best-converting family (13.7k impressions at 1.30%), so a
+    # title Google cuts at "खरीदें" is the most expensive truncation we ship.
+    #
+    # The ladder drops, in order: the pack size, the brand, the English
+    # expansion, then the Hindi one. The bare acronym survives to the last
+    # variant because "SSP"/"DAP"/"MOP" is what gets typed.
+    hi_name, en_name = p["name_hi"], p["name_en"]
+    hi_bare, en_bare = _bare_name(hi_name), _bare_name(en_name)
+    rs = f"₹{p['price']}"
+    # "SSP (सिंगल सुपर फॉस्फेट)" already opens with its own acronym, so the
+    # short English form would print it a second time ("… (SSP) ₹460"). Where
+    # the bare English name is already in the Hindi one, the bracket is dropped
+    # and the space goes to the pack size instead.
+    en_tag = "" if en_bare.lower() in hi_name.lower() else f" ({en_bare})"
+    en_lead = hi_bare if en_bare.lower() in hi_bare.lower() else f"{hi_bare} ({en_bare})"
+    title = _fit(
+        f"{hi_name} ({en_name}) {rs} — {p['unit_hi']}",
+        f"{hi_name} ({en_name}) {rs} में खरीदें",
+        f"{hi_name} {rs} — {en_name} Price Online",
+        f"{hi_name}{en_tag} {rs} — {p['unit_hi']}",
+        f"{hi_name} {rs} — {en_bare} Price {p['unit_hi']}",
+        f"{hi_name} {rs} — {en_bare} Price Online",
+        f"{en_lead} {rs} — {p['unit_hi']} की कीमत",
+        f"{hi_bare} {rs} — {en_bare} Price Online",
+        f"{hi_name} की कीमत {rs} — {p['unit_hi']}",
+        f"{hi_bare} की कीमत {rs} — {p['unit_hi']}",
+        f"{hi_bare} {rs} — {en_bare}",
+        f"{hi_bare} की कीमत {rs}")
+    desc = _fit(
+        f"{hi_name} ({p['unit_hi']}) अभी {rs} में ऑर्डर करें — "
+        f"{p['desc_hi']} Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी उपलब्ध।",
+        f"{hi_name} ({p['unit_hi']}) अभी {rs} में ऑर्डर करें — "
+        f"{p['desc_hi']} Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी।",
+        f"{hi_name} ({p['unit_hi']}) — {rs}। {p['desc_hi']} "
+        f"Cash on Delivery, ₹500+ पर मुफ्त डिलीवरी।",
+        f"{hi_name} ({p['unit_hi']}) अभी {rs} में ऑर्डर करें — {p['desc_hi']}",
+        f"{hi_name} ({p['unit_hi']}) — {rs}। {p['desc_hi']}",
+        f"{hi_name} ({en_bare}) {p['unit_hi']} की कीमत {rs} — "
+        f"Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी उपलब्ध।",
+        f"{hi_name} — {p['unit_hi']} {rs}। Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी।",
+        limit=162)
 
     # ── CTAs ──
     ctas = [f'<a class="btn btn-app" href="{SITE}/shop.html?product={p["id"]}">🛒 ऐप में खरीदें</a>']

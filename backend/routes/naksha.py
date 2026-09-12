@@ -96,6 +96,21 @@ _BHULEKH = {
 }
 
 
+# The abbreviation a searcher actually types. "mp map" earned 2,708 impressions
+# in the 28 days to 9 Sep 2026 at position 5.2 and took FOUR clicks (0.15%) —
+# the single worst title/query mismatch on the site — because the title said
+# "Madhya Pradesh Map" and Google had nothing of what the reader typed to bold.
+# Across all of /naksha the abbreviation queries were 4,524 impressions for MP
+# and 2,900 for UP. Only states whose short form is genuinely used as a name
+# are listed: the rest ("br 52 district name") are vehicle-registration
+# lookups, a different question that a title cannot answer.
+_ABBR = {
+    "madhya-pradesh": "MP", "uttar-pradesh": "UP", "andhra-pradesh": "AP",
+    "tamil-nadu": "TN", "west-bengal": "WB", "himachal-pradesh": "HP",
+    "jammu-and-kashmir": "J&K", "uttarakhand": "UK", "arunachal-pradesh": "AR",
+}
+
+
 # ── data ────────────────────────────────────────────────────────────────────
 
 _cache: dict = {}
@@ -2844,7 +2859,19 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
     # the Devanagari one — and still took 6 clicks from 2,034 impressions
     # (0.29%) against 0.79% from the Hindi searchers. A title with no Latin
     # word in it is not a result an "assam map" searcher recognises as theirs.
+    # The abbreviation goes next to the English name, not instead of it: "mp map"
+    # and "madhya pradesh map" are both real demand and only one of them is
+    # served by either spelling alone.
+    ab = _ABBR.get(key)
+    abbr_variants = [
+        f"{hi} का नक्शा – {n} जिलों का HD मानचित्र | {s['en']} ({ab}) Map",
+        f"{hi} का नक्शा – {n} जिलों का मानचित्र | {s['en']} ({ab}) Map",
+        f"{hi} का नक्शा – {n} जिले | {s['en']} ({ab}) Map, HD डाउनलोड",
+        f"{hi} का नक्शा – {n} जिले | {s['en']} ({ab}) Map",
+        f"{hi} का नक्शा | {s['en']} ({ab}) Map – {n} जिले",
+    ] if ab else []
     title = _fit(
+        *abbr_variants,
         f"{hi} का नक्शा – {n} जिलों का HD मानचित्र | {s['en']} Map",
         f"{hi} का नक्शा – {n} जिलों का मानचित्र | {s['en']} Map",
         f"{hi} का नक्शा – {n} जिले | {s['en']} Map",
@@ -3034,10 +3061,30 @@ def _jile_page(key: str) -> HTMLResponse:
     span = f"{s['north']} से {s['south']} तक"
     canon = _abs(_jile_url(key))
 
+    # These pages rank 6-10 for the question itself — "गुजरात में कितने जिले हैं",
+    # "arunachal pradesh mein kitne jile hain", "ap me kitne jile hai" — and took
+    # zero clicks in the 28 days to 9 Sep 2026. The count was in the old title
+    # but buried mid-phrase behind "सभी", while "(हिंदी + English)" spent eight
+    # characters on something no one searches for. Lead with the question and
+    # put the number where the answer goes; carry the Latin spelling so the
+    # romanised half of the same query has something to bold.
+    ab = _ABBR.get(key)
+    en = s["en"]
     title = _fit(
-        f"{hi} के जिले – सभी {n} जिलों की सूची (हिंदी + English)",
-        f"{hi} के जिले – सभी {n} जिलों की सूची")
+        f"{hi} में कितने जिले हैं? {n} जिलों की पूरी सूची | {en} Districts",
+        f"{hi} में कितने जिले हैं? {n} जिलों की सूची | {en} Districts",
+        f"{hi} में कितने जिले हैं? {n} जिलों की पूरी सूची",
+        f"{hi} में कितने जिले हैं? पूरी सूची | {en} District List",
+        f"{hi} के {n} जिले – पूरी सूची | {en} Districts",
+        f"{hi} के जिले – सभी {n} जिलों की सूची",
+        f"{hi} के {n} जिले – पूरी सूची")
+    # The description opens with the bare number, so the answer survives even
+    # when Google rewrites the title into its own question format.
     desc = _fit(
+        f"{hi} में कुल {n} जिले हैं ({en} has {n} districts) — पूरी सूची हिंदी और "
+        f"अंग्रेज़ी दोनों नामों के साथ, {span}। साथ में HD नक्शा, मुफ्त डाउनलोड।",
+        f"{hi} में कुल {n} जिले हैं ({en} has {n} districts) — पूरी सूची हिंदी और "
+        f"अंग्रेज़ी दोनों नामों के साथ। साथ में HD नक्शा, मुफ्त डाउनलोड।",
         f"{hi} में कुल {n} जिले हैं — पूरी सूची हिंदी और अंग्रेज़ी दोनों नामों के "
         f"साथ, {span}। साथ में {hi} का HD नक्शा — मुफ्त डाउनलोड।",
         f"{hi} में कुल {n} जिले हैं — पूरी सूची हिंदी और अंग्रेज़ी दोनों नामों के साथ। "
@@ -3212,9 +3259,26 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
         f"{hi} का नक्शा – {shi} | जिला मानचित्र, गांव व सैटेलाइट व्यू",
         f"{hi} का नक्शा – {shi} | जिला मानचित्र",
         f"{hi} का नक्शा – {shi}")
-    desc = (f"{hi} जिले का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
-            f"सैटेलाइट व्यू में अपना गांव और तहसील देखें, जिले की सीमा नक्शे पर "
-            f"हाइलाइट, और {shi} का पूरा HD नक्शा मुफ्त डाउनलोड करें।")
+    # The title above went through a _fit ladder on 2026-09-06; this description
+    # was left behind as a single f-string and has been over budget ever since.
+    # Measured 2026-09-12 against production: 10 of 10 sampled district pages
+    # rendered 190-221 chars against Google's 162, so every one of them was cut
+    # mid-sentence — on 768 sitemap URLs carrying 216k impressions at 0.63%.
+    # Same rule as the title: pick a whole shorter sentence, never a slice.
+    desc = _fit(
+        f"{hi} जिले का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
+        f"सैटेलाइट व्यू में अपना गांव और तहसील देखें, और {shi} का पूरा HD नक्शा "
+        f"मुफ्त डाउनलोड करें।",
+        f"{hi} जिले का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
+        f"सैटेलाइट व्यू में गांव व तहसील देखें, HD नक्शा मुफ्त डाउनलोड करें।",
+        f"{hi} का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
+        f"सैटेलाइट व्यू में गांव व तहसील देखें, HD नक्शा मुफ्त डाउनलोड।",
+        f"{hi} जिले का नक्शा ({en} district map), {shi}। सैटेलाइट व्यू में गांव व "
+        f"तहसील देखें, HD नक्शा मुफ्त डाउनलोड करें।",
+        f"{hi} जिले का नक्शा ({en} district map) — सैटेलाइट व्यू, गांव व तहसील, "
+        f"HD नक्शा मुफ्त डाउनलोड।",
+        f"{hi} का नक्शा ({en} district map) — सैटेलाइट व्यू व HD डाउनलोड।",
+        limit=162)
 
     v_line = (f"इस जिले के {len(villages)} गांव व कस्बे सूची में दर्ज हैं।"
               if villages else
