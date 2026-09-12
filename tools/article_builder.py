@@ -41,6 +41,10 @@ import sys
 from pathlib import Path
 from urllib.parse import quote
 
+from article_advisory import (ADVISORY_MARK, advisory_html, needs_advisory,
+                              sweep as advisory_sweep)
+from article_cards import sweep as card_date_sweep
+
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND = ROOT / "frontend"
 ARTICLES = FRONTEND / "articles"
@@ -401,6 +405,29 @@ def render(a: dict) -> str:
         dukan_promo = ""
         dukan_promo_js = ""
 
+    # The spray/dose advisory. Decided from what the AUTHOR wrote — body, quick
+    # facts and FAQ answers all carry doses — never from the rendered page,
+    # which also contains other articles' titles. It sits directly under the
+    # body, immediately after the sentence that named the chemical, and above
+    # the दुकान promo: the reader must be told to check the label before he is
+    # told where to buy. validate() fails the build if this is ever missing.
+    # Every authored field, not a hand-picked few: the first version read body
+    # + quick facts + FAQs and missed a "200 लीटर / एकड़" sitting in `badges`,
+    # which then failed the build it was supposed to satisfy. `related` is the
+    # one exclusion — those are other articles' titles, not this page's claims,
+    # and validate() cuts the same block before re-testing.
+    def _flat(v):
+        if isinstance(v, str):
+            return [v]
+        if isinstance(v, (list, tuple)):
+            return [s for x in v for s in _flat(x)]
+        return []
+
+    authored = " ".join(s for k, v in a.items() if k != "related"
+                        for s in _flat(v))
+    advisory = (advisory_html(lang)
+                if a.get("advisory") or needs_advisory(authored) else "")
+
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -526,7 +553,7 @@ def render(a: dict) -> str:
   </div>
 
 {a['body']}
-{dukan_promo}
+{advisory}{dukan_promo}
   <!-- ── AD SLOT : before FAQ ── -->
   <div class="ad-slot responsive" aria-label="{loc['ad']}">
     <div class="ad-slot-label">{loc['ad']}</div>
@@ -591,6 +618,12 @@ def sync_index_card(a: dict) -> str:
     """
     c, slug = a["card"], a["slug"]
     hero = _hero(a)
+    # The card's date is the same value the page's JSON-LD reports as
+    # dateModified, so a card can never contradict the page Google indexed.
+    # The baked label is only the offline fallback: articles/index.html
+    # recomputes "आज / कल / N दिन पहले" at view time, because a baked "आज"
+    # is wrong by the next morning.
+    card_date = a.get("date_modified", a["date"])
     # The emoji stays in the markup either way — it is the layered fallback the
     # band reveals if the image 404s, not an alternative to having one.
     if hero:
@@ -621,8 +654,10 @@ def sync_index_card(a: dict) -> str:
         f'        <div class="article-footer">\n'
         f'          <div class="article-meta">⏱️ {a["read_time"]} मिनट '
         f'<span class="meta-dot" style="display:inline-block;width:3px;height:3px;'
-        f'border-radius:50%;background:currentColor;margin:0 2px;"></span> नया</div>\n'
-        f'          <div class="article-views">👁 नया</div>\n'
+        f'border-radius:50%;background:currentColor;margin:0 2px;"></span> '
+        f'<time class="article-date" datetime="{card_date}">{a["date_label"]}</time>'
+        f'</div>\n'
+        f'          <div class="article-views"></div>\n'
         f'        </div>\n'
         f'      </div>\n'
         f'    </a>\n'
@@ -788,6 +823,18 @@ def validate(path: Path) -> list[str]:
 
     check(len(vis.split()) >= 1200, f"only {len(vis.split())} words (want 2000+)")
     check("{{" not in doc, "unrendered template placeholder")
+
+    # A page that names a pesticide or prints a dose must carry the advisory.
+    # These articles were generated, not written by an agronomist, so the page
+    # may not say where the number came from — but it must say the label is the
+    # authority. Tested on the article's own prose: the related-articles strip
+    # is other pages' titles, and the advisory's own copy would otherwise be
+    # able to satisfy the rule it is being checked against.
+    own = re.split(r'<div class="relevant-articles">', doc)[0]
+    own = re.sub(r'<div class="km-advisory".*?</div>', " ", own, flags=re.S)
+    if needs_advisory(_visible(own)):
+        check(ADVISORY_MARK in doc,
+              "names a chemical or a dose but carries no spray/dose advisory")
     return bad
 
 
@@ -851,6 +898,28 @@ def main() -> int:
                 print(f"      - {x}")
         else:
             print("  ✓ all checks passed")
+
+    # 36 article pages predate this builder and have no content module, so
+    # render() can never reach them — and they carry MORE chemistry than the
+    # generated ones. --all sweeps them too, rather than leaving a "remember to
+    # also run the other tool" step that will be forgotten exactly once.
+    if args.all:
+        hit = advisory_sweep(ARTICLES, write=not args.check)
+        if hit:
+            verb = "missing advisory on" if args.check else "advisory added to"
+            print(f"\nlegacy pages — {verb} {len(hit)}:")
+            for s in hit:
+                print(f"  {s}")
+            failed = failed or args.check
+
+        # Same story for the card dates: 36 cards are hand-written and no
+        # rebuild reaches them, and theirs were the frozen "2 दिन पहले" ones.
+        dated = card_date_sweep(write=not args.check)
+        if dated:
+            verb = "stale date on" if args.check else "date refreshed on"
+            print(f"\ncards — {verb} {len(dated)}")
+            failed = failed or args.check
+
     return 1 if failed else 0
 
 
