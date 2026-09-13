@@ -357,6 +357,11 @@ class UserProfile(Base):
     farming_experience   = Column(String,   nullable=True)
     family_size          = Column(Integer,  nullable=True)
     avatar_url           = Column(String,   nullable=True)
+    # Last time `name` actually changed value, added 2026-09-14. The display
+    # name is stamped onto every Krashi Bazar card the user has ever posted,
+    # so a name that changes weekly makes a seller unidentifiable to the buyer
+    # who spoke to him yesterday. NULL = never renamed since signup.
+    name_changed_at      = Column(DateTime, nullable=True)
 
     # Location (manually entered address)
     state                = Column(String,   nullable=True)
@@ -873,6 +878,18 @@ class BazarPost(Base):
     likes_count    = Column(Integer,  default=0)
     comments_count = Column(Integer,  default=0)
     created_at     = Column(DateTime, default=datetime.utcnow, index=True)
+    # ── Edit bookkeeping, added 2026-09-14 with PATCH /bazar/posts/{id}.
+    # A listing is editable (a farmer who typed 900 for 9000 should fix it, not
+    # delete and repost), but editing is rate-limited: each edit is a write to
+    # Neon and a re-render of a page we pay bandwidth for, and a price that
+    # changes hourly is not a price a buyer can act on.
+    #
+    # The window is a rolling 24h stamped on the FIRST edit of a window rather
+    # than a calendar day, so the limit cannot be doubled by editing at 23:59
+    # and again at 00:01. NULL edit_window_start = never edited.
+    updated_at        = Column(DateTime, nullable=True)
+    edit_count        = Column(Integer,  default=0)
+    edit_window_start = Column(DateTime, nullable=True)
 
 
 class BazarLike(Base):
@@ -1801,6 +1818,10 @@ def _ensure_postgres_columns():
             ("farming_experience",   "VARCHAR"),
             ("family_size",          "INTEGER"),
             ("avatar_url",           "VARCHAR"),
+            # Added 2026-09-14 with the rename cooldown. NULL on every existing
+            # row says "never renamed", which starts everyone with a free change
+            # rather than locking out an account for a rename it never made.
+            ("name_changed_at",      "TIMESTAMP"),
             # Location
             ("state",                "VARCHAR"),
             ("district",             "VARCHAR"),
@@ -1979,6 +2000,13 @@ def _ensure_postgres_columns():
             ("district", "VARCHAR"),
             ("crop_slug", "VARCHAR"),
             ("source", "VARCHAR"),
+            # Added 2026-09-14 with the edit endpoint. edit_count DEFAULTs to 0
+            # because a row written before today has genuinely never been
+            # edited; updated_at and edit_window_start stay NULL for the same
+            # reason — a backfilled timestamp would claim an edit happened.
+            ("updated_at",        "TIMESTAMP"),
+            ("edit_count",        "INTEGER DEFAULT 0"),
+            ("edit_window_start", "TIMESTAMP"),
         ],
         # Outreach + payment tracking, added 2026-08-03. The `buyers` table
         # itself predates this by days, so create_all() already made it without

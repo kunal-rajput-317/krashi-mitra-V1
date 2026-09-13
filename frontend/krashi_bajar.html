@@ -596,6 +596,30 @@
   .bz-act-btn:hover { background: #fff; color: var(--green-mid); border-color: var(--green-light); }
   .bz-act-btn:active { transform: scale(0.95); }
   .bz-act-btn svg { width: 16px; height: 16px; flex-shrink: 0; display: block; }
+  /* A count of zero renders as an empty span, not a "0": a wall of 👍 0 · 💬 0
+     down the feed reads as an empty room. The span stays in the DOM so the
+     live comment-count update can still find it by id. */
+  .bz-act-btn span:empty { display: none; }
+  .bz-act-btn.edit { color: var(--green-dark); border-color: var(--green-light); background: #fff; }
+  .bz-act-btn.edit:hover { background: var(--green-pale); }
+  /* Composer: which kind of post this is. Two buttons rather than a <select>
+     because it is the first decision on the form and has to be readable at a
+     glance on a 390px phone. */
+  .bz-type-pick { display: flex; gap: 8px; }
+  .bz-type-pick button {
+    flex: 1; padding: 11px 8px; border-radius: 12px; cursor: pointer;
+    border: 1.5px solid var(--border); background: var(--cream);
+    font-family: inherit; font-size: 13.5px; font-weight: 800; color: var(--text-mid);
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .bz-type-pick button.active {
+    background: var(--green-pale); color: var(--green-dark); border-color: var(--green-mid);
+  }
+  /* Shown only while editing — media cannot be changed, see edit_post(). */
+  .bz-edit-note {
+    background: #fff8e1; border: 1px solid #ffe08a; border-radius: 10px;
+    padding: 9px 11px; font-size: 12px; color: #7a5c00; line-height: 1.5;
+  }
   .bz-act-btn.liked {
     color: var(--tick-blue); background: #e8f4fd; border-color: #bfe0f8;
   }
@@ -1371,8 +1395,8 @@
   <!-- Toolbar card -->
   <div class="bz-toolbar">
     <div class="bz-mode-tabs">
-      <button class="bz-mode-btn" id="mode-sell" onclick="setMode('sell')" data-t="tab_sell">मेरी फसल बेचें</button>
-      <button class="bz-mode-btn active" id="mode-buy" onclick="setMode('buy')" data-t="tab_buy">खरीदार बनें</button>
+      <button class="bz-mode-btn active" id="mode-all" onclick="setMode('all')" data-t="tab_all">सभी पोस्ट</button>
+      <button class="bz-mode-btn" id="mode-mine" onclick="setMode('mine')" data-t="tab_mine">मेरी पोस्ट</button>
     </div>
     <div class="bz-search-row">
       <input id="bz-search" type="text" autocomplete="off"
@@ -1421,7 +1445,17 @@
 <div class="bz-modal-overlay" id="composer-overlay" onclick="if(event.target===this)closeComposer()">
   <div class="bz-modal">
     <button class="bz-modal-close" onclick="closeComposer()">✕</button>
-    <div class="bz-modal-title">🌾 <span data-t="composer_title">अपनी फसल बेचें</span></div>
+    <div class="bz-modal-title">🌾 <span id="cmp-title" data-t="composer_title">अपनी फसल बेचें</span></div>
+
+    <div class="bz-form-row">
+      <label class="bz-form-label" data-t="lbl_type">आप क्या करना चाहते हैं?</label>
+      <div class="bz-type-pick">
+        <button type="button" id="cmp-type-sell" class="active"
+                onclick="setComposerType('sell')" data-t="type_sell">🌾 बेचना है</button>
+        <button type="button" id="cmp-type-buy"
+                onclick="setComposerType('buy')" data-t="type_buy">🛒 खरीदना है</button>
+      </div>
+    </div>
 
     <div class="bz-form-row">
       <label class="bz-form-label" data-t="lbl_crop">फसल</label>
@@ -1464,7 +1498,11 @@
       </div>
     </div>
 
-    <div class="bz-form-row">
+    <div class="bz-form-row" id="cmp-edit-note" style="display:none;">
+      <div class="bz-edit-note" data-t="edit_media_note">📷 फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।</div>
+    </div>
+
+    <div class="bz-form-row" id="cmp-media-row">
       <label class="bz-form-label" data-t="lbl_media">फोटो / वीडियो</label>
       <div class="bz-media-drop" onclick="document.getElementById('cmp-media').click()">
         📷 <span data-t="media_hint">फोटो या वीडियो जोड़ें (photo ≤ 50MB, video ≤ 5 मिनट)</span>
@@ -1576,7 +1614,12 @@ const TRANSLATIONS = {
     nav_home:'मुख्य', nav_weather:'मौसम', nav_mandi:'मंडी', nav_shop:'दुकान',
     nav_chat:'सहायता', nav_schemes:'सरकारी योजना',
     page_title:'कृषि बाज़ार', page_sub:'सीधे खरीदार से जुड़ें — किसान का भरोसेमंद मंच',
-    tab_sell:'मेरी फसल बेचें', tab_buy:'खरीदार बनें',
+    tab_all:'सभी पोस्ट', tab_mine:'मेरी पोस्ट',
+    lbl_type:'आप क्या करना चाहते हैं?', type_sell:'🌾 बेचना है', type_buy:'🛒 खरीदना है',
+    edit:'बदलें', edit_title:'अपनी listing बदलें', btn_save:'सेव करें ✓',
+    edit_media_note:'📷 फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।',
+    edit_saved:'✓ Listing update हो गई।', edits_left:'आज बाकी edit',
+    edit_nochange:'कुछ बदला नहीं।',
     search_ph:'फसल या मंडी खोजें...', loading:'लोड हो रहा है…', load_more:'और देखें ↓',
     fab_post:'पोस्ट करें', composer_title:'अपनी फसल बेचें',
     lbl_crop:'फसल', crop_other_ph:'फसल का नाम लिखें', lbl_text:'विवरण',
@@ -1622,7 +1665,12 @@ const TRANSLATIONS = {
     nav_home:'Home', nav_weather:'Weather', nav_mandi:'Mandi', nav_shop:'Shop',
     nav_chat:'Help', nav_schemes:'Govt Schemes',
     page_title:'Crop Bazar', page_sub:'Connect directly with buyers — the farmer\'s trusted marketplace',
-    tab_sell:'Sell my crop', tab_buy:'Become a buyer',
+    tab_all:'All posts', tab_mine:'My posts',
+    lbl_type:'What do you want to do?', type_sell:'🌾 I want to sell', type_buy:'🛒 I want to buy',
+    edit:'Edit', edit_title:'Edit your listing', btn_save:'Save ✓',
+    edit_media_note:'📷 Photo/video can’t be changed yet — delete the post and add a new one instead.',
+    edit_saved:'✓ Listing updated.', edits_left:'edits left today',
+    edit_nochange:'Nothing changed.',
     search_ph:'Search crop or mandi...', loading:'Loading…', load_more:'Show more ↓',
     fab_post:'Post', composer_title:'Sell your crop',
     lbl_crop:'Crop', crop_other_ph:'Type crop name', lbl_text:'Details',
@@ -1668,7 +1716,12 @@ const TRANSLATIONS = {
     nav_home:'ಮುಖಪುಟ', nav_weather:'ಹವಾಮಾನ', nav_mandi:'ಮಂಡಿ', nav_shop:'ಅಂಗಡಿ',
     nav_chat:'ಸಹಾಯ', nav_schemes:'ಸರ್ಕಾರಿ ಯೋಜನೆ',
     page_title:'ಬೆಳೆ ಬಜಾರ್', page_sub:'ಖರೀದಿದಾರರೊಂದಿಗೆ ನೇರ ಸಂಪರ್ಕ — ರೈತರ ನಂಬಿಕೆಯ ವೇದಿಕೆ',
-    tab_sell:'ನನ್ನ ಬೆಳೆ ಮಾರಿ', tab_buy:'ಖರೀದಿದಾರರಾಗಿ',
+    tab_all:'ಎಲ್ಲಾ ಪೋಸ್ಟ್‌ಗಳು', tab_mine:'ನನ್ನ ಪೋಸ್ಟ್‌ಗಳು',
+    lbl_type:'ನೀವು ಏನು ಮಾಡಲು ಬಯಸುತ್ತೀರಿ?', type_sell:'🌾 ಮಾರಬೇಕು', type_buy:'🛒 ಖರೀದಿಸಬೇಕು',
+    edit:'ಬದಲಿಸಿ', edit_title:'ನಿಮ್ಮ ಪಟ್ಟಿ ಬದಲಿಸಿ', btn_save:'ಉಳಿಸಿ ✓',
+    edit_media_note:'📷 ಫೋಟೋ/ವಿಡಿಯೋ ಈಗ ಬದಲಿಸಲಾಗದು — ಪೋಸ್ಟ್ ಅಳಿಸಿ ಹೊಸದನ್ನು ಹಾಕಿ.',
+    edit_saved:'✓ ಪಟ್ಟಿ ಅಪ್‌ಡೇಟ್ ಆಯಿತು.', edits_left:'ಇಂದು ಉಳಿದ ಎಡಿಟ್',
+    edit_nochange:'ಏನೂ ಬದಲಾಗಿಲ್ಲ.',
     search_ph:'ಬೆಳೆ ಅಥವಾ ಮಂಡಿ ಹುಡುಕಿ...', loading:'ಲೋಡ್ ಆಗುತ್ತಿದೆ…', load_more:'ಇನ್ನಷ್ಟು ↓',
     fab_post:'ಪೋಸ್ಟ್ ಮಾಡಿ', composer_title:'ನಿಮ್ಮ ಬೆಳೆ ಮಾರಿ',
     lbl_crop:'ಬೆಳೆ', crop_other_ph:'ಬೆಳೆ ಹೆಸರು ಬರೆಯಿರಿ', lbl_text:'ವಿವರ',
@@ -1729,6 +1782,13 @@ function setLang(lang) {
   const tr = T();
   document.querySelectorAll('[data-t]').forEach(el => { const k = el.getAttribute('data-t'); if (tr[k]) el.textContent = tr[k]; });
   document.querySelectorAll('[data-t-ph]').forEach(el => { const k = el.getAttribute('data-t-ph'); if (tr[k]) el.setAttribute('placeholder', tr[k]); });
+  // The composer's title and button carry data-t for the "new post" wording, so
+  // a language switch with the edit form open would silently relabel it as a
+  // new post while still holding an edit's post id.
+  if (typeof editingPostId !== 'undefined' && editingPostId) {
+    document.getElementById('cmp-title').textContent  = tr.edit_title;
+    document.getElementById('cmp-submit').textContent = tr.btn_save;
+  }
   renderChips();
   renderFeed();          // re-render cards with new labels
   updateCountLabel();
@@ -1808,7 +1868,7 @@ const IC_COMMENT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const IC_SHARE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="10.49" x2="15.42" y2="6.51"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg>`;
 
 function likeBtnInner(liked, count) {
-  return `${liked ? IC_THUMB_FILLED : IC_THUMB_OUTLINE}<span>${count || 0}</span>`;
+  return `${liked ? IC_THUMB_FILLED : IC_THUMB_OUTLINE}<span>${count > 0 ? count : ''}</span>`;
 }
 
 function loaderHtml() {
@@ -1918,13 +1978,21 @@ function renderChips() {
 function setCrop(v) { activeCrop = v; renderChips(); loadFeed(true); }
 
 // ── Feed state ──────────────────────────────────────────────
-// Two kinds of post land here, and `mode` is NOT the switch between them:
-//   post_type 'sell' — a farmer's crop, from the पोस्ट करें button.
-//   post_type 'buy'  — a paying /dukanlisting dealer, written and kept in
-//                      sync by services/dealers.py::_sync_bazar_post.
-// Tab 'buy'  = buyer view: browse everyone's listings.
-// Tab 'sell' = seller view: post your crop + see your own listings.
-let mode = 'buy';
+// `mode` picks WHOSE posts the feed shows. It has never filtered by post_type
+// and must not start: one feed carries both kinds, each card wearing its own
+// sell/buy badge, so a buyer browsing crop and a dealer's खरीदना-है listing sit
+// side by side the way they do in a real mandi.
+//   'all'  — everyone's listings (the default, open to guests)
+//   'mine' — only your own, where you can edit them (needs login + profile)
+// It used to be called 'buy'/'sell', which read as a post_type filter and was
+// mislabelled in the UI to match ("मेरी फसल बेचें" for what is really
+// "my posts"). Renamed 2026-09-14; ?mode=sell still works, see the boot block.
+//
+// post_type, entirely separate, is 'sell' (a farmer's crop, from पोस्ट करें)
+// or 'buy' (a paying /dukanlisting dealer, kept in sync by
+// services/dealers.py::_sync_bazar_post, and now also anyone who picks
+// "खरीदना है" in the composer).
+let mode = 'all';
 let feedPosts = [];
 let feedPage = 0;
 let feedTotal = 0;
@@ -1933,13 +2001,13 @@ let feedBusy = false;
 let searchTimer = null;
 
 async function setMode(m) {
-  if (m === 'sell') {
-    // Seller view shows YOUR listings — needs a logged-in member
+  if (m === 'mine') {
+    // "मेरी पोस्ट" shows YOUR listings and lets you edit them — needs a member
     if (!(await requireMember())) return;
   }
   mode = m;
-  document.getElementById('mode-sell').classList.toggle('active', m === 'sell');
-  document.getElementById('mode-buy').classList.toggle('active', m === 'buy');
+  document.getElementById('mode-all').classList.toggle('active', m === 'all');
+  document.getElementById('mode-mine').classList.toggle('active', m === 'mine');
   loadFeed(true);
 }
 function onSearchInput() {
@@ -2034,7 +2102,7 @@ async function loadFeed(reset) {
     // even though _sync_bazar_post had created it and the card renderer
     // below has always handled p.post_type === 'buy'.
     const params = new URLSearchParams({ page: feedPage + 1, page_size: 10 });
-    if (mode === 'sell' && bazarMe) params.set('user', bazarMe.user_id);  // my listings
+    if (mode === 'mine' && bazarMe) params.set('user', bazarMe.user_id);  // my listings
     if (activeCrop) params.set('crop', activeCrop);
     if (q) params.set('q', q);
     const j = await api(`/bazar/feed?${params}`);
@@ -2056,7 +2124,7 @@ async function loadFeed(reset) {
 
 function updateCountLabel() {
   const tr = T();
-  const prefix = mode === 'sell' ? tr.my_listings : tr.near_you;
+  const prefix = mode === 'mine' ? tr.my_listings : tr.near_you;
   document.getElementById('bz-count-label').textContent =
     `${prefix} — ${feedTotal} ${tr.listings}`;
 }
@@ -2149,7 +2217,7 @@ function demoNoticeHtml() {
 }
 function emptyStateHtml() {
   const tr = T();
-  const mine = mode === 'sell';
+  const mine = mode === 'mine';
   return `<div class="bz-empty-state">
     <div class="em">${mine ? '🌾' : '🔍'}</div>
     <div class="t">${escapeHtml(mine ? tr.empty_mine_title : tr.empty_title)}</div>
@@ -2165,7 +2233,7 @@ const DEMO_MIN_REAL = 3;
 function renderFeed() {
   const feed = document.getElementById('bz-feed');
   const q = (document.getElementById('bz-search').value || '').trim();
-  const browsing = mode !== 'sell' && !activeCrop && !q;   // default view, unfiltered
+  const browsing = mode !== 'mine' && !activeCrop && !q;   // default view, unfiltered
   const wantDemos = browsing && !feedBusy && !feedHasMore && feedTotal < DEMO_MIN_REAL;
   const demoHtml = wantDemos
     ? demoNoticeHtml() + DEMO_POSTS.map(p => postCardHtml(p)).join('')
@@ -2229,6 +2297,13 @@ function postCardHtml(p) {
     ? `<button class="bz-offer-btn" onclick="${nav(`openOffer(${p.id})`)}">${escapeHtml(tr.btn_send_offer)}</button>`
     : '';
 
+  // Your own listing gets an edit button in the slot the offer button fills on
+  // everyone else's — the ⋯ menu keeps sold/delete. Not on sample cards, which
+  // have no row behind them to edit.
+  const editBtn = (p.is_mine && !demo)
+    ? `<button class="bz-act-btn edit" onclick="openEditPost(${p.id})">✏️ ${escapeHtml(tr.edit)}</button>`
+    : '';
+
   // Blue "Follow" beside the name — hidden on your own posts; sample cards
   // keep it (tap → post-your-crop nudge) so the affordance is visible.
   const showFollow = !p.is_mine && !(bazarMe && a.user_id === bazarMe.user_id);
@@ -2262,11 +2337,12 @@ function postCardHtml(p) {
         ${likeBtnInner(p.liked_by_me, p.likes_count)}
       </button>
       <button class="bz-act-btn" onclick="${nav(`openComments(${p.id})`)}" aria-label="Comments">
-        ${IC_COMMENT}<span id="cmt-count-${p.id}">${p.comments_count || 0}</span> ${escapeHtml(tr.comment)}
+        ${IC_COMMENT}<span id="cmt-count-${p.id}">${p.comments_count > 0 ? p.comments_count : ''}</span> ${escapeHtml(tr.comment)}
       </button>
       <button class="bz-act-btn" onclick="${nav(`sharePost(${p.id})`)}" id="share-btn-${p.id}" aria-label="Share">
         ${IC_SHARE}${escapeHtml(tr.share)}
       </button>
+      ${editBtn}
       ${offerBtn}
     </div>
   </article>`;
@@ -2612,7 +2688,7 @@ async function sendComment() {
     if (j.success) {
       input.value = '';
       const p = feedPosts.find(x => x.id === commentsPostId);
-      if (p) { p.comments_count = j.data.comments_count; const c = document.getElementById(`cmt-count-${p.id}`); if (c) c.textContent = p.comments_count; }
+      if (p) { p.comments_count = j.data.comments_count; const c = document.getElementById(`cmt-count-${p.id}`); if (c) c.textContent = p.comments_count > 0 ? p.comments_count : ''; }
       openComments(commentsPostId);   // reload thread
     }
   } catch {}
@@ -2641,7 +2717,7 @@ async function sendOffer() {
     });
     if (j.success) {
       const p = feedPosts.find(x => x.id === offerPostId);
-      if (p) { p.comments_count = j.data.comments_count; const c = document.getElementById(`cmt-count-${p.id}`); if (c) c.textContent = p.comments_count; }
+      if (p) { p.comments_count = j.data.comments_count; const c = document.getElementById(`cmt-count-${p.id}`); if (c) c.textContent = p.comments_count > 0 ? p.comments_count : ''; }
       closeOffer();
       toast(j.message || '💰 Offer भेज दिया!');
     }
@@ -3148,10 +3224,82 @@ function _lbWheel(e) {
 // ── Composer (always creates a SELL listing) ────────────────
 let pickedMedia = null;
 
+// What the composer is currently doing. `editingPostId` null = writing a new
+// listing; a number = editing that one, which changes the endpoint (PATCH, JSON)
+// as well as the title and button. Media is create-only either way — the edit
+// endpoint refuses it, because another upload would land on Render's ephemeral
+// disk that already loses every photo on redeploy.
+let composerType  = 'sell';
+let editingPostId = null;
+
+function setComposerType(t) {
+  composerType = (t === 'buy') ? 'buy' : 'sell';
+  document.getElementById('cmp-type-sell').classList.toggle('active', composerType === 'sell');
+  document.getElementById('cmp-type-buy').classList.toggle('active', composerType === 'buy');
+}
+
+/** Put the composer back to "new post" before every open, so a cancelled edit
+ *  never leaks its values — or its post id — into the next listing. */
+function resetComposer() {
+  const tr = T();
+  editingPostId = null;
+  setComposerType('sell');
+  document.getElementById('cmp-crop').selectedIndex = 0;
+  document.getElementById('cmp-crop-other').value = '';
+  document.getElementById('cmp-crop-other').style.display = 'none';
+  document.getElementById('cmp-text').value = '';
+  document.getElementById('cmp-price').value = '';
+  document.getElementById('cmp-old-price').value = '';
+  document.getElementById('cmp-qty').value = '';
+  document.getElementById('cmp-unit').selectedIndex = 0;
+  clearMedia();
+  document.getElementById('cmp-title').textContent = tr.composer_title;
+  document.getElementById('cmp-submit').textContent = tr.btn_post;
+  document.getElementById('cmp-media-row').style.display = '';
+  document.getElementById('cmp-edit-note').style.display = 'none';
+}
+
 async function openComposer() {
   if (!(await requireMember({ phone: true }))) return;   // sellers must be reachable
+  resetComposer();
   document.getElementById('composer-overlay').classList.add('open');
 }
+
+/** Open the same modal over an existing listing of yours. */
+async function openEditPost(postId) {
+  if (!(await requireMember({ phone: true }))) return;
+  const p = feedPosts.find(x => x.id === postId);
+  if (!p) return;
+  const tr = T();
+  resetComposer();
+  editingPostId = postId;
+  setComposerType(p.post_type === 'buy' ? 'buy' : 'sell');
+
+  // The crop may be one the picker does not list (it was typed into "अन्य"),
+  // so fall back to the free-text box rather than silently changing his crop.
+  const sel = document.getElementById('cmp-crop');
+  const known = Array.from(sel.options).some(o => o.value === p.crop);
+  if (p.crop && known) {
+    sel.value = p.crop;
+  } else if (p.crop) {
+    sel.value = '__other__';
+    const other = document.getElementById('cmp-crop-other');
+    other.style.display = 'block';
+    other.value = p.crop;
+  }
+  document.getElementById('cmp-text').value      = p.text      || '';
+  document.getElementById('cmp-price').value     = p.price     != null ? p.price : '';
+  document.getElementById('cmp-old-price').value = p.old_price != null ? p.old_price : '';
+  document.getElementById('cmp-qty').value       = p.quantity  != null ? p.quantity : '';
+  if (p.unit) document.getElementById('cmp-unit').value = p.unit;
+
+  document.getElementById('cmp-title').textContent  = tr.edit_title;
+  document.getElementById('cmp-submit').textContent = tr.btn_save;
+  document.getElementById('cmp-media-row').style.display = 'none';
+  document.getElementById('cmp-edit-note').style.display = '';
+  document.getElementById('composer-overlay').classList.add('open');
+}
+
 function closeComposer() { document.getElementById('composer-overlay').classList.remove('open'); }
 
 function fillCropSelect() {
@@ -3229,27 +3377,46 @@ function clearMedia() {
   prev.innerHTML = ''; prev.style.display = 'none';
 }
 
+/** Shared by both paths — the composer is one form whether it is writing a
+ *  new listing or changing an existing one. Numbers come back as null, not '',
+ *  so an emptied price box CLEARS the price on an edit instead of being
+ *  silently ignored (see EditPostRequest.model_fields_set in bazar.py). */
+function readComposer() {
+  const sel = document.getElementById('cmp-crop');
+  const num = (id) => {
+    const v = document.getElementById(id).value.trim();
+    return v === '' ? null : Number(v);
+  };
+  return {
+    post_type: composerType,
+    crop: sel.value === '__other__'
+      ? document.getElementById('cmp-crop-other').value.trim()
+      : sel.value,
+    text:      document.getElementById('cmp-text').value.trim(),
+    price:     num('cmp-price'),
+    old_price: num('cmp-old-price'),
+    quantity:  num('cmp-qty'),
+    unit:      document.getElementById('cmp-unit').value,
+  };
+}
+
 async function submitPost() {
   if (!(await requireMember())) return;
   const btn = document.getElementById('cmp-submit');
-  const sel = document.getElementById('cmp-crop');
-  const crop = sel.value === '__other__'
-    ? document.getElementById('cmp-crop-other').value.trim()
-    : sel.value;
-  const text = document.getElementById('cmp-text').value.trim();
-  if (!text && !pickedMedia) { toast('⚠️ कुछ लिखें या photo/video जोड़ें'); return; }
+  const f   = readComposer();
+
+  if (editingPostId) { await saveEdit(btn, f); return; }
+
+  if (!f.text && !pickedMedia) { toast('⚠️ कुछ लिखें या photo/video जोड़ें'); return; }
 
   const fd = new FormData();
-  fd.append('post_type', 'sell');
-  if (crop) fd.append('crop', crop);
-  if (text) fd.append('text', text);
-  const price = document.getElementById('cmp-price').value;
-  const oldPrice = document.getElementById('cmp-old-price').value;
-  const qty = document.getElementById('cmp-qty').value;
-  if (price) fd.append('price', price);
-  if (oldPrice) fd.append('old_price', oldPrice);
-  if (qty) fd.append('quantity', qty);
-  fd.append('unit', document.getElementById('cmp-unit').value);
+  fd.append('post_type', f.post_type);
+  if (f.crop) fd.append('crop', f.crop);
+  if (f.text) fd.append('text', f.text);
+  if (f.price     != null) fd.append('price', f.price);
+  if (f.old_price != null) fd.append('old_price', f.old_price);
+  if (f.quantity  != null) fd.append('quantity', f.quantity);
+  fd.append('unit', f.unit);
   if (pickedMedia) fd.append('media', pickedMedia);
 
   btn.disabled = true;
@@ -3262,21 +3429,64 @@ async function submitPost() {
     const j = await r.json();
     if (r.ok && j.success) {
       closeComposer();
-      // reset form
-      document.getElementById('cmp-text').value = '';
-      document.getElementById('cmp-price').value = '';
-      document.getElementById('cmp-old-price').value = '';
-      document.getElementById('cmp-qty').value = '';
-      clearMedia();
+      resetComposer();
       toast(j.message || '🎉 पोस्ट हो गया!');
-      // new listing belongs in both views (buy = all listings, sell = mine)
+      // a new listing belongs in both views (all listings, and mine)
       feedPosts.unshift(j.data); feedTotal++; renderFeed(); updateCountLabel();
     } else if (r.status === 403 && (j.detail === 'PROFILE_REQUIRED')) {
       showPrompt('profile');
     } else if (r.status === 401) {
       showPrompt('login');
     } else {
+      // 429 is the daily listing cap — the server's Hindi message says how many
+      // and when, so it is shown as-is rather than replaced with a generic one.
       toast('⚠️ ' + (j.detail || j.message || 'Post नहीं हो पाया'));
+    }
+  } catch {
+    toast('⚠️ Network error — दोबारा try करें');
+  }
+  btn.disabled = false;
+}
+
+/** PATCH an existing listing. Every editable field is sent every time: the
+ *  backend compares against the stored row and refuses to spend one of the
+ *  day's three edits when nothing actually differs. */
+async function saveEdit(btn, f) {
+  const tr = T();
+  const p  = feedPosts.find(x => x.id === editingPostId);
+  if (!f.text && !(p && p.media_url)) {
+    toast('⚠️ ' + tr.edit_media_note); return;
+  }
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API_BASE}/bazar/posts/${editingPostId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(f),
+    });
+    const j = await r.json();
+    if (r.ok && j.success) {
+      closeComposer();
+      if (j.data && j.data.post) {
+        const i = feedPosts.findIndex(x => x.id === j.data.post.id);
+        // is_mine/liked_by_me come back from a single-post serialise that has
+        // no viewer context, so keep what the feed already knew about them.
+        if (i >= 0) feedPosts[i] = { ...feedPosts[i], ...j.data.post,
+                                     is_mine: true,
+                                     liked_by_me: feedPosts[i].liked_by_me };
+        renderFeed();
+      }
+      const left = j.data && j.data.edits_left;
+      toast((j.message || tr.edit_saved) +
+            (typeof left === 'number' ? ` (${left} ${tr.edits_left})` : ''));
+      resetComposer();
+    } else if (r.status === 401) {
+      showPrompt('login');
+    } else {
+      toast('⚠️ ' + (j.detail || j.message || 'Update नहीं हो पाया'));
     }
   } catch {
     toast('⚠️ Network error — दोबारा try करें');
@@ -3289,13 +3499,16 @@ async function submitPost() {
   setLang(currentLang);
   fillCropSelect();
   renderChips();
-  // Deep link ?mode=sell — the "बेचना है" door on every /bhav price page lands
-  // here rather than opening a second composer over there. setMode owns the
-  // login/profile gate and loads the feed itself; when it bails (guest, or no
-  // profile yet) `mode` is still 'buy', and the buyer feed is loaded instead so
-  // nobody is left staring at a blank page behind the login prompt.
-  if (urlParams.get('mode') === 'sell') {
-    setMode('sell').then(() => { if (mode !== 'sell') loadFeed(true); });
+  // Deep link — the "बेचना है" door on every /bhav price page lands here rather
+  // than opening a second composer over there. It sends ?mode=sell and that URL
+  // is baked into cached /bhav HTML we do not control the lifetime of, so the
+  // old spelling has to keep working forever; both it and ?mode=mine open your
+  // own posts. setMode owns the login/profile gate and loads the feed itself;
+  // when it bails (guest, or no profile yet) `mode` is still 'all', so the open
+  // feed loads instead of leaving a blank page behind the login prompt.
+  const wanted = urlParams.get('mode');
+  if (wanted === 'mine' || wanted === 'sell') {
+    setMode('mine').then(() => { if (mode !== 'mine') loadFeed(true); });
   } else {
     loadFeed(true);
   }

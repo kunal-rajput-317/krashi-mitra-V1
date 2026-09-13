@@ -27,7 +27,7 @@
 
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -61,6 +61,25 @@ MAX_IMAGE_BYTES = 50  * 1024 * 1024   # 50 MB
 # Video duration (max 5 min) is enforced client-side in krashi_bajar.html —
 # the server can't read duration without ffprobe, so it caps raw size instead.
 MAX_VIDEO_BYTES = 120 * 1024 * 1024   # 120 MB (~5 min at phone-camera bitrate)
+
+
+# ── Rate limits ──────────────────────────────────────────────
+
+# Every one of these actions costs something real on a free tier: a post can
+# carry a 50 MB photo, an edit is a Neon write plus a re-render of a page whose
+# bandwidth already suspended this site once (17 Aug 2026). They are also a
+# quality floor — a listing whose price moves five times a day is not a price a
+# buyer can act on, and a seller who renames himself weekly cannot be recognised
+# by the buyer who spoke to him yesterday.
+#
+# Rolling windows, not calendar days: a calendar reset lets the limit be doubled
+# by acting at 23:59 and again at 00:01.
+MAX_POSTS_PER_DAY      = 10   # new listings per account per 24h
+MAX_EDITS_PER_POST_DAY = 3    # edits to ONE listing per 24h
+# The third limit of this set — how often the display name may change — belongs
+# to the same policy but is enforced where the name is written: see
+# NAME_CHANGE_COOLDOWN_DAYS in backend/routes/profile.py. Declaring it in both
+# files would mean two numbers to keep equal and one day they would not be.
 
 
 # ── Auth helpers ─────────────────────────────────────────────
@@ -232,6 +251,7 @@ def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool,
         "likes_count":    p.likes_count or 0,
         "comments_count": p.comments_count or 0,
         "created_at":     p.created_at.isoformat() if p.created_at else None,
+        "updated_at":     p.updated_at.isoformat() if p.updated_at else None,
         "author":         author,
         "liked_by_me":    liked,
         "is_mine":        is_mine,
@@ -477,6 +497,20 @@ async def create_post(
     if not (text and text.strip()) and not media:
         raise HTTPException(400, "कुछ लिखें या photo/video जोड़ें।")
 
+    # Checked BEFORE the upload, so a capped account never spends our disk and
+    # bandwidth on a file we are about to refuse.
+    since = datetime.utcnow() - timedelta(days=1)
+    todays = (db.query(func.count(BazarPost.id))
+                .filter(BazarPost.user_id == user_id,
+                        BazarPost.created_at >= since)
+                .scalar() or 0)
+    if todays >= MAX_POSTS_PER_DAY:
+        raise HTTPException(
+            429,
+            f"एक दिन में {MAX_POSTS_PER_DAY} से ज़्यादा listing नहीं डाल सकते। "
+            "कल फिर कोशिश करें।",
+        )
+
     media_url, media_type = (None, None)
     if media and media.filename:
         media_url, media_type = await _save_media(media)
@@ -540,6 +574,124 @@ def delete_post(
     db.delete(post)
     db.commit()
     return {"success": True, "message": "Post delete हो गया।", "data": {}}
+
+
+# ── PATCH /bazar/posts/{id} — edit a listing ─────────────────
+
+class EditPostRequest(BaseModel):
+    """Every field optional, and "absent" is not "null".
+
+    A farmer fixing a mistyped price sends only `price`; nothing else on the
+    listing should move. Pydantic's `model_fields_set` is what separates a field
+    the client actually sent from one it left out, so sending `"old_price": null`
+    clears the struck-through price while omitting it leaves it alone. Reading
+    `None` as "unchanged" would have made clearing a wrong number impossible.
+    """
+    post_type: Optional[str]   = None
+    crop:      Optional[str]   = None
+    text:      Optional[str]   = None
+    price:     Optional[float] = None
+    old_price: Optional[float] = None
+    quantity:  Optional[float] = None
+    unit:      Optional[str]   = None
+
+
+@router.patch("/posts/{post_id}")
+def edit_post(
+    post_id:      int,
+    body:         EditPostRequest,
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    """Edit your own listing — text and numbers only, never the media.
+
+    Media is deliberately out of scope: an upload here would write another file
+    to Render's ephemeral disk, which already loses every photo on redeploy.
+    Replacing a photo waits for object storage; until then the honest options
+    are keep it or delete the post.
+    """
+    post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
+    if not post:
+        raise HTTPException(404, "Post नहीं मिला।")
+    if post.user_id != current_user["user_id"]:
+        raise HTTPException(403, "सिर्फ अपना post edit कर सकते हैं।")
+
+    sent = body.model_fields_set
+    if not sent:
+        raise HTTPException(400, "कुछ बदला नहीं।")
+
+    # ── Validate before touching the row, so a rejected edit changes nothing
+    # and does not burn one of the day's three.
+    if "post_type" in sent and body.post_type not in ("sell", "buy"):
+        raise HTTPException(400, "Post type sell या buy होना चाहिए।")
+    for field in ("price", "old_price", "quantity"):
+        v = getattr(body, field)
+        if field in sent and v is not None and v < 0:
+            raise HTTPException(400, "भाव या मात्रा ऋणात्मक नहीं हो सकती।")
+    if "unit" in sent and not (body.unit or "").strip():
+        raise HTTPException(400, "इकाई खाली नहीं रह सकती।")
+    # A post is allowed to be text-only or media-only, never neither — the same
+    # rule create_post enforces, which an edit could otherwise walk around by
+    # blanking the text of a post whose photo never existed.
+    if "text" in sent and not (body.text or "").strip() and not post.media_url:
+        raise HTTPException(400, "Photo नहीं है, तो विवरण खाली नहीं कर सकते।")
+
+    # ── Rate limit, on a rolling 24h window stamped at the window's first edit.
+    now = datetime.utcnow()
+    window = post.edit_window_start
+    used = post.edit_count or 0
+    if window is None or (now - window) >= timedelta(days=1):
+        window, used = now, 0          # window expired → this edit opens a new one
+    elif used >= MAX_EDITS_PER_POST_DAY:
+        mins_left = int((window + timedelta(days=1) - now).total_seconds() // 60) + 1
+        hrs, mins = divmod(mins_left, 60)
+        wait = f"{hrs} घंटे {mins} मिनट" if hrs else f"{mins} मिनट"
+        raise HTTPException(
+            429,
+            f"एक दिन में {MAX_EDITS_PER_POST_DAY} बार ही edit कर सकते हैं। "
+            f"{wait} बाद फिर कोशिश करें।",
+        )
+
+    # ── Apply only what was sent.
+    changed = False
+    if "post_type" in sent and post.post_type != body.post_type:
+        post.post_type = body.post_type; changed = True
+    if "crop" in sent:
+        v = (body.crop or "").strip() or None
+        if post.crop != v: post.crop = v; changed = True
+    if "text" in sent:
+        v = (body.text or "").strip() or None
+        if post.text != v: post.text = v; changed = True
+    if "unit" in sent:
+        v = (body.unit or "").strip()
+        if post.unit != v: post.unit = v; changed = True
+    for field in ("price", "old_price", "quantity"):
+        if field in sent:
+            v = getattr(body, field)
+            if getattr(post, field) != v:
+                setattr(post, field, v); changed = True
+
+    # An edit that changes nothing is not an edit: it must not spend one of the
+    # three, or a double-tapped Save would.
+    if not changed:
+        return {"success": True, "message": "कुछ बदला नहीं।",
+                "data": {"edits_left": max(0, MAX_EDITS_PER_POST_DAY - used)}}
+
+    post.edit_window_start = window
+    post.edit_count = used + 1
+    post.updated_at = now
+    db.commit()
+    db.refresh(post)
+
+    author = _authors_for([post], db).get(post.user_id, {})
+    return {
+        "success": True,
+        "message": "✓ Listing update हो गई।",
+        "data": {
+            "post": _post_to_dict(post, author, liked=False, is_mine=True),
+            "edits_left": max(0, MAX_EDITS_PER_POST_DAY - post.edit_count),
+        },
+    }
 
 
 # ── PATCH /bazar/posts/{id}/status ───────────────────────────

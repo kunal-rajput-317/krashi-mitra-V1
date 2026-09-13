@@ -13,7 +13,7 @@ from PIL import Image, ImageOps
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from backend.database.db import UserProfile, User, BazarPost, BazarFollow, get_db, acct
@@ -23,6 +23,11 @@ from backend.utils.security import assert_media_matches
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/profile", tags=["profile"])
+
+# How often a farmer may change his display name. Kept here rather than in
+# bazar.py because this is the endpoint that enforces it, but the reason is a
+# Krashi Bazar one — see the rename-cooldown block in update_profile().
+NAME_CHANGE_COOLDOWN_DAYS = 7
 
 # ── Profile Pic Upload Storage ───────────────────────────────
 PROFILE_UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads" / "avatar"
@@ -420,6 +425,27 @@ def update_profile(
             "message": "Profile नहीं मिला। पहले POST /profile से profile बनाएं।",
             "data":    {}
         }
+
+    # ── Rename cooldown ─────────────────────────────────────────
+    # The display name is stamped on every Krashi Bazar card this account has
+    # ever posted and on the offers sent against them, so a name that changes
+    # weekly leaves a buyer unable to recognise the seller he spoke to. Checked
+    # before anything is applied, so a refused rename leaves the rest of the
+    # submitted profile untouched rather than half-saved.
+    #
+    # Only a REAL change counts: the profile form posts every field back on
+    # every save, so re-sending the same name must not start a cooldown.
+    new_name = (body.full_name or "").strip() if body.full_name is not None else None
+    if new_name and new_name != (profile.name or "").strip():
+        last = profile.name_changed_at
+        if last and (datetime.utcnow() - last) < timedelta(days=NAME_CHANGE_COOLDOWN_DAYS):
+            days_left = NAME_CHANGE_COOLDOWN_DAYS - (datetime.utcnow() - last).days
+            raise HTTPException(
+                429,
+                f"नाम {NAME_CHANGE_COOLDOWN_DAYS} दिन में एक बार ही बदल सकते हैं। "
+                f"{max(1, days_left)} दिन बाद फिर कोशिश करें।",
+            )
+        profile.name_changed_at = datetime.utcnow()
 
     # Apply only fields the caller actually sent (not None)
     str_map = {
