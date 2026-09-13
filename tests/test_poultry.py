@@ -232,10 +232,17 @@ def test_page_renders(client, stored, path):
     assert "text/html" in r.headers["content-type"]
 
 
-@pytest.mark.parametrize("path", PAGES[1:])
+@pytest.mark.parametrize("path", PAGES)
 def test_every_page_that_prints_a_rate_carries_neccs_clarification(client, stored, path):
     """THE LICENCE TEST. NECC allows republication on the condition that this
-    text goes with the numbers. Dropping it is not a cosmetic regression."""
+    text goes with the numbers. Dropping it is not a cosmetic regression.
+
+    Scoped to PAGES[1:] until 2026-09-14, on the reasoning that /pashupalan was
+    a shelf of guides rather than a rate page. It had stopped being one: the
+    hub grew a headline block printing "आज का औसत NECC अंडा रेट — ₹579 प्रति
+    100" and shipped it with no clarification anywhere on the page. The rule is
+    about the number, not about which tier prints it, so the parametrisation
+    now follows the rule instead of the original page list."""
     body = client.get(path).text
     assert poultry_necc.CLARIFICATION in body, path
     assert poultry_necc.CLARIFICATION_HI in body, path
@@ -568,3 +575,85 @@ def test_the_feed_grain_hubs_link_back():
     # before. (Asserted on the helper, not a rendered page: /bhav/{crop} needs
     # the mandi index, which this suite's throwaway SQLite DB has no rows for.)
     assert _poultry_cta("wheat") == ""
+
+
+# ── the table hands off, it does not answer for 34 cities ───
+
+def test_the_table_does_not_print_a_rate_it_should_be_handing_off(client, stored):
+    """/pashupalan/anda-rate is a tier page: it answers its own question and
+    then sends the farmer down, exactly the way /bhav's tier pages do.
+
+    It used to print all 34 absolutes, which made it the last page anyone
+    needed. In the 28 days to 2026-09-09 the table earned 1,793 impressions
+    and all 34 zone pages earned ZERO — a farmer who could read लखनऊ's rate
+    off row 21 had no reason to open the page carrying लखनऊ's 30-day trend,
+    last-year comparison and rank. Each row now carries the delta as the hook
+    and a way in, and nothing else. (/bhav's own `.dcard` goes further and
+    shows no number at all; the delta is here because the 2026-07-16 round on
+    /bhav settled that a bare word creates no curiosity.)
+    """
+    body = client.get("/pashupalan/anda-rate").text
+    rows = re.findall(r'<a class="egg-row".*?</a>', body, re.S)
+    assert len(rows) >= 20, len(rows)
+
+    z = poultry.zone(stored, "lucknow")
+    mine = [r for r in rows if f'/anda-rate/{z["slug"]}"' in r]
+    assert len(mine) == 1
+    row = mine[0]
+    # Neither unit of the absolute may appear inside the row…
+    assert f"₹{poultry.rupees(z['paise'])}" not in row
+    assert f"₹{poultry.per_hundred(z['paise'])}" not in row
+    assert "प्रति 100" not in row and "/अंडा" not in row
+    # …and the name is still there, so the layout is teased, not collapsed.
+    assert z["hi"] in row
+
+    # Every row, not just this one, offers the way in.
+    for r in rows:
+        assert "रेट देखें →" in r
+
+
+def test_the_tables_own_answer_stays_complete(client, stored):
+    """Hiding the per-city rate must not leave the page with no number on it —
+    a farmer who searched "आज का अंडा रेट" came here for one, and this is the
+    section's only URL that has ever earned an impression.
+
+    The page's OWN answer — today's average, the dearest zone, the cheapest —
+    is page content and stays, the same line /bhav draws around a district
+    average (see feedback: hide the value, not the layout).
+    """
+    body = client.get("/pashupalan/anda-rate").text
+    rows = (poultry.latest(stored, section="necc")
+            or poultry.latest(stored, section="prevailing"))
+    avg = round(sum(r["paise"] for r in rows) / len(rows))
+    assert f"₹{poultry.rupees(avg)}" in body
+    assert f"₹{poultry.per_hundred(avg)}" in body
+
+    # And the two stats that NAME a zone are doors into it, not dead labels.
+    for edge in (rows[0], rows[-1]):
+        assert re.search(
+            rf'<a href="[^"]*/anda-rate/{re.escape(edge["slug"])}">'
+            rf'<b>₹{re.escape(poultry.rupees(edge["paise"]))}</b>', body), edge["slug"]
+
+
+def test_the_peer_block_compares_against_the_zone_whose_page_it_is(client, stored):
+    """The block is headed "तुलना". It used to print each peer's own
+    day-over-day change under that heading, which compared nothing to
+    anything. The delta is now peer-minus-this-zone — /bhav's `_cmp_card`
+    shape, where the sub-label names the number being compared against.
+    """
+    me = poultry.zone(stored, "lucknow")
+    body = client.get("/pashupalan/anda-rate/lucknow").text
+    assert f"₹{poultry.rupees(me['paise'])} से तुलना" in body
+
+    rows = re.findall(r'<a class="egg-row" href="[^"]*/anda-rate/([a-z0-9-]+)".*?</a>',
+                      body, re.S)
+    assert rows, "the zone page lost its peer block"
+    assert "lucknow" not in rows, "a zone must not be its own peer"
+    for slug in rows:
+        row = re.search(rf'<a class="egg-row" href="[^"]*/anda-rate/{slug}".*?</a>',
+                        body, re.S).group(0)
+        diff = poultry.zone(stored, slug)["paise"] - me["paise"]
+        if diff:
+            assert f"₹{abs(diff) / 100:.2f} {'ज़्यादा' if diff > 0 else 'कम'}" in row, slug
+        else:
+            assert "बराबर" in row, slug

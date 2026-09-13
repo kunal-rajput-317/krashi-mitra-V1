@@ -1395,6 +1395,26 @@ function renderCropGrid(ok) {
     '</div>';
   });
   grid.innerHTML = html;
+  preselectFromUrl();
+}
+
+/* ?crop=wheat — the ecosystem strip (backend/services/ecosystem.py) links here
+   labelled "गेहूं का फसल कैलेंडर", so the page has to arrive with गेहूं already
+   chosen. A label that names a crop and a page that then asks which crop is a
+   promise broken on arrival.
+
+   Only ever a key the grid actually rendered, so a stale or hand-typed ?crop=
+   selects nothing rather than half-selecting a crop that does not exist. The
+   canonical stays /meri_fasal, so this adds no second URL to the index. */
+function preselectFromUrl() {
+  try {
+    var want = new URLSearchParams(location.search).get("crop");
+    if (!want || selectedCropKey) return;
+    var tile = document.querySelector('.crop-tile[data-key="' + CSS.escape(want) + '"]');
+    if (!tile) return;
+    selectCrop(want);
+    tile.scrollIntoView({ block: "center" });
+  } catch (e) {}
 }
 
 function selectCrop(key) {

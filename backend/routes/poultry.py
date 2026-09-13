@@ -24,6 +24,17 @@
 # farmer types "लखनऊ अंडा रेट"; a district page underneath it would earn
 # nothing and dilute the zone above it.
 #
+# THE TABLE HANDS OFF; IT DOES NOT ANSWER FOR ALL 34 CITIES. /pashupalan/
+# anda-rate prints its OWN answer in full — today's average, the dearest zone,
+# the cheapest — and then lists the 34 zones with a delta and "रेट देखें →"
+# and no absolute rate. That is /bhav's shape, not a new one: a tier page
+# there answers its own question and hands off to the tier below as .dcards
+# carrying a name and "भाव देखें →". The table used to print every absolute,
+# and the result is in the numbers — 1,793 impressions to the table in the 28
+# days to 2026-09-09 and ZERO to all 34 zone pages, because a farmer who could
+# read his city's rate off row 21 had no reason to open the page with that
+# city's trend, last-year comparison and rank on it. Changed 2026-09-13.
+#
 # WHY THIS SECTION EXISTS AT ALL. The egg rate changes every single day and a
 # poultry farmer checks it every single morning — which is the one thing the
 # crop side never had. /bhav answers a question a farmer asks twice a season;
@@ -161,9 +172,14 @@ color:inherit;border-top:1px solid var(--border)}
 .egg-n{display:block;font-size:14px;font-weight:700;color:var(--text-dark);line-height:1.25}
 .egg-s{display:block;font-size:11px;color:var(--text-soft);font-weight:600;margin-top:1px}
 .egg-p{text-align:right;flex-shrink:0}
-.egg-r{display:block;font-size:16px;font-weight:700;color:var(--green-dark);line-height:1.2;white-space:nowrap}
-.egg-r small{font-size:10.5px;font-weight:600;color:var(--text-soft);margin-left:2px}
-.egg-h{display:block;font-size:10.5px;color:var(--text-soft);font-weight:600;margin-top:1px;white-space:nowrap}
+/* The row's right-hand side carries a hook and a way in, never the rate — see
+   _rows_html. .egg-d has to restate its own size because the shell's global
+   .up/.dn set 11.5px, and a delta standing in for the number reads as a
+   footnote at that size. */
+.egg-d{display:block;font-size:13.5px;font-weight:700;color:var(--text-soft);line-height:1.2;white-space:nowrap}
+.egg-d.up{color:#1b7a3d;font-size:13.5px}
+.egg-d.dn{color:#c0392b;font-size:13.5px}
+.egg-go{display:block;font-size:11px;font-weight:700;color:var(--green-mid);margin-top:2px;white-space:nowrap}
 /* The "no city matched" line the search box reveals. Hidden until it has
    something to say, so the page never ships an empty state it does not need. */
 .egg-none{display:none;padding:16px 14px;font-size:13px;color:var(--text-soft);
@@ -171,8 +187,13 @@ line-height:1.65;background:var(--white);border:1px solid var(--border);
 border-radius:var(--radius-md);margin-top:12px}
 
 .egg-stat{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.egg-stat div{flex:1;min-width:132px;background:var(--white);border:1px solid var(--border);
+.egg-stat div,.egg-stat a{flex:1;min-width:132px;background:var(--white);border:1px solid var(--border);
 border-radius:var(--radius-sm);padding:10px 13px;box-shadow:var(--shadow-sm)}
+/* The dearest and the cheapest are the two stats that NAME a zone, so they are
+   the door to that zone rather than a dead label. */
+.egg-stat a{display:block;text-decoration:none;color:inherit}
+.egg-stat a:hover{background:var(--green-pale);border-color:var(--green-mid)}
+.egg-stat a span::after{content:" →";color:var(--green-mid);font-weight:700}
 .egg-stat b{display:block;font-size:17px;font-weight:700;color:var(--green-dark);line-height:1.2}
 .egg-stat span{font-size:11px;color:var(--text-soft);font-weight:600}
 
@@ -249,11 +270,40 @@ def _hi_date(d: date) -> str:
     return f"{d.day} {_HI_MONTHS[d.month - 1]} {d.year}"
 
 
-def _delta_html(change) -> str:
-    if not change:
+def _hook_html(r: dict, compare_to: dict | None) -> str:
+    """The curiosity hook on a zone row, standing where the rate used to.
+
+    /bhav settled this shape over two over-corrections on 2026-07-16: a bare
+    "ज़्यादा" creates no curiosity, and collapsing the row to a name-only link
+    reads as thin content. So the row keeps its full layout and shows a
+    CONCRETE comparison — the delta — while the absolute stays on the page it
+    belongs to.
+
+    Two kinds of delta, because the two lists ask different questions. On the
+    table it is "कल से", the only comparison a list of 34 unrelated cities can
+    honestly make. In the peers block at the foot of a zone page it is against
+    THAT zone, which is what a heading reading "तुलना" promises — the block
+    used to print each peer's own day-over-day change underneath it, which
+    compared nothing to anything.
+    """
+    if compare_to is not None:
+        diff = r["paise"] - compare_to["paise"]
+        if not diff:
+            return '<span class="egg-d">बराबर</span>'
+        cls, arrow, word = (("up", "▲", "ज़्यादा") if diff > 0
+                            else ("dn", "▼", "कम"))
+        return (f'<span class="egg-d {cls}">{arrow} ₹{abs(diff) / 100:.2f} '
+                f'{word}</span>')
+    # None and 0 are different facts and the section's rule is that a day we
+    # do not have never gets invented: None means there is no day before this
+    # one to compare against, 0 means the rate genuinely held.
+    if r["change"] is None:
         return ""
-    cls, sign = ("up", "▲") if change > 0 else ("dn", "▼")
-    return (f'<span class="{cls}">{sign} ₹{abs(change) / 100:.2f}</span>')
+    if not r["change"]:
+        return '<span class="egg-d">कल जितना ही</span>'
+    cls, arrow = ("up", "▲") if r["change"] > 0 else ("dn", "▼")
+    return (f'<span class="egg-d {cls}">{arrow} ₹{abs(r["change"]) / 100:.2f} '
+            f'कल से</span>')
 
 
 def _section_nav(rows: list[dict]) -> str:
@@ -352,7 +402,25 @@ def _trend_chart(series: list[dict]) -> str:
 </svg>"""
 
 
-def _rows_html(rows: list[dict]) -> str:
+def _rows_html(rows: list[dict], compare_to: dict | None = None) -> str:
+    """The zone list — this section's tier-below grid, and the only way into a
+    zone page other than the blue bar.
+
+    IT DOES NOT PRINT THE RATE, and that is the point of it. This is /bhav's
+    settled pattern rather than a new idea: a tier page there answers its own
+    question in full (the crop's average, the dearest mandi, the cheapest) and
+    then hands off to the tier below as `.dcard`s carrying a name, "भाव देखें
+    →" and no number at all.
+
+    This table used to print all 34 absolutes, which made it the last page of
+    the section. In the 28 days to 2026-09-09 it earned 1,793 impressions and
+    every one of the 34 zone pages earned ZERO — and a farmer who could read
+    लखनऊ's rate off row 21 had no reason to open the page carrying लखनऊ's
+    30-day trend, its last-year comparison and its rank. The hub's own answer
+    (today's average, the dearest zone, the cheapest) stays complete above
+    this list: that is page content, the same line /bhav draws around a
+    district average.
+    """
     out = []
     for r in rows:
         spark = _sparkline([str(p) for p in r["spark"]]) if len(r["spark"]) > 1 else ""
@@ -366,10 +434,8 @@ def _rows_html(rows: list[dict]) -> str:
             f'<span class="egg-z"><span class="egg-n">{escape(r["hi"])}</span>'
             f'<span class="egg-s">{escape(where)}</span></span>'
             f'{spark}'
-            f'<span class="egg-p"><span class="egg-r">₹{poultry.rupees(r["paise"])}'
-            f'<small>/अंडा</small></span>'
-            f'<span class="egg-h">₹{poultry.per_hundred(r["paise"])} प्रति 100 '
-            f'{_delta_html(r["change"])}</span></span></a>')
+            f'<span class="egg-p">{_hook_html(r, compare_to)}'
+            f'<span class="egg-go">रेट देखें →</span></span></a>')
     return f'<div class="egg-list">{"".join(out)}</div>'
 
 
@@ -505,6 +571,13 @@ def farm_hub(db: Session = Depends(get_db)):
     # zone the table actually shows — promising 24 and landing on 34 is a
     # small lie the farmer notices immediately.
     total = len(all_rows)
+    # `live` PRINTS A NECC NUMBER, WHICH MAKES THIS A PAGE UNDER THE LICENCE.
+    # The section hub was written as a shelf of guides and the clarification
+    # test was scoped to PAGES[1:] accordingly — then this block was added and
+    # the hub started publishing "आज का औसत NECC अंडा रेट — ₹579 प्रति 100"
+    # with nothing beside it. NECC permits republication only if its
+    # clarification travels with the numbers, so the block below is emitted
+    # exactly when this one is, and the test now covers all three pages.
     live = ""
     if rows and day:
         avg = round(sum(r["paise"] for r in rows) / len(rows))
@@ -535,6 +608,7 @@ def farm_hub(db: Session = Depends(get_db)):
 अंडे का ही रोज़ का राष्ट्रीय रेट प्रकाशित होता है। दूध, बकरी और मछली के दाम इलाके
 और सौदे पर तय होते हैं — उनके लिए यहाँ गाइड हैं, झूठा "आज का रेट" नहीं।</p>
 {_lead_gen_html()}
+{_clarification() if live else ""}
 """
     crumbs = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", SECTION)])
     return _doc(
@@ -586,10 +660,10 @@ def poultry_hub(db: Session = Depends(get_db)):
     stats = (
         '<div class="egg-stat">'
         f'<div><b>₹{poultry.rupees(avg)}</b><span>औसत रेट प्रति अंडा</span></div>'
-        f'<div><b>₹{poultry.rupees(high["paise"])}</b>'
-        f'<span>सबसे ऊँचा — {escape(high["hi"])}</span></div>'
-        f'<div><b>₹{poultry.rupees(low["paise"])}</b>'
-        f'<span>सबसे कम — {escape(low["hi"])}</span></div>'
+        f'<a href="{BASE}/{high["slug"]}"><b>₹{poultry.rupees(high["paise"])}</b>'
+        f'<span>सबसे ऊँचा — {escape(high["hi"])}</span></a>'
+        f'<a href="{BASE}/{low["slug"]}"><b>₹{poultry.rupees(low["paise"])}</b>'
+        f'<span>सबसे कम — {escape(low["hi"])}</span></a>'
         f'<div><b>{len(all_rows)}</b><span>शहर / ज़ोन</span></div>'
         '</div>')
 
@@ -638,8 +712,8 @@ def poultry_hub(db: Session = Depends(get_db)):
  f'{"▲" if avg_change > 0 else "▼"} ₹{abs(avg_change) / 100:.2f} कल से</span>'
  if avg_change else ''}</div>
 <p class="answer-lead">यह {len(rows)} NECC ज़ोन का औसत है — ₹{poultry.per_hundred(avg)}
-प्रति 100 अंडे। नीचे हर शहर का अपना रेट है; अपने शहर पर टैप करें तो पिछले महीने का
-रुझान भी दिखेगा।</p>
+प्रति 100 अंडे। नीचे अपना शहर चुनें — वहाँ आज का पूरा रेट, पिछले 30 दिन का रुझान और
+पिछले साल से तुलना मिलेगी।</p>
 </section>
 
 {stats}
@@ -658,15 +732,41 @@ def poultry_hub(db: Session = Depends(get_db)):
     crumbs_ld = _crumb_ld([("होम", f"{SITE}/"), ("पशुपालन", SECTION),
                            ("अंडे का रेट", BASE)])
     return _doc(
-        title=_fit(f"आज का अंडा रेट {_hi_date(day)} — NECC egg rate today",
-                   "आज का अंडा रेट — सभी शहर | NECC egg rate today",
-                   "आज का अंडा रेट — NECC egg rate today"),
-        desc=_fit(f"आज का अंडा रेट: औसत ₹{poultry.rupees(avg)} प्रति अंडा "
+        # NO DATE IN THE TITLE. It read "आज का अंडा रेट 13 सितंबर 2026" — the
+        # word "today" beside a date that is, by construction, never today:
+        # `day` is the date of the last NECC sheet, so on a good morning the
+        # SERP shows yesterday and on a Sunday it shows Friday. On a query
+        # whose entire point is freshness, that contradiction is the first
+        # thing a farmer reads. In the 28 days to 2026-09-09 "अंडा रेट" put
+        # 308 impressions in front of this title at position 7.8 and earned
+        # ZERO clicks; the whole section took 546 impressions and one click.
+        # The freshness claim belongs in dateModified and the visible "अपडेट"
+        # line, which carry the real date and are tested to never say today.
+        #
+        # THE ROMANISED FORM EARNS ITS PLACE. ande ka rate / anda ka rate /
+        # aaj ka anda rate / andaret are ~50 impressions sitting at positions
+        # 10-25 while the Devanagari queries sit at 6-8 — the same script
+        # mismatch the /sarkari_yojana read found, and the same fix. "anda
+        # rate today" covers the romanised and English readings in three
+        # words, which is what the dropped date paid for.
+        title=_fit(f"आज का अंडा रेट — anda rate today | {len(all_rows)} शहरों का NECC भाव",
+                   "आज का अंडा रेट — anda rate today | NECC egg rate",
+                   "आज का अंडा रेट — anda rate today"),
+        # The number stays where it already was — the description is the one
+        # place a price query gets its answer before the click, and this page
+        # carries NECC's clarification exactly as the licence requires. What
+        # changed is the tail: "NECC egg rate today" said the same thing the
+        # title said, so one of the two repetitions buys the romanised form
+        # instead.
+        desc=_fit(f"आज का अंडा रेट (anda rate today): औसत ₹{poultry.rupees(avg)} प्रति अंडा "
                   f"(₹{poultry.per_hundred(avg)} प्रति 100)। "
-                  f"{len(all_rows)} शहरों का NECC egg rate today — "
+                  f"{len(all_rows)} शहरों का NECC रेट — "
                   f"{high['hi']} सबसे ऊँचा, {low['hi']} सबसे कम।",
-                  f"आज का अंडा रेट: औसत ₹{poultry.rupees(avg)} प्रति अंडा। "
-                  f"{len(all_rows)} शहरों का NECC egg rate today।",
+                  f"आज का अंडा रेट (anda rate today): औसत ₹{poultry.rupees(avg)} प्रति अंडा "
+                  f"(₹{poultry.per_hundred(avg)} प्रति 100)। "
+                  f"{len(all_rows)} शहरों का NECC रेट।",
+                  f"आज का अंडा रेट (anda rate today): औसत ₹{poultry.rupees(avg)} प्रति अंडा। "
+                  f"{len(all_rows)} शहरों का NECC egg rate।",
                   limit=162),
         canon=BASE,
         crumbs=f'<a href="{SITE}/">होम</a> › <a href="{SECTION}">पशुपालन</a> '
@@ -740,8 +840,9 @@ def zone_page(zone_slug: str, db: Session = Depends(get_db)):
     peers_html = ""
     if peers:
         near = f"{z['state_hi']} और आसपास" if z["state_hi"] else "दूसरे शहरों"
-        peers_html = (_sec_title(f"{near} का आज का रेट", "एक टैप में तुलना")
-                      + _rows_html(peers)
+        peers_html = (_sec_title(f"{near} का आज का रेट",
+                                 f"{hi} के ₹{poultry.rupees(paise)} से तुलना")
+                      + _rows_html(peers, compare_to=z)
                       + f'<p class="note"><a href="{BASE}">सभी शहरों का अंडा रेट '
                         'देखें →</a></p>')
 

@@ -54,8 +54,9 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
                                  acct)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
-    buyers, crop_types, district_geo, freight, index_gate, lead_clicks, leads,
-    msp, placements, rental as rental_svc, state_lang, wa_channels as _wa_channels,
+    buyers, crop_types, district_geo, ecosystem, freight, index_gate,
+    lead_clicks, leads, msp, placements, rental as rental_svc, state_lang,
+    wa_channels as _wa_channels,
 )
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
@@ -2405,6 +2406,13 @@ justify-content:space-between;align-items:center;font-size:12.5px}
 border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
 """
 
+# The "आगे क्या करें" strip's own sheet, appended so it reaches the <head> once
+# per page instead of riding inline in the body on ~14,000 URLs. It is scoped
+# entirely under .km-journey and declares literal colours rather than this
+# module's CSS variables, because the same block is rendered into the static
+# article pages, which never load this stylesheet — see services/ecosystem.CSS.
+_CSS += ecosystem.CSS
+
 _FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
           '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
           '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
@@ -2722,6 +2730,7 @@ window.addEventListener('pageshow',window.kmHideLoading);
 <script src="{_asset('bhav-nearest.js')}" defer></script>
 <script src="{_asset('ads.js')}" defer></script>
 <script src="{_asset('km-social.js')}" defer></script>
+<script src="{_asset('km-journey.js')}" defer></script>
 <div class="topbar-spacer" id="topbar-spacer"></div>
 <script src="{_asset('header-scroll.js')}"></script>"""
 
@@ -2785,11 +2794,74 @@ _CACHE_HEADERS = {
 }
 
 
+def _journey(canon: str, crop: str, lang: str, robots: str) -> str:
+    """The "आगे क्या करें" strip — services/ecosystem.py, rendered here so that
+    every section using this shell is in the ecosystem by default.
+
+    THIS IS THE WHOLE POINT OF PUTTING IT IN _doc(). /product, /ganna, /rental,
+    /naksha, /sawal, /pashupalan and /krashi_dukan all render through this
+    function; none of them had a single link out to any of the others. A future
+    section gets the strip the day it ships, without a line of its own — and
+    opting OUT is the thing that takes an argument, which is the right way
+    round for a defect whose cause was "nobody remembered to add the links".
+
+    The names matter more than the URL: ecosystem.py refuses to print a step it
+    cannot label in the reader's script, so a district we hand over as the slug
+    "bijnor" silently degrades to the generic wording. This is the one place
+    that holds both the index (slug → the feed's spelling) and the Hindi/Marathi
+    tables, so it resolves them here rather than making each caller do it.
+
+    A NOFOLLOW page gets nothing, and nofollow is the right test rather than
+    noindex. "noindex, follow" is the site saying keep this URL out of the
+    index but do follow its links — an empty dealer directory or a credits
+    page, which is precisely where a reader most needs somewhere to go next.
+    "noindex, nofollow" is the UPI collect page: a transaction, where an
+    onward menu is a distraction from the one thing the page is for.
+    """
+    if "nofollow" in (robots or ""):
+        return ""
+    try:
+        ctx = ecosystem.parse(canon, crop=crop, lang=lang)
+        if ctx.crop:
+            idx = _get_index()
+            commodity = idx.get("crops", {}).get(ctx.crop, "")
+            if commodity:
+                ctx.crop_hi = state_lang.crop(_hindi_name(commodity), lang)
+            state = idx.get("states", {}).get(ctx.crop, {}).get(ctx.state, "")
+            district = (idx.get("dists", {}).get(ctx.crop, {})
+                        .get(ctx.state, {}).get(ctx.district, ""))
+        else:
+            # A place-only page (/bhav/rajya/…, /naksha/…, /ganna/…) — the slug
+            # → spelling map lives per crop, so read the names off any crop
+            # that reports from there rather than not naming the place at all.
+            state = district = ""
+            idx = _get_index()
+            for cs in idx.get("dists", {}):
+                names = idx["dists"][cs].get(ctx.state, {})
+                if ctx.district in names:
+                    state = idx["states"][cs][ctx.state]
+                    district = names[ctx.district]
+                    break
+        if state:
+            ctx.state_hi = _hindi_state(state)
+        if district:
+            ctx.district_hi = state_lang.district(
+                _hindi_district(state, district), lang)
+        # with_css=False: the sheet rides in _CSS, in the <head>, once. The
+        # article builder takes the other branch — a static page has no shared
+        # stylesheet of ours to append to.
+        return ecosystem.journey_html(ctx, with_css=False)
+    except Exception:                       # never turn a working page into a 500
+        logger.warning("[journey] strip skipped for %s", canon, exc_info=True)
+        return ""
+
+
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
          extra_css: str = "", robots: str = "", head_extra: str = "",
          updated: str = "", footer_note: str = "", crop: str = "",
-         lang: str = "hi", quicknav: str | None = None) -> HTMLResponse:
+         lang: str = "hi", quicknav: str | None = None,
+         journey: bool = True) -> HTMLResponse:
     """One page shell for all four tiers — head, header, crumbs, body, footer.
     `active` defaults to "bhav" for this module's own pages; other SEO routes
     (e.g. product.py) that reuse this shell pass their own nav key/"" so they
@@ -2826,7 +2898,12 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     reaches only <html lang> and og:locale. Any caller that rendered its title
     in that language must pass it: a Marathi title on a page still declaring
     lang="hi" tells Google the two disagree, and the tag is believed over the
-    prose. Default "hi" leaves every other caller byte-identical."""
+    prose. Default "hi" leaves every other caller byte-identical.
+    `journey` is the "आगे क्या करें" strip — services/ecosystem.py, ON by
+    default, because the defect it fixes is every section forgetting to link to
+    every other one and a default of False would reproduce it for the next
+    section built. Pass False only where an onward menu is genuinely wrong for
+    the page. A noindex page opts itself out — see _journey."""
     og = og_img or f"{SITE}/images/og-banner.webp"
     # Resolved here rather than at each call site so all four crop tiers are
     # guaranteed to agree — a page whose type differs from its sibling tier's
@@ -2880,6 +2957,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {crumbs_nav}
 <div class="wrap">
 {body}
+{_journey(canon, crop, lang, robots) if journey else ''}
 </div>
 {_footer(footer_note)}
 {_INSTALL_JS}

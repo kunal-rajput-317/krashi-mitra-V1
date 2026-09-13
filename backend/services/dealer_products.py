@@ -11,8 +11,12 @@
 # WHY THE SHAPE COPIES THE SHOP. name_hi / name_en / price / mrp / unit_hi are
 # the fields routes/product.py::_hub_card() already renders, so a dealer's card
 # and a KrashiMitra catalogue card are the same object to a farmer's eye. One
-# design language, one discount calculation (off_pct below is the same formula
-# as product.py::_off_pct), and no second visual vocabulary to keep in sync.
+# design language, and no second visual vocabulary to keep in sync.
+#
+# THE "% OFF" PILL LIVES HERE AND ONLY HERE. product.py computed the same figure
+# for the KrashiMitra catalogue and no longer does: its mrp is an editorial
+# number, so the saving was a claim nobody could be held to. A dealer's mrp is
+# the one printed on the sack he is selling, and off_pct() below is honest.
 #
 # ATTACHED TO THE ACCOUNT, NOT ONE DISTRICT. A dealer paying for three districts
 # types his catalogue once. Lookups therefore key on owner_user_id when the
@@ -36,8 +40,9 @@ _MAX = {"name_hi": 120, "name_en": 120, "unit_hi": 60, "badge": 24}
 
 
 def off_pct(price, mrp) -> int:
-    """The "% off" pill. Same formula as routes/product.py::_off_pct — a
-    dealer's discount must not be computed differently from the shop's."""
+    """The "% off" pill, for a dealer quoting his own price against the MRP on
+    the sack. The KrashiMitra catalogue no longer shows one — see the module
+    header — so this is the only discount figure the site computes."""
     try:
         price, mrp = int(price or 0), int(mrp or 0)
     except (TypeError, ValueError):

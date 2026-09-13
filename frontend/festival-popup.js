@@ -59,6 +59,29 @@
     document.head.appendChild(s);
   }
 
+  // The admin's upload lands on the backend's own disk, so `image_url`
+  // comes back root-relative ("/images/festivals/fest_*.webp") and only
+  // resolves on the backend origin. /admin is mounted on that backend,
+  // which is why the panel always looked right, while every public page is
+  // served by Netlify — where the same path 404s and the old handler fell
+  // through to a hardcoded कृष्ण photo. That is how a गणेश चतुर्थी popup
+  // shipped with the wrong deity on it. Resolve it like the avatar does.
+  function festivalImageUrl(url) {
+    if (!url) return '';
+    url = String(url).trim();
+    if (!url) return '';
+    // Only the upload directory. The other /images/* files are committed and
+    // exist in both deploys, so leaving them relative keeps them on the CDN
+    // rather than on the backend's metered egress.
+    if (url.indexOf('/images/festivals/') !== 0) return url;
+    // Never fall back to '': that resolves to the page's own origin, where
+    // this path 404s. Owned by config/backend-origin.txt — rewritten by
+    // tools/set_backend_origin.py, same as the literal in init() below.
+    var base = window.KRASHIMITRA_API_BASE ||
+      'https://krashi-mitra-v1-p099.onrender.com';
+    return base + url;
+  }
+
   function createModal(cfg) {
     var existing = document.getElementById(MODAL_ID);
     if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
@@ -70,8 +93,8 @@
       if (e.target === overlay) closeModal();
     };
 
-    var topPill = cfg.top_pill || '🪶 ॥ हरे कृष्ण ॥ 🪈';
-    var imgUrl = window.KRISHNA_JANMASHTAMI_IMAGE || cfg.image_url || '/images/krishna-janmashtami.webp';
+    var topPill = cfg.top_pill || '✨ मंगलकामनाएं ✨';
+    var imgUrl = festivalImageUrl(cfg.image_url);
     var title = cfg.title || 'त्योहार शुभकामनाएं';
     var blessing = cfg.blessing_summary || 'कृषि मित्र परिवार की ओर से मंगलकामनाएं!';
     var b1 = cfg.bullet_1 || '';
@@ -88,13 +111,19 @@
       ].join('');
     }
 
+    // No configured image, or one this origin cannot load: drop the frame.
+    // A missing picture is honest; the wrong deity is not.
+    var imgHtml = imgUrl
+      ? '<div class="km-fest-img-frame"><img src="' + escapeHtml(imgUrl) +
+        '" alt="' + escapeHtml(cfg.festival_name || 'त्योहार') +
+        '" class="km-fest-img" onerror="this.parentNode.style.display=\'none\'"></div>'
+      : '';
+
     overlay.innerHTML = [
       '<div class="km-fest-card">',
       '  <button type="button" class="km-fest-close" onclick="window.closeFestivalPopup()" title="बंद करें (Close)">✕</button>',
       '  <div class="km-fest-top-pill">' + escapeHtml(topPill) + '</div>',
-      '  <div class="km-fest-img-frame">',
-      '    <img src="' + escapeHtml(imgUrl) + '" alt="Festival" class="km-fest-img" onerror="this.src=\'/images/krishna-janmashtami.jpg\'">',
-      '  </div>',
+      imgHtml,
       '  <h2 class="km-fest-title">' + escapeHtml(title) + '</h2>',
       '  <div class="km-fest-blessing">' + escapeHtml(blessing) + '</div>',
       bulletsHtml,

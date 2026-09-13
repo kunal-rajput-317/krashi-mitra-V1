@@ -44,8 +44,16 @@ from urllib.parse import quote
 from article_advisory import (ADVISORY_MARK, advisory_html, needs_advisory,
                               sweep as advisory_sweep)
 from article_cards import sweep as card_date_sweep
+from article_journey import (sweep as journey_sweep,
+                             unplaceable as journey_stuck)
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+# The site's link graph. Pure functions, no FastAPI and no DB import, so the
+# builder can render the "आगे क्या करें" strip from the command line without
+# booting the app — see the contract note at the top of that module.
+from backend.services import ecosystem  # noqa: E402
+
 FRONTEND = ROOT / "frontend"
 ARTICLES = FRONTEND / "articles"
 INDEX = ARTICLES / "index.html"
@@ -199,7 +207,13 @@ def _load_shell() -> dict:
         "style": _chunk(t, "  <style>\n    :root {", "  </style>"),
         "header": _chunk(t, "<!-- ══ CANONICAL HEADER",
                          '<div class="topbar-spacer" id="topbar-spacer"></div>'),
-        "cta": _chunk(t, "<!-- ═══ INTERNAL LINKS CTA", "</section>"),
+        # NO "cta" chunk any more. It used to lift a hardcoded three-link block
+        # (chat/shop/weather, pointing at the .html forms that 301) out of the
+        # shell source and stamp it, identical, onto all 176 articles. It is
+        # replaced by the "आगे क्या करें" strip, which is generated per article
+        # from backend/services/ecosystem.py — so the marker it was cut on no
+        # longer exists in the shell source, and looking for it would abort
+        # every build.
         "tail": t[t.index("<!-- ══ CANONICAL FOOTER"):],
     }
 
@@ -405,6 +419,11 @@ def render(a: dict) -> str:
         dukan_promo = ""
         dukan_promo_js = ""
 
+    # The strip's links are server-authored and crawlable as rendered; this only
+    # deepens the ones carrying data-km-place once the reader's own district is
+    # known from an earlier page. See frontend/km-journey.js.
+    journey_js = '<script src="../km-journey.js" defer></script>\n'
+
     # The spray/dose advisory. Decided from what the AUTHOR wrote — body, quick
     # facts and FAQ answers all carry doses — never from the rendered page,
     # which also contains other articles' titles. It sits directly under the
@@ -427,6 +446,37 @@ def render(a: dict) -> str:
                         for s in _flat(v))
     advisory = (advisory_html(lang)
                 if a.get("advisory") or needs_advisory(authored) else "")
+
+    # ── the "आगे क्या करें" strip — backend/services/ecosystem.py ──────────
+    #
+    # It REPLACES the old three-link CTA lifted from the shell source, which
+    # was the same chat/shop/weather block on all 176 articles regardless of
+    # subject, and pointed at the .html forms that 301. This one is built from
+    # what the article is about and lands in four different sections.
+    #
+    # `have` is what the page already links to well, and both entries are
+    # earned: the related-articles grid sits directly above this block, and the
+    # price chips directly below it. Offering either again would spend a slot
+    # restating a link the reader can already see, when the whole point is the
+    # sections he currently has no route to at all — /pashupalan, /rental,
+    # /sawal, /naksha.
+    #
+    # The crop is the author's FIRST price chip. article_builder requires every
+    # bhav_links slug to resolve, so it is a verified /bhav address rather than
+    # a guess, and the first one is the article's own subject.
+    _chips = a.get("bhav_links") or []
+    _crop = _chips[0][0] if _chips else ""
+    _have = {"articles"} | ({"bhav"} if _chips else set())
+    journey = ecosystem.journey_html(ecosystem.parse(
+        url,
+        section="articles",
+        crop=_crop,
+        crop_hi=ecosystem.family_hi(ecosystem.family(_crop)),
+        topics=ecosystem.topics(a.get("section", ""), a.get("cat_label", ""),
+                                a["card"].get("tag", ""), a.get("h1", "")),
+        lang=lang,
+        have=_have,
+    ))
 
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
@@ -597,7 +647,8 @@ def render(a: dict) -> str:
 
 </div><!-- /article-wrapper -->
 
-{shell['cta']}
+<!-- आगे क्या करें — backend/services/ecosystem.py -->
+<div style="max-width:860px;margin:0 auto 32px;padding:0 16px">{journey}</div>
 
 <!-- bhav-links: live mandi-price pages + share -->
 <section class="bhav-links" style="max-width:860px;margin:28px auto;padding:18px 20px;background:#f0f7f0;border:1px solid #cfe3cf;border-radius:12px;font-family:inherit">
@@ -605,7 +656,7 @@ def render(a: dict) -> str:
   <p style="margin:0 0 12px;line-height:2">{chips}</p>
   <a href="https://wa.me/?text={wa}" style="display:inline-block;background:#25d366;color:#fff;font-weight:700;padding:9px 16px;border-radius:22px;text-decoration:none">{loc['wa_share']}</a>
 </section>
-{dukan_promo_js}{shell['tail']}"""
+{dukan_promo_js}{journey_js}{shell['tail']}"""
 
 
 # ── site wiring ────────────────────────────────────────────────────────────
@@ -919,6 +970,35 @@ def main() -> int:
             verb = "stale date on" if args.check else "date refreshed on"
             print(f"\ncards — {verb} {len(dated)}")
             failed = failed or args.check
+
+        # And the same for the ecosystem strip. A legacy page with no onward
+        # links is the exact cul-de-sac services/ecosystem.py exists to end,
+        # and it is 36 of the 175 live articles — a fifth of the section.
+        walked = journey_sweep(ARTICLES, write=not args.check)
+        if walked:
+            verb = "missing strip on" if args.check else "strip added to"
+            print(f"\nlegacy pages — {verb} {len(walked)}")
+            failed = failed or args.check
+        # Reported even when nothing was written: a page with no anchor to hang
+        # the strip on is silently left out of the ecosystem, and silence is
+        # how it would stay that way.
+        stuck = journey_stuck(ARTICLES)
+        if stuck:
+            print(f"\nno place for the strip on {len(stuck)} page(s):")
+            for s in stuck:
+                print(f"  {s}")
+
+    # The strip is BAKED INTO A FILE here, unlike on a server page where a
+    # failed lookup costs one step of one render. A build with no reachable
+    # database resolves no /sawal crops, so every article is rewritten without
+    # its Q&A link and the diff looks deliberate. Say so loudly and fail,
+    # rather than letting a rebuild silently prune the ecosystem.
+    lost = ecosystem.degraded()
+    if lost:
+        print(f"\n✗ the link graph could not reach: {', '.join(sorted(lost))}")
+        print("  The strip was written WITHOUT those sections. Fix the "
+              "connection and re-run before committing this.")
+        failed = True
 
     return 1 if failed else 0
 

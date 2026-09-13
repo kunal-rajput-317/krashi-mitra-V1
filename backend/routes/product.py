@@ -18,6 +18,35 @@
 # shop.html's mtime changes, so a live edit shows up without a restart.
 #
 # Also serves /product/sitemap.xml and a /product/ hub page.
+#
+# THE PRICE HERE IS INDICATIVE, AND THE PAGE HAS TO SAY SO. PRODUCTS carries a
+# rupee figure per item, and this page used to present it as OUR sale price:
+# Offer JSON-LD with availability InStock and seller KrashiMitra, a "% छूट"
+# computed against an MRP nobody verified, a ⭐ rating nobody gave, and a
+# promise of free delivery over ₹500 with Cash on Delivery.
+#
+# None of that is what the business does. An order placed from the shop becomes
+# an ENQUIRY that a dealer later quotes against — `orders` carries quote_total,
+# dealer_name, quote_note and quoted_at for exactly that reason — and of the 28
+# orders placed to date, 8 came back "Not Available". So "InStock", "seller:
+# KrashiMitra" and a firm ₹850 were claims the business never made, on the
+# site's best-converting family. Under the Consumer Protection Act 2019 a
+# stated price, a discount against an unverified MRP, an invented rating and a
+# delivery promise are each a representation we would have to stand behind.
+#
+# The truthful version is the one krashi_dukan.py and rental.py already
+# settled on: WE CONNECT, WE DO NOT SELL. The number stays — a farmer searching
+# "कपिला पशु आहार की कीमत" wants a number, and reporting a typical market price
+# is what /bhav does all day — but it is labelled as indicative, it carries no
+# Offer markup, and the disclaimer rides on the page rather than sitting in
+# Terms. tests/test_product_price_claims.py fails the build if any of that
+# comes back.
+#
+# Offer JSON-LD RETURNS ONLY WITH A REAL SELLER. Same rule as rental.py: an
+# Offer needs a seller and a price someone will honour. When dukan_items carries
+# a shop's own price for a product, that shop is the seller and an AggregateOffer
+# is honest — krashi_dukan.py already does this. An indicative catalogue figure
+# is neither, so it gets no offers block.
 # ============================================================
 
 import re
@@ -37,6 +66,24 @@ router = APIRouter()
 
 SITE = "https://krashimitra.in"
 _SHOP_HTML = Path(__file__).resolve().parents[2] / "frontend" / "shop.html"
+
+# The disclaimer, in one place, on every page that prints a rupee figure —
+# because "we are only the connector" is worth nothing to a farmer who never
+# read it. Same stance and the same strip krashi_dukan.py and rental.py use;
+# this module owns the text because both of those already import from here,
+# and the reverse import would be circular.
+DISCLAIMER = ("कृषि मित्र सामान नहीं बेचता — हम सिर्फ़ जोड़ने का काम करते हैं। "
+              "यहाँ दी कीमत अनुमानित बाज़ार भाव है, किसी दुकान का पक्का रेट नहीं — "
+              "असली दाम दुकान, कंपनी, पैक और इलाके से बदलता है। "
+              "ऑर्डर करने पर दुकानदार अपना रेट बताता है। खरीदने से पहले "
+              "पैक, वज़न और एक्सपायरी ज़रूर जाँच लें।")
+
+# The material-connection disclosure for the Amazon/Flipkart buttons. rel=
+# "sponsored" tells Google; this tells the farmer, which is the half the CCPA's
+# endorsement guidelines actually ask for.
+AFFILIATE_NOTE = ("Amazon और Flipkart के लिंक एफ़िलिएट लिंक हैं — "
+                  "उनसे खरीदने पर कृषि मित्र को कमीशन मिल सकता है। "
+                  "आपको कोई अतिरिक्त शुल्क नहीं लगता।")
 
 CAT_LABELS = {
     "seeds": "🌱 बीज", "fertilizer": "🧪 खाद", "pesticide": "🌿 कीटनाशक",
@@ -131,8 +178,12 @@ def _available(url: str) -> bool:
     return bool(url) and not url.startswith("not_available_")
 
 
-def _off_pct(p: dict) -> int:
-    return round((1 - p["price"] / p["mrp"]) * 100) if p.get("mrp") and p["mrp"] > p["price"] else 0
+# There is deliberately no _off_pct() here any more. A "% off" needs an MRP
+# somebody stands behind, and PRODUCTS' mrp is an editorial figure — so the
+# discount computed from it was a claim about a saving no farmer could hold us
+# to. services/dealer_products.py::off_pct() keeps the pill for the one case
+# where it is honest: a real dealer quoting his own price against the MRP on
+# the sack he is selling.
 
 
 # badge/badgeClass are already parsed off PRODUCTS but the old page never
@@ -167,6 +218,17 @@ def _product_chip(p: dict) -> str:
 _EXTRA_CSS = """
 .desc{font-size:14px;color:var(--text-mid);margin:16px 0}
 
+/* ── "we connect, we do not sell" ── the same amber strip /krashi_dukan and
+   /rental carry, so the three sections make one claim in one voice ── */
+.prod-disclaimer{background:#fff8e6;border:1px solid #f0dca8;border-radius:var(--radius-md);
+padding:12px 15px;font-size:12.5px;color:#6b5312;line-height:1.6;margin:16px 0 0}
+.prod-disclaimer b{color:#4a3908}
+.prod-affil-note{font-size:11.5px;color:var(--text-soft);line-height:1.6;margin:10px 0 0}
+/* The price is a market estimate, and the label sits ON the number rather than
+   in a footnote under it. */
+.prod-est{font-size:11px;font-weight:700;color:var(--text-soft);background:var(--cream);
+border-radius:10px;padding:3px 10px;white-space:nowrap;align-self:center}
+
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-top:14px}
 .prod-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);
 overflow:hidden;box-shadow:var(--shadow-sm);text-decoration:none;color:inherit;display:block;
@@ -180,8 +242,7 @@ display:flex;align-items:center;justify-content:center;padding:10px}
 .prod-card-en{display:block;font-size:10.5px;font-weight:600;color:var(--text-soft);margin-top:1px}
 .prod-card-price{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:8px}
 .prod-card-price b{font-size:16px;font-weight:700;color:var(--green-dark)}
-.prod-card-price .mrp{font-size:11px;color:var(--text-soft);text-decoration:line-through}
-.prod-card-price .off{font-size:10.5px;font-weight:700;color:#c0392b}
+.prod-card-price .est{font-size:10.5px;font-weight:600;color:var(--text-soft)}
 .prod-card-unit{font-size:11px;color:var(--text-soft);margin-top:2px}
 
 .prod-badge-card{position:absolute;top:8px;left:8px;background:var(--amber);color:#fff;
@@ -243,16 +304,20 @@ _CSS = _BASE_CSS + _EXTRA_CSS
 
 
 def _hub_card(p: dict) -> str:
-    off = _off_pct(p)
-    mrp_html = f'<span class="mrp">₹{p["mrp"]}</span>' if off else ""
-    off_html = f'<span class="off">{off}% off</span>' if off else ""
+    """One catalogue tile — on the /product/ hub and in the related strip.
+
+    The struck-through MRP and the "% off" pill are gone for the same reason
+    they are gone from the product page itself: the MRP is unverified, so the
+    discount computed against it is a claim we cannot stand behind, and a card
+    is exactly where a farmer reads one without reading anything else. The
+    price stays and is labelled ~ for approximate, which is what it is."""
     return f"""<a class="prod-card" href="/product/{p['slug']}">
 <div class="prod-card-photo">{_badge_pill(p, "prod-badge-card")}
 <img src="{escape(p['img'])}" alt="{escape(p['name_hi'])}" loading="lazy" width="120" height="100"></div>
 <div class="prod-card-body">
 <div class="prod-card-name">{escape(p['name_hi'])}</div>
 <span class="prod-card-en">{escape(p['name_en'])}</span>
-<div class="prod-card-price"><b>₹{p['price']}</b>{mrp_html}{off_html}</div>
+<div class="prod-card-price"><b>~₹{p['price']}</b><span class="est">अनुमानित</span></div>
 <div class="prod-card-unit">{escape(p['unit_hi'])}</div>
 </div>
 </a>"""
@@ -291,14 +356,18 @@ def product_hub():
             f'<h2 id="cat-{cat}">{escape(label)} ({len(rows)})</h2>'
             f'<div class="prod-grid">{cards}</div>')
 
-    title = "बीज, खाद, कीटनाशक व उपकरण ऑनलाइन — कीमत व Cash on Delivery"
+    # The hub advertised Cash on Delivery and free delivery over ₹500 in its
+    # title, its description and its hero — three places Google reads, for a
+    # service this site does not run. Replaced with what the catalogue is: the
+    # going rate on farm inputs, and a dealer who quotes the real one.
+    title = "बीज, खाद, कीटनाशक व उपकरण के भाव — कृषि मित्र दुकान"
     desc = (f"कृषि मित्र दुकान के {len(products)} उत्पाद — बीज, खाद, कीटनाशक, उपकरण, पशु आहार व "
-            f"सिंचाई सामान। कीमत देखें, Cash on Delivery के साथ ऑनलाइन ऑर्डर करें।")
+            f"सिंचाई सामान का अनुमानित बाज़ार भाव। रेट पूछें, दुकानदार अपना दाम बताएगा।")
 
     body = f"""<div class="hero nophoto">
 <div class="hero-body">
 <h1>कृषि मित्र दुकान — सभी उत्पाद</h1>
-<p class="hero-sub">🛒 {len(products)} उत्पाद उपलब्ध · Cash on Delivery · ₹500+ पर मुफ्त डिलीवरी</p>
+<p class="hero-sub">🛒 {len(products)} उत्पाद · अनुमानित बाज़ार भाव · रेट दुकानदार का</p>
 </div>
 </div>
 <div class="cta-row">
@@ -311,7 +380,8 @@ def product_hub():
 </form>
 {"".join(jump_chips)}
 </div>
-{"".join(sections)}"""
+{"".join(sections)}
+<div class="prod-disclaimer"><b>ध्यान दें:</b> {escape(DISCLAIMER)}</div>"""
 
     return _doc(title, desc, f"{SITE}/product/",
                 f'<a href="{SITE}/">कृषि मित्र</a> › उत्पाद', body,
@@ -360,7 +430,6 @@ def product_page(slug: str):
 
     cat_label = CAT_LABELS.get(p["cat"], p["cat"])
     canon = f"{SITE}/product/{p['slug']}"
-    off_pct = _off_pct(p)
 
     # Measured against production 2026-09-12: 89 of the 94 product titles ran
     # over Google's 68-char window (median 83) and 40 of 94 descriptions over
@@ -385,7 +454,7 @@ def product_page(slug: str):
     en_lead = hi_bare if en_bare.lower() in hi_bare.lower() else f"{hi_bare} ({en_bare})"
     title = _fit(
         f"{hi_name} ({en_name}) {rs} — {p['unit_hi']}",
-        f"{hi_name} ({en_name}) {rs} में खरीदें",
+        f"{hi_name} ({en_name}) की कीमत {rs}",
         f"{hi_name} {rs} — {en_name} Price Online",
         f"{hi_name}{en_tag} {rs} — {p['unit_hi']}",
         f"{hi_name} {rs} — {en_bare} Price {p['unit_hi']}",
@@ -396,30 +465,45 @@ def product_page(slug: str):
         f"{hi_bare} की कीमत {rs} — {p['unit_hi']}",
         f"{hi_bare} {rs} — {en_bare}",
         f"{hi_bare} की कीमत {rs}")
+    # The description sold what we do not sell: "अभी ऑर्डर करें" plus free
+    # delivery over ₹500 and Cash on Delivery, on every variant. What is true is
+    # that the figure is a typical market price and that a dealer quotes the
+    # real one — so that is what the snippet now says. It still leads with the
+    # name, the pack and the number, which is what the query asked for.
     desc = _fit(
-        f"{hi_name} ({p['unit_hi']}) अभी {rs} में ऑर्डर करें — "
-        f"{p['desc_hi']} Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी उपलब्ध।",
-        f"{hi_name} ({p['unit_hi']}) अभी {rs} में ऑर्डर करें — "
-        f"{p['desc_hi']} Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी।",
-        f"{hi_name} ({p['unit_hi']}) — {rs}। {p['desc_hi']} "
-        f"Cash on Delivery, ₹500+ पर मुफ्त डिलीवरी।",
-        f"{hi_name} ({p['unit_hi']}) अभी {rs} में ऑर्डर करें — {p['desc_hi']}",
-        f"{hi_name} ({p['unit_hi']}) — {rs}। {p['desc_hi']}",
-        f"{hi_name} ({en_bare}) {p['unit_hi']} की कीमत {rs} — "
-        f"Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी उपलब्ध।",
-        f"{hi_name} — {p['unit_hi']} {rs}। Cash on Delivery व ₹500+ पर मुफ्त डिलीवरी।",
+        f"{hi_name} ({p['unit_hi']}) का अनुमानित भाव {rs} — {p['desc_hi']} "
+        f"असली रेट दुकान और इलाके से बदलता है।",
+        f"{hi_name} ({p['unit_hi']}) का अनुमानित भाव {rs} — {p['desc_hi']} "
+        f"रेट दुकान से बदलता है।",
+        f"{hi_name} ({p['unit_hi']}) — अनुमानित {rs}। {p['desc_hi']} "
+        f"असली रेट दुकान पर पक्का करें।",
+        f"{hi_name} ({p['unit_hi']}) का अनुमानित भाव {rs} — {p['desc_hi']}",
+        f"{hi_name} ({p['unit_hi']}) — अनुमानित {rs}। {p['desc_hi']}",
+        f"{hi_name} ({en_bare}) {p['unit_hi']} की अनुमानित कीमत {rs} — "
+        f"असली रेट दुकान, कंपनी और इलाके से बदलता है।",
+        f"{hi_name} — {p['unit_hi']} का अनुमानित भाव {rs}। रेट दुकान से बदलता है।",
+        f"{hi_name} — {p['unit_hi']} की अनुमानित कीमत {rs}।",
         limit=162)
 
     # ── CTAs ──
-    ctas = [f'<a class="btn btn-app" href="{SITE}/shop.html?product={p["id"]}">🛒 ऐप में खरीदें</a>']
+    # "ऐप में खरीदें" promised a purchase; the button opens an enquiry that a
+    # dealer quotes against, so it now says what it does.
+    ctas = [f'<a class="btn btn-app" href="{SITE}/shop.html?product={p["id"]}">🛒 रेट पूछें</a>']
     if _available(p.get("affil_amazon", "")):
         ctas.append(f'<a class="btn btn-amazon" target="_blank" rel="noopener sponsored" '
                     f'href="{escape(p["affil_amazon"])}">Amazon पर देखें</a>')
     if _available(p.get("affil_flipkart", "")):
         ctas.append(f'<a class="btn btn-flipkart" target="_blank" rel="noopener sponsored" '
                     f'href="{escape(p["affil_flipkart"])}">Flipkart पर देखें</a>')
-    wa_text = quote(f"{p['name_hi']} — ₹{p['price']} ({p['unit_hi']})\n{canon}")
+    wa_text = quote(f"{p['name_hi']} — अनुमानित ₹{p['price']} ({p['unit_hi']})\n{canon}")
     ctas.append(f'<a class="btn btn-wa" target="_blank" href="https://wa.me/?text={wa_text}">📲 शेयर करें</a>')
+    # The disclosure rides beside the buttons it is about, and only on pages
+    # that actually carry one — a page with no affiliate link has nothing to
+    # disclose, and printing it there would be noise that trains the reader to
+    # skip the notice on the pages where it means something.
+    affil_note = (f'<p class="prod-affil-note">{escape(AFFILIATE_NOTE)}</p>'
+                  if _available(p.get("affil_amazon", ""))
+                  or _available(p.get("affil_flipkart", "")) else "")
 
     # ── related products: same category, same rich card as the /product/ hub ──
     related = [r for r in _get_products() if r["cat"] == p["cat"] and r["slug"] != p["slug"]][:8]
@@ -429,34 +513,45 @@ def product_page(slug: str):
         related_html = f'<h2>{escape(cat_label)} में अन्य उत्पाद</h2><div class="prod-grid">{cards}</div>'
 
     # ── FAQ + JSON-LD from the one shared helper, same as /bhav ──
+    #
+    # The first answer used to state the price as a fact and claim a "% छूट"
+    # against an MRP nobody verified; the second promised free delivery and
+    # Cash on Delivery, which is the opposite of what the section says it does.
+    # Both are now the true answer, which is also the more useful one: here is
+    # the going rate, here is why yours will differ, here is who sets it.
     faqs = [
         (f"{p['name_hi']} ({p['name_en']}) की कीमत क्या है?",
-         (f"{p['name_hi']} की कीमत ₹{p['price']} है ({p['unit_hi']}), MRP ₹{p['mrp']} पर {off_pct}% की छूट के साथ।"
-          if off_pct else f"{p['name_hi']} की कीमत ₹{p['price']} है ({p['unit_hi']})।")),
-        ("क्या डिलीवरी और Cash on Delivery उपलब्ध है?",
-         "हाँ, कृषि मित्र दुकान से ₹500+ के ऑर्डर पर मुफ्त डिलीवरी और Cash on Delivery उपलब्ध है।"),
+         f"{p['name_hi']} ({p['unit_hi']}) का अनुमानित बाज़ार भाव ₹{p['price']} के आसपास है। "
+         f"यह पक्का रेट नहीं है — दुकान, कंपनी, पैक साइज़ और इलाके के हिसाब से दाम बदलता है। "
+         f"अपने नज़दीकी दुकानदार से आज का रेट पूछ लें।"),
+        ("क्या कृषि मित्र यह सामान बेचता है?",
+         "नहीं। कृषि मित्र सामान न बेचता है, न डिलीवरी करता है, न किसी सामान की गारंटी "
+         "लेता है। हम सिर्फ़ किसान और दुकानदार को जोड़ते हैं — रेट पूछने पर दुकानदार "
+         "अपना भाव बताता है, और सौदा आपका उसी से होता है।"),
     ]
     faq_html, faq_ld = _faq(faqs)
 
+    # Product WITHOUT offers. An Offer needs a seller and a price someone will
+    # honour; an indicative catalogue figure has neither, so marking one up as
+    # an offer puts a false claim into structured data — the same rule
+    # rental.py and krashi_dukan.py follow. `brand` went with it: declaring
+    # "Kapila Cattle Feed" to be a KrashiMitra brand is someone else's
+    # trademark on our name. A product whose brand we cannot state truthfully
+    # simply does not carry the key.
     product_ld = {
         "@context": "https://schema.org", "@type": "Product",
         "name": f"{p['name_en']} — {p['name_hi']}",
         "description": p["desc_en"],
         "image": p["img"],
-        "brand": {"@type": "Brand", "name": "KrashiMitra"},
-        "offers": {
-            "@type": "Offer", "price": str(p["price"]), "priceCurrency": "INR",
-            "availability": "https://schema.org/InStock",
-            "url": f"{SITE}/shop.html?product={p['id']}",
-            "seller": {"@type": "Organization", "name": "KrashiMitra"},
-        },
     }
     ld = _ld(product_ld, faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("उत्पाद", f"{SITE}/product/"), (p["name_hi"], canon)]))
 
-    off_badge = f'<div class="answer-delta up">{off_pct}% छूट</div>' if off_pct else ""
-    mrp_stat = f"₹{p['mrp']}" if p.get("mrp") else "—"
-
+    # The stat row used to print MRP and a ⭐ rating beside the price. The MRP
+    # is unverified — which made the "% छूट" badge above it a discount claim
+    # against a number we made up — and the rating was never collected from
+    # anybody. Both are gone. What replaces them is true and more useful: the
+    # pack the price refers to, and where the price comes from.
     body = f"""<section class="answer">
 <div class="answer-prod-split">
 <div class="answer-prod-photo-lg">
@@ -469,12 +564,12 @@ onclick="document.getElementById('km-lightbox-img').src=this.src;document.getEle
 <p class="answer-sub">{escape(cat_label)} · {escape(p['name_en'])}</p>
 <div class="answer-price">
 <div class="answer-rupee">₹{p['price']}<small>/{escape(p['unit_hi'])}</small></div>
-{off_badge}
+<div class="prod-est">अनुमानित भाव</div>
 </div>
 <div class="answer-range">
-<div><span>MRP</span><b>{mrp_stat}</b></div>
-<div><span>रेटिंग</span><b>{escape(p['rating'])}</b></div>
+<div><span>पैक</span><b>{escape(p['unit_hi'])}</b></div>
 <div><span>श्रेणी</span><b>{escape(cat_label)}</b></div>
+<div><span>रेट किसका</span><b>दुकानदार का</b></div>
 </div>
 </div>
 </div>
@@ -483,6 +578,8 @@ onclick="document.getElementById('km-lightbox-img').src=this.src;document.getEle
 <p class="desc">{escape(p['desc_hi'])}</p>
 
 <div class="cta-row">{"".join(ctas)}</div>
+{affil_note}
+<div class="prod-disclaimer"><b>ध्यान दें:</b> {escape(DISCLAIMER)}</div>
 
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}

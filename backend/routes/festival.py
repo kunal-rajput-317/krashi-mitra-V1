@@ -15,6 +15,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 
+from backend.origin import backend_origin
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/festival", tags=["Festival Wishes"])
@@ -23,6 +25,43 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 CONFIG_FILE = BASE_DIR / "backend" / "data" / "festival_config.json"
 FESTIVAL_IMG_DIR = BASE_DIR / "frontend" / "images" / "festivals"
 FESTIVAL_IMG_DIR.mkdir(parents=True, exist_ok=True)
+
+# Uploaded and AI-generated festival art is written to this app's own disk, so
+# a root-relative "/images/festivals/..." only resolves on this origin. /admin
+# is mounted here, which is why the panel preview always looked right — while
+# every public page is served by Netlify, where the same path 404s and the
+# popup fell back to whatever image was hardcoded. So the path is STORED
+# relative and SERVED absolute: a Render rename then repoints every existing
+# image_url on its own, instead of freezing a dead host into the config file.
+#
+# Only this prefix is rewritten. The other /images/* files are committed, exist
+# in both deploys, and are better served by the CDN than by this host's
+# metered egress.
+UPLOAD_PREFIX = "/images/festivals/"
+
+
+def _to_public_url(url: str) -> str:
+    """Backend-hosted upload path -> absolute URL any origin can load."""
+    url = (url or "").strip()
+    if url.startswith(UPLOAD_PREFIX):
+        return backend_origin().rstrip("/") + url
+    return url
+
+
+def _to_stored_url(url: str) -> str:
+    """Inverse: drop any host, so what lands in the config file stays relative."""
+    url = (url or "").strip()
+    m = re.match(r"^https?://[^/]+(/.*)$", url, re.IGNORECASE)
+    if m and m.group(1).startswith(UPLOAD_PREFIX):
+        return m.group(1)
+    return url
+
+
+def _public_config(config: dict) -> dict:
+    out = dict(config)
+    out["image_url"] = _to_public_url(out.get("image_url", ""))
+    return out
+
 
 # Default configuration fallback
 DEFAULT_CONFIG = {
@@ -121,7 +160,7 @@ def get_festival_config():
     return {
         "success": True,
         "is_live": is_live,
-        "config": config,
+        "config": _public_config(config),
     }
 
 
@@ -130,16 +169,19 @@ def update_festival_config(payload: FestivalConfigRequest):
     """Updates the festival configuration from admin panel."""
     current = _load_config()
     data = payload.dict()
+    # The admin form echoes back whatever the last GET handed it, which is now
+    # absolute. Store the relative path so the host stays out of the file.
+    data["image_url"] = _to_stored_url(data.get("image_url", ""))
     data["updated_at"] = datetime.now(timezone(timedelta(hours=5, minutes=30))).isoformat()
     current.update(data)
     _save_config(current)
-    
+
     is_live = _is_active_now(current)
     return {
         "success": True,
         "message": "त्योहार शुभकामनाएं सेटिंग्स सफलतापूर्वक सहेज दी गईं!",
         "is_live": is_live,
-        "config": current,
+        "config": _public_config(current),
     }
 
 
@@ -270,11 +312,11 @@ Output ONLY the raw prompt text with no quotes or explanation.
     except Exception as pe:
         logger.warning(f"Pollinations festival image generation failed: {pe}")
 
-    # Step 4: Fallback to default
-    return {
-        "success": True,
-        "message": "डिफ़ॉल्ट उत्सव फोटो चुनी गई",
-        "image_url": "/images/krishna-janmashtami.webp",
-        "prompt": detailed_prompt,
-        "source": "fallback"
-    }
+    # Step 4: no image. The old fallback handed back the committed Krishna
+    # photo, which the admin form then saved as this festival's picture — a
+    # silent way to publish the wrong deity. Failing out loud is the honest
+    # answer: the admin uploads one instead.
+    raise HTTPException(
+        status_code=502,
+        detail="AI से फोटो नहीं बन पाई — कृपया अपनी फोटो अपलोड करें।",
+    )
