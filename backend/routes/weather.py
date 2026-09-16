@@ -7,9 +7,26 @@
 # CHANGED IN THIS STEP:
 #   + Full DB-first serving with stale detection
 #   + Standard API response format (success/message/data)
-#   + /weather/districts  — list all available UP districts
-#   + /weather/refresh    — admin-only manual cache refresh
-#   + /weather/status     — cache health check
+#   + /api/weather/districts  — list all available UP districts
+#   + /api/weather/refresh    — admin-only manual cache refresh
+#   + /api/weather/status     — cache health check
+# ============================================================
+# WHY EVERY PATH HERE STARTS WITH /api (17 Sep 2026):
+#   /weather is a PAGE — frontend/weather.html, the canonical URL in the
+#   sitemap, and where every मौसम देखें button on the site points. This router
+#   used to own the bare /weather path and answer it with JSON. That was
+#   survivable only while Netlify sat out front serving the page and the
+#   origin served the API from a different host. Netlify was retired on
+#   16 Sep 2026 and Cloudflare now points krashimitra.in straight at Render —
+#   one origin for both — so the router won, and every मौसम देखें button on
+#   the site opened a wall of raw JSON instead of the weather page.
+#
+#   The page and the API can no longer share a path, so the API moved. With
+#   nothing here claiming /weather, main.py's CleanURLStaticFiles resolves it
+#   to weather.html the way Netlify used to, and tests/test_clean_urls.py
+#   covers it with every other canonical URL — it no longer needs an
+#   exception. /api is also the one prefix sw.js refuses to cache, so these
+#   responses can never be replayed stale.
 # ============================================================
 
 import logging
@@ -61,9 +78,9 @@ def _row_to_dict(row: WeatherCache) -> dict:
     }
 
 
-# ── GET /weather ─────────────────────────────────────────────
+# ── GET /api/weather ─────────────────────────────────────────
 
-@router.get("/weather")
+@router.get("/api/weather")
 async def get_weather(district: str = Query(default="Lucknow")):
     """
     Return cached weather for a UP district.
@@ -113,7 +130,7 @@ async def get_weather(district: str = Query(default="Lucknow")):
                     "success": False,
                     "message": (
                         f"'{district}' उत्तर प्रदेश का मान्य जिला नहीं है। "
-                        "कृपया /weather/districts से जिलों की सूची देखें।"
+                        "कृपया /api/weather/districts से जिलों की सूची देखें।"
                     ),
                     "data": {}
                 }
@@ -152,9 +169,9 @@ async def get_weather(district: str = Query(default="Lucknow")):
         db.close()
 
 
-# ── GET /weather/districts ───────────────────────────────────
+# ── GET /api/weather/districts ───────────────────────────────
 
-@router.get("/weather/districts")
+@router.get("/api/weather/districts")
 async def get_districts():
     """
     Return all 75 supported UP districts with their cache status.
@@ -211,9 +228,9 @@ async def get_districts():
         db.close()
 
 
-# ── GET /weather/status ──────────────────────────────────────
+# ── GET /api/weather/status ──────────────────────────────────
 
-@router.get("/weather/status")
+@router.get("/api/weather/status")
 async def get_cache_status():
     """
     Cache health dashboard — total cached, stale count,
@@ -273,9 +290,9 @@ async def get_cache_status():
         db.close()
 
 
-# ── GET /weather/history ─────────────────────────────────────
+# ── GET /api/weather/history ─────────────────────────────────
 
-@router.get("/weather/history")
+@router.get("/api/weather/history")
 async def get_weather_history(district: str = Query(default="Lucknow")):
     """
     Return the last 7 days of weather snapshots for a UP district.
@@ -337,9 +354,9 @@ async def get_weather_history(district: str = Query(default="Lucknow")):
         db.close()
 
 
-# ── POST /weather/refresh ─────────────────────────────────────
+# ── POST /api/weather/refresh ────────────────────────────────
 
-@router.post("/weather/refresh")
+@router.post("/api/weather/refresh")
 async def manual_refresh(x_admin_key: str = Header(default=None)):
     """
     Admin-only manual trigger for full cache refresh.

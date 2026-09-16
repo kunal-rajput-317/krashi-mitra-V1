@@ -2224,7 +2224,7 @@
 
     try {
       const res  = await fetch(
-        `${window.KRASHIMITRA_API_BASE}/weather?district=${encodeURIComponent(district)}`
+        `${window.KRASHIMITRA_API_BASE}/api/weather?district=${encodeURIComponent(district)}`
       );
       const json = await res.json();
       window._lastWeatherData = json;
@@ -2645,7 +2645,7 @@
         ${Array(7).fill(`<div class="wx-week-day"><div style="width:26px;height:8px;background:rgba(255,255,255,0.15);border-radius:3px;"></div><div style="width:20px;height:20px;background:rgba(255,255,255,0.15);border-radius:50%;margin:5px 0;"></div><div style="width:20px;height:8px;background:rgba(255,255,255,0.15);border-radius:3px;"></div><div style="width:14px;height:7px;background:rgba(255,255,255,0.10);border-radius:3px;"></div></div>`).join('')}
       </div>`;
     try {
-      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/weather/history?district=${encodeURIComponent(district)}`);
+      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/api/weather/history?district=${encodeURIComponent(district)}`);
       const json = await res.json();
       renderWeatherHistory(json.success ? json.data : null);
     } catch (err) {

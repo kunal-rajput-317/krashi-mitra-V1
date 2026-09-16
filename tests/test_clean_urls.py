@@ -22,14 +22,14 @@ import pytest
 
 from backend.routes.sitemap import CORE
 
-# routes/weather.py owns /weather on this origin — it is the JSON forecast API,
-# and weather.html fetches `${KRASHIMITRA_API_BASE}/weather` to fill itself in.
-# Netlify serves the page at that path, the origin serves the API, and making
-# the origin serve the page instead would break the page. The one CORE row a
-# clean-URL fallback cannot cover.
-ROUTER_OWNED = {"/weather"}
-
-CANONICAL_URLS = [url for _file, url, *_rest in CORE if url not in ROUTER_OWNED]
+# /weather was the one CORE row this file used to skip: routes/weather.py owned
+# the bare path and answered it with JSON, which was survivable only while
+# Netlify served the page and a separate host served the API. Netlify went
+# (16 Sep 2026), one origin began serving both, and the router won — every
+# मौसम देखें button on the site opened raw JSON. The forecast API moved to
+# /api/weather, so the page resolves through the same fallback as every other
+# canonical URL and this list no longer needs an exception.
+CANONICAL_URLS = [url for _file, url, *_rest in CORE]
 
 
 @pytest.fixture(scope="module")
