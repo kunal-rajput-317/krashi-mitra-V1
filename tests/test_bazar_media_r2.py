@@ -334,13 +334,43 @@ def test_upload_falls_back_to_disk_without_credentials(monkeypatch, tmp_path):
     assert len(written) == 1 and written[0].suffix == ".webp"
 
 
-def test_production_refuses_to_store_media_on_the_ephemeral_disk(monkeypatch, tmp_path):
-    """The silent-data-loss setting must be loud.
+def test_production_never_writes_media_to_the_ephemeral_disk(db_engine, monkeypatch, tmp_path):
+    """The silent-data-loss setting must stay impossible.
 
     Writing to Render's disk looked like success for months while every photo
-    was thrown away on the next redeploy. With R2 unconfigured in production the
-    upload now fails in front of the farmer instead.
+    was thrown away on the next redeploy. That disk is still forbidden in
+    production — but refusing outright (which is what this asserted before)
+    meant that once R2 was deferred for want of a payment method, a farmer
+    could not attach a photo at all. The bytes now go to Postgres instead.
+    What must never change is the disk staying empty.
     """
+    from backend.routes import bazar
+
+    for k in list(R2_ENV) + ["R2_ENDPOINT"]:
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setattr(bazar, "IS_PROD", True)
+    monkeypatch.setattr(bazar, "BAZAR_UPLOAD_DIR", tmp_path)
+    monkeypatch.setattr(media_store.requests, "put", lambda *a, **k:
+                        pytest.fail("must not call R2 when unconfigured"))
+
+    url, kind = asyncio.run(bazar._save_media(_upload(_photo(800, 600), "crop.jpg")))
+
+    assert kind == "image"
+    assert "/bazar/media/" in url, url
+    assert url.startswith("https://"), "media_url must stay absolute — share.py's og:image reads it"
+    assert not list(tmp_path.iterdir()), "nothing may be written to a disk that forgets"
+
+    from backend.services import media_db
+    stored = media_db.get(media_db.key_for(url))
+    assert stored is not None, "the bytes must actually be readable back"
+    assert stored[1] == "image/webp"
+    assert len(stored[0]) > 0
+    media_db.delete(url)
+
+
+def test_production_still_refuses_video_without_r2(db_engine, monkeypatch, tmp_path):
+    """A 40 MB video against a 0.5 GB database is how the bazar takes the whole
+    site read-only. Images only until R2 is live."""
     from fastapi import HTTPException
 
     from backend.routes import bazar
@@ -351,9 +381,43 @@ def test_production_refuses_to_store_media_on_the_ephemeral_disk(monkeypatch, tm
     monkeypatch.setattr(bazar, "BAZAR_UPLOAD_DIR", tmp_path)
 
     with pytest.raises(HTTPException) as e:
-        asyncio.run(bazar._save_media(_upload(_photo(800, 600), "crop.jpg")))
+        asyncio.run(bazar._save_media(_upload(bytes.fromhex("00000018667479706d703432") + bytes(2048),
+                                        "clip.mp4")))
     assert e.value.status_code == 503
-    assert not list(tmp_path.iterdir()), "nothing may be written to a disk that forgets"
+    assert not list(tmp_path.iterdir())
+
+
+def test_the_byte_cap_refuses_rather_than_filling_neon(db_engine, monkeypatch):
+    """Neon's 0.5 GB is shared with all 22 tables, and filling it flips the
+    whole compute read-only — not just the bazar. The cap is the guard."""
+    from backend.services import media_db
+
+    monkeypatch.setattr(media_db, "MAX_TOTAL_BYTES", 10)
+    with pytest.raises(RuntimeError, match="full"):
+        media_db.put(b"x" * 64, "over-cap.webp", "image/webp")
+    assert media_db.get("over-cap.webp") is None
+
+
+def test_media_is_served_immutable_so_postgres_leaves_the_read_path(client, db_engine):
+    """Storing media in Postgres is only viable because Cloudflare answers the
+    repeat reads. Lose these headers and every feed scroll bills Neon."""
+    from backend.services import media_db
+
+    url = media_db.put(b"not-really-a-webp", "cache-probe.webp", "image/webp")
+    try:
+        r = client.get("/bazar/media/cache-probe.webp")
+        assert r.status_code == 200
+        assert r.content == b"not-really-a-webp"
+        assert "immutable" in r.headers["cache-control"]
+        assert "immutable" in r.headers["cdn-cache-control"]
+        # krashi_bajar.html draws this onto a <canvas> with crossOrigin.
+        assert r.headers.get("access-control-allow-origin") == "*"
+    finally:
+        media_db.delete(url)
+
+
+def test_unknown_media_key_is_a_404_not_a_500(client, db_engine):
+    assert client.get("/bazar/media/nope.webp").status_code == 404
 
 
 def test_video_content_types_are_not_all_mp4():

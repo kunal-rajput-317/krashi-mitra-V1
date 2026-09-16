@@ -1103,6 +1103,15 @@ def build_state(key):
     from PIL import Image
     im = Image.open(IMG_DIR / f"{prefix}-district-map.png")
     im.save(IMG_DIR / f"{prefix}-district-map.webp", "WEBP", quality=82, method=6)
+
+    # The only place the webp is ever rendered is a 64x64 banner thumb in
+    # naksha.py, and shipping the 1440px display copy to fill it cost 60 KB a
+    # page for 64 CSS pixels. The thumb is 1.1 KB. Emitted here so a map
+    # rebuild cannot silently leave the pages pointing at a missing file.
+    _thumb = im.copy()
+    _thumb.thumbnail((128, 128), Image.LANCZOS)   # 2x the 64px display box
+    _thumb.save(IMG_DIR / f"{prefix}-district-map-thumb.webp", "WEBP",
+                quality=82, method=6)
     print("webp:", os.path.getsize(IMG_DIR / f"{prefix}-district-map.webp"), "bytes")
     print(f"-> {key}: {n} districts, full map {W}x{H}\n")
 

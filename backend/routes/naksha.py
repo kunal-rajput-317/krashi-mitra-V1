@@ -2981,7 +2981,7 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
 
 <!-- Compact HD Map Download Banner -->
 <div class="nk-dl-banner">
-  <img src="{_img(s, 'district-map.webp')}" class="nk-dl-banner-thumb" width="64" height="64" loading="lazy" alt="{escape(alt)}">
+  <img src="{_img(s, 'district-map-thumb.webp')}" class="nk-dl-banner-thumb" width="64" height="64" loading="lazy" alt="{escape(alt)}">
   <div class="nk-dl-banner-info">
     <h3>⬇️ {escape(hi)} का HD प्रिंट नक्शा डाउनलोड करें</h3>
     <p>सभी {n} जिले हिंदी में · हाई-क्वालिटी PNG प्रिंट नक्शा ({s['w']}×{s['h']} px) · बिल्कुल मुफ्त</p>
@@ -3389,7 +3389,7 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
 
 <!-- Compact HD Map Download Banner -->
 <div class="nk-dl-banner">
-  <img src="{_img(s, 'district-map.webp')}" class="nk-dl-banner-thumb" width="64" height="64" loading="lazy" alt="{escape(f'{shi} का नक्शा — {hi} समेत सभी {n} जिलों का हिंदी जिलेवार मानचित्र')}">
+  <img src="{_img(s, 'district-map-thumb.webp')}" class="nk-dl-banner-thumb" width="64" height="64" loading="lazy" alt="{escape(f'{shi} का नक्शा — {hi} समेत सभी {n} जिलों का हिंदी जिलेवार मानचित्र')}">
   <div class="nk-dl-banner-info">
     <h3>⬇️ {escape(shi)} का HD प्रिंट नक्शा</h3>
     <p>{escape(hi)} समेत सभी {n} जिले हिंदी में · मुफ्त HD PNG डाउनलोड</p>

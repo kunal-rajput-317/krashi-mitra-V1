@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import (
-    APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
+    APIRouter, Depends, HTTPException, UploadFile, File, Form, Request, Response
 )
 from pydantic import BaseModel
 from sqlalchemy import func, or_, desc
@@ -47,7 +47,7 @@ from backend.database.db import (
     BazarFollow, get_db, acct, accts
 )
 from backend.routes.share import _FALLBACK_IMAGE, _HI_CROP_EN, _crop_image
-from backend.services import media_store
+from backend.services import media_db, media_store
 from backend.utils.auth_utils import get_current_user, resolve_token_user
 from backend.utils.security import IS_PROD, assert_media_matches
 import logging
@@ -393,6 +393,39 @@ def bazar_me(
 
 # ── GET /bazar/feed ──────────────────────────────────────────
 
+@router.get("/media/{key}")
+def get_media(key: str):
+    """Serve a listing photo out of bazar_media.
+
+    The whole viability of storing media in Postgres rests on this handler's
+    headers. The key is a uuid and its bytes never change, so the response is
+    immutable and Cloudflare may hold it at the edge indefinitely — which turns
+    "a photo is read on every feed render", the original objection to Postgres,
+    into roughly one read per photo per cache period. Without these headers
+    this route would bill Neon's metered compute for every scroll.
+
+    404s (rather than erroring) on an unknown key: the feed card already carries
+    an onerror that drops the media block, so a missing photo costs a farmer a
+    picture, not a broken listing.
+    """
+    row = media_db.get(key)
+    if not row:
+        raise HTTPException(404, "Media नहीं मिला।")
+    data, content_type = row
+    return Response(
+        content=data,
+        media_type=content_type,
+        headers={
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "CDN-Cache-Control": "public, max-age=31536000, immutable",
+            # Same rule the R2 bucket needs: krashi_bajar.html draws this image
+            # onto a <canvas> with crossOrigin='anonymous' to build the WhatsApp
+            # share card, and without it the photo silently drops out.
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
+
 @router.get("/feed")
 def get_feed(
     post_type: Optional[str] = None,     # "sell" | "buy" | None = all
@@ -585,17 +618,34 @@ async def _save_media(media: UploadFile) -> tuple:
     if not media_store.enabled():
         # In production the disk below is Render's, which is wiped on the next
         # redeploy. Silently writing there is what lost every photo this feature
-        # ever held, and it looked like success for months. Refusing is louder
-        # and cheaper: the farmer is told now, instead of finding a black bar
-        # under his listing a week later.
+        # ever held, and it looked like success for months.
+        #
+        # Refusing was the right call over writing to that disk — but it meant
+        # that from 14 Sep 2026, with R2 deferred for want of a payment method,
+        # a farmer could not attach a photo at all. So production now falls back
+        # to Postgres (services/media_db.py), which is where avatars already
+        # live. Images only, and under a hard byte cap: Neon's 0.5 GB ceiling
+        # is shared with all 22 tables and filling it turns the whole site
+        # read-only. Both limits are enforced by media_db.put().
         if IS_PROD:
-            log.error("[bazar] R2 is not configured — refusing to store media on "
-                      "an ephemeral disk. Set R2_* in the Render dashboard.")
-            raise HTTPException(
-                503,
-                "फोटो upload अभी बंद है — थोड़ी देर बाद try करें। "
-                "बाकी listing अभी भी डाल सकते हैं।",
-            )
+            if media_type != "image":
+                raise HTTPException(
+                    503,
+                    "अभी सिर्फ photo डाल सकते हैं, video नहीं। "
+                    "बाकी listing अभी भी डाल सकते हैं।",
+                )
+            try:
+                url = await run_in_threadpool(
+                    media_db.put, data, fname, content_type
+                )
+            except Exception:
+                log.exception("[bazar] database media store failed")
+                raise HTTPException(
+                    503,
+                    "फोटो upload अभी बंद है — थोड़ी देर बाद try करें। "
+                    "बाकी listing अभी भी डाल सकते हैं।",
+                )
+            return url, media_type
         dest = BAZAR_UPLOAD_DIR / fname
         try:
             dest.write_bytes(data)
@@ -714,12 +764,15 @@ def delete_post(
         raise HTTPException(403, "सिर्फ अपना post delete कर सकते हैं।")
 
     if post.media_url:
-        # Two eras of storage: R2 objects, and files on the local disk from
-        # before it (plus whatever a developer uploads offline). owns() picks
-        # the right one; both are best-effort, because a storage hiccup must
-        # never stop a farmer from removing his own listing.
+        # Three eras of storage: R2 objects, rows in bazar_media (the interim
+        # store while R2 is deferred), and files on the local disk from before
+        # either (plus whatever a developer uploads offline). owns() picks the
+        # right one; all are best-effort, because a storage hiccup must never
+        # stop a farmer from removing his own listing.
         if media_store.owns(post.media_url):
             media_store.delete(post.media_url)
+        elif media_db.owns(post.media_url):
+            media_db.delete(post.media_url)
         elif post.media_url.startswith("/uploads/"):
             try:
                 (BAZAR_UPLOAD_DIR / Path(post.media_url).name).unlink(missing_ok=True)

@@ -3,7 +3,7 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey, Index, select
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, LargeBinary, text, UniqueConstraint, ForeignKey, Index, select
 from sqlalchemy.orm import sessionmaker, declarative_base, deferred
 from sqlalchemy.pool import NullPool
 from datetime import datetime
@@ -117,6 +117,39 @@ def is_read_only_error(exc: BaseException) -> bool:
     if getattr(orig, "pgcode", None) == _READ_ONLY_SQLSTATE:
         return True
     return "read-only transaction" in str(exc).lower()
+
+
+
+# ── BAZAR MEDIA (interim store while R2 is deferred) ─────────
+# Cloudflare R2 is the intended home for listing photos and the code for it is
+# finished — but R2 will not activate without a payment method, which the owner
+# does not have (deferred 2026-09-17). Meanwhile _save_media() REFUSES uploads
+# in production rather than write to Render's disk, which is wiped on redeploy.
+# So since 14 Sep 2026 a farmer simply cannot attach a photo to a listing.
+#
+# This table is the stopgap: the bytes live in Postgres, like avatars already
+# do (routes/profile.py). The objection to that has always been that Neon's
+# metered compute is the tightest ceiling here and a photo is read on every
+# feed render — which is why /bazar/media/{key} serves an immutable
+# Cache-Control, so Cloudflare answers repeat reads at the edge and Postgres
+# sees roughly one read per photo per cache period.
+#
+# Images only, and capped (see services/media_db.py): Neon's free tier allows
+# 0.5 GB for the WHOLE database, and filling it flips the compute read-only
+# across the entire site, not just the bazar.
+#
+# When the card arrives: set the five R2_* vars and new uploads route to R2
+# automatically. Rows here keep serving, so nothing has to be migrated at once.
+class BazarMedia(Base):
+    __tablename__ = "bazar_media"
+
+    key          = Column(String(80),  primary_key=True)    # "<uuid>.webp"
+    content_type = Column(String(60),  nullable=False)
+    # deferred: the feed and the size-accounting queries must never drag the
+    # blob back with them — only the /media/{key} handler wants the bytes.
+    data         = deferred(Column(LargeBinary, nullable=False))
+    bytes        = Column(Integer,     nullable=False)
+    created_at   = Column(DateTime,    default=datetime.utcnow, nullable=False)
 
 
 # ── WEATHER CACHE MODEL ──────────────────────────────────────

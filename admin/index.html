@@ -6125,7 +6125,7 @@ body {
               <div class="panel-body">
                 <!-- Live Preview in 4:3 -->
                 <div style="width:100%; height:230px; background:#071410; border:2px solid rgba(245,158,11,0.5); border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:14px; box-shadow:0 8px 25px rgba(0,0,0,0.4);">
-                  <img id="fest-img-preview" src="/images/krishna-janmashtami.webp" alt="Festival Preview" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/images/krishna-janmashtami.jpg'">
+                  <img id="fest-img-preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Festival Preview" style="width:100%; height:100%; object-fit:cover;background:#f1f5f9">
                   <div id="fest-img-loading" style="display:none; position:absolute; inset:0; background:rgba(7,20,16,0.85); backdrop-filter:blur(3px); color:#fef08a; font-size:13px; font-weight:700; align-items:center; justify-content:center; gap:8px;">
                     <span class="km-spinner"></span> AI उत्सव फोटो तैयार हो रही है…
                   </div>
@@ -10337,7 +10337,7 @@ async function fetchWeatherForecast() {
   await populateWeatherDistrictDropdown();
 
   try {
-    const r = await fetch(`${API}/weather?district=${encodeURIComponent(dist)}`);
+    const r = await fetch(`${API}/api/weather?district=${encodeURIComponent(dist)}`);
     const res = await r.json();
 
     if (!res.success || !res.data) {
@@ -10373,7 +10373,7 @@ let _weatherDistrictsLoaded = false;
 async function populateWeatherDistrictDropdown() {
   if (_weatherDistrictsLoaded) return;
   try {
-    const r = await fetch(`${API}/weather/districts`);
+    const r = await fetch(`${API}/api/weather/districts`);
     const res = await r.json();
     if (!res.success || !res.data) return;
     const sel = document.getElementById('weather-district-select');
@@ -10387,7 +10387,7 @@ async function populateWeatherDistrictDropdown() {
 
 async function loadWeatherStats() {
   try {
-    const r = await fetch(`${API}/weather/status`);
+    const r = await fetch(`${API}/api/weather/status`);
     const res = await r.json();
     if (!res.success || !res.data) return;
     const d = res.data;
@@ -10420,13 +10420,13 @@ async function triggerWeatherRefresh() {
 
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
   if (log) log.innerHTML = `<span class="log-entry-warn">Starting manual refresh of all 75 UP districts weather cache...</span>\n`;
-  printTerminalLog('Executing: POST /weather/refresh ...');
+  printTerminalLog('Executing: POST /api/weather/refresh ...');
 
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (weatherAdminKey) headers['X-Admin-Key'] = weatherAdminKey;
 
-    const r = await fetch(`${API}/weather/refresh`, { method: 'POST', headers });
+    const r = await fetch(`${API}/api/weather/refresh`, { method: 'POST', headers });
     const d = await r.json();
 
     if (r.ok && d.success) {
@@ -16750,7 +16750,7 @@ const FESTIVAL_PRESETS = {
     summary: 'कृषि मित्र परिवार की ओर से आपको एवं आपके पूरे परिवार को पावन पर्व की कोटि-कोटि मंगलकामनाएं!',
     b1: 'भगवान श्री कृष्ण का आशीर्वाद आपके खेत-खलिहान में लहलहाती फसल और समृद्धि लाए।',
     b2: 'गौमाता और पशुधन सदैव स्वस्थ रहें एवं घर-आंगन में सुख-शांति बनी रहे।',
-    image: '/images/krishna-janmashtami.webp',
+    image: '',
     cta: '🙏 जय श्री कृष्ण (शुभकामनाएं स्वीकारें)'
   },
   diwali: {
@@ -16879,7 +16879,7 @@ async function loadFestivalWishes() {
     if (coolSelect) coolSelect.value = String(cfg.cooldown_hours || 3);
 
     // Update Preview
-    updateFestImgPreview(cfg.image_url || '/images/krishna-janmashtami.webp');
+    updateFestImgPreview(cfg.image_url || '');
 
     // Update Status Pill
     const badge = document.getElementById('fest-live-indicator-badge');
@@ -17122,7 +17122,7 @@ async function saveFestivalConfig() {
 
 function testFestivalPreviewModal() {
   const pill = document.getElementById('fest-top-pill')?.value || '🪶 ॥ हरे कृष्ण ॥ 🪈';
-  const img = document.getElementById('fest-image-url')?.value || '/images/krishna-janmashtami.webp';
+  const img = document.getElementById('fest-image-url')?.value || '';
   const title = document.getElementById('fest-title')?.value || 'त्योहार शुभकामनाएं';
   const summary = document.getElementById('fest-summary')?.value || 'कृषि मित्र परिवार की ओर से मंगलकामनाएं!';
   const b1 = document.getElementById('fest-bullet-1')?.value || '';

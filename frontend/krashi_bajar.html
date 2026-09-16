@@ -606,10 +606,17 @@
     font-size: 13.5px; font-weight: 700; color: var(--text-dark);
   }
   .bz-card-facts .sep { color: var(--border); font-weight: 400; }
+  /* The seller's own words, ABOVE the photo — what he wrote is the caption
+     for the picture, so it reads before it, the way every feed does it. It is
+     a direct child of the card now rather than part of the info strip under
+     the photo, hence its own side padding.
+     Two lines rather than one: below the photo it was an afterthought and a
+     clamp was fine; above it, it is the first thing read. */
   .bz-card-text {
-    font-size: 12.5px; line-height: 1.45; color: var(--text-mid); margin-top: 2px;
+    padding: 0 12px 9px;
+    font-size: 13px; line-height: 1.5; color: var(--text-dark);
     word-break: break-word;
-    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden;
   }
   .bz-qty-row { font-size: 13.5px; color: var(--text-dark); font-weight: 700;
@@ -2591,10 +2598,10 @@ function postCardHtml(p) {
       <span class="bz-head-time">${timeAgo(p.created_at)}</span>
       ${mineMenu}
     </div>
+    ${p.text ? `<div class="bz-card-text">${escapeHtml(p.text)}</div>` : ''}
     ${heroHtml}
     <div class="bz-card-info">
       ${qtyHtml}
-      ${p.text ? `<div class="bz-card-text">${escapeHtml(p.text)}</div>` : ''}
     </div>
     <div class="bz-actions">
       <button class="bz-act-btn ${p.liked_by_me ? 'liked' : ''}" onclick="${nav(`toggleLike(${p.id})`)}" id="like-btn-${p.id}" aria-label="${escapeHtml(tr.like_aria || 'Like')}">

@@ -59,24 +59,10 @@ APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = int(os.getenv("APP_PORT", "8000"))
 DEBUG    = os.getenv("DEBUG", "true").lower() == "true"
 
-# Ensure festival image is present in frontend/images
-try:
-    _f_src = Path(r"C:\Users\krdhm\.gemini\antigravity-ide\brain\d5cb4e0a-cbb9-42b0-972e-a9e9d1175222\krishna_janmashtami_1788514442626.jpg")
-    _f_dst_jpg = BASE_DIR / "frontend" / "images" / "krishna-janmashtami.jpg"
-    _f_dst_webp = BASE_DIR / "frontend" / "images" / "krishna-janmashtami.webp"
-    if _f_src.exists():
-        import shutil
-        if not _f_dst_jpg.exists():
-            shutil.copyfile(_f_src, _f_dst_jpg)
-        if not _f_dst_webp.exists():
-            try:
-                from PIL import Image
-                with Image.open(_f_src) as img:
-                    img.save(_f_dst_webp, "WEBP", quality=88)
-            except Exception:
-                shutil.copyfile(_f_src, _f_dst_webp)
-except Exception as _fe:
-    pass
+# (An earlier build copied a Janmashtami image in from a hardcoded path on
+# one developer's D: drive. It could never resolve on Render, and the
+# festival it served ended on 5 Sep 2026. Festival art is uploaded through
+# /admin now and lands in frontend/images/festivals/.)
 
 from backend.database.db import MandiPrice, get_db, init_db
 

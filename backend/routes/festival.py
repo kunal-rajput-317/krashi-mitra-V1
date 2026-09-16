@@ -63,17 +63,21 @@ def _public_config(config: dict) -> dict:
     return out
 
 
-# Default configuration fallback
+# Fallback for a missing/unreadable config file. It is deliberately INACTIVE
+# and image-less: the file lives on Render's ephemeral disk, so it disappears
+# on every redeploy, and an `active: True` default meant a redeploy could pop a
+# long-finished festival at farmers. _is_active_now() also gates on the dates,
+# but a default that is off needs no date to be correct.
 DEFAULT_CONFIG = {
-    "active": True,
-    "festival_id": "krishna_janmashtami",
+    "active": False,
+    "festival_id": "",
     "festival_name": "श्री कृष्ण जन्माष्टमी",
     "top_pill": "🪶 ॥ हरे कृष्ण हरे राम ॥ 🪈",
     "title": "श्री कृष्ण जन्माष्टमी की हार्दिक शुभकामनाएं",
     "blessing_summary": "कृषि मित्र परिवार की ओर से आपको एवं आपके पूरे परिवार को पावन पर्व की कोटि-कोटि मंगलकामनाएं!",
     "bullet_1": "भगवान श्री कृष्ण का आशीर्वाद आपके खेत-खलिहान में लहलहाती फसल और समृद्धि लाए।",
     "bullet_2": "गौमाता और पशुधन सदैव स्वस्थ रहें एवं घर-आंगन में सुख-शांति बनी रहे।",
-    "image_url": "/images/krishna-janmashtami.webp",
+    "image_url": "",
     "cta_text": "🙏 जय श्री कृष्ण (शुभकामनाएं स्वीकारें)",
     "start_time": "2026-09-04T00:00:00+05:30",
     "end_time": "2026-09-05T23:59:59+05:30",
