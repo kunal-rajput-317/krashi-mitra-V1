@@ -21,6 +21,14 @@ Disallow: /assets/redirecting-animation.html
 # villages) crawlable.
 Disallow: /naksha/*/gaon/
 
+# Outbound affiliate / lead redirects. Every one is rel="nofollow sponsored"
+# already, so this is not about link equity — it is about crawl budget and
+# about the number. A crawler that follows /go/ links downloads a 302 per
+# product per page, and each hop reaches services/lead_clicks.record; the
+# bot-UA filter there is what keeps them out of the count, and a Disallow is
+# the cheaper half of the same job. These URLs have nothing to index.
+Disallow: /go/
+
 # ── AI / LLM crawlers: explicitly welcome ─────────────────────────────
 # GEO (generative-engine optimization): we WANT to be crawled, indexed and
 # cited by AI search (ChatGPT, Perplexity, Claude, Gemini, Copilot).
@@ -44,6 +52,7 @@ Disallow: /old_index.html
 Disallow: /articles/article_template.html
 Disallow: /assets/redirecting-animation.html
 Disallow: /naksha/*/gaon/
+Disallow: /go/
 
 # Machine-readable site guide for LLMs (llmstxt.org)
 # https://krashimitra.in/llms.txt

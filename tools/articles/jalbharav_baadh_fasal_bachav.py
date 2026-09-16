@@ -247,7 +247,7 @@ ARTICLE = {
     "faqs": FAQS,
 
     "bhav_links": [("paddy-common", "धान का भाव"), ("soyabean", "सोयाबीन का भाव"),
-                   ("sugarcane", "गन्ने का भाव")],
+                   ("sugar", "चीनी का भाव")],
 
     "card": {
         "emoji": "🌊", "bg": "#eff6ff", "accent": "#0369a1",

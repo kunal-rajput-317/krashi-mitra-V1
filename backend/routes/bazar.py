@@ -19,13 +19,16 @@
 #   DELETE /bazar/posts/{id}               owner
 #   PATCH  /bazar/posts/{id}/status        owner — active|sold|closed
 #   POST   /bazar/posts/{id}/like          auth+profile — toggle
-#   GET    /bazar/posts/{id}/comments      public
-#   POST   /bazar/posts/{id}/comments      auth+profile — comment or ₹ offer
+#   GET    /bazar/posts/{id}/comments      public — parents with nested replies
+#   POST   /bazar/posts/{id}/comments      auth+profile — comment, reply or ₹ offer
+#   DELETE /bazar/posts/{id}/comments/{cid}  comment author OR post owner
+#   POST   /bazar/comments/{id}/like       auth+profile — toggle
 #   GET    /bazar/users/{id}               public profile card (auth optional)
 #   POST   /bazar/users/{id}/follow        auth+profile — toggle
 # ============================================================
 
 import os
+import re
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -37,13 +40,16 @@ from fastapi import (
 from pydantic import BaseModel
 from sqlalchemy import func, or_, desc
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from backend.database.db import (
-    Buyer, User, UserProfile, BazarPost, BazarLike, BazarComment, BazarFollow, get_db,
-    acct, accts
+    Buyer, User, UserProfile, BazarPost, BazarLike, BazarComment, BazarCommentLike,
+    BazarFollow, get_db, acct, accts
 )
+from backend.routes.share import _FALLBACK_IMAGE, _HI_CROP_EN, _crop_image
+from backend.services import media_store
 from backend.utils.auth_utils import get_current_user, resolve_token_user
-from backend.utils.security import assert_media_matches
+from backend.utils.security import IS_PROD, assert_media_matches
 import logging
 
 log = logging.getLogger(__name__)
@@ -51,16 +57,40 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/bazar", tags=["bazar"])
 
 # ── Media storage ────────────────────────────────────────────
-
+# Bytes go to Cloudflare R2 (backend/services/media_store.py). This directory
+# is the fallback for a developer running uvicorn with no R2 credentials — on
+# Render it is wiped on every redeploy, which is why every listing photo posted
+# before 14 Sep 2026 is a 404 today.
 BAZAR_UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads" / "bazar"
 BAZAR_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+MEDIA_PREFIX = "bazar/"   # key prefix inside the R2 bucket
+
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 VIDEO_EXTS = {".mp4", ".webm", ".mov", ".m4v"}
-MAX_IMAGE_BYTES = 50  * 1024 * 1024   # 50 MB
-# Video duration (max 5 min) is enforced client-side in krashi_bajar.html —
-# the server can't read duration without ffprobe, so it caps raw size instead.
-MAX_VIDEO_BYTES = 120 * 1024 * 1024   # 120 MB (~5 min at phone-camera bitrate)
+# R2 serves back whatever Content-Type we store the object with, and a <video>
+# tag will not play a file the browser is told is the wrong kind. Photos have no
+# such table: they are all re-encoded to image/webp on the way in.
+VIDEO_CONTENT_TYPES = {
+    ".mp4":  "video/mp4",
+    ".m4v":  "video/x-m4v",
+    ".webm": "video/webm",
+    ".mov":  "video/quicktime",
+}
+# The old caps were 50 MB / 120 MB, set when the only cost of a big file was a
+# disk that threw it away anyway. Now the bytes are kept, and both numbers are
+# about what the *farmer* can afford: 98% of this audience is on a phone on
+# rural data, on both ends of the transfer.
+#
+# A photo is re-encoded to ~200 KB on arrival (media_store.shrink_image), so
+# this cap only has to be wider than a phone camera's output, not than what we
+# store. Video is stored as it arrives — no ffmpeg on this dyno — so 40 MB is
+# roughly 30-40 seconds of 720p, and it is the real limit, not the 5-minute
+# duration guard in krashi_bajar.html, which the server cannot check without
+# ffprobe. Keep the two in the same neighbourhood or the client promises an
+# upload the server refuses.
+MAX_IMAGE_BYTES = 12 * 1024 * 1024   # 12 MB — a phone JPEG is 3-8 MB
+MAX_VIDEO_BYTES = 40 * 1024 * 1024   # 40 MB — ~30-40s of phone video
 
 
 # ── Rate limits ──────────────────────────────────────────────
@@ -202,7 +232,7 @@ def _shop_names(posts, db: Session) -> dict:
     both confusing and worse for him than the name he actually pays to
     advertise.
     """
-    ids = {p.user_id for p in posts if (p.source or "") == "dukan" and p.user_id}
+    ids = {p.users_id for p in posts if (p.source or "") == "dukan" and p.users_id}
     if not ids:
         return {}
     rows = (db.query(Buyer)
@@ -225,8 +255,68 @@ def _signed_as(p: BazarPost, author: dict, shop_names: dict) -> dict:
     so Follow follows the person and tapping through opens the real profile
     under the real name; nothing here hides who is behind the listing.
     """
-    name = shop_names.get(p.user_id) if (p.source or "") == "dukan" else None
+    name = shop_names.get(p.users_id) if (p.source or "") == "dukan" else None
     return {**author, "name": name, "is_shop": True} if name else author
+
+
+# Romanized Hindi crop names → the English keyword _crop_image() matches on.
+#
+# The crop field is free text and farmers type what is on their phone keyboard:
+# the live feed holds "Green matar", "Mera kela teyyari hai" and "Ready for
+# Sell". _HI_CROP_EN only covers Devanagari, so every one of those fell through
+# to no photo. Matched per word, not on the whole string, because the crop is
+# rarely alone in the field.
+_ROMAN_CROP_EN = {
+    "gehu": "wheat", "gehun": "wheat", "gahu": "wheat", "genhu": "wheat",
+    "dhan": "paddy", "chawal": "rice", "basmati": "rice",
+    "matar": "peas", "mattar": "peas", "aloo": "potato", "alu": "potato",
+    "pyaz": "onion", "pyaaz": "onion", "kanda": "onion",
+    "tamatar": "tomato", "makka": "maize", "makai": "maize",
+    "sarson": "mustard", "chana": "chana", "ganna": "sugarcane",
+    "lahsun": "garlic", "lehsun": "garlic", "mirch": "chilli", "mirchi": "chilli",
+    "haldi": "turmeric", "moongfali": "groundnut", "mungfali": "groundnut",
+    "arhar": "arhar", "tur": "arhar", "urad": "urad", "moong": "moong",
+    "kapas": "cotton", "masur": "masur", "baingan": "brinjal",
+    "adrak": "ginger", "bhindi": "bhindi", "kela": "banana", "aam": "mango",
+    "seb": "apple", "soyabean": "soybean", "soybean": "soybean",
+    "jau": "barley", "bajra": "bajra", "jowar": "jowar", "til": "sesamum",
+    "gobhi": "cauliflower", "gobi": "cauliflower", "gajar": "carrot",
+    "lauki": "bottle gourd", "kaddu": "pumpkin", "nimbu": "lemon",
+    "anar": "pomegranate", "angoor": "grapes", "papita": "papaya",
+    "amrud": "guava", "santra": "orange", "tarbuj": "watermelon",
+    "palak": "spinach", "methi": "fenugreek", "dhaniya": "coriander",
+    "mooli": "raddish", "shimla": "capsicum", "sahjan": "drumstick",
+}
+
+
+def _crop_photo(crop: Optional[str]) -> str:
+    """A stock photo of the crop, for a listing whose owner uploaded none.
+
+    Most listings carry no photo, and a feed of grey text boxes is the main
+    reason the page looked unfinished on a phone. These are the same
+    licence-checked, self-hosted crop photos /bhav and the share cards use —
+    resolved server-side so there is one crop→photo table, not a second copy in
+    JavaScript, and returned as a krashimitra.in URL so Netlify serves it and it
+    never touches Render's metered egress.
+    """
+    if not crop:
+        return ""
+    name = crop.strip()
+    # _crop_image never returns nothing — an unmatched crop gets the site's OG
+    # banner, which is right for a link preview and wrong here. A card showing
+    # the KrashiMitra logo where the crop should be is worse than a card showing
+    # an emoji tile, so an unmatched crop comes back empty and the page decides.
+    url = _crop_image(_HI_CROP_EN.get(name, name))
+    if url and url != _FALLBACK_IMAGE:
+        return url
+    for token in re.findall(r"[a-z]+", name.lower()):
+        en = _ROMAN_CROP_EN.get(token)
+        if not en:
+            continue
+        url = _crop_image(en)
+        if url and url != _FALLBACK_IMAGE:
+            return url
+    return ""
 
 
 def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool,
@@ -239,6 +329,7 @@ def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool,
         "text":           p.text,
         "media_url":      p.media_url,
         "media_type":     p.media_type,
+        "crop_image":     _crop_photo(p.crop),
         "price":          p.price,
         "old_price":      p.old_price,
         "quantity":       p.quantity,
@@ -260,7 +351,7 @@ def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool,
 
 def _authors_for(posts, db: Session) -> dict:
     """Batch-load author info for a list of posts → {user_id: author_dict}."""
-    ids = {p.user_id for p in posts}
+    ids = {p.users_id for p in posts}
     if not ids:
         return {}
     users    = {u.id: u for u in db.query(User).filter(User.id.in_(ids)).all()}
@@ -333,7 +424,7 @@ def get_feed(
     if district:
         query = query.filter(func.lower(BazarPost.district) == _norm_place(district))
     if user:
-        query = query.filter(BazarPost.user_id == user)
+        query = query.filter(BazarPost.users_id == user)
     if q and q.strip():
         like = f"%{q.strip()}%"
         query = query.filter(or_(
@@ -354,7 +445,7 @@ def get_feed(
     if me and posts:
         my_likes = {
             l.post_id for l in db.query(BazarLike)
-            .filter(BazarLike.user_id == me["user_id"],
+            .filter(BazarLike.users_id == me["user_id"],
                     BazarLike.post_id.in_([p.id for p in posts])).all()
         }
     # Which of these authors does the viewer already follow? (for the
@@ -372,10 +463,10 @@ def get_feed(
     items = [
         _post_to_dict(
             p,
-            authors.get(p.user_id, {"user_id": p.user_id, "name": "किसान",
-                                    "verified": False, "location": ""}),
+            authors.get(p.users_id, {"user_id": p.users_id, "name": "किसान",
+                                     "verified": False, "location": ""}),
             liked=p.id in my_likes,
-            is_mine=bool(me and me["user_id"] == p.user_id),
+            is_mine=bool(me and me["user_id"] == p.users_id),
             shop_names=shops,
         )
         for p in posts
@@ -407,15 +498,15 @@ def get_single_post(
         raise HTTPException(404, "Post नहीं मिला।")
 
     authors = _authors_for([post], db)
-    author = authors.get(post.user_id, {"user_id": post.user_id, "name": "किसान",
-                                            "verified": False, "location": ""})
+    author = authors.get(post.users_id, {"user_id": post.users_id, "name": "किसान",
+                                             "verified": False, "location": ""})
     liked = False
     if me:
         liked = db.query(BazarLike).filter(
-            BazarLike.user_id == me["user_id"],
+            BazarLike.users_id == me["user_id"],
             BazarLike.post_id == post_id
         ).first() is not None
-    is_mine = bool(me and me["user_id"] == post.user_id)
+    is_mine = bool(me and me["user_id"] == post.users_id)
 
     return {
         "success": True,
@@ -427,8 +518,48 @@ def get_single_post(
 
 # ── POST /bazar/posts — create listing ───────────────────────
 
+async def _read_upload(media: UploadFile, media_type: str, max_bytes: int) -> bytes:
+    """Read an upload into memory, refusing it the moment it is too big.
+
+    Bounded by max_bytes, which is why holding the whole file is safe on a
+    512 MB instance: the caps below are what make this a few tens of MB and not
+    a swap storm. The magic number is checked on the first chunk, before the
+    rest of the body is even pulled off the socket — the extension only ever
+    told us what the caller *claims*.
+    """
+    buf, size, first = bytearray(), 0, True
+    while True:
+        chunk = await media.read(1024 * 1024)
+        if not chunk:
+            break
+        if first:
+            assert_media_matches(chunk[:16], media_type)
+            first = False
+        size += len(chunk)
+        if size > max_bytes:
+            raise HTTPException(
+                400,
+                f"File बहुत बड़ी है — अधिकतम {max_bytes // (1024*1024)} MB।",
+            )
+        buf.extend(chunk)
+    if not buf:
+        raise HTTPException(400, "File खाली है। दोबारा try करें।")
+    return bytes(buf)
+
+
 async def _save_media(media: UploadFile) -> tuple:
-    """Validate + save an uploaded image/video. Returns (url, media_type)."""
+    """Validate + store an uploaded image/video. Returns (url, media_type).
+
+    Photos are re-encoded to a bounded WebP first — a 4000px phone JPEG becomes
+    ~200 KB, which is what the 390px feed card actually needs and what makes the
+    R2 free tier last. Video is stored as uploaded; transcoding needs ffmpeg,
+    which this dyno does not have and could not afford the CPU for.
+
+    Storage is R2 when configured and the local disk when it is not, so
+    `uvicorn` still runs offline with no credentials. The disk branch is dev
+    only: on Render it is wiped every redeploy, which is how every photo posted
+    before 14 Sep 2026 was lost. See backend/services/media_store.py.
+    """
     ext = os.path.splitext(media.filename or "")[1].lower()
     if ext in IMAGE_EXTS:
         media_type, max_bytes = "image", MAX_IMAGE_BYTES
@@ -437,35 +568,53 @@ async def _save_media(media: UploadFile) -> tuple:
     else:
         raise HTTPException(400, "केवल photo (jpg/png/webp) या video (mp4/webm) upload करें।")
 
+    raw = await _read_upload(media, media_type, max_bytes)
+
+    if media_type == "image":
+        try:
+            data, content_type, ext = media_store.shrink_image(raw)
+        except ValueError as e:
+            log.info("[bazar] rejected image upload: %s", e)
+            raise HTTPException(400, "यह photo पढ़ी नहीं जा सकी। दूसरी file चुनें।")
+    else:
+        data = raw
+        content_type = VIDEO_CONTENT_TYPES.get(ext, "video/mp4")
+
     fname = f"{uuid.uuid4().hex}{ext}"
-    dest  = BAZAR_UPLOAD_DIR / fname
-    size  = 0
-    first = True
+
+    if not media_store.enabled():
+        # In production the disk below is Render's, which is wiped on the next
+        # redeploy. Silently writing there is what lost every photo this feature
+        # ever held, and it looked like success for months. Refusing is louder
+        # and cheaper: the farmer is told now, instead of finding a black bar
+        # under his listing a week later.
+        if IS_PROD:
+            log.error("[bazar] R2 is not configured — refusing to store media on "
+                      "an ephemeral disk. Set R2_* in the Render dashboard.")
+            raise HTTPException(
+                503,
+                "फोटो upload अभी बंद है — थोड़ी देर बाद try करें। "
+                "बाकी listing अभी भी डाल सकते हैं।",
+            )
+        dest = BAZAR_UPLOAD_DIR / fname
+        try:
+            dest.write_bytes(data)
+        except Exception:
+            dest.unlink(missing_ok=True)
+            raise HTTPException(500, "File save नहीं हो पाई। दोबारा try करें।")
+        return f"/uploads/bazar/{fname}", media_type
+
     try:
-        with open(dest, "wb") as f:
-            while True:
-                chunk = await media.read(1024 * 1024)
-                if not chunk:
-                    break
-                if first:
-                    # The extension only told us what the caller *claims*.
-                    # Check the magic number before a single byte lands on disk.
-                    assert_media_matches(chunk[:16], media_type)
-                    first = False
-                size += len(chunk)
-                if size > max_bytes:
-                    raise HTTPException(
-                        400,
-                        f"File बहुत बड़ी है — अधिकतम {max_bytes // (1024*1024)} MB।",
-                    )
-                f.write(chunk)
-    except HTTPException:
-        dest.unlink(missing_ok=True)
-        raise
+        # Blocking HTTP inside an async endpoint would hold the event loop for
+        # the whole upload and stall every other request on the single
+        # instance. The threadpool is what keeps the feed responsive.
+        url = await run_in_threadpool(
+            media_store.put, data, f"{MEDIA_PREFIX}{fname}", content_type
+        )
     except Exception:
-        dest.unlink(missing_ok=True)
-        raise HTTPException(500, "File save नहीं हो पाई। दोबारा try करें।")
-    return f"/uploads/bazar/{fname}", media_type
+        log.exception("[bazar] R2 upload failed")
+        raise HTTPException(502, "Photo upload नहीं हो पाया। दोबारा try करें।")
+    return url, media_type
 
 
 @router.post("/posts")
@@ -501,7 +650,7 @@ async def create_post(
     # bandwidth on a file we are about to refuse.
     since = datetime.utcnow() - timedelta(days=1)
     todays = (db.query(func.count(BazarPost.id))
-                .filter(BazarPost.user_id == user_id,
+                .filter(BazarPost.users_id == user_id,
                         BazarPost.created_at >= since)
                 .scalar() or 0)
     if todays >= MAX_POSTS_PER_DAY:
@@ -521,7 +670,7 @@ async def create_post(
     # crop lying in a different district from the one he registered with, and
     # the /bhav page is the district he was actually looking at.
     post = BazarPost(
-        user_id    = user_id,
+        users_id   = user_id,
         post_type  = post_type,
         crop       = (crop or "").strip() or None,
         text       = (text or "").strip() or None,
@@ -561,14 +710,21 @@ def delete_post(
     post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
     if not post:
         raise HTTPException(404, "Post नहीं मिला।")
-    if post.user_id != current_user["user_id"]:
+    if post.users_id != current_user["user_id"]:
         raise HTTPException(403, "सिर्फ अपना post delete कर सकते हैं।")
 
     if post.media_url:
-        try:
-            (BAZAR_UPLOAD_DIR / Path(post.media_url).name).unlink(missing_ok=True)
-        except Exception:
-            pass
+        # Two eras of storage: R2 objects, and files on the local disk from
+        # before it (plus whatever a developer uploads offline). owns() picks
+        # the right one; both are best-effort, because a storage hiccup must
+        # never stop a farmer from removing his own listing.
+        if media_store.owns(post.media_url):
+            media_store.delete(post.media_url)
+        elif post.media_url.startswith("/uploads/"):
+            try:
+                (BAZAR_UPLOAD_DIR / Path(post.media_url).name).unlink(missing_ok=True)
+            except Exception:
+                pass
     db.query(BazarLike).filter(BazarLike.post_id == post_id).delete()
     db.query(BazarComment).filter(BazarComment.post_id == post_id).delete()
     db.delete(post)
@@ -613,7 +769,7 @@ def edit_post(
     post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
     if not post:
         raise HTTPException(404, "Post नहीं मिला।")
-    if post.user_id != current_user["user_id"]:
+    if post.users_id != current_user["user_id"]:
         raise HTTPException(403, "सिर्फ अपना post edit कर सकते हैं।")
 
     sent = body.model_fields_set
@@ -683,7 +839,7 @@ def edit_post(
     db.commit()
     db.refresh(post)
 
-    author = _authors_for([post], db).get(post.user_id, {})
+    author = _authors_for([post], db).get(post.users_id, {})
     return {
         "success": True,
         "message": "✓ Listing update हो गई।",
@@ -712,7 +868,7 @@ def set_post_status(
     post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
     if not post:
         raise HTTPException(404, "Post नहीं मिला।")
-    if post.user_id != current_user["user_id"]:
+    if post.users_id != current_user["user_id"]:
         raise HTTPException(403, "सिर्फ अपना post update कर सकते हैं।")
     post.status = body.status
     db.commit()
@@ -736,13 +892,13 @@ def toggle_like(
 
     existing = (db.query(BazarLike)
                   .filter(BazarLike.post_id == post_id,
-                          BazarLike.user_id == user_id).first())
+                          BazarLike.users_id == user_id).first())
     if existing:
         db.delete(existing)
         post.likes_count = max(0, (post.likes_count or 0) - 1)
         liked = False
     else:
-        db.add(BazarLike(post_id=post_id, user_id=user_id))
+        db.add(BazarLike(post_id=post_id, users_id=user_id))
         post.likes_count = (post.likes_count or 0) + 1
         liked = True
     db.commit()
@@ -758,31 +914,72 @@ class CommentRequest(BaseModel):
     text:         Optional[str]   = None
     kind:         str             = "comment"   # "comment" | "offer"
     offer_amount: Optional[float] = None
+    parent_id:    Optional[int]   = None        # set to reply to a comment
 
 
 @router.get("/posts/{post_id}/comments")
 def get_comments(
     post_id: int,
+    request: Request = None,
     db:      Session = Depends(get_db),
 ):
     post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
     if not post:
         raise HTTPException(404, "Post नहीं मिला।")
 
+    me = get_optional_user(request, db) if request else None
+
     comments = (db.query(BazarComment)
                   .filter(BazarComment.post_id == post_id)
                   .order_by(BazarComment.created_at.asc())
                   .limit(200).all())
     authors = _authors_for(comments, db)
-    items = [{
-        "id":           c.id,
-        "kind":         c.kind,
-        "text":         c.text,
-        "offer_amount": c.offer_amount,
-        "created_at":   c.created_at.isoformat() if c.created_at else None,
-        "author":       authors.get(c.user_id, {"user_id": c.user_id, "name": "किसान",
-                                                "verified": False, "location": ""}),
-    } for c in comments]
+
+    # Which of these the viewer has already liked — one query for the whole
+    # thread, not one per comment.
+    liked_ids = set()
+    if me and comments:
+        liked_ids = {row[0] for row in db.query(BazarCommentLike.comment_id).filter(
+            BazarCommentLike.users_id == me["user_id"],
+            BazarCommentLike.comment_id.in_([c.id for c in comments]),
+        ).all()}
+
+    # The post's owner may remove anything under his own listing; everyone else
+    # may remove only what they wrote.
+    my_id = me["user_id"] if me else None
+    is_post_owner = bool(my_id and post.users_id == my_id)
+
+    def _one(c: BazarComment) -> dict:
+        return {
+            "id":           c.id,
+            "kind":         c.kind,
+            "text":         c.text,
+            "offer_amount": c.offer_amount,
+            "parent_id":    c.parent_id,
+            "likes_count":  c.likes_count or 0,
+            "liked_by_me":  c.id in liked_ids,
+            "can_delete":   bool(my_id and (c.users_id == my_id or is_post_owner)),
+            "created_at":   c.created_at.isoformat() if c.created_at else None,
+            "author":       authors.get(c.users_id, {"user_id": c.users_id, "name": "किसान",
+                                                     "verified": False, "location": ""}),
+        }
+
+    # Flat list, parents first with their replies nested under them. The client
+    # renders exactly two levels, so the shape it needs is built here rather
+    # than reassembled in JavaScript.
+    by_parent: dict = {}
+    for c in comments:
+        if c.parent_id:
+            by_parent.setdefault(c.parent_id, []).append(c)
+
+    items = []
+    for c in comments:
+        if c.parent_id:
+            continue
+        row = _one(c)
+        row["replies"] = [_one(r) for r in by_parent.get(c.id, [])]
+        items.append(row)
+
     return {"success": True, "message": "", "data": {"comments": items}}
 
 
@@ -808,12 +1005,31 @@ def add_comment(
     elif not (body.text and body.text.strip()):
         raise HTTPException(400, "Comment खाली नहीं हो सकता।")
 
+    # Replies are one level deep and no deeper. Answering a reply attaches to
+    # that reply's own parent, so the thread stays two levels on a 390px screen
+    # instead of marching off the right edge.
+    parent_id = None
+    if body.parent_id:
+        parent = db.query(BazarComment).filter(
+            BazarComment.id == body.parent_id,
+            BazarComment.post_id == post_id,     # never across posts
+        ).first()
+        if not parent:
+            raise HTTPException(404, "जिस comment का जवाब दे रहे हैं वह नहीं मिला।")
+        parent_id = parent.parent_id or parent.id
+        if kind == "offer":
+            # An offer is a number against the listing, not against a sentence
+            # in the thread; nesting one would hide it from the seller.
+            raise HTTPException(400, "Offer किसी comment का जवाब नहीं हो सकता।")
+
     comment = BazarComment(
         post_id      = post_id,
-        user_id      = user_id,
+        users_id     = user_id,
         kind         = kind,
         text         = (body.text or "").strip() or None,
         offer_amount = body.offer_amount if kind == "offer" else None,
+        parent_id    = parent_id,
+        likes_count  = 0,
     )
     db.add(comment)
     post.comments_count = (post.comments_count or 0) + 1
@@ -831,8 +1047,109 @@ def add_comment(
             "offer_amount": comment.offer_amount,
             "created_at":   comment.created_at.isoformat(),
             "author":       _author_info(user, profile),
+            "parent_id":    comment.parent_id,
+            "likes_count":  0,
+            "liked_by_me":  False,
+            "can_delete":   True,
+            "replies":      [],
             "comments_count": post.comments_count,
         },
+    }
+
+
+# ── DELETE /bazar/posts/{post_id}/comments/{comment_id} ──────
+
+@router.delete("/posts/{post_id}/comments/{comment_id}")
+def delete_comment(
+    post_id:      int,
+    comment_id:   int,
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    """Remove a comment, offer or reply.
+
+    Two people may do it: whoever wrote it, and whoever owns the listing — a
+    farmer has to be able to clear abuse or a wrong price off his own post
+    without waiting for us. Deleting a top-level comment takes its replies with
+    it, because a reply to nothing is unreadable.
+    """
+    user_id = current_user["user_id"]
+    post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
+    if not post:
+        raise HTTPException(404, "Post नहीं मिला।")
+
+    comment = db.query(BazarComment).filter(
+        BazarComment.id == comment_id,
+        BazarComment.post_id == post_id,
+    ).first()
+    if not comment:
+        raise HTTPException(404, "Comment नहीं मिला।")
+
+    if comment.users_id != user_id and post.users_id != user_id:
+        raise HTTPException(403, "सिर्फ अपना comment delete कर सकते हैं।")
+
+    # A parent takes its replies down with it; count them BEFORE the delete.
+    doomed = [comment.id]
+    if not comment.parent_id:
+        doomed += [r.id for r in db.query(BazarComment.id).filter(
+            BazarComment.parent_id == comment.id).all()]
+
+    db.query(BazarCommentLike).filter(
+        BazarCommentLike.comment_id.in_(doomed)).delete(synchronize_session=False)
+    db.query(BazarComment).filter(
+        BazarComment.id.in_(doomed)).delete(synchronize_session=False)
+
+    # Never below zero: these counters predate the column and some rows drifted.
+    post.comments_count = max(0, (post.comments_count or 0) - len(doomed))
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Comment हटा दिया।",
+        "data": {"deleted": doomed, "comments_count": post.comments_count},
+    }
+
+
+# ── POST /bazar/comments/{comment_id}/like ───────────────────
+
+@router.post("/comments/{comment_id}/like")
+def toggle_comment_like(
+    comment_id:   int,
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    """Toggle. The unique constraint on (comment_id, user_id) is what makes a
+    double-tap idempotent rather than a second like."""
+    user_id = current_user["user_id"]
+    require_profile(user_id, db)
+
+    comment = db.query(BazarComment).filter(BazarComment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(404, "Comment नहीं मिला।")
+
+    existing = db.query(BazarCommentLike).filter(
+        BazarCommentLike.comment_id == comment_id,
+        BazarCommentLike.users_id == user_id,
+    ).first()
+
+    if existing:
+        db.delete(existing)
+        liked = False
+    else:
+        db.add(BazarCommentLike(comment_id=comment_id, users_id=user_id))
+        liked = True
+    db.flush()
+
+    # Counted from the rows rather than incremented, so a counter that has
+    # drifted heals itself on the next tap instead of drifting further.
+    comment.likes_count = db.query(func.count(BazarCommentLike.id)).filter(
+        BazarCommentLike.comment_id == comment_id).scalar() or 0
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "",
+        "data": {"liked": liked, "likes_count": comment.likes_count},
     }
 
 
@@ -850,7 +1167,7 @@ def get_public_profile(
         raise HTTPException(404, "User नहीं मिला।")
     profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
 
-    posts_count     = db.query(BazarPost).filter(BazarPost.user_id == user_id).count()
+    posts_count     = db.query(BazarPost).filter(BazarPost.users_id == user_id).count()
     followers_count = db.query(BazarFollow).filter(BazarFollow.following_id == user_id).count()
     following_count = db.query(BazarFollow).filter(BazarFollow.follower_id == user_id).count()
 
@@ -862,7 +1179,7 @@ def get_public_profile(
                           .first()) is not None
 
     recent = (db.query(BazarPost)
-                .filter(BazarPost.user_id == user_id, BazarPost.status != "closed")
+                .filter(BazarPost.users_id == user_id, BazarPost.status != "closed")
                 .order_by(desc(BazarPost.created_at)).limit(6).all())
     author = _author_info(user, profile)
     # No shop_names here on purpose. This card's whole job is to say who the

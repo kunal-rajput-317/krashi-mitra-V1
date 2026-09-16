@@ -467,7 +467,7 @@ def _sync_bazar_post(db, owner_user_id) -> None:
             and r.paid_until and r.paid_until > now]
 
     post = (db.query(BazarPost)
-              .filter(BazarPost.user_id == owner_user_id, BazarPost.source == "dukan")
+              .filter(BazarPost.users_id == owner_user_id, BazarPost.source == "dukan")
               .first())
 
     if not live:
@@ -501,7 +501,7 @@ def _sync_bazar_post(db, owner_user_id) -> None:
         post.status = "active"
     else:
         post = BazarPost(
-            user_id=owner_user_id, post_type="buy", text=text,
+            users_id=owner_user_id, post_type="buy", text=text,
             state=lead.state, district=lead.district, source="dukan",
             status="active",
         )

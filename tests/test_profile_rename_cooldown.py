@@ -31,7 +31,7 @@ def member(db_session):
         stale = [u.id for u in rows]
         accts = [u.user_id for u in rows if u.user_id is not None]
         if stale:
-            db_session.query(BazarPost).filter(BazarPost.user_id.in_(stale)).delete()
+            db_session.query(BazarPost).filter(BazarPost.users_id.in_(stale)).delete()
             if accts:
                 db_session.query(UserProfile).filter(
                     UserProfile.user_id.in_(accts)).delete()

@@ -305,6 +305,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/khet-me-chuha-niyantran", "#b91c1c", "🐀", "फसल · कीट",
+         "खेत में चूहे कैसे मारें — विष चारा की सही विधि और मात्रा"),
         (f"{SITE}/articles/makka-ethanol-maang", "#d97706", "🌽", "मक्का · बाज़ार",
          "मक्के का भाव और एथेनॉल — नया खरीदार कहाँ से आया"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#b45309", "🌾", "गेहूं · फसल गाइड",

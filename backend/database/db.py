@@ -439,7 +439,7 @@ def acct(users_id):
         db.query(UserProfile).filter(UserProfile.user_id == acct(user_id))
 
     `users_id` may be a plain int (a JWT's user_id) or a column expression
-    (MandiAlert.user_id, BazarPost.user_id, …), so the same call works for
+    (MandiAlert.user_id, BazarPost.users_id, …), so the same call works for
     scalar lookups and for joins across the sibling tables.
 
     Returns NULL for an unverified account, which has no number yet — and a
@@ -847,10 +847,16 @@ class BazarPost(Base):
     __tablename__ = "bazar_posts"
 
     id             = Column(Integer,  primary_key=True, index=True)
-    user_id        = Column(Integer,
+    # Named users_id, not user_id, because that is literally what it holds — a
+    # users.id. The column used to be called user_id, which read as "the account
+    # number" (users.user_id) and is NOT that: post 8 carries 113 here while its
+    # author's account number is 102. Account numbers are also renumbered by the
+    # compaction pass (see _FOREIGN_KEYS), so they could never have been safe to
+    # store here anyway.
+    users_id       = Column(Integer,
                             ForeignKey("users.id", ondelete="CASCADE",
                                        name="fk_bazar_posts_user_id"),
-                            nullable=False, index=True)             # users.id
+                            nullable=False, index=True)
     post_type      = Column(String,   default="sell", nullable=False)  # "sell" | "buy"
     crop           = Column(String,   nullable=True, index=True)
     text           = Column(Text,     nullable=True)
@@ -894,14 +900,14 @@ class BazarPost(Base):
 
 class BazarLike(Base):
     __tablename__ = "bazar_likes"
-    __table_args__ = (UniqueConstraint("post_id", "user_id", name="bazar_like_uidx"),)
+    __table_args__ = (UniqueConstraint("post_id", "users_id", name="bazar_like_uidx"),)
 
     id         = Column(Integer,  primary_key=True, index=True)
     post_id    = Column(Integer,
                         ForeignKey("bazar_posts.id", ondelete="CASCADE",
                                    name="fk_bazar_likes_post_id"),
                         nullable=False, index=True)
-    user_id    = Column(Integer,
+    users_id   = Column(Integer,                       # users.id — see BazarPost
                         ForeignKey("users.id", ondelete="CASCADE",
                                    name="fk_bazar_likes_user_id"),
                         nullable=False, index=True)
@@ -917,14 +923,43 @@ class BazarComment(Base):
                           ForeignKey("bazar_posts.id", ondelete="CASCADE",
                                      name="fk_bazar_comments_post_id"),
                           nullable=False, index=True)
-    user_id      = Column(Integer,
+    users_id     = Column(Integer,                     # users.id — see BazarPost
                           ForeignKey("users.id", ondelete="CASCADE",
                                      name="fk_bazar_comments_user_id"),
                           nullable=False, index=True)
     kind         = Column(String,   default="comment")  # "comment" | "offer"
     text         = Column(Text,     nullable=True)
     offer_amount = Column(Float,    nullable=True)      # set when kind == "offer"
+    # A reply points at the comment it answers. Exactly ONE level deep — a
+    # reply to a reply is stored against the same top-level parent, because a
+    # thread that indents forever is unreadable on a 390px phone.
+    parent_id    = Column(Integer,
+                          ForeignKey("bazar_comments.id", ondelete="CASCADE",
+                                     name="fk_bazar_comments_parent_id"),
+                          nullable=True, index=True)
+    likes_count  = Column(Integer,  default=0)
     created_at   = Column(DateTime, default=datetime.utcnow)
+
+
+class BazarCommentLike(Base):
+    """One row per (user, comment). The unique constraint is what makes a
+    double-tap idempotent rather than a second like."""
+    __tablename__ = "bazar_comment_likes"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    comment_id = Column(Integer,
+                        ForeignKey("bazar_comments.id", ondelete="CASCADE",
+                                   name="fk_bazar_comment_likes_comment_id"),
+                        nullable=False, index=True)
+    users_id   = Column(Integer,                       # users.id — see BazarPost
+                        ForeignKey("users.id", ondelete="CASCADE",
+                                   name="fk_bazar_comment_likes_user_id"),
+                        nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("comment_id", "users_id", name="uq_bazar_comment_like"),
+    )
 
 
 class BazarFollow(Base):
@@ -1417,6 +1452,78 @@ class DukanCatalog(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class ShopProduct(Base):
+    """One product on /product/<slug> — the KrashiMitra catalogue, editable.
+
+    NOT DukanCatalog, on purpose. That table is the *shops'* price-comparison
+    catalogue: a generic product a dukan lists its own rate against, with no
+    price and no affiliate link of its own. This one is the /product family —
+    an editorial estimate, an Amazon/Flipkart link, and a page that ranks for
+    "<product> की कीमत". Same reason DukanShop copies Buyer rather than sharing
+    it: one business must not surface inside the other because the columns
+    happened to look alike.
+
+    POSTGRES IS THE SOURCE OF TRUTH, shop.html IS THE BASELINE. Until now the
+    catalogue existed only as a `const PRODUCTS = [...]` literal inside
+    frontend/shop.html, so adding a product meant hand-editing a 94-entry JS
+    array and shipping a deploy. Rows here are merged OVER that array by
+    services/shop_catalog.py: a row whose slug matches replaces the committed
+    entry, a row whose slug is new is an addition, and `active=False` hides one.
+    Nothing is migrated and nothing is deleted — if this table is empty, or the
+    database is asleep, /product renders exactly what it rendered before.
+
+    THE IMAGE HAS TWO SOURCES, like DukanCatalog and for the same reason.
+    `image_url` points at a file already committed under frontend/images (what
+    PRODUCTS has always used); `image_data` is a base64 WebP typed in from the
+    panel, in Postgres because Render's free tier wipes the disk on restart.
+    That second path is what finally lets the wrong photos be fixed: 19 of the
+    24 products the /bhav affiliate shelf can surface currently show a picture
+    of a different product.
+
+    NO `rating` COLUMN. PRODUCTS carries one and nothing renders it — a ⭐ score
+    nobody ever collected is a claim, and tests/test_product_price_claims.py
+    exists to keep it off these pages. A column would be an invitation.
+    """
+    __tablename__ = "shop_products"
+
+    id   = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, nullable=False, unique=True, index=True)   # IS the URL
+    cat  = Column(String, nullable=False, index=True)                # product.py CAT_LABELS key
+
+    emoji       = Column(String, nullable=True)   # the card glyph — and the affiliate shelf's icon
+    badge       = Column(String, nullable=True)   # "bestseller" | "organic" | "new-badge"
+    badge_class = Column(String, nullable=True)
+
+    name_hi = Column(String, nullable=False)
+    name_en = Column(String, nullable=False)      # the slug is derived from this
+    name_kn = Column(String, nullable=True)
+    desc_hi = Column(Text,   nullable=True)
+    desc_en = Column(Text,   nullable=True)
+    desc_kn = Column(Text,   nullable=True)
+    unit_hi = Column(String, nullable=True)
+    unit_en = Column(String, nullable=True)
+    unit_kn = Column(String, nullable=True)
+
+    # An editorial estimate of what a local shop charges — explicitly NOT the
+    # Amazon price, which is why the page prints "रेट किसका — दुकानदार का" and
+    # why the affiliate shelf prints no rupee figure at all. Amazon's own price
+    # may only be displayed live via their API, never hand-copied into a field.
+    price = Column(Integer, nullable=True)
+    mrp   = Column(Integer, nullable=True)
+
+    image_url  = Column(String, nullable=True)
+    image_data = deferred(Column(Text, nullable=True))    # base64 WebP, panel upload
+    image_mime = Column(String, nullable=True)            # cheap presence flag
+
+    affil_amazon   = Column(String, nullable=True)
+    affil_flipkart = Column(String, nullable=True)
+
+    active     = Column(Boolean, default=True, nullable=False, index=True)
+    sort_order = Column(Integer, default=0,    nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class DukanShop(Base):
     """One physical shop in the directory.
 
@@ -1788,6 +1895,43 @@ def _ensure_postgres_columns():
     if engine.dialect.name != "postgresql":
         return
 
+    # ── bazar_*.user_id → users_id (2026-09-16) ──────────────
+    # Every one of these columns holds a users.id, but "user_id" reads in THIS
+    # schema as the account number (users.user_id) — a genuinely different number
+    # for the same person: bazar post 8 carries 113 here while its author's
+    # account number is 102. The name was the entire defect. No value changes,
+    # and RENAME COLUMN carries the FK, indexes and NOT NULL across untouched.
+    #
+    # Runs before schema_patches below so the add-column pass can never see the
+    # old name and helpfully re-add it as an empty duplicate.
+    #
+    # Guarded on BOTH sides — old present AND new absent — so it no-ops on every
+    # later startup, and never fires on a fresh DB where create_all() already
+    # emitted the column under the new name.
+    #
+    # `users` and `user_profiles` are deliberately NOT in this list. Their
+    # user_id column IS the account number, so it is named correctly, and those
+    # two tables are the identity root that 13 others hang off.
+    with engine.begin() as conn:
+        for _t in ("bazar_posts", "bazar_likes", "bazar_comments",
+                   "bazar_comment_likes"):
+            conn.execute(text(f"""
+                DO $$
+                BEGIN
+                    IF EXISTS (SELECT 1 FROM information_schema.columns
+                                WHERE table_schema = 'public'
+                                  AND table_name   = '{_t}'
+                                  AND column_name  = 'user_id')
+                   AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                                WHERE table_schema = 'public'
+                                  AND table_name   = '{_t}'
+                                  AND column_name  = 'users_id')
+                    THEN
+                        ALTER TABLE {_t} RENAME COLUMN user_id TO users_id;
+                    END IF;
+                END $$;
+            """))
+
     schema_patches = {
         "users": [
             ("user_id", "INTEGER"),
@@ -2007,6 +2151,14 @@ def _ensure_postgres_columns():
             ("updated_at",        "TIMESTAMP"),
             ("edit_count",        "INTEGER DEFAULT 0"),
             ("edit_window_start", "TIMESTAMP"),
+        ],
+        # Added 2026-09-15 with replies and comment likes. parent_id stays NULL
+        # on every existing row, which is correct — they are all top-level — and
+        # likes_count DEFAULTs to 0 rather than NULL so the counter can be
+        # incremented without a coalesce at every call site.
+        "bazar_comments": [
+            ("parent_id",   "INTEGER"),
+            ("likes_count", "INTEGER DEFAULT 0"),
         ],
         # Outreach + payment tracking, added 2026-08-03. The `buyers` table
         # itself predates this by days, so create_all() already made it without
@@ -2728,10 +2880,10 @@ _FOREIGN_KEYS = [
     ("push_subscriptions", "user_id",         "users",              "id", "SET NULL"),
     ("mandi_alerts",       "user_id",         "users",              "id", "CASCADE"),
     ("mandi_alerts",       "subscription_id", "push_subscriptions", "id", "CASCADE"),
-    ("bazar_posts",        "user_id",         "users",              "id", "CASCADE"),
-    ("bazar_likes",        "user_id",         "users",              "id", "CASCADE"),
+    ("bazar_posts",        "users_id",        "users",              "id", "CASCADE"),
+    ("bazar_likes",        "users_id",        "users",              "id", "CASCADE"),
     ("bazar_likes",        "post_id",         "bazar_posts",        "id", "CASCADE"),
-    ("bazar_comments",     "user_id",         "users",              "id", "CASCADE"),
+    ("bazar_comments",     "users_id",        "users",              "id", "CASCADE"),
     ("bazar_comments",     "post_id",         "bazar_posts",        "id", "CASCADE"),
     ("bazar_follows",      "follower_id",     "users",              "id", "CASCADE"),
     ("bazar_follows",      "following_id",    "users",              "id", "CASCADE"),

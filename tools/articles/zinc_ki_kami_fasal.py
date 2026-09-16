@@ -267,6 +267,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/usar-bhumi-sudhar-jipsam", "#92400e", "🧂", "मिट्टी · ऊसर",
+         "ऊसर ज़मीन में जिप्सम — कितना, कब और कैसे डालें"),
         (f"{SITE}/articles/rabi-makka-ki-kheti", "#ca8a04", "🌽", "मक्का · रबी",
          "रबी मक्का की खेती — समय, बीज दर, खाद और सिंचाई"),
         (f"{SITE}/articles/sulphur-gandhak-ki-kami", "#ca8a04", "⚗️", "खाद · गंधक",

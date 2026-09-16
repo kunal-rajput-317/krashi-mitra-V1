@@ -12,12 +12,15 @@
 #
 # Two rules this file exists under:
 #
-#   1. It NEVER calls a third-party API. Every judgement is derived from what
-#      the last automatic run left behind (sync_log, table contents, files on
-#      disk). A health page that burns the data.gov quota is a health page that
-#      causes outages. The single exception is _chk_ads_txt, which fetches 59
-#      bytes from our own origin — see the reasoning in that function; a purely
-#      on-disk check provably could not catch the failure it exists for.
+#   1. It NEVER calls a metered third-party API. Every judgement is derived
+#      from what the last automatic run left behind (sync_log, table contents,
+#      files on disk). A health page that burns the data.gov quota is a health
+#      page that causes outages. Two checks are allowed out of the box, each
+#      because no on-disk check could catch the failure it exists for, and
+#      neither spends anything: _chk_ads_txt fetches 59 bytes from our own
+#      origin, and _resend_probe asks Resend whether the mail key still
+#      authenticates (a read, not billed against the mail quota). The
+#      reasoning is written out in both functions.
 #   2. A pass is memoised for CACHE_TTL_SEC. The database is Neon: round-the-
 #      clock traffic is what quota-blocked the compute in July and took the
 #      whole site down, which is why the staleness watchdog runs 3-hourly and
@@ -470,19 +473,190 @@ def _chk_bazar(db, detailed):
             "facts": facts}
 
 
+# ── Resend connection probe ─────────────────────────────────
+
+_RESEND_PROBE_URL = "https://api.resend.com/domains"
+_resend_probe_cache: tuple[float, dict] | None = None
+
+
+def _classify_resend(status_code: int, body: dict, from_domain: str = "") -> dict:
+    """Turn one Resend API answer into a verdict. Pure — no network, so the
+    branches below are testable without ever leaving the box.
+
+    The three answers that matter, and why they are not the obvious ones:
+
+      200                       the key has full access; the body then also
+                                says whether the sending domain is verified.
+      401 restricted_api_key    the production key is a *send-only* key, which
+                                Resend authenticates and then refuses the
+                                scope. That refusal is proof the key is live —
+                                reading it as a failure would paint the card
+                                red on a perfectly healthy setup.
+      400/401 "API key is invalid"
+                                the key is genuinely dead. This is the silent
+                                killer: a revoked or rotated key leaves
+                                RESEND_API_KEY set and non-empty, so every
+                                configuration check stays green while no OTP
+                                reaches anybody.
+
+    Anything else — a 5xx, a rate-limit, an unrecognised shape — is "unknown"
+    and never colours the card red, because Resend being briefly unreachable
+    says nothing about whether mail is going out.
+    """
+    name = str(body.get("name") or "")
+    msg = str(body.get("message") or "")
+
+    if status_code < 400:
+        out = {"state": "live", "note": "कुंजी चालू है", "domain": None}
+        want = (from_domain or "").rsplit("@", 1)[-1].lower()
+        for d in (body.get("data") or []):
+            if str(d.get("name", "")).lower() == want:
+                dom_status = str(d.get("status", "") or "?")
+                out["domain"] = f"{d.get('name')} — {dom_status}"
+                if dom_status.lower() != "verified":
+                    out["state"] = "domain_unverified"
+                    out["note"] = f"भेजने वाला डोमेन verified नहीं ({dom_status})"
+                break
+        return out
+
+    if name == "restricted_api_key":
+        return {"state": "live", "note": "कुंजी चालू है (सिर्फ़ भेजने की)", "domain": None}
+
+    if "api key" in msg.lower() or name in ("validation_error", "missing_api_key"):
+        return {"state": "dead", "note": msg[:120] or "API key is invalid", "domain": None}
+
+    return {"state": "unknown", "note": f"HTTP {status_code} {msg[:80]}".strip(), "domain": None}
+
+
+def _resend_probe() -> dict:
+    """Does the Resend key still authenticate?
+
+    The second deliberate exception to rule 1 at the top of this file, and for
+    the same reason as _chk_ads_txt: no on-disk check could catch the failure
+    it exists for. It is a read, it is not billed against the mail quota, it
+    carries a 6-second timeout, and it is memoised for CACHE_TTL_SEC alongside
+    the rest of the pass — so a browser left open on this page asks Resend at
+    most once a minute.
+    """
+    global _resend_probe_cache
+    now = time.time()
+    if _resend_probe_cache and now - _resend_probe_cache[0] < CACHE_TTL_SEC:
+        return _resend_probe_cache[1]
+
+    from backend.utils.auth_utils import RESEND_API_KEY, RESEND_FROM_EMAIL
+
+    if not RESEND_API_KEY:
+        out = {"state": "unset", "note": "Resend कुंजी सेट नहीं है", "domain": None}
+    else:
+        import httpx
+        try:
+            r = httpx.get(_RESEND_PROBE_URL,
+                          headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+                          timeout=6)
+            try:
+                body = r.json() or {}
+            except Exception:
+                body = {}
+            out = _classify_resend(r.status_code, body, RESEND_FROM_EMAIL)
+        except Exception as e:
+            out = {"state": "unknown",
+                   "note": f"Resend तक पहुँच नहीं ({str(e)[:60]})", "domain": None}
+
+    _resend_probe_cache = (now, out)
+    return out
+
+
 def _chk_email(db, detailed):
-    """OTP/reset mail. Without this nobody can finish a signup."""
-    resend = bool(os.getenv("RESEND_API_KEY", "").strip()
-                  and os.getenv("RESEND_FROM_EMAIL", "").strip())
-    smtp = bool(os.getenv("SMTP_EMAIL", "").strip() and os.getenv("SMTP_PASSWORD", "").strip())
+    """OTP/reset mail. Without this nobody can finish a signup.
+
+    Judged on three things, in ascending order of how much they actually prove:
+
+      1. is anything configured  — the env vars
+      2. does the key still work — _resend_probe()
+      3. what did real sends do  — the sync_log rows auth_utils now writes
+
+    The check used to do (1) alone, which is why it read "OTP मेल जा रहे हैं"
+    the whole time no OTP was going anywhere: an env var being non-empty says
+    nothing about whether Resend still accepts it. (3) is the honest signal and
+    outranks the rest — but it only exists once somebody has tried to sign up,
+    so (2) is what catches a dead key *before* the next farmer hits it.
+
+    Config is read from auth_utils rather than os.getenv, so this reports on
+    exactly what the sender uses — including the RESEND_FEOM_EMAIL typo alias
+    and the SMTP_EMAIL fallback, either of which would otherwise show as
+    "no mail route" while mail was in fact going out.
+    """
+    from backend.utils.auth_utils import (MAIL_LOG_SOURCE, RESEND_API_KEY,
+                                          RESEND_FROM_EMAIL, SMTP_EMAIL,
+                                          SMTP_PASSWORD)
+    resend = bool(RESEND_API_KEY and RESEND_FROM_EMAIL)
+    smtp = bool(SMTP_EMAIL and SMTP_PASSWORD)
+
+    # Via the model, not text(): finished_at is a DateTime column, and raw SQL
+    # skips the type coercion that turns it back into a datetime — SQLite hands
+    # the string straight through and every age comparison below raises.
+    from backend.database.db import SyncLog
+    rows = (db.query(SyncLog.status, SyncLog.detail, SyncLog.finished_at)
+              .filter(SyncLog.source == MAIL_LOG_SOURCE)
+              .order_by(SyncLog.finished_at.desc(), SyncLog.id.desc())
+              .limit(50).all())
+    last = rows[0] if rows else None
+    last_ok = next((r for r in rows if r[0] == "success"), None)
+    last_bad = next((r for r in rows if r[0] == "failed"), None)
+    day_ago = datetime.utcnow() - timedelta(hours=24)
+    fails_24 = sum(1 for r in rows if r[0] == "failed" and r[2] and r[2] > day_ago)
+    sent_24 = sum(1 for r in rows if r[0] == "success" and r[2] and r[2] > day_ago)
+
+    probe = _resend_probe() if resend else {"state": "unset", "note": "", "domain": None}
+
     facts = []
     if detailed:
-        facts = [["Resend", _yn(resend)], ["SMTP fallback", _yn(smtp)]]
+        facts = [["Resend", _yn(resend)], ["SMTP fallback", _yn(smtp)],
+                 ["कनेक्शन", probe["note"] or "—"]]
+        if probe.get("domain"):
+            facts.append(["भेजने वाला डोमेन", probe["domain"]])
+        facts.append(["आख़िरी OTP गया",
+                      f"{_ist(last_ok[2])} · {_ago(last_ok[2])}" if last_ok else "—"])
+        facts.append(["24 घंटे में", f"{sent_24} गए · {fails_24} फ़ेल"])
+        if last_bad:
+            facts.append(["आख़िरी गड़बड़ी",
+                          f"{(last_bad[1] or '')[:90]} · {_ago(last_bad[2])}"])
+
     if not (resend or smtp):
-        return {"status": "down", "detail": "कोई मेल भेजने का रास्ता नहीं — OTP नहीं जाएगा",
+        return {"status": "down",
+                "detail": "कोई मेल भेजने का रास्ता नहीं — OTP नहीं जाएगा", "facts": facts}
+
+    # A key that no longer authenticates stays set in the environment, so
+    # nothing else on this page would notice; only SMTP can still save it.
+    if probe["state"] == "dead":
+        if smtp:
+            return {"status": "warn",
+                    "detail": "Resend कुंजी अब काम नहीं कर रही — SMTP से भेजा जा रहा है",
+                    "facts": facts}
+        return {"status": "down",
+                "detail": "Resend कुंजी अब काम नहीं कर रही — OTP नहीं जा रहे", "facts": facts}
+
+    if probe["state"] == "domain_unverified" and not smtp:
+        return {"status": "down",
+                "detail": "भेजने वाला डोमेन verified नहीं — Resend मेल रोक देगा", "facts": facts}
+
+    # What the last real send did beats anything the configuration claims.
+    if last and last[0] == "failed":
+        return {"status": "down",
+                "detail": "पिछला OTP भेजा नहीं जा सका — अभी साइनअप अटकेगा", "facts": facts}
+    if fails_24:
+        return {"status": "warn",
+                "detail": f"पिछले 24 घंटे में {fails_24} OTP फ़ेल हुए — बाकी चले गए", "facts": facts}
+
+    via = "Resend" if resend else "SMTP"
+    if not last:
+        # Nothing has tried to send yet, so only the connection is evidence.
+        connected = probe["state"] == "live" or (smtp and not resend)
+        return {"status": "ok",
+                "detail": (f"{via} जुड़ा है · अभी कोई OTP भेजा नहीं गया" if connected
+                           else f"{via} कॉन्फ़िगर है · अभी कोई OTP भेजा नहीं गया"),
                 "facts": facts}
-    return {"status": "ok", "detail": f"OTP मेल जा रहे हैं ({'Resend' if resend else 'SMTP'})",
-            "facts": facts}
+    return {"status": "ok", "detail": f"OTP मेल जा रहे हैं ({via})", "facts": facts}
 
 
 def _chk_articles(db, detailed):

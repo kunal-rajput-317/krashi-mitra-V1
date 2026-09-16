@@ -45,7 +45,7 @@ _CORE = [
     ("/bhav",           "आज का भाव",       "Live mandi (wholesale market) prices for crops across India, updated daily from data.gov.in. Daily crop prices by crop → state → district. Full URL list in /bhav/sitemap.xml."),
     ("/weather",        "मौसम",           "Farm weather forecasts for Indian districts."),
     ("/meri_fasal",     "मेरी फसल",        "Crop calendar: sowing-date → growth-stage timeline with stage-specific tasks."),
-    ("/shop",           "कृषि दुकान",      "Agri-input marketplace: farmers request quotes for seeds, fertilizer, pesticides, tools. Product pages listed in /product/sitemap.xml."),
+    ("/product",        "कृषि दुकान",      "Agri-input marketplace: farmers request quotes for seeds, fertilizer, pesticides, tools. Product pages listed in /product/sitemap.xml."),
     ("/krashi_bajar",   "कृषि बाज़ार",      "Social crop marketplace where farmers post produce for sale."),
     ("/sarkari_yojana", "सरकारी योजना",    "Government agriculture schemes explained in Hindi (PM-Kisan etc.)."),
     ("/chat",           "AI चैट",          "Hindi agriculture Q&A assistant."),

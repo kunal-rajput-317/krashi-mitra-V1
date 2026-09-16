@@ -327,6 +327,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/khet-me-chuha-niyantran", "#b91c1c", "🐀", "फसल · कीट",
+         "खेत में चूहे कैसे मारें — विष चारा की सही विधि और मात्रा"),
         (f"{SITE}/articles/beej-upchar-vidhi", "#16a34a", "🌱", "बीज · उपचार",
          "बीज उपचार की विधि — कौन सी दवा, किस क्रम में"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#a16207", "🌾", "गेहूं · खेती",

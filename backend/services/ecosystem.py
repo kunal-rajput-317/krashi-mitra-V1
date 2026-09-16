@@ -317,7 +317,7 @@ _PREFIX = (
     ("/krashi_dukan", "dukan"), ("/krashi_bajar", "bazar"),
     ("/pashupalan", "pashupalan"), ("/farm", "pashupalan"),
     ("/sarkari_yojana", "yojana"), ("/meri_fasal", "fasal"),
-    ("/crop-calendar", "fasal"), ("/product", "shop"), ("/shop", "shop"),
+    ("/crop-calendar", "fasal"), ("/product", "shop"),
     ("/rental", "rental"), ("/naksha", "naksha"), ("/map", "naksha"),
     ("/weather", "weather"), ("/ganna", "ganna"), ("/sawal", "sawal"),
     ("/bhav", "bhav"), ("/khoj", "khoj"), ("/chat", "chat"),

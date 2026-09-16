@@ -333,6 +333,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/usar-bhumi-sudhar-jipsam", "#92400e", "🧂", "मिट्टी · ऊसर",
+         "ऊसर ज़मीन में जिप्सम — कितना, कब और कैसे डालें"),
         (f"{SITE}/articles/dap-guide-up", "#1d4ed8", "🧪", "खाद · DAP",
          "DAP खाद का सही उपयोग — कब, कितना, कैसे"),
         (f"{SITE}/articles/npk-complex-khad-guide", "#0369a1", "🔢", "खाद · NPK",

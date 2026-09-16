@@ -66,8 +66,9 @@ CORE = [
     ("meri_fasal.html",     "/meri_fasal",      0.9, "weekly", ("hi",), ()),
     ("krashi_news.html",    "/krashi_news",     0.9, "daily",  ("hi",),
      ("/images/og-banner.jpg",)),
-    ("shop.html",           "/shop",            0.9, "daily",  ("hi", "en", "kn"),
-     ("/images/shop-hero.webp",)),
+    # shop.html itself is retired (2026-09-16) — /product is the shop now, and
+    # it already has its own /product/sitemap.xml (product.py), so it needs no
+    # row here.
     ("krashi_bajar.html",   "/krashi_bajar",    0.9, "daily",  ("hi", "en", "kn"), ()),
     ("chat.html",           "/chat",            0.9, "daily",  ("hi", "en", "kn"), ()),
     ("weather.html",        "/weather",         0.8, "daily",  ("hi", "en", "kn"), ()),

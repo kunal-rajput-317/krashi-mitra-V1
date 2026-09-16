@@ -385,7 +385,7 @@ ARTICLE = {
     "body": BODY,
     "faqs": FAQS,
 
-    "bhav_links": [("sugarcane", "गन्ने का भाव"),
+    "bhav_links": [("sugar", "चीनी का भाव"),
                    ("potato", "आलू का भाव"),
                    ("mustard", "सरसों का भाव")],
 
@@ -402,6 +402,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/ganna-satta-parchi-up", "#15803d", "📋", "गन्ना · सट्टा",
+         "गन्ना सट्टा और पर्ची कैलेंडर — UP में कैसे देखें"),
         (f"{SITE}/articles/ganna-guide-up", "#15803d", "🎋", "गन्ना · गाइड",
          "उत्तर प्रदेश में गन्ने की खेती — पूरी गाइड"),
         (f"{SITE}/articles/ganna-rog", "#b91c1c", "🦠", "गन्ना · रोग",
@@ -410,8 +412,8 @@ ARTICLE = {
          "गन्ने में चोटी बेधक — पहचान और रोकथाम"),
         (f"{SITE}/articles/ganna-pricing-analytics-up", "#0f766e", "📊", "गन्ना · मूल्य",
          "UP गन्ना मूल्य — SAP, FRP और भुगतान का हिसाब"),
-        (f"{SITE}/bhav/sugarcane", "#1b7a3d", "💰", "मंडी · आज के भाव",
-         "गन्ने का आज का मंडी भाव — राज्यवार LIVE रेट"),
+        (f"{SITE}/bhav/sugar", "#1b7a3d", "💰", "मंडी · आज के भाव",
+         "चीनी का आज का मंडी भाव — राज्यवार LIVE रेट"),
         (f"{SITE}/chat", "#2e7d32", "🤖", "AI · सहायता",
          "फसल की फोटो भेजें — AI से तुरंत पहचान व इलाज"),
     ],

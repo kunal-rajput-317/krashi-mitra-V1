@@ -291,6 +291,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/up-dhan-kharid-panjikaran", "#1d4ed8", "📝", "खरीद · पंजीकरण",
+         "UP धान खरीद पंजीकरण — MSP पर धान कैसे बेचें"),
+        (f"{SITE}/articles/khet-me-chuha-niyantran", "#b91c1c", "🐀", "फसल · कीट",
+         "खेत में चूहे कैसे मारें — विष चारा की सही विधि और मात्रा"),
         (f"{SITE}/articles/dhan-seedhi-buvai-dsr", "#0e7490", "🌾", "धान · तकनीक",
          "धान की सीधी बुवाई (DSR) — पानी और मज़दूरी दोनों की बचत"),
         (f"{SITE}/articles/krishi-yantra-subsidy", "#b45309", "🚜", "योजना · सब्सिडी",

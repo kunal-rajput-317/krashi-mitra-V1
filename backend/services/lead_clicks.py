@@ -41,6 +41,12 @@ _BOT_TOKENS = (
     "bot", "crawl", "spider", "slurp", "bingpreview", "facebookexternalhit",
     "whatsapp", "telegram", "preview", "fetcher", "monitor", "headless",
     "python-requests", "curl", "wget", "httpx", "axios", "scrapy", "lighthouse",
+    # Starlette's TestClient. The dev setup points a --reload uvicorn at the
+    # LIVE Neon database, so a test that walks a /go/ route writes a real row
+    # into the one table whose count gets quoted to a counterparty. It has
+    # happened. The other names here keep strangers out of the number; this one
+    # keeps us out of it.
+    "testclient",
 )
 
 _MAX = 300   # referer/label column headroom — a URL can be arbitrarily long
@@ -148,8 +154,13 @@ def _count(db: Session, since: datetime, until: datetime | None = None) -> dict:
     if until is not None:
         q = q.filter(LeadClick.created_at < until)
     by = dict(q.group_by(LeadClick.kind).all())
+    # "product" is the Amazon/Flipkart shelf (/go/p/<net>/<slug>). It is broken
+    # out rather than folded into the total because it is the only surface here
+    # that pays a commission today — a month where the total held steady while
+    # this column moved is the one thing the headline number cannot say.
     return {"offer": by.get("offer", 0),
             "buyer": by.get("buyer", 0),
+            "product": by.get("product", 0),
             "total": sum(by.values())}
 
 

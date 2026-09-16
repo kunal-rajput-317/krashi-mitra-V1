@@ -259,7 +259,11 @@
   // the same reason INVENTORY below is: drawer markup lives at several
   // directory depths and /bhav is served by the backend, so a relative path
   // would resolve wrong from /articles/ or from inside the /bhav tree.
-  var HREF = { '🏪': '/bhav', '📐': '/naksha' };
+  //
+  // 🛒 joined 2026-09-16: shop.html is retired, and /product is now the shop —
+  // every 🛒 link on every page (however it was written when shipped) now goes
+  // straight there, the same way 🏪 already gets repointed at /bhav.
+  var HREF = { '🏪': '/bhav', '📐': '/naksha', '🛒': '/product' };
 
   // ---- The canonical menu, in full -----------------------------------
   var INVENTORY = [
@@ -270,7 +274,7 @@
     { k: '🗺️', href: '/map.html',            at: /^\/(map)(\.html)?(\/|$)/ },
     { k: '🏪',  href: '/bhav',                at: /^\/bhav(\/(?!net-price)|$)/ },
     { k: '🚜',  href: '/bhav/net-price',      at: /^\/bhav\/net-price/ },
-    { k: '🛒',  href: '/shop.html',           at: /^\/shop(\.html)?$/ },
+    { k: '🛒',  href: '/product',             at: /^\/product(\/|$)/ },
     { k: '⚙️',  href: '/rental',              at: /^\/rental(\/|$)/ },
     { k: '🥚',  href: '/pashupalan/anda-rate', at: /^\/(pashupalan|farm)(\/|$)/ },
     { k: '🤝',  href: '/dukanlisting',        at: /^\/dukanlisting/ },

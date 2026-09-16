@@ -494,8 +494,8 @@ def share_bazar(post_id: int, db: Session = Depends(get_db)):
     try:
         post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
         if post:
-            user    = db.query(User).filter(User.id == post.user_id).first()
-            profile = db.query(UserProfile).filter(UserProfile.user_id == acct(post.user_id)).first()
+            user    = db.query(User).filter(User.id == post.users_id).first()
+            profile = db.query(UserProfile).filter(UserProfile.user_id == acct(post.users_id)).first()
 
             name = (profile.name if profile and profile.name
                     else (user.name if user else "किसान"))
@@ -519,7 +519,12 @@ def share_bazar(post_id: int, db: Session = Depends(get_db)):
             desc = " · ".join(dparts)
 
             if post.media_url and post.media_type == "image":
-                image = f"{BACKEND}{post.media_url}"
+                # Media lives on R2 now and arrives as an absolute URL; only the
+                # legacy /uploads/... rows still need the backend prefixed, and
+                # prefixing an absolute one would emit an og:image that is two
+                # URLs glued together and previews as nothing.
+                image = (post.media_url if post.media_url.startswith("http")
+                         else f"{BACKEND}{post.media_url}")
             elif post.crop:
                 en = _HI_CROP_EN.get(post.crop.strip(), post.crop)
                 image = _crop_image(en, 960)

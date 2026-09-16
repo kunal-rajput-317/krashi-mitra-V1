@@ -293,6 +293,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pashu-galghotu-rog", "#b91c1c", "🐃", "पशुपालन · रोग",
+         "गलघोंटू रोग — लक्षण, इलाज और टीका कब लगवाएँ"),
         (f"{SITE}/articles/pashu-khurpaka-muhpaka-fmd", "#b91c1c", "🐄", "पशुपालन · रोग",
          "खुरपका-मुँहपका रोग — टीका, लक्षण और बचाव"),
         (f"{SITE}/articles/dairy-farming-doodh-utpadan", "#be185d", "🥛", "पशुपालन · डेयरी",

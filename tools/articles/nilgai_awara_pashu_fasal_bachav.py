@@ -287,6 +287,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/khet-me-chuha-niyantran", "#b91c1c", "🐀", "फसल · कीट",
+         "खेत में चूहे कैसे मारें — विष चारा की सही विधि और मात्रा"),
         (f"{SITE}/articles/tarbandi-yojana-subsidy", "#1d4ed8", "🚧", "योजना · अनुदान",
          "तारबंदी योजना — 70% तक अनुदान और आवेदन का तरीका"),
         (f"{SITE}/articles/chana-fali-chhedak-illi", "#c2410c", "🐛", "चना · कीट",

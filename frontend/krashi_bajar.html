@@ -148,7 +148,7 @@
           {
             "@type": "Question",
             "name": "कृषि बाज़ार पर फसल कैसे बेचें?",
-            "acceptedAnswer": { "@type": "Answer", "text": "मुफ़्त अकाउंट बनाएं, अपनी किसान प्रोफ़ाइल व मोबाइल नंबर भरें, फिर '➕ पोस्ट करें' से फसल की फोटो, भाव और मात्रा डालें। खरीदार सीधे आपको ऑफर भेजेंगे।" }
+            "acceptedAnswer": { "@type": "Answer", "text": "मुफ़्त अकाउंट बनाएं, अपनी किसान प्रोफ़ाइल व मोबाइल नंबर भरें, फिर'पोस्ट करें' से फसल की फोटो, भाव और मात्रा डालें। खरीदार सीधे आपको ऑफर भेजेंगे।" }
           },
           {
             "@type": "Question",
@@ -390,27 +390,33 @@
   .main-content { flex: 1; padding: 0 0 60px; max-width: 760px; margin: 0 auto; width: 100%; }
 
   /* Page heading — same style as mandi.html (plain centered text, no hero box) */
+  /* #1a56db appeared here and nowhere else in the file — a stray blue on a
+     green-and-amber site, which read as an unstyled default. */
   .bz-page-heading {
     text-align: center;
-    font-size: 22px; font-weight: 800; color: #1a56db;
-    padding: 20px 16px 2px;
+    font-size: 19px; font-weight: 800; color: var(--green-dark);
+    padding: 13px 16px 1px; letter-spacing: -0.2px;
   }
   .bz-page-sub {
-    text-align: center; font-size: 12.5px; font-weight: 600;
-    color: var(--text-mid); padding: 2px 16px 0;
+    text-align: center; font-size: 12px; font-weight: 600;
+    color: var(--text-mid); padding: 0 16px;
   }
 
   /* Toolbar card */
   .bz-toolbar {
     background: var(--white); border: 1.5px solid var(--border);
     border-radius: var(--radius); box-shadow: var(--shadow);
-    margin: 16px 16px 0; padding: 14px 14px 12px;
+    margin: 11px 16px 0; padding: 10px 12px 9px;
   }
   .bz-mode-tabs {
-    display: flex; background: #e6efe9; border-radius: 12px; padding: 4px; margin-bottom: 12px;
+    display: flex; background: #e6efe9; border-radius: 12px; padding: 3px; margin-bottom: 9px;
   }
+  /* A guest has no "my posts", so half the tab bar was dead for most of the
+     audience while costing ~56px above the feed. setMode() still accepts
+     'mine', so a deep link keeps working — only the control is hidden. */
+  .bz-toolbar.is-guest .bz-mode-tabs { display: none; }
   .bz-mode-btn {
-    flex: 1; padding: 10px 14px; border: none; border-radius: 9px;
+    flex: 1; padding: 8px 14px; border: none; border-radius: 9px;
     background: transparent; font-size: 13.5px; font-weight: 600; color: var(--text-mid);
     cursor: pointer; font-family: inherit; transition: all 0.2s; white-space: nowrap;
   }
@@ -421,7 +427,7 @@
   .bz-search-row {
     display: flex; align-items: center; gap: 8px;
     background: var(--cream); border: 1.5px solid var(--border);
-    border-radius: 24px; padding: 9px 14px; margin-bottom: 12px;
+    border-radius: 24px; padding: 7px 13px; margin-bottom: 9px;
   }
   .bz-search-row input {
     flex: 1; border: none; outline: none; background: transparent;
@@ -476,7 +482,7 @@
 
   .bz-count-row {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px 8px; font-size: 12.5px; font-weight: 700; color: var(--text-mid);
+    padding: 11px 20px 7px; font-size: 12px; font-weight: 700; color: var(--text-mid);
   }
   .bz-count-row .bz-live-dot {
     display: inline-block; width: 7px; height: 7px; border-radius: 50%;
@@ -485,23 +491,23 @@
   @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
   /* ── FEED CARDS ── */
-  .bz-feed { padding: 0 16px; display: flex; flex-direction: column; gap: 14px; }
+  .bz-feed { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
   .bz-card {
     background: var(--white); border: 1.5px solid var(--border);
     border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
   }
-  .bz-card-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px; }
+  .bz-card-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px 8px; }
   .bz-avatar {
-    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 800; font-size: 17px; cursor: pointer; user-select: none;
+    color: #fff; font-weight: 800; font-size: 12.5px; cursor: pointer; user-select: none;
     overflow: hidden;
   }
   .bz-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
   .bz-head-info { flex: 1; min-width: 0; }
   .bz-author-row { display: flex; align-items: center; gap: 5px; }
   .bz-author-name {
-    font-size: 14.5px; font-weight: 700; color: var(--text-dark); cursor: pointer;
+    font-size: 13px; font-weight: 700; color: var(--text-dark); cursor: pointer;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .bz-author-name:hover { text-decoration: underline; }
@@ -509,16 +515,21 @@
   /* Follow link beside the author name (Twitter/Instagram style) */
   .bz-follow-link {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
-    font-family: inherit; font-size: 12.5px; font-weight: 800;
-    color: var(--tick-blue); padding: 2px 4px; border-radius: 6px;
+    font-family: inherit; font-size: 12px; font-weight: 800;
+    /* Was --tick-blue: that colour belongs to the verified badge, which is a
+       recognised convention; on a plain Follow link it just looked unstyled. */
+    color: var(--green-mid); padding: 2px 4px; border-radius: 6px;
     transition: opacity 0.15s;
   }
   .bz-follow-link::before { content: '·'; color: var(--text-light); margin-right: 6px; font-weight: 700; }
   .bz-follow-link:hover { opacity: 0.75; text-decoration: underline; }
   .bz-follow-link.following { color: var(--text-light); }
   .bz-follow-link.following:hover { text-decoration: none; }
-  .bz-head-meta { font-size: 11.5px; color: var(--text-light); font-weight: 600; margin-top: 1px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bz-head-time {
+    flex-shrink: 0; font-size: 11px; color: var(--text-light); font-weight: 600;
+    white-space: nowrap;
+  }
+  .bz-head-time::before { content: '· '; }
   .bz-type-badge {
     flex-shrink: 0; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 10px;
     letter-spacing: 0.4px; text-transform: uppercase;
@@ -558,45 +569,159 @@
     font-size: 17px; color: var(--text-light); padding: 4px 6px; border-radius: 6px;
   }
   .bz-card-menu-btn:hover { background: var(--cream); }
-  .bz-card-text { padding: 0 14px 10px; font-size: 14px; line-height: 1.55; color: var(--text-dark); white-space: pre-wrap; word-break: break-word; }
-  .bz-card-media { width: 100%; background: #0d1f16; display: block; }
-  .bz-card-media img, .bz-card-media video {
-    width: 100%; max-height: 420px; object-fit: cover; display: block;
+  /* The ⋯ menu. It replaced a browser prompt() that asked the farmer to type
+     "1" or "2"; the parent .bz-card-head is the positioning context. */
+  .bz-card-head { position: relative; }
+  .bz-post-menu {
+    position: absolute; top: 100%; right: 8px; z-index: 60;
+    min-width: 168px; padding: 5px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 10px 28px rgba(26,60,46,0.18);
+    display: flex; flex-direction: column;
   }
-  .bz-price-block {
-    display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
-    padding: 12px 14px 8px; flex-wrap: wrap;
+  .bz-post-menu button {
+    text-align: right; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    color: var(--text-dark); padding: 10px 12px; border-radius: 8px;
+    white-space: nowrap;
   }
-  .bz-price-main { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .bz-price-now { font-size: 22px; font-weight: 800; color: var(--green-dark); }
-  .bz-price-unit { font-size: 12px; font-weight: 600; color: var(--text-mid); }
-  .bz-price-old { font-size: 12.5px; color: #b91c1c; text-decoration: line-through; font-weight: 600; }
+  .bz-post-menu button:hover { background: var(--green-pale); color: var(--green-dark); }
+  .bz-post-menu button.danger { color: #b91c1c; }
+  .bz-post-menu button.danger:hover { background: #fee2e2; }
+  /* ── Card body: a hero photo with the price on it ──
+     Two layouts came before this one. Six stacked full-width bands cost
+     147-231px for ~100 characters and showed no image at all; a right-hand
+     84px thumbnail was dense but shrank the photo to 21% of the card and left
+     sparse listings mostly empty. A crop is sold on how it looks, so the photo
+     leads and the number sits on top of it. */
+  .bz-card-body { display: block; }
+  .bz-card-info { padding: 7px 12px 8px; }
+  .bz-card-facts {
+    display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
+    font-size: 13.5px; font-weight: 700; color: var(--text-dark);
+  }
+  .bz-card-facts .sep { color: var(--border); font-weight: 400; }
+  .bz-card-text {
+    font-size: 12.5px; line-height: 1.45; color: var(--text-mid); margin-top: 2px;
+    word-break: break-word;
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .bz-qty-row { font-size: 13.5px; color: var(--text-dark); font-weight: 700;
+    display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .bz-qty-row .sep { color: var(--border); font-weight: 400; }
+  .bz-place-row { font-size: 12px; color: var(--text-light); font-weight: 600; }
+
+  /* ── Hero photo ── */
+  .bz-hero {
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
+    /* 16/9 is right at phone width (358px wide → 201px tall). The feed column
+       is 760px on a desktop, where the same ratio gives a 410px photo and one
+       card fills the whole screen — mobile is the baseline here, desktop the
+       variant, so the ratio holds until the cap takes over. object-fit keeps
+       the crop centred either way. */
+    max-height: 230px;
+    background: var(--green-pale); overflow: hidden;
+  }
+  .bz-hero > img, .bz-hero > video {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .bz-hero.is-real { cursor: zoom-in; }
+  /* The tiers stack: emoji at the bottom, stock photo over it, the farmer's own
+     photo on top. Removing a broken one reveals the next instead of a hole. */
+  .bz-thumb-under { position: absolute; inset: 0; z-index: 1; }
+  .bz-thumb-emoji {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 0 18px; text-align: center;
+    font-size: 21px; font-weight: 800; color: var(--green-mid); opacity: 0.85;
+    background: linear-gradient(135deg, var(--green-pale), #eaf6ed);
+  }
+  .bz-thumb-stock { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* A stock photo is OURS, not a picture of this farmer's goods. The earlier
+     card said so by washing the photo out, which also made the feed look
+     drab — the whole complaint. Full colour now, and the claim is corrected in
+     words instead: a label the farmer can actually read. */
+  .bz-stock-tag {
+    position: absolute; top: 8px; left: 8px; z-index: 4;
+    background: rgba(26,60,46,0.72); color: #fff;
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.2px;
+    padding: 3px 8px; border-radius: 20px; backdrop-filter: blur(3px);
+  }
+  /* Scrim: a price in white over a pale photo is unreadable without it. */
+  .bz-hero::after {
+    content: ''; position: absolute; inset: 35% 0 0 0; z-index: 3;
+    background: linear-gradient(transparent 0%, rgba(12,32,22,0.20) 45%, rgba(12,32,22,0.88) 100%);
+    pointer-events: none;
+  }
+  .bz-hero-foot {
+    position: absolute; z-index: 4; left: 12px; right: 12px; bottom: 9px;
+    display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap;
+  }
+  .bz-price-now {
+    font-size: 25px; font-weight: 800; color: #fff; letter-spacing: -0.5px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.35); line-height: 1;
+  }
+  .bz-price-unit { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.88); }
+  .bz-price-old {
+    font-size: 12px; color: rgba(255,255,255,0.75); text-decoration: line-through;
+    font-weight: 600;
+  }
   .bz-better-badge {
-    background: var(--green-pale); color: var(--green-mid);
-    font-size: 11px; font-weight: 800; border-radius: 10px; padding: 3px 9px; white-space: nowrap;
+    margin-left: auto; background: var(--amber); color: #1a2e1e;
+    font-size: 10.5px; font-weight: 800; border-radius: 9px; padding: 3px 8px;
+    white-space: nowrap;
   }
-  .bz-qty-row { padding: 0 14px 10px; font-size: 12px; color: var(--text-mid); font-weight: 600;
-    display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .bz-ask-price {
+    font-size: 16px; font-weight: 800; color: #fff;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.35);
+  }
+  /* The type badge moves onto the photo, where it reads as a ribbon rather
+     than as one more grey chip competing with the seller's name. */
+  .bz-hero-tags {
+    position: absolute; top: 8px; right: 8px; z-index: 4; display: flex; gap: 5px;
+  }
+  .bz-hero-tags .bz-type-badge {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.22); backdrop-filter: blur(3px);
+  }
+  .bz-hero-tags .bz-type-badge.sell { background: rgba(255,255,255,0.93); color: var(--green-dark); }
+  .bz-hero-tags .bz-type-badge.buy  { background: rgba(255,248,225,0.95); color: #92400e; }
+
+  .bz-hero .bz-play {
+    position: absolute; inset: 0 0 18% 0; z-index: 4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+    pointer-events: none;
+  }
   .bz-sold-badge {
     background: #fee2e2; color: #b91c1c; font-size: 10.5px; font-weight: 800;
     border-radius: 8px; padding: 2px 8px; letter-spacing: 0.4px;
   }
+  /* The primary action is FIRST (left). The "+ पोस्ट करें" FAB is fixed to the
+     bottom-right corner and a hit test showed it covering .bz-offer-btn — the
+     page's main conversion action — at every scroll position. Nothing important
+     may live in the bottom-right of a card any more. */
   .bz-actions {
-    display: flex; align-items: center; gap: 8px;
-    border-top: 1px solid var(--border); padding: 10px 12px;
+    display: flex; align-items: center; gap: 6px;
+    border-top: 1px solid var(--border); padding: 7px 10px;
   }
+  .bz-act-spacer { flex: 1; }
+  /* Icon-first, label dropped on phones: three word-buttons plus the offer
+     button did not fit on one 390px row and wrapped to two. */
   .bz-act-btn {
-    display: inline-flex; align-items: center; gap: 7px;
+    display: inline-flex; align-items: center; gap: 5px;
     background: var(--cream); border: 1.5px solid var(--border);
     cursor: pointer; font-family: inherit;
-    font-size: 12.5px; font-weight: 700; color: var(--text-mid);
-    padding: 8px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; color: var(--text-mid);
+    padding: 7px 11px; border-radius: 18px; min-height: 34px;
     transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
   }
+  .bz-act-label { display: none; }
+  @media (min-width: 480px) { .bz-act-label { display: inline; } }
   .bz-act-btn:hover { background: #fff; color: var(--green-mid); border-color: var(--green-light); }
   .bz-act-btn:active { transform: scale(0.95); }
   .bz-act-btn svg { width: 16px; height: 16px; flex-shrink: 0; display: block; }
-  /* A count of zero renders as an empty span, not a "0": a wall of 👍 0 · 💬 0
+  /* A count of zero renders as an empty span, not a "0": a row of zeroes
      down the feed reads as an empty room. The span stays in the DOM so the
      live comment-count update can still find it by id. */
   .bz-act-btn span:empty { display: none; }
@@ -621,14 +746,14 @@
     padding: 9px 11px; font-size: 12px; color: #7a5c00; line-height: 1.5;
   }
   .bz-act-btn.liked {
-    color: var(--tick-blue); background: #e8f4fd; border-color: #bfe0f8;
+    color: var(--green-mid); background: var(--green-pale); border-color: var(--green-light);
   }
-  .bz-act-btn.liked:hover { border-color: #8ecbf4; color: var(--tick-blue); }
+  .bz-act-btn.liked:hover { border-color: var(--green-mid); color: var(--green-dark); }
   @keyframes like-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
   .bz-act-btn.liked svg { animation: like-pop 0.3s ease; }
   .bz-offer-btn {
-    margin-left: auto; background: var(--amber); color: #1a2e1e;
-    border: none; border-radius: 20px; padding: 8px 16px;
+    background: var(--amber); color: #1a2e1e;
+    border: none; border-radius: 18px; padding: 8px 15px; min-height: 34px;
     font-size: 12.5px; font-weight: 800; cursor: pointer; font-family: inherit;
     transition: transform 0.12s, background 0.15s; white-space: nowrap;
   }
@@ -645,28 +770,14 @@
   .bz-loadmore:hover { border-color: var(--green-light); box-shadow: var(--shadow); }
   .bz-loading { text-align: center; padding: 26px; color: var(--text-light); font-size: 13px; font-weight: 600; }
 
-  /* Wheat growing-cycle loader: seed sprouts → sapling → ripe wheat, on loop */
+  /* Was a sprouting-wheat animation built from three emoji on a loop. A
+     plain spinner says "loading" without the sticker. */
   .bz-grow {
-    position: relative; width: 52px; height: 52px; margin: 0 auto 10px;
+    position: relative; width: 26px; height: 26px; margin: 0 auto 10px;
+    border: 2.5px solid var(--border); border-top-color: var(--green-mid);
+    border-radius: 50%; animation: bz-spin 0.8s linear infinite;
   }
-  .bz-grow::after {           /* soil line */
-    content: ''; position: absolute; left: 4px; right: 4px; bottom: 0;
-    height: 4px; border-radius: 2px; background: var(--soil); opacity: 0.55;
-  }
-  .bz-grow span {
-    position: absolute; inset: 0 0 4px 0;
-    display: flex; align-items: flex-end; justify-content: center;
-    font-size: 36px; line-height: 1; opacity: 0;
-    transform-origin: 50% 100%;
-    animation: bz-grow-cycle 2.1s infinite;
-  }
-  .bz-grow span:nth-child(2) { animation-delay: 0.7s; }
-  .bz-grow span:nth-child(3) { animation-delay: 1.4s; }
-  @keyframes bz-grow-cycle {
-    0%        { opacity: 0; transform: scale(0.45); }
-    8%, 27%   { opacity: 1; transform: scale(1); }
-    36%, 100% { opacity: 0; transform: scale(1.05); }
-  }
+  @keyframes bz-spin { to { transform: rotate(360deg); } }
 
   /* ── FLOATING POST BUTTON ── */
   .bz-fab {
@@ -679,11 +790,20 @@
     transition: transform 0.15s, box-shadow 0.15s;
   }
   .bz-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(26,60,46,0.42); }
+  /* A drawn "+", not the emoji, which rendered as a purple sticker. */
+  .bz-fab-plus { font-size: 19px; font-weight: 400; line-height: 0.8; opacity: 0.9; }
+  /* Slides away while scrolling down and returns on any upward scroll — the
+     same gesture contract bottomnav.js already uses, so the two move together
+     instead of one covering cards while the other hides. */
+  .bz-fab.bz-fab-hide {
+    transform: translateY(140%); opacity: 0; pointer-events: none;
+    transition: transform 0.22s ease, opacity 0.22s ease;
+  }
   /* The bottom nav (bottomnav.js) owns the bottom 64px on phones at z-index
      3500, and this button is position:fixed — the body padding that clears the
      nav for normal content cannot move it. At bottom:22px/z-index:900 it sat
      UNDER the nav: elementFromPoint at the button's own centre returned a
-     .km-bn-item, so the tap the empty seller state asks for ("➕ पोस्ट करें से
+     .km-bn-item, so the tap the empty seller state asks for ("पोस्ट करें से
      अपनी पहली फसल बेचें") landed on the nav instead. Same breakpoint as the
      nav's own, so nothing moves on desktop, where there is no nav to clear. */
   @media (max-width: 768px) {
@@ -859,10 +979,12 @@
   .bz-sheet-title { font-size: 15px; font-weight: 800; color: var(--green-dark); }
   .bz-sheet-body { flex: 1; overflow-y: auto; padding: 12px 18px; display: flex; flex-direction: column; gap: 12px; }
   .bz-comment { display: flex; gap: 10px; align-items: flex-start; }
+  .bz-comment + .bz-comment { margin-top: 12px; }
   .bz-comment .bz-avatar { width: 32px; height: 32px; font-size: 13px; }
+  .bz-comment-col { flex: 1; min-width: 0; }
   .bz-comment-bubble {
     background: var(--cream); border-radius: 4px 14px 14px 14px;
-    padding: 8px 12px; font-size: 13px; color: var(--text-dark); flex: 1; min-width: 0;
+    padding: 8px 12px; font-size: 13px; color: var(--text-dark); min-width: 0;
   }
   .bz-comment-author { font-size: 12px; font-weight: 700; color: var(--green-mid); display: flex; align-items: center; gap: 4px; }
   .bz-comment-time { font-size: 10.5px; color: var(--text-light); font-weight: 600; margin-top: 3px; }
@@ -870,6 +992,57 @@
     background: var(--amber-light); border: 1px solid #fde68a;
   }
   .bz-offer-amount { font-size: 15px; font-weight: 800; color: #b45309; }
+
+  /* A comment posted but not yet acknowledged by the server. It is already on
+     screen — waiting for the round-trip before painting is what made the
+     button feel dead — so it is only dimmed until the reply lands. */
+  .bz-comment.pending { opacity: 0.55; }
+
+  /* Like · Reply · Delete under the bubble, as icons. They were Hindi words,
+     which put a second line of text directly under the comment's own text and
+     read as more comment rather than as controls. The words survive in
+     aria-label and title. */
+  .bz-comment-acts {
+    display: flex; align-items: center; gap: 4px; padding: 3px 8px 0;
+  }
+  .bz-comment-acts button {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: none; border: none; cursor: pointer;
+    /* 30px square: a bare 15px icon is under the comfortable tap target on a
+       phone, and these sit close together. */
+    min-width: 30px; height: 30px; padding: 0 7px; border-radius: 15px;
+    font-family: inherit; font-size: 11.5px; font-weight: 800;
+    color: var(--text-light); transition: background 0.15s, color 0.15s;
+  }
+  .bz-comment-acts button svg { width: 15px; height: 15px; display: block; flex-shrink: 0; }
+  .bz-comment-acts button:hover { color: var(--green-mid); background: var(--green-pale); }
+  .bz-comment-acts button:active { transform: scale(0.92); }
+  .bz-comment-acts button.liked { color: var(--green-mid); }
+  .bz-comment-acts button.danger:hover { color: #b91c1c; background: #fee2e2; }
+  /* An empty count renders nothing rather than a "0" — a column of zeroes down
+     the thread reads as an empty room. Same rule as the feed card. */
+  .bz-comment-acts .n:empty { display: none; }
+
+  /* Replies: one level of indent and no more. A thread that keeps indenting
+     runs off the right edge of a 390px screen. */
+  .bz-replies { margin: 10px 0 0 14px; padding-left: 12px; border-left: 2px solid var(--border); }
+  .bz-replies .bz-comment + .bz-comment { margin-top: 10px; }
+  .bz-replies .bz-avatar { width: 26px; height: 26px; font-size: 11px; }
+  .bz-replies .bz-comment-bubble { font-size: 12.5px; padding: 7px 11px; }
+  /* The composer switches to reply mode; this says whom you are answering and
+     how to get back out. */
+  .bz-reply-banner {
+    display: none; align-items: center; gap: 8px;
+    padding: 7px 14px; border-top: 1px solid var(--border);
+    background: var(--green-pale); font-size: 12px; font-weight: 700;
+    color: var(--green-dark);
+  }
+  .bz-reply-banner.open { display: flex; }
+  .bz-reply-banner button {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 15px; font-weight: 700; color: var(--green-mid);
+    line-height: 1; padding: 2px 4px;
+  }
   .bz-sheet-input-row {
     display: flex; gap: 8px; padding: 10px 14px 14px; border-top: 1px solid var(--border); flex-shrink: 0;
   }
@@ -1168,7 +1341,9 @@
 
   /* Login/profile prompt */
   .bz-prompt-body { text-align: center; padding: 8px 4px 4px; }
-  .bz-prompt-emoji { font-size: 46px; margin-bottom: 10px; }
+  /* The three prompt stickers (lock / farmer / phone) are gone — the
+     heading carries the message on its own. */
+  .bz-prompt-emoji { display: none; }
   .bz-prompt-text { font-size: 14px; color: var(--text-mid); font-weight: 600; line-height: 1.6; margin-bottom: 16px; }
   .bz-prompt-cta {
     display: block; width: 100%; text-align: center; text-decoration: none;
@@ -1422,7 +1597,7 @@
   <!-- Feed -->
   <div class="bz-feed" id="bz-feed"></div>
   <div class="bz-loading" id="bz-loading" style="display:none;">
-    <div class="bz-grow"><span>🌱</span><span>🌿</span><span>🌾</span></div>
+    <div class="bz-grow"></div>
     <span data-t="loading">लोड हो रहा है…</span>
   </div>
   <button class="bz-loadmore" id="bz-loadmore" style="display:none;" onclick="loadFeed(false)" data-t="load_more">और देखें ↓</button>
@@ -1439,21 +1614,21 @@
 </div>
 
 <!-- Floating post button -->
-<button class="bz-fab" onclick="openComposer()">➕ <span data-t="fab_post">पोस्ट करें</span></button>
+<button class="bz-fab" onclick="openComposer()"><span class="bz-fab-plus" aria-hidden="true">+</span><span data-t="fab_post">पोस्ट करें</span></button>
 
 <!-- ══ COMPOSER MODAL ══ -->
 <div class="bz-modal-overlay" id="composer-overlay" onclick="if(event.target===this)closeComposer()">
   <div class="bz-modal">
     <button class="bz-modal-close" onclick="closeComposer()">✕</button>
-    <div class="bz-modal-title">🌾 <span id="cmp-title" data-t="composer_title">अपनी फसल बेचें</span></div>
+    <div class="bz-modal-title"><span id="cmp-title" data-t="composer_title">अपनी फसल बेचें</span></div>
 
     <div class="bz-form-row">
       <label class="bz-form-label" data-t="lbl_type">आप क्या करना चाहते हैं?</label>
       <div class="bz-type-pick">
         <button type="button" id="cmp-type-sell" class="active"
-                onclick="setComposerType('sell')" data-t="type_sell">🌾 बेचना है</button>
+                onclick="setComposerType('sell')" data-t="type_sell">बेचना है</button>
         <button type="button" id="cmp-type-buy"
-                onclick="setComposerType('buy')" data-t="type_buy">🛒 खरीदना है</button>
+                onclick="setComposerType('buy')" data-t="type_buy">खरीदना है</button>
       </div>
     </div>
 
@@ -1499,19 +1674,19 @@
     </div>
 
     <div class="bz-form-row" id="cmp-edit-note" style="display:none;">
-      <div class="bz-edit-note" data-t="edit_media_note">📷 फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।</div>
+      <div class="bz-edit-note" data-t="edit_media_note">फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।</div>
     </div>
 
     <div class="bz-form-row" id="cmp-media-row">
       <label class="bz-form-label" data-t="lbl_media">फोटो / वीडियो</label>
       <div class="bz-media-drop" onclick="document.getElementById('cmp-media').click()">
-        📷 <span data-t="media_hint">फोटो या वीडियो जोड़ें (photo ≤ 50MB, video ≤ 5 मिनट)</span>
+        <span data-t="media_hint">फोटो या वीडियो जोड़ें (photo ≤ 12MB, video ≤ 40MB)</span>
       </div>
       <input type="file" id="cmp-media" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" style="display:none;" onchange="onMediaPicked(this)">
       <div class="bz-media-preview" id="cmp-media-preview"></div>
     </div>
 
-    <button class="bz-submit-btn" id="cmp-submit" onclick="submitPost()" data-t="btn_post">पोस्ट करें 🚀</button>
+    <button class="bz-submit-btn" id="cmp-submit" onclick="submitPost()" data-t="btn_post">पोस्ट करें</button>
   </div>
 </div>
 
@@ -1519,10 +1694,14 @@
 <div class="bz-sheet-overlay" id="comments-overlay" onclick="if(event.target===this)closeComments()">
   <div class="bz-sheet">
     <div class="bz-sheet-head">
-      <span class="bz-sheet-title">💬 <span data-t="comments_title">सवाल-जवाब व ऑफर</span></span>
+      <span class="bz-sheet-title"><span data-t="comments_title">सवाल-जवाब व ऑफर</span></span>
       <button class="bz-modal-close" style="position:static;" onclick="closeComments()">✕</button>
     </div>
     <div class="bz-sheet-body" id="comments-body"></div>
+    <div class="bz-reply-banner" id="reply-banner">
+      <span id="reply-banner-name"></span>
+      <button onclick="cancelReply()" aria-label="cancel reply">✕</button>
+    </div>
     <div class="bz-sheet-input-row">
       <input id="comment-input" type="text" placeholder="अपना सवाल पूछें..." data-t-ph="comment_ph"
              onkeydown="if(event.key==='Enter')sendComment()" />
@@ -1535,7 +1714,7 @@
 <div class="bz-modal-overlay" id="offer-overlay" onclick="if(event.target===this)closeOffer()">
   <div class="bz-modal" style="max-width:380px;">
     <button class="bz-modal-close" onclick="closeOffer()">✕</button>
-    <div class="bz-modal-title">💰 <span data-t="offer_title">अपना ऑफर भेजें</span></div>
+    <div class="bz-modal-title"><span data-t="offer_title">अपना ऑफर भेजें</span></div>
     <div class="bz-form-row">
       <label class="bz-form-label" data-t="lbl_offer_amt">ऑफर भाव (₹ प्रति इकाई)</label>
       <input class="bz-input" id="offer-amount" type="number" min="1" placeholder="2300" />
@@ -1566,7 +1745,7 @@
       <span class="fl-count" id="fl-count"></span>
     </div>
     <div class="fl-search-wrap">
-      <input class="fl-search" id="fl-search" type="text" oninput="filterFollowList()" placeholder="🔍 खोजें…">
+      <input class="fl-search" id="fl-search" type="text" oninput="filterFollowList()" placeholder="खोजें…">
     </div>
     <div class="fl-list" id="fl-list"></div>
   </div>
@@ -1584,7 +1763,7 @@
   <div class="bz-modal" style="max-width:380px;">
     <button class="bz-modal-close" onclick="closePrompt()">✕</button>
     <div class="bz-prompt-body">
-      <div class="bz-prompt-emoji" id="prompt-emoji">🔒</div>
+      <div class="bz-prompt-emoji" id="prompt-emoji"></div>
       <div class="bz-prompt-text" id="prompt-text"></div>
       <a class="bz-prompt-cta" id="prompt-cta" href="login.html">लॉगिन करें</a>
     </div>
@@ -1615,9 +1794,9 @@ const TRANSLATIONS = {
     nav_chat:'सहायता', nav_schemes:'सरकारी योजना',
     page_title:'कृषि बाज़ार', page_sub:'सीधे खरीदार से जुड़ें — किसान का भरोसेमंद मंच',
     tab_all:'सभी पोस्ट', tab_mine:'मेरी पोस्ट',
-    lbl_type:'आप क्या करना चाहते हैं?', type_sell:'🌾 बेचना है', type_buy:'🛒 खरीदना है',
+    lbl_type:'आप क्या करना चाहते हैं?', type_sell:'बेचना है', type_buy:'खरीदना है',
     edit:'बदलें', edit_title:'अपनी listing बदलें', btn_save:'सेव करें ✓',
-    edit_media_note:'📷 फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।',
+    edit_media_note:'फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।',
     edit_saved:'✓ Listing update हो गई।', edits_left:'आज बाकी edit',
     edit_nochange:'कुछ बदला नहीं।',
     search_ph:'फसल या मंडी खोजें...', loading:'लोड हो रहा है…', load_more:'और देखें ↓',
@@ -1626,13 +1805,17 @@ const TRANSLATIONS = {
     text_ph:'जैसे: मेरा गेहूं तैयार है — 50 क्विंटल, अच्छी क्वालिटी। सीधे खेत से पिकअप की सुविधा भी है।',
     lbl_price:'भाव (₹)', lbl_old_price:'पुराना भाव (₹, वैकल्पिक)',
     lbl_qty:'मात्रा', lbl_unit:'इकाई', lbl_media:'फोटो / वीडियो',
-    media_hint:'फोटो या वीडियो जोड़ें (photo ≤ 50MB, video ≤ 5 मिनट)',
+    media_hint:'फोटो या वीडियो जोड़ें (photo ≤ 12MB, video ≤ 40MB)',
     btn_post:'पोस्ट करें', comments_title:'सवाल-जवाब व ऑफर', comment_ph:'अपना सवाल पूछें...',
     offer_title:'अपना ऑफर भेजें', lbl_offer_amt:'ऑफर भाव (₹ प्रति इकाई)',
     lbl_offer_msg:'संदेश (वैकल्पिक)', offer_msg_ph:'20 क्विंटल चाहिए, कल उठा सकते हैं',
     btn_send_offer:'₹ ऑफर भेजें',
     listings:'सक्रिय लिस्टिंग', near_you:'आपके नज़दीक', my_listings:'मेरी लिस्टिंग',
     like:'पसंद', comment:'पूछें', offers:'ऑफर', share:'शेयर',
+    price_on_ask:'भाव पूछें', like_aria:'पसंद करें', stock_photo:'प्रतीकात्मक चित्र',
+    reply:'जवाब दें', delete_c:'हटाएं', replying_to:'जवाब:', no_comments:'अभी कोई सवाल नहीं — पहला आप पूछें।',
+    delete_comment_q:'यह comment हटाएं?', delete_failed:'हटाया नहीं जा सका — दोबारा try करें',
+    comment_failed:'Comment भेजा नहीं जा सका — दोबारा try करें',
     better_price:'बेहतर भाव', available:'उपलब्ध', sold:'बिक गया',
     login_needed:'बेचने-खरीदने, लाइक व कमेंट के लिए पहले लॉगिन करें।',
     profile_needed:'बेचने-खरीदने के लिए पहले अपनी किसान प्रोफ़ाइल बनाएं।',
@@ -1644,12 +1827,13 @@ const TRANSLATIONS = {
     min_ago:'मिनट पहले', hr_ago:'घंटे पहले', day_ago:'दिन पहले', just_now:'अभी-अभी',
     per:'प्रति', qty_lbl:'मात्रा', posted_deleted:'Post delete हो गया।',
     mark_sold:'बिक गया चिह्नित करें', delete_post:'पोस्ट हटाएं',
+    delete_post_q:'यह पोस्ट हटाएं? वापस नहीं आएगी।', action_failed:'नहीं हो पाया — दोबारा try करें',
     recent_posts:'हाल की पोस्ट', member_since:'सदस्य बने',
     sample_badge:'नमूना',
-    demo_notice:'कृषि बाज़ार अभी शुरू हो रहा है। नीचे कुछ नमूना लिस्टिंग हैं — इनसे समझें कि पोस्ट कैसी दिखती है। पहली असली पोस्ट आप करें! 🌾',
-    demo_nudge:'यह सिर्फ एक नमूना लिस्टिंग है। ऊपर “➕ पोस्ट करें” से अपनी असली फसल पोस्ट करें।',
+    demo_notice:'कृषि बाज़ार अभी शुरू हो रहा है। नीचे कुछ नमूना लिस्टिंग हैं — इनसे समझें कि पोस्ट कैसी दिखती है। पहली असली पोस्ट आप करें!',
+    demo_nudge:'यह सिर्फ एक नमूना लिस्टिंग है। ऊपर “पोस्ट करें” से अपनी असली फसल पोस्ट करें।',
     empty_title:'कोई लिस्टिंग नहीं मिली', empty_sub:'दूसरी फसल चुनें या खोज बदलें।',
-    empty_mine_title:'आपने अभी कोई फसल पोस्ट नहीं की', empty_mine_sub:'“➕ पोस्ट करें” से अपनी पहली फसल बेचें।',
+    empty_mine_title:'आपने अभी कोई फसल पोस्ट नहीं की', empty_mine_sub:'“पोस्ट करें” से अपनी पहली फसल बेचें।',
     zoom_hint:'दो उंगलियों से ज़ूम करें • डबल-टैप',
     phone_needed:'बेचने या खरीदने के लिए आपका मोबाइल नंबर ज़रूरी है — ताकि खरीदार/विक्रेता आपसे संपर्क कर सकें।',
     fill_phone:'मोबाइल नंबर भरें',
@@ -1666,9 +1850,9 @@ const TRANSLATIONS = {
     nav_chat:'Help', nav_schemes:'Govt Schemes',
     page_title:'Crop Bazar', page_sub:'Connect directly with buyers — the farmer\'s trusted marketplace',
     tab_all:'All posts', tab_mine:'My posts',
-    lbl_type:'What do you want to do?', type_sell:'🌾 I want to sell', type_buy:'🛒 I want to buy',
+    lbl_type:'What do you want to do?', type_sell:'I want to sell', type_buy:'I want to buy',
     edit:'Edit', edit_title:'Edit your listing', btn_save:'Save ✓',
-    edit_media_note:'📷 Photo/video can’t be changed yet — delete the post and add a new one instead.',
+    edit_media_note:'Photo/video can’t be changed yet — delete the post and add a new one instead.',
     edit_saved:'✓ Listing updated.', edits_left:'edits left today',
     edit_nochange:'Nothing changed.',
     search_ph:'Search crop or mandi...', loading:'Loading…', load_more:'Show more ↓',
@@ -1677,13 +1861,17 @@ const TRANSLATIONS = {
     text_ph:'e.g. My wheat is ready — 50 quintals, good quality. Pickup from farm available.',
     lbl_price:'Price (₹)', lbl_old_price:'Old price (₹, optional)',
     lbl_qty:'Quantity', lbl_unit:'Unit', lbl_media:'Photo / Video',
-    media_hint:'Add a photo or video (photo ≤ 50MB, video ≤ 5 min)',
+    media_hint:'Add a photo or video (photo ≤ 12MB, video ≤ 40MB)',
     btn_post:'Post', comments_title:'Questions & Offers', comment_ph:'Ask your question...',
     offer_title:'Send your offer', lbl_offer_amt:'Offer price (₹ per unit)',
     lbl_offer_msg:'Message (optional)', offer_msg_ph:'Need 20 quintals, can pick up tomorrow',
     btn_send_offer:'₹ Send offer',
     listings:'active listings', near_you:'Near you', my_listings:'My listings',
     like:'Like', comment:'Ask', offers:'Offers', share:'Share',
+    price_on_ask:'Price on ask', like_aria:'Like', stock_photo:'Representative photo',
+    reply:'Reply', delete_c:'Delete', replying_to:'Replying to', no_comments:'No questions yet — ask the first one.',
+    delete_comment_q:'Delete this comment?', delete_failed:'Could not delete — try again',
+    comment_failed:'Could not send — try again',
     better_price:'better price', available:'available', sold:'SOLD',
     login_needed:'Login first to sell, buy, like and comment.',
     profile_needed:'Create your farmer profile first to sell or buy.',
@@ -1695,12 +1883,13 @@ const TRANSLATIONS = {
     min_ago:'min ago', hr_ago:'hr ago', day_ago:'days ago', just_now:'just now',
     per:'per', qty_lbl:'Qty', posted_deleted:'Post deleted.',
     mark_sold:'Mark as sold', delete_post:'Delete post',
+    delete_post_q:'Delete this post? It cannot be undone.', action_failed:'Could not do that — try again',
     recent_posts:'Recent posts', member_since:'Member since',
     sample_badge:'SAMPLE',
-    demo_notice:'Krashi Bazar is just getting started. Below are a few sample listings so you can see how a post looks. Be the first to post a real one! 🌾',
-    demo_nudge:'This is just a sample listing. Tap “➕ Post” above to list your real crop.',
+    demo_notice:'Krashi Bazar is just getting started. Below are a few sample listings so you can see how a post looks. Be the first to post a real one!',
+    demo_nudge:'This is just a sample listing. Tap “Post” above to list your real crop.',
     empty_title:'No listings found', empty_sub:'Try another crop or change your search.',
-    empty_mine_title:'You haven’t posted a crop yet', empty_mine_sub:'Tap “➕ Post” to sell your first crop.',
+    empty_mine_title:'You haven’t posted a crop yet', empty_mine_sub:'Tap “Post” to sell your first crop.',
     zoom_hint:'Pinch to zoom • double-tap',
     phone_needed:'A mobile number is required to sell or buy — so buyers/sellers can reach you.',
     fill_phone:'Add mobile number',
@@ -1717,9 +1906,9 @@ const TRANSLATIONS = {
     nav_chat:'ಸಹಾಯ', nav_schemes:'ಸರ್ಕಾರಿ ಯೋಜನೆ',
     page_title:'ಬೆಳೆ ಬಜಾರ್', page_sub:'ಖರೀದಿದಾರರೊಂದಿಗೆ ನೇರ ಸಂಪರ್ಕ — ರೈತರ ನಂಬಿಕೆಯ ವೇದಿಕೆ',
     tab_all:'ಎಲ್ಲಾ ಪೋಸ್ಟ್‌ಗಳು', tab_mine:'ನನ್ನ ಪೋಸ್ಟ್‌ಗಳು',
-    lbl_type:'ನೀವು ಏನು ಮಾಡಲು ಬಯಸುತ್ತೀರಿ?', type_sell:'🌾 ಮಾರಬೇಕು', type_buy:'🛒 ಖರೀದಿಸಬೇಕು',
+    lbl_type:'ನೀವು ಏನು ಮಾಡಲು ಬಯಸುತ್ತೀರಿ?', type_sell:'ಮಾರಬೇಕು', type_buy:'ಖರೀದಿಸಬೇಕು',
     edit:'ಬದಲಿಸಿ', edit_title:'ನಿಮ್ಮ ಪಟ್ಟಿ ಬದಲಿಸಿ', btn_save:'ಉಳಿಸಿ ✓',
-    edit_media_note:'📷 ಫೋಟೋ/ವಿಡಿಯೋ ಈಗ ಬದಲಿಸಲಾಗದು — ಪೋಸ್ಟ್ ಅಳಿಸಿ ಹೊಸದನ್ನು ಹಾಕಿ.',
+    edit_media_note:'ಫೋಟೋ/ವಿಡಿಯೋ ಈಗ ಬದಲಿಸಲಾಗದು — ಪೋಸ್ಟ್ ಅಳಿಸಿ ಹೊಸದನ್ನು ಹಾಕಿ.',
     edit_saved:'✓ ಪಟ್ಟಿ ಅಪ್‌ಡೇಟ್ ಆಯಿತು.', edits_left:'ಇಂದು ಉಳಿದ ಎಡಿಟ್',
     edit_nochange:'ಏನೂ ಬದಲಾಗಿಲ್ಲ.',
     search_ph:'ಬೆಳೆ ಅಥವಾ ಮಂಡಿ ಹುಡುಕಿ...', loading:'ಲೋಡ್ ಆಗುತ್ತಿದೆ…', load_more:'ಇನ್ನಷ್ಟು ↓',
@@ -1728,13 +1917,17 @@ const TRANSLATIONS = {
     text_ph:'ಉದಾ: ನನ್ನ ಗೋಧಿ ಸಿದ್ಧವಾಗಿದೆ — 50 ಕ್ವಿಂಟಾಲ್, ಉತ್ತಮ ಗುಣಮಟ್ಟ.',
     lbl_price:'ಬೆಲೆ (₹)', lbl_old_price:'ಹಳೆ ಬೆಲೆ (₹, ಐಚ್ಛಿಕ)',
     lbl_qty:'ಪ್ರಮಾಣ', lbl_unit:'ಘಟಕ', lbl_media:'ಫೋಟೋ / ವಿಡಿಯೋ',
-    media_hint:'ಫೋಟೋ ಅಥವಾ ವಿಡಿಯೋ ಸೇರಿಸಿ (photo ≤ 50MB, video ≤ 5 ನಿಮಿಷ)',
+    media_hint:'ಫೋಟೋ ಅಥವಾ ವಿಡಿಯೋ ಸೇರಿಸಿ (photo ≤ 12MB, video ≤ 40MB)',
     btn_post:'ಪೋಸ್ಟ್ ಮಾಡಿ', comments_title:'ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಆಫರ್', comment_ph:'ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಕೇಳಿ...',
     offer_title:'ನಿಮ್ಮ ಆಫರ್ ಕಳುಹಿಸಿ', lbl_offer_amt:'ಆಫರ್ ಬೆಲೆ (₹ ಪ್ರತಿ ಘಟಕ)',
     lbl_offer_msg:'ಸಂದೇಶ (ಐಚ್ಛಿಕ)', offer_msg_ph:'20 ಕ್ವಿಂಟಾಲ್ ಬೇಕು',
     btn_send_offer:'₹ ಆಫರ್ ಕಳುಹಿಸಿ',
     listings:'ಸಕ್ರಿಯ ಪಟ್ಟಿಗಳು', near_you:'ನಿಮ್ಮ ಹತ್ತಿರ', my_listings:'ನನ್ನ ಪಟ್ಟಿಗಳು',
     like:'ಇಷ್ಟ', comment:'ಕೇಳಿ', offers:'ಆಫರ್', share:'ಹಂಚಿಕೊಳ್ಳಿ',
+    price_on_ask:'ಬೆಲೆ ಕೇಳಿ', like_aria:'ಇಷ್ಟಪಡಿ', stock_photo:'ಪ್ರಾತಿನಿಧಿಕ ಚಿತ್ರ',
+    reply:'ಉತ್ತರಿಸಿ', delete_c:'ಅಳಿಸಿ', replying_to:'ಉತ್ತರ:', no_comments:'ಇನ್ನೂ ಪ್ರಶ್ನೆಗಳಿಲ್ಲ — ಮೊದಲನೆಯದನ್ನು ಕೇಳಿ.',
+    delete_comment_q:'ಈ ಕಾಮೆಂಟ್ ಅಳಿಸುವುದೇ?', delete_failed:'ಅಳಿಸಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
+    comment_failed:'ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
     better_price:'ಉತ್ತಮ ಬೆಲೆ', available:'ಲಭ್ಯವಿದೆ', sold:'ಮಾರಾಟವಾಗಿದೆ',
     login_needed:'ಮಾರಾಟ, ಖರೀದಿ, ಲೈಕ್‌ಗೆ ಮೊದಲು ಲಾಗಿನ್ ಮಾಡಿ.',
     profile_needed:'ಮೊದಲು ನಿಮ್ಮ ರೈತ ಪ್ರೊಫೈಲ್ ರಚಿಸಿ.',
@@ -1746,12 +1939,13 @@ const TRANSLATIONS = {
     min_ago:'ನಿಮಿಷ ಹಿಂದೆ', hr_ago:'ಗಂಟೆ ಹಿಂದೆ', day_ago:'ದಿನ ಹಿಂದೆ', just_now:'ಈಗಷ್ಟೇ',
     per:'ಪ್ರತಿ', qty_lbl:'ಪ್ರಮಾಣ', posted_deleted:'ಪೋಸ್ಟ್ ಅಳಿಸಲಾಗಿದೆ.',
     mark_sold:'ಮಾರಾಟವಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ', delete_post:'ಪೋಸ್ಟ್ ಅಳಿಸಿ',
+    delete_post_q:'ಈ ಪೋಸ್ಟ್ ಅಳಿಸುವುದೇ? ಹಿಂತಿರುಗಿಸಲಾಗದು.', action_failed:'ಆಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
     recent_posts:'ಇತ್ತೀಚಿನ ಪೋಸ್ಟ್‌ಗಳು', member_since:'ಸದಸ್ಯರಾದದ್ದು',
     sample_badge:'ನಮೂನೆ',
-    demo_notice:'ಕೃಷಿ ಬಜಾರ್ ಈಗಷ್ಟೇ ಪ್ರಾರಂಭವಾಗುತ್ತಿದೆ. ಕೆಳಗೆ ಕೆಲವು ನಮೂನೆ ಪಟ್ಟಿಗಳಿವೆ — ಪೋಸ್ಟ್ ಹೇಗಿರುತ್ತದೆ ಎಂದು ನೋಡಿ. ಮೊದಲ ನಿಜವಾದ ಪೋಸ್ಟ್ ನೀವು ಮಾಡಿ! 🌾',
-    demo_nudge:'ಇದು ಕೇವಲ ನಮೂನೆ ಪಟ್ಟಿ. ನಿಮ್ಮ ನಿಜವಾದ ಬೆಳೆ ಪೋಸ್ಟ್ ಮಾಡಲು ಮೇಲೆ “➕” ಒತ್ತಿರಿ.',
+    demo_notice:'ಕೃಷಿ ಬಜಾರ್ ಈಗಷ್ಟೇ ಪ್ರಾರಂಭವಾಗುತ್ತಿದೆ. ಕೆಳಗೆ ಕೆಲವು ನಮೂನೆ ಪಟ್ಟಿಗಳಿವೆ — ಪೋಸ್ಟ್ ಹೇಗಿರುತ್ತದೆ ಎಂದು ನೋಡಿ. ಮೊದಲ ನಿಜವಾದ ಪೋಸ್ಟ್ ನೀವು ಮಾಡಿ!',
+    demo_nudge:'ಇದು ಕೇವಲ ನಮೂನೆ ಪಟ್ಟಿ. ನಿಮ್ಮ ನಿಜವಾದ ಬೆಳೆ ಪೋಸ್ಟ್ ಮಾಡಲು ಮೇಲೆ “” ಒತ್ತಿರಿ.',
     empty_title:'ಯಾವುದೇ ಪಟ್ಟಿ ಸಿಗಲಿಲ್ಲ', empty_sub:'ಬೇರೆ ಬೆಳೆ ಆರಿಸಿ ಅಥವಾ ಹುಡುಕಾಟ ಬದಲಿಸಿ.',
-    empty_mine_title:'ನೀವು ಇನ್ನೂ ಯಾವುದೇ ಬೆಳೆ ಪೋಸ್ಟ್ ಮಾಡಿಲ್ಲ', empty_mine_sub:'ನಿಮ್ಮ ಮೊದಲ ಬೆಳೆ ಮಾರಲು “➕” ಒತ್ತಿರಿ.',
+    empty_mine_title:'ನೀವು ಇನ್ನೂ ಯಾವುದೇ ಬೆಳೆ ಪೋಸ್ಟ್ ಮಾಡಿಲ್ಲ', empty_mine_sub:'ನಿಮ್ಮ ಮೊದಲ ಬೆಳೆ ಮಾರಲು “” ಒತ್ತಿರಿ.',
     zoom_hint:'ಎರಡು ಬೆರಳಿಂದ ಜೂಮ್ • ಡಬಲ್-ಟ್ಯಾಪ್',
     phone_needed:'ಮಾರಾಟ ಅಥವಾ ಖರೀದಿಗೆ ಮೊಬೈಲ್ ನಂಬರ್ ಅಗತ್ಯ — ಖರೀದಿದಾರರು/ಮಾರಾಟಗಾರರು ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಲು.',
     fill_phone:'ಮೊಬೈಲ್ ನಂಬರ್ ಸೇರಿಸಿ',
@@ -1866,6 +2060,33 @@ const IC_THUMB_OUTLINE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentCo
 const IC_THUMB_FILLED  = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
 const IC_COMMENT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
 const IC_SHARE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="10.49" x2="15.42" y2="6.51"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg>`;
+// Comment-thread actions. The Hindi words they replace move to aria-label and
+// title, so the meaning survives for a screen reader and on a long press.
+const IC_REPLY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`;
+const IC_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+
+/** A listing photo that 404s drops to the tier beneath it.
+ *
+ *  Every photo posted before media moved to R2 is gone (Render wiped the disk
+ *  on each redeploy), so this fires on real rows today. Dropping the <img>
+ *  reveals the stock crop photo or the emoji tile already sitting behind it —
+ *  and the card stops claiming to show the farmer's own crop, so the tile is
+ *  restyled as the muted, captioned stock variant. */
+function bzThumbFallback(el) {
+  const box = el.closest('.bz-hero');
+  el.remove();
+  if (!box) return;
+  box.classList.remove('is-real');
+  box.querySelector('.bz-play')?.remove();
+  box.onclick = null;
+  if (box.querySelector('.bz-thumb-stock') && !box.querySelector('.bz-stock-tag')) {
+    box.classList.add('is-stock');
+    const tag = document.createElement('span');
+    tag.className = 'bz-stock-tag';
+    tag.textContent = T().stock_photo;
+    box.appendChild(tag);
+  }
+}
 
 function likeBtnInner(liked, count) {
   return `${liked ? IC_THUMB_FILLED : IC_THUMB_OUTLINE}<span>${count > 0 ? count : ''}</span>`;
@@ -1873,7 +2094,7 @@ function likeBtnInner(liked, count) {
 
 function loaderHtml() {
   return `<div class="bz-loading">
-    <div class="bz-grow"><span>🌱</span><span>🌿</span><span>🌾</span></div>
+    <div class="bz-grow"></div>
     <span>${escapeHtml(T().loading)}</span>
   </div>`;
 }
@@ -1907,17 +2128,17 @@ function showPrompt(kind) {  // 'login' | 'profile' | 'phone'
   const text  = document.getElementById('prompt-text');
   const cta   = document.getElementById('prompt-cta');
   if (kind === 'profile') {
-    emoji.textContent = '🧑‍🌾';
+    emoji.textContent = '';
     text.textContent = tr.profile_needed;
     cta.textContent = tr.make_profile;
     cta.href = 'profile.html';
   } else if (kind === 'phone') {
-    emoji.textContent = '📱';
+    emoji.textContent = '';
     text.textContent = tr.phone_needed;
     cta.textContent = tr.fill_phone;
     cta.href = 'profile.html?focus=phone';
   } else {
-    emoji.textContent = '🔒';
+    emoji.textContent = '';
     text.textContent = tr.login_needed;
     cta.textContent = tr.do_login;
     cta.href = 'login.html';
@@ -2021,7 +2242,7 @@ function startVoiceSearch(e) {
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    toast("⚠️ Voice search is not supported in this browser.");
+    toast("Voice search is not supported in this browser.");
     return;
   }
 
@@ -2052,16 +2273,16 @@ function startVoiceSearch(e) {
 
     voiceRecognition.onstart = () => {
       if (micBtn) micBtn.classList.add('recording');
-      toast("🎙️ बोलिए... (Listening...)");
+      toast("बोलिए... (Listening...)");
     };
 
     voiceRecognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
       if (micBtn) micBtn.classList.remove('recording');
       if (event.error === 'not-allowed') {
-        toast("⚠️ Microphone permission denied.");
+        toast("Microphone permission denied.");
       } else {
-        toast("⚠️ Voice search failed.");
+        toast("Voice search failed.");
       }
     };
 
@@ -2075,7 +2296,7 @@ function startVoiceSearch(e) {
       if (cleanText) {
         if (searchInput) {
           searchInput.value = cleanText;
-          toast(`🔍: "${cleanText}"`);
+          toast(`: "${cleanText}"`);
           onSearchInput();
         }
       }
@@ -2085,7 +2306,7 @@ function startVoiceSearch(e) {
   } catch (err) {
     console.error("Speech recognition start failed:", err);
     if (micBtn) micBtn.classList.remove('recording');
-    toast("⚠️ Voice search error.");
+    toast("Voice search error.");
   }
 }
 
@@ -2113,7 +2334,7 @@ async function loadFeed(reset) {
       feedPosts   = feedPosts.concat(j.data.posts);
     }
   } catch (e) {
-    if (!feedPosts.length) toast('⚠️ Server से data नहीं मिला');
+    if (!feedPosts.length) toast('Server से data नहीं मिला');
   }
   document.getElementById('bz-loading').style.display = 'none';
   document.getElementById('bz-loadmore').style.display = feedHasMore ? 'block' : 'none';
@@ -2210,16 +2431,16 @@ const DEMO_POSTS = (() => {
 })();
 
 // Any tap on a sample card just nudges the user to post their real crop.
-function demoNudge(ev) { if (ev) ev.stopPropagation(); toast('🌱 ' + T().demo_nudge); }
+function demoNudge(ev) { if (ev) ev.stopPropagation(); toast('' + T().demo_nudge); }
 
 function demoNoticeHtml() {
-  return `<div class="bz-demo-notice"><span class="em">👋</span><span>${escapeHtml(T().demo_notice)}</span></div>`;
+  return `<div class="bz-demo-notice"><span class="em"></span><span>${escapeHtml(T().demo_notice)}</span></div>`;
 }
 function emptyStateHtml() {
   const tr = T();
   const mine = mode === 'mine';
   return `<div class="bz-empty-state">
-    <div class="em">${mine ? '🌾' : '🔍'}</div>
+    <div class="em">${mine ?'' : ''}</div>
     <div class="t">${escapeHtml(mine ? tr.empty_mine_title : tr.empty_title)}</div>
     <div class="s">${escapeHtml(mine ? tr.empty_mine_sub : tr.empty_sub)}</div>
   </div>`;
@@ -2254,41 +2475,73 @@ function postCardHtml(p) {
   const nav = (real) => demo ? 'demoNudge(event)' : real;   // sample cards → nudge
   const name = escapeHtml(a.name || 'किसान');
   const tick = a.verified ? `<span class="bz-tick" title="Verified seller">${TICK_SVG}</span>` : '';
-  const meta = [escapeHtml(p.location || a.location || ''), timeAgo(p.created_at)].filter(Boolean).join(' · ');
+  const place = escapeHtml(p.location || a.location || '');
   const badge = (p.post_type === 'buy'
     ? `<span class="bz-type-badge buy">${escapeHtml(tr.buy_wanted)}</span>`
     : `<span class="bz-type-badge sell">${escapeHtml(tr.sell_badge)}</span>`)
     + (demo ? `<span class="bz-type-badge sample" style="margin-left:5px;">${escapeHtml(tr.sample_badge)}</span>` : '');
 
-  let mediaHtml = '';
-  if (p.media_url && p.media_type === 'image')
-    mediaHtml = `<div class="bz-card-media"><img src="${mediaSrc(p.media_url)}" alt="${escapeHtml(p.crop || 'crop')}" loading="lazy" style="cursor:zoom-in;" onclick="openLightbox('${mediaSrc(p.media_url)}')"></div>`;
-  else if (p.media_url && p.media_type === 'video')
-    mediaHtml = `<div class="bz-card-media"><video src="${mediaSrc(p.media_url)}" controls preload="metadata" playsinline></video></div>`;
-
-  let priceHtml = '';
+  // ── The price, which is rendered ON the hero photo ──
+  let priceHtml;
   if (p.price) {
     let betterBadge = '';
     if (p.old_price && p.old_price > 0 && p.price > p.old_price) {
       const pct = Math.round(((p.price - p.old_price) / p.old_price) * 100);
       if (pct > 0) betterBadge = `<span class="bz-better-badge">+${pct}% ${escapeHtml(tr.better_price)}</span>`;
     }
-    priceHtml = `
-      <div class="bz-price-block">
-        <div class="bz-price-main">
-          <span class="bz-price-now">₹${fmtNum(p.price)}</span>
-          <span class="bz-price-unit">/${escapeHtml(p.unit || 'क्विंटल')}</span>
-          ${p.old_price ? `<span class="bz-price-old">₹${fmtNum(p.old_price)}</span>` : ''}
-        </div>
-        ${betterBadge}
-      </div>`;
+    // An old price equal to the current one struck itself through — "₹2,100
+    // ₹2̶,̶1̶0̶0̶" — which reads as a price change that did not happen.
+    const showOld = p.old_price && p.old_price > 0 && p.old_price !== p.price;
+    priceHtml =
+      `<span class="bz-price-now">₹${fmtNum(p.price)}</span>` +
+      `<span class="bz-price-unit">/${escapeHtml(p.unit || 'क्विंटल')}</span>` +
+      (showOld ? `<span class="bz-price-old">₹${fmtNum(p.old_price)}</span>` : '') +
+      betterBadge;
+  } else {
+    // Without this the photo's foot is empty and the card reads as a fragment.
+    priceHtml = `<span class="bz-ask-price">${escapeHtml(tr.price_on_ask)}</span>`;
   }
 
-  const qtyBits = [];
-  if (p.quantity) qtyBits.push(`📦 ${fmtNum(p.quantity)} ${escapeHtml(p.unit || '')} ${escapeHtml(tr.available)}`);
-  if (p.crop)     qtyBits.push(`🌱 ${escapeHtml(p.crop)}`);
-  if (p.status === 'sold') qtyBits.push(`<span class="bz-sold-badge">${escapeHtml(tr.sold)}</span>`);
-  const qtyHtml = qtyBits.length ? `<div class="bz-qty-row">${qtyBits.join('')}</div>` : '';
+  // ── The hero photo, in order of honesty ──
+  // A real upload is a photo of the goods and opens full size. Failing that,
+  // our own licence-checked crop photo, labelled so it cannot be read as a
+  // picture of THIS farmer's crop. Failing that, an emoji tile — never an empty
+  // grey box, which is what made the feed look unfinished.
+  const emojiTile = `<span class="bz-thumb-emoji">${escapeHtml(p.crop || tr.sell_badge)}</span>`;
+  // Every tier is rendered underneath the one above it rather than instead of
+  // it, so a dead src reveals the next tier instead of leaving a hole. The
+  // legacy /uploads rows are all dead, and removing their <img> outright left
+  // those cards with an empty photo area.
+  const stockLayer = p.crop_image
+    ? `<img class="bz-thumb-stock" src="${escapeHtml(p.crop_image)}" alt="" loading="lazy" onerror="this.remove()">`
+    : '';
+  const fallback = `<span class="bz-thumb-under">${emojiTile}${stockLayer}</span>`;
+  // Says in words what the old card said by washing the photo out: this is our
+  // picture of the crop, not his picture of the goods.
+  const stockTag = p.crop_image
+    ? `<span class="bz-stock-tag">${escapeHtml(tr.stock_photo)}</span>` : '';
+
+  const heroTags = `<div class="bz-hero-tags">${badge}</div>`;
+  const heroFoot = `<div class="bz-hero-foot">${priceHtml}</div>`;
+
+  let heroHtml;
+  if (p.media_url && p.media_type === 'image')
+    heroHtml = `<div class="bz-hero is-real" data-crop="${escapeHtml(p.crop || '')}" onclick="openLightbox('${mediaSrc(p.media_url)}')">${fallback}<img src="${mediaSrc(p.media_url)}" alt="${escapeHtml(p.crop || 'crop')}" loading="lazy" onerror="bzThumbFallback(this)">${heroTags}${heroFoot}</div>`;
+  else if (p.media_url && p.media_type === 'video')
+    heroHtml = `<div class="bz-hero is-real" data-crop="${escapeHtml(p.crop || '')}" onclick="openLightbox('${mediaSrc(p.media_url)}')">${fallback}<video src="${mediaSrc(p.media_url)}" muted preload="metadata" playsinline onerror="bzThumbFallback(this)"></video><span class="bz-play">▶</span>${heroTags}${heroFoot}</div>`;
+  else
+    heroHtml = `<div class="bz-hero${p.crop_image ? ' is-stock' : ''}" data-crop="${escapeHtml(p.crop || '')}">${fallback}${stockTag}${heroTags}${heroFoot}</div>`;
+
+  // Crop, quantity and place on ONE line. As three stacked rows they were 69px
+  // of a 358px card — the photo is what this layout is spending its height on.
+  const factBits = [];
+  if (p.crop)     factBits.push(escapeHtml(p.crop));
+  if (p.quantity) factBits.push(`${fmtNum(p.quantity)} ${escapeHtml(p.unit || '')}`);
+  if (place)      factBits.push(`<span class="bz-place-row">${place}</span>`);
+  const qtyHtml = (factBits.length || p.status === 'sold')
+    ? `<div class="bz-card-facts">${factBits.join('<span class="sep">·</span>')}${
+        p.status === 'sold' ? `<span class="bz-sold-badge">${escapeHtml(tr.sold)}</span>` : ''}</div>`
+    : '';
 
   const mineMenu = p.is_mine ? `
     <button class="bz-card-menu-btn" onclick="togglePostMenu(event, ${p.id})" title="⋯">⋯</button>` : '';
@@ -2297,12 +2550,9 @@ function postCardHtml(p) {
     ? `<button class="bz-offer-btn" onclick="${nav(`openOffer(${p.id})`)}">${escapeHtml(tr.btn_send_offer)}</button>`
     : '';
 
-  // Your own listing gets an edit button in the slot the offer button fills on
-  // everyone else's — the ⋯ menu keeps sold/delete. Not on sample cards, which
-  // have no row behind them to edit.
-  const editBtn = (p.is_mine && !demo)
-    ? `<button class="bz-act-btn edit" onclick="openEditPost(${p.id})">✏️ ${escapeHtml(tr.edit)}</button>`
-    : '';
+  // Edit used to sit here as its own pill. It lives in the ⋯ menu now, beside
+  // "mark sold" and "delete", so your own listing's action row has the same
+  // shape as everyone else's instead of a stray button where the offer goes.
 
   // Blue "Follow" beside the name — hidden on your own posts; sample cards
   // keep it (tap → post-your-crop nudge) so the affordance is visible.
@@ -2312,6 +2562,9 @@ function postCardHtml(p) {
          onclick="${nav(`followFromCard(event, ${a.user_id})`)}">${a.is_following ? 'Following' : 'Follow'}</button>`
     : '';
 
+  // Order matters in .bz-actions: the primary button leads, the icon buttons
+  // are pushed right by .bz-act-spacer, and nothing important ends up under
+  // the fixed "+ पोस्ट करें" FAB in the bottom-right corner.
   return `
   <article class="bz-card${demo ? ' is-demo' : ''}" id="post-${p.id}">
     <div class="bz-card-head">
@@ -2323,59 +2576,119 @@ function postCardHtml(p) {
         <div class="bz-author-row">
           <span class="bz-author-name" onclick="${nav(`openProfile(${a.user_id})`)}">${name}</span>${tick}${followBtn}
         </div>
-        <div class="bz-head-meta">${meta}</div>
       </div>
-      ${badge}
+      <span class="bz-head-time">${timeAgo(p.created_at)}</span>
       ${mineMenu}
     </div>
-    ${p.text ? `<div class="bz-card-text">${escapeHtml(p.text)}</div>` : ''}
-    ${mediaHtml}
-    ${priceHtml}
-    ${qtyHtml}
+    ${heroHtml}
+    <div class="bz-card-info">
+      ${qtyHtml}
+      ${p.text ? `<div class="bz-card-text">${escapeHtml(p.text)}</div>` : ''}
+    </div>
     <div class="bz-actions">
-      <button class="bz-act-btn ${p.liked_by_me ? 'liked' : ''}" onclick="${nav(`toggleLike(${p.id})`)}" id="like-btn-${p.id}" aria-label="Like">
+      <button class="bz-act-btn ${p.liked_by_me ? 'liked' : ''}" onclick="${nav(`toggleLike(${p.id})`)}" id="like-btn-${p.id}" aria-label="${escapeHtml(tr.like_aria || 'Like')}">
         ${likeBtnInner(p.liked_by_me, p.likes_count)}
       </button>
-      <button class="bz-act-btn" onclick="${nav(`openComments(${p.id})`)}" aria-label="Comments">
-        ${IC_COMMENT}<span id="cmt-count-${p.id}">${p.comments_count > 0 ? p.comments_count : ''}</span> ${escapeHtml(tr.comment)}
+      <button class="bz-act-btn" onclick="${nav(`openComments(${p.id})`)}" aria-label="${escapeHtml(tr.comment)}">
+        ${IC_COMMENT}<span id="cmt-count-${p.id}">${p.comments_count > 0 ? p.comments_count : ''}</span><span class="bz-act-label">${escapeHtml(tr.comment)}</span>
       </button>
-      <button class="bz-act-btn" onclick="${nav(`sharePost(${p.id})`)}" id="share-btn-${p.id}" aria-label="Share">
-        ${IC_SHARE}${escapeHtml(tr.share)}
+      <button class="bz-act-btn" onclick="${nav(`sharePost(${p.id})`)}" id="share-btn-${p.id}" aria-label="${escapeHtml(tr.share)}">
+        ${IC_SHARE}<span class="bz-act-label">${escapeHtml(tr.share)}</span>
       </button>
-      ${editBtn}
+      <span class="bz-act-spacer"></span>
       ${offerBtn}
     </div>
   </article>`;
 }
 
 // Owner post menu (simple confirm actions)
-async function togglePostMenu(ev, postId) {
+/** The ⋯ menu on your own listing.
+ *
+ *  This used to be `prompt("1 = बिक गया\n2 = पोस्ट हटाएं")` — a browser dialog
+ *  asking a farmer to type a digit. It is a real menu now: edit, mark sold,
+ *  delete. Edit moved in here from the action row, which frees that row for
+ *  the buttons everyone else sees on the card.
+ */
+let openMenuId = null;
+
+function closePostMenu() {
+  document.querySelectorAll('.bz-post-menu').forEach(m => m.remove());
+  openMenuId = null;
+}
+
+function togglePostMenu(ev, postId) {
   ev.stopPropagation();
+  const wasOpen = openMenuId === postId;
+  closePostMenu();
+  if (wasOpen) return;
+
+  const tr = T();
+  const p = feedPosts.find(x => x.id === postId);
+  const btn = ev.currentTarget;
+  if (!p || !btn) return;
+
+  const items = [
+    { label: tr.edit, act: `openEditPost(${postId})` },
+    ...(p.status === 'sold' ? [] : [{ label: tr.mark_sold, act: `markPostSold(${postId})` }]),
+    { label: tr.delete_post, act: `deletePost(${postId})`, danger: true },
+  ];
+  const menu = document.createElement('div');
+  menu.className = 'bz-post-menu';
+  menu.innerHTML = items.map(i =>
+    `<button class="${i.danger ? 'danger' : ''}" onclick="closePostMenu();${i.act}">${escapeHtml(i.label)}</button>`
+  ).join('');
+  btn.parentNode.style.position = btn.parentNode.style.position || 'relative';
+  btn.insertAdjacentElement('afterend', menu);
+  openMenuId = postId;
+
+  // One-shot close on the next tap anywhere else, and on Escape.
+  setTimeout(() => {
+    document.addEventListener('click', closePostMenu, { once: true });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { closePostMenu(); document.removeEventListener('keydown', esc); }
+    });
+  }, 0);
+}
+
+async function markPostSold(postId) {
   const tr = T();
   const p = feedPosts.find(x => x.id === postId);
   if (!p) return;
-  const choice = p.status === 'sold'
-    ? confirm(tr.delete_post + '?') ? 'del' : null
-    : prompt(`1 = ${tr.mark_sold}\n2 = ${tr.delete_post}`, '1');
-  if (choice === null) return;
+  const prev = p.status;
+  p.status = 'sold';                 // paint first, reconcile after
+  renderFeed();
   try {
-    if (choice === 'del' || choice === '2') {
-      const j = await api(`/bazar/posts/${postId}`, { method: 'DELETE' });
-      if (j.success) {
-        feedPosts = feedPosts.filter(x => x.id !== postId);
-        feedTotal = Math.max(0, feedTotal - 1);
-        renderFeed(); updateCountLabel();
-        toast(tr.posted_deleted);
-      }
-    } else if (choice === '1') {
-      const j = await api(`/bazar/posts/${postId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'sold' }),
-      });
-      if (j.success) { p.status = 'sold'; renderFeed(); toast('✓ ' + tr.sold); }
-    }
-  } catch {}
+    const j = await api(`/bazar/posts/${postId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'sold' }),
+    });
+    if (!j.success) throw new Error('refused');
+    toast(tr.sold);
+  } catch {
+    p.status = prev; renderFeed();
+    toast(tr.action_failed);
+  }
+}
+
+async function deletePost(postId) {
+  const tr = T();
+  if (!confirm(tr.delete_post_q)) return;
+  const idx = feedPosts.findIndex(x => x.id === postId);
+  if (idx < 0) return;
+  const [removed] = feedPosts.splice(idx, 1);
+  feedTotal = Math.max(0, feedTotal - 1);
+  renderFeed(); updateCountLabel();
+  try {
+    const j = await api(`/bazar/posts/${postId}`, { method: 'DELETE' });
+    if (!j.success) throw new Error('refused');
+    toast(tr.posted_deleted);
+  } catch {
+    feedPosts.splice(idx, 0, removed);   // put the listing back where it was
+    feedTotal += 1;
+    renderFeed(); updateCountLabel();
+    toast(tr.delete_failed);
+  }
 }
 
 // ── Like ────────────────────────────────────────────────────
@@ -2433,18 +2746,18 @@ function shareUrl(postId) { return `https://krashimitra.in/share/bazar/${postId}
 function shareText(p) {
   const a = p.author || {};
   const lines = [];
-  const verb = p.post_type === 'buy' ? '🛒 खरीदना है' : '🌾 बेचना है';
+  const verb = p.post_type === 'buy' ?'खरीदना है' : 'बेचना है';
   lines.push(`${verb}: ${p.crop || 'फसल'}`);
   if (p.price) {
-    let l = `💰 भाव: ₹${fmtNum(p.price)}/${p.unit || 'क्विंटल'}`;
+    let l = `भाव: ₹${fmtNum(p.price)}/${p.unit || 'क्विंटल'}`;
     if (p.old_price) l += `  (पहले ₹${fmtNum(p.old_price)})`;
     lines.push(l);
   }
-  if (p.quantity) lines.push(`📦 मात्रा: ${fmtNum(p.quantity)} ${p.unit || 'क्विंटल'}`);
-  if (p.location) lines.push(`📍 ${p.location}`);
-  lines.push(`🧑‍🌾 ${a.name || 'किसान'}${a.verified ? ' ✅' : ''}`);
+  if (p.quantity) lines.push(`मात्रा: ${fmtNum(p.quantity)} ${p.unit || 'क्विंटल'}`);
+  if (p.location) lines.push(`${p.location}`);
+  lines.push(`${a.name || 'किसान'}${a.verified ?' ' : ''}`);
   lines.push('');
-  lines.push('👉 कृषि बाज़ार पर देखें — सीधा किसान से जुड़ें:');
+  lines.push('कृषि बाज़ार पर देखें — सीधा किसान से जुड़ें:');
   lines.push(shareUrl(p.id));
   return lines.join('\n');
 }
@@ -2491,7 +2804,7 @@ async function buildShareCard(p) {
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 52px ${FONT}`;
   ctx.textBaseline = 'middle';
-  ctx.fillText('🌾 कृषि बाज़ार', 44, 66);
+  ctx.fillText('कृषि बाज़ार', 44, 66);
   ctx.font = `600 30px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.textAlign = 'right';
@@ -2516,7 +2829,7 @@ async function buildShareCard(p) {
     ctx.fillStyle = '#2d6a4f';
     ctx.textAlign = 'center';
     ctx.font = `140px ${FONT}`;
-    ctx.fillText(p.post_type === 'buy' ? '🛒' : '🌾', W / 2, PY + PH / 2 - 80);
+    ctx.fillText(p.post_type === 'buy' ?'' : '', W / 2, PY + PH / 2 - 80);
     ctx.font = `800 92px ${FONT}`;
     ctx.fillText(p.crop || 'फसल', W / 2, PY + PH / 2 + 80);
     ctx.textAlign = 'left';
@@ -2573,15 +2886,15 @@ async function buildShareCard(p) {
   ctx.font = `700 40px ${FONT}`;
   ctx.fillStyle = '#1a2e1e';
   const bits = [];
-  if (p.crop) bits.push(`🌱 ${p.crop}`);
-  if (p.quantity) bits.push(`📦 ${fmtNum(p.quantity)} ${p.unit || 'क्विंटल'} उपलब्ध`);
+  if (p.crop) bits.push(`${p.crop}`);
+  if (p.quantity) bits.push(`${fmtNum(p.quantity)} ${p.unit || 'क्विंटल'} उपलब्ध`);
   if (bits.length) { ctx.fillText(bits.join('   ·   '), 72, y); y += 66; }
 
   // Location + farmer
   ctx.font = `600 34px ${FONT}`;
   ctx.fillStyle = '#4a6355';
-  if (p.location) { ctx.fillText(`📍 ${p.location}`, 72, y); y += 56; }
-  ctx.fillText(`🧑‍🌾 ${a.name || 'किसान'}${a.verified ? ' ✅' : ''}`, 72, y);
+  if (p.location) { ctx.fillText(`${p.location}`, 72, y); y += 56; }
+  ctx.fillText(`${a.name || 'किसान'}${a.verified ?' ' : ''}`, 72, y);
 
   // Footer band
   ctx.fillStyle = '#1a3c2e';
@@ -2600,7 +2913,7 @@ async function sharePost(postId) {
   const url = shareUrl(postId);
   if (!p) {
     if (navigator.share) navigator.share({ url }).catch(() => {});
-    else { navigator.clipboard?.writeText(url); toast('🔗 Link copy हो गया'); }
+    else { navigator.clipboard?.writeText(url); toast('Link copy हो गया'); }
     return;
   }
   const btn = document.getElementById(`share-btn-${postId}`);
@@ -2620,11 +2933,11 @@ async function sharePost(postId) {
     if (navigator.share) { await navigator.share({ text }); return; }
     // 3) Desktop fallback → copy details + link
     await navigator.clipboard?.writeText(text);
-    toast('📋 Details + link copy हो गए — WhatsApp पर paste करें');
+    toast('Details + link copy हो गए — WhatsApp पर paste करें');
   } catch (e) {
     if (e && e.name !== 'AbortError') {
       navigator.clipboard?.writeText(text);
-      toast('📋 Details + link copy हो गए');
+      toast('Details + link copy हो गए');
     }
   } finally {
     if (btn) btn.style.opacity = '';
@@ -2634,64 +2947,226 @@ async function sharePost(postId) {
 // ── Comments ────────────────────────────────────────────────
 let commentsPostId = null;
 
+// The thread the sheet is currently showing, kept so a like, a reply or a
+// delete can repaint from memory instead of refetching the whole thread.
+let commentsCache = [];
+let replyingTo = null;      // {id, name} while the composer is in reply mode
+
 async function openComments(postId) {
   commentsPostId = postId;
+  cancelReply();
   document.getElementById('comments-overlay').classList.add('open');
   const body = document.getElementById('comments-body');
-  body.innerHTML = loaderHtml();
+  // The sheet opens on the previous thread if it is the same post, so tapping
+  // the button twice does not blank the screen while the network answers.
+  if (!commentsCache.length || commentsCache._postId !== postId) {
+    commentsCache = [];
+    body.innerHTML = loaderHtml();
+  }
   try {
     const j = await api(`/bazar/posts/${postId}/comments`);
-    renderComments(j.data.comments || []);
-  } catch { body.innerHTML = ''; }
+    commentsCache = j.data.comments || [];
+    commentsCache._postId = postId;
+    renderComments();
+  } catch { if (!commentsCache.length) body.innerHTML = ''; }
 }
-function closeComments() { document.getElementById('comments-overlay').classList.remove('open'); commentsPostId = null; }
+function closeComments() {
+  document.getElementById('comments-overlay').classList.remove('open');
+  commentsPostId = null; commentsCache = []; cancelReply();
+}
 
-function renderComments(list) {
-  const body = document.getElementById('comments-body');
-  if (!list.length) {
-    body.innerHTML = `<div class="bz-empty" style="padding:26px;"><div class="em">💬</div>${escapeHtml(T().comment_ph)}</div>`;
-    return;
-  }
-  body.innerHTML = list.map(c => {
-    const a = c.author || {};
-    const tick = a.verified ? TICK_SVG : '';
-    const offer = c.kind === 'offer'
-      ? `<div class="bz-offer-amount">💰 ₹${fmtNum(c.offer_amount)}</div>` : '';
-    return `
-    <div class="bz-comment">
+/** One comment or reply. `depth` 1 drops the reply affordance — replies are
+ *  one level deep, and answering a reply attaches to its parent anyway. */
+function commentHtml(c, depth) {
+  const tr = T();
+  const a = c.author || {};
+  const tick = a.verified ? TICK_SVG : '';
+  const offer = c.kind === 'offer'
+    ? `<div class="bz-offer-amount">₹${fmtNum(c.offer_amount)}</div>` : '';
+  const acts = c._pending ? '' : `
+      <div class="bz-comment-acts">
+        <button class="${c.liked_by_me ? 'liked' : ''}" id="clike-${c.id}"
+                onclick="toggleCommentLike(${c.id})"
+                aria-label="${escapeHtml(tr.like)}" title="${escapeHtml(tr.like)}"
+                >${c.liked_by_me ? IC_THUMB_FILLED : IC_THUMB_OUTLINE}<span class="n" id="clike-n-${c.id}">${c.likes_count > 0 ? c.likes_count : ''}</span></button>
+        ${depth === 0 ? `<button onclick="startReply(${c.id})" aria-label="${escapeHtml(tr.reply)}" title="${escapeHtml(tr.reply)}">${IC_REPLY}</button>` : ''}
+        ${c.can_delete ? `<button class="danger" onclick="deleteComment(${c.id})" aria-label="${escapeHtml(tr.delete_c)}" title="${escapeHtml(tr.delete_c)}">${IC_TRASH}</button>` : ''}
+      </div>`;
+  const replies = (c.replies && c.replies.length)
+    ? `<div class="bz-replies">${c.replies.map(r => commentHtml(r, 1)).join('')}</div>` : '';
+
+  return `
+    <div class="bz-comment${c._pending ? ' pending' : ''}" id="comment-${c.id}">
       ${a.avatar_url
         ? `<div class="bz-avatar" onclick="openProfile(${a.user_id})"><img src="${mediaSrc(a.avatar_url)}" alt="${escapeHtml(a.name)}"></div>`
         : `<div class="bz-avatar" style="background:${avatarColor(a.name)}" onclick="openProfile(${a.user_id})">${escapeHtml(initial(a.name))}</div>`
       }
-      <div class="bz-comment-bubble ${c.kind === 'offer' ? 'offer' : ''}">
-        <div class="bz-comment-author" onclick="openProfile(${a.user_id})" style="cursor:pointer;">${escapeHtml(a.name || '')} ${tick}</div>
-        ${offer}
-        ${c.text ? `<div>${escapeHtml(c.text)}</div>` : ''}
-        <div class="bz-comment-time">${timeAgo(c.created_at)}</div>
+      <div class="bz-comment-col">
+        <div class="bz-comment-bubble ${c.kind === 'offer' ? 'offer' : ''}">
+          <div class="bz-comment-author" onclick="openProfile(${a.user_id})" style="cursor:pointer;">${escapeHtml(a.name || '')} ${tick}</div>
+          ${offer}
+          ${c.text ? `<div>${escapeHtml(c.text)}</div>` : ''}
+          <div class="bz-comment-time">${timeAgo(c.created_at)}</div>
+        </div>
+        ${acts}
+        ${replies}
       </div>
     </div>`;
-  }).join('');
-  body.scrollTop = body.scrollHeight;
+}
+
+function renderComments(keepScroll) {
+  const body = document.getElementById('comments-body');
+  const at = body.scrollTop;
+  if (!commentsCache.length) {
+    body.innerHTML = `<div class="bz-empty" style="padding:26px;">${escapeHtml(T().no_comments)}</div>`;
+    return;
+  }
+  body.innerHTML = commentsCache.map(c => commentHtml(c, 0)).join('');
+  body.scrollTop = keepScroll ? at : body.scrollHeight;
+}
+
+/** Walk parents and replies — a like or a delete can land on either. */
+function findComment(id) {
+  for (const c of commentsCache) {
+    if (c.id === id) return c;
+    for (const r of (c.replies || [])) if (r.id === id) return r;
+  }
+  return null;
+}
+
+function startReply(id) {
+  const c = findComment(id);
+  if (!c) return;
+  replyingTo = { id, name: (c.author || {}).name || '' };
+  const banner = document.getElementById('reply-banner');
+  document.getElementById('reply-banner-name').textContent =
+    `${T().replying_to} ${replyingTo.name}`;
+  banner.classList.add('open');
+  document.getElementById('comment-input').focus();
+}
+function cancelReply() {
+  replyingTo = null;
+  document.getElementById('reply-banner')?.classList.remove('open');
+}
+
+async function toggleCommentLike(id) {
+  if (!getToken()) { showPrompt('login'); return; }
+  const c = findComment(id);
+  if (!c) return;
+
+  // Paint first, reconcile after. The round-trip to a sleeping free dyno is
+  // what made this button feel broken.
+  const wasLiked = !!c.liked_by_me;
+  const wasCount = c.likes_count || 0;
+  c.liked_by_me = !wasLiked;
+  c.likes_count = Math.max(0, wasCount + (wasLiked ? -1 : 1));
+  const paint = () => {
+    const btn = document.getElementById(`clike-${id}`);
+    if (!btn) return;
+    btn.classList.toggle('liked', !!c.liked_by_me);
+    // The thumb swaps outline↔filled, so repaint the icon, not just the count.
+    const svg = btn.querySelector('svg');
+    if (svg) svg.outerHTML = c.liked_by_me ? IC_THUMB_FILLED : IC_THUMB_OUTLINE;
+    // No leading space — the gap is flex gap now, and " 3" here would sit
+    // differently from the same count rendered by commentHtml().
+    const n = btn.querySelector('.n');
+    if (n) n.textContent = c.likes_count > 0 ? c.likes_count : '';
+  };
+  paint();
+
+  try {
+    if (!(await requireMember())) throw new Error('gate');
+    const j = await api(`/bazar/comments/${id}/like`, { method: 'POST' });
+    if (j.success) { c.liked_by_me = j.data.liked; c.likes_count = j.data.likes_count; paint(); }
+  } catch {
+    c.liked_by_me = wasLiked; c.likes_count = wasCount; paint();
+  }
+}
+
+async function deleteComment(id) {
+  const tr = T();
+  if (!confirm(tr.delete_comment_q)) return;
+  const postId = commentsPostId;
+
+  // Take it off screen immediately, put it back only if the server refuses.
+  const before = JSON.parse(JSON.stringify(commentsCache));
+  commentsCache = commentsCache
+    .filter(c => c.id !== id)
+    .map(c => ({ ...c, replies: (c.replies || []).filter(r => r.id !== id) }));
+  renderComments(true);
+
+  try {
+    const j = await api(`/bazar/posts/${postId}/comments/${id}`, { method: 'DELETE' });
+    if (!j.success) throw new Error('refused');
+    syncCommentCount(postId, j.data.comments_count);
+  } catch {
+    commentsCache = before; renderComments(true);
+    toast(tr.delete_failed);
+  }
+}
+
+function syncCommentCount(postId, count) {
+  const p = feedPosts.find(x => x.id === postId);
+  if (!p) return;
+  p.comments_count = count;
+  const el = document.getElementById(`cmt-count-${postId}`);
+  if (el) el.textContent = count > 0 ? count : '';
 }
 
 async function sendComment() {
   const input = document.getElementById('comment-input');
   const text = input.value.trim();
   if (!text || !commentsPostId) return;
-  if (!(await requireMember())) return;
+  const postId = commentsPostId;
+  const parent = replyingTo ? replyingTo.id : null;
+
+  // Clear the box and show the comment at once. Everything after this is
+  // reconciliation — the old version awaited the gate AND the POST AND a full
+  // thread refetch before anything moved on screen.
+  input.value = '';
+  cancelReply();
+  const tempId = -Date.now();
+  const mine = {
+    id: tempId, kind: 'comment', text, parent_id: parent,
+    likes_count: 0, liked_by_me: false, can_delete: false, replies: [],
+    created_at: new Date().toISOString(), _pending: true,
+    author: bazarMe
+      ? { user_id: bazarMe.user_id, name: bazarMe.name, verified: bazarMe.verified,
+          avatar_url: bazarMe.avatar_url }
+      : { name: '' },
+  };
+  if (parent) {
+    const p = findComment(parent);
+    if (p) (p.replies = p.replies || []).push(mine);
+  } else {
+    commentsCache.push(mine);
+  }
+  renderComments();
+
+  const drop = () => {
+    commentsCache = commentsCache
+      .filter(c => c.id !== tempId)
+      .map(c => ({ ...c, replies: (c.replies || []).filter(r => r.id !== tempId) }));
+  };
+
   try {
-    const j = await api(`/bazar/posts/${commentsPostId}/comments`, {
+    if (!(await requireMember())) { drop(); renderComments(true); input.value = text; return; }
+    const j = await api(`/bazar/posts/${postId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, kind: 'comment' }),
+      body: JSON.stringify({ text, kind: 'comment', parent_id: parent }),
     });
-    if (j.success) {
-      input.value = '';
-      const p = feedPosts.find(x => x.id === commentsPostId);
-      if (p) { p.comments_count = j.data.comments_count; const c = document.getElementById(`cmt-count-${p.id}`); if (c) c.textContent = p.comments_count > 0 ? p.comments_count : ''; }
-      openComments(commentsPostId);   // reload thread
-    }
-  } catch {}
+    if (!j.success) throw new Error('refused');
+    // Swap the placeholder for the real row — it carries the id every action
+    // below needs, and can_delete, which the optimistic copy cannot know.
+    Object.assign(mine, j.data, { _pending: false, replies: mine.replies || [] });
+    syncCommentCount(postId, j.data.comments_count);
+    renderComments(true);
+  } catch {
+    drop(); renderComments(true);
+    input.value = text;                 // never lose what he typed
+    toast(T().comment_failed);
+  }
 }
 
 // ── Offers ──────────────────────────────────────────────────
@@ -2708,7 +3183,7 @@ function closeOffer() { document.getElementById('offer-overlay').classList.remov
 async function sendOffer() {
   const amt = parseFloat(document.getElementById('offer-amount').value);
   const msg = document.getElementById('offer-msg').value.trim();
-  if (!amt || amt <= 0 || !offerPostId) { toast('⚠️ सही amount डालें'); return; }
+  if (!amt || amt <= 0 || !offerPostId) { toast('सही amount डालें'); return; }
   try {
     const j = await api(`/bazar/posts/${offerPostId}/comments`, {
       method: 'POST',
@@ -2719,7 +3194,7 @@ async function sendOffer() {
       const p = feedPosts.find(x => x.id === offerPostId);
       if (p) { p.comments_count = j.data.comments_count; const c = document.getElementById(`cmt-count-${p.id}`); if (c) c.textContent = p.comments_count > 0 ? p.comments_count : ''; }
       closeOffer();
-      toast(j.message || '💰 Offer भेज दिया!');
+      toast(j.message || 'Offer भेज दिया!');
     }
   } catch {}
 }
@@ -2781,9 +3256,9 @@ function renderProfile(u) {
   const crops = (u.crops_grown || u.primary_crop || '')
     .split(',').map(s => s.trim()).filter(Boolean).slice(0, 5);
   const tags = [
-    ...crops.map(c => `<span class="ig-bio-tag">🌱 ${escapeHtml(c)}</span>`),
-    u.farming_experience ? `<span class="ig-bio-tag">🧑‍🌾 ${escapeHtml(u.farming_experience)}</span>` : '',
-    u.farming_type ? `<span class="ig-bio-tag">🚜 ${escapeHtml(u.farming_type)}</span>` : '',
+    ...crops.map(c => `<span class="ig-bio-tag">${escapeHtml(c)}</span>`),
+    u.farming_experience ? `<span class="ig-bio-tag">${escapeHtml(u.farming_experience)}</span>` : '',
+    u.farming_type ? `<span class="ig-bio-tag">${escapeHtml(u.farming_type)}</span>` : '',
   ].filter(Boolean).join('');
 
   // Follow / Edit Profile button matching IG layout
@@ -2800,11 +3275,13 @@ function renderProfile(u) {
   let postsContent = '';
   if (u.recent_posts && u.recent_posts.length > 0) {
     const minis = u.recent_posts.map(p => {
+      // Same pre-R2 dead-file case as the feed card: drop the broken image and
+      // keep the tile, which is still the link to the post.
       if (p.media_url && p.media_type === 'image')
-        return `<div class="ig-grid-item" onclick="scrollToPost(${p.id})"><img src="${mediaSrc(p.media_url)}" loading="lazy"></div>`;
+        return `<div class="ig-grid-item" onclick="scrollToPost(${p.id})"><img src="${mediaSrc(p.media_url)}" loading="lazy" onerror="this.remove()"></div>`;
       if (p.media_url && p.media_type === 'video')
-        return `<div class="ig-grid-item" onclick="scrollToPost(${p.id})"><video src="${mediaSrc(p.media_url)}" muted preload="metadata"></video></div>`;
-      return `<div class="ig-grid-item" onclick="scrollToPost(${p.id})">${escapeHtml((p.crop || p.text || '📝').slice(0, 24))}</div>`;
+        return `<div class="ig-grid-item" onclick="scrollToPost(${p.id})"><video src="${mediaSrc(p.media_url)}" muted preload="metadata" onerror="this.remove()"></video></div>`;
+      return `<div class="ig-grid-item" onclick="scrollToPost(${p.id})">${escapeHtml((p.crop || p.text || '').slice(0, 24))}</div>`;
     }).join('');
     postsContent = `<div class="ig-grid" id="ig-profile-grid">${minis}</div>`;
   } else {
@@ -2847,7 +3324,7 @@ function renderProfile(u) {
           ` : ''}
         </div>
         <div class="ig-profile-subname">
-          ${u.location ? `📍 ${escapeHtml(u.location)}${u.state ? ', ' + escapeHtml(u.state) : ''}` : ''}
+          ${u.location ? `${escapeHtml(u.location)}${u.state ?', ' + escapeHtml(u.state) : ''}` : ''}
         </div>
         <div class="ig-profile-stats">
           <button type="button" class="ig-stat-item ig-stat-btn" onclick="scrollToProfileGrid()"><strong>${u.posts_count}</strong> posts</button>
@@ -2859,7 +3336,7 @@ function renderProfile(u) {
 
     <!-- Instagram Bio Line & Tags -->
     <div class="ig-profile-bio">
-      ${u.member_since ? `<div class="ig-bio-line">📅 ${escapeHtml(tr.member_since)}: ${escapeHtml(u.member_since)}</div>` : ''}
+      ${u.member_since ? `<div class="ig-bio-line">${escapeHtml(tr.member_since)}: ${escapeHtml(u.member_since)}</div>` : ''}
       ${tags ? `<div class="ig-bio-tags">${tags}</div>` : ''}
     </div>
 
@@ -2892,7 +3369,7 @@ async function uploadModalAvatar(input) {
   const file = input.files && input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) {
-    toast("⚠️ File बहुत बड़ी है — अधिकतम 5MB");
+    toast("File बहुत बड़ी है — अधिकतम 5MB");
     input.value = "";
     return;
   }
@@ -2910,7 +3387,7 @@ async function uploadModalAvatar(input) {
     });
     const data = await res.json().catch(() => ({}));
     if (data.success && data.data && data.data.avatar_url) {
-      toast("✅ Profile picture update हो गया! 🎉");
+      toast("Profile picture update हो गया! ");
       localStorage.setItem("user_avatar_url", data.data.avatar_url);
       // Re-load profile card overlay to display new picture
       if (profileUserId) {
@@ -2928,10 +3405,10 @@ async function uploadModalAvatar(input) {
         bazarMe.avatar_url = data.data.avatar_url;
       }
     } else {
-      toast(data.message || "⚠️ Upload fail");
+      toast(data.message || "Upload fail");
     }
   } catch {
-    toast("⚠️ Server error");
+    toast("Server error");
   } finally {
     input.value = "";
   }
@@ -3009,7 +3486,7 @@ async function openFollowList(userId, type) {
     type === 'following' ? tr.following_l : tr.followers;
   document.getElementById('fl-search').value = '';
   document.getElementById('fl-search').placeholder =
-    currentLang === 'en' ? '🔍 Search…' : (currentLang === 'kn' ? '🔍 ಹುಡುಕಿ…' : '🔍 खोजें…');
+    currentLang === 'en' ?'Search…' : (currentLang === 'kn' ?'ಹುಡುಕಿ…' : 'खोजें…');
   document.getElementById('fl-count').textContent = '';
   document.getElementById('fl-list').innerHTML = loaderHtml();
   document.getElementById('follow-list-overlay').classList.add('open');
@@ -3049,7 +3526,7 @@ function renderFollowList(list) {
       ${av}
       <div class="fl-meta">
         <div class="fl-name">${escapeHtml(u.name)} ${tick}</div>
-        ${u.location ? `<div class="fl-sub">📍 ${escapeHtml(u.location)}</div>` : ''}
+        ${u.location ? `<div class="fl-sub">${escapeHtml(u.location)}</div>` : ''}
       </div>
       ${btn}
     </div>`;
@@ -3306,16 +3783,20 @@ function fillCropSelect() {
   const sel = document.getElementById('cmp-crop');
   const opts = CROPS.filter(c => c.v).map(c =>
     `<option value="${escapeHtml(c.v)}">${escapeHtml(c[currentLang] || c.hi)}</option>`).join('');
-  sel.innerHTML = opts + `<option value="__other__">✏️ ${currentLang === 'en' ? 'Other' : currentLang === 'kn' ? 'ಇತರೆ' : 'अन्य'}</option>`;
+  sel.innerHTML = opts + `<option value="__other__">${currentLang === 'en' ?'Other' : currentLang === 'kn' ?'ಇತರೆ' : 'अन्य'}</option>`;
   sel.onchange = () => {
     document.getElementById('cmp-crop-other').style.display =
       sel.value === '__other__' ? 'block' : 'none';
   };
 }
 
-const MAX_IMAGE_MB   = 50;    // matches backend MAX_IMAGE_BYTES
-const MAX_VIDEO_MB   = 120;   // matches backend MAX_VIDEO_BYTES
-const MAX_VIDEO_SECS = 5 * 60;
+const MAX_IMAGE_MB   = 12;    // matches backend MAX_IMAGE_BYTES
+const MAX_VIDEO_MB   = 40;    // matches backend MAX_VIDEO_BYTES
+// Duration is the softer of the two guards and only the browser can read it.
+// 40 MB is ~30-40s of phone video, so a clip near this length is refused on
+// size long before it is refused on time; the limit stays as a backstop for a
+// low-bitrate file that would otherwise upload for minutes.
+const MAX_VIDEO_SECS = 90;
 
 /** Read a video file's duration (seconds) from its metadata. */
 function videoDuration(file) {
@@ -3341,22 +3822,22 @@ async function onMediaPicked(input) {
   // Size limits (also enforced server-side)
   const maxMb = isVideo ? MAX_VIDEO_MB : MAX_IMAGE_MB;
   if (file.size > maxMb * 1024 * 1024) {
-    toast(`⚠️ File बहुत बड़ी है — ${isVideo ? 'video' : 'photo'} max ${maxMb}MB`);
+    toast(`File बहुत बड़ी है — ${isVideo ?'video' : 'photo'} max ${maxMb}MB`);
     input.value = '';
     return;
   }
 
-  // Video duration limit — 5 minutes
+  // Video duration limit — see MAX_VIDEO_SECS
   if (isVideo) {
     const dur = await videoDuration(file);
     if (dur == null) {
-      toast('⚠️ Video पढ़ी नहीं जा सकी — दूसरी file try करें');
+      toast('Video पढ़ी नहीं जा सकी — दूसरी file try करें');
       input.value = '';
       return;
     }
     if (dur > MAX_VIDEO_SECS) {
       const mins = Math.floor(dur / 60), secs = Math.round(dur % 60);
-      toast(`⚠️ Video ${mins}:${String(secs).padStart(2,'0')} की है — अधिकतम 5 मिनट allowed`);
+      toast(`Video ${mins}:${String(secs).padStart(2,'0')} की है — अधिकतम ${MAX_VIDEO_SECS} सेकंड allowed`);
       input.value = '';
       return;
     }
@@ -3407,7 +3888,7 @@ async function submitPost() {
 
   if (editingPostId) { await saveEdit(btn, f); return; }
 
-  if (!f.text && !pickedMedia) { toast('⚠️ कुछ लिखें या photo/video जोड़ें'); return; }
+  if (!f.text && !pickedMedia) { toast('कुछ लिखें या photo/video जोड़ें'); return; }
 
   const fd = new FormData();
   fd.append('post_type', f.post_type);
@@ -3430,7 +3911,7 @@ async function submitPost() {
     if (r.ok && j.success) {
       closeComposer();
       resetComposer();
-      toast(j.message || '🎉 पोस्ट हो गया!');
+      toast(j.message || 'पोस्ट हो गया!');
       // a new listing belongs in both views (all listings, and mine)
       feedPosts.unshift(j.data); feedTotal++; renderFeed(); updateCountLabel();
     } else if (r.status === 403 && (j.detail === 'PROFILE_REQUIRED')) {
@@ -3440,10 +3921,10 @@ async function submitPost() {
     } else {
       // 429 is the daily listing cap — the server's Hindi message says how many
       // and when, so it is shown as-is rather than replaced with a generic one.
-      toast('⚠️ ' + (j.detail || j.message || 'Post नहीं हो पाया'));
+      toast('' + (j.detail || j.message || 'Post नहीं हो पाया'));
     }
   } catch {
-    toast('⚠️ Network error — दोबारा try करें');
+    toast('Network error — दोबारा try करें');
   }
   btn.disabled = false;
 }
@@ -3455,7 +3936,7 @@ async function saveEdit(btn, f) {
   const tr = T();
   const p  = feedPosts.find(x => x.id === editingPostId);
   if (!f.text && !(p && p.media_url)) {
-    toast('⚠️ ' + tr.edit_media_note); return;
+    toast('' + tr.edit_media_note); return;
   }
   btn.disabled = true;
   try {
@@ -3486,10 +3967,10 @@ async function saveEdit(btn, f) {
     } else if (r.status === 401) {
       showPrompt('login');
     } else {
-      toast('⚠️ ' + (j.detail || j.message || 'Update नहीं हो पाया'));
+      toast('' + (j.detail || j.message || 'Update नहीं हो पाया'));
     }
   } catch {
-    toast('⚠️ Network error — दोबारा try करें');
+    toast('Network error — दोबारा try करें');
   }
   btn.disabled = false;
 }
@@ -3499,6 +3980,69 @@ async function saveEdit(btn, f) {
   setLang(currentLang);
   fillCropSelect();
   renderChips();
+  // "मेरी पोस्ट" is meaningless to a guest, and the tab bar it sits in cost
+  // ~56px of the 381px of chrome that stood between the top of the page and the
+  // first listing. Hidden on the token alone (synchronous) rather than waiting
+  // on /bazar/me, so the feed does not visibly reflow after it answers; the
+  // ?mode=sell deep link from /bhav still works, it just has no visible tab.
+  if (!getToken()) document.querySelector('.bz-toolbar')?.classList.add('is-guest');
+
+  // The "+ पोस्ट करें" FAB is position:fixed in the bottom-right corner, and a
+  // hit test found it sitting on top of card content at every scroll position.
+  // Same rule as bottomnav.js's own auto-hide (small jitters and the bounce
+  // near the top are ignored) so the button and the nav move as one.
+  (function fabAutoHide() {
+    const fab = document.querySelector('.bz-fab');
+    if (!fab) return;
+
+    /** Is the button sitting on top of a listing's offer button right now?
+     *
+     *  A fixed button over a scrolling feed always covers something; the only
+     *  question is what. Covering a crop photo is harmless, covering "₹ ऑफर
+     *  भेजें" — the one action the whole page exists to produce — is not. The
+     *  offer button used to live on the left for exactly this reason; it sits
+     *  on the right now, so the FAB has to be the one that yields.
+     */
+    const coversOffer = () => {
+      const b = fab.getBoundingClientRect();
+      for (const x of [b.left + 6, b.left + b.width / 2, b.right - 6]) {
+        for (const y of [b.top + 4, b.top + b.height / 2, b.bottom - 4]) {
+          for (const el of document.elementsFromPoint(x, y)) {
+            if (el.closest('.bz-fab')) continue;
+            if (el.closest('.bz-offer-btn')) return true;
+            break;                       // only the topmost non-FAB element
+          }
+        }
+      }
+      return false;
+    };
+
+    let lastY = window.pageYOffset || 0;
+    let settle = 0;
+    const apply = (hide) => fab.classList.toggle('bz-fab-hide', hide);
+
+    window.addEventListener('scroll', () => {
+      const y = window.pageYOffset || 0;
+      if (y > 0) {
+        const d = y - lastY;
+        if (Math.abs(d) >= 6) {
+          // Scrolling down gets it out of the way; scrolling up brings it back.
+          apply(d > 0 && y > 90);
+          lastY = y;
+        }
+      } else {
+        apply(false);
+        lastY = 0;
+      }
+      // Re-check once the scroll settles rather than on every frame: this reads
+      // layout, and a flicker on the way past a card would be worse than the
+      // overlap it prevents.
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        if (!fab.classList.contains('bz-fab-hide') && coversOffer()) apply(true);
+      }, 160);
+    }, { passive: true });
+  })();
   // Deep link — the "बेचना है" door on every /bhav price page lands here rather
   // than opening a second composer over there. It sends ?mode=sell and that URL
   // is baked into cached /bhav HTML we do not control the lifetime of, so the

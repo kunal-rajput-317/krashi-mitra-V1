@@ -178,6 +178,22 @@ IMAGES = {
     "madhumakhi-palan-guide": "Apiary in the valley.jpg",
     "pashu-lumpy-skin-rog": "Rural women and cattle on a village road in Raichur.jpg",
 
+    # State पशुपालन spokes (2026-09-14). Each is the animal the state is
+    # actually known for, photographed in India — the caption says what the
+    # frame shows and never claims the state, because only the Hajipur fish
+    # market below is documented as being in the state its article is about.
+    "bhains-palan-up": "Milking the Buffalo (35403227412).jpg",
+    "bakri-palan-rajasthan": "Boy and goats in Rajasthan.jpg",
+    "machhli-palan-bihar": "Mallah men selling fishes.jpg",
+    # The other two of the five were curated and fetched, then the articles
+    # were stopped before they were written — so they follow the PENDING rule
+    # above: the curation stays here, the files do not sit in the repo
+    # attributing pictures nothing displays. To resume, write the content
+    # module (Tamil for Namakkal layer poultry, Kannada for KMF/Nandini dairy)
+    # and run: python tools/fetch_article_images.py <slug>
+    "murgi-palan-tamil-nadu": "Feeding the Chickens (35412883672).jpg",
+    "dairy-guide-karnataka": "Coming for Milking... (22296679258).jpg",
+
     # ── schemes, markets, inputs ──────────────────────────────────────────
     "bhandaran-ghun-keet": "Traditional granary and preservation of grains.jpg",
     "enam-online-fasal-bechna": "Vegetable market, Ahmedabad.jpg",
@@ -296,8 +312,46 @@ IMAGES = {
     # mouth or hoof lesions exists that we may use commercially, and the caption
     # never implies the reader is looking at the disease.
     "sharadkalin-ganna-buvai": "Sugarcane Agriculture.jpg",
+    # No free photograph of a पर्ची or a mill weighbridge exists on Commons,
+    # so the सट्टा/पर्ची article uses the moment the पर्ची actually governs —
+    # the harvest — and its caption says so. A harvest scene also keeps it
+    # visually distinct from the three cane articles that use field shots.
+    # (The better-framed Doddagowdana harvest shot is CC BY-SA 4.0 but its
+    # author asks to be contacted before commercial use, and this site
+    # carries AdSense — so it is not used.)
+    "ganna-satta-parchi-up":
+        "File.sugacane crop.jpg",
     "rabi-makka-ki-kheti": "A winter crop of maize near Sei dam in Kotra tehsil, Udaipur district, Rajasthan, in May 2019.jpg",
     "pashu-khurpaka-muhpaka-fmd": "Dairy Project at Kasturbagram Rural Institute, Indore.jpg",
+
+    # गलघोंटू hits buffalo hardest, so the hero is an Indian buffalo breed on a
+    # farm. No usable free photograph of the swollen throat exists — the caption
+    # says the animals shown are healthy.
+    "pashu-galghotu-rog": "Jafarabadi buffalo in village.jpg",
+
+    # ── सितंबर 2026, तीसरा बैच ─────────────────────────────────────────────
+    # The धान खरीद article is written for Uttar Pradesh, and this is a paddy
+    # field photographed in Uttar Pradesh. No free photograph of a UP क्रय
+    # केंद्र (procurement centre) exists on Commons that we may use
+    # commercially, so the crop stands in and the caption says exactly that.
+    # Frame (2) of the series, not (1): dhan-me-urea-kab-kitna already holds (1)
+    # and two articles sharing one photograph look like a broken card grid.
+    "up-dhan-kharid-panjikaran": "Rice fields Uttar Pradesh (2).jpg",
+
+    # ── सितंबर 2026, चौथा बैच ──────────────────────────────────────────────
+    # The rodent article gets the actual pest: Bandicota bengalensis, the lesser
+    # bandicoot rat, which AICRP names the predominant rodent of Indian
+    # irrigated agriculture. Photographed in India (Mike Prince, Bangalore),
+    # CC BY 2.0 — so it is the real organism and not a stand-in crop.
+    "khet-me-chuha-niyantran": "Lesser Bandicoot-Rat.jpg",
+
+    # ऊसर/क्षारीय भूमि सुधार. Commons has no usable photograph of Indian sodic
+    # land — every "salt affected soil" hit is a foreign salt pan or a portrait
+    # crop. So the hero is the practice the article says cannot be skipped:
+    # green manuring in an Indian farmer's field (Manav Vikas Sansthan,
+    # CC BY-SA 4.0, 5120×2880). The caption says it shows green manure, not
+    # usar land.
+    "usar-bhumi-sudhar-jipsam": "Green Manuring by Manav Vikas Sansthan.jpg",
 }
 
 # In-body illustrations on the hand-written articles.

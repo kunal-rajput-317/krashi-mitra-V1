@@ -292,6 +292,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pashu-galghotu-rog", "#b91c1c", "🐃", "पशुपालन · रोग",
+         "गलघोंटू रोग — लक्षण, इलाज और टीका कब लगवाएँ"),
         (f"{SITE}/articles/hara-chara-napier-berseem", "#15803d", "🌿", "पशुपालन · चारा",
          "साल भर हरा चारा — बरसीम, नेपियर और जई का कैलेंडर"),
         (f"{SITE}/articles/kisan-credit-card", "#4f46e5", "💳", "सरकारी योजना",

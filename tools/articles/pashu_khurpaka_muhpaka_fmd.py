@@ -344,6 +344,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/pashu-galghotu-rog", "#b91c1c", "🐃", "पशुपालन · रोग",
+         "गलघोंटू रोग — लक्षण, इलाज और टीका कब लगवाएँ"),
         (f"{SITE}/articles/pashu-lumpy-skin-rog", "#b91c1c", "🐄", "पशुपालन · रोग",
          "पशुओं में लंपी स्किन रोग — पहचान और बचाव"),
         (f"{SITE}/articles/pashu-thanaila-mastitis", "#be185d", "🥛", "पशुपालन · रोग",

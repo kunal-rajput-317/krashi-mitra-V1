@@ -291,6 +291,46 @@ RESEND_FROM_EMAIL = (
     or SMTP_EMAIL
 ).strip()
 
+# ── Delivery log ────────────────────────────────────────────
+# Every send attempt records one row in `sync_log` (source "email"), exactly
+# the way the mandi and weather fetches do. Until it did, a failed OTP existed
+# only as a line in Render's log — long gone by the time anybody noticed that
+# signups had stopped — so /health could say nothing truer than "a key is set".
+# This is what lets the ईमेल card report what actually happened rather than
+# what is merely configured. The recipient address is deliberately not stored;
+# the row carries only the provider and the failure reason.
+MAIL_LOG_SOURCE = "email"
+
+
+def _record_mail(provider: str, ok: bool, reason: str = "") -> None:
+    """One sync_log row per attempt. Never raises — a logging failure must
+    never turn a delivered OTP into a failed signup."""
+    try:
+        from backend.services.sync_log_service import record_sync
+        record_sync(
+            source = MAIL_LOG_SOURCE,
+            status = "success" if ok else "failed",
+            rows   = 1 if ok else 0,
+            detail = f"{provider} · {reason}" if reason else provider,
+        )
+    except Exception as e:
+        log.warning(f"⚠️  Could not record mail attempt ({provider}): {e}")
+
+
+def _resend_error_reason(response) -> str:
+    """The human cause out of a Resend error body.
+
+    Resend answers errors as {"name": ..., "message": ...} and `message` is the
+    part that names what actually went wrong — "API key is invalid", "domain is
+    not verified", the daily cap. That string is what the health card prints
+    back, so keep it rather than a bare status code."""
+    try:
+        msg = (response.json() or {}).get("message", "")
+    except Exception:
+        msg = ""
+    return str(msg or response.text or "")[:180]
+
+
 def _send_with_resend(to_email: str, subject: str, body: str) -> bool:
     """Send email through Resend HTTPS API, which works on Render free tier."""
     if not RESEND_API_KEY or not RESEND_FROM_EMAIL:
@@ -312,12 +352,16 @@ def _send_with_resend(to_email: str, subject: str, body: str) -> bool:
             timeout=15,
         )
         if response.status_code < 400:
+            _record_mail("resend", True)
             return True
 
         log.warning(f"⚠️  Resend email error {response.status_code}: {response.text[:500]}")
+        _record_mail("resend", False,
+                     f"HTTP {response.status_code} — {_resend_error_reason(response)}")
         return False
     except Exception as e:
         log.warning(f"⚠️  Resend network error to {to_email}: {e}")
+        _record_mail("resend", False, f"network — {str(e)[:140]}")
         return False
 
 def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bool:
@@ -352,6 +396,11 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
     if not SMTP_EMAIL or not SMTP_PASSWORD:
         log.warning(f"⚠️  SMTP not configured. DEV OTP for {to_email}: {otp}")
         log.info("    Add RESEND_API_KEY + RESEND_FROM_EMAIL, or SMTP_EMAIL + SMTP_PASSWORD.")
+        # Resend already declined (or was never configured) and there is no
+        # fallback left, so this signup is stuck at the OTP screen. Record it:
+        # "no route configured" is precisely the state the health card exists
+        # to name, and it is invisible everywhere else.
+        _record_mail("none", False, "no mail route configured")
         return False
 
     try:
@@ -367,6 +416,7 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
             server.ehlo()
             server.login(SMTP_EMAIL, SMTP_PASSWORD)
             server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
+        _record_mail("smtp", True)
         return True
 
     except smtplib.SMTPAuthenticationError:
@@ -374,15 +424,19 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
             "⚠️  SMTP auth failed — check SMTP_EMAIL and Gmail app password. "
             "Use a 16-character app password, not your normal Gmail password."
         )
+        _record_mail("smtp", False, "auth failed — check the app password")
         return False
     except smtplib.SMTPException as e:
         log.warning(f"⚠️  SMTP error to {to_email}: {e}")
+        _record_mail("smtp", False, f"SMTP — {str(e)[:140]}")
         return False
     except OSError as e:
         log.warning(f"⚠️  Network error sending email to {to_email}: {e}")
+        _record_mail("smtp", False, f"network — {str(e)[:140]}")
         return False
     except Exception as e:
         log.warning(f"⚠️  Unexpected email error to {to_email}: {e}")
+        _record_mail("smtp", False, f"unexpected — {str(e)[:140]}")
         return False
     
     log.info("✅ auth_utils.py loaded successfully")

@@ -347,6 +347,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/usar-bhumi-sudhar-jipsam", "#92400e", "🧂", "मिट्टी · ऊसर",
+         "ऊसर ज़मीन में जिप्सम — कितना, कब और कैसे डालें"),
         (f"{SITE}/articles/sharadkalin-ganna-buvai", "#15803d", "🎋", "गन्ना · बुवाई",
          "शरदकालीन गन्ना बुवाई — समय, बीज दर और सहफसल"),
         (f"{SITE}/articles/alsi-ki-kheti-mp", "#2563eb", "🌾", "अलसी · खेती",

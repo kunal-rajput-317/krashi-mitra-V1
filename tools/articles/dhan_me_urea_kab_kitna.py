@@ -353,6 +353,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/up-dhan-kharid-panjikaran", "#0369a1", "🧾", "UP धान · खरीद",
+         "UP धान खरीद पंजीकरण — MSP ₹2,441 पर धान बेचने की पूरी प्रक्रिया"),
         (f"{SITE}/articles/urea-guide-up", "#16a34a", "🌱", "खाद · यूरिया",
          "यूरिया कब-कितना डालें? फसलवार मात्रा और सही समय"),
         (f"{SITE}/articles/ek-acre-bigha-kitna-urea", "#16a34a", "📐", "यूरिया · मात्रा",

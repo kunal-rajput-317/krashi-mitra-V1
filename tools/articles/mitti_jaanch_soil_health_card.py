@@ -272,6 +272,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/usar-bhumi-sudhar-jipsam", "#92400e", "🧂", "मिट्टी · ऊसर",
+         "ऊसर ज़मीन में जिप्सम — कितना, कब और कैसे डालें"),
         (f"{SITE}/articles/urea-guide-up", "#0369a1", "🧪", "खाद · यूरिया",
          "यूरिया का असर कितने दिन रहता है — सही मात्रा और समय"),
         (f"{SITE}/articles/dap-guide-up", "#1565c0", "🧪", "खाद · DAP",

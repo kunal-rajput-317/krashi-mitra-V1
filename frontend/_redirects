@@ -171,8 +171,10 @@
 /articles/baingan-tana-phal-chhedak.html   /articles/baingan-tana-phal-chhedak   301!
 /articles/bajra-jogiya-rog-rajasthan.html   /articles/bajra-jogiya-rog-rajasthan   301!
 /articles/bakri-palan-guide.html   /articles/bakri-palan-guide   301!
+/articles/bakri-palan-rajasthan.html   /articles/bakri-palan-rajasthan   301!
 /articles/bans-ki-kheti.html   /articles/bans-ki-kheti   301!
 /articles/beej-upchar-vidhi.html   /articles/beej-upchar-vidhi   301!
+/articles/bhains-palan-up.html   /articles/bhains-palan-up   301!
 /articles/bhandaran-ghun-keet.html   /articles/bhandaran-ghun-keet   301!
 /articles/bhindi-pila-mozek.html   /articles/bhindi-pila-mozek   301!
 /articles/chana-fali-chhedak-illi.html   /articles/chana-fali-chhedak-illi   301!
@@ -205,6 +207,7 @@
 /articles/ganna-guide-up.html   /articles/ganna-guide-up   301!
 /articles/ganna-pricing-analytics-up.html   /articles/ganna-pricing-analytics-up   301!
 /articles/ganna-rog.html   /articles/ganna-rog   301!
+/articles/ganna-satta-parchi-up.html   /articles/ganna-satta-parchi-up   301!
 /articles/garlic-farming-guide.html   /articles/garlic-farming-guide   301!
 /articles/gehun-deemak-niyantran.html   /articles/gehun-deemak-niyantran   301!
 /articles/gehun-gulli-danda.html   /articles/gehun-gulli-danda   301!
@@ -229,6 +232,7 @@
 /articles/kela-mumbai-mandi-ganesh.html   /articles/kela-mumbai-mandi-ganesh   301!
 /articles/kela-panama-wilt.html   /articles/kela-panama-wilt   301!
 /articles/kharpatwarnashi-guide.html   /articles/kharpatwarnashi-guide   301!
+/articles/khet-me-chuha-niyantran.html   /articles/khet-me-chuha-niyantran   301!
 /articles/kisan-credit-card.html   /articles/kisan-credit-card   301!
 /articles/kisan-drone-chhidkav.html   /articles/kisan-drone-chhidkav   301!
 /articles/kisan-pehchan-patra-agristack.html   /articles/kisan-pehchan-patra-agristack   301!
@@ -238,6 +242,7 @@
 /articles/lahsun-thrips-baingani-dhabba.html   /articles/lahsun-thrips-baingani-dhabba   301!
 /articles/land-price-up.html   /articles/land-price-up   301!
 /articles/litchi-guide-bihar.html   /articles/litchi-guide-bihar   301!
+/articles/machhli-palan-bihar.html   /articles/machhli-palan-bihar   301!
 /articles/machhli-palan-guide.html   /articles/machhli-palan-guide   301!
 /articles/madhumakhi-palan-guide.html   /articles/madhumakhi-palan-guide   301!
 /articles/madurai-malli-jasmine-kheti.html   /articles/madurai-malli-jasmine-kheti   301!
@@ -279,6 +284,7 @@
 /articles/paddy-guide-karnataka.html   /articles/paddy-guide-karnataka   301!
 /articles/pala-tushar-se-fasal-bachav.html   /articles/pala-tushar-se-fasal-bachav   301!
 /articles/parali-prabandhan.html   /articles/parali-prabandhan   301!
+/articles/pashu-galghotu-rog.html   /articles/pashu-galghotu-rog   301!
 /articles/pashu-khurpaka-muhpaka-fmd.html   /articles/pashu-khurpaka-muhpaka-fmd   301!
 /articles/pashu-lumpy-skin-rog.html   /articles/pashu-lumpy-skin-rog   301!
 /articles/pashu-thanaila-mastitis.html   /articles/pashu-thanaila-mastitis   301!
@@ -320,12 +326,14 @@
 /articles/tomato-leaf-curl.html   /articles/tomato-leaf-curl   301!
 /articles/tur-guide-karnataka.html   /articles/tur-guide-karnataka   301!
 /articles/up-agriculture-guide.html   /articles/up-agriculture-guide   301!
+/articles/up-dhan-kharid-panjikaran.html   /articles/up-dhan-kharid-panjikaran   301!
 /articles/urea-ammonium-sulphate-can-tulna.html   /articles/urea-ammonium-sulphate-can-tulna   301!
 /articles/urea-bori-rate-subsidy.html   /articles/urea-bori-rate-subsidy   301!
 /articles/urea-chhidkav-ghol-matra.html   /articles/urea-chhidkav-ghol-matra   301!
 /articles/urea-guide-up.html   /articles/urea-guide-up   301!
 /articles/urea-ke-baad-pani-kab.html   /articles/urea-ke-baad-pani-kab   301!
 /articles/urea-ke-fayde-aur-nuksan.html   /articles/urea-ke-fayde-aur-nuksan   301!
+/articles/usar-bhumi-sudhar-jipsam.html   /articles/usar-bhumi-sudhar-jipsam   301!
 /articles/uzhavar-sandhai-tamil-nadu.html   /articles/uzhavar-sandhai-tamil-nadu   301!
 /articles/vashi-apmc-mandi-guide.html   /articles/vashi-apmc-mandi-guide   301!
 /articles/zinc-ki-kami-fasal.html   /articles/zinc-ki-kami-fasal   301!
@@ -372,7 +380,6 @@
 /index.html            /                  301!
 /weather.html          /weather           301!
 /chat.html             /chat              301!
-/shop.html             /shop              301!
 /krashi_bajar.html     /krashi_bajar      301!
 /sarkari_yojana.html   /sarkari_yojana    301!
 /khoj.html             /khoj              301!
@@ -385,12 +392,20 @@
 #
 # Everything below retires an old entry point. /dukan* was renamed to
 # /dukanlisting because "dukan" already meant two other things on this site
-# (/product = कृषि दुकान, /shop = किसान की दुकान). The old URL was indexed and
-# is in the wild, so it 301s rather than 404s.
+# (/product = कृषि दुकान, /krashi_dukan = real shops listing their own prices).
+# The old URL was indexed and is in the wild, so it 301s rather than 404s.
 # `!` forces the rule past the real files/directories Netlify would match first.
 /dukan.html            /dukanlisting     301!
 /dukan/product         /dukanlisting     301!
 /dukan                 /dukanlisting     301!
+
+# /shop is retired (2026-09-16) — /product is now the one shop on the site.
+# frontend/shop.html still exists on disk (product.py/shop_catalog.py parse its
+# PRODUCTS array as the catalogue baseline), but it is never linked to or
+# served as a page any more; both URL forms 301 straight to the real thing.
+# Forced because the file itself still exists and would otherwise win.
+/shop.html             /product          301!
+/shop                  /product          301!
 /about.html            /about             301!
 /privacy-policy.html   /privacy-policy    301!
 /terms.html            /terms             301!

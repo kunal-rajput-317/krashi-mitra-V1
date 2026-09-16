@@ -1135,7 +1135,7 @@ class TestBazarPostSync:
     def _post(self, clean, user_id):
         from backend.database.db import BazarPost
         return (clean.query(BazarPost)
-                .filter(BazarPost.user_id == user_id, BazarPost.source == "dukan")
+                .filter(BazarPost.users_id == user_id, BazarPost.source == "dukan")
                 .first())
 
     def test_no_post_before_the_dealer_is_live(self, clean, dealer_user, client):
@@ -1172,7 +1172,7 @@ class TestBazarPostSync:
         dealers.record_payment(clean, row.slug, 199)
         dealers.update(clean, row.slug, {"note": "changed"})
         assert clean.query(BazarPost).filter(
-            BazarPost.user_id == user.id, BazarPost.source == "dukan").count() == 1
+            BazarPost.users_id == user.id, BazarPost.source == "dukan").count() == 1
 
     def test_legacy_rows_never_get_a_bazar_post(self, clean):
         """There is no users.id behind an admin-typed row to author one as."""
@@ -1232,7 +1232,7 @@ class TestBazarPostSync:
         from backend.database.db import BazarPost
 
         user = self._live(clean, dealer_user, client)
-        clean.add(BazarPost(user_id=user.id, post_type="sell", status="active",
+        clean.add(BazarPost(users_id=user.id, post_type="sell", status="active",
                             text="मेरा अपना गेहूं बिकाऊ है"))
         clean.commit()
         posts = client.get("/bazar/feed").json()["data"]["posts"]

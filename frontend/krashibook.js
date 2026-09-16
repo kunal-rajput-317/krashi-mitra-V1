@@ -40,7 +40,10 @@
   function pagePrefix() {
     return location.pathname.indexOf("/articles/") !== -1 ? "../" : "";
   }
-  function shopUrl()    { return pagePrefix() + "shop.html?orders=1"; }
+  // shop.html (and the ?orders=1 modal it opened) is retired 2026-09-16 —
+  // /product is the shop now, but it has no order-history view of its own,
+  // so this button lands on the hub rather than opening anything.
+  function shopUrl()    { return "/product"; }
   function loginUrl()   { return pagePrefix() + "login.html"; }
   function profileUrl() { return pagePrefix() + "profile.html"; }
   // Root-absolute, unlike its siblings: /bhav is backend-rendered, not a

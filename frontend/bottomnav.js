@@ -70,7 +70,7 @@
 
   var TABS = [
     { key: 'mandi',       rel: '/bhav',            abs: '/bhav',        match: /^\/bhav(\/|$)/ },
-    { key: 'shop',        rel: 'shop.html',        abs: '/product/',    match: /^\/(product|shop)(\/|$)|\/shop\.html$/ },
+    { key: 'shop',        rel: '/product/',        abs: '/product/',    match: /^\/(product|shop)(\/|$)|\/shop\.html$/ },
     { key: 'krashi_news', rel: 'krashi_news.html', abs: '/krashi_news', match: /(krashi_news|news)(\.html)?(\/|$)|^\/articles(\/|$)/ },
     { key: 'more' } // button — opens the sidebar drawer
   ];

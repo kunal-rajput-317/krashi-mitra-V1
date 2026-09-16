@@ -286,6 +286,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/usar-bhumi-sudhar-jipsam", "#92400e", "🧂", "मिट्टी · ऊसर",
+         "ऊसर ज़मीन में जिप्सम — कितना, कब और कैसे डालें"),
         (f"{SITE}/articles/ssp-khad-guide", "#1d4ed8", "🧪", "खाद · SSP",
          "SSP खाद — DAP से कब बेहतर, कितनी मात्रा"),
         (f"{SITE}/articles/zinc-ki-kami-fasal", "#6d28d9", "🔬", "खाद · ज़िंक",

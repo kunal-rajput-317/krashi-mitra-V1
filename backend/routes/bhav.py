@@ -54,9 +54,9 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
                                  acct)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
-    buyers, crop_types, district_geo, ecosystem, freight, index_gate,
-    lead_clicks, leads, msp, placements, rental as rental_svc, state_lang,
-    wa_channels as _wa_channels,
+    affiliate, buyers, crop_types, district_geo, ecosystem, freight,
+    index_gate, lead_clicks, leads, msp, placements, rental as rental_svc,
+    state_lang, wa_channels as _wa_channels,
 )
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
@@ -4364,6 +4364,74 @@ def _lead_gen_html() -> str:
             + script + '</section>')
 
 
+def _kheti_saman_html(cs: str, hi: str = "") -> str:
+    """The affiliate shelf: four products that match what this farmer is about
+    to do, each linked through the tracked /go/p/ hop.
+
+    WHY THIS SITS ON A PRICE PAGE. The Amazon program lived on /product for
+    months — 94 catalogue pages nobody searches for by name — while the pages
+    that carry the traffic offered a farmer nothing he could act on but a
+    government scheme link that pays us nothing. This moves the one program
+    that can actually earn onto the one surface that has readers.
+
+    WHY IT IS NOT A SHOP. Nothing here claims we sell, stock, ship or price
+    anything: no rupee figure, no MRP, no discount, no availability. The
+    catalogue's price is an editorial estimate, and printing it beside an
+    outbound link would be a number the farmer checks against Amazon's real
+    one three seconds later — a claim we would have to defend, for no gain,
+    since the destination shows the true price anyway. The card says what the
+    thing is and where the link goes, and stops.
+
+    WHY EMOJI AND NOT THE PRODUCT PHOTO. A photo shelf converts better — when
+    the photo is of the product. PRODUCTS reuses a handful of real pack shots
+    as placeholders across the catalogue, so 19 of the 24 items this shelf can
+    surface carry a picture of something else: the tarpaulin shows a drip kit,
+    the storage bags show a branded cattle-feed sack that belongs to another
+    company. On /product that has been wrong on 94 quiet pages; putting it on
+    every district page would be wrong at traffic, and a farmer who taps a
+    photo and lands on a different object stops trusting the block above it
+    too. Every row in PRODUCTS carries a hand-picked `emoji` that IS accurate,
+    so the shelf uses that and reads as a list rather than a storefront. Swap
+    this for .dp-card photos the day the catalogue has its own photography.
+
+    Placed low on the page for the same reason _lead_gen_html is: it must never
+    compete with the price or cost the page its LCP. Selection is
+    services/affiliate.py and is deterministic, so this renders identically
+    into cached HTML for every farmer on the page.
+    """
+    picks = affiliate.for_crop(cs)
+    if not picks:
+        return ""
+    cards = []
+    for p in picks:
+        net = affiliate.network_for(p)
+        if not net:
+            continue
+        cards.append(
+            f'<a class="lead-card" href="{affiliate.go_url(p["slug"], net)}" '
+            f'data-affil="{escape(p["slug"])}" target="_blank" rel="nofollow sponsored">'
+            f'<span class="lead-ic">{escape(p.get("emoji", "•"))}</span>'
+            f'<span class="lead-tx"><b>{escape(p.get("name_hi", ""))}</b>'
+            f'<small>{escape(p.get("unit_hi", ""))}</small></span>'
+            f'<span class="lead-cta">{escape(net.capitalize())} पर देखें →</span></a>')
+    if not cards:
+        return ""
+    # Same GA4 pattern as the किसान-सेवा card, and the same guard: a page that
+    # somehow loads without gtag must not throw on every tap. Scoped to
+    # [data-affil] so it binds these rows and not the service-offer rows, which
+    # fire their own event with a different name.
+    script = ("<script>document.querySelectorAll('.lead-card[data-affil]').forEach(function(a){"
+              "a.addEventListener('click',function(){try{gtag('event','affiliate_click',"
+              "{product_id:a.getAttribute('data-affil')});}catch(e){}});});</script>")
+    sub = (f'{escape(hi)} बेचने और रखने में काम आने वाला सामान।' if hi
+           else 'खेती में रोज़ काम आने वाला सामान।')
+    return (f'<section class="lead-gen"><h2>🛒 ज़रूरी खेती का सामान</h2>'
+            f'<p class="lead-sub">{sub}</p>'
+            f'<div class="lead-list">{"".join(cards)}</div>'
+            f'<p class="lead-fine">{escape(affiliate.AFFILIATE_NOTE)}</p>'
+            + script + '</section>')
+
+
 def _district_from_referer(ref: str) -> str | None:
     """Pull the district slug out of the /bhav page a click came from.
 
@@ -6152,6 +6220,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
+{_kheti_saman_html(cs, hi)}
 {_lead_gen_html()}
 {_related_links(cs, ss, ds, commodity, district)}
 {_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4'),
@@ -6704,8 +6773,8 @@ def _bazar_slice(post_type: str, cs: str, state: str, district: str,
         out = []
         for p in rows:
             author = bazar._author_info(
-                db.query(User).filter(User.id == p.user_id).first(),
-                db.query(UserProfile).filter(UserProfile.user_id == acct(p.user_id)).first())
+                db.query(User).filter(User.id == p.users_id).first(),
+                db.query(UserProfile).filter(UserProfile.user_id == acct(p.users_id)).first())
             out.append({
                 "id": p.id, "text": p.text or "", "price": p.price,
                 "quantity": p.quantity, "unit": p.unit or "क्विंटल",

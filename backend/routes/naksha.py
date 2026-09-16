@@ -1379,17 +1379,29 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
   L.control.zoom({{ position: 'bottomright' }}).addTo(map);
 
   // ── Tile Layers ──
+  // maxNativeZoom is the deepest zoom the PROVIDER actually holds a picture for;
+  // maxZoom is how far the farmer may keep zooming. Splitting them is the point:
+  // over most of rural India Esri's imagery stops at z18, and a z19 request comes
+  // back as a grey "Map data not yet available" card — so the last zoom step, the
+  // one where you are trying to see your own खेत, used to destroy the picture.
+  // Capping the REQUEST at 18 and letting Leaflet upscale keeps real imagery on
+  // screen the whole way in. 20 is the ceiling because a 4x upscale still shows
+  // plot edges; at 21 it is mush, which is the complaint this answers.
   var satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
     attribution: 'Tiles © Esri World Imagery',
-    maxZoom: 19
+    maxNativeZoom: 18,
+    maxZoom: 20
   }});
   var labelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
     attribution: '© Esri',
-    maxZoom: 19
+    maxNativeZoom: 18,
+    maxZoom: 20
   }});
+  // OSM serves real tiles to z19 and hard-400s at z20, so it gets its own floor.
   var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
     attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
+    maxNativeZoom: 19,
+    maxZoom: 20
   }});
 
   // Default: Satellite + Labels
@@ -3660,12 +3672,14 @@ def _village_scripts(v: dict, label: str) -> str:
     done = true;
     var lat={v['lat']}, lon={v['lon']};
     var map=L.map('nk-map',{{zoomSnap:0.25}}).setView([lat,lon],13);
+    // See _tail_scripts: request no deeper than the provider has a picture,
+    // then let Leaflet upscale, so zooming in never lands on Esri's grey card.
     var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}',
-      {{attribution:'Tiles © Esri World Imagery',maxZoom:19}}).addTo(map);
+      {{attribution:'Tiles © Esri World Imagery',maxNativeZoom:18,maxZoom:20}}).addTo(map);
     var labels=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{{z}}/{{y}}/{{x}}',
-      {{attribution:'© Esri',maxZoom:19}}).addTo(map);
+      {{attribution:'© Esri',maxNativeZoom:18,maxZoom:20}}).addTo(map);
     var osm=L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png',
-      {{attribution:'© OpenStreetMap contributors',maxZoom:19}});
+      {{attribution:'© OpenStreetMap contributors',maxNativeZoom:19,maxZoom:20}});
     L.control.layers({{"🛰️ सैटेलाइट (Satellite)":sat,"🗺️ नक्शा (Map)":osm}},
                      {{"🏘️ गांव व सड़क लेबल":labels}},{{position:'topright'}}).addTo(map);
     L.marker([lat,lon]).addTo(map).bindPopup({label}).openPopup();

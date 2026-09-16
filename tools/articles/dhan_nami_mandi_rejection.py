@@ -288,6 +288,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/up-dhan-kharid-panjikaran", "#0369a1", "🧾", "UP धान · खरीद",
+         "UP धान खरीद पंजीकरण — MSP ₹2,441 पर धान बेचने की पूरी प्रक्रिया"),
         (f"{SITE}/articles/enam-online-fasal-bechna", "#0f766e", "🛒", "मंडी · eNAM",
          "eNAM से ऑनलाइन फसल बेचना — पूरी प्रक्रिया"),
         (f"{SITE}/articles/mp-e-uparjan-panjiyan", "#1d4ed8", "📝", "खरीद · पंजीयन",

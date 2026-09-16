@@ -567,7 +567,7 @@ def get_profile(
     data = _profile_to_dict(profile)
     
     # Query stats for the header card
-    data["posts_count"] = db.query(BazarPost).filter(BazarPost.user_id == user_id).count()
+    data["posts_count"] = db.query(BazarPost).filter(BazarPost.users_id == user_id).count()
     data["followers_count"] = db.query(BazarFollow).filter(BazarFollow.following_id == user_id).count()
     data["following_count"] = db.query(BazarFollow).filter(BazarFollow.follower_id == user_id).count()
     

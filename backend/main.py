@@ -17,12 +17,16 @@
 import asyncio
 import logging
 import os
+import stat
 from pathlib import Path
 
+import anyio
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
+from starlette.types import Scope
 import uvicorn
 
 load_dotenv()
@@ -298,6 +302,21 @@ async def startup():
             log.warning(f"⚠️ Panel article not restored — {_f}")
     except Exception as e:
         log.warning(f"⚠️ Article restore skipped (non-fatal): {e}")
+    # Say out loud where listing photos are going. Render's disk is wiped on
+    # every redeploy, so an unconfigured bucket is a silent data-loss setting —
+    # it is how every bazar photo posted before 14 Sep 2026 was lost, and
+    # nothing in the logs ever said so.
+    try:
+        from backend.services import media_store
+        if media_store.enabled():
+            log.info("📦 Listing media → R2 at %s", media_store.public_url(""))
+        else:
+            log.warning("⚠️ R2 is not configured — listing photo uploads are "
+                        "disabled in production (set R2_ACCOUNT_ID, "
+                        "R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, "
+                        "R2_PUBLIC_BASE). See backend/services/media_store.py.")
+    except Exception as e:
+        log.warning(f"⚠️ Media store check skipped (non-fatal): {e}")
     # Warm up embedding models in the background so the first question is fast
     asyncio.create_task(_warm_up_models())
     try:
@@ -420,6 +439,9 @@ app.include_router(admin_rental_route.router)   # /admin/rental/* — machine ow
 from backend.routes import admin_articles as admin_articles_route
 app.include_router(admin_articles_route.router)  # /admin/articles/* — write and publish an article with no deploy
 
+from backend.routes import admin_products as admin_products_route
+app.include_router(admin_products_route.router)  # /admin/catalogue/* — add/edit /product catalogue items with no deploy
+
 from backend.routes import credits as credits_route
 app.include_router(credits_route.router)  # /articles/credits — Commons photo attribution the licences require (noindex)
 
@@ -482,5 +504,42 @@ app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="
 # Bazar post photos/videos (uploads/bazar/*) — dir is created by routes/bazar.py
 app.mount("/uploads", StaticFiles(directory=BASE_DIR / "uploads"), name="uploads")
 
+# ── Clean URLs, the way Netlify serves them ─────────────────────────
+# Every canonical core-page URL on this site is extensionless: sitemap.py
+# emits /krashi_bajar, _redirects 301s /krashi_bajar.html onto it, and every
+# SSR page the backend renders links to it that way (bhav.py, news_page.py,
+# ecosystem.py, llms.py). Netlify resolves those natively from the .html file.
+# Starlette's StaticFiles never appends ".html", so on THIS origin all of them
+# came back as 404.html instead — invisible in production while Netlify sits
+# out front, but it meant local dev 404'd on half the site, and a Netlify
+# outage (11 Aug 2026) would 404 every canonical URL on the fallback origin.
+#
+# The plain path is looked up first, so a real file or a real directory always
+# wins (/dukanlisting is a directory, not dukanlisting.html); only a path that
+# would otherwise have 404'd is retried with ".html". Nothing that worked
+# before changes, and no list of page names has to be kept in sync — a new
+# .html file in frontend/ is reachable at its clean URL the moment it lands.
+class CleanURLStaticFiles(StaticFiles):
+    """StaticFiles that also serves `foo.html` at `/foo`."""
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        if (
+            path
+            and scope["method"] in ("GET", "HEAD")
+            and "." not in path.rsplit("/", 1)[-1]  # no extension asked for
+        ):
+            try:
+                _full, found = await anyio.to_thread.run_sync(self.lookup_path, path)
+                if found is None:
+                    _full, as_html = await anyio.to_thread.run_sync(
+                        self.lookup_path, f"{path}.html"
+                    )
+                    if as_html is not None and stat.S_ISREG(as_html.st_mode):
+                        path = f"{path}.html"
+            except OSError:
+                pass  # unreadable or absurdly long — let StaticFiles answer it
+        return await super().get_response(path, scope)
+
+
 # Serve the entire frontend directly at root
-app.mount("/", StaticFiles(directory=BASE_DIR / "frontend", html=True), name="frontend")
+app.mount("/", CleanURLStaticFiles(directory=BASE_DIR / "frontend", html=True), name="frontend")

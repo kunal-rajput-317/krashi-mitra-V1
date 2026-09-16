@@ -316,6 +316,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/usar-bhumi-sudhar-jipsam", "#92400e", "🧂", "मिट्टी · ऊसर",
+         "ऊसर ज़मीन में जिप्सम — कितना, कब और कैसे डालें"),
         (f"{SITE}/articles/alsi-ki-kheti-mp", "#2563eb", "🌾", "अलसी · खेती",
          "अलसी की खेती — उतेरा से बुवाई और कली मक्खी से बचाव"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#a16207", "🌾", "गेहूं · खेती",

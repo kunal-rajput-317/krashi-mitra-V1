@@ -253,6 +253,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/up-dhan-kharid-panjikaran", "#0369a1", "🧾", "UP धान · खरीद",
+         "UP धान खरीद पंजीकरण — MSP ₹2,441 पर धान बेचने की पूरी प्रक्रिया"),
         (f"{SITE}/articles/apmc-bahar-seedhi-bikri", "#1d4ed8", "🤝", "मंडी · बिक्री",
          "मंडी के बाहर सीधे बेचना — नियम, फ़ायदे और जोखिम"),
         (f"{SITE}/articles/mumbai-mandi-payment-suraksha", "#c2410c", "🧾", "मंडी · भुगतान",

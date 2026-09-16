@@ -330,6 +330,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/usar-bhumi-sudhar-jipsam", "#92400e", "🧂", "मिट्टी · ऊसर",
+         "ऊसर ज़मीन में जिप्सम — कितना, कब और कैसे डालें"),
         (f"{SITE}/articles/gehun-me-sinchai-kab", "#0369a1", "💧", "गेहूं · सिंचाई",
          "गेहूं में सिंचाई कब करें — छह सिंचाई का कार्यक्रम"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#a16207", "🌾", "गेहूं · खेती",

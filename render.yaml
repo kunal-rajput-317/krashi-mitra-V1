@@ -96,6 +96,42 @@ services:
         sync: false          # optional
       - key: CORS_ORIGINS
         sync: false          # optional
+
+      # ── Listing media (Cloudflare R2) ───────────────────────
+      # Where a farmer's crop photo lives. Render's disk is ephemeral, so
+      # before this every bazar photo was a 404 by the next redeploy — all
+      # three that existed on 14 Sep 2026 were already gone. R2 was chosen over
+      # Postgres (a crop photo is read on every feed render, and Neon's metered
+      # compute is the tightest ceiling here) and over the origin disk (Render
+      # meters 5 GB/month of egress and suspended the workspace over it on
+      # 17 Aug 2026; R2 egress is free and never touches that meter).
+      #
+      # All five must be set together — with any one missing the backend falls
+      # back to the local disk, which is correct for `uvicorn` offline and
+      # wrong for production. backend/services/media_store.py has the full
+      # setup, including the one bucket setting that is not an env var: a CORS
+      # rule allowing GET from https://krashimitra.in, without which the
+      # WhatsApp share card cannot draw a listing photo onto its canvas.
+      #
+      #   R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY
+      #       dash.cloudflare.com → R2 → Account ID, then
+      #       Manage API tokens → Create → Object Read & Write
+      #   R2_BUCKET         the bucket name, e.g. krashimitra-media
+      #   R2_PUBLIC_BASE    its public host, no trailing slash — a custom
+      #                     domain (https://media.krashimitra.in) or the
+      #                     https://pub-<hash>.r2.dev address
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_PUBLIC_BASE
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false          # optional — overrides the S3 endpoint
       # UPI listing-fee collection (services/upi.py). KM_UPI_ID is the
       # destination of real money, so it is never committed — an out-of-date or
       # mistyped VPA in git would silently route a dealer's ₹500 to a stranger.

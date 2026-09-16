@@ -320,6 +320,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/up-dhan-kharid-panjikaran", "#0369a1", "🧾", "UP धान · खरीद",
+         "UP धान खरीद पंजीकरण — MSP ₹2,441 पर धान बेचने की पूरी प्रक्रिया"),
         (f"{SITE}/articles/kodo-kutki-ki-kheti-mp", "#a16207", "🌾", "मोटा अनाज · MP",
          "कोदो-कुटकी की खेती — बुवाई, उपज और ₹1,000 प्रति क्विंटल बोनस"),
         (f"{SITE}/articles/sharbati-gehun-mp", "#b45309", "🌾", "गेहूं · मध्य प्रदेश",

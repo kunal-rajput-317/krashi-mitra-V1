@@ -54,13 +54,14 @@ from html import escape
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter
-from fastapi.responses import HTMLResponse, Response
+from fastapi import APIRouter, BackgroundTasks, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from backend.routes.bhav import (
-    _CSS as _BASE_CSS, _FONTS, _ICON, _ANALYTICS, _header, _footer, _doc, _faq,
-    _crumb_ld, _fit, _ld,
+    _CSS as _BASE_CSS, _FONTS, _ICON, _ANALYTICS, _district_from_referer,
+    _header, _footer, _doc, _faq, _crumb_ld, _fit, _ld,
 )
+from backend.services import affiliate, lead_clicks, shop_catalog
 
 router = APIRouter()
 
@@ -81,9 +82,12 @@ DISCLAIMER = ("कृषि मित्र सामान नहीं बे�
 # The material-connection disclosure for the Amazon/Flipkart buttons. rel=
 # "sponsored" tells Google; this tells the farmer, which is the half the CCPA's
 # endorsement guidelines actually ask for.
-AFFILIATE_NOTE = ("Amazon और Flipkart के लिंक एफ़िलिएट लिंक हैं — "
-                  "उनसे खरीदने पर कृषि मित्र को कमीशन मिल सकता है। "
-                  "आपको कोई अतिरिक्त शुल्क नहीं लगता।")
+#
+# It lives in services/affiliate.py now that /bhav carries affiliate links too:
+# two sections printing two slightly different disclosures is how one of them
+# quietly stops saying the thing that matters. Re-exported under the old name
+# because this module is where the rest of the codebase already looks for it.
+AFFILIATE_NOTE = affiliate.AFFILIATE_NOTE
 
 CAT_LABELS = {
     "seeds": "🌱 बीज", "fertilizer": "🧪 खाद", "pesticide": "🌿 कीटनाशक",
@@ -154,24 +158,38 @@ _cache: dict = {"mtime": 0.0, "products": [], "by_slug": {}}
 
 
 def _get_products() -> list[dict]:
+    """The catalogue: shop.html's committed baseline, patched by the panel.
+
+    The baseline half is unchanged — parsed out of shop.html, re-read only when
+    its mtime moves. The overlay half is services/shop_catalog.py, which owns
+    its own short-lived cache because a database has no mtime and this function
+    is now on the hot path of every /bhav district page (the affiliate shelf
+    calls it per render). Both halves fail closed: a bad edit to shop.html
+    keeps the last good parse, and a sleeping or read-only database merges
+    nothing at all, which leaves exactly the baseline.
+    """
     try:
         mtime = _SHOP_HTML.stat().st_mtime
     except OSError:
-        return _cache["products"]
+        return shop_catalog.merge(_cache["products"])
     if mtime != _cache["mtime"]:
         try:
             parsed = _parse_shop_html(_SHOP_HTML.read_text(encoding="utf-8"))
         except Exception:
-            return _cache["products"]         # keep last good on a bad edit
+            return shop_catalog.merge(_cache["products"])   # keep last good on a bad edit
         if parsed:                            # never clobber good cache with empty
             _cache.update(mtime=mtime, products=parsed,
                           by_slug={p["slug"]: p for p in parsed})
-    return _cache["products"]
+    return shop_catalog.merge(_cache["products"])
 
 
 def _get_by_slug() -> dict:
-    _get_products()
-    return _cache["by_slug"]
+    """Built off the MERGED list, not the baseline cache.
+
+    _cache["by_slug"] holds only what shop.html committed, so reading it here
+    would make a panel-added product resolve on the hub and 404 on its own
+    page — the one failure that looks like the feature is broken."""
+    return {p["slug"]: p for p in _get_products()}
 
 
 def _available(url: str) -> bool:
@@ -189,6 +207,22 @@ def _available(url: str) -> bool:
 # badge/badgeClass are already parsed off PRODUCTS but the old page never
 # surfaced them — mirrors the 🔥/🌿/🆕 prefix shop.html itself uses on cards.
 _BADGE = {"organic": ("🌿", "ऑर्गेनिक"), "new-badge": ("🆕", "नया")}
+
+
+def _photo(p: dict, w: int, h: int, cls: str = "") -> str:
+    """The product's picture, or its emoji when there is not one yet.
+
+    A product typed into the admin panel may have no photo for another minute —
+    the owner adds it, then uploads the pack shot. Rendering `<img src="">`
+    meanwhile gives every browser's broken-image glyph on a live page, which
+    looks like the product is broken rather than new. The emoji is honest, it
+    is already hand-picked per product, and it is what the affiliate shelf on
+    /bhav uses for the same reason."""
+    img = (p.get("img") or "").strip()
+    if img:
+        return (f'<img src="{escape(img)}" alt="{escape(p.get("name_hi", ""))}" '
+                f'loading="lazy" width="{w}" height="{h}">')
+    return f'<span class="prod-noimg{" " + cls if cls else ""}">{escape(p.get("emoji", "📦"))}</span>'
 
 
 def _badge_pill(p: dict, cls: str = "prod-badge") -> str:
@@ -237,6 +271,12 @@ transition:transform .15s,box-shadow .15s,border-color .15s}
 .prod-card-photo{position:relative;height:118px;background:var(--cream);
 display:flex;align-items:center;justify-content:center;padding:10px}
 .prod-card-photo img{max-height:100px;max-width:88%;object-fit:contain}
+/* No photo yet — a product typed into the panel before its pack shot
+   arrives. The emoji fills the same box an <img> would, so the grid does not
+   reflow when the photo is uploaded a minute later. */
+.prod-noimg{font-size:44px;line-height:1;display:flex;align-items:center;
+justify-content:center;width:100%;height:100%}
+.prod-noimg.lg{font-size:112px;aspect-ratio:1;background:var(--cream)}
 .prod-card-body{padding:11px 13px 13px}
 .prod-card-name{font-size:13.5px;font-weight:700;color:var(--text-dark);line-height:1.3}
 .prod-card-en{display:block;font-size:10.5px;font-weight:600;color:var(--text-soft);margin-top:1px}
@@ -313,7 +353,7 @@ def _hub_card(p: dict) -> str:
     price stays and is labelled ~ for approximate, which is what it is."""
     return f"""<a class="prod-card" href="/product/{p['slug']}">
 <div class="prod-card-photo">{_badge_pill(p, "prod-badge-card")}
-<img src="{escape(p['img'])}" alt="{escape(p['name_hi'])}" loading="lazy" width="120" height="100"></div>
+{_photo(p, 120, 100)}</div>
 <div class="prod-card-body">
 <div class="prod-card-name">{escape(p['name_hi'])}</div>
 <span class="prod-card-en">{escape(p['name_en'])}</span>
@@ -321,6 +361,81 @@ def _hub_card(p: dict) -> str:
 <div class="prod-card-unit">{escape(p['unit_hi'])}</div>
 </div>
 </a>"""
+
+
+# ════════════════════════════════════════════════════════════
+# The tracked affiliate hop
+#
+# Every Amazon/Flipkart link on the site now leaves through here instead of
+# pointing straight at amzn.to. One extra redirect buys the two things the
+# program was missing: a click we can count, and a URL we can swap in one
+# place if a network or a tag ever changes.
+#
+# Same two rules as /go/<offer_id>, for the same reasons: the write happens in
+# a background task AFTER the 302 (a sleeping Neon compute must never sit
+# between a farmer and the product he tapped), and it can never fail the
+# redirect (services/lead_clicks.record swallows everything).
+# ════════════════════════════════════════════════════════════
+@router.get("/go/p/{net}/{slug}")
+def affiliate_redirect(net: str, slug: str, request: Request,
+                       background: BackgroundTasks):
+    """Tracked hop to a product's affiliate URL.
+
+    An unknown slug, an unknown network or a product with no link for that
+    network falls back to the product page rather than erroring — a farmer who
+    tapped a product should land on something about that product, and a stale
+    link in a cached page is exactly when that matters.
+    """
+    p = affiliate.by_slug(slug)
+    url = affiliate.raw_url(p, net) if p else ""
+    if not url:
+        return RedirectResponse(f"/product/{slug}" if p else "/product",
+                                status_code=302)
+    ref = request.headers.get("referer", "")
+    background.add_task(
+        lead_clicks.record, "product", f"{net}:{slug}",
+        # The catalogue name, not the Hindi one: this is read in the admin
+        # panel beside offer and dealer rows, where English sorts and greps.
+        label      = p.get("name_en"),
+        category   = p.get("cat"),
+        # Set only when the click came off a /bhav page — which is the whole
+        # question this placement exists to answer.
+        district   = _district_from_referer(ref),
+        referer    = ref,
+        user_agent = request.headers.get("user-agent"),
+    )
+    return RedirectResponse(url, status_code=302)
+
+
+# ── /product/img/{id}.webp ──────────────────────────────────
+# A photo typed into the admin panel, out of Postgres. On disk it would not
+# survive the next Render restart — the same lesson profile.py's avatars and
+# krashi_dukan.py's catalogue photos already learned.
+#
+# Three path segments, so /product/{slug} (two) cannot swallow it.
+
+@router.get("/product/img/{product_id}.webp")
+def product_image(product_id: int):
+    import base64
+
+    from backend.database.db import SessionLocal, ShopProduct
+    db = None
+    try:
+        db = SessionLocal()
+        row = db.query(ShopProduct).filter(ShopProduct.id == product_id).first()
+        if not row or not row.image_data:
+            return Response(status_code=404)
+        blob = base64.b64decode(row.image_data)
+    except Exception:
+        return Response(status_code=404)
+    finally:
+        if db is not None:
+            try:
+                db.close()
+            except Exception:
+                pass
+    return Response(content=blob, media_type=row.image_mime or "image/webp",
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/product/sitemap.xml")
@@ -370,9 +485,6 @@ def product_hub():
 <p class="hero-sub">🛒 {len(products)} उत्पाद · अनुमानित बाज़ार भाव · रेट दुकानदार का</p>
 </div>
 </div>
-<div class="cta-row">
-<a class="btn btn-app" href="{SITE}/shop.html">🛒 पूरी दुकान ऐप में खोलें</a>
-</div>
 <div class="hub-filter-row">
 <form class="hub-search" action="{SITE}/find" method="get" role="search">
 <input type="text" name="q" placeholder="उत्पाद खोजें... (DAP, नीम तेल, स्प्रेयर)" autocomplete="off" aria-label="उत्पाद खोजें">
@@ -414,7 +526,6 @@ def _not_found() -> HTMLResponse:
 </div>
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/product/">सभी उत्पाद देखें</a>
-<a class="btn btn-wa" style="background:var(--green-dark)" href="{SITE}/shop.html">🛒 दुकान ऐप खोलें</a>
 </div>
 </div>
 {_footer()}
@@ -427,7 +538,17 @@ def product_page(slug: str):
     p = _get_by_slug().get(slug.lower())
     if not p:
         return _not_found()
+    return render_product(p)
 
+
+def render_product(p: dict) -> HTMLResponse:
+    """The product page for one already-resolved product.
+
+    Split out of product_page so the Shop Panel can preview an edit that has
+    not been saved: it hands in the merged dict and gets back the real page,
+    rendered by this exact code rather than by a second, drifting copy of it.
+    Same reason admin_articles.py previews through the article builder itself.
+    """
     cat_label = CAT_LABELS.get(p["cat"], p["cat"])
     canon = f"{SITE}/product/{p['slug']}"
 
@@ -487,14 +608,19 @@ def product_page(slug: str):
 
     # ── CTAs ──
     # "ऐप में खरीदें" promised a purchase; the button opens an enquiry that a
-    # dealer quotes against, so it now says what it does.
-    ctas = [f'<a class="btn btn-app" href="{SITE}/shop.html?product={p["id"]}">🛒 रेट पूछें</a>']
+    # dealer quotes against, so it now says what it does. shop.html (and its
+    # cart/order modal) is retired — the enquiry now goes straight to WhatsApp.
+    ask_text = quote(f"मुझे {p['name_hi']} ({p['unit_hi']}) का रेट जानना है — अनुमानित {rs}\n{canon}")
+    ctas = [f'<a class="btn btn-app" target="_blank" href="https://wa.me/919870951001?text={ask_text}">🛒 रेट पूछें</a>']
+    # Through /go/p/<net>/<slug>, never straight at the network. These buttons
+    # were the site's only affiliate placement for months and left no record of
+    # a single click; the redirect is what turns them into a number.
     if _available(p.get("affil_amazon", "")):
-        ctas.append(f'<a class="btn btn-amazon" target="_blank" rel="noopener sponsored" '
-                    f'href="{escape(p["affil_amazon"])}">Amazon पर देखें</a>')
+        ctas.append(f'<a class="btn btn-amazon" target="_blank" rel="noopener nofollow sponsored" '
+                    f'href="{affiliate.go_url(p["slug"], "amazon")}">Amazon पर देखें</a>')
     if _available(p.get("affil_flipkart", "")):
-        ctas.append(f'<a class="btn btn-flipkart" target="_blank" rel="noopener sponsored" '
-                    f'href="{escape(p["affil_flipkart"])}">Flipkart पर देखें</a>')
+        ctas.append(f'<a class="btn btn-flipkart" target="_blank" rel="noopener nofollow sponsored" '
+                    f'href="{affiliate.go_url(p["slug"], "flipkart")}">Flipkart पर देखें</a>')
     wa_text = quote(f"{p['name_hi']} — अनुमानित ₹{p['price']} ({p['unit_hi']})\n{canon}")
     ctas.append(f'<a class="btn btn-wa" target="_blank" href="https://wa.me/?text={wa_text}">📲 शेयर करें</a>')
     # The disclosure rides beside the buttons it is about, and only on pages
@@ -542,7 +668,6 @@ def product_page(slug: str):
         "@context": "https://schema.org", "@type": "Product",
         "name": f"{p['name_en']} — {p['name_hi']}",
         "description": p["desc_en"],
-        "image": p["img"],
     }
     ld = _ld(product_ld, faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("उत्पाद", f"{SITE}/product/"), (p["name_hi"], canon)]))
@@ -555,8 +680,7 @@ def product_page(slug: str):
     body = f"""<section class="answer">
 <div class="answer-prod-split">
 <div class="answer-prod-photo-lg">
-<img src="{escape(p['img'])}" alt="{escape(p['name_hi'])}" loading="lazy" width="280" height="280"
-onclick="document.getElementById('km-lightbox-img').src=this.src;document.getElementById('km-lightbox').classList.add('open')">
+{_photo(p, 280, 280, "lg")}
 <span class="photo-zoom-hint">🔍</span></div>
 <div class="answer-prod-info">
 {_badge_pill(p)}

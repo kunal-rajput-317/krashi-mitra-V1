@@ -361,6 +361,10 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/up-dhan-kharid-panjikaran", "#0369a1", "🧾", "UP धान · खरीद",
+         "UP धान खरीद पंजीकरण — MSP ₹2,441 पर धान बेचने की पूरी प्रक्रिया"),
+        (f"{SITE}/articles/khet-me-chuha-niyantran", "#b91c1c", "🐀", "फसल · कीट",
+         "खेत में चूहे कैसे मारें — विष चारा की सही विधि और मात्रा"),
         (f"{SITE}/articles/dhan-jhonka-rog", "#1b7a3d", "🌾", "धान · रोग",
          "धान का झोंका (ब्लास्ट) रोग — पहचान और नियंत्रण"),
         (f"{SITE}/articles/makka-fall-armyworm", "#ca8a04", "🌽", "मक्का · कीट",

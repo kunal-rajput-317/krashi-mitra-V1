@@ -303,7 +303,7 @@ ARTICLE = {
     "body": BODY,
     "faqs": FAQS,
 
-    "bhav_links": [("sugarcane", "गन्ने का भाव"), ("wheat", "गेहूं का भाव"),
+    "bhav_links": [("sugar", "चीनी का भाव"), ("wheat", "गेहूं का भाव"),
                    ("paddy-common", "धान का भाव")],
 
     "card": {
@@ -315,14 +315,16 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/ganna-satta-parchi-up", "#15803d", "📋", "गन्ना · सट्टा",
+         "गन्ना सट्टा और पर्ची कैलेंडर — UP में कैसे देखें"),
         (f"{SITE}/articles/sharadkalin-ganna-buvai", "#15803d", "🎋", "गन्ना · बुवाई",
          "शरदकालीन गन्ना बुवाई — समय, बीज दर और सहफसल"),
         (f"{SITE}/articles/ganna-rog", "#047857", "🎋", "गन्ना · रोग",
          "गन्ने का लाल सड़न (Red Rot) रोग — पहचान और रोकथाम"),
         (f"{SITE}/articles/ganna-guide-up", "#047857", "🌱", "गन्ना · फसल गाइड",
          "गन्ने की उन्नत खेती — उत्तर प्रदेश मार्गदर्शिका"),
-        (f"{SITE}/bhav/sugarcane", "#047857", "💰", "मंडी · आज के भाव",
-         "गन्ने का आज का मंडी भाव — राज्यवार LIVE रेट"),
+        (f"{SITE}/bhav/sugar", "#047857", "💰", "मंडी · आज के भाव",
+         "चीनी का आज का मंडी भाव — राज्यवार LIVE रेट"),
         (f"{SITE}/articles/dhan-bhura-fudka-up", "#1b7a3d", "🐛", "धान · कीट",
          "धान में भूरा फुदका (भूरा माहू) — पहचान, ETL और दवा"),
         (f"{SITE}/articles/keet-niyantran", "#e65100", "🐛", "कीट · नियंत्रण",

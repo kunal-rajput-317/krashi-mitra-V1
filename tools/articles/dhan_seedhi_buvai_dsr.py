@@ -271,6 +271,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/up-dhan-kharid-panjikaran", "#0369a1", "🧾", "UP धान · खरीद",
+         "UP धान खरीद पंजीकरण — MSP ₹2,441 पर धान बेचने की पूरी प्रक्रिया"),
         (f"{SITE}/articles/zinc-ki-kami-fasal", "#6d28d9", "🔬", "खाद · ज़िंक",
          "ज़िंक की कमी — धान का खैरा और इलाज"),
         (f"{SITE}/articles/kharpatwarnashi-guide", "#65a30d", "🌿", "खरपतवार · तकनीक",

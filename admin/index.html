@@ -1660,8 +1660,12 @@ body {
         <span>Weather Page</span>
       </div>
       <div class="nav-item" onclick="switchPage('shop-panel', this)">
+        <span class="nav-icon">🧾</span>
+        <span>Preorders</span>
+      </div>
+      <div class="nav-item" onclick="switchPage('catalogue', this)">
         <span class="nav-icon">🛒</span>
-        <span>Store Page</span>
+        <span>Shop Panel</span>
       </div>
       <div class="nav-item" onclick="switchPage('cache-rag', this)">
         <span class="nav-icon">🔍</span>
@@ -3356,6 +3360,7 @@ body {
         }
         .ld-kind-buyer { background: rgba(34,197,94,.14); color: var(--primary); }
         .ld-kind-offer { background: rgba(59,130,246,.14); color: var(--info); }
+        .ld-kind-product { background: rgba(245,158,11,.16); color: #b45309; }
         .ld-empty { font-size: 12.5px; color: var(--text-dim); line-height: 1.65; }
       </style>
       <!-- ─────────────── PAGE: DEADLINE CHECKLIST ───────────────
@@ -3401,6 +3406,15 @@ body {
                 <div class="stat-label">Service offers <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('ck_lead_offer',event)">?</button></div>
                 <div class="stat-value ld-big" id="ld-offer">—</div>
                 <div class="stat-sub">loan / insurance / solar links</div>
+              </div>
+              <!-- The only surface on this panel that pays a commission today.
+                   Amazon reports earnings but never tells you which page sent
+                   the click; this column is the half only we can see. -->
+              <div class="stat-card">
+                <span class="stat-icon">🛒</span>
+                <div class="stat-label">Amazon / Flipkart <button class="km-q" type="button" aria-label="यह क्या है?" onclick="kmHelp('ck_lead_product',event)">?</button></div>
+                <div class="stat-value ld-big" id="ld-product">—</div>
+                <div class="stat-sub">affiliate shelf clicks</div>
               </div>
               <div class="stat-card">
                 <span class="stat-icon">📅</span>
@@ -5135,6 +5149,168 @@ body {
            keyword, and a bad keyword is the only way this can quietly mis-type
            a crop. Source of truth is backend/data/crop_types.json, read live by
            mtime — edit the JSON, no deploy. -->
+      <div class="page" id="page-catalogue">
+        <style>
+        .pc-bar { display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+        .pc-bar input, .pc-bar select {
+          font-size:12.5px; padding:7px 10px; border-radius:var(--radius-sm);
+          border:1px solid var(--border); background:var(--surface); color:var(--text);
+        }
+        .pc-bar input { min-width:200px; }
+        .pc-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:10px; margin-bottom:14px; }
+        .pc-stat { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:11px 13px; }
+        .pc-stat b { display:block; font-size:22px; font-family:var(--font-mono); line-height:1; }
+        .pc-stat span { font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; }
+        .pc-pill { border-radius:999px; padding:2px 8px; font-size:10px; font-weight:600; white-space:nowrap; }
+        .pc-pill.added { background:rgba(63,166,90,.16); color:#3fa65a; }
+        .pc-pill.edited { background:rgba(240,160,32,.18); color:#f0a020; }
+        .pc-pill.committed { background:var(--bg); color:var(--text-dim); }
+        .pc-pill.az { background:rgba(255,153,0,.16); color:#e08600; }
+        .pc-pill.off { background:rgba(229,72,77,.16); color:#e5484d; }
+        /* The same card /product's hub renders — photo on top, Hindi name,
+           English name, ~₹ price with its अनुमानित label, pack size — so what
+           the owner edits looks like what the farmer sees. Ported from
+           routes/product.py's .prod-card rather than invented, in admin
+           tokens; keep the two in step if that card is restyled.
+
+           Under it sits a control strip that only exists here: the price and
+           the Amazon link are edited in place, because changing a price fast
+           is what this panel is for. */
+        .pc-group { margin:18px 0 8px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+        .pc-group h3 { font-size:13px; font-weight:700; margin:0; }
+        .pc-group .pc-gn { font-family:var(--font-mono); font-size:11px; color:var(--text-dim); }
+        .pc-group .pc-gap { font-size:11px; color:#e08600; font-weight:600; }
+        .pc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:14px; }
+        .pc-card { background:var(--surface); border:1px solid var(--border); border-radius:16px;
+                   display:flex; flex-direction:row; overflow:hidden;
+                   transition:transform .2s, border-color .2s; }
+        .pc-card:hover { transform:translateY(-3px); border-color:var(--primary); }
+        .pc-card.off { opacity:.5; }
+        /* Left image column, 45% of the card — the proportion shop.html uses. */
+        .pc-h-img { width:45%; min-width:45%; flex-shrink:0; display:flex; align-items:center;
+                    justify-content:center; padding:10px 8px; font-size:52px; background:var(--bg); }
+        .pc-h-img img { width:95%; height:104px; object-fit:contain; display:block; }
+        .pc-h-body { padding:12px 12px 10px; flex:1; display:flex; flex-direction:column; min-width:0; }
+        .pc-h-header { display:flex; justify-content:space-between; align-items:flex-start;
+                       gap:6px; margin-bottom:2px; }
+        .pc-h-name { font-family:var(--font-hindi); font-weight:700; font-size:13.5px;
+                     line-height:1.3; flex:1; min-width:0; }
+        .pc-h-slug { font-family:var(--font-mono); font-size:10px; color:var(--muted);
+                     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        /* ₹280 / 5 kg बैग — the big number with the pack size as a small span,
+           exactly as the live card reads it. The number is an input here. */
+        .pc-h-price { display:flex; align-items:baseline; gap:3px; flex-wrap:wrap; margin:6px 0 5px; }
+        .pc-rs { font-size:19px; font-weight:800; color:#3fa65a; line-height:1; }
+        .pc-h-price .unit { font-size:11.5px; font-weight:500; color:var(--text-dim); }
+        .pc-h-actions { display:flex; flex-direction:column; gap:6px; margin-top:auto; padding-top:8px; }
+        .pc-ctl-row { display:flex; gap:6px; align-items:center; }
+        .pc-in { font-size:12.5px; padding:6px 9px; border-radius:var(--radius-sm);
+                 border:1px solid var(--border); background:var(--bg); color:var(--text); }
+        /* The price box IS the card's price: same size and colour, with a
+           dashed underline as the only hint that it is editable. */
+        .pc-in.price { width:74px; font-size:19px; font-weight:800; color:#3fa65a; line-height:1;
+                       font-family:var(--font-mono); padding:0 3px; background:transparent;
+                       border:1px solid transparent; border-bottom:1px dashed var(--border); border-radius:4px; }
+        .pc-in.price:focus { border-color:var(--primary); background:var(--bg); outline:none; }
+        .pc-in.az { flex:1; min-width:0; font-family:var(--font-mono); font-size:10.5px; padding:5px 8px; }
+        .pc-in.az.empty { border-color:rgba(255,153,0,.5); }
+        .pc-in.saving { border-color:var(--primary); }
+        .pc-in.saved { border-color:#3fa65a; }
+        .pc-in.err { border-color:#e5484d; }
+        .pc-mini { font-size:11px; padding:5px 9px; border-radius:var(--radius-sm);
+                   border:1px solid var(--border); background:var(--bg); color:var(--text);
+                   cursor:pointer; text-decoration:none; display:inline-block; }
+        .pc-mini:hover { border-color:var(--primary); }
+        .pc-mini.save { background:var(--primary); border-color:var(--primary); color:#08150d; font-weight:700; }
+        .pc-mini.warn { color:#e5484d; }
+        /* Read mode is the default and nothing in it is an input: a number box
+           left live changes on a stray mouse-wheel, which is how a price goes
+           wrong on a live page without anyone touching it. */
+        .pc-h-read { font-size:15px; font-weight:800; color:#3fa65a; line-height:1; }
+        .pc-h-link { font-family:var(--font-mono); font-size:10px; color:var(--text-dim);
+                     margin-top:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .pc-h-link.none { color:#e08600; }
+        /* An armed card is unmistakable — you should never wonder which one you
+           are editing. */
+        .pc-card.editing { border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
+        .pc-card.editing .pc-h-img { opacity:.65; }
+        /* ABOVE the editor modal. Both are .pay-modal (z-index 400) and this
+           one sits EARLIER in the DOM, so at equal z-index the editor painted
+           over it and Preview looked like it had done nothing. 600 clears the
+           editor and .km-confirm (500) without leapfrogging the topbars. */
+        #pc-prev { z-index:600; }
+        /* The box has to fit the screen it is previewing on, or Save ends up
+           below the fold — which is exactly where a Save button must never be. */
+        #pc-prev .pay-box { max-height:94vh; overflow-y:auto; }
+        .pc-prev-frame { width:390px; max-width:100%; height:min(62vh,540px);
+                         border:1px solid var(--border); border-radius:12px;
+                         background:#fff; display:block; margin:0 auto; }
+        /* One column on a phone; the 45/55 split still works at that width. */
+        @media (max-width:560px) { .pc-grid { grid-template-columns:1fr; } }
+        .pc-form label { display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.4px;
+                         color:var(--text-dim); margin:12px 0 4px; }
+        .pc-form input, .pc-form select, .pc-form textarea {
+          width:100%; font-size:13px; padding:8px 10px; border-radius:var(--radius-sm);
+          border:1px solid var(--border); background:var(--bg); color:var(--text);
+        }
+        .pc-form textarea { min-height:56px; resize:vertical; font-family:var(--font-hindi); }
+        .pc-two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .pc-hint { font-size:11px; color:var(--muted); margin-top:5px; line-height:1.55; }
+        .pc-acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+        .pc-empty { padding:26px; text-align:center; color:var(--muted); font-size:13px; }
+        .pc-photo-row { display:flex; gap:12px; align-items:center; margin-top:6px; }
+        .pc-photo-prev { width:64px; height:64px; border-radius:10px; background:var(--bg); border:1px solid var(--border);
+                         display:flex; align-items:center; justify-content:center; font-size:30px; overflow:hidden; flex:0 0 auto; }
+        .pc-photo-prev img { width:100%; height:100%; object-fit:cover; }
+        </style>
+
+        <div class="page-header">
+          <h1 class="page-title">🛒 Shop Panel</h1>
+          <p class="page-sub">Every product behind /product/&lt;slug&gt; — add one, change a price, paste an Amazon link. Saved to Postgres and live immediately, with no redeploy.</p>
+        </div>
+
+        <!-- The one thing a new editor has to understand before touching it,
+             said once, here, rather than discovered by breaking something. -->
+        <div class="dashboard-panel" style="margin-bottom:16px;">
+          <div class="panel-body" style="font-size:12.5px; line-height:1.7; color:var(--muted);">
+            <b style="color:var(--text);">shop.html is never rewritten.</b> The 94 committed products stay where they are;
+            this panel writes an overlay on top. Editing one creates an override you can
+            <b>Revert</b> at any time. <b>Delete</b> removes a product you added here; to take a
+            committed product down, switch it <b>off</b> instead.
+            <br>
+            <b style="color:var(--text);">The price is the local shop's estimate</b> — the page says
+            “रेट किसका — दुकानदार का”. It is not Amazon's price and does not need to follow it.
+            Never paste Amazon's live price here.
+          </div>
+        </div>
+
+        <div class="pc-stats" id="pc-stats"></div>
+
+        <div class="pc-bar">
+          <input type="search" id="pc-q" placeholder="Search name or slug…" oninput="renderCatalogue()">
+          <select id="pc-cat" onchange="renderCatalogue()"><option value="">All categories</option></select>
+          <select id="pc-state" onchange="renderCatalogue()">
+            <option value="">All</option>
+            <option value="added">Added here</option>
+            <option value="edited">Edited</option>
+            <option value="committed">Committed only</option>
+            <option value="noaz">No Amazon link</option>
+            <option value="hidden">Switched off</option>
+          </select>
+          <select id="pc-sort" onchange="renderCatalogue()">
+            <option value="cat">Group by category</option>
+            <option value="name">Name A→Z</option>
+            <option value="price-hi">Price high→low</option>
+            <option value="price-lo">Price low→high</option>
+            <option value="state">Recently edited first</option>
+          </select>
+          <button class="btn btn-primary" onclick="newProduct()">+ नया प्रोडक्ट</button>
+          <button class="btn" onclick="loadCatalogue()">↻ Refresh</button>
+        </div>
+
+        <div id="pc-list"><div class="km-loader"><span class="km-spinner"></span> Loading…</div></div>
+      </div>
+
       <div class="page" id="page-crop-types">
         <style>
         .ct-top { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-bottom:16px; }
@@ -6216,6 +6392,100 @@ body {
           <button class="by-btn" onclick="closePlaceModal()">बंद करें</button>
           <button class="by-btn ok" id="pl-save" onclick="savePlacement()" disabled>
             इस पेज पर लगाएं</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- The real product page with unsaved edits applied, in an iframe at the
+         width almost all of this site's traffic reads at. Rendered by
+         routes/product.py::render_product, not a mock of it. -->
+    <div class="pay-modal" id="pc-prev" hidden onclick="if(event.target===this)closePreview()">
+      <div class="pay-box" style="max-width:460px;">
+        <h3>Preview — 390px</h3>
+        <p class="pm-sub" id="pc-prev-sub">Not saved yet.</p>
+        <iframe class="pc-prev-frame" id="pc-prev-frame" title="Product page preview"></iframe>
+        <div class="pc-acts">
+          <button class="btn btn-primary" id="pc-prev-save">Save</button>
+          <button class="btn" onclick="closePreview()">Back to editing</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pay-modal" id="pc-modal" hidden onclick="if(event.target===this)closeProductModal()">
+      <div class="pay-box pc-form" style="text-align:left;max-width:620px;max-height:88vh;overflow-y:auto;">
+        <h3 id="pc-title">प्रोडक्ट</h3>
+        <p class="pm-sub" id="pc-sub"></p>
+
+        <div class="pc-two">
+          <div>
+            <label>Hindi name *</label>
+            <input type="text" id="pc-name-hi" maxlength="120" style="font-family:var(--font-hindi);">
+          </div>
+          <div>
+            <label>English name *</label>
+            <input type="text" id="pc-name-en" maxlength="120" oninput="pcPreviewSlug()">
+          </div>
+        </div>
+        <div class="pc-hint" id="pc-slug-hint"></div>
+
+        <div class="pc-two">
+          <div>
+            <label>Category *</label>
+            <select id="pc-f-cat"></select>
+          </div>
+          <div>
+            <label>Emoji</label>
+            <input type="text" id="pc-emoji" maxlength="8" placeholder="📦">
+          </div>
+        </div>
+
+        <div class="pc-two">
+          <div>
+            <label>Pack / unit (Hindi)</label>
+            <input type="text" id="pc-unit-hi" maxlength="60" placeholder="5 kg बैग" style="font-family:var(--font-hindi);">
+          </div>
+          <div>
+            <label>अनुमानित price ₹ *</label>
+            <input type="number" id="pc-price" min="0" step="1">
+          </div>
+        </div>
+        <div class="pc-hint">The local shop's estimated rate, not Amazon's. The page labels it अनुमानित and says the rate is the दुकानदार's.</div>
+
+        <label>Hindi description</label>
+        <textarea id="pc-desc-hi" maxlength="400"></textarea>
+
+        <label>English description <span style="text-transform:none;color:var(--muted);">— used in the page's meta description</span></label>
+        <textarea id="pc-desc-en" maxlength="400" style="font-family:inherit;"></textarea>
+
+        <label>Amazon affiliate link</label>
+        <input type="url" id="pc-az" placeholder="https://www.amazon.in/…?tag=krashimitra-21">
+        <div class="pc-hint">Must include your tag. Every click goes through /go/p/amazon/&lt;slug&gt; so it is counted — you never link straight out.</div>
+
+        <label>Flipkart affiliate link</label>
+        <input type="url" id="pc-fk" placeholder="https://www.flipkart.com/…&amp;affid=…">
+
+        <label>Photo</label>
+        <div class="pc-photo-row">
+          <div class="pc-photo-prev" id="pc-photo-prev">📦</div>
+          <div style="flex:1;min-width:0;">
+            <input type="file" id="pc-photo" accept="image/*" onchange="uploadProductPhoto()">
+            <div class="pc-hint" id="pc-photo-hint">Upload the real pack shot — it replaces the committed image everywhere, including the /bhav shelf. Max 8 MB.</div>
+          </div>
+        </div>
+
+        <label>Image URL <span style="text-transform:none;color:var(--muted);">— used when there is no upload</span></label>
+        <input type="url" id="pc-img-url" placeholder="https://krashimitra.in/images/…">
+
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;color:var(--text);margin-top:14px;">
+          <input type="checkbox" id="pc-active" style="width:auto;" checked> Live on the site
+        </label>
+
+        <div class="pc-acts">
+          <button class="btn btn-primary" onclick="saveProduct()">Save</button>
+          <button class="btn" onclick="previewProduct()">Preview</button>
+          <button class="btn" onclick="closeProductModal()">Cancel</button>
+          <a class="btn" id="pc-view" href="#" target="_blank" rel="noopener">Open page ↗</a>
+          <button class="btn btn-danger" id="pc-del" onclick="deleteProduct()" style="margin-left:auto;">Delete</button>
         </div>
       </div>
     </div>
@@ -9236,11 +9506,459 @@ function switchPage(pageId, el) {
   if (pageId === 'infra') { loadInfra(false); startInfraPolling(); } else { stopInfraPolling(); }
   if (pageId === 'book' && !_book) loadBook();
   if (pageId === 'wa-channels') loadWaPosts(false);
+  if (pageId === 'catalogue') loadCatalogue();
   if (pageId === 'crop-types' && !_cropTypes) loadCropTypes(false);
   if (pageId === 'index-gate') loadIndexGate();
   if (pageId === 'articles') loadArticles();
   if (pageId === 'news-funnel') loadNewsFunnel();
   if (pageId === 'festival-wishes') loadFestivalWishes();
+}
+
+// ── कैटलॉग editor (/admin/catalogue) ───────────────────────────────────────
+// The /product catalogue used to be a `const PRODUCTS = [...]` literal inside
+// frontend/shop.html, so adding a product meant editing a 94-entry JS array and
+// shipping a deploy. Every product is also an affiliate placement, so that made
+// revenue grow at the speed of deploys. This edits an OVERLAY in Postgres that
+// the server merges over shop.html — nothing here can damage the committed
+// catalogue, which is what makes it safe to use from a phone.
+let _cat = null;         // last payload from the server
+let _catEditing = null;  // slug being edited, or null for a new product
+
+async function loadCatalogue() {
+  const box = document.getElementById('pc-list');
+  if (!box) return;
+  box.innerHTML = '<div class="km-loader"><span class="km-spinner"></span> Loading…</div>';
+  try {
+    const r = await fetch(`${API}/admin/catalogue`, { headers: getAuthHeader() });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    _cat = await r.json();
+
+    // The category pickers are filled from the server's own CAT_LABELS so the
+    // panel can never drift into offering a category the pages do not render.
+    const opts = Object.entries(_cat.cats || {})
+      .map(([k, v]) => `<option value="${escapeHtml(k)}">${escapeHtml(v)}</option>`).join('');
+    document.getElementById('pc-cat').innerHTML =
+      '<option value="">All categories</option>' + opts;
+    document.getElementById('pc-f-cat').innerHTML = opts;
+
+    renderCatalogue();
+  } catch (e) {
+    box.innerHTML = `<p class="pc-empty" style="color:var(--danger);">Could not load the catalogue — ${escapeHtml(e.message)}</p>`;
+  }
+}
+
+function renderCatalogue() {
+  if (!_cat) return;
+  const q = (document.getElementById('pc-q').value || '').trim().toLowerCase();
+  const cat = document.getElementById('pc-cat').value;
+  const state = document.getElementById('pc-state').value;
+  const hidden = new Set(_cat.hidden || []);
+
+  // A switched-off product is absent from `catalogue` (the merge drops it), so
+  // it is rebuilt from `edited` — otherwise the only way back to something you
+  // hid would be to know its slug by heart.
+  let rows = (_cat.catalogue || []).slice();
+  if (state === 'hidden' || !state) {
+    for (const slug of hidden) {
+      const e = (_cat.edited || {})[slug];
+      if (e) rows.push({ slug, name_hi: e.name_hi, name_en: e.name_en, cat: e.cat || 'misc',
+                         emoji: e.emoji, price: e.price, unit_hi: e.unit_hi, img: e.img,
+                         affil_amazon: e.affil_amazon || '',
+                         has_amazon: !!e.affil_amazon, state: 'off' });
+    }
+  }
+
+  const shown = rows.filter(r => {
+    if (cat && r.cat !== cat) return false;
+    if (state === 'noaz' && r.has_amazon) return false;
+    if (state === 'hidden' && r.state !== 'off') return false;
+    if (state && state !== 'noaz' && state !== 'hidden' && r.state !== state) return false;
+    if (q && !((r.name_hi || '') + (r.name_en || '') + r.slug).toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const live = _cat.catalogue || [];
+  const stats = [
+    ['live on site', live.length],
+    ['added here', live.filter(r => r.state === 'added').length],
+    ['edited', live.filter(r => r.state === 'edited').length],
+    ['switched off', hidden.size],
+    ['no Amazon link', live.filter(r => !r.has_amazon).length],
+  ];
+  document.getElementById('pc-stats').innerHTML = stats.map(([l, n]) =>
+    `<div class="pc-stat"><b>${n}</b><span>${l}</span></div>`).join('');
+
+  const sort = document.getElementById('pc-sort').value;
+  const cats = _cat.cats || {};
+  if (sort === 'name')      shown.sort((a, b) => (a.name_hi || '').localeCompare(b.name_hi || '', 'hi'));
+  if (sort === 'price-hi')  shown.sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
+  if (sort === 'price-lo')  shown.sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
+  if (sort === 'state')     shown.sort((a, b) => pcRank(a.state) - pcRank(b.state));
+
+  const box = document.getElementById('pc-list');
+  if (!shown.length) { box.innerHTML = '<p class="pc-empty">Nothing matches that filter.</p>'; return; }
+
+  if (sort !== 'cat') { box.innerHTML = `<div class="pc-grid">${shown.map(pcCard).join('')}</div>`; return; }
+
+  // Grouped by category — the view that makes "which shelf is thin" and "which
+  // category still has no affiliate links" answerable at a glance.
+  const groups = {};
+  shown.forEach(r => { (groups[r.cat] || (groups[r.cat] = [])).push(r); });
+  box.innerHTML = Object.keys(groups).sort((a, b) =>
+      (cats[a] || a).localeCompare(cats[b] || b)).map(c => {
+    const rows = groups[c];
+    const missing = rows.filter(r => !r.has_amazon).length;
+    return `<div class="pc-group">
+        <h3>${escapeHtml(cats[c] || c)}</h3>
+        <span class="pc-gn">${rows.length}</span>
+        ${missing ? `<span class="pc-gap">${missing} without an Amazon link</span>` : ''}
+      </div>
+      <div class="pc-grid">${rows.map(pcCard).join('')}</div>`;
+  }).join('');
+}
+
+function pcRank(state) { return ({ added: 0, edited: 1, off: 2, committed: 3 })[state] ?? 4; }
+
+// shop.html's horizontal card (.fert-h-card): image column on the left at 45%,
+// body on the right, the big ₹ number with the pack size as a small span after
+// it. Ported so the panel shows the product the way the shop does, rather than
+// being a second, different-looking list of the same things. Admin colours, not
+// the site's greens — this sits in a dark panel.
+//
+// The price and the Amazon link are inputs in place of the card's static text:
+// changing a price without a redeploy is what this panel is for.
+function pcCard(r) {
+  const slug = escapeHtml(r.slug);
+  const ph = r.img
+    ? `<img src="${escapeHtml(r.img)}" alt="" loading="lazy">`
+    : escapeHtml(r.emoji || '📦');
+  const az = escapeHtml(r.affil_amazon || '');
+  const off = r.state === 'off';
+  const editing = _editing.has(r.slug);
+
+  // Read mode prints the values; edit mode swaps in the inputs. Nothing on a
+  // card can be changed until Edit is pressed — the price box in particular is
+  // a number input, and a number input left live changes on a stray
+  // mouse-wheel, which puts a wrong price on a live page with nobody typing.
+  const price = editing
+    ? `<span class="pc-rs">₹</span>
+       <input class="pc-in price" type="number" min="0" step="1" value="${r.price ?? ''}"
+              title="अनुमानित — the local shop's rate, not Amazon's">
+       <span class="unit">/ ${escapeHtml(r.unit_hi || '—')}</span>`
+    : `<span class="pc-h-read">₹${r.price ?? '—'}</span>
+       <span class="unit">/ ${escapeHtml(r.unit_hi || '—')}</span>`;
+
+  const link = editing
+    ? `<div class="pc-ctl-row"><input class="pc-in az${az ? '' : ' empty'}" type="url"
+              value="${az}" placeholder="Amazon affiliate link…"></div>`
+    : `<div class="pc-h-link${az ? '' : ' none'}">${az ? '🔗 ' + az : '⚠ no Amazon link'}</div>`;
+
+  const actions = editing
+    ? `<div class="pc-ctl-row">
+         <button class="pc-mini save" onclick="saveCard('${slug}')">Save</button>
+         <button class="pc-mini" onclick="previewCard('${slug}')">Preview</button>
+         <button class="pc-mini" onclick="cancelEdit('${slug}')">Cancel</button>
+       </div>
+       <div class="pc-ctl-row">
+         <button class="pc-mini${off ? '' : ' warn'}" onclick="toggleLive('${slug}',${off})">${off ? 'Put back on site' : 'Take off site'}</button>
+         <button class="pc-mini" onclick="openProduct('${slug}')">More…</button>
+       </div>`
+    : `<div class="pc-ctl-row">
+         <button class="pc-mini" onclick="startEdit('${slug}')">Edit</button>
+         <button class="pc-mini" onclick="openProduct('${slug}')">More…</button>
+         <a class="pc-mini" href="/product/${slug}" target="_blank" rel="noopener" title="Open the live page">↗</a>
+       </div>`;
+
+  return `<div class="pc-card${off ? ' off' : ''}${editing ? ' editing' : ''}" data-slug="${slug}">
+    <div class="pc-h-img">${ph}</div>
+    <div class="pc-h-body">
+      <div class="pc-h-header">
+        <div class="pc-h-name">${escapeHtml(r.name_hi || r.name_en || r.slug)}</div>
+        <span class="pc-pill ${off ? 'off' : r.state}">${off ? 'off' : r.state}</span>
+      </div>
+      <div class="pc-h-slug">${slug}</div>
+      <div class="pc-h-price">${price}</div>
+      ${link}
+      <div class="pc-h-actions">${actions}</div>
+    </div>
+  </div>`;
+}
+
+// Which cards are armed. A Set rather than a flag per row so a re-render (a
+// filter change, a refresh after saving another card) does not silently drop
+// someone mid-edit.
+const _editing = new Set();
+
+function startEdit(slug) { _editing.add(slug); renderCatalogue(); }
+function cancelEdit(slug) { _editing.delete(slug); renderCatalogue(); }
+
+function pcCardValues(slug) {
+  const card = document.querySelector(`.pc-card[data-slug="${CSS.escape(slug)}"]`);
+  if (!card) return null;
+  const price = card.querySelector('.pc-in.price');
+  const az = card.querySelector('.pc-in.az');
+  return {
+    price: price ? (price.value || '').trim() : undefined,
+    affil_amazon: az ? (az.value || '').trim() : undefined,
+  };
+}
+
+async function saveCard(slug, body) {
+  body = body || pcCardValues(slug);
+  if (!body) return;
+  try {
+    const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(slug)}`, {
+      method: 'PATCH',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    _editing.delete(slug);
+    closePreview();
+    showToast('Saved — live now');
+    loadCatalogue();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+// The real page, rendered server-side with the unsaved values, dropped into a
+// 390px iframe. Save is offered from inside the preview so the loop is
+// look → save rather than look → close → find the card again.
+async function previewCard(slug) {
+  const body = pcCardValues(slug);
+  if (!body) return;
+  try {
+    const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(slug)}/preview`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    openPreview(await r.text(), `${slug} — not saved yet`, () => saveCard(slug, body));
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function openPreview(html, sub, onSave) {
+  document.getElementById('pc-prev-sub').textContent = sub;
+  document.getElementById('pc-prev-frame').srcdoc = html;
+  const btn = document.getElementById('pc-prev-save');
+  btn.onclick = onSave;
+  document.getElementById('pc-prev').hidden = false;
+}
+
+function closePreview() {
+  const box = document.getElementById('pc-prev');
+  if (!box || box.hidden) return;
+  box.hidden = true;
+  document.getElementById('pc-prev-frame').srcdoc = '';   // stop the iframe
+}
+
+async function toggleLive(slug, isOff) {
+  try {
+    const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(slug)}`, {
+      method: 'PATCH',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: !!isOff }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    showToast(isOff ? 'Back on the site' : 'Taken off the site');
+    loadCatalogue();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function pcSet(id, v) { const el = document.getElementById(id); if (el) el.value = v == null ? '' : v; }
+
+function pcPreviewSlug() {
+  // Mirrors services/shop_catalog.slugify — shown live so the owner sees the
+  // URL being minted before saving, not after.
+  const en = document.getElementById('pc-name-en').value || '';
+  const slug = en.toLowerCase().replace(/[()%]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const hint = document.getElementById('pc-slug-hint');
+  if (!hint) return;
+  hint.innerHTML = _catEditing
+    ? `URL: <code>/product/${escapeHtml(_catEditing)}</code> — renaming does not move it.`
+    : (slug ? `URL will be <code>/product/${escapeHtml(slug)}</code>` : 'The URL is built from the English name.');
+}
+
+function newProduct() {
+  _catEditing = null;
+  document.getElementById('pc-title').textContent = 'नया प्रोडक्ट';
+  document.getElementById('pc-sub').textContent = 'Saved straight to the live site — no deploy.';
+  ['pc-name-hi','pc-name-en','pc-emoji','pc-unit-hi','pc-price','pc-desc-hi','pc-desc-en','pc-az','pc-fk','pc-img-url']
+    .forEach(id => pcSet(id, ''));
+  document.getElementById('pc-active').checked = true;
+  // "अन्य" rather than whatever happens to be first in the list: a category
+  // nobody consciously picked should land in misc, not mislabel a sprayer as
+  // seed on a page that ranks for it.
+  const catSel = document.getElementById('pc-f-cat');
+  if (catSel) catSel.value = catSel.querySelector('option[value="misc"]') ? 'misc' : catSel.value;
+  document.getElementById('pc-photo-prev').innerHTML = '📦';
+  document.getElementById('pc-del').style.display = 'none';
+  document.getElementById('pc-view').style.display = 'none';
+  document.getElementById('pc-photo').disabled = true;
+  document.getElementById('pc-photo-hint').textContent = 'Save the product first, then add its photo.';
+  pcPreviewSlug();
+  document.getElementById('pc-modal').hidden = false;
+}
+
+async function openProduct(slug) {
+  try {
+    const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(slug)}`, { headers: getAuthHeader() });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    const p = (await r.json()).product;
+    _catEditing = slug;
+
+    document.getElementById('pc-title').textContent = p.name_hi || slug;
+    document.getElementById('pc-sub').textContent =
+      p.source === 'committed' ? 'From shop.html — saving creates an override you can revert.'
+      : p.source === 'override' ? 'Overriding a committed product. Delete reverts to the original.'
+      : 'Added from this panel.';
+
+    pcSet('pc-name-hi', p.name_hi); pcSet('pc-name-en', p.name_en);
+    pcSet('pc-emoji', p.emoji);     pcSet('pc-unit-hi', p.unit_hi);
+    pcSet('pc-price', p.price);     pcSet('pc-desc-hi', p.desc_hi);
+    pcSet('pc-desc-en', p.desc_en); pcSet('pc-az', p.affil_amazon);
+    pcSet('pc-fk', p.affil_flipkart);
+    pcSet('pc-img-url', p.has_image ? (p.image_url || '') : (p.img || ''));
+    document.getElementById('pc-f-cat').value = p.cat || 'misc';
+    document.getElementById('pc-active').checked = p.active !== false;
+    document.getElementById('pc-photo-prev').innerHTML = p.img
+      ? `<img src="${escapeHtml(p.img)}" alt="">` : escapeHtml(p.emoji || '📦');
+
+    const del = document.getElementById('pc-del');
+    del.style.display = p.source === 'committed' ? 'none' : '';
+    del.textContent = p.source === 'override' ? 'Revert to committed' : 'Delete';
+    const view = document.getElementById('pc-view');
+    view.style.display = ''; view.href = `/product/${slug}`;
+    document.getElementById('pc-photo').disabled = false;
+    document.getElementById('pc-photo-hint').textContent =
+      'Upload the real pack shot — it replaces the committed image everywhere, including the /bhav shelf. Max 8 MB.';
+
+    pcPreviewSlug();
+    document.getElementById('pc-modal').hidden = false;
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function closeProductModal() { document.getElementById('pc-modal').hidden = true; }
+
+// Same preview, from the full editor: everything on the form applied to the
+// real page without saving a thing.
+async function previewProduct() {
+  const slug = _catEditing || (document.getElementById('pc-name-en').value || '')
+    .toLowerCase().replace(/[()%]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!slug) { showToast('Give it an English name first', 'error'); return; }
+  const body = pcPayload();
+  try {
+    const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(slug)}/preview`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${r.status}`);
+    }
+    openPreview(await r.text(), `${slug} — not saved yet`, () => { closePreview(); saveProduct(); });
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function pcPayload() {
+  const val = id => (document.getElementById(id).value || '').trim();
+  return {
+    name_hi: val('pc-name-hi'), name_en: val('pc-name-en'),
+    cat: document.getElementById('pc-f-cat').value,
+    emoji: val('pc-emoji'), unit_hi: val('pc-unit-hi'),
+    price: val('pc-price'), desc_hi: val('pc-desc-hi'), desc_en: val('pc-desc-en'),
+    affil_amazon: val('pc-az'), affil_flipkart: val('pc-fk'),
+    image_url: val('pc-img-url'),
+    active: document.getElementById('pc-active').checked,
+  };
+}
+
+async function saveProduct() {
+  const body = pcPayload();
+  const url = _catEditing
+    ? `${API}/admin/catalogue/${encodeURIComponent(_catEditing)}`
+    : `${API}/admin/catalogue`;
+  try {
+    const r = await fetch(url, {
+      method: _catEditing ? 'PATCH' : 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    showToast(_catEditing ? 'Saved — live now' : `Added — /product/${d.slug}`);
+    if (!_catEditing && d.slug) { closeProductModal(); await loadCatalogue(); return openProduct(d.slug); }
+    closeProductModal();
+    loadCatalogue();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function deleteProduct() {
+  if (!_catEditing) return;
+  const reverting = document.getElementById('pc-del').textContent.startsWith('Revert');
+  if (!confirm(reverting
+      ? 'Revert to the committed product from shop.html? Your edits here are discarded.'
+      : `Delete ${_catEditing}? Its page will stop resolving.`)) return;
+  try {
+    const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(_catEditing)}`,
+      { method: 'DELETE', headers: getAuthHeader() });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    showToast(d.reverted ? 'Reverted to the committed product' : 'Deleted');
+    closeProductModal();
+    loadCatalogue();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function uploadProductPhoto() {
+  const input = document.getElementById('pc-photo');
+  if (!_catEditing || !input.files || !input.files[0]) return;
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  const hint = document.getElementById('pc-photo-hint');
+  hint.textContent = 'Uploading…';
+  try {
+    const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(_catEditing)}/image`,
+      { method: 'POST', headers: getAuthHeader(), body: fd });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    // Cache-bust: the URL is stable across replacements, so without this the
+    // browser shows the photo that was just replaced.
+    const src = `${d.img}?v=${Date.now()}`;
+    document.getElementById('pc-photo-prev').innerHTML = `<img src="${src}" alt="">`;
+    hint.textContent = `Saved — ${Math.round(d.bytes / 1024)} KB, live everywhere now.`;
+    input.value = '';
+    loadCatalogue();
+  } catch (e) {
+    hint.textContent = e.message;
+    showToast(e.message, 'error');
+  }
 }
 
 // KPI card → Preorders page deep-link (filter applied on arrival)
@@ -11331,6 +12049,7 @@ function renderLeads(d) {
   set('ld-total',  t.total ?? 0);
   set('ld-buyer',  t.buyer ?? 0);
   set('ld-offer',  t.offer ?? 0);
+  set('ld-product', t.product ?? 0);
   set('ld-today',  (d.today || {}).total ?? 0);
   set('ld-alltime', `all-time ${d.all_time ?? 0}`);
   set('ld-since',  d.since
@@ -11345,7 +12064,11 @@ function renderLeads(d) {
   dEl.className = 'ld-delta ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat');
   dEl.textContent = `${delta > 0 ? '+' : ''}${delta} vs ${d.last_month_label || 'last month'} (${l.total ?? 0})`;
 
-  const kindTag = k => `<span class="ld-kind ld-kind-${k === 'buyer' ? 'buyer' : 'offer'}">${k === 'buyer' ? 'खरीदार' : 'offer'}</span>`;
+  // Three surfaces feed this table now. A product click mislabelled
+  // 'offer' would quietly merge the paying surface into the free one.
+  const KIND = { buyer: ['buyer', 'खरीदार'], product: ['product', 'Amazon'], offer: ['offer', 'offer'] };
+  const kindTag = k => { const [cls, txt] = KIND[k] || KIND.offer;
+    return `<span class="ld-kind ld-kind-${cls}">${txt}</span>`; };
 
   const topRows = (d.top || []).map(x => `
     <div class="ld-row">${kindTag(x.kind)}
@@ -11369,7 +12092,8 @@ function renderLeads(d) {
   // would make it non-zero instead of showing an empty box.
   const empty = `<p class="ld-empty">No clicks recorded yet. This fills up once a
     खरीदार listing is live in a district with traffic, or a service offer is switched
-    on in <code>backend/data/lead_offers.json</code>.</p>`;
+    on in <code>backend/data/lead_offers.json</code>. The Amazon shelf is live on every
+    /bhav district page, so a long run of zeros there is worth checking.</p>`;
 
   document.getElementById('ld-breakdown').innerHTML = (t.total > 0 || (d.recent || []).length)
     ? `<div class="ld-col"><h4>Top this month</h4>${topRows || empty}</div>
@@ -13098,6 +13822,11 @@ const KM_HELP = {
   ck_lead_offer: { t: '🏦 Service offers',
     d: `लोन / बीमा / सोलर वाले लिंक पर टैप। अभी ये सरकारी लिंक हैं, इसलिए इनसे कमाई नहीं —
         पर ये बताते हैं कि किसान ऐसी चीज़ों पर टैप करता है।` },
+  ck_lead_product: { t: '🛒 Amazon / Flipkart',
+    d: `हर /bhav ज़िला पेज पर नीचे जो सामान की शेल्फ़ दिखती है, उस पर टैप। <b>यही अकेली जगह है
+        जहाँ से आज सच में कमीशन आता है।</b><br><br>
+        Amazon बताता है कि कितनी कमाई हुई, पर यह नहीं बताता कि टैप किस पेज से आया — वो आधा
+        हिस्सा सिर्फ़ यहाँ दिखता है।` },
   ck_ring: { t: 'प्रगति का घेरा',
     d: `कुल कामों में से कितने पूरे हुए। सिर्फ़ गिनती है — एक बड़ा काम और एक छोटा काम इसमें
         बराबर गिने जाते हैं, इसलिए इसे नतीजा न समझें।` },
