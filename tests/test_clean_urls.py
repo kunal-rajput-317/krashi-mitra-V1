@@ -80,3 +80,77 @@ class TestNothingElseBecameReachable:
     def test_it_does_not_climb_out_of_frontend(self, client):
         """`backend/main.py` exists; /backend/main must not serve it."""
         assert client.get("/backend/main").status_code == 404
+
+
+class TestRulesNetlifyUsedToAnswer:
+    """The /international subtree, once this origin owned it.
+
+    Until 16 Sep 2026 Netlify served frontend/international/*.html straight off
+    disk. When the site moved to Cloudflare DNS → Render, routes/international.py
+    owned the whole subtree, and its deliberate two-letter guard turned every
+    .html form into a hard 404 — including /international/index.html, which is
+    where both the `/global` and `/international/*` rules in frontend/_redirects
+    land. So those rules resolved onto a 404 and the hub was unreachable by
+    either of its two aliases.
+    """
+
+    @pytest.mark.parametrize("url,target", [
+        ("/international/us.html", "/international/us"),
+        ("/international/bd.html", "/international/bd"),
+        ("/international/index.html", "/international"),
+    ])
+    def test_the_html_form_folds_onto_the_canonical_url(self, client, url, target):
+        response = client.get(url, follow_redirects=False)
+        assert response.status_code == 301, url
+        assert response.headers["location"] == target
+
+    def test_the_hub_aliases_resolve(self, client):
+        for url in ("/global", "/international"):
+            response = client.get(url, follow_redirects=True)
+            assert response.status_code == 200, url
+
+    def test_the_two_letter_guard_still_holds(self, client):
+        """The .html branch must not become a way around the shape check —
+        `code` is user input and the guard is the only thing between it and
+        the filesystem."""
+        for url in ("/international/zzzz.html", "/international/..%2Fsecret.html"):
+            response = client.get(url, follow_redirects=False)
+            assert response.status_code != 200, url
+            assert "secret" not in response.headers.get("location", "")
+
+    def test_no_indexed_url_redirects_twice(self, client, repo_root):
+        """A 301 has to land on something that answers, not on another 301.
+
+        The seven legacy country bookmarks (/us.html, /bd.html …) pointed at
+        /international/{code}.html, which now redirects again — a two-hop chain
+        from a URL Google still has indexed.
+        """
+        # The one accepted chain. routes/articles.py canonicalises any .html
+        # slug to its extensionless form before a rule is consulted, so a rule
+        # retiring an article that is ALSO reachable at .html gets its turn on
+        # the second hop, not the first. Two hops, terminating, on a slug that
+        # no longer has a page — not worth special-casing article routing for.
+        ACCEPTED = {"/articles/tomato-guide-up.html"}
+
+        rules = (repo_root / "frontend" / "_redirects").read_text(encoding="utf-8")
+        chains = []
+        for line in rules.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split()
+            if len(parts) != 3 or not parts[2].startswith("301"):
+                continue
+            source, target, _status = parts
+            # A wildcard source is a pattern, not a URL anyone can request.
+            if target.startswith("http") or "*" in source or source in ACCEPTED:
+                continue
+            first = client.get(source, follow_redirects=False)
+            if first.status_code != 301:
+                continue
+            second = client.get(first.headers["location"], follow_redirects=False)
+            if second.status_code in (301, 302, 307, 308):
+                chains.append(
+                    f"{source} -> {first.headers['location']} -> "
+                    f"{second.headers.get('location')}")
+        assert not chains, "redirect chains:\n  " + "\n  ".join(chains)

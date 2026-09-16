@@ -334,7 +334,7 @@ class TestRoutes:
         assert r.status_code == 200
         assert "<h1>" in r.text
         # Netlify only caches a proxied response when the origin opts in
-        assert "Netlify-CDN-Cache-Control" in r.headers
+        assert "CDN-Cache-Control" in r.headers
 
     def test_an_unknown_slug_is_a_real_404(self, client):
         """A 200 homepage here is a soft-404 and index bloat."""

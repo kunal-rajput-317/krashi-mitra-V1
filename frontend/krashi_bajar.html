@@ -14,7 +14,7 @@
           l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
               /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
       window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
-        (l ? 'http://' + (h || 'localhost') + ':8000' : 'https://krashi-mitra-v1-p099.onrender.com');
+        (l ? 'http://' + (h || 'localhost') + ':8000' : location.origin);
       window.KRASHIMITRA_IS_LOCAL = l;
       window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
     })();
@@ -163,7 +163,7 @@
           {
             "@type": "Question",
             "name": "नीले टिक ✓ का क्या मतलब है?",
-            "acceptedAnswer": { "@type": "Answer", "text": "नीला टिक KrashiMitra द्वारा सत्यापित विक्रेता की पहचान है। सत्यापित विक्रेता ज़्यादा भरोसेमंद माने जाते हैं।" }
+            "acceptedAnswer": { "@type": "Answer", "text": "नीला टिक का मतलब है कि कृषि मित्र ने फ़ोन पर उस विक्रेता का नाम, मोबाइल नंबर और गाँव जाँचा है। यह फसल, भाव या सौदे की गारंटी नहीं है।" }
           }
         ]
       }
@@ -557,6 +557,11 @@
     font-size: 12.5px; font-weight: 500; color: #1e4e79; line-height: 1.55;
   }
   .bz-bluetick-note .bz-verified-badge { flex-shrink: 0; margin-top: 1px; }
+  .bz-bluetick-cta {
+    display: block; margin-top: 6px; font-weight: 800; color: #1d9bf0;
+    text-decoration: none;
+  }
+  .bz-bluetick-cta:hover { text-decoration: underline; }
 
 
   /* Empty state (filtered / my-listings with no results) */
@@ -1605,7 +1610,10 @@
   <!-- Blue-tick meaning note -->
   <div class="bz-bluetick-note">
     <svg class="bz-verified-badge" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#1d9bf0" d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34z"/><path fill="#fff" d="M9.71 16.29l-3.5-3.5 1.42-1.42 2.08 2.09 5.16-5.17 1.42 1.42z"/></svg>
-    <span data-t="bluetick_note">नीला टिक ✓ का मतलब — यह विक्रेता KrashiMitra द्वारा सत्यापित है। सत्यापित विक्रेता ज़्यादा भरोसेमंद माने जाते हैं।</span>
+    <span>
+      <span data-t="bluetick_note">नीला टिक ✓ — कृषि मित्र ने फ़ोन पर इस विक्रेता का नाम, मोबाइल नंबर और गाँव जाँचा है। यह फसल, भाव या सौदे की गारंटी नहीं है।</span>
+      <a class="bz-bluetick-cta" href="/verify" data-t="bluetick_cta">आपको भी नीला टिक चाहिए?</a>
+    </span>
   </div>
 
   <!-- Dealer promo — shared component (dukan-promo.js + km-shell.css). -->
@@ -1837,7 +1845,8 @@ const TRANSLATIONS = {
     zoom_hint:'दो उंगलियों से ज़ूम करें • डबल-टैप',
     phone_needed:'बेचने या खरीदने के लिए आपका मोबाइल नंबर ज़रूरी है — ताकि खरीदार/विक्रेता आपसे संपर्क कर सकें।',
     fill_phone:'मोबाइल नंबर भरें',
-    bluetick_note:'नीला टिक ✓ का मतलब — यह विक्रेता KrashiMitra द्वारा सत्यापित है। सत्यापित विक्रेता ज़्यादा भरोसेमंद माने जाते हैं।',
+    bluetick_note:'नीला टिक ✓ — कृषि मित्र ने फ़ोन पर इस विक्रेता का नाम, मोबाइल नंबर और गाँव जाँचा है। यह फसल, भाव या सौदे की गारंटी नहीं है।',
+    bluetick_cta:'आपको भी नीला टिक चाहिए?',
   },
   en: {
     logo_text:'Krashi Mitra', menu_title:'Menu',
@@ -1893,7 +1902,8 @@ const TRANSLATIONS = {
     zoom_hint:'Pinch to zoom • double-tap',
     phone_needed:'A mobile number is required to sell or buy — so buyers/sellers can reach you.',
     fill_phone:'Add mobile number',
-    bluetick_note:'The blue tick ✓ means this seller is verified by KrashiMitra. Verified sellers are considered more trustworthy.',
+    bluetick_note:'Blue tick ✓ — KrashiMitra confirmed this seller’s name, mobile number and village by phone. It is not a guarantee of the crop, the price or the deal.',
+    bluetick_cta:'Want the blue tick?',
   },
   kn: {
     logo_text:'ಕೃಷಿ ಮಿತ್ರ', menu_title:'ಮೆನು',
@@ -1949,7 +1959,8 @@ const TRANSLATIONS = {
     zoom_hint:'ಎರಡು ಬೆರಳಿಂದ ಜೂಮ್ • ಡಬಲ್-ಟ್ಯಾಪ್',
     phone_needed:'ಮಾರಾಟ ಅಥವಾ ಖರೀದಿಗೆ ಮೊಬೈಲ್ ನಂಬರ್ ಅಗತ್ಯ — ಖರೀದಿದಾರರು/ಮಾರಾಟಗಾರರು ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಲು.',
     fill_phone:'ಮೊಬೈಲ್ ನಂಬರ್ ಸೇರಿಸಿ',
-    bluetick_note:'ನೀಲಿ ಟಿಕ್ ✓ ಎಂದರೆ ಈ ಮಾರಾಟಗಾರರು KrashiMitra ನಿಂದ ಪರಿಶೀಲಿಸಲ್ಪಟ್ಟಿದ್ದಾರೆ. ಪರಿಶೀಲಿತ ಮಾರಾಟಗಾರರು ಹೆಚ್ಚು ವಿಶ್ವಾಸಾರ್ಹರು.',
+    bluetick_note:'ನೀಲಿ ಟಿಕ್ ✓ — ಕೃಷಿ ಮಿತ್ರ ಫೋನ್‌ನಲ್ಲಿ ಈ ಮಾರಾಟಗಾರರ ಹೆಸರು, ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ಹಳ್ಳಿಯನ್ನು ಪರಿಶೀಲಿಸಿದೆ. ಇದು ಬೆಳೆ, ಬೆಲೆ ಅಥವಾ ವ್ಯವಹಾರದ ಖಾತರಿಯಲ್ಲ.',
+    bluetick_cta:'ನಿಮಗೂ ನೀಲಿ ಟಿಕ್ ಬೇಕೇ?',
   },
 };
 const urlParams = new URLSearchParams(window.location.search);

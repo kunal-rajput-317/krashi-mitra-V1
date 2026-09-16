@@ -14,6 +14,7 @@ build failure rather than an outage.
 """
 
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -225,3 +226,156 @@ class TestSwitchingProviders:
         # only if it was in the history, so assert on what we do control:
         assert "https://api.krashimitra.in" not in self.redirects(sandbox), \
             "the previous origin must be replaced even though it is not a Render host"
+
+
+class TestBrowserCodeCarriesNoBackendURL:
+    """The strongest guard here, because it removes the failure rather than
+    catching it.
+
+    Every other test in this file checks that the address in a file is the
+    CURRENT one. None of them can help with what actually happened on
+    16 Sep 2026: Render suspended the account, a new service came up on a new
+    subdomain, `set_backend_origin.py` rewrote all 22 browser literals
+    correctly in one command — and the live site went on calling the dead host
+    for hours, because the repo was right and the deploy had not happened.
+
+    A literal in browser code can only ever be as fresh as the last deploy. So
+    there is no longer a literal: api-config.js and the inline bootstrap on
+    each page read `location.origin`, which the browser cannot get wrong. One
+    origin has served both the pages and the API since Netlify left the
+    request path that morning.
+
+    What made it expensive to spot is worth recording. Every server-rendered
+    page — /bhav, /naksha, /ganna, the article tree — kept answering 200,
+    because none of them makes an API call. The site looked healthy while
+    login, OTP, profile, KrashiBook, the कृषि बाज़ार feed and मौसम were all
+    dialling a suspended server, and कृषि बाज़ार in particular still rendered
+    its sample listings, so it looked *populated*. A green page proves nothing
+    about the half of the site that talks to an API.
+    """
+
+    # sw.js is exempt: its CACHE_NAME comment is a dated changelog of every
+    # origin the site has used, and that history is why a returning browser
+    # gets a cache bump on each move. It is a comment, never a fetch target.
+    EXEMPT = {"sw.js"}
+
+    def browser_files(self):
+        for path in sorted((REPO / "frontend").rglob("*")):
+            if path.suffix in (".js", ".html") and path.name not in self.EXEMPT:
+                yield path
+
+    def test_no_backend_host_is_hardcoded_anywhere_in_the_frontend(self):
+        offenders = []
+        for path in self.browser_files():
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            for host in set(HOST_RE.findall(text)):
+                offenders.append(f"{path.relative_to(REPO).as_posix()} → {host}")
+        assert not offenders, (
+            "browser code must derive the API base from location.origin, never "
+            "carry an address that goes stale between deploys:\n  "
+            + "\n  ".join(offenders))
+
+    def test_the_bootstrap_actually_uses_location_origin(self):
+        """Guards the other direction: the rule above is satisfied by deleting
+        the address, which would leave the API base undefined."""
+        text = (REPO / "frontend" / "api-config.js").read_text(encoding="utf-8")
+        assert "location.origin" in text
+        assert "window.KRASHIMITRA_API_BASE" in text
+
+    def test_an_explicit_override_is_still_respected(self):
+        """A backend on a different origin has to stay possible — it is how
+        local dev works, and how a static host in front would work again."""
+        text = (REPO / "frontend" / "api-config.js").read_text(encoding="utf-8")
+        assert "if (window.KRASHIMITRA_API_BASE) return;" in text
+
+    def test_the_tool_no_longer_manages_browser_files(self):
+        """If a frontend file reappears in TARGETS, someone has put an address
+        back into the browser and the guard above is about to start failing."""
+        from tools.set_backend_origin import TARGETS
+
+        frontend = [t for t in TARGETS if t.startswith("frontend/")
+                    and t != "frontend/_redirects"]
+        assert not frontend, f"browser files back under the tool's control: {frontend}"
+
+    # The origins every bootstrap is exercised against. The made-up Render host
+    # is the important row: it stands for the subdomain the NEXT suspension
+    # hands out, which nothing in this repo can know in advance. Deriving the
+    # base from location.origin is what makes that row pass without an edit.
+    ORIGINS = [
+        ("https://krashimitra.in", "https://krashimitra.in"),
+        ("https://www.krashimitra.in", "https://www.krashimitra.in"),
+        ("https://a-host-nobody-told-us-about.onrender.com",
+         "https://a-host-nobody-told-us-about.onrender.com"),
+        ("http://localhost:5500", "http://localhost:8000"),   # Live Server
+        ("http://127.0.0.1:8000", "http://127.0.0.1:8000"),   # uvicorn direct
+    ]
+
+    def _bootstraps(self):
+        """Every inline API-base bootstrap, plus api-config.js's own.
+
+        There are a dozen copies because api-config.js loads deferred and the
+        base has to be set synchronously before any page script runs. Copies
+        drift — login.html derived the dev port from the page's own port, so on
+        Live Server every /auth call went to the static server — so each one is
+        executed here rather than eyeballed.
+        """
+        script = re.compile(r"<script>(.*?)</script>", re.S)
+        for path in sorted((REPO / "frontend").rglob("*.html")):
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            for match in script.finditer(text):
+                body = match.group(1)
+                if "window.KRASHIMITRA_API_BASE =" in body:
+                    yield path.relative_to(REPO).as_posix(), body
+        api = (REPO / "frontend" / "api-config.js").read_text(encoding="utf-8")
+        yield "frontend/api-config.js", api.split("// \u2500\u2500 Google OAuth")[0]
+
+    def test_every_bootstrap_resolves_to_the_right_origin(self, tmp_path):
+        """Runs the real browser code under node with a stubbed `location`.
+
+        The pure-text guard above proves no address is hardcoded. This proves
+        the replacement actually computes the right one — including on a host
+        this repo has never heard of, which is the case that broke.
+        """
+        node = shutil.which("node")
+        if not node:
+            pytest.skip("node not installed")
+
+        parts = ["let fails = 0;"]
+        for name, body in self._bootstraps():
+            # The bootstrap is handed to node inside a template literal, so
+            # backslashes, backticks and ${ have to survive the trip intact.
+            safe = (body.replace("\\", "\\\\")
+                        .replace("`", "\\`")
+                        .replace("${", "\\${"))
+            rows = ", ".join(f'["{o}", "{w}"]' for o, w in self.ORIGINS)
+            parts.append("""
+for (const [origin, want] of [%s]) {
+  const u = new URL(origin);
+  const window = {};
+  const location = {hostname: u.hostname, port: u.port, protocol: u.protocol, origin: u.origin};
+  const document = {addEventListener(){}, getElementById(){return null}, querySelector(){return null}};
+  try { new Function("window","location","document", `%s`)(window, location, document); }
+  catch (e) { console.log("EXEC FAIL %s @" + origin + ": " + e.message); fails++; continue; }
+  if (window.KRASHIMITRA_API_BASE !== want)
+    { console.log("WRONG %s @" + origin + " -> " + window.KRASHIMITRA_API_BASE); fails++; }
+}""" % (rows, safe, name, name))
+        parts.append('if (fails) { console.log(fails + " FAILURES"); process.exit(1); }')
+
+        harness = tmp_path / "bootstraps.js"
+        harness.write_text("\n".join(parts), encoding="utf-8")
+        result = subprocess.run([node, str(harness)], capture_output=True, text=True)
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_the_bootstraps_are_valid_javascript(self, tmp_path):
+        """A syntax error in one of these takes out every page that inlines it,
+        and nothing else in the suite parses browser code."""
+        node = shutil.which("node")
+        if not node:
+            pytest.skip("node not installed")
+        blob = "\n".join(f"// ---- {name}\n(function(){{\n{body}\n}})();"
+                         for name, body in self._bootstraps())
+        path = tmp_path / "all.js"
+        path.write_text(blob, encoding="utf-8")
+        result = subprocess.run([node, "--check", str(path)],
+                                capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr

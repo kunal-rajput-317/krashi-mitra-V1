@@ -78,7 +78,7 @@
     // this path 404s. Owned by config/backend-origin.txt — rewritten by
     // tools/set_backend_origin.py, same as the literal in init() below.
     var base = window.KRASHIMITRA_API_BASE ||
-      'https://krashi-mitra-v1-p099.onrender.com';
+      location.origin;
     return base + url;
   }
 
@@ -245,7 +245,7 @@
     // Never fall back to '': that resolves to the page's own origin, and
     // /api/* is not a path Netlify proxies. Owned by
     // config/backend-origin.txt — rewritten by tools/set_backend_origin.py.
-    var apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1-p099.onrender.com';
+    var apiBase = window.KRASHIMITRA_API_BASE || location.origin;
     try {
       var res = await fetch(apiBase + '/api/festival/config');
       var data = await res.json();

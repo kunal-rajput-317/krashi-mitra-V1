@@ -14,14 +14,19 @@
       var h = location.hostname,
           l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
               /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
-      var p = location.port || '8000';
-      // Non-local must stay hardcoded to Render, not location.origin — on the
-      // krashimitra.in (Netlify) domain, _redirects only proxies bhav/product/
-      // share/alerts/sitemap/llms, so /login, /auth/*, /profile etc would 404
-      // instead of reaching the backend. Cross-origin to Render is fine; that
-      // origin is already in the backend's CORS allowlist.
+      var p = location.port;
+      // A dev server's own port is not the API's. Live Server (5500) is the
+      // documented local setup, so deriving the port from the page sent every
+      // /auth call to the static server and login failed with nothing in the log.
+      if (!p || p === '5500' || p === '3000' || p === '5173' || p === '8080') p = '8000';
+      // Non-local is location.origin: one origin serves both the pages and the
+      // API. This used to be a hardcoded Render URL, because krashimitra.in was
+      // Netlify static and _redirects proxied only bhav/product/share/alerts/
+      // sitemap/llms — /login and /auth/* would have 404'd. Netlify left the
+      // request path on 16 Sep 2026, and the literal it left behind then broke
+      // login for hours when Render moved account. See frontend/api-config.js.
       window.KRASHIMITRA_API_BASE = window.KRASHIMITRA_API_BASE ||
-        (l ? location.protocol + '//' + (h || 'localhost') + ':' + p : 'https://krashi-mitra-v1-p099.onrender.com');
+        (l ? location.protocol + '//' + (h || 'localhost') + ':' + p : location.origin);
       window.KRASHIMITRA_IS_LOCAL = l;
       window.KRASHIMITRA_GOOGLE_CLIENT_ID = '235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com';
     })();
@@ -957,8 +962,12 @@
     var h = location.hostname;
     var l = h === 'localhost' || h === '127.0.0.1' || h === '' ||
         /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
-    var p = location.port || '8000';
-    return l ? location.protocol + '//' + (h || 'localhost') + ':' + p : 'https://krashi-mitra-v1-p099.onrender.com';
+    var p = location.port;
+      // A dev server's own port is not the API's. Live Server (5500) is the
+      // documented local setup, so deriving the port from the page sent every
+      // /auth call to the static server and login failed with nothing in the log.
+      if (!p || p === '5500' || p === '3000' || p === '5173' || p === '8080') p = '8000';
+    return l ? location.protocol + '//' + (h || 'localhost') + ':' + p : location.origin;
   }
 
   async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {

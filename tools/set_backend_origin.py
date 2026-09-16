@@ -14,15 +14,25 @@ days.
     python tools/set_backend_origin.py             # re-sync from the config file
 
 Python and the GitHub workflows read config/backend-origin.txt directly and
-need no rewriting. This tool exists for the two places that genuinely cannot
-read a file at request time:
+need no rewriting. This tool exists for the places that genuinely cannot read a
+file at request time:
 
-  * frontend/_redirects — Netlify proxy rules; the format has no variables
-  * the browser JS/HTML — api-config.js sets window.KRASHIMITRA_API_BASE
-    synchronously before any page script runs, so it cannot await a fetch
+  * frontend/_redirects — proxy rules; the format has no variables
+  * backend/data/krashimitra_book.json — the operating manual's own copy
+
+The browser used to be on that list, and taking it off is why this file is
+shorter than it was. api-config.js now derives the API base from
+`location.origin`, because since 16 Sep 2026 one origin serves both the pages
+and the API. A literal there could only ever be as fresh as the last deploy —
+and on the day Render suspended the account, the repo was updated in one
+command while every deployed page went on calling the dead host. Rewriting 22
+literals correctly is no defence when the failure is that they were not
+shipped. Not having them is.
 
 tests/test_backend_origin.py runs --check, so a file left behind fails the
-build instead of quietly 404ing in production.
+build instead of quietly 404ing in production, and
+TestBrowserCodeCarriesNoBackendURL fails it if a literal creeps back into the
+frontend.
 """
 from __future__ import annotations
 
@@ -53,27 +63,15 @@ OLD_PREFIX = "#old "
 
 # Everything that carries the URL as a literal. Directories are walked with the
 # given suffixes. Python is absent on purpose — it imports backend/origin.py.
+#
+# The 19 frontend files that used to be here are absent for a stronger reason:
+# they no longer contain an address at all. api-config.js and the inline
+# bootstraps on each page read `location.origin`, so the browser is told where
+# the backend is by the browser, not by a value this tool wrote at some point
+# in the past. The list any future switch has to get right is now two entries
+# long, and neither of them is on the request path for a farmer's login.
 TARGETS: list[str] = [
     "frontend/_redirects",
-    "frontend/api-config.js",
-    "frontend/krashibook.js",
-    "frontend/location.js",
-    "frontend/main.js",
-    "frontend/404.html",
-    "frontend/index.html",
-    "frontend/chat.html",
-    "frontend/khoj.html",
-    "frontend/login.html",
-    "frontend/profile.html",
-    "frontend/shop.html",
-    "frontend/weather.html",
-    "frontend/meri_fasal.html",
-    "frontend/krashi_bajar.html",
-    "frontend/sarkari_yojana.html",
-    "frontend/articles/index.html",
-    "frontend/dukanlisting/index.html",
-    "frontend/krashi_news.html",
-    "frontend/festival-popup.js",
     "backend/data/krashimitra_book.json",
 ]
 

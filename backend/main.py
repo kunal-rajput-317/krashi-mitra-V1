@@ -132,6 +132,20 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 
+# ── frontend/_redirects, on this origin ──────────────────────────────
+# Netlify answered those 300-odd rules until 16 Sep 2026, when the site moved
+# to Cloudflare DNS → Render and Netlify left the request path. 35 indexed URLs
+# 404'd the moment it did. See backend/utils/netlify_redirects.py for what the
+# file means and which rules are skipped as already-routed.
+#
+# Added here, second only to gzip, so it sits INSIDE the security-header and
+# request-id middleware: a 301 it generates still carries both. It has to be
+# middleware rather than a route because a forced rule must win against the
+# static mount at "/" — otherwise /shop keeps serving frontend/shop.html.
+from backend.utils.netlify_redirects import NetlifyRedirectMiddleware
+
+app.add_middleware(NetlifyRedirectMiddleware)
+
 # ── CORS ─────────────────────────────────────────────────────────────
 from fastapi.middleware.cors import CORSMiddleware
 from urllib.parse import urlparse
@@ -407,6 +421,9 @@ app.include_router(dukanlisting_route.router)   # अपनी दुकान �
 
 from backend.routes import pay as pay_route
 app.include_router(pay_route.router)     # /pay — UPI listing-fee page sent to a dealer over WhatsApp (noindex)
+
+from backend.routes import verify as verify_route
+app.include_router(verify_route.router)  # /verify — blue-tick application + fee (noindex)
 
 from backend.routes import donate as donate_route
 app.include_router(donate_route.router)  # /donate — public UPI page for anyone who wants to support the site

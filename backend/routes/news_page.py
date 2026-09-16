@@ -119,7 +119,7 @@ _articles_cache = {"stamp": None, "articles": []}
 
 _CACHE_HEADERS = {
     "Cache-Control": "public, max-age=300",
-    "Netlify-CDN-Cache-Control": "public, durable, max-age=1800, stale-while-revalidate=86400",
+    "CDN-Cache-Control": "public, max-age=1800, stale-while-revalidate=86400",
 }
 
 

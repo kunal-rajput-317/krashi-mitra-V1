@@ -17,7 +17,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 router = APIRouter(tags=["international"])
 
@@ -50,7 +50,26 @@ def international_country(code: str):
     A two-letter lowercase code only. Anything else 404s rather than reaching
     the filesystem — `code` is user input and INTL_DIR holds nothing but these
     pages, so the shape check is the whole guard.
+
+    The .html forms fold onto the canonical URL instead of 404ing. They were
+    real files on Netlify's disk and are still linked from older pages and
+    bookmarks; once Netlify left the request path on 16 Sep 2026 this route
+    owned the whole /international/* subtree, and its two-letter guard turned
+    every one of them into a hard 404 — including /international/index.html,
+    which is where the `/global` and `/international/*` rules in
+    frontend/_redirects both land.
+
+    The guard is applied to the stem too, so `..%2F..%2Fsecret.html` still
+    404s rather than becoming a redirect out of the section.
     """
+    if code.lower().endswith(".html"):
+        stem = code[:-5].lower()
+        if stem == "index":
+            return RedirectResponse("/international", status_code=301)
+        if len(stem) == 2 and stem.isascii() and stem.isalpha():
+            return RedirectResponse(f"/international/{stem}", status_code=301)
+        raise HTTPException(status_code=404)
+
     if len(code) != 2 or not code.isascii() or not code.isalpha():
         raise HTTPException(status_code=404)
     return _page(f"{code.lower()}.html")

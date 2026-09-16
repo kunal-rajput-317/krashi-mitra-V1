@@ -145,6 +145,16 @@ services:
       # Listing fee in whole rupees. Optional — services/upi.py defaults to 500.
       - key: KM_LISTING_FEE
         sync: false          # optional
+      # Blue-tick verification (services/seller_verify.py). The fee buys the
+      # phone check, not the badge — the badge is granted by hand in
+      # /admin → नीला टिक, after the call. Both optional: ₹199 for 12 months
+      # unless set. Env rather than literals for the same reason as the listing
+      # fee — the first real negotiation may not land on ₹199, and re-deploying
+      # to change a price is the manual seam this project bans.
+      - key: KM_VERIFY_FEE
+        sync: false          # optional — whole rupees, default 199
+      - key: KM_VERIFY_MONTHS
+        sync: false          # optional — badge window, default 12
 
       # ── Free-tier runway (admin panel → Infra & Credits) ────
       # Read-only billing API tokens for the three free plans the site runs

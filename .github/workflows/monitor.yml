@@ -62,6 +62,34 @@ jobs:
           fi
           echo "liveness ok"
 
+          # 1b) The PUBLIC domain — the only address a farmer ever types.
+          #
+          # Everything above this point talks to the origin directly, so it
+          # stays green through an outage farmers cannot see past. That is not
+          # hypothetical: on 16 Sep 2026 Netlify's free tier went
+          # usage_exceeded and served 503 on every URL of krashimitra.in for
+          # hours while Render answered 200 throughout. This job would have
+          # reported a healthy site for the whole outage.
+          #
+          # Checked separately from the origin so the alert can say WHICH half
+          # broke — an origin-up/domain-down split is DNS, the CDN or the
+          # host in front, and none of those are fixed by looking at Render.
+          # /bhav rather than / because a server-rendered route proves the app
+          # is really being reached, not just a cached or parked page.
+          for url in "https://krashimitra.in/" "https://krashimitra.in/bhav"; do
+            pub=""
+            for i in 1 2 3; do
+              pub=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$url" || true)
+              [ "$pub" = "200" ] && break
+              echo "public attempt $i for $url => '$pub', retry in 30s"; sleep 30
+            done
+            if [ "$pub" != "200" ]; then
+              alert "PUBLIC SITE DOWN — $url returned '$pub' while the origin ($BASE) is healthy. DNS, Cloudflare or the host in front, not the app."
+              exit 1
+            fi
+          done
+          echo "public domain ok"
+
           # 2) Data freshness — is the mandi feed still updating?
           body=$(curl -s --max-time 60 "$BASE/health/data" || true)
           echo "freshness: $body"

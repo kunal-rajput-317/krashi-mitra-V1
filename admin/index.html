@@ -1684,6 +1684,11 @@ body {
         <span>खरीदार / Dealers</span>
         <span class="nav-badge" id="by-nav-badge" hidden>0</span>
       </div>
+      <div class="nav-item" onclick="switchPage('verifications', this)">
+        <span class="nav-icon">✅</span>
+        <span>नीला टिक / Verify</span>
+        <span class="nav-badge" id="vf-nav-badge" hidden>0</span>
+      </div>
       <div class="nav-item" onclick="switchPage('dukan', this)">
         <span class="nav-icon">🏪</span>
         <span>कृषि दुकान / Shops</span>
@@ -3636,6 +3641,36 @@ body {
            The number to read is days_left, not the percentage. A bandwidth
            meter at 60% that is barely moving is fine; a compute meter at 40%
            burning four times as fast is the one that ends the month early. -->
+      <!-- नीला टिक — the seller verification queue behind /verify.
+           The ONLY place users.seller_verified is ever set, and the reason it
+           is a screen rather than a SQL statement: the site tells every buyer
+           that a ticked seller was checked by KrashiMitra, so somebody has to
+           actually make the call. Paying puts a row in this queue; it does not
+           tick anything. See backend/services/seller_verify.py. -->
+      <div class="page" id="page-verifications">
+        <div class="page-header">
+          <div class="page-title">
+            <h2>नीला टिक / Seller verification</h2>
+            <p>शुल्क जाँच का है, टिक का नहीं — <b>Approve</b> दबाने से पहले फ़ोन करें।
+               पैसा आया हो तो पहले <b>₹ मिला</b> दर्ज करें।</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="loadVerifications()" id="vf-refresh-btn">↻ Refresh</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="display:flex;gap:6px;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+            <button class="btn btn-secondary vf-filter active" data-vf="" onclick="setVfFilter('',this)">सभी</button>
+            <button class="btn btn-secondary vf-filter" data-vf="paid" onclick="setVfFilter('paid',this)">फ़ोन करना है</button>
+            <button class="btn btn-secondary vf-filter" data-vf="applied" onclick="setVfFilter('applied',this)">शुल्क बाकी</button>
+            <button class="btn btn-secondary vf-filter" data-vf="approved" onclick="setVfFilter('approved',this)">चालू</button>
+            <button class="btn btn-secondary vf-filter" data-vf="rejected" onclick="setVfFilter('rejected',this)">मना</button>
+            <button class="btn btn-secondary vf-filter" data-vf="expired" onclick="setVfFilter('expired',this)">खत्म</button>
+          </div>
+          <div id="vf-list" style="padding:14px;">लोड हो रहा है…</div>
+        </div>
+      </div>
+
       <!-- कृषि दुकान — the local shop directory behind /krashi_dukan.
            NOT the खरीदार page above: that sells an ad slot on a /bhav crop
            page. This is a directory of real shops and what they stock, and it
@@ -9500,6 +9535,7 @@ function switchPage(pageId, el) {
   }
   if (pageId === 'locator') loadFarmerLocator();
   if (pageId === 'buyers') loadBuyers();
+  if (pageId === 'verifications') loadVerifications();
   if (pageId === 'dukan') loadDukan();
   if (pageId === 'rental') loadRental();
   if (pageId === 'checklist') { loadChecklist(); loadLeads(); }
@@ -17106,6 +17142,180 @@ function testFestivalPreviewModal() {
     showToast('👁️ लाइव प्रीव्यू खुला — इसे बंद करने के लिए ✕ पर क्लिक करें');
   } else {
     showToast('प्रीव्यू स्क्रिप्ट लोड नहीं हुई');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   नीला टिक — the seller verification queue.
+
+   This screen is the human half of a claim the site publishes: every ticked
+   seller is described to buyers as "KrashiMitra द्वारा सत्यापित". Approve is
+   therefore not a formality — it asserts that somebody rang the number on the
+   row and it was him. Paying only gets a farmer INTO this list.
+   ══════════════════════════════════════════════════════════════ */
+let _vfFilter = '';
+let _vfRows = [];
+
+function setVfFilter(v, el) {
+  _vfFilter = v;
+  document.querySelectorAll('.vf-filter').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  loadVerifications();
+}
+
+const VF_LABEL = {
+  applied:  ['शुल्क बाकी', '#b45309', '#fff8e1'],
+  paid:     ['फ़ोन करना है', '#1e4e79', '#e8f4fd'],
+  approved: ['चालू', '#2d6a4f', '#d8f3dc'],
+  rejected: ['मना', '#b91c1c', '#fee2e2'],
+  expired:  ['खत्म', '#6b7280', '#f1f5f9'],
+};
+
+async function loadVerifications() {
+  const box = document.getElementById('vf-list');
+  if (!box) return;
+  box.textContent = 'लोड हो रहा है…';
+  try {
+    const q = _vfFilter ? ('?status=' + encodeURIComponent(_vfFilter)) : '';
+    const r = await fetch(API + '/admin/verifications' + q, { headers: getAuthHeader() });
+    if (r.status === 404) throw new Error('endpoint missing — restart the backend');
+    const j = await r.json();
+    _vfRows = (j.data && j.data.items) || [];
+    const counts = (j.data && j.data.counts) || {};
+
+    // The badge counts what is owed a phone call, not the size of the list.
+    const badge = document.getElementById('vf-nav-badge');
+    if (badge) {
+      const n = counts.paid || 0;
+      badge.textContent = n;
+      badge.hidden = !n;
+    }
+    renderVerifications();
+  } catch (e) {
+    box.innerHTML = '<div style="color:#b91c1c;font-weight:700;">' +
+                    esc(String(e.message || e)) + '</div>';
+  }
+}
+
+function renderVerifications() {
+  const box = document.getElementById('vf-list');
+  if (!box) return;
+  if (!_vfRows.length) {
+    box.innerHTML = '<div style="color:#6b7280;">कोई आवेदन नहीं।</div>';
+    return;
+  }
+  box.innerHTML = _vfRows.map(function (v) {
+    const L = VF_LABEL[v.status] || ['—', '#6b7280', '#f1f5f9'];
+    const paid = v.paid_at ? ('₹' + (v.fee_amount || '?') + ' मिला') : 'शुल्क नहीं आया';
+    const tick = v.verified_now
+      ? '<span style="color:#1d9bf0;font-weight:800;font-size:12px;">✓ टिक चालू</span>' : '';
+    const refund = v.refund_due
+      ? '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:800;' +
+        'border-radius:9px;padding:2px 9px;">रिफंड बाकी</span>' : '';
+    const note = v.note
+      ? '<div style="font-size:12.5px;color:#6b7280;margin-top:5px;">' + esc(v.note) + '</div>' : '';
+    const why = v.reject_reason
+      ? '<div style="font-size:12.5px;color:#b91c1c;margin-top:5px;">मना: ' +
+        esc(v.reject_reason) + '</div>' : '';
+    const refundBtn = v.refund_due
+      ? '<button class="btn btn-secondary" onclick="vfRefund(\'' + esc(v.ref) +
+        '\')">रिफंड भेज दिया</button>' : '';
+    const days = (v.days_left != null) ? (' · ' + v.days_left + ' दिन बाकी') : '';
+    return '' +
+    '<div style="border:1px solid var(--border);border-radius:10px;padding:13px 14px;margin-bottom:10px;">' +
+      '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px;">' +
+        '<b style="font-size:15px;">' + esc(v.full_name || '—') + '</b>' +
+        '<span style="background:' + L[2] + ';color:' + L[1] + ';font-size:11px;font-weight:800;' +
+          'border-radius:9px;padding:2px 9px;">' + esc(L[0]) + '</span>' +
+        tick + refund +
+        '<span style="margin-left:auto;font-family:var(--font-mono);font-size:12px;color:#6b7280;">' +
+          esc(v.ref) + '</span>' +
+      '</div>' +
+      '<div style="font-size:13px;color:#374151;line-height:1.7;">' +
+        '<a href="tel:' + esc(v.phone || '') + '" style="font-weight:800;">' +
+          esc(v.phone || 'नंबर नहीं') + '</a>' +
+        ' · ' + esc(v.village || '—') + ', ' + esc(v.district || '—') +
+        ' · पहचान: ' + esc(v.id_kind_hi || v.id_kind || '—') +
+        ' · ' + esc(paid) + days +
+      '</div>' + note + why +
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">' +
+        '<button class="btn btn-secondary" onclick="vfCollect(\'' + esc(v.ref) + '\')">₹ माँगें</button>' +
+        '<button class="btn btn-secondary" onclick="vfPayment(\'' + esc(v.ref) + '\')">₹ मिला</button>' +
+        '<button class="btn btn-primary" onclick="vfApprove(\'' + esc(v.ref) + '\')">✓ टिक दें</button>' +
+        '<button class="btn btn-secondary" onclick="vfReject(\'' + esc(v.ref) + '\')">✕ मना करें</button>' +
+        refundBtn +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function vfCollect(ref) {
+  try {
+    const r = await fetch(API + '/admin/verifications/' + encodeURIComponent(ref) + '/collect',
+                          { headers: getAuthHeader() });
+    const j = await r.json();
+    const d = j.data || {};
+    if (!d.configured) { showToast('KM_UPI_ID सेट नहीं है'); return; }
+    // Same shape as the dealer collect modal: the QR, the raw VPA as plain
+    // copyable text, and a ready-to-send Hindi message.
+    const w = window.open('', '_blank', 'width=420,height=700');
+    if (!w) { showToast('पॉपअप ब्लॉक हो गया'); return; }
+    w.document.write(
+      '<title>₹' + (d.amount || '') + ' — ' + esc(ref) + '</title>' +
+      '<div style="font-family:system-ui;text-align:center;padding:18px;">' +
+        '<div style="font-size:30px;font-weight:800;color:#1a3c2e;">₹' + (d.amount || '') + '</div>' +
+        '<div style="margin:12px 0;">' + (d.qr_svg || '') + '</div>' +
+        '<div style="font-size:15px;font-weight:700;word-break:break-all;">' + esc(d.vpa || '') + '</div>' +
+        '<div style="font-family:monospace;margin-top:8px;">' + esc(ref) + '</div>' +
+        '<textarea style="width:100%;height:190px;margin-top:14px;font-size:12px;">' +
+          esc(d.whatsapp || '') + '</textarea>' +
+      '</div>');
+  } catch (e) {
+    showToast('नहीं हो पाया');
+  }
+}
+
+async function vfPayment(ref) {
+  const amt = prompt('कितना पैसा आया? (बैंक ऐप में जो दिखा, वही)');
+  if (!amt) return;
+  const utr = prompt('UTR / reference (ज़रूरी नहीं)') || '';
+  await vfPost(ref, 'payment', { amount: amt, ref: utr }, '₹ दर्ज हो गया — अब फ़ोन करें');
+}
+
+async function vfApprove(ref) {
+  const v = _vfRows.find(function (x) { return x.ref === ref; }) || {};
+  // This confirm IS the control. Everything else on the screen is bookkeeping;
+  // this button publishes a claim about a named person.
+  if (!confirm('क्या आपने ' + (v.phone || 'इस नंबर') + ' पर फ़ोन करके पहचान जाँच ली है?\n\n' +
+               'टिक का मतलब है कि कृषि मित्र ने खुद जाँचा है।')) return;
+  await vfPost(ref, 'approve', {}, '✓ टिक चालू हो गया');
+}
+
+async function vfReject(ref) {
+  const reason = prompt('क्यों मना कर रहे हैं? (किसान को यही दिखेगा)');
+  if (reason === null) return;
+  await vfPost(ref, 'reject', { reason: reason },
+               'मना दर्ज हो गया — पैसा आया हो तो वापस भेजें');
+}
+
+async function vfRefund(ref) {
+  if (!confirm('पैसा सच में वापस भेज दिया?')) return;
+  await vfPost(ref, 'refund', {}, 'रिफंड दर्ज हो गया');
+}
+
+async function vfPost(ref, action, payload, okMsg) {
+  try {
+    const r = await fetch(API + '/admin/verifications/' + encodeURIComponent(ref) + '/' + action, {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, getAuthHeader()),
+      body: JSON.stringify(payload || {}),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.success) throw new Error(j.detail || 'failed');
+    showToast(okMsg);
+    loadVerifications();
+  } catch (e) {
+    showToast('नहीं हो पाया — ' + String(e.message || e));
   }
 }
 </script>

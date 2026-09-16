@@ -4720,7 +4720,7 @@ renderCardDates();
   const API = window.KRASHIMITRA_API_BASE ||
     (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)
       ? 'http://' + location.hostname + ':8000'
-      : 'https://krashi-mitra-v1-p099.onrender.com');
+      : location.origin);
   let meta;
   try {
     const res = await fetch(`${API}/articles/meta`);

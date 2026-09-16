@@ -155,13 +155,39 @@ _ARTICLE_CACHE = {
     # response is only cached when the origin opts in, and Googlebot crawling
     # through Render's cold starts is what caps how fast a page gets indexed.
     "Cache-Control": "public, max-age=300",
-    "Netlify-CDN-Cache-Control":
-        "public, durable, max-age=1800, stale-while-revalidate=86400",
+    "CDN-Cache-Control":
+        "public, max-age=1800, stale-while-revalidate=86400",
 }
 
 
 def _serve(path: Path) -> HTMLResponse:
     return HTMLResponse(path.read_text(encoding="utf-8"), headers=_ARTICLE_CACHE)
+
+
+def _article_file(slug: str) -> Path | None:
+    """The file behind a canonical slug, whatever case it was committed in.
+
+    The canonical URL is the lowercased stem — sitemap.py publishes it that
+    way and _scan() keys on it — but five articles were committed with capital
+    letters in the filename (DAP-guide-up, MOP-guide, PM-kisan-samman-nidhi,
+    motha-ghaas-UP, soyabean-MP-guide). A case-insensitive filesystem hides
+    that locally; on Render's Linux disk those five canonical URLs 404'd, and
+    the _redirects 301 from the .html form pointed straight at the 404.
+
+    Exact match first, so nothing that already resolved changes. The scan only
+    runs on a miss, and a miss is either a crawler on a dead URL or an article
+    the DB restore below is about to re-lay.
+    """
+    exact = _ARTICLES_DIR / f"{slug}.html"
+    if exact.is_file():
+        return exact
+    try:
+        for path in _ARTICLES_DIR.glob("*.html"):
+            if path.stem.lower() == slug:
+                return path
+    except OSError:
+        pass
+    return None
 
 
 @router.get("/articles/{slug}")
@@ -178,8 +204,8 @@ def article_page(slug: str):
     if canon != slug:
         return RedirectResponse(f"/articles/{canon}", status_code=301)
 
-    path = _ARTICLES_DIR / f"{slug}.html"
-    if path.is_file():
+    path = _article_file(slug)
+    if path is not None:
         return _serve(path)
 
     # Missing file, live row: the boot restore did not run or failed, and this

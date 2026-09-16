@@ -2152,3 +2152,186 @@ async def record_dealer_payment(
     if not row:
         raise HTTPException(404, "Unknown dealer")
     return {"success": True, "counts": dealers.counts(db), "funnel": dealers.funnel(db)}
+
+
+# ── Blue-tick verification queue ─────────────────────────────
+# The badge tells every buyer on the site that KrashiMitra checked this seller.
+# Everything below is the human half of that claim: the fee buys the review,
+# and only `approve` — after the phone call — sets users.seller_verified.
+# See backend/services/seller_verify.py for why that split is not negotiable.
+
+@router.get("/verifications")
+def list_verifications(
+    status: str = Query("", max_length=20),
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """The queue, newest first. `paid` rows are the ones owed a phone call."""
+    from backend.database.db import SellerVerification, User, UserProfile
+    from backend.services import seller_verify
+
+    seller_verify.expire_due(db)
+
+    q = db.query(SellerVerification)
+    if status and status in seller_verify.STATUSES:
+        q = q.filter(SellerVerification.status == status)
+    rows = q.order_by(SellerVerification.updated_at.desc()).limit(300).all()
+
+    users = {}
+    if rows:
+        ids = {r.user_id for r in rows}
+        users = {u.id: u for u in db.query(User).filter(User.id.in_(ids)).all()}
+
+    items = []
+    for r in rows:
+        u = users.get(r.user_id)
+        items.append({
+            "ref":        r.ref,
+            "user_id":    r.user_id,
+            "email":      u.email if u else None,
+            "verified_now": bool(u.seller_verified) if u else False,
+            "status":     r.status,
+            "full_name":  r.full_name,
+            "phone":      r.phone,
+            "village":    r.village,
+            "district":   r.district,
+            "state":      r.state,
+            "id_kind":    r.id_kind,
+            "id_kind_hi": seller_verify.ID_KIND_HI.get(r.id_kind or "", ""),
+            "note":       r.note,
+            "fee_amount": r.fee_amount,
+            "paid_at":    r.paid_at.isoformat() if r.paid_at else None,
+            "paid_ref":   r.paid_ref,
+            "refunded_at": r.refunded_at.isoformat() if r.refunded_at else None,
+            "refund_due": seller_verify.refund_due(r),
+            "reject_reason": r.reject_reason,
+            "reviewed_by": r.reviewed_by,
+            "valid_until": r.valid_until.isoformat() if r.valid_until else None,
+            "days_left":  seller_verify.days_left(r),
+            "applied_at": r.created_at.isoformat() if r.created_at else None,
+            "pay_url":    f"https://krashimitra.in/verify",
+        })
+
+    counts = {}
+    for s in seller_verify.STATUSES:
+        counts[s] = db.query(SellerVerification).filter(
+            SellerVerification.status == s).count()
+    return {"success": True, "data": {"items": items, "counts": counts,
+                                      "fee": seller_verify.fee(),
+                                      "months": seller_verify.months()}}
+
+
+@router.get("/verifications/{ref}/collect")
+def verification_collect(
+    ref: str,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """QR + link + a ready-to-send WhatsApp message for one application."""
+    from backend.routes.verify import _pay_pack
+    from backend.services import seller_verify
+    from backend.utils.hindi_translit import readable
+
+    row = seller_verify.by_ref(db, ref)
+    if not row:
+        raise HTTPException(404, "Unknown application")
+    pack = _pay_pack(row)
+    name = (row.full_name or "").strip()
+    pack["whatsapp"] = (
+        f"नमस्ते {name}, कृषि मित्र से।\n\n"
+        f"नीले टिक के सत्यापन का शुल्क ₹{pack['amount']} है "
+        f"({seller_verify.months()} महीने के लिए)।\n"
+        f"UPI: {pack['vpa']}\n"
+        f"आवेदन नंबर: {row.ref}\n\n"
+        f"शुल्क मिलने के बाद हम आपको इसी नंबर पर फ़ोन करेंगे और जाँच पूरी होते ही "
+        f"टिक चालू कर देंगे। जाँच में जानकारी गलत निकली तो पूरा शुल्क वापस।\n"
+        f"https://krashimitra.in/verify"
+    )
+    return {"success": True, "data": pack}
+
+
+@router.post("/verifications/{ref}/payment")
+def record_verification_payment(
+    ref:     str,
+    payload: dict,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Money arrived. Hand-entered from the bank app — there is no callback.
+
+    Deliberately does NOT grant the badge: see approve() below. A farmer who
+    has paid is owed a phone call, not a tick.
+    """
+    from backend.services import seller_verify, upi
+
+    amount = upi.clean_amount(payload.get("amount"), default=0)
+    if amount < upi.MIN_AMOUNT:
+        raise HTTPException(
+            400, f"Enter the amount actually received (₹{upi.MIN_AMOUNT}–₹{upi.MAX_AMOUNT})")
+    row = seller_verify.record_payment(db, ref, amount, payload.get("ref") or "")
+    if not row:
+        raise HTTPException(404, "Unknown application")
+    return {"success": True, "data": {"status": row.status, "paid": True}}
+
+
+@router.post("/verifications/{ref}/approve")
+def approve_verification(
+    ref:     str,
+    payload: dict = None,
+    _:  str      = Depends(require_admin),
+    db: Session  = Depends(admin_db),
+):
+    """Grant the blue tick. The one endpoint that may set seller_verified.
+
+    Named for the phone call it implies. If you have not spoken to this person
+    and seen the identity they named, this is not the button.
+    """
+    from backend.services import seller_verify
+
+    by = ((payload or {}).get("by") or "admin")
+    row = seller_verify.approve(db, ref, by=by)
+    if not row:
+        raise HTTPException(404, "Unknown application")
+    return {"success": True, "data": {
+        "status": row.status,
+        "valid_until": row.valid_until.isoformat() if row.valid_until else None,
+        "days_left": seller_verify.days_left(row),
+    }}
+
+
+@router.post("/verifications/{ref}/reject")
+def reject_verification(
+    ref:     str,
+    payload: dict = None,
+    _:  str      = Depends(require_admin),
+    db: Session  = Depends(admin_db),
+):
+    """Refuse the badge and clear it if it was on. Marks the refund due.
+
+    The fee bought a review; the review happened and the answer was no, so the
+    money goes back. Send it, then hit /refund to record that you did.
+    """
+    from backend.services import seller_verify
+
+    payload = payload or {}
+    row = seller_verify.reject(db, ref, reason=payload.get("reason") or "",
+                               by=payload.get("by") or "admin")
+    if not row:
+        raise HTTPException(404, "Unknown application")
+    return {"success": True, "data": {"status": row.status,
+                                      "refund_due": seller_verify.refund_due(row)}}
+
+
+@router.post("/verifications/{ref}/refund")
+def record_verification_refund(
+    ref: str,
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """The refund actually went out. Hand-entered, same rule as paid_at."""
+    from backend.services import seller_verify
+
+    row = seller_verify.record_refund(db, ref)
+    if not row:
+        raise HTTPException(404, "Unknown application")
+    return {"success": True, "data": {"refunded_at": row.refunded_at.isoformat()}}

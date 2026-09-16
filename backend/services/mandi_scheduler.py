@@ -149,6 +149,29 @@ def _db_write_check():
         return None
 
 
+def _expire_badges():
+    """Take the blue tick off sellers whose verification window has run out.
+
+    Rides along here rather than starting a scheduler of its own — it is one
+    cheap UPDATE a day. It has to be on a timer at all because the badge is a
+    published claim: krashi_bajar renders it on every card and share.py puts it
+    in the WhatsApp preview, and neither goes near the row that knows the window
+    has ended. Without this, "verified" would keep being asserted until the
+    seller happened to open his own /verify page.
+    """
+    try:
+        from backend.database.db import SessionLocal
+        from backend.services import seller_verify
+        db = SessionLocal()
+        try:
+            return seller_verify.expire_due(db)
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Badge expiry sweep failed (non-fatal): {e}")
+        return None
+
+
 def _register_job():
     """
     Register the mandi refresh job. data.gov wipes the daily feed overnight
@@ -218,7 +241,19 @@ def _register_job():
         misfire_grace_time = None,
     )
 
-    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + 3-hourly DB write canary")
+    # Blue-tick expiry, once a day. See _expire_badges.
+    scheduler.add_job(
+        func               = _expire_badges,
+        trigger            = CronTrigger(hour=4, minute=20, timezone=IST),
+        id                 = "seller_badge_expiry",
+        name               = "Seller blue-tick expiry sweep — daily 04:20 IST",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
+        misfire_grace_time = None,
+    )
+
+    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + 3-hourly DB write canary + daily badge expiry")
 
 
 async def start_scheduler():

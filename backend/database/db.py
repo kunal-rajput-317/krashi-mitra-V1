@@ -5,6 +5,7 @@
 
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, text, UniqueConstraint, ForeignKey, Index, select
 from sqlalchemy.orm import sessionmaker, declarative_base, deferred
+from sqlalchemy.pool import NullPool
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -29,20 +30,68 @@ if DATABASE_URL.startswith("postgresql") and "sslmode" not in DATABASE_URL:
     separator = "&" if "?" in DATABASE_URL else "?"
     DATABASE_URL += f"{separator}sslmode=require"
 
-# Log host only — never the credentials (they were leaking into Render logs)
-_safe_host = DATABASE_URL.split("@")[-1].split("?")[0] if "@" in DATABASE_URL else "local"
-log.info(f"[DB] connecting to: ...@{_safe_host}")
-
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
-engine       = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=10,           # concurrent connections (default was 5 — too few for 14k-page crawl traffic)
-    max_overflow=15,        # burst headroom
-    pool_timeout=20,        # seconds to wait for a free slot before erroring (default 30)
-    pool_recycle=300,       # recycle connections every 5 min — Neon's pooler can drop idle ones
-)
+# ── Connection lifetime, and why there is no pool ────────────
+# Neon suspends a compute only when it has ZERO open connections. SQLAlchemy's
+# default QueuePool never closes an idle connection in the background —
+# `pool_recycle` is evaluated at checkout, not on a timer — so the pool alone
+# held the compute awake around the clock. The arithmetic that settles it: the
+# minimum compute is 0.25 CU and 0.25 x 24h = 6.0 CU-hrs/day, against a free
+# allowance of 100/month = 3.3/day. The burn was idle-awake time, not query
+# load, which is why trimming rows never helped and why no fresh free account
+# ever survived more than ~15 days (100 / 6.5).
+#
+# NullPool closes the connection when the Session is closed, so between
+# requests nothing holds the compute up and it can actually scale to zero.
+#
+# The cost is a fresh TCP + TLS + auth handshake per session. That is what
+# `_pooler_url` below is for: Neon's PgBouncer endpoint keeps its own warm
+# server-side connections, so our connect stays cheap while the compute is
+# still free to suspend. psycopg2 uses no server-side prepared statements, so
+# transaction-mode pooling is safe for this app.
+#
+# Set KM_DB_DIRECT=1 to bypass the pooler (session-level features, or if a
+# migration ever needs a dedicated backend); the NullPool behaviour stays.
+def _pooler_url(url: str) -> str:
+    """Point a Neon URL at its `-pooler` twin. Any other host is unchanged.
+
+    `ep-foo-123.us-east-2.aws.neon.tech` -> `ep-foo-123-pooler.us-east-2.aws.neon.tech`
+    Split on the LAST "@" so a password containing one cannot break the parse.
+    """
+    if "@" not in url:
+        return url
+    head, tail = url.rsplit("@", 1)
+    cut = min((i for i in (tail.find("/"), tail.find("?")) if i != -1),
+              default=len(tail))
+    hostport, rest = tail[:cut], tail[cut:]
+    host, colon, port = hostport.partition(":")
+    if not host.endswith(".neon.tech"):
+        return url
+    label, dot, domain = host.partition(".")
+    if not dot or label.endswith("-pooler"):
+        return url
+    return f"{head}@{label}-pooler.{domain}{colon}{port}{rest}"
+
+
+_engine_kwargs: dict = {"poolclass": NullPool}
+
+if DATABASE_URL.startswith("postgresql"):
+    if os.getenv("KM_DB_DIRECT", "") not in ("1", "true", "yes"):
+        DATABASE_URL = _pooler_url(DATABASE_URL)
+    # A suspended Neon compute resumes in a few seconds; without a timeout a
+    # cold start can hang a request until the proxy gives up on it instead.
+    _engine_kwargs["connect_args"] = {
+        "connect_timeout": 15,
+        "application_name": "krashimitra",
+    }
+
+# Log host only — never the credentials (they were leaking into Render logs).
+# Printed after the rewrite above, so it names the host actually dialled.
+_safe_host = DATABASE_URL.split("@")[-1].split("?")[0] if "@" in DATABASE_URL else "local"
+log.info(f"[DB] connecting to: ...@{_safe_host} (NullPool)")
+
+engine       = create_engine(DATABASE_URL, **_engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base         = declarative_base()
 
@@ -960,6 +1009,64 @@ class BazarCommentLike(Base):
     __table_args__ = (
         UniqueConstraint("comment_id", "users_id", name="uq_bazar_comment_like"),
     )
+
+
+class SellerVerification(Base):
+    """One farmer's application for the blue tick.
+
+    The badge itself is still `users.seller_verified` — this table is the
+    paperwork behind it, not a second source of truth. That split matters: the
+    tick is read on every feed render and by share.py, and none of those want a
+    join.
+
+    THE FEE BUYS THE CHECK, NOT THE TICK. The page tells a buyer this seller was
+    verified by KrashiMitra, so the tick has to mean somebody actually looked.
+    Payment moves the row to `paid` and stops there; only `approve()` — a human,
+    after the call — sets the flag on `users`. Selling the badge itself would
+    make every tick on the site a claim the site could not defend.
+    """
+    __tablename__ = "seller_verifications"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer,
+                         ForeignKey("users.id", ondelete="CASCADE",
+                                    name="fk_seller_verifications_user_id"),
+                         nullable=False, unique=True, index=True)
+    # The thread tying a bank credit back to this row, exactly as a dealer's
+    # slug does: it is the UPI `tr` reference AND the key in the /verify URL.
+    ref         = Column(String, nullable=False, unique=True, index=True)
+    # applied → paid → approved | rejected; approved → expired when the window
+    # runs out. Never skips to approved without a human.
+    status      = Column(String, default="applied", index=True)
+
+    # What he says about himself. Checked on the call, never trusted on arrival.
+    full_name   = Column(String, nullable=True)
+    phone       = Column(String, nullable=True)
+    village     = Column(String, nullable=True)
+    district    = Column(String, nullable=True)
+    state       = Column(String, nullable=True)
+    id_kind     = Column(String, nullable=True)   # आधार / KCC / दुकान लाइसेंस …
+    note        = Column(Text,   nullable=True)
+
+    # Money. Only a human who saw the credit in the bank app writes these.
+    fee_amount  = Column(Integer,  nullable=True)
+    paid_at     = Column(DateTime, nullable=True)
+    paid_ref    = Column(String,   nullable=True)
+    refunded_at = Column(DateTime, nullable=True)
+
+    # The review. Only a human writes these too.
+    reviewed_at   = Column(DateTime, nullable=True)
+    reviewed_by   = Column(String,   nullable=True)
+    reject_reason = Column(String,   nullable=True)
+
+    # The badge window. An expiring tick keeps the claim current — a seller
+    # checked once in 2026 is not still "verified" three years later — and it
+    # is what creates the renewal conversation.
+    approved_at = Column(DateTime, nullable=True)
+    valid_until = Column(DateTime, nullable=True, index=True)
+
+    created_at  = Column(DateTime, default=datetime.utcnow)
+    updated_at  = Column(DateTime, default=datetime.utcnow)
 
 
 class BazarFollow(Base):

@@ -2781,16 +2781,20 @@ def _footer(note: str = "") -> str:
 </div></footer>"""
 
 
-# Netlify proxies /bhav/* and /product/* to Render but only caches a proxied
-# response when the origin opts in via Netlify-CDN-Cache-Control. 30 min at
-# the edge (prices move ~5x/day) plus a day of stale-while-revalidate keeps
-# Googlebot crawling 14k URLs off Render's cold-start latency — crawl speed
-# caps how fast the tree gets indexed. Browsers get 5 min so a farmer
+# The edge caches these only when the origin opts in. The header used to be
+# Netlify-CDN-Cache-Control, which Cloudflare ignores — so from the 16 Sep 2026
+# move to Cloudflare → Render until this line changed, every /bhav page was a
+# cache miss and Render paid for all 14k of them against a 5 GB/mo cap.
+# CDN-Cache-Control is the vendor-neutral spelling and both honour it.
+#
+# 30 min at the edge (prices move ~5x/day) plus a day of stale-while-revalidate
+# keeps Googlebot crawling 14k URLs off Render's cold-start latency — crawl
+# speed caps how fast the tree gets indexed. Browsers get 5 min so a farmer
 # refreshing still sees fresh numbers quickly.
 _CACHE_HEADERS = {
     "Cache-Control": "public, max-age=300",
-    "Netlify-CDN-Cache-Control":
-        "public, durable, max-age=1800, stale-while-revalidate=86400",
+    "CDN-Cache-Control":
+        "public, max-age=1800, stale-while-revalidate=86400",
 }
 
 
@@ -3772,7 +3776,7 @@ def bhav_sitemap():
            f'{body}\n</urlset>')
     return Response(content=xml, media_type="application/xml",
                     headers={"Cache-Control": "public, max-age=3600",
-                             "Netlify-CDN-Cache-Control":
+                             "CDN-Cache-Control":
                                  "public, durable, max-age=3600, "
                                  "stale-while-revalidate=86400"})
 
@@ -5273,7 +5277,7 @@ def _api_hub_rest():
     html = f'<div id="bhav-crop-tail"><h2>अन्य फसलें ({len(rest)})</h2><div class="chips">{chips}</div></div>'
     return JSONResponse({"ok": True, "html": html},
                         headers={"Cache-Control": "public, max-age=3600",
-                                 "Netlify-CDN-Cache-Control": "public, max-age=86400"})
+                                 "CDN-Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/bhav/api/hub-states")
@@ -5293,7 +5297,7 @@ def _api_hub_states():
     html = f'<div class="place-grid" id="bhav-state-grid">{state_cards}</div>'
     return JSONResponse({"ok": True, "html": html},
                         headers={"Cache-Control": "public, max-age=3600",
-                                 "Netlify-CDN-Cache-Control": "public, max-age=86400"})
+                                 "CDN-Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/bhav/api/tier2-extras/{c_slug}")
@@ -5339,7 +5343,7 @@ def _api_tier2_extras(c_slug: str):
     html = best_html + answer_lead
     return JSONResponse({"ok": True, "html": html},
                         headers={"Cache-Control": "public, max-age=300",
-                                 "Netlify-CDN-Cache-Control": "public, max-age=600"})
+                                 "CDN-Cache-Control": "public, max-age=600"})
 
 
 @router.get("/bhav/api/tier3-extras/{c_slug}/{s_slug}")
@@ -5395,7 +5399,7 @@ def _api_tier3_extras(c_slug: str, s_slug: str):
     html = top_html + answer_lead
     return JSONResponse({"ok": True, "html": html},
                         headers={"Cache-Control": "public, max-age=300",
-                                 "Netlify-CDN-Cache-Control": "public, max-age=600"})
+                                 "CDN-Cache-Control": "public, max-age=600"})
 
 
 @router.get("/bhav/api/tier4-extras/{c_slug}/{s_slug}/{d_slug}")
@@ -5450,7 +5454,7 @@ def _api_tier4_extras(c_slug: str, s_slug: str, d_slug: str):
 
     return JSONResponse({"ok": True, "html": better_html or ""},
                         headers={"Cache-Control": "public, max-age=300",
-                                 "Netlify-CDN-Cache-Control": "public, max-age=600"})
+                                 "CDN-Cache-Control": "public, max-age=600"})
 
 
 # ── seasonality (पिछले साल इसी समय / कब बेचें) ────────────────
@@ -5598,7 +5602,7 @@ def _api_season(c_slug: str, s_slug: str, d_slug: str):
 
     return JSONResponse({"ok": True, "html": html},
                         headers={"Cache-Control": "public, max-age=3600",
-                                 "Netlify-CDN-Cache-Control": "public, max-age=21600"})
+                                 "CDN-Cache-Control": "public, max-age=21600"})
 
 
 # ════════════════════════════════════════════════════════════

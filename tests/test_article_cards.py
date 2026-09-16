@@ -99,3 +99,38 @@ def test_slug_lookup_is_case_insensitive():
     """motha-ghaas-UP.html is not lowercase on disk. Windows hides that; Linux
     would skip the card silently."""
     assert ac.article_date("motha-ghaas-up") is not None
+
+
+# ── canonical slug resolution ────────────────────────────────────────
+
+def test_every_article_file_is_reachable_at_its_canonical_slug():
+    """The canonical URL is the lowercased stem; five files carry capitals.
+
+    Windows hides this (case-insensitive filesystem), Render's Linux disk does
+    not — /articles/dap-guide-up, /articles/mop-guide,
+    /articles/pm-kisan-samman-nidhi, /articles/motha-ghaas-up and
+    /articles/soyabean-mp-guide all 404'd in production while the _redirects
+    301 from the .html form pointed straight at them.
+    """
+    from pathlib import Path
+
+    from backend.routes.articles import _article_file
+
+    articles = Path(__file__).resolve().parents[1] / "frontend" / "articles"
+    missing = []
+    for path in articles.glob("*.html"):
+        if path.name == "index.html":
+            continue
+        slug = path.stem.lower()
+        if _article_file(slug) is None:
+            missing.append(slug)
+    assert not missing, f"canonical slugs with no file behind them: {missing}"
+
+
+def test_lookup_prefers_an_exact_filename_match():
+    """A miss triggers a directory scan; a hit must never pay for one, and an
+    exact name must never be beaten by a differently-cased sibling."""
+    from backend.routes.articles import _ARTICLES_DIR, _article_file
+
+    assert _article_file("dap-guide-up") == _ARTICLES_DIR / "DAP-guide-up.html"
+    assert _article_file("no-such-article-anywhere") is None

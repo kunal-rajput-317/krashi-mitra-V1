@@ -18,26 +18,33 @@
   if (location.port && location.port !== '5500' && location.port !== '3000' && location.port !== '5173' && location.port !== '8080') {
     defaultPort = location.port;
   }
-  // Production is served two ways: krashimitra.in (Netlify static + a handful
-  // of proxied paths in _redirects — bhav/product/share/alerts/sitemap/llms
-  // ONLY) and the Render host below (the FastAPI app serving its own
-  // frontend, same origin as the API). `location.origin` would be right on
-  // the Render domain but silently 404s everything else (login, signup,
-  // /auth/*, /profile, ...) on krashimitra.in since Netlify doesn't proxy
-  // those paths. Always hitting the Render URL directly works on both —
-  // it's a cross-origin call from krashimitra.in, but that origin is already
-  // in the backend's CORS allowlist.
+  // In production the API is on the SAME ORIGIN as the page, so ask the
+  // browser where it is instead of shipping an address.
   //
-  // ⚠️ DO NOT EDIT THE URL BELOW BY HAND. Render reassigns this subdomain
-  // every time the service is recreated (twice so far, each an outage). The
-  // value is owned by config/backend-origin.txt and written here by
-  //     python tools/set_backend_origin.py <new-url>
-  // which updates _redirects and every other page in the same pass. This file
-  // cannot read the config at request time — it must set the API base
-  // synchronously, before any page script runs, so it cannot await a fetch.
+  // This used to be a hardcoded Render URL, and the reason was real at the
+  // time: krashimitra.in was Netlify static, which proxied only a handful of
+  // paths (bhav/product/share/alerts/sitemap/llms), so location.origin would
+  // have 404'd login, signup, /auth/* and /profile. That stopped being true
+  // on 16 Sep 2026, when the site moved to Cloudflare DNS → Render and one
+  // origin began serving both the pages and the API.
+  //
+  // The hardcoded URL then cost an outage of its own. Render suspended the
+  // account that day; a new one came up on a new subdomain; the repo was
+  // updated in one command — and the DEPLOYED pages went on calling the dead
+  // host, because the address only moves when someone remembers to ship it.
+  // Every server-rendered page looked fine while every interactive feature —
+  // login, OTP, profile, KrashiBook, the bazar feed, मौसम — was dialling a
+  // suspended server. That failure mode is now structurally impossible: there
+  // is no address here to go stale.
+  //
+  // A backend on a DIFFERENT origin is still supported — set
+  // window.KRASHIMITRA_API_BASE before this script and it is left alone (see
+  // the early return above). config/backend-origin.txt still owns the
+  // absolute URL for everything that probes the site from outside: Python,
+  // both GitHub workflows, and the proxy lines in _redirects.
   window.KRASHIMITRA_API_BASE = isLocal
     ? location.protocol + '//' + (host || 'localhost') + ':' + defaultPort
-    : 'https://krashi-mitra-v1-p099.onrender.com';
+    : location.origin;
   window.KRASHIMITRA_IS_LOCAL = isLocal;
 
   console.log('[KrashiMitra] API base =', window.KRASHIMITRA_API_BASE);
@@ -274,7 +281,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Keep href in sync for hover/middle-click/right-click UX
     btn.href = "/profile.html";
 
-    const apiBase = window.KRASHIMITRA_API_BASE || 'https://krashi-mitra-v1-p099.onrender.com';
+    const apiBase = window.KRASHIMITRA_API_BASE || location.origin;
     const cachedAvatar = localStorage.getItem("user_avatar_url");
     if (cachedAvatar && cachedAvatar !== "null") {
       const src = cachedAvatar.startsWith("/") ? apiBase + cachedAvatar : cachedAvatar;
