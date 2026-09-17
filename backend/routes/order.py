@@ -22,7 +22,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.database.db import get_db, Order, User
-from backend.utils.auth_utils import decode_access_token
+# resolve_token_user_id, NOT decode_access_token — and it has to be imported.
+# _get_token_optional() below called it inside a bare `except Exception: pass`,
+# so the NameError it raised on every request was swallowed and the caller was
+# handed None: a logged-in farmer's pre-book came back 401 "पहले लॉगिन करें"
+# and his order history came back empty. Nothing in the UI could show that,
+# because the only page that posted orders (shop.html) was retired first.
+from backend.utils.auth_utils import resolve_token_user_id
 
 router = APIRouter(prefix="/order", tags=["order"])
 

@@ -949,6 +949,17 @@ class BazarPost(Base):
     quantity       = Column(Float,    nullable=True)
     unit           = Column(String,   default="क्विंटल")
     location       = Column(String,   nullable=True)   # denormalized "village, district"
+    # ── Where the crop actually IS, added 2026-09-17 with the composer's
+    # location block. Until then a listing inherited the poster's profile
+    # address, which most farmers never fill, so cards showed no place at all
+    # and the /bhav district slice below was always empty. `village` is his own
+    # spelling of the smallest place he would name; lat/lon are the map pin,
+    # the only one of the three a buyer can actually navigate to. All nullable:
+    # a row written before today genuinely has none of them, and a backfill
+    # would be a guess about someone else's field.
+    village        = Column(String,   nullable=True)
+    lat            = Column(Float,    nullable=True)
+    lon            = Column(Float,    nullable=True)
     # ── Structured place/crop, added 2026-07-28 so /bhav can serve a district
     # slice of this feed at /bhav/{crop}/{state}/{district}/kharidar.
     # `location` cannot do that job: it is one free-text "village, district"
@@ -1045,18 +1056,29 @@ class BazarCommentLike(Base):
 
 
 class SellerVerification(Base):
-    """One farmer's application for the blue tick.
+    """One farmer's membership in the blue tick, and the money behind it.
 
     The badge itself is still `users.seller_verified` — this table is the
     paperwork behind it, not a second source of truth. That split matters: the
     tick is read on every feed render and by share.py, and none of those want a
     join.
 
-    THE FEE BUYS THE CHECK, NOT THE TICK. The page tells a buyer this seller was
-    verified by KrashiMitra, so the tick has to mean somebody actually looked.
-    Payment moves the row to `paid` and stops there; only `approve()` — a human,
-    after the call — sets the flag on `users`. Selling the badge itself would
-    make every tick on the site a claim the site could not defend.
+    THE TICK IS A PAID MEMBERSHIP (changed 2026-09-18). It used to mean
+    "KrashiMitra checked this person by phone", and the fee bought that check.
+    It no longer claims anything about the seller — it means he pays for
+    KrashiMitra प्रीमियम, the same thing X's blue check means. So payment IS the
+    grant: `record_payment()` sets the flag, because that is now the whole
+    truth of the badge and no human review stands between the two.
+
+    WHICH MOVES THE LEGAL GUARD, IT DOES NOT REMOVE IT. The old rule protected
+    a claim about a person. The new rule protects the absence of one: nothing
+    the site publishes may read the tick as verification, identity or a
+    guarantee of the crop, the price or the deal. tests/test_seller_verification
+    sweeps the user-facing copy for exactly that.
+
+    `payment_claimed_at` is the farmer saying he sent the money, not the money
+    arriving. A upi:// hand-off reports nothing back, so a claim only moves the
+    row up the admin queue; a human who saw the bank credit writes `paid_at`.
     """
     __tablename__ = "seller_verifications"
 
@@ -1081,11 +1103,19 @@ class SellerVerification(Base):
     id_kind     = Column(String, nullable=True)   # आधार / KCC / दुकान लाइसेंस …
     note        = Column(Text,   nullable=True)
 
+    # Which term he bought: "m1" (1 month) or "m3" (3). NULL on rows written
+    # before the price table existed, and seller_verify.plan() reads NULL as
+    # the monthly plan — which is what every one of those rows actually was.
+    plan        = Column(String, nullable=True)
+
     # Money. Only a human who saw the credit in the bank app writes these.
     fee_amount  = Column(Integer,  nullable=True)
     paid_at     = Column(DateTime, nullable=True)
     paid_ref    = Column(String,   nullable=True)
     refunded_at = Column(DateTime, nullable=True)
+    # He says he sent it. Written from his own phone, so it grants nothing —
+    # it only tells the admin queue which row to confirm first.
+    payment_claimed_at = Column(DateTime, nullable=True)
 
     # The review. Only a human writes these too.
     reviewed_at   = Column(DateTime, nullable=True)
@@ -2291,6 +2321,12 @@ def _ensure_postgres_columns():
             ("updated_at",        "TIMESTAMP"),
             ("edit_count",        "INTEGER DEFAULT 0"),
             ("edit_window_start", "TIMESTAMP"),
+            # Added 2026-09-17 with the composer's location block. NULL on every
+            # existing row is the honest answer — those listings were posted
+            # with no way to say where the crop was.
+            ("village",           "VARCHAR"),
+            ("lat",               "FLOAT"),
+            ("lon",               "FLOAT"),
         ],
         # Added 2026-09-15 with replies and comment likes. parent_id stays NULL
         # on every existing row, which is correct — they are all top-level — and
@@ -2333,6 +2369,13 @@ def _ensure_postgres_columns():
         # backfills the truth rather than inventing a term nobody agreed to.
         "dukan_shops": [
             ("plan_months", "INTEGER DEFAULT 3"),
+        ],
+        # Added 2026-09-18 with the paid-membership tick. NULL on every existing
+        # row is the truth: nobody had a "I have sent the money" button to press
+        # before this, so no historical application ever made that claim.
+        "seller_verifications": [
+            ("payment_claimed_at", "TIMESTAMP"),
+            ("plan",               "VARCHAR"),
         ],
     }
 

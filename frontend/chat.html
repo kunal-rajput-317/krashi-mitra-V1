@@ -810,6 +810,28 @@ button.sidebar-drawer-link {
 }
 .img-preview-remove:hover { color: #c0392b; }
 
+/* ── Daily question cap note ─────────────────── */
+.chat-cap-note {
+  flex-shrink: 0;
+  display: none;
+  padding: 7px 20px;
+  background: var(--green-pale, #eaf4ee);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-light);
+  text-align: center;
+}
+.chat-cap-note.visible { display: block; }
+.chat-cap-note.spent {
+  background: #fdf3e7;
+  color: #8a5a1c;
+  font-weight: 600;
+}
+@media (max-width: 480px) {
+  .chat-cap-note { padding: 6px 12px; font-size: 11.5px; }
+}
+
 /* ── Input bar ───────────────────────────────────────────── */
 .chat-input-bar {
   flex-shrink: 0;
@@ -1255,6 +1277,9 @@ button.sidebar-drawer-link {
     <button class="img-preview-remove" onclick="removeImagePreview()">✕</button>
   </div>
 
+  <!-- daily question cap — filled by renderChatCap() -->
+  <div class="chat-cap-note" id="chat-cap-note"></div>
+
   <!-- input bar -->
   <div class="chat-input-bar">
     <div class="chat-input-wrap">
@@ -1335,6 +1360,9 @@ const TRANSLATIONS = {
     input_placeholder: "यहाँ लिखें या बोलें...",
     thinking:       "सोच रहे हैं...",
     maintenance_note: "AI अभी सुधार की प्रक्रिया में है — कुछ सवालों के जवाब सीमित मिल सकते हैं। जल्द ही पूरी सेवा वापस आएगी।",
+    cap_left:        "आज {n} सवाल बाकी हैं — सोच-समझकर पूछें।",
+    cap_spent:       "आज के {n} सवाल पूरे हो गए 🌾 कल फिर पूछें। तब तक मंडी भाव, मौसम और खेती की जानकारी देखें।",
+    cap_placeholder: "आज के सवाल पूरे हो गए — कल फिर आइए।",
   },
   en: {
     nav_chat:       "AI Advisor",
@@ -1366,6 +1394,9 @@ const TRANSLATIONS = {
     input_placeholder: "Type or speak here...",
     thinking:       "Thinking...",
     maintenance_note: "AI is under maintenance — some answers may be limited. Full service will be back soon.",
+    cap_left:        "{n} questions left today — ask the ones that matter.",
+    cap_spent:       "You’ve used all {n} questions for today 🌾 Come back tomorrow. Meanwhile, mandi prices, weather and farming guides are still open.",
+    cap_placeholder: "Today’s questions are used up — come back tomorrow.",
   },
   kn: {
     nav_chat:       "AI ಕೇಳಿ",
@@ -1397,6 +1428,9 @@ const TRANSLATIONS = {
     input_placeholder: "ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಮಾತನಾಡಿ...",
     thinking:       "ಯೋಚಿಸುತ್ತಿದ್ದೇವೆ...",
     maintenance_note: "AI ಸದ್ಯ ನಿರ್ವಹಣೆಯಲ್ಲಿದೆ — ಕೆಲವು ಉತ್ತರಗಳು ಸೀಮಿತವಾಗಿರಬಹುದು. ಪೂರ್ಣ ಸೇವೆ ಶೀಘ್ರದಲ್ಲೇ ಮರಳಲಿದೆ।",
+    cap_left:        "ಇಂದು {n} ಪ್ರಶ್ನೆಗಳು ಬಾಕಿ — ಯೋಚಿಸಿ ಕೇಳಿ.",
+    cap_spent:       "ಇಂದಿನ {n} ಪ್ರಶ್ನೆಗಳು ಮುಗಿದವು 🌾 ನಾಳೆ ಮತ್ತೆ ಕೇಳಿ. ಅಲ್ಲಿಯವರೆಗೆ ಮಂಡಿ ಬೆಲೆ, ಹವಾಮಾನ ಮತ್ತು ಕೃಷಿ ಮಾಹಿತಿ ನೋಡಿ.",
+    cap_placeholder: "ಇಂದಿನ ಪ್ರಶ್ನೆಗಳು ಮುಗಿದವು — ನಾಳೆ ಬನ್ನಿ.",
   }
 };
 
@@ -1437,6 +1471,7 @@ function setLang(lang) {
   });
   const inp = document.getElementById('chat-input');
   if (inp) inp.placeholder = tr.input_placeholder || '';
+  if (typeof renderChatCap === 'function') renderChatCap();
 }
 function t(key) {
   return (TRANSLATIONS[currentLang] || TRANSLATIONS.hi)[key] || key;
@@ -1463,6 +1498,66 @@ let isBotTyping      = false;
 let pendingImage     = null;
 let khojFallbackTimer = null;
 const CHAT_API_BASE  = window.KRASHIMITRA_API_BASE;
+
+// ════════════════════════════════════
+// DAILY QUESTION CAP  (temporary)
+// ════════════════════════════════════
+// Three AI questions a day. The server enforces the same cap per IP
+// (backend/routes/chatbot.py → AI_CHAT_DAILY_LIMIT); this counter only spares
+// the farmer a wasted round-trip and says it in their own language instead of
+// a raw 429. localStorage is per-device and clearable, so it is a courtesy,
+// never the guard — when the two disagree, the server's number wins below.
+let CHAT_DAILY_LIMIT = 3;
+
+function chatCapKey() {
+  const d = new Date();
+  const p = (v) => String(v).padStart(2, '0');
+  return `km_chat_used_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function chatAsked() {
+  try { return parseInt(localStorage.getItem(chatCapKey()), 10) || 0; }
+  catch (e) { return 0; }   // private mode / blocked storage — the server still caps
+}
+
+function setChatAsked(count) {
+  try {
+    const today = chatCapKey();
+    localStorage.setItem(today, String(count));
+    // yesterday's keys would pile up forever otherwise
+    Object.keys(localStorage)
+      .filter(k => k.indexOf('km_chat_used_') === 0 && k !== today)
+      .forEach(k => localStorage.removeItem(k));
+  } catch (e) {}
+}
+
+function chatCapSpent() { return chatAsked() >= CHAT_DAILY_LIMIT; }
+
+// Single place that paints the cap: the note above the input, the placeholder,
+// and whether the input and send button are live at all.
+function renderChatCap() {
+  const note  = document.getElementById('chat-cap-note');
+  const inp   = document.getElementById('chat-input');
+  const send  = document.getElementById('chat-send-btn');
+  const left  = Math.max(0, CHAT_DAILY_LIMIT - chatAsked());
+  const spent = left === 0;
+
+  if (note) {
+    note.textContent = (spent ? t('cap_spent') : t('cap_left'))
+      .replace('{n}', spent ? CHAT_DAILY_LIMIT : left);
+    note.classList.add('visible');
+    note.classList.toggle('spent', spent);
+  }
+  if (inp) {
+    inp.disabled = spent;
+    if (spent) inp.placeholder = t('cap_placeholder');
+  }
+  if (send && !isBotTyping) send.disabled = spent;
+  if (spent) {
+    const chips = document.getElementById('chat-suggestions');
+    if (chips) chips.style.display = 'none';
+  }
+}
 
 // ── Khoj fallback ──────────────────────────────────────────
 function showKhojFallback(query) {
@@ -1644,6 +1739,7 @@ async function sendChatMessage() {
   const text = inp.value.trim();
   if (!text && !pendingImage) return;
   if (isBotTyping) return;
+  if (chatCapSpent()) { renderChatCap(); showKhojFallback(text); return; }
   hideKhojFallback();
 
   // What farmers actually ask, and how much they lean on photo diagnosis.
@@ -1671,6 +1767,7 @@ async function sendChatMessage() {
   inp.value = '';
   inp.style.height = 'auto';
   chatHistory.push({ role: 'user', content: userContent.length === 1 ? userContent[0].text : userContent });
+  setChatAsked(chatAsked() + 1);   // counted on send, exactly as the server counts it
   showTyping();
 
   try {
@@ -1685,6 +1782,18 @@ async function sendChatMessage() {
         district: 'Uttar Pradesh'
       })
     });
+    // The server keeps its own per-IP tally; if it says today is done, believe
+    // it over our localStorage count (cleared storage, a second device, a
+    // shared connection) and re-lock the input.
+    const serverCap = parseInt(res.headers.get('X-Daily-Limit'), 10);
+    if (res.status === 429 && serverCap > 0) {
+      CHAT_DAILY_LIMIT = serverCap;
+      setChatAsked(serverCap);
+      removeTyping();
+      appendMessage('bot', t('cap_spent').replace('{n}', serverCap));
+      showKhojFallback(q);
+      return;
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
     const raw = (data.answer || data.message || '').trim();
@@ -1785,6 +1894,7 @@ function showTyping() {
 function removeTyping() {
   isBotTyping = false;
   document.getElementById('chat-send-btn').disabled = false;
+  renderChatCap();   // re-locks if that was today's last question
   document.getElementById('chat-loading-bar').classList.remove('active');
   const ti = document.getElementById('typing-indicator');
   if (ti) {

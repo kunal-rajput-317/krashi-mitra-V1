@@ -8,6 +8,7 @@ import os
 import time
 import threading
 from collections import defaultdict, deque
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import HTTPException, Request
@@ -109,6 +110,70 @@ def check_rate_limit(key: str, limit: int, window: int) -> Optional[int]:
 
         dq.append(now)
         return None
+
+
+# ── Daily caps ───────────────────────────────────────────────
+# Deliberately a separate store from the sliding window above. _prune() drops
+# any bucket whose newest hit is over an hour old, which would silently reset a
+# 24-hour counter the moment a farmer paused for lunch. A day bucket keys on the
+# IST calendar date instead: it resets at midnight India time and the whole map
+# is dropped in one go when the date rolls, so nothing needs pruning.
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+_daily: dict = {}
+_daily_date: str = ""
+_daily_lock = threading.Lock()
+
+
+def check_daily_limit(key: str, limit: int) -> Optional[int]:
+    """
+    Record a hit for `key` today. Returns None if allowed, else the seconds
+    remaining until the counter resets at IST midnight.
+    """
+    global _daily_date
+    now = datetime.now(IST)
+    today = now.strftime("%Y-%m-%d")
+
+    with _daily_lock:
+        if today != _daily_date:
+            _daily.clear()
+            _daily_date = today
+
+        if len(_daily) > _MAX_TRACKED_KEYS:
+            _daily.clear()   # under active abuse — reset rather than grow
+
+        used = _daily.get(key, 0)
+        if used >= limit:
+            midnight = (now + timedelta(days=1)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            return max(1, int((midnight - now).total_seconds()))
+
+        _daily[key] = used + 1
+        return None
+
+
+def daily_limit(bucket: str, limit: int, message: str):
+    """
+    FastAPI dependency factory for a per-IP, per-calendar-day cap.
+
+    Raises 429 with the caller-supplied `message` and an X-Daily-Limit header,
+    so a client can tell "you are out for today" apart from the ordinary
+    per-minute throttle and say so in the farmer's own words.
+    """
+    def _dep(request: Request):
+        retry = check_daily_limit(f"{bucket}:{client_ip(request)}", limit)
+        if retry is not None:
+            raise HTTPException(
+                status_code=429,
+                detail=message,
+                headers={
+                    "Retry-After":   str(retry),
+                    "X-Daily-Limit": str(limit),
+                },
+            )
+    return _dep
 
 
 def rate_limit(bucket: str, limit: int, window: int):

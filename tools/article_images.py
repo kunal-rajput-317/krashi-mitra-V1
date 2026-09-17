@@ -52,6 +52,7 @@ IMAGES = {
     "kapas-gulabi-sundi": "பருத்தி1.jpg",
     "dhan-bhura-fudka-up": "FARMERS ENGAGED IN RICE CULTIVATION, KUTTANAD.jpg",
     "dhan-jivanu-jhulsa-blb": "Apatani Rice Paddies.jpg",
+    "masoor-me-khad-kab-kitni": "Disc Harrow Seed Drill.jpg",
 
     # ── trees & agroforestry ──────────────────────────────────────────────
     "sagaun-teak-ki-kheti": "Forest plantation of Tectona grandis in Costa Rica (2017).jpg",

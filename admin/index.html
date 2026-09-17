@@ -3650,9 +3650,10 @@ body {
       <div class="page" id="page-verifications">
         <div class="page-header">
           <div class="page-title">
-            <h2>नीला टिक / Seller verification</h2>
-            <p>शुल्क जाँच का है, टिक का नहीं — <b>Approve</b> दबाने से पहले फ़ोन करें।
-               पैसा आया हो तो पहले <b>₹ मिला</b> दर्ज करें।</p>
+            <h2>नीला टिक / प्रीमियम सदस्यता</h2>
+            <p>टिक = भुगतान की हुई सदस्यता। कोई जाँच नहीं, कोई फ़ोन कॉल नहीं —
+               बैंक में पैसा दिखे तो <b>₹ मिला</b> दबाएँ, टिक उसी वक्त चालू हो जाता है।
+               <b>✕ टिक हटाएँ</b> सिर्फ़ किसी और के नाम से बने खाते या धोखे के लिए है।</p>
           </div>
           <div class="page-actions">
             <button class="btn btn-secondary" onclick="loadVerifications()" id="vf-refresh-btn">↻ Refresh</button>
@@ -3661,10 +3662,10 @@ body {
         <div class="card" style="padding:0;overflow:hidden;">
           <div style="display:flex;gap:6px;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
             <button class="btn btn-secondary vf-filter active" data-vf="" onclick="setVfFilter('',this)">सभी</button>
-            <button class="btn btn-secondary vf-filter" data-vf="paid" onclick="setVfFilter('paid',this)">फ़ोन करना है</button>
-            <button class="btn btn-secondary vf-filter" data-vf="applied" onclick="setVfFilter('applied',this)">शुल्क बाकी</button>
-            <button class="btn btn-secondary vf-filter" data-vf="approved" onclick="setVfFilter('approved',this)">चालू</button>
-            <button class="btn btn-secondary vf-filter" data-vf="rejected" onclick="setVfFilter('rejected',this)">मना</button>
+            <button class="btn btn-secondary vf-filter" data-vf="applied" onclick="setVfFilter('applied',this)">भुगतान बाकी</button>
+            <button class="btn btn-secondary vf-filter" data-vf="paid" onclick="setVfFilter('paid',this)">चालू (भुगतान)</button>
+            <button class="btn btn-secondary vf-filter" data-vf="approved" onclick="setVfFilter('approved',this)">चालू (मुफ़्त)</button>
+            <button class="btn btn-secondary vf-filter" data-vf="rejected" onclick="setVfFilter('rejected',this)">हटाया</button>
             <button class="btn btn-secondary vf-filter" data-vf="expired" onclick="setVfFilter('expired',this)">खत्म</button>
           </div>
           <div id="vf-list" style="padding:14px;">लोड हो रहा है…</div>
@@ -16996,6 +16997,8 @@ async function handleFestImgUpload(input) {
   try {
     const res = await fetch(`${API}/api/festival/upload-image`, {
       method: 'POST',
+      // No Content-Type: fetch sets the multipart boundary itself.
+      headers: getAuthHeader(),
       body: formData
     });
     const d = await res.json();
@@ -17026,7 +17029,7 @@ async function generateFestiveAiImage() {
   try {
     const res = await fetch(`${API}/api/festival/generate-image`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({
         festival_name: festName,
         theme_prompt: document.getElementById('fest-summary')?.value || ''
@@ -17100,7 +17103,7 @@ async function saveFestivalConfig() {
   try {
     const res = await fetch(`${API}/api/festival/config`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify(payload)
     });
     const d = await res.json();
@@ -17146,12 +17149,20 @@ function testFestivalPreviewModal() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   नीला टिक — the seller verification queue.
+   नीला टिक — the premium-membership queue.
 
-   This screen is the human half of a claim the site publishes: every ticked
-   seller is described to buyers as "KrashiMitra द्वारा सत्यापित". Approve is
-   therefore not a formality — it asserts that somebody rang the number on the
-   row and it was him. Paying only gets a farmer INTO this list.
+   Changed 2026-09-18: the tick used to mean "KrashiMitra checked this seller
+   by phone", and this screen was where that check was recorded. It is now a
+   paid membership that claims nothing about its holder, so there is no call to
+   make. The only human judgement left is the one UPI cannot automate — did the
+   money actually land — which makes "₹ मिला" the button that grants the badge.
+
+   Rows come back sorted by who is waiting: a farmer who has pressed
+   "मैंने पैसे भेज दिए" and has no tick yet is always at the top, and the nav
+   badge counts exactly those.
+
+   "✓ मुफ़्त टिक" gives a membership away — it is the owner's comp, not an
+   approval of anybody. "✕ टिक हटाएँ" is the impersonation kill switch.
    ══════════════════════════════════════════════════════════════ */
 let _vfFilter = '';
 let _vfRows = [];
@@ -17164,11 +17175,20 @@ function setVfFilter(v, el) {
 }
 
 const VF_LABEL = {
-  applied:  ['शुल्क बाकी', '#b45309', '#fff8e1'],
-  paid:     ['फ़ोन करना है', '#1e4e79', '#e8f4fd'],
-  approved: ['चालू', '#2d6a4f', '#d8f3dc'],
-  rejected: ['मना', '#b91c1c', '#fee2e2'],
+  applied:  ['भुगतान बाकी', '#b45309', '#fff8e1'],
+  paid:     ['चालू · भुगतान', '#2d6a4f', '#d8f3dc'],
+  approved: ['चालू · मुफ़्त', '#1e4e79', '#e8f4fd'],
+  rejected: ['हटाया', '#b91c1c', '#fee2e2'],
   expired:  ['खत्म', '#6b7280', '#f1f5f9'],
+};
+
+/* The money, which is a different axis from the membership status: a row can
+   be "भुगतान बाकी" with the farmer insisting he has paid, and that pair is the
+   single most urgent state on this screen. */
+const VF_PAY = {
+  pending:  ['₹ बाकी', '#6b7280', '#f1f5f9'],
+  claimed:  ['₹ दावा — जाँचें', '#b45309', '#ffedd5'],
+  received: ['₹ मिला', '#2d6a4f', '#d8f3dc'],
 };
 
 async function loadVerifications() {
@@ -17183,10 +17203,11 @@ async function loadVerifications() {
     _vfRows = (j.data && j.data.items) || [];
     const counts = (j.data && j.data.counts) || {};
 
-    // The badge counts what is owed a phone call, not the size of the list.
+    // The badge counts farmers who say they have paid and have no tick yet —
+    // the only state on this screen where somebody is waiting on us.
     const badge = document.getElementById('vf-nav-badge');
     if (badge) {
-      const n = counts.paid || 0;
+      const n = (j.data && j.data.awaiting_confirm) || 0;
       badge.textContent = n;
       badge.hidden = !n;
     }
@@ -17206,9 +17227,14 @@ function renderVerifications() {
   }
   box.innerHTML = _vfRows.map(function (v) {
     const L = VF_LABEL[v.status] || ['—', '#6b7280', '#f1f5f9'];
-    const paid = v.paid_at ? ('₹' + (v.fee_amount || '?') + ' मिला') : 'शुल्क नहीं आया';
+    const P = VF_PAY[v.pay_status] || VF_PAY.pending;
+    const pay = '<span style="background:' + P[2] + ';color:' + P[1] + ';font-size:11px;' +
+      'font-weight:800;border-radius:9px;padding:2px 9px;">' + esc(P[0]) + '</span>';
+    const plan = '<span style="font-size:11.5px;font-weight:700;color:#6b7280;">' +
+      esc(v.plan_hi || '') + ' · ₹' + (v.fee_amount || v.plan_price || '?') + '</span>';
+    const paid = v.paid_at ? ('₹' + (v.fee_amount || '?') + ' मिला') : 'पैसा नहीं दिखा';
     const tick = v.verified_now
-      ? '<span style="color:#1d9bf0;font-weight:800;font-size:12px;">✓ टिक चालू</span>' : '';
+      ? '<span style="color:#0284c7;font-weight:800;font-size:12px;">✓ टिक चालू</span>' : '';
     const refund = v.refund_due
       ? '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:800;' +
         'border-radius:9px;padding:2px 9px;">रिफंड बाकी</span>' : '';
@@ -17227,7 +17253,7 @@ function renderVerifications() {
         '<b style="font-size:15px;">' + esc(v.full_name || '—') + '</b>' +
         '<span style="background:' + L[2] + ';color:' + L[1] + ';font-size:11px;font-weight:800;' +
           'border-radius:9px;padding:2px 9px;">' + esc(L[0]) + '</span>' +
-        tick + refund +
+        pay + tick + refund +
         '<span style="margin-left:auto;font-family:var(--font-mono);font-size:12px;color:#6b7280;">' +
           esc(v.ref) + '</span>' +
       '</div>' +
@@ -17235,14 +17261,15 @@ function renderVerifications() {
         '<a href="tel:' + esc(v.phone || '') + '" style="font-weight:800;">' +
           esc(v.phone || 'नंबर नहीं') + '</a>' +
         ' · ' + esc(v.village || '—') + ', ' + esc(v.district || '—') +
-        ' · पहचान: ' + esc(v.id_kind_hi || v.id_kind || '—') +
         ' · ' + esc(paid) + days +
+      '</div>' +
+      '<div style="margin-top:4px;">' + plan +
       '</div>' + note + why +
       '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">' +
         '<button class="btn btn-secondary" onclick="vfCollect(\'' + esc(v.ref) + '\')">₹ माँगें</button>' +
-        '<button class="btn btn-secondary" onclick="vfPayment(\'' + esc(v.ref) + '\')">₹ मिला</button>' +
-        '<button class="btn btn-primary" onclick="vfApprove(\'' + esc(v.ref) + '\')">✓ टिक दें</button>' +
-        '<button class="btn btn-secondary" onclick="vfReject(\'' + esc(v.ref) + '\')">✕ मना करें</button>' +
+        '<button class="btn btn-primary" onclick="vfPayment(\'' + esc(v.ref) + '\')">₹ मिला → टिक चालू</button>' +
+        '<button class="btn btn-secondary" onclick="vfApprove(\'' + esc(v.ref) + '\')">✓ मुफ़्त टिक</button>' +
+        '<button class="btn btn-secondary" onclick="vfReject(\'' + esc(v.ref) + '\')">✕ टिक हटाएँ</button>' +
         refundBtn +
       '</div>' +
     '</div>';
@@ -17276,26 +17303,36 @@ async function vfCollect(ref) {
 }
 
 async function vfPayment(ref) {
-  const amt = prompt('कितना पैसा आया? (बैंक ऐप में जो दिखा, वही)');
+  const v = _vfRows.find(function (x) { return x.ref === ref; }) || {};
+  // This is now the grant, so the confirm asks the one question that matters:
+  // a tick given on a payment that never arrived is a month given away free.
+  if (!confirm('बैंक ऐप में पैसा आया हुआ दिख रहा है?\n\n' +
+               '"ठीक है" दबाने पर ' + (v.full_name || 'इस सदस्य') + ' का नीला टिक ' +
+               'उसी वक्त चालू हो जाएगा — ' + (v.plan_hi || '') + '।')) return;
+  const amt = prompt('कितना पैसा आया? (बैंक ऐप में जो दिखा, वही)',
+                     String(v.fee_amount || v.plan_price || ''));
   if (!amt) return;
   const utr = prompt('UTR / reference (ज़रूरी नहीं)') || '';
-  await vfPost(ref, 'payment', { amount: amt, ref: utr }, '₹ दर्ज हो गया — अब फ़ोन करें');
+  await vfPost(ref, 'payment', { amount: amt, ref: utr }, '₹ दर्ज — नीला टिक चालू हो गया');
 }
 
 async function vfApprove(ref) {
   const v = _vfRows.find(function (x) { return x.ref === ref; }) || {};
-  // This confirm IS the control. Everything else on the screen is bookkeeping;
-  // this button publishes a claim about a named person.
-  if (!confirm('क्या आपने ' + (v.phone || 'इस नंबर') + ' पर फ़ोन करके पहचान जाँच ली है?\n\n' +
-               'टिक का मतलब है कि कृषि मित्र ने खुद जाँचा है।')) return;
-  await vfPost(ref, 'approve', {}, '✓ टिक चालू हो गया');
+  // Not an approval of anybody — a membership handed over for nothing. The
+  // confirm says so, because the button next to it is the one that takes money.
+  if (!confirm('बिना पैसे के टिक दे रहे हैं?\n\n' +
+               (v.full_name || 'इस सदस्य') + ' को ' + (v.plan_hi || '') +
+               ' की मुफ़्त सदस्यता मिल जाएगी। पैसा आया है तो "₹ मिला" दबाएँ।')) return;
+  await vfPost(ref, 'approve', {}, '✓ मुफ़्त टिक चालू हो गया');
 }
 
 async function vfReject(ref) {
-  const reason = prompt('क्यों मना कर रहे हैं? (किसान को यही दिखेगा)');
+  // The kill switch. A paid badge is still not sellable to someone posing as
+  // somebody else, and a term cut short owes the money back.
+  const reason = prompt('टिक क्यों हटा रहे हैं? (सदस्य को यही दिखेगा)');
   if (reason === null) return;
   await vfPost(ref, 'reject', { reason: reason },
-               'मना दर्ज हो गया — पैसा आया हो तो वापस भेजें');
+               'टिक हटा दिया — पैसा आया हो तो वापस भेजें');
 }
 
 async function vfRefund(ref) {

@@ -19,6 +19,16 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.services.news_auto_service import get_published_posts
 
+
+# /sponsor is held back until its figures are verified by hand, and
+# backend/routes/sponsor.py is gitignored until then. Ask the import system
+# rather than hard-coding the answer: the day the file is un-ignored the footer
+# link returns on its own, with no second edit to remember. find_spec does not
+# execute the module.
+def _sponsor_live() -> bool:
+    import importlib.util
+    return importlib.util.find_spec("backend.routes.sponsor") is not None
+
 logger = logging.getLogger("krishi.news_page_ssr")
 
 router = APIRouter(tags=["Krashi News SSR"])
@@ -1515,6 +1525,7 @@ def _news_footer() -> str:
 <a href="{SITE}/weather">मौसम</a>
 <a href="{SITE}/krashi_news">कृषि समाचार</a>
 <a href="{SITE}/chat">AI सहायक</a>
+{f'<a href="{SITE}/sponsor">विज्ञापन दें</a>' if _sponsor_live() else ''}
 <a href="{SITE}/donate">सहयोग करें</a>
 </nav>
 <div class="km-footer-note">ताज़ा कृषि समाचार, मंडी विश्लेषण एवं सरकारी योजनाएं — कृषि मित्र © {datetime.now().year}</div>
@@ -2333,7 +2344,19 @@ function openCommentDrawer(id) {{
   if (!ensureLoggedIn({{ title: "कमेंट करने के लिए लॉगिन करें", text: "किसान चर्चा में भाग लेने के लिए कृपया लॉगिन करें।" }})) return;
   activeCommentNewsId = id;
   const list = document.getElementById('comment-list-container');
-  list.innerHTML = '<div style="color:#64748b;font-size:13px;">टिप्पणियां लोड हो रही हैं…</div>';
+  // The shape of a comment — name, then a line of text — rather than a
+  // sentence saying one is coming. .km-sk: frontend/km-skeleton.css, linked
+  // by the shared server head (_FONTS in bhav.py).
+  list.innerHTML =
+    '<div class="km-sk-rows" role="status" aria-live="polite" style="padding:6px 0;">' +
+      '<span class="km-sk-label">टिप्पणियां लोड हो रही हैं…</span>' +
+      '<div class="km-sk-row"><div class="km-sk km-sk-circle"></div>' +
+        '<div class="km-sk-row-body"><div class="km-sk km-sk-line" style="width:36%"></div>' +
+        '<div class="km-sk km-sk-line" style="width:86%"></div></div></div>' +
+      '<div class="km-sk-row"><div class="km-sk km-sk-circle"></div>' +
+        '<div class="km-sk-row-body"><div class="km-sk km-sk-line" style="width:28%"></div>' +
+        '<div class="km-sk km-sk-line" style="width:70%"></div></div></div>' +
+    '</div>';
   document.getElementById('km-comment-modal').classList.add('open');
   
   fetch(getApiBase() + '/api/news/' + encodeURIComponent(id) + '/social')

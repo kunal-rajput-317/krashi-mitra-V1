@@ -2,24 +2,40 @@
 # routes/verify.py
 # /verify — the blue-tick funnel a farmer walks through himself.
 # ============================================================
-# Four states on one page, driven by his own application row:
+# WHAT THE TICK MEANS HERE (changed 2026-09-18). It is a paid membership, the
+# same thing X's blue check is. It is NOT verification, NOT an identity check
+# and NOT a guarantee of the crop, the price or the deal — and this page is
+# where that distinction is either honoured or quietly broken, because it is
+# the page selling the thing.
 #
-#   none      → what the tick means, what is checked, the fee → apply form
-#   applied   → "we have your application" + the UPI QR for the fee
-#   paid      → "we will call you on <number>" — the review is pending
-#   approved  → the tick, when it expires, and how to renew
-#   rejected  → the reason, and the refund
+# SO THIS PAGE MAY NOT SAY "सत्यापित". Not in a headline, not in a benefit
+# list, not in the phrase "सत्यापित विक्रेता बनें" it used to be titled. Every
+# benefit printed below is something the site actually does when the flag goes
+# on — a tick beside his name, a blue ring on his photo, the tick in the
+# WhatsApp preview — and nothing about how buyers will behave, what price he
+# will get, or who he is. A test sweeps the rendered page for the banned words.
 #
-# WHAT THIS PAGE MUST NEVER SAY. Not "पेमेंट हो गया" — a upi:// hand-off
-# reports nothing back (services/upi.py), so only a human who saw the bank
-# credit can say that. And not that paying earns the tick: the fee buys the
-# check. Every word of copy here is written to keep the badge's public claim —
-# "KrashiMitra द्वारा सत्यापित" — true. See services/seller_verify.py.
+# Nor may it say "पेमेंट हो गया": a upi:// hand-off reports nothing back
+# (services/upi.py), so only a human who saw the bank credit can say that. What
+# the farmer CAN say is that he sent it — that is the "मैंने पैसे भेज दिए"
+# button, which records his claim, moves his row to the top of the admin queue
+# and grants nothing.
+#
+# Six states on one page, driven by his own row:
+#
+#   none      → what the tick is, the two plans, the signup form
+#   applied   → the UPI QR + "मैंने पैसे भेज दिए"
+#   claimed   → "हमें आपका भुगतान जाँचना है" (his claim, unconfirmed)
+#   paid      → the tick is on, when it ends, how to renew
+#   approved  → same, given by the owner
+#   rejected  → the badge was removed, and the refund
+#   expired   → the term ran out → the plans again
 #
 # noindex, always. It is a logged-in billing page; it has no business in a
 # sitemap or a SERP, and a farmer reaching it from search instead of from his
 # own profile would be reading someone else's funnel.
 # ============================================================
+import json
 from html import escape
 from typing import Optional
 
@@ -37,14 +53,28 @@ router = APIRouter()
 
 CANON = "https://krashimitra.in/verify"
 
-# What the tick is allowed to assert, in the words the page uses. Kept here as
-# one string because it appears on this page AND has to stay in step with the
-# note on krashi_bajar.html — if the check ever changes, both move together.
-CHECKS_HI = [
-    "आपका नाम और मोबाइल नंबर — फ़ोन पर बात करके",
-    "आपका गाँव / ज़िला",
-    "आपकी बताई गई पहचान (आधार / KCC / लाइसेंस) — सिर्फ़ देखी जाती है, रखी नहीं जाती",
+# What the membership actually gets him. Every line is a thing this codebase
+# does the moment users.seller_verified flips — the tick in bazar.py's feed
+# payload, the ocean-blue ring krashi_bajar.html draws on his avatar, the ✅
+# share.py puts in the WhatsApp preview, and the badge on his own profile.
+#
+# What is NOT on this list, and may never be: more buyers, a faster sale, a
+# better price, or anything about who he is. Those are either unprovable or a
+# claim about a person, and this badge is sold on neither.
+GETS_HI = [
+    "आपके नाम के साथ नीला टिक — हर पोस्ट पर",
+    "प्रोफ़ाइल फ़ोटो पर नीला घेरा, जो भीड़ में दिखता है",
+    "कृषि मित्र के WhatsApp चैनल पर आपके नाम के साथ टिक",
+    "आपकी प्रोफ़ाइल पर प्रीमियम सदस्य का निशान",
 ]
+
+# The one paragraph that keeps this page honest. It says what the tick is and,
+# more importantly, the three things it is not.
+MEANS_HI = (
+    "नीला टिक कृषि मित्र प्रीमियम का निशान है — इसका मतलब है कि यह सदस्य "
+    "कृषि मित्र प्रीमियम लेता है। यह पहचान की जाँच नहीं है, और फसल, भाव या "
+    "सौदे की कोई गारंटी नहीं है। खरीदार को हर सौदे में खुद जाँच-परख करनी चाहिए।"
+)
 
 
 # ── API ──────────────────────────────────────────────────────
@@ -57,6 +87,17 @@ class ApplyRequest(BaseModel):
     state:     Optional[str] = None
     id_kind:   Optional[str] = None
     note:      Optional[str] = None
+    # "m1" or "m3". Not validated here on purpose — seller_verify.plan() reads
+    # anything it does not recognise as the monthly plan, so a junk code buys
+    # the cheapest term rather than 400ing a farmer out of the funnel.
+    plan:      Optional[str] = None
+
+
+class PaidClaimRequest(BaseModel):
+    # The UTR / reference off his UPI app, if he can find it. Optional, because
+    # asking a farmer to copy a 12-digit transaction id off a confirmation
+    # screen is exactly the step that ends a funnel.
+    paid_ref:  Optional[str] = None
 
 
 def _profile(user_id: int, db: Session) -> UserProfile:
@@ -102,17 +143,60 @@ def apply_for_badge(
 
     if not data["full_name"]:
         raise HTTPException(400, "अपना पूरा नाम डालें।")
-    # The whole check is a phone call. Without a number there is nothing to do.
+    # Not a check — the badge checks nothing. It is the only way to reach him
+    # about a payment that did not arrive or a term about to run out, and a
+    # membership nobody can contact is a refund waiting to happen.
     digits = "".join(ch for ch in data["phone"] if ch.isdigit())
     if len(digits) < 10:
-        raise HTTPException(400, "सही मोबाइल नंबर डालें — सत्यापन फ़ोन पर होता है।")
+        raise HTTPException(400, "सही मोबाइल नंबर डालें — इसी पर हम आपसे संपर्क करेंगे।")
 
     row = seller_verify.apply(db, user_id, data)
     return {
         "success": True,
-        "message": "आवेदन मिल गया। अब शुल्क भेजें — फिर हम आपको फ़ोन करेंगे।",
+        "message": "हो गया। अब शुल्क भेजें — पैसा पहुँचते ही टिक चालू हो जाएगा।",
         "data": seller_verify.to_dict(row),
     }
+
+
+@router.post("/verify/paid")
+def claim_paid(
+    body:         PaidClaimRequest,
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    """"मैंने पैसे भेज दिए." His claim, recorded. It grants nothing.
+
+    Keyed on his own session, never on a ref out of the URL, so one member
+    cannot mark another member's row as paid. It does not move the status and
+    never touches the flag — if it did, the badge would be free to anyone who
+    can tap a button. What it buys him is position: the admin queue sorts
+    claimed rows to the top (seller_verify.pending_first), so the confirmation
+    is minutes away instead of whenever the list next gets scrolled.
+    """
+    user_id = current_user["user_id"]
+    row = seller_verify.claim_payment(db, user_id, (body.paid_ref or ""))
+    if not row:
+        raise HTTPException(404, "पहले नीला टिक के लिए आवेदन करें।")
+    return {
+        "success": True,
+        "message": "आपका संदेश मिल गया। पैसा पहुँचा है या नहीं, हम जाँच कर रहे हैं।",
+        "data": seller_verify.to_dict(row),
+    }
+
+
+@router.get("/verify/plans")
+def public_plans():
+    """The price table, for pages that are static files and cannot be templated.
+
+    krashi_bajar.html is served off disk, so the only honest way for its in-feed
+    offer card to print ₹199 / ₹499 is to ask. Hard-coding them in the HTML
+    would mean a price change needed a deploy AND a cache bust, and the card
+    would quietly disagree with the UPI link the moment either was missed.
+
+    Public and unauthenticated: it is a price list, the same one any visitor
+    sees on /verify, and it carries nothing about anybody.
+    """
+    return {"success": True, "message": "", "data": {"plans": seller_verify.plans()}}
 
 
 @router.get("/verify/pay/{ref}")
@@ -147,24 +231,49 @@ def _pay_pack(row) -> dict:
     }
 
 
+
+
 # ── The page ─────────────────────────────────────────────────
 
 _CSS = """
 .vf-wrap{max-width:560px;margin:0 auto;padding:8px 0 48px}
 .vf-card{background:var(--white);border:1px solid var(--border);
 border-radius:var(--radius-sm);padding:24px 20px;box-shadow:var(--shadow-sm);margin-bottom:14px}
-.vf-tick{display:inline-flex;align-items:center;gap:7px;background:#e8f4fd;color:#1d9bf0;
+.vf-tick{display:inline-flex;align-items:center;gap:7px;background:#e8f4fd;color:#0284c7;
 border-radius:20px;padding:5px 13px;font-size:13px;font-weight:700;margin-bottom:12px}
+.vf-tick svg{width:16px;height:16px;flex-shrink:0}
 .vf-h{font-size:21px;font-weight:800;color:var(--text-dark);margin:0 0 8px;line-height:1.35}
 .vf-p{font-size:14px;color:var(--text-soft);line-height:1.65;margin:0 0 14px}
-.vf-checks{list-style:none;padding:0;margin:0 0 16px}
+.vf-checks{list-style:none;padding:0;margin:0 0 4px}
 .vf-checks li{position:relative;padding-left:26px;font-size:13.5px;line-height:1.6;
 color:var(--text-dark);margin-bottom:8px}
-.vf-checks li:before{content:'✓';position:absolute;left:0;top:0;color:var(--green-mid);font-weight:800}
+.vf-checks li:before{content:'✓';position:absolute;left:0;top:0;color:#0284c7;font-weight:800}
 .vf-note{background:#fff8e1;border:1px solid #ffe08a;border-radius:10px;padding:11px 13px;
 font-size:12.5px;color:#7a5c00;line-height:1.6;margin-bottom:16px}
-.vf-fee{font-size:34px;font-weight:800;color:var(--green-dark);line-height:1.1;margin:0}
-.vf-fee-sub{font-size:12.5px;color:var(--text-soft);margin:2px 0 18px}
+
+/* ── The two plans ── */
+.vf-plans{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 16px}
+.vf-plan{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+background:var(--cream);border:2px solid var(--border);border-radius:14px;padding:14px 12px 13px;
+cursor:pointer;font-family:inherit;text-align:left;transition:border-color .15s,background .15s}
+.vf-plan:hover{border-color:#bae0fb}
+.vf-plan.on{border-color:#0284c7;background:#f0f8ff}
+/* Indented past the radio, which sits on this same line. Without it the dot
+covered the digit — "1 महीने के लिए" read as "महीने के लिए" on both cards, so
+the one number telling a farmer what he was buying was the one hidden. */
+.vf-plan-term{font-size:11.5px;font-weight:800;color:var(--text-soft);letter-spacing:.02em;
+padding-left:21px}
+.vf-plan-price{font-size:26px;font-weight:800;color:var(--green-dark);line-height:1.15}
+.vf-plan-price s{font-size:14px;font-weight:600;color:var(--text-light);margin-left:6px}
+.vf-plan-pm{font-size:11.5px;font-weight:700;color:var(--text-soft)}
+.vf-plan-save{position:absolute;top:-9px;right:8px;background:#0284c7;color:#fff;
+font-size:10px;font-weight:800;padding:2px 7px;border-radius:9px;letter-spacing:.02em}
+.vf-plan-tick{position:absolute;top:13px;left:10px;width:15px;height:15px;border-radius:50%;
+border:2px solid var(--border);background:#fff}
+.vf-plan.on .vf-plan-tick{border-color:#0284c7;background:#0284c7;
+box-shadow:inset 0 0 0 2px #fff}
+.vf-offer-line{font-size:11.5px;font-weight:700;color:#0284c7;margin:-8px 0 14px}
+
 .vf-field{margin-bottom:12px}
 .vf-field label{display:block;font-size:12.5px;font-weight:700;color:var(--text-dark);margin-bottom:5px}
 .vf-field input,.vf-field select,.vf-field textarea{width:100%;box-sizing:border-box;
@@ -176,6 +285,9 @@ border:0;border-radius:var(--radius-sm);font-size:16px;font-weight:700;text-deco
 text-align:center;cursor:pointer;font-family:inherit;box-shadow:var(--shadow-sm)}
 .vf-btn:hover{background:var(--green-mid)}
 .vf-btn[disabled]{opacity:.55;cursor:default}
+.vf-btn.ghost{background:#fff;color:#0284c7;border:1.5px solid #bae0fb;box-shadow:none;
+margin-top:10px;font-size:14px;padding:12px 16px}
+.vf-btn.ghost:hover{background:#f0f8ff}
 .vf-qr{display:inline-block;padding:14px;background:#fff;border:1px solid var(--border);
 border-radius:var(--radius-sm);line-height:0;margin-bottom:6px}
 .vf-qr svg{width:186px;height:186px;display:block}
@@ -186,33 +298,28 @@ background:var(--cream);border:1px dashed var(--border);border-radius:8px;paddin
 .vf-state{text-align:center}
 .vf-err{color:#b91c1c;font-size:13px;font-weight:700;margin-top:10px}
 .vf-muted{font-size:12px;color:var(--text-soft);line-height:1.6;margin-top:14px}
+.vf-wait{background:#f0f8ff;border:1px solid #cfe6fb;border-radius:10px;padding:13px 14px;
+font-size:13px;color:#1e4e79;line-height:1.6;font-weight:600}
 """
 
+# The badge, drawn once. Same path as the one krashi_bajar.html puts beside a
+# member's name, so the thing he is buying is the thing he is looking at.
+_TICK_SVG = (
+    '<svg viewBox="0 0 24 24" fill="#0284c7" aria-hidden="true"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/></svg>'
+)
 
-@router.get("/verify", response_class=HTMLResponse)
-def verify_page():
-    checks = "".join(f"<li>{escape(c)}</li>" for c in CHECKS_HI)
-    fee = seller_verify.fee()
-    months = seller_verify.months()
-    id_opts = "".join(
-        f'<option value="{escape(k)}">{escape(seller_verify.ID_KIND_HI[k])}</option>'
-        for k in seller_verify.ID_KINDS
-    )
 
-    body = f"""
+# The page body. A plain template, not an f-string: the script below is full of
+# object literals, and escaping every brace made the old version unreadable for
+# no gain. Substitutions are the __TOKEN__ pairs at the bottom of verify_page().
+_BODY = """
 <div class="vf-wrap">
   <div class="vf-card" id="vf-intro">
-    <span class="vf-tick">✓ नीला टिक</span>
-    <h1 class="vf-h">कृषि बाज़ार में सत्यापित विक्रेता बनें</h1>
-    <p class="vf-p">नीले टिक का मतलब है कि कृषि मित्र ने आपसे बात करके आपकी पहचान जाँची है।
-      खरीदार सत्यापित विक्रेता पर ज़्यादा भरोसा करते हैं।</p>
-    <p class="vf-p" style="margin-bottom:8px;"><b>हम क्या जाँचते हैं:</b></p>
-    <ul class="vf-checks">{checks}</ul>
-    <div class="vf-note"><b>ध्यान दें —</b> शुल्क सत्यापन की जाँच का है, टिक का नहीं।
-      फ़ोन पर जाँच पूरी होने के बाद ही टिक मिलता है। अगर जाँच में जानकारी गलत निकली
-      तो टिक नहीं मिलेगा और <b>पूरा शुल्क वापस</b> कर दिया जाएगा।</div>
-    <p class="vf-fee">₹{fee}</p>
-    <p class="vf-fee-sub">{months} महीने के लिए · एक बार</p>
+    <span class="vf-tick">__TICK__ नीला टिक</span>
+    <h1 class="vf-h">कृषि बाज़ार में नीला टिक लगवाएँ</h1>
+    <p class="vf-p">__MEANS__</p>
+    <p class="vf-p" style="margin-bottom:8px;"><b>क्या मिलेगा:</b></p>
+    <ul class="vf-checks">__GETS__</ul>
   </div>
 
   <div class="vf-card" id="vf-body">
@@ -221,137 +328,205 @@ def verify_page():
 </div>
 
 <script>
-(function() {{
-  var FEE = {fee}, MONTHS = {months};
+(function() {
+  var PLANS = __PLANS__;
   var API = (window.KRASHIMITRA_API_BASE || '');
   var tok = null;
-  try {{ tok = localStorage.getItem('krishi_token'); }} catch (e) {{}}
+  try { tok = localStorage.getItem('krishi_token'); } catch (e) {}
   var box = document.getElementById('vf-body');
-  var esc = function(s) {{
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {{
-      return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c];
-    }});
-  }};
+  var picked = PLANS.length ? PLANS[0].code : 'm1';
 
-  function api(path, opts) {{
-    opts = opts || {{}};
-    opts.headers = Object.assign({{'Content-Type': 'application/json'}}, opts.headers || {{}});
+  var esc = function(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  };
+
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({'Content-Type': 'application/json'}, opts.headers || {});
     if (tok) opts.headers['Authorization'] = 'Bearer ' + tok;
-    return fetch(API + path, opts).then(function(r) {{
-      return r.json().then(function(j) {{ j._status = r.status; return j; }});
-    }});
-  }}
+    return fetch(API + path, opts).then(function(r) {
+      return r.json().then(function(j) { j._status = r.status; return j; });
+    });
+  }
 
-  if (!tok) {{
-    box.innerHTML = '<p class="vf-p vf-state">सत्यापन के लिए पहले लॉगिन करें।</p>' +
+  function loginWall() {
+    box.innerHTML = '<p class="vf-p vf-state">नीला टिक लेने के लिए पहले लॉगिन करें।</p>' +
       '<a class="vf-btn" href="/login.html?next=/verify">लॉगिन करें</a>';
-    return;
-  }}
+  }
+  if (!tok) { loginWall(); return; }
 
-  function applyForm(d) {{
+  function planOf(code) {
+    for (var i = 0; i < PLANS.length; i++) if (PLANS[i].code === code) return PLANS[i];
+    return PLANS[0] || {price: 199, months: 1};
+  }
+
+  /* The picker. Drawn from the same table the server prices from, so the
+     struck figure on the card and the amount in the UPI link cannot drift. */
+  function planCards() {
+    return '<div class="vf-plans">' + PLANS.map(function(p) {
+      return '<button type="button" class="vf-plan' + (p.code === picked ? ' on' : '') + '"' +
+        ' data-plan="' + esc(p.code) + '" onclick="window.__vfPick(&quot;' + esc(p.code) + '&quot;)">' +
+        '<span class="vf-plan-tick"></span>' +
+        (p.save_pct ? '<span class="vf-plan-save">' + p.save_pct + '% छूट</span>' : '') +
+        '<span class="vf-plan-term">' + esc(p.term_hi) + '</span>' +
+        '<span class="vf-plan-price">₹' + p.price +
+          (p.mrp ? '<s>₹' + p.mrp + '</s>' : '') + '</span>' +
+        (p.months > 1 ? '<span class="vf-plan-pm">₹' + p.per_month + ' / महीना</span>'
+                      : '<span class="vf-plan-pm">हर महीने</span>') +
+        '</button>';
+    }).join('') + '</div>' +
+    '<p class="vf-offer-line">शुरुआती छूट — काटी गई क़ीमत इस प्लान की सामान्य क़ीमत है।</p>';
+  }
+
+  window.__vfPick = function(code) {
+    picked = code;
+    var cards = document.querySelectorAll('.vf-plan');
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].classList.toggle('on', cards[i].getAttribute('data-plan') === code);
+    }
+    var btn = document.getElementById('vf-submit');
+    if (btn && !btn.disabled) btn.textContent = '₹' + planOf(code).price + ' — आगे बढ़ें';
+  };
+
+  /* ── State: no membership, or a lapsed one ── */
+  function signupForm(d) {
     box.innerHTML =
+      planCards() +
       '<div class="vf-field"><label>पूरा नाम</label><input id="vf-name" value="' + esc(d.full_name || '') + '" placeholder="जैसे: राम सिंह"></div>' +
       '<div class="vf-field"><label>मोबाइल नंबर</label><input id="vf-phone" inputmode="numeric" value="' + esc(d.phone || '') + '" placeholder="10 अंक"></div>' +
       '<div class="vf-field"><label>गाँव</label><input id="vf-village" value="' + esc(d.village || '') + '"></div>' +
       '<div class="vf-field"><label>ज़िला</label><input id="vf-district" value="' + esc(d.district || '') + '"></div>' +
-      '<div class="vf-field"><label>कौन सी पहचान दिखा सकते हैं?</label><select id="vf-id">{id_opts}</select></div>' +
       '<div class="vf-field"><label>कुछ और बताना हो (ज़रूरी नहीं)</label><textarea id="vf-note" rows="2"></textarea></div>' +
-      '<button class="vf-btn" id="vf-submit">आवेदन भेजें</button>' +
-      '<p class="vf-muted">आवेदन भेजने के बाद अगला कदम शुल्क भेजना है। हम उसी नंबर पर फ़ोन करेंगे।</p>' +
+      '<button class="vf-btn" id="vf-submit">₹' + planOf(picked).price + ' — आगे बढ़ें</button>' +
+      '<p class="vf-muted">अगला कदम शुल्क भेजना है। पैसा पहुँचते ही नीला टिक चालू हो जाएगा। ' +
+      'नाम और नंबर इसलिए चाहिए कि रिन्यू या किसी दिक्कत पर हम आपसे संपर्क कर सकें।</p>' +
       '<div class="vf-err" id="vf-err" style="display:none;"></div>';
-    document.getElementById('vf-submit').onclick = function() {{
+    document.getElementById('vf-submit').onclick = function() {
       var btn = this; btn.disabled = true; btn.textContent = 'भेजा जा रहा है…';
-      api('/verify/apply', {{ method: 'POST', body: JSON.stringify({{
+      api('/verify/apply', { method: 'POST', body: JSON.stringify({
+        plan:      picked,
         full_name: document.getElementById('vf-name').value,
         phone:     document.getElementById('vf-phone').value,
         village:   document.getElementById('vf-village').value,
         district:  document.getElementById('vf-district').value,
-        id_kind:   document.getElementById('vf-id').value,
         note:      document.getElementById('vf-note').value
-      }}) }}).then(function(j) {{
+      }) }).then(function(j) {
         if (j.success) return render(j.data);
         var e = document.getElementById('vf-err');
         e.style.display = 'block';
         e.textContent = (j.detail === 'PROFILE_REQUIRED')
           ? 'पहले अपनी प्रोफ़ाइल पूरी करें।' : (j.detail || j.message || 'नहीं हो पाया।');
-        btn.disabled = false; btn.textContent = 'आवेदन भेजें';
-      }});
-    }};
-  }}
+        btn.disabled = false; btn.textContent = '₹' + planOf(picked).price + ' — आगे बढ़ें';
+      });
+    };
+  }
 
-  function payBox(d) {{
+  /* ── State: signed up, money not seen yet ── */
+  function payBox(d) {
     box.innerHTML = '<p class="vf-p vf-state">शुल्क की जानकारी ला रहे हैं…</p>';
-    api('/verify/pay/' + encodeURIComponent(d.ref)).then(function(j) {{
-      var p = (j && j.data) || {{}};
-      if (!p.configured) {{
+    api('/verify/pay/' + encodeURIComponent(d.ref)).then(function(j) {
+      var p = (j && j.data) || {};
+      if (!p.configured) {
         box.innerHTML = '<p class="vf-p vf-state">पेमेंट अभी चालू नहीं है। कृपया कृषि मित्र टीम से संपर्क करें — +91 9870951001</p>';
         return;
-      }}
+      }
       box.innerHTML =
         '<div class="vf-state">' +
-        '<p class="vf-p" style="margin-bottom:6px;"><b>आवेदन मिल गया।</b> अब ₹' + p.amount + ' शुल्क भेजें।</p>' +
+        '<p class="vf-p" style="margin-bottom:6px;"><b>अब ₹' + p.amount + ' भेजें</b> — ' +
+          esc(d.term_hi || '') + '</p>' +
         (p.qr_svg ? '<div class="vf-qr">' + p.qr_svg + '</div>' : '') +
         '<p class="vf-p" style="font-size:12px;margin:4px 0 14px;">किसी भी UPI ऐप से स्कैन करें</p>' +
         '<a class="vf-btn" href="' + esc(p.link) + '">UPI ऐप खोलें</a>' +
         '<div class="vf-vpa">' + esc(p.vpa) + '</div>' +
-        '<p class="vf-ref">आपका आवेदन नंबर: <b>' + esc(p.ref) + '</b></p>' +
-        '<p class="vf-muted">पैसा पहुँचने के बाद हम आपके नंबर पर फ़ोन करेंगे और जाँच पूरी होते ही टिक चालू कर देंगे। ' +
-        'शुल्क भेजने भर से टिक नहीं मिलता।</p>' +
+        '<button class="vf-btn ghost" id="vf-paid">मैंने पैसे भेज दिए</button>' +
+        '<p class="vf-ref">आपका नंबर: <b>' + esc(p.ref) + '</b></p>' +
+        '<p class="vf-muted">पैसा पहुँचते ही हम टिक चालू कर देंगे। UPI ऐप हमें अपने आप ' +
+        'नहीं बताता कि पैसा आया है, इसलिए भेजने के बाद ऊपर वाला बटन दबा दें — ' +
+        'आपका नंबर सबसे पहले जाँचा जाएगा।</p>' +
         '</div>';
-    }});
-  }}
+      document.getElementById('vf-paid').onclick = function() {
+        var btn = this; btn.disabled = true; btn.textContent = 'भेजा जा रहा है…';
+        api('/verify/paid', { method: 'POST', body: JSON.stringify({}) })
+          .then(function(j) {
+            if (j && j.success) return render(j.data);
+            btn.disabled = false; btn.textContent = 'मैंने पैसे भेज दिए';
+          });
+      };
+    });
+  }
 
-  function render(d) {{
-    if (!d || !d.status) return applyForm(d || {{}});
-    if (d.status === 'applied') return payBox(d);
-    if (d.status === 'paid') {{
+  /* ── State: he says he paid, nobody has confirmed ── */
+  function claimedBox(d) {
+    box.innerHTML = '<div class="vf-state">' +
+      '<p class="vf-h" style="font-size:18px;">हम आपका भुगतान जाँच रहे हैं</p>' +
+      '<div class="vf-wait">आपने बताया कि आपने ₹' + (d.fee || '') + ' भेज दिए हैं। ' +
+      'हम बैंक में देखकर टिक चालू कर देंगे। ज़्यादा देर लगे तो ' +
+      '<b>+91 9870951001</b> पर बताइए।</div>' +
+      '<p class="vf-ref">आपका नंबर: <b>' + esc(d.ref) + '</b></p></div>';
+  }
+
+  /* ── State: the tick is on ── */
+  function activeBox(d) {
+    box.innerHTML = '<div class="vf-state">' +
+      '<span class="vf-tick">__TICK__ नीला टिक चालू है</span>' +
+      '<p class="vf-p">आपके नाम के साथ नीला टिक दिख रहा है।' +
+      (d.days_left != null ? (' यह <b>' + d.days_left + ' दिन</b> और चलेगा।') : '') + '</p>' +
+      '<button class="vf-btn ghost" id="vf-extend">और समय के लिए बढ़ाएँ</button>' +
+      '<p class="vf-muted">खत्म होने से पहले हम आपको याद दिला देंगे। अभी बढ़ाने पर ' +
+      'बाकी दिन जुड़ जाते हैं, कटते नहीं।</p></div>';
+    document.getElementById('vf-extend').onclick = function() { signupForm(d); };
+  }
+
+  function render(d) {
+    if (!d || !d.status) return signupForm(d || {});
+    if (d.active) return activeBox(d);
+    if (d.status === 'applied') return d.payment_claimed ? claimedBox(d) : payBox(d);
+    if (d.status === 'rejected') {
       box.innerHTML = '<div class="vf-state">' +
-        '<p class="vf-h" style="font-size:18px;">शुल्क मिल गया — अब जाँच बाकी है</p>' +
-        '<p class="vf-p">हम <b>' + esc(d.phone || 'आपके नंबर') + '</b> पर फ़ोन करेंगे। ' +
-        'बात होने और पहचान जाँचने के बाद नीला टिक चालू कर दिया जाएगा।</p>' +
-        '<p class="vf-ref">आवेदन नंबर: <b>' + esc(d.ref) + '</b></p></div>';
-      return;
-    }}
-    if (d.status === 'approved') {{
-      box.innerHTML = '<div class="vf-state">' +
-        '<span class="vf-tick">✓ सत्यापित</span>' +
-        '<p class="vf-p">आपका नीला टिक चालू है। ' +
-        (d.days_left != null ? ('यह <b>' + d.days_left + ' दिन</b> और चलेगा।') : '') + '</p>' +
-        '<p class="vf-muted">खत्म होने से पहले हम आपको याद दिला देंगे।</p></div>';
-      return;
-    }}
-    if (d.status === 'rejected') {{
-      box.innerHTML = '<div class="vf-state">' +
-        '<p class="vf-h" style="font-size:18px;">इस बार टिक नहीं मिला</p>' +
+        '<p class="vf-h" style="font-size:18px;">आपका नीला टिक हटा दिया गया है</p>' +
         (d.reject_reason ? '<p class="vf-p">कारण: ' + esc(d.reject_reason) + '</p>' : '') +
         (d.paid ? ('<p class="vf-p">' + (d.refunded ? 'आपका शुल्क वापस भेज दिया गया है।'
-          : 'आपका पूरा शुल्क वापस भेजा जा रहा है।') + '</p>') : '') +
-        '<button class="vf-btn" id="vf-again">फिर से आवेदन करें</button></div>';
-      document.getElementById('vf-again').onclick = function() {{ applyForm(d); }};
+          : 'आपका बाकी शुल्क वापस भेजा जा रहा है।') + '</p>') : '') +
+        '<p class="vf-muted">कोई गलतफ़हमी लगे तो +91 9870951001 पर बात करें।</p></div>';
       return;
-    }}
-    if (d.status === 'expired') {{
+    }
+    if (d.status === 'expired') {
       box.innerHTML = '<div class="vf-state">' +
-        '<p class="vf-h" style="font-size:18px;">आपका टिक खत्म हो गया</p>' +
-        '<p class="vf-p">फिर से चालू करने के लिए ₹' + FEE + ' भेजें — जाँच दोबारा होगी।</p>' +
+        '<p class="vf-h" style="font-size:18px;">आपका नीला टिक खत्म हो गया</p>' +
+        '<p class="vf-p">फिर से चालू करने के लिए कोई एक प्लान चुनें।</p>' +
         '<button class="vf-btn" id="vf-renew">फिर से चालू करें</button></div>';
-      document.getElementById('vf-renew').onclick = function() {{ applyForm(d); }};
+      document.getElementById('vf-renew').onclick = function() { signupForm(d); };
       return;
-    }}
-    applyForm(d);
-  }}
+    }
+    signupForm(d);
+  }
 
-  api('/verify/me').then(function(j) {{
-    if (j && j.success) render(j.data);
-    else box.innerHTML = '<p class="vf-p vf-state">सत्यापन के लिए पहले लॉगिन करें।</p>' +
-      '<a class="vf-btn" href="/login.html?next=/verify">लॉगिन करें</a>';
-  }});
-}})();
+  api('/verify/me').then(function(j) {
+    if (j && j.success) {
+      var d = j.data || {};
+      if (d.plan) picked = d.plan;
+      render(d);
+    } else loginWall();
+  }).catch(loginWall);
+})();
 </script>"""
 
+
+@router.get("/verify", response_class=HTMLResponse)
+def verify_page():
+    gets = "".join(f"<li>{escape(g)}</li>" for g in GETS_HI)
+    body = (_BODY
+            .replace("__PLANS__", json.dumps(seller_verify.plans(), ensure_ascii=False))
+            .replace("__GETS__", gets)
+            .replace("__MEANS__", escape(MEANS_HI))
+            .replace("__TICK__", _TICK_SVG))
+
     return _doc(
-        "सत्यापित विक्रेता बनें — कृषि मित्र",
-        "कृषि बाज़ार में नीला टिक — कृषि मित्र फ़ोन पर आपकी पहचान जाँचता है।",
+        "नीला टिक — कृषि मित्र प्रीमियम",
+        "कृषि बाज़ार में नीला टिक — कृषि मित्र प्रीमियम सदस्यता का निशान। "
+        "पहचान या सौदे की गारंटी नहीं।",
         CANON, "", body, active="", extra_css=_CSS,
         robots="noindex, nofollow",
     )

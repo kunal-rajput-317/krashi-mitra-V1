@@ -48,6 +48,7 @@
   <meta name="twitter:image" content="https://krashimitra.in/images/og-banner.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="km-skeleton.css">   <!-- .km-sk loading blocks -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
 
   <style>
@@ -397,6 +398,16 @@
       border-radius: 8px;
       user-select: none;
     }
+    /* This hero paints the shimmer ONTO the real elements (the name, the stat
+       values, the avatar) rather than standing blocks in for them, which is
+       why it is not .km-sk. It still has to stop moving for a reader who asks
+       it to — the same rule km-skeleton.css applies everywhere else. */
+    @media (prefers-reduced-motion: reduce) {
+      .profile-hero.is-loading .hero-name,
+      .profile-hero.is-loading .ig-hero-stats .ig-stat-item,
+      .profile-hero.is-loading .stat-val,
+      .profile-hero.is-loading .profile-avatar { animation: none !important; }
+    }
     .profile-hero.is-loading .hero-name { min-width: 190px; height: 24px; }
     .profile-hero.is-loading .ig-hero-stats .ig-stat-item { min-width: 62px; height: 20px; }
     .profile-hero.is-loading .stat-val { display: inline-block; min-width: 46px; height: 15px; }
@@ -431,6 +442,87 @@
       cursor: pointer;
     }
     .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+
+    /* ── कृषि मित्र प्रीमियम — the blue tick on your own profile ──
+       Same ocean ring krashi_bajar.html draws around a member's photo in the
+       feed, at the size this page shows the photo. It is a ::before on the
+       CONTAINER rather than a border on the avatar so the photo does not shrink
+       when the ring appears — a ticked and an unticked profile must be the same
+       shape, or the hero jumps the moment the membership starts. */
+    .ig-avatar-container.is-verified::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #38bdf8, #0284c7 55%, #075985);
+      z-index: 0;
+    }
+    .ig-avatar-container.is-verified .profile-avatar {
+      position: relative;
+      z-index: 1;
+      border-color: #fff !important;
+    }
+    .hero-name-tick { display: none; flex-shrink: 0; line-height: 0; }
+    .hero-name-tick svg { width: 19px; height: 19px; display: block; }
+    .ig-avatar-container.is-verified ~ .ig-hero-info .hero-name-tick,
+    .profile-hero.is-premium .hero-name-tick { display: inline-flex; }
+
+    /* The membership card. Two faces: an offer when the tick is off, a
+       statement of what is running when it is on. Never both. */
+    .pf-tick {
+      position: relative; overflow: hidden;
+      border-radius: 16px; padding: 16px 17px 15px; margin-bottom: 14px;
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe 60%, #dbeafe);
+      border: 1.5px solid #bae6fd;
+    }
+    .pf-tick.is-on {
+      background: linear-gradient(135deg, #ecfdf5, #d1fae5 60%, #e0f2fe);
+      border-color: #a7f3d0;
+    }
+    .pf-tick-head { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+    .pf-tick-head svg { width: 21px; height: 21px; flex-shrink: 0; }
+    .pf-tick-t { font-size: 15px; font-weight: 800; color: #0c4a6e; line-height: 1.35; }
+    .pf-tick.is-on .pf-tick-t { color: #065f46; }
+    .pf-tick-s {
+      font-size: 12.5px; font-weight: 500; color: #1e4e79;
+      line-height: 1.6; margin-bottom: 12px;
+    }
+    .pf-tick.is-on .pf-tick-s { color: #047857; }
+    .pf-tick-plans { display: flex; gap: 8px; margin-bottom: 12px; }
+    .pf-tick-plan {
+      flex: 1; min-width: 0; background: rgba(255,255,255,0.88);
+      border: 1.5px solid #bae6fd; border-radius: 11px; padding: 9px 11px;
+    }
+    .pf-tick-plan .term {
+      display: block; font-size: 10.5px; font-weight: 800; color: #1e4e79;
+      letter-spacing: .02em; margin-bottom: 1px;
+    }
+    .pf-tick-plan .price { font-size: 20px; font-weight: 800; color: #075985; line-height: 1.2; }
+    .pf-tick-plan .price s { font-size: 12px; font-weight: 600; color: #94a3b8; margin-left: 4px; }
+    .pf-tick-plan .pm { display: block; font-size: 10.5px; font-weight: 700; color: #64748b; }
+    .pf-tick-btn {
+      display: block; width: 100%; box-sizing: border-box; text-align: center;
+      text-decoration: none; background: #0284c7; color: #fff;
+      font-family: inherit; font-size: 14.5px; font-weight: 800;
+      padding: 12px 16px; border: 0; border-radius: 11px; cursor: pointer;
+      box-shadow: 0 3px 10px rgba(2,132,199,0.28);
+    }
+    .pf-tick-btn:hover { background: #0369a1; }
+    .pf-tick.is-on .pf-tick-btn {
+      background: #fff; color: #047857; border: 1.5px solid #a7f3d0; box-shadow: none;
+    }
+    .pf-tick-fine {
+      font-size: 10.5px; font-weight: 500; color: #4a6b85;
+      line-height: 1.55; margin-top: 9px; text-align: center;
+    }
+    .pf-tick-wait {
+      background: rgba(255,255,255,0.85); border: 1px solid #fed7aa; border-radius: 11px;
+      padding: 11px 13px; font-size: 12.5px; font-weight: 600; color: #9a3412; line-height: 1.6;
+    }
+    @media (max-width: 380px) {
+      .pf-tick-plan .price { font-size: 18px; }
+      .pf-tick-plan .price s { display: none; }
+    }
     .avatar-edit-overlay {
       position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex;
       align-items: center; justify-content: center; font-size: 16px; opacity: 0; transition: opacity 0.2s; border-radius: 50%;
@@ -1109,6 +1201,7 @@
         <div class="ig-hero-eyebrow">👨‍🌾 Farmer Profile</div>
         <div class="ig-hero-name-row">
           <h1 class="hero-name" id="hero-name">किसान प्रोफाइल</h1>
+          <span class="hero-name-tick" id="hero-name-tick" title="कृषि मित्र प्रीमियम सदस्य"></span>
         </div>
         <div class="ig-hero-stats">
           <button type="button" class="ig-stat-item clickable" onclick="openMyBazar('posts')" title="मेरी पोस्ट देखें"><strong id="hero-posts">0</strong> posts</button>
@@ -1125,6 +1218,13 @@
       <div class="stat-item"><div class="stat-icon">🌊</div><div class="stat-val" id="stat-irrigation">-</div><div class="stat-lbl">सिंचाई</div></div>
     </div>
   </section>
+
+  <!-- ── कृषि मित्र प्रीमियम (नीला टिक) ──
+       Filled by loadTickStatus() from /verify/me, which is also what expires a
+       lapsed badge, so opening your own profile is enough to make the tick
+       honest again. Hidden until that answers: an offer card that flashes up
+       and then turns into "your tick is running" reads as a bug. -->
+  <div class="pf-tick" id="pf-tick" style="display:none;"></div>
 
   <!-- ── Quick Links Row ── -->
   <div class="quick-row">
@@ -1204,7 +1304,7 @@
       <div class="form-card">
         <div class="form-card-head"><div class="form-card-icon">📍</div><div><div class="form-card-title">स्थान की जानकारी</div><div class="form-card-sub">राज्य, जिला और गांव</div></div></div>
         <div class="form-grid">
-          <div class="field"><label for="state">राज्य <span class="req">*</span></label><select id="state" name="state"><option value="">राज्य चुनें</option><option value="Andhra Pradesh">Andhra Pradesh</option><option value="Bihar">Bihar</option><option value="Chhattisgarh">Chhattisgarh</option><option value="Gujarat">Gujarat</option><option value="Haryana">Haryana</option><option value="Himachal Pradesh">Himachal Pradesh</option><option value="Jharkhand">Jharkhand</option><option value="Karnataka">Karnataka</option><option value="Kerala">Kerala</option><option value="Madhya Pradesh">Madhya Pradesh</option><option value="Maharashtra">Maharashtra</option><option value="Odisha">Odisha</option><option value="Punjab">Punjab</option><option value="Rajasthan">Rajasthan</option><option value="Tamil Nadu">Tamil Nadu</option><option value="Telangana">Telangana</option><option value="Uttar Pradesh" selected>Uttar Pradesh</option><option value="Uttarakhand">Uttarakhand</option><option value="West Bengal">West Bengal</option></select></div>
+          <div class="field"><label for="state">राज्य <span class="req">*</span></label><select id="state" name="state"><option value="">राज्य चुनें</option><option value="Andhra Pradesh">Andhra Pradesh</option><option value="Arunachal Pradesh">Arunachal Pradesh</option><option value="Assam">Assam</option><option value="Bihar">Bihar</option><option value="Chhattisgarh">Chhattisgarh</option><option value="Goa">Goa</option><option value="Gujarat">Gujarat</option><option value="Haryana">Haryana</option><option value="Himachal Pradesh">Himachal Pradesh</option><option value="Jharkhand">Jharkhand</option><option value="Karnataka">Karnataka</option><option value="Kerala">Kerala</option><option value="Madhya Pradesh">Madhya Pradesh</option><option value="Maharashtra">Maharashtra</option><option value="Manipur">Manipur</option><option value="Meghalaya">Meghalaya</option><option value="Mizoram">Mizoram</option><option value="Nagaland">Nagaland</option><option value="Odisha">Odisha</option><option value="Punjab">Punjab</option><option value="Rajasthan">Rajasthan</option><option value="Sikkim">Sikkim</option><option value="Tamil Nadu">Tamil Nadu</option><option value="Telangana">Telangana</option><option value="Tripura">Tripura</option><option value="Uttar Pradesh">Uttar Pradesh</option><option value="Uttarakhand">Uttarakhand</option><option value="West Bengal">West Bengal</option></select></div>
           <div class="field"><label for="district">जिला</label><input id="district" name="district" type="text" placeholder="जैसे: Bijnor"></div>
           <div class="field"><label for="tehsil">तहसील / तालुका</label><input id="tehsil" name="tehsil" type="text" placeholder="तहसील का नाम"></div>
           <div class="field"><label for="village">गांव</label><input id="village" name="village" type="text" placeholder="गांव का नाम"></div>
@@ -1377,7 +1477,10 @@
 
     <!-- ── Save Bar ── -->
     <div class="save-bar">
-      <span class="save-bar-hint" id="save-mode-hint">Loading...</span>
+      <!-- The hero above already shimmers while the profile loads (.is-loading);
+           this hint matches it instead of sitting there in English saying
+           "Loading...". fillForm() overwrites it as soon as the profile lands. -->
+      <span class="save-bar-hint" id="save-mode-hint"><span class="km-sk km-sk-line" style="display:inline-block;width:190px;height:11px;vertical-align:middle"></span></span>
       <div class="save-bar-actions">
         <button type="button" class="btn btn-danger" id="logout-form" onclick="logout()">🚪 Logout</button>
         <button type="submit" class="btn btn-primary" id="save-btn">✅ सेव करें</button>
@@ -1630,6 +1733,15 @@
 
     /* ── Fill form from saved profile ── */
     function fillForm(p) {
+      // A stored state the dropdown does not list (a UT, or an older
+      // spelling) would set the select to "" — and the save guard would
+      // then block the row until the user re-picked. Carry it instead.
+      if (p.state) {
+        const sel = document.getElementById("state");
+        if (sel && !Array.from(sel.options).some(o => o.value === p.state)) {
+          sel.add(new Option(p.state, p.state));
+        }
+      }
       TEXT_FIELDS.forEach(name => {
         const el = document.getElementById(name);
         if (!el) return;
@@ -1645,7 +1757,6 @@
       });
 
       // defaults
-      if (!document.getElementById("state").value) document.getElementById("state").value = "Uttar Pradesh";
       if (!document.getElementById("preferred_language").value) document.getElementById("preferred_language").value = "hindi";
       if (!document.getElementById("farm_size_unit").value) document.getElementById("farm_size_unit").value = "acres";
     }
@@ -1883,6 +1994,100 @@
     }
 
     /* ── Load profile ── */
+    /* ══ कृषि मित्र प्रीमियम — the blue tick ══
+       One fetch to /verify/me, which returns the membership AND the price
+       table, so this card cannot print a price the UPI link disagrees with.
+       That endpoint also runs the expiry sweep, which is why a lapsed tick
+       corrects itself the moment its owner opens this page.
+
+       What the card may say: that he is a premium member, when the term ends,
+       what it costs to start or extend. What it may NEVER say: verified,
+       सत्यापित, or anything about his identity — the tick is a membership and
+       claims nothing about him. Same rule as /verify and the feed. */
+    const TICK_MARK = '<svg viewBox="0 0 24 24" fill="#0284c7" aria-hidden="true"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/></svg>';
+    const TICK_FINE = 'प्रीमियम सदस्यता का निशान — पहचान की जाँच या किसी सौदे की गारंटी नहीं।';
+
+    function paintTickBadge(on) {
+      // The ring and the tick beside the name are the same fact. Setting one
+      // class drives both, so they can never disagree.
+      const hero = document.getElementById("profile-hero");
+      const wrap = document.querySelector(".ig-avatar-container");
+      const mark = document.getElementById("hero-name-tick");
+      if (hero) hero.classList.toggle("is-premium", !!on);
+      if (wrap) wrap.classList.toggle("is-verified", !!on);
+      if (mark) mark.innerHTML = on ? TICK_MARK : "";
+    }
+
+    function planCardsHtml(plans) {
+      return (plans || []).map(pl => `
+        <div class="pf-tick-plan">
+          <span class="term">${escHtml(pl.term_hi || "")}</span>
+          <span class="price">₹${pl.price}${pl.mrp ? `<s>₹${pl.mrp}</s>` : ""}</span>
+          <span class="pm">₹${pl.per_month} / महीना</span>
+        </div>`).join("");
+    }
+
+    async function loadTickStatus() {
+      const box = document.getElementById("pf-tick");
+      if (!box) return;
+      const token = getToken();
+      if (!token) return;                       // logged out → the page redirects anyway
+      let d = null;
+      try {
+        const r = await fetch(`${API_BASE}/verify/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.success) return;        // stay hidden rather than guess
+        d = j.data || {};
+      } catch { return; }                       // offline → no card, no wrong card
+
+      paintTickBadge(!!d.active);
+      const plans = d.plans || [];
+
+      if (d.active) {
+        const left = (d.days_left != null)
+          ? `आपका नीला टिक <b>${d.days_left} दिन</b> और चलेगा।`
+          : "आपका नीला टिक चालू है।";
+        box.className = "pf-tick is-on";
+        box.innerHTML = `
+          <div class="pf-tick-head">${TICK_MARK}
+            <span class="pf-tick-t">नीला टिक चालू है</span></div>
+          <div class="pf-tick-s">${left} अभी बढ़ाने पर बाकी दिन जुड़ जाते हैं, कटते नहीं।</div>
+          <a class="pf-tick-btn" href="/verify">सदस्यता बढ़ाएँ</a>
+          <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
+      } else if (d.status === "applied" && d.payment_claimed) {
+        // He has told us he paid. Do not offer to sell it to him again.
+        box.className = "pf-tick";
+        box.innerHTML = `
+          <div class="pf-tick-head">${TICK_MARK}
+            <span class="pf-tick-t">आपका भुगतान जाँचा जा रहा है</span></div>
+          <div class="pf-tick-wait">पैसा बैंक में दिखते ही आपका नीला टिक चालू कर दिया जाएगा।
+            ज़्यादा देर लगे तो <b>+91 9870951001</b> पर बताइए।</div>`;
+      } else if (d.status === "applied") {
+        box.className = "pf-tick";
+        box.innerHTML = `
+          <div class="pf-tick-head">${TICK_MARK}
+            <span class="pf-tick-t">शुल्क भेजना बाकी है</span></div>
+          <div class="pf-tick-s">₹${d.fee} भेजते ही आपका नीला टिक चालू हो जाएगा — ${escHtml(d.term_hi || "")}।</div>
+          <a class="pf-tick-btn" href="/verify">शुल्क भेजें</a>
+          <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
+      } else {
+        const gone = (d.status === "expired")
+          ? "आपका नीला टिक खत्म हो गया है — फिर से चालू करें।"
+          : "कृषि बाज़ार में आपके नाम के साथ नीला टिक और आपकी फ़ोटो पर नीला घेरा।";
+        box.className = "pf-tick";
+        box.innerHTML = `
+          <div class="pf-tick-head">${TICK_MARK}
+            <span class="pf-tick-t">कृषि मित्र प्रीमियम</span></div>
+          <div class="pf-tick-s">${escHtml(gone)}</div>
+          ${plans.length ? `<div class="pf-tick-plans">${planCardsHtml(plans)}</div>` : ""}
+          <a class="pf-tick-btn" href="/verify">नीला टिक लें</a>
+          <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
+      }
+      box.style.display = "";
+    }
+
     async function loadProfile() {
       clearMessage();
       const token = getToken();
@@ -1926,7 +2131,7 @@
           // No profile yet — prefill with the signup name from the users
           // table so the hero and name field aren't a blank placeholder.
           const acctName = (data.data && data.data.full_name) || "";
-          fillForm({ full_name: acctName, state: "Uttar Pradesh", preferred_language: "hindi", farm_size_unit: "acres" });
+          fillForm({ full_name: acctName, preferred_language: "hindi", farm_size_unit: "acres" });
           updateSummary({ full_name: acctName });
           showMessage(data.message || "अभी प्रोफाइल नहीं बनी है। जानकारी भरकर सेव करें।", "ok");
           document.getElementById("save-mode-hint").textContent = "नई प्रोफाइल बनाएं";
@@ -1952,6 +2157,18 @@
       if (!token) { window.location.href = "login.html"; return; }
       const payload = getPayload();
       if (!payload.full_name) { showMessage("कृपया अपना पूरा नाम भरें।", "err"); return; }
+      // राज्य lives on the "farm" tab, which may be hidden right now —
+      // switch to it first, or the error names a field the user cannot see.
+      if (!payload.state) {
+        switchTab("farm");          // NOTE: this clearMessage()s — show after
+        showMessage("कृपया अपना राज्य चुनें।", "err");
+        setTimeout(() => {
+          const el = document.getElementById("state");
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+        }, 180);
+        return;
+      }
       const btn = document.getElementById("save-btn");
       btn.disabled = true;
       btn.textContent = "⏳ सेव हो रहा है…";
@@ -2073,6 +2290,9 @@
     }
     window.addEventListener("load", async () => {
       await loadProfile();
+      // After the profile, not with it: the ring goes on the avatar the hero
+      // has just finished drawing, and this must not delay the page for it.
+      loadTickStatus();
       window.scrollTo(0, 0);
 
       // Deep-link from Krashi Bazar: ?focus=phone → jump straight to the

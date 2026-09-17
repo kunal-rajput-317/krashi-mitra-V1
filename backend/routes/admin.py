@@ -44,14 +44,10 @@ def admin_db():
 async def system_status(_: str = Depends(require_admin)):
     from backend.config import get_all_settings, ALLOWED_GEMINI_MODELS, ALLOWED_CLAUDE_MODELS
 
-    gemini_keys = [
-        os.getenv(name, "").strip()
-        for name in (
-            "GEMINI_API_KEY",
-            "GEMINI_API_KEY2",  "GEMINI_API_KEY_2",
-            "GEMINI_API_KEY3",  "GEMINI_API_KEY_3",
-        )
-    ]
+    # One discovery helper for every caller — see services/chatbot_service.
+    # Adding a key is an env var, never a code change here.
+    from backend.services.chatbot_service import gemini_keys as _gemini_keys
+    gemini_keys = _gemini_keys()
 
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
@@ -80,8 +76,8 @@ async def system_status(_: str = Depends(require_admin)):
     settings = get_all_settings()
 
     return {
-        "gemini_configured":    any(gemini_keys),
-        "gemini_keys_count":    sum(1 for k in gemini_keys if k),
+        "gemini_configured":    bool(gemini_keys),
+        "gemini_keys_count":    len(gemini_keys),
         "ollama_running":       ollama_ok,
         "ollama_model":         settings.get("ollama_model", "—"),
         "chroma_chunks":        chroma_count,
@@ -2154,11 +2150,16 @@ async def record_dealer_payment(
     return {"success": True, "counts": dealers.counts(db), "funnel": dealers.funnel(db)}
 
 
-# ── Blue-tick verification queue ─────────────────────────────
-# The badge tells every buyer on the site that KrashiMitra checked this seller.
-# Everything below is the human half of that claim: the fee buys the review,
-# and only `approve` — after the phone call — sets users.seller_verified.
-# See backend/services/seller_verify.py for why that split is not negotiable.
+# ── Blue-tick membership queue ───────────────────────────────
+# The tick is a paid membership (changed 2026-09-18) — it claims nothing about
+# the seller, so there is no phone call to make and no review to pass. What is
+# left for a human is the one thing UPI cannot do: confirm that the money
+# actually landed. `payment` is therefore the button that grants the badge,
+# `approve` is the owner's complimentary grant, and `reject` is the kill switch
+# for impersonation. See backend/services/seller_verify.py.
+#
+# The queue sorts itself by who is waiting on whom: a farmer who has pressed
+# "मैंने पैसे भेज दिए" and has no badge yet is at the top, every time.
 
 @router.get("/verifications")
 def list_verifications(
@@ -2166,7 +2167,7 @@ def list_verifications(
     _:  str     = Depends(require_admin),
     db: Session = Depends(admin_db),
 ):
-    """The queue, newest first. `paid` rows are the ones owed a phone call."""
+    """The queue. Rows claiming a payment nobody has confirmed come first."""
     from backend.database.db import SellerVerification, User, UserProfile
     from backend.services import seller_verify
 
@@ -2175,7 +2176,8 @@ def list_verifications(
     q = db.query(SellerVerification)
     if status and status in seller_verify.STATUSES:
         q = q.filter(SellerVerification.status == status)
-    rows = q.order_by(SellerVerification.updated_at.desc()).limit(300).all()
+    rows = seller_verify.pending_first(
+        q.order_by(SellerVerification.updated_at.desc()).limit(300).all())
 
     users = {}
     if rows:
@@ -2185,12 +2187,28 @@ def list_verifications(
     items = []
     for r in rows:
         u = users.get(r.user_id)
+        chosen = seller_verify.plan(r.plan)
+        # Three states, and the panel needs all three separately: nothing yet,
+        # he says he sent it, and a human has seen it in the bank.
+        if r.paid_at:
+            pay_status = "received"
+        elif seller_verify.payment_claimed(r):
+            pay_status = "claimed"
+        else:
+            pay_status = "pending"
         items.append({
             "ref":        r.ref,
             "user_id":    r.user_id,
             "email":      u.email if u else None,
             "verified_now": bool(u.seller_verified) if u else False,
             "status":     r.status,
+            "active":     seller_verify.is_active(r),
+            "plan":       chosen["code"],
+            "plan_hi":    chosen["term_hi"],
+            "plan_price": chosen["price"],
+            "pay_status": pay_status,
+            "payment_claimed_at": (r.payment_claimed_at.isoformat()
+                                   if r.payment_claimed_at else None),
             "full_name":  r.full_name,
             "phone":      r.phone,
             "village":    r.village,
@@ -2216,7 +2234,11 @@ def list_verifications(
     for s in seller_verify.STATUSES:
         counts[s] = db.query(SellerVerification).filter(
             SellerVerification.status == s).count()
+    # What the panel's own summary strip counts: money waiting to be confirmed.
+    awaiting = sum(1 for i in items if i["pay_status"] == "claimed")
     return {"success": True, "data": {"items": items, "counts": counts,
+                                      "awaiting_confirm": awaiting,
+                                      "plans": seller_verify.plans(),
                                       "fee": seller_verify.fee(),
                                       "months": seller_verify.months()}}
 
@@ -2237,14 +2259,23 @@ def verification_collect(
         raise HTTPException(404, "Unknown application")
     pack = _pay_pack(row)
     name = (row.full_name or "").strip()
+    chosen = seller_verify.plan(row.plan)
+    # Says what he is buying and what it is not, in the same words /verify uses.
+    # It may never offer a check, a verification or a guarantee — the badge is a
+    # membership, and a WhatsApp message is as public a claim as a web page.
+    chosen = seller_verify.plan(row.plan)
+    # Says what he is buying and what it is not, in the same words /verify uses.
+    # It may never offer a check, a verification or a guarantee — the badge is a
+    # membership, and a WhatsApp message is as public a claim as a web page.
     pack["whatsapp"] = (
         f"नमस्ते {name}, कृषि मित्र से।\n\n"
-        f"नीले टिक के सत्यापन का शुल्क ₹{pack['amount']} है "
-        f"({seller_verify.months()} महीने के लिए)।\n"
+        f"कृषि मित्र प्रीमियम (नीला टिक) का शुल्क ₹{pack['amount']} है "
+        f"— {chosen['term_hi']}।\n"
         f"UPI: {pack['vpa']}\n"
-        f"आवेदन नंबर: {row.ref}\n\n"
-        f"शुल्क मिलने के बाद हम आपको इसी नंबर पर फ़ोन करेंगे और जाँच पूरी होते ही "
-        f"टिक चालू कर देंगे। जाँच में जानकारी गलत निकली तो पूरा शुल्क वापस।\n"
+        f"आपका नंबर: {row.ref}\n\n"
+        f"पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n"
+        f"नीला टिक प्रीमियम सदस्यता का निशान है — यह पहचान की जाँच या फसल, भाव "
+        f"या सौदे की गारंटी नहीं है।\n"
         f"https://krashimitra.in/verify"
     )
     return {"success": True, "data": pack}
@@ -2257,10 +2288,13 @@ def record_verification_payment(
     _:  str     = Depends(require_admin),
     db: Session = Depends(admin_db),
 ):
-    """Money arrived. Hand-entered from the bank app — there is no callback.
+    """Money arrived — and this is what turns the tick on.
 
-    Deliberately does NOT grant the badge: see approve() below. A farmer who
-    has paid is owed a phone call, not a tick.
+    Hand-entered from the bank app, because a upi:// hand-off has no callback.
+    Under the old phone-check tick this endpoint was forbidden from granting
+    the badge; the badge is now a paid membership, so payment is the whole of
+    it and there is nothing left to review. Press this when you have seen the
+    credit, not when the farmer says you will.
     """
     from backend.services import seller_verify, upi
 
@@ -2271,7 +2305,13 @@ def record_verification_payment(
     row = seller_verify.record_payment(db, ref, amount, payload.get("ref") or "")
     if not row:
         raise HTTPException(404, "Unknown application")
-    return {"success": True, "data": {"status": row.status, "paid": True}}
+    return {"success": True, "data": {
+        "status": row.status,
+        "paid": True,
+        "active": seller_verify.is_active(row),
+        "valid_until": row.valid_until.isoformat() if row.valid_until else None,
+        "days_left": seller_verify.days_left(row),
+    }}
 
 
 @router.post("/verifications/{ref}/approve")
@@ -2281,10 +2321,12 @@ def approve_verification(
     _:  str      = Depends(require_admin),
     db: Session  = Depends(admin_db),
 ):
-    """Grant the blue tick. The one endpoint that may set seller_verified.
+    """Give the badge away — a complimentary membership, no payment.
 
-    Named for the phone call it implies. If you have not spoken to this person
-    and seen the identity they named, this is not the button.
+    The ordinary paid grant is /payment above. This is for the ones you choose
+    to hand out: the first sellers on a new district page, someone you already
+    know, a goodwill month. It adds a term on top of whatever is left, so it is
+    safe to press on a live membership.
     """
     from backend.services import seller_verify
 
@@ -2306,15 +2348,18 @@ def reject_verification(
     _:  str      = Depends(require_admin),
     db: Session  = Depends(admin_db),
 ):
-    """Refuse the badge and clear it if it was on. Marks the refund due.
+    """Take the badge away. The kill switch, and it marks the refund due.
 
-    The fee bought a review; the review happened and the answer was no, so the
-    money goes back. Send it, then hit /refund to record that you did.
+    A membership that claims nothing about its holder still cannot be sold to
+    someone posing as someone else, so this is the answer to impersonation, to
+    a member pushing a scam behind the tick, and to a chargeback. A term cut
+    short was not delivered, so the money goes back — send it, then hit
+    /refund to record that you did.
     """
     from backend.services import seller_verify
 
     payload = payload or {}
-    row = seller_verify.reject(db, ref, reason=payload.get("reason") or "",
+    row = seller_verify.revoke(db, ref, reason=payload.get("reason") or "",
                                by=payload.get("by") or "admin")
     if not row:
         raise HTTPException(404, "Unknown application")

@@ -573,10 +573,8 @@ let that reach the image):
         ai_prompt = f"Photorealistic 4k photo of thriving {category} agricultural field in rural India, bright natural sunlight, lush green crops, cinematic 16:9 ratio"
 
     # 2. Try Google Imagen 3 via configured GEMINI_API_KEY
-    for env_k in ["GEMINI_API_KEY", "GEMINI_API_KEY2", "GEMINI_API_KEY3"]:
-        api_k = os.getenv(env_k, "").strip()
-        if not api_k:
-            continue
+    from backend.services.chatbot_service import gemini_keys
+    for env_k, api_k in gemini_keys():
         try:
             imagen_url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={api_k}"
             payload = {

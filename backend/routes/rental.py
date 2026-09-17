@@ -55,7 +55,7 @@ from backend.routes.bhav import (
     _fit, _footer, _header, _ld,
 )
 from backend.routes.product import _EXTRA_CSS as _PRODUCT_CSS
-from backend.services import free_month, rental
+from backend.services import free_month, legal, rental
 
 router = APIRouter()
 
@@ -75,12 +75,14 @@ _NOT_OURS = "कृषि मित्र मशीन किराये पर
 DISCLAIMER = (_NOT_OURS +
               "यहाँ दिए किराये अनुमानित हैं — असली रेट मशीन मालिक, इलाके, सीज़न और "
               "डीज़ल के दाम पर निर्भर करता है। सौदा तय करने से पहले मशीन देख लें और "
-              "रेट में क्या-क्या शामिल है यह लिखवा लें।")
+              "रेट में क्या-क्या शामिल है यह लिखवा लें।"
+              + " " + legal.MACHINE_NOTE)
 
 DISCLAIMER_LISTED = (_NOT_OURS +
                      "नीचे दिए रेट मालिक के अपने बताए हुए हैं, हमारे नहीं — और बदल सकते हैं। "
                      "न हम बुकिंग करते हैं, न किसी मशीन या सौदे की गारंटी लेते हैं। "
-                     "जाने से पहले फ़ोन करके रेट और मशीन की उपलब्धता पक्की कर लें।")
+                     "जाने से पहले फ़ोन करके रेट और मशीन की उपलब्धता पक्की कर लें।"
+                     + " " + legal.MACHINE_NOTE)
 
 # The one honest answer to "अभी किराये पर कहाँ से लूँ" while we have no
 # providers listed: the government's own custom-hiring network. Both are real,

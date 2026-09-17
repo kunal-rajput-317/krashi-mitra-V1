@@ -7,6 +7,7 @@
 import json
 import logging
 import os
+import re
 from urllib.parse import urlparse
 
 import httpx
@@ -324,23 +325,36 @@ async def call_claude(prompt: str) -> str:
 
 # ── Gemini with multi-key rotation (ASYNC) ───────────────────
 
+# GEMINI_API_KEY, GEMINI_API_KEY2 … GEMINI_API_KEY9, and the GEMINI_API_KEY_2
+# spelling that also exists in the wild. Numbers are read out of the name, so
+# adding a sixth key is an env var and nothing else — the hardcoded 3-key list
+# this replaced had to be edited in five files, and in practice never was.
+_GEMINI_KEY_RE = re.compile(r"^GEMINI_API_KEY_?(\d*)$")
+
+
 def gemini_keys() -> list:
     """[(env name, key)] for every Gemini key configured, in order, deduped.
 
     Public because the chat pipeline is no longer the only caller — the
-    WhatsApp panel's picture and suggestion features rotate through the same
-    keys (services/wa_image, services/wa_extra). One list, so a key added for
-    one and not the other cannot happen; that is a bug that would only surface
-    under quota pressure, which is the worst time to find it."""
+    WhatsApp panel's picture and suggestion features, the festival and news
+    image generators, /admin/status and the health card all rotate through the
+    same keys. One list, so a key added for one and not the other cannot
+    happen; that is a bug that would only surface under quota pressure, which
+    is the worst time to find it."""
+    found = []
+    for name, raw in os.environ.items():
+        m = _GEMINI_KEY_RE.match(name.strip().upper())
+        if not m:
+            continue
+        k = (raw or "").strip()
+        if k:
+            # bare GEMINI_API_KEY is key 1; "" sorts as 1 for GEMINI_API_KEY_1 too
+            found.append((int(m.group(1) or 1), name, k))
+
     keys, seen = [], set()
-    for key_name in [
-        "GEMINI_API_KEY",
-        "GEMINI_API_KEY2", "GEMINI_API_KEY_2",
-        "GEMINI_API_KEY3", "GEMINI_API_KEY_3",
-    ]:
-        k = os.getenv(key_name, "").strip()
-        if k and k not in seen:
-            keys.append((key_name, k))
+    for _, name, k in sorted(found, key=lambda t: (t[0], t[1])):
+        if k not in seen:
+            keys.append((name, k))
             seen.add(k)
     return keys
 

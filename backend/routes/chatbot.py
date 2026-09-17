@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from backend.config import get_setting
 from backend.database.db import ChatHistory, User, get_db
 from backend.utils.auth_utils import get_current_user
-from backend.utils.security import rate_limit
+from backend.utils.security import daily_limit, rate_limit
 from backend.services.chatbot_service import (
     build_context,
     build_prompt,
@@ -91,8 +91,24 @@ PIPELINE_TIMEOUT = float(os.getenv("PIPELINE_TIMEOUT", "50"))  # seconds
 # typing follow-ups while making bulk abuse pointless.
 _LIMIT_ASK = rate_limit("ask", 15, 60)
 
+# A temporary cap on top of that, while paid AI calls are the binding
+# constraint: 3 questions per IP per day, resetting at IST midnight. The
+# per-minute limit above only stops a burst — it still allows thousands of
+# answers a day. chat.html counts the same 3 in the browser so the farmer sees
+# a kind message instead of a raw 429, but that counter is a courtesy; this is
+# the one that actually holds. Raise or drop it via AI_CHAT_DAILY_LIMIT without
+# a deploy, or delete both halves when the cap is no longer wanted.
+AI_CHAT_DAILY_LIMIT = int(os.getenv("AI_CHAT_DAILY_LIMIT", "3"))
 
-@router.post("/ask", dependencies=[Depends(_LIMIT_ASK)])
+_LIMIT_ASK_DAILY = daily_limit(
+    "ask_day",
+    AI_CHAT_DAILY_LIMIT,
+    f"आज के {AI_CHAT_DAILY_LIMIT} सवाल पूरे हो गए 🌾 "
+    f"कल फिर पूछें।",
+)
+
+
+@router.post("/ask", dependencies=[Depends(_LIMIT_ASK), Depends(_LIMIT_ASK_DAILY)])
 async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
     """
     Full pipeline: Cache → RAG → Gemini (async) → Ollama → error.

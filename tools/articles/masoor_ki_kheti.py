@@ -136,6 +136,7 @@ BODY = r"""
       <li><strong>फॉस्फोरस सबसे ज़रूरी:</strong> DAP या SSP बुवाई के समय कतार में, बीज के नीचे।</li>
       <li><strong>सल्फर:</strong> SSP देने का एक बड़ा फायदा यह है कि उसमें सल्फर भी मिलता है, जो दलहन में उपयोगी है।</li>
       <li><strong>ज़िंक और बोरॉन:</strong> कमी वाले खेतों में — मात्रा <strong>मिट्टी जाँच रिपोर्ट</strong> से तय करें।</li>
+      <li><strong>बोरी का पूरा हिसाब:</strong> कौन सी खाद कितनी, किस दिन और खेत में किस जगह — एक एकड़ का पूरा गणित <a href="https://krashimitra.in/articles/masoor-me-khad-kab-kitni">मसूर में कौन सी खाद डालें</a> में है।</li>
       <li><strong>पहली सिंचाई:</strong> आमतौर पर बुवाई के <strong>40–45 दिन बाद, फूल आने से पहले</strong>।</li>
       <li><strong>दूसरी सिंचाई:</strong> <strong>फली भरते समय</strong> — यही उपज पर सबसे ज़्यादा असर डालती है।</li>
       <li><strong>हल्की सिंचाई करें:</strong> खेत में पानी भरना उकठा को सीधे बढ़ाता है; मसूर खड़ा पानी सहन नहीं करती।</li>
@@ -289,9 +290,9 @@ ARTICLE = {
     "body": BODY,
     "faqs": FAQS,
 
-    "bhav_links": [("wheat", "गेहूं का भाव"),
-                   ("red-gram-arhar-tur-whole", "अरहर का भाव"),
-                   ("mustard", "सरसों का भाव")],
+    "bhav_links": [("lentil-masur-whole", "मसूर का भाव"),
+                   ("wheat", "गेहूं का भाव"),
+                   ("red-gram-arhar-tur-whole", "अरहर का भाव")],
 
     "card": {
         "emoji": "🫘", "bg": "#fff7ed", "accent": "#b45309",
@@ -302,6 +303,8 @@ ARTICLE = {
     },
 
     "related": [
+        (f"{SITE}/articles/masoor-me-khad-kab-kitni", "#ca8a04", "🧪", "मसूर · खाद",
+         "मसूर में कौन सी खाद डालें? 1 एकड़ का पूरा हिसाब"),
         (f"{SITE}/articles/dhaniya-ki-kheti-mp", "#16a34a", "🌿", "धनिया · खेती",
          "धनिया की खेती — बुवाई अक्टूबर से, बीज 4.5 किलो प्रति एकड़"),
         (f"{SITE}/articles/jau-ki-kheti", "#a16207", "🌾", "जौ · खेती",

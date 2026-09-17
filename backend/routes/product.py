@@ -58,10 +58,10 @@ from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from backend.routes.bhav import (
-    _CSS as _BASE_CSS, _FONTS, _ICON, _ANALYTICS, _district_from_referer,
+    _CSS as _BASE_CSS, _FONTS, _ICON, _ANALYTICS, _asset, _district_from_referer,
     _header, _footer, _doc, _faq, _crumb_ld, _fit, _ld,
 )
-from backend.services import affiliate, lead_clicks, shop_catalog
+from backend.services import affiliate, legal, lead_clicks, shop_catalog
 
 router = APIRouter()
 
@@ -77,7 +77,8 @@ DISCLAIMER = ("कृषि मित्र सामान नहीं बे�
               "यहाँ दी कीमत अनुमानित बाज़ार भाव है, किसी दुकान का पक्का रेट नहीं — "
               "असली दाम दुकान, कंपनी, पैक और इलाके से बदलता है। "
               "ऑर्डर करने पर दुकानदार अपना रेट बताता है। खरीदने से पहले "
-              "पैक, वज़न और एक्सपायरी ज़रूर जाँच लें।")
+              "पैक, वज़न और एक्सपायरी ज़रूर जाँच लें।"
+              + " " + legal.GOODS_NOTE)
 
 # The material-connection disclosure for the Amazon/Flipkart buttons. rel=
 # "sponsored" tells Google; this tells the farmer, which is the half the CCPA's
@@ -336,11 +337,275 @@ align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
 .km-lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
 .km-lightbox-close{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;
 background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;cursor:pointer}
+
+/* The buy CTA is a <button>, not an <a> — it opens the pre-book sheet rather
+   than going anywhere. The shared .btn rule was written for anchors, so the
+   browser's own button chrome (border, grey background, 13px system font)
+   would otherwise show through everything .btn sets. */
+button.btn{border:0;cursor:pointer;line-height:1.35}
+
+/* ── the प्री-बुक sheet ── shop.html's buy funnel, on the page that replaced
+   it. Same four fields, the same /order/log row and the same 📒 it lands in;
+   the only thing left behind is the Amazon/Flipkart chooser it used to open
+   first, because those two buttons already sit beside this one here. ── */
+.pb-ov{position:fixed;inset:0;z-index:100000;background:rgba(16,32,25,.55);
+display:flex;align-items:flex-end;justify-content:center;
+-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.pb-ov[hidden]{display:none}
+.pb-box{position:relative;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
+background:var(--white);border-radius:20px 20px 0 0;padding:20px 18px 18px;
+box-shadow:var(--shadow-md);animation:pb-up .22s ease}
+@keyframes pb-up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media(min-width:600px){.pb-ov{align-items:center;padding:20px}
+.pb-box{border-radius:var(--radius-md)}}
+.pb-box h2{margin:0 0 3px;font-size:18px;line-height:1.35;color:var(--green-dark);padding-right:36px}
+.pb-sub{margin:0 0 4px;font-size:12.5px;color:var(--text-soft);line-height:1.5}
+.pb-x{position:absolute;top:12px;right:12px;width:34px;height:34px;border:0;border-radius:50%;
+background:var(--cream);color:var(--text-mid);font-size:21px;line-height:1;cursor:pointer}
+.pb-x:hover{background:var(--border)}
+.pb-item{display:flex;align-items:center;gap:10px;margin:12px 0 2px;padding:10px 12px;
+background:var(--cream);border-radius:12px;font-size:13px;color:var(--text-mid);line-height:1.45}
+.pb-item b{display:block;font-size:14px;color:var(--text-dark)}
+.pb-item .pb-em{font-size:26px;line-height:1;flex:0 0 auto}
+.pb-lbl{display:block;font-size:12.5px;font-weight:700;color:var(--text-mid);margin:12px 0 5px}
+.pb-req{color:#d32f2f}
+.pb-in{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:11px;
+font-size:15px;font-family:inherit;color:var(--text-dark);background:var(--white)}
+.pb-in:focus{outline:none;border-color:var(--green-mid)}
+.pb-in.bad{border-color:#e53935}
+.pb-qty{display:flex;align-items:center;gap:10px}
+.pb-qty button{width:40px;height:40px;flex:0 0 auto;border:1.5px solid var(--border);border-radius:11px;
+background:var(--cream);color:var(--green-dark);font-size:19px;font-weight:800;cursor:pointer}
+.pb-qty .pb-in{width:78px;text-align:center}
+.pb-total{margin-top:10px;padding:9px 13px;border-radius:11px;background:var(--green-pale);
+font-size:14px;font-weight:800;color:var(--green-dark)}
+.pb-go{width:100%;margin-top:14px;padding:13px;border:0;border-radius:12px;
+background:var(--green-dark);color:#fff;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer}
+.pb-go:hover{background:var(--green-mid)}
+.pb-go:disabled{opacity:.62;cursor:default}
+.pb-note{margin:10px 0 0;font-size:11.5px;color:var(--text-soft);line-height:1.6}
+/* the state after a saved row — the form is gone, the tracking code is not */
+.pb-ok{text-align:center;padding:6px 0 2px}
+.pb-ok .pb-tick{font-size:40px;line-height:1}
+.pb-ok h3{margin:8px 0 4px;font-size:17px;color:var(--green-dark)}
+.pb-ok p{margin:0 0 4px;font-size:13px;color:var(--text-mid);line-height:1.6}
+.pb-code{display:inline-block;margin:8px 0 2px;padding:6px 14px;border-radius:10px;
+background:var(--cream);font-family:monospace;font-size:15px;font-weight:700;color:var(--text-dark)}
+.pb-wa{display:block;margin-top:14px;padding:13px;border-radius:12px;background:#25d366;color:#0b3d1e;
+font-size:15px;font-weight:800;text-decoration:none}
+/* Top, not bottom: the only messages this carries are the two failure
+   branches, and both leave a WhatsApp button sitting at the bottom of the
+   sheet — a toast down there lands squarely on the thing it is telling him
+   to tap. */
+.pb-toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:100001;
+max-width:92vw;padding:12px 16px;border-radius:12px;background:#14361f;color:#fff;
+font-size:13.5px;font-weight:600;line-height:1.5;box-shadow:0 8px 26px rgba(0,0,0,.3)}
+.pb-toast[hidden]{display:none}
 """
 
 # Only _not_found() below needs the combined sheet — it builds its own <head>
 # by hand instead of going through bhav.py's _doc().
 _CSS = _BASE_CSS + _EXTRA_CSS
+
+
+# ── the buy funnel ──────────────────────────────────────────
+#
+# WHAT THE BUTTON DOES, AND WHY IT IS BACK. The page used to end on a WhatsApp
+# link titled "रेट पूछें": it drafted a message and left. Nothing was recorded,
+# so nobody could answer it later, it never reached /admin, and the farmer had
+# no way to see a reply anywhere but that one chat.
+#
+# The funnel shop.html ran is the one the business actually has: the farmer
+# pre-books (name, phone, quantity, pincode), the row lands in `orders` through
+# POST /order/log, the owner sources a dealer and quotes back with
+# quote_total/dealer_name, and the farmer reads the quote in the 📒 book. When
+# /shop was retired on 16 Sep 2026 that funnel lost its only front end — the
+# API, the admin queue and the book all stayed. This puts it back on /product,
+# which is the shop now.
+#
+# It is NOT a sale, and the wording may never imply one. We take an enquiry, a
+# dealer names the price, and 8 of the first 28 came back "Not Available" — so
+# the sheet says प्री-बुक, says no money moves in this step, and keeps the
+# estimate labelled as an estimate. tests/test_product_price_claims.py fails
+# the build on "ऑर्डर करें" and "में खरीदें" for exactly that reason.
+#
+# Plain string, not an f-string — the JS braces would need doubling otherwise.
+_BUY_JS = """
+var ov=document.getElementById('pb-ov');
+if(!ov)return;
+var P={id:parseInt(ov.dataset.pid,10)||null,name:ov.dataset.pname,
+       unit:ov.dataset.punit,price:parseFloat(ov.dataset.pprice)||0,url:ov.dataset.purl};
+var qty=1, sent=false;
+function $(id){return document.getElementById(id);}
+function money(n){return n.toLocaleString('en-IN');}
+function paint(){$('pb-q').value=qty;
+ $('pb-total').textContent='अनुमानित: ₹'+money(P.price*qty)+' ('+qty+' × '+P.unit+')';}
+
+var GATE={title:'प्री-बुक के लिए लॉगिन करें',
+ text:'दाम तैयार होते ही सूचना आपके खाते पर आएगी — फ़ोन बदलने या ब्राउज़र साफ़ करने पर भी आपकी प्री-बुक सुरक्षित रहेगी।',
+ resume:'product-buy'};
+
+function show(){ov.hidden=false;document.body.style.overflow='hidden';paint();
+ setTimeout(function(){var n=$('pb-name');if(n)n.focus();},180);}
+window.kmCloseBuy=function(){ov.hidden=true;document.body.style.overflow='';};
+
+/* Gated before the sheet opens, not after it is filled in — nobody should type
+   his name, number and pincode only to be sent to login. He comes back to this
+   same URL with ?do=product-buy and the sheet re-opens itself. */
+window.kmOpenBuy=function(){
+ if(window.KMRequireLogin&&!window.KMRequireLogin(GATE))return;
+ show();
+};
+window.kmBuyQty=function(d){qty=Math.max(1,qty+d);paint();};
+window.kmBuySetQty=function(v){var q=parseInt(v,10);qty=(isNaN(q)||q<1)?1:q;paint();};
+
+ov.addEventListener('click',function(e){if(e.target===ov)window.kmCloseBuy();});
+document.addEventListener('keydown',function(e){
+ if(e.key==='Escape'&&!ov.hidden)window.kmCloseBuy();});
+if(window.KMTakeResume&&window.KMTakeResume()==='product-buy')setTimeout(show,300);
+
+function toast(msg,ms){var t=$('pb-toast');t.textContent=msg;t.hidden=false;
+ setTimeout(function(){t.hidden=true;},ms||5000);}
+function bad(id){var el=$(id);el.classList.add('bad');el.focus();
+ setTimeout(function(){el.classList.remove('bad');},1400);}
+
+function waHref(code,nm,ph,pin,vil){
+ /* A real newline, built at runtime: _BUY_JS is an ordinary Python string, so
+    a "\\n" written here would be a line break in the emitted JS source and the
+    literal would never close. */
+ var NL=String.fromCharCode(10);
+ var msg='🌾 *कृषि मित्र — प्री-बुक*'+NL+(code?('🆔 '+code+NL):'')+
+  NL+'👤 '+nm+NL+'📱 '+ph+
+  NL+NL+'📦 '+P.name+NL+'🔢 मात्रा: '+qty+' ('+P.unit+')'+
+  NL+'🏷️ अनुमानित दर: ₹'+money(P.price)+
+  NL+NL+'📍 पिनकोड: '+pin+(vil?(NL+'🏘️ '+vil):'')+
+  NL+NL+P.url+
+  NL+'💬 कृपया मेरे इलाके के दुकानदार से पूरा दाम पता करके भेजें।';
+ return 'https://wa.me/919870951001?text='+encodeURIComponent(msg);
+}
+
+/* The saved row IS the outcome — the WhatsApp hand-off is a tap, not a popup.
+   window.open() from inside a fetch callback is not a user gesture any more and
+   mobile browsers block it, which on shop.html could leave a farmer staring at
+   nothing after a pre-book that had in fact gone through. */
+function done(code,nm,ph,pin,vil){
+ sent=true;
+ /* A tick and "दर्ज हो गई" only where a row was actually written. Without a
+    tracking code nothing was saved, nothing will reach 📒 and nobody will
+    call — so that branch says so and makes WhatsApp the way out, rather than
+    dressing a failure up as a booking. */
+ var head=code
+  ?('<div class="pb-tick">✅</div><h3>प्री-बुक दर्ज हो गई</h3>'+
+    '<p>हम पिनकोड '+pin+' पर दुकानदार से दाम पता करके आपको भेजेंगे। अभी कोई भुगतान नहीं।</p>'+
+    '<div class="pb-code">'+code+'</div>'+
+    '<p>यह नंबर संभालकर रखें — दाम तैयार होते ही 📒 किताब में इसी नंबर पर आएगा।</p>')
+  :('<div class="pb-tick">⚠️</div><h3>प्री-बुक सेव नहीं हो पाई</h3>'+
+    '<p>आपकी जानकारी हमारे पास दर्ज नहीं हुई। नीचे के बटन से WhatsApp पर भेज '+
+    'दीजिए — वहीं से दाम पता करके भेज देंगे।</p>');
+ $('pb-form').innerHTML='<div class="pb-ok">'+head+
+  '<a class="pb-wa" target="_blank" rel="noopener" href="'+waHref(code,nm,ph,pin,vil)+'">'+
+  (code?'📲 WhatsApp पर भी भेजें':'📲 WhatsApp पर भेजें')+'</a></div>';
+}
+
+window.kmSubmitBuy=function(){
+ if(sent)return;
+ var nm=$('pb-name').value.trim(), ph=$('pb-phone').value.trim(),
+     pin=$('pb-pin').value.trim(), vil=$('pb-vill').value.trim();
+ if(!nm){bad('pb-name');return;}
+ if(ph.length<10){bad('pb-phone');return;}
+ if(pin.length<6){bad('pb-pin');return;}
+ var btn=$('pb-go'), label=btn.textContent;
+ btn.disabled=true;btn.textContent='भेजा जा रहा है…';
+ var base=window.KRASHIMITRA_API_BASE||location.origin;
+ var h={'Content-Type':'application/json'}, tok=null;
+ try{tok=localStorage.getItem('krishi_token');}catch(e){}
+ if(tok)h['Authorization']='Bearer '+tok;
+ fetch(base+'/order/log',{method:'POST',headers:h,body:JSON.stringify({
+  product_name:P.name, product_id:P.id, quantity:qty,
+  unit_price:P.price, total:P.price*qty, phone:ph,
+  customer_name:nm, pincode:pin, source:'prebook'})})
+ .then(function(r){return r.json().catch(function(){return {};})
+   .then(function(d){return {status:r.status,d:d};});})
+ .then(function(res){
+  btn.disabled=false;btn.textContent=label;
+  /* Token expired while the sheet was open — nothing was saved, so do not hand
+     him a tick that says it was. */
+  if(res.status===401){window.kmCloseBuy();
+   if(window.KMShowLoginGate)window.KMShowLoginGate(GATE);
+   else toast('कृपया दोबारा लॉगिन करें।');
+   return;}
+  if(res.d&&res.d.success){
+   if(window.kmTrack)kmTrack('prebook_order',{product:P.name,quantity:qty,
+     value:P.price*qty,source:'product'});
+   done(res.d.tracking_code,nm,ph,pin,vil);
+   return;}
+  done(null,nm,ph,pin,vil);
+  toast('⚠️ सेव नहीं हो पाया — WhatsApp से भेज दीजिए।');
+ })
+ .catch(function(){
+  btn.disabled=false;btn.textContent=label;
+  done(null,nm,ph,pin,vil);
+  toast('⚠️ इंटरनेट नहीं मिला — WhatsApp से भेज दीजिए।');
+ });
+};
+"""
+
+
+def _buy_sheet(p: dict, canon: str) -> str:
+    """The pre-book sheet, its toast, and the script that drives them.
+
+    Every product-specific value rides on data-* attributes rather than being
+    baked into the script: /product HTML is edge-cached for half an hour, so
+    the markup has to be identical for every visitor and one script has to work
+    on all 94 pages. Nothing user-specific is rendered here — the login gate,
+    the name and the number are all the browser's side of the job."""
+    return f"""<div class="pb-ov" id="pb-ov" hidden
+ data-pid="{p.get('id') or ''}" data-pname="{escape(p['name_hi'], quote=True)}"
+ data-punit="{escape(p['unit_hi'], quote=True)}" data-pprice="{p['price']}"
+ data-purl="{escape(canon, quote=True)}">
+<div class="pb-box" role="dialog" aria-modal="true" aria-labelledby="pb-t">
+<button class="pb-x" type="button" onclick="kmCloseBuy()" aria-label="बंद करें">&times;</button>
+<h2 id="pb-t">प्री-बुक करें</h2>
+<p class="pb-sub">दाम दुकानदार का होता है — हम आपके इलाके में पता करके आपको भेजते हैं।</p>
+<div id="pb-form">
+<div class="pb-item"><span class="pb-em" aria-hidden="true">{p['emoji']}</span>
+<span><b>{escape(p['name_hi'])}</b>₹{p['price']} / {escape(p['unit_hi'])} · अनुमानित</span></div>
+
+<label class="pb-lbl" for="pb-name">👤 किसान का नाम <span class="pb-req">*</span></label>
+<input class="pb-in" id="pb-name" type="text" placeholder="जैसे: रामलाल सिंह" autocomplete="name">
+
+<label class="pb-lbl" for="pb-phone">📱 मोबाइल नंबर <span class="pb-req">*</span></label>
+<input class="pb-in" id="pb-phone" type="tel" maxlength="10" inputmode="numeric"
+ placeholder="जैसे: 9876543210" autocomplete="tel"
+ oninput="this.value=this.value.replace(/\\D/g,'')">
+
+<label class="pb-lbl" for="pb-q">📦 मात्रा <span class="pb-req">*</span></label>
+<div class="pb-qty">
+<button type="button" onclick="kmBuyQty(-1)" aria-label="कम करें">&minus;</button>
+<input class="pb-in" id="pb-q" type="number" min="1" value="1" inputmode="numeric"
+ oninput="kmBuySetQty(this.value)">
+<button type="button" onclick="kmBuyQty(1)" aria-label="ज़्यादा करें">+</button>
+</div>
+<div class="pb-total" id="pb-total">अनुमानित: ₹{p['price']}</div>
+
+<label class="pb-lbl" for="pb-pin">📍 पिनकोड — कहाँ चाहिए <span class="pb-req">*</span></label>
+<input class="pb-in" id="pb-pin" type="tel" maxlength="6" inputmode="numeric"
+ placeholder="जैसे: 273001" autocomplete="postal-code"
+ oninput="this.value=this.value.replace(/\\D/g,'')">
+
+<label class="pb-lbl" for="pb-vill">🏘️ गाँव / जिला</label>
+<input class="pb-in" id="pb-vill" type="text" placeholder="जैसे: मेरठ, UP (वैकल्पिक)">
+
+<button class="pb-go" id="pb-go" type="button" onclick="kmSubmitBuy()">प्री-बुक भेजें</button>
+<p class="pb-note">अभी कोई भुगतान नहीं। कृषि मित्र सामान नहीं बेचता — पैक, वज़न और
+एक्सपायरी दुकानदार की ज़िम्मेदारी है, सौदा आपका उसी से होता है।
+सामान के इस्तेमाल से किसी भी नुकसान के लिए कृषि मित्र ज़िम्मेदार नहीं।</p>
+</div>
+</div>
+</div>
+<div class="pb-toast" id="pb-toast" hidden></div>
+<script>(function(){{{_BUY_JS}}})();</script>"""
+
 
 
 def _hub_card(p: dict) -> str:
@@ -607,11 +872,12 @@ def render_product(p: dict) -> HTMLResponse:
         limit=162)
 
     # ── CTAs ──
-    # "ऐप में खरीदें" promised a purchase; the button opens an enquiry that a
-    # dealer quotes against, so it now says what it does. shop.html (and its
-    # cart/order modal) is retired — the enquiry now goes straight to WhatsApp.
-    ask_text = quote(f"मुझे {p['name_hi']} ({p['unit_hi']}) का रेट जानना है — अनुमानित {rs}\n{canon}")
-    ctas = [f'<a class="btn btn-app" target="_blank" href="https://wa.me/919870951001?text={ask_text}">🛒 रेट पूछें</a>']
+    # "रेट पूछें" drafted a WhatsApp message and left: no row, nothing in
+    # /admin, nothing in the 📒 book, and no way to answer the farmer later
+    # unless somebody happened to read that chat. The first button is the
+    # pre-book again — shop.html's funnel, on the page that replaced it (see
+    # _BUY_JS above). It still promises nothing but a dealer's quote.
+    ctas = ['<button class="btn btn-app" type="button" onclick="kmOpenBuy()">🛒 खरीदें</button>']
     # Through /go/p/<net>/<slug>, never straight at the network. These buttons
     # were the site's only affiliate placement for months and left no record of
     # a single click; the redirect is what turns them into a number.
@@ -711,9 +977,16 @@ def render_product(p: dict) -> HTMLResponse:
 <div class="km-lightbox" id="km-lightbox" onclick="this.classList.remove('open')">
 <img id="km-lightbox-img" src="" alt="{escape(p['name_hi'])}">
 <button class="km-lightbox-close" onclick="event.stopPropagation();document.getElementById('km-lightbox').classList.remove('open')" aria-label="बंद करें">✕</button>
-</div>"""
+</div>
+{_buy_sheet(p, canon)}"""
 
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/product/">उत्पाद</a> › '
               f'{escape(cat_label)} › {escape(p["name_hi"])}')
+    # The 📒 book rides on this page and only this one in the section, because
+    # this is where a pre-book is placed and the book is where its quote comes
+    # back — a tracking code with nowhere on the site to read it is the same
+    # dead end the WhatsApp-only button was. It mounts itself next to the
+    # header avatar and no-ops on a page that already has one.
     return _doc(title, desc, canon, crumbs, body, ld, p["img"],
-                active="shop", extra_css=_EXTRA_CSS)
+                active="shop", extra_css=_EXTRA_CSS,
+                head_extra=f'<script src="{_asset("krashibook.js")}" defer></script>')

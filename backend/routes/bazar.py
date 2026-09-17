@@ -9,8 +9,11 @@
 #   • Guests can READ the feed, comments and public profiles.
 #   • Posting, liking, commenting, offering and following need
 #     a logged-in user WITH a farmer profile (user_profiles row).
-#   • The blue "verified seller" tick = users.seller_verified,
-#     toggled manually by the admin directly in the DB.
+#   • The blue tick = users.seller_verified. It is a PAID MEMBERSHIP, not a
+#     verification: it says this member pays for कृषि मित्र प्रीमियम and
+#     claims nothing about who he is or what he is selling. Granted by
+#     services/seller_verify.record_payment when the money lands; see that
+#     module before putting the word "verified" in front of a farmer.
 #
 # ENDPOINTS:
 #   GET    /bazar/feed                     public (auth optional)
@@ -338,6 +341,12 @@ def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool,
         "crop_slug":      p.crop_slug,
         "state":          p.state,
         "district":       p.district,
+        # The composer's own three fields, echoed back so re-opening a listing
+        # to edit it shows the place the farmer actually picked rather than
+        # re-deriving it from the joined `location` string.
+        "village":        p.village,
+        "lat":            p.lat,
+        "lon":            p.lon,
         "status":         p.status,
         "likes_count":    p.likes_count or 0,
         "comments_count": p.comments_count or 0,
@@ -387,6 +396,13 @@ def bazar_me(
             "has_phone":   _has_phone(profile),
             "avatar_url":  profile.avatar_url if profile else None,
             "verified":    bool(user.seller_verified),
+            # His registered address, so the composer's location block opens on
+            # the place he already told us about instead of empty. It is only a
+            # default — the crop may be lying somewhere else, which is why the
+            # composer lets him change it per listing.
+            "state":       profile.state    if profile else None,
+            "district":    profile.district if profile else None,
+            "village":     profile.village  if profile else None,
         },
     }
 
@@ -667,6 +683,63 @@ async def _save_media(media: UploadFile) -> tuple:
     return url, media_type
 
 
+def _coord(v: Optional[float], limit: float) -> Optional[float]:
+    """A map pin, or None — never a number that is not a place on earth.
+
+    The pin arrives as a form field, so it is whatever the page sent. Out of
+    range is dropped rather than rejected: the coordinates are an extra on a
+    listing whose text and price are the point, and refusing the whole post
+    over a bad decimal would lose the farmer's crop, price and photo with it.
+    Rounded to 5 places (~1 m) because storing more is false precision — the
+    phone's own fix is tens of metres wide — and because a full-width float is
+    a finer answer to "where is his farm" than anyone asked us to keep.
+    """
+    if v is None:
+        return None
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    if f != f or abs(f) > limit or f == 0:      # NaN, out of range, or 0/0
+        return None
+    return round(f, 5)
+
+
+def _pin(lat: Optional[float], lon: Optional[float]) -> tuple:
+    """The two coordinates, or neither. A longitude with no latitude is not a
+    place — kept apart they would put the pin on the equator."""
+    la, lo = _coord(lat, 90.0), _coord(lon, 180.0)
+    return (la, lo) if (la is not None and lo is not None) else (None, None)
+
+
+def _place_fields(village: Optional[str], district: Optional[str],
+                  state: Optional[str], profile) -> dict:
+    """What the composer said about the place, falling back to the profile.
+
+    The page the farmer posted from wins over his profile: he may be selling a
+    crop lying in a different district from the one he registered with, and the
+    composer is the district he just pointed at on the map. `location` is
+    derived here and nowhere else, so the string on the card can never disagree
+    with the columns /bhav filters on.
+    """
+    d  = (district or "").strip() or (profile.district if profile else None)
+    st = (state    or "").strip() or (profile.state    if profile else None)
+    v  = (village  or "").strip() or None
+    # The profile's village is only borrowed when the profile's DISTRICT is
+    # what we ended up with. A farmer selling a lot that sits in Sitapur, whose
+    # profile says Rampur village in Hardoi, must not have his listing labelled
+    # "Rampur, Sitapur" — that village is not in that district. Same reason an
+    # emptied box stays empty: clearing it is an answer.
+    if v is None and not (village or "").strip() and not (district or "").strip():
+        v = (profile.village if profile else None) or None
+    return {
+        "village":  v or None,
+        "district": d or None,
+        "state":    st or None,
+        "location": ", ".join([p for p in [v, d] if p]),
+    }
+
+
 @router.post("/posts")
 async def create_post(
     post_type:    str                  = Form("sell"),
@@ -676,12 +749,16 @@ async def create_post(
     old_price:    Optional[float]      = Form(None),
     quantity:     Optional[float]      = Form(None),
     unit:         Optional[str]        = Form("क्विंटल"),
-    # Set by the /bhav panel, which knows exactly which crop and district the
-    # farmer was looking at. krashi_bajar.html omits them and falls back to the
-    # profile below, so the existing composer is unaffected.
+    # Where the crop is. The composer collects all four (2026-09-17); the /bhav
+    # panel sends crop_slug/state/district because it already knows which crop
+    # and district the farmer was looking at. Anything omitted falls back to the
+    # profile in _place_fields, so an older client still posts fine.
     crop_slug:    Optional[str]        = Form(None),
     state:        Optional[str]        = Form(None),
     district:     Optional[str]        = Form(None),
+    village:      Optional[str]        = Form(None),
+    lat:          Optional[float]      = Form(None),
+    lon:          Optional[float]      = Form(None),
     source:       Optional[str]        = Form(None),
     media:        Optional[UploadFile] = File(None),
     current_user: dict                 = Depends(get_current_user),
@@ -714,11 +791,9 @@ async def create_post(
     if media and media.filename:
         media_url, media_type = await _save_media(media)
 
-    location = ", ".join([p for p in [profile.village, profile.district] if p])
+    place = _place_fields(village, district, state, profile)
+    pin   = _pin(lat, lon)
 
-    # The page the farmer posted from wins over the profile: he may be selling a
-    # crop lying in a different district from the one he registered with, and
-    # the /bhav page is the district he was actually looking at.
     post = BazarPost(
         users_id   = user_id,
         post_type  = post_type,
@@ -730,10 +805,13 @@ async def create_post(
         old_price  = old_price,
         quantity   = quantity,
         unit       = (unit or "क्विंटल").strip(),
-        location   = location,
+        location   = place["location"],
         crop_slug  = (crop_slug or "").strip() or None,
-        state      = (state or "").strip() or (profile.state or None),
-        district   = (district or "").strip() or (profile.district or None),
+        state      = place["state"],
+        district   = place["district"],
+        village    = place["village"],
+        lat        = pin[0],
+        lon        = pin[1],
         source     = (source or "").strip() or "bazar",
     )
     db.add(post)
@@ -803,6 +881,16 @@ class EditPostRequest(BaseModel):
     old_price: Optional[float] = None
     quantity:  Optional[float] = None
     unit:      Optional[str]   = None
+    # The place, added 2026-09-17. A farmer who picked the wrong district — or
+    # posted before the composer had the field at all — must be able to fix it
+    # the same way he fixes a mistyped price. `location` is NOT here: it is
+    # derived from village + district below, so there is one place string and
+    # not two that can drift apart.
+    state:     Optional[str]   = None
+    district:  Optional[str]   = None
+    village:   Optional[str]   = None
+    lat:       Optional[float] = None
+    lon:       Optional[float] = None
 
 
 @router.patch("/posts/{post_id}")
@@ -879,6 +967,27 @@ def edit_post(
             v = getattr(body, field)
             if getattr(post, field) != v:
                 setattr(post, field, v); changed = True
+    # ── The place. Coordinates go through the same _coord() the create path
+    # uses, so an out-of-range pin is dropped here too instead of being stored
+    # only when it arrives by the other door.
+    for field in ("state", "district", "village"):
+        if field in sent:
+            v = (getattr(body, field) or "").strip() or None
+            if getattr(post, field) != v:
+                setattr(post, field, v); changed = True
+    if {"lat", "lon"} & sent:
+        # Both, always: an edit that moves only the latitude would leave the
+        # pin somewhere neither the old nor the new coordinates describe.
+        la, lo = _pin(body.lat if "lat" in sent else post.lat,
+                      body.lon if "lon" in sent else post.lon)
+        if (post.lat, post.lon) != (la, lo):
+            post.lat, post.lon = la, lo; changed = True
+    # Derived, never sent: whichever of the two moved, the card's line is
+    # rebuilt from what the row now holds.
+    if {"district", "village"} & sent:
+        loc = ", ".join([x for x in [post.village, post.district] if x])
+        if (post.location or "") != loc:
+            post.location = loc; changed = True
 
     # An edit that changes nothing is not an edit: it must not spend one of the
     # three, or a double-tapped Save would.

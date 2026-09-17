@@ -1,36 +1,55 @@
 # ============================================================
 # backend/services/seller_verify.py
-# The blue tick: what it costs, and what it is allowed to mean.
+# The blue tick: a paid membership, and nothing more than that.
 # ============================================================
-# WHAT THE TICK CLAIMS. krashi_bajar.html tells every buyer, in Hindi, that a
-# ticked seller "KrashiMitra द्वारा सत्यापित है" — verified BY US. That is a
-# claim about a person, published by this site, on a page where money changes
-# hands. It is the exact shape of thing the project's never-a-legal-exposure
-# rule exists to stop, and it is only safe while it is true.
+# WHAT THE TICK CLAIMS — NOTHING ABOUT THE SELLER. Changed 2026-09-18. It used
+# to mean "KrashiMitra ने फ़ोन पर इस विक्रेता की पहचान जाँची है", and the ₹ fee
+# bought that phone call. That is a claim about a named person, published by
+# this site, on a page where money changes hands, and keeping it true cost a
+# call per seller.
 #
-# SO THE FEE BUYS THE CHECK, NOT THE TICK. Paying moves an application to
-# `paid` and no further. `approve()` — a human, after a phone call that
-# confirms the name, the number and the village — is the only thing in this
-# codebase that sets users.seller_verified. Nothing in the payment path may
-# call it, and a test pins that.
+# The tick now means what X's blue check means: this account pays for
+# KrashiMitra प्रीमियम. So payment IS the grant — `record_payment()` sets
+# users.seller_verified, because paying is the entire content of the badge and
+# there is nothing left for a human to check.
 #
-# This is the same split the dealer rail already runs on: dealers.record_payment
-# explicitly does NOT flip active/verified for a self-serve account, because
-# "the phone-verification call stays a hard gate". A farmer's badge is a
-# stronger claim than a dealer's listing, not a weaker one.
+# THE LEGAL GUARD MOVED, IT DID NOT GO AWAY. The old rule protected a claim.
+# The new rule protects the absence of one: no user-facing string may read the
+# tick as सत्यापित / verified / identity / a guarantee of the crop, the price
+# or the deal. The moment one does, the site is publishing a claim it never
+# checked — the exact exposure the never-a-legal-exposure rule exists to stop,
+# arrived from the other direction. tests/test_seller_verification.py sweeps
+# /verify, the feed copy and the admin WhatsApp template for those words.
 #
-# REJECTED MEANS REFUNDED. If the call does not check out, the badge is refused
-# and the fee goes back (`reject()` marks the refund due; the admin sends it and
-# records it). Keeping money for a service not rendered is a consumer-law
-# argument this site cannot afford to have.
+# PAYING IS NOT SAYING YOU PAID. A upi:// hand-off reports nothing back
+# (services/upi.py), so `claim_payment()` — the farmer's own "मैंने भेज दिया"
+# button — writes `payment_claimed_at` and grants nothing. It exists to push
+# his row to the top of the admin queue. Only a human who saw the credit calls
+# `record_payment()`. If that ever inverts, the badge is free to anyone who can
+# tap a button, and a test pins it.
 #
-# THE TICK EXPIRES. A seller checked once is not "verified" forever — the claim
-# goes stale, and an expiring badge is also what creates the renewal call.
-# `expire_due()` clears the flag; it is idempotent and safe to run on a timer.
+# ADMIN STILL HAS A KILL SWITCH. `revoke()` clears the flag — for the one thing
+# a paid badge still has to answer for, which is impersonation. X keeps the
+# same power for the same reason: selling a checkmark to someone posing as
+# someone else is not a neutral act just because the badge claims nothing.
 #
-# CONFIG. KM_VERIFY_FEE (₹, default 199) and KM_VERIFY_MONTHS (default 12).
-# Both env, for the same reason the listing fee is: re-deploying to change a
-# price is exactly the manual seam the everything-must-be-automatic rule bans.
+# THE TICK EXPIRES, because a membership is a term, not a state.
+# `expire_due()` clears the flag; idempotent, safe on a timer.
+#
+# TWO PLANS, AND THE STRUCK PRICE IS PART OF THE PRODUCT. ₹399 ₹199/महीना and
+# ₹699 ₹499/3 महीने. The MRP is an anchor, not a claim about a past price, so
+# it is labelled वास्तविक क़ीमत and never "was" or "discount from" — see
+# product-price-claims: a figure the site would have to defend is one it does
+# not print. A farmer choosing the 3-month plan pays ₹166/month, and that
+# spread is the only reason two plans exist rather than one.
+#
+# CONFIG. Every number is env-overridable per plan — KM_VERIFY_M1_PRICE,
+# KM_VERIFY_M1_MRP, KM_VERIFY_M3_PRICE, KM_VERIFY_M3_MRP — because the first
+# real negotiation may not land on ₹199 and re-deploying to change a price is
+# exactly the manual seam the everything-must-be-automatic rule bans.
+# KM_VERIFY_FEE still overrides the monthly price, so the variable already set
+# on Render keeps working; KM_VERIFY_MONTHS is retired, because the term now
+# comes from the plan the farmer picked and not from the environment.
 # ============================================================
 
 import logging
@@ -43,13 +62,27 @@ from backend.database.db import SellerVerification, User
 
 log = logging.getLogger(__name__)
 
-# Statuses, in the only order they may be reached.
+# Statuses. The strings are unchanged from the phone-check era on purpose —
+# renaming them would need a data migration on a free-tier Postgres that goes
+# read-only without warning — but two of them now mean something new:
+#
+#   applied   → signed up, money not in the bank yet  (tick OFF)
+#   paid      → membership running, paid for           (tick ON)
+#   approved  → membership running, given free by the owner (tick ON)
+#   rejected  → revoked, e.g. for impersonation        (tick OFF)
+#   expired   → the term ran out                       (tick OFF)
 APPLIED, PAID, APPROVED, REJECTED, EXPIRED = (
     "applied", "paid", "approved", "rejected", "expired")
 STATUSES = {APPLIED, PAID, APPROVED, REJECTED, EXPIRED}
 
-# What a farmer can offer as proof on the call. Free text would be unusable in
-# a queue; "other" keeps the list from becoming a gate.
+# The two that mean "the badge is on right now". Anything reading the row
+# instead of the flag must go through this, not compare to PAID by hand.
+ACTIVE_STATUSES = {PAID, APPROVED}
+
+# Kept because the signup form still asks — a member's own name and village are
+# what the owner needs to reach him about a renewal, and a shop licence tells
+# him whether he is talking to a farmer or a trader. It is NOT checked, and
+# nothing on the site says it was.
 ID_KINDS = ["aadhaar", "kcc", "shop_licence", "land_record", "other"]
 
 ID_KIND_HI = {
@@ -61,18 +94,88 @@ ID_KIND_HI = {
 }
 
 
-def fee() -> int:
-    try:
-        return max(1, int(os.getenv("KM_VERIFY_FEE", "199") or 199))
-    except (TypeError, ValueError):
-        return 199
+# ── The price table ──────────────────────────────────────────
+
+# code → (months, price, struck MRP). The order here is the order the cards are
+# drawn in, cheapest entry first, because that is the one a farmer who has
+# never paid for anything on this site will read first.
+PLAN_DEFS = [
+    ("m1", 1, 199, 399),
+    ("m3", 3, 499, 699),
+]
+DEFAULT_PLAN = "m1"
+
+PLAN_TERM_HI = {1: "1 महीने के लिए", 3: "3 महीने के लिए"}
 
 
-def months() -> int:
+def _rupees(env: str, fallback: int) -> int:
     try:
-        return max(1, int(os.getenv("KM_VERIFY_MONTHS", "12") or 12))
+        return max(1, int(os.getenv(env, "") or fallback))
     except (TypeError, ValueError):
-        return 12
+        return fallback
+
+
+def plans() -> list:
+    """The cards /verify draws, priced from env. Never an f-string of literals.
+
+    `mrp` is the struck figure and `price` is what he pays. `per_month` is
+    computed rather than stored so the two can never disagree — a card that
+    said ₹499 / 3 महीने next to a hand-typed "₹150/महीना" would be wrong the
+    first time a price moved.
+    """
+    out = []
+    for code, mon, price, mrp in PLAN_DEFS:
+        # KM_VERIFY_FEE is the legacy single-price variable; it only ever meant
+        # the monthly rate, so it applies to m1 and nothing else.
+        legacy = _rupees("KM_VERIFY_FEE", price) if code == "m1" else price
+        rupee = _rupees(f"KM_VERIFY_{code.upper()}_PRICE", legacy)
+        struck = _rupees(f"KM_VERIFY_{code.upper()}_MRP", mrp)
+        # A struck price at or below the real one is not an anchor, it is a
+        # mistake on a page about money. Drop it rather than print it.
+        out.append({
+            "code":      code,
+            "months":    mon,
+            "price":     rupee,
+            "mrp":       struck if struck > rupee else None,
+            "per_month": round(rupee / mon),
+            "term_hi":   PLAN_TERM_HI.get(mon, f"{mon} महीने के लिए"),
+            "save_pct":  (round((1 - rupee / struck) * 100)
+                          if struck > rupee else None),
+        })
+    return out
+
+
+def plan(code: str = "") -> dict:
+    """One plan by code, falling back to the monthly one.
+
+    Every caller that turns a farmer's choice into money goes through here, so
+    an unknown code out of a request body buys the cheapest term rather than
+    a free one or a crash.
+    """
+    code = (code or "").strip().lower()
+    table = plans()
+    for row in table:
+        if row["code"] == code:
+            return row
+    for row in table:
+        if row["code"] == DEFAULT_PLAN:
+            return row
+    return table[0]
+
+
+def plan_codes() -> list:
+    return [c for c, _m, _p, _q in PLAN_DEFS]
+
+
+def fee(code: str = "") -> int:
+    """What this plan costs. No argument = the monthly plan, which is what the
+    admin queue and the collect message mean when they say "the fee"."""
+    return plan(code)["price"]
+
+
+def months(code: str = "") -> int:
+    """The term this plan buys. Was env-wide and 12; now it comes from the plan."""
+    return plan(code)["months"]
 
 
 def _new_ref() -> str:
@@ -101,12 +204,13 @@ def by_ref(db, ref: str) -> Optional[SellerVerification]:
 # ── The farmer's side ────────────────────────────────────────
 
 def apply(db, user_id: int, data: dict) -> SellerVerification:
-    """Record an application. Structurally cannot approve, pay or tick.
+    """Sign up for the membership. Structurally cannot pay or tick.
 
     Mirrors dealers.from_signup: everything on this path arrives from a public
-    form, so this function only ever writes the claim fields. If a future edit
-    makes it able to set `status` from `data`, the badge becomes purchasable by
-    anyone who can craft a request body.
+    form, so this function only ever writes the contact fields. If a future
+    edit makes it able to set `status` or `paid_at` from `data`, the badge
+    becomes free to anyone who can craft a request body — the fee is now the
+    only thing between a farmer and a tick, so this is the whole gate.
     """
     row = get(db, user_id)
     now = datetime.utcnow()
@@ -132,7 +236,15 @@ def apply(db, user_id: int, data: dict) -> SellerVerification:
     kind = (data.get("id_kind") or "").strip().lower()
     row.id_kind   = kind if kind in ID_KINDS else "other"
     row.note      = (data.get("note") or "").strip()[:500] or None
-    row.fee_amount = row.fee_amount or fee()
+    # The plan is the one thing on this form that costs money, so it is read
+    # through plan(): an unknown code buys the monthly term, never a free one.
+    chosen = plan(data.get("plan") or row.plan or "")
+    row.plan = chosen["code"]
+    # Re-priced on every signup on purpose. An application that sat unpaid for
+    # a month must be collected at today's price, not at the one it was drawn
+    # at — otherwise the struck figure on the card and the amount in the UPI
+    # link disagree, and the farmer is looking at both.
+    row.fee_amount = chosen["price"]
     row.updated_at = now
 
     db.commit()
@@ -144,12 +256,17 @@ def apply(db, user_id: int, data: dict) -> SellerVerification:
 
 def record_payment(db, ref: str, amount: int, paid_ref: str = "",
                    ) -> Optional[SellerVerification]:
-    """Money arrived. Typed in by hand, and that is the design.
+    """Money arrived — so the tick goes on. Typed in by hand, and that is the design.
 
     A upi:// link hands off to the farmer's own app and reports nothing back,
-    so `paid_at` means one thing: a human saw the credit. And note what this
-    does NOT do — it never touches users.seller_verified. Paying buys the
-    review; only approve() grants the badge.
+    so `paid_at` means one thing: a human saw the credit. What is new since
+    2026-09-18 is that this is also where the badge is granted. Under the old
+    phone-check tick this function was forbidden from touching the flag; under
+    a paid membership, payment is the whole of what the badge says, and making
+    the farmer wait for a call he is no longer owed would just be a delay.
+
+    Renewing extends from whichever end date is later, so paying early does not
+    cost him the days he already has.
     """
     row = by_ref(db, ref)
     if not row:
@@ -160,37 +277,16 @@ def record_payment(db, ref: str, amount: int, paid_ref: str = "",
     try:
         row.fee_amount = max(1, int(amount))
     except (TypeError, ValueError):
-        row.fee_amount = row.fee_amount or fee()
-    # An already-approved row paying again is a renewal, not a downgrade.
+        row.fee_amount = row.fee_amount or fee(row.plan)
+    # A complimentary badge paying for itself stays `approved` — the owner gave
+    # it, and that is worth still being able to see in the queue.
     if row.status != APPROVED:
         row.status = PAID
-    row.updated_at = now
-    db.commit()
-    db.refresh(row)
-    return row
-
-
-def approve(db, ref: str, by: str = "admin") -> Optional[SellerVerification]:
-    """The one call that sets the tick. Named for the phone call it implies.
-
-    Callable from any status on purpose — the owner may want to verify someone
-    who has not paid, and refusing that would put a rule in the code that the
-    business does not actually have. What is NOT allowed is anything automatic
-    reaching this, which is why it lives here and not in record_payment.
-    """
-    row = by_ref(db, ref)
-    if not row:
-        return None
-    now = datetime.utcnow()
-    row.status = APPROVED
-    row.approved_at = now
-    row.reviewed_at = now
-    row.reviewed_by = (by or "admin")[:60]
     row.reject_reason = None
-    # Renewing extends from whichever is later, so an early renewal does not
-    # cost the seller the days he already paid for.
     base = row.valid_until if (row.valid_until and row.valid_until > now) else now
-    row.valid_until = base + timedelta(days=30 * months())
+    # The term he chose, not a site-wide constant: a ₹499 credit has to buy 3
+    # months and a ₹199 one has to buy 1, or the cheaper plan is the better deal.
+    row.valid_until = base + timedelta(days=30 * months(row.plan))
     row.updated_at = now
 
     user = db.query(User).filter(User.id == row.user_id).first()
@@ -201,13 +297,80 @@ def approve(db, ref: str, by: str = "admin") -> Optional[SellerVerification]:
     return row
 
 
-def reject(db, ref: str, reason: str = "", by: str = "admin"
-           ) -> Optional[SellerVerification]:
-    """Refused after the check. Takes the badge away and marks a refund due.
+def claim_payment(db, user_id: int, paid_ref: str = "") -> Optional[SellerVerification]:
+    """"मैंने पैसे भेज दिए" — his word for it, which grants nothing.
 
-    The fee bought a review; the review happened and the answer was no, so the
-    money goes back. `refunded_at` stays None until a human sends it — the same
-    rule as paid_at, for the same reason.
+    Deliberately keyed on user_id, not ref: this is called from his own logged-in
+    page, so the row is the one that belongs to him and cannot be another
+    member's. It moves no status and never touches the flag — a upi:// hand-off
+    reports nothing back, so the only thing a tap can honestly record is that he
+    says he sent it. What it buys him is position: `pending_first` sorts claimed
+    rows to the top of the admin queue, so the confirmation is minutes away
+    rather than whenever someone next scrolls the list.
+    """
+    row = get(db, user_id)
+    if not row:
+        return None
+    now = datetime.utcnow()
+    row.payment_claimed_at = now
+    # His UTR, if he typed one. Overwritten by the real one on confirmation.
+    ref = (paid_ref or "").strip()[:64]
+    if ref and not row.paid_at:
+        row.paid_ref = ref
+    row.updated_at = now
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def approve(db, ref: str, by: str = "admin") -> Optional[SellerVerification]:
+    """Give the badge without a payment — the owner's comp.
+
+    Under the phone-check tick this was the ONLY call allowed to set the flag.
+    It is now the unusual path, not the normal one: record_payment grants the
+    ordinary paid membership, and this exists for the ones the owner hands out
+    — the first sellers on a new district page, someone he already knows, a
+    goodwill month after a bad week. X does the same for accounts it wants on
+    the platform.
+
+    Still admin-only, and still nothing automatic may reach it: a code path
+    that could call this is a code path that gives the badge away.
+    """
+    row = by_ref(db, ref)
+    if not row:
+        return None
+    now = datetime.utcnow()
+    row.status = APPROVED
+    row.approved_at = now
+    row.reviewed_at = now
+    row.reviewed_by = (by or "admin")[:60]
+    row.reject_reason = None
+    # Extends from whichever end date is later, so a comp on top of a live
+    # membership adds to it rather than replacing what he paid for.
+    base = row.valid_until if (row.valid_until and row.valid_until > now) else now
+    row.valid_until = base + timedelta(days=30 * months(row.plan))
+    row.updated_at = now
+
+    user = db.query(User).filter(User.id == row.user_id).first()
+    if user:
+        user.seller_verified = True
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def revoke(db, ref: str, reason: str = "", by: str = "admin"
+           ) -> Optional[SellerVerification]:
+    """Take the badge away. The kill switch a paid badge still needs.
+
+    A membership that claims nothing about its holder still cannot be sold to
+    someone posing as someone else, so this is the answer to impersonation, to
+    a member using the tick to push a scam, and to a chargeback. X keeps the
+    same power over a paid check for the same reason.
+
+    It marks the money refundable, because a term that was cut short was not
+    delivered. `refunded_at` stays None until a human sends it — the same rule
+    as paid_at, for the same reason: no UPI rail here reports anything back.
     """
     row = by_ref(db, ref)
     if not row:
@@ -229,6 +392,13 @@ def reject(db, ref: str, reason: str = "", by: str = "admin"
     return row
 
 
+# The old name, from when refusal came after a phone check. Kept because the
+# admin endpoint, its button and the queue's status string all read "reject",
+# and renaming a status would need a migration on a Postgres that goes
+# read-only at its quota without warning.
+reject = revoke
+
+
 def record_refund(db, ref: str) -> Optional[SellerVerification]:
     row = by_ref(db, ref)
     if not row:
@@ -241,7 +411,7 @@ def record_refund(db, ref: str) -> Optional[SellerVerification]:
 
 
 def refund_due(row: Optional[SellerVerification]) -> bool:
-    """Rejected, paid, and not yet sent back."""
+    """Revoked, paid, and not yet sent back."""
     return bool(row and row.status == REJECTED and row.paid_at and not row.refunded_at)
 
 
@@ -250,13 +420,15 @@ def refund_due(row: Optional[SellerVerification]) -> bool:
 def expire_due(db, now: Optional[datetime] = None) -> int:
     """Clear the tick on every window that has run out. Idempotent.
 
-    Safe to call from a scheduler or a request path: it only ever moves
-    approved→expired, so running it twice a minute changes nothing the second
-    time.
+    Safe to call from a scheduler or a request path: it only ever moves a live
+    membership→expired, so running it twice a minute changes nothing the second
+    time. It sweeps `paid` as well as `approved` — a lapsed paid membership is
+    the common case now, and filtering on `approved` alone would have left
+    every paying member ticked forever.
     """
     now = now or datetime.utcnow()
     rows = (db.query(SellerVerification)
-              .filter(SellerVerification.status == APPROVED,
+              .filter(SellerVerification.status.in_(tuple(ACTIVE_STATUSES)),
                       SellerVerification.valid_until.isnot(None),
                       SellerVerification.valid_until <= now).all())
     if not rows:
@@ -272,22 +444,73 @@ def expire_due(db, now: Optional[datetime] = None) -> int:
     return len(rows)
 
 
+def is_active(row: Optional[SellerVerification]) -> bool:
+    """Is the badge on, according to the row? Both paid and comped count.
+
+    Anything reading this table instead of users.seller_verified must come
+    through here — `row.status == PAID` was correct while paid was the only way
+    to hold a live badge, and stopped being correct the day approve() became
+    the owner's comp.
+    """
+    return bool(row and row.status in ACTIVE_STATUSES)
+
+
 def days_left(row: Optional[SellerVerification], now: Optional[datetime] = None) -> Optional[int]:
-    if not row or row.status != APPROVED or not row.valid_until:
+    if not is_active(row) or not row.valid_until:
         return None
     return max(0, (row.valid_until - (now or datetime.utcnow())).days)
 
 
+def payment_claimed(row: Optional[SellerVerification]) -> bool:
+    """He says he sent the money and nobody has confirmed it yet.
+
+    This is the queue's only urgent state: a farmer sitting on a payment he has
+    made, with no badge, waiting on a human. It is also the one state a member
+    can create himself, so it grants nothing — see claim_payment().
+    """
+    return bool(row and row.payment_claimed_at and not row.paid_at)
+
+
+def pending_first(rows: list) -> list:
+    """Order the admin queue by who is actually waiting on somebody.
+
+    Claimed-but-unconfirmed first (he has paid and has no badge), then
+    unpaid signups, then everything settled — newest within each group.
+    """
+    def key(r):
+        if payment_claimed(r):
+            group = 0
+        elif r.status == APPLIED:
+            group = 1
+        else:
+            group = 2
+        stamp = r.updated_at or r.created_at or datetime.min
+        return (group, -stamp.timestamp())
+    return sorted(rows, key=key)
+
+
 def to_dict(row: Optional[SellerVerification], now: Optional[datetime] = None) -> dict:
-    """What the farmer's own page is allowed to see about his application."""
+    """What the farmer's own page is allowed to see about his membership."""
     if not row:
-        return {"status": None, "fee": fee(), "months": months()}
+        return {"status": None, "plan": None, "fee": fee(), "months": months(),
+                "plans": plans()}
+    chosen = plan(row.plan)
     return {
         "status":       row.status,
+        "active":       is_active(row),
         "ref":          row.ref,
-        "fee":          row.fee_amount or fee(),
-        "months":       months(),
+        "plan":         chosen["code"],
+        "fee":          row.fee_amount or chosen["price"],
+        "mrp":          chosen["mrp"],
+        "months":       chosen["months"],
+        "term_hi":      chosen["term_hi"],
+        "plans":        plans(),
         "paid":         bool(row.paid_at),
+        # Two different facts, and the page says different things for each:
+        # "we have not seen the money yet" vs "send the money".
+        "payment_claimed": payment_claimed(row),
+        "claimed_at":   (row.payment_claimed_at.isoformat()
+                         if row.payment_claimed_at else None),
         "full_name":    row.full_name,
         "phone":        row.phone,
         "village":      row.village,

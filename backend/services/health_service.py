@@ -421,9 +421,8 @@ def _chk_ai_chat(db, detailed):
     embedding model is what OOMs a 512MB instance, and a health check that
     causes the outage it reports is worse than no check."""
     from backend.config import get_setting
-    keys = [k for k in ("GEMINI_API_KEY", "GEMINI_API_KEY2", "GEMINI_API_KEY_2",
-                        "GEMINI_API_KEY3", "GEMINI_API_KEY_3")
-            if os.getenv(k, "").strip()]
+    from backend.services.chatbot_service import gemini_keys
+    keys = gemini_keys()
     cached = None
     try:
         from cache.cache_engine import get_cache_stats
@@ -785,7 +784,14 @@ def _chk_integrations(db, detailed):
         ("Anthropic (सीडर)",  "optional", "ANTHROPIC_API_KEY"),
     ]
     got = {name: (tier, bool(os.getenv(env, "").strip())) for name, tier, env in items}
+    # Gemini is the one entry with more than one env var behind it: a site
+    # running only on the spare keys is configured, whatever KEY1 says.
+    from backend.services.chatbot_service import gemini_keys
+    gkeys = gemini_keys()
+    got["Gemini"] = ("feature", bool(gkeys))
     facts = [[name, _yn(ok)] for name, (_, ok) in got.items()]
+    if detailed:
+        facts.append(["Gemini कुंजियाँ", str(len(gkeys))])
     facts.append(["Ollama fallback", _yn(bool(get_setting("ollama_enabled", False)))])
 
     core    = [n for n, (t, ok) in got.items() if t == "core" and not ok]

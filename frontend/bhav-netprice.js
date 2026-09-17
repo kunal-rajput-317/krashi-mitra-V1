@@ -19,6 +19,19 @@
   var reqId = 0;         // only the newest request may paint (guards stale results)
   var MAX_QTY = 100000;  // hard ceiling — must match the server-side clamp
 
+  // What the wait looks like: the answer's own shape — the headline mandi,
+  // the net-in-hand block, then the freight rows under it. .km-sk comes from
+  // km-skeleton.css, which every /bhav page links in <head>.
+  var SKELETON =
+    '<div role="status" aria-live="polite">' +
+      '<span class="km-sk-label">गणना हो रही है…</span>' +
+      '<div class="km-sk km-sk-line lg" style="width:56%"></div>' +
+      '<div class="km-sk" style="height:74px;border-radius:14px;margin:14px 0"></div>' +
+      '<div class="km-sk km-sk-line" style="width:92%;margin-bottom:9px"></div>' +
+      '<div class="km-sk km-sk-line" style="width:84%;margin-bottom:9px"></div>' +
+      '<div class="km-sk km-sk-line" style="width:62%"></div>' +
+    '</div>';
+
   function $(id) { return document.getElementById(id); }
 
   function readGeo() {
@@ -79,7 +92,17 @@
     // is dropped — so what's shown always matches the current crop/qty/vehicle,
     // never an out-of-order older answer.
     var myId = ++reqId;
-    if (els.results) els.results.setAttribute("aria-busy", "true");
+    if (els.results) {
+      els.results.setAttribute("aria-busy", "true");
+      // First calculation: the box is empty and the aria-busy overlay has
+      // nothing to sit on top of, so the farmer watched a spinner over blank
+      // space. Paint the answer's own shape instead — the freight rows and the
+      // net-in-hand line. A RE-calculation keeps the previous numbers under the
+      // overlay, which is more useful than replacing them with grey blocks.
+      if (!els.results.querySelector(".np-take, .np-row")) {
+        els.results.innerHTML = SKELETON;
+      }
+    }
     fetch(url, { headers: { "Accept": "application/json" } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {

@@ -39,6 +39,17 @@ from fastapi.responses import Response
 router = APIRouter()
 
 SITE = "https://krashimitra.in"
+
+# /sponsor is held back until its figures are verified by hand, and
+# backend/routes/sponsor.py is gitignored until then. Ask the import system
+# whether it is present rather than hard-coding the answer: the day the file is
+# un-ignored, the link and the sitemap entry come back on their own, with no
+# second edit to remember. find_spec does not execute the module.
+def _sponsor_live() -> bool:
+    import importlib.util
+    return importlib.util.find_spec("backend.routes.sponsor") is not None
+
+
 _FRONTEND = Path(__file__).resolve().parents[2] / "frontend"
 _ARTICLES = _FRONTEND / "articles"
 
@@ -128,6 +139,11 @@ HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
         ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly"),
         ("/rental", 0.7, "monthly"), ("/donate", 0.3, "yearly"),
         ("/pashupalan", 0.7, "weekly"), ("/pashupalan/anda-rate", 0.9, "daily")]
+
+if _sponsor_live():
+    # Indexable on purpose: a brand searching "advertise to farmers india" is
+    # the one visitor this page is for, and a farmer's query cannot reach it.
+    HUBS.append(("/sponsor", 0.5, "yearly"))
 
 _ARTICLE_PRIORITY = 0.8
 _ARTICLE_CHANGEFREQ = "weekly"

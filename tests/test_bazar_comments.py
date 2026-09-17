@@ -323,9 +323,15 @@ def test_the_decorative_emoji_are_gone():
         assert glyph not in body, f"{glyph} is back on the page"
 
 
-def test_the_loader_is_a_spinner_not_a_sticker():
+def test_the_loader_is_a_skeleton_not_a_sticker():
+    """Three loaders have stood here: a sprouting-wheat emoji loop, then a
+    plain spinner, and now the comment thread's own shape — avatar, bubble,
+    avatar, bubble. What must never come back is the sticker.
+
+    See tests/test_loading_skeletons.py for the site-wide contract.
+    """
     html = _page()
-    assert "bz-spin" in html
+    assert "bz-sk-row" in html and "bz-sk-bubble" in html, "the sheet lost its skeleton"
     assert "bz-grow-cycle" not in html, "the sprouting-wheat emoji animation is back"
 
 

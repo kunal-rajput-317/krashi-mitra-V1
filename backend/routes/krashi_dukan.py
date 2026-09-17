@@ -39,7 +39,7 @@ from backend.routes.bhav import (
 )
 from backend.routes.product import CAT_LABELS, _EXTRA_CSS as _PRODUCT_CSS
 from backend.routes.rental import CROSS_CSS as _RENTAL_CSS, cross_link as _rental_link
-from backend.services import free_month, krashi_dukan as dukan
+from backend.services import free_month, krashi_dukan as dukan, legal
 
 router = APIRouter()
 
@@ -50,7 +50,8 @@ BASE = f"{SITE}/krashi_dukan"
 # "we are only the connector" is worth nothing to a farmer who never read it.
 DISCLAIMER = ("कृषि मित्र सिर्फ़ जोड़ने का काम करता है — सामान दुकानदार का है, "
               "कीमत दुकानदार की है। हम न सामान बेचते हैं, न डिलीवरी करते हैं, "
-              "न किसी सामान की गारंटी लेते हैं। दुकान पर जाकर सामान ज़रूर जाँच लें।")
+              "न किसी सामान की गारंटी लेते हैं। दुकान पर जाकर सामान ज़रूर जाँच लें।"
+              + " " + legal.GOODS_NOTE)
 
 _EXTRA_CSS = _PRODUCT_CSS + _RENTAL_CSS + free_month.CSS + """
 /* ── shop rows under a product ── */

@@ -70,6 +70,17 @@ services:
         sync: false          # optional
       - key: GEMINI_API_KEY
         sync: false
+      # Spare Gemini keys — each one is another free daily quota, tried in
+      # order when the one before it returns 429. Any GEMINI_API_KEY<n> the
+      # dashboard has is picked up automatically; nothing in code lists them.
+      - key: GEMINI_API_KEY2
+        sync: false          # optional
+      - key: GEMINI_API_KEY3
+        sync: false          # optional
+      - key: GEMINI_API_KEY4
+        sync: false          # optional
+      - key: GEMINI_API_KEY5
+        sync: false          # optional
       - key: GEMINI_MODEL
         sync: false          # optional
       - key: OPENWEATHER_API_KEY
@@ -145,16 +156,32 @@ services:
       # Listing fee in whole rupees. Optional — services/upi.py defaults to 500.
       - key: KM_LISTING_FEE
         sync: false          # optional
-      # Blue-tick verification (services/seller_verify.py). The fee buys the
-      # phone check, not the badge — the badge is granted by hand in
-      # /admin → नीला टिक, after the call. Both optional: ₹199 for 12 months
-      # unless set. Env rather than literals for the same reason as the listing
-      # fee — the first real negotiation may not land on ₹199, and re-deploying
-      # to change a price is the manual seam this project bans.
+      # Blue tick = कृषि मित्र प्रीमियम (services/seller_verify.py). Changed
+      # 2026-09-18: it is a paid membership, not a phone check, so the badge is
+      # granted the moment ₹ मिला is pressed in /admin → नीला टिक. Two plans,
+      # each with a struck anchor price: ₹399 ₹199 for 1 month and ₹699 ₹499
+      # for 3. All four figures are optional and default to those numbers.
+      #
+      # Env rather than literals for the same reason as the listing fee — the
+      # first real negotiation may not land on ₹199, and re-deploying to change
+      # a price is the manual seam this project bans. The struck figure is the
+      # plan's normal price and is dropped automatically if it is ever set at
+      # or below the real one, because a crossed-out price that is not higher
+      # is a mistake on a page about money.
+      - key: KM_VERIFY_M1_PRICE
+        sync: false          # optional — 1-month price, default 199
+      - key: KM_VERIFY_M1_MRP
+        sync: false          # optional — 1-month struck price, default 399
+      - key: KM_VERIFY_M3_PRICE
+        sync: false          # optional — 3-month price, default 499
+      - key: KM_VERIFY_M3_MRP
+        sync: false          # optional — 3-month struck price, default 699
+      # Legacy single-price variable. Still honoured — it only ever meant the
+      # monthly rate, so it overrides KM_VERIFY_M1_PRICE's default and nothing
+      # else. KM_VERIFY_MONTHS is retired: the term comes from the plan the
+      # farmer picked, not from the environment.
       - key: KM_VERIFY_FEE
-        sync: false          # optional — whole rupees, default 199
-      - key: KM_VERIFY_MONTHS
-        sync: false          # optional — badge window, default 12
+        sync: false          # optional — whole rupees, monthly plan
 
       # ── Free-tier runway (admin panel → Infra & Credits) ────
       # Read-only billing API tokens for the three free plans the site runs

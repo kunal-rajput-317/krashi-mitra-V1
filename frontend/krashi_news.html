@@ -34,6 +34,9 @@
 
   <!-- Universal page shell (header / drawer / blue bar / footer) -->
   <link rel="stylesheet" href="km-shell.css">
+  <!-- Loading skeletons. The story list paints its own before the data script
+       has run, so it is linked here as well as bootstrapped by drawer-menu.js. -->
+  <link rel="stylesheet" href="km-skeleton.css">
 
   <!-- SEO Meta -->
   <meta name="description" content="ताज़ा कृषि समाचार — मंडी भाव बुलेटिन, सरकारी योजना अपडेट, मौसम अलर्ट और फसल सुरक्षा सलाह। हिंदी में पढ़ें या ऑडियो में सुनें, रोज़ अपडेट।">
@@ -1871,16 +1874,15 @@
       border-radius: 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    .scroll-spinner {
-      width: 16px;
-      height: 16px;
-      border: 2.5px solid #d1fae5;
-      border-top-color: var(--news-green);
-      border-radius: 50%;
-      display: inline-block;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    /* The grid's own anatomy: meta row, headline, two lines of excerpt, and
+       the 155px picture beside them. .article-card supplies the frame and the
+       grid areas; these blocks only fill it. (.km-sk: km-skeleton.css) */
+    .sk-card .card-content-side { display: flex; flex-direction: column; gap: 9px; }
+    .sk-card .card-meta-row { gap: 8px; }
+    .sk-card .card-media-side { background: none; }
+    .sk-card .card-action-bar { gap: 10px; }
+
+    /* (the scroll spinner is a skeleton card now — see .sk-card above) */
     .all-loaded-msg {
       display: inline-block;
       font-size: 13px;
@@ -2518,15 +2520,76 @@
     </div>
 
     <!-- ── News Articles Grid ── -->
-    <div class="cards-grid" id="news-grid">
-      <!-- Injected via JavaScript -->
+    <div class="cards-grid" id="news-grid" role="status" aria-live="polite">
+      <!-- Replaced by renderNewsList() as soon as the stories are ready. Until
+           then the reader sees the shape of a story card, not an empty page. -->
+      <span class="km-sk-label">समाचार लोड हो रहे हैं…</span>
+      <article class="article-card sk-card" aria-hidden="true">
+        <div class="card-content-side">
+          <div class="card-meta-row">
+            <span class="km-sk km-sk-pill" style="width:62px;height:18px"></span>
+            <span class="km-sk km-sk-line sm" style="width:52px"></span>
+            <span class="km-sk km-sk-line sm" style="width:44px"></span>
+          </div>
+          <div class="km-sk km-sk-line lg" style="width:92%"></div>
+          <div class="km-sk km-sk-line lg" style="width:64%"></div>
+          <div class="km-sk km-sk-line" style="width:100%"></div>
+          <div class="km-sk km-sk-line" style="width:82%"></div>
+        </div>
+        <div class="card-media-side"><div class="km-sk" style="width:100%;height:100%;border-radius:10px"></div></div>
+        <div class="card-action-bar">
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+        </div>
+      </article>
+      <article class="article-card sk-card" aria-hidden="true">
+        <div class="card-content-side">
+          <div class="card-meta-row">
+            <span class="km-sk km-sk-pill" style="width:62px;height:18px"></span>
+            <span class="km-sk km-sk-line sm" style="width:52px"></span>
+            <span class="km-sk km-sk-line sm" style="width:44px"></span>
+          </div>
+          <div class="km-sk km-sk-line lg" style="width:92%"></div>
+          <div class="km-sk km-sk-line lg" style="width:64%"></div>
+          <div class="km-sk km-sk-line" style="width:100%"></div>
+          <div class="km-sk km-sk-line" style="width:82%"></div>
+        </div>
+        <div class="card-media-side"><div class="km-sk" style="width:100%;height:100%;border-radius:10px"></div></div>
+        <div class="card-action-bar">
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+        </div>
+      </article>
     </div>
 
     <!-- Infinite Scroll Sentinel & Load More Wrap -->
     <div class="load-more-wrap" id="load-more-wrap">
-      <div class="infinite-scroll-status" id="infinite-scroll-status" style="display:none;">
-        <span class="scroll-spinner"></span>
-        <span>ताज़ा समाचार लोड हो रहे हैं...</span>
+      <div class="infinite-scroll-status" id="infinite-scroll-status" style="display:none;"
+           role="status" aria-live="polite">
+        <span class="km-sk-label">ताज़ा समाचार लोड हो रहे हैं...</span>
+        <div class="cards-grid" style="width:100%">
+          <article class="article-card sk-card" aria-hidden="true">
+        <div class="card-content-side">
+          <div class="card-meta-row">
+            <span class="km-sk km-sk-pill" style="width:62px;height:18px"></span>
+            <span class="km-sk km-sk-line sm" style="width:52px"></span>
+            <span class="km-sk km-sk-line sm" style="width:44px"></span>
+          </div>
+          <div class="km-sk km-sk-line lg" style="width:92%"></div>
+          <div class="km-sk km-sk-line lg" style="width:64%"></div>
+          <div class="km-sk km-sk-line" style="width:100%"></div>
+          <div class="km-sk km-sk-line" style="width:82%"></div>
+        </div>
+        <div class="card-media-side"><div class="km-sk" style="width:100%;height:100%;border-radius:10px"></div></div>
+        <div class="card-action-bar">
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+          <span class="km-sk km-sk-pill" style="width:58px;height:26px"></span>
+        </div>
+      </article>
+        </div>
       </div>
       <button class="btn-load-more" id="btn-load-more" onclick="loadMoreNews()">
         <span>और समाचार देखें (12 और लोड करें)</span>
@@ -4289,7 +4352,18 @@
     async function loadReaderComments(newsId) {
       var list = document.getElementById('reader-comments-list');
       if (!list) return;
-      list.innerHTML = '<div style="font-size:12.5px;color:var(--news-muted);padding:8px 0;">टिप्पणियां लोड हो रही हैं…</div>';
+      // The shape of a comment — avatar, name, two lines — rather than a
+      // sentence saying it is coming.
+      list.innerHTML =
+        '<div class="km-sk-rows" role="status" aria-live="polite" style="padding:8px 0;">' +
+          '<span class="km-sk-label">टिप्पणियां लोड हो रही हैं…</span>' +
+          '<div class="km-sk-row"><div class="km-sk km-sk-circle"></div>' +
+            '<div class="km-sk-row-body"><div class="km-sk km-sk-line" style="width:38%"></div>' +
+            '<div class="km-sk km-sk-line" style="width:88%"></div></div></div>' +
+          '<div class="km-sk-row"><div class="km-sk km-sk-circle"></div>' +
+            '<div class="km-sk-row-body"><div class="km-sk km-sk-line" style="width:30%"></div>' +
+            '<div class="km-sk km-sk-line" style="width:72%"></div></div></div>' +
+        '</div>';
       try {
         var r = await fetch(getApiBase() + '/api/news/' + encodeURIComponent(newsId) + '/social');
         var d = await r.json();

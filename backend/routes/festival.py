@@ -12,10 +12,12 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 
 from backend.origin import backend_origin
+from backend.routes.admin import require_admin
+from backend.utils.security import assert_media_matches
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,11 @@ FESTIVAL_IMG_DIR.mkdir(parents=True, exist_ok=True)
 # in both deploys, and are better served by the CDN than by this host's
 # metered egress.
 UPLOAD_PREFIX = "/images/festivals/"
+
+# Same ceiling as a /bazar photo. Without one, `await file.read()` pulled a
+# whole request body into RAM on a 512MB box, and nothing checked the bytes
+# were an image at all — the extension was taken at face value.
+MAX_IMAGE_BYTES = 12 * 1024 * 1024   # 12 MB
 
 
 def _to_public_url(url: str) -> str:
@@ -169,7 +176,10 @@ def get_festival_config():
 
 
 @router.post("/config")
-def update_festival_config(payload: FestivalConfigRequest):
+def update_festival_config(
+    payload: FestivalConfigRequest,
+    _: str = Depends(require_admin),
+):
     """Updates the festival configuration from admin panel."""
     current = _load_config()
     data = payload.dict()
@@ -190,7 +200,10 @@ def update_festival_config(payload: FestivalConfigRequest):
 
 
 @router.post("/upload-image")
-async def upload_festival_image(file: UploadFile = File(...)):
+async def upload_festival_image(
+    file: UploadFile = File(...),
+    _: str = Depends(require_admin),
+):
     """Uploads a festival image from the admin panel."""
     if not file.filename:
         raise HTTPException(status_code=400, detail="कोई फ़ाइल नहीं मिली")
@@ -203,8 +216,27 @@ async def upload_festival_image(file: UploadFile = File(...)):
     filename = f"fest_{clean_stem}_{int(time.time())}{ext}"
     dest_path = FESTIVAL_IMG_DIR / filename
 
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        if not chunks:
+            # Magic number, not the filename: ".jpg" proves nothing.
+            assert_media_matches(chunk[:16], "image")
+        total += len(chunk)
+        if total > MAX_IMAGE_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"फोटो बहुत बड़ी है — अधिकतम {MAX_IMAGE_BYTES // (1024 * 1024)} MB।",
+            )
+        chunks.append(chunk)
+    contents = b"".join(chunks)
+    if not contents:
+        raise HTTPException(status_code=400, detail="कोई फ़ाइल नहीं मिली")
+
     try:
-        contents = await file.read()
         with open(dest_path, "wb") as f:
             f.write(contents)
 
@@ -230,7 +262,10 @@ async def upload_festival_image(file: UploadFile = File(...)):
 
 
 @router.post("/generate-image")
-async def generate_festive_image(payload: GenerateFestiveImageRequest):
+async def generate_festive_image(
+    payload: GenerateFestiveImageRequest,
+    _: str = Depends(require_admin),
+):
     """Generates an AI festive image using Gemini/call_ai + Google Imagen 3 / Pollinations cascade."""
     import base64
     import io
@@ -266,10 +301,8 @@ Output ONLY the raw prompt text with no quotes or explanation.
     local_path = FESTIVAL_IMG_DIR / filename
 
     # Step 2: Try Google Imagen 3 if keys available
-    for env_k in ["GEMINI_API_KEY", "GEMINI_API_KEY2", "GEMINI_API_KEY3"]:
-        api_k = os.getenv(env_k, "").strip()
-        if not api_k:
-            continue
+    from backend.services.chatbot_service import gemini_keys
+    for env_k, api_k in gemini_keys():
         try:
             imagen_url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={api_k}"
             payload_data = {

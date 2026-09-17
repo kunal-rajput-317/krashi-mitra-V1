@@ -173,6 +173,10 @@
   <meta name="apple-mobile-web-app-title" content="KrashiMitra Weather">
 
   <!-- Google Fonts -->
+  <!-- Loading skeletons. The forecast card paints its skeleton on first paint,
+       before any script runs, so it is linked here as well as bootstrapped by
+       drawer-menu.js. -->
+  <link rel="stylesheet" href="km-skeleton.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&family=Noto+Serif+Devanagari:wght@700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&display=swap">
 
   <style>
@@ -1070,18 +1074,19 @@
     }
 
     /* ── Loading shimmer ── */
-    .wx-shimmer {
-      background: linear-gradient(90deg, #e8f0eb 25%, #d4e6da 50%, #e8f0eb 75%);
-      background-size: 200% 100%;
-      animation: wx-shimmer 1.4s infinite;
-      border-radius: 20px;
-      height: 260px;
-      margin-bottom: 14px;
+    /* Two plain grey bars, 260px and 100px, told the farmer nothing about
+       what was coming. The wait now carries the card's own silhouette: the
+       place and the time it was read, the big temperature beside the
+       condition icon, the three stat tiles, and the advisory bar under it.
+       The blocks are .km-sk (km-skeleton.css) — one shimmer for the site,
+       and one that answers prefers-reduced-motion. */
+    .wx-sk-card {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 20px; padding: 16px; margin-bottom: 14px;
     }
-    @keyframes wx-shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .wx-sk-row   { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .wx-sk-hero  { display: flex; align-items: center; gap: 16px; margin: 18px 0 16px; }
+    .wx-sk-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
     /* ── Weekly inside dark card ── */
     .wx-week-chart-wrap { padding: 0; margin-top: 8px; }
@@ -1602,8 +1607,31 @@
 
   <!-- Weather result area -->
   <div id="weather-result">
-    <div class="wx-shimmer"></div>
-    <div class="wx-shimmer" style="height:100px; margin-bottom:14px; opacity:0.5;"></div>
+    <!-- The skeleton the page opens with. fetchWeather() re-uses THIS markup
+         for every later lookup (it is captured once below), so the shape of
+         the wait lives in one place. -->
+    <div role="status" aria-live="polite">
+      <span class="km-sk-label">मौसम लोड हो रहा है…</span>
+      <div class="wx-sk-card" aria-hidden="true">
+        <div class="wx-sk-row">
+          <div class="km-sk km-sk-line" style="width:46%"></div>
+          <div class="km-sk km-sk-line sm" style="width:74px"></div>
+        </div>
+        <div class="wx-sk-hero">
+          <div style="flex:1">
+            <div class="km-sk" style="width:130px;height:44px;border-radius:10px"></div>
+            <div class="km-sk km-sk-line sm" style="width:94px;margin-top:11px"></div>
+          </div>
+          <div class="km-sk km-sk-circle" style="width:68px;height:68px"></div>
+        </div>
+        <div class="wx-sk-stats">
+          <div class="km-sk" style="height:52px"></div>
+          <div class="km-sk" style="height:52px"></div>
+          <div class="km-sk" style="height:52px"></div>
+        </div>
+      </div>
+      <div class="km-sk" aria-hidden="true" style="height:74px;border-radius:16px;margin-bottom:14px"></div>
+    </div>
   </div>
 
   <!-- 7-day history (populated by fetchWeatherHistory) -->
@@ -2148,7 +2176,7 @@
             <div class="wx-card-sep" aria-hidden="true"></div>
             <div class="wx-card-right">
               <div id="wx-week-inner">
-                <div style="height:88px;border-radius:10px;background:linear-gradient(90deg,rgba(255,255,255,0.07) 25%,rgba(255,255,255,0.13) 50%,rgba(255,255,255,0.07) 75%);background-size:200% 100%;animation:wx-shimmer 1.4s infinite;margin-top:10px;"></div>
+                <div class="km-sk on-dark" style="height:88px;border-radius:10px;margin-top:10px;"></div>
                 <div style="display:flex;border-top:1px solid rgba(255,255,255,0.12);margin-top:10px;">
                   ${Array(7).fill('<div style="flex:1;height:72px;"></div>').join('')}
                 </div>
@@ -2209,6 +2237,11 @@
     `;
   }
 
+  // Captured from the page's own first paint, before anything overwrites it:
+  // the skeleton markup lives in the HTML above and is re-used from here, so
+  // there is one copy of it rather than two that can drift apart.
+  const WX_SKELETON = (document.getElementById("weather-result") || {}).innerHTML || "";
+
   async function fetchWeather() {
     const district = document.getElementById("weather-district").value;
     const result   = document.getElementById("weather-result");
@@ -2217,9 +2250,7 @@
     // Which districts the weather page actually serves
     if (window.kmTrack) kmTrack('weather_check', { district: district || '' });
 
-    result.innerHTML = `
-      <div class="wx-shimmer"></div>
-      <div class="wx-shimmer" style="height:100px; margin-bottom:14px; opacity:0.5;"></div>`;
+    result.innerHTML = WX_SKELETON;
     if (agePill) agePill.textContent = `🕐 ${t('loading')}`;
 
     try {
@@ -2639,10 +2670,10 @@
     // Show dark shimmer while loading
     el.innerHTML = `
       <div class="wx-week-chart-wrap">
-        <div style="height:105px;border-radius:10px;background:linear-gradient(90deg,rgba(255,255,255,0.07) 25%,rgba(255,255,255,0.13) 50%,rgba(255,255,255,0.07) 75%);background-size:200% 100%;animation:wx-shimmer 1.4s infinite;"></div>
+        <div class="km-sk on-dark" style="height:105px;border-radius:10px;"></div>
       </div>
       <div class="wx-week-day-row">
-        ${Array(7).fill(`<div class="wx-week-day"><div style="width:26px;height:8px;background:rgba(255,255,255,0.15);border-radius:3px;"></div><div style="width:20px;height:20px;background:rgba(255,255,255,0.15);border-radius:50%;margin:5px 0;"></div><div style="width:20px;height:8px;background:rgba(255,255,255,0.15);border-radius:3px;"></div><div style="width:14px;height:7px;background:rgba(255,255,255,0.10);border-radius:3px;"></div></div>`).join('')}
+        ${Array(7).fill(`<div class="wx-week-day"><div class="km-sk on-dark" style="width:26px;height:8px;"></div><div class="km-sk on-dark km-sk-circle" style="width:20px;height:20px;margin:5px 0;"></div><div class="km-sk on-dark" style="width:20px;height:8px;"></div><div class="km-sk on-dark" style="width:14px;height:7px;"></div></div>`).join('')}
       </div>`;
     try {
       const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/api/weather/history?district=${encodeURIComponent(district)}`);

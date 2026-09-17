@@ -1,0 +1,92 @@
+/* ============================================================
+   KrashiMitra — loading skeletons
+   ------------------------------------------------------------
+   Every panel on this site used to wait behind the same 26px
+   spinner (or behind nothing at all), on phones that are mostly
+   on a slow connection. A spinner says "wait". A skeleton says
+   "this is what is coming, and this is its shape" — and because
+   the blocks carry the real content's dimensions, nothing jumps
+   when the data lands.
+
+   ONE primitive, `.km-sk`: a tinted block with a highlight
+   sweeping across it. Everything else in this file — and every
+   page-local skeleton — is just rectangles of the right size,
+   which is the point: each page dresses the primitive in ITS
+   own shape (a bhav row, a forecast tile, a news card, a
+   comment bubble), never in a generic grey box.
+
+   Loaded automatically on every page by drawer-menu.js, and
+   linked directly in <head> by the pages that paint a skeleton
+   before their scripts run.
+
+   Usage:
+     <div class="km-sk km-sk-line" style="width:60%"></div>
+     <div class="km-sk km-sk-circle" style="width:32px;height:32px"></div>
+   Always pair a skeleton region with a screen-reader label:
+     <div role="status" aria-live="polite">
+       <span class="km-sk-label">लोड हो रहा है…</span> …blocks…
+     </div>
+   ============================================================ */
+
+.km-sk {
+  position: relative;
+  overflow: hidden;
+  background: #e7eee9;
+  border-radius: 6px;
+}
+.km-sk::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  animation: km-sk-sweep 1.3s ease-in-out infinite;
+}
+@keyframes km-sk-sweep { to { transform: translateX(100%); } }
+
+/* A highlight travelling across the screen is exactly the motion a
+   vestibular trigger asks the browser to stop. The block still breathes, so
+   it still reads as loading rather than as a broken grey box. */
+@media (prefers-reduced-motion: reduce) {
+  .km-sk::after {
+    transform: none;
+    background: rgba(255, 255, 255, 0.6);
+    animation: km-sk-fade 1.8s ease-in-out infinite;
+  }
+  @keyframes km-sk-fade { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.7; } }
+}
+
+/* On a dark panel the pale block disappears; invert the tint there. */
+.km-sk-dark .km-sk, .km-sk.on-dark { background: rgba(255, 255, 255, 0.13); }
+.km-sk-dark .km-sk::after, .km-sk.on-dark::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+}
+
+/* ── Shapes ──────────────────────────────────────────────── */
+.km-sk-line   { height: 11px; border-radius: 6px; }
+.km-sk-line.sm { height: 9px; }
+.km-sk-line.lg { height: 15px; }
+.km-sk-circle { border-radius: 50%; flex-shrink: 0; }
+.km-sk-pill   { border-radius: 18px; }
+
+/* A list of rows: an avatar/icon and a block of text beside it. Used by the
+   comment sheets, the ledger, the order lists and the suggestion panels. */
+.km-sk-rows { display: flex; flex-direction: column; gap: 14px; }
+.km-sk-row  { display: flex; gap: 10px; align-items: flex-start; }
+.km-sk-row > .km-sk-circle { width: 32px; height: 32px; }
+.km-sk-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+
+/* A stack of text lines. The last one is short, the way a paragraph ends. */
+.km-sk-para { display: flex; flex-direction: column; gap: 7px; }
+.km-sk-para > .km-sk:last-child { width: 62%; }
+
+/* Announced once by a screen reader, never drawn. */
+.km-sk-label {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -176,6 +176,9 @@
   <!-- assets/logo-192.png, not icon-192.png — the latter has never existed, and
        a missing static file is served as the 200-HTML fallback, so the iOS
        home-screen icon silently fell back to a page screenshot. -->
+  <!-- Loading skeletons (.km-sk). The मंडी भाव tiles paint theirs before any
+       script runs, so it is linked here as well as bootstrapped by drawer-menu.js. -->
+  <link rel="stylesheet" href="km-skeleton.css">
   <link rel="apple-touch-icon" href="/assets/logo-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1460,16 +1463,9 @@
       overflow: hidden;
     }
     .mandi-skel-body { padding: 12px 13px; }
-    .skel-box {
-      background: linear-gradient(90deg, #eef1ef 25%, #f7f9f8 50%, #eef1ef 75%);
-      background-size: 200% 100%;
-      animation: skelShine 1.3s linear infinite;
-      border-radius: 8px;
-    }
-    @keyframes skelShine {
-      from { background-position: 200% 0; }
-      to   { background-position: -200% 0; }
-    }
+    /* The tiles' blocks are .km-sk now (km-skeleton.css) — one shimmer for the
+       whole site, and one that also answers prefers-reduced-motion, which this
+       page's private copy never did. */
     .mandi-state {
       grid-column: 1 / -1;
       padding: 30px 18px;
@@ -2550,41 +2546,42 @@
     </div>
 
     <!-- Cards are rendered from the live /shop/mandi feed — never hardcode prices here -->
-    <div class="mandi-rows" id="mandi-rows">
-      <div class="mandi-skel">
-        <div class="skel-box" style="height:130px;border-radius:0"></div>
+    <div class="mandi-rows" id="mandi-rows" role="status" aria-live="polite">
+      <span class="km-sk-label">मंडी भाव लोड हो रहे हैं…</span>
+      <div class="mandi-skel" aria-hidden="true">
+        <div class="km-sk" style="height:130px;border-radius:0"></div>
         <div class="mandi-skel-body">
-          <div class="skel-box" style="width:60%;height:13px"></div>
-          <div class="skel-box" style="width:85%;height:10px;margin-top:7px"></div>
-          <div class="skel-box" style="width:70%;height:20px;margin-top:10px"></div>
-          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
+          <div class="km-sk" style="width:60%;height:13px"></div>
+          <div class="km-sk" style="width:85%;height:10px;margin-top:7px"></div>
+          <div class="km-sk" style="width:70%;height:20px;margin-top:10px"></div>
+          <div class="km-sk" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
       </div>
-      <div class="mandi-skel">
-        <div class="skel-box" style="height:130px;border-radius:0"></div>
+      <div class="mandi-skel" aria-hidden="true">
+        <div class="km-sk" style="height:130px;border-radius:0"></div>
         <div class="mandi-skel-body">
-          <div class="skel-box" style="width:50%;height:13px"></div>
-          <div class="skel-box" style="width:80%;height:10px;margin-top:7px"></div>
-          <div class="skel-box" style="width:65%;height:20px;margin-top:10px"></div>
-          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
+          <div class="km-sk" style="width:50%;height:13px"></div>
+          <div class="km-sk" style="width:80%;height:10px;margin-top:7px"></div>
+          <div class="km-sk" style="width:65%;height:20px;margin-top:10px"></div>
+          <div class="km-sk" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
       </div>
-      <div class="mandi-skel">
-        <div class="skel-box" style="height:130px;border-radius:0"></div>
+      <div class="mandi-skel" aria-hidden="true">
+        <div class="km-sk" style="height:130px;border-radius:0"></div>
         <div class="mandi-skel-body">
-          <div class="skel-box" style="width:55%;height:13px"></div>
-          <div class="skel-box" style="width:75%;height:10px;margin-top:7px"></div>
-          <div class="skel-box" style="width:72%;height:20px;margin-top:10px"></div>
-          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
+          <div class="km-sk" style="width:55%;height:13px"></div>
+          <div class="km-sk" style="width:75%;height:10px;margin-top:7px"></div>
+          <div class="km-sk" style="width:72%;height:20px;margin-top:10px"></div>
+          <div class="km-sk" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
       </div>
-      <div class="mandi-skel">
-        <div class="skel-box" style="height:130px;border-radius:0"></div>
+      <div class="mandi-skel" aria-hidden="true">
+        <div class="km-sk" style="height:130px;border-radius:0"></div>
         <div class="mandi-skel-body">
-          <div class="skel-box" style="width:58%;height:13px"></div>
-          <div class="skel-box" style="width:82%;height:10px;margin-top:7px"></div>
-          <div class="skel-box" style="width:68%;height:20px;margin-top:10px"></div>
-          <div class="skel-box" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
+          <div class="km-sk" style="width:58%;height:13px"></div>
+          <div class="km-sk" style="width:82%;height:10px;margin-top:7px"></div>
+          <div class="km-sk" style="width:68%;height:20px;margin-top:10px"></div>
+          <div class="km-sk" style="width:100%;height:34px;margin-top:14px;border-radius:10px"></div>
         </div>
       </div>
     </div>
@@ -2730,6 +2727,18 @@
        mandi cards use) — the earlier Unsplash URLs included a dead photo id that
        404'd, and a missing asset renders as a broken icon rather than failing loudly. -->
   <div class="articles-grid">
+
+    <a class="article-card" href="articles/masoor-me-khad-kab-kitni">
+      <div class="article-thumb">
+        <img src="images/articles/masoor-me-khad-kab-kitni-card.webp" alt="ट्रैक्टर से चलने वाली सीड ड्रिल मशीन" loading="lazy">
+      </div>
+      <div class="article-body">
+        <span class="article-tag">मसूर · खाद</span>
+        <div class="article-title">मसूर में कौन सी खाद डालें? 1 एकड़ का पूरा हिसाब</div>
+        <div class="article-meta">⏱️ 9 मिनट &nbsp;·&nbsp; 📅 <time class="article-date" data-slug="masoor-me-khad-kab-kitni" datetime="2026-09-17"></time></div>
+      </div>
+      <span class="article-arrow">›</span>
+    </a>
 
     <a class="article-card" href="articles/ganna-satta-parchi-up">
       <div class="article-thumb">
@@ -3232,17 +3241,45 @@
   }
 
   /* ── Weather snapshot fetch and farmer recommendations ── */
+
+  /* The snapshot's values — temperature, condition, the two pills — are the
+     only parts that wait on the network; the card around them is already
+     drawn. So the skeleton goes exactly where the numbers will be, and the
+     card does not move when they arrive. (.km-sk: km-skeleton.css) */
+  // on-dark: the snapshot card is a dark green gradient, and the default pale
+  // block reads as four white slabs on it rather than as a placeholder.
+  const wSkel = (w, h) =>
+    `<span class="km-sk on-dark km-sk-line" style="display:inline-block;width:${w};height:${h};vertical-align:middle"></span>`;
+
+  function weatherSkeleton() {
+    const t = document.getElementById('w-temp');
+    const c = document.getElementById('w-cond');
+    const h = document.getElementById('w-humidity');
+    const w = document.getElementById('w-wind');
+    if (t) t.innerHTML = wSkel('104px', '34px');
+    if (c) c.innerHTML = wSkel('68%', '12px');
+    if (h) h.innerHTML = wSkel('26px', '10px');
+    if (w) w.innerHTML = wSkel('30px', '10px');
+  }
+
   function weatherFail() {
     const cond = document.getElementById('w-cond');
     const upd  = document.getElementById('w-updated');
+    // Put the placeholders back first: a skeleton left shimmering behind an
+    // error message is the page telling the farmer two different things.
+    const temp = document.getElementById('w-temp');
+    if (temp) temp.innerHTML = '—<span class="weather-unit">°C</span>';
+    ['w-humidity', 'w-wind'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
     if (cond) cond.textContent = 'मौसम अभी लोड नहीं हो पाया';
     if (upd)  upd.innerHTML =
       '<button class="mandi-retry" onclick="fetchWeather()">फिर कोशिश करें</button>';
   }
 
   async function fetchWeather() {
-    const condEl0 = document.getElementById('w-cond');
-    if (condEl0) condEl0.textContent = 'मौसम लोड हो रहा है…';
+    weatherSkeleton();
     try {
       const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/weather?district=${WEATHER_DISTRICT}`);
       const json = await res.json();

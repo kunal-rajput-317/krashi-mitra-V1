@@ -174,6 +174,9 @@
   <!-- Google Fonts (same as mandi.html) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loading skeletons. drawer-menu.js injects this on every page; the feed
+       paints its skeleton before any script runs, so this page links it too. -->
+  <link rel="stylesheet" href="km-skeleton.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&family=Noto+Serif+Devanagari:wght@700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&display=swap">
 
 <style>
@@ -197,6 +200,12 @@
     --radius:        14px;
     --radius-sm:     8px;
     --tick-blue:     #1d9bf0;
+    /* The ring drawn around a premium member's photo. Deeper than --tick-blue
+       on purpose: at 28px the badge blue washes out against a green card,
+       while this reads as a deliberate ring at every size the avatar appears
+       in (28px in the feed, 26px on a reply, 82px in the profile sheet). */
+    --ocean:         #0284c7;
+    --ocean-deep:    #075985;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -504,6 +513,16 @@
     overflow: hidden;
   }
   .bz-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+  /* A premium member's photo, ringed. box-shadow rather than a border so the
+     ring costs no layout — a border would shrink the image inside the same 28px
+     box and make ticked and unticked avatars different sizes in one column.
+     The white spacer ring is what keeps it readable over a photo. */
+  .bz-avatar.is-verified {
+    box-shadow: 0 0 0 1.5px var(--white), 0 0 0 3px var(--ocean);
+  }
+  /* No margin to go with it: the card head already has 12px of padding and an
+     8px gap, so a 3px ring sits inside that slack. Giving it a margin instead
+     would move the avatar and make a ticked row a different height. */
   .bz-head-info { flex: 1; min-width: 0; }
   .bz-author-row { display: flex; align-items: center; gap: 5px; }
   .bz-author-name {
@@ -547,6 +566,68 @@
     font-size: 12.5px; font-weight: 600; color: #3730a3; line-height: 1.55;
   }
   .bz-demo-notice .em { font-size: 20px; line-height: 1; flex-shrink: 0; }
+
+  /* ── The blue-tick offer, IN the feed ──
+     It used to live only at the bottom of the page, below the feed AND below
+     "और देखें" — which on an infinite list is a place nobody arrives at. This
+     card is injected between posts instead (see TICK_CTA_AFTER), so it is read
+     during the one thing every visitor here actually does, which is scroll. */
+  .bz-tickcta {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe 60%, #dbeafe);
+    border: 1.5px solid #bae6fd; border-radius: var(--radius);
+    padding: 15px 16px 14px; box-shadow: var(--shadow);
+  }
+  .bz-tickcta-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .bz-tickcta-head svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .bz-tickcta-t {
+    font-size: 14.5px; font-weight: 800; color: #0c4a6e; line-height: 1.4;
+  }
+  .bz-tickcta-s {
+    font-size: 12.5px; font-weight: 500; color: #1e4e79; line-height: 1.6;
+    margin-bottom: 11px;
+  }
+  /* The two plans, side by side at 390px — a farmer comparing ₹199 and ₹499
+     needs both on screen at once, so they never stack. */
+  .bz-tickcta-plans { display: flex; gap: 8px; margin-bottom: 12px; }
+  .bz-tickcta-plan {
+    flex: 1; min-width: 0; background: rgba(255,255,255,0.86);
+    border: 1.5px solid #bae6fd; border-radius: 11px; padding: 9px 10px;
+  }
+  .bz-tickcta-plan .term {
+    display: block; font-size: 10.5px; font-weight: 800; color: #1e4e79;
+    letter-spacing: .02em; margin-bottom: 1px;
+  }
+  .bz-tickcta-plan .price {
+    font-size: 19px; font-weight: 800; color: var(--ocean-deep); line-height: 1.2;
+  }
+  .bz-tickcta-plan .price s {
+    font-size: 12px; font-weight: 600; color: var(--text-light); margin-left: 4px;
+  }
+  .bz-tickcta-plan .pm { display: block; font-size: 10.5px; font-weight: 700; color: #64748b; }
+  .bz-tickcta-btn {
+    display: block; width: 100%; text-align: center; text-decoration: none;
+    background: var(--ocean); color: #fff; font-family: inherit;
+    font-size: 14.5px; font-weight: 800; padding: 12px 16px; border: 0;
+    border-radius: 11px; cursor: pointer;
+    box-shadow: 0 3px 10px rgba(2,132,199,0.28);
+  }
+  .bz-tickcta-btn:hover { background: #0369a1; }
+  .bz-tickcta-fine {
+    font-size: 10.5px; font-weight: 500; color: #4a6b85; line-height: 1.55;
+    margin-top: 8px; text-align: center;
+  }
+  .bz-tickcta-x {
+    position: absolute; top: 6px; right: 7px; width: 24px; height: 24px;
+    background: none; border: 0; cursor: pointer; font-family: inherit;
+    font-size: 15px; line-height: 1; color: #7aa4c0; border-radius: 50%;
+  }
+  .bz-tickcta-x:hover { background: rgba(255,255,255,0.7); color: #0c4a6e; }
+
+  @media (max-width: 380px) {
+    .bz-tickcta-plan .price { font-size: 17px; }
+    .bz-tickcta-plan .price s { display: none; }
+  }
 
   /* Blue-tick meaning note (page footer) */
   .bz-bluetick-note {
@@ -612,13 +693,27 @@
      the photo, hence its own side padding.
      Two lines rather than one: below the photo it was an afterthought and a
      clamp was fine; above it, it is the first thing read. */
+  .bz-card-textwrap { padding: 0 12px 9px; }
   .bz-card-text {
-    padding: 0 12px 9px;
     font-size: 13px; line-height: 1.5; color: var(--text-dark);
     word-break: break-word;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  /* A clamp on its own just swallows the end of the sentence, and the last
+     line of a listing is usually the part that sells it — "सीधे खेत से पिकअप",
+     a quantity, "दलाल नहीं". So the reader gets a way to finish it.
+     bzApplyClamps() measures each block after it paints and adds the toggle
+     ONLY where the text really overflows: a two-line post never grows a stray
+     "और देखें", which would have made the feed look untidier, not tidier. */
+  .bz-clampable.is-open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+  .bz-clamp-more {
+    display: block; margin-top: 2px; padding: 0;
+    background: none; border: 0; font: inherit;
+    font-size: 12.5px; font-weight: 700; color: var(--green-mid);
+    cursor: pointer;
+  }
+  .bz-clamp-more:hover { text-decoration: underline; }
   .bz-qty-row { font-size: 13.5px; color: var(--text-dark); font-weight: 700;
     display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
   .bz-qty-row .sep { color: var(--border); font-weight: 400; }
@@ -782,14 +877,40 @@
   .bz-loadmore:hover { border-color: var(--green-light); box-shadow: var(--shadow); }
   .bz-loading { text-align: center; padding: 26px; color: var(--text-light); font-size: 13px; font-weight: 600; }
 
-  /* Was a sprouting-wheat animation built from three emoji on a loop. A
-     plain spinner says "loading" without the sticker. */
-  .bz-grow {
-    position: relative; width: 26px; height: 26px; margin: 0 auto 10px;
-    border: 2.5px solid var(--border); border-top-color: var(--green-mid);
-    border-radius: 50%; animation: bz-spin 0.8s linear infinite;
+
+  /* ── Loading skeleton ────────────────────────────────
+     The .km-sk primitive lives in km-skeleton.css (linked in <head>, and
+     bootstrapped site-wide by drawer-menu.js). What belongs HERE is the only
+     part that is this page's own: the shape of a listing card. */
+  /* The feed's own geometry, block for block: #bz-loading is a SIBLING of
+     .bz-feed, so it has to carry the same side padding and gap or the
+     skeleton cards sit 16px wider than the real ones. */
+  #bz-loading { padding: 2px 0 14px; text-align: left; }
+  .bz-sk-feed { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+  .bz-sk-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px 8px; }
+  .bz-sk-avatar { width: 28px; height: 28px; flex-shrink: 0; }
+  .bz-sk-name { width: 38%; }
+  .bz-sk-time { width: 54px; margin-left: auto; height: 9px; }
+  .bz-sk-text { padding: 0 12px 9px; display: flex; flex-direction: column; gap: 6px; }
+  .bz-sk-hero { width: 100%; aspect-ratio: 16 / 9; max-height: 230px; border-radius: 0; }
+  .bz-sk-info { padding: 9px 12px 8px; }
+  .bz-sk-acts {
+    display: flex; align-items: center; gap: 6px;
+    border-top: 1px solid var(--border); padding: 7px 10px;
   }
-  @keyframes bz-spin { to { transform: rotate(360deg); } }
+  .bz-sk-pill  { width: 58px; height: 34px; border-radius: 18px; flex-shrink: 0; }
+  .bz-sk-offer { width: 104px; height: 34px; border-radius: 18px; margin-left: auto; }
+  /* The sheet and the profile modal load rows, not cards. */
+  .bz-sk-rows { display: flex; flex-direction: column; gap: 14px; padding: 6px 2px; }
+  .bz-sk-row  { display: flex; gap: 10px; align-items: flex-start; }
+  .bz-sk-row .bz-sk-avatar { width: 32px; height: 32px; }
+  .bz-sk-bubble { flex: 1; height: 54px; border-radius: 4px 14px 14px 14px; }
+  .bz-sk-bubble.short { height: 38px; }
+  /* Announced once, not read out block by block. */
+  .km-sk-label {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
 
   /* ── FLOATING POST BUTTON ── */
   .bz-fab {
@@ -850,6 +971,20 @@
     font-size: 17px; font-weight: 800; color: var(--green-dark);
     margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
   }
+  /* The composer is the one modal tall enough to scroll, and its ✕ used to
+     scroll away with the form: .bz-modal-close is position:absolute and
+     .bz-modal is itself the scrolling box, so "top:14px" means 14px from the
+     top of the CONTENT. The title row is sticky instead, and the button sits
+     inside it — so the way out is in the same corner at every scroll position. */
+  #composer-overlay .bz-modal { padding-top: 0; }
+  #composer-overlay .bz-modal-title {
+    position: sticky; top: 0; z-index: 4;
+    margin: 0 -20px 14px; padding: 18px 20px 12px;
+    background: #fff; border-bottom: 1px solid var(--border);
+  }
+  #composer-overlay .bz-modal-close {
+    position: static; margin-left: auto; flex: 0 0 auto;
+  }
 
   /* Clickable profile stat (posts / followers / following) */
   .ig-stat-btn {
@@ -890,6 +1025,9 @@
     font-weight: 800; color: #fff; font-size: 16px;
   }
   .fl-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fl-avatar.is-verified {
+    box-shadow: 0 0 0 2px var(--white), 0 0 0 4px var(--ocean);
+  }
   .fl-meta { flex: 1; min-width: 0; }
   .fl-name {
     font-size: 13.5px; font-weight: 700; color: var(--text-dark);
@@ -958,11 +1096,110 @@
   .bz-media-drop:hover { border-color: var(--green-light); background: #fff; }
   .bz-media-preview { margin-top: 10px; position: relative; border-radius: 12px; overflow: hidden; display: none; }
   .bz-media-preview img, .bz-media-preview video { width: 100%; max-height: 220px; object-fit: cover; display: block; }
+  .bz-media-working {
+    padding: 22px 14px; text-align: center; background: var(--cream);
+    color: var(--text-mid); font-size: 12.5px; font-weight: 700;
+  }
+  /* Shown because it is HIS data being saved, not only ours — on a metered
+     2G connection "6.2 MB → 310 KB" is the most useful thing on this form. */
+  .bz-media-saved {
+    padding: 7px 10px; background: var(--green-pale); color: var(--green-dark);
+    font-size: 11.5px; font-weight: 700; text-align: center;
+  }
   .bz-media-remove {
     position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.65);
     color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px;
     cursor: pointer; font-size: 13px;
   }
+  /* Composer: where the crop is.
+     Two one-tap doors sit ABOVE the राज्य/ज़िला pair on purpose — a farmer who
+     allows location, or drops a pin, never has to read the selects at all, and
+     the selects are there for the one who denies both. The district he ends up
+     with is spelled the way /bhav spells it (the options come from the mandi
+     index via /bhav/api/places), which is what lets his listing appear on his
+     own district's price page. */
+  .bz-loc-btns { display: flex; gap: 8px; margin-bottom: 8px; }
+  .bz-loc-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 8px; border-radius: 12px; cursor: pointer;
+    border: 1.5px solid var(--border); background: var(--cream);
+    font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--green-dark);
+    transition: background .15s, border-color .15s;
+  }
+  .bz-loc-btn:hover { border-color: var(--green-light); background: #fff; }
+  .bz-loc-btn:disabled { opacity: 0.6; cursor: wait; }
+  .bz-loc-btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+  /* A GPS fix takes seconds on a phone with a weak signal, and a button that
+     only greys out reads as broken. The icon becomes the spinner — nothing
+     moves, nothing resizes, so the row does not twitch while he waits. */
+  .bz-loc-btn.busy svg { display: none; }
+  .bz-loc-btn.busy::before {
+    content: ''; width: 14px; height: 14px; flex: 0 0 auto;
+    border: 2px solid var(--green-pale); border-top-color: var(--green-mid);
+    border-radius: 50%; animation: bz-loc-spin 0.7s linear infinite;
+  }
+  @keyframes bz-loc-spin { to { transform: rotate(360deg); } }
+  /* Same treatment for the note, so "ली जा रही है…" reads as in-progress
+     rather than as a result that has already arrived. */
+  .bz-loc-note.busy::before {
+    content: ''; width: 12px; height: 12px; flex: 0 0 auto; margin-top: 2px;
+    border: 2px solid var(--green-pale); border-top-color: var(--green-mid);
+    border-radius: 50%; animation: bz-loc-spin 0.7s linear infinite;
+  }
+  .bz-loc-note {
+    display: none; align-items: flex-start; gap: 6px; margin-top: 8px;
+    font-size: 12px; line-height: 1.5; color: var(--green-dark);
+    background: var(--green-pale); border-radius: 10px; padding: 8px 10px;
+  }
+  .bz-loc-note.on { display: flex; }
+  .bz-loc-note.err { color: #7a3b28; background: #fdeee8; }
+  .bz-loc-note svg { width: 14px; height: 14px; flex: 0 0 auto; margin-top: 1px; }
+
+  /* Full-screen map picker. Above the composer (5000) because it opens over it
+     and the composer stays mounted underneath with everything already typed. */
+  .bz-map-overlay {
+    display: none; position: fixed; inset: 0; z-index: 6000;
+    background: #fff; flex-direction: column;
+  }
+  .bz-map-overlay.open { display: flex; }
+  .bz-map-head {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    border-bottom: 1px solid var(--border); background: #fff;
+  }
+  .bz-map-head .bz-map-ttl { font-size: 14.5px; font-weight: 800; color: var(--green-dark); flex: 1; }
+  .bz-map-wrap { flex: 1; min-height: 0; position: relative; }
+  #bz-map { position: absolute; inset: 0; }
+  /* The pin is painted over the CENTRE of the map and never moves: the farmer
+     drags the map under it. Dragging a marker with a thumb means the thumb
+     covers the thing being aimed. */
+  .bz-map-pin {
+    position: absolute; left: 50%; top: 50%; z-index: 500;
+    transform: translate(-50%, -100%); pointer-events: none;
+    filter: drop-shadow(0 3px 5px rgba(0,0,0,0.35));
+  }
+  .bz-map-foot {
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--border); background: #fff;
+  }
+  .bz-map-where {
+    font-size: 13px; font-weight: 700; color: var(--text-dark);
+    margin-bottom: 10px; min-height: 19px; line-height: 1.45;
+  }
+  .bz-map-where span { color: var(--text-light); font-weight: 600; }
+  .bz-map-gps {
+    position: absolute; right: 12px; bottom: 12px; z-index: 500;
+    width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border);
+    background: #fff; box-shadow: var(--shadow); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: var(--green-dark);
+  }
+  .bz-map-gps svg { width: 19px; height: 19px; }
+  .bz-map-gps.busy svg { display: none; }
+  .bz-map-gps.busy::before {
+    content: ''; width: 17px; height: 17px;
+    border: 2px solid var(--green-pale); border-top-color: var(--green-mid);
+    border-radius: 50%; animation: bz-loc-spin 0.7s linear infinite;
+  }
+
   .bz-submit-btn {
     width: 100%; background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
     color: #fff; border: none; border-radius: 12px; padding: 13px;
@@ -999,6 +1236,11 @@
     padding: 8px 12px; font-size: 13px; color: var(--text-dark); min-width: 0;
   }
   .bz-comment-author { font-size: 12px; font-weight: 700; color: var(--green-mid); display: flex; align-items: center; gap: 4px; }
+  /* Four lines in a comment, two on a card: a comment is already the thing
+     you opened the sheet to read, so it is cut later than a card caption. */
+  .bz-comment-text { word-break: break-word;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+    overflow: hidden; }
   .bz-comment-time { font-size: 10.5px; color: var(--text-light); font-weight: 600; margin-top: 3px; }
   .bz-comment-bubble.offer {
     background: var(--amber-light); border: 1px solid #fde68a;
@@ -1123,6 +1365,20 @@
     color: #fff;
     border: 2px solid var(--green-pale);
     box-shadow: 0 4px 12px rgba(45,106,79,0.15);
+  }
+  /* 82px, so the ring gets a real gradient rather than a flat line — this is
+     the one place the badge is the size of a thing you look at. */
+  .ig-profile-avatar-container.is-verified::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #38bdf8, var(--ocean) 55%, var(--ocean-deep));
+  }
+  .ig-profile-avatar-container.is-verified .ig-profile-avatar,
+  .ig-profile-avatar-container.is-verified .ig-profile-avatar-placeholder {
+    position: relative;
+    border-color: var(--white);
   }
   .ig-avatar-upload-overlay {
     position: absolute;
@@ -1608,9 +1864,33 @@
 
   <!-- Feed -->
   <div class="bz-feed" id="bz-feed"></div>
-  <div class="bz-loading" id="bz-loading" style="display:none;">
-    <div class="bz-grow"></div>
-    <span data-t="loading">लोड हो रहा है…</span>
+  <!-- Visible from the first paint, before any script runs: on a slow phone
+       the gap between "page arrived" and "feed answered" is seconds, and it
+       used to be blank. loadFeed() refills it (3 cards on a fresh load, 2 for
+       the next page) and hides it when the posts land. -->
+  <div class="bz-loading" id="bz-loading" role="status" aria-live="polite">
+    <span class="km-sk-label" data-t="loading">लोड हो रहा है…</span>
+    <div class="bz-sk-feed">
+      <article class="bz-card" aria-hidden="true">
+        <div class="bz-sk-head">
+          <div class="km-sk km-sk-circle bz-sk-avatar"></div>
+          <div class="km-sk km-sk-line bz-sk-name"></div>
+          <div class="km-sk km-sk-line bz-sk-time"></div>
+        </div>
+        <div class="bz-sk-text">
+          <div class="km-sk km-sk-line"></div>
+          <div class="km-sk km-sk-line" style="width:72%;"></div>
+        </div>
+        <div class="km-sk bz-sk-hero"></div>
+        <div class="bz-sk-info"><div class="km-sk km-sk-line" style="width:52%;"></div></div>
+        <div class="bz-sk-acts">
+          <div class="km-sk bz-sk-pill"></div>
+          <div class="km-sk bz-sk-pill"></div>
+          <div class="km-sk bz-sk-pill"></div>
+          <div class="km-sk bz-sk-offer"></div>
+        </div>
+      </article>
+    </div>
   </div>
   <button class="bz-loadmore" id="bz-loadmore" style="display:none;" onclick="loadFeed(false)" data-t="load_more">और देखें ↓</button>
 
@@ -1618,7 +1898,7 @@
   <div class="bz-bluetick-note">
     <svg class="bz-verified-badge" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#1d9bf0" d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34z"/><path fill="#fff" d="M9.71 16.29l-3.5-3.5 1.42-1.42 2.08 2.09 5.16-5.17 1.42 1.42z"/></svg>
     <span>
-      <span data-t="bluetick_note">नीला टिक ✓ — कृषि मित्र ने फ़ोन पर इस विक्रेता का नाम, मोबाइल नंबर और गाँव जाँचा है। यह फसल, भाव या सौदे की गारंटी नहीं है।</span>
+      <span data-t="bluetick_note">नीला टिक ✓ — यह सदस्य कृषि मित्र प्रीमियम लेता है। यह पहचान की जाँच नहीं है, और फसल, भाव या सौदे की कोई गारंटी नहीं है। हर सौदे में खुद जाँच-परख करें।</span>
       <a class="bz-bluetick-cta" href="/verify" data-t="bluetick_cta">आपको भी नीला टिक चाहिए?</a>
     </span>
   </div>
@@ -1634,8 +1914,10 @@
 <!-- ══ COMPOSER MODAL ══ -->
 <div class="bz-modal-overlay" id="composer-overlay" onclick="if(event.target===this)closeComposer()">
   <div class="bz-modal">
-    <button class="bz-modal-close" onclick="closeComposer()">✕</button>
-    <div class="bz-modal-title"><span id="cmp-title" data-t="composer_title">अपनी फसल बेचें</span></div>
+    <div class="bz-modal-title">
+      <span id="cmp-title" data-t="composer_title">अपनी फसल बेचें</span>
+      <button class="bz-modal-close" onclick="closeComposer()" aria-label="बंद करें">✕</button>
+    </div>
 
     <div class="bz-form-row">
       <label class="bz-form-label" data-t="lbl_type">आप क्या करना चाहते हैं?</label>
@@ -1688,6 +1970,35 @@
       </div>
     </div>
 
+    <div class="bz-form-row" id="cmp-loc-row">
+      <label class="bz-form-label" data-t="lbl_place">फसल कहाँ रखी है?</label>
+      <div class="bz-loc-btns">
+        <button type="button" class="bz-loc-btn" id="cmp-loc-gps" onclick="useDeviceLocation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            <circle cx="12" cy="12" r="8"/>
+          </svg>
+          <span data-t="btn_gps">मेरी लोकेशन</span>
+        </button>
+        <button type="button" class="bz-loc-btn" id="cmp-loc-map" onclick="openMapPicker()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span data-t="btn_map">नक्शे पर चुनें</span>
+        </button>
+      </div>
+      <div class="bz-form-2col">
+        <div><select class="bz-select" id="cmp-state" onchange="onComposerState()"></select></div>
+        <div><select class="bz-select" id="cmp-district"></select></div>
+      </div>
+      <input class="bz-input" id="cmp-village" style="margin-top:8px;"
+             oninput="villageTyped = true;"
+             placeholder="गाँव / तहसील (वैकल्पिक)" data-t-ph="village_ph" />
+      <div class="bz-loc-note" id="cmp-loc-note"></div>
+    </div>
+
     <div class="bz-form-row" id="cmp-edit-note" style="display:none;">
       <div class="bz-edit-note" data-t="edit_media_note">फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।</div>
     </div>
@@ -1702,6 +2013,37 @@
     </div>
 
     <button class="bz-submit-btn" id="cmp-submit" onclick="submitPost()" data-t="btn_post">पोस्ट करें</button>
+  </div>
+</div>
+
+<!-- ══ MAP PICKER ══
+     Opens OVER the composer, which stays mounted with everything already typed
+     in it. Leaflet itself is fetched the first time this opens and never on a
+     plain page load: the feed is the page, and most farmers never come here. -->
+<div class="bz-map-overlay" id="map-overlay">
+  <div class="bz-map-head">
+    <button class="bz-modal-close" style="position:static;" onclick="closeMapPicker()"
+            aria-label="बंद करें">✕</button>
+    <span class="bz-map-ttl" data-t="map_title">नक्शे पर जगह चुनें</span>
+  </div>
+  <div class="bz-map-wrap">
+    <div id="bz-map"></div>
+    <svg class="bz-map-pin" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z" fill="#2d6a4f"/>
+      <circle cx="12" cy="10" r="3.4" fill="#fff"/>
+    </svg>
+    <button class="bz-map-gps" onclick="recenterMap()" id="bz-map-gps"
+            aria-label="मेरी लोकेशन">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        <circle cx="12" cy="12" r="8"/>
+      </svg>
+    </button>
+  </div>
+  <div class="bz-map-foot">
+    <div class="bz-map-where" id="bz-map-where"></div>
+    <button class="bz-submit-btn" onclick="confirmMapPick()" data-t="map_confirm">यही जगह चुनें</button>
   </div>
 </div>
 
@@ -1821,6 +2163,18 @@ const TRANSLATIONS = {
     lbl_price:'भाव (₹)', lbl_old_price:'पुराना भाव (₹, वैकल्पिक)',
     lbl_qty:'मात्रा', lbl_unit:'इकाई', lbl_media:'फोटो / वीडियो',
     media_hint:'फोटो या वीडियो जोड़ें (photo ≤ 12MB, video ≤ 40MB)',
+    media_shrinking:'फोटो तैयार की जा रही है…', media_shrunk:'फोटो छोटी कर दी —',
+    lbl_place:'फसल कहाँ रखी है?', btn_gps:'मेरी लोकेशन', btn_map:'नक्शे पर चुनें',
+    state_ph:'राज्य चुनें', district_ph:'ज़िला चुनें', village_ph:'गाँव / तहसील (वैकल्पिक)',
+    loc_finding:'लोकेशन ली जा रही है…',
+    loc_set:'जगह सेट हुई —',
+    loc_denied:'लोकेशन बंद है — नीचे राज्य और ज़िला खुद चुन लें।',
+    loc_failed:'लोकेशन नहीं मिली — नीचे राज्य और ज़िला खुद चुन लें।',
+    loc_nomatch:'यह ज़िला हमारी सूची में नहीं मिला — नीचे खुद चुन लें।',
+    map_title:'नक्शे पर जगह चुनें', map_confirm:'यही जगह चुनें',
+    map_drag:'नक्शा घुमाकर अपनी जगह पिन के नीचे लाएं',
+    map_loading:'नक्शा खुल रहा है…',
+    map_failed:'नक्शा नहीं खुल पाया — नीचे राज्य और ज़िला खुद चुन लें।',
     btn_post:'पोस्ट करें', comments_title:'सवाल-जवाब व ऑफर', comment_ph:'अपना सवाल पूछें...',
     offer_title:'अपना ऑफर भेजें', lbl_offer_amt:'ऑफर भाव (₹ प्रति इकाई)',
     lbl_offer_msg:'संदेश (वैकल्पिक)', offer_msg_ph:'20 क्विंटल चाहिए, कल उठा सकते हैं',
@@ -1828,6 +2182,7 @@ const TRANSLATIONS = {
     listings:'सक्रिय लिस्टिंग', near_you:'आपके नज़दीक', my_listings:'मेरी लिस्टिंग',
     like:'पसंद', comment:'पूछें', offers:'ऑफर', share:'शेयर',
     price_on_ask:'भाव पूछें', like_aria:'पसंद करें', stock_photo:'प्रतीकात्मक चित्र',
+    read_more:'और देखें', read_less:'कम देखें',
     reply:'जवाब दें', delete_c:'हटाएं', replying_to:'जवाब:', no_comments:'अभी कोई सवाल नहीं — पहला आप पूछें।',
     delete_comment_q:'यह comment हटाएं?', delete_failed:'हटाया नहीं जा सका — दोबारा try करें',
     comment_failed:'Comment भेजा नहीं जा सका — दोबारा try करें',
@@ -1852,8 +2207,15 @@ const TRANSLATIONS = {
     zoom_hint:'दो उंगलियों से ज़ूम करें • डबल-टैप',
     phone_needed:'बेचने या खरीदने के लिए आपका मोबाइल नंबर ज़रूरी है — ताकि खरीदार/विक्रेता आपसे संपर्क कर सकें।',
     fill_phone:'मोबाइल नंबर भरें',
-    bluetick_note:'नीला टिक ✓ — कृषि मित्र ने फ़ोन पर इस विक्रेता का नाम, मोबाइल नंबर और गाँव जाँचा है। यह फसल, भाव या सौदे की गारंटी नहीं है।',
+    bluetick_note:'नीला टिक ✓ — यह सदस्य कृषि मित्र प्रीमियम लेता है। यह पहचान की जाँच नहीं है, और फसल, भाव या सौदे की कोई गारंटी नहीं है। हर सौदे में खुद जाँच-परख करें।',
     bluetick_cta:'आपको भी नीला टिक चाहिए?',
+    tickcta_t:'अपने नाम के साथ नीला टिक लगवाएँ',
+    tickcta_s:'कृषि मित्र प्रीमियम — हर पोस्ट पर नीला टिक और आपकी फ़ोटो पर नीला घेरा, जो भीड़ में दिखता है।',
+    tickcta_btn:'नीला टिक लें',
+    tickcta_fine:'प्रीमियम सदस्यता का निशान — पहचान की जाँच या सौदे की गारंटी नहीं।',
+    tickcta_pm:'/ महीना',
+    tickcta_term_one:'1 महीने के लिए',
+    tickcta_term_many:'__N__ महीने के लिए',
   },
   en: {
     logo_text:'Krashi Mitra', menu_title:'Menu',
@@ -1878,6 +2240,18 @@ const TRANSLATIONS = {
     lbl_price:'Price (₹)', lbl_old_price:'Old price (₹, optional)',
     lbl_qty:'Quantity', lbl_unit:'Unit', lbl_media:'Photo / Video',
     media_hint:'Add a photo or video (photo ≤ 12MB, video ≤ 40MB)',
+    media_shrinking:'Preparing the photo…', media_shrunk:'Photo shrunk —',
+    lbl_place:'Where is the crop?', btn_gps:'My location', btn_map:'Pick on map',
+    state_ph:'Select state', district_ph:'Select district', village_ph:'Village / tehsil (optional)',
+    loc_finding:'Getting your location…',
+    loc_set:'Location set —',
+    loc_denied:'Location is off — pick your state and district below.',
+    loc_failed:'Couldn’t get your location — pick your state and district below.',
+    loc_nomatch:'That district isn’t in our list — pick one below.',
+    map_title:'Pick the place on the map', map_confirm:'Use this place',
+    map_drag:'Move the map so your place sits under the pin',
+    map_loading:'Opening the map…',
+    map_failed:'The map couldn’t open — pick your state and district below.',
     btn_post:'Post', comments_title:'Questions & Offers', comment_ph:'Ask your question...',
     offer_title:'Send your offer', lbl_offer_amt:'Offer price (₹ per unit)',
     lbl_offer_msg:'Message (optional)', offer_msg_ph:'Need 20 quintals, can pick up tomorrow',
@@ -1885,6 +2259,7 @@ const TRANSLATIONS = {
     listings:'active listings', near_you:'Near you', my_listings:'My listings',
     like:'Like', comment:'Ask', offers:'Offers', share:'Share',
     price_on_ask:'Price on ask', like_aria:'Like', stock_photo:'Representative photo',
+    read_more:'See more', read_less:'See less',
     reply:'Reply', delete_c:'Delete', replying_to:'Replying to', no_comments:'No questions yet — ask the first one.',
     delete_comment_q:'Delete this comment?', delete_failed:'Could not delete — try again',
     comment_failed:'Could not send — try again',
@@ -1909,8 +2284,15 @@ const TRANSLATIONS = {
     zoom_hint:'Pinch to zoom • double-tap',
     phone_needed:'A mobile number is required to sell or buy — so buyers/sellers can reach you.',
     fill_phone:'Add mobile number',
-    bluetick_note:'Blue tick ✓ — KrashiMitra confirmed this seller’s name, mobile number and village by phone. It is not a guarantee of the crop, the price or the deal.',
+    bluetick_note:'Blue tick ✓ — this member subscribes to KrashiMitra Premium. It is not an identity check, and it is not a guarantee of the crop, the price or the deal. Check every deal yourself.',
     bluetick_cta:'Want the blue tick?',
+    tickcta_t:'Get the blue tick beside your name',
+    tickcta_s:'KrashiMitra Premium — a blue tick on every post and a blue ring on your photo, so your listing stands out.',
+    tickcta_btn:'Get the blue tick',
+    tickcta_fine:'A premium membership badge — not an identity check, and not a guarantee of any deal.',
+    tickcta_pm:'/ month',
+    tickcta_term_one:'for 1 month',
+    tickcta_term_many:'for __N__ months',
   },
   kn: {
     logo_text:'ಕೃಷಿ ಮಿತ್ರ', menu_title:'ಮೆನು',
@@ -1935,6 +2317,18 @@ const TRANSLATIONS = {
     lbl_price:'ಬೆಲೆ (₹)', lbl_old_price:'ಹಳೆ ಬೆಲೆ (₹, ಐಚ್ಛಿಕ)',
     lbl_qty:'ಪ್ರಮಾಣ', lbl_unit:'ಘಟಕ', lbl_media:'ಫೋಟೋ / ವಿಡಿಯೋ',
     media_hint:'ಫೋಟೋ ಅಥವಾ ವಿಡಿಯೋ ಸೇರಿಸಿ (photo ≤ 12MB, video ≤ 40MB)',
+    media_shrinking:'ಫೋಟೋ ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ…', media_shrunk:'ಫೋಟೋ ಚಿಕ್ಕದಾಗಿದೆ —',
+    lbl_place:'ಬೆಳೆ ಎಲ್ಲಿದೆ?', btn_gps:'ನನ್ನ ಸ್ಥಳ', btn_map:'ನಕ್ಷೆಯಲ್ಲಿ ಆಯ್ಕೆ ಮಾಡಿ',
+    state_ph:'ರಾಜ್ಯ ಆಯ್ಕೆ ಮಾಡಿ', district_ph:'ಜಿಲ್ಲೆ ಆಯ್ಕೆ ಮಾಡಿ', village_ph:'ಗ್ರಾಮ / ತಾಲ್ಲೂಕು (ಐಚ್ಛಿಕ)',
+    loc_finding:'ಸ್ಥಳ ಪಡೆಯಲಾಗುತ್ತಿದೆ…',
+    loc_set:'ಸ್ಥಳ ಸಿದ್ಧ —',
+    loc_denied:'ಸ್ಥಳ ಆಫ್ ಆಗಿದೆ — ಕೆಳಗೆ ರಾಜ್ಯ ಮತ್ತು ಜಿಲ್ಲೆ ಆಯ್ಕೆ ಮಾಡಿ.',
+    loc_failed:'ಸ್ಥಳ ಸಿಗಲಿಲ್ಲ — ಕೆಳಗೆ ರಾಜ್ಯ ಮತ್ತು ಜಿಲ್ಲೆ ಆಯ್ಕೆ ಮಾಡಿ.',
+    loc_nomatch:'ಆ ಜಿಲ್ಲೆ ನಮ್ಮ ಪಟ್ಟಿಯಲ್ಲಿ ಇಲ್ಲ — ಕೆಳಗೆ ಆಯ್ಕೆ ಮಾಡಿ.',
+    map_title:'ನಕ್ಷೆಯಲ್ಲಿ ಸ್ಥಳ ಆಯ್ಕೆ ಮಾಡಿ', map_confirm:'ಇದೇ ಸ್ಥಳ',
+    map_drag:'ನಿಮ್ಮ ಸ್ಥಳ ಪಿನ್ ಕೆಳಗೆ ಬರುವಂತೆ ನಕ್ಷೆ ಸರಿಸಿ',
+    map_loading:'ನಕ್ಷೆ ತೆರೆಯುತ್ತಿದೆ…',
+    map_failed:'ನಕ್ಷೆ ತೆರೆಯಲಿಲ್ಲ — ಕೆಳಗೆ ರಾಜ್ಯ ಮತ್ತು ಜಿಲ್ಲೆ ಆಯ್ಕೆ ಮಾಡಿ.',
     btn_post:'ಪೋಸ್ಟ್ ಮಾಡಿ', comments_title:'ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಆಫರ್', comment_ph:'ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಕೇಳಿ...',
     offer_title:'ನಿಮ್ಮ ಆಫರ್ ಕಳುಹಿಸಿ', lbl_offer_amt:'ಆಫರ್ ಬೆಲೆ (₹ ಪ್ರತಿ ಘಟಕ)',
     lbl_offer_msg:'ಸಂದೇಶ (ಐಚ್ಛಿಕ)', offer_msg_ph:'20 ಕ್ವಿಂಟಾಲ್ ಬೇಕು',
@@ -1942,6 +2336,7 @@ const TRANSLATIONS = {
     listings:'ಸಕ್ರಿಯ ಪಟ್ಟಿಗಳು', near_you:'ನಿಮ್ಮ ಹತ್ತಿರ', my_listings:'ನನ್ನ ಪಟ್ಟಿಗಳು',
     like:'ಇಷ್ಟ', comment:'ಕೇಳಿ', offers:'ಆಫರ್', share:'ಹಂಚಿಕೊಳ್ಳಿ',
     price_on_ask:'ಬೆಲೆ ಕೇಳಿ', like_aria:'ಇಷ್ಟಪಡಿ', stock_photo:'ಪ್ರಾತಿನಿಧಿಕ ಚಿತ್ರ',
+    read_more:'ಇನ್ನಷ್ಟು ನೋಡಿ', read_less:'ಕಡಿಮೆ ತೋರಿಸಿ',
     reply:'ಉತ್ತರಿಸಿ', delete_c:'ಅಳಿಸಿ', replying_to:'ಉತ್ತರ:', no_comments:'ಇನ್ನೂ ಪ್ರಶ್ನೆಗಳಿಲ್ಲ — ಮೊದಲನೆಯದನ್ನು ಕೇಳಿ.',
     delete_comment_q:'ಈ ಕಾಮೆಂಟ್ ಅಳಿಸುವುದೇ?', delete_failed:'ಅಳಿಸಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
     comment_failed:'ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
@@ -1966,8 +2361,15 @@ const TRANSLATIONS = {
     zoom_hint:'ಎರಡು ಬೆರಳಿಂದ ಜೂಮ್ • ಡಬಲ್-ಟ್ಯಾಪ್',
     phone_needed:'ಮಾರಾಟ ಅಥವಾ ಖರೀದಿಗೆ ಮೊಬೈಲ್ ನಂಬರ್ ಅಗತ್ಯ — ಖರೀದಿದಾರರು/ಮಾರಾಟಗಾರರು ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಲು.',
     fill_phone:'ಮೊಬೈಲ್ ನಂಬರ್ ಸೇರಿಸಿ',
-    bluetick_note:'ನೀಲಿ ಟಿಕ್ ✓ — ಕೃಷಿ ಮಿತ್ರ ಫೋನ್‌ನಲ್ಲಿ ಈ ಮಾರಾಟಗಾರರ ಹೆಸರು, ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ಹಳ್ಳಿಯನ್ನು ಪರಿಶೀಲಿಸಿದೆ. ಇದು ಬೆಳೆ, ಬೆಲೆ ಅಥವಾ ವ್ಯವಹಾರದ ಖಾತರಿಯಲ್ಲ.',
+    bluetick_note:'ನೀಲಿ ಟಿಕ್ ✓ — ಈ ಸದಸ್ಯರು ಕೃಷಿ ಮಿತ್ರ ಪ್ರೀಮಿಯಂ ಪಡೆದಿದ್ದಾರೆ. ಇದು ಗುರುತಿನ ಪರಿಶೀಲನೆ ಅಲ್ಲ, ಮತ್ತು ಬೆಳೆ, ಬೆಲೆ ಅಥವಾ ವ್ಯವಹಾರದ ಖಾತರಿಯಲ್ಲ. ಪ್ರತಿ ವ್ಯವಹಾರವನ್ನೂ ನೀವೇ ಪರಿಶೀಲಿಸಿ.',
     bluetick_cta:'ನಿಮಗೂ ನೀಲಿ ಟಿಕ್ ಬೇಕೇ?',
+    tickcta_t:'ನಿಮ್ಮ ಹೆಸರಿನ ಜೊತೆ ನೀಲಿ ಟಿಕ್ ಪಡೆಯಿರಿ',
+    tickcta_s:'ಕೃಷಿ ಮಿತ್ರ ಪ್ರೀಮಿಯಂ — ಪ್ರತಿ ಪೋಸ್ಟ್‌ನಲ್ಲಿ ನೀಲಿ ಟಿಕ್ ಮತ್ತು ನಿಮ್ಮ ಫೋಟೋಗೆ ನೀಲಿ ಉಂಗುರ.',
+    tickcta_btn:'ನೀಲಿ ಟಿಕ್ ಪಡೆಯಿರಿ',
+    tickcta_fine:'ಪ್ರೀಮಿಯಂ ಸದಸ್ಯತ್ವದ ಗುರುತು — ಗುರುತಿನ ಪರಿಶೀಲನೆ ಅಥವಾ ವ್ಯವಹಾರದ ಖಾತರಿ ಅಲ್ಲ.',
+    tickcta_pm:'/ ತಿಂಗಳು',
+    tickcta_term_one:'1 ತಿಂಗಳಿಗೆ',
+    tickcta_term_many:'__N__ ತಿಂಗಳಿಗೆ',
   },
 };
 const urlParams = new URLSearchParams(window.location.search);
@@ -2001,6 +2403,10 @@ function setLang(lang) {
     document.getElementById('cmp-title').textContent  = tr.edit_title;
     document.getElementById('cmp-submit').textContent = tr.btn_save;
   }
+  // The place options are built in JS, not marked up with data-t, so they do
+  // not follow [data-t] above — and a Hindi reader switching to English must
+  // not be left with a list he can no longer match to the map.
+  if (typeof refreshPlaceLabels === 'function') refreshPlaceLabels();
   renderChips();
   renderFeed();          // re-render cards with new labels
   updateCountLabel();
@@ -2110,11 +2516,27 @@ function likeBtnInner(liked, count) {
   return `${liked ? IC_THUMB_FILLED : IC_THUMB_OUTLINE}<span>${count > 0 ? count : ''}</span>`;
 }
 
+/** The loading state for the sheet, the profile modal and the followers list.
+ *  Rows rather than cards, because that is what lands in all three. */
 function loaderHtml() {
-  return `<div class="bz-loading">
-    <div class="bz-grow"></div>
-    <span>${escapeHtml(T().loading)}</span>
+  const row = (cls) => `<div class="bz-sk-row">
+      <div class="km-sk km-sk-circle bz-sk-avatar"></div>
+      <div class="km-sk bz-sk-bubble ${cls}"></div>
+    </div>`;
+  return `<div class="bz-sk-rows" role="status" aria-live="polite">
+    <span class="km-sk-label">${escapeHtml(T().loading)}</span>
+    ${row('')}${row('short')}${row('')}
   </div>`;
+}
+
+/** Match the skeleton to what is being waited for: a fresh feed is three
+ *  cards, the next page is two. The card is cloned from the one already in
+ *  the page, so there is one copy of that markup, not two. */
+function bzSkeleton(n) {
+  const box = document.querySelector('#bz-loading .bz-sk-feed');
+  if (!box || !box.firstElementChild) return;
+  while (box.children.length > n) box.lastElementChild.remove();
+  while (box.children.length < n) box.appendChild(box.firstElementChild.cloneNode(true));
 }
 
 function toast(msg) {
@@ -2127,6 +2549,92 @@ function toast(msg) {
 
 // ── Auth gating ─────────────────────────────────────────────
 let bazarMe = null;   // {user_id, name, has_profile, verified} once fetched
+
+/* ── The blue-tick offer ──
+   Prices are env-driven on the server (KM_VERIFY_M1_PRICE and friends), and
+   this page is a static file, so the card asks for them rather than carrying
+   copies that would silently disagree with the UPI link the first time a price
+   moved. One fetch per page load; a failure just means the card sits this one
+   out, which is the right way for an ad to fail. */
+let tickPlans = null;
+const TICK_CTA_AFTER = 3;          // posts to read before the offer appears
+const TICK_CTA_HIDE_DAYS = 14;     // how long a dismissal lasts
+
+/* Same mark as the tick beside a member's name, drawn at card size. */
+const TICK_SVG_LG = `<svg viewBox="0 0 24 24" fill="#0284c7" aria-hidden="true"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/></svg>`;
+
+async function fetchTickPlans() {
+  if (tickPlans) return tickPlans;
+  try {
+    const r = await fetch(`${API_BASE}/verify/plans`);
+    const j = await r.json();
+    if (j && j.success && j.data && j.data.plans && j.data.plans.length) {
+      tickPlans = j.data.plans;
+      renderFeed();                // it arrived after the first paint
+    }
+  } catch {}
+  return tickPlans;
+}
+
+function tickCtaDismissed() {
+  try {
+    const at = parseInt(localStorage.getItem('km_tickcta_off') || '0', 10);
+    return !!at && (Date.now() - at) < TICK_CTA_HIDE_DAYS * 864e5;
+  } catch { return false; }
+}
+
+function dismissTickCta(ev) {
+  if (ev) ev.stopPropagation();
+  try { localStorage.setItem('km_tickcta_off', String(Date.now())); } catch {}
+  const el = document.querySelector('.bz-tickcta');
+  if (el) el.remove();
+}
+
+/* The card. Returns '' — and injects nothing — for a member who already has
+   the tick: selling somebody something they are currently paying for is the
+   fastest way to make the badge look like spam. */
+function tickCtaHtml() {
+  if (!tickPlans || tickCtaDismissed()) return '';
+  if (bazarMe && bazarMe.verified) return '';
+  const tr = T();
+  /* term_hi comes off the wire in Hindi, and setLang() re-renders this card
+     into whatever the reader picked — so an English card would have carried a
+     Devanagari term beside an English price. Built from `months` instead, and
+     term_hi is only the fallback for a language that has no phrasing yet. */
+  const term = (pl) => {
+    const key = pl.months > 1 ? tr.tickcta_term_many : tr.tickcta_term_one;
+    return key ? String(key).replace('__N__', pl.months) : (pl.term_hi || '');
+  };
+  const plans = tickPlans.map(pl => `
+    <div class="bz-tickcta-plan">
+      <span class="term">${escapeHtml(term(pl))}</span>
+      <span class="price">₹${pl.price}${pl.mrp ? `<s>₹${pl.mrp}</s>` : ''}</span>
+      <span class="pm">₹${pl.per_month} ${escapeHtml(tr.tickcta_pm)}</span>
+    </div>`).join('');
+  return `
+  <div class="bz-tickcta">
+    <button class="bz-tickcta-x" onclick="dismissTickCta(event)" aria-label="बंद करें">✕</button>
+    <div class="bz-tickcta-head">
+      ${TICK_SVG_LG}
+      <span class="bz-tickcta-t">${escapeHtml(tr.tickcta_t)}</span>
+    </div>
+    <div class="bz-tickcta-s">${escapeHtml(tr.tickcta_s)}</div>
+    <div class="bz-tickcta-plans">${plans}</div>
+    <a class="bz-tickcta-btn" href="/verify">${escapeHtml(tr.tickcta_btn)}</a>
+    <div class="bz-tickcta-fine">${escapeHtml(tr.tickcta_fine)}</div>
+  </div>`;
+}
+
+/* Slot it between posts rather than before or after them. Above the feed it
+   would push the listings — the reason anybody opened this page — below the
+   fold on a 390px phone; below the feed is where it used to be, under an
+   infinite list and a "और देखें" button, which is nowhere. */
+function withTickCta(cards) {
+  const cta = tickCtaHtml();
+  if (!cta) return cards;
+  const at = Math.min(TICK_CTA_AFTER, cards.length);
+  return cards.slice(0, at).concat([cta], cards.slice(at));
+}
 
 async function fetchMe() {
   if (!getToken()) return null;
@@ -2331,7 +2839,9 @@ function startVoiceSearch(e) {
 async function loadFeed(reset) {
   if (feedBusy) return;
   feedBusy = true;
+  const fresh = reset || !feedPosts.length;
   if (reset) { feedPage = 0; feedPosts = []; renderFeed(); }
+  bzSkeleton(fresh ? 3 : 2);
   document.getElementById('bz-loading').style.display = 'block';
   document.getElementById('bz-loadmore').style.display = 'none';
   try {
@@ -2464,6 +2974,53 @@ function emptyStateHtml() {
   </div>`;
 }
 
+/** Give every overflowing .bz-clampable an "और देखें" toggle.
+ *
+ *  Whether a block overflows is a measurement, not something the HTML string
+ *  knows, so this runs on the live nodes after each render. Blocks that fit
+ *  are left exactly as they were — no button, no change in height.
+ */
+const bzOpenClamps = new Set();   // keys the reader has opened, kept across renders
+function bzApplyClamps(root) {
+  (root || document).querySelectorAll('.bz-clampable:not([data-clamped])').forEach(el => {
+    el.setAttribute('data-clamped', '1');
+    // Measure while it is still clamped: an already-open block overflows by
+    // nothing, so restoring the open state first would cost it its button.
+    if (el.scrollHeight - el.clientHeight < 4) return;   // fits; 4px absorbs rounding
+    const key = el.getAttribute('data-clamp-key');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bz-clamp-more';
+    const paint = (open) => { btn.textContent = open ? T().read_less : T().read_more; };
+    btn.onclick = (ev) => {
+      ev.stopPropagation();   // the card underneath opens a lightbox
+      const open = el.classList.toggle('is-open');
+      if (key) { open ? bzOpenClamps.add(key) : bzOpenClamps.delete(key); }
+      paint(open);
+    };
+    el.insertAdjacentElement('afterend', btn);
+    // "और देखें" then scrolling far enough to load the next page re-renders the
+    // feed; without this the post the reader was in the middle of shuts again.
+    const wasOpen = !!key && bzOpenClamps.has(key);
+    if (wasOpen) el.classList.add('is-open');
+    paint(wasOpen);
+  });
+}
+
+/* Devanagari arrives from Google Fonts, and the fallback face wraps to a
+   different number of lines — measured before the swap, a post can be told it
+   fits when it does not. Re-measure once, after the real font lands. */
+if (document.fonts && document.fonts.status !== 'loaded') {
+  document.fonts.ready.then(() => {
+    document.querySelectorAll('.bz-clamp-more').forEach(b => b.remove());
+    document.querySelectorAll('.bz-clampable[data-clamped]').forEach(el => {
+      el.classList.remove('is-open');
+      el.removeAttribute('data-clamped');
+    });
+    bzApplyClamps(document);
+  });
+}
+
 // ── Render feed ─────────────────────────────────────────────
 // Sample cards appear for EVERY visitor (feed + injection are auth-independent)
 // while real supply is scarce (< DEMO_MIN_REAL live listings): below any real
@@ -2479,11 +3036,15 @@ function renderFeed() {
     : '';
 
   if (feedPosts.length) {
-    feed.innerHTML = feedPosts.map(p => postCardHtml(p)).join('') + demoHtml;
+    feed.innerHTML = withTickCta(feedPosts.map(p => postCardHtml(p))).join('') + demoHtml;
+    bzApplyClamps(feed);
     return;
   }
   if (feedBusy) { feed.innerHTML = ''; return; }   // loader (#bz-loading) is showing
-  feed.innerHTML = demoHtml || emptyStateHtml();
+  // An empty or sample-only feed still gets the offer — it is the one screen
+  // where a farmer is looking at nothing else.
+  feed.innerHTML = (demoHtml || emptyStateHtml()) + tickCtaHtml();
+  bzApplyClamps(feed);
 }
 
 function postCardHtml(p) {
@@ -2492,7 +3053,11 @@ function postCardHtml(p) {
   const demo = !!p._demo;
   const nav = (real) => demo ? 'demoNudge(event)' : real;   // sample cards → nudge
   const name = escapeHtml(a.name || 'किसान');
-  const tick = a.verified ? `<span class="bz-tick" title="Verified seller">${TICK_SVG}</span>` : '';
+  // The tick beside the name and the ring around the photo are the same fact,
+  // read off the same flag — a card carrying one without the other would look
+  // like a rendering bug rather than a badge.
+  const tick = a.verified ? `<span class="bz-tick" title="${escapeHtml(T().tickcta_fine)}">${TICK_SVG}</span>` : '';
+  const ring = a.verified ? ' is-verified' : '';
   const place = escapeHtml(p.location || a.location || '');
   const badge = (p.post_type === 'buy'
     ? `<span class="bz-type-badge buy">${escapeHtml(tr.buy_wanted)}</span>`
@@ -2587,8 +3152,8 @@ function postCardHtml(p) {
   <article class="bz-card${demo ? ' is-demo' : ''}" id="post-${p.id}">
     <div class="bz-card-head">
       ${a.avatar_url
-        ? `<div class="bz-avatar" onclick="${nav(`openProfile(${a.user_id})`)}"><img src="${mediaSrc(a.avatar_url)}" alt="${name}"></div>`
-        : `<div class="bz-avatar" style="background:${avatarColor(a.name)}" onclick="${nav(`openProfile(${a.user_id})`)}">${escapeHtml(initial(a.name))}</div>`
+        ? `<div class="bz-avatar${ring}" onclick="${nav(`openProfile(${a.user_id})`)}"><img src="${mediaSrc(a.avatar_url)}" alt="${name}"></div>`
+        : `<div class="bz-avatar${ring}" style="background:${avatarColor(a.name)}" onclick="${nav(`openProfile(${a.user_id})`)}">${escapeHtml(initial(a.name))}</div>`
       }
       <div class="bz-head-info">
         <div class="bz-author-row">
@@ -2598,7 +3163,7 @@ function postCardHtml(p) {
       <span class="bz-head-time">${timeAgo(p.created_at)}</span>
       ${mineMenu}
     </div>
-    ${p.text ? `<div class="bz-card-text">${escapeHtml(p.text)}</div>` : ''}
+    ${p.text ? `<div class="bz-card-textwrap"><div class="bz-card-text bz-clampable" data-clamp-key="post-${p.id}">${escapeHtml(p.text)}</div></div>` : ''}
     ${heroHtml}
     <div class="bz-card-info">
       ${qtyHtml}
@@ -3016,14 +3581,14 @@ function commentHtml(c, depth) {
   return `
     <div class="bz-comment${c._pending ? ' pending' : ''}" id="comment-${c.id}">
       ${a.avatar_url
-        ? `<div class="bz-avatar" onclick="openProfile(${a.user_id})"><img src="${mediaSrc(a.avatar_url)}" alt="${escapeHtml(a.name)}"></div>`
-        : `<div class="bz-avatar" style="background:${avatarColor(a.name)}" onclick="openProfile(${a.user_id})">${escapeHtml(initial(a.name))}</div>`
+        ? `<div class="bz-avatar${a.verified ? ' is-verified' : ''}" onclick="openProfile(${a.user_id})"><img src="${mediaSrc(a.avatar_url)}" alt="${escapeHtml(a.name)}"></div>`
+        : `<div class="bz-avatar${a.verified ? ' is-verified' : ''}" style="background:${avatarColor(a.name)}" onclick="openProfile(${a.user_id})">${escapeHtml(initial(a.name))}</div>`
       }
       <div class="bz-comment-col">
         <div class="bz-comment-bubble ${c.kind === 'offer' ? 'offer' : ''}">
           <div class="bz-comment-author" onclick="openProfile(${a.user_id})" style="cursor:pointer;">${escapeHtml(a.name || '')} ${tick}</div>
           ${offer}
-          ${c.text ? `<div>${escapeHtml(c.text)}</div>` : ''}
+          ${c.text ? `<div class="bz-comment-text bz-clampable" data-clamp-key="comment-${c.id}">${escapeHtml(c.text)}</div>` : ''}
           <div class="bz-comment-time">${timeAgo(c.created_at)}</div>
         </div>
         ${acts}
@@ -3040,6 +3605,7 @@ function renderComments(keepScroll) {
     return;
   }
   body.innerHTML = commentsCache.map(c => commentHtml(c, 0)).join('');
+  bzApplyClamps(body);   // before the scroll: a toggle changes scrollHeight
   body.scrollTop = keepScroll ? at : body.scrollHeight;
 }
 
@@ -3320,7 +3886,7 @@ function renderProfile(u) {
   document.getElementById('profile-body').innerHTML = `
     <!-- Instagram Top Info Row -->
     <div class="ig-profile-header">
-      <div class="ig-profile-avatar-container">
+      <div class="ig-profile-avatar-container${u.verified ? ' is-verified' : ''}">
         ${u.avatar_url
           ? `<img class="ig-profile-avatar" src="${mediaSrc(u.avatar_url)}" alt="${escapeHtml(u.name)}">`
           : `<div class="ig-profile-avatar-placeholder" style="background:${avatarColor(u.name)}">${escapeHtml(initial(u.name))}</div>`
@@ -3529,9 +4095,10 @@ function renderFollowList(list) {
     return;
   }
   box.innerHTML = list.map(u => {
+    const fring = u.verified ? ' is-verified' : '';
     const av = u.avatar_url
-      ? `<div class="fl-avatar"><img src="${mediaSrc(u.avatar_url)}" alt="${escapeHtml(u.name)}"></div>`
-      : `<div class="fl-avatar" style="background:${avatarColor(u.name)}">${escapeHtml(initial(u.name))}</div>`;
+      ? `<div class="fl-avatar${fring}"><img src="${mediaSrc(u.avatar_url)}" alt="${escapeHtml(u.name)}"></div>`
+      : `<div class="fl-avatar${fring}" style="background:${avatarColor(u.name)}">${escapeHtml(initial(u.name))}</div>`;
     const tick = u.verified ? TICK_SVG : '';
     // No follow button for myself; otherwise Follow / Following toggle
     const btn = u.is_me ? '' :
@@ -3747,6 +4314,13 @@ function resetComposer() {
   document.getElementById('cmp-old-price').value = '';
   document.getElementById('cmp-qty').value = '';
   document.getElementById('cmp-unit').selectedIndex = 0;
+  document.getElementById('cmp-village').value = '';
+  villageTyped = false;
+  locBusy('cmp-loc-gps', false); locBusy('cmp-loc-map', false);
+  document.getElementById('cmp-state').selectedIndex = 0;
+  fillDistrictSelect('');
+  pickedLat = pickedLon = null;
+  locNote('', '');
   clearMedia();
   document.getElementById('cmp-title').textContent = tr.composer_title;
   document.getElementById('cmp-submit').textContent = tr.btn_post;
@@ -3758,6 +4332,15 @@ async function openComposer() {
   if (!(await requireMember({ phone: true }))) return;   // sellers must be reachable
   resetComposer();
   document.getElementById('composer-overlay').classList.add('open');
+  // The place block fills itself in the background: the ~700-district list is
+  // fetched once per page, and the form opens on the address he registered
+  // with. Neither is worth holding the modal shut for — he starts by typing
+  // the crop, several fields above this one.
+  await loadPlaces();
+  fillStateSelect();
+  const me = await fetchMe();
+  if (me && !editingPostId) applyPlace({ state: me.state, district: me.district,
+                                         village: me.village });
 }
 
 /** Open the same modal over an existing listing of yours. */
@@ -3787,6 +4370,21 @@ async function openEditPost(postId) {
   document.getElementById('cmp-old-price').value = p.old_price != null ? p.old_price : '';
   document.getElementById('cmp-qty').value       = p.quantity  != null ? p.quantity : '';
   if (p.unit) document.getElementById('cmp-unit').value = p.unit;
+  // The place as this listing holds it — never the profile's, which is a
+  // default for a NEW listing and would silently move an old one.
+  document.getElementById('cmp-village').value = p.village || '';
+  villageTyped = !!p.village;
+  pickedLat = (p.lat != null) ? p.lat : null;
+  pickedLon = (p.lon != null) ? p.lon : null;
+  loadPlaces().then(() => {
+    if (editingPostId !== postId) return;   // he moved on while it loaded
+    fillStateSelect();
+    const st = stateEntry(p.state);
+    if (st) {
+      document.getElementById('cmp-state').value = st.n;
+      fillDistrictSelect(p.district || '');
+    }
+  });
 
   document.getElementById('cmp-title').textContent  = tr.edit_title;
   document.getElementById('cmp-submit').textContent = tr.btn_save;
@@ -3796,6 +4394,358 @@ async function openEditPost(postId) {
 }
 
 function closeComposer() { document.getElementById('composer-overlay').classList.remove('open'); }
+
+// ══ WHERE THE CROP IS ════════════════════════════════════════
+// Until 2026-09-17 a listing had no place of its own — it inherited whatever
+// address the poster's profile happened to carry, and most farmers never fill
+// that in. So cards showed no place, and /bhav's district slice of this feed
+// (which filters on the structured state/district columns) was always empty.
+//
+// Three doors, one set of fields: the device's own fix, a pin on a map, or the
+// two selects. The selects' options come from /bhav/api/places — the mandi
+// index — so a district picked here is spelled exactly the way the /bhav price
+// page will later look for it. Everything a reverse-geocoder returns has to be
+// matched back into that list, which is what normPlace() exists for.
+let PLACES    = null;   // [{n, hi, d:[[name, hindi], …]}, …] — fetched once
+let placesReq = null;   // the in-flight fetch, so two opens share one request
+let pickedLat = null;   // the pin on the listing being written right now
+let pickedLon = null;
+// Whether the village box holds something the FARMER put there, as opposed to
+// a default we filled in from his profile or a geocoder. Only his own typing
+// is protected from being overwritten by the next fix or pin — a default is
+// there to be replaced, and a farmer who taps "मेरी लोकेशन" is asking to be
+// moved, not asking us to keep the village he registered with years ago.
+let villageTyped = false;
+
+/** A comparison key for place names. The same district reaches us as
+ *  "Muzaffarnagar", "muzaffarnagar district" and "Muzaffarnagar (Rural)"
+ *  depending on who is answering, and none of those is a difference worth
+ *  losing a listing over. */
+function normPlace(v) {
+  return (v || '').toLowerCase()
+    .replace(/\(.*?\)/g, ' ')
+    .replace(/\b(district|dist|division|tehsil|taluk|taluka|rural|urban)\b/g, ' ')
+    .replace(/[^a-zऀ-ॿ]+/g, '');
+}
+
+// States the geocoder names differently from the mandi feed. Both sides are
+// normalised first, so only genuinely different WORDS need an entry.
+const STATE_ALIAS = {
+  orissa: 'odisha', uttaranchal: 'uttarakhand', pondicherry: 'puducherry',
+  nctofdelhi: 'delhi', newdelhi: 'delhi',
+  jammukashmir: 'jammuandkashmir',
+  andamannicobarislands: 'andamanandnicobarislands',
+  dadranagarhaveli: 'dadraandnagarhaveli',
+};
+
+function placeLabel(pair) {
+  // Hindi for a Hindi reader, the stored English otherwise. There is no
+  // Kannada district table, and Devanagari is no help to a Kannada reader.
+  return (currentLang === 'hi' && pair[1]) ? pair[1] : pair[0];
+}
+
+async function loadPlaces() {
+  if (PLACES) return PLACES;
+  if (!placesReq) {
+    placesReq = fetch(`${API_BASE}/bhav/api/places`)
+      .then(r => r.json())
+      .then(j => { PLACES = (j && j.ok && j.places) || []; return PLACES; })
+      .catch(() => { placesReq = null; return []; });   // leave a retry possible
+  }
+  return placesReq;
+}
+
+function stateEntry(name) {
+  if (!name || !PLACES) return null;
+  const n = STATE_ALIAS[normPlace(name)] || normPlace(name);
+  return PLACES.find(st => {
+    const k = STATE_ALIAS[normPlace(st.n)] || normPlace(st.n);
+    return k === n || k.indexOf(n) === 0 || n.indexOf(k) === 0;
+  }) || null;
+}
+
+/** The first of `names` that is a district of `state`, or ''. A geocoder hands
+ *  back a whole ladder of administrative names and only one of them is the
+ *  district — we find out which by asking our own list, not by trusting an
+ *  admin-level number that means different things in different states. */
+function districtIn(state, names) {
+  const st = stateEntry(state);
+  if (!st) return '';
+  for (const raw of names) {
+    const n = normPlace(raw);
+    if (!n) continue;
+    let hit = st.d.find(d => normPlace(d[0]) === n || normPlace(d[1]) === n);
+    if (!hit) hit = st.d.find(d => {
+      const k = normPlace(d[0]);
+      return k.indexOf(n) === 0 || n.indexOf(k) === 0;
+    });
+    if (hit) return hit[0];
+  }
+  return '';
+}
+
+/** Fill the राज्य select, keeping whatever was already chosen. */
+function fillStateSelect() {
+  const tr  = T();
+  const sel = document.getElementById('cmp-state');
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">${escapeHtml(tr.state_ph)}</option>` +
+    (PLACES || []).map(st =>
+      `<option value="${escapeHtml(st.n)}">${escapeHtml(placeLabel([st.n, st.hi]))}</option>`
+    ).join('');
+  if (cur) sel.value = cur;
+}
+
+/** Fill ज़िला for the chosen state, selecting `want` when it is in the list. */
+function fillDistrictSelect(want) {
+  const tr  = T();
+  const sel = document.getElementById('cmp-district');
+  const st  = stateEntry(document.getElementById('cmp-state').value);
+  sel.innerHTML = `<option value="">${escapeHtml(tr.district_ph)}</option>` +
+    ((st && st.d) || []).map(d =>
+      `<option value="${escapeHtml(d[0])}">${escapeHtml(placeLabel(d))}</option>`
+    ).join('');
+  if (want) {
+    const hit = ((st && st.d) || []).find(d => normPlace(d[0]) === normPlace(want));
+    if (hit) sel.value = hit[0];
+  }
+}
+
+function onComposerState() { fillDistrictSelect(''); }
+
+/** Re-label both selects after a language switch, without losing the choice. */
+function refreshPlaceLabels() {
+  const sSel = document.getElementById('cmp-state');
+  if (!PLACES || !sSel) return;
+  const d = document.getElementById('cmp-district').value;
+  fillStateSelect();
+  fillDistrictSelect(d);
+}
+
+/** kind: '' (good) | 'err' | 'busy' */
+function locNote(msg, kind) {
+  const el = document.getElementById('cmp-loc-note');
+  if (!msg) { el.className = 'bz-loc-note'; el.textContent = ''; return; }
+  el.className = 'bz-loc-note on' + (kind ? ' ' + kind : '');
+  el.textContent = msg;
+}
+
+/** The spinner on either location button, and the disabled state with it. */
+function locBusy(id, on) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.classList.toggle('busy', !!on);
+  b.disabled = !!on;
+}
+
+/** What the form currently says about the place, as one readable line. */
+function placeSummary() {
+  const sSel = document.getElementById('cmp-state');
+  const dSel = document.getElementById('cmp-district');
+  const v    = document.getElementById('cmp-village').value.trim();
+  const dl   = dSel.value && dSel.selectedOptions[0] ? dSel.selectedOptions[0].text : '';
+  const sl   = sSel.value && sSel.selectedOptions[0] ? sSel.selectedOptions[0].text : '';
+  return [v, dl, sl].filter(Boolean).join(', ');
+}
+
+/** coords → {state, district, village}, via BigDataCloud's key-less
+ *  client-side reverse geocoder — the same free service location.js uses.
+ *  Asked in English because the answer is matched against the mandi index,
+ *  whose names are English; the farmer then reads the Hindi label off our own
+ *  list, not off theirs. */
+async function reverseGeocode(lat, lon) {
+  const url = 'https://api.bigdatacloud.net/data/reverse-geocode-client' +
+              `?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+  const d = await fetch(url).then(r => r.json());
+  const admin = ((d.localityInfo || {}).administrative || []).map(a => a.name);
+  const state = d.principalSubdivision || '';
+  // city/locality lead, because across most of rural India the nearest named
+  // place IS the district town; the rest of the ladder is the fallback.
+  const district = districtIn(state, [d.city, d.locality].concat(admin));
+  let village = d.locality || d.city || '';
+  if (normPlace(village) === normPlace(district)) village = '';
+  return { state, district, village };
+}
+
+/** Write a resolved place into the form. The village box is only filled when
+ *  it is empty — what the farmer typed about his own village beats a geocoder
+ *  that has never been there. Returns whether a district actually landed. */
+function applyPlace(p) {
+  const st = stateEntry(p.state);
+  if (st) {
+    document.getElementById('cmp-state').value = st.n;
+    fillDistrictSelect(p.district || '');
+  }
+  const vil = document.getElementById('cmp-village');
+  if (p.village && !villageTyped) vil.value = p.village;
+  return !!(st && document.getElementById('cmp-district').value);
+}
+
+/** "मेरी लोकेशन" — the device's own fix, straight into the fields. */
+async function useDeviceLocation() {
+  const tr  = T();
+  const btn = document.getElementById('cmp-loc-gps');
+  if (!navigator.geolocation) { locNote(tr.loc_failed, 'err'); return; }
+  locBusy('cmp-loc-gps', true);
+  locNote(tr.loc_finding, 'busy');
+  await loadPlaces();
+  fillStateSelect();
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = +pos.coords.latitude.toFixed(5);
+    const lon = +pos.coords.longitude.toFixed(5);
+    pickedLat = lat; pickedLon = lon;
+    try {
+      const ok = applyPlace(await reverseGeocode(lat, lon));
+      locNote(ok ? `${tr.loc_set} ${placeSummary()}` : tr.loc_nomatch, ok ? '' : 'err');
+    } catch {
+      // The pin is still good when the NAME lookup fails — a buyer can
+      // navigate to coordinates, and the two selects are right there.
+      locNote(tr.loc_nomatch, 'err');
+    }
+    locBusy('cmp-loc-gps', false);
+  }, (err) => {
+    locBusy('cmp-loc-gps', false);
+    locNote((err && err.code === 1) ? tr.loc_denied : tr.loc_failed, 'err');
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 });
+}
+
+// ── The map picker ──────────────────────────────────────────
+// Leaflet loads the first time this opens and never on a plain page load: the
+// feed is what this page is for, and most visitors never write a listing.
+// Leaflet is the library here for the reason it is everywhere else on this
+// site — raster tiles and one marker, on budget Android phones.
+let bzMap = null, mapMoveTimer = null, mapPlace = null;
+
+function loadAsset(src, isCss) {
+  return new Promise((resolve, reject) => {
+    const el = document.createElement(isCss ? 'link' : 'script');
+    if (isCss) { el.rel = 'stylesheet'; el.href = src; } else { el.src = src; }
+    el.onload = resolve; el.onerror = reject;
+    document.head.appendChild(el);
+  });
+}
+
+async function ensureLeaflet() {
+  if (window.L) return;
+  await loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', true);
+  await loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', false);
+}
+
+async function openMapPicker() {
+  const tr = T();
+  locBusy('cmp-loc-map', true);
+  locNote(tr.map_loading, 'busy');
+  try {
+    await Promise.all([ensureLeaflet(), loadPlaces()]);
+  } catch {
+    locBusy('cmp-loc-map', false);
+    locNote(tr.map_failed, 'err');
+    return;
+  }
+  locBusy('cmp-loc-map', false);
+  locNote('', '');
+  fillStateSelect();
+  document.getElementById('map-overlay').classList.add('open');
+
+  // Where it opens: the pin already on this draft, then the device's
+  // remembered spot (location.js writes km_geo), then the whole country.
+  let centre = [22.9, 79.0], zoom = 4.4;
+  const geo = (window.KrashiLocation && window.KrashiLocation.get()) || null;
+  if (pickedLat != null && pickedLon != null) { centre = [pickedLat, pickedLon]; zoom = 14; }
+  else if (geo && geo.status === 'granted' && geo.lat) { centre = [geo.lat, geo.lon]; zoom = 13; }
+
+  if (!bzMap) {
+    bzMap = L.map('bz-map', { zoomControl: false }).setView(centre, zoom);
+    // Satellite, because a farmer finds his own खेत by looking at it — the
+    // shape of the plot and the trees along it — not by reading a road name.
+    //
+    // maxNativeZoom is the deepest zoom Esri actually HOLDS a picture for;
+    // maxZoom is how far he may keep zooming. Splitting them is the whole
+    // trick: over most of rural India Esri's imagery stops at z18 and a z19
+    // request comes back as a grey "Map data not yet available" card with
+    // HTTP 200, so no tile error fires and Leaflet paints grey over the field.
+    // Capping the REQUEST at 18 and letting Leaflet upscale keeps real imagery
+    // on screen all the way in. Identical to naksha.py — see that file before
+    // changing either, they must not drift.
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © Esri World Imagery',
+      maxNativeZoom: 18, maxZoom: 20,
+    }).addTo(bzMap);
+    // Place names ON the imagery: bare satellite at country zoom is unusable
+    // for finding a district, and this is the layer that lets him orient
+    // before he zooms into his own plot.
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '© Esri',
+      maxNativeZoom: 18, maxZoom: 20,
+    }).addTo(bzMap);
+    L.control.zoom({ position: 'topright' }).addTo(bzMap);
+    bzMap.on('moveend', onMapSettled);
+  } else {
+    bzMap.setView(centre, zoom);
+  }
+  // The container was display:none a moment ago, so Leaflet measured it as
+  // 0×0 and would paint one tile in the corner of a grey box.
+  document.getElementById('bz-map-where').textContent = tr.map_drag;
+  setTimeout(() => { bzMap.invalidateSize(); onMapSettled(); }, 60);
+}
+
+/** After every pan, name the spot under the pin — debounced, because one pan
+ *  fires moveend once but a flick fires it repeatedly, and each one is a call
+ *  to somebody else's free service. */
+function onMapSettled() {
+  clearTimeout(mapMoveTimer);
+  mapMoveTimer = setTimeout(async () => {
+    if (!bzMap) return;
+    const c   = bzMap.getCenter();
+    const lat = +c.lat.toFixed(5), lon = +c.lng.toFixed(5);
+    const where = document.getElementById('bz-map-where');
+    try {
+      const p  = await reverseGeocode(lat, lon);
+      mapPlace = { lat, lon, state: p.state, district: p.district, village: p.village };
+      const st = stateEntry(p.state);
+      const dh = (st && p.district)
+        ? placeLabel(st.d.find(d => d[0] === p.district) || [p.district, ''])
+        : '';
+      const line = [p.village, dh, st ? placeLabel([st.n, st.hi]) : p.state]
+                     .filter(Boolean).join(', ');
+      where.innerHTML = line ? escapeHtml(line)
+                             : `<span>${escapeHtml(T().map_drag)}</span>`;
+    } catch {
+      // Naming the spot is a nicety; the pin itself is what gets saved.
+      mapPlace = { lat, lon, state: '', district: '', village: '' };
+      where.innerHTML = `<span>${lat.toFixed(4)}, ${lon.toFixed(4)}</span>`;
+    }
+  }, 420);
+}
+
+function recenterMap() {
+  if (!navigator.geolocation || !bzMap) return;
+  const b = document.getElementById('bz-map-gps');
+  if (b) b.classList.add('busy');
+  const done = () => { if (b) b.classList.remove('busy'); };
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { bzMap.setView([pos.coords.latitude, pos.coords.longitude], 15); done(); },
+    done,
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 });
+}
+
+function confirmMapPick() {
+  const tr = T();
+  if (!bzMap) { closeMapPicker(); return; }
+  const c = bzMap.getCenter();
+  pickedLat = +c.lat.toFixed(5);
+  pickedLon = +c.lng.toFixed(5);
+  // mapPlace lags the pin by one debounce when he confirms mid-pan, so only
+  // its NAMES are used, and only while it is still about this same spot.
+  const fresh = mapPlace &&
+    Math.abs(mapPlace.lat - pickedLat) < 0.02 &&
+    Math.abs(mapPlace.lon - pickedLon) < 0.02;
+  const ok = fresh ? applyPlace(mapPlace) : false;
+  closeMapPicker();
+  locNote(ok ? `${tr.loc_set} ${placeSummary()}` : tr.loc_nomatch, ok ? '' : 'err');
+}
+
+function closeMapPicker() { document.getElementById('map-overlay').classList.remove('open'); }
 
 function fillCropSelect() {
   const sel = document.getElementById('cmp-crop');
@@ -3830,6 +4780,83 @@ function videoDuration(file) {
   });
 }
 
+// ── Photos are shrunk in the phone, before they are ever uploaded ──
+// A modern phone camera writes a 4000x3000 JPEG of 4-8 MB. Nothing on this
+// site ever shows it bigger than a 760px column, so every byte past that is
+// paid for three times: on his mobile data going up, on Render's metered
+// egress coming back down (a 5GB overrun already suspended this site once),
+// and in the seconds he spends staring at a progress bar on a 2G connection.
+// Downscaling to 1600px long edge takes ~200ms and turns 6 MB into ~300 KB.
+// 2048 and 0.88, NOT lower. The widest this site ever paints a listing photo
+// is the 760px feed column, which is ~1300 real pixels on a 430px phone at 3x
+// — so 2048 leaves headroom to pinch-zoom into the crop and still see grain,
+// husk and colour. That is the whole job of the photo: a buyer deciding
+// whether the lot is worth a phone call. Shrinking past what he can judge
+// saves bytes by destroying the only reason the photo is there.
+const UPLOAD_MAX_EDGE = 2048;
+const UPLOAD_QUALITY  = 0.88;
+
+/** Decode a file with its EXIF rotation ALREADY applied.
+ *  canvas.drawImage ignores EXIF, so a photo taken in portrait would be
+ *  re-encoded on its side — the phone shows it upright, we would store it
+ *  rotated, and the farmer would think we broke his picture. */
+function decodeOriented(file) {
+  if (window.createImageBitmap) {
+    try {
+      return createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch { /* older browsers reject the options bag — fall through */ }
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload  = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/** file → a smaller file. Returns the ORIGINAL on any failure: a photo that
+ *  uploads big beats a photo that does not upload at all. */
+async function shrinkImage(file) {
+  try {
+    const bmp = await decodeOriented(file);
+    const w0 = bmp.width, h0 = bmp.height;
+    if (!w0 || !h0) return file;
+    const scale = Math.min(1, UPLOAD_MAX_EDGE / Math.max(w0, h0));
+    // Already small enough and already a compact format — leave it alone
+    // rather than re-encoding it (a second lossy pass only adds artefacts).
+    // Already small enough, and small on disk: touch nothing. A second lossy
+    // pass over an already-modest photo only adds artefacts.
+    if (scale === 1 && file.size <= 1.5 * 1024 * 1024) return file;
+
+    const cv = document.createElement('canvas');
+    cv.width  = Math.round(w0 * scale);
+    cv.height = Math.round(h0 * scale);
+    const ctx = cv.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, 0, 0, cv.width, cv.height);
+    if (bmp.close) bmp.close();
+
+    // WebP where it exists (roughly 30% under JPEG at the same quality), JPEG
+    // everywhere else. Both are on the server's accept list, and the name has
+    // to match the bytes — assert_media_matches() sniffs the header.
+    const type = cv.toDataURL('image/webp').startsWith('data:image/webp')
+      ? 'image/webp' : 'image/jpeg';
+    const blob = await new Promise(r => cv.toBlob(r, type, UPLOAD_QUALITY));
+    if (!blob || blob.size >= file.size) return file;   // never make it worse
+
+    const base = (file.name || 'photo').replace(/\.[^.]+$/, '');
+    const ext  = type === 'image/webp' ? '.webp' : '.jpg';
+    return new File([blob], base + ext, { type, lastModified: Date.now() });
+  } catch {
+    return file;
+  }
+}
+
+function prettyKB(n) {
+  return n >= 1024 * 1024 ? (n / 1024 / 1024).toFixed(1) + ' MB'
+                          : Math.round(n / 1024) + ' KB';
+}
+
 async function onMediaPicked(input) {
   const file = input.files && input.files[0];
   const prev = document.getElementById('cmp-media-preview');
@@ -3861,12 +4888,26 @@ async function onMediaPicked(input) {
     }
   }
 
-  pickedMedia = file;
-  const url = URL.createObjectURL(file);
+  // The gates above still measure the ORIGINAL, so the 12MB limit keeps
+  // meaning what it says; the shrink is about what we send, not what he may
+  // choose. Videos are left alone — re-encoding one in a phone browser takes
+  // longer than uploading it.
+  let sending = file;
+  if (!isVideo) {
+    prev.innerHTML = `<div class="bz-media-working">${escapeHtml(T().media_shrinking)}</div>`;
+    prev.style.display = 'block';
+    sending = await shrinkImage(file);
+  }
+
+  pickedMedia = sending;
+  const url = URL.createObjectURL(sending);
+  const saved = (!isVideo && sending !== file)
+    ? `<div class="bz-media-saved">${escapeHtml(T().media_shrunk)} ${prettyKB(file.size)} → ${prettyKB(sending.size)}</div>`
+    : '';
   prev.innerHTML = (isVideo
     ? `<video src="${url}" controls muted></video>`
     : `<img src="${url}" alt="preview">`) +
-    `<button class="bz-media-remove" onclick="clearMedia()">✕</button>`;
+    `<button class="bz-media-remove" onclick="clearMedia()">✕</button>` + saved;
   prev.style.display = 'block';
 }
 function clearMedia() {
@@ -3886,7 +4927,7 @@ function readComposer() {
     const v = document.getElementById(id).value.trim();
     return v === '' ? null : Number(v);
   };
-  return {
+  const f = {
     post_type: composerType,
     crop: sel.value === '__other__'
       ? document.getElementById('cmp-crop-other').value.trim()
@@ -3896,7 +4937,19 @@ function readComposer() {
     old_price: num('cmp-old-price'),
     quantity:  num('cmp-qty'),
     unit:      document.getElementById('cmp-unit').value,
+    village:   document.getElementById('cmp-village').value.trim(),
+    lat:       pickedLat,
+    lon:       pickedLon,
   };
+  // The place. Sent as '' rather than omitted so that clearing a district on an
+  // edit actually clears it — same rule as the numbers above. But only once the
+  // district list has arrived: the selects are empty until then, and an edit
+  // saved in that window would report "no district" and wipe a good one.
+  if (PLACES) {
+    f.state    = document.getElementById('cmp-state').value;
+    f.district = document.getElementById('cmp-district').value;
+  }
+  return f;
 }
 
 async function submitPost() {
@@ -3916,6 +4969,14 @@ async function submitPost() {
   if (f.old_price != null) fd.append('old_price', f.old_price);
   if (f.quantity  != null) fd.append('quantity', f.quantity);
   fd.append('unit', f.unit);
+  // Only what he actually gave us: an empty field must fall back to the
+  // profile on the server, not overwrite it with a blank.
+  if (f.state)    fd.append('state', f.state);
+  if (f.district) fd.append('district', f.district);
+  if (f.village)  fd.append('village', f.village);
+  if (f.lat != null && f.lon != null) {
+    fd.append('lat', f.lat); fd.append('lon', f.lon);
+  }
   if (pickedMedia) fd.append('media', pickedMedia);
 
   btn.disabled = true;
@@ -4074,6 +5135,7 @@ async function saveEdit(btn, f) {
   } else {
     loadFeed(true);
   }
+  fetchTickPlans();
   fetchMe().then(me => {
     if (me) {
       const btn = document.getElementById('header-avatar-btn');

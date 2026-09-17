@@ -55,9 +55,17 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
 from backend.services import (
     affiliate, buyers, crop_types, district_geo, ecosystem, freight,
-    index_gate, lead_clicks, leads, msp, placements, rental as rental_svc,
-    state_lang, wa_channels as _wa_channels,
+    index_gate, lead_clicks, leads, legal, msp, placements,
+    rental as rental_svc, state_lang, wa_channels as _wa_channels,
 )
+# services/sponsors.py is gitignored while /sponsor is held back pending a
+# hand-check of its figures. None means no sponsor slot renders anywhere and
+# /go/s/ sends people home — which is this site's state today anyway, since the
+# registry ships empty. Drop the guard when the page ships.
+try:
+    from backend.services import sponsors
+except ImportError:
+    sponsors = None
 from backend.routes import bazar
 from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
                                   _STAPLE_TILES_N)
@@ -2420,6 +2428,14 @@ _FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
           '&family=Noto+Serif+Devanagari:wght@600;700'
           '&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">')
 
+# The loading skeletons (.km-sk) live in frontend/km-skeleton.css so the server
+# pages and the static pages share ONE definition of the shimmer instead of the
+# four private copies they had. It rides in _FONTS because that constant is what
+# every server section already puts in its <head> — product.py, rental.py,
+# naksha.py and poultry.py all import it — and because a lazy panel paints its
+# skeleton on first paint, before the deferred drawer-menu.js could inject it.
+_FONTS += f'<link rel="stylesheet" href="{_asset("km-skeleton.css")}">'
+
 _ICON = f'<link rel="icon" href="{SITE}/assets/krashimitra_logo.png" type="image/png">'
 
 # ── Add-to-home-screen ──────────────────────────────────────────────────────
@@ -2774,6 +2790,7 @@ def _footer(note: str = "") -> str:
 <a href="{SITE}/pashupalan">पशुपालन</a>
 <a href="{SITE}/weather">मौसम</a>
 <a href="{SITE}/chat">AI सहायक</a>
+{f'<a href="{SITE}/sponsor">विज्ञापन दें</a>' if sponsors else ''}
 <a href="{SITE}/donate">सहयोग करें</a>
 </nav>
 {crops_nav}
@@ -2858,6 +2875,30 @@ def _journey(canon: str, crop: str, lang: str, robots: str) -> str:
     except Exception:                       # never turn a working page into a 500
         logger.warning("[journey] strip skipped for %s", canon, exc_info=True)
         return ""
+
+
+def _sponsor_strip(canon: str) -> str:
+    """The paid slot, placed once per page between the content and the "आगे
+    क्या करें" strip.
+
+    WHY HERE AND NOWHERE ELSE. It is below everything the farmer came for and
+    below the page's own call to action, which is the same rule frontend/ads.js
+    follows and for a better reason: a sponsor card that outranks the price
+    table costs us the trust the sponsorship is priced on. One slot per page,
+    never two — services/sponsors.py already caps one live sponsor per
+    category, and stacking categories would turn the bottom of ~14k pages into
+    an ad stack.
+
+    Returns "" when nobody is paying, which is every page today. An unsold slot
+    renders nothing at all — no label, no reserved box, no gap.
+    """
+    if sponsors is None:
+        return ""
+    try:
+        path = "/" + canon.split("//", 1)[-1].split("/", 1)[1]
+    except IndexError:
+        path = "/"
+    return sponsors.card_html(path.split("?", 1)[0])
 
 
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
@@ -2954,13 +2995,14 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {head_extra}
 {ld}
 {date_ld}
-<style>{_CSS}{extra_css}</style>
+<style>{_CSS}{sponsors.CSS if sponsors else ""}{extra_css}</style>
 </head>
 <body{body_attrs}>
 {_header(active, quicknav)}
 {crumbs_nav}
 <div class="wrap">
 {body}
+{_sponsor_strip(canon)}
 {_journey(canon, crop, lang, robots) if journey else ''}
 </div>
 {_footer(footer_note)}
@@ -4014,7 +4056,7 @@ def bhav_hub():
 </div>
 <div class="shop-section-title"><span>आज के भाव — अपनी फसल चुनें</span></div>
 <div class="commodity-grid" id="bhav-commodity-grid">{"".join(tiles)}</div>
-{_lazy_div('bhav-crop-tail')}
+{_lazy_div('bhav-crop-tail', 'tiles')}
 </div>
 <div class="bhav-pane" data-pane="state" hidden>
 <div class="mandi-toolbar">
@@ -4025,7 +4067,7 @@ def bhav_hub():
 </div>
 </div>
 <div class="shop-section-title"><span>राज्य चुनें — सभी फसलों के भाव देखें</span></div>
-<div class="place-grid" id="bhav-state-grid">{_LAZY_SKEL}</div>
+<div class="place-grid" id="bhav-state-grid">{_lazy_skel("tiles")}</div>
 </div>
 {_dukan_pitch()}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
@@ -4433,6 +4475,7 @@ def _kheti_saman_html(cs: str, hi: str = "") -> str:
             f'<p class="lead-sub">{sub}</p>'
             f'<div class="lead-list">{"".join(cards)}</div>'
             f'<p class="lead-fine">{escape(affiliate.AFFILIATE_NOTE)}</p>'
+            f'<p class="lead-fine">{escape(legal.SHELF_CAUTION)}</p>'
             + script + '</section>')
 
 
@@ -4475,6 +4518,36 @@ def lead_redirect(offer_id: str, request: Request, background: BackgroundTasks):
         )
         return RedirectResponse(o["url"], status_code=302)
     return RedirectResponse("/bhav", status_code=302)
+
+
+@router.get("/go/s/{sponsor_id}")
+def sponsor_redirect(sponsor_id: str, request: Request, background: BackgroundTasks):
+    """Tracked outbound hop for a site sponsor → the brand's landing page.
+
+    Its own path segment rather than a row in lead_offers, because the two are
+    different products with different money behind them: an offer is ours to
+    swap at will, a sponsor's destination is contractual. Same shape otherwise
+    — record after the 302, so a sleeping Neon compute never sits between a
+    farmer and the page he tapped.
+
+    THIS COUNT IS WHAT WE INVOICE AGAINST, so it only ever counts real taps: an
+    unknown or expired id redirects home and records nothing rather than
+    inventing a click on a sponsorship that has ended.
+    """
+    row = next((s for s in sponsors.active() if s.get("id") == sponsor_id), None)         if sponsors else None
+    if not row:
+        return RedirectResponse("/", status_code=302)
+    ref = request.headers.get("referer", "")
+    logger.info("sponsor_click id=%s cat=%s", sponsor_id, row.get("category", "-"))
+    background.add_task(
+        lead_clicks.record, "sponsor", sponsor_id,
+        label      = row.get("name"),
+        category   = row.get("category"),
+        district   = _district_from_referer(ref),
+        referer    = ref,
+        user_agent = request.headers.get("user-agent"),
+    )
+    return RedirectResponse(row["url"], status_code=302)
 
 
 def _net_price_cta(hi: str, cs: str = "", state: str = "", district: str = "") -> str:
@@ -5228,20 +5301,51 @@ def bhav_net_price_page():
 # full-state comparison) are fetched client-side AFTER the page
 # is visible — eliminating the 504 timeout on Render/Netlify.
 # ════════════════════════════════════════════════════════════
-_LAZY_SKEL = ('<div class="lazy-skel"><div class="skel-bar"></div>'
-              '<div class="skel-bar short"></div></div>')
+# Two grey bars stood in for every lazy panel on the site — for a grid of
+# crop tiles, for a table of district prices, for the seasonality card alike.
+# What arrives is never that shape, so the page jumped when it landed and the
+# wait told the farmer nothing about what he was waiting for. Each panel now
+# names its own shape, and the blocks are .km-sk (frontend/km-skeleton.css).
+def _lazy_skel(shape: str = "text") -> str:
+    """The skeleton a lazy panel waits behind, in the shape of its content."""
+    if shape == "tiles":          # a grid of crop / place tiles
+        tile = ('<div class="lz-tile"><div class="km-sk lz-tile-img"></div>'
+                '<div class="lz-tile-txt"><div class="km-sk km-sk-line"></div>'
+                '<div class="km-sk km-sk-line sm" style="width:58%"></div></div></div>')
+        inner = f'<div class="lz-tiles">{tile * 6}</div>'
+    elif shape == "rows":         # a list of district / mandi rows
+        row = ('<div class="lz-row"><div class="km-sk km-sk-line" style="width:42%"></div>'
+               '<div class="km-sk km-sk-line" style="width:74px"></div></div>')
+        inner = f'<div class="lz-rows">{row * 5}</div>'
+    elif shape == "card":         # one panel with a heading and a body block
+        inner = ('<div class="lz-card"><div class="km-sk km-sk-line lg" style="width:52%"></div>'
+                 '<div class="km-sk" style="height:96px;margin-top:12px;border-radius:10px"></div>'
+                 '<div class="km-sk km-sk-line sm" style="width:64%;margin-top:11px"></div></div>')
+    else:                         # a paragraph of text
+        inner = ('<div class="lz-card"><div class="km-sk km-sk-line"></div>'
+                 '<div class="km-sk km-sk-line" style="width:88%;margin-top:9px"></div>'
+                 '<div class="km-sk km-sk-line" style="width:60%;margin-top:9px"></div></div>')
+    return (f'<div class="lazy-skel" role="status" aria-live="polite">'
+            f'<span class="km-sk-label">लोड हो रहा है…</span>{inner}</div>')
+
+
+_LAZY_SKEL = _lazy_skel("text")   # kept for callers that want the plain shape
 _LAZY_CSS = """
-.lazy-skel{padding:18px 16px;opacity:.55}
-.skel-bar{height:14px;border-radius:7px;background:linear-gradient(90deg,#e8e8e8 25%,#f4f4f4 50%,#e8e8e8 75%);
-background-size:200% 100%;animation:skel-sh 1.2s ease infinite;margin-bottom:10px}
-.skel-bar.short{width:60%}
-@keyframes skel-sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.lazy-skel{padding:18px 16px}
+.lz-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 18px}
+@media(max-width:900px){.lz-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lz-tile{display:flex;align-items:center;gap:12px;padding:8px 0}
+.lz-tile-img{width:70px;height:54px;border-radius:9px;flex-shrink:0}
+.lz-tile-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.lz-rows{display:flex;flex-direction:column;gap:14px}
+.lz-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lz-card{padding:2px 0}
 """
 
 
-def _lazy_div(div_id: str) -> str:
+def _lazy_div(div_id: str, shape: str = "text") -> str:
     """Placeholder div with skeleton that JS will fill from the lazy API."""
-    return f'<div id="{div_id}">{_LAZY_SKEL}</div>'
+    return f'<div id="{div_id}">{_lazy_skel(shape)}</div>'
 
 
 def _lazy_script(pairs: list) -> str:
@@ -5298,6 +5402,41 @@ def _api_hub_states():
     return JSONResponse({"ok": True, "html": html},
                         headers={"Cache-Control": "public, max-age=3600",
                                  "CDN-Cache-Control": "public, max-age=86400"})
+
+
+@router.get("/bhav/api/places")
+def _api_places():
+    """{state: [district, …]} — the place names this site actually knows.
+
+    Serves the Krashi Bazar composer's राज्य / ज़िला pickers. It reads the same
+    cached mandi index every /bhav page is built from, so a district a farmer
+    picks for his listing is spelled exactly the way bazar.place_posts() will
+    later look for it. A hand-maintained list would be a second spelling of
+    ~700 district names, and the one that drifts is the one that silently drops
+    his listing off the district page it was collected for.
+
+    Unioned across crops: the pickers ask "where is he", not "where is this
+    crop traded", and a farmer whose district only trades one commodity still
+    has to be able to name it.
+    """
+    idx = _get_index()
+    places: dict = {}
+    for cs, smap in idx.get("states", {}).items():
+        for ss, sname in smap.items():
+            places.setdefault(sname, set()).update(
+                idx.get("dists", {}).get(cs, {}).get(ss, {}).values())
+    # Pairs, not objects: ~700 districts × a {"n": …, "hi": …} wrapper is a few
+    # KB of punctuation on a page a farmer opens on a 2G phone. Each entry is
+    # [what we store, what he reads] — the English name is the one the district
+    # page is keyed on, and the Hindi one exists because a form that asks a
+    # Hindi reader to find "Muzaffarnagar" in a list of 75 is a form he closes.
+    out = [{"n": sname, "hi": _hindi_state(sname),
+            "d": [[d, _hindi_district(sname, d)] for d in sorted(dists)]}
+           for sname, dists in sorted(places.items()) if dists]
+    return JSONResponse(
+        {"ok": True, "places": out},
+        headers={"Cache-Control": "public, max-age=3600",
+                 "CDN-Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/bhav/api/tier2-extras/{c_slug}")
@@ -5670,7 +5809,7 @@ def bhav_crop(c_slug: str):
 {_hub_selector(cs, seed_ss, "", idx, known_crop=True)}
 {_msp_html(commodity)}
 {_dukan_pitch()}
-{_lazy_div('bhav-lazy-t2')}
+{_lazy_div('bhav-lazy-t2', 'rows')}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'राज्य खोजें... (उत्तर प्रदेश, बिहार)')}
 <div class="place-grid" id="tier-grid">{"".join(cards)}</div>
@@ -5798,7 +5937,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 {_msp_html(commodity)}
 {_dukan_pitch(hi_state)}
 {_dealer_teaser_html(cs, ss, state, "")}
-{_lazy_div('bhav-lazy-t3')}
+{_lazy_div('bhav-lazy-t3', 'rows')}
 <h2>जिले के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'जिला खोजें...')}
 <div class="dcard-grid" id="tier-grid">{"".join(cards)}</div>
@@ -5938,14 +6077,14 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # /bhav/api/tier4-extras — this was the #1 cause of 504s because it
     # re-fetched the entire state's rows on every district page load.
     # Now the price panel renders instantly; the comparison appears shortly after.
-    better_html = _lazy_div('bhav-lazy-t4')
+    better_html = _lazy_div('bhav-lazy-t4', 'rows')
 
     # ── multi-year seasonality (पिछले साल इसी समय / कब बेचें) ──
     # Also lazy, and for a second reason beyond speed: on the first ever view
     # of a district+crop the summary does not exist yet, so the endpoint
     # queues it for the background drain and returns nothing. The page must
     # never wait on that.
-    season_html = _lazy_div('bhav-lazy-season')
+    season_html = _lazy_div('bhav-lazy-season', 'card')
 
     # ── the trend chart, drawn from the district series built above ──
     # sell-or-wait read, from the same history the chart draws (no forecast made)

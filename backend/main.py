@@ -414,6 +414,16 @@ app.include_router(verify_route.router)  # /verify — blue-tick application + f
 from backend.routes import donate as donate_route
 app.include_router(donate_route.router)  # /donate — public UPI page for anyone who wants to support the site
 
+# /sponsor — the brand-facing media kit and rate card (English, on purpose).
+# Held back until its figures have been verified by hand, so the module is
+# gitignored and this import is allowed to fail: a clone without it boots
+# normally and /sponsor simply 404s. Remove the guard when the page ships.
+try:
+    from backend.routes import sponsor as sponsor_route
+    app.include_router(sponsor_route.router)
+except ImportError:
+    log.info("routes/sponsor.py absent — /sponsor is not served")
+
 from backend.routes import product as product_route
 app.include_router(product_route.router)  # SEO shop-product pages (/product/*) + /product/sitemap.xml
 

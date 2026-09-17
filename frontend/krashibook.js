@@ -208,6 +208,31 @@
     return best;
   }
 
+  // ── Loading state ─────────────────────────────────
+  // A spinning ↻ in the middle of an empty panel told the farmer nothing
+  // about what was coming. Every card in all three tabs has the same shape —
+  // a head row (tracking code + status chip), the product, then a line of
+  // detail — so the wait now shows that shape instead.
+  //
+  // .km-sk comes from km-skeleton.css, which drawer-menu.js injects on every
+  // page; this file is bootstrapped by the same script, so it is always there.
+  function skeletonCards(n) {
+    var one =
+      '<div class="km-book-card" aria-hidden="true">' +
+        '<div class="km-book-card-head">' +
+          '<span class="km-sk km-sk-line sm" style="width:82px"></span>' +
+          '<span class="km-sk km-sk-pill" style="width:72px;height:19px"></span>' +
+        '</div>' +
+        '<div class="km-sk km-sk-line lg" style="width:64%;margin:9px 0 10px"></div>' +
+        '<div class="km-sk km-sk-line" style="width:86%"></div>' +
+      '</div>';
+    var html = "";
+    for (var i = 0; i < n; i++) html += one;
+    return '<div role="status" aria-live="polite">' +
+             '<span class="km-sk-label">लोड हो रहा है…</span>' + html +
+           '</div>';
+  }
+
   // ── Shared state while the book is open ───────────────────
   var state = { orders: null, profile: null, profileDone: false, suggestLoaded: false };
 
@@ -571,7 +596,7 @@
     if (state.suggestLoaded) return; // build once per open
     state.suggestLoaded = true;
 
-    list.innerHTML = '<div class="km-book-loading"><span class="km-book-spinner">↻</span> आपके लिए सुझाव बन रहे हैं...</div>';
+    list.innerHTML = skeletonCards(2);
 
     whenProfile(function (profile) {
       var el = document.getElementById("km-book-tab-suggest");
@@ -700,7 +725,7 @@
     overlay.classList.add("open");
     state = { orders: null, profile: null, profileDone: false, suggestLoaded: false };
     switchTab("alerts");
-    var loading = '<div class="km-book-loading"><span class="km-book-spinner">↻</span> लोड हो रहा है...</div>';
+    var loading = skeletonCards(3);
     document.getElementById("km-book-tab-alerts").innerHTML = loading;
     document.getElementById("km-book-tab-history").innerHTML = loading;
     document.getElementById("km-book-tab-suggest").innerHTML = "";
@@ -815,9 +840,8 @@
     // Misc
     ".km-book-empty{text-align:center;padding:34px 12px;color:#8a958f;line-height:1.6;}" +
     ".km-book-empty .emoji{font-size:40px;display:block;margin-bottom:10px;}" +
-    ".km-book-loading{text-align:center;padding:24px;color:#999;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;}" +
-    ".km-book-spinner{display:inline-block;animation:km-book-spin 1s linear infinite;}" +
-    "@keyframes km-book-spin{to{transform:rotate(360deg);}}";
+    // (the ↻ spinner that used to live here is a skeleton now — skeletonCards())
+    ".km-book-card[aria-hidden=\"true\"]{border-color:#eef2f0;}";
 
   function injectStyles() {
     var style = document.createElement("style");

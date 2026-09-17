@@ -77,6 +77,23 @@
     (document.head || document.documentElement).appendChild(s);
   })();
 
+  // ---- Shell bootstrap: km-support.js ---------------------------------
+  // The two links that ask for money — /sponsor and /donate — appended to
+  // whatever footer the page happens to have. Both pages existed and worked;
+  // neither was reachable from the homepage or any static page, which is the
+  // whole reason this site has earned ₹0. Bootstrapped here for the same
+  // reason as the three above: one edit reaches every page instead of 150.
+  (function bootSupport() {
+    if (document.querySelector('script[src*="km-support.js"]')) return;
+    var me = document.currentScript ||
+             document.querySelector('script[src*="drawer-menu.js"]');
+    if (!me || !me.src) return;
+    var s = document.createElement('script');
+    s.src = new URL('km-support.js', me.src).href;
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  })();
+
   // ---- Shell bootstrap: km-gamify.js ----------------------------------
   // Gamification & streak engine: records daily Mandi Bhav check streak,
   // Meri Fasal crop logging, badge awards and farmer levels across all pages.
@@ -89,6 +106,27 @@
     s.src = new URL('km-gamify.js', me.src).href;
     s.defer = true;
     (document.head || document.documentElement).appendChild(s);
+  })();
+
+  // ---- Shell bootstrap: km-skeleton.css -------------------------------
+  // The loading skeletons. Every page has panels that wait on the network,
+  // and the primitive they are all drawn from lives in one stylesheet — so
+  // it is bootstrapped from here for the same reason as the scripts above:
+  // the 17 static pages, the 60 articles and bhav.py's ~14k server pages get
+  // it from one edit rather than 148.
+  //
+  // Pages that paint a skeleton BEFORE their scripts run (the feed, the
+  // forecast, the news list) also carry their own <link> in <head>; this
+  // guard is what stops that from loading the file twice.
+  (function bootSkeletonCss() {
+    if (document.querySelector('link[href*="km-skeleton.css"]')) return;
+    var me = document.currentScript ||
+             document.querySelector('script[src*="drawer-menu.js"]');
+    if (!me || !me.src) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = new URL('km-skeleton.css', me.src).href;   // resolves ../drawer-menu.js too
+    (document.head || document.documentElement).appendChild(l);
   })();
 
   var OLIVE = '#6f7f3a', LEAF = '#b3c47f', CREAM = '#eef3e0';

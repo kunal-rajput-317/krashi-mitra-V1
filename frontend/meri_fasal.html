@@ -139,6 +139,8 @@
   }
   </script>
 
+  <!-- Loading skeletons (.km-sk); मेरी फसलें paints one before its script runs. -->
+  <link rel="stylesheet" href="km-skeleton.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@700;800&family=Noto+Sans+Devanagari:wght@400;600;700;800&display=swap">
 
   <style>
@@ -811,9 +813,13 @@
     .fasal-empty .fe-emoji { font-size: 44px; display: block; margin-bottom: 10px; }
     .fasal-empty b { color: var(--text-dark); font-size: 15px; }
     .fasal-empty div { font-size: 13px; margin-top: 5px; line-height: 1.6; }
+    /* A spinning ↻ said "wait" for both lists. A crop card is a title with a
+       day-chip, a line of meta, a stage row and a progress bar; a crop tile is
+       a picture with two lines under it. Those are what the wait shows now.
+       (.km-sk: km-skeleton.css) */
     .fasal-loading { text-align: center; padding: 30px; color: var(--text-light); font-size: 13.5px; }
-    .spin { display: inline-block; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .fc-sk-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .fc-sk-stage { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
 
     /* login nudge */
     .login-nudge {
@@ -1046,14 +1052,47 @@
     <!-- My crops -->
     <div class="fasal-section-title">🧑‍🌾 मेरी फसलें</div>
     <div id="crops-container">
-      <div class="fasal-loading"><span class="spin">↻</span> लोड हो रहा है...</div>
+      <div role="status" aria-live="polite">
+        <span class="km-sk-label">लोड हो रहा है...</span>
+        <div class="fasal-card" aria-hidden="true">
+        <div class="fc-sk-head">
+          <div style="flex:1">
+            <div class="km-sk km-sk-line lg" style="width:54%"></div>
+            <div class="km-sk km-sk-line sm" style="width:72%;margin-top:9px"></div>
+          </div>
+          <div class="km-sk km-sk-pill" style="width:74px;height:30px"></div>
+        </div>
+        <div class="fc-sk-stage">
+          <div class="km-sk km-sk-pill" style="width:96px;height:26px"></div>
+          <div class="km-sk km-sk-line sm" style="width:104px"></div>
+        </div>
+        <div class="km-sk" style="height:10px;border-radius:20px;margin-top:12px"></div>
+      </div>
+      </div>
     </div>
 
 
     <div class="add-panel" id="add-panel" style="display:none">
       <div class="fasal-section-title" style="margin-top:0">फसल चुनें</div>
-      <div class="crop-grid" id="crop-grid">
-        <div class="fasal-loading"><span class="spin">↻</span> फसलें लोड हो रही हैं...</div>
+      <div class="crop-grid" id="crop-grid" role="status" aria-live="polite">
+        <span class="km-sk-label">फसलें लोड हो रही हैं...</span>
+        <div class="crop-tile" aria-hidden="true">
+          <div class="ct-imgwrap"><div class="km-sk" style="width:100%;height:100%"></div></div>
+          <div class="km-sk km-sk-line" style="width:70%;margin:6px auto 0"></div>
+          <div class="km-sk km-sk-line sm" style="width:46%;margin:5px auto 0"></div>
+        </div><div class="crop-tile" aria-hidden="true">
+          <div class="ct-imgwrap"><div class="km-sk" style="width:100%;height:100%"></div></div>
+          <div class="km-sk km-sk-line" style="width:70%;margin:6px auto 0"></div>
+          <div class="km-sk km-sk-line sm" style="width:46%;margin:5px auto 0"></div>
+        </div><div class="crop-tile" aria-hidden="true">
+          <div class="ct-imgwrap"><div class="km-sk" style="width:100%;height:100%"></div></div>
+          <div class="km-sk km-sk-line" style="width:70%;margin:6px auto 0"></div>
+          <div class="km-sk km-sk-line sm" style="width:46%;margin:5px auto 0"></div>
+        </div><div class="crop-tile" aria-hidden="true">
+          <div class="ct-imgwrap"><div class="km-sk" style="width:100%;height:100%"></div></div>
+          <div class="km-sk km-sk-line" style="width:70%;margin:6px auto 0"></div>
+          <div class="km-sk km-sk-line sm" style="width:46%;margin:5px auto 0"></div>
+        </div>
       </div>
       <div class="sowing-hint" id="sowing-hint"></div>
       <div class="add-form-row">
@@ -1195,7 +1234,8 @@ function fetchTimeline(cropKey, sowingDate, cb) {
 function loadMyCrops() {
   var token = getToken();
   var box = document.getElementById("crops-container");
-  box.innerHTML = '<div class="fasal-loading"><span class="spin">↻</span> लोड हो रहा है...</div>';
+  // Same shape the page opened with — a crop card, not a spinner.
+  box.innerHTML = '<div role="status" aria-live="polite">        <span class="km-sk-label">लोड हो रहा है...</span>        <div class="fasal-card" aria-hidden="true">        <div class="fc-sk-head">          <div style="flex:1">            <div class="km-sk km-sk-line lg" style="width:54%"></div>            <div class="km-sk km-sk-line sm" style="width:72%;margin-top:9px"></div>          </div>          <div class="km-sk km-sk-pill" style="width:74px;height:30px"></div>        </div>        <div class="fc-sk-stage">          <div class="km-sk km-sk-pill" style="width:96px;height:26px"></div>          <div class="km-sk km-sk-line sm" style="width:104px"></div>        </div>        <div class="km-sk" style="height:10px;border-radius:20px;margin-top:12px"></div>      </div>      </div>';
 
   if (token) {
     document.getElementById("login-nudge").style.display = "none";
