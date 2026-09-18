@@ -461,6 +461,50 @@ body {
 @keyframes km-shimmer { 0% { background-position: -180% 0; } 100% { background-position: 180% 0; } }
 .km-skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.11) 37%, rgba(255,255,255,0.04) 63%); background-size: 220% 100%; animation: km-shimmer 1.25s ease-in-out infinite; border-radius: 10px; }
 
+/* ── नीला टिक queue ──
+   A table, like खरीदार and Orders, rather than the stack of boxes it was: the
+   queue is a worklist, and a worklist is read down a column. */
+.vf-table { width: 100%; border-collapse: collapse; text-align: left; }
+.vf-table th {
+  padding: 11px 12px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.7px;
+  color: var(--muted); font-family: var(--font-mono);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.vf-table td {
+  padding: 13px 12px; font-size: 13px; vertical-align: top;
+  border-bottom: 1px solid var(--border); color: var(--text-dim);
+}
+.vf-table tbody tr:last-child td { border-bottom: none; }
+.vf-table tbody tr:hover td { background: var(--surface-hl); }
+/* The row somebody is waiting on. Reading down the queue, this is the only
+   thing that has to catch the eye before any of the text does. */
+.vf-table tbody tr.is-waiting td { background: rgba(234,179,8,0.06); }
+.vf-table tbody tr.is-waiting td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.vf-name { font-weight: 700; color: var(--text); font-size: 13.5px; }
+.vf-sub  { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.vf-ref  { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+.vf-tel  { font-weight: 700; }
+.vf-when { white-space: nowrap; font-size: 12.5px; }
+.vf-when .rel { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.vf-chip {
+  display: inline-block; font-size: 10.5px; font-weight: 800;
+  border-radius: 9px; padding: 2px 8px; white-space: nowrap;
+}
+.vf-acts { white-space: nowrap; text-align: right; }
+.vf-acts .btn { padding: 6px 10px; font-size: 11.5px; }
+
+/* The wait, in the shape of the rows it is waiting for. */
+.vf-sk-line { height: 11px; border-radius: 6px; }
+.vf-table tr.vf-sk td { border-bottom: 1px solid var(--border); }
+@media (prefers-reduced-motion: reduce) {
+  .km-skeleton { animation: none; }
+}
+/* ↻ Refresh, turning while it fetches. */
+#vf-refresh-btn.is-busy { pointer-events: none; opacity: 0.75; }
+#vf-refresh-btn.is-busy .vf-spin { display: inline-block; animation: km-spin 0.8s linear infinite; }
+.vf-spin { display: inline-block; }
+
 /* ── the ? glossary, on every page ── */
 /* The ? that sits beside a term. Deliberately quiet: it is next to
    almost every label on this page, and thirty loud badges is a page
@@ -3656,7 +3700,7 @@ body {
                <b>✕ टिक हटाएँ</b> सिर्फ़ किसी और के नाम से बने खाते या धोखे के लिए है।</p>
           </div>
           <div class="page-actions">
-            <button class="btn btn-secondary" onclick="loadVerifications()" id="vf-refresh-btn">↻ Refresh</button>
+            <button class="btn btn-secondary" onclick="loadVerifications()" id="vf-refresh-btn"><span class="vf-spin">↻</span> Refresh</button>
           </div>
         </div>
         <div class="card" style="padding:0;overflow:hidden;">
@@ -3668,7 +3712,7 @@ body {
             <button class="btn btn-secondary vf-filter" data-vf="rejected" onclick="setVfFilter('rejected',this)">हटाया</button>
             <button class="btn btn-secondary vf-filter" data-vf="expired" onclick="setVfFilter('expired',this)">खत्म</button>
           </div>
-          <div id="vf-list" style="padding:14px;">लोड हो रहा है…</div>
+          <div id="vf-list" style="padding:4px 14px 14px;"></div>
         </div>
       </div>
 
@@ -17190,7 +17234,12 @@ const VF_PAY = {
 async function loadVerifications() {
   const box = document.getElementById('vf-list');
   if (!box) return;
-  box.textContent = 'लोड हो रहा है…';
+  // Wait in the shape of the answer: the same six columns, shimmering. On a
+  // cold Render instance this is the better part of a minute, and a sentence
+  // that never moves is indistinguishable from one left behind by a crash.
+  box.innerHTML = vfSkeletonHtml(_vfRows.length ? Math.min(_vfRows.length, 5) : 3);
+  const rBtn = document.getElementById('vf-refresh-btn');
+  if (rBtn) rBtn.classList.add('is-busy');
   try {
     const q = _vfFilter ? ('?status=' + encodeURIComponent(_vfFilter)) : '';
     const r = await fetch(API + '/admin/verifications' + q, { headers: getAuthHeader() });
@@ -17230,11 +17279,15 @@ async function loadVerifications() {
     }
     renderVerifications();
   } catch (e) {
-    box.innerHTML = '<div style="color:#b91c1c;font-weight:700;">' +
+    box.innerHTML = '<div style="color:#b91c1c;font-weight:700;padding-top:10px;">' +
                     escapeHtml(String(e.message || e)) + '</div>' +
                     '<div style="color:#6b7280;font-size:12.5px;margin-top:6px;">' +
                     'यह "कोई आवेदन नहीं" नहीं है — आवेदन आए हो सकते हैं, ' +
                     'सर्वर से बात नहीं हो पाई।</div>';
+  } finally {
+    // finally, not the try: a failed load must stop the spinner too, or the
+    // panel looks like it is still working on something it has given up on.
+    if (rBtn) rBtn.classList.remove('is-busy');
   }
 }
 
@@ -17244,60 +17297,126 @@ function renderVerifications() {
   if (!_vfRows.length) {
     // "Nothing matches this filter" and "nobody has ever applied" are very
     // different things to read at 1am while wondering where an application went.
-    box.innerHTML = '<div style="color:#6b7280;">' + (_vfFilter
+    box.innerHTML = '<div style="color:#6b7280;padding:14px 2px;">' + (_vfFilter
       ? 'इस छाँट में कोई नहीं — <b>सभी</b> दबाकर पूरी सूची देखें।'
       : 'अभी तक कोई आवेदन नहीं आया।') + '</div>';
     return;
   }
-  box.innerHTML = _vfRows.map(function (v) {
-    const L = VF_LABEL[v.status] || ['—', '#6b7280', '#f1f5f9'];
-    const P = VF_PAY[v.pay_status] || VF_PAY.pending;
-    const pay = '<span style="background:' + P[2] + ';color:' + P[1] + ';font-size:11px;' +
-      'font-weight:800;border-radius:9px;padding:2px 9px;">' + escapeHtml(P[0]) + '</span>';
-    const plan = '<span style="font-size:11.5px;font-weight:700;color:#6b7280;">' +
-      escapeHtml(v.plan_hi || '') + ' · ₹' + (v.fee_amount || v.plan_price || '?') + '</span>';
-    const paid = v.paid_at ? ('₹' + (v.fee_amount || '?') + ' मिला') : 'पैसा नहीं दिखा';
-    const tick = v.verified_now
-      ? '<span style="color:#0284c7;font-weight:800;font-size:12px;">✓ टिक चालू</span>' : '';
-    const refund = v.refund_due
-      ? '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:800;' +
-        'border-radius:9px;padding:2px 9px;">रिफंड बाकी</span>' : '';
-    const note = v.note
-      ? '<div style="font-size:12.5px;color:#6b7280;margin-top:5px;">' + escapeHtml(v.note) + '</div>' : '';
-    const why = v.reject_reason
-      ? '<div style="font-size:12.5px;color:#b91c1c;margin-top:5px;">मना: ' +
-        escapeHtml(v.reject_reason) + '</div>' : '';
-    const refundBtn = v.refund_due
-      ? '<button class="btn btn-secondary" onclick="vfRefund(\'' + escapeHtml(v.ref) +
-        '\')">रिफंड भेज दिया</button>' : '';
-    const days = (v.days_left != null) ? (' · ' + v.days_left + ' दिन बाकी') : '';
-    return '' +
-    '<div style="border:1px solid var(--border);border-radius:10px;padding:13px 14px;margin-bottom:10px;">' +
-      '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px;">' +
-        '<b style="font-size:15px;">' + escapeHtml(v.full_name || '—') + '</b>' +
-        '<span style="background:' + L[2] + ';color:' + L[1] + ';font-size:11px;font-weight:800;' +
-          'border-radius:9px;padding:2px 9px;">' + escapeHtml(L[0]) + '</span>' +
-        pay + tick + refund +
-        '<span style="margin-left:auto;font-family:var(--font-mono);font-size:12px;color:#6b7280;">' +
-          escapeHtml(v.ref) + '</span>' +
-      '</div>' +
-      '<div style="font-size:13px;color:#374151;line-height:1.7;">' +
-        '<a href="tel:' + escapeHtml(v.phone || '') + '" style="font-weight:800;">' +
-          escapeHtml(v.phone || 'नंबर नहीं') + '</a>' +
-        ' · ' + escapeHtml(v.village || '—') + ', ' + escapeHtml(v.district || '—') +
-        ' · ' + escapeHtml(paid) + days +
-      '</div>' +
-      '<div style="margin-top:4px;">' + plan +
-      '</div>' + note + why +
-      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">' +
-        '<button class="btn btn-secondary" onclick="vfCollect(\'' + escapeHtml(v.ref) + '\')">₹ माँगें</button>' +
-        '<button class="btn btn-primary" onclick="vfPayment(\'' + escapeHtml(v.ref) + '\')">₹ मिला → टिक चालू</button>' +
-        '<button class="btn btn-secondary" onclick="vfApprove(\'' + escapeHtml(v.ref) + '\')">✓ मुफ़्त टिक</button>' +
-        '<button class="btn btn-secondary" onclick="vfReject(\'' + escapeHtml(v.ref) + '\')">✕ टिक हटाएँ</button>' +
-        refundBtn +
-      '</div>' +
-    '</div>';
-  }).join('');
+  box.innerHTML =
+    '<div class="table-responsive"><table class="vf-table">' +
+      '<thead><tr>' +
+        '<th>नाम / नंबर</th><th>जगह</th><th>प्लान</th>' +
+        '<th>आवेदन</th><th>भुगतान</th><th style="text-align:right;">काम</th>' +
+      '</tr></thead><tbody>' +
+      _vfRows.map(vfRowHtml).join('') +
+    '</tbody></table></div>';
+}
+
+/* One application, one row. The two dates are the point of the rewrite: the
+   card layout never printed either, so there was no way to tell an application
+   that arrived this morning from one that had been sitting for a week. */
+function vfRowHtml(v) {
+  const L = VF_LABEL[v.status] || ['—', '#6b7280', '#f1f5f9'];
+  const P = VF_PAY[v.pay_status] || VF_PAY.pending;
+  const chip = (t, c, bg) =>
+    '<span class="vf-chip" style="background:' + bg + ';color:' + c + ';">' +
+    escapeHtml(t) + '</span>';
+
+  const place = [v.village, v.district].filter(Boolean).join(', ') || '—';
+  const days  = (v.days_left != null) ? ('<div class="vf-sub">' + v.days_left + ' दिन बाकी</div>') : '';
+  const tick  = v.verified_now
+    ? '<div class="vf-sub" style="color:#0284c7;font-weight:800;">✓ टिक चालू</div>' : '';
+  const why   = v.reject_reason
+    ? '<div class="vf-sub" style="color:#b91c1c;">' + escapeHtml(v.reject_reason) + '</div>' : '';
+  const note  = v.note
+    ? '<div class="vf-sub" title="' + escapeHtml(v.note) + '">' +
+      escapeHtml(v.note.length > 38 ? v.note.slice(0, 38) + '…' : v.note) + '</div>' : '';
+
+  // The money column says what happened and, when he is waiting on us, how long.
+  let money = chip(P[0], P[1], P[2]);
+  if (v.pay_status === 'claimed' && v.payment_claimed_at) {
+    money += '<div class="vf-sub">' + vfAgo(v.payment_claimed_at) + ' से इंतज़ार</div>';
+  } else if (v.paid_at) {
+    money += '<div class="vf-sub">' + vfDate(v.paid_at) + ' · ₹' + (v.fee_amount || '?') + '</div>';
+  }
+  if (v.refund_due) money += '<div class="vf-sub" style="color:#b91c1c;">रिफंड बाकी</div>';
+
+  const r = "'" + escapeHtml(v.ref) + "'";
+  const acts =
+    '<button class="btn btn-secondary" onclick="vfCollect(' + r + ')" title="QR + WhatsApp संदेश">₹ माँगें</button> ' +
+    '<button class="btn btn-primary" onclick="vfPayment(' + r + ')" title="पैसा आया — टिक चालू करें">₹ मिला</button> ' +
+    '<button class="btn btn-secondary" onclick="vfApprove(' + r + ')" title="बिना पैसे के टिक दें">मुफ़्त</button> ' +
+    '<button class="btn btn-secondary" onclick="vfReject(' + r + ')" title="टिक हटाएँ">हटाएँ</button>' +
+    (v.refund_due
+      ? ' <button class="btn btn-secondary" onclick="vfRefund(' + r + ')">रिफंड भेजा</button>' : '');
+
+  return '<tr' + (v.pay_status === 'claimed' ? ' class="is-waiting"' : '') + '>' +
+    '<td>' +
+      '<div class="vf-name">' + escapeHtml(v.full_name || '—') + '</div>' +
+      '<a class="vf-tel" href="tel:' + escapeHtml(v.phone || '') + '">' +
+        escapeHtml(v.phone || 'नंबर नहीं') + '</a>' +
+      '<div class="vf-ref">' + escapeHtml(v.ref) + '</div>' + note +
+    '</td>' +
+    '<td>' + escapeHtml(place) + '<div class="vf-sub">' + escapeHtml(v.state || '') + '</div></td>' +
+    '<td>₹' + (v.fee_amount || v.plan_price || '?') +
+      '<div class="vf-sub">' + escapeHtml(v.plan_hi || '') + '</div></td>' +
+    '<td class="vf-when">' + vfDate(v.applied_at) +
+      '<span class="rel">' + vfAgo(v.applied_at) + '</span></td>' +
+    '<td>' + chip(L[0], L[1], L[2]) + '<div style="margin-top:4px;">' + money + '</div>' +
+      tick + days + why + '</td>' +
+    '<td class="vf-acts">' + acts + '</td>' +
+  '</tr>';
+}
+
+/* "18 सितं" — short, because it sits in a column. */
+function vfDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? '—' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+/* "9 घंटे पहले". How long somebody has been waiting is the thing this queue is
+   actually about, and a date alone does not say it. */
+function vfAgo(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1)    return 'अभी';
+  if (mins < 60)   return mins + ' मिनट पहले';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24)    return hrs + ' घंटे पहले';
+  const days = Math.round(hrs / 24);
+  if (days === 1)  return 'कल';
+  if (days < 30)   return days + ' दिन पहले';
+  const mons = Math.round(days / 30);
+  return mons + ' महीने पहले';
+}
+
+/* The wait, drawn in the shape of the rows it is waiting for — five columns of
+   shimmer, not a word of text. The queue used to sit on "लोड हो रहा है…", which
+   on a cold Render instance is forty seconds of a sentence that never changes,
+   and was indistinguishable from the same sentence left behind by a crash. */
+function vfSkeletonHtml(rows) {
+  const bar = (w, h) => '<div class="km-skeleton vf-sk-line" style="width:' + w +
+                        ';height:' + (h || 11) + 'px;"></div>';
+  let out = '';
+  for (let i = 0; i < (rows || 3); i++) {
+    out +=
+      '<tr class="vf-sk">' +
+        '<td>' + bar('120px', 13) + '<div style="height:5px;"></div>' + bar('88px') +
+                 '<div style="height:5px;"></div>' + bar('70px', 9) + '</td>' +
+        '<td>' + bar('74px') + '<div style="height:5px;"></div>' + bar('48px', 9) + '</td>' +
+        '<td>' + bar('40px') + '<div style="height:5px;"></div>' + bar('62px', 9) + '</td>' +
+        '<td>' + bar('46px') + '<div style="height:5px;"></div>' + bar('60px', 9) + '</td>' +
+        '<td>' + bar('84px', 15) + '</td>' +
+        '<td class="vf-acts">' + bar('190px', 26) + '</td>' +
+      '</tr>';
+  }
+  return '<div class="table-responsive"><table class="vf-table">' +
+    '<thead><tr><th>नाम / नंबर</th><th>जगह</th><th>प्लान</th>' +
+    '<th>आवेदन</th><th>भुगतान</th><th style="text-align:right;">काम</th></tr></thead>' +
+    '<tbody>' + out + '</tbody></table></div>';
 }
 
 async function vfCollect(ref) {
