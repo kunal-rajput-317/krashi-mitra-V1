@@ -17151,6 +17151,13 @@ function testFestivalPreviewModal() {
 /* ══════════════════════════════════════════════════════════════
    नीला टिक — the premium-membership queue.
 
+   ESCAPING: escapeHtml(), which is this file's only such helper. This block
+   was written against a global esc() that has never existed here — so every
+   row threw "esc is not defined" the moment one was rendered, the catch
+   below called esc() again and threw a second time, and #vf-list kept its
+   static "लोड हो रहा है…" markup. The queue looked empty or stuck while
+   applications sat in the database. Do not reintroduce esc().
+
    Changed 2026-09-18: the tick used to mean "KrashiMitra checked this seller
    by phone", and this screen was where that check was recorded. It is now a
    paid membership that claims nothing about its holder, so there is no call to
@@ -17217,7 +17224,7 @@ async function loadVerifications() {
     let j;
     try { j = await r.json(); }
     catch (_) { throw new Error('सर्वर ने अधूरा जवाब भेजा — ↻ Refresh दबाएँ'); }
-    if (!j || !j.data) throw new Error(esc(j && j.detail) || 'जवाब में डेटा नहीं मिला');
+    if (!j || !j.data) throw new Error(escapeHtml(j && j.detail) || 'जवाब में डेटा नहीं मिला');
 
     _vfRows = j.data.items || [];
     const counts = j.data.counts || {};
@@ -17235,7 +17242,7 @@ async function loadVerifications() {
     renderVerifications();
   } catch (e) {
     box.innerHTML = '<div style="color:#b91c1c;font-weight:700;">' +
-                    esc(String(e.message || e)) + '</div>' +
+                    escapeHtml(String(e.message || e)) + '</div>' +
                     '<div style="color:#6b7280;font-size:12.5px;margin-top:6px;">' +
                     'यह "कोई आवेदन नहीं" नहीं है — आवेदन आए हो सकते हैं, ' +
                     'सर्वर से बात नहीं हो पाई।</div>';
@@ -17257,9 +17264,9 @@ function renderVerifications() {
     const L = VF_LABEL[v.status] || ['—', '#6b7280', '#f1f5f9'];
     const P = VF_PAY[v.pay_status] || VF_PAY.pending;
     const pay = '<span style="background:' + P[2] + ';color:' + P[1] + ';font-size:11px;' +
-      'font-weight:800;border-radius:9px;padding:2px 9px;">' + esc(P[0]) + '</span>';
+      'font-weight:800;border-radius:9px;padding:2px 9px;">' + escapeHtml(P[0]) + '</span>';
     const plan = '<span style="font-size:11.5px;font-weight:700;color:#6b7280;">' +
-      esc(v.plan_hi || '') + ' · ₹' + (v.fee_amount || v.plan_price || '?') + '</span>';
+      escapeHtml(v.plan_hi || '') + ' · ₹' + (v.fee_amount || v.plan_price || '?') + '</span>';
     const paid = v.paid_at ? ('₹' + (v.fee_amount || '?') + ' मिला') : 'पैसा नहीं दिखा';
     const tick = v.verified_now
       ? '<span style="color:#0284c7;font-weight:800;font-size:12px;">✓ टिक चालू</span>' : '';
@@ -17267,37 +17274,37 @@ function renderVerifications() {
       ? '<span style="background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:800;' +
         'border-radius:9px;padding:2px 9px;">रिफंड बाकी</span>' : '';
     const note = v.note
-      ? '<div style="font-size:12.5px;color:#6b7280;margin-top:5px;">' + esc(v.note) + '</div>' : '';
+      ? '<div style="font-size:12.5px;color:#6b7280;margin-top:5px;">' + escapeHtml(v.note) + '</div>' : '';
     const why = v.reject_reason
       ? '<div style="font-size:12.5px;color:#b91c1c;margin-top:5px;">मना: ' +
-        esc(v.reject_reason) + '</div>' : '';
+        escapeHtml(v.reject_reason) + '</div>' : '';
     const refundBtn = v.refund_due
-      ? '<button class="btn btn-secondary" onclick="vfRefund(\'' + esc(v.ref) +
+      ? '<button class="btn btn-secondary" onclick="vfRefund(\'' + escapeHtml(v.ref) +
         '\')">रिफंड भेज दिया</button>' : '';
     const days = (v.days_left != null) ? (' · ' + v.days_left + ' दिन बाकी') : '';
     return '' +
     '<div style="border:1px solid var(--border);border-radius:10px;padding:13px 14px;margin-bottom:10px;">' +
       '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px;">' +
-        '<b style="font-size:15px;">' + esc(v.full_name || '—') + '</b>' +
+        '<b style="font-size:15px;">' + escapeHtml(v.full_name || '—') + '</b>' +
         '<span style="background:' + L[2] + ';color:' + L[1] + ';font-size:11px;font-weight:800;' +
-          'border-radius:9px;padding:2px 9px;">' + esc(L[0]) + '</span>' +
+          'border-radius:9px;padding:2px 9px;">' + escapeHtml(L[0]) + '</span>' +
         pay + tick + refund +
         '<span style="margin-left:auto;font-family:var(--font-mono);font-size:12px;color:#6b7280;">' +
-          esc(v.ref) + '</span>' +
+          escapeHtml(v.ref) + '</span>' +
       '</div>' +
       '<div style="font-size:13px;color:#374151;line-height:1.7;">' +
-        '<a href="tel:' + esc(v.phone || '') + '" style="font-weight:800;">' +
-          esc(v.phone || 'नंबर नहीं') + '</a>' +
-        ' · ' + esc(v.village || '—') + ', ' + esc(v.district || '—') +
-        ' · ' + esc(paid) + days +
+        '<a href="tel:' + escapeHtml(v.phone || '') + '" style="font-weight:800;">' +
+          escapeHtml(v.phone || 'नंबर नहीं') + '</a>' +
+        ' · ' + escapeHtml(v.village || '—') + ', ' + escapeHtml(v.district || '—') +
+        ' · ' + escapeHtml(paid) + days +
       '</div>' +
       '<div style="margin-top:4px;">' + plan +
       '</div>' + note + why +
       '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">' +
-        '<button class="btn btn-secondary" onclick="vfCollect(\'' + esc(v.ref) + '\')">₹ माँगें</button>' +
-        '<button class="btn btn-primary" onclick="vfPayment(\'' + esc(v.ref) + '\')">₹ मिला → टिक चालू</button>' +
-        '<button class="btn btn-secondary" onclick="vfApprove(\'' + esc(v.ref) + '\')">✓ मुफ़्त टिक</button>' +
-        '<button class="btn btn-secondary" onclick="vfReject(\'' + esc(v.ref) + '\')">✕ टिक हटाएँ</button>' +
+        '<button class="btn btn-secondary" onclick="vfCollect(\'' + escapeHtml(v.ref) + '\')">₹ माँगें</button>' +
+        '<button class="btn btn-primary" onclick="vfPayment(\'' + escapeHtml(v.ref) + '\')">₹ मिला → टिक चालू</button>' +
+        '<button class="btn btn-secondary" onclick="vfApprove(\'' + escapeHtml(v.ref) + '\')">✓ मुफ़्त टिक</button>' +
+        '<button class="btn btn-secondary" onclick="vfReject(\'' + escapeHtml(v.ref) + '\')">✕ टिक हटाएँ</button>' +
         refundBtn +
       '</div>' +
     '</div>';
@@ -17316,14 +17323,14 @@ async function vfCollect(ref) {
     const w = window.open('', '_blank', 'width=420,height=700');
     if (!w) { showToast('पॉपअप ब्लॉक हो गया'); return; }
     w.document.write(
-      '<title>₹' + (d.amount || '') + ' — ' + esc(ref) + '</title>' +
+      '<title>₹' + (d.amount || '') + ' — ' + escapeHtml(ref) + '</title>' +
       '<div style="font-family:system-ui;text-align:center;padding:18px;">' +
         '<div style="font-size:30px;font-weight:800;color:#1a3c2e;">₹' + (d.amount || '') + '</div>' +
         '<div style="margin:12px 0;">' + (d.qr_svg || '') + '</div>' +
-        '<div style="font-size:15px;font-weight:700;word-break:break-all;">' + esc(d.vpa || '') + '</div>' +
-        '<div style="font-family:monospace;margin-top:8px;">' + esc(ref) + '</div>' +
+        '<div style="font-size:15px;font-weight:700;word-break:break-all;">' + escapeHtml(d.vpa || '') + '</div>' +
+        '<div style="font-family:monospace;margin-top:8px;">' + escapeHtml(ref) + '</div>' +
         '<textarea style="width:100%;height:190px;margin-top:14px;font-size:12px;">' +
-          esc(d.whatsapp || '') + '</textarea>' +
+          escapeHtml(d.whatsapp || '') + '</textarea>' +
       '</div>');
   } catch (e) {
     showToast('नहीं हो पाया');

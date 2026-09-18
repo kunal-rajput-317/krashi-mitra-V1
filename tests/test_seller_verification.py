@@ -661,3 +661,35 @@ def test_a_failed_queue_load_is_not_reported_as_an_empty_queue():
     render = html[html.index("function renderVerifications()"):]
     assert "इस छाँट में कोई नहीं" in render
     assert "अभी तक कोई आवेदन नहीं आया।" in render
+
+
+def test_the_queue_only_calls_helpers_that_exist():
+    """The queue called esc(), which this file has never defined.
+
+    Every row threw "esc is not defined" the moment one was rendered — and the
+    catch that was supposed to report it called esc() too, so it threw a second
+    time, uncaught, leaving #vf-list showing the static "लोड हो रहा है…" it
+    ships with. The panel therefore looked empty, then looked stuck, while two
+    applications sat in the database and one farmer had already sent money.
+
+    Nothing about that was visible in a Python test or in the API response, so
+    what is pinned is the thing that was actually wrong: a name that is not
+    there. escapeHtml() is this file's only escaping helper.
+    """
+    import io
+    import re
+    from pathlib import Path
+
+    html = io.open(Path(__file__).resolve().parents[1] / "admin" / "index.html",
+                   encoding="utf-8").read()
+    assert re.search(r"^function escapeHtml\(", html, re.M), (
+        "escapeHtml() is gone — every panel that escapes output is now broken")
+
+    # Comments may name esc() to explain the history; code may not call it.
+    code = re.sub(r"/\*.*?\*/", "", html, flags=re.S)
+    code = re.sub(r"<!--.*?-->", "", code, flags=re.S)
+    # \b so a name merely ending in "esc" — desc(, describe( — is not a hit.
+    bare = [m.start() for m in re.finditer(r"\besc\(", code)]
+    assert not bare, (
+        f"{len(bare)} call(s) to a non-existent esc() — use escapeHtml(). "
+        "This is the bug that made the नीला टिक queue render nothing.")
