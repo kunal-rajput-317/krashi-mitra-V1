@@ -694,6 +694,31 @@
       color: var(--green-dark);
     }
 
+    /* The ring is absolutely positioned over the hero's top-right and nothing
+       reserved its column, so the eyebrow, the name and the प्रीमियम tick that
+       follows the name all slid underneath it — at 320px even a short name
+       like "kunal rajput" did. So the two rows that reach that high keep the
+       ring's column clear at EVERY width: a long enough name collided on a
+       desktop too, and a rule that only fires under 640px would leave that
+       standing. Keep this in step with the ring's width + `right` offset. */
+    .ig-hero-eyebrow,
+    .ig-hero-name-row { padding-right: 54px; }
+
+    /* On a phone the ring itself comes down too — it is a glanceable hint, not
+       the point of the page, and the name it was crowding is. The svg carries
+       a viewBox, without which sizing it here would CROP the circle rather
+       than scale it. */
+    @media (max-width: 640px) {
+      .profile-progress-circle-wrap {
+        top: 12px; right: 12px;
+        width: 40px; height: 40px;
+      }
+      .progress-ring { width: 40px; height: 40px; }
+      .progress-circle-text { font-size: 9px; }
+      .ig-hero-eyebrow,
+      .ig-hero-name-row { padding-right: 40px; }
+    }
+
     /* ── Quick Links Row ── */
     .quick-row {
       display: flex; gap: 8px; flex-wrap: wrap;
@@ -1180,7 +1205,7 @@
     
     <!-- Circular progress indicator in the top right corner -->
     <div class="profile-progress-circle-wrap" id="completion-wrap" title="प्रोफाइल पूर्णता">
-      <svg class="progress-ring" width="54" height="54">
+      <svg class="progress-ring" width="54" height="54" viewBox="0 0 54 54">
         <circle class="progress-ring__background" stroke="#eef2ef" stroke-width="4" fill="transparent" r="22" cx="27" cy="27" />
         <circle class="progress-ring__circle" id="progress-circle" stroke="var(--green-mid)" stroke-width="4" fill="transparent" r="22" cx="27" cy="27" style="stroke-dasharray: 138; stroke-dashoffset: 138;" />
       </svg>
