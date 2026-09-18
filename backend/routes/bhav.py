@@ -4291,13 +4291,20 @@ def bhav_district_hub(state: str, district: str):
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"),
         (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn_hi, canon)]))
 
+    # ── CTR-optimised title (§2.2): district name + top crops ──
+    # The farmer searching "मेरठ मंडी भाव" sees his actual crops in the result.
+    _top_crops = ", ".join(_hindi_name(cn) for _, cn in ordered[:4])
     title = _fit(*(([f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav {date.today().year}",
                      f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav"] if dn_hi != dn else []) + [
+                 f"{dn_hi} मंडी भाव आज — {_top_crops} का नेट रेट",
                  f"{dn_hi} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}",
                  f"{dn_hi} मंडी भाव आज — सभी फसलों के ताजा रेट",
                  f"{dn_hi} मंडी भाव आज — {hi_state}",
                  f"{dn_hi} मंडी भाव आज"]))
+    # ── CTR-optimised meta (§2.2): trend + net-bhav CTA ──
     desc = _fit(
+        f"{as_of_hi} अपडेट: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों "
+        f"का ताजा भाव + पिछले दिनों का रुझान। भाड़ा घटाकर नेट भाव देखें और सबसे ज़्यादा कमाई वाली मंडी चुनें।",
         f"{as_of_hi}: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का ताजा भाव — "
         f"अपनी फसल चुनकर आज का न्यूनतम, अधिकतम और मॉडल रेट देखें। रोज़ अपडेट (data.gov.in)।",
         f"{as_of_hi}: {dn_hi} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
@@ -5287,9 +5294,10 @@ def bhav_net_price_page():
 
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › '
               f'<a href="{SITE}/bhav">मंडी भाव</a> › नेट भाव कैलकुलेटर')
-    desc = ("भाड़ा जोड़कर कौन सी मंडी में बेचना फायदेमंद है? अपनी फसल, मात्रा और वाहन चुनिए — "
-            "आस-पास की मंडियों का नेट भाव (मॉडल भाव − भाड़ा) एक जगह देखिए।")
-    return _doc("नेट भाव कैलकुलेटर — भाड़ा जोड़कर कौन सी मंडी में बेचें?",
+    # ── CTR-optimised title/meta (§2.3) ──
+    desc = ("दूर की मंडी का ऊँचा रेट धोखा दे सकता है। ट्रांसपोर्ट, टोल और समय "
+            "घटाकर 2 मिनट में असली नेट भाव निकालें — कौन सी मंडी लाभदायक, तुरंत देखें।")
+    return _doc("मंडी नेट भाव कैलकुलेटर — भाड़ा घटाकर असली रेट, कौन सी मंडी लाभदायक?",
                 desc, canon, crumbs, body, ld, extra_css=_NP_CSS)
 
 
@@ -6172,10 +6180,23 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # known the two collapse back to one string and the richest variant is simply
     # not offered, which is the old behaviour exactly.
     en_d = "" if d_hi == district else district
+    # ── CTR Variant A: price-in-title ──
+    # A live number in the title is the single biggest CTR lever for mandi
+    # queries — the searcher sees the answer before clicking. The top price
+    # (st["hi"]) is used because it is the one the farmer hopes for.
+    # Variants are ordered richest → shortest; _fit picks the first that
+    # survives Google's ~68-char SERP window.  Existing patterns stay as
+    # fallbacks for the long crop+district combos where the price variant
+    # doesn't fit.
+    _top = f"₹{st['hi']:,}/क्वि" if st.get("hi") else ""
     title = _fit(*(
+        # ── price-in-title variants (Variant A) ──
+        ([f"{t_hi} का भाव आज {place}: {_top} तक — {t_en}"] if _top and not same else
+         [f"{t_hi} का भाव आज {place}: {_top} तक"] if _top else []) +
+        # ── static fallback (Variant B) ──
         # No real Hindi name for this commodity: t_hi IS t_en, so a bilingual
         # template would print one long string twice.
-        ([f"{t_hi} का भाव आज {place} मंडी में — {en_d} Mandi"] if en_d else []) + [
+        (([f"{t_hi} का भाव आज {place} मंडी में — {en_d} Mandi"] if en_d else []) + [
          f"{t_hi} का भाव आज {place} मंडी में",
          f"{place} में {t_hi} का भाव आज",
          f"{t_hi} भाव — {place}",
@@ -6190,7 +6211,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
          f"{t_hi} का भाव आज {place} — {t_en} Price",
          f"{place} में {t_hi} भाव — {t_en}",
          f"{place} में {t_hi} का भाव आज",
-         f"{t_hi} का भाव — {district}"]))
+         f"{t_hi} का भाव — {district}"])))
 
     # Same `lang` resolved above the FAQs. `t_hi` rather than `hi` here: the
     # title falls back to the English name for the ~13 commodity groups with no
@@ -6216,12 +6237,14 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # One bracket, not two: "आगरा (Agra, उत्तर प्रदेश)", never "आगरा (Agra) (उत्तर प्रदेश)".
     d_state = (f"{d_hi} ({hi_state})" if d_both == d_hi
                else f"{d_hi} ({district}, {hi_state})")
+    # ── CTR-optimised meta description ──
+    # Number + benefit + freshness signal + soft CTA. The MSP mention and
+    # "रोज़ सुबह अपडेट" are the hooks the old description was missing.
     desc  = _fit(
+        f"{as_of_hi} अपडेट: {d_state} में {hi} का ताजा भाव — {_avg}"
+        f"{_mandis_gen(st['n'])} के रेट, MSP तुलना और नेट भाव। रोज़ सुबह अपडेट।",
         f"{as_of_hi}: {d_state} में {hi} का ताजा भाव — {_avg}"
-        # No "7-दिन" here: the chart's window is however many days this district
-        # actually has history for, so a hard-coded number is a claim the page
-        # cannot keep.
-        f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और भाव का रुझान।",
+        f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और भाव का रुझान। रोज़ अपडेट।",
         f"{as_of_hi}: {d_both} में {hi} का ताजा भाव — {_avg}"
         f"{_mandis_gen(st['n'])} के रेट और भाव का रुझान।",
         f"{as_of_hi}: {d_hi} में {hi} का ताजा भाव — {_avg}"

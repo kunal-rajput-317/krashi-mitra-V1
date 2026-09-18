@@ -453,16 +453,17 @@ def ganna_hub():
         (str(len(_states())), "गन्ना राज्य"),
     ])
 
+    # ── CTR-optimised title/meta (§2.6) ──
     title = _fit(
-        f"गन्ना का भाव {show_season} — FRP {_rs(show.get('rate', 0))} और राज्यवार SAP रेट",
-        f"गन्ना मूल्य {show_season} — FRP {_rs(show.get('rate', 0))} व राज्यवार SAP",
+        f"गन्ना भाव, सट्टा और पर्ची कैलेंडर {show_season} — FRP {_rs(show.get('rate', 0))} | कृषि मित्र",
+        f"गन्ना भाव {show_season} — FRP {_rs(show.get('rate', 0))} और राज्यवार SAP रेट | कृषि मित्र",
+        f"गन्ना का भाव {show_season} — FRP {_rs(show.get('rate', 0))} व SAP रेट",
         f"गन्ना का भाव {show_season} — FRP और राज्यवार रेट")
     desc = _fit(
+        f"UP में गन्ने का भाव {show_season}, गन्ना सट्टा और पर्ची कैलेंडर, मिल-एरिया — "
+        f"केंद्र का FRP {_rs(show.get('rate', 0))}, राज्यवार SAP और कब कटेगा आपका गन्ना। पूरा अपडेट।",
         f"गन्ना का सरकारी रेट {show_season}: केंद्र का FRP {_rs(show.get('rate', 0))} प्रति "
-        f"क्विंटल ({show.get('recovery', 10.25)}% रिकवरी पर)। उत्तर प्रदेश, पंजाब, हरियाणा, "
-        f"उत्तराखंड समेत हर गन्ना राज्य का SAP रेट एक जगह — किस राज्य में कितना मिलेगा।",
-        f"गन्ना का सरकारी रेट {show_season}: केंद्र का FRP {_rs(show.get('rate', 0))} प्रति "
-        f"क्विंटल। यूपी, पंजाब, हरियाणा, उत्तराखंड समेत हर राज्य का SAP रेट एक जगह।",
+        f"क्विंटल। यूपी, पंजाब, हरियाणा समेत हर राज्य का SAP रेट एक जगह।",
         limit=162)
 
     faq_html, faq_ld = _faq_ui([
