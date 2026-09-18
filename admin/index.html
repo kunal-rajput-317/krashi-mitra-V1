@@ -7097,11 +7097,18 @@ function doLogin() {
 
   fetch(`${API}/admin/status`, { headers: { Authorization: token } })
     .then(r => {
-      if (r.status === 401) {
-        throw new Error('❌ Incorrect username or password');
+      if (r.status === 401 || r.status === 403) {
+        const e = new Error('❌ Incorrect username or password');
+        e.kind = 'credentials';
+        throw e;
       }
       if (!r.ok) {
-        throw new Error('❌ Backend server connection issue');
+        // The server answered, just not with a session. Not a wrong password,
+        // so it must not cost the owner a 30-second lockout.
+        const e = new Error('❌ सर्वर ने जवाब नहीं दिया (HTTP ' + r.status +
+                            ') — थोड़ी देर बाद दोबारा कोशिश करें');
+        e.kind = 'server';
+        throw e;
       }
       return r.json();
     })
@@ -7114,38 +7121,27 @@ function doLogin() {
       loadOverview();
     })
     .catch(e => {
-      // Check if it is a network unreachable error to trigger Mock Preview mode
-      if (e.message.indexOf('Failed to fetch') !== -1 || e.message.indexOf('Failed') !== -1 || e.message.indexOf('connection') !== -1 || e.message.indexOf('Network') !== -1) {
-        console.warn('Backend server offline. Launching in Mock Preview mode.');
-        AUTH_TOKEN = token;
-        sessionStorage.setItem('km_admin_auth_new', token);
-        overlay.classList.add('hidden');
-        adminApp.classList.add('visible');
-        initDashboard({
-          gemini_configured: true,
-          gemini_keys_count: 3,
-          ollama_running: false,
-          ollama_model: '—',
-          chroma_chunks: 1420,
-          cache_entries: 24,
-          checked_at: new Date().toLocaleTimeString('en-IN'),
-          current_model: 'gemini-1.5-flash',
-          semantic_cache: true,
-          ollama_enabled: false,
-          claude_configured: false,
-          claude_enabled: false,
-          claude_model: 'claude-opus-4-8',
-          pipeline_timeout: 50,
-          gemini_timeout: 15
-        });
-        showToast('Backend offline. Loaded mock preview state.', 'error');
-        printTerminalLog('Warning: Running in system mockup mode (backend server offline).', 'log-entry-warn');
-        return;
-      }
-      loginErr.textContent = e.message;
+      /* This used to be "Mock Preview mode". On ANY error whose message
+         contained "Failed" — which every offline fetch does — it set AUTH_TOKEN
+         to a token nothing had validated, hid the login overlay, and filled the
+         dashboard with hard-coded figures: 1420 chroma chunks, 24 cache
+         entries, gemini_configured: true. A cold Render instance was enough to
+         put the owner in a panel that looked logged in and showed numbers that
+         were invented. Every data panel behind it then failed its own fetch and
+         reported that as empty.
+
+         A backend that did not answer is not a session. The overlay stays. */
+      const offline = (e.kind !== 'credentials' && e.kind !== 'server');
+      loginErr.textContent = offline
+        ? '❌ बैकएंड से बात नहीं हो पाई — सर्वर जाग रहा हो तो 30-60 सेकंड बाद दोबारा कोशिश करें'
+        : e.message;
       loginErr.classList.add('visible');
-      loginPass.value = '';
-      startCooldown(30); // 30 seconds cooldown lock
+      if (e.kind === 'credentials') {
+        loginPass.value = '';
+        startCooldown(30);   // only a wrong password earns the lockout
+      } else {
+        printTerminalLog('Login failed: ' + e.message, 'log-entry-warn');
+      }
     })
     .finally(() => {
       if (!isCooldownActive()) {
@@ -7166,25 +7162,11 @@ function logout() {
   }
 }
 
-// Initialize Dashboard with Default/Mock Data immediately on page load
-const defaultMockData = {
-  gemini_configured: true,
-  gemini_keys_count: 3,
-  ollama_running: false,
-  ollama_model: '—',
-  chroma_chunks: 1420,
-  cache_entries: 24,
-  checked_at: new Date().toLocaleTimeString('en-IN'),
-  current_model: 'gemini-1.5-flash',
-  semantic_cache: true,
-  ollama_enabled: false,
-  claude_configured: false,
-  claude_enabled: false,
-  claude_model: 'claude-opus-4-8',
-  pipeline_timeout: 50,
-  gemini_timeout: 15
-};
-initDashboard(defaultMockData);
+// The dashboard used to be painted with a `defaultMockData` literal on page
+// load — 1420 chroma chunks, 24 cache entries, gemini_configured: true — so the
+// very first thing the owner saw was a set of numbers nothing had measured, and
+// they stayed on screen until a real /admin/status answered, or forever if none
+// did. The tiles now keep their own markup until real data arrives.
 
 // Background silent login/connection checking logic
 (async () => {
@@ -7237,14 +7219,22 @@ initDashboard(defaultMockData);
     }
   } catch(e) {}
 
-  // If server is online but credentials failed, force logout to show login overlay!
+  /* Either way the overlay comes back. This branch used to be "Mock Control
+     Mode": on an unreachable backend it left the panel open with AUTH_TOKEN
+     still empty, so getAuthHeader() sent `Authorization: ''` and every panel
+     got a 401 it then displayed as "no data". That is how the नीला टिक queue
+     came to report an empty queue with two applications in the database.
+
+     There is no such thing as a session without a server. */
+  logout();
   if (serverOnline) {
-    logout();
+    loginErr.textContent = '❌ सेशन खत्म — दोबारा लॉगिन करें';
   } else {
-    console.warn('Backend server is offline. Operating in Mock Control Mode.');
-    printTerminalLog('System Warning: Operating in Mock Control Mode (FastAPI server offline).', 'log-entry-warn');
-    loadOverview();
+    loginErr.textContent = '❌ बैकएंड सो रहा है या पहुँच से बाहर है — 30-60 सेकंड बाद दोबारा कोशिश करें';
+    printTerminalLog('System: backend unreachable — login required, nothing loaded.',
+                     'log-entry-warn');
   }
+  loginErr.classList.add('visible');
 })();
 
 // Clock logic
@@ -11596,12 +11586,11 @@ function processTerminalCommand(rawCmd) {
           printTerminalLog(JSON.stringify(d, null, 2));
         })
         .catch(e => {
-          printTerminalLog('Mock Config details: ' + JSON.stringify({
-            gemini_configured: true,
-            semantic_cache: true,
-            chroma_chunks: 1420,
-            active_model: "gemini-1.5-flash"
-          }, null, 2));
+          // Was a "Mock Config details:" dump of invented figures. A console
+          // that answers `status` with numbers nobody measured is worse than
+          // one that says it could not ask.
+          printTerminalLog('status unavailable — backend did not answer ('
+                           + String(e && e.message || e) + ')', 'log-entry-warn');
         });
       break;
       
