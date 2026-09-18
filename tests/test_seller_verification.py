@@ -629,3 +629,35 @@ def test_the_admin_panel_has_the_tab_wired_up():
     # And the panel must show the payment state, not just the membership state.
     assert "VF_PAY" in html
     assert "awaiting_confirm" in html
+
+
+def test_a_failed_queue_load_is_not_reported_as_an_empty_queue():
+    """The panel said "कोई आवेदन नहीं" while two applications sat in the DB.
+
+    loadVerifications() only treated a 404 as a failure; every other bad
+    response fell through to `(j.data && j.data.items) || []`, so a 401 on an
+    expired admin token — or a 502 while Render was cold — emptied the list and
+    painted the empty state. The owner then had no way to tell "nobody has
+    applied" from "the request did not answer", which is the difference between
+    doing nothing and losing a paying member.
+    """
+    import io
+    from pathlib import Path
+
+    html = io.open(Path(__file__).resolve().parents[1] / "admin" / "index.html",
+                   encoding="utf-8").read()
+    start = html.index("async function loadVerifications()")
+    fn = html[start:html.index("function renderVerifications()", start)]
+
+    assert "if (!r.ok)" in fn, "a non-200 response is still treated as data"
+    assert "!j.data) throw" in fn, "a body with no data is still treated as data"
+    # The badge must not be written from a filtered view, or asking for
+    # "चालू (भुगतान)" would report that nobody is waiting on a payment.
+    assert "badge && !_vfFilter" in fn
+    # And the failure text has to deny the empty-queue reading out loud.
+    assert "यह \"कोई आवेदन नहीं\" नहीं है" in fn
+
+    # The empty state itself must distinguish the two nothings.
+    render = html[html.index("function renderVerifications()"):]
+    assert "इस छाँट में कोई नहीं" in render
+    assert "अभी तक कोई आवेदन नहीं आया।" in render

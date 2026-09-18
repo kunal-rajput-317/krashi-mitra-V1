@@ -17198,23 +17198,47 @@ async function loadVerifications() {
   try {
     const q = _vfFilter ? ('?status=' + encodeURIComponent(_vfFilter)) : '';
     const r = await fetch(API + '/admin/verifications' + q, { headers: getAuthHeader() });
-    if (r.status === 404) throw new Error('endpoint missing — restart the backend');
-    const j = await r.json();
-    _vfRows = (j.data && j.data.items) || [];
-    const counts = (j.data && j.data.counts) || {};
+
+    /* Only a 404 used to count as a failure. Everything else fell through to
+       `(j.data && j.data.items) || []`, so a 401 on an expired admin token — or
+       a 502 while Render was cold — emptied _vfRows and painted the queue's
+       "कोई आवेदन नहीं।" empty state. The panel then said there were no
+       applications while two were sitting in the database, one of them a farmer
+       waiting on his payment being confirmed. A request that did not answer is
+       not an answer, so it says so now. */
+    if (!r.ok) {
+      throw new Error(
+        r.status === 401 || r.status === 403
+          ? 'लॉगिन की मियाद खत्म — पेज रीलोड करके दोबारा लॉगिन करें (' + r.status + ')'
+          : r.status === 404
+            ? 'endpoint missing — restart the backend'
+            : 'सर्वर ने जवाब नहीं दिया (' + r.status + ') — थोड़ी देर बाद ↻ Refresh दबाएँ');
+    }
+    let j;
+    try { j = await r.json(); }
+    catch (_) { throw new Error('सर्वर ने अधूरा जवाब भेजा — ↻ Refresh दबाएँ'); }
+    if (!j || !j.data) throw new Error(esc(j && j.detail) || 'जवाब में डेटा नहीं मिला');
+
+    _vfRows = j.data.items || [];
+    const counts = j.data.counts || {};
 
     // The badge counts farmers who say they have paid and have no tick yet —
-    // the only state on this screen where somebody is waiting on us.
+    // the only state on this screen where somebody is waiting on us. Set only
+    // on a load that actually answered, and never from a filtered view: asking
+    // for "चालू (भुगतान)" would otherwise report nobody waiting.
     const badge = document.getElementById('vf-nav-badge');
-    if (badge) {
-      const n = (j.data && j.data.awaiting_confirm) || 0;
+    if (badge && !_vfFilter) {
+      const n = j.data.awaiting_confirm || 0;
       badge.textContent = n;
       badge.hidden = !n;
     }
     renderVerifications();
   } catch (e) {
     box.innerHTML = '<div style="color:#b91c1c;font-weight:700;">' +
-                    esc(String(e.message || e)) + '</div>';
+                    esc(String(e.message || e)) + '</div>' +
+                    '<div style="color:#6b7280;font-size:12.5px;margin-top:6px;">' +
+                    'यह "कोई आवेदन नहीं" नहीं है — आवेदन आए हो सकते हैं, ' +
+                    'सर्वर से बात नहीं हो पाई।</div>';
   }
 }
 
@@ -17222,7 +17246,11 @@ function renderVerifications() {
   const box = document.getElementById('vf-list');
   if (!box) return;
   if (!_vfRows.length) {
-    box.innerHTML = '<div style="color:#6b7280;">कोई आवेदन नहीं।</div>';
+    // "Nothing matches this filter" and "nobody has ever applied" are very
+    // different things to read at 1am while wondering where an application went.
+    box.innerHTML = '<div style="color:#6b7280;">' + (_vfFilter
+      ? 'इस छाँट में कोई नहीं — <b>सभी</b> दबाकर पूरी सूची देखें।'
+      : 'अभी तक कोई आवेदन नहीं आया।') + '</div>';
     return;
   }
   box.innerHTML = _vfRows.map(function (v) {
