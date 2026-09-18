@@ -193,6 +193,7 @@ window.KRASHIMITRA_GOOGLE_CLIENT_ID = "235912622385-faavoh67rvg0m126bj5af8ot3n2k
   var USER_KEYS = [
     "krishi_token",       // the session itself
     "user_avatar_url",    // header avatar — painted from cache before any fetch
+    "km_seller_verified", // the blue tick's ring on that avatar
     "user_name",
     "km_seen_status",     // KrashiBook read-markers (that user's order/alert ids)
     "km_fasal_summary",   // मेरी फसल summary the 📒 book shows on every page
@@ -254,6 +255,38 @@ document.addEventListener("DOMContentLoaded", function () {
   // broken-image icon and "disappear". Instead we retry once with a cache-bust
   // after a short delay, and only then fall back to the 👤 icon.
   // Exposed on window so page-level scripts can reuse the same behaviour.
+  /* ── The blue tick's ring on the header avatar ──
+     .header-avatar-btn is styled in ten different places — km-shell.css, six
+     static pages, and the server-rendered /bhav and news shells — so the rule
+     is injected here instead. Every page loads api-config.js; none of them
+     would have got the ring by editing one stylesheet.
+
+     Same ocean blue as the ring krashi_bajar.html draws on a member's avatar in
+     the feed and profile.html draws on his own photo. box-shadow, so the button
+     keeps its size and a ticked header is not a pixel taller than an unticked
+     one. */
+  var RING_STYLE_ID = "km-premium-ring";
+  function ensureRingStyle() {
+    if (document.getElementById(RING_STYLE_ID)) return;
+    var st = document.createElement("style");
+    st.id = RING_STYLE_ID;
+    st.textContent =
+      ".header-avatar-btn.is-premium{" +
+        "box-shadow:0 0 0 2px #fff,0 0 0 4px #0284c7;" +
+      "}";
+    document.head.appendChild(st);
+  }
+
+  /* Whether the account that owns this avatar pays for कृषि मित्र प्रीमियम.
+     Cached so the ring paints with the avatar on the next page instead of
+     appearing a second later, the same reason user_avatar_url is cached. */
+  function markPremium(el, on) {
+    if (!el) return;
+    ensureRingStyle();
+    el.classList.toggle("is-premium", !!on);
+    el.title = on ? "कृषि मित्र प्रीमियम" : (el.title || "Profile");
+  }
+
   function renderHeaderAvatar(el, src) {
     if (!el || !src) return;
     const img = document.createElement("img");
@@ -287,6 +320,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const src = cachedAvatar.startsWith("/") ? apiBase + cachedAvatar : cachedAvatar;
       renderHeaderAvatar(btn, src);
     }
+    // The ring does not wait for the avatar: a member with no photo still has
+    // a membership, and the 👤 fallback gets ringed just the same.
+    markPremium(btn, localStorage.getItem("km_seller_verified") === "1");
 
     // Always revalidate against the server in the background, even when a
     // cached avatar was just rendered above — a stale localStorage entry
@@ -316,6 +352,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (res.data.full_name) {
           localStorage.setItem("user_name", res.data.full_name);
         }
+        /* The server is the only thing that knows the membership is still
+           running — seller_verify's expiry sweep can have cleared it since the
+           last page load, and a ring left over from a lapsed term is the site
+           showing a badge nobody is paying for. */
+        var premium = !!res.data.verified;
+        try { localStorage.setItem("km_seller_verified", premium ? "1" : "0"); } catch (e) {}
+        markPremium(btn, premium);
       }
     });
   } else {
