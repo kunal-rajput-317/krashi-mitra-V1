@@ -3998,62 +3998,103 @@ async function uploadModalAvatar(input) {
   }
 }
 
-// Follow toggled from a feed card — optimistic flip, one in-flight
-// request per author, syncs every card by that author.
+// ── Follow / unfollow ───────────────────────────────────────
+// The tap is the only thing the farmer waits for: every surface that
+// shows this author (feed cards, the profile modal, the followers /
+// following list) flips instantly, then settles on the server's answer
+// — or rolls back if the request fails. One in-flight request per user.
+// No pre-flight /bazar/me either: the POST itself is the gate, and
+// api() turns a 403 into the profile / phone prompt.
 const _followBusy = new Set();
 
-function _paintFollow(userId, on) {
+function _paintFollow(userId, on, followersCount) {
+  const tr = T();
+
+  // Feed cards by this author (English labels, matching the card markup)
   feedPosts.forEach(x => { if (x.author && x.author.user_id === userId) x.author.is_following = on; });
   document.querySelectorAll(`[data-follow-uid="${userId}"]`).forEach(btn => {
     btn.classList.toggle('following', on);
     btn.textContent = on ? 'Following' : 'Follow';
   });
+
+  // Profile modal
+  if (profileUserId === userId) {
+    const btn = document.getElementById('follow-btn');
+    if (btn) {
+      btn.classList.toggle('following', on);
+      btn.classList.toggle('primary', !on);
+      btn.textContent = on ? tr.following : tr.follow;
+    }
+    const cnt = document.getElementById('prof-followers');
+    if (cnt && followersCount != null) cnt.textContent = followersCount;
+  }
+
+  // Followers / following list — cache too, so a search re-render keeps it
+  const rec = followListData.find(u => u.user_id === userId);
+  if (rec) rec.is_following = on;
+  const lbtn = document.getElementById(`fl-btn-${userId}`);
+  if (lbtn) {
+    lbtn.classList.toggle('following', on);
+    lbtn.classList.toggle('primary', !on);
+    lbtn.textContent = on ? tr.following : tr.follow;
+  }
 }
 
-async function followFromCard(ev, userId) {
-  if (ev) ev.stopPropagation();
+/** Whatever the freshest surface currently says about this author. */
+function _isFollowing(userId) {
+  if (profileUserId === userId) {
+    const b = document.getElementById('follow-btn');
+    if (b) return b.classList.contains('following');
+  }
+  const lbtn = document.getElementById(`fl-btn-${userId}`);
+  if (lbtn) return lbtn.classList.contains('following');
+  const p = feedPosts.find(x => x.author && x.author.user_id === userId);
+  if (p) return !!p.author.is_following;
+  const rec = followListData.find(u => u.user_id === userId);
+  if (rec) return !!rec.is_following;
+  return false;
+}
+
+function _followersShown() {
+  if (!document.getElementById('prof-followers')) return null;
+  const n = parseInt(document.getElementById('prof-followers').textContent, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function _runFollow(userId) {
   if (!userId) return;
   if (!getToken()) { showPrompt('login'); return; }
   if (_followBusy.has(userId)) return;   // request already in flight
 
-  // Optimistic flip — paint instantly, server sync in background
-  const prev = !!(feedPosts.find(x => x.author && x.author.user_id === userId) || {author:{}}).author.is_following;
-  _paintFollow(userId, !prev);
+  const prev  = _isFollowing(userId);
+  const count = profileUserId === userId ? _followersShown() : null;
+
+  // Paint first, ask the server after.
+  _paintFollow(userId, !prev, count == null ? null : Math.max(0, count + (prev ? -1 : 1)));
 
   _followBusy.add(userId);
   try {
-    if (!(await requireMember())) { _paintFollow(userId, prev); return; }
     const j = await api(`/bazar/users/${userId}/follow`, { method: 'POST' });
     if (j.success) {
-      _paintFollow(userId, j.data.following);   // settle on server truth
+      _paintFollow(userId, j.data.following, j.data.followers_count);
       toast(j.message || '');
     } else {
-      _paintFollow(userId, prev);
+      _paintFollow(userId, prev, count);
     }
   } catch {
-    _paintFollow(userId, prev);
+    _paintFollow(userId, prev, count);
   } finally {
     _followBusy.delete(userId);
   }
 }
 
-async function toggleFollow(userId) {
-  if (!(await requireMember())) return;
-  try {
-    const j = await api(`/bazar/users/${userId}/follow`, { method: 'POST' });
-    if (j.success) {
-      const tr = T();
-      const btn = document.getElementById('follow-btn');
-      const cnt = document.getElementById('prof-followers');
-      if (btn) {
-        btn.classList.toggle('following', j.data.following);
-        btn.textContent = j.data.following ? tr.following : tr.follow;
-      }
-      if (cnt) cnt.textContent = j.data.followers_count;
-      toast(j.message || '');
-    }
-  } catch {}
+function followFromCard(ev, userId) {
+  if (ev) ev.stopPropagation();
+  _runFollow(userId);
 }
+
+function toggleFollow(userId)       { _runFollow(userId); }
+function toggleFollowInList(userId) { _runFollow(userId); }
 
 // ── Followers / Following list ──────────────────────────────
 let followListData = [];   // full list (for client-side search filtering)
@@ -4134,25 +4175,6 @@ function closeFollowList() {
 function openProfileFromList(userId) {
   closeFollowList();
   openProfile(userId);
-}
-
-async function toggleFollowInList(userId) {
-  if (!(await requireMember())) return;
-  try {
-    const j = await api(`/bazar/users/${userId}/follow`, { method: 'POST' });
-    if (j.success) {
-      const tr = T();
-      const btn = document.getElementById(`fl-btn-${userId}`);
-      if (btn) {
-        btn.classList.toggle('following', j.data.following);
-        btn.classList.toggle('primary', !j.data.following);
-        btn.textContent = j.data.following ? tr.following : tr.follow;
-      }
-      // keep cached state in sync so search re-render preserves it
-      const rec = followListData.find(u => u.user_id === userId);
-      if (rec) rec.is_following = j.data.following;
-    }
-  } catch {}
 }
 
 // ── Photo zoom (lightbox): focal pinch / drag / double-tap ──
