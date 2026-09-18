@@ -593,6 +593,107 @@ def test_revoking_through_the_panel_clears_the_tick(client, db_session, applican
     assert not _verified(db_session, applicant)
 
 
+# ── The money, and today's work ───────────────────────────────
+# The screen sells a membership and used to say nothing about what it earned,
+# and nothing about who was waiting. Both are now in the payload.
+
+def test_the_queue_reports_the_money(client, db_session, applicant):
+    row = _apply(db_session, applicant)
+    d = client.get("/admin/verifications", auth=AUTH).json()["data"]
+    m = d["money"]
+
+    # Signed up, not paid: it is money that can be collected today, and it is
+    # NOT revenue. The two must never be added together.
+    assert m["pending"] >= 199
+    before = m["collected_month"]
+
+    client.post(f"/admin/verifications/{row.ref}/payment",
+                json={"amount": 199}, auth=AUTH)
+    m2 = client.get("/admin/verifications", auth=AUTH).json()["data"]["money"]
+    assert m2["collected_month"] == before + 199
+    assert m2["active"] >= 1
+
+
+def test_the_money_ignores_the_filter(client, db_session, applicant):
+    """"₹ इस महीने" must not change because somebody clicked a chip."""
+    _apply(db_session, applicant)
+    allm = client.get("/admin/verifications", auth=AUTH).json()["data"]["money"]
+    one = client.get("/admin/verifications?status=rejected",
+                     auth=AUTH).json()["data"]
+    assert one["items"] == [] or all(i["status"] == "rejected" for i in one["items"])
+    assert one["money"]["collected_total"] == allm["collected_total"]
+    assert one["money"]["pending"] == allm["pending"]
+
+
+def test_todo_is_everybody_waiting_on_a_human(client, db_session, applicant):
+    """An unpaid signup is work. A live, healthy membership is not."""
+    row = _apply(db_session, applicant)
+    refs = [i["ref"] for i in
+            client.get("/admin/verifications?status=todo", auth=AUTH).json()["data"]["items"]]
+    assert row.ref in refs, "an unpaid signup is not in काम बाकी"
+
+    seller_verify.record_payment(db_session, row.ref, 199)   # months out
+    refs = [i["ref"] for i in
+            client.get("/admin/verifications?status=todo", auth=AUTH).json()["data"]["items"]]
+    assert row.ref not in refs, "a healthy paid membership is being shown as work"
+
+
+def test_a_term_about_to_run_out_is_work(client, db_session, applicant):
+    """A membership is a renewal business: the ask has to happen BEFORE it
+    lapses, so the last week counts as work."""
+    from backend.routes.admin import EXPIRING_DAYS
+
+    row = _apply(db_session, applicant)
+    seller_verify.record_payment(db_session, row.ref, 199)
+    row.valid_until = datetime.utcnow() + timedelta(days=EXPIRING_DAYS - 2)
+    db_session.commit()
+
+    d = client.get("/admin/verifications?status=expiring", auth=AUTH).json()["data"]
+    assert row.ref in [i["ref"] for i in d["items"]]
+    assert d["money"]["expiring"] >= 1
+    assert [i for i in d["items"] if i["ref"] == row.ref][0]["expiring"] is True
+
+    todo = client.get("/admin/verifications?status=todo", auth=AUTH).json()["data"]
+    assert row.ref in [i["ref"] for i in todo["items"]], (
+        "a membership days from lapsing is not in काम बाकी")
+
+
+@pytest.mark.parametrize("raw,want", [
+    ("9870900111",    "919870900111"),
+    ("919870900111",  "919870900111"),
+    ("09870900111",   "919870900111"),
+    ("+91 98709 00111", "919870900111"),
+    ("12345",         ""),      # too short — no button rather than a dead chat
+    ("89544213880",   ""),      # eleven digits, not an Indian mobile
+    (None,            ""),
+])
+def test_the_whatsapp_number_is_normalised_or_refused(raw, want):
+    """wa.me takes digits with a country code and nothing else. A number it
+    cannot use must produce NO button, never a link to a chat with nobody."""
+    from backend.routes.admin import _wa_phone
+
+    assert _wa_phone(raw) == want
+
+
+def test_the_whatsapp_templates_never_call_the_tick_a_check():
+    """The panel writes these on the client, so they are swept in the source.
+
+    A WhatsApp message is as public a claim as a web page, and these go out one
+    per farmer, unedited.
+    """
+    import io
+    import re
+    from pathlib import Path
+
+    html = io.open(Path(__file__).resolve().parents[1] / "admin" / "index.html",
+                   encoding="utf-8").read()
+    fn = html[html.index("function vfWaText("):html.index("function vfWaLabel(")]
+    for word in BANNED_CLAIMS:
+        assert word not in fn, f"the WhatsApp template promises a check: {word!r}"
+    # Every branch that quotes a price must also carry the disclaimer.
+    assert "गारंटी नहीं है" in fn
+
+
 def test_the_collect_message_sells_a_membership_not_a_check(client, db_session, applicant):
     """A WhatsApp message is as public a claim as a web page."""
     row = _apply(db_session, applicant, plan="m3")

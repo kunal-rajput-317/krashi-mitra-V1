@@ -483,6 +483,16 @@ body {
 .vf-table tbody tr.is-waiting td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .vf-name { font-weight: 700; color: var(--text); font-size: 13.5px; }
 .vf-sub  { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+/* The action column grew a WhatsApp button, and the columns left of it started
+   wrapping "रामपुर, हरदोई" onto three lines. Widths are declared so the table
+   spends its space on the two columns anybody reads across — who, and what is
+   owed — instead of distributing it evenly over six. */
+.vf-table th:nth-child(1), .vf-table td:nth-child(1) { width: 20%; min-width: 165px; }
+.vf-table th:nth-child(2), .vf-table td:nth-child(2) { width: 15%; }
+.vf-table th:nth-child(3), .vf-table td:nth-child(3) { width: 9%;  white-space: nowrap; }
+.vf-table th:nth-child(4), .vf-table td:nth-child(4) { width: 9%; }
+.vf-table th:nth-child(5), .vf-table td:nth-child(5) { width: 16%; }
+.vf-place { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vf-ref  { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
 .vf-tel  { font-weight: 700; }
 .vf-when { white-space: nowrap; font-size: 12.5px; }
@@ -494,7 +504,39 @@ body {
 .vf-acts { white-space: nowrap; text-align: right; }
 .vf-acts .btn { padding: 6px 10px; font-size: 11.5px; }
 /* ⋯ is a handle, not a field: just wide enough for the glyph and its arrow. */
-.vf-more { width: 52px; padding: 5px 4px; text-align: center; }
+/* "और ▾", never a bare ⋯: a control whose contents you cannot guess is one
+   nobody opens. Wide enough to read, narrow enough to stay out of the way. */
+.vf-more { width: 86px; padding: 5px 6px; }
+
+/* ── The money strip ──
+   This screen sells a membership and used to say nothing about what the
+   membership earned. Four numbers, and the two that mean work are clickable. */
+.vf-money { display: flex; gap: 10px; flex-wrap: wrap; padding: 14px 14px 4px; }
+.vf-money-tile {
+  flex: 1 1 150px; min-width: 130px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px;
+  font-family: inherit; text-align: left;
+}
+button.vf-money-tile { cursor: pointer; transition: var(--transition); }
+button.vf-money-tile:hover { border-color: var(--primary); }
+.vf-money-tile.is-work { border-color: rgba(234,179,8,0.45); background: rgba(234,179,8,0.06); }
+.vf-money-tile.is-zero { opacity: 0.6; }
+.vf-money-n {
+  display: block; font-size: 21px; font-weight: 800; color: var(--text);
+  line-height: 1.15; font-family: var(--font-mono);
+}
+.vf-money-l { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
+.vf-money-tile.is-work .vf-money-n { color: var(--accent); }
+
+/* WhatsApp — the one action this business actually runs on. */
+.vf-wa {
+  display: inline-flex; align-items: center; gap: 5px; text-decoration: none;
+  background: #25d366; color: #063; font-weight: 800; font-size: 11.5px;
+  border-radius: 7px; padding: 6px 10px; border: 0; white-space: nowrap;
+}
+.vf-wa:hover { background: #1ebe5b; }
+.vf-allclear { padding: 26px 14px; color: var(--muted); font-size: 13.5px; }
+.vf-allclear b { color: var(--text); }
 
 /* The wait, in the shape of the rows it is waiting for. */
 .vf-sk-line { height: 11px; border-radius: 6px; }
@@ -3706,9 +3748,12 @@ body {
           </div>
         </div>
         <div class="card" style="padding:0;overflow:hidden;">
+          <div class="vf-money" id="vf-money"></div>
           <div style="display:flex;gap:6px;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-            <button class="btn btn-secondary vf-filter active" data-vf="" onclick="setVfFilter('',this)">सभी</button>
+            <button class="btn btn-secondary vf-filter active" data-vf="todo" onclick="setVfFilter('todo',this)">काम बाकी</button>
+            <button class="btn btn-secondary vf-filter" data-vf="" onclick="setVfFilter('',this)">सभी</button>
             <button class="btn btn-secondary vf-filter" data-vf="applied" onclick="setVfFilter('applied',this)">भुगतान बाकी</button>
+            <button class="btn btn-secondary vf-filter" data-vf="expiring" onclick="setVfFilter('expiring',this)">जल्द खत्म</button>
             <button class="btn btn-secondary vf-filter" data-vf="paid" onclick="setVfFilter('paid',this)">चालू (भुगतान)</button>
             <button class="btn btn-secondary vf-filter" data-vf="approved" onclick="setVfFilter('approved',this)">चालू (मुफ़्त)</button>
             <button class="btn btn-secondary vf-filter" data-vf="rejected" onclick="setVfFilter('rejected',this)">हटाया</button>
@@ -17206,12 +17251,18 @@ function testFestivalPreviewModal() {
    "✓ मुफ़्त टिक" gives a membership away — it is the owner's comp, not an
    approval of anybody. "✕ टिक हटाएँ" is the impersonation kill switch.
    ══════════════════════════════════════════════════════════════ */
-let _vfFilter = '';
+/* Opens on काम बाकी, not on सभी. The settled rows are the majority and need
+   nothing; the screen should open on the handful that do. */
+let _vfFilter = 'todo';
 let _vfRows = [];
+let _vfMeta = {};      // money, upi and expiring_days from the last good load
 
 function setVfFilter(v, el) {
   _vfFilter = v;
   document.querySelectorAll('.vf-filter').forEach(b => b.classList.remove('active'));
+  // The money tiles call this with no element, so find the matching chip
+  // instead of leaving every filter looking unselected.
+  if (!el) el = document.querySelector('.vf-filter[data-vf="' + v + '"]');
   if (el) el.classList.add('active');
   loadVerifications();
 }
@@ -17267,7 +17318,9 @@ async function loadVerifications() {
     if (!j || !j.data) throw new Error(escapeHtml(j && j.detail) || 'जवाब में डेटा नहीं मिला');
 
     _vfRows = j.data.items || [];
+    _vfMeta = j.data;
     const counts = j.data.counts || {};
+    renderVfMoney(j.data.money || {}, j.data.expiring_days || 7);
 
     // The badge counts farmers who say they have paid and have no tick yet —
     // the only state on this screen where somebody is waiting on us. Set only
@@ -17293,12 +17346,50 @@ async function loadVerifications() {
   }
 }
 
+/* ── The money ──
+   Four numbers, and the two that mean work are buttons: pressing them filters
+   the list to exactly the rows behind the figure. A number you cannot act on
+   is decoration. */
+function renderVfMoney(m, expiringDays) {
+  const box = document.getElementById('vf-money');
+  if (!box) return;
+  const rupee = (v) => '₹' + Number(v || 0).toLocaleString('en-IN');
+
+  const tile = (n, label, opts) => {
+    const o = opts || {};
+    const cls = 'vf-money-tile' + (o.work && o.n ? ' is-work' : '') +
+                (!o.n && o.dim ? ' is-zero' : '');
+    const inner = '<span class="vf-money-n">' + escapeHtml(n) + '</span>' +
+                  '<span class="vf-money-l">' + escapeHtml(label) + '</span>';
+    return o.filter
+      ? '<button class="' + cls + '" onclick="setVfFilter(\'' + o.filter + '\')">' + inner + '</button>'
+      : '<div class="' + cls + '">' + inner + '</div>';
+  };
+
+  box.innerHTML =
+    tile(rupee(m.collected_month), 'इस महीने आया') +
+    tile(rupee(m.pending), 'भुगतान बाकी',
+         { n: m.pending, work: true, filter: 'applied', dim: true }) +
+    tile(String(m.awaiting || 0), 'भुगतान जाँचना है',
+         { n: m.awaiting, work: true, filter: 'todo', dim: true }) +
+    tile(String(m.active || 0), 'चालू सदस्य') +
+    tile(String(m.expiring || 0), expiringDays + ' दिन में खत्म',
+         { n: m.expiring, work: true, filter: 'expiring', dim: true });
+}
+
 function renderVerifications() {
   const box = document.getElementById('vf-list');
   if (!box) return;
   if (!_vfRows.length) {
     // "Nothing matches this filter" and "nobody has ever applied" are very
     // different things to read at 1am while wondering where an application went.
+    // An empty काम बाकी is the screen working, not the screen broken.
+    if (_vfFilter === 'todo') {
+      box.innerHTML = '<div class="vf-allclear">✓ <b>कोई काम बाकी नहीं।</b> ' +
+        'हर भुगतान जाँचा जा चुका है और किसी की सदस्यता जल्द खत्म नहीं हो रही। ' +
+        '<b>सभी</b> दबाकर पूरी सूची देखें।</div>';
+      return;
+    }
     box.innerHTML = '<div style="color:#6b7280;padding:14px 2px;">' + (_vfFilter
       ? 'इस छाँट में कोई नहीं — <b>सभी</b> दबाकर पूरी सूची देखें।'
       : 'अभी तक कोई आवेदन नहीं आया।') + '</div>';
@@ -17352,7 +17443,8 @@ function vfRowHtml(v) {
         escapeHtml(v.phone || 'नंबर नहीं') + '</a>' +
       '<div class="vf-ref">' + escapeHtml(v.ref) + '</div>' + note +
     '</td>' +
-    '<td>' + escapeHtml(place) + '<div class="vf-sub">' + escapeHtml(v.state || '') + '</div></td>' +
+    '<td><div class="vf-place">' + escapeHtml(place) + '</div>' +
+      '<div class="vf-sub vf-place">' + escapeHtml(v.state || '') + '</div></td>' +
     '<td>₹' + (v.fee_amount || v.plan_price || '?') +
       '<div class="vf-sub">' + escapeHtml(v.plan_hi || '') + '</div></td>' +
     '<td class="vf-when">' + vfDate(v.applied_at) +
@@ -17363,59 +17455,98 @@ function vfRowHtml(v) {
   '</tr>';
 }
 
-/* The काम column. Not one dropdown holding everything — the four actions are
-   not four equal choices, and which one matters is entirely decided by the row
-   you are looking at. A farmer who has sent money needs confirming; one who has
-   not needs asking; a live membership needs nothing at all. So each row leads
-   with the thing to do next, and the rest fold into ⋯.
+/* ── The काम column ──
+   Built from the one question the row can answer: what does this person need
+   from me right now? The answer is almost always a message — this business runs
+   on WhatsApp, and the panel used to make sending one a four-step job (open a
+   popup, read a QR, select the text, paste it somewhere else). So every row
+   whose number is usable leads with a wa.me link carrying the right message
+   already written, and the rest folds into "और ▾".
 
-   The overflow is a status-select-min, the same control the pre-order panel
-   uses, rather than a hand-rolled popup: no click-outside handling, no z-index
-   against the table, and it already matches everything else on the screen. */
+   The messages are assembled here rather than fetched: /admin/verifications
+   sends the UPI details once, and a collect pack per row would be one HTTP
+   round trip per farmer just to fill in a template. */
 
+const WA_BASE = 'https://wa.me/';
+
+function vfMoney(v) { return v.fee_amount || v.plan_price || 199; }
+
+/* What to say, and it is never allowed to say the tick is a check on anybody.
+   Same rule as /verify and the feed: this is a membership, and a WhatsApp
+   message is as public a claim as a web page. */
+function vfWaText(v) {
+  const up = (_vfMeta && _vfMeta.upi) || {};
+  const name = v.full_name || 'किसान भाई';
+  const amt = vfMoney(v);
+  const term = v.plan_hi || '';
+  const vpa = up.vpa || '';
+  const NOT = 'नीला टिक प्रीमियम सदस्यता का निशान है — यह पहचान की जाँच या ' +
+              'फसल, भाव या सौदे की गारंटी नहीं है।';
+
+  if (v.pay_status === 'claimed') {
+    return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
+      'आपने बताया कि ₹' + amt + ' भेज दिए हैं — हम बैंक में जाँच रहे हैं और ' +
+      'पैसा दिखते ही आपका नीला टिक चालू कर देंगे।\n' +
+      'आपका नंबर: ' + v.ref;
+  }
+  if (v.active) {
+    const left = (v.days_left != null) ? (v.days_left + ' दिन') : 'कुछ दिन';
+    return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
+      'आपका नीला टिक ' + left + ' में खत्म हो रहा है। आगे जारी रखने के लिए ' +
+      '₹' + amt + ' भेज दें — ' + term + '।\n' +
+      (vpa ? 'UPI: ' + vpa + '\n' : '') +
+      'आपका नंबर: ' + v.ref + '\n\n' + NOT;
+  }
+  // applied / expired / rejected — all of them need the same thing: money.
+  return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
+    'कृषि मित्र प्रीमियम (नीला टिक) का शुल्क ₹' + amt + ' है — ' + term + '।\n' +
+    (vpa ? 'UPI: ' + vpa + '\n' : '') +
+    'आपका नंबर: ' + v.ref + '\n\n' +
+    'पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n' + NOT + '\n' +
+    'https://krashimitra.in/verify';
+}
+
+function vfWaLabel(v) {
+  if (v.pay_status === 'claimed') return '💬 बता दें';
+  if (v.active) return v.expiring ? '💬 रिन्यू माँगें' : '💬 संदेश';
+  return '💬 ₹ माँगें';
+}
+
+/* The lead button, decided by the row. A live, healthy membership gets no
+   primary at all — there is nothing to do, and a row that needs no work should
+   not look like a row that does. */
 function vfPlan(v) {
-  const CLAIMED = (v.pay_status === 'claimed');
-  const ACTIVE  = !!v.active;
-
-  // [label, action, isPrimary] — the lead button, then ⋯ for the remainder.
-  if (v.status === 'applied' && CLAIMED) {
-    // He says the money is sent and has no tick. The whole queue exists for
-    // this row: check the bank, press one button.
+  if (v.status === 'applied' && v.pay_status === 'claimed') {
     return { lead: ['₹ मिला → टिक चालू', 'payment', true],
-             more: [['₹ माँगें — QR + संदेश', 'collect'],
+             more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                     ['✓ मुफ़्त टिक', 'approve'],
                     ['✕ टिक हटाएँ', 'reject']] };
   }
   if (v.status === 'applied') {
-    // Signed up, nothing received. The next move is asking.
-    return { lead: ['₹ माँगें', 'collect', false],
-             more: [['₹ मिला → टिक चालू', 'payment'],
+    return { lead: ['₹ मिला', 'payment', false],
+             more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                     ['✓ मुफ़्त टिक', 'approve'],
                     ['✕ टिक हटाएँ', 'reject']] };
   }
   if (v.status === 'rejected' && v.refund_due) {
-    // Money taken for a term that was cut short. Nothing else matters here.
     return { lead: ['↩ रिफंड भेज दिया', 'refund', true],
-             more: [['₹ माँगें', 'collect'],
+             more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                     ['✓ मुफ़्त टिक', 'approve']] };
   }
   if (v.status === 'rejected' || v.status === 'expired') {
-    // Lapsed or removed — the way back is a payment.
-    return { lead: ['₹ माँगें', 'collect', false],
-             more: [['₹ मिला → टिक चालू', 'payment'],
+    return { lead: ['₹ मिला', 'payment', false],
+             more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                     ['✓ मुफ़्त टिक', 'approve']] };
   }
-  if (ACTIVE) {
-    // Running and paid for. There is nothing to do, so nothing is offered as a
-    // button — a row that needs no work should not look like a row that does.
-    return { lead: null,
-             more: [['₹ माँगें — रिन्यू', 'collect'],
+  if (v.active) {
+    return { lead: v.expiring ? ['₹ मिला → बढ़ाएँ', 'payment', false] : null,
+             more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                     ['₹ मिला → समय बढ़ाएँ', 'payment'],
                     ['✓ मुफ़्त समय बढ़ाएँ', 'approve'],
                     ['✕ टिक हटाएँ', 'reject']] };
   }
-  return { lead: ['₹ माँगें', 'collect', false],
-           more: [['₹ मिला → टिक चालू', 'payment'],
+  return { lead: ['₹ मिला', 'payment', false],
+           more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                   ['✓ मुफ़्त टिक', 'approve'],
                   ['✕ टिक हटाएँ', 'reject']] };
 }
@@ -17425,6 +17556,15 @@ function vfActionSelect(v) {
   const ref = escapeHtml(v.ref);
   let out = '';
 
+  // WhatsApp first — it is what the owner reaches for, and on a row with no
+  // usable number it is simply absent rather than broken.
+  if (v.wa_phone) {
+    out += '<a class="vf-wa" target="_blank" rel="noopener" href="' +
+           WA_BASE + encodeURIComponent(v.wa_phone) + '?text=' +
+           encodeURIComponent(vfWaText(v)) + '">' +
+           escapeHtml(vfWaLabel(v)) + '</a> ';
+  }
+
   if (plan.lead) {
     out += '<button class="btn ' + (plan.lead[2] ? 'btn-primary' : 'btn-secondary') +
            '" onclick="vfAction(\'' + ref + '\', \'' + plan.lead[1] + '\')">' +
@@ -17432,7 +17572,7 @@ function vfActionSelect(v) {
   }
 
   if (plan.more.length) {
-    let opts = '<option value="" disabled selected>⋯</option>';
+    let opts = '<option value="" disabled selected>और ▾</option>';
     plan.more.forEach(function (m) {
       opts += '<option value="' + m[1] + '">' + escapeHtml(m[0]) + '</option>';
     });
@@ -17443,7 +17583,7 @@ function vfActionSelect(v) {
 }
 
 function vfAction(ref, value, el) {
-  if (el) el.selectedIndex = 0;   // never leave an action sitting where ⋯ goes
+  if (el) el.selectedIndex = 0;   // never leave an action sitting where "और" goes
   if (!value) return;
   if (value === 'collect') return vfCollect(ref);
   if (value === 'payment') return vfPayment(ref);

@@ -2161,20 +2161,74 @@ async def record_dealer_payment(
 # The queue sorts itself by who is waiting on whom: a farmer who has pressed
 # "मैंने पैसे भेज दिए" and has no badge yet is at the top, every time.
 
+# A membership is a renewal business, so a term running out IS work — the
+# owner has to ask before it lapses, not after. Seven days is the window a
+# WhatsApp reminder can still land in.
+EXPIRING_DAYS = 7
+
+
+def _wa_phone(raw) -> str:
+    """A number wa.me will accept, or "".
+
+    India only, because every seller on this site is in India: ten digits get
+    91 in front, a number that already carries it is left alone, and anything
+    else returns empty so the panel shows no WhatsApp button rather than a link
+    that opens a chat with nobody.
+    """
+    d = "".join(ch for ch in str(raw or "") if ch.isdigit())
+    if len(d) == 10:
+        return "91" + d
+    if len(d) == 12 and d.startswith("91"):
+        return d
+    if len(d) == 11 and d.startswith("0"):
+        return "91" + d[1:]
+    return ""
+
+
 @router.get("/verifications")
 def list_verifications(
     status: str = Query("", max_length=20),
     _:  str     = Depends(require_admin),
     db: Session = Depends(admin_db),
 ):
-    """The queue. Rows claiming a payment nobody has confirmed come first."""
+    """The queue, and the money behind it.
+
+    `status` takes the five real statuses plus two synthetic views that match
+    how this screen is actually used:
+
+      todo      — anybody waiting on a human: a claimed payment to confirm, an
+                  unpaid signup to chase, a term about to run out.
+      expiring  — live memberships with a week or less left.
+
+    The money block is deliberately computed over EVERY row, not the filtered
+    page: "₹ इस महीने" must not change because somebody clicked a filter.
+    """
+    from datetime import datetime, timedelta
+
+    from sqlalchemy import and_, func, or_
+
     from backend.database.db import SellerVerification, User, UserProfile
-    from backend.services import seller_verify
+    from backend.services import seller_verify, upi
 
     seller_verify.expire_due(db)
 
+    now = datetime.utcnow()
+    soon = now + timedelta(days=EXPIRING_DAYS)
+
     q = db.query(SellerVerification)
-    if status and status in seller_verify.STATUSES:
+    if status == "todo":
+        # Claimed-but-unconfirmed, unpaid signups, and terms about to lapse.
+        q = q.filter(or_(
+            SellerVerification.status == seller_verify.APPLIED,
+            and_(SellerVerification.status.in_(tuple(seller_verify.ACTIVE_STATUSES)),
+                   SellerVerification.valid_until.isnot(None),
+                   SellerVerification.valid_until <= soon),
+        ))
+    elif status == "expiring":
+        q = q.filter(SellerVerification.status.in_(tuple(seller_verify.ACTIVE_STATUSES)),
+                     SellerVerification.valid_until.isnot(None),
+                     SellerVerification.valid_until <= soon)
+    elif status and status in seller_verify.STATUSES:
         q = q.filter(SellerVerification.status == status)
     rows = seller_verify.pending_first(
         q.order_by(SellerVerification.updated_at.desc()).limit(300).all())
@@ -2207,6 +2261,10 @@ def list_verifications(
             "plan_hi":    chosen["term_hi"],
             "plan_price": chosen["price"],
             "pay_status": pay_status,
+            # Digits only, country code included — wa.me refuses anything else.
+            "wa_phone":   _wa_phone(r.phone),
+            "expiring":   bool(seller_verify.is_active(r) and r.valid_until
+                               and r.valid_until <= soon),
             "payment_claimed_at": (r.payment_claimed_at.isoformat()
                                    if r.payment_claimed_at else None),
             "full_name":  r.full_name,
@@ -2236,11 +2294,48 @@ def list_verifications(
             SellerVerification.status == s).count()
     # What the panel's own summary strip counts: money waiting to be confirmed.
     awaiting = sum(1 for i in items if i["pay_status"] == "claimed")
-    return {"success": True, "data": {"items": items, "counts": counts,
-                                      "awaiting_confirm": awaiting,
-                                      "plans": seller_verify.plans(),
-                                      "fee": seller_verify.fee(),
-                                      "months": seller_verify.months()}}
+
+    # ── The money, over the whole table ──
+    # This screen sells a membership and never said what the membership earned.
+    # Without it the owner cannot tell a good week from a bad one, which is the
+    # only question a paid product has to answer.
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    def _sum(*filters):
+        return int(db.query(func.coalesce(func.sum(SellerVerification.fee_amount), 0))
+                     .filter(*filters).scalar() or 0)
+
+    money = {
+        "collected_month": _sum(SellerVerification.paid_at.isnot(None),
+                                SellerVerification.paid_at >= month_start),
+        "collected_total": _sum(SellerVerification.paid_at.isnot(None)),
+        # Signed up and never paid — the number the owner can actually go and
+        # collect today, which is the whole point of showing it.
+        "pending":         _sum(SellerVerification.status == seller_verify.APPLIED),
+        "active":          db.query(SellerVerification).filter(
+                               SellerVerification.status.in_(
+                                   tuple(seller_verify.ACTIVE_STATUSES))).count(),
+        "expiring":        db.query(SellerVerification).filter(
+                               SellerVerification.status.in_(
+                                   tuple(seller_verify.ACTIVE_STATUSES)),
+                               SellerVerification.valid_until.isnot(None),
+                               SellerVerification.valid_until <= soon).count(),
+        "awaiting":        awaiting,
+        "refunds_due":     sum(1 for i in items if i["refund_due"]),
+    }
+
+    return {"success": True, "data": {
+        "items": items, "counts": counts,
+        "awaiting_confirm": awaiting,
+        "money": money,
+        "expiring_days": EXPIRING_DAYS,
+        # Sent once, not per row: the panel builds each WhatsApp message on the
+        # client, and a collect pack per row would be one HTTP call per farmer.
+        "upi": {"configured": upi.configured(), "vpa": upi.vpa(),
+                "payee": upi.payee_name()},
+        "plans": seller_verify.plans(),
+        "fee": seller_verify.fee(),
+        "months": seller_verify.months()}}
 
 
 @router.get("/verifications/{ref}/collect")
