@@ -493,6 +493,8 @@ body {
 }
 .vf-acts { white-space: nowrap; text-align: right; }
 .vf-acts .btn { padding: 6px 10px; font-size: 11.5px; }
+/* ⋯ is a handle, not a field: just wide enough for the glyph and its arrow. */
+.vf-more { width: 52px; padding: 5px 4px; text-align: center; }
 
 /* The wait, in the shape of the rows it is waiting for. */
 .vf-sk-line { height: 11px; border-radius: 6px; }
@@ -17341,14 +17343,7 @@ function vfRowHtml(v) {
   }
   if (v.refund_due) money += '<div class="vf-sub" style="color:#b91c1c;">रिफंड बाकी</div>';
 
-  const r = "'" + escapeHtml(v.ref) + "'";
-  const acts =
-    '<button class="btn btn-secondary" onclick="vfCollect(' + r + ')" title="QR + WhatsApp संदेश">₹ माँगें</button> ' +
-    '<button class="btn btn-primary" onclick="vfPayment(' + r + ')" title="पैसा आया — टिक चालू करें">₹ मिला</button> ' +
-    '<button class="btn btn-secondary" onclick="vfApprove(' + r + ')" title="बिना पैसे के टिक दें">मुफ़्त</button> ' +
-    '<button class="btn btn-secondary" onclick="vfReject(' + r + ')" title="टिक हटाएँ">हटाएँ</button>' +
-    (v.refund_due
-      ? ' <button class="btn btn-secondary" onclick="vfRefund(' + r + ')">रिफंड भेजा</button>' : '');
+  const acts = vfActionSelect(v);
 
   return '<tr' + (v.pay_status === 'claimed' ? ' class="is-waiting"' : '') + '>' +
     '<td>' +
@@ -17366,6 +17361,95 @@ function vfRowHtml(v) {
       tick + days + why + '</td>' +
     '<td class="vf-acts">' + acts + '</td>' +
   '</tr>';
+}
+
+/* The काम column. Not one dropdown holding everything — the four actions are
+   not four equal choices, and which one matters is entirely decided by the row
+   you are looking at. A farmer who has sent money needs confirming; one who has
+   not needs asking; a live membership needs nothing at all. So each row leads
+   with the thing to do next, and the rest fold into ⋯.
+
+   The overflow is a status-select-min, the same control the pre-order panel
+   uses, rather than a hand-rolled popup: no click-outside handling, no z-index
+   against the table, and it already matches everything else on the screen. */
+
+function vfPlan(v) {
+  const CLAIMED = (v.pay_status === 'claimed');
+  const ACTIVE  = !!v.active;
+
+  // [label, action, isPrimary] — the lead button, then ⋯ for the remainder.
+  if (v.status === 'applied' && CLAIMED) {
+    // He says the money is sent and has no tick. The whole queue exists for
+    // this row: check the bank, press one button.
+    return { lead: ['₹ मिला → टिक चालू', 'payment', true],
+             more: [['₹ माँगें — QR + संदेश', 'collect'],
+                    ['✓ मुफ़्त टिक', 'approve'],
+                    ['✕ टिक हटाएँ', 'reject']] };
+  }
+  if (v.status === 'applied') {
+    // Signed up, nothing received. The next move is asking.
+    return { lead: ['₹ माँगें', 'collect', false],
+             more: [['₹ मिला → टिक चालू', 'payment'],
+                    ['✓ मुफ़्त टिक', 'approve'],
+                    ['✕ टिक हटाएँ', 'reject']] };
+  }
+  if (v.status === 'rejected' && v.refund_due) {
+    // Money taken for a term that was cut short. Nothing else matters here.
+    return { lead: ['↩ रिफंड भेज दिया', 'refund', true],
+             more: [['₹ माँगें', 'collect'],
+                    ['✓ मुफ़्त टिक', 'approve']] };
+  }
+  if (v.status === 'rejected' || v.status === 'expired') {
+    // Lapsed or removed — the way back is a payment.
+    return { lead: ['₹ माँगें', 'collect', false],
+             more: [['₹ मिला → टिक चालू', 'payment'],
+                    ['✓ मुफ़्त टिक', 'approve']] };
+  }
+  if (ACTIVE) {
+    // Running and paid for. There is nothing to do, so nothing is offered as a
+    // button — a row that needs no work should not look like a row that does.
+    return { lead: null,
+             more: [['₹ माँगें — रिन्यू', 'collect'],
+                    ['₹ मिला → समय बढ़ाएँ', 'payment'],
+                    ['✓ मुफ़्त समय बढ़ाएँ', 'approve'],
+                    ['✕ टिक हटाएँ', 'reject']] };
+  }
+  return { lead: ['₹ माँगें', 'collect', false],
+           more: [['₹ मिला → टिक चालू', 'payment'],
+                  ['✓ मुफ़्त टिक', 'approve'],
+                  ['✕ टिक हटाएँ', 'reject']] };
+}
+
+function vfActionSelect(v) {
+  const plan = vfPlan(v);
+  const ref = escapeHtml(v.ref);
+  let out = '';
+
+  if (plan.lead) {
+    out += '<button class="btn ' + (plan.lead[2] ? 'btn-primary' : 'btn-secondary') +
+           '" onclick="vfAction(\'' + ref + '\', \'' + plan.lead[1] + '\')">' +
+           escapeHtml(plan.lead[0]) + '</button> ';
+  }
+
+  if (plan.more.length) {
+    let opts = '<option value="" disabled selected>⋯</option>';
+    plan.more.forEach(function (m) {
+      opts += '<option value="' + m[1] + '">' + escapeHtml(m[0]) + '</option>';
+    });
+    out += '<select class="status-select-min vf-more" title="और विकल्प" ' +
+           'onchange="vfAction(\'' + ref + '\', this.value, this)">' + opts + '</select>';
+  }
+  return out;
+}
+
+function vfAction(ref, value, el) {
+  if (el) el.selectedIndex = 0;   // never leave an action sitting where ⋯ goes
+  if (!value) return;
+  if (value === 'collect') return vfCollect(ref);
+  if (value === 'payment') return vfPayment(ref);
+  if (value === 'approve') return vfApprove(ref);
+  if (value === 'reject')  return vfReject(ref);
+  if (value === 'refund')  return vfRefund(ref);
 }
 
 /* "18 सितं" — short, because it sits in a column. */
@@ -17410,7 +17494,7 @@ function vfSkeletonHtml(rows) {
         '<td>' + bar('40px') + '<div style="height:5px;"></div>' + bar('62px', 9) + '</td>' +
         '<td>' + bar('46px') + '<div style="height:5px;"></div>' + bar('60px', 9) + '</td>' +
         '<td>' + bar('84px', 15) + '</td>' +
-        '<td class="vf-acts">' + bar('190px', 26) + '</td>' +
+        '<td class="vf-acts">' + bar('124px', 26) + '</td>' +
       '</tr>';
   }
   return '<div class="table-responsive"><table class="vf-table">' +
