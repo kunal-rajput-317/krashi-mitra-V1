@@ -382,7 +382,7 @@ async def call_gemini(prompt: str, max_tokens: int = 1500) -> str:
         "maxOutputTokens": max_tokens,
         "topP":            0.8,
     }
-    if "2.5" in model or "3.5" in model:
+    if any(v in model for v in ("2.5", "3.5", "3.6")):
         gen_config["thinkingConfig"] = {"thinkingBudget": 0}
 
     last_error = None
@@ -398,6 +398,15 @@ async def call_gemini(prompt: str, max_tokens: int = 1500) -> str:
             }
             try:
                 resp = await client.post(url, json=payload)
+                if resp.status_code == 404 and model != "gemini-3.6-flash":
+                    # Newer Google AI Studio projects no longer support retired models (e.g. gemini-2.5-flash)
+                    log.info(f"[Gemini] {key_name} got 404 for {model}, trying gemini-3.6-flash...")
+                    fallback_url = (
+                        f"https://generativelanguage.googleapis.com/v1beta/models/"
+                        f"gemini-3.6-flash:generateContent?key={api_key}"
+                    )
+                    resp = await client.post(fallback_url, json=payload)
+
                 if resp.status_code == 429:
                     log.info(f"[Gemini] {key_name} quota exceeded, trying next key...")
                     last_error = f"{key_name}: 429 quota exceeded"

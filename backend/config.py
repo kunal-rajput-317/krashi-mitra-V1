@@ -48,8 +48,9 @@ _settings: dict = {
 }
 
 ALLOWED_GEMINI_MODELS = [
-    "gemini-2.5-flash",
+    "gemini-3.6-flash",
     "gemini-3.5-flash",
+    "gemini-2.5-flash",
 ]
 
 # Image models are billed PER IMAGE, not per token, so this list is short and

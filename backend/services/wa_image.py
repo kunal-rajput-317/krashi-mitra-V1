@@ -64,8 +64,10 @@
 import base64
 import hashlib
 import logging
+import random
 import re
 import time
+import urllib.parse
 from datetime import date
 from pathlib import Path
 
@@ -338,41 +340,64 @@ async def generate(full_prompt: str) -> dict:
         return {"image": hit[1], "cached": True, "model": model}
 
     keys = _keys()
-    if not keys:
-        raise RuntimeError("कोई GEMINI_API_KEY सेट नहीं है — AI तस्वीर नहीं बन सकती। "
-                           "नक्शे वाला मुफ़्त बैकड्रॉप अब भी चलेगा।")
-
-    payload = {
-        "contents": [{"parts": [{"text": full_prompt}]}],
-        "generationConfig": {"responseModalities": ["IMAGE"]},
-    }
-
     last = None
-    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
-           f"{model}:generateContent")
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        for name, api_key in keys:
-            try:
-                r = await client.post(url, json=payload,
-                                      headers={"x-goog-api-key": api_key})
-                if r.status_code in (429, 403):
-                    log.info("[wa_image] %s: %s — next key", name, r.status_code)
-                    last = f"{name}: {r.status_code}"
-                    continue
-                r.raise_for_status()
-                uri = _pick(r.json())
-                if not uri:
-                    last = f"{name}: कोई तस्वीर नहीं लौटी"
-                    continue
+
+    if keys:
+        payload = {
+            "contents": [{"parts": [{"text": full_prompt}]}],
+            "generationConfig": {"responseModalities": ["IMAGE"]},
+        }
+        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+               f"{model}:generateContent")
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            for name, api_key in keys:
+                try:
+                    r = await client.post(url, json=payload,
+                                          headers={"x-goog-api-key": api_key})
+                    if r.status_code in (429, 403):
+                        log.info("[wa_image] %s: %s — next key", name, r.status_code)
+                        last = f"{name}: {r.status_code}"
+                        continue
+                    r.raise_for_status()
+                    uri = _pick(r.json())
+                    if not uri:
+                        last = f"{name}: कोई तस्वीर नहीं लौटी"
+                        continue
+                    if len(_cache) >= _CACHE_MAX:
+                        _cache.pop(next(iter(_cache)), None)
+                    _cache[ck] = (time.time(), uri)
+                    log.info("[wa_image] OK %s (%s)", name, model)
+                    return {"image": uri, "cached": False, "model": model}
+                except httpx.TimeoutException:
+                    last = f"{name}: {timeout:g}s में जवाब नहीं आया"
+                except Exception as e:                       # noqa: BLE001
+                    last = f"{name}: {e}"
+    else:
+        last = "कोई GEMINI_API_KEY सेट नहीं है"
+
+    # Fallback: Pollinations AI Flux engine (Free, No Key required, high-res photo)
+    log.info("[wa_image] Gemini image gen unavailable (%s), trying Pollinations AI Flux fallback...", last)
+    try:
+        encoded_p = urllib.parse.quote(full_prompt)
+        seed = random.randint(1000, 999999)
+        poll_url = (f"https://image.pollinations.ai/prompt/{encoded_p}"
+                    f"?width=720&height=900&model=flux&nologo=true&seed={seed}")
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            resp = await client.get(poll_url, headers={"User-Agent": "Mozilla/5.0 KrashiMitra/2.0"})
+            if resp.status_code == 200 and len(resp.content) > 6000:
+                b64 = base64.b64encode(resp.content).decode("utf-8")
+                mime = resp.headers.get("content-type", "image/jpeg")
+                if "image" not in mime:
+                    mime = "image/jpeg"
+                uri = f"data:{mime};base64,{b64}"
                 if len(_cache) >= _CACHE_MAX:
                     _cache.pop(next(iter(_cache)), None)
                 _cache[ck] = (time.time(), uri)
-                log.info("[wa_image] OK %s (%s)", name, model)
-                return {"image": uri, "cached": False, "model": model}
-            except httpx.TimeoutException:
-                last = f"{name}: {timeout:g}s में जवाब नहीं आया"
-            except Exception as e:                       # noqa: BLE001
-                last = f"{name}: {e}"
+                log.info("[wa_image] OK via Pollinations Flux fallback")
+                return {"image": uri, "cached": False, "model": "pollinations-flux"}
+    except Exception as pe:
+        log.warning("[wa_image] Pollinations fallback failed: %s", pe)
+
     raise RuntimeError(f"तस्वीर नहीं बन पाई — {last}")
 
 

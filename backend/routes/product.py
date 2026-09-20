@@ -559,17 +559,19 @@ def _buy_sheet(p: dict, canon: str) -> str:
     the markup has to be identical for every visitor and one script has to work
     on all 94 pages. Nothing user-specific is rendered here — the login gate,
     the name and the number are all the browser's side of the job."""
+    unit_val = (p.get("unit_hi") or "").strip() or "यूनिट"
+    emoji_val = p.get("emoji") or "📦"
     return f"""<div class="pb-ov" id="pb-ov" hidden
  data-pid="{p.get('id') or ''}" data-pname="{escape(p['name_hi'], quote=True)}"
- data-punit="{escape(p['unit_hi'], quote=True)}" data-pprice="{p['price']}"
+ data-punit="{escape(unit_val, quote=True)}" data-pprice="{p['price']}"
  data-purl="{escape(canon, quote=True)}">
 <div class="pb-box" role="dialog" aria-modal="true" aria-labelledby="pb-t">
 <button class="pb-x" type="button" onclick="kmCloseBuy()" aria-label="बंद करें">&times;</button>
 <h2 id="pb-t">प्री-बुक करें</h2>
 <p class="pb-sub">दाम दुकानदार का होता है — हम आपके इलाके में पता करके आपको भेजते हैं।</p>
 <div id="pb-form">
-<div class="pb-item"><span class="pb-em" aria-hidden="true">{p['emoji']}</span>
-<span><b>{escape(p['name_hi'])}</b>₹{p['price']} / {escape(p['unit_hi'])} · अनुमानित</span></div>
+<div class="pb-item"><span class="pb-em" aria-hidden="true">{emoji_val}</span>
+<span><b>{escape(p['name_hi'])}</b>₹{p['price']} / {escape(unit_val)} · अनुमानित</span></div>
 
 <label class="pb-lbl" for="pb-name">👤 किसान का नाम <span class="pb-req">*</span></label>
 <input class="pb-in" id="pb-name" type="text" placeholder="जैसे: रामलाल सिंह" autocomplete="name">
@@ -800,7 +802,12 @@ def _not_found() -> HTMLResponse:
 
 @router.get("/product/{slug}", response_class=HTMLResponse)
 def product_page(slug: str):
-    p = _get_by_slug().get(slug.lower())
+    by_slug = _get_by_slug()
+    norm = slug.lower().strip()
+    p = by_slug.get(norm)
+    if not p:
+        # Also try slugified version in case raw product name or unslugified URL was passed
+        p = by_slug.get(_slugify(norm))
     if not p:
         return _not_found()
     return render_product(p)
@@ -814,7 +821,7 @@ def render_product(p: dict) -> HTMLResponse:
     rendered by this exact code rather than by a second, drifting copy of it.
     Same reason admin_articles.py previews through the article builder itself.
     """
-    cat_label = CAT_LABELS.get(p["cat"], p["cat"])
+    cat_label = CAT_LABELS.get(p.get("cat", "misc"), p.get("cat", "misc"))
     canon = f"{SITE}/product/{p['slug']}"
 
     # Measured against production 2026-09-12: 89 of the 94 product titles ran
@@ -832,6 +839,14 @@ def render_product(p: dict) -> HTMLResponse:
     hi_name, en_name = p["name_hi"], p["name_en"]
     hi_bare, en_bare = _bare_name(hi_name), _bare_name(en_name)
     rs = f"₹{p['price']}"
+
+    unit_hi = (p.get("unit_hi") or "").strip()
+    unit_tag = f" — {unit_hi}" if unit_hi else ""
+    unit_price = f" {unit_hi}" if unit_hi else ""
+    unit_bracket = f" ({unit_hi})" if unit_hi else ""
+    unit_slash = f"<small>/{escape(unit_hi)}</small>" if unit_hi else ""
+    unit_label = escape(unit_hi) if unit_hi else "मानक"
+
     # "SSP (सिंगल सुपर फॉस्फेट)" already opens with its own acronym, so the
     # short English form would print it a second time ("… (SSP) ₹460"). Where
     # the bare English name is already in the Hindi one, the bracket is dropped
@@ -839,36 +854,38 @@ def render_product(p: dict) -> HTMLResponse:
     en_tag = "" if en_bare.lower() in hi_name.lower() else f" ({en_bare})"
     en_lead = hi_bare if en_bare.lower() in hi_bare.lower() else f"{hi_bare} ({en_bare})"
     title = _fit(
-        f"{hi_name} ({en_name}) {rs} — {p['unit_hi']}",
+        f"{hi_name} ({en_name}) {rs}{unit_tag}",
         f"{hi_name} ({en_name}) की कीमत {rs}",
         f"{hi_name} {rs} — {en_name} Price Online",
-        f"{hi_name}{en_tag} {rs} — {p['unit_hi']}",
-        f"{hi_name} {rs} — {en_bare} Price {p['unit_hi']}",
+        f"{hi_name}{en_tag} {rs}{unit_tag}",
+        f"{hi_name} {rs} — {en_bare} Price{unit_price}",
         f"{hi_name} {rs} — {en_bare} Price Online",
-        f"{en_lead} {rs} — {p['unit_hi']} की कीमत",
+        f"{en_lead} {rs}{unit_tag} की कीमत",
         f"{hi_bare} {rs} — {en_bare} Price Online",
-        f"{hi_name} की कीमत {rs} — {p['unit_hi']}",
-        f"{hi_bare} की कीमत {rs} — {p['unit_hi']}",
+        f"{hi_name} की कीमत {rs}{unit_tag}",
+        f"{hi_bare} की कीमत {rs}{unit_tag}",
         f"{hi_bare} {rs} — {en_bare}",
         f"{hi_bare} की कीमत {rs}")
+
     # The description sold what we do not sell: "अभी ऑर्डर करें" plus free
     # delivery over ₹500 and Cash on Delivery, on every variant. What is true is
     # that the figure is a typical market price and that a dealer quotes the
     # real one — so that is what the snippet now says. It still leads with the
     # name, the pack and the number, which is what the query asked for.
+    desc_hi = (p.get("desc_hi") or "").strip()
+    desc_en = (p.get("desc_en") or "").strip()
+    desc_text = desc_hi or desc_en or f"{cat_label} का उच्च गुणवत्ता वाला उत्पाद।"
+    desc_clean = desc_text.rstrip("। .") + "।"
+
     desc = _fit(
-        f"{hi_name} ({p['unit_hi']}) का अनुमानित भाव {rs} — {p['desc_hi']} "
-        f"असली रेट दुकान और इलाके से बदलता है।",
-        f"{hi_name} ({p['unit_hi']}) का अनुमानित भाव {rs} — {p['desc_hi']} "
-        f"रेट दुकान से बदलता है।",
-        f"{hi_name} ({p['unit_hi']}) — अनुमानित {rs}। {p['desc_hi']} "
-        f"असली रेट दुकान पर पक्का करें।",
-        f"{hi_name} ({p['unit_hi']}) का अनुमानित भाव {rs} — {p['desc_hi']}",
-        f"{hi_name} ({p['unit_hi']}) — अनुमानित {rs}। {p['desc_hi']}",
-        f"{hi_name} ({en_bare}) {p['unit_hi']} की अनुमानित कीमत {rs} — "
-        f"असली रेट दुकान, कंपनी और इलाके से बदलता है।",
-        f"{hi_name} — {p['unit_hi']} का अनुमानित भाव {rs}। रेट दुकान से बदलता है।",
-        f"{hi_name} — {p['unit_hi']} की अनुमानित कीमत {rs}।",
+        f"{hi_name}{unit_bracket} का अनुमानित भाव {rs} — {desc_clean} असली रेट दुकान और इलाके से बदलता है।",
+        f"{hi_name}{unit_bracket} का अनुमानित भाव {rs} — {desc_clean} रेट दुकान से बदलता है।",
+        f"{hi_name}{unit_bracket} — अनुमानित {rs}। {desc_clean} असली रेट दुकान पर पक्का करें।",
+        f"{hi_name}{unit_bracket} का अनुमानित भाव {rs} — {desc_clean}",
+        f"{hi_name}{unit_bracket} — अनुमानित {rs}। {desc_clean}",
+        f"{hi_name} ({en_bare}){unit_price} की अनुमानित कीमत {rs} — असली रेट दुकान, कंपनी और इलाके से बदलता है।",
+        f"{hi_name} —{unit_price} का अनुमानित भाव {rs}। रेट दुकान से बदलता है।",
+        f"{hi_name} —{unit_price} की अनुमानित कीमत {rs}।",
         limit=162)
 
     # ── CTAs ──
@@ -887,7 +904,7 @@ def render_product(p: dict) -> HTMLResponse:
     if _available(p.get("affil_flipkart", "")):
         ctas.append(f'<a class="btn btn-flipkart" target="_blank" rel="noopener nofollow sponsored" '
                     f'href="{affiliate.go_url(p["slug"], "flipkart")}">Flipkart पर देखें</a>')
-    wa_text = quote(f"{p['name_hi']} — अनुमानित ₹{p['price']} ({p['unit_hi']})\n{canon}")
+    wa_text = quote(f"{p['name_hi']} — अनुमानित ₹{p['price']}{unit_bracket}\n{canon}")
     ctas.append(f'<a class="btn btn-wa" target="_blank" href="https://wa.me/?text={wa_text}">📲 शेयर करें</a>')
     # The disclosure rides beside the buttons it is about, and only on pages
     # that actually carry one — a page with no affiliate link has nothing to
@@ -898,7 +915,7 @@ def render_product(p: dict) -> HTMLResponse:
                   or _available(p.get("affil_flipkart", "")) else "")
 
     # ── related products: same category, same rich card as the /product/ hub ──
-    related = [r for r in _get_products() if r["cat"] == p["cat"] and r["slug"] != p["slug"]][:8]
+    related = [r for r in _get_products() if r.get("cat") == p.get("cat") and r["slug"] != p["slug"]][:8]
     related_html = ""
     if related:
         cards = "".join(_hub_card(r) for r in related)
@@ -913,7 +930,7 @@ def render_product(p: dict) -> HTMLResponse:
     # the going rate, here is why yours will differ, here is who sets it.
     faqs = [
         (f"{p['name_hi']} ({p['name_en']}) की कीमत क्या है?",
-         f"{p['name_hi']} ({p['unit_hi']}) का अनुमानित बाज़ार भाव ₹{p['price']} के आसपास है। "
+         f"{p['name_hi']}{unit_bracket} का अनुमानित बाज़ार भाव ₹{p['price']} के आसपास है। "
          f"यह पक्का रेट नहीं है — दुकान, कंपनी, पैक साइज़ और इलाके के हिसाब से दाम बदलता है। "
          f"अपने नज़दीकी दुकानदार से आज का रेट पूछ लें।"),
         ("क्या कृषि मित्र यह सामान बेचता है?",
@@ -923,6 +940,16 @@ def render_product(p: dict) -> HTMLResponse:
     ]
     faq_html, faq_ld = _faq(faqs)
 
+    raw_img = (p.get("img") or "").strip()
+    if raw_img.startswith("http://") or raw_img.startswith("https://"):
+        og_img = raw_img
+    elif raw_img.startswith("/"):
+        og_img = f"{SITE}{raw_img}"
+    elif raw_img:
+        og_img = f"{SITE}/{raw_img}"
+    else:
+        og_img = f"{SITE}/images/og-banner.webp"
+
     # Product WITHOUT offers. An Offer needs a seller and a price someone will
     # honour; an indicative catalogue figure has neither, so marking one up as
     # an offer puts a false claim into structured data — the same rule
@@ -931,10 +958,17 @@ def render_product(p: dict) -> HTMLResponse:
     # trademark on our name. A product whose brand we cannot state truthfully
     # simply does not carry the key.
     product_ld = {
-        "@context": "https://schema.org", "@type": "Product",
+        "@context": "https://schema.org",
+        "@type": "Product",
         "name": f"{p['name_en']} — {p['name_hi']}",
-        "description": p["desc_en"],
+        "description": desc_en or desc_hi or f"{p['name_en']} ({cat_label})",
+        "category": cat_label,
+        "sku": f"KM-PROD-{p.get('id', p['slug'])}",
+        "url": canon,
     }
+    if og_img:
+        product_ld["image"] = og_img
+
     ld = _ld(product_ld, faq_ld, _crumb_ld([
         ("कृषि मित्र", f"{SITE}/"), ("उत्पाद", f"{SITE}/product/"), (p["name_hi"], canon)]))
 
@@ -950,14 +984,14 @@ def render_product(p: dict) -> HTMLResponse:
 <span class="photo-zoom-hint">🔍</span></div>
 <div class="answer-prod-info">
 {_badge_pill(p)}
-<h1>{p['emoji']} {escape(p['name_hi'])}</h1>
+<h1>{p.get('emoji', '📦')} {escape(p['name_hi'])}</h1>
 <p class="answer-sub">{escape(cat_label)} · {escape(p['name_en'])}</p>
 <div class="answer-price">
-<div class="answer-rupee">₹{p['price']}<small>/{escape(p['unit_hi'])}</small></div>
+<div class="answer-rupee">₹{p['price']}{unit_slash}</div>
 <div class="prod-est">अनुमानित भाव</div>
 </div>
 <div class="answer-range">
-<div><span>पैक</span><b>{escape(p['unit_hi'])}</b></div>
+<div><span>पैक</span><b>{unit_label}</b></div>
 <div><span>श्रेणी</span><b>{escape(cat_label)}</b></div>
 <div><span>रेट किसका</span><b>दुकानदार का</b></div>
 </div>
@@ -965,7 +999,7 @@ def render_product(p: dict) -> HTMLResponse:
 </div>
 </section>
 
-<p class="desc">{escape(p['desc_hi'])}</p>
+<p class="desc">{escape(desc_hi or desc_en or "")}</p>
 
 <div class="cta-row">{"".join(ctas)}</div>
 {affil_note}
@@ -987,6 +1021,6 @@ def render_product(p: dict) -> HTMLResponse:
     # back — a tracking code with nowhere on the site to read it is the same
     # dead end the WhatsApp-only button was. It mounts itself next to the
     # header avatar and no-ops on a page that already has one.
-    return _doc(title, desc, canon, crumbs, body, ld, p["img"],
+    return _doc(title, desc, canon, crumbs, body, ld, og_img,
                 active="shop", extra_css=_EXTRA_CSS,
                 head_extra=f'<script src="{_asset("krashibook.js")}" defer></script>')
