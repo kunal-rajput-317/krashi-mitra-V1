@@ -532,8 +532,66 @@ app.mount("/uploads", StaticFiles(directory=BASE_DIR / "uploads"), name="uploads
 # would otherwise have 404'd is retried with ".html". Nothing that worked
 # before changes, and no list of page names has to be kept in sync — a new
 # .html file in frontend/ is reachable at its clean URL the moment it lands.
+#
+# Cache headers
+# -------------
+# Starlette's StaticFiles serves assets with NO Cache-Control by default,
+# so Cloudflare's proxy treats every response as uncacheable at the edge —
+# the 🟠 on the DNS record buys nothing if the origin does not opt in.
+# Worse, .geojson is not in Cloudflare's default "always-cacheable"
+# extension list (unlike .png/.js/.css which Cloudflare caches even without
+# a header), so every district map fetch went straight through to Render.
+#
+# Images/fonts: 30-day immutable (the file content never changes at a URL;
+#   a changed image gets a new filename or ?v= from the pages that embed it).
+# GeoJSON:      7-day edge + browser cache (district boundaries rarely move,
+#   and the 917 KB Andhra Pradesh file is the single largest non-image asset).
+# JS/CSS:       1-day browser, 7-day edge (shell scripts like api-config.js
+#   are already network-first in the service worker; edge caching is safe).
+# HTML:         5-min browser, 1-hour edge + 1-day stale-while-revalidate
+#   (matches _CACHE_HEADERS for the SSR pages from bhav._doc()).
+#
+# CDN-Cache-Control is the vendor-neutral header Cloudflare honours — it
+# controls the edge TTL independently of the browser TTL in Cache-Control.
+# It is the same header bhav.py already sends for every SSR page.
+
+# File-extension → (browser Cache-Control, CDN-Cache-Control).
+# Checked tail-first, so the first suffix match wins.
+_STATIC_CACHE = {
+    # images + fonts — immutable
+    ".webp":   ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    ".png":    ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    ".jpg":    ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    ".jpeg":   ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    ".svg":    ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    ".ico":    ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    ".woff2":  ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    ".woff":   ("public, max-age=2592000, immutable",
+                "public, max-age=2592000, immutable"),
+    # GeoJSON district boundaries
+    ".geojson": ("public, max-age=604800",
+                 "public, max-age=604800"),
+    # scripts + stylesheets
+    ".js":     ("public, max-age=86400",
+                "public, max-age=604800"),
+    ".css":    ("public, max-age=86400",
+                "public, max-age=604800"),
+    # static HTML (core pages like index.html, weather.html, etc.)
+    ".html":   ("public, max-age=300",
+                "public, max-age=3600, stale-while-revalidate=86400"),
+}
+
+
 class CleanURLStaticFiles(StaticFiles):
-    """StaticFiles that also serves `foo.html` at `/foo`."""
+    """StaticFiles that also serves `foo.html` at `/foo` and stamps
+    Cache-Control + CDN-Cache-Control on every response."""
 
     async def get_response(self, path: str, scope: Scope) -> Response:
         if (
@@ -551,7 +609,16 @@ class CleanURLStaticFiles(StaticFiles):
                         path = f"{path}.html"
             except OSError:
                 pass  # unreadable or absurdly long — let StaticFiles answer it
-        return await super().get_response(path, scope)
+        response = await super().get_response(path, scope)
+        # Stamp cache headers on successful responses only — a 404 must not be
+        # cached at the edge, or a missing file is a permanent absence.
+        if response.status_code < 400:
+            for ext, (browser, cdn) in _STATIC_CACHE.items():
+                if path.endswith(ext):
+                    response.headers["Cache-Control"] = browser
+                    response.headers["CDN-Cache-Control"] = cdn
+                    break
+        return response
 
 
 # Serve the entire frontend directly at root

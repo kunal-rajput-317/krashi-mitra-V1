@@ -19,7 +19,10 @@ const ASSETS_TO_CACHE = [
   './assets/logo.png',
   './assets/krashimitra_logo.png',
   './assets/logo-192.png',
-  './assets/logo-512.png',
+  // logo-512.png (328 KB) removed from precache — it is only read by the
+  // manifest's install prompt, which requires being online anyway.  Every
+  // CACHE_NAME bump re-downloads all of these, and 328 KB × users adds up
+  // against Render's 5 GB/month bandwidth cap.
   './assets/favicon.ico'
 ];
 
