@@ -515,7 +515,69 @@ if __name__ == "__main__":
 app.mount("/admin", StaticFiles(directory=BASE_DIR / "admin", html=True), name="admin")
 
 # Bazar post photos/videos (uploads/bazar/*) — dir is created by routes/bazar.py
-app.mount("/uploads", StaticFiles(directory=BASE_DIR / "uploads"), name="uploads")
+#
+# CachedStaticFiles vs plain StaticFiles: the uploads directory holds only
+# UUID-keyed files (bazar photos + avatars). A UUID filename is content-addressed
+# by definition — the bytes at a given URL can never change — so immutable
+# Cache-Control is correct and lets Cloudflare hold every uploaded file at the
+# edge indefinitely. Without this, every feed scroll re-fetched the same bazar
+# photo from Render and counted against the 5 GB/month bandwidth cap.
+# The /uploads tree also holds two large PDFs (Sugarcane.pdf at 7.3 MB,
+# Wheat.pdf at 973 KB) that previously had no cache header and hit Render
+# fresh on every click.
+
+# Extension → (browser Cache-Control, CDN-Cache-Control)
+_UPLOADS_CACHE = {
+    # Images — immutable (UUID filename, bytes never change at this URL)
+    ".webp":  ("public, max-age=31536000, immutable",
+               "public, max-age=31536000, immutable"),
+    ".jpg":   ("public, max-age=31536000, immutable",
+               "public, max-age=31536000, immutable"),
+    ".jpeg":  ("public, max-age=31536000, immutable",
+               "public, max-age=31536000, immutable"),
+    ".png":   ("public, max-age=31536000, immutable",
+               "public, max-age=31536000, immutable"),
+    # Videos — also UUID-named, but Cloudflare free plan prohibits using it as a
+    # video-streaming CDN (ToS §2.8). These land here only on the local disk
+    # fallback (dev) — on production the IS_PROD block in bazar.py returns 503
+    # for video when R2 is off. Still stamp the header so the dev server behaves
+    # sensibly and there is no surprise if the rule ever changes.
+    ".mp4":   ("public, max-age=31536000, immutable",
+               "public, max-age=31536000, immutable"),
+    ".webm":  ("public, max-age=31536000, immutable",
+               "public, max-age=31536000, immutable"),
+    ".mov":   ("public, max-age=31536000, immutable",
+               "public, max-age=31536000, immutable"),
+    # PDFs — large reference documents that change rarely; cache for 30 days
+    # at the browser and 1 year at the edge (Cloudflare will serve stale on
+    # cache miss anyway, but a stale-while-revalidate avoids a thundering herd
+    # on a cache expiry for a 7 MB file).
+    ".pdf":   ("public, max-age=2592000",
+               "public, max-age=31536000"),
+}
+
+
+class CachedStaticFiles(StaticFiles):
+    """StaticFiles that stamps Cache-Control + CDN-Cache-Control on uploads.
+
+    Every file in the uploads tree is UUID-named and therefore content-addressed:
+    the bytes at a given URL never change. `immutable` is safe for all media
+    types and means Cloudflare can hold them at the edge indefinitely, so a
+    returning visitor's feed scroll costs zero Render egress.
+    """
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        response = await super().get_response(path, scope)
+        if response.status_code < 400:
+            suffix = Path(path).suffix.lower()
+            pair = _UPLOADS_CACHE.get(suffix)
+            if pair:
+                response.headers["Cache-Control"] = pair[0]
+                response.headers["CDN-Cache-Control"] = pair[1]
+        return response
+
+
+app.mount("/uploads", CachedStaticFiles(directory=BASE_DIR / "uploads"), name="uploads")
 
 # ── Clean URLs, the way Netlify serves them ─────────────────────────
 # Every canonical core-page URL on this site is extensionless: sitemap.py
@@ -613,11 +675,24 @@ class CleanURLStaticFiles(StaticFiles):
         # Stamp cache headers on successful responses only — a 404 must not be
         # cached at the edge, or a missing file is a permanent absence.
         if response.status_code < 400:
+            matched = False
             for ext, (browser, cdn) in _STATIC_CACHE.items():
                 if path.endswith(ext):
                     response.headers["Cache-Control"] = browser
                     response.headers["CDN-Cache-Control"] = cdn
+                    matched = True
                     break
+            # The homepage ("/") and clean-URL requests ("/weather",
+            # "/krashi_bajar") arrive here with an empty or extensionless
+            # path — StaticFiles resolves them to index.html internally, but
+            # `path` is still "" or "weather", so no extension matches above.
+            # Fall back to the content-type to decide.
+            if not matched:
+                ct = response.headers.get("content-type", "")
+                if "text/html" in ct:
+                    b, c = _STATIC_CACHE[".html"]
+                    response.headers["Cache-Control"] = b
+                    response.headers["CDN-Cache-Control"] = c
         return response
 
 
