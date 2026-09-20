@@ -479,14 +479,6 @@ def _change_pct(modal: str, prev: str):
 # kept on fetch failure that then never reappear in the feed.
 SNAPSHOT_KEEP_DAYS = 7
 
-# How stale an *unchanged* snapshot row may get before its fetched_at is
-# bumped. The fetch runs six times a day and most prices do not move between
-# runs, so rewriting every row every time cost ~20x the table's size in row
-# versions — which is what Neon's storage cap actually counts, and what put
-# the compute into read-only. SNAPSHOT_KEEP_DAYS is measured in days, so one
-# bump a day keeps the age-out exactly as correct as six did.
-FRESH_BUMP_HOURS = int(os.getenv("MANDI_FRESH_BUMP_HOURS", "20"))
-
 CHUNK = 1000   # rows per INSERT — keeps statement size and lock time sane
 
 
@@ -668,153 +660,6 @@ def check_api_key() -> bool:
     return False
 
 
-def _merge_snapshot(db, rows: list, prev_map: dict, spark_map: dict,
-                    now: datetime) -> dict:
-    """Bring mandi_prices in line with this fetch, writing as little as possible.
-
-    Extracted from fetch_and_store() so the write-avoidance below can be
-    tested directly: the helpers it used to sit beside (_prev_modal_map,
-    _spark_map) are Postgres-only SQL, so nothing that calls them can run
-    in CI, and this is the part that must not regress.
-
-    Returns counts for the log line.
-    """
-    fetched_keys   = {x["group_key"] for x in rows}
-    touched_states = {x["state"] for x in rows}
-    # ONE snapshot row per market identity, carrying its newest date.
-    #
-    # `rows` is deduped on group_key + arrival_date (see the fetch loop),
-    # because history needs every date. The snapshot answers a different
-    # question — "what is this mandi charging now" — and group_key
-    # deliberately holds no date. Inserting straight from `rows` therefore
-    # wrote one snapshot row per date the feed still carried, while the
-    # delete below matched on group_key alone and so only ever cleared a
-    # single generation. The surplus compounded on every fetch.
-    #
-    # By 21 Aug 2026 that was 8,111 of 36,197 snapshot rows (22%)
-    # redundant. A farmer saw one mandi repeated up to 8 times in the table
-    # on its own /bhav page, and because the copies came from different
-    # dates they often disagreed: Sriganganagar (F&V) APMC listed four
-    # different rates for the same Amrapali mango. _stats() averages the
-    # rows it is given, so the headline district price was silently
-    # weighted by how many stale dates each mandi still had in the feed —
-    # Meerut wheat read ₹2,593 where the true average of its two distinct
-    # quotes was ₹2,595.
-    newest: dict = {}
-    for x in rows:
-        k   = x["group_key"]
-        cur = newest.get(k)
-        if cur is None:
-            newest[k] = x
-            continue
-        d_new, d_cur = _parse_dt(x.get("arrival_date")), _parse_dt(cur.get("arrival_date"))
-        if d_cur is None or (d_new is not None and d_new > d_cur):
-            newest[k] = x
-
-    # The candidate row for each identity, before we know whether it
-    # differs from what is already stored.
-    cand: dict = {}
-    for x in newest.values():
-        prev = prev_map.get(x["group_key"])
-        cand[x["group_key"]] = {
-            "state":            x["state"],
-            "commodity":        x["commodity"],
-            "district":         x["district"],
-            "market":           x["market"],
-            "variety":          x["variety"],
-            "grade":            x["grade"],
-            "min_price":        x["min_price"],
-            "max_price":        x["max_price"],
-            "modal_price":      x["modal_price"],
-            "prev_modal_price": prev,
-            "change_pct":       _change_pct(x["modal_price"], prev),
-            "spark":            spark_map.get(x["group_key"]),
-            "arrival_date":     x["arrival_date"],
-            "fetched_at":       now,
-        }
-
-    # ── Replace only what actually changed ───────────────────────────
-    #
-    # This used to DELETE + re-INSERT every identity that re-appeared in
-    # the fetch, six times a day, whether or not a single paisa had moved.
-    # On 21 Sep 2026 pg_stat_user_tables showed what that cost: 28,512
-    # live rows against 556,334 inserts and 542,819 deletes — roughly 20×
-    # the table's own size in row versions. Neon's free-plan cap
-    # (neon.max_cluster_size, 512 MB) counts change history, not live
-    # data, so this churn is what flips the compute read-only while
-    # pg_database_size still reads a comfortable 126 MB: every page keeps
-    # serving and nothing can be saved. See db_health_service.
-    #
-    # mandi_last_seen already had this guard (the WHERE clause in
-    # _upsert_last_seen); the snapshot never did. Now an identity whose
-    # prices, dates and sparkline all match what is stored is left alone.
-    VALUE_COLS = ("min_price", "max_price", "modal_price", "prev_modal_price",
-                  "spark", "arrival_date")
-
-    def _unchanged(stored: tuple, c: dict) -> bool:
-        """Would re-inserting this candidate produce the identical row?"""
-        for i, col in enumerate(VALUE_COLS):
-            if stored[i] != c[col]:
-                return False
-        a, b = stored[len(VALUE_COLS)], c["change_pct"]   # Float — compare rounded
-        if (a is None) != (b is None):
-            return False
-        return a is None or round(a, 6) == round(b, 6)
-
-    stale_ids  = []     # delete + rewrite: something actually moved
-    keep_fresh = []     # (id, fetched_at) for rows we are leaving untouched
-    seen_gk    = set()  # first row wins; a duplicate identity is always rewritten
-    existing_q = db.query(
-        MandiPrice.id, MandiPrice.state, MandiPrice.district,
-        MandiPrice.market, MandiPrice.commodity, MandiPrice.variety,
-        MandiPrice.grade,
-        MandiPrice.min_price, MandiPrice.max_price, MandiPrice.modal_price,
-        MandiPrice.prev_modal_price, MandiPrice.spark, MandiPrice.arrival_date,
-        MandiPrice.change_pct, MandiPrice.fetched_at,
-    ).filter(MandiPrice.state.in_(touched_states))
-    for row in existing_q:
-        rid = row[0]
-        gk = _group_key({"state": row[1], "district": row[2], "market": row[3],
-                         "commodity": row[4], "variety": row[5], "grade": row[6]})
-        if gk not in fetched_keys:
-            continue
-        c = cand.get(gk)
-        # A second row for the same identity is the pre-21-Aug duplicate
-        # bug. Always collapse it by rewriting, never by "keeping" both.
-        if c is None or gk in seen_gk:
-            stale_ids.append(rid)
-            continue
-        seen_gk.add(gk)
-        if _unchanged(tuple(row[7:14]), c):
-            keep_fresh.append((rid, row[14]))
-            cand.pop(gk, None)        # nothing to insert for this identity
-        else:
-            stale_ids.append(rid)
-
-    CHUNK_IDS = 5000
-    for i in range(0, len(stale_ids), CHUNK_IDS):
-        db.query(MandiPrice).filter(
-            MandiPrice.id.in_(stale_ids[i:i + CHUNK_IDS])
-        ).delete(synchronize_session=False)
-
-    snapshot = list(cand.values())
-    db.bulk_insert_mappings(MandiPrice, snapshot)
-
-    # An untouched row still has to look "seen", or the age-out below
-    # would delete a mandi that is reporting faithfully at a steady price.
-    # Bumping it once a day instead of on all six fetches keeps that
-    # correct — SNAPSHOT_KEEP_DAYS is measured in days — while leaving
-    # five-sixths of the churn unwritten.
-    bump_ids = [rid for rid, fa in keep_fresh
-                if fa is None or (now - fa) > timedelta(hours=FRESH_BUMP_HOURS)]
-    for i in range(0, len(bump_ids), CHUNK_IDS):
-        db.query(MandiPrice).filter(
-            MandiPrice.id.in_(bump_ids[i:i + CHUNK_IDS])
-        ).update({MandiPrice.fetched_at: now}, synchronize_session=False)
-    return {"snapshot": len(snapshot), "rewritten": len(stale_ids),
-            "unchanged": len(keep_fresh), "touched": len(bump_ids)}
-
-
 def fetch_and_store() -> dict:
     """Main entry point. Returns a small summary dict for logging/tests."""
     from backend.services.sync_log_service import record_sync
@@ -925,7 +770,74 @@ def fetch_and_store() -> dict:
         #    SNAPSHOT_KEEP_DAYS). No wholesale delete also means rows from
         #    states whose fetch hard-failed midway are safe to merge — a
         #    fetch can now only improve the snapshot, never shrink it.
-        merged = _merge_snapshot(db, rows, prev_map, spark_map, now)
+        fetched_keys   = {x["group_key"] for x in rows}
+        touched_states = {x["state"] for x in rows}
+        stale_ids = []
+        existing_q = db.query(
+            MandiPrice.id, MandiPrice.state, MandiPrice.district,
+            MandiPrice.market, MandiPrice.commodity, MandiPrice.variety,
+            MandiPrice.grade,
+        ).filter(MandiPrice.state.in_(touched_states))
+        for rid, st, di, mk, co, va, gr in existing_q:
+            gk = _group_key({"state": st, "district": di, "market": mk,
+                             "commodity": co, "variety": va, "grade": gr})
+            if gk in fetched_keys:
+                stale_ids.append(rid)
+        CHUNK_IDS = 5000
+        for i in range(0, len(stale_ids), CHUNK_IDS):
+            db.query(MandiPrice).filter(
+                MandiPrice.id.in_(stale_ids[i:i + CHUNK_IDS])
+            ).delete(synchronize_session=False)
+        # ONE snapshot row per market identity, carrying its newest date.
+        #
+        # `rows` is deduped on group_key + arrival_date (see the fetch loop),
+        # because history needs every date. The snapshot answers a different
+        # question — "what is this mandi charging now" — and group_key
+        # deliberately holds no date. Inserting straight from `rows` therefore
+        # wrote one snapshot row per date the feed still carried, while the
+        # delete above matched on group_key alone and so only ever cleared a
+        # single generation. The surplus compounded on every fetch.
+        #
+        # By 21 Aug 2026 that was 8,111 of 36,197 snapshot rows (22%)
+        # redundant. A farmer saw one mandi repeated up to 8 times in the table
+        # on its own /bhav page, and because the copies came from different
+        # dates they often disagreed: Sriganganagar (F&V) APMC listed four
+        # different rates for the same Amrapali mango. _stats() averages the
+        # rows it is given, so the headline district price was silently
+        # weighted by how many stale dates each mandi still had in the feed —
+        # Meerut wheat read ₹2,593 where the true average of its two distinct
+        # quotes was ₹2,595.
+        newest: dict = {}
+        for x in rows:
+            k   = x["group_key"]
+            cur = newest.get(k)
+            if cur is None:
+                newest[k] = x
+                continue
+            d_new, d_cur = _parse_dt(x.get("arrival_date")), _parse_dt(cur.get("arrival_date"))
+            if d_cur is None or (d_new is not None and d_new > d_cur):
+                newest[k] = x
+
+        snapshot = []
+        for x in newest.values():
+            prev = prev_map.get(x["group_key"])
+            snapshot.append({
+                "state":            x["state"],
+                "commodity":        x["commodity"],
+                "district":         x["district"],
+                "market":           x["market"],
+                "variety":          x["variety"],
+                "grade":            x["grade"],
+                "min_price":        x["min_price"],
+                "max_price":        x["max_price"],
+                "modal_price":      x["modal_price"],
+                "prev_modal_price": prev,
+                "change_pct":       _change_pct(x["modal_price"], prev),
+                "spark":            spark_map.get(x["group_key"]),
+                "arrival_date":     x["arrival_date"],
+                "fetched_at":       now,
+            })
+        db.bulk_insert_mappings(MandiPrice, snapshot)
 
         # Age out rows never refreshed recently (market stopped reporting for
         # a week+) so last-known prices don't linger forever.
@@ -937,8 +849,7 @@ def fetch_and_store() -> dict:
         logger.info(
             f"✅ Mandi fetch done | fetched={len(rows)} "
             f"(live={live_count} archive={archive_added}) "
-            f"merged={merged['snapshot']} (rewritten {merged['rewritten']}, "
-            f"unchanged {merged['unchanged']}, bumped {merged['touched']}) "
+            f"merged={len(snapshot)} (updated {len(stale_ids)}) "
             f"history_added={history_added} failed_states={len(failed_states)}"
         )
         # An archive-topped-up run is reported as "partial": the snapshot is
@@ -947,8 +858,7 @@ def fetch_and_store() -> dict:
         # admin sync log rather than looking like a clean live fetch.
         status = "partial" if (failed_states or archive_added) else "success"
         detail = (f"{len(rows)} rows merged into snapshot "
-                  f"({merged['rewritten']} rewritten, {merged['unchanged']} "
-                  f"unchanged), +{history_added} history")
+                  f"({len(stale_ids)} updated), +{history_added} history")
         if archive_added:
             detail += (f" — live feed sparse ({live_count} rows), "
                        f"+{archive_added} from archive "
@@ -956,7 +866,7 @@ def fetch_and_store() -> dict:
         if failed_states:
             detail += f" — {len(failed_states)} state(s) incomplete"
         record_sync("mandi", status, len(rows), detail, started_at)
-        return {"fetched": len(rows), "snapshot": merged["snapshot"],
+        return {"fetched": len(rows), "snapshot": len(snapshot),
                 "replaced": len(stale_ids), "history_added": history_added,
                 "failed_states": sorted(failed_states),
                 "live": live_count, "archive_added": archive_added,

@@ -149,22 +149,6 @@ def _db_write_check():
         return None
 
 
-def _infra_check():
-    """Read the free-tier meters and mail only if one is about to run out.
-
-    The Infra & Credits page has had these numbers since 17 Aug 2026, but a
-    page has to be opened to help, and this one was not being opened. Every
-    outage this site has had was a quota outage, so the check runs whether or
-    not anyone is looking; on a normal day it logs one line and sends nothing.
-    """
-    try:
-        from backend.services.infra_service import run_check
-        return run_check()
-    except Exception as e:
-        logger.error(f"Infra check failed (non-fatal): {e}")
-        return None
-
-
 def _expire_badges():
     """Take the blue tick off sellers whose verification window has run out.
 
@@ -257,21 +241,6 @@ def _register_job():
         misfire_grace_time = None,
     )
 
-    # Free-tier runway, once a day. Daily and not hourly because these are
-    # rate-limited billing APIs and the thing being watched moves over days;
-    # 09:10 IST so it lands after the 08:00 fetch has done the day's writing
-    # and the numbers reflect it.
-    scheduler.add_job(
-        func               = _infra_check,
-        trigger            = CronTrigger(hour=9, minute=10, timezone=IST),
-        id                 = "infra_runway_check",
-        name               = "Free-tier runway check — daily 09:10 IST",
-        replace_existing   = True,
-        max_instances      = 1,
-        coalesce           = True,
-        misfire_grace_time = None,
-    )
-
     # Blue-tick expiry, once a day. See _expire_badges.
     scheduler.add_job(
         func               = _expire_badges,
@@ -284,7 +253,7 @@ def _register_job():
         misfire_grace_time = None,
     )
 
-    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + 3-hourly DB write canary + daily infra runway check + daily badge expiry")
+    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + 3-hourly DB write canary + daily badge expiry")
 
 
 async def start_scheduler():

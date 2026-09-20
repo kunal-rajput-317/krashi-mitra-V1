@@ -20,11 +20,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from backend.services.news_auto_service import get_published_posts
 
 
-# services/sponsors.py and routes/sponsor.py are optional: the section is
-# self-contained, and a deployment without it must serve the rest of the site
-# normally rather than fail to boot. Absent, /sponsor 404s, no footer link is
-# rendered, nothing is added to the sitemap and no sponsor slot appears.
-# find_spec does not execute the module.
+# /sponsor is held back until its figures are verified by hand, and
+# backend/routes/sponsor.py is gitignored until then. Ask the import system
+# rather than hard-coding the answer: the day the file is un-ignored the footer
+# link returns on its own, with no second edit to remember. find_spec does not
+# execute the module.
 def _sponsor_live() -> bool:
     import importlib.util
     return importlib.util.find_spec("backend.routes.sponsor") is not None

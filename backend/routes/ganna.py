@@ -455,11 +455,8 @@ def ganna_hub():
 
     # ── CTR-optimised title/meta (§2.6) ──
     title = _fit(
-        # No "| कृषि मित्र" suffix — see tests/test_serp_budgets.py. The brand
-        # is unknown to a searcher, so the suffix spends characters that a
-        # keyword could use and wins nothing back. Added 19 Sep, removed 21 Sep.
-        f"गन्ना भाव, सट्टा और पर्ची कैलेंडर {show_season} — FRP {_rs(show.get('rate', 0))}",
-        f"गन्ना भाव {show_season} — FRP {_rs(show.get('rate', 0))} और राज्यवार SAP रेट",
+        f"गन्ना भाव, सट्टा और पर्ची कैलेंडर {show_season} — FRP {_rs(show.get('rate', 0))} | कृषि मित्र",
+        f"गन्ना भाव {show_season} — FRP {_rs(show.get('rate', 0))} और राज्यवार SAP रेट | कृषि मित्र",
         f"गन्ना का भाव {show_season} — FRP {_rs(show.get('rate', 0))} व SAP रेट",
         f"गन्ना का भाव {show_season} — FRP और राज्यवार रेट")
     desc = _fit(

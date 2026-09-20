@@ -41,3 +41,21 @@ cache/page_stats.json
 # traffic made to someone paying for it.
 cache/mediakit.json
 
+# ── /sponsor, held back 2026-09-18 ──────────────────────────────────────────
+# The brand-facing media kit and its rate card. Kept out of the repo until the
+# owner has checked every figure and claim on the page by hand — it is the one
+# page read by someone about to send money, so an unverified number on it costs
+# a relationship rather than a pageview.
+#
+# The tracked files that use these (main.py, routes/bhav.py,
+# services/gsc_scheduler.py) all import them defensively and no-op when they are
+# absent, so a clone without these files boots and serves normally — /sponsor
+# simply 404s and the sponsor slot renders nothing. Delete this block to ship.
+backend/routes/sponsor.py
+backend/services/sponsors.py
+backend/services/mediakit.py
+backend/data/sponsors.json
+tests/test_sponsor.py
+# NOT frontend/km-support.js — it ships. Its /sponsor link is commented out and
+# it carries the /donate fix, which is independent of this hold and is the
+# reason the site had no visible ask on any static page.
