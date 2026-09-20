@@ -58,10 +58,10 @@ from backend.services import (
     index_gate, lead_clicks, leads, legal, msp, placements,
     rental as rental_svc, state_lang, wa_channels as _wa_channels,
 )
-# services/sponsors.py is gitignored while /sponsor is held back pending a
-# hand-check of its figures. None means no sponsor slot renders anywhere and
-# /go/s/ sends people home — which is this site's state today anyway, since the
-# registry ships empty. Drop the guard when the page ships.
+# services/sponsors.py is optional — the sponsor section is self-contained and
+# a deployment without it must serve the rest of the site normally. None means
+# no sponsor slot renders anywhere and /go/s/ sends people home, which is also
+# the state whenever the registry is empty.
 try:
     from backend.services import sponsors
 except ImportError:
@@ -2751,7 +2751,7 @@ window.addEventListener('pageshow',window.kmHideLoading);
 <script src="{_asset('header-scroll.js')}"></script>"""
 
 
-_FOOTER_NOTE = ("भाव भारत सरकार के data.gov.in (Agmarknet) से रोज़ अपडेट होते हैं।\n"
+_FOOTER_NOTE = ("भाव भारत सरकार के data.gov.in (Agmarknet) से रोज़ अपडेट होते हैं。\n"
                 "बेचने से पहले अपनी मंडी में भाव ज़रूर पुष्टि करें।")
 
 
@@ -2877,7 +2877,7 @@ def _journey(canon: str, crop: str, lang: str, robots: str) -> str:
         return ""
 
 
-def _sponsor_strip(canon: str) -> str:
+def _sponsor_strip(canon: str, state: str = "", crop: str = "") -> str:
     """The paid slot, placed once per page between the content and the "आगे
     क्या करें" strip.
 
@@ -2898,7 +2898,21 @@ def _sponsor_strip(canon: str) -> str:
         path = "/" + canon.split("//", 1)[-1].split("/", 1)[1]
     except IndexError:
         path = "/"
-    return sponsors.card_html(path.split("?", 1)[0])
+    path = path.split("?", 1)[0]
+    if not state or not crop:
+        parts = [p for p in path.strip("/").split("/") if p]
+        if len(parts) >= 2 and parts[0] == "bhav":
+            if parts[1] == "rajya" and len(parts) >= 3:
+                state = state or parts[2]
+            elif len(parts) == 2:
+                crop = crop or parts[1]
+            elif len(parts) >= 4:
+                crop = crop or parts[1]
+                state = state or parts[2]
+            elif len(parts) == 3:
+                crop = crop or parts[1]
+                state = state or parts[2]
+    return sponsors.card_html(path, state=state, crop=crop)
 
 
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
@@ -4541,7 +4555,7 @@ def sponsor_redirect(sponsor_id: str, request: Request, background: BackgroundTa
     unknown or expired id redirects home and records nothing rather than
     inventing a click on a sponsorship that has ended.
     """
-    row = next((s for s in sponsors.active() if s.get("id") == sponsor_id), None)         if sponsors else None
+    row = next((s for s in (getattr(sponsors, "all_active", sponsors.active)()) if s.get("id") == sponsor_id), None) if sponsors else None
     if not row:
         return RedirectResponse("/", status_code=302)
     ref = request.headers.get("referer", "")
@@ -6180,20 +6194,27 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # known the two collapse back to one string and the richest variant is simply
     # not offered, which is the old behaviour exactly.
     en_d = "" if d_hi == district else district
-    # ── CTR Variant A: price-in-title ──
-    # A live number in the title is the single biggest CTR lever for mandi
-    # queries — the searcher sees the answer before clicking. The top price
-    # (st["hi"]) is used because it is the one the farmer hopes for.
-    # Variants are ordered richest → shortest; _fit picks the first that
-    # survives Google's ~68-char SERP window.  Existing patterns stay as
-    # fallbacks for the long crop+district combos where the price variant
-    # doesn't fit.
-    _top = f"₹{st['hi']:,}/क्वि" if st.get("hi") else ""
+    # NO RUPEE FIGURE IN THE TITLE. Tried 19 Sep 2026 ("Variant A",
+    # price-in-title) and reverted 21 Sep, because the claim cannot be kept
+    # true. Measured that day over the whole index: of 11,403 crop×district
+    # pages, ZERO carried a price from the current day — median age 2 days,
+    # 16.4% of them 4-7 days old. The figure used was st["hi"], which is
+    # round(max(maxs)): the highest max across every mandi in the district and
+    # the most volatile number on the page. Live example from production,
+    # /bhav/garlic/madhya-pradesh/sehore: the title read "भाव आज … ₹15,001/क्वि
+    # तक" while the page itself said 19 सितंबर and a modal of ₹10,478.
+    #
+    # Google then caches a title for days to weeks on top of that, so there is
+    # no refresh cadence that can rescue it — the 13 Jul Bareilly snippet was
+    # still being served on 2 Aug. A farmer who clicks ₹15,001 and finds
+    # ₹10,478 has been misled by us, which is both the legal exposure rule and
+    # the one asset the whole site sells.
+    #
+    # "आज का भाव" WITHOUT a number is fine and stays: it names what the page is
+    # for, and makes no claim about a figure. The meta description carries the
+    # real date ("19 सितंबर 2026 अपडेट") and may quote numbers, because it is
+    # regenerated with the page and shown beside that date.
     title = _fit(*(
-        # ── price-in-title variants (Variant A) ──
-        ([f"{t_hi} का भाव आज {place}: {_top} तक — {t_en}"] if _top and not same else
-         [f"{t_hi} का भाव आज {place}: {_top} तक"] if _top else []) +
-        # ── static fallback (Variant B) ──
         # No real Hindi name for this commodity: t_hi IS t_en, so a bilingual
         # template would print one long string twice.
         (([f"{t_hi} का भाव आज {place} मंडी में — {en_d} Mandi"] if en_d else []) + [

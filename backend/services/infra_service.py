@@ -548,6 +548,18 @@ def _render_origin_probe() -> tuple[list, str, str]:
                 f"{RENDER_ORIGIN} पर कोई service ही नहीं मिल रही (no-server) — "
                 "या तो service बंद/suspend है, या hostname बदल गया है। "
                 "Netlify से homepage चलता रहेगा, पर हर proxied route 404/503।")
+    if "hibernate" in routing:
+        # `hibernate-pending-wake` is Render's edge answering 503 while a free
+        # instance spins back up — the same normal sleep the timeout branch
+        # above already refuses to call an outage, just caught a moment later.
+        # Without this it falls through to the >=500 check and the card reads
+        # "Render बंद है" for a backend that is fine, which is both how a
+        # status page stops being read and, since the daily check mails on a
+        # `down` verdict, how the alert itself becomes noise.
+        return (facts, "warn",
+                "Render की free instance सो गई थी और अभी जाग रही है "
+                "(hibernate-pending-wake) — पहली request ~50s ले सकती है। "
+                "यह outage नहीं है।")
     if r.status_code >= 500:
         return (facts, "down", f"Render origin पर HTTP {r.status_code}")
     if r.status_code >= 400:
@@ -811,6 +823,23 @@ def _neon() -> dict:
             "cap पर पहुँचते ही Neon compute को read-only कर देता है: पेज चलते "
             "रहते हैं, पर signup/order/alert कुछ भी सेव नहीं होता। असली इस्तेमाल "
             "इससे ज़्यादा है — cap change-history भी गिनता है।"))
+        # Listing photos live in Postgres until R2 is affordable (see
+        # services/media_db.py), under their own cap — the one number on this
+        # page that is not the provider's, because Neon does not know or care
+        # that 60 MB of its branch is reserved. Without this meter the cap is
+        # invisible until a farmer's upload 503s.
+        try:
+            from backend.services import media_db, media_store
+            if not media_store.enabled():
+                p["meters"].append(_meter(
+                    "media", "Bazar photos (DB में)", media_db.total_bytes(),
+                    media_db.MAX_TOTAL_BYTES, "bytes", None,
+                    "R2 चालू होने तक listing की फ़ोटो इसी database में हैं। "
+                    "यह cap भर गया तो फ़ोटो upload बंद हो जाएगा — बाकी साइट "
+                    "चलती रहेगी। R2 आते ही यह meter हट जाएगा।"))
+        except Exception as e:
+            logger.warning(f"media meter unavailable: {e}")
+
         writable = bool(st.get("writable"))
         p["facts"].append(["लिख सकते हैं", "हाँ" if writable else "नहीं"])
         if not writable:
@@ -899,7 +928,13 @@ def _neon() -> dict:
 
 # ── the runner ───────────────────────────────────────────────
 
-_PROBES = (("netlify", _netlify), ("render", _render), ("neon", _neon))
+# Netlify was retired on 16 Sep 2026 — Cloudflare DNS points straight at
+# Render and there is one origin. _netlify() is kept because the account
+# still exists and the probe is the only written record of how its usage
+# endpoints work, but it is no longer polled: a card that can only ever
+# say "set NETLIFY_AUTH_TOKEN" for a service we do not use is noise on a
+# page whose whole job is to be scanned quickly.
+_PROBES = (("render", _render), ("neon", _neon))
 
 
 def _verdict(providers: list[dict]) -> dict:
@@ -1013,7 +1048,89 @@ def run(use_cache: bool = True) -> dict:
     return payload
 
 
+# ── the watch: this file's numbers, without anyone opening the page ──
+
+# A meter this close to running out inside its own billing period is worth
+# waking someone for. Below it, the page is enough.
+ALERT_DAYS_LEFT = float(os.getenv("INFRA_ALERT_DAYS", "10"))
+
+# Where the warning goes. Same ladder as db_health_service, so one env var
+# configures both and a half-set environment still reaches somebody.
+ALERT_EMAIL = (os.getenv("INFRA_ALERT_EMAIL")
+               or os.getenv("DB_ALERT_EMAIL")
+               or os.getenv("ALERT_EMAIL")
+               or os.getenv("RESEND_FROM_EMAIL")
+               or "").strip()
+
+_last_alert: str = ""       # so a standing problem mails once, not every day
+
+
+def _alert_key(v: dict, risks: list) -> str:
+    """What is wrong, coarsely — the alert re-sends only when this changes."""
+    return "|".join([v.get("status", "")] +
+                    sorted(f"{r['provider']}:{r['meter']}" for r in risks))
+
+
+def run_check(alert: bool = True) -> dict:
+    """Scheduled entry point. Runs the same probe the admin page runs, and
+    stays silent unless something is actually about to break.
+
+    The panel was built after the third quota outage, and then went unread —
+    which is the failure mode of every dashboard that has to be opened. The
+    numbers only protect anything if they come to you, so this is the part
+    that matters: a daily probe that says nothing on a normal day.
+    """
+    global _last_alert
+    payload = run(use_cache=False)
+    v = payload.get("verdict") or {}
+    risks = [r for r in (v.get("at_risk") or [])
+             if r.get("days_left") is not None and r["days_left"] <= ALERT_DAYS_LEFT]
+    down = v.get("status") == "down"
+
+    if not (down or risks):
+        if _last_alert:
+            logger.info("✅ infra: everything back inside its allowance")
+            _last_alert = ""
+        else:
+            logger.info(f"infra ok — {v.get('headline', '')}")
+        return payload
+
+    key = _alert_key(v, risks)
+    logger.warning(f"⚠️ infra: {v.get('headline', '')} — {v.get('sub', '')}")
+    if alert and key != _last_alert:
+        lines = [v.get("headline", ""), "", v.get("sub", ""), ""]
+        for r in risks:
+            lines.append(f"• {r['provider']} — {r['meter']}: "
+                         f"{r['days_left']:.0f} दिन बाकी ({r['pct']}%)")
+        lines += ["", "पूरा हिसाब: /admin → Infra & Credits"]
+        _mail("KrashiMitra: एक free-tier सीमा खत्म होने वाली है"
+              if not down else "KrashiMitra: एक सेवा बंद है",
+              "\n".join(lines))
+    _last_alert = key
+    return payload
+
+
+def _mail(subject: str, body: str) -> None:
+    if not ALERT_EMAIL:
+        logger.warning("infra alert not sent — set INFRA_ALERT_EMAIL (or ALERT_EMAIL)")
+        return
+    try:
+        from backend.utils.auth_utils import _send_with_resend
+        if _send_with_resend(ALERT_EMAIL, subject, body):
+            logger.info(f"📧 infra alert mailed to {ALERT_EMAIL}")
+        else:
+            logger.warning("infra alert email failed to send")
+    except Exception as e:
+        logger.warning(f"infra alert email failed: {e}")
+
+
 if __name__ == "__main__":
+    # `python -m backend.services.infra_service` — the same probe the
+    # daily job runs, without sending mail. Windows consoles are cp1252
+    # and the labels are Devanagari, so write bytes rather than let
+    # print() die on an encoding the numbers do not depend on.
     import json
+    import sys
     logging.basicConfig(level=logging.INFO)
-    print(json.dumps(run(use_cache=False), indent=2, ensure_ascii=False))
+    out = json.dumps(run_check(alert=False), indent=2, ensure_ascii=False)
+    sys.stdout.buffer.write(out.encode("utf-8", "replace") + b"\n")

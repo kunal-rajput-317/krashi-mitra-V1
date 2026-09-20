@@ -36,15 +36,13 @@
   // Order matters: these are appended in sequence after whatever the page's
   // own footer already lists, so the site's own navigation stays first.
   //
-  // /sponsor is commented out, not deleted. The page is built but held back
-  // until its audience figures have been checked by hand, and its route is
-  // gitignored meanwhile — so linking it from ~150 static pages would point
-  // the whole site at a 404. The server-rendered footers gate the same link on
-  // whether the route actually imports; this file cannot ask that question
-  // from a browser, so it waits for a human instead. Uncomment when /sponsor
-  // ships.
+  // /sponsor ships, so it is linked. The page itself carries NO traffic
+  // figures — those live behind a per-prospect token at /sponsor/kit/<token>,
+  // which is unlinked by design and must never be added to this list. Linking
+  // the kit from ~150 static footers would hand the site's whole Search
+  // Console profile to anyone who scrolled.
   var LINKS = [
-    // { href: '/sponsor', text: 'विज्ञापन दें' },
+    { href: '/sponsor', text: 'विज्ञापन दें' },
     { href: '/donate',  text: 'सहयोग करें' }
   ];
 

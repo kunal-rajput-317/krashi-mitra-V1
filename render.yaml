@@ -68,6 +68,18 @@ services:
         sync: false
       - key: ADMIN_SECRET_KEY
         sync: false          # optional
+      # Signs the per-prospect links to /sponsor/kit/<token>, the ONLY place
+      # this site's Search Console figures appear. /sponsor itself publishes
+      # none of them on purpose — posted, they tell every other agri publisher
+      # which surfaces work here and how big they are.
+      #
+      # LEAVING THIS UNSET IS SAFE AND IS THE DEFAULT: no valid token can
+      # exist, so the kit route 404s for everyone and nothing leaks. Set it to
+      # a long random string only when you want to start sending links, and
+      # rotate it to revoke every outstanding link at once.
+      # Mint a link with: python tools/sponsor_kit_link.py "Brand Name"
+      - key: KM_SPONSOR_KIT_SECRET
+        sync: false          # optional
       - key: GEMINI_API_KEY
         sync: false
       # Spare Gemini keys — each one is another free daily quota, tried in

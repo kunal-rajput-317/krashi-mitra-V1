@@ -40,11 +40,17 @@ router = APIRouter()
 
 SITE = "https://krashimitra.in"
 
-# /sponsor is held back until its figures are verified by hand, and
-# backend/routes/sponsor.py is gitignored until then. Ask the import system
-# whether it is present rather than hard-coding the answer: the day the file is
-# un-ignored, the link and the sitemap entry come back on their own, with no
-# second edit to remember. find_spec does not execute the module.
+# services/sponsors.py and routes/sponsor.py are optional: the section is
+# self-contained, and a deployment without it must serve the rest of the site
+# normally rather than fail to boot. Absent, /sponsor 404s, no footer link is
+# rendered, nothing is added to the sitemap and no sponsor slot appears.
+# Ask the import system rather than hard-coding the answer; find_spec does not
+# execute the module.
+#
+# NOTE /sponsor/kit/<token> is deliberately absent from every sitemap and from
+# robots.txt. It carries the Search Console figures, and the only thing keeping
+# them private is that the URL is unlinked and unguessable — listing it, even
+# to disallow it, would announce that it exists.
 def _sponsor_live() -> bool:
     import importlib.util
     return importlib.util.find_spec("backend.routes.sponsor") is not None

@@ -1426,6 +1426,65 @@ class Buyer(Base):
 
 
 
+class Sponsor(Base):
+    """One site-wide sponsor — the brand tier sold on /sponsor.
+
+    **A DIFFERENT PRODUCT FROM DealerPlacement.** That table sells one dealer a
+    slot on one /bhav crop page and resolves overlaps by geographic
+    specificity; this is one brand buying the whole site for one category.
+    Merging them would let a ₹199 district listing and a ₹25,000 category
+    partnership compete for the same render, and the cheaper one would
+    sometimes win.
+
+    **Why a table as well as data/sponsors.json** — the same reason as Buyer
+    above: Render's free plan has no persistent disk, so a sponsor typed into
+    the admin panel and written to the JSON would silently revert on the next
+    deploy. The file stays the committed seed; this table is what changes at
+    runtime; a row whose `slug` matches a JSON id overrides it.
+
+    **`until` is the product, not a note.** services/sponsors.py refuses to
+    render a row once it passes, because over-delivering is the failure mode
+    that costs money here: a brand whose month ran out and whose logo is still
+    up has no reason to send the next payment, and learns we do not track what
+    we sold.
+
+    **`category` is what exclusivity was sold on**, and two live sponsors may
+    never share one — enforced in services/sponsors.py::active() and pinned by
+    tests/test_sponsor.py. It is the thing that makes a site this size worth
+    brand money, and it voids silently if it is ever allowed to double up.
+
+    **paid_at is set by a human who saw the credit.** Same rule as every other
+    money surface here: a upi:// hand-off reports nothing back, so nothing may
+    infer payment from a tapped link.
+    """
+    __tablename__ = "sponsors"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    slug       = Column(String,  nullable=False, unique=True, index=True)  # public id; /go/s/<slug>
+    # The gate. services/sponsors.py renders nothing without active + name +
+    # category + url + a future `until`, so a half-filled row stays invisible.
+    active     = Column(Boolean, default=False, nullable=False, index=True)
+    name       = Column(String,  nullable=False)
+    category   = Column(String,  nullable=False, index=True)   # exclusivity key
+    line       = Column(String,  nullable=True)                # brand's own one-liner
+    url        = Column(String,  nullable=False)               # rel="nofollow sponsored"
+    logo       = Column(String,  nullable=True)                # self-hosted path
+    # "" / NULL means every section; otherwise a JSON list of path prefixes.
+    sections   = Column(Text,    nullable=True)
+    states     = Column(Text,    nullable=True)
+    crops      = Column(Text,    nullable=True)
+    since      = Column(String,  nullable=True)                # YYYY-MM-DD
+    until      = Column(String,  nullable=True)                # YYYY-MM-DD; expiry is enforced
+    amount     = Column(Integer, nullable=True)                # what they actually paid, ₹
+    tier       = Column(String,  nullable=True)                # RATE_CARD id
+    contact    = Column(String,  nullable=True)                # admin-only
+    notes      = Column(Text,    nullable=True)                # admin-only
+    paid_at    = Column(DateTime, nullable=True)               # only a human sets this
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow,
+                        nullable=False)
+
+
 class DealerProduct(Base):
     """One item a paying dealer sells, rendered as a product card on /bhav.
 

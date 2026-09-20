@@ -414,10 +414,10 @@ app.include_router(verify_route.router)  # /verify — blue-tick application + f
 from backend.routes import donate as donate_route
 app.include_router(donate_route.router)  # /donate — public UPI page for anyone who wants to support the site
 
-# /sponsor — the brand-facing media kit and rate card (English, on purpose).
-# Held back until its figures have been verified by hand, so the module is
-# gitignored and this import is allowed to fail: a clone without it boots
-# normally and /sponsor simply 404s. Remove the guard when the page ships.
+# /sponsor — the brand-facing pitch and rate card (English, on purpose). The
+# traffic figures are NOT on it; they live behind a per-prospect token at
+# /sponsor/kit/<token>. Optional module: a deployment without it boots normally
+# and /sponsor simply 404s.
 try:
     from backend.routes import sponsor as sponsor_route
     app.include_router(sponsor_route.router)
@@ -448,6 +448,15 @@ app.include_router(admin_dukan_route.router)   # /admin/dukan/* — shops, catal
 
 from backend.routes import admin_rental as admin_rental_route
 app.include_router(admin_rental_route.router)   # /admin/rental/* — machine owners, rates, UPI collect
+
+# /admin/sponsor/* — site sponsors, category exclusivity, UPI collect, kit links.
+# Optional for the same reason /sponsor is: the section is self-contained and a
+# deployment without it must still boot.
+try:
+    from backend.routes import admin_sponsor as admin_sponsor_route
+    app.include_router(admin_sponsor_route.router)
+except ImportError:
+    log.info("routes/admin_sponsor.py absent — the sponsor panel is not served")
 
 from backend.routes import admin_articles as admin_articles_route
 app.include_router(admin_articles_route.router)  # /admin/articles/* — write and publish an article with no deploy
