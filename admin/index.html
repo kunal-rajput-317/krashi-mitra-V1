@@ -12202,11 +12202,11 @@ function spRenderTable() {
       '<td>' + (s.paid_at ? '<span class="sp-pill live">मिला</span>'
                           : '<span class="sp-pill soon">बाकी</span>') + '</td>' +
       '<td><div class="sp-act">' +
-        '<button class="sp-btn" onclick="spToggle('' + s.id + '', ' + (s.active ? 'false' : 'true') + ')">' +
+        '<button class="sp-btn" onclick="spToggle(\'' + s.id + '\', ' + (s.active ? 'false' : 'true') + ')">' +
           (s.active ? 'बंद करें' : 'LIVE करें') + '</button>' +
-        '<button class="sp-btn" onclick="spCollect('' + s.id + '')">₹ माँगें</button>' +
-        '<button class="sp-btn" onclick="spPaid('' + s.id + '')">भुगतान दर्ज</button>' +
-        (s.paid_at ? '' : '<button class="sp-btn danger" onclick="spDelete('' + s.id + '')">हटाएँ</button>') +
+        '<button class="sp-btn" onclick="spCollect(\'' + s.id + '\')">₹ माँगें</button>' +
+        '<button class="sp-btn" onclick="spPaid(\'' + s.id + '\')">भुगतान दर्ज</button>' +
+        (s.paid_at ? '' : '<button class="sp-btn danger" onclick="spDelete(\'' + s.id + '\')">हटाएँ</button>') +
       '</div></td></tr>';
   }).join('');
   tbl.innerHTML =
