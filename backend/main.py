@@ -449,6 +449,15 @@ app.include_router(admin_dukan_route.router)   # /admin/dukan/* — shops, catal
 from backend.routes import admin_rental as admin_rental_route
 app.include_router(admin_rental_route.router)   # /admin/rental/* — machine owners, rates, UPI collect
 
+# /admin/sponsor/* — site sponsors, category exclusivity, UPI collect, kit links.
+# Optional for the same reason /sponsor is: the section is self-contained and a
+# deployment without it must still boot.
+try:
+    from backend.routes import admin_sponsor as admin_sponsor_route
+    app.include_router(admin_sponsor_route.router)
+except ImportError:
+    log.info("routes/admin_sponsor.py absent — the sponsor panel is not served")
+
 from backend.routes import admin_articles as admin_articles_route
 app.include_router(admin_articles_route.router)  # /admin/articles/* — write and publish an article with no deploy
 
