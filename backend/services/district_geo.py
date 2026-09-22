@@ -11,9 +11,11 @@
 # no centroid for is simply skipped — the caller then falls back to its
 # server-rendered highest-price panel, so the page degrades cleanly.
 # ============================================================
+import hashlib
 import json
 import logging
 import math
+import re
 import time
 import urllib.parse
 import urllib.request
@@ -81,6 +83,59 @@ def coord_for(state: str, district: str):
         except (TypeError, ValueError):
             return None
     return None
+
+
+def resolve_mandi_coords(state: str, district: str, market: str) -> tuple[float, float, bool] | None:
+    """Resolve (lat, lon, is_exact) for a market in (state, district).
+
+    Tries matching the market name against cached villages/towns in village_service.
+    If matched, returns (lat, lon, True).
+    Otherwise, falls back to the district centroid from district_coords.json with a
+    deterministic small radial offset per market name so multiple mandis don't stack
+    on a single pixel, returning (lat, lon, False).
+    Returns None if the district itself cannot be geocoded.
+    """
+    if not state or not district:
+        return None
+
+    clean_mkt = re.sub(r'(?i)\b(apmc|mandi|grain market|sub yard|upaj mandi|sub market yard|market yard|main yard|yard)\b', '', market or '').strip()
+    clean_mkt = re.sub(r'[\(\)\[\]\-]+', ' ', clean_mkt).strip()
+    norm_mkt = re.sub(r'[\s._\-/()]+', '', clean_mkt).lower()
+
+    # Try matching against village/town cache if available
+    try:
+        from backend.services import village_service
+        s_slug = re.sub(r'[^a-z0-9]+', '-', (state or '').strip().lower()).strip('-')
+        d_slug = re.sub(r'[^a-z0-9]+', '-', (district or '').strip().lower()).strip('-')
+        villages = village_service.load(s_slug, d_slug)
+        if villages and norm_mkt:
+            for v in villages:
+                v_name = v.get("name", "")
+                v_hi = v.get("hi", "")
+                v_slug = v.get("slug", "")
+                if (norm_mkt == re.sub(r'[\s._\-/()]+', '', v_name).lower() or
+                    (v_hi and norm_mkt == re.sub(r'[\s._\-/()]+', '', v_hi).lower()) or
+                    (v_slug and v_slug == re.sub(r'[^a-z0-9]+', '-', clean_mkt.lower()).strip('-'))):
+                    return round(float(v["lat"]), 5), round(float(v["lon"]), 5), True
+    except Exception as e:
+        logger.debug("village match error for %s/%s/%s: %s", state, district, market, e)
+
+    # Fallback to district centroid
+    centroid = coord_for(state, district)
+    if not centroid:
+        return None
+
+    lat, lon = centroid
+    if not market:
+        return lat, lon, False
+
+    # Deterministic radial offset (jitter) based on market name hash
+    h = int(hashlib.md5(market.strip().lower().encode("utf-8")).hexdigest()[:6], 16)
+    theta = (h % 360) * math.pi / 180.0
+    radius_deg = 0.008 + ((h >> 9) % 20) * 0.001
+    j_lat = round(lat + radius_deg * math.sin(theta), 5)
+    j_lon = round(lon + radius_deg * math.cos(theta), 5)
+    return j_lat, j_lon, False
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

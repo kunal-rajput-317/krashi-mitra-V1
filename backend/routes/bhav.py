@@ -1436,7 +1436,7 @@ def _state_card(href: str, state: str, count: int, count_lbl: str) -> str:
   <div class="place-n">{escape(_hindi_state(state))}</div>
   <div class="place-divider-wrap">
     <div class="place-line"></div>
-    <span class="place-ornament">🌿</span>
+    <span class="place-ornament"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2d6a4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>
     <div class="place-line"></div>
   </div>
   <div class="place-en">{escape(state)}</div>
@@ -1680,6 +1680,15 @@ display:flex;align-items:center;justify-content:center;transition:opacity .15s,b
 .ctl-mic:hover{opacity:1;background:var(--cream)}
 .ctl-mic.listening{opacity:1;color:#e53935;animation:ctl-mic-pulse .7s ease-in-out infinite alternate}
 @keyframes ctl-mic-pulse{from{opacity:.7}to{opacity:1}}
+.ctl-loc{flex-shrink:0;background:none;border:none;padding:4px;cursor:pointer;
+color:var(--text-mid);opacity:.6;border-radius:50%;line-height:1;
+display:flex;align-items:center;justify-content:center;transition:opacity .15s,background .15s,color .15s,transform .1s}
+.ctl-loc:hover{opacity:1;background:var(--cream);color:var(--green-mid)}
+.ctl-loc:active{transform:scale(0.85)}
+.ctl-loc.loading{opacity:1!important;pointer-events:none;background:rgba(37,99,235,0.12);border-radius:50%}
+.ctl-loc.loading svg{animation:bmSpin .8s linear infinite;color:#2563eb}
+.ctl-loc.active{color:#2563eb;opacity:1;background:rgba(37,99,235,0.1)}
+@keyframes bmSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 /* type-then-pick results list — must select a real match to proceed, same
 UX contract as mandi.html's .mn-combo-list (no navigating on free-typed text) */
 .ctl-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);
@@ -2093,6 +2102,19 @@ transition:opacity .15s,background .15s}
 .mn-mic-btn:hover{opacity:1;background:#e8ede9}
 .mn-mic-btn.listening{opacity:1;animation:mn-mic-pulse .7s ease-in-out infinite alternate}
 @keyframes mn-mic-pulse{from{opacity:.7}to{opacity:1;color:#e53935}}
+.mn-loc-btn{background:none;border:none;padding:2px 3px;cursor:pointer;font-size:14px;
+flex-shrink:0;opacity:.55;line-height:1;border-radius:50%;color:var(--text-mid);
+transition:opacity .15s,background .15s,color .15s,transform .1s;display:inline-flex;align-items:center;justify-content:center}
+.mn-loc-btn:hover{opacity:1;background:#e8ede9;color:var(--green-mid)}
+.mn-loc-btn:active{transform:scale(0.85)}
+.mn-loc-btn.loading{opacity:1!important;pointer-events:none;background:rgba(37,99,235,0.12);border-radius:50%}
+.mn-loc-btn.loading svg{animation:bmSpin .8s linear infinite;color:#2563eb}
+.mn-loc-btn.active{color:#2563eb;opacity:1;background:rgba(37,99,235,0.1)}
+.bhav-crop-loc-banner{display:flex;align-items:center;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:8px 14px;border-radius:10px;font-size:12.5px;font-weight:600;margin-bottom:14px;flex-wrap:wrap}
+.bhav-crop-loc-banner b{color:#1e3a8a}
+.bhav-crop-loc-banner .bcl-icon{display:inline-flex;color:#2563eb}
+.bhav-crop-loc-banner .bcl-link{margin-left:auto;color:#1d4ed8;text-decoration:none;font-weight:700}
+.bhav-crop-loc-banner .bcl-link:hover{text-decoration:underline}
 
 .shop-section-title{font-family:var(--font-serif);font-size:19px;color:var(--text-dark);
 margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-left:12px;
@@ -3156,7 +3178,7 @@ def _switchers(c_slug: str, s_slug: str, d_slug: str) -> str:
         key=lambda x: (_tile_rank(x[1]), _hindi_name(x[1])))
     states = sorted(idx["states"].get(c_slug, {}).items(), key=lambda kv: kv[1])
     dists  = sorted(idx["dists"].get(c_slug, {}).get(s_slug, {}).items(),
-                    key=lambda kv: kv[1])
+                    key=lambda kv: _hindi_district(s_slug, kv[1]))
 
     crop_opts = "".join(
         f'<option value="/bhav/{cs}/{s_slug}/{d_slug}"{" selected" if cs == c_slug else ""}>'
@@ -3167,7 +3189,7 @@ def _switchers(c_slug: str, s_slug: str, d_slug: str) -> str:
         f'{escape(_hindi_state(sn))}</option>' for ss, sn in states)
     dist_opts = "".join(
         f'<option value="/bhav/{c_slug}/{s_slug}/{ds}"{" selected" if ds == d_slug else ""}>'
-        f'{escape(dn)}</option>' for ds, dn in dists)
+        f'{escape(_hindi_district(s_slug, dn))}</option>' for ds, dn in dists)
 
     return f"""<div class="ctl">
 <label class="ctl-f"><span>फसल</span>
@@ -3307,7 +3329,7 @@ def _dists_in_state(idx: dict, ss: str) -> dict:
 
 def _hub_selector(cs: str, ss: str, ds: str, idx: dict,
                    known_crop: bool = False, known_state: bool = False,
-                   known_dist: bool = False) -> str:
+                   known_dist: bool = False, show_crop: bool = True) -> str:
     """Same crop/state/district quick-jump as _switchers(), but a type-or-speak
     <input list=datalist> instead of a plain <select> — the hub's district list
     can run to 60+ entries, too many to scan by scrolling on a first visit.
@@ -3331,24 +3353,36 @@ def _hub_selector(cs: str, ss: str, ds: str, idx: dict,
     districts that report anything there), so no combination can 404."""
     cur_crop = _hindi_name(idx["crops"].get(cs, "")) if known_crop else ""
     cur_state = _hindi_state(_state_name(idx, ss)) if known_state else ""
-    cur_dist = _dist_name(idx, ss, ds) if known_dist else ""
+    raw_dist = _dist_name(idx, ss, ds) if known_dist else ""
+    cur_dist = _hindi_district(ss, raw_dist) if raw_dist else ""
 
     crops = sorted(
         _crops_in(idx, ss if known_state else "", ds if known_dist else "").items(),
         key=lambda x: (_tile_rank(x[1]), _hindi_name(x[1])))
     if known_crop:
         states = sorted(idx["states"].get(cs, {}).items(), key=lambda kv: kv[1])
-        dists = sorted(idx["dists"].get(cs, {}).get(ss, {}).items(), key=lambda kv: kv[1])
+        dists = sorted(idx["dists"].get(cs, {}).get(ss, {}).items(),
+                       key=lambda kv: _hindi_district(ss, kv[1]))
     else:
         states = sorted(_states_all(idx).items(), key=lambda kv: kv[1])
-        dists = sorted(_dists_in_state(idx, ss).items(), key=lambda kv: kv[1])
+        dists = sorted(_dists_in_state(idx, ss).items(),
+                       key=lambda kv: _hindi_district(ss, kv[1]))
 
     place = (f"/{ss}/{ds}" if known_dist else f"/{ss}") if known_state else ""
     crop_map = {_hindi_name(cn): f"/bhav/{c}{place}" for c, cn in crops}
     state_map = ({_hindi_state(sn): f"/bhav/{cs}/{s}" for s, sn in states} if known_crop
                  else {_hindi_state(sn): f"/bhav/rajya/{s}" for s, sn in states})
-    dist_map = ({dn: f"/bhav/{cs}/{ss}/{d}" for d, dn in dists} if known_crop
-                else {dn: f"/bhav/rajya/{ss}/{d}" for d, dn in dists})
+
+    dist_map = {}
+    dist_alt = {}
+    for d, dn in dists:
+        hi_d = _hindi_district(ss, dn)
+        label = hi_d
+        if label in dist_map:
+            label = f"{hi_d} ({dn})"
+        dist_map[label] = f"/bhav/{cs}/{ss}/{d}" if known_crop else f"/bhav/rajya/{ss}/{d}"
+        dist_alt[label] = f"{dn} {d} {d.replace('-', ' ')}".strip()
+
     # English synonyms, keyed by the same Hindi label used above, purely for
     # search — so typing "wheat" finds गेहूं just like typing "गेहूं" does.
     # The Hindi label stays the one thing that's shown, stored and navigated on.
@@ -3362,13 +3396,18 @@ def _hub_selector(cs: str, ss: str, ds: str, idx: dict,
                 '<line x1="8" y1="23" x2="16" y2="23"/></svg>')
 
     def _field(label: str, list_id: str, placeholder: str, m: dict,
-               alt_var: str = "null", value: str = "") -> str:
+               alt_var: str = "null", value: str = "", has_loc: bool = False) -> str:
         var = list_id.replace("-", "_")
         inp_id = f"{list_id}-i"
+        loc_id = f"{list_id}-loc"
         # data-valid marks a prefilled field as a real pick, not free-typed text —
         # kmComboBlur()/kmComboReject() only wipe fields WITHOUT that flag, so an
         # already-known crop/state stays shown instead of vanishing on first blur.
         val_attr = f'value="{escape(value)}" data-valid="1" ' if value else ""
+        loc_btn = (f'<button type="button" class="ctl-loc" id="{loc_id}" '
+                   f'onclick="kmLoc(\'{inp_id}\',\'{var}\')" '
+                   f'title="मेरी लोकेशन से चुनें" aria-label="मेरी लोकेशन">'
+                   f'{_LOC_SVG_HTML}</button>') if has_loc else ""
         return f"""<label class="ctl-f"><span>{label}</span>
 <div class="ctl-input-row">
 <input id="{inp_id}" {val_attr}autocomplete="off" placeholder="{escape(placeholder)}"
@@ -3377,20 +3416,23 @@ oninput="kmComboFilter('{inp_id}',window.{var},{alt_var})"
 onfocus="kmComboOpen('{inp_id}',window.{var},{alt_var})"
 onkeydown="kmComboKeydown(event,'{inp_id}',window.{var},{alt_var})"
 onblur="kmComboBlur('{inp_id}')">
+{loc_btn}
 <button type="button" class="ctl-mic" onclick="kmVoice('{inp_id}','{var}')" aria-label="आवाज़ से {escape(label)} खोजें">{_MIC_SVG}</button>
 </div>
 <ul class="ctl-list" id="{inp_id}-list" role="listbox"></ul></label>"""
 
-    fields = (_field("फसल", "dl-hub-crop", "फसल चुनें", crop_map, "window.dl_hub_crop_alt", cur_crop)
-              + _field("राज्य", "dl-hub-state", "राज्य चुनें", state_map, "window.dl_hub_state_alt", cur_state)
-              + _field("मंडी / जिला", "dl-hub-dist", "मंडी / जिला चुनें", dist_map,
-                       value=cur_dist))
+    fl = []
+    if show_crop:
+        fl.append(_field("फसल", "dl-hub-crop", "फसल चुनें", crop_map, "window.dl_hub_crop_alt", cur_crop, has_loc=False))
+    fl.append(_field("राज्य", "dl-hub-state", "राज्य चुनें", state_map, "window.dl_hub_state_alt", cur_state, has_loc=True))
+    fl.append(_field("मंडी / जिला", "dl-hub-dist", "मंडी / जिला चुनें", dist_map, "window.dl_hub_dist_alt", cur_dist, has_loc=True))
+    fields = "".join(fl)
 
     maps_js = "".join(
         f'window.{var}={_json.dumps(m, ensure_ascii=False)};'
         for var, m in (("dl_hub_crop", crop_map), ("dl_hub_state", state_map),
                        ("dl_hub_dist", dist_map), ("dl_hub_crop_alt", crop_alt),
-                       ("dl_hub_state_alt", state_alt)))
+                       ("dl_hub_state_alt", state_alt), ("dl_hub_dist_alt", dist_alt)))
 
     return f"""<div class="ctl">{fields}</div>
 <script>
@@ -3409,7 +3451,7 @@ var hi=k.toLowerCase(),en=((alt&&alt[k])||'').toLowerCase();
 return hi.indexOf(q)!==-1||en.indexOf(q)!==-1;
 }}):keys;
 list.innerHTML=matches.length
-?matches.slice(0,40).map(function(k){{return '<li role="option">'+k+'</li>';}}).join('')
+?matches.slice(0,80).map(function(k){{return '<li role="option">'+k+'</li>';}}).join('')
 :'<li class="ctl-no-results">कोई परिणाम नहीं मिला</li>';
 Array.prototype.forEach.call(list.children,function(li){{
 if(li.classList.contains('ctl-no-results'))return;
@@ -3474,6 +3516,64 @@ if(url){{if(window.kmShowLoading)window.kmShowLoading();location.href=url;}}else
 }};
 rec.onend=function(){{if(btn)btn.classList.remove('listening');}};
 rec.start();
+}}
+function kmLoc(inputId,mapVar){{
+var btn=document.getElementById(inputId.replace(/-i$/, '-loc'));
+if(!navigator.geolocation){{alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');return;}}
+if(btn){{btn.classList.remove('active');btn.classList.add('loading');}}
+
+function _applyLoc(lat,lon){{
+var url='https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+lat+'&longitude='+lon+'&localityLanguage=hi';
+fetch(url).then(function(res){{return res.json();}}).then(function(d){{
+if(btn){{btn.classList.remove('loading');btn.classList.add('active');}}
+var state=(d.principalSubdivision||'').trim();
+var city=(d.city||d.locality||'').trim();
+var admin=[];
+if(d.localityInfo&&Array.isArray(d.localityInfo.administrative)){{
+d.localityInfo.administrative.forEach(function(a){{
+if(a&&a.name){{var cl=a.name.replace(/\\s*(District|Division|जिला|जिल्हा|मण्डल)\\s*/gi,'').trim();if(cl)admin.push(cl);}}
+}});
+}}
+var map=window[mapVar]||{{}};
+var alt=window[mapVar+'_alt']||{{}};
+var matchedKey=null;
+var cands=[city].concat(admin).concat([state]).filter(Boolean);
+for(var i=0;i<cands.length;i++){{
+var c=cands[i];
+if(map[c]){{matchedKey=c;break;}}
+var cLow=c.toLowerCase();
+for(var k in map){{
+var kLow=k.toLowerCase(),altVal=((alt&&alt[k])||'').toLowerCase();
+if(kLow===cLow||kLow.indexOf(cLow)!==-1||cLow.indexOf(kLow)!==-1||altVal===cLow||altVal.indexOf(cLow)!==-1){{matchedKey=k;break;}}
+}}
+if(matchedKey)break;
+}}
+var el=document.getElementById(inputId);
+if(matchedKey){{
+kmComboSelect(inputId,matchedKey,map);
+}}else{{
+var fill=city||admin[0]||state||'';
+if(el&&fill){{el.value=fill;el.dataset.valid='1';kmComboFilter(inputId,map);el.focus();}}
+}}
+}}).catch(function(){{if(btn)btn.classList.remove('loading');}});
+}}
+
+try{{
+var stored=JSON.parse(localStorage.getItem('km_geo')||'null');
+if(stored&&stored.lat&&stored.lon&&(Date.now()-(stored.ts||0)<7*86400000)){{
+setTimeout(function(){{_applyLoc(stored.lat,stored.lon);}},300);
+return;
+}}
+}}catch(_){{}}
+
+navigator.geolocation.getCurrentPosition(function(pos){{
+try{{
+localStorage.setItem('km_geo',JSON.stringify({{
+status:'granted',lat:+pos.coords.latitude.toFixed(5),lon:+pos.coords.longitude.toFixed(5),ts:Date.now()
+}}));
+}}catch(_){{}}
+_applyLoc(pos.coords.latitude,pos.coords.longitude);
+}},function(){{if(btn)btn.classList.remove('loading');}},{{enableHighAccuracy:false,timeout:10000,maximumAge:600000}});
 }}
 </script>"""
 
@@ -3880,6 +3980,64 @@ function _bhavVoice(inputId,micId,after){
 }
 function bhavTileVoice(){_bhavVoice('bhav-tile-search','bhav-tile-mic',bhavFilterTiles);}
 function bhavStateVoice(){_bhavVoice('bhav-state-search','bhav-state-mic',bhavFilterStates);}
+function bhavHubLocation(tab){
+  var btn = document.getElementById(tab === 'state' ? 'bhav-state-loc' : 'bhav-tile-loc') || document.getElementById('bhav-state-loc');
+  if(!navigator.geolocation){
+    alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');
+    return;
+  }
+  if(btn){ btn.classList.remove('active'); btn.classList.add('loading'); }
+
+  function _resolveHub(lat, lon){
+    var url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=hi';
+    fetch(url)
+      .then(function(res){ return res.json(); })
+      .then(function(d){
+        if(btn){ btn.classList.remove('loading'); btn.classList.add('active'); }
+        var state = (d.principalSubdivision || '').trim();
+        var sBox = document.getElementById('bhav-state-search');
+        if(sBox && state){
+          sBox.value = state;
+          bhavFilterStates();
+          var sLow = state.toLowerCase();
+          var card = document.querySelector('#bhav-state-grid .place[data-name*="' + sLow + '"]');
+          if(card){
+            try { card.scrollIntoView({behavior:'smooth', block:'center'}); } catch(_){}
+            card.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+            card.style.boxShadow = '0 0 0 3px #2563eb';
+            setTimeout(function(){ card.style.boxShadow = ''; }, 2500);
+          }
+        }
+        var stateTabBtn = document.querySelector('.bhav-tab-btn[data-pane="state"]');
+        if(stateTabBtn && !stateTabBtn.classList.contains('active')) stateTabBtn.click();
+      })
+      .catch(function(){
+        if(btn){ btn.classList.remove('loading'); }
+      });
+  }
+
+  try {
+    var stored = JSON.parse(localStorage.getItem('km_geo') || 'null');
+    if(stored && stored.lat && stored.lon && (Date.now() - (stored.ts || 0) < 7 * 86400000)){
+      setTimeout(function(){ _resolveHub(stored.lat, stored.lon); }, 300);
+      return;
+    }
+  } catch(_){}
+
+  navigator.geolocation.getCurrentPosition(function(pos){
+    try {
+      localStorage.setItem('km_geo', JSON.stringify({
+        status: 'granted',
+        lat: +pos.coords.latitude.toFixed(5),
+        lon: +pos.coords.longitude.toFixed(5),
+        ts: Date.now()
+      }));
+    } catch(_){}
+    _resolveHub(pos.coords.latitude, pos.coords.longitude);
+  }, function(){
+    if(btn){ btn.classList.remove('loading'); }
+  }, {enableHighAccuracy: false, timeout: 10000, maximumAge: 600000});
+}
 </script>"""
 
 
@@ -3890,6 +4048,21 @@ _MIC_SVG_HTML = ('<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15"
                  '<path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>'
                  '<line x1="8" y1="23" x2="16" y2="23"/></svg>')
 
+# Reusable location icon — clean target/crosshairs pin glyph, strictly no emojis.
+_LOC_SVG_HTML = ('<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" '
+                 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '
+                 'stroke-linejoin="round"><circle cx="12" cy="12" r="7"/>'
+                 '<line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>'
+                 '<line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>'
+                 '<circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>')
+
+
+# Reusable search glass icon — clean SVG, strictly no emojis.
+_SEARCH_SVG_HTML = ('<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" '
+                    'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '
+                    'stroke-linejoin="round"><circle cx="11" cy="11" r="8"/>'
+                    '<line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>')
+
 
 def _tier_head(h1: str, sub: str) -> str:
     """Clean blue centered heading + a dated freshness line — the SAME top the
@@ -3899,19 +4072,27 @@ def _tier_head(h1: str, sub: str) -> str:
             f'<p class="mandi-page-sub">{sub}</p>')
 
 
-def _tier_search(grid_id: str, placeholder: str) -> str:
-    """The app's 🔍+mic search box that live-filters the picker grid with id
-    `grid_id`. Every item in that grid must carry data-name (Hindi + English)."""
+def _tier_search(grid_id: str, placeholder: str, has_loc: bool | None = None) -> str:
+    """The app's 🔍+loc+mic search box that live-filters the picker grid with id
+    `grid_id`. Every item in that grid must carry data-name (Hindi + English).
+    Location button is ONLY shown for place searches (State / District), never for Crops.
+    """
+    if has_loc is None:
+        has_loc = ("जिला" in placeholder or "राज्य" in placeholder)
+    loc_btn = (f'<button class="mn-loc-btn" id="{grid_id}-loc" type="button" '
+               f'onmousedown="event.preventDefault()" onclick="bhavGridLocation(\'{grid_id}\')" '
+               f'title="मेरी लोकेशन से खोजें" aria-label="मेरी लोकेशन">{_LOC_SVG_HTML}</button>\n'
+               if has_loc else "")
     return f"""<div class="mandi-toolbar">
 <div class="ctile-search-row">
-<span class="cs-icon">🔍</span>
+<span class="cs-icon">{_SEARCH_SVG_HTML}</span>
 <input id="{grid_id}-search" type="text" autocomplete="off" placeholder="{escape(placeholder)}" oninput="bhavGridFilter('{grid_id}')" />
-<button class="mn-mic-btn" id="{grid_id}-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavGridVoice('{grid_id}')" title="बोलकर खोजें">{_MIC_SVG_HTML}</button>
+{loc_btn}<button class="mn-mic-btn" id="{grid_id}-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavGridVoice('{grid_id}')" title="बोलकर खोजें">{_MIC_SVG_HTML}</button>
 </div>
 </div>"""
 
 
-# Generic grid filter + voice for the tier picker pages (one filterable grid each).
+# Generic grid filter + voice + location for the tier picker pages.
 _TIER_SEARCH_JS = """<script>
 function bhavGridFilter(gid){
   var box=document.getElementById(gid+'-search');
@@ -3933,6 +4114,93 @@ function bhavGridVoice(gid){
   r.onend=function(){if(mic){mic.classList.remove('listening');}};
   r.onerror=function(){if(mic){mic.classList.remove('listening');}};
   try{r.start();}catch(_){}
+}
+function bhavGridLocation(gid){
+  var btn = document.getElementById(gid + '-loc');
+  if(!navigator.geolocation){
+    alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');
+    return;
+  }
+  if(btn){ btn.classList.remove('active'); btn.classList.add('loading'); }
+
+  function _resolveGrid(lat, lon){
+    var url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=hi';
+    fetch(url)
+      .then(function(res){ return res.json(); })
+      .then(function(d){
+        if(btn){ btn.classList.remove('loading'); btn.classList.add('active'); }
+        var state = (d.principalSubdivision || '').trim();
+        var city = (d.city || d.locality || '').trim();
+        var adminList = [];
+        if(d.localityInfo && Array.isArray(d.localityInfo.administrative)){
+          d.localityInfo.administrative.forEach(function(a){
+            if(a && a.name){
+              var clean = a.name.replace(/\\s*(District|Division|जिला|जिल्हा|मण्डल)\\s*/gi,'').trim();
+              if(clean) adminList.push(clean);
+            }
+          });
+        }
+        var box = document.getElementById(gid + '-search');
+        if(!box) return;
+
+        var items = document.querySelectorAll('#' + gid + ' [data-name]');
+        var matchedText = '';
+        var matchedEl = null;
+
+        var candidates = [city].concat(adminList).concat([state]).filter(Boolean);
+        for(var c = 0; c < candidates.length; c++){
+          var cLow = candidates[c].toLowerCase();
+          for(var i = 0; i < items.length; i++){
+            var dn = (items[i].dataset.name || '').toLowerCase();
+            if(dn.indexOf(cLow) >= 0){
+              matchedText = candidates[c];
+              matchedEl = items[i];
+              break;
+            }
+          }
+          if(matchedEl) break;
+        }
+
+        if(matchedText){
+          box.value = matchedText;
+          bhavGridFilter(gid);
+          if(matchedEl){
+            try { matchedEl.scrollIntoView({behavior:'smooth', block:'center'}); } catch(_){}
+            matchedEl.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+            matchedEl.style.boxShadow = '0 0 0 3px #2563eb';
+            setTimeout(function(){ matchedEl.style.boxShadow = ''; }, 2500);
+          }
+        } else if(city || adminList[0] || state){
+          box.value = city || adminList[0] || state;
+          bhavGridFilter(gid);
+        }
+      })
+      .catch(function(){
+        if(btn){ btn.classList.remove('loading'); }
+      });
+  }
+
+  try {
+    var stored = JSON.parse(localStorage.getItem('km_geo') || 'null');
+    if(stored && stored.lat && stored.lon && (Date.now() - (stored.ts || 0) < 7 * 86400000)){
+      setTimeout(function(){ _resolveGrid(stored.lat, stored.lon); }, 300);
+      return;
+    }
+  } catch(_){}
+
+  navigator.geolocation.getCurrentPosition(function(pos){
+    try {
+      localStorage.setItem('km_geo', JSON.stringify({
+        status: 'granted',
+        lat: +pos.coords.latitude.toFixed(5),
+        lon: +pos.coords.longitude.toFixed(5),
+        ts: Date.now()
+      }));
+    } catch(_){}
+    _resolveGrid(pos.coords.latitude, pos.coords.longitude);
+  }, function(){
+    if(btn){ btn.classList.remove('loading'); }
+  }, {enableHighAccuracy: false, timeout: 10000, maximumAge: 600000});
 }
 </script>"""
 
@@ -4049,9 +4317,9 @@ def bhav_hub():
 <div class="bhav-pane" data-pane="crop">
 <div class="mandi-toolbar">
 <div class="ctile-search-row">
-<span class="cs-icon">🔍</span>
+<span class="cs-icon">{_SEARCH_SVG_HTML}</span>
 <input id="bhav-tile-search" type="text" autocomplete="off" placeholder="फसल खोजें... (गेहूं, प्याज, आलू)" oninput="bhavFilterTiles()" />
-<button class="mn-mic-btn" id="bhav-tile-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavTileVoice()" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+<button class="mn-mic-btn" id="bhav-tile-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavTileVoice()" title="बोलकर खोजें">{_MIC_SVG_HTML}</button>
 </div>
 </div>
 <div class="shop-section-title"><span>आज के भाव — अपनी फसल चुनें</span></div>
@@ -4061,9 +4329,10 @@ def bhav_hub():
 <div class="bhav-pane" data-pane="state" hidden>
 <div class="mandi-toolbar">
 <div class="ctile-search-row">
-<span class="cs-icon">🔍</span>
+<span class="cs-icon">{_SEARCH_SVG_HTML}</span>
 <input id="bhav-state-search" type="text" autocomplete="off" placeholder="राज्य खोजें... (उत्तर प्रदेश, बिहार)" oninput="bhavFilterStates()" />
-<button class="mn-mic-btn" id="bhav-state-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavStateVoice()" title="बोलकर खोजें"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+<button class="mn-loc-btn" id="bhav-state-loc" type="button" onmousedown="event.preventDefault()" onclick="bhavHubLocation('state')" title="मेरी लोकेशन से खोजें" aria-label="मेरी लोकेशन">{_LOC_SVG_HTML}</button>
+<button class="mn-mic-btn" id="bhav-state-mic" type="button" onmousedown="event.preventDefault()" onclick="bhavStateVoice()" title="बोलकर खोजें">{_MIC_SVG_HTML}</button>
 </div>
 </div>
 <div class="shop-section-title"><span>राज्य चुनें — सभी फसलों के भाव देखें</span></div>
@@ -4146,10 +4415,10 @@ def bhav_state_hub(state: str):
     # crop. The selector's जिला field goes to the same place; this grid is the
     # no-JS path and the only way Google reaches those pages by link.
     dcards = "".join(
-        f'<a class="dcard" href="/bhav/rajya/{ss}/{ds}" data-name="{escape(dn.lower())}">'
-        f'<span class="dcard-n">{escape(dn)}</span>'
+        f'<a class="dcard" href="/bhav/rajya/{ss}/{ds}" data-name="{escape(f"{_hindi_district(ss, dn)} {dn} {ds}".lower())}">'
+        f'<span class="dcard-n">{escape(_hindi_district(ss, dn))}</span>'
         f'<span class="dcard-r">भाव देखें →</span></a>'
-        for ds, dn in sorted(dists_here.items(), key=lambda kv: kv[1]))
+        for ds, dn in sorted(dists_here.items(), key=lambda kv: _hindi_district(ss, kv[1])))
 
     faqs = [
         (f"{hi_state} में आज कौन-कौन सी फसलों का भाव मिलता है?",
@@ -4209,7 +4478,7 @@ def bhav_state_hub(state: str):
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav">← सभी राज्य</a>
 </div>
-{_hub_selector("", ss, "", idx, known_state=True)}
+{_hub_selector("", ss, "", idx, known_state=True, show_crop=False)}
 <h2>{escape(hi_state)} में फसल चुनें</h2>
 {_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)')}
 <div class="crop-grid" id="tier-grid">{"".join(cards)}</div>
@@ -4348,11 +4617,14 @@ def bhav_district_hub(state: str, district: str):
     head_sub = (f"📅 {as_of_hi} · {escape(hi_state)} · {len(crops_here)} फसलें · "
                 f"औसत भाव ₹/क्विंटल · स्रोत: data.gov.in (Agmarknet)"
                 f"{_age_badge(fresh)}")
+    hub_map_html = _district_hub_satellite_map_html(state=sn, district=dn,
+                                                    s_slug=ss, d_slug=ds, d_hi=dn_hi)
     body = f"""{_tier_head(head_h1, head_sub)}
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav/rajya/{ss}">← {escape(hi_state)} के सभी जिले</a>
 </div>
-{_hub_selector("", ss, ds, idx, known_state=True, known_dist=True)}
+{_hub_selector("", ss, ds, idx, known_state=True, known_dist=True, show_crop=False)}
+{hub_map_html}
 <h2>{escape(dn_hi)} में फसल चुनें</h2>
 {_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)')}
 <div class="crop-grid" id="tier-grid">{"".join(cards)}</div>
@@ -4363,8 +4635,14 @@ def bhav_district_hub(state: str, district: str):
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/rajya/{ss}">{escape(hi_state)}</a> › {escape(dn_hi)}')
-    return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS, lang=lang,
-                updated=fresh)
+    hub_head = (
+        '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'
+        '<link rel="dns-prefetch" href="https://unpkg.com">'
+        f'{_LEAFLET_CSS}'
+        if hub_map_html else ""
+    )
+    return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS + _BHAV_MAP_CSS,
+                head_extra=hub_head, lang=lang, updated=fresh)
 
 
 # ════════════════════════════════════════════════════════════
@@ -4858,12 +5136,15 @@ def _net_rank(commodity: str, lat: float, lon: float, qty: float,
         if dist_km > radius:
             continue
         br = freight.net_price(_num(r.get("modal_price")), dist_km, tier, qty)
+        m_coords = district_geo.resolve_mandi_coords(state, district, r.get("market", "-")) or (c[0], c[1], False)
         ranked.append({
             "market":   r.get("market", "-"),
             "district": district,
             "state":    state,
             "ss":       _slugify(state),
             "ds":       _slugify(district),
+            "lat":      m_coords[0],
+            "lon":      m_coords[1],
             **br,
         })
     ranked.sort(key=lambda x: (x["net_per_q"], -x["distance_km"]), reverse=True)
@@ -4935,8 +5216,17 @@ def _net_price_html(cs: str, hi: str, ranked: list, qty: float, tier: str,
             f'<div class="np-take-main">{main}</div>'
             f'<div class="np-take-info">{chips}</div></div>'
             f'{net_fig}</div>')
+    map_bar = ('<div class="np-map-bar">'
+               '<button id="np-map-toggle" class="np-map-toggle-btn" type="button" onclick="if(window.toggleNpMap)window.toggleNpMap();">'
+               '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>'
+               ' नक्शे पर देखें (Satellite Map)</button>'
+               '</div>'
+               '<div id="np-map-container" class="np-map-container" style="display:none">'
+               '<div id="np-map-canvas" class="bhav-map-canvas" style="height:350px;border-radius:12px;overflow:hidden"></div>'
+               '</div>')
 
     return (f'{take}'
+            f'{map_bar}'
             f'<div class="np-list">{"".join(cards)}</div>'
             f'{haul}'
             '<p class="np-fine">भाड़ा सिर्फ अनुमान है — असली खर्च डीज़ल, रास्ते और '
@@ -5052,7 +5342,8 @@ def bhav_net_price(crop: str, lat: float, lon: float,
     haul = _haul_html(tier, lat, lon) if ranked else ""
     html = _net_price_html((crop or "").lower(), _hindi_name(commodity),
                            ranked, qty, tier, haul)
-    return JSONResponse({"ok": True, "html": html, "count": len(ranked)},
+    return JSONResponse({"ok": True, "html": html, "count": len(ranked),
+                         "mandis": ranked, "user_lat": lat, "user_lon": lon},
                         headers={"Cache-Control": "no-store"})
 
 
@@ -5298,7 +5589,7 @@ def bhav_net_price_page():
     desc = ("दूर की मंडी का ऊँचा रेट धोखा दे सकता है। ट्रांसपोर्ट, टोल और समय "
             "घटाकर 2 मिनट में असली नेट भाव निकालें — कौन सी मंडी लाभदायक, तुरंत देखें।")
     return _doc("मंडी नेट भाव कैलकुलेटर — भाड़ा घटाकर असली रेट, कौन सी मंडी लाभदायक?",
-                desc, canon, crumbs, body, ld, extra_css=_NP_CSS)
+                desc, canon, crumbs, body, ld, extra_css=_NP_CSS + _BHAV_MAP_CSS)
 
 
 # ════════════════════════════════════════════════════════════
@@ -5365,6 +5656,1067 @@ def _lazy_script(pairs: list) -> str:
         for url, did in pairs
     )
     return f'<script>document.addEventListener("DOMContentLoaded",function(){{{fetches}}});</script>'
+
+
+_LEAFLET_CSS = '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">'
+
+_BHAV_MAP_CSS = """
+.bhav-map-sec{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin:26px 0;box-shadow:var(--shadow-sm);position:relative;isolation:isolate;z-index:10}
+.bhav-map-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--white)}
+.bhav-map-head-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bhav-map-head h2{font-size:17px;font-weight:700;color:var(--text-dark);margin:0;line-height:1.3}
+.bhav-map-pill{display:inline-flex;align-items:center;padding:3px 10px;background:var(--green-pale);color:var(--green-dark);border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.2px}
+.bhav-map-sub-note{font-size:12.5px;color:var(--text-soft);font-weight:500}
+@media(max-width:768px){.bhav-map-sub-note{display:none}}
+.bhav-map-wrap{position:relative;width:100%;height:420px;background:#0d1d13;overflow:hidden}
+@media(max-width:640px){.bhav-map-wrap{height:330px}.bhav-map-head{padding:12px 16px}}
+.bhav-map-canvas{width:100%;height:100%;z-index:1;background:#0d1d13}
+.bhav-map-canvas .leaflet-container,.bhav-map-canvas .leaflet-tile-container{background:#0d1d13!important}
+.bhav-map-ctrls{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
+.bhav-map-ctrls-left,.bhav-map-ctrls-right{display:flex;align-items:center;gap:8px;pointer-events:auto;flex-wrap:wrap}
+@media(max-width:640px){
+  .bhav-map-ctrls{gap:6px}
+  .bhav-map-ctrls-left,.bhav-map-ctrls-right{gap:6px}
+}
+.bhav-map-btn-group{display:flex;background:rgba(18,38,28,.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:8px;overflow:hidden;padding:2px}
+.bhav-map-tab{background:transparent;border:none;color:#d8f3dc;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease;font-family:inherit;line-height:1.2;min-height:32px}
+.bhav-map-tab.active{background:var(--green-mid);color:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.bhav-map-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(18,38,28,.88);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s ease;font-family:inherit;line-height:1.2;min-height:32px}
+.bhav-map-btn:hover{background:rgba(26,60,46,.95);border-color:rgba(255,255,255,.3);color:#fff}
+.bhav-map-btn-route{background:rgba(22,101,52,.92);border-color:rgba(82,183,136,.45);color:#fff}
+.bhav-map-btn-route:hover{background:rgba(20,83,45,.98);border-color:rgba(82,183,136,.7);color:#fff}
+.bhav-map-btn-route.loading{opacity:.85;pointer-events:none}
+.bm-icon{width:14px;height:14px;display:inline-block;vertical-align:middle;fill:currentColor;flex-shrink:0}
+.bhav-map-skel{position:absolute;inset:0;background:radial-gradient(circle at center,#153224 0%,#0a1710 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#95d5b2;z-index:2;cursor:pointer;transition:opacity .3s ease}
+.bhav-map-skel.hidden{opacity:0;pointer-events:none}
+.bhav-map-skel-icon{width:44px;height:44px;stroke:currentColor;fill:none;stroke-width:1.5;margin-bottom:10px;opacity:.85}
+.bhav-map-skel-txt{font-size:14px;font-weight:600;color:#e8f5e9}
+.bhav-map-skel-sub{font-size:12px;color:#a3b899;margin-top:4px}
+.bhav-mandi-pin{cursor:pointer;position:relative}
+.bhav-mandi-pin:hover{z-index:99999!important}
+.bhav-mandi-pin-inner{display:inline-flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);position:relative;transition:transform .18s cubic-bezier(.2,0,0,1)}
+.bhav-pin-card{display:flex;align-items:center;gap:6px;background:#132d20;color:#fff;border:1.5px solid #52b788;border-radius:18px;padding:4px 10px;box-shadow:0 3px 12px rgba(0,0,0,.45);white-space:nowrap;font-size:12px;font-weight:600;line-height:1.2;transition:transform .15s ease,box-shadow .15s ease}
+.bhav-mandi-pin:hover .bhav-pin-card{transform:scale(1.05);box-shadow:0 6px 18px rgba(0,0,0,.6)}
+.bhav-pin-name{color:#d8f3dc}
+.bhav-pin-price{background:#52b788;color:#0b1d13;font-weight:800;padding:2px 6px;border-radius:10px;font-size:11px}
+.bhav-pin-top .bhav-pin-card{background:#2a1c02;border-color:#f59e0b;box-shadow:0 3px 14px rgba(245,158,11,.45)}
+.bhav-pin-top .bhav-pin-name{color:#fef3c7}
+.bhav-pin-top .bhav-pin-price{background:#f59e0b;color:#1e1302}
+.bhav-pin-tag{font-size:9px;font-weight:800;background:#f59e0b;color:#1e1302;padding:1px 5px;border-radius:6px;letter-spacing:0.3px}
+.bhav-pin-arrow{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #52b788;margin-top:-1px}
+.bhav-pin-top .bhav-pin-arrow{border-top-color:#f59e0b}
+.bhav-pin-stem{position:absolute;left:50%;top:100%;width:2px;background:#52b788;transform:translateX(-50%);pointer-events:none;opacity:0.9;border-radius:1px;box-shadow:0 0 3px rgba(0,0,0,.5);z-index:1}
+.bhav-pin-top .bhav-pin-stem{background:#f59e0b}
+.bhav-pin-stem .bhav-pin-dot{position:absolute;left:50%;bottom:-3px;width:6px;height:6px;border-radius:50%;background:#52b788;border:1.5px solid #fff;transform:translateX(-50%);box-shadow:0 0 4px rgba(0,0,0,.6)}
+.bhav-pin-top .bhav-pin-stem .bhav-pin-dot{background:#f59e0b}
+.bhav-user-pin{width:16px;height:16px;background:#2563eb;border:2.5px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(37,99,235,.35);position:relative;animation:bmPulse 2s infinite}
+@keyframes bmPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,.6)}70%{box-shadow:0 0 0 12px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+.bhav-popup{font-family:var(--font-body);padding:2px;min-width:180px}
+.bhav-popup-title{font-size:14px;font-weight:700;color:#14351f;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.bhav-popup-tag{font-size:10px;padding:2px 6px;background:#d8f3dc;color:#1b4332;border-radius:4px;font-weight:700}
+.bhav-popup-price{font-size:18px;font-weight:800;color:#1b4332;margin:4px 0 2px}
+.bhav-popup-price small{font-size:12px;font-weight:500;color:#556b2f}
+.bhav-popup-range{font-size:12px;color:#5a6b61;margin-bottom:6px}
+.bhav-popup-date{font-size:11px;color:#7c8983;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.bhav-popup-dist{font-size:11px;color:#1e40af;font-weight:600;background:#eff6ff;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:8px}
+.bhav-popup-actions{display:flex;gap:8px;margin-top:8px}
+.bhav-popup-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;font-size:12px;font-weight:700;border-radius:6px;text-decoration:none;border:none;cursor:pointer;font-family:inherit}
+.bhav-popup-btn-nav{background:#166534;color:#fff}
+.bhav-popup-btn-nav:hover{background:#14532d;color:#fff}
+.bhav-popup-btn-gmap{background:#2563eb;color:#fff}
+.bhav-popup-btn-gmap:hover{background:#1d4ed8;color:#fff}
+.bhav-popup-btn-bazar{background:#f3f4f6;color:#1f2937}
+.bhav-popup-btn-bazar:hover{background:#e5e7eb;color:#111827}
+.np-map-bar{margin:12px 0 6px;display:flex;justify-content:flex-end}
+.np-map-toggle-btn{display:inline-flex;align-items:center;gap:6px;background:var(--cream);border:1px solid var(--border);color:var(--text-dark);padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .15s}
+.np-map-toggle-btn:hover{background:var(--green-pale);color:var(--green-dark);border-color:var(--green-light)}
+.np-map-container{margin:10px 0 16px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.answer-range{align-items:center}
+@media(max-width:480px){.answer-range{gap:14px}}
+@media(max-width:360px){.answer-range{gap:10px}}
+.answer-map-btn{margin-left:auto;display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(16,185,129,.32) 0%,rgba(5,150,105,.22) 50%,rgba(6,78,59,.78) 100%),rgba(10,35,24,.75);border:1.5px solid rgba(110,231,183,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-family:var(--font-body);font-size:13px;font-weight:700;padding:7px 14px;border-radius:9999px;cursor:pointer;line-height:1.2;transition:all .2s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 14px rgba(0,0,0,.25),0 0 16px rgba(16,185,129,.25),inset 0 1px 0 rgba(255,255,255,.35);white-space:nowrap;min-height:38px;touch-action:manipulation}
+.answer-map-btn::after{content:'';position:absolute;top:-60%;left:-60%;width:40%;height:220%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);transform:rotate(25deg);animation:ambSheen 4.5s cubic-bezier(.4,0,.2,1) infinite;pointer-events:none}
+@keyframes ambSheen{0%,65%{left:-70%}82%,100%{left:150%}}
+.answer-map-btn:hover{background:linear-gradient(135deg,rgba(16,185,129,.45) 0%,rgba(5,150,105,.32) 50%,rgba(6,78,59,.88) 100%),rgba(10,35,24,.85);border-color:#6ee7b7;transform:translateY(-2px) scale(1.02);box-shadow:0 6px 20px rgba(0,0,0,.35),0 0 22px rgba(52,211,153,.45),inset 0 1px 0 rgba(255,255,255,.5)}
+.answer-map-btn:active{transform:translateY(0) scale(.98);box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 10px rgba(16,185,129,.3)}
+.answer-map-btn .amb-radar{position:relative;display:inline-flex;width:8px;height:8px;flex-shrink:0}
+.answer-map-btn .amb-ping{position:absolute;inset:-3px;border-radius:50%;background:#34d399;opacity:.75;animation:ambPing 2s cubic-bezier(0,0,.2,1) infinite}
+.answer-map-btn .amb-dot{position:relative;width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399}
+@keyframes ambPing{70%,100%{transform:scale(2.2);opacity:0}}
+.answer-map-btn .bm-icon{width:15px;height:15px;stroke:#a7f3d0;color:#a7f3d0;flex-shrink:0;transition:transform .2s ease}
+.answer-map-btn:hover .bm-icon{transform:rotate(-6deg) scale(1.1);stroke:#fff;color:#fff}
+.answer-map-btn .amb-txt{color:#fff;font-weight:700;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.answer-map-btn .amb-badge{display:inline-flex;align-items:center;padding:2px 6px;font-size:10px;font-weight:800;letter-spacing:.4px;background:rgba(52,211,153,.22);border:1px solid rgba(110,231,183,.5);color:#d1fae5;border-radius:6px;line-height:1.1;transition:all .18s ease}
+.answer-map-btn:hover .amb-badge{background:rgba(52,211,153,.35);border-color:#6ee7b7;color:#fff}
+.answer-map-btn .amb-arrow{width:13px;height:13px;stroke:#a7f3d0;flex-shrink:0;transition:transform .2s ease,stroke .2s ease;margin-left:-2px}
+.answer-map-btn:hover .amb-arrow{transform:translateX(3px);stroke:#fff}
+@media(max-width:480px){.answer-map-btn{padding:6px 11px;font-size:12px;gap:5px;min-height:34px}.answer-map-btn .amb-badge{font-size:9px;padding:1px 4px}}
+@media(max-width:360px){.answer-map-btn .amb-badge,.answer-map-btn .amb-arrow{display:none}.answer-map-btn{padding:5px 9px;font-size:11.5px;gap:4px}}
+.bhav-map-btn-icon{width:32px;height:32px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;line-height:1;flex-shrink:0}
+.bhav-map-btn-icon.active{background:#2563eb;border-color:#60a5fa;color:#fff}
+.bhav-map-btn-icon.loading svg{animation:bmSpin 1s linear infinite}
+@keyframes bmSpin{100%{transform:rotate(360deg)}}
+.bhav-map-sec.is-fullscreen{position:fixed!important;inset:0!important;z-index:999999!important;width:100vw!important;height:100vh!important;margin:0!important;border-radius:0!important;border:none!important}
+.bhav-map-sec.is-fullscreen .bhav-map-head{padding:10px 16px;background:var(--white)}
+.bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 54px)!important}
+@media(max-width:640px){.bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 48px)!important}}
+.bhav-map-route-card{position:absolute;bottom:14px;left:12px;max-width:calc(100% - 64px);background:rgba(18,38,28,.93);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(82,183,136,.45);border-radius:12px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:25;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:bmSlideUp .25s ease-out}
+@keyframes bmSlideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.bhav-route-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.bhav-route-main svg{width:18px;height:18px;fill:#60a5fa;flex-shrink:0}
+.bhav-route-info{display:flex;flex-direction:column;min-width:0;gap:2px}
+.bhav-route-title{font-size:12px;color:#d8f3dc;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bhav-route-title b{color:#fff;font-weight:700}
+.bhav-route-meta{font-size:12px;color:#95d5b2;font-weight:500}
+.bhav-route-meta b{color:#8ef0b4;font-size:13.5px;font-weight:800}
+.bhav-route-meta small{color:#cbd5e1;font-size:11px;font-weight:500;margin-left:4px}
+.bhav-route-nav-btn{display:inline-flex;align-items:center;gap:5px;background:#2563eb;color:#fff;font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;transition:background .15s;flex-shrink:0}
+.bhav-route-nav-btn:hover{background:#1d4ed8;color:#fff}
+@media(max-width:520px){
+  .bhav-map-route-card{bottom:10px;left:8px;max-width:calc(100% - 56px);padding:7px 10px;gap:8px}
+  .bhav-route-title{font-size:11px}
+  .bhav-route-meta{font-size:11px}
+  .bhav-route-meta b{font-size:12.5px}
+  .bhav-route-nav-btn{padding:5px 8px;font-size:10.5px}
+}
+"""
+
+
+def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_lon: float) -> str:
+    js_id = map_id.replace('-', '_')
+    return f"""<script>
+(function(){{
+  var mapId = "{map_id}";
+  var jsId = "{js_id}";
+  var markers = {markers_json};
+  var center = [{center_lat}, {center_lon}];
+  var map = null, satLayer = null, labelLayer = null, osmLayer = null, markerObjs = [];
+  var userMarker = null;
+  var routeGlowLayer = null, routeLineLayer = null;
+  var initialized = false;
+
+  function loadAsset(u, isCss) {{
+    return new Promise(function(res, rej) {{
+      if (isCss) {{
+        if (document.querySelector('link[href="' + u + '"]')) return res();
+        var l = document.createElement('link');
+        l.rel = 'stylesheet'; l.href = u;
+        l.onload = res; l.onerror = rej;
+        document.head.appendChild(l);
+      }} else {{
+        if (window.L || document.querySelector('script[src="' + u + '"]')) return res();
+        var s = document.createElement('script');
+        s.src = u; s.async = true;
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      }}
+    }});
+  }}
+
+  function ensureLeaflet() {{
+    if (window.L) return Promise.resolve();
+    return Promise.all([
+      loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', true),
+      loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', false)
+    ]);
+  }}
+
+  function initMap() {{
+    if (initialized) return;
+    initialized = true;
+    var skel = document.getElementById(mapId + '-skel');
+    if (skel) skel.classList.add('hidden');
+
+    var mapEl = document.getElementById(mapId + '-canvas');
+    if (!mapEl) return;
+
+    map = L.map(mapEl, {{zoomControl: false, zoomSnap: 0.25}}).setView(center, 11);
+    L.control.zoom({{position: 'bottomright'}}).addTo(map);
+
+    satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
+      attribution: 'Tiles © Esri World Imagery', maxNativeZoom: 18, maxZoom: 20,
+      keepBuffer: 4
+    }});
+    satLayer.on('tileerror', function(e) {{
+      if (e.tile && !e.tile._retried) {{
+        e.tile._retried = true;
+        setTimeout(function() {{ e.tile.src = e.url; }}, 800);
+      }}
+    }});
+    labelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
+      attribution: '© Esri', maxNativeZoom: 18, maxZoom: 20,
+      keepBuffer: 4
+    }});
+    osmLayer = L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
+      attribution: '© OpenStreetMap contributors', maxNativeZoom: 19, maxZoom: 20,
+      keepBuffer: 4
+    }});
+
+    satLayer.addTo(map);
+    labelLayer.addTo(map);
+
+    markerObjs = [];
+    var bounds = L.latLngBounds([]);
+    markers.forEach(function(m, i) {{
+      var pos = [m.lat, m.lon];
+      bounds.extend(pos);
+
+      var pinHtml = '<div class="bhav-mandi-pin-inner" id="' + mapId + '-pin-inner-' + i + '">' +
+        '<div class="bhav-pin-card">' +
+        (m.is_top ? '<span class="bhav-pin-tag">उच्चतम भाव</span>' : '') +
+        '<span class="bhav-pin-name">' + m.name + '</span>' +
+        '<span class="bhav-pin-price">' + m.price + '</span>' +
+        '</div><div class="bhav-pin-arrow"></div>' +
+        '<div class="bhav-pin-stem" id="' + mapId + '-pin-stem-' + i + '" style="display:none">' +
+        '<div class="bhav-pin-dot"></div>' +
+        '</div>' +
+        '</div>';
+
+      var icon = L.divIcon({{
+        className: 'bhav-mandi-pin' + (m.is_top ? ' bhav-pin-top' : ''),
+        html: pinHtml,
+        iconSize: null,
+        iconAnchor: null
+      }});
+
+      var popHtml = '<div class="bhav-popup">' +
+        '<div class="bhav-popup-title"><span>' + m.market + '</span>' +
+        (m.is_top ? '<span class="bhav-popup-tag">उच्चतम भाव</span>' : '') + '</div>' +
+        '<div class="bhav-popup-price">' + m.price + (m.price.indexOf('₹') === 0 ? ' <small>/क्विंटल</small>' : '') + '</div>' +
+        (m.min_price && m.min_price !== '—' && m.max_price && m.max_price !== '—' ?
+          '<div class="bhav-popup-range">न्यूनतम ' + m.min_price + ' — अधिकतम ' + m.max_price + '</div>' : '') +
+        (m.date ? '<div class="bhav-popup-date">' +
+          '<svg class="bm-icon" style="width:12px;height:12px" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg> रिपोर्ट: ' + m.date + '</div>' : '') +
+        '<div id="' + mapId + '-dist-' + i + '" class="bhav-popup-dist" style="display:none"></div>' +
+        '<div class="bhav-popup-actions">' +
+        '<button type="button" id="' + mapId + '-pop-btn-' + i + '" onclick="' + jsId + '_showPathTo(' + i + ')" class="bhav-popup-btn bhav-popup-btn-nav">' +
+        '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> रास्ता देखें</button>' +
+        '<button type="button" onclick="if(window.openCropAppeal)openCropAppeal();else window.location.href=\\'/bazar\\';" class="bhav-popup-btn bhav-popup-btn-bazar">फसल बेचें / खरीदें</button>' +
+        '</div></div>';
+
+      var mObj = L.marker(pos, {{icon: icon}}).addTo(map).bindPopup(popHtml);
+      markerObjs.push({{
+        marker: mObj,
+        data: m,
+        idx: i,
+        pos: pos,
+        is_top: m.is_top,
+        price_num: m.price_num || 0
+      }});
+    }});
+
+    function restackMarkers() {{
+      if (!map || markerObjs.length <= 1) return;
+
+      var pts = markerObjs.map(function(item) {{
+        var pt = map.latLngToContainerPoint(item.pos);
+        return {{
+          idx: item.idx,
+          x: pt.x,
+          y: pt.y,
+          is_top: item.is_top,
+          price_num: item.price_num
+        }};
+      }});
+
+      var visited = new Uint8Array(pts.length);
+      var clusters = [];
+
+      for (var i = 0; i < pts.length; i++) {{
+        if (visited[i]) continue;
+        var cluster = [pts[i]];
+        visited[i] = 1;
+        var added = true;
+        while (added) {{
+          added = false;
+          for (var j = 0; j < pts.length; j++) {{
+            if (visited[j]) continue;
+            for (var k = 0; k < cluster.length; k++) {{
+              var dx = Math.abs(pts[j].x - cluster[k].x);
+              var dy = Math.abs(pts[j].y - cluster[k].y);
+              if (dx < 140 && dy < 34) {{
+                visited[j] = 1;
+                cluster.push(pts[j]);
+                added = true;
+                break;
+              }}
+            }}
+          }}
+        }}
+        clusters.push(cluster);
+      }}
+
+      clusters.forEach(function(cluster) {{
+        if (cluster.length === 1) {{
+          var single = cluster[0];
+          var innerEl = document.getElementById(mapId + '-pin-inner-' + single.idx);
+          var stemEl = document.getElementById(mapId + '-pin-stem-' + single.idx);
+          if (innerEl) {{
+            innerEl.style.transform = 'translate(-50%, -100%)';
+            innerEl.style.zIndex = single.is_top ? '100' : '10';
+          }}
+          if (stemEl) stemEl.style.display = 'none';
+          return;
+        }}
+
+        cluster.sort(function(a, b) {{
+          if (a.is_top && !b.is_top) return 1;
+          if (!a.is_top && b.is_top) return -1;
+          return a.price_num - b.price_num;
+        }});
+
+        var curTop = cluster[0].y - 32;
+        for (var s = 0; s < cluster.length; s++) {{
+          var item = cluster[s];
+          var innerEl = document.getElementById(mapId + '-pin-inner-' + item.idx);
+          var stemEl = document.getElementById(mapId + '-pin-stem-' + item.idx);
+
+          if (s === 0) {{
+            if (innerEl) {{
+              innerEl.style.transform = 'translate(-50%, -100%)';
+              innerEl.style.zIndex = item.is_top ? '100' : '10';
+            }}
+            if (stemEl) stemEl.style.display = 'none';
+            curTop = item.y - 32;
+          }} else {{
+            var targetBottom = curTop - 5;
+            var yShift = Math.max(s * 34, Math.round(item.y - targetBottom));
+            curTop = item.y - yShift - 32;
+
+            if (innerEl) {{
+              innerEl.style.transform = 'translate(-50%, calc(-100% - ' + yShift + 'px))';
+              innerEl.style.zIndex = (item.is_top ? 200 : 50) + s;
+            }}
+            if (stemEl) {{
+              stemEl.style.display = 'block';
+              stemEl.style.height = (yShift + 1) + 'px';
+            }}
+          }}
+        }}
+      }});
+    }}
+
+    if (markers.length > 1) {{
+      map.fitBounds(bounds, {{padding: [45, 45], maxZoom: 13}});
+    }} else if (markers.length === 1) {{
+      map.setView([markers[0].lat, markers[0].lon], 12);
+    }}
+
+    map.on('zoomend', restackMarkers);
+    map.on('moveend', restackMarkers);
+    window.addEventListener('resize', function() {{ if (map) {{ map.invalidateSize(); restackMarkers(); }} }});
+    setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 80);
+    setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 300);
+    setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 800);
+    setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 1500);
+  }}
+
+  var setLayerFn = function(type) {{
+    if (!map) return;
+    var btnSat = document.getElementById(mapId + '-tab-sat');
+    var btnOsm = document.getElementById(mapId + '-tab-osm');
+    if (type === 'sat') {{
+      if (osmLayer) map.removeLayer(osmLayer);
+      if (satLayer && !map.hasLayer(satLayer)) map.addLayer(satLayer);
+      if (labelLayer && !map.hasLayer(labelLayer)) map.addLayer(labelLayer);
+      if (btnSat) btnSat.classList.add('active');
+      if (btnOsm) btnOsm.classList.remove('active');
+    }} else {{
+      if (satLayer) map.removeLayer(satLayer);
+      if (labelLayer) map.removeLayer(labelLayer);
+      if (osmLayer && !map.hasLayer(osmLayer)) map.addLayer(osmLayer);
+      if (btnOsm) btnOsm.classList.add('active');
+      if (btnSat) btnSat.classList.remove('active');
+    }}
+  }};
+  window[jsId + '_setLayer'] = setLayerFn;
+  window[mapId + '_setLayer'] = setLayerFn;
+
+  function haversineKm(lat1, lon1, lat2, lon2) {{
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  }}
+
+  function renderRoute(coords, uLat, uLon, mLat, mLon) {{
+    if (!map) return;
+    if (routeGlowLayer) map.removeLayer(routeGlowLayer);
+    if (routeLineLayer) map.removeLayer(routeLineLayer);
+
+    routeGlowLayer = L.polyline(coords, {{
+      color: '#1e3a8a', weight: 8, opacity: 0.55, lineCap: 'round', lineJoin: 'round'
+    }}).addTo(map);
+
+    routeLineLayer = L.polyline(coords, {{
+      color: '#2563eb', weight: 4.5, opacity: 0.95, lineCap: 'round', lineJoin: 'round'
+    }}).addTo(map);
+
+    var routeBounds = L.latLngBounds(coords);
+    routeBounds.extend([uLat, uLon]);
+    routeBounds.extend([mLat, mLon]);
+    map.fitBounds(routeBounds, {{padding: [55, 55], maxZoom: 14}});
+  }}
+
+  var activeMandi = null, activeMandiIdx = null;
+
+  function placeUserMarker(uLat, uLon) {{
+    if (!map) return;
+    if (userMarker) map.removeLayer(userMarker);
+    var uIcon = L.divIcon({{
+      className: 'bhav-user-pin-wrap',
+      html: '<div class="bhav-user-pin" title="पिन खिसकाएं"></div>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    }});
+    userMarker = L.marker([uLat, uLon], {{icon: uIcon, draggable: true}}).addTo(map)
+      .bindPopup('<div style="font-weight:700;font-size:12px;color:#1e40af;text-align:center;">आपकी लोकेशन<div style="font-size:11px;font-weight:500;color:#64748b;margin-top:2px;">(पिन खींचकर सही जगह रख सकते हैं)</div></div>');
+
+    userMarker.on('dragend', function(e) {{
+      var p = e.target.getLatLng();
+      updateUserPos(p.lat, p.lng);
+    }});
+
+    map.on('click', function(e) {{
+      if (!userMarker) {{
+        placeUserMarker(e.latlng.lat, e.latlng.lng);
+      }} else {{
+        userMarker.setLatLng(e.latlng);
+      }}
+      updateUserPos(e.latlng.lat, e.latlng.lng);
+    }});
+
+    var locBtn = document.getElementById(mapId + '-btn-loc');
+    if (locBtn) {{
+      locBtn.classList.remove('loading');
+      locBtn.classList.add('active');
+      locBtn.title = 'आपकी लोकेशन मिली (पिन को खिसका भी सकते हैं)';
+    }}
+  }}
+
+  function findAndDrawShortestPath(uLat, uLon, targetMandi, straightDist) {{
+    var routeCard = document.getElementById(mapId + '-route-card');
+    var routeDistEl = document.getElementById(mapId + '-route-dist');
+    var routeMandiEl = document.getElementById(mapId + '-route-mandi');
+    var routeNavEl = document.getElementById(mapId + '-route-nav');
+    var routeBtn = document.getElementById(mapId + '-btn-route');
+
+    if (routeBtn) {{
+      routeBtn.classList.remove('loading');
+      routeBtn.innerHTML = '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> रास्ता देखें';
+    }}
+
+    var destLat = Number(targetMandi.lat);
+    var destLon = Number(targetMandi.lon);
+    var navUrl = 'https://www.google.com/maps/dir/?api=1&origin=' +
+                 Number(uLat).toFixed(5) + ',' + Number(uLon).toFixed(5) +
+                 '&destination=' + destLat.toFixed(5) + ',' + destLon.toFixed(5) +
+                 '&travelmode=driving';
+
+    if (routeMandiEl) routeMandiEl.textContent = targetMandi.market || targetMandi.name;
+    if (routeNavEl) {{
+      routeNavEl.href = navUrl;
+      routeNavEl.innerHTML = '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> गूगल मैप पर देखें';
+      routeNavEl.title = 'Google Maps में रास्ता खोलें';
+    }}
+    if (routeCard) routeCard.style.display = 'flex';
+
+    if (activeMandiIdx !== null) {{
+      var popBtn = document.getElementById(mapId + '-pop-btn-' + activeMandiIdx);
+      if (popBtn) {{
+        popBtn.outerHTML = '<a href="' + navUrl + '" target="_blank" rel="noopener" class="bhav-popup-btn bhav-popup-btn-nav bhav-popup-btn-gmap" id="' + mapId + '-pop-btn-' + activeMandiIdx + '"><svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> गूगल मैप पर देखें</a>';
+      }}
+    }}
+
+    var fallbackCoords = [[uLat, uLon], [destLat, destLon]];
+    var osrmUrl = 'https://router.project-osrm.org/route/v1/driving/' +
+                  uLon + ',' + uLat + ';' + destLon + ',' + destLat +
+                  '?overview=full&geometries=geojson';
+
+    fetch(osrmUrl)
+      .then(function(res) {{ return res.json(); }})
+      .then(function(data) {{
+        if (data && data.routes && data.routes.length > 0 && data.routes[0].geometry) {{
+          var roadCoords = data.routes[0].geometry.coordinates.map(function(pt) {{
+            return [pt[1], pt[0]];
+          }});
+          var roadKm = (data.routes[0].distance / 1000).toFixed(1);
+          var roadKmNum = parseFloat(roadKm);
+          // Calibrated realistic Indian road travel speed (local/state/highway):
+          var speedKmH = roadKmNum < 30 ? 32 : (roadKmNum < 100 ? 44 : 54);
+          var durationMin = Math.round((roadKmNum / speedKmH) * 60);
+          if (routeDistEl) {{
+            var timeTxt = durationMin >= 60 ?
+              Math.floor(durationMin / 60) + ' घंटा ' + (durationMin % 60) + ' मिनट' :
+              durationMin + ' मिनट';
+            routeDistEl.innerHTML = roadKm + ' किमी <small>· लगभग ' + timeTxt + ' (सड़क मार्ग)</small>';
+          }}
+          renderRoute(roadCoords, uLat, uLon, destLat, destLon);
+        }} else {{
+          var estRoadKm = (straightDist * 1.30).toFixed(1);
+          var estSpeedKmH = straightDist < 30 ? 32 : (straightDist < 100 ? 44 : 54);
+          var estMin = Math.round((parseFloat(estRoadKm) / estSpeedKmH) * 60);
+          var estTimeTxt = estMin >= 60 ?
+            Math.floor(estMin / 60) + ' घंटा ' + (estMin % 60) + ' मिनट' :
+            estMin + ' मिनट';
+          if (routeDistEl) {{
+            routeDistEl.innerHTML = estRoadKm + ' किमी <small>· लगभग ' + estTimeTxt + ' (सड़क मार्ग)</small>';
+          }}
+          renderRoute(fallbackCoords, uLat, uLon, destLat, destLon);
+        }}
+      }})
+      .catch(function() {{
+        var estRoadKm = (straightDist * 1.30).toFixed(1);
+        if (routeDistEl) {{
+          routeDistEl.textContent = estRoadKm + ' किमी (अनुमानित)';
+        }}
+        renderRoute(fallbackCoords, uLat, uLon, destLat, destLon);
+      }});
+  }}
+
+  function showPathTo(idx) {{
+    if (!markers || markers.length === 0) return;
+    var targetMandi = null;
+    var targetIdx = null;
+
+    if (typeof idx === 'number' && markers[idx]) {{
+      targetIdx = idx;
+      targetMandi = markers[idx];
+    }} else if (activeMandi && activeMandiIdx !== null) {{
+      targetMandi = activeMandi;
+      targetIdx = activeMandiIdx;
+    }} else if (markers.length === 1) {{
+      targetIdx = 0;
+      targetMandi = markers[0];
+    }} else if (userMarker) {{
+      var p = userMarker.getLatLng();
+      var nearest = null, nearDist = Infinity, nIdx = 0;
+      markers.forEach(function(m, i) {{
+        var d = haversineKm(p.lat, p.lng, m.lat, m.lon);
+        if (d < nearDist) {{ nearDist = d; nearest = m; nIdx = i; }}
+      }});
+      targetMandi = nearest || markers[0];
+      targetIdx = nIdx;
+    }} else {{
+      targetIdx = 0;
+      targetMandi = markers[0];
+    }}
+
+    activeMandi = targetMandi;
+    activeMandiIdx = targetIdx;
+
+    var routeBtn = document.getElementById(mapId + '-btn-route');
+    var popBtn = targetIdx !== null ? document.getElementById(mapId + '-pop-btn-' + targetIdx) : null;
+
+    function _setRouteBtnLoading(isLoading) {{
+      if (routeBtn) {{
+        if (isLoading) {{
+          routeBtn.classList.add('loading');
+          routeBtn.innerHTML = '<svg class="bm-icon" style="animation:bmSpin 0.8s linear infinite" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg> खोज रहे हैं…';
+        }} else {{
+          routeBtn.classList.remove('loading');
+          routeBtn.innerHTML = '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> रास्ता देखें';
+        }}
+      }}
+    }}
+
+    if (userMarker) {{
+      var pos = userMarker.getLatLng();
+      var d = haversineKm(pos.lat, pos.lng, activeMandi.lat, activeMandi.lon);
+      findAndDrawShortestPath(pos.lat, pos.lng, activeMandi, d);
+    }} else {{
+      try {{
+        var stored = JSON.parse(localStorage.getItem('km_geo') || 'null');
+        if (stored && stored.lat && stored.lon && (Date.now() - (stored.ts || 0) < 7 * 86400000)) {{
+          placeUserMarker(stored.lat, stored.lon);
+          if (typeof idx !== 'number' && markers.length > 1) {{
+            var nStored = null, nDistStored = Infinity, nIStored = 0;
+            markers.forEach(function(m, i) {{
+              var ds = haversineKm(stored.lat, stored.lon, m.lat, m.lon);
+              if (ds < nDistStored) {{ nDistStored = ds; nStored = m; nIStored = i; }}
+            }});
+            if (nStored) {{
+              activeMandi = nStored;
+              activeMandiIdx = nIStored;
+            }}
+          }}
+          var d2 = haversineKm(stored.lat, stored.lon, activeMandi.lat, activeMandi.lon);
+          findAndDrawShortestPath(stored.lat, stored.lon, activeMandi, d2);
+          return;
+        }}
+      }} catch (_) {{}}
+
+      if (!navigator.geolocation) {{
+        alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है। नक्शे पर कहीं भी टैप करके अपनी लोकेशन पिन रखें।');
+        return;
+      }}
+
+      _setRouteBtnLoading(true);
+      if (popBtn) {{
+        popBtn.innerHTML = '<svg class="bm-icon" style="animation:bmSpin 0.8s linear infinite" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg> लोकेशन मिल रही है…';
+      }}
+
+      navigator.geolocation.getCurrentPosition(function(pos) {{
+        _setRouteBtnLoading(false);
+        var uLat = pos.coords.latitude;
+        var uLon = pos.coords.longitude;
+        try {{
+          localStorage.setItem('km_geo', JSON.stringify({{
+            status: 'granted',
+            lat: +uLat.toFixed(5),
+            lon: +uLon.toFixed(5),
+            ts: Date.now()
+          }}));
+        }} catch (_) {{}}
+        placeUserMarker(uLat, uLon);
+        if (typeof idx !== 'number' && markers.length > 1) {{
+          var nLive = null, nDistLive = Infinity, nILive = 0;
+          markers.forEach(function(m, i) {{
+            var dl = haversineKm(uLat, uLon, m.lat, m.lon);
+            if (dl < nDistLive) {{ nDistLive = dl; nLive = m; nILive = i; }}
+          }});
+          if (nLive) {{
+            activeMandi = nLive;
+            activeMandiIdx = nILive;
+          }}
+        }}
+        var d3 = haversineKm(uLat, uLon, activeMandi.lat, activeMandi.lon);
+        findAndDrawShortestPath(uLat, uLon, activeMandi, d3);
+      }}, function() {{
+        _setRouteBtnLoading(false);
+        if (popBtn) {{
+          popBtn.innerHTML = '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> रास्ता देखें';
+        }}
+        alert('रास्ता देखने के लिए कृपया लोकेशन की अनुमति दें, या नक्शे पर टैप करके अपनी जगह बताएं।');
+      }}, {{ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }});
+    }}
+  }}
+  window[jsId + '_showPathTo'] = showPathTo;
+  window[mapId + '_showPathTo'] = showPathTo;
+
+  function updateUserPos(lat, lon) {{
+    var nearest = null;
+    var nearestDist = Infinity;
+    markers.forEach(function(m, i) {{
+      var d = haversineKm(lat, lon, m.lat, m.lon);
+      if (d < nearestDist) {{
+        nearestDist = d;
+        nearest = m;
+      }}
+      var distEl = document.getElementById(mapId + '-dist-' + i);
+      if (distEl) {{
+        distEl.textContent = d.toFixed(1) + ' किमी दूर';
+        distEl.style.display = 'inline-block';
+      }}
+    }});
+
+    var targetMandi = activeMandi || nearest;
+    var targetDist = activeMandi ? haversineKm(lat, lon, activeMandi.lat, activeMandi.lon) : nearestDist;
+    if (targetMandi) {{
+      findAndDrawShortestPath(lat, lon, targetMandi, targetDist);
+    }}
+  }}
+
+  var getLocFn = function() {{
+    if (!map) return;
+    var locBtn = document.getElementById(mapId + '-btn-loc');
+    if (locBtn) {{
+      locBtn.classList.add('loading');
+      locBtn.title = 'लोकेशन खोजी जा रही है…';
+    }}
+
+    function _handlePos(uLat, uLon) {{
+      placeUserMarker(uLat, uLon);
+      updateUserPos(uLat, uLon);
+    }}
+
+    try {{
+      var stored = JSON.parse(localStorage.getItem('km_geo') || 'null');
+      if (stored && stored.lat && stored.lon && (Date.now() - (stored.ts || 0) < 7 * 86400000)) {{
+        setTimeout(function() {{ _handlePos(stored.lat, stored.lon); }}, 300);
+        return;
+      }}
+    }} catch (_) {{}}
+
+    if (!navigator.geolocation) {{
+      alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');
+      if (locBtn) {{
+        locBtn.classList.remove('loading');
+        locBtn.title = 'मेरी लोकेशन खोजें';
+      }}
+      return;
+    }}
+
+    navigator.geolocation.getCurrentPosition(function(pos) {{
+      var uLat = pos.coords.latitude;
+      var uLon = pos.coords.longitude;
+      try {{
+        localStorage.setItem('km_geo', JSON.stringify({{
+          status: 'granted',
+          lat: +uLat.toFixed(5),
+          lon: +uLon.toFixed(5),
+          ts: Date.now()
+        }}));
+      }} catch (_) {{}}
+      _handlePos(uLat, uLon);
+    }}, function(err) {{
+      if (locBtn) {{
+        locBtn.classList.remove('loading');
+        locBtn.title = 'मेरी लोकेशन खोजें';
+      }}
+    }}, {{ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }});
+  }};
+  window[jsId + '_getLoc'] = getLocFn;
+  window[mapId + '_getLoc'] = getLocFn;
+
+  var toggleFsFn = function() {{
+    var sec = document.getElementById(mapId + '-sec');
+    if (!sec) return;
+    var isFs = sec.classList.toggle('is-fullscreen');
+    var fsIcon = document.getElementById(mapId + '-fs-icon');
+    if (fsIcon) {{
+      if (isFs) {{
+        fsIcon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+      }} else {{
+        fsIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+      }}
+    }}
+    if (isFs) {{
+      if (sec.requestFullscreen) {{
+        sec.requestFullscreen().catch(function(){{}});
+      }} else if (sec.webkitRequestFullscreen) {{
+        sec.webkitRequestFullscreen();
+      }}
+    }} else {{
+      if (document.fullscreenElement && document.exitFullscreen) {{
+        document.exitFullscreen().catch(function(){{}});
+      }} else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {{
+        document.webkitExitFullscreen();
+      }}
+    }}
+    setTimeout(function() {{ if (map) map.invalidateSize(); }}, 180);
+  }};
+  window[jsId + '_toggleFs'] = toggleFsFn;
+  window[mapId + '_toggleFs'] = toggleFsFn;
+
+  document.addEventListener('fullscreenchange', function() {{
+    var sec = document.getElementById(mapId + '-sec');
+    if (!sec) return;
+    if (!document.fullscreenElement && sec.classList.contains('is-fullscreen')) {{
+      sec.classList.remove('is-fullscreen');
+      var fsIcon = document.getElementById(mapId + '-fs-icon');
+      if (fsIcon) {{
+        fsIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+      }}
+      if (map) map.invalidateSize();
+    }}
+  }});
+
+  var loadMapFn = function() {{
+    ensureLeaflet().then(initMap);
+  }};
+  window['load_' + jsId] = loadMapFn;
+  window['load_' + mapId] = loadMapFn;
+  if (mapId === 'bhav-map') {{
+    window.load_bhav_map = loadMapFn;
+  }}
+
+  window.scrollToBhavMap = function() {{
+    loadMapFn();
+    var sec = document.getElementById(mapId + '-sec') || document.getElementById('bhav-map-sec') || document.getElementById('bhav-hub-map-sec');
+    if (sec) {{
+      sec.scrollIntoView({{behavior: 'smooth', block: 'start'}});
+    }}
+  }};
+
+  function setupObserver() {{
+    var sec = document.getElementById(mapId + '-sec');
+    if (!sec) return;
+    if ('IntersectionObserver' in window) {{
+      var obs = new IntersectionObserver(function(entries) {{
+        if (entries[0].isIntersecting) {{
+          obs.disconnect();
+          loadMapFn();
+        }}
+      }}, {{rootMargin: '350px'}});
+      obs.observe(sec);
+    }} else {{
+      loadMapFn();
+    }}
+  }}
+
+  if (document.readyState === 'loading') {{
+    document.addEventListener('DOMContentLoaded', setupObserver);
+  }} else {{
+    setupObserver();
+  }}
+}})();
+</script>"""
+
+
+def _mandi_satellite_map_html(state: str, district: str, prices: list,
+                              commodity: str, crop_hi: str, s_slug: str,
+                              d_slug: str, d_hi: str) -> str:
+    by_market = {}
+    for p in prices:
+        mkt = (p.get("market") or "").strip()
+        if not mkt or mkt == "-":
+            continue
+        cur = by_market.get(mkt)
+        p_modal = _num(p.get("modal_price"))
+        if cur is None or (p_modal and p_modal > _num(cur.get("modal_price"))):
+            by_market[mkt] = p
+
+    if not by_market:
+        return ""
+
+    top_price = 0
+    for p in by_market.values():
+        m_val = _num(p.get("modal_price"))
+        if m_val and m_val > top_price:
+            top_price = m_val
+
+    markers = []
+    for mkt, p in by_market.items():
+        coords = district_geo.resolve_mandi_coords(state, district, mkt)
+        if not coords:
+            continue
+        lat, lon, is_exact = coords
+        modal_val = _num(p.get("modal_price"))
+        min_val = _num(p.get("min_price"))
+        max_val = _num(p.get("max_price"))
+        dt = p.get("date") or ""
+        is_top = bool(modal_val and modal_val >= top_price and top_price > 0)
+
+        clean_name = re.sub(r'(?i)\b(apmc|mandi|grain market|sub yard|upaj mandi|sub market yard|market yard|main yard|yard)\b', '', mkt).strip()
+        clean_name = re.sub(r'[\(\)\[\]\-]+', ' ', clean_name).strip() or mkt
+
+        markers.append({
+            "market": mkt,
+            "name": clean_name,
+            "lat": lat,
+            "lon": lon,
+            "is_exact": is_exact,
+            "price": f"₹{modal_val:,}" if modal_val else "—",
+            "price_num": modal_val or 0,
+            "min_price": f"₹{min_val:,}" if min_val else "—",
+            "max_price": f"₹{max_val:,}" if max_val else "—",
+            "variety": p.get("variety") or "",
+            "date": _hindi_data_date(dt) if dt else "",
+            "is_top": is_top,
+        })
+
+    if not markers:
+        return ""
+
+    map_id = "bhav-map"
+    js_id = map_id.replace('-', '_')
+    center_lat = round(sum(m["lat"] for m in markers) / len(markers), 5)
+    center_lon = round(sum(m["lon"] for m in markers) / len(markers), 5)
+    markers_json = _json.dumps(markers, ensure_ascii=False)
+
+    mandi_cnt = len(markers)
+    cnt_txt = f"{mandi_cnt} मंडी दर्ज" if mandi_cnt == 1 else f"{mandi_cnt} मंडियां दर्ज"
+    naksha_link = f"/naksha/{quote(s_slug)}/{quote(d_slug)}" if s_slug and d_slug else "/naksha"
+
+    html = f"""<section class="bhav-map-sec" id="{map_id}-sec">
+  <div class="bhav-map-head">
+    <div class="bhav-map-head-left">
+      <h2>{escape(d_hi)} मंडी उपग्रह नक्शा (Satellite View)</h2>
+      <span class="bhav-map-pill">{cnt_txt}</span>
+    </div>
+    <div class="bhav-map-sub-note">उपग्रह चित्र पर मंडी यार्ड देखें और रास्ता निकालें</div>
+  </div>
+  <div class="bhav-map-wrap">
+    <div class="bhav-map-skel" id="{map_id}-skel" onclick="if(window['load_{js_id}'])window['load_{js_id}']();">
+      <svg class="bhav-map-skel-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M12 12l6-6"/></svg>
+      <span class="bhav-map-skel-txt">उपग्रह नक्शा लोड हो रहा है…</span>
+      <span class="bhav-map-skel-sub">नक्शा देखने के लिए क्लिक करें</span>
+    </div>
+    <div class="bhav-map-ctrls">
+      <div class="bhav-map-ctrls-left">
+        <div class="bhav-map-btn-group">
+          <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">सैटेलाइट (Satellite)</button>
+          <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">नक्शा (Roads)</button>
+        </div>
+        <button type="button" class="bhav-map-btn bhav-map-btn-route" id="{map_id}-btn-route" onclick="{js_id}_showPathTo()" title="मंडी का रास्ता देखें" aria-label="रास्ता देखें">
+          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+          रास्ता देखें
+        </button>
+      </div>
+      <div class="bhav-map-ctrls-right">
+        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
+          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+        </button>
+        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
+          <svg class="bm-icon" id="{map_id}-fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+        <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn">
+          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+          पूरा नक्शा देखें
+        </a>
+      </div>
+    </div>
+    <div id="{map_id}-route-card" class="bhav-map-route-card" style="display:none;">
+      <div class="bhav-route-main">
+        <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        <div class="bhav-route-info">
+          <span class="bhav-route-title">नजदीकी मंडी: <b id="{map_id}-route-mandi">—</b></span>
+          <span class="bhav-route-meta">दूरी: <b id="{map_id}-route-dist">—</b></span>
+        </div>
+      </div>
+      <a id="{map_id}-route-nav" href="#" target="_blank" rel="noopener" class="bhav-route-nav-btn" title="गूगल मैप पर रास्ता देखें">
+        <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        गूगल मैप पर देखें
+      </a>
+    </div>
+    <div id="{map_id}-canvas" class="bhav-map-canvas"></div>
+  </div>
+</section>
+{_bhav_map_script(map_id, markers_json, center_lat, center_lon)}"""
+    return html
+
+
+def _mandis_in_district(state_name: str, dist_name: str) -> list[dict]:
+    db = SessionLocal()
+    try:
+        rows = (db.query(MandiPrice.market, MandiPrice.commodity, MandiPrice.modal_price)
+                .filter(MandiPrice.state.ilike(state_name))
+                .filter(MandiPrice.district.ilike(dist_name))
+                .all())
+    finally:
+        db.close()
+
+    by_mkt: dict = {}
+    for mkt, com, modal in rows:
+        mkt = (mkt or "").strip()
+        if not mkt or mkt == "-":
+            continue
+        slot = by_mkt.setdefault(mkt, {"crops": set(), "modals": []})
+        if com and _is_crop(com):
+            slot["crops"].add(com)
+        m = _num(modal)
+        if m:
+            slot["modals"].append(m)
+
+    out = []
+    for mkt, v in by_mkt.items():
+        coords = district_geo.resolve_mandi_coords(state_name, dist_name, mkt)
+        if not coords:
+            continue
+        lat, lon, is_exact = coords
+        clean_name = re.sub(r'(?i)\b(apmc|mandi|grain market|sub yard|upaj mandi|sub market yard|market yard|main yard|yard)\b', '', mkt).strip()
+        clean_name = re.sub(r'[\(\)\[\]\-]+', ' ', clean_name).strip() or mkt
+        crop_count = len(v["crops"])
+
+        out.append({
+            "market": mkt,
+            "name": clean_name,
+            "lat": lat,
+            "lon": lon,
+            "is_exact": is_exact,
+            "crop_count": crop_count,
+            "price": f"{crop_count} फसलें" if crop_count else "सक्रिय मंडी",
+            "price_num": crop_count,
+            "min_price": "—",
+            "max_price": "—",
+            "date": "",
+            "is_top": False,
+        })
+    return out
+
+
+def _district_hub_satellite_map_html(state: str, district: str,
+                                     s_slug: str, d_slug: str, d_hi: str) -> str:
+    markers = _mandis_in_district(state, district)
+    if not markers:
+        coords = district_geo.coord_for(state, district)
+        if not coords:
+            return ""
+        markers = [{
+            "market": f"{d_hi} मंडी",
+            "name": d_hi,
+            "lat": coords[0],
+            "lon": coords[1],
+            "is_exact": False,
+            "crop_count": 0,
+            "price": "सक्रिय मंडी",
+            "price_num": 0,
+            "min_price": "—",
+            "max_price": "—",
+            "date": "",
+            "is_top": False,
+        }]
+
+    map_id = "bhav-hub-map"
+    js_id = map_id.replace('-', '_')
+    center_lat = round(sum(m["lat"] for m in markers) / len(markers), 5)
+    center_lon = round(sum(m["lon"] for m in markers) / len(markers), 5)
+    markers_json = _json.dumps(markers, ensure_ascii=False)
+
+    mandi_cnt = len(markers)
+    cnt_txt = f"{mandi_cnt} मंडी दर्ज" if mandi_cnt == 1 else f"{mandi_cnt} मंडियां दर्ज"
+    naksha_link = f"/naksha/{quote(s_slug)}/{quote(d_slug)}" if s_slug and d_slug else "/naksha"
+
+    html = f"""<section class="bhav-map-sec" id="{map_id}-sec">
+  <div class="bhav-map-head">
+    <div class="bhav-map-head-left">
+      <h2>{escape(d_hi)} जिले की मंडियां — उपग्रह नक्शा (Satellite View)</h2>
+      <span class="bhav-map-pill">{cnt_txt}</span>
+    </div>
+    <div class="bhav-map-sub-note">उपग्रह चित्र पर मंडी यार्ड देखें और रास्ता निकालें</div>
+  </div>
+  <div class="bhav-map-wrap">
+    <div class="bhav-map-skel" id="{map_id}-skel" onclick="if(window['load_{js_id}'])window['load_{js_id}']();">
+      <svg class="bhav-map-skel-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M12 12l6-6"/></svg>
+      <span class="bhav-map-skel-txt">उपग्रह नक्शा लोड हो रहा है…</span>
+      <span class="bhav-map-skel-sub">नक्शा देखने के लिए क्लिक करें</span>
+    </div>
+    <div class="bhav-map-ctrls">
+      <div class="bhav-map-ctrls-left">
+        <div class="bhav-map-btn-group">
+          <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">सैटेलाइट (Satellite)</button>
+          <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">नक्शा (Roads)</button>
+        </div>
+        <button type="button" class="bhav-map-btn bhav-map-btn-route" id="{map_id}-btn-route" onclick="{js_id}_showPathTo()" title="मंडी का रास्ता देखें" aria-label="रास्ता देखें">
+          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+          रास्ता देखें
+        </button>
+      </div>
+      <div class="bhav-map-ctrls-right">
+        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
+          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+        </button>
+        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
+          <svg class="bm-icon" id="{map_id}-fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+        <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn">
+          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+          पूरा नक्शा देखें
+        </a>
+      </div>
+    </div>
+    <div id="{map_id}-route-card" class="bhav-map-route-card" style="display:none;">
+      <div class="bhav-route-main">
+        <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        <div class="bhav-route-info">
+          <span class="bhav-route-title">नजदीकी मंडी: <b id="{map_id}-route-mandi">—</b></span>
+          <span class="bhav-route-meta">दूरी: <b id="{map_id}-route-dist">—</b></span>
+        </div>
+      </div>
+      <a id="{map_id}-route-nav" href="#" target="_blank" rel="noopener" class="bhav-route-nav-btn" title="गूगल मैप पर रास्ता देखें">
+        <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        गूगल मैप पर देखें
+      </a>
+    </div>
+    <div id="{map_id}-canvas" class="bhav-map-canvas"></div>
+  </div>
+</section>
+{_bhav_map_script(map_id, markers_json, center_lat, center_lon)}"""
+    return html
 
 
 @router.get("/bhav/api/hub-rest")
@@ -5880,9 +7232,10 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
 
     # District cards — purely from the cached index, no DB hit.
     cards = []
-    for ds, dn in sorted(dist_map.items(), key=lambda kv: kv[1]):
-        cards.append(f"""<a class="dcard" href="/bhav/{cs}/{ss}/{ds}" data-name="{escape(dn.lower())}">
-<span class="dcard-n">{escape(dn)}</span>
+    for ds, dn in sorted(dist_map.items(), key=lambda kv: _hindi_district(ss, kv[1])):
+        dn_hi = _hindi_district(ss, dn)
+        cards.append(f"""<a class="dcard" href="/bhav/{cs}/{ss}/{ds}" data-name="{escape(f'{dn_hi} {dn} {ds}'.lower())}">
+<span class="dcard-n">{escape(dn_hi)}</span>
 <span class="dcard-r">भाव देखें →</span>
 </a>""")
 
@@ -6315,6 +7668,21 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     page_h1 = state_lang.h1("crop_district", lang, {**_lv, "crop": hi_loc},
                             f"आज का {hi} भाव — {d_hi} मंडी")
 
+    map_html = _mandi_satellite_map_html(state=state, district=district,
+                                         prices=prices, commodity=commodity,
+                                         crop_hi=hi, s_slug=ss, d_slug=ds, d_hi=d_hi)
+
+    hero_map_btn = (
+        '<button class="answer-map-btn" type="button" onclick="scrollToBhavMap()" title="मंडी उपग्रह नक्शा देखें">'
+        '<span class="amb-radar" aria-hidden="true"><span class="amb-ping"></span><span class="amb-dot"></span></span>'
+        '<svg class="bm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>'
+        '<span class="amb-txt">नक्शा देखें</span>'
+        '<span class="amb-badge">उपग्रह</span>'
+        '<svg class="amb-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
+        '</button>'
+        if map_html else ""
+    )
+
     body = f"""<section class="answer">
 {answer_photo}
 {_alert_bell(commodity, state, district)}
@@ -6329,6 +7697,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <div><span>न्यूनतम</span><b>{f"₹{st['lo']:,}" if st['lo'] else '—'}</b></div>
 <div><span>अधिकतम</span><b>{f"₹{st['hi']:,}" if st['hi'] else '—'}</b></div>
 <div><span>{'मंडी' if st['n'] == 1 else 'मंडियां'}</span><b>{st['n']}</b></div>
+{hero_map_btn}
 </div>
 {signal_html}
 <div class="answer-actions">
@@ -6350,6 +7719,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     }}
     window.open('https://wa.me/?text='+encodeURIComponent(CFG.caption+'\\n'+CFG.url),'_blank');
   }};
+  window.scrollToBhavMap=function(){{
+    if(window.load_bhav_map)window.load_bhav_map();
+    var el=document.getElementById('bhav-map-sec');
+    if(el)el.scrollIntoView({{behavior:'smooth',block:'start'}});
+  }};
 }})();
 </script>
 
@@ -6366,6 +7740,8 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {season_html}
 
 {answer_lead}
+
+{map_html}
 
 <section class="card-w">
 <div class="card-w-h"><h2>मंडीवार भाव</h2><em>▲▼ = कल के मुकाबले</em></div>
@@ -6392,14 +7768,21 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4'),
                ('/bhav/api/season/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-season')])}"""
 
+    map_head = (
+        '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'
+        '<link rel="dns-prefetch" href="https://unpkg.com">'
+        f'{_LEAFLET_CSS}'
+        if map_html else ""
+    )
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(d_hi)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
+                head_extra=map_head,
                 # _BP_CSS + _PRODUCT_CSS are new here: the district page now
                 # carries the paid dealer panel too (the metered product), which
                 # it never used to.
-                extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS + _BP_CSS + _PRODUCT_CSS,
+                extra_css=_LAZY_CSS + _APPEAL_CSS + _DKP_CSS + _BP_CSS + _PRODUCT_CSS + _BHAV_MAP_CSS,
                 updated=fresh_iso, crop=cs, lang=lang,
                 robots=index_gate.robots_for(fresh_iso))
 

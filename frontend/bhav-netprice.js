@@ -18,6 +18,9 @@
   var timer = null;
   var reqId = 0;         // only the newest request may paint (guards stale results)
   var MAX_QTY = 100000;  // hard ceiling — must match the server-side clamp
+  var lastMandis = [];
+  var lastUserCoords = null;
+  var npMap = null;
 
   // What the wait looks like: the answer's own shape — the headline mandi,
   // the net-in-hand block, then the freight rows under it. .km-sk comes from
@@ -109,7 +112,13 @@
         if (myId !== reqId) return;                 // superseded — ignore
         if (els.results) els.results.removeAttribute("aria-busy");
         if (d && d.ok && d.html && els.results) {
+          lastMandis = d.mandis || [];
+          lastUserCoords = (typeof d.user_lat === "number" && typeof d.user_lon === "number") ? [d.user_lat, d.user_lon] : null;
           els.results.innerHTML = d.html;
+          var wrap = $("np-map-container");
+          if (wrap && wrap.style.display !== "none") {
+            ensureLeaflet().then(renderNpMap);
+          }
         }
       })
       .catch(function () {
@@ -183,6 +192,117 @@
     }
     return false;
   }
+
+  function loadAsset(u, isCss) {
+    return new Promise(function(res, rej) {
+      if (isCss) {
+        if (document.querySelector('link[href="' + u + '"]')) return res();
+        var l = document.createElement('link');
+        l.rel = 'stylesheet'; l.href = u;
+        l.onload = res; l.onerror = rej;
+        document.head.appendChild(l);
+      } else {
+        if (window.L || document.querySelector('script[src="' + u + '"]')) return res();
+        var s = document.createElement('script');
+        s.src = u; s.async = true;
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      }
+    });
+  }
+
+  function ensureLeaflet() {
+    if (window.L) return Promise.resolve();
+    return Promise.all([
+      loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', true),
+      loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', false)
+    ]);
+  }
+
+  function renderNpMap() {
+    var c = $("np-map-canvas");
+    if (!c || !lastMandis || !lastMandis.length || !window.L) return;
+
+    if (!npMap) {
+      npMap = L.map(c, { zoomControl: false, zoomSnap: 0.25 }).setView([22.9, 79.0], 5);
+      L.control.zoom({ position: 'bottomright' }).addTo(npMap);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles © Esri World Imagery', maxNativeZoom: 18, maxZoom: 20
+      }).addTo(npMap);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© Esri', maxNativeZoom: 18, maxZoom: 20
+      }).addTo(npMap);
+    }
+
+    if (window.npMarkerGroup) {
+      npMap.removeLayer(window.npMarkerGroup);
+    }
+    window.npMarkerGroup = L.layerGroup().addTo(npMap);
+
+    var bounds = L.latLngBounds([]);
+    if (lastUserCoords) {
+      bounds.extend(lastUserCoords);
+      var uIcon = L.divIcon({
+        className: 'bhav-user-pin-wrap',
+        html: '<div class="bhav-user-pin"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+      L.marker(lastUserCoords, { icon: uIcon }).addTo(window.npMarkerGroup)
+        .bindPopup('<div style="font-weight:700;font-size:12px;color:#1e40af">आपकी लोकेशन</div>');
+    }
+
+    lastMandis.forEach(function(m, idx) {
+      if (typeof m.lat !== 'number' || typeof m.lon !== 'number') return;
+      var pos = [m.lat, m.lon];
+      bounds.extend(pos);
+
+      var isTop = (idx === 0);
+      var pinHtml = '<div class="bhav-pin-card">' +
+        (isTop ? '<span class="bhav-pin-tag">उच्चतम नेट</span>' : '') +
+        '<span class="bhav-pin-name">' + m.market + '</span>' +
+        '<span class="bhav-pin-price">₹' + m.net_per_q.toLocaleString() + '</span>' +
+        '</div><div class="bhav-pin-arrow"></div>';
+
+      var icon = L.divIcon({
+        className: 'bhav-mandi-pin' + (isTop ? ' bhav-pin-top' : ''),
+        html: pinHtml,
+        iconSize: null,
+        iconAnchor: null
+      });
+
+      var pop = '<div class="bhav-popup">' +
+        '<div class="bhav-popup-title"><span>' + m.market + ' (' + m.district + ')</span>' +
+        (isTop ? '<span class="bhav-popup-tag">उच्चतम नेट भाव</span>' : '') + '</div>' +
+        '<div class="bhav-popup-price">₹' + m.net_per_q.toLocaleString() + ' <small>नेट/क्विंटल</small></div>' +
+        '<div class="bhav-popup-range">मंडी रेट: ₹' + m.modal.toLocaleString() + ' · भाड़ा: ~₹' + m.freight_per_q.toLocaleString() + '/क्विं.</div>' +
+        '<div class="bhav-popup-dist">' + m.distance_km + ' किमी दूर</div>' +
+        '<div class="bhav-popup-actions">' +
+        '<a href="https://www.google.com/maps/dir/?api=1&destination=' + m.lat + ',' + m.lon + '" target="_blank" rel="noopener" class="bhav-popup-btn bhav-popup-btn-nav">' +
+        '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> रास्ता देखें</a>' +
+        '</div></div>';
+
+      L.marker(pos, { icon: icon }).addTo(window.npMarkerGroup).bindPopup(pop);
+    });
+
+    if (bounds.isValid()) {
+      npMap.fitBounds(bounds, { padding: [45, 45], maxZoom: 13 });
+    }
+    setTimeout(function() { npMap && npMap.invalidateSize(); }, 100);
+    setTimeout(function() { npMap && npMap.invalidateSize(); }, 350);
+  }
+
+  window.toggleNpMap = function() {
+    var wrap = $("np-map-container");
+    if (!wrap) return;
+    var open = wrap.style.display !== 'none';
+    if (open) {
+      wrap.style.display = 'none';
+    } else {
+      wrap.style.display = 'block';
+      ensureLeaflet().then(renderNpMap);
+    }
+  };
 
   function init() {
     els = {

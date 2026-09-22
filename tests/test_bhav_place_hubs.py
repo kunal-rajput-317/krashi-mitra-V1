@@ -87,7 +87,7 @@ class TestDistrictHub:
 
     def test_shows_the_place_as_already_picked(self, client):
         html = client.get("/bhav/rajya/uttar-pradesh/bijnor").text
-        assert 'value="Bijnor" data-valid="1"' in html
+        assert 'value="बिजनौर" data-valid="1"' in html
         assert 'value="उत्तर प्रदेश" data-valid="1"' in html
 
     def test_canonical_and_crumbs(self, client):
@@ -126,3 +126,29 @@ class TestCropScopedTiersUnchanged:
     def test_tier4_links_to_the_district_hub(self, client):
         html = client.get("/bhav/wheat/uttar-pradesh/bijnor").text
         assert 'href="/bhav/rajya/uttar-pradesh/bijnor"' in html
+
+
+class TestBilingualDistrictSelector:
+    def test_hub_selector_district_options_are_hindi_with_alt_english(self, client):
+        """District dropdown in _hub_selector must have Hindi keys and dl_hub_dist_alt for English search."""
+        html = client.get("/bhav/potato/uttar-pradesh").text
+        # dl_hub_dist has Hindi district name as key
+        assert '"बिजनौर": "/bhav/potato/uttar-pradesh/bijnor"' in html
+        # dl_hub_dist_alt has English synonym mapping
+        assert "window.dl_hub_dist_alt=" in html
+        assert '"बिजनौर": "Bijnor bijnor bijnor"' in html
+        # Input has dl_hub_dist_alt passed to kmComboFilter
+        assert "window.dl_hub_dist_alt" in html
+
+    def test_state_page_district_cards_display_hindi(self, client):
+        """On /bhav/{crop}/{state}, dcards display Hindi district names and search both scripts."""
+        html = client.get("/bhav/potato/uttar-pradesh").text
+        assert '<span class="dcard-n">बिजनौर</span>' in html
+        assert 'data-name="बिजनौर bijnor bijnor"' in html
+
+    def test_state_hub_district_cards_display_hindi(self, client):
+        """On /bhav/rajya/{state}, dcards display Hindi district names and search both scripts."""
+        html = client.get("/bhav/rajya/uttar-pradesh").text
+        assert '<span class="dcard-n">बिजनौर</span>' in html
+        assert '<span class="dcard-n">मेरठ</span>' in html
+        assert 'data-name="बिजनौर bijnor bijnor"' in html
