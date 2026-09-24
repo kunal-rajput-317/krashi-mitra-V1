@@ -4,7 +4,9 @@ uvicorn[standard]
 python-multipart
 
 # ── Database ─────────────────────────────────────────────────
-sqlalchemy
+# <2.1: 2.1 changed the default Postgres driver and crashed the deploy; the
+# app is tested on 2.0.x. Lift the cap deliberately, not via a fresh build.
+sqlalchemy>=2.0,<2.1
 psycopg2-binary
 alembic
 

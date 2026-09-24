@@ -26,6 +26,12 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Name the driver. SQLAlchemy 2.1 switched the bare `postgresql://` default from
+# psycopg2 to psycopg 3, which is not installed — Render crashed on boot with
+# "No module named 'psycopg'" the day 2.1 was released (2026-09-25).
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+
 # Ensure SSL for Neon/Postgres URLs only
 if DATABASE_URL.startswith("postgresql") and "sslmode" not in DATABASE_URL:
     separator = "&" if "?" in DATABASE_URL else "?"
