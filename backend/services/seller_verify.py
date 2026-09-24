@@ -36,15 +36,16 @@
 # THE TICK EXPIRES, because a membership is a term, not a state.
 # `expire_due()` clears the flag; idempotent, safe on a timer.
 #
-# TWO PLANS, AND THE STRUCK PRICE IS PART OF THE PRODUCT. ₹399 ₹199/महीना and
-# ₹699 ₹499/3 महीने. The MRP is an anchor, not a claim about a past price, so
-# it is labelled वास्तविक क़ीमत and never "was" or "discount from" — see
-# product-price-claims: a figure the site would have to defend is one it does
-# not print. A farmer choosing the 3-month plan pays ₹166/month, and that
-# spread is the only reason two plans exist rather than one.
+# TWO PLANS, AND NO STRUCK PRICE. ₹199/महीना and ₹499/3 महीने. Until
+# 2026-09-25 each card showed a crossed-out "MRP" (₹399, ₹699) that was never
+# a price anyone paid — which the CCPA's 2023 dark-pattern guidelines treat as
+# a false reference price. Removed, and the env variables that could bring it
+# back are gone with it. The only saving shown is a real one: three months
+# for ₹499 against ₹597 for three single months — save_pct is computed from
+# the monthly plan, never typed.
 #
-# CONFIG. Every number is env-overridable per plan — KM_VERIFY_M1_PRICE,
-# KM_VERIFY_M1_MRP, KM_VERIFY_M3_PRICE, KM_VERIFY_M3_MRP — because the first
+# CONFIG. Each price is env-overridable per plan — KM_VERIFY_M1_PRICE,
+# KM_VERIFY_M3_PRICE — because the first
 # real negotiation may not land on ₹199 and re-deploying to change a price is
 # exactly the manual seam the everything-must-be-automatic rule bans.
 # KM_VERIFY_FEE still overrides the monthly price, so the variable already set
@@ -96,12 +97,12 @@ ID_KIND_HI = {
 
 # ── The price table ──────────────────────────────────────────
 
-# code → (months, price, struck MRP). The order here is the order the cards are
+# code → (months, price). The order here is the order the cards are
 # drawn in, cheapest entry first, because that is the one a farmer who has
 # never paid for anything on this site will read first.
 PLAN_DEFS = [
-    ("m1", 1, 199, 399),
-    ("m3", 3, 499, 699),
+    ("m1", 1, 199),
+    ("m3", 3, 499),
 ]
 DEFAULT_PLAN = "m1"
 
@@ -118,29 +119,33 @@ def _rupees(env: str, fallback: int) -> int:
 def plans() -> list:
     """The cards /verify draws, priced from env. Never an f-string of literals.
 
-    `mrp` is the struck figure and `price` is what he pays. `per_month` is
+    `price` is what he pays. `mrp` is always None — kept only so an older
+    cached page that still reads it draws no struck price. `per_month` is
     computed rather than stored so the two can never disagree — a card that
     said ₹499 / 3 महीने next to a hand-typed "₹150/महीना" would be wrong the
     first time a price moved.
     """
     out = []
-    for code, mon, price, mrp in PLAN_DEFS:
+    monthly = None
+    for code, mon, price in PLAN_DEFS:
         # KM_VERIFY_FEE is the legacy single-price variable; it only ever meant
         # the monthly rate, so it applies to m1 and nothing else.
         legacy = _rupees("KM_VERIFY_FEE", price) if code == "m1" else price
         rupee = _rupees(f"KM_VERIFY_{code.upper()}_PRICE", legacy)
-        struck = _rupees(f"KM_VERIFY_{code.upper()}_MRP", mrp)
-        # A struck price at or below the real one is not an anchor, it is a
-        # mistake on a page about money. Drop it rather than print it.
+        if mon == 1:
+            monthly = rupee
+        # The real saving against paying month by month — never a typed figure.
+        full = monthly * mon if (monthly and mon > 1) else None
+        real = bool(full and full > rupee)
         out.append({
             "code":      code,
             "months":    mon,
             "price":     rupee,
-            "mrp":       struck if struck > rupee else None,
+            "mrp":       None,
             "per_month": round(rupee / mon),
             "term_hi":   PLAN_TERM_HI.get(mon, f"{mon} महीने के लिए"),
-            "save_pct":  (round((1 - rupee / struck) * 100)
-                          if struck > rupee else None),
+            "save_pct":  round((1 - rupee / full) * 100) if real else None,
+            "save_vs":   full if real else None,
         })
     return out
 
@@ -292,6 +297,10 @@ def record_payment(db, ref: str, amount: int, paid_ref: str = "",
     user = db.query(User).filter(User.id == row.user_id).first()
     if user:
         user.seller_verified = True
+    from backend.services import ledger
+    ledger.record(db, "verify", row.fee_amount, payer=row.full_name or "",
+                  contact=row.phone or "", ref=row.paid_ref or "",
+                  source_key=row.ref, received_at=now)
     db.commit()
     db.refresh(row)
     return row
@@ -403,8 +412,15 @@ def record_refund(db, ref: str) -> Optional[SellerVerification]:
     row = by_ref(db, ref)
     if not row:
         return None
+    if row.refunded_at:
+        return row          # already refunded — a second click must not refund twice
     row.refunded_at = datetime.utcnow()
     row.updated_at = row.refunded_at
+    if row.paid_at and row.fee_amount:
+        from backend.services import ledger
+        ledger.record(db, "verify", -int(row.fee_amount), payer=row.full_name or "",
+                      contact=row.phone or "", source_key=row.ref,
+                      received_at=row.refunded_at, note="refund")
     db.commit()
     db.refresh(row)
     return row

@@ -178,6 +178,10 @@ def resolve_token_user(db, token: str) -> Optional["User"]:
     user = db.query(User).filter(User.id == user_id).first()
     if user is None or not user.is_verified:
         return None
+    # An account its owner deleted keeps its row (services/account_delete.py)
+    # and stays is_verified, so this is what ends every token already issued.
+    if (user.email or "").endswith("@deleted.invalid"):
+        return None
     if user.created_at and datetime.utcfromtimestamp(iat) < (
         user.created_at - timedelta(seconds=TOKEN_AGE_SKEW_SECONDS)
     ):
@@ -370,7 +374,17 @@ def send_otp_email(to_email: str, otp: str, purpose: str = "verification") -> bo
     Returns True on success, False on any failure.
     Never raises — exceptions are caught and logged only.
     """
-    if purpose == "reset":
+    if purpose == "delete":
+        subject = "KrashiMitra — खाता हटाने का OTP"
+        body    = (
+            f"नमस्ते,\n\n"
+            f"आपका KrashiMitra खाता हटाने का OTP है: {otp}\n\n"
+            f"यह OTP {OTP_EXPIRY_MINUTES} मिनट में expire हो जाएगा।\n\n"
+            f"अगर आपने खाता हटाने को नहीं कहा, तो यह OTP किसी को न बताएँ और "
+            f"तुरंत अपना पासवर्ड बदलें।\n\n"
+            f"— KrashiMitra Team"
+        )
+    elif purpose == "reset":
         subject = "KrashiMitra — Password Reset OTP"
         body    = (
             f"नमस्ते,\n\n"

@@ -80,10 +80,16 @@ _ARTICLES_DIR = _ROOT / "frontend" / "articles"
 
 # ── the sections ───────────────────────────────────────────────────────────
 #
-# id → (hub URL, icon). The id is what ctx.section holds and what a provider
+# id → (hub URL, icon). The icon is a small real photo, not an emoji — one
+# 96px WebP per section in frontend/images/journey/, cut from photos already
+# credited on /articles/credits. The id is what ctx.section holds and what a provider
 # registers under; `hub` is the always-safe destination for that section.
 # ADD A ROW HERE WHEN A SECTION SHIPS — tests/test_ecosystem.py checks that
 # every section the app serves is represented.
+
+def _img(section_id: str) -> str:
+    return f"/images/journey/{section_id}.webp"
+
 
 @dataclass(frozen=True)
 class Section:
@@ -93,22 +99,22 @@ class Section:
 
 
 SECTIONS: dict[str, Section] = {s.id: s for s in (
-    Section("bhav",       "/bhav",           "📈"),
-    Section("articles",   "/articles/",      "📰"),
-    Section("sawal",      "/sawal",          "❓"),
-    Section("pashupalan", "/pashupalan",     "🐄"),
-    Section("ganna",      "/ganna",          "🎋"),
-    Section("rental",     "/rental",         "🚜"),
-    Section("shop",       "/product/",       "🛒"),
-    Section("dukan",      "/krashi_dukan",   "🏪"),
-    Section("naksha",     "/naksha",         "🗺️"),
-    Section("weather",    "/weather",        "🌤️"),
-    Section("news",       "/krashi_news",    "📢"),
-    Section("yojana",     "/sarkari_yojana", "🏛️"),
-    Section("fasal",      "/meri_fasal",     "🌱"),
-    Section("bazar",      "/krashi_bajar",   "🧺"),
-    Section("khoj",       "/khoj",           "🔍"),
-    Section("chat",       "/chat",           "🤖"),
+    Section("bhav",       "/bhav",           _img("bhav")),
+    Section("articles",   "/articles/",      _img("articles")),
+    Section("sawal",      "/sawal",          _img("sawal")),
+    Section("pashupalan", "/pashupalan",     _img("pashupalan")),
+    Section("ganna",      "/ganna",          _img("ganna")),
+    Section("rental",     "/rental",         _img("rental")),
+    Section("shop",       "/product/",       _img("shop")),
+    Section("dukan",      "/krashi_dukan",   _img("dukan")),
+    Section("naksha",     "/naksha",         _img("naksha")),
+    Section("weather",    "/weather",        _img("weather")),
+    Section("news",       "/krashi_news",    _img("news")),
+    Section("yojana",     "/sarkari_yojana", _img("yojana")),
+    Section("fasal",      "/meri_fasal",     _img("fasal")),
+    Section("bazar",      "/krashi_bajar",   _img("bazar")),
+    Section("khoj",       "/khoj",           _img("khoj")),
+    Section("chat",       "/chat",           _img("chat")),
 )}
 
 
@@ -608,7 +614,7 @@ def _step(ctx: Ctx, section: str, href: str, key: str, score: int,
     sec = SECTIONS.get(section)
     return Step(section=section, href=href, title=title,
                 why=_t(key + ".w", ctx.lang, loc, **vals),
-                icon=sec.icon if sec else "🌾", score=score,
+                icon=sec.icon if sec else "", score=score,
                 place_tpl=place_tpl)
 
 
@@ -1032,9 +1038,9 @@ box-shadow:0 1px 4px rgba(26,60,46,.05);
 transition:transform .15s,box-shadow .15s,border-color .15s}
 .km-journey-card:hover,.km-journey-card:focus{transform:translateY(-2px);
 border-color:#52b788;box-shadow:0 6px 18px rgba(26,60,46,.12)}
-.km-journey-ico{flex:0 0 38px;width:38px;height:38px;border-radius:50%;
-background:#d8f3dc;display:flex;align-items:center;justify-content:center;
-font-size:19px;line-height:1}
+.km-journey-ico{flex:0 0 44px;width:44px;height:44px;border-radius:50%;
+background:#d8f3dc;overflow:hidden;box-shadow:0 0 0 2px #fff,0 0 0 3px #d8f3dc}
+.km-journey-ico img{display:block;width:100%;height:100%;object-fit:cover}
 .km-journey-txt{min-width:0;flex:1}
 .km-journey-t{display:block;font-size:14.5px;font-weight:700;line-height:1.45;color:#1a3c2e}
 .km-journey-w{display:block;margin-top:2px;font-size:12px;line-height:1.5;color:#6b7b73}
@@ -1044,6 +1050,13 @@ font-size:19px;line-height:1}
 .km-journey-card{flex-direction:column;align-items:flex-start;gap:9px;padding:16px}
 .km-journey-go{display:none}}
 """
+
+
+def _ico(src: str) -> str:
+    if not src:
+        return ""
+    return (f'<img src="{escape(src, quote=True)}" alt="" width="44" height="44"'
+            f' loading="lazy" decoding="async">')
 
 
 def journey_html(ctx: Ctx, n: int = 4, loc: dict = None,
@@ -1070,13 +1083,13 @@ def journey_html(ctx: Ctx, n: int = 4, loc: dict = None,
         cards.append(
             f'<a class="km-journey-card" href="{escape(s.href, quote=True)}"'
             f' data-km-step="{escape(s.section, quote=True)}"{tpl}>'
-            f'<span class="km-journey-ico" aria-hidden="true">{s.icon}</span>'
+            f'<span class="km-journey-ico" aria-hidden="true">{_ico(s.icon)}</span>'
             f'<span class="km-journey-txt">'
             f'<span class="km-journey-t">{escape(s.title)}</span>{why}</span>'
             f'<span class="km-journey-go" aria-hidden="true">&rsaquo;</span></a>')
     style = f"<style>{CSS}</style>" if with_css else ""
     sub_html = f"<span>{escape(sub)}</span>" if sub else ""
     return (f'{style}<nav class="km-journey" aria-label="{escape(head, quote=True)}">'
-            f'<div class="km-journey-h"><strong>🧭 {escape(head)}</strong>'
+            f'<div class="km-journey-h"><strong>{escape(head)}</strong>'
             f'{sub_html}</div>'
             f'<div class="km-journey-grid">{"".join(cards)}</div></nav>')

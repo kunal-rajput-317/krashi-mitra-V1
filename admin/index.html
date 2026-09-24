@@ -1782,6 +1782,15 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         <span>कृषि दुकान / Shops</span>
         <span class="nav-badge" id="dk-nav-badge" hidden>0</span>
       </div>
+      <div class="nav-item" onclick="switchPage('reports', this)" id="nav-reports">
+        <span class="nav-icon">🚩</span>
+        <span>बाज़ार शिकायतें</span>
+        <span class="nav-badge" id="rp-nav-badge" style="background:#e5484d; color:#fff;" hidden>0</span>
+      </div>
+      <div class="nav-item" onclick="switchPage('ledger', this)" id="nav-ledger">
+        <span class="nav-icon">💰</span>
+        <span>हिसाब / Payments</span>
+      </div>
             <div class="nav-item" onclick="switchPage('sponsor', this)" id="nav-sponsor">
         <span class="nav-icon">🤝</span>
         <span>प्रायोजक — Sponsors</span>
@@ -2334,6 +2343,136 @@ button.vf-money-tile:hover { border-color: var(--primary); }
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🔔 Is the alert system actually delivering?
+             The subscriber table below answers "who signed up", which looked
+             healthy for 57 days while push_enabled() was missing and not one
+             notification had ever been sent. "Never delivered" is the number
+             that would have caught it, so it leads. -->
+        <div class="table-container" style="margin-top:20px;">
+          <div class="panel-header" style="flex-wrap:wrap; gap:10px;">
+            <span class="panel-title">🔔 Alert System Control</span>
+            <button class="btn btn-secondary" onclick="loadAlertHealth()">↻ Refresh</button>
+          </div>
+          <div class="panel-body">
+            <div id="alert-health-banner" style="margin-bottom:12px;">
+              <div class="km-loader"><span class="km-spinner"></span> Checking delivery…</div>
+            </div>
+            <div id="alert-health-stats" class="stats-grid"
+                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:16px;"></div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; padding-top:12px; border-top:1px solid var(--border,#2a2a2a);">
+              <label class="text-mono" style="font-size:12px; display:flex; align-items:center; gap:7px;">
+                <input type="checkbox" id="alert-sending" onchange="saveAlertSettings()">
+                <span><b>Sending</b><br><span class="text-muted">push notifications go out</span></span>
+              </label>
+              <label class="text-mono" style="font-size:12px; display:flex; align-items:center; gap:7px;">
+                <input type="checkbox" id="alert-bell" onchange="saveAlertSettings()">
+                <span><b>Bell visible</b><br><span class="text-muted">🔔 shows on /bhav pages</span></span>
+              </label>
+              <label class="text-mono" style="font-size:12px;">
+                <span class="text-muted">Min move ₹</span><br>
+                <input type="number" id="alert-move-rs" min="0" max="10000" step="1"
+                       style="width:80px;" onchange="saveAlertSettings()">
+              </label>
+              <label class="text-mono" style="font-size:12px;">
+                <span class="text-muted">Min move %</span><br>
+                <input type="number" id="alert-move-pct" min="0" max="100" step="0.1"
+                       style="width:80px;" onchange="saveAlertSettings()">
+              </label>
+              <div style="display:flex; gap:8px; margin-left:auto;">
+                <button class="btn btn-secondary" onclick="sendAlertTest()">✉ Send test push</button>
+                <button class="btn btn-primary" onclick="runAlertsNow()">▶ Run alert pass now</button>
+              </div>
+            </div>
+            <div id="alert-action-out" class="text-mono text-muted"
+                 style="font-size:12px; margin-top:10px; min-height:16px;"></div>
+          </div>
+        </div>
+
+        <!-- ✉ A hand-written notification to farmers.
+             Two-step on purpose: Preview resolves the real audience, Send has
+             to echo that same count back. A broadcast cannot be unsent, and the
+             distance between "this goes to Raisen" and "this goes to everyone"
+             is one unticked box. -->
+        <div class="table-container" style="margin-top:20px;">
+          <div class="panel-header" style="flex-wrap:wrap; gap:10px;">
+            <span class="panel-title">✉ Send a Custom Notification</span>
+            <button class="btn btn-secondary" onclick="loadBroadcastHistory()">↻ History</button>
+          </div>
+          <div class="panel-body">
+            <div style="display:grid; gap:12px; max-width:640px;">
+              <label class="text-mono" style="font-size:12px;">
+                <span class="text-muted">Title</span>
+                <span id="bc-title-count" class="text-muted" style="float:right;">0/60</span>
+                <input type="text" id="bc-title" maxlength="60" style="width:100%;"
+                       placeholder="कृषि मित्र — ज़रूरी सूचना"
+                       oninput="bcCount(); bcInvalidate();">
+              </label>
+              <label class="text-mono" style="font-size:12px;">
+                <span class="text-muted">Message</span>
+                <span id="bc-body-count" class="text-muted" style="float:right;">0/180</span>
+                <textarea id="bc-body" maxlength="180" rows="3" style="width:100%; resize:vertical;"
+                          placeholder="कल मंडी बंद रहेगी — सोमवार से भाव फिर आएंगे।"
+                          oninput="bcCount(); bcInvalidate();"></textarea>
+              </label>
+              <label class="text-mono" style="font-size:12px;">
+                <span class="text-muted">Opens this link when tapped (optional)</span>
+                <input type="text" id="bc-url" style="width:100%;"
+                       placeholder="https://krashimitra.in/bhav" oninput="bcInvalidate()">
+              </label>
+
+              <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:center;">
+                <label class="text-mono" style="font-size:12px; display:flex; align-items:center; gap:6px;">
+                  <input type="radio" name="bc-aud" value="alerts" checked onchange="bcInvalidate()">
+                  🔔 farmers with a bhav alert
+                </label>
+                <label class="text-mono" style="font-size:12px; display:flex; align-items:center; gap:6px;">
+                  <input type="radio" name="bc-aud" value="all" onchange="bcInvalidate()">
+                  every device that ever subscribed
+                </label>
+              </div>
+
+              <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                <label class="text-mono" style="font-size:12px;">
+                  <span class="text-muted">Crop (exact)</span><br>
+                  <input type="text" id="bc-commodity" placeholder="Wheat" oninput="bcInvalidate()">
+                </label>
+                <label class="text-mono" style="font-size:12px;">
+                  <span class="text-muted">State (exact)</span><br>
+                  <input type="text" id="bc-state" placeholder="Uttar Pradesh" oninput="bcInvalidate()">
+                </label>
+                <label class="text-mono" style="font-size:12px;">
+                  <span class="text-muted">District (exact)</span><br>
+                  <input type="text" id="bc-district" placeholder="Raisen" oninput="bcInvalidate()">
+                </label>
+              </div>
+              <div class="text-muted text-mono" style="font-size:11px;">
+                Filters apply only to the 🔔 audience, and use the feed's own English
+                spelling. Leave blank for everyone.
+              </div>
+
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button type="button" class="btn btn-secondary" onclick="previewBroadcast()">👁 Preview audience</button>
+                <button type="button" class="btn btn-primary" id="bc-send" onclick="sendBroadcast()" disabled>
+                  ✉ Send
+                </button>
+              </div>
+              <div id="bc-out" class="text-mono" style="font-size:12px; min-height:18px;"></div>
+            </div>
+
+            <div class="table-responsive" style="margin-top:18px;">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Sent</th><th>Title</th><th>Message</th><th>Target</th><th>Delivered</th></tr>
+                </thead>
+                <tbody id="bc-history">
+                  <tr><td colspan="5" class="text-muted text-mono" style="text-align:center;">—</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -4169,6 +4308,66 @@ button.vf-money-tile:hover { border-color: var(--primary); }
           <div id="sp-kitout" style="margin-top:10px"></div>
         </div>
       </div>
+      <!-- 🚩 बाज़ार शिकायतें — routes/admin_reports.py. IT Rules 2021: acknowledge
+           within 24 hours, resolve within 15 days. Styles reuse .sp-*. -->
+      <div class="page" id="page-reports">
+        <h1 class="page-title">🚩 कृषि बाज़ार — शिकायतें</h1>
+        <p class="sp-hint" style="margin-bottom:16px">
+          लोगों ने जिन पोस्ट पर "रिपोर्ट करें" दबाया। कानून (IT नियम 2021): <b>24 घंटे में देखें</b>,
+          <b>15 दिन में निपटाएँ</b> — धोखाधड़ी, नकली / प्रतिबंधित सामान या अश्लील पोस्ट तुरंत हटाएँ।
+          "हटाएँ" पोस्ट को फ़ोटो समेत मिटा देता है; "खारिज" शिकायत बंद करता है, पोस्ट रहती है।
+        </p>
+        <div class="card" style="padding:16px">
+          <div style="overflow-x:auto"><table class="sp-tbl" id="rp-table"><thead><tr><th>लोड हो रहा है...</th></tr></thead></table></div>
+        </div>
+      </div>
+
+      <!-- 💰 हिसाब — every payment from every feature, append-only.
+           Styles reuse the .sp-* widgets from the Sponsors page above.
+           See backend/services/ledger.py for the rules. -->
+      <div class="page" id="page-ledger">
+        <style>
+        .lg-bar { height:10px; border-radius:999px; background:var(--border); overflow:hidden; margin:8px 0 4px; }
+        .lg-bar i { display:block; height:100%; background:#3fa65a; }
+        .lg-bar.warn i { background:#f59e0b; } .lg-bar.over i { background:#e5484d; }
+        .lg-neg { color:#e5484d; } .lg-void td { opacity:.45; text-decoration:line-through; }
+        .lg-void td:last-child { text-decoration:none; }
+        </style>
+        <h1 class="page-title">💰 हिसाब — Payments</h1>
+        <p class="sp-hint" style="margin-bottom:16px">
+          हर पैसा जो आया या वापस गया — डीलर, दुकान, किराया, नीला टिक, प्रायोजक सब यहाँ अपने-आप जुड़ते हैं
+          (उनके अपने पन्ने पर "भुगतान दर्ज" दबाते ही)। AdSense या बैंक ट्रांसफ़र जैसा बाकी पैसा नीचे के फ़ॉर्म से जोड़िए।
+          कोई entry मिटती नहीं — ग़लत हो तो "रद्द" कीजिए, कारण के साथ। यही सूची CA को ITR और GST के लिए दीजिए।
+        </p>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px">
+          <label style="font-size:12px; opacity:.75">वित्त वर्ष (FY)</label>
+          <select id="lg-fy" class="sp-btn" onchange="lgLoad()"></select>
+          <select id="lg-src" class="sp-btn" onchange="lgLoad()"><option value="">सभी स्रोत</option></select>
+          <button class="sp-btn primary" onclick="lgCsv()">⬇ CSV (CA के लिए)</button>
+        </div>
+        <div class="sp-sum" id="lg-metrics"></div>
+        <div id="lg-gst"></div>
+        <div class="sp-form">
+          <h3 style="margin:0 0 12px; font-size:15px">बाहर से आया पैसा जोड़ें (AdSense, बैंक ट्रांसफ़र…)</h3>
+          <div class="sp-row">
+            <div><label>स्रोत *</label><select id="lg-f-source"></select></div>
+            <div><label>राशि (₹) *</label><input id="lg-f-amount" type="number" min="1" placeholder="उदा. 150000"></div>
+            <div><label>तारीख़ (बैंक में जिस दिन आया) *</label><input id="lg-f-date" type="date"></div>
+            <div><label>तरीका</label><select id="lg-f-method"><option value="bank">बैंक ट्रांसफ़र</option><option value="upi">UPI</option><option value="other">अन्य</option></select></div>
+          </div>
+          <div class="sp-row">
+            <div><label>किसने दिया</label><input id="lg-f-payer" placeholder="उदा. Google Asia Pacific / Sonalika"></div>
+            <div><label>संपर्क</label><input id="lg-f-contact" placeholder="फ़ोन / ईमेल"></div>
+            <div><label>Reference (UPI / UTR)</label><input id="lg-f-ref" placeholder="बैंक स्टेटमेंट से"></div>
+            <div><label>नोट</label><input id="lg-f-note" placeholder="उदा. AdSense — अगस्त की कमाई"></div>
+          </div>
+          <button class="sp-btn primary" onclick="lgAdd()">दर्ज करें</button>
+          <p class="sp-hint">डीलर, दुकान, किराया या नीला टिक का पैसा यहाँ मत जोड़िए — उनके अपने पन्ने पर "भुगतान दर्ज" दबाइए, वरना listing नहीं बढ़ेगी और पैसा दो बार गिना जाएगा।</p>
+        </div>
+        <div class="card" style="padding:16px">
+          <div style="overflow-x:auto"><table class="sp-tbl" id="lg-table"><thead><tr><th>लोड हो रहा है...</th></tr></thead></table></div>
+        </div>
+      </div>
       <div class="page" id="page-rental">
         <style>
         /* Reuses the .dk-* widgets defined by the कृषि दुकान page above —
@@ -4483,6 +4682,17 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         <div class="if-grid" id="if-grid">
           <div class="km-loader"><span class="km-spinner"></span> तीनों सेवाओं से हिसाब लिया जा रहा है…</div>
         </div>
+
+        <!-- Where Render's bandwidth goes. Render's own graph is one line for
+             the whole service; this is the origin counting its own bytes by
+             section and by requester (services/bandwidth_meter.py). -->
+        <div class="sec-label" style="margin-top:22px;">
+          Bandwidth — कहाँ और किसे जा रहा है
+          <select id="bw-days" onchange="loadBandwidth()" style="float:right;margin-top:-4px;font-size:12px;">
+            <option value="1">आज</option><option value="7" selected>7 दिन</option><option value="31">31 दिन</option>
+          </select>
+        </div>
+        <div id="bw-box" class="if-card"><div class="km-loader"><span class="km-spinner"></span> गिन रहे हैं…</div></div>
       </div>
 
       <!-- ══════════ कृषि मित्र BOOK ══════════
@@ -4963,6 +5173,13 @@ button.vf-money-tile:hover { border-color: var(--primary); }
           font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
           background:var(--surface-hl); border:1px solid var(--border);
           border-radius:999px; padding:3px 9px;
+        }
+        /* Which language the post is written in. Only shown when that is not
+           Hindi: on the twelve Hindi-belt channels it would be noise on every
+           card, and the point of the chip is that it is worth noticing. */
+        .wa-lang {
+          font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;
+          background:rgba(37,211,102,.12); color:#25d366; border:1px solid rgba(37,211,102,.28);
         }
         .wa-mandis { font-size:11px; color:var(--muted); font-family:var(--font-mono); margin-left:auto; }
 
@@ -7834,6 +8051,7 @@ async function loadInfra(force) {
       badge.textContent = v.status === 'down' ? '!' : '•';
     }
     _ovInfraStrip(d.providers || []);
+    loadBandwidth();
   } catch (e) {
     vbox.innerHTML = '';
     grid.innerHTML = `<div class="if-card"><div class="if-body" style="color:var(--danger);font-size:13px;line-height:1.7;">
@@ -7842,6 +8060,53 @@ async function loadInfra(force) {
     </div></div>`;
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh'; }
+  }
+}
+
+function _bwSize(b) {
+  if (b >= 1e9) return (b / 1e9).toFixed(2) + ' GB';
+  if (b >= 1e6) return (b / 1e6).toFixed(1) + ' MB';
+  return Math.round(b / 1e3) + ' KB';
+}
+
+function _bwTable(title, rows, nameOf, total) {
+  if (!rows.length) return '';
+  return `<div style="margin-top:14px;"><div style="font-weight:600;font-size:13px;margin-bottom:6px;">${title}</div>
+    <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+      ${rows.map(r => {
+        const pct = total ? (100 * r.bytes / total) : 0;
+        return `<tr style="border-top:1px solid var(--border);">
+          <td style="padding:5px 4px;">${escapeHtml(nameOf(r))}</td>
+          <td style="padding:5px 4px;text-align:right;white-space:nowrap;">${_bwSize(r.bytes)}</td>
+          <td style="padding:5px 4px;text-align:right;color:var(--text-dim);">${pct.toFixed(1)}%</td>
+          <td style="padding:5px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${r.requests.toLocaleString('en-IN')} req</td>
+        </tr>`;
+      }).join('')}
+    </table></div>`;
+}
+
+async function loadBandwidth() {
+  const box = document.getElementById('bw-box');
+  if (!box) return;
+  const days = (document.getElementById('bw-days') || {}).value || 7;
+  try {
+    const r = await fetch(`${API}/admin/bandwidth?days=${days}`, { headers: getAuthHeader() });
+    if (r.status === 401) { logout(); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.detail || `HTTP ${r.status}`);
+    const t = d.total_bytes || 0;
+    const perDay = (d.by_day || []).map(x => `${x.name.slice(5)}: ${_bwSize(x.bytes)}`).join(' · ');
+    box.innerHTML = `<div class="if-body">
+      <div class="if-vh" style="font-size:15px;">${_bwSize(t)} · ${(d.total_requests || 0).toLocaleString('en-IN')} requests</div>
+      <div class="if-detail">Cloudflare cache से छूटकर Render तक पहुँचे जवाब — यही Render के 5 GB में गिना जाता है। ${escapeHtml(perDay)}</div>
+      ${d.db_error ? `<div class="if-err">DB पढ़ नहीं पाए, सिर्फ़ इस process की गिनती: ${escapeHtml(d.db_error)}</div>` : ''}
+      ${_bwTable('किसे (group × agent) — top 25', d.top_pairs || [], x => `${x.group} → ${x.agent}`, t)}
+      ${_bwTable('कहाँ (site section)', (d.by_group || []).slice(0, 20), x => x.name, t)}
+      ${_bwTable('किसने माँगा (agent)', d.by_agent || [], x => x.name, t)}
+      <div class="if-stamp" style="margin-top:10px;">इस process की गिनती ${escapeHtml(d.counting_since || '')} से · हर घंटे DB में</div>
+    </div>`;
+  } catch (e) {
+    box.innerHTML = `<div class="if-body if-err">Bandwidth नहीं मिला — ${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -8195,6 +8460,8 @@ function _waPostCard(p, isDone) {
     <div class="wa-h">
       <span class="wa-n">${escapeHtml(p.hi_state)}</span>
       <span class="wa-ch">${escapeHtml(p.channel)}</span>
+      ${p.lang && p.lang !== 'hi' ? `<span class="wa-lang"
+        title="यह पोस्ट इसी भाषा में लिखी जाती है">${escapeHtml(p.lang_hi || p.lang)}</span>` : ''}
       ${p.thin ? `<span class="wa-thin">एक ही मंडी</span>` : ''}
       ${nv.hi ? `<span class="wa-novel ${nv.key === 'same' ? 'same' : ''}"
         title="कितनी फसलों के भाव कल से बदले">${escapeHtml(nv.hi)} · ${nv.moved}/${nv.total}</span>` : ''}
@@ -8332,7 +8599,11 @@ function waMakeImage(state) { return _waImgFetch(state, false); }
 // what lands on the clipboard is sharp on a phone rather than a scaled-up
 // thumbnail of a preview.
 const WA_CARD_W = 1080, WA_CARD_H = 1350;
-const WA_FONT = "'Nirmala UI','Noto Sans Devanagari','Mangal',sans-serif";
+// Nirmala UI is the one Windows face that carries all nine scripts a post can
+// be written in; the Devanagari-only Notos behind it would drop a Malayalam or
+// Tamil heading to the browser's own fallback, so the generic Noto goes ahead
+// of them.
+const WA_FONT = "'Nirmala UI','Noto Sans','Noto Sans Devanagari','Mangal',sans-serif";
 
 function _waLoad(src) {
   return new Promise(res => {
@@ -8442,7 +8713,7 @@ async function waDrawCard(p) {
   // ── heading
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 62px ${WA_FONT}`;
-  ctx.fillText(`${p.hi_state}`, PAD, 300);
+  ctx.fillText(`${p.post_state || p.hi_state}`, PAD, 300);
   ctx.fillStyle = 'rgba(255,255,255,.82)';
   ctx.font = `600 32px ${WA_FONT}`;
   ctx.fillText(p.date || '', PAD, 348);
@@ -9708,7 +9979,7 @@ function switchPage(pageId, el) {
     loadFilesList();
     loadSettings();
   }
-  if (pageId === 'mandi-analysis') { fetchMandiPrices(); loadAlerts(); }
+  if (pageId === 'mandi-analysis') { fetchMandiPrices(); loadAlerts(); loadAlertHealth(); loadBroadcastHistory(); }
   if (pageId === 'weather-panel') { loadWeatherStats(); fetchWeatherForecast(); }
   if (pageId === 'shop-panel') {
     loadHeatmapData();
@@ -9721,6 +9992,8 @@ function switchPage(pageId, el) {
   if (pageId === 'dukan') loadDukan();
   if (pageId === 'rental') loadRental();
   if (pageId === 'sponsor') spLoad();
+  if (pageId === 'ledger') lgLoad();
+  if (pageId === 'reports') rpLoad();
   if (pageId === 'checklist') { loadChecklist(); loadLeads(); }
   if (pageId === 'infra') { loadInfra(false); startInfraPolling(); } else { stopInfraPolling(); }
   if (pageId === 'book' && !_book) loadBook();
@@ -11205,6 +11478,255 @@ async function loadAlerts() {
   }
 }
 
+// ── 🔔 Alert system control ──────────────────────────────────
+// Reads GET /admin/alerts/health, which answers "is anything being delivered"
+// rather than "are we configured". The distinction is the whole reason this
+// panel exists: the keys were present and the config looked right for 57 days
+// while every run died on a missing function and nobody was ever notified.
+let ALERT_CFG = null;
+
+async function loadAlertHealth() {
+  const banner = document.getElementById('alert-health-banner');
+  const grid   = document.getElementById('alert-health-stats');
+  if (!banner) return;
+  try {
+    const r = await fetch(`${API}/admin/alerts/health`, { headers: getAuthHeader() });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.message || 'Load failed');
+
+    ALERT_CFG = d.settings;
+    const s = d.stats;
+
+    // Reflect the live settings into the controls.
+    document.getElementById('alert-sending').checked  = !!d.settings['alerts.sending_enabled'];
+    document.getElementById('alert-bell').checked     = !!d.settings['alerts.bell_visible'];
+    document.getElementById('alert-move-rs').value    = d.settings['alerts.min_move_rs'];
+    document.getElementById('alert-move-pct').value   = d.settings['alerts.min_move_pct'];
+
+    // One headline verdict, worst-first. "Subscribers but nothing ever sent"
+    // outranks everything else — it is the failure this system has already had.
+    let tone = 'ok', msg = '';
+    if (!d.vapid_configured) {
+      tone = 'bad'; msg = 'VAPID keys are not configured — nothing can ever be sent.';
+    } else if (s.alerts_active && s.devices_active && !s.ever_notified) {
+      tone = 'bad'; msg = `${s.alerts_active} farmers are subscribed and not one notification has ever been delivered.`;
+    } else if (!d.settings['alerts.sending_enabled']) {
+      tone = 'warn'; msg = `Sending is switched OFF — ${s.alerts_active} alerts are waiting.`;
+    } else if (s.undeliverable) {
+      tone = 'warn'; msg = `${s.undeliverable} alert(s) have no reachable device — those farmers get nothing.`;
+    } else if (!s.alerts_active) {
+      tone = 'ok'; msg = 'Alert system is live. No subscribers yet.';
+    } else {
+      tone = 'ok'; msg = `Delivering. Last notification ${s.last_delivery || 'never'}.`;
+    }
+    const colour = tone === 'bad' ? 'var(--danger)' : tone === 'warn' ? 'var(--warning,#e0a800)' : 'var(--success,#28a745)';
+    const icon   = tone === 'bad' ? '🔴' : tone === 'warn' ? '🟡' : '🟢';
+    banner.innerHTML = `<div style="padding:10px 12px; border-left:3px solid ${colour}; background:rgba(255,255,255,.03); font-size:13px;">
+      ${icon} <b style="color:${colour};">${escapeHtml(msg)}</b></div>`;
+
+    const cell = (label, value, bad) =>
+      `<div style="padding:8px 10px; background:rgba(255,255,255,.03); border-radius:6px;">
+         <div class="text-muted text-mono" style="font-size:10px; text-transform:uppercase;">${label}</div>
+         <div class="text-mono" style="font-size:18px; ${bad ? 'color:var(--danger);' : ''}">${value}</div>
+       </div>`;
+    grid.innerHTML =
+      cell('Active alerts',  s.alerts_active) +
+      cell('Live devices',   s.devices_active, !s.devices_active && s.alerts_active) +
+      cell('Sent today',     s.notified_today) +
+      cell('Ever notified',  s.ever_notified, s.alerts_active && !s.ever_notified) +
+      cell('Never notified', s.never_notified, s.never_notified > 0) +
+      cell('Undeliverable',  s.undeliverable, s.undeliverable > 0) +
+      cell('Dead endpoints', s.devices_dead) +
+      cell('Last delivery',  s.last_delivery || '—', !s.last_delivery && s.alerts_active);
+  } catch (e) {
+    banner.innerHTML = `<div style="color:var(--danger);">${escapeHtml(String(e))}</div>`;
+  }
+}
+
+async function saveAlertSettings() {
+  const out = document.getElementById('alert-action-out');
+  const body = {
+    sending_enabled: document.getElementById('alert-sending').checked,
+    bell_visible:    document.getElementById('alert-bell').checked,
+    min_move_rs:     parseFloat(document.getElementById('alert-move-rs').value),
+    min_move_pct:    parseFloat(document.getElementById('alert-move-pct').value),
+  };
+  // A blank number field must not be posted as NaN — leave that key out and
+  // the server keeps whatever is stored.
+  if (!isFinite(body.min_move_rs))  delete body.min_move_rs;
+  if (!isFinite(body.min_move_pct)) delete body.min_move_pct;
+
+  out.textContent = 'Saving…';
+  try {
+    const r = await fetch(`${API}/admin/alerts/settings`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.message || d.detail || 'Save failed');
+    out.textContent = 'Saved.';
+    // Collecting subscribers who will never hear anything is the one
+    // combination worth objecting to out loud.
+    if (body.bell_visible && !body.sending_enabled) {
+      out.innerHTML += ' <span style="color:var(--warning,#e0a800);">'
+        + 'Bell is visible but sending is off — new subscribers will get nothing.</span>';
+    }
+    loadAlertHealth();
+  } catch (e) {
+    out.innerHTML = `<span style="color:var(--danger);">${escapeHtml(String(e))}</span>`;
+  }
+}
+
+async function runAlertsNow() {
+  const n = document.getElementById('alert-health-stats')?.textContent || '';
+  if (!confirm('This sends REAL push notifications to subscribed farmers right now.\n\n'
+             + 'The once-a-day and minimum-move rules still apply, so nobody gets a duplicate.\n\n'
+             + 'Continue?')) return;
+  const out = document.getElementById('alert-action-out');
+  out.textContent = 'Running…';
+  try {
+    const r = await fetch(`${API}/admin/alerts/run`, { method: 'POST', headers: getAuthHeader() });
+    const d = await r.json();
+    const res = d.result || {};
+    out.textContent = `Sent ${res.sent ?? 0} · skipped ${res.skipped ?? 0} · failed ${res.failed ?? 0}`
+      + (res.deferred ? ` · deferred (${res.deferred})` : '');
+    loadAlertHealth();
+    loadAlerts();
+  } catch (e) {
+    out.innerHTML = `<span style="color:var(--danger);">${escapeHtml(String(e))}</span>`;
+  }
+}
+
+async function sendAlertTest() {
+  if (!confirm('Send a test notification to the 5 most recent devices?\n\n'
+             + 'It is labelled as a test and carries no price.')) return;
+  const out = document.getElementById('alert-action-out');
+  out.textContent = 'Sending test…';
+  try {
+    const r = await fetch(`${API}/admin/alerts/test`, { method: 'POST', headers: getAuthHeader() });
+    const d = await r.json();
+    out.textContent = d.message || (d.success ? 'Test sent.' : 'Test failed.');
+  } catch (e) {
+    out.innerHTML = `<span style="color:var(--danger);">${escapeHtml(String(e))}</span>`;
+  }
+}
+
+// ── ✉ Custom broadcast ──────────────────────────────────────
+// Send is armed only by a successful Preview, and carries that preview's
+// recipient count back to the server. Editing anything disarms it again: the
+// count on screen must always describe the message about to go out.
+let BC_EXPECT = null;
+
+function bcCount() {
+  const t = document.getElementById('bc-title').value.length;
+  const b = document.getElementById('bc-body').value.length;
+  document.getElementById('bc-title-count').textContent = `${t}/60`;
+  document.getElementById('bc-body-count').textContent = `${b}/180`;
+}
+
+function bcInvalidate() {
+  BC_EXPECT = null;
+  const btn = document.getElementById('bc-send');
+  if (btn) btn.disabled = true;
+}
+
+function bcPayload() {
+  return {
+    title:     document.getElementById('bc-title').value.trim(),
+    body:      document.getElementById('bc-body').value.trim(),
+    url:       document.getElementById('bc-url').value.trim() || null,
+    audience:  document.querySelector('input[name="bc-aud"]:checked').value,
+    commodity: document.getElementById('bc-commodity').value.trim() || null,
+    state:     document.getElementById('bc-state').value.trim() || null,
+    district:  document.getElementById('bc-district').value.trim() || null,
+  };
+}
+
+async function previewBroadcast() {
+  const out = document.getElementById('bc-out');
+  out.textContent = 'Checking…';
+  try {
+    const r = await fetch(`${API}/admin/alerts/broadcast`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...bcPayload(), dry: true }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || d.message || 'Preview failed');
+
+    BC_EXPECT = d.recipients;
+    document.getElementById('bc-send').disabled = !d.recipients;
+
+    const who = d.sample.length
+      ? ` (e.g. ${d.sample.map(s => s.user_id ? 'user ' + s.user_id : 'device').join(', ')})`
+      : '';
+    let html = `<b>${d.recipients} device(s)</b> will receive this${escapeHtml(who)}.`;
+    if (!d.recipients) html += ' <span style="color:var(--warning,#e0a800);">Nothing to send.</span>';
+    if (d.warning) {
+      html += `<div style="color:var(--warning,#e0a800); margin-top:6px;">⚠ ${escapeHtml(d.warning)}</div>`;
+    }
+    out.innerHTML = html;
+  } catch (e) {
+    bcInvalidate();
+    out.innerHTML = `<span style="color:var(--danger);">${escapeHtml(String(e.message || e))}</span>`;
+  }
+}
+
+async function sendBroadcast() {
+  if (BC_EXPECT === null) { previewBroadcast(); return; }
+  const p = bcPayload();
+  if (!confirm(`Send this to ${BC_EXPECT} device(s)?\n\n`
+             + `"${p.title}"\n${p.body}\n\n`
+             + 'This reaches real farmers immediately and CANNOT be unsent.')) return;
+
+  const out = document.getElementById('bc-out');
+  out.textContent = 'Sending…';
+  try {
+    const r = await fetch(`${API}/admin/alerts/broadcast`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...p, dry: false, expect_recipients: BC_EXPECT }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || d.message || 'Send failed');
+    out.innerHTML = `<span style="color:var(--success,#28a745);">${escapeHtml(d.message)}</span>`;
+    // Disarm so a second click cannot repeat the send.
+    bcInvalidate();
+    document.getElementById('bc-title').value = '';
+    document.getElementById('bc-body').value = '';
+    bcCount();
+    loadBroadcastHistory();
+  } catch (e) {
+    bcInvalidate();   // force a fresh preview before any retry
+    out.innerHTML = `<span style="color:var(--danger);">${escapeHtml(String(e.message || e))}</span>`;
+  }
+}
+
+async function loadBroadcastHistory() {
+  const tb = document.getElementById('bc-history');
+  if (!tb) return;
+  try {
+    const r = await fetch(`${API}/admin/alerts/broadcasts?limit=25`, { headers: getAuthHeader() });
+    const d = await r.json();
+    const rows = d.broadcasts || [];
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="5" class="text-muted text-mono" style="text-align:center;">Nothing sent yet.</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(b => `<tr>
+      <td class="text-mono" style="font-size:11px;">${escapeHtml(
+        new Date(b.created_at).toLocaleString('en-IN', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}))}</td>
+      <td>${escapeHtml(b.title)}</td>
+      <td class="text-muted" style="font-size:12px;">${escapeHtml(b.body)}</td>
+      <td class="text-mono" style="font-size:11px;">${escapeHtml(b.audience)} · ${escapeHtml(b.target)}</td>
+      <td class="text-mono">${b.sent}/${b.devices}</td>
+    </tr>`).join('');
+  } catch (e) {
+    tb.innerHTML = `<tr><td colspan="5" style="color:var(--danger);">${escapeHtml(String(e))}</td></tr>`;
+  }
+}
+
 async function loadPreordersTable(filterStatus = '') {
   const tbody = document.getElementById('preorders-table-body');
   if (!tbody) return;
@@ -12134,6 +12656,209 @@ function toggleTheme() {
   applyAdminLayout(_activeLayout, _activeTheme, _activeWidth, _activeDensity);
 })();
 
+// ── 🚩 बाज़ार शिकायतें (backend/routes/admin_reports.py) ───────────────────
+async function rpLoad() {
+  try {
+    const r = await fetch(API + '/admin/bazar-reports', { headers: getAuthHeader() });
+    if (!r.ok) return;
+    const d = await r.json();
+    const badge = document.getElementById('rp-nav-badge');
+    if (badge) { badge.textContent = d.open || 0; badge.hidden = !d.open; }
+    const tbl = document.getElementById('rp-table');
+    if (!tbl) return;
+    if (!d.posts.length) {
+      tbl.innerHTML = '<tr><td style="opacity:.65; padding:16px 8px">कोई शिकायत नहीं। 👍</td></tr>';
+      return;
+    }
+    tbl.innerHTML = '<thead><tr><th>पोस्ट</th><th>शिकायतें</th><th>कितनी पुरानी</th><th></th></tr></thead><tbody>' +
+      d.posts.map(function (g) {
+        const late = g.open && g.age_hours >= 24;
+        const why = g.reports.map(function (x) {
+          return '• ' + escapeHtml(x.reason) + (x.note ? ' — ' + escapeHtml(x.note) : '');
+        }).join('<br>');
+        const post = g.exists
+          ? '<b>#' + g.post_id + ' ' + escapeHtml(g.crop || '') + '</b> · ' + escapeHtml(g.author || '') +
+            '<br><span style="opacity:.75; font-size:12px">' + escapeHtml(g.text || '') + '</span>' +
+            (g.location ? '<br><span style="opacity:.6; font-size:11px">' + escapeHtml(g.location) + '</span>' : '')
+          : '<b>#' + g.post_id + '</b> <span style="opacity:.6">(पोस्ट अब नहीं है)</span>';
+        const acts = g.open
+          ? '<div class="sp-act"><button class="sp-btn danger" onclick="rpResolve(' + g.post_id + ', \'remove\')">हटाएँ</button>' +
+            '<button class="sp-btn" onclick="rpResolve(' + g.post_id + ', \'dismiss\')">खारिज</button></div>'
+          : '<span class="sp-pill off">निपटा</span>';
+        return '<tr' + (g.open ? '' : ' style="opacity:.55"') + '><td>' + post + '</td>' +
+          '<td>' + g.count + (g.open ? ' <span class="sp-pill soon">' + g.open + ' खुली</span>' : '') +
+          '<br><span style="font-size:12px">' + why + '</span></td>' +
+          '<td>' + (late ? '<span class="sp-pill gone">' : '<span class="sp-pill live">') +
+            Math.round(g.age_hours) + ' घंटे</span></td>' +
+          '<td>' + acts + '</td></tr>';
+      }).join('') + '</tbody>';
+  } catch (e) { console.error('rpLoad failed:', e); }
+}
+
+// The 24-hour clock matters here, so the badge refreshes on its own — not only
+// when the page is opened. Before login the fetch 401s and rpLoad() returns.
+setTimeout(rpLoad, 4000);
+setInterval(rpLoad, 10 * 60 * 1000);
+
+async function rpResolve(postId, action) {
+  const q = action === 'remove'
+    ? 'पोस्ट #' + postId + ' फ़ोटो समेत हमेशा के लिए हट जाएगी। जारी रखें?'
+    : 'शिकायत खारिज करें? पोस्ट बनी रहेगी।';
+  if (!confirm(q)) return;
+  try {
+    const r = await fetch(API + '/admin/bazar-reports/' + postId + '/resolve', {
+      method: 'POST',
+      headers: Object.assign({}, getAuthHeader(), { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ action: action }) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    rpLoad();
+  } catch (e) { alert('नहीं हुआ: ' + (e.message || e)); }
+}
+
+// ── 💰 हिसाब — Payments ledger (backend/routes/admin_ledger.py) ─────────────
+let LG = null;
+function lgRs(n) { return (n < 0 ? '−₹' : '₹') + Math.abs(Number(n) || 0).toLocaleString('en-IN'); }
+
+async function lgLoad() {
+  const fy = (document.getElementById('lg-fy') || {}).value || '';
+  const src = (document.getElementById('lg-src') || {}).value || '';
+  try {
+    const r = await fetch(API + '/admin/ledger?fy=' + encodeURIComponent(fy) + '&source=' + encodeURIComponent(src),
+                          { headers: getAuthHeader() });
+    if (!r.ok) return;
+    LG = await r.json();
+    lgFillSelects();
+    lgRender();
+  } catch (e) { console.error('lgLoad failed:', e); }
+}
+
+function lgFillSelects() {
+  const fySel = document.getElementById('lg-fy');
+  if (fySel && !fySel.dataset.filled) {
+    fySel.innerHTML = LG.fys.map(function (f) { return '<option value="' + f + '">FY ' + f + '</option>'; }).join('');
+    fySel.value = LG.summary.fy; fySel.dataset.filled = '1';
+  }
+  const srcSel = document.getElementById('lg-src');
+  if (srcSel && !srcSel.dataset.filled) {
+    srcSel.innerHTML = '<option value="">सभी स्रोत</option>' + Object.keys(LG.sources).map(function (k) {
+      return '<option value="' + k + '">' + escapeHtml(LG.sources[k]) + '</option>'; }).join('');
+    srcSel.dataset.filled = '1';
+  }
+  const f = document.getElementById('lg-f-source');
+  if (f && !f.dataset.filled) {
+    f.innerHTML = LG.manual_sources.map(function (k) {
+      return '<option value="' + k + '">' + escapeHtml(LG.sources[k]) + '</option>'; }).join('');
+    f.dataset.filled = '1';
+  }
+  const d = document.getElementById('lg-f-date');
+  if (d && !d.value) d.value = new Date(Date.now() + 19800000).toISOString().slice(0, 10);
+}
+
+function lgRender() {
+  const s = LG.summary;
+  const top = (s.by_source[0] || {});
+  document.getElementById('lg-metrics').innerHTML =
+    '<div class="sp-card"><b>' + lgRs(s.total) + '</b><span>FY ' + s.fy + ' कुल</span></div>' +
+    '<div class="sp-card"><b>' + lgRs(s.this_month) + '</b><span>इस महीने</span></div>' +
+    '<div class="sp-card"><b>' + s.count + '</b><span>भुगतान</span></div>' +
+    '<div class="sp-card"><b>' + lgRs(s.refunds) + '</b><span>वापस किया (refund)</span></div>' +
+    (top.label ? '<div class="sp-card"><b>' + lgRs(top.amount) + '</b><span>सबसे ज़्यादा: ' + escapeHtml(top.label) + '</span></div>' : '');
+
+  const pct = Math.min(100, Math.round(100 * Math.max(0, s.total) / s.gst_limit));
+  const cls = s.gst_over ? 'over' : (s.gst_warn ? 'warn' : '');
+  const msg = s.gst_over
+    ? '<b>₹20 लाख पार — GST registration अब ज़रूरी है।</b> 30 दिन के अंदर करवाइए (CA से)।'
+    : s.gst_warn
+      ? '<b>₹20 लाख के पास।</b> GST registration अभी से शुरू कर दीजिए — सीमा पार होने के 30 दिन के अंदर ज़रूरी है।'
+      : 'GST registration की सीमा ₹20 लाख / वित्त वर्ष। इसमें AdSense समेत हर स्रोत गिना जाता है।';
+  document.getElementById('lg-gst').innerHTML =
+    '<div class="card" style="padding:14px 16px; margin-bottom:16px">' +
+    '<div style="font-size:13px">' + msg + '</div>' +
+    '<div class="lg-bar ' + cls + '"><i style="width:' + pct + '%"></i></div>' +
+    '<div class="sp-hint" style="margin:0">' + lgRs(s.total) + ' / ₹20,00,000 (' + pct + '%)</div></div>';
+
+  const tbl = document.getElementById('lg-table');
+  if (!LG.payments.length) {
+    tbl.innerHTML = '<tr><td style="opacity:.65; padding:16px 8px">इस वित्त वर्ष में अभी कोई भुगतान दर्ज नहीं।</td></tr>';
+    return;
+  }
+  tbl.innerHTML =
+    '<thead><tr><th>तारीख़</th><th>राशि</th><th>स्रोत</th><th>किसने</th><th>Reference</th><th>नोट</th><th></th></tr></thead><tbody>' +
+    LG.payments.map(function (p) {
+      const tag = p.origin === 'backfill' ? ' · पुराना' : (p.origin === 'manual' ? ' · हाथ से' : '');
+      return '<tr class="' + (p.voided ? 'lg-void' : '') + '">' +
+        '<td>' + p.date + '<br><span style="opacity:.6; font-size:11px">' + p.time + tag + '</span></td>' +
+        '<td class="' + (p.amount < 0 ? 'lg-neg' : '') + '"><b>' + lgRs(p.amount) + '</b></td>' +
+        '<td>' + escapeHtml(p.source_label) + (p.source_key ? '<br><span style="opacity:.6; font-size:11px">' + escapeHtml(p.source_key) + '</span>' : '') + '</td>' +
+        '<td>' + escapeHtml(p.payer || '—') + (p.contact ? '<br><span style="opacity:.6; font-size:11px">' + escapeHtml(p.contact) + '</span>' : '') + '</td>' +
+        '<td style="font-family:var(--font-mono); font-size:12px">' + escapeHtml(p.ref || '—') + '</td>' +
+        '<td>' + escapeHtml(p.note || '') + (p.voided ? '<br><span class="lg-neg">रद्द: ' + escapeHtml(p.void_reason) + '</span>' : '') + '</td>' +
+        '<td><div class="sp-act"><button class="sp-btn" onclick="lgReceipt(' + p.id + ')">रसीद</button>' +
+        (p.voided ? '' : '<button class="sp-btn danger" onclick="lgVoid(' + p.id + ')">रद्द</button>') +
+        '</div></td></tr>';
+    }).join('') + '</tbody>';
+}
+
+function lgV(id) { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; }
+
+async function lgAdd() {
+  const body = { source: lgV('lg-f-source'), amount: parseInt(lgV('lg-f-amount') || '0', 10),
+                 date: lgV('lg-f-date'), method: lgV('lg-f-method'), payer: lgV('lg-f-payer'),
+                 contact: lgV('lg-f-contact'), ref: lgV('lg-f-ref'), note: lgV('lg-f-note') };
+  if (!body.amount || body.amount < 1) { alert('राशि लिखिए।'); return; }
+  if (!confirm(lgRs(body.amount) + ' — ' + (LG.sources[body.source] || body.source) + ' — ' + body.date +
+               '\nक्या यह पैसा सच में बैंक में आ चुका है?')) return;
+  await lgSend(API + '/admin/ledger', body, function () {
+    ['lg-f-amount', 'lg-f-payer', 'lg-f-contact', 'lg-f-ref', 'lg-f-note'].forEach(function (i) {
+      document.getElementById(i).value = '';
+    });
+  });
+}
+
+async function lgVoid(id) {
+  const reason = prompt('यह entry रद्द क्यों? (मिटेगी नहीं — "रद्द" लिखी रहेगी)');
+  if (!reason || !reason.trim()) return;
+  await lgSend(API + '/admin/ledger/' + id + '/void', { reason: reason.trim() });
+}
+
+async function lgSend(url, body, after) {
+  try {
+    const r = await fetch(url, { method: 'POST',
+      headers: Object.assign({}, getAuthHeader(), { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body) });
+    const d = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(d.detail || 'failed');
+    if (after) after();
+    lgLoad();
+  } catch (e) { alert('नहीं हुआ: ' + (e.message || e)); }
+}
+
+async function lgReceipt(id) {
+  // The receipt route is admin-only, so it cannot just be linked: fetch it with
+  // the auth header and write the HTML into a new tab to print or save as PDF.
+  const w = window.open('', '_blank');
+  try {
+    const r = await fetch(API + '/admin/ledger/' + id + '/receipt', { headers: getAuthHeader() });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const html = await r.text();
+    w.document.open(); w.document.write(html); w.document.close();
+  } catch (e) { if (w) w.close(); alert('रसीद नहीं बनी: ' + (e.message || e)); }
+}
+
+async function lgCsv() {
+  const fy = lgV('lg-fy');
+  try {
+    const r = await fetch(API + '/admin/ledger/export.csv?fy=' + encodeURIComponent(fy), { headers: getAuthHeader() });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'krashimitra-payments-FY' + fy + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  } catch (e) { alert('CSV नहीं बना: ' + (e.message || e)); }
+}
+
 // ── 🤝 प्रायोजक — Sponsors ───────────────────────────────────
 let SP_STATE = { sponsors: [], rate_card: [], kit_enabled: false };
 
@@ -12165,12 +12890,23 @@ function spRenderMetrics() {
     '<div class="sp-card"><b>' + (SP_STATE.sponsors || []).length + '</b><span>कुल records</span></div>';
 
   const kw = document.getElementById('sp-kitwarn');
+  const pr = SP_STATE.price_review;
+  const prHtml = !pr ? '' :
+    '<div class="sp-warn" style="background:rgba(63,166,90,.12); border-color:rgba(63,166,90,.45)">' +
+    '<b>📈 Traffic ' + pr.ratio + '× — प्रायोजक के दाम बढ़ाने का समय।</b> ' +
+    'पिछले 7 दिन: ~' + Number(pr.avg_clicks).toLocaleString('en-IN') + ' visits/दिन (दाम ' + pr.priced_on +
+    ' को ~' + Number(pr.base_clicks).toLocaleString('en-IN') + '/दिन पर तय हुए थे)।<br>' +
+    pr.suggest.map(function (s) {
+      return escapeHtml(s.name) + ': ₹' + Number(s.now).toLocaleString('en-IN') + ' → <b>₹' +
+             Number(s.new).toLocaleString('en-IN') + '</b>';
+    }).join('<br>') +
+    '<br><span style="opacity:.75">पुराने प्रायोजक renewal तक पुराने दाम पर रहेंगे।</span></div>';
   if (kw) {
-    kw.innerHTML = SP_STATE.kit_enabled ? '' :
+    kw.innerHTML = prHtml + (SP_STATE.kit_enabled ? '' :
       '<div class="sp-warn"><b>KM_SPONSOR_KIT_SECRET सेट नहीं है।</b> ' +
       'इसलिए कोई media-kit लिंक नहीं बन सकता और <code>/sponsor/kit/*</code> सबके लिए 404 है — ' +
       'यह सुरक्षित default है, bug नहीं। Render dashboard → Environment में कोई लंबी random ' +
-      'string डालिए, और locally <code>.env</code> में।</div>';
+      'string डालिए, और locally <code>.env</code> में।</div>');
   }
 }
 
@@ -12266,7 +13002,9 @@ async function spPaid(slug) {
   if (amt === null) return;
   const until = prompt('किस तारीख़ तक चला (YYYY-MM-DD)? खाली = वही रहने दें।');
   if (until === null) return;
-  const body = {};
+  const ref = prompt('बैंक / UPI reference (UTR) — स्टेटमेंट से। हिसाब में यही दर्ज होगा।');
+  if (ref === null) return;
+  const body = { ref: ref.trim() };
   if (amt.trim()) body.amount = parseInt(amt, 10) || null;
   if (until.trim()) body.until = until.trim();
   await spSend(API + '/admin/sponsor/' + slug + '/payment', 'POST', body);

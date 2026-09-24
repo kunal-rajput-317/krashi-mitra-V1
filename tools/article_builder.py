@@ -44,7 +44,8 @@ from urllib.parse import quote
 from article_advisory import (ADVISORY_MARK, advisory_html, needs_advisory,
                               sweep as advisory_sweep)
 from article_cards import sweep as card_date_sweep
-from article_journey import (sweep as journey_sweep,
+from article_journey import (restyle as journey_restyle,
+                             sweep as journey_sweep,
                              unplaceable as journey_stuck)
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -978,6 +979,13 @@ def main() -> int:
         if walked:
             verb = "missing strip on" if args.check else "strip added to"
             print(f"\nlegacy pages — {verb} {len(walked)}")
+            failed = failed or args.check
+        # And bring every baked strip up to the current look (CSS + section
+        # photos) — see article_journey.restyle().
+        restyled = journey_restyle(ARTICLES, write=not args.check)
+        if restyled:
+            verb = "outdated strip look on" if args.check else "strip look refreshed on"
+            print(f"\nstrip — {verb} {len(restyled)}")
             failed = failed or args.check
         # Reported even when nothing was written: a page with no anchor to hang
         # the strip on is silently left out of the ecosystem, and silence is

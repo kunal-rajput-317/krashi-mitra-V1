@@ -41,17 +41,24 @@ CREDITS = OUT_DIR / "CREDITS.json"
 API = "https://commons.wikimedia.org/w/api.php"
 UA = "KrashiMitra/1.0 (https://krashimitra.in; krashimitra038@gmail.com)"
 
-# Every hero comes out at exactly 1200×675. The figure and the card band are
+# Every hero comes out at exactly TARGET_W×TARGET_H. The figure and the card band are
 # both fixed-ratio boxes, so a portrait source would either be cropped to a
 # sliver by object-fit or — where height resolves to auto — render as a
 # full-height column that shoves the article off the screen. Normalising here
 # means the <img width/height> we emit is always the true size of the file, so
 # there is no layout shift while it loads.
-TARGET_W = 1200
-TARGET_H = 675
+#
+# 960×540 at q75, not the 1200×675 at q82 this used to write: those came out at
+# 300–450 KB (Commons photos are grainy, so quality barely moves the size), and
+# on 25 Sep 2026 they were a large share of what Render bills against its
+# 5 GB/month cap. 960 px still covers a 390-CSS-px phone at 2.5x. The builder's
+# <img width="1200" height="675"> is only an aspect ratio, and 16:9 is kept.
+# tools/shrink_images.py applies the same budget to files already on disk.
+TARGET_W = 960
+TARGET_H = 540
 CARD_W = 480
 CARD_H = 270
-WEBP_QUALITY = 82
+WEBP_QUALITY = 75
 
 # Below this the upscale to 1200 is visible. Commons has plenty of alternatives;
 # fail loudly rather than ship a soft hero.
@@ -88,7 +95,7 @@ def commons_info(filename: str) -> dict | None:
         "action": "query", "titles": f"File:{filename}",
         "prop": "imageinfo",
         "iiprop": "url|extmetadata|mime",
-        "iiurlwidth": TARGET_W,
+        "iiurlwidth": 1200,   # fetch bigger than we keep, downscale is cleaner
     })
     pages = data.get("query", {}).get("pages", {})
     for pid, page in pages.items():
@@ -141,7 +148,7 @@ def _flatten(im: Image.Image) -> Image.Image:
 
 
 def _emit(slug: str, im: Image.Image, fit: str, source: str) -> None:
-    """Write the 1200×675 hero and its 480×270 card cut."""
+    """Write the TARGET_W×TARGET_H hero and its 480×270 card cut."""
     im = _contain_16x9(im) if fit == "contain" else _crop_16x9(im)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     dest = OUT_DIR / f"{slug}.webp"
@@ -198,7 +205,7 @@ def local_one(slug: str, rel: str, force: bool = False) -> bool:
 
 
 def _crop_16x9(im: Image.Image) -> Image.Image:
-    """Centre-crop to 16:9, then scale to 1200×675.
+    """Centre-crop to 16:9, then scale to TARGET_W×TARGET_H.
 
     Centre because the subject of a crop photograph is centred far more often
     than not, and a wrong crop is obvious on the card grid.
@@ -228,7 +235,7 @@ def _edge_colour(im: Image.Image) -> tuple[int, int, int]:
 
 
 def _contain_16x9(im: Image.Image) -> Image.Image:
-    """Fit the whole image inside 1200×675, padding to fill.
+    """Fit the whole image inside TARGET_W×TARGET_H, padding to fill.
 
     For annotated diagrams: they carry Hindi labels right out to the edge, so
     a centre crop silently eats the text that makes them worth showing.

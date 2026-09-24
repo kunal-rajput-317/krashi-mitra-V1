@@ -62,9 +62,9 @@ def client():
     ("/mandi", "/bhav"),
     ("/mandi.html", "/bhav"),
     ("/naksha.html", "/naksha"),
-    # These land on the FINAL destination, not on another 301 — /map and the
-    # bare /dukanlisting both redirect again on this origin.
-    ("/map.html", "/naksha/uttar-pradesh"),
+    # These land on the FINAL destination, not on another 301 — the bare
+    # /dukanlisting redirects again on this origin. /map is a real page now.
+    ("/map.html", "/map"),
     ("/dukan", "/dukanlisting/"),
     ("/dukan.html", "/dukanlisting/"),
     ("/dukan/product", "/dukanlisting/"),

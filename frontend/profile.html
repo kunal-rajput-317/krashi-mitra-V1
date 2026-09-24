@@ -1240,7 +1240,6 @@
       <div class="stat-item"><div class="stat-icon">📍</div><div class="stat-val" id="stat-location">-</div><div class="stat-lbl">जिला</div></div>
       <div class="stat-item"><div class="stat-icon">🌱</div><div class="stat-val" id="stat-crop">-</div><div class="stat-lbl">मुख्य फसल</div></div>
       <div class="stat-item"><div class="stat-icon">🧭</div><div class="stat-val" id="stat-farm">-</div><div class="stat-lbl">खेत</div></div>
-      <div class="stat-item"><div class="stat-icon">🌊</div><div class="stat-val" id="stat-irrigation">-</div><div class="stat-lbl">सिंचाई</div></div>
     </div>
   </section>
 
@@ -1281,21 +1280,12 @@
     </div>
   </div>
 
-  <!-- ── Scheme Status (hidden sidebar card IDs preserved) ── -->
-  <div id="scheme-card" style="display:none;">
-    <span id="scheme-pmkisan"></span>
-    <span id="scheme-kcc"></span>
-    <span id="scheme-aadhaar"></span>
-    <span id="scheme-bima"></span>
-  </div>
-
   <!-- ── Tab Nav ── -->
   <div class="tab-nav" role="tablist">
     <button class="tab-btn active" role="tab" onclick="switchTab('personal', event)">👤 व्यक्तिगत</button>
     <button class="tab-btn" role="tab" onclick="switchTab('farm', event)">🌾 खेत</button>
     <button class="tab-btn" role="tab" onclick="switchTab('crops', event)">🌱 फसल</button>
     <button class="tab-btn" role="tab" onclick="switchTab('achievements', event)">🏆 उपलब्धियां व स्ट्रीक</button>
-    <button class="tab-btn" role="tab" onclick="switchTab('schemes', event)">🏛️ योजना</button>
     <button class="tab-btn" role="tab" onclick="switchTab('prefs', event)">⚙️ सेटिंग</button>
   </div>
 
@@ -1314,12 +1304,8 @@
                hatch — tel-input.js owns maxlength/inputmode/pattern for these. -->
           <div class="field"><label for="phone_number">मोबाइल नंबर</label><input id="phone_number" name="phone_number" type="tel" placeholder="10 अंकों का नंबर" autocomplete="tel" data-km-tel></div>
           <div class="field"><label for="whatsapp_number">WhatsApp नंबर <span class="hint">(अलग हो तो)</span></label><input id="whatsapp_number" name="whatsapp_number" type="tel" placeholder="WhatsApp नंबर" data-km-tel></div>
-          <div class="field"><label for="dob">जन्म तिथि</label><input id="dob" name="dob" type="date"></div>
-          <div class="field"><label for="gender">लिंग</label><select id="gender" name="gender"><option value="">चुनें</option><option value="male">पुरुष</option><option value="female">महिला</option><option value="other">अन्य</option></select></div>
           <div class="field"><label for="occupation">व्यवसाय</label><select id="occupation" name="occupation"><option value="">चुनें</option><option value="farmer">किसान (Farmer)</option><option value="businessman">व्यापारी (Businessman)</option><option value="dealer">डीलर (Dealer)</option><option value="seller">विक्रेता (Seller)</option><option value="buyer">खरीदार (Buyer)</option><option value="agri_trader">कृषि व्यापारी / आढ़ती</option><option value="input_dealer">बीज/खाद/कीटनाशक विक्रेता</option><option value="livestock">पशुपालक / डेयरी</option><option value="agri_advisor">कृषि सलाहकार</option><option value="fpo">FPO / सहकारी समिति</option><option value="student">छात्र (Student)</option><option value="govt">सरकारी कर्मचारी</option><option value="freehand">फ्रीलांसर / फ्री हैंड (Free hand)</option><option value="other">अन्य (Other)</option></select></div>
-          <div class="field"><label for="education">शिक्षा</label><select id="education" name="education"><option value="">चुनें</option><option value="illiterate">अनपढ़</option><option value="primary">प्राथमिक (1-5)</option><option value="middle">मिडिल (6-8)</option><option value="high_school">हाई स्कूल (10th)</option><option value="intermediate">इंटरमीडिएट (12th)</option><option value="graduate">स्नातक</option><option value="post_graduate">स्नातकोत्तर</option></select></div>
           <div class="field"><label for="farming_experience">खेती का अनुभव</label><select id="farming_experience" name="farming_experience"><option value="">चुनें</option><option value="0-2">0-2 साल</option><option value="3-5">3-5 साल</option><option value="6-10">6-10 साल</option><option value="11-20">11-20 साल</option><option value="20+">20+ साल</option></select></div>
-          <div class="field"><label for="family_size">परिवार के सदस्य</label><input id="family_size" name="family_size" type="number" placeholder="जैसे: 5" min="1" max="30"></div>
         </div>
       </div>
     </div>
@@ -1343,21 +1329,6 @@
         <div class="form-grid">
           <div class="field"><label for="farm_size">खेत का आकार</label><input id="farm_size" name="farm_size" type="text" placeholder="जैसे: 2.5 acres"></div>
           <div class="field"><label for="farm_size_unit">इकाई</label><select id="farm_size_unit" name="farm_size_unit"><option value="acres">Acres (एकड़)</option><option value="bigha">Bigha (बीघा)</option><option value="hectare">Hectare (हेक्टेयर)</option><option value="guntha">Guntha</option></select></div>
-          <div class="field"><label for="land_ownership">जमीन का प्रकार</label><select id="land_ownership" name="land_ownership"><option value="">चुनें</option><option value="owned">स्वामित्व (अपनी जमीन)</option><option value="leased">पट्टे पर (लीज)</option><option value="both">दोनों</option><option value="family">पारिवारिक</option></select></div>
-          <div class="field"><label for="soil_type">मिट्टी का प्रकार</label><select id="soil_type" name="soil_type"><option value="">चुनें</option><option value="alluvial">जलोढ़ (Alluvial)</option><option value="black">काली (Black/Regur)</option><option value="red">लाल (Red)</option><option value="laterite">लैटेराइट</option><option value="sandy">रेतीली (Sandy)</option><option value="loamy">दोमट (Loamy)</option><option value="clayey">चिकनी (Clayey)</option></select></div>
-          <div class="field"><label for="irrigation_type">सिंचाई का प्रकार</label><select id="irrigation_type" name="irrigation_type"><option value="">चुनें</option><option value="canal">नहर (Canal)</option><option value="borewell">बोरवेल / ट्यूबवेल</option><option value="well">कुआं (Well)</option><option value="drip">ड्रिप सिंचाई</option><option value="sprinkler">स्प्रिंकलर</option><option value="rain_fed">वर्षा आधारित</option><option value="pond">तालाब / झील</option></select></div>
-          <div class="field"><label for="khasra_number">खसरा / खाता नंबर <span class="hint">(वैकल्पिक)</span></label><input id="khasra_number" name="khasra_number" type="text" placeholder="भूमि रिकॉर्ड नंबर"></div>
-          <div class="field full">
-            <label for="equipment_owned">उपकरण/मशीनरी</label>
-            <div class="check-grid" style="margin-top:4px;">
-              <label class="check-item"><input type="checkbox" name="eq_tractor" id="eq_tractor"> ट्रैक्टर</label>
-              <label class="check-item"><input type="checkbox" name="eq_pump" id="eq_pump"> पंप सेट</label>
-              <label class="check-item"><input type="checkbox" name="eq_thresher" id="eq_thresher"> थ्रेशर</label>
-              <label class="check-item"><input type="checkbox" name="eq_sprayer" id="eq_sprayer"> स्प्रेयर</label>
-              <label class="check-item"><input type="checkbox" name="eq_harvester" id="eq_harvester"> हार्वेस्टर</label>
-              <label class="check-item"><input type="checkbox" name="eq_none" id="eq_none"> कोई नहीं</label>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1368,11 +1339,8 @@
         <div class="form-card-head"><div class="form-card-icon">🌱</div><div><div class="form-card-title">फसल की जानकारी</div><div class="form-card-sub">मुख्य फसल, सीजन और खेती का तरीका</div></div></div>
         <div class="form-grid">
           <div class="field"><label for="primary_crop">मुख्य फसल <span class="req">*</span></label><select id="primary_crop" name="primary_crop"><option value="">फसल चुनें</option><option value="Wheat">गेहूं (Wheat)</option><option value="Rice">धान (Rice)</option><option value="Sugarcane">गन्ना (Sugarcane)</option><option value="Cotton">कपास (Cotton)</option><option value="Maize">मक्का (Maize)</option><option value="Soybean">सोयाबीन (Soybean)</option><option value="Mustard">सरसों (Mustard)</option><option value="Potato">आलू (Potato)</option><option value="Tomato">टमाटर (Tomato)</option><option value="Onion">प्याज (Onion)</option><option value="Pulses">दाल (Pulses)</option><option value="Groundnut">मूंगफली (Groundnut)</option><option value="Chilli">मिर्च (Chilli)</option><option value="Banana">केला (Banana)</option><option value="Mango">आम (Mango)</option><option value="Other">अन्य</option></select></div>
-          <div class="field"><label for="farming_season">खेती का मौसम</label><select id="farming_season" name="farming_season"><option value="">चुनें</option><option value="kharif">खरीफ (Kharif)</option><option value="rabi">रबी (Rabi)</option><option value="zaid">जायद (Zaid)</option><option value="all">सभी मौसम</option></select></div>
           <div class="field full"><label for="crops_grown">सभी फसलें <span class="hint">(comma से अलग करें)</span></label><input id="crops_grown" name="crops_grown" type="text" placeholder="जैसे: sugarcane, wheat, rice, vegetables"></div>
           <div class="field"><label for="farming_type">खेती का प्रकार</label><select id="farming_type" name="farming_type"><option value="">चुनें</option><option value="conventional">पारंपरिक (Conventional)</option><option value="organic">जैविक (Organic)</option><option value="semi_organic">अर्ध-जैविक</option><option value="natural">प्राकृतिक खेती</option><option value="integrated">एकीकृत खेती</option></select></div>
-          <div class="field"><label for="yield_per_acre">उत्पादन प्रति एकड़ <span class="hint">(अनुमानित)</span></label><input id="yield_per_acre" name="yield_per_acre" type="text" placeholder="जैसे: 30 quintal"></div>
-          <div class="field full"><label for="crop_problems">फसल की मुख्य समस्याएं</label><textarea id="crop_problems" name="crop_problems" placeholder="जैसे: कीट, रोग, पानी की कमी, बाजार मूल्य आदि..." style="min-height:60px;"></textarea></div>
           <div class="field full"><div class="info-box"><span class="info-box-icon">💡</span><span>फसल की जानकारी भरने से AI सहायक आपको <strong>सटीक और व्यक्तिगत कृषि सलाह</strong> दे पाएगा।</span></div></div>
         </div>
       </div>
@@ -1453,37 +1421,12 @@
 
     </div>
 
-    <!-- ── Tab: Schemes ── -->
-    <div class="tab-panel" id="tab-schemes">
-      <div class="form-card">
-        <div class="form-card-head"><div class="form-card-icon">🏛️</div><div><div class="form-card-title">सरकारी योजनाएं</div><div class="form-card-sub">पात्रता और नामांकन</div></div></div>
-        <div class="form-grid">
-          <div class="field full"><div class="info-box"><span class="info-box-icon">ℹ️</span><span>यह जानकारी आपको सही सरकारी योजनाओं की जानकारी देने के लिए उपयोग होती है। यह डेटा सुरक्षित रहता है।</span></div></div>
-          <div class="field full"><label>PM-Kisan सम्मान निधि</label><label class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-title">PM-Kisan में नामांकित हैं?</div><div class="toggle-row-sub">₹6,000 प्रति वर्ष की सहायता राशि</div></div><label class="toggle-switch"><input type="checkbox" id="pm_kisan_registered" name="pm_kisan_registered"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></label></div>
-          <div class="field full"><label>किसान क्रेडिट कार्ड (KCC)</label><label class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-title">KCC उपलब्ध है?</div><div class="toggle-row-sub">खेती के लिए कम ब्याज पर ऋण</div></div><label class="toggle-switch"><input type="checkbox" id="has_kcc" name="has_kcc"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></label></div>
-          <div class="field full"><label>आधार लिंकिंग</label><label class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-title">बैंक खाता आधार से लिंक है?</div><div class="toggle-row-sub">DBT सब्सिडी के लिए जरूरी</div></div><label class="toggle-switch"><input type="checkbox" id="aadhaar_linked" name="aadhaar_linked"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></label></div>
-          <div class="field full"><label>फसल बीमा (PMFBY)</label><label class="toggle-row"><div class="toggle-row-info"><div class="toggle-row-title">फसल बीमा करा रखा है?</div><div class="toggle-row-sub">प्राकृतिक आपदा से सुरक्षा</div></div><label class="toggle-switch"><input type="checkbox" id="fasal_bima" name="fasal_bima"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></label></div>
-        </div>
-
-        <div class="scheme-list">
-          <div class="scheme-item"><span>PM-Kisan सम्मान निधि</span><span class="scheme-badge badge-na" id="scheme-pmkisan">-</span></div>
-          <div class="scheme-item"><span>किसान क्रेडिट कार्ड</span><span class="scheme-badge badge-na" id="scheme-kcc">-</span></div>
-          <div class="scheme-item"><span>आधार लिंकिंग</span><span class="scheme-badge badge-na" id="scheme-aadhaar">-</span></div>
-          <div class="scheme-item"><span>फसल बीमा</span><span class="scheme-badge badge-na" id="scheme-bima">-</span></div>
-        </div>
-      </div>
-    </div>
-
     <!-- ── Tab: Preferences ── -->
     <div class="tab-panel" id="tab-prefs">
       <div class="form-card">
         <div class="form-card-head"><div class="form-card-icon">⚙️</div><div><div class="form-card-title">सेटिंग और प्राथमिकताएं</div><div class="form-card-sub">भाषा, सूचना और अन्य</div></div></div>
         <div class="form-grid">
           <div class="field"><label for="preferred_language">भाषा</label><select id="preferred_language" name="preferred_language"><option value="hindi" selected>हिंदी</option><option value="english">English</option><option value="hinglish">Hinglish</option></select></div>
-          <div class="field"><label for="advisory_type">सलाह का प्रकार</label><select id="advisory_type" name="advisory_type"><option value="">चुनें</option><option value="text">टेक्स्ट</option><option value="voice">वॉइस</option><option value="both">दोनों</option></select></div>
-          <div class="field"><label for="bank_name">बैंक का नाम</label><input id="bank_name" name="bank_name" type="text" placeholder="जैसे: SBI, PNB"></div>
-          <div class="field"><label for="annual_income">वार्षिक आय (अनुमानित)</label><input id="annual_income" name="annual_income" type="text" placeholder="जैसे: 2,00,000"></div>
-          <div class="field full"><label for="special_needs">विशेष आवश्यकताएं</label><textarea id="special_needs" name="special_needs" placeholder="कोई विशेष जानकारी या सहायता..." style="min-height:50px;"></textarea></div>
 
           <div class="field full">
             <label>सूचना प्राथमिकताएं</label>
@@ -1512,6 +1455,149 @@
       </div>
     </div>
   </form>
+
+  <!-- ── खाता हटाएँ — routes/account_delete.py ──
+       Password (email accounts) + an OTP to the account's own email. The rows
+       are anonymised, not deleted: see services/account_delete.py. -->
+  <style>
+    .del-card { margin-top: 18px; border-color: #ffd6d1; }
+    .del-card .form-card-icon { background: var(--danger-bg); }
+    .del-body { padding: 14px 18px 16px; font-size: 13px; line-height: 1.65; color: var(--text); }
+    .del-body ul { margin: 6px 0 12px; padding-left: 18px; }
+    .del-modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; justify-content: center; z-index: 2147483000; }
+    .del-modal.open { display: flex; }
+    .del-sheet { background: var(--white); width: 100%; max-width: 460px; border-radius: 16px 16px 0 0; padding: 20px 18px 22px; max-height: 92vh; overflow-y: auto; }
+    @media (min-width: 600px) { .del-modal { align-items: center; } .del-sheet { border-radius: 16px; } }
+    .del-sheet h3 { margin: 0 0 6px; font-size: 17px; color: var(--danger); }
+    .del-sheet p { font-size: 13px; line-height: 1.6; margin: 0 0 12px; }
+    .del-sheet label.f { display: block; font-size: 12px; font-weight: 700; margin: 10px 0 5px; }
+    .del-sheet input[type=password], .del-sheet input[type=text], .del-sheet select {
+      width: 100%; box-sizing: border-box; min-height: 44px; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 0 12px; font: inherit; font-size: 14px; background: var(--white); }
+    .del-row { display: flex; gap: 8px; align-items: center; }
+    .del-row input { flex: 1; }
+    .del-check { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; margin: 14px 0 4px; line-height: 1.5; }
+    .del-check input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+    .del-msg { font-size: 13px; font-weight: 700; margin-top: 10px; min-height: 18px; }
+    .del-msg.err { color: var(--danger); } .del-msg.ok { color: var(--green-dark, #1b5e3b); }
+    .del-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .del-actions .btn { flex: 1; min-height: 46px; font-size: 14px; }
+    .btn-solid-danger { background: var(--danger); color: #fff; border: 0; }
+    .btn-solid-danger[disabled] { opacity: .5; cursor: default; }
+  </style>
+
+  <div class="form-card del-card" id="del-card" hidden>
+    <div class="form-card-head">
+      <div class="form-card-icon">⚠️</div>
+      <div><div class="form-card-title">खाता हटाएँ</div>
+        <div class="form-card-sub">यह वापस नहीं हो सकता</div></div>
+    </div>
+    <div class="del-body">
+      खाता हटाने पर ये हमेशा के लिए मिट जाएगा:
+      <ul>
+        <li>आपकी प्रोफ़ाइल — नाम, नंबर, गाँव, लोकेशन, फ़ोटो और खेती की जानकारी</li>
+        <li>कृषि बाज़ार की आपकी पोस्ट और फ़ोटो, AI चैट, फसल कैलेंडर, अलर्ट</li>
+        <li>दूसरों की पोस्ट पर आपके कमेंट की जगह लिखा आएगा "यह कमेंट हटा दिया गया"</li>
+      </ul>
+      कानून के कारण रहेगा: आपके <b>भुगतान का रिकॉर्ड 8 साल</b> तक (आयकर / GST), और आपका नाम, ईमेल व नंबर
+      <b>180 दिन</b> तक छिपाकर (IT नियम 2021) — फिर वह भी अपने-आप मिट जाएगा।
+      <div style="margin-top:12px"><button type="button" class="btn btn-danger" onclick="kmDelOpen()">🗑️ मेरा खाता हटाएँ</button></div>
+    </div>
+  </div>
+
+  <div class="del-modal" id="del-modal" role="dialog" aria-modal="true" aria-labelledby="del-title">
+    <div class="del-sheet">
+      <h3 id="del-title">पक्का खाता हटाना है?</h3>
+      <p>यह वापस नहीं हो सकता। पुष्टि के लिए <span id="del-pw-note">अपना पासवर्ड और </span>ईमेल <b id="del-email"></b> पर आया OTP डालें।</p>
+
+      <label class="f" for="del-reason">क्यों हटा रहे हैं? (वैकल्पिक)</label>
+      <select id="del-reason"><option value="">— चुनें —</option></select>
+
+      <div id="del-pw-wrap">
+        <label class="f" for="del-pw">पासवर्ड</label>
+        <input type="password" id="del-pw" autocomplete="current-password">
+      </div>
+
+      <label class="f" for="del-otp">ईमेल OTP</label>
+      <div class="del-row">
+        <input type="text" id="del-otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 अंक">
+        <button type="button" class="btn btn-danger" id="del-otp-btn" onclick="kmDelSendOtp()">OTP भेजें</button>
+      </div>
+
+      <label class="del-check"><input type="checkbox" id="del-confirm">
+        <span>मैं समझता / समझती हूँ कि मेरा खाता और ऊपर लिखा सब डेटा हमेशा के लिए मिट जाएगा।</span></label>
+
+      <div class="del-msg" id="del-msg"></div>
+      <div class="del-actions">
+        <button type="button" class="btn" style="background:var(--green-pale)" onclick="kmDelClose()">रहने दें</button>
+        <button type="button" class="btn btn-solid-danger" id="del-go" onclick="kmDelGo()">खाता हटाएँ</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const API = window.KRASHIMITRA_API_BASE;
+    const tok = () => localStorage.getItem("krishi_token");
+    const $ = (id) => document.getElementById(id);
+    let info = null;
+
+    function msg(text, ok) { const m = $("del-msg"); m.textContent = text || ""; m.className = "del-msg " + (ok ? "ok" : "err"); }
+    async function call(path, opts) {
+      const r = await fetch(API + path, Object.assign({ headers: {
+        Authorization: "Bearer " + tok(), "Content-Type": "application/json" } }, opts || {}));
+      if (r.status === 429) return { success: false, message: "बहुत बार कोशिश हुई — थोड़ी देर बाद करें।" };
+      return r.json().catch(() => ({ success: false, message: "कुछ गड़बड़ हुई।" }));
+    }
+
+    // Shown only to a signed-in visitor whose account the API recognises.
+    async function init() {
+      if (!tok() || !API) return;
+      const j = await call("/account/delete/info").catch(() => null);
+      if (!j || !j.success) return;
+      info = j.data;
+      $("del-card").hidden = false;
+      $("del-email").textContent = info.email;
+      if (!info.has_password) { $("del-pw-wrap").style.display = "none"; $("del-pw-note").style.display = "none"; }
+      const sel = $("del-reason");
+      Object.keys(info.reasons || {}).forEach(function (k) {
+        const o = document.createElement("option"); o.value = k; o.textContent = info.reasons[k]; sel.appendChild(o);
+      });
+    }
+
+    window.kmDelOpen = function () { msg(""); $("del-modal").classList.add("open"); };
+    window.kmDelClose = function () { $("del-modal").classList.remove("open"); };
+    $("del-modal").addEventListener("click", function (e) { if (e.target === this) kmDelClose(); });
+
+    window.kmDelSendOtp = async function () {
+      const b = $("del-otp-btn"); b.disabled = true;
+      const j = await call("/account/delete/otp", { method: "POST" });
+      msg(j.message, j.success);
+      let left = j.success ? 60 : 0;
+      const t = setInterval(function () {
+        if (left <= 0) { clearInterval(t); b.disabled = false; b.textContent = "OTP दोबारा भेजें"; return; }
+        b.textContent = left-- + "s";
+      }, 1000);
+    };
+
+    window.kmDelGo = async function () {
+      if (!$("del-confirm").checked) return msg("पहले पुष्टि वाला बॉक्स चुनें।");
+      const otp = $("del-otp").value.trim();
+      if (!/^\d{6}$/.test(otp)) return msg("6 अंकों का OTP डालें।");
+      if (info && info.has_password && !$("del-pw").value) return msg("पासवर्ड डालें।");
+      const go = $("del-go"); go.disabled = true; go.textContent = "हटाया जा रहा है…";
+      const j = await call("/account/delete", { method: "POST", body: JSON.stringify({
+        otp: otp, password: $("del-pw").value || null, reason: $("del-reason").value || null, confirm: true }) });
+      if (!j.success) { go.disabled = false; go.textContent = "खाता हटाएँ"; return msg(j.message); }
+      msg(j.message, true);
+      // Every token is already dead server-side; clear this device too.
+      ["krishi_token", "user_avatar_url", "km_geo"].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+      setTimeout(function () { window.location.replace("/"); }, 2200);
+    };
+
+    init();
+  })();
+  </script>
 
 </main>
 
@@ -1694,23 +1780,21 @@
     }
 
     // All form fields sent to/from API
+    // Date of birth, gender, bank, income, khasra, scheme status, special needs
+    // and the unused farm details were removed 2026-09-25 (DPDP: collect only
+    // what a feature uses). See RETIRED_PROFILE_FIELDS in backend/database/db.py.
     const TEXT_FIELDS = [
-      "full_name","phone_number","whatsapp_number","dob","gender","education",
-      "occupation","farming_experience","family_size","state","district","tehsil","village",
-      "pin_code","nearest_mandi","farm_size","farm_size_unit","land_ownership",
-      "soil_type","irrigation_type","khasra_number","primary_crop","farming_season",
-      "crops_grown","farming_type","yield_per_acre","crop_problems","bank_name",
-      "annual_income","preferred_language","advisory_type","special_needs"
+      "full_name","phone_number","whatsapp_number",
+      "occupation","farming_experience","state","district","tehsil","village",
+      "pin_code","nearest_mandi","farm_size","farm_size_unit","primary_crop",
+      "crops_grown","farming_type","preferred_language"
     ];
 
     const BOOL_FIELDS = [
-      "pm_kisan_registered","has_kcc","aadhaar_linked","fasal_bima",
       "notif_weather","notif_mandi","notif_scheme","notif_pest","notif_tips","notif_none"
     ];
 
-    const CHECKBOX_FIELDS = [
-      "eq_tractor","eq_pump","eq_thresher","eq_sprayer","eq_harvester","eq_none"
-    ];
+    const CHECKBOX_FIELDS = [];
 
 
     function setSignedInUI(isIn) {
@@ -1803,7 +1887,6 @@
       // Hero tags
       const tags = [];
       if (p.farming_type) tags.push({ "conventional":"पारंपरिक", "organic":"जैविक", "natural":"प्राकृतिक", "integrated":"एकीकृत" }[p.farming_type] || p.farming_type);
-      if (p.irrigation_type) tags.push({ "canal":"नहर सिंचाई", "borewell":"बोरवेल", "drip":"ड्रिप", "rain_fed":"वर्षा आधारित" }[p.irrigation_type] || p.irrigation_type);
       if (p.farming_experience) tags.push(p.farming_experience + " अनुभव");
       document.getElementById("hero-tags").innerHTML = tags.map(t => `<span class="hero-tag">${escHtml(t)}</span>`).join("");
 
@@ -1812,9 +1895,6 @@
       document.getElementById("stat-crop").textContent = dash(primaryCrop);
       const farmStr = p.farm_size ? `${p.farm_size} ${p.farm_size_unit || "acres"}` : "-";
       document.getElementById("stat-farm").textContent = farmStr;
-      document.getElementById("stat-irrigation").textContent = p.irrigation_type
-        ? ({ "canal":"नहर", "borewell":"बोरवेल", "drip":"ड्रिप", "rain_fed":"वर्षा", "well":"कुआं", "sprinkler":"स्प्रिंकलर", "pond":"तालाब" }[p.irrigation_type] || p.irrigation_type)
-        : "-";
 
       // Sidebar summary
       document.getElementById("summary-location").textContent = dash(location);
@@ -1832,20 +1912,6 @@
       const chipArr = crops.length ? crops : [];
       document.getElementById("crop-chips").innerHTML = chipArr.map(c => `<span class="crop-chip">${escHtml(c)}</span>`).join("");
 
-      // Scheme badges
-      const sbadge = (id, val) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (val === true || val === "true" || val === 1) { el.textContent = "हाँ ✓"; el.className = "scheme-badge badge-yes"; }
-        else if (val === false || val === "false" || val === 0) { el.textContent = "नहीं"; el.className = "scheme-badge badge-no"; }
-        else { el.textContent = "-"; el.className = "scheme-badge badge-na"; }
-      };
-      const hasSaved = hasProfile || Object.keys(p).length > 0;
-      sbadge("scheme-pmkisan", hasSaved ? !!p.pm_kisan_registered : null);
-      sbadge("scheme-kcc", hasSaved ? !!p.has_kcc : null);
-      sbadge("scheme-aadhaar", hasSaved ? !!p.aadhaar_linked : null);
-      sbadge("scheme-bima", hasSaved ? !!p.fasal_bima : null);
-
       // Completion
       calcCompletion(p);
     }
@@ -1854,9 +1920,8 @@
     function calcCompletion(p) {
       const checks = [
         p.full_name, p.phone_number, p.state, p.district, p.village,
-        p.primary_crop, p.farm_size, p.irrigation_type, p.soil_type,
-        p.farming_type, p.preferred_language, p.farming_experience,
-        (p.pm_kisan_registered !== undefined), (p.has_kcc !== undefined)
+        p.primary_crop, p.farm_size,
+        p.farming_type, p.preferred_language, p.farming_experience
       ];
       const filled = checks.filter(Boolean).length;
       const pct = Math.round((filled / checks.length) * 100);
@@ -1948,11 +2013,7 @@
         { id: 'pin_code', tab: 'farm' },
         { id: 'primary_crop', tab: 'crops' },
         { id: 'farm_size', tab: 'crops' },
-        { id: 'irrigation_type', tab: 'crops' },
-        { id: 'soil_type', tab: 'crops' },
         { id: 'farming_type', tab: 'crops' },
-        { id: 'pm_kisan_registered', tab: 'schemes' },
-        { id: 'has_kcc', tab: 'schemes' },
         { id: 'preferred_language', tab: 'prefs' }
       ];
 

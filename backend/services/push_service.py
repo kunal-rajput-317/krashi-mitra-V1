@@ -16,7 +16,7 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import func
 
@@ -48,6 +48,23 @@ MIN_MOVE_RS  = 10
 MIN_MOVE_PCT = 1.0
 
 
+def push_enabled() -> bool:
+    """Can this deployment send a push at all?
+
+    Both VAPID keys are required: the public one identifies us to the push
+    service, the private one signs. One without the other silently fails at
+    send time, which is worse than not trying.
+
+    This function was deleted by 1c175c5 (2026-07-27) while both of its call
+    sites stayed, so run_mandi_alerts() raised NameError on its first line and
+    mandi_scheduler's `except Exception` logged it as non-fatal. 74 farmers
+    subscribed over the following 57 days and not one push was ever sent —
+    every mandi_alerts row still had last_notified_on NULL. tests/
+    test_push_alerts.py::test_alert_pass_runs now fails if it goes missing
+    again."""
+    return bool(VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY)
+
+
 def _now_ist():
     return datetime.utcnow() + timedelta(hours=5, minutes=30)
 
@@ -57,17 +74,22 @@ def _in_quiet_hours(now_ist) -> bool:
     return mins >= QUIET_START_MIN_IST or mins < QUIET_END_MIN_IST
 
 
-def _is_meaningful_move(avg: int, last_price: str) -> bool:
+def _is_meaningful_move(avg: int, last_price: str,
+                        min_rs: float = MIN_MOVE_RS,
+                        min_pct: float = MIN_MOVE_PCT) -> bool:
     """False if this is the same price already sent, or a move too small to be
     worth a notification. True (send) when there is no prior price at all —
-    the first alert for a newly-subscribed crop is never noise."""
+    the first alert for a newly-subscribed crop is never noise.
+
+    The floors are passed in because the admin panel can retune them without a
+    deploy; the module constants remain the defaults."""
     last = _num(last_price)
     if last is None:
         return True
     moved = abs(avg - last)
     if moved == 0:
         return False
-    return moved >= MIN_MOVE_RS or (moved / last) * 100 >= MIN_MOVE_PCT
+    return moved >= min_rs or (moved / last) * 100 >= min_pct
 
 
 def _num(v):
@@ -149,20 +171,49 @@ def _price_for(db, commodity: str, state, district):
     rows = q.all()
     modals = [m for m in (_num(r.modal_price) for r in rows) if m]
     if not modals:
-        return None, None, 0
+        return None, None, 0, ""
     avg = round(sum(modals) / len(modals))
     changes = [r.change_pct for r in rows if r.change_pct is not None]
     change = round(sum(changes) / len(changes), 1) if changes else None
-    return avg, change, len(rows)
+    return avg, change, len(rows), _newest_iso(rows)
+
+
+def _newest_iso(rows) -> str:
+    """The newest arrival_date among these rows as 'YYYY-MM-DD', or ''.
+
+    Roughly half of all mandi×crop pairs get no fresh report on any given day
+    (see the /bhav staleness audit) and the snapshot carries the last known
+    price forward, so the row being present says nothing about when the market
+    actually traded. Everything that wants to say "आज" has to check this
+    first."""
+    from backend.routes.bhav import _row_date_iso     # lazy: avoids import cycle
+    best = ""
+    for r in rows:
+        iso = _row_date_iso(r.arrival_date or "")
+        if iso > best:
+            best = iso
+    return best
 
 
 def _describe(alert: MandiAlert):
-    """(hindi crop name, place label, this alert's /bhav url)."""
-    from backend.routes.bhav import _hindi_name, _slugify   # lazy: avoids import cycle
+    """(hindi crop name, place label, this alert's /bhav url).
 
-    hi    = _hindi_name(alert.commodity) or alert.commodity
-    where = alert.district or alert.state or ""
-    url   = f"{SITE}/bhav/{_slugify(alert.commodity)}"
+    The place is translated, not passed through raw. The feed names districts in
+    English, so an untranslated label produced "आज Bijnor में गेहूं के भाव" —
+    a notification in two scripts, which is the same defect that makes a
+    wrong-script SERP title convert far worse. Both helpers fall back to the
+    English name when they have no mapping, which is still better than nothing."""
+    from backend.routes.bhav import (           # lazy: avoids import cycle
+        _hindi_district, _hindi_name, _hindi_state, _slugify)
+
+    hi = _hindi_name(alert.commodity) or alert.commodity
+    if alert.district:
+        where = _hindi_district(alert.state or "", alert.district) or alert.district
+    elif alert.state:
+        where = _hindi_state(alert.state) or alert.state
+    else:
+        where = ""
+    url = f"{SITE}/bhav/{_slugify(alert.commodity)}"
     if alert.state:
         url += f"/{_slugify(alert.state)}"
         if alert.district:
@@ -184,10 +235,42 @@ def _move_text(change, delta_rs):
     return None
 
 
-def _payload_for_group(items):
+def _when_word(data_iso: str, today) -> str:
+    """"आज" / "कल" / "18 सितंबर" — the day this price was actually reported.
+
+    Never say "आज" over a carried-forward number. About half of all mandi×crop
+    pairs get no fresh report on a given day, so a notification that opens with
+    "आज" when the last real trade was a week ago tells the farmer something
+    false about his market, on his lock screen, in our name. An empty or
+    unparseable date drops the time word entirely rather than guessing.
+
+    Placement is the caller's job: "आज"/"कल" read naturally in front of the
+    sentence, a date does not ("19 सितंबर का वाराणसी में…"), so a dated price
+    is labelled at the end instead."""
+    if not _iso_ok(data_iso):
+        return ""
+    from backend.routes.bhav import _hindi_data_date
+    d = date.fromisoformat(data_iso)
+    delta = (today - d).days
+    if delta == 0:
+        return "आज"
+    if delta == 1:
+        return "कल"
+    return _hindi_data_date(f"{d.day:02d}/{d.month:02d}/{d.year}")
+
+
+def _iso_ok(s: str) -> bool:
+    try:
+        date.fromisoformat(s)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+def _payload_for_group(items, today):
     """One push payload for everything due for a single recipient this run.
 
-    items: [(alert, avg, change), ...]. A farmer with several 🔔s can have
+    items: [(alert, avg, change, data_iso), ...]. A farmer with several 🔔s can have
     several move on the same fetch — sending one notification per alert would
     read as a burst/spam, so 2+ due alerts for the same recipient are folded
     into a single digest instead. The common case (one alert due) keeps the
@@ -198,16 +281,19 @@ def _payload_for_group(items):
     what the crop sells for; what earns a notification is that it moved, and
     by how much. The absolute number is one tap away on the /bhav page."""
     if len(items) == 1:
-        alert, avg, change = items[0]
+        alert, avg, change, data_iso = items[0]
         hi, where, url = _describe(alert)
         delta_rs = None
         last = _num(alert.last_price)
         if last is not None:
             delta_rs = avg - last
         place = f"{where} में " if where else ""
-        move = _move_text(change, delta_rs)
-        body = (f"आज {place}{hi} के भाव {move}" if move
-                else f"आज {place}{hi} का भाव ₹{avg:,}/क्विंटल है")
+        when  = _when_word(data_iso, today)
+        lead  = f"{when} " if when in ("आज", "कल") else ""
+        tail  = f" — {when} का भाव" if when and not lead else ""
+        move  = _move_text(change, delta_rs)
+        body = (f"{lead}{place}{hi} के भाव {move}{tail}" if move
+                else f"{lead}{place}{hi} का भाव ₹{avg:,}/क्विंटल है{tail}")
         return {
             "title": f"{hi} भाव — {where}".strip(" —"),
             "body":  body,
@@ -220,11 +306,16 @@ def _payload_for_group(items):
     # the notification stays readable instead of turning into a wall of text.
     ranked = sorted(items, key=lambda t: abs(t[2] or 0), reverse=True)
     lines, url = [], None
-    for alert, avg, change in ranked[:4]:
+    for alert, avg, change, data_iso in ranked[:4]:
         hi, where, u = _describe(alert)
         last = _num(alert.last_price)
         delta_rs = (avg - last) if last is not None else None
         move  = _move_text(change, delta_rs) or f"₹{avg:,}/क्विंटल"
+        # Each line carries its own date when that line is not today's — the
+        # rows in one digest can easily come from different report days.
+        when  = _when_word(data_iso, today)
+        if when and when != "आज":
+            move = f"{move} ({when})"
         label = f"{hi} ({where})" if where else hi
         lines.append(f"{label}: {move}")
         if url is None:
@@ -247,6 +338,15 @@ def run_mandi_alerts() -> dict:
     if not push_enabled():
         log.info("push: VAPID not configured — skipping alert pass")
         return {"sent": 0, "skipped": 0, "enabled": False}
+
+    # Operator kill switch. Like quiet hours this touches no alert row, so
+    # switching sending back on resumes from exactly where it stopped rather
+    # than replaying a backlog of prices that are no longer today's.
+    from backend.services.app_settings import get_all
+    cfg = get_all()
+    if not cfg["alerts.sending_enabled"]:
+        log.info("push: sending switched off in admin — skipping alert pass")
+        return {"sent": 0, "skipped": 0, "enabled": True, "deferred": "admin_off"}
 
     now_ist = _now_ist()
     if _in_quiet_hours(now_ist):
@@ -281,22 +381,25 @@ def run_mandi_alerts() -> dict:
                 skipped += 1
                 continue
 
-            avg, change, n = _price_for(db, alert.commodity, alert.state, alert.district)
+            avg, change, n, data_iso = _price_for(db, alert.commodity,
+                                                  alert.state, alert.district)
             if not avg:
                 skipped += 1
                 continue
 
-            if not _is_meaningful_move(avg, alert.last_price):
+            if not _is_meaningful_move(avg, alert.last_price,
+                                       cfg["alerts.min_move_rs"],
+                                       cfg["alerts.min_move_pct"]):
                 skipped += 1
                 continue
 
             key = ("user", alert.user_id) if alert.user_id is not None else ("device", alert.subscription_id)
-            groups.setdefault(key, []).append((alert, avg, change))
+            groups.setdefault(key, []).append((alert, avg, change, data_iso))
             devices_by_key[key] = devices
 
         # Pass 2 — one push per recipient, covering everything of theirs due this run.
         for key, items in groups.items():
-            payload = _payload_for_group(items)
+            payload = _payload_for_group(items, today)
             # One device accepting is enough to call the alert delivered — a
             # farmer's old tablet being unreachable must not make him miss the
             # price on the phone in his hand tomorrow.
@@ -304,7 +407,7 @@ def run_mandi_alerts() -> dict:
             for device in devices_by_key[key]:
                 if send_push(db, device, payload):
                     ok = True
-            for alert, avg, change in items:
+            for alert, avg, change, _iso in items:
                 if ok:
                     alert.last_notified_on = today
                     alert.last_price = str(avg)

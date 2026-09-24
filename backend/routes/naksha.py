@@ -43,6 +43,8 @@
 
 import json
 import math
+import re
+import time
 from datetime import datetime
 from html import escape
 from pathlib import Path
@@ -337,6 +339,12 @@ _NK_CSS = """
   box-shadow: var(--nk-shadow-lg);
   border: 1.5px solid var(--nk-border-glass);
   background: #0d2f23;
+  isolation: isolate;
+  z-index: 10;
+  scroll-margin-top: 155px;
+}
+#nk-map-wrap {
+  scroll-margin-top: 155px;
 }
 .nk-app-map-wrap.is-fullscreen {
   position: fixed !important;
@@ -542,6 +550,305 @@ _NK_CSS = """
   font-weight: 600;
 }
 
+/* Quick Actions & Mandi Toggle */
+.nk-search-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.nk-mandi-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 10px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(19, 66, 50, 0.22);
+  border-radius: 999px;
+  color: var(--nk-emerald-dark);
+  font-family: var(--nk-font);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
+}
+.nk-mandi-toggle-btn:hover {
+  background: #ffffff;
+  border-color: var(--nk-mint);
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 18px rgba(82, 183, 136, 0.3);
+}
+.nk-mandi-toggle-btn.active {
+  background: linear-gradient(135deg, #071f16 0%, #154534 100%);
+  color: #f5b731;
+  border-color: #f5b731;
+  box-shadow: 0 6px 20px rgba(245, 183, 49, 0.35);
+}
+.nk-mandi-btn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5b731;
+  color: #071f16;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: 2px;
+}
+.nk-mandi-toggle-btn.active .nk-mandi-btn-badge {
+  background: #ffffff;
+  color: #071f16;
+}
+.nk-mandi-toggle-btn.loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* ── Mandi 3-Tier LOD Markers ── */
+/* Tier 1: District Mandi Cluster Badge (Zoom < 9) */
+.nk-mandi-cluster-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(7, 31, 22, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid #52b788;
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #ffffff;
+  font-family: var(--nk-font);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  user-select: none;
+}
+.nk-mandi-cluster-badge:hover {
+  transform: scale(1.1);
+  border-color: #f5b731;
+  background: #0d3827;
+  z-index: 1000 !important;
+}
+.nk-cluster-ic {
+  font-size: 13px;
+  line-height: 1;
+}
+.nk-cluster-name {
+  color: #e8f5e9;
+  letter-spacing: 0.2px;
+}
+.nk-cluster-count {
+  background: #f5b731;
+  color: #1e1302;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  line-height: 1.3;
+}
+
+/* Tier 2: Compact Mandi Badge (Zoom 9-11) */
+.nk-mandi-compact-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(14, 61, 38, 0.95);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(82, 183, 136, 0.75);
+  border-radius: 999px;
+  padding: 3px 9px;
+  color: #d8f3dc;
+  font-family: var(--nk-font);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+.nk-mandi-compact-badge:hover {
+  transform: scale(1.08);
+  background: #145234;
+  border-color: #52b788;
+  color: #ffffff;
+  z-index: 1000 !important;
+}
+.nk-compact-ic {
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Tier 3: Full Detailed Mandi Pin & Card (Zoom >= 12) */
+.nk-mandi-marker-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+.nk-mandi-marker-wrap:hover {
+  transform: scale(1.08);
+  z-index: 1000 !important;
+}
+.nk-mandi-pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #071f16;
+  color: #f5b731;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  border: 1.5px solid #f5b731;
+  line-height: 1.2;
+}
+.nk-mandi-pin-icon-box {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #1b4d3e, #0a261c);
+  border: 2px solid #ffffff;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  margin-top: 2px;
+}
+.nk-mandi-pin-icon {
+  transform: rotate(45deg);
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Mandi Popup Card */
+.nk-mandi-popup .leaflet-popup-content-wrapper {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(7, 31, 22, 0.28);
+  border: 1px solid rgba(19, 66, 50, 0.15);
+}
+.nk-mandi-popup .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+  width: 270px !important;
+  font-family: var(--nk-font);
+}
+.nk-mandi-card {
+  padding: 14px 16px;
+  box-sizing: border-box;
+}
+.nk-mandi-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #edf3ef;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.nk-mandi-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #071f16;
+  line-height: 1.25;
+}
+.nk-mandi-card-subtitle {
+  font-size: 11.5px;
+  color: #5b786a;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.nk-mandi-card-tag {
+  background: #edf8f3;
+  color: #134232;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.nk-mandi-crop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.nk-mandi-crop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: #f7faf8;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.nk-mandi-crop-name {
+  font-weight: 700;
+  color: #1a2e22;
+}
+.nk-mandi-crop-price {
+  font-weight: 800;
+  color: #0b5e3a;
+  background: #e8f5ed;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.nk-mandi-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.nk-mandi-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+.nk-mandi-btn-nav {
+  background: #eef3fc;
+  color: #1a56db;
+  border: 1px solid rgba(26, 86, 219, 0.2);
+}
+.nk-mandi-btn-nav:hover {
+  background: #1a56db;
+  color: #ffffff;
+}
+.nk-mandi-btn-bhav {
+  background: #071f16;
+  color: #ffffff;
+  border: 1px solid #071f16;
+}
+.nk-mandi-btn-bhav:hover {
+  background: #134232;
+  color: #f5b731;
+}
+
 /* ── Top-Right Controls: Fullscreen + Tools Speed-Dial ── */
 .nk-fs-btn {
   position: absolute;
@@ -704,11 +1011,230 @@ _NK_CSS = """
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* ── "रास्ता देखें": in-map route to the nearest mandi ── */
+.nk-route-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.5px solid rgba(14, 61, 38, 0.18);
+  color: #0e3d26;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+  transition: all 0.18s ease;
+}
+.nk-route-btn:hover, .nk-route-btn.active {
+  background: #0e3d26;
+  color: #ffffff;
+  border-color: #0e3d26;
+}
+.nk-route-btn.loading { pointer-events: none; opacity: 0.85; }
+.nk-route-arrow { width: 14px; height: 14px; fill: #2563eb; flex-shrink: 0; }
+.nk-route-btn:hover .nk-route-arrow, .nk-route-btn.active .nk-route-arrow { fill: #8ef0b4; }
+.nk-route-btn.loading .nk-route-arrow { animation: nkSpin 0.9s linear infinite; }
+.nk-route-flow { pointer-events: none; }
+.nk-route-flow.is-done { animation: nkRouteFade 0.45s ease-out forwards; }
+@keyframes nkRouteFade { from { opacity: 0.95; } to { opacity: 0; } }
+.nk-route-panel {
+  position: absolute;
+  left: 12px;
+  top: 104px;
+  z-index: 1004;
+  width: 296px;
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
+  background: rgba(7, 31, 22, 0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(82, 183, 136, 0.45);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+  display: none;
+  animation: nkRouteSlide 0.2s ease-out;
+}
+.nk-route-panel.open { display: block; }
+@keyframes nkRouteSlide { from { transform: translateX(-12px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.nk-rp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.nk-rp-title { font-size: 13.5px; font-weight: 800; color: #d8f3dc; }
+.nk-rp-close { background: rgba(255, 255, 255, 0.1); border: none; color: #a7f3d0; cursor: pointer; border-radius: 8px; padding: 5px 7px; line-height: 1; font-size: 13px; }
+.nk-rp-close:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
+.nk-rp-body { display: flex; align-items: stretch; gap: 8px; }
+.nk-rp-rail { display: flex; flex-direction: column; align-items: center; padding: 13px 0 15px; }
+.nk-rp-rail .nk-rp-dots { flex: 1; width: 0; border-left: 2px dotted rgba(216, 243, 220, 0.45); margin: 4px 0; }
+.nk-rp-fields { flex: 1; min-width: 0; }
+.nk-rp-swap-btn {
+  align-self: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #95d5b2;
+  cursor: pointer;
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.nk-rp-swap-btn:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
+.nk-rp-chip-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin: 0 0 8px 19px; }
+.nk-rp-chip-row .nk-rp-lbl { font-size: 10px; font-weight: 700; color: rgba(216, 243, 220, 0.6); }
+.nk-rt-start { width: 15px; height: 15px; border-radius: 50%; background: #4285f4; border: 3px solid #fff; box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5); box-sizing: border-box; }
+.nk-rt-dest svg { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); display: block; }
+.nk-rt-alt-label {
+  background: #ffffff;
+  color: #3c4043;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  font-family: inherit;
+}
+.nk-rp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.nk-rp-dot { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid #60a5fa; flex-shrink: 0; }
+.nk-rp-dot.dest { border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border-color: #8ef0b4; background: rgba(142, 240, 180, 0.25); }
+.nk-rp-field { flex: 1; min-width: 0; position: relative; }
+.nk-rp-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 9px 10px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  outline: none;
+}
+.nk-rp-input::placeholder { color: rgba(216, 243, 220, 0.5); font-weight: 500; }
+.nk-rp-input:focus { border-color: rgba(82, 183, 136, 0.7); background: rgba(255, 255, 255, 0.11); }
+.nk-rp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 9px 19px; }
+.nk-rp-chip {
+  background: rgba(82, 183, 136, 0.16);
+  border: 1px solid rgba(82, 183, 136, 0.3);
+  color: #b7e4c7;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.nk-rp-chip:hover, .nk-rp-chip.active { background: #52b788; border-color: #52b788; color: #071f16; }
+.nk-rp-swap { display: flex; justify-content: flex-end; margin: -3px 0 4px 0; }
+.nk-rp-swap button { background: rgba(255, 255, 255, 0.08); border: none; color: #95d5b2; cursor: pointer; border-radius: 8px; padding: 4px 8px; font-size: 12px; line-height: 1; }
+.nk-rp-swap button:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
+.nk-rp-go {
+  width: 100%;
+  background: #2563eb;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px;
+  cursor: pointer;
+  margin-top: 3px;
+  transition: background 0.15s;
+}
+.nk-rp-go:hover { background: #1d4ed8; }
+.nk-rp-go:disabled { opacity: 0.6; cursor: default; }
+.nk-rp-note { font-size: 10.5px; font-weight: 600; color: #95d5b2; margin-top: 7px; line-height: 1.4; min-height: 14px; }
+.nk-rp-note.err { color: #fca5a5; }
+.nk-rp-sugg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #0b2b1e;
+  border: 1px solid rgba(82, 183, 136, 0.35);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 3;
+  display: none;
+}
+.nk-rp-sugg.active { display: block; }
+.nk-rp-sugg div { padding: 8px 10px; font-size: 12px; font-weight: 600; color: #d8f3dc; cursor: pointer; }
+.nk-rp-sugg div:hover { background: rgba(82, 183, 136, 0.2); color: #fff; }
+/* Click-catcher for "map par chunein" — a plain overlay keeps the district and
+   measure-tool handlers from firing while a point is being picked. */
+.nk-pick-overlay { position: absolute; inset: 0; z-index: 1005; cursor: crosshair; display: none; background: rgba(0, 0, 0, 0.08); }
+.nk-pick-overlay.active { display: block; }
+.nk-pick-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(7, 31, 22, 0.95);
+  border: 1px solid rgba(82, 183, 136, 0.5);
+  color: #d8f3dc;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+@media (max-width: 560px) {
+  .nk-route-panel { left: 10px; right: 10px; width: auto; top: 96px; padding: 11px; }
+  .nk-rp-input { font-size: 12px; padding: 8px 9px; }
+}
+.nk-route-card {
+  position: absolute;
+  left: 12px;
+  bottom: 16px;
+  z-index: 1002;
+  max-width: min(340px, calc(100% - 78px));
+  box-sizing: border-box;
+  background: rgba(7, 31, 22, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(82, 183, 136, 0.45);
+  border-radius: 14px;
+  padding: 9px 12px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: nkRouteUp 0.22s ease-out;
+}
+.nk-route-card.show { display: flex; }
+@keyframes nkRouteUp { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.nk-route-card-info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.nk-route-card-title { font-size: 12px; font-weight: 700; color: #d8f3dc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nk-route-card-title b { color: #ffffff; }
+.nk-route-card-meta { font-size: 11.5px; font-weight: 600; color: #95d5b2; }
+.nk-route-card-meta b { color: #8ef0b4; font-size: 13px; font-weight: 800; }
+.nk-route-nav { display: inline-flex; align-items: center; gap: 4px; background: #2563eb; color: #fff; font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 8px; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+.nk-route-nav:hover { background: #1d4ed8; color: #fff; }
+.nk-route-close { background: rgba(255, 255, 255, 0.1); border: none; color: #a7f3d0; cursor: pointer; padding: 6px; border-radius: 8px; display: inline-flex; flex-shrink: 0; }
+.nk-route-close:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
+/* The drawer is a full-width bottom sheet, so the card steps aside for it. */
+.nk-bottom-drawer.active ~ .nk-route-card { display: none; }
+@media (max-width: 560px) {
+  .nk-route-card { left: 10px; bottom: 24px; max-width: calc(100% - 64px); padding: 8px 10px; gap: 8px; }
+  .nk-route-nav { padding: 5px 8px; font-size: 10.5px; }
+}
+
 /* ── My Location Button (bottom-right standalone, icon-only) ── */
 .nk-my-loc-btn {
   position: absolute;
-  bottom: 80px;
-  right: 12px;
+  /* Sits in the same column as Leaflet's zoom stack, clearing it. That stack
+     ends 91px above the wrap's bottom (attribution strip + its own margin),
+     so anything under ~100px here lands on top of the + button. */
+  bottom: 102px;
+  right: 10px;
   z-index: 1001;
   width: 42px;
   height: 42px;
@@ -752,8 +1278,20 @@ _NK_CSS = """
   color: #ffffff;
   border-color: #1d4ed8;
 }
+/* The crosshair is radially symmetric, so spinning it reads as static — the
+   ring is the part a farmer can actually see working. */
 .nk-my-loc-btn.loading .nk-loc-svg {
-  animation: nkSpin 0.9s linear infinite;
+  opacity: 0.45;
+}
+.nk-my-loc-btn.loading::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: nkSpin 0.8s linear infinite;
+  pointer-events: none;
 }
 
 @media (max-width: 560px) {
@@ -764,7 +1302,7 @@ _NK_CSS = """
   .nk-fs-icon { width: 16px; height: 16px; }
   .nk-fab-menu { right: 10px; top: 50px; }
   .nk-fab-main { width: 35px; height: 35px; border-radius: 8px; }
-  .nk-my-loc-btn { bottom: 75px; right: 10px; width: 38px; height: 38px; }
+  .nk-my-loc-btn { bottom: 100px; right: 10px; width: 38px; height: 38px; }
   .nk-loc-svg { width: 19px; height: 19px; }
 }
 
@@ -1329,13 +1867,14 @@ def _state_select_dropdown(current_key: str, states: dict, is_jile: bool = False
             f'{"".join(opts)}</select>')
 
 
-def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str:
+def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug: str = "") -> str:
     """map-download.js everywhere; Leaflet and interactive controls where there is a map to draw."""
     out = ['<script>window.KM_LOC_AFTER_SCROLL=true;</script>',
            f'<script src="{_asset("map-download.js")}" defer></script>']
     if s:
         initial_js = json.dumps(initial, ensure_ascii=False)
         state_key_js = json.dumps(state_key or "uttar-pradesh")
+        dslug_js = json.dumps(dslug)
         bhulekh_info = _BHULEKH.get(state_key, ("https://bhulekh.gov.in/", "भूलेख पोर्टल"))
         bhulekh_url_js = json.dumps(bhulekh_info[0])
         bhulekh_title_js = json.dumps(bhulekh_info[1], ensure_ascii=False)
@@ -1363,6 +1902,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
     }}
     mapInitialized = true;
   var stateKey = {state_key_js};
+  var districtSlug = {dslug_js};
   var bhulekhUrl = {bhulekh_url_js};
   var bhulekhTitle = {bhulekh_title_js};
 
@@ -1378,6 +1918,19 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
   // Custom Zoom Control placed bottom-right
   L.control.zoom({{ position: 'bottomright' }}).addTo(map);
 
+  // setView teleports once the jump is longer than a screen or two, which is
+  // every GPS fix from a state-wide view. flyTo arcs out and back in, so the
+  // farmer can see where the map went.
+  function nkFlyTo(lat, lon, zoom) {{
+    if(!map) return;
+    var reduce = false;
+    try {{ reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }} catch(e) {{}}
+    if(reduce) {{ map.setView([lat, lon], zoom); return; }}
+    var km = 0;
+    try {{ km = map.getCenter().distanceTo(L.latLng(lat, lon)) / 1000; }} catch(e) {{}}
+    map.flyTo([lat, lon], zoom, {{ duration: Math.max(1.2, Math.min(2.6, 1 + km / 260)), easeLinearity: 0.22 }});
+  }}
+
   // ── Tile Layers ──
   // maxNativeZoom is the deepest zoom the PROVIDER actually holds a picture for;
   // maxZoom is how far the farmer may keep zooming. Splitting them is the point:
@@ -1387,24 +1940,45 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
   // Capping the REQUEST at 18 and letting Leaflet upscale keeps real imagery on
   // screen the whole way in. 20 is the ceiling because a 4x upscale still shows
   // plot edges; at 21 it is mush, which is the complaint this answers.
+  // ── 3-Tier Progressive LOD Tile Layers ──
+  // Tier 1: Instant Low-Poly/Low-Res Base (z=7, ~18KB, stretched across entire canvas in <150ms)
+  var lowSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
+    maxNativeZoom: 7,
+    maxZoom: 20,
+    zIndex: 1,
+    attribution: '',
+    className: 'nk-tile-low-poly'
+  }});
+  // Tier 2 & 3: Mid/High-Res Progressive Satellite Imagery (z=8-18)
   var satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
     attribution: 'Tiles © Esri World Imagery',
+    minZoom: 8,
     maxNativeZoom: 18,
-    maxZoom: 20
+    maxZoom: 20,
+    zIndex: 2,
+    updateWhenIdle: true,
+    keepBuffer: 2
   }});
   var labelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
     attribution: '© Esri',
+    minZoom: 8,
     maxNativeZoom: 18,
-    maxZoom: 20
+    maxZoom: 20,
+    zIndex: 3,
+    updateWhenIdle: true,
+    keepBuffer: 2
   }});
   // OSM serves real tiles to z19 and hard-400s at z20, so it gets its own floor.
   var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
     attribution: '© OpenStreetMap contributors',
     maxNativeZoom: 19,
-    maxZoom: 20
+    maxZoom: 20,
+    updateWhenIdle: true,
+    keepBuffer: 2
   }});
 
-  // Default: Satellite + Labels
+  // Default: Low-Res Base + Satellite + Labels
+  lowSatLayer.addTo(map);
   satLayer.addTo(map);
   labelLayer.addTo(map);
   var currentLayerType = 'sat'; // 'sat' or 'osm'
@@ -1453,7 +2027,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
       var toast = document.createElement('div');
       toast.id = 'nk-loc-perm-toast';
       toast.innerHTML =
-        '<div class="nk-lt-icon">📍</div>' +
+        '<div class="nk-lt-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#52b788" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2.5" fill="#52b788"/></svg></div>' +
         '<div class="nk-lt-body">' +
           '<div class="nk-lt-title">लोकेशन एक्सेस दें — सटीक नक्शा के लिए</div>' +
           '<div class="nk-lt-msg">अपना खेत, गाँव या ज़मीन सटीक रूप से देखने व नापने के लिए GPS लोकेशन की अनुमति दें।</div>' +
@@ -1546,6 +2120,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
   if(fabLayer) {{
     fabLayer.addEventListener('click', function(){{
       if(currentLayerType === 'sat') {{
+        map.removeLayer(lowSatLayer);
         map.removeLayer(satLayer);
         map.removeLayer(labelLayer);
         osmLayer.addTo(map);
@@ -1554,6 +2129,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
         if(fabLayerText) fabLayerText.textContent = 'सैटेलाइट व्यू';
       }} else {{
         map.removeLayer(osmLayer);
+        lowSatLayer.addTo(map);
         satLayer.addTo(map);
         labelLayer.addTo(map);
         currentLayerType = 'sat';
@@ -1647,6 +2223,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
 
       if(!map.hasLayer(satLayer)) {{
         map.removeLayer(osmLayer);
+        lowSatLayer.addTo(map);
         satLayer.addTo(map);
         labelLayer.addTo(map);
         currentLayerType = 'sat';
@@ -1673,7 +2250,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
       }});
       gpsMarker = L.marker([lat, lon], {{ icon: pulseIcon }}).addTo(map);
 
-      map.setView([lat, lon], 16, {{ animate: true }});
+      nkFlyTo(lat, lon, 16);
 
       // Reverse geocode via BigDataCloud client API
       var rurl = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=hi';
@@ -2099,9 +2676,14 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
     }});
   }}
 
-  var defaultStyle = {{ color: '#2d6a4f', weight: 1.4, fillColor: '#52b788', fillOpacity: 0.28 }};
-  var highlightStyle = {{ color: '#f5b731', weight: 3.5, fillColor: '#e9a825', fillOpacity: 0.70 }};
-  var dimmedStyle = {{ color: '#2d6a4f', weight: 1, fillColor: '#52b788', fillOpacity: 0.10 }};
+  // Fills stay faint: the satellite imagery is the content, the overlay only frames it.
+  // The selected district is an outline, never a wash — a 70% orange fill hid the
+  // very fields the farmer zoomed in to see.
+  var defaultStyle = {{ color: '#2d6a4f', weight: 1.4, fillColor: '#52b788', fillOpacity: 0.12, dashArray: null }};
+  var highlightStyle = {{ color: '#f5b731', weight: 3, fillColor: '#f5b731', fillOpacity: 0, dashArray: null }};
+  var dimmedStyle = {{ color: '#ffffff', weight: 0.8, fillColor: '#52b788', fillOpacity: 0, dashArray: null }};
+  var hoverStyle = {{ fillColor: '#f5b731', fillOpacity: 0.15 }};
+  var selectedLayer = null;
 
   function selectDistrict(name, autoScroll) {{
     if(!name) {{ resetView(); return; }}
@@ -2111,6 +2693,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
     var item = districtMap[foundKey];
     var layer = item.layer, hiName = item.hiName, enName = item.enName, dslug = item.dslug;
 
+    selectedLayer = layer;
     allLayers.forEach(function(l){{ l.setStyle(dimmedStyle); }});
     layer.setStyle(highlightStyle);
     if(layer.bringToFront) layer.bringToFront();
@@ -2137,6 +2720,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
   }}
 
   function resetView() {{
+    selectedLayer = null;
     allLayers.forEach(function(l){{ l.setStyle(defaultStyle); }});
     if(geojsonLayer) map.fitBounds(geojsonLayer.getBounds(), {{ padding: map.getSize().x < 500 ? [8, 8] : [24, 24] }});
     if(bottomDrawer) bottomDrawer.classList.remove('active');
@@ -2235,13 +2819,14 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
 
           if(!map.hasLayer(satLayer)) {{
             map.removeLayer(osmLayer);
+            lowSatLayer.addTo(map);
             satLayer.addTo(map);
             labelLayer.addTo(map);
             currentLayerType = 'sat';
             if(fabLayer) fabLayer.innerHTML = '🗺️<span class="nk-fab-label">नक्शा व्यू</span>';
           }}
 
-          map.setView([lat, lon], 14, {{ animate: true }});
+          nkFlyTo(lat, lon, 14);
           if(currentSearchMarker) map.removeLayer(currentSearchMarker);
           currentSearchMarker = L.marker([lat, lon]).addTo(map);
           currentSearchMarker.bindPopup('<b>🌾 ' + place.display_name + '</b>').openPopup();
@@ -2282,14 +2867,32 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
           l.bindTooltip(hiName, {{ sticky: true, className: 'nk-dist-tooltip' }});
           l.on('click', function(){{ selectDistrict(hiName, true); }});
           l.on('mouseover', function(){{
-            l.setStyle({{ fillColor: '#e9a825', fillOpacity: 0.55 }});
+            if(l !== selectedLayer) l.setStyle(hoverStyle);
           }});
           l.on('mouseout', function(){{
-            l.setStyle(defaultStyle);
+            if(l === selectedLayer) return;
+            l.setStyle(selectedLayer ? dimmedStyle : defaultStyle);
           }});
         }}
       }}).addTo(map);
       if(!isOverlayVisible) map.removeLayer(geojsonLayer);
+
+      // 3-Tier Dynamic Boundary LOD on Zoom
+      map.on('zoomend', function() {{
+        var z = map.getZoom();
+        if(geojsonLayer && isOverlayVisible && map.hasLayer(geojsonLayer)) {{
+          // Restyle each layer, keeping the selection an outline at every zoom
+          allLayers.forEach(function(l) {{
+            if(l === selectedLayer) {{ l.setStyle(highlightStyle); return; }}
+            if(z > 13) {{
+              // High Zoom: Field & Farm view — no fill so satellite imagery is crystal clear
+              l.setStyle({{ weight: 1.2, fillOpacity: 0, dashArray: '4, 6' }});
+            }} else {{
+              l.setStyle(selectedLayer ? dimmedStyle : defaultStyle);
+            }}
+          }});
+        }}
+      }});
 
       var fit = function(){{
         map.invalidateSize();
@@ -2311,6 +2914,764 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
       console.warn('GeoJSON boundary load deferred:', err);
       setTimeout(function(){{ map.invalidateSize(); }}, 200);
     }});
+
+  // ── Mandi Explorer Layer ("मंडी देखें") ──
+  var mandiLayerGroup = null;
+  var isMandiActive = false;
+  var mandiCachedData = null;
+  var mandiBtn = document.getElementById('nk-mandi-toggle-btn');
+  var mandiFabBtn = document.getElementById('nk-fab-mandi');
+  var mandiFabText = document.getElementById('nk-fab-mandi-text');
+  var mandiBadge = document.getElementById('nk-mandi-btn-count');
+
+  function updateMandiBtnState(active, loading, count) {{
+    isMandiActive = active;
+    [mandiBtn, mandiFabBtn].forEach(function(b) {{
+      if(!b) return;
+      if(loading) b.classList.add('loading');
+      else b.classList.remove('loading');
+      if(active) b.classList.add('active');
+      else b.classList.remove('active');
+    }});
+    if(mandiBtn) {{
+      var txtEl = mandiBtn.querySelector('.nk-mandi-btn-text');
+      if(txtEl) {{
+        if(loading) txtEl.textContent = 'मंडी लोड हो रही है...';
+        else if(active) txtEl.textContent = 'मंडी हटाएं';
+        else txtEl.textContent = 'मंडी देखें';
+      }}
+    }}
+    if(mandiFabText) {{
+      if(loading) mandiFabText.textContent = 'लोड हो रहा है...';
+      else if(active) mandiFabText.textContent = 'मंडी हटाएं' + (count ? ' (' + count + ')' : '');
+      else mandiFabText.textContent = 'मंडी देखें';
+    }}
+    if(mandiBadge) {{
+      if(active && count > 0) {{
+        mandiBadge.textContent = count;
+        mandiBadge.style.display = 'inline-flex';
+      }} else {{
+        mandiBadge.style.display = 'none';
+      }}
+    }}
+  }}
+
+  var mandiClusters = null;
+  var mandiLODTimer = null;
+
+  function buildDistrictClusters(mandis) {{
+    var cMap = {{}};
+    mandis.forEach(function(m) {{
+      var d = m.district || 'अन्य';
+      if (!cMap[d]) {{
+        cMap[d] = {{
+          district: d,
+          state: m.state,
+          latSum: 0,
+          lonSum: 0,
+          count: 0,
+          mandis: []
+        }};
+      }}
+      cMap[d].latSum += m.lat;
+      cMap[d].lonSum += m.lon;
+      cMap[d].count++;
+      cMap[d].mandis.push(m);
+    }});
+
+    var clusters = [];
+    Object.keys(cMap).forEach(function(k) {{
+      var g = cMap[k];
+      clusters.push({{
+        district: g.district,
+        state: g.state,
+        lat: g.latSum / g.count,
+        lon: g.lonSum / g.count,
+        count: g.count,
+        mandis: g.mandis
+      }});
+    }});
+    return clusters;
+  }}
+
+  function buildMandiPopup(m) {{
+    var cropsHtml = '';
+    if(m.top_crops && m.top_crops.length > 0) {{
+      cropsHtml = '<div class="nk-mandi-crop-list">';
+      m.top_crops.forEach(function(c) {{
+        cropsHtml += '<div class="nk-mandi-crop-row"><span class="nk-mandi-crop-name">' + c.crop + '</span><span class="nk-mandi-crop-price">' + c.price + '</span></div>';
+      }});
+      cropsHtml += '</div>';
+    }}
+
+    return '<div class="nk-mandi-card">' +
+      '<div class="nk-mandi-card-head">' +
+        '<div>' +
+          '<div class="nk-mandi-card-title">' + m.market + '</div>' +
+          '<div class="nk-mandi-card-subtitle">' + m.district + ', ' + m.state + '</div>' +
+        '</div>' +
+        '<span class="nk-mandi-card-tag">' + (m.is_exact ? 'सटीक केंद्र' : 'मंडी क्षेत्र') + '</span>' +
+      '</div>' +
+      cropsHtml +
+      '<div class="nk-mandi-card-actions">' +
+        '<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(m.nav_q || (m.market + ' mandi')) + '" target="_blank" rel="noopener" class="nk-mandi-card-btn nk-mandi-btn-nav">🧭 रास्ता देखें</a>' +
+        '<a href="' + m.bhav_url + '" class="nk-mandi-card-btn nk-mandi-btn-bhav">📊 सभी भाव देखें</a>' +
+      '</div>' +
+    '</div>';
+  }}
+
+  function onMandiMapMove() {{
+    if(!isMandiActive || !mandiCachedData) return;
+    if(mandiLODTimer) clearTimeout(mandiLODTimer);
+    mandiLODTimer = setTimeout(function() {{
+      refreshMandiLOD();
+    }}, 100);
+  }}
+
+  function refreshMandiLOD() {{
+    if(!isMandiActive || !mandiCachedData) return;
+    if(!mandiLayerGroup) {{
+      mandiLayerGroup = L.layerGroup().addTo(map);
+    }}
+    mandiLayerGroup.clearLayers();
+
+    var allMandis = mandiCachedData.mandis || [];
+    if(allMandis.length === 0) return;
+
+    var curZoom = map.getZoom();
+    var isMultiDistrict = !districtSlug;
+    var bounds = map.getBounds().pad(0.18);
+
+    // TIER 1: State Macro Zoom (Zoom < 9 on multi-district view)
+    if(isMultiDistrict && curZoom < 9) {{
+      if(!mandiClusters) {{
+        mandiClusters = buildDistrictClusters(allMandis);
+      }}
+      mandiClusters.forEach(function(c) {{
+        if(!bounds.contains([c.lat, c.lon])) return;
+        var clusterIcon = L.divIcon({{
+          className: 'nk-mandi-cluster-wrap',
+          html: '<div class="nk-mandi-cluster-badge" title="' + c.district + ' (' + c.count + ' मंडियां - ज़ूम करने के लिए टैप करें)">' +
+                  '<span class="nk-cluster-ic">🏛️</span>' +
+                  '<span class="nk-cluster-name">' + c.district + '</span>' +
+                  '<span class="nk-cluster-count">' + c.count + '</span>' +
+                '</div>',
+          iconSize: [110, 32],
+          iconAnchor: [55, 16]
+        }});
+        var marker = L.marker([c.lat, c.lon], {{ icon: clusterIcon }});
+        marker.on('click', function() {{
+          var b = L.latLngBounds(c.mandis.map(function(m) {{ return [m.lat, m.lon]; }}));
+          map.fitBounds(b, {{ padding: [50, 50], maxZoom: 11 }});
+        }});
+        mandiLayerGroup.addLayer(marker);
+      }});
+      return;
+    }}
+
+    // Filter mandis within current visible viewport (Viewport Frustum Culling)
+    var visibleMandis = allMandis.filter(function(m) {{
+      return bounds.contains([m.lat, m.lon]);
+    }});
+
+    // If zoomed out or many visible, use Tier 2 Compact Badge; else Tier 3 Detailed
+    var useCompact = (curZoom < 12);
+
+    visibleMandis.forEach(function(m) {{
+      var icon;
+      if(useCompact) {{
+        // TIER 2: Compact Mandi Pill
+        icon = L.divIcon({{
+          className: 'nk-mandi-compact-wrap',
+          html: '<div class="nk-mandi-compact-badge" title="' + m.market + '">' +
+                  '<span class="nk-compact-ic">🏛️</span>' +
+                  '<span class="nk-compact-name">' + m.market + '</span>' +
+                '</div>',
+          iconSize: [110, 28],
+          iconAnchor: [55, 14],
+          popupAnchor: [0, -16]
+        }});
+      }} else {{
+        // TIER 3: Detailed Live Price Badge
+        var badgeText = (m.top_crops && m.top_crops.length)
+          ? (m.top_crops[0].crop + ' ' + m.top_crops[0].price)
+          : (m.crop_count ? (m.crop_count + ' फसलें') : 'मंडी');
+
+        icon = L.divIcon({{
+          className: 'nk-mandi-div-icon',
+          html: '<div class="nk-mandi-marker-wrap">' +
+                  '<div class="nk-mandi-pin-badge">🌾 ' + badgeText + '</div>' +
+                  '<div class="nk-mandi-pin-icon-box"><span class="nk-mandi-pin-icon">🏛️</span></div>' +
+                '</div>',
+          iconSize: [120, 50],
+          iconAnchor: [60, 50],
+          popupAnchor: [0, -52]
+        }});
+      }}
+
+      var marker = L.marker([m.lat, m.lon], {{ icon: icon }});
+      marker.bindPopup(function() {{ return buildMandiPopup(m); }}, {{ className: 'nk-mandi-popup', maxWidth: 300 }});
+      mandiLayerGroup.addLayer(marker);
+    }});
+  }}
+
+  function toggleMandis() {{
+    if(isMandiActive) {{
+      isMandiActive = false;
+      map.off('zoomend moveend', onMandiMapMove);
+      if(mandiLayerGroup) {{
+        map.removeLayer(mandiLayerGroup);
+        mandiLayerGroup.clearLayers();
+      }}
+      updateMandiBtnState(false, false, 0);
+      return;
+    }}
+
+    if(mandiCachedData) {{
+      renderMandiMarkers(mandiCachedData);
+      return;
+    }}
+
+    updateMandiBtnState(false, true, 0);
+    var targetDslug = districtSlug || '';
+    var url = '/api/naksha/mandis?state=' + encodeURIComponent(stateKey);
+    if(targetDslug) url += '&district=' + encodeURIComponent(targetDslug);
+
+    fetch(url)
+      .then(function(r) {{ return r.json(); }})
+      .then(function(res) {{
+        if(res && res.ok && res.mandis) {{
+          mandiCachedData = res;
+          renderMandiMarkers(res);
+        }} else {{
+          updateMandiBtnState(false, false, 0);
+          alert('इस क्षेत्र की मंडियां प्राप्त नहीं हो सकीं।');
+        }}
+      }})
+      .catch(function(err) {{
+        console.error('Mandi fetch error:', err);
+        updateMandiBtnState(false, false, 0);
+        alert('मंडी डेटा लोड करने में समस्या हुई। कृपया पुनः प्रयास करें।');
+      }});
+  }}
+
+  function renderMandiMarkers(data) {{
+    isMandiActive = true;
+    mandiClusters = null;
+    var list = data.mandis || [];
+    if(list.length === 0) {{
+      updateMandiBtnState(false, false, 0);
+      alert('इस क्षेत्र में अभी कोई सक्रिय मंडी दर्ज नहीं है।');
+      return;
+    }}
+
+    if(!mandiLayerGroup) {{
+      mandiLayerGroup = L.layerGroup().addTo(map);
+    }}
+
+    refreshMandiLOD();
+    map.on('zoomend moveend', onMandiMapMove);
+    updateMandiBtnState(true, false, list.length);
+
+    if(districtSlug && list.length > 0) {{
+      try {{
+        var groupBounds = L.latLngBounds(list.map(function(m) {{ return [m.lat, m.lon]; }}));
+        if(groupBounds.isValid()) {{
+          map.fitBounds(groupBounds, {{ padding: [40, 40], maxZoom: 12 }});
+        }}
+      }} catch(e) {{}}
+    }}
+  }}
+
+  // ── "रास्ता देखें": route from the farmer to the nearest mandi ──
+  // Same three-layer draw as /bhav's map: glow, road line, and a comet that
+  // rides the head of the reveal once and is then discarded.
+  var nkRouteGlow = null, nkRouteLine = null, nkRouteFlow = null, nkRouteRaf = null;
+  var nkRouteEnds = null, nkAltLayers = [], nkRouteChoices = null;
+  var routeBtn = document.getElementById('nk-route-btn');
+  var routeBtnText = document.getElementById('nk-route-btn-text');
+  var routeCard = document.getElementById('nk-route-card');
+
+  function nkKm(lat1, lon1, lat2, lon2) {{
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }}
+
+  function nkRouteBusy(on) {{
+    if(!routeBtn) return;
+    if(on) routeBtn.classList.add('loading');
+    else routeBtn.classList.remove('loading');
+    if(routeBtnText) routeBtnText.textContent = on ? 'खोज रहे हैं…' : 'रास्ता देखें';
+  }}
+
+  function nkClearRoute() {{
+    if(nkRouteRaf) {{ cancelAnimationFrame(nkRouteRaf); nkRouteRaf = null; }}
+    [nkRouteGlow, nkRouteLine, nkRouteFlow].forEach(function(l) {{
+      if(l && map) map.removeLayer(l);
+    }});
+    nkRouteGlow = nkRouteLine = nkRouteFlow = null;
+    nkAltLayers.forEach(function(l) {{ if(l && map) map.removeLayer(l); }});
+    nkAltLayers = [];
+    if(nkRouteEnds && map) {{ map.removeLayer(nkRouteEnds); nkRouteEnds = null; }}
+    if(routeCard) routeCard.classList.remove('show');
+    if(routeBtn) routeBtn.classList.remove('active');
+  }}
+
+  function nkPathEl(layer) {{
+    if(!layer) return null;
+    return layer.getElement ? layer.getElement() : (layer._path || null);
+  }}
+
+  function nkDrawRoute(coords, uLat, uLon, mLat, mLon, approx) {{
+    nkClearRoute();
+    nkRouteGlow = L.polyline(coords, {{
+      color: '#1967d2', weight: 9, opacity: approx ? 0.5 : 0.9, lineCap: 'round', lineJoin: 'round'
+    }}).addTo(map);
+    nkRouteLine = L.polyline(coords, {{
+      color: '#4285f4', weight: 5.5, opacity: 1,
+      dashArray: approx ? '9 9' : null, lineCap: 'round', lineJoin: 'round'
+    }}).addTo(map);
+    nkRouteFlow = L.polyline(coords, {{
+      color: '#a8c7fa', weight: 5.5, opacity: 0.95,
+      className: 'nk-route-flow', lineCap: 'round', lineJoin: 'round'
+    }}).addTo(map);
+
+    // Both ends get a marker, the way a directions result always shows where
+    // it starts and where it stops.
+    nkRouteEnds = L.layerGroup([
+      L.marker([uLat, uLon], {{ icon: L.divIcon({{ className: 'nk-rt-start-wrap', html: '<div class="nk-rt-start"></div>', iconSize: [15, 15], iconAnchor: [7, 7] }}), interactive: false }}),
+      L.marker([mLat, mLon], {{ icon: L.divIcon({{ className: 'nk-rt-dest', html: '<svg width="26" height="34" viewBox="0 0 24 32"><path d="M12 0C5.4 0 0 5.4 0 12c0 8.4 12 20 12 20s12-11.6 12-20c0-6.6-5.4-12-12-12z" fill="#ea4335"/><circle cx="12" cy="12" r="4.6" fill="#fff"/></svg>', iconSize: [26, 34], iconAnchor: [13, 33] }}), interactive: false }})
+    ]).addTo(map);
+
+    var gEl = nkPathEl(nkRouteGlow), lEl = nkPathEl(nkRouteLine), fEl = nkPathEl(nkRouteFlow);
+    [gEl, lEl, fEl].forEach(function(el) {{ if(el) el.style.visibility = 'hidden'; }});
+
+    var reduceMotion = false;
+    try {{ reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }} catch(e) {{}}
+
+    function finish() {{
+      nkRouteRaf = null;
+      [lEl, gEl].forEach(function(el) {{
+        if(!el) return;
+        el.style.visibility = '';
+        el.style.strokeDasharray = (el === lEl && approx) ? '9 9' : 'none';
+        el.style.strokeDashoffset = '';
+      }});
+      if(fEl) {{
+        fEl.style.visibility = '';
+        if(fEl.classList) fEl.classList.add('is-done');
+      }}
+      setTimeout(function() {{
+        if(nkRouteFlow && map) {{ map.removeLayer(nkRouteFlow); nkRouteFlow = null; }}
+      }}, 500);
+    }}
+
+    // Frame by frame off the live path length: Leaflet reprojects the path on
+    // every zoom step, so a CSS transition would stutter as the map settles.
+    function run() {{
+      var probe = fEl || lEl;
+      var len0 = 0;
+      try {{ len0 = probe && probe.getTotalLength ? probe.getTotalLength() : 0; }} catch(e) {{}}
+      if(reduceMotion || !len0) {{ finish(); return; }}
+      [gEl, lEl, fEl].forEach(function(el) {{ if(el) el.style.visibility = ''; }});
+      var dur = Math.max(3000, Math.min(7000, len0 * 5.5));
+      var t0 = 0;
+      function frame(ts) {{
+        if(!t0) t0 = ts;
+        var p = Math.min(1, (ts - t0) / dur);
+        var e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+        var len = len0;
+        try {{ len = probe.getTotalLength() || len0; }} catch(err) {{}}
+        var head = e * len;
+        [lEl, gEl].forEach(function(el) {{
+          if(!el) return;
+          el.style.strokeDasharray = len + ' ' + len;
+          el.style.strokeDashoffset = String(len - head);
+        }});
+        if(fEl) {{
+          var tail = Math.max(34, len * 0.18);
+          fEl.style.strokeDasharray = tail + ' ' + (len + tail);
+          fEl.style.strokeDashoffset = String(tail - head);
+        }}
+        if(p < 1) nkRouteRaf = requestAnimationFrame(frame);
+        else finish();
+      }}
+      nkRouteRaf = requestAnimationFrame(frame);
+    }}
+
+    var started = false;
+    function kick() {{
+      if(started) return;
+      started = true;
+      map.off('moveend', kick);
+      requestAnimationFrame(run);
+    }}
+    map.on('moveend', kick);
+    setTimeout(kick, 3000);
+
+    var b = L.latLngBounds(coords);
+    b.extend([uLat, uLon]);
+    b.extend([mLat, mLon]);
+    var opts = {{ paddingTopLeft: [40, 110], paddingBottomRight: [45, 120], maxZoom: 14 }};
+    var reduceFly = false;
+    try {{ reduceFly = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }} catch(e) {{}}
+    if(reduceFly || !map.flyToBounds) map.fitBounds(b, opts);
+    else {{
+      opts.duration = 1.5;
+      opts.easeLinearity = 0.22;
+      map.flyToBounds(b, opts);
+    }}
+  }}
+
+  // ── The directions panel ──
+  // /bhav always routes to the mandi its page is about; here the farmer names
+  // both ends, so each field carries either a resolved point or free text that
+  // still has to be geocoded.
+  var routePanel = document.getElementById('nk-route-panel');
+  var rpFrom = document.getElementById('nk-rp-from');
+  var rpTo = document.getElementById('nk-rp-to');
+  var rpNote = document.getElementById('nk-rp-note');
+  var rpGo = document.getElementById('nk-rp-go');
+  var pickOverlay = document.getElementById('nk-pick-overlay');
+  var pickHint = document.getElementById('nk-pick-hint');
+  var nkFrom = null, nkTo = null, nkPickFor = null;
+
+  function nkNote(msg, isErr) {{
+    if(!rpNote) return;
+    rpNote.textContent = msg || '';
+    if(isErr) rpNote.classList.add('err');
+    else rpNote.classList.remove('err');
+  }}
+
+  function nkPanelOpen(on) {{
+    if(!routePanel) return;
+    if(on) routePanel.classList.add('open');
+    else {{ routePanel.classList.remove('open'); nkPickMode(null); }}
+    if(routeBtn) {{
+      if(on) routeBtn.classList.add('active');
+      else if(!nkRouteLine) routeBtn.classList.remove('active');
+    }}
+  }}
+
+  function nkSetPoint(which, lat, lon, label) {{
+    var pt = {{ lat: lat, lon: lon, label: label || (lat.toFixed(4) + ', ' + lon.toFixed(4)) }};
+    if(which === 'from') {{ nkFrom = pt; if(rpFrom) rpFrom.value = pt.label; }}
+    else {{ nkTo = pt; if(rpTo) rpTo.value = pt.label; }}
+  }}
+
+  function nkPickMode(which) {{
+    nkPickFor = which;
+    if(!pickOverlay) return;
+    if(which) {{
+      if(pickHint) pickHint.textContent = which === 'from'
+        ? 'शुरुआत की जगह नक्शे पर टैप करें'
+        : 'मंज़िल नक्शे पर टैप करें';
+      pickOverlay.classList.add('active');
+    }} else {{
+      pickOverlay.classList.remove('active');
+    }}
+  }}
+
+  if(pickOverlay) pickOverlay.addEventListener('click', function(ev) {{
+    if(!nkPickFor || !map) return;
+    var r = map.getContainer().getBoundingClientRect();
+    var ll = map.containerPointToLatLng(L.point(ev.clientX - r.left, ev.clientY - r.top));
+    var which = nkPickFor;
+    nkSetPoint(which, ll.lat, ll.lng, 'नक्शे पर चुनी जगह');
+    nkPickMode(null);
+    nkNote('');
+    // Name it the way a dropped pin names itself, so the card reads as places
+    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + ll.lat + '&longitude=' + ll.lng + '&localityLanguage=hi')
+      .then(function(r) {{ return r.json(); }})
+      .then(function(d) {{
+        var nm = d.locality || d.city || d.principalSubdivision || '';
+        if(nm) nkSetPoint(which, ll.lat, ll.lng, nm);
+      }})
+      .catch(function() {{}});
+  }});
+
+  // Free text is geocoded through the same Nominatim the search box uses, but
+  // biased to what is on screen so "Bara" means the nearby one.
+  function nkGeocode(q, cb) {{
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q);
+    try {{
+      var b = map.getBounds();
+      url += '&viewbox=' + b.getWest().toFixed(4) + ',' + b.getNorth().toFixed(4) + ',' +
+             b.getEast().toFixed(4) + ',' + b.getSouth().toFixed(4);
+    }} catch(e) {{}}
+    fetch(url)
+      .then(function(r) {{ return r.json(); }})
+      .then(function(d) {{
+        if(d && d.length) cb(parseFloat(d[0].lat), parseFloat(d[0].lon), String(d[0].display_name || q).split(',')[0]);
+        else cb(null);
+      }})
+      .catch(function() {{ cb(null); }});
+  }}
+
+  function nkMyLocation(cb) {{
+    if(gpsMarker) {{ var p = gpsMarker.getLatLng(); cb(p.lat, p.lng); return; }}
+    try {{
+      var stored = JSON.parse(localStorage.getItem('km_geo') || 'null');
+      if(stored && stored.lat && stored.lon && (Date.now() - (stored.ts || 0) < 7 * 86400000)) {{
+        cb(stored.lat, stored.lon);
+        return;
+      }}
+    }} catch(e) {{}}
+    if(!navigator.geolocation) {{ cb(null); return; }}
+    if(fabGps) fabGps.classList.add('loading');
+    navigator.geolocation.getCurrentPosition(function(pos) {{
+      if(fabGps) fabGps.classList.remove('loading');
+      cb(pos.coords.latitude, pos.coords.longitude);
+    }}, function() {{
+      if(fabGps) fabGps.classList.remove('loading');
+      cb(null);
+    }}, {{ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }});
+  }}
+
+  function nkRouteMandis(cb) {{
+    if(mandiCachedData && mandiCachedData.mandis) {{ cb(mandiCachedData.mandis); return; }}
+    var url = '/api/naksha/mandis?state=' + encodeURIComponent(stateKey);
+    if(districtSlug) url += '&district=' + encodeURIComponent(districtSlug);
+    fetch(url)
+      .then(function(r) {{ return r.json(); }})
+      .then(function(res) {{
+        if(res && res.ok && res.mandis && res.mandis.length) {{ mandiCachedData = res; cb(res.mandis); }}
+        else cb([]);
+      }})
+      .catch(function() {{ cb([]); }});
+  }}
+
+  function nkNearestMandi(lat, lon, cb) {{
+    nkRouteMandis(function(list) {{
+      if(!list.length) {{ cb(null); return; }}
+      var near = null, best = Infinity;
+      list.forEach(function(m) {{
+        var d = nkKm(lat, lon, m.lat, m.lon);
+        if(d < best) {{ best = d; near = m; }}
+      }});
+      cb(near);
+    }});
+  }}
+
+  // District names come from the map itself; villages and everything else fall
+  // through to the geocoder on submit.
+  function nkSuggest(which) {{
+    var input = which === 'from' ? rpFrom : rpTo;
+    var box = document.getElementById('nk-rp-' + which + '-sugg');
+    if(!input || !box) return;
+    var q = (input.value || '').trim().toLowerCase();
+    if(q.length < 2) {{ box.classList.remove('active'); box.innerHTML = ''; return; }}
+    var hits = Object.keys(districtMap).filter(function(k) {{
+      var it = districtMap[k];
+      return it.hiName === k && (it.hiName.toLowerCase().indexOf(q) > -1 || it.enName.toLowerCase().indexOf(q) > -1);
+    }}).slice(0, 5);
+    if(!hits.length) {{ box.classList.remove('active'); box.innerHTML = ''; return; }}
+    box.innerHTML = hits.map(function(k) {{
+      return '<div data-k="' + k + '">📍 ' + k + ' <small>' + districtMap[k].enName + '</small></div>';
+    }}).join('');
+    box.classList.add('active');
+    box.querySelectorAll('div[data-k]').forEach(function(el) {{
+      el.addEventListener('click', function() {{
+        var k = el.getAttribute('data-k');
+        var lyr = districtMap[k] && districtMap[k].layer;
+        var c = null;
+        try {{ c = lyr && lyr.getBounds ? lyr.getBounds().getCenter() : null; }} catch(e) {{}}
+        if(c) nkSetPoint(which, c.lat, c.lng, k);
+        else if(input) input.value = k;
+        box.classList.remove('active');
+      }});
+    }});
+  }}
+
+  function nkResolve(which, cb) {{
+    var input = which === 'from' ? rpFrom : rpTo;
+    var pt = which === 'from' ? nkFrom : nkTo;
+    var txt = input ? (input.value || '').trim() : '';
+    if(pt && pt.label === txt) {{ cb(pt); return; }}
+    if(!txt) {{ cb(null); return; }}
+    nkGeocode(txt, function(lat, lon, name) {{
+      if(lat === null || lat === undefined) {{ cb(null); return; }}
+      var p = {{ lat: lat, lon: lon, label: name || txt }};
+      if(which === 'from') nkFrom = p; else nkTo = p;
+      if(input) input.value = p.label;
+      cb(p);
+    }});
+  }}
+
+  function nkRunRoute() {{
+    nkNote('रास्ता खोजा जा रहा है…');
+    if(rpGo) rpGo.disabled = true;
+    nkResolve('from', function(a) {{
+      if(!a) {{ if(rpGo) rpGo.disabled = false; nkNote('शुरुआत की जगह नहीं मिली — दूसरा नाम आज़माएं या नक्शे पर चुनें।', true); return; }}
+      nkResolve('to', function(b) {{
+        if(!b) {{ if(rpGo) rpGo.disabled = false; nkNote('मंज़िल नहीं मिली — दूसरा नाम आज़माएं या नक्शे पर चुनें।', true); return; }}
+        nkDrawOsrm(a, b);
+      }});
+    }});
+  }}
+
+  function nkFmtMins(mins) {{
+    return mins >= 60 ? (Math.floor(mins / 60) + ' घंटा ' + (mins % 60) + ' मिनट') : (mins + ' मिनट');
+  }}
+
+  function nkMins(km) {{
+    var speed = km < 30 ? 32 : (km < 100 ? 44 : 54);
+    return Math.round((km / speed) * 60);
+  }}
+
+  function nkFillCard(a, b, km, mins, approx) {{
+    var labelEl = document.getElementById('nk-route-label');
+    var nameEl = document.getElementById('nk-route-mandi');
+    var distEl = document.getElementById('nk-route-dist');
+    var navEl = document.getElementById('nk-route-nav');
+    if(labelEl) labelEl.textContent = 'रास्ता';
+    if(nameEl) nameEl.textContent = a.label + ' → ' + b.label;
+    if(navEl) navEl.href = 'https://www.google.com/maps/dir/?api=1&origin=' + a.lat.toFixed(5) + ',' + a.lon.toFixed(5) +
+                           '&destination=' + b.lat.toFixed(5) + ',' + b.lon.toFixed(5) + '&travelmode=driving';
+    if(distEl) {{
+      distEl.innerHTML = 'दूरी: <b>' + km + ' किमी</b> · लगभग ' + nkFmtMins(mins) +
+                         (approx ? ' (अनुमानित)' : ' (सड़क मार्ग)');
+    }}
+    if(bottomDrawer) bottomDrawer.classList.remove('active');
+    if(routeCard) routeCard.classList.add('show');
+    if(routeBtn) routeBtn.classList.add('active');
+    if(rpGo) rpGo.disabled = false;
+    nkNote('');
+    nkPanelOpen(false);
+  }}
+
+  // OSRM returns up to three ways round; the ones not taken stay on the map in
+  // grey with their travel time, and tapping one switches to it.
+  function nkSelectRoute(idx) {{
+    if(!nkRouteChoices) return;
+    var c = nkRouteChoices;
+    c.idx = idx;
+    var r = c.routes[idx];
+    var coords = r.geometry.coordinates.map(function(pt) {{ return [pt[1], pt[0]]; }});
+    nkDrawRoute(coords, c.a.lat, c.a.lon, c.b.lat, c.b.lon, false);
+    c.routes.forEach(function(alt, i) {{
+      if(i === idx) return;
+      var altCoords = alt.geometry.coordinates.map(function(pt) {{ return [pt[1], pt[0]]; }});
+      var line = L.polyline(altCoords, {{
+        color: '#9aa0a6', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round'
+      }}).addTo(map);
+      line.on('click', function() {{ nkSelectRoute(i); }});
+      nkAltLayers.push(line);
+      var mid = altCoords[Math.floor(altCoords.length / 2)];
+      var altKm = alt.distance / 1000;
+      var tag = L.marker(mid, {{
+        icon: L.divIcon({{ className: 'nk-rt-alt-wrap', html: '<span class="nk-rt-alt-label">' + nkFmtMins(nkMins(altKm)) + ' · ' + altKm.toFixed(0) + ' किमी</span>', iconSize: null }})
+      }}).addTo(map);
+      tag.on('click', function() {{ nkSelectRoute(i); }});
+      nkAltLayers.push(tag);
+    }});
+    var km = (r.distance / 1000).toFixed(1);
+    nkFillCard(c.a, c.b, km, nkMins(parseFloat(km)), false);
+  }}
+
+  function nkDrawOsrm(a, b) {{
+    var straight = nkKm(a.lat, a.lon, b.lat, b.lon);
+    // See /bhav: full geometry is ~46x the bytes on a long haul and the extra
+    // points are invisible at the zoom a long route fits into.
+    var ovDetail = straight > 60 ? 'simplified' : 'full';
+    var osrm = 'https://router.project-osrm.org/route/v1/driving/' +
+               a.lon.toFixed(5) + ',' + a.lat.toFixed(5) + ';' +
+               b.lon.toFixed(5) + ',' + b.lat.toFixed(5) +
+               '?overview=' + ovDetail + '&geometries=geojson&alternatives=true';
+    fetch(osrm)
+      .then(function(r) {{ return r.json(); }})
+      .then(function(data) {{
+        var rs = (data && data.routes ? data.routes : []).filter(function(r) {{ return r && r.geometry; }});
+        if(rs.length) {{
+          nkRouteChoices = {{ routes: rs.slice(0, 3), idx: 0, a: a, b: b }};
+          nkSelectRoute(0);
+        }} else {{ nkFallback(a, b, straight); }}
+      }})
+      .catch(function() {{ nkFallback(a, b, straight); }});
+  }}
+
+  function nkFallback(a, b, straight) {{
+    nkRouteChoices = null;
+    var estKm = (straight * 1.30).toFixed(1);
+    nkDrawRoute([[a.lat, a.lon], [b.lat, b.lon]], a.lat, a.lon, b.lat, b.lon, true);
+    nkFillCard(a, b, estKm, nkMins(parseFloat(estKm)), true);
+  }}
+
+  if(routeBtn) routeBtn.addEventListener('click', function() {{
+    var isOpen = routePanel && routePanel.classList.contains('open');
+    if(isOpen) {{ nkPanelOpen(false); return; }}
+    nkPanelOpen(true);
+    nkNote('');
+    if(rpFrom && !rpFrom.value) {{
+      nkMyLocation(function(lat, lon) {{
+        if(lat !== null && lat !== undefined && !rpFrom.value) nkSetPoint('from', lat, lon, 'मेरी लोकेशन');
+      }});
+    }}
+  }});
+
+  var rpCloseBtn = document.getElementById('nk-rp-close');
+  if(rpCloseBtn) rpCloseBtn.addEventListener('click', function() {{ nkPanelOpen(false); }});
+  if(rpGo) rpGo.addEventListener('click', nkRunRoute);
+  if(rpFrom) {{
+    rpFrom.addEventListener('input', function() {{ nkFrom = null; nkSuggest('from'); }});
+    rpFrom.addEventListener('keydown', function(e) {{ if(e.key === 'Enter') nkRunRoute(); }});
+  }}
+  if(rpTo) {{
+    rpTo.addEventListener('input', function() {{ nkTo = null; nkSuggest('to'); }});
+    rpTo.addEventListener('keydown', function(e) {{ if(e.key === 'Enter') nkRunRoute(); }});
+  }}
+
+  var rpSwapBtn = document.getElementById('nk-rp-swap');
+  if(rpSwapBtn) rpSwapBtn.addEventListener('click', function() {{
+    var a = nkFrom, av = rpFrom ? rpFrom.value : '';
+    nkFrom = nkTo; if(rpFrom) rpFrom.value = rpTo ? rpTo.value : '';
+    nkTo = a; if(rpTo) rpTo.value = av;
+  }});
+
+  if(routePanel) routePanel.querySelectorAll('.nk-rp-chip').forEach(function(chip) {{
+    chip.addEventListener('click', function() {{
+      var pick = chip.getAttribute('data-pick');
+      if(pick) {{ nkPickMode(pick); return; }}
+      if(chip.getAttribute('data-from') === 'gps') {{
+        nkNote('लोकेशन खोजी जा रही है…');
+        nkMyLocation(function(lat, lon) {{
+          if(lat === null || lat === undefined) {{ nkNote('लोकेशन नहीं मिली — नक्शे पर चुनें या जगह का नाम लिखें।', true); return; }}
+          nkSetPoint('from', lat, lon, 'मेरी लोकेशन');
+          nkNote('');
+        }});
+        return;
+      }}
+      if(chip.getAttribute('data-to') === 'mandi') {{
+        nkNote('नजदीकी मंडी खोजी जा रही है…');
+        nkResolve('from', function(a) {{
+          function pick(lat, lon) {{
+            nkNearestMandi(lat, lon, function(m) {{
+              if(!m) {{ nkNote('इस क्षेत्र की मंडी की जानकारी अभी उपलब्ध नहीं है।', true); return; }}
+              nkSetPoint('to', Number(m.lat), Number(m.lon), m.market || 'मंडी');
+              nkNote('');
+            }});
+          }}
+          if(a) pick(a.lat, a.lon);
+          else nkMyLocation(function(lat, lon) {{
+            if(lat === null || lat === undefined) {{ nkNote('पहले शुरुआत की जगह भरें।', true); return; }}
+            nkSetPoint('from', lat, lon, 'मेरी लोकेशन');
+            pick(lat, lon);
+          }});
+        }});
+      }}
+    }});
+  }});
+
+  var routeCloseBtn = document.getElementById('nk-route-close');
+  if(routeCloseBtn) routeCloseBtn.addEventListener('click', nkClearRoute);
+
+  if(mandiBtn) mandiBtn.addEventListener('click', toggleMandis);
+  if(mandiFabBtn) mandiFabBtn.addEventListener('click', toggleMandis);
   }}
 
   if(document.readyState === 'loading') {{
@@ -2322,6 +3683,175 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "") -> str
 }})();
 </script>""")
     return "\n".join(out)
+
+
+# ── Mandi API for Interactive Naksha Map ────────────────────────────────────
+
+_mandi_cache: dict[str, dict] = {}
+_mandi_cache_ts: dict[str, float] = {}
+_MANDI_CACHE_TTL = 1800.0  # 30 minutes cache
+
+
+@router.get("/api/naksha/mandis")
+def api_naksha_mandis(state: str = "", district: str = ""):
+    """Return APMC mandis for a given state and/or district with coordinates,
+    top commodities & prices, and navigation info. Fast, cached response."""
+    from backend.database.db import SessionLocal, MandiPrice
+    from backend.services import district_geo
+    from backend.routes.bhav import _hindi_name
+
+    cache_key = f"{(state or '').strip().lower()}|{(district or '').strip().lower()}"
+    now = time.time()
+    if cache_key in _mandi_cache and (now - _mandi_cache_ts.get(cache_key, 0)) < _MANDI_CACHE_TTL:
+        return _mandi_cache[cache_key]
+
+    states_meta = _states()
+
+    # 1. Resolve State
+    st_raw = (state or "").strip()
+    st_slug = st_raw.lower()
+    st_meta = states_meta.get(st_slug)
+    if not st_meta:
+        for k, v in states_meta.items():
+            if v.get("en", "").lower() == st_slug or v.get("hi") == st_raw:
+                st_slug = k
+                st_meta = v
+                break
+
+    st_en = st_meta["en"] if st_meta else st_raw
+    st_hi = st_meta["hi"] if st_meta else st_raw
+    if not st_slug and st_en:
+        st_slug = slugify(st_en)
+
+    # 2. Resolve District (if provided)
+    dist_en = ""
+    dist_hi = ""
+    dist_slug = ""
+    if district:
+        d_raw = district.strip()
+        d_idx = _dindex(st_slug) if st_slug in states_meta else {}
+        if d_raw.lower() in d_idx:
+            dist_slug = d_raw.lower()
+            dist_en = d_idx[dist_slug]["en"]
+            dist_hi = d_idx[dist_slug]["hi"]
+        else:
+            for dslug, dinfo in d_idx.items():
+                if dinfo["en"].lower() == d_raw.lower() or dinfo["hi"] == d_raw:
+                    dist_slug = dslug
+                    dist_en = dinfo["en"]
+                    dist_hi = dinfo["hi"]
+                    break
+            if not dist_en:
+                dist_en = d_raw
+                dist_slug = slugify(d_raw)
+                dist_hi = d_raw
+
+    # 3. Query DB
+    db = SessionLocal()
+    try:
+        q = db.query(
+            MandiPrice.state,
+            MandiPrice.district,
+            MandiPrice.market,
+            MandiPrice.commodity,
+            MandiPrice.modal_price,
+            MandiPrice.min_price,
+            MandiPrice.max_price,
+            MandiPrice.arrival_date,
+        )
+        if st_en:
+            q = q.filter(MandiPrice.state.ilike(st_en))
+        if dist_en:
+            q = q.filter(MandiPrice.district.ilike(dist_en))
+        rows = q.all()
+    finally:
+        db.close()
+
+    # 4. Group by (district, market)
+    by_mkt: dict = {}
+    for st_val, d_val, mkt, com, modal, p_min, p_max, arr_date in rows:
+        mkt = (mkt or "").strip()
+        if not mkt or mkt == "-":
+            continue
+        d_val = (d_val or dist_en or "").strip()
+        key = (d_val.lower(), mkt.lower())
+        if key not in by_mkt:
+            by_mkt[key] = {
+                "state": st_val or st_en,
+                "district": d_val,
+                "market": mkt,
+                "crops": {},
+                "dates": set(),
+            }
+        slot = by_mkt[key]
+        if arr_date:
+            slot["dates"].add(arr_date)
+        if com:
+            try:
+                m_num = int(float(str(modal).replace(",", "").strip())) if modal else 0
+            except (ValueError, TypeError):
+                m_num = 0
+            if com not in slot["crops"] or (m_num and m_num > slot["crops"][com].get("modal_num", 0)):
+                slot["crops"][com] = {
+                    "crop_en": com,
+                    "crop_hi": _hindi_name(com),
+                    "modal_num": m_num,
+                    "modal": f"₹{m_num:,}" if m_num else (f"₹{modal}" if modal else "—"),
+                }
+
+    # 5. Build marker list with coordinates
+    mandis = []
+    for (d_low, m_low), data in by_mkt.items():
+        coords = district_geo.resolve_mandi_coords(data["state"], data["district"], data["market"])
+        if not coords:
+            continue
+        lat, lon, is_exact = coords
+
+        sorted_crops = sorted(data["crops"].values(), key=lambda c: -c["modal_num"])
+        top_crops = [
+            {"crop": c["crop_hi"], "price": c["modal"]}
+            for c in sorted_crops[:4]
+        ]
+
+        clean_name = re.sub(
+            r'(?i)\b(apmc|mandi|grain market|sub yard|upaj mandi|sub market yard|market yard|main yard|yard)\b',
+            '', data["market"]
+        ).strip()
+        clean_name = re.sub(r'[\(\)\[\]\-]+', ' ', clean_name).strip() or data["market"]
+
+        d_s = slugify(data["district"])
+        s_s = st_slug or slugify(data["state"])
+        bhav_url = f"/bhav/rajya/{s_s}/{d_s}" if s_s and d_s else "/bhav"
+
+        nav_q = f"{data['market']}, {data['district']}, {data['state']} mandi"
+
+        mandis.append({
+            "market": data["market"],
+            "name": clean_name,
+            "district": data["district"],
+            "state": data["state"],
+            "lat": round(lat, 5),
+            "lon": round(lon, 5),
+            "is_exact": is_exact,
+            "crop_count": len(data["crops"]),
+            "top_crops": top_crops,
+            "bhav_url": bhav_url,
+            "nav_q": nav_q,
+        })
+
+    mandis.sort(key=lambda m: -m["crop_count"])
+    result = {
+        "ok": True,
+        "state": st_en,
+        "state_slug": st_slug,
+        "district": dist_en,
+        "count": len(mandis),
+        "mandis": mandis,
+    }
+    _mandi_cache[cache_key] = result
+    _mandi_cache_ts[cache_key] = now
+    return result
+
 
 # ── hub ─────────────────────────────────────────────────────────────────────
 
@@ -2552,7 +4082,7 @@ def naksha_hub():
            autocomplete="off" aria-label="राज्य खोजें" />
     <button type="button" class="nk-land-gps-btn" id="nk-land-gps-btn"
             title="GPS से राज्य पता करें">
-      <span class="nk-land-gps-ic">📍</span>
+      <span class="nk-land-gps-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg></span>
       <span class="nk-land-gps-txt">मेरा राज्य</span>
     </button>
   </div>
@@ -2739,10 +4269,21 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
       <input type="text" id="nk-search-input" class="nk-search-input" placeholder="{escape(search_placeholder)}" autocomplete="off" aria-label="जिला या गांव खोजें">
       <button type="button" id="nk-search-clear-btn" class="nk-search-clear-btn" aria-label="साफ करें">✕</button>
       <button type="button" id="nk-search-loc-btn" class="nk-search-loc-btn" title="आपकी लोकेशन (GPS)" aria-label="आपकी लोकेशन (GPS)">
-        <span class="nk-loc-icon">📍</span>
+        <span class="nk-loc-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg></span>
         <span class="nk-loc-text">लोकेशन</span>
       </button>
       <button type="button" id="nk-search-btn" class="nk-search-btn">खोजें</button>
+    </div>
+    <div class="nk-search-actions">
+      <button type="button" id="nk-mandi-toggle-btn" class="nk-mandi-toggle-btn" title="मंडी देखें व भाव जानें" aria-label="मंडी देखें">
+        <span class="nk-mandi-btn-icon">🌾</span>
+        <span class="nk-mandi-btn-text">मंडी देखें</span>
+        <span class="nk-mandi-btn-badge" id="nk-mandi-btn-count" style="display:none">0</span>
+      </button>
+      <button type="button" id="nk-route-btn" class="nk-route-btn" title="कहाँ से कहाँ तक — रास्ता देखें" aria-label="रास्ता देखें">
+        <svg class="nk-route-arrow" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        <span id="nk-route-btn-text">रास्ता देखें</span>
+      </button>
     </div>
     <div class="nk-suggestions-list" id="nk-suggestions-list"></div>
   </div>
@@ -2776,6 +4317,10 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
     </button>
 
     <div class="nk-fab-options" id="nk-fab-options">
+      <button type="button" id="nk-fab-mandi" class="nk-fab-opt" aria-label="मंडी देखें" title="मंडी देखें व ताजा भाव जानें">
+        <span class="nk-fab-opt-ic">🌾</span>
+        <span class="nk-fab-opt-label" id="nk-fab-mandi-text">मंडी देखें</span>
+      </button>
       <button type="button" id="nk-fab-measure" class="nk-fab-opt" aria-label="खेत नापो (क्षेत्रफल)">
         <span class="nk-fab-opt-ic">📐</span>
         <span class="nk-fab-opt-label">खेत नापो (Area)</span>
@@ -2826,13 +4371,13 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
 
   <!-- My Location Button (bottom-right standalone, icon-only) -->
   <button type="button" id="nk-fab-gps" class="nk-my-loc-btn" title="मेरी लोकेशन (GPS)" aria-label="मेरी लोकेशन (GPS)">
-    <svg class="nk-loc-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
-      <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="3 2"/>
-      <line x1="12" y1="2" x2="12" y2="5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <line x1="12" y1="18.5" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <line x1="2" y1="12" x2="5.5" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <line x1="18.5" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <svg class="nk-loc-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="7"/>
+      <line x1="12" y1="2" x2="12" y2="5"/>
+      <line x1="12" y1="19" x2="12" y2="22"/>
+      <line x1="2" y1="12" x2="5" y2="12"/>
+      <line x1="19" y1="12" x2="22" y2="12"/>
+      <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
     </svg>
   </button>
 
@@ -2853,6 +4398,62 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
       <a id="nk-drawer-gaon" class="nk-drawer-btn gaon" href="{gaon_link_href}" {gaon_link_style}>🌾 गांव सूची</a>
       <a class="nk-drawer-btn dl" data-km-map-picker href="{_img(s, 'district-map.png')}" download="{s['prefix']}-{s['n']}-jile.png">⬇️ HD डाउनलोड</a>
     </div>
+  </div>
+
+  <!-- Nearest-mandi route summary (sits under the drawer when that opens) -->
+  <!-- Directions panel: /naksha routes between any two points, unlike /bhav
+       where the destination is always the mandi the page is about. -->
+  <div class="nk-route-panel" id="nk-route-panel">
+    <div class="nk-rp-head">
+      <span class="nk-rp-title">रास्ता देखें</span>
+      <button type="button" class="nk-rp-close" id="nk-rp-close" aria-label="बंद करें">✕</button>
+    </div>
+    <div class="nk-rp-body">
+      <div class="nk-rp-rail">
+        <span class="nk-rp-dot"></span>
+        <span class="nk-rp-dots"></span>
+        <span class="nk-rp-dot dest"></span>
+      </div>
+      <div class="nk-rp-fields">
+        <div class="nk-rp-field" style="margin-bottom:8px">
+          <input type="text" id="nk-rp-from" class="nk-rp-input" placeholder="कहाँ से (शुरुआत)" autocomplete="off">
+          <div class="nk-rp-sugg" id="nk-rp-from-sugg"></div>
+        </div>
+        <div class="nk-rp-field">
+          <input type="text" id="nk-rp-to" class="nk-rp-input" placeholder="कहाँ तक (मंज़िल)" autocomplete="off">
+          <div class="nk-rp-sugg" id="nk-rp-to-sugg"></div>
+        </div>
+      </div>
+      <button type="button" class="nk-rp-swap-btn" id="nk-rp-swap" title="उलटा करें">⇅</button>
+    </div>
+    <div class="nk-rp-chip-row">
+      <span class="nk-rp-lbl">शुरुआत:</span>
+      <button type="button" class="nk-rp-chip" data-from="gps">📍 मेरी लोकेशन</button>
+      <button type="button" class="nk-rp-chip" data-pick="from">🗺️ नक्शे पर</button>
+    </div>
+    <div class="nk-rp-chip-row">
+      <span class="nk-rp-lbl">मंज़िल:</span>
+      <button type="button" class="nk-rp-chip" data-to="mandi">🌾 नजदीकी मंडी</button>
+      <button type="button" class="nk-rp-chip" data-pick="to">🗺️ नक्शे पर</button>
+    </div>
+    <button type="button" class="nk-rp-go" id="nk-rp-go">रास्ता दिखाएँ</button>
+    <div class="nk-rp-note" id="nk-rp-note"></div>
+  </div>
+
+  <div class="nk-pick-overlay" id="nk-pick-overlay">
+    <div class="nk-pick-hint" id="nk-pick-hint">नक्शे पर जगह टैप करें</div>
+  </div>
+
+  <div class="nk-route-card" id="nk-route-card">
+    <svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:#60a5fa;flex-shrink:0"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+    <div class="nk-route-card-info">
+      <span class="nk-route-card-title"><span id="nk-route-label">रास्ता</span>: <b id="nk-route-mandi">—</b></span>
+      <span class="nk-route-card-meta" id="nk-route-dist">—</span>
+    </div>
+    <a id="nk-route-nav" href="#" target="_blank" rel="noopener" class="nk-route-nav" title="गूगल मैप पर रास्ता">गूगल मैप</a>
+    <button type="button" id="nk-route-close" class="nk-route-close" title="रास्ता हटाएँ" aria-label="रास्ता हटाएँ">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
 </div>
 """
@@ -3436,7 +5037,7 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
 </section>
 
 <p class="nk-updated">🕒 अंतिम अपडेट: {_hindi_date(_updated())} · जिला-सीमा: Census of India · गांव-बिंदु: OpenStreetMap</p>
-{_tail_scripts(s, initial=hi, state_key=key)}"""
+{_tail_scripts(s, initial=hi, state_key=key, dslug=dslug)}"""
 
 
     crumb = _crumb_ld([("होम", f"{SITE}/"), ("राज्यों के नक्शे", f"{SITE}/naksha"),
@@ -4040,7 +5641,7 @@ def _map_landing_page() -> HTMLResponse:
            autocomplete="off" aria-label="राज्य खोजें" />
     <button type="button" class="nk-land-gps-btn" id="nk-land-gps-btn"
             title="GPS से राज्य पता करें">
-      <span class="nk-land-gps-ic">📍</span>
+      <span class="nk-land-gps-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg></span>
       <span class="nk-land-gps-txt">मेरा राज्य</span>
     </button>
   </div>
@@ -4176,16 +5777,76 @@ def _map_landing_page() -> HTMLResponse:
 
 # ── routes ──────────────────────────────────────────────────────────────────
 
+_MAP_TOOL_CSS = """
+.km-map-tool-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0 10px}
+.km-map-tool-bar h1{font-size:17px;margin:0;flex:1 1 auto;color:var(--nk-emerald-dark)}
+.km-map-tool-bar .nk-state-select{max-width:220px}
+.km-map-tool-bar a{font-size:13px;font-weight:600;white-space:nowrap}
+.km-map-tool .nk-map{height:calc(100dvh - 230px);min-height:420px;max-height:none}
+"""
+
+
+def _map_tool_page(key: str) -> HTMLResponse:
+    """/map — the minimal entry to the maps category: the same interactive map
+    and features as /naksha/{state}, with nothing around it. Same map code as
+    the नक्शा cluster (_map_app_container + _tail_scripts), never a fork.
+
+    noindex: /naksha is the content tree that ranks; this is a tool page whose
+    map would otherwise compete with /naksha/{state} for the same queries.
+    """
+    states = _states()
+    s = states[key]
+    hi = s["hi"]
+    opts = "".join(
+        f'<option value="{k}"{" selected" if k == key else ""}>{escape(v["hi"])}</option>'
+        for k, v in states.items())
+    # The farmer's state is remembered, so /map opens on it next time.
+    body = f"""<div class="km-map-tool">
+<div class="km-map-tool-bar">
+  <h1>🗺️ {escape(hi)} का नक्शा</h1>
+  <select class="nk-state-select" id="km-map-state" aria-label="राज्य चुनें">{opts}</select>
+  <a href="{_url(key)}">जिले व जानकारी →</a>
+</div>
+{_map_app_container(key, s, hi)}
+</div>
+<script>
+(function(){{
+  var KEY = {json.dumps(key)};
+  var sel = document.getElementById('km-map-state');
+  var hasParam = /[?&]state=/.test(location.search);
+  try {{
+    var saved = localStorage.getItem('km_map_state');
+    if(!hasParam && saved && saved !== KEY) {{ location.replace('/map?state=' + encodeURIComponent(saved)); return; }}
+    localStorage.setItem('km_map_state', KEY);
+  }} catch(e) {{}}
+  if(sel) sel.addEventListener('change', function(){{
+    try {{ localStorage.setItem('km_map_state', sel.value); }} catch(e) {{}}
+    location.href = '/map?state=' + encodeURIComponent(sel.value);
+  }});
+}})();
+</script>
+{_tail_scripts(s, state_key=key)}"""
+    return _doc(f"{hi} का नक्शा — कृषि मानचित्र",
+                f"{hi} का इंटरैक्टिव सैटेलाइट नक्शा — जिला व गांव खोजें, मंडी और रास्ता देखें।",
+                f"{SITE}/map", "", body, active="map",
+                extra_css=_NK_CSS + _MAP_TOOL_CSS, head_extra=_LEAFLET_CSS,
+                robots="noindex, follow", journey=False)
+
+
 @router.get("/map", response_class=HTMLResponse)
-def up_map():
-    """Legacy redirect from /map to /naksha/uttar-pradesh."""
-    return RedirectResponse(f"{SITE}/naksha/uttar-pradesh", status_code=301)
+def map_tool(state: str = "uttar-pradesh"):
+    """The standalone map tool. Not a redirect: /map and /naksha serve
+    different use cases — see _map_tool_page."""
+    state = "uttar-pradesh" if state == "uttarpradesh" else state.lower()
+    if state not in _states():
+        state = "uttar-pradesh"
+    return _map_tool_page(state)
 
 
 @router.get("/naksha/{state}", response_class=HTMLResponse)
 def state_map(state: str):
-    # "uttarpradesh" (no hyphen) is the spelling the /map popup below links to,
-    # and the one a farmer is likeliest to type from memory — both resolve to
+    # "uttarpradesh" (no hyphen) is the spelling a farmer is likeliest to type
+    # from memory — both resolve to
     # the same page as the hyphenated slug.
     if state in ("uttar-pradesh", "uttarpradesh"):
         return _state_page("uttar-pradesh", f"{SITE}/naksha/uttar-pradesh")

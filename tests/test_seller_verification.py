@@ -186,17 +186,16 @@ def test_an_unknown_id_kind_falls_back_rather_than_storing_junk(db_session, appl
 
 # ── The two plans ────────────────────────────────────────────
 
-def test_both_plans_are_priced_with_a_higher_struck_figure(db_session):
+def test_no_plan_carries_a_struck_price(db_session, monkeypatch):
+    """A crossed-out price nobody ever paid is a false reference price (CCPA
+    dark-pattern guidelines, 2023). None is printed, and the old env variable
+    that set one no longer does anything."""
+    monkeypatch.setenv("KM_VERIFY_M1_MRP", "999")
     plans = {p["code"]: p for p in seller_verify.plans()}
     assert plans["m1"]["months"] == 1 and plans["m1"]["price"] == 199
-    assert plans["m1"]["mrp"] == 399
     assert plans["m3"]["months"] == 3 and plans["m3"]["price"] == 499
-    assert plans["m3"]["mrp"] == 699
     for p in plans.values():
-        assert p["mrp"] > p["price"], (
-            "a struck price at or below the real one is not an anchor, it is a "
-            "mistake on a page about money"
-        )
+        assert p["mrp"] is None
         assert p["per_month"] == round(p["price"] / p["months"])
 
 
@@ -207,11 +206,12 @@ def test_the_longer_plan_is_actually_cheaper_per_month():
     assert plans["m3"]["per_month"] < plans["m1"]["per_month"]
 
 
-def test_a_struck_price_below_the_real_one_is_dropped(monkeypatch):
-    monkeypatch.setenv("KM_VERIFY_M1_MRP", "150")
+def test_the_only_saving_shown_is_the_real_one():
+    """3 months for ₹499 against ₹199 × 3 = ₹597 — a saving that is true."""
     plans = {p["code"]: p for p in seller_verify.plans()}
-    assert plans["m1"]["mrp"] is None
     assert plans["m1"]["save_pct"] is None
+    assert plans["m3"]["save_vs"] == 597
+    assert plans["m3"]["save_pct"] == round((1 - 499 / 597) * 100)
 
 
 def test_an_unknown_plan_code_buys_the_cheapest_term_not_a_free_one(db_session, applicant):
@@ -404,10 +404,12 @@ def test_the_page_never_claims_a_payment_happened(client):
     assert "भुगतान हो गया" not in body
 
 
-def test_the_page_offers_both_plans_with_their_struck_prices(client):
+def test_the_page_offers_both_plans_and_no_struck_price(client):
     body = client.get("/verify").text
-    for figure in ("199", "399", "499", "699"):
+    for figure in ("199", "499"):
         assert figure in body, f"/verify does not print ₹{figure}"
+    for gone in ("399", "699", "काटी गई क़ीमत"):
+        assert gone not in body, f"/verify still prints {gone}"
 
 
 def test_the_plans_endpoint_is_public_and_carries_no_personal_data(client):

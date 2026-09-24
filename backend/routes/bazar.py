@@ -20,6 +20,7 @@
 #   GET    /bazar/me                       auth — gate info for frontend
 #   POST   /bazar/posts                    auth+profile — multipart, media optional
 #   DELETE /bazar/posts/{id}               owner
+#   POST   /bazar/posts/{id}/media         owner — multipart, replace the photo
 #   PATCH  /bazar/posts/{id}/status        owner — active|sold|closed
 #   POST   /bazar/posts/{id}/like          auth+profile — toggle
 #   GET    /bazar/posts/{id}/comments      public — parents with nested replies
@@ -47,7 +48,7 @@ from starlette.concurrency import run_in_threadpool
 
 from backend.database.db import (
     Buyer, User, UserProfile, BazarPost, BazarLike, BazarComment, BazarCommentLike,
-    BazarFollow, get_db, acct, accts
+    BazarFollow, BazarMediaChange, get_db, acct, accts
 )
 from backend.routes.share import _FALLBACK_IMAGE, _HI_CROP_EN, _crop_image
 from backend.services import media_db, media_store
@@ -109,6 +110,13 @@ MAX_VIDEO_BYTES = 40 * 1024 * 1024   # 40 MB — ~30-40s of phone video
 # by acting at 23:59 and again at 00:01.
 MAX_POSTS_PER_DAY      = 10   # new listings per account per 24h
 MAX_EDITS_PER_POST_DAY = 3    # edits to ONE listing per 24h
+# Photo replacements per ACCOUNT per 24h — deliberately not per post, unlike the
+# line above. A per-post cap would let one account spend thirty uploads a day
+# across ten listings, and an upload is the most expensive action a farmer can
+# take here: a Class A write against R2's 1M/month, or, if R2 is ever off,
+# bytes into a 60 MB slice of the database whose 0.5 GB ceiling turns the whole
+# site read-only when it fills. Counted from bazar_media_changes; see the model.
+MAX_MEDIA_CHANGES_PER_DAY = 3
 # The third limit of this set — how often the display name may change — belongs
 # to the same policy but is enforced where the name is written: see
 # NAME_CHANGE_COOLDOWN_DAYS in backend/routes/profile.py. Declaring it in both
@@ -345,8 +353,11 @@ def _post_to_dict(p: BazarPost, author: dict, liked: bool, is_mine: bool,
         # to edit it shows the place the farmer actually picked rather than
         # re-deriving it from the joined `location` string.
         "village":        p.village,
-        "lat":            p.lat,
-        "lon":            p.lon,
+        # The map pin is metre-precise — where his crop (often his home) is.
+        # Only the edit form needs it, and only he can edit, so only he gets
+        # it. Everyone else sees village / district, never the coordinates.
+        "lat":            p.lat if is_mine else None,
+        "lon":            p.lon if is_mine else None,
         "status":         p.status,
         "likes_count":    p.likes_count or 0,
         "comments_count": p.comments_count or 0,
@@ -841,26 +852,99 @@ def delete_post(
     if post.users_id != current_user["user_id"]:
         raise HTTPException(403, "सिर्फ अपना post delete कर सकते हैं।")
 
-    if post.media_url:
-        # Three eras of storage: R2 objects, rows in bazar_media (the interim
-        # store while R2 is deferred), and files on the local disk from before
-        # either (plus whatever a developer uploads offline). owns() picks the
-        # right one; all are best-effort, because a storage hiccup must never
-        # stop a farmer from removing his own listing.
-        if media_store.owns(post.media_url):
-            media_store.delete(post.media_url)
-        elif media_db.owns(post.media_url):
-            media_db.delete(post.media_url)
-        elif post.media_url.startswith("/uploads/"):
-            try:
-                (BAZAR_UPLOAD_DIR / Path(post.media_url).name).unlink(missing_ok=True)
-            except Exception:
-                pass
-    db.query(BazarLike).filter(BazarLike.post_id == post_id).delete()
-    db.query(BazarComment).filter(BazarComment.post_id == post_id).delete()
-    db.delete(post)
+    purge_post(db, post)
     db.commit()
     return {"success": True, "message": "Post delete हो गया।", "data": {}}
+
+
+def purge_post(db: Session, post: BazarPost) -> None:
+    """Remove one post and everything hanging off it. Does not commit.
+
+    The ONE removal path — the owner's delete above, the admin acting on a
+    report, and account deletion all come through here, so a new child table
+    only has to be taught to one function. Three eras of storage for the media
+    — R2 objects, rows in bazar_media, and files on a local disk from before
+    either — are _drop_media()'s job, shared with the photo-replace endpoint.
+    """
+    try:
+        _drop_media(post.media_url)
+    except Exception as e:                 # best effort: a storage hiccup must not keep the post up
+        log.warning("media drop failed for post %s: %s", post.id, e)
+    cids = [c for (c,) in db.query(BazarComment.id).filter(BazarComment.post_id == post.id).all()]
+    if cids:
+        db.query(BazarCommentLike).filter(BazarCommentLike.comment_id.in_(cids)) \
+          .delete(synchronize_session=False)
+    db.query(BazarComment).filter(BazarComment.post_id == post.id).delete(synchronize_session=False)
+    db.query(BazarLike).filter(BazarLike.post_id == post.id).delete(synchronize_session=False)
+    db.query(BazarMediaChange).filter(BazarMediaChange.post_id == post.id).delete(synchronize_session=False)
+    db.delete(post)
+
+
+# ── POST /bazar/posts/{id}/report — "रिपोर्ट करें" ────────────
+#
+# IT Rules 2021: an intermediary must give users a way to complain about what
+# others post, acknowledge within 24 hours and act within 15 days. A logged-in
+# reader picks a reason; the report lands in the admin's 🚩 queue and the first
+# one on a post emails the owner. Nothing is hidden automatically — a crowd
+# could otherwise take down an honest seller by reporting him in a group.
+
+REPORT_REASONS = {
+    "fraud":     "धोखाधड़ी / ठगी",
+    "fake":      "नकली या प्रतिबंधित सामान",
+    "wrong":     "गलत या भ्रामक जानकारी",
+    "abuse":     "अपमानजनक / अश्लील",
+    "identity":  "किसी और की फ़ोटो या पहचान",
+    "spam":      "स्पैम",
+    "other":     "अन्य",
+}
+_REPORTS_PER_DAY = 20
+
+
+class ReportRequest(BaseModel):
+    reason: str
+    note:   Optional[str] = None
+
+
+@router.post("/posts/{post_id}/report")
+def report_post(
+    post_id:      int,
+    body:         ReportRequest,
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    from backend.database.db import BazarReport
+    from backend.utils.security import check_daily_limit
+    uid = current_user["user_id"]
+    post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
+    if not post:
+        raise HTTPException(404, "Post नहीं मिला।")
+    if post.users_id == uid:
+        return {"success": False, "message": "अपनी पोस्ट रिपोर्ट नहीं कर सकते।", "data": {}}
+    if body.reason not in REPORT_REASONS:
+        return {"success": False, "message": "कारण चुनें।", "data": {}}
+    if db.query(BazarReport).filter(BazarReport.post_id == post_id,
+                                    BazarReport.users_id == uid).first():
+        return {"success": True, "message": "आपकी शिकायत पहले ही दर्ज है — हम जाँच कर रहे हैं।", "data": {}}
+    if check_daily_limit(f"bazar_report:{uid}", _REPORTS_PER_DAY) is not None:
+        return {"success": False, "message": "आज बहुत शिकायतें हो गईं — कल कोशिश करें।", "data": {}}
+
+    first = db.query(BazarReport).filter(BazarReport.post_id == post_id,
+                                         BazarReport.status == "open").count() == 0
+    db.add(BazarReport(post_id=post_id, users_id=uid, reason=body.reason,
+                       note=(body.note or "").strip()[:500] or None))
+    db.commit()
+    if first:
+        try:
+            from backend.services.infra_service import _mail
+            _mail("KrashiMitra: कृषि बाज़ार पोस्ट पर शिकायत",
+                  f"Post #{post_id} ({post.crop or ''}) — कारण: {REPORT_REASONS[body.reason]}\n"
+                  f"{(body.note or '').strip()[:300]}\n\n"
+                  "24 घंटे में देखें: /admin → 🚩 बाज़ार शिकायतें")
+        except Exception as e:
+            log.warning("report mail failed: %s", e)
+    return {"success": True,
+            "message": "शिकायत दर्ज हो गई। हम 24 घंटे में देखेंगे। धन्यवाद।",
+            "data": {}}
 
 
 # ── PATCH /bazar/posts/{id} — edit a listing ─────────────────
@@ -900,12 +984,13 @@ def edit_post(
     current_user: dict    = Depends(get_current_user),
     db:           Session = Depends(get_db),
 ):
-    """Edit your own listing — text and numbers only, never the media.
+    """Edit your own listing — text and numbers. The photo has its own door.
 
-    Media is deliberately out of scope: an upload here would write another file
-    to Render's ephemeral disk, which already loses every photo on redeploy.
-    Replacing a photo waits for object storage; until then the honest options
-    are keep it or delete the post.
+    This endpoint takes a JSON body, and a file upload cannot ride on one
+    without breaking that contract and every client and test built against it.
+    So replacing a photo is `POST /bazar/posts/{id}/media` below, which is
+    multipart and carries its own, separate daily limit — the two actions cost
+    different things and are rate-limited apart.
     """
     post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
     if not post:
@@ -1008,6 +1093,123 @@ def edit_post(
         "data": {
             "post": _post_to_dict(post, author, liked=False, is_mine=True),
             "edits_left": max(0, MAX_EDITS_PER_POST_DAY - post.edit_count),
+        },
+    }
+
+
+# ── POST /bazar/posts/{id}/media — replace the photo ─────────
+#
+# Asked for on 17 Sep 2026 and blocked until now for a real reason: a
+# replacement meant writing to Render's ephemeral disk, which is where every
+# photo this feature ever held went to die. R2 has been live since 18 Sep, so
+# the blocker is gone.
+#
+# Why it matters: re-shooting a listing used to mean deleting the post and
+# losing its likes, its comments and any offers on it. A farmer whose first
+# photo came out dark had to throw away the conversation to fix it.
+#
+# Three things this must get right, and they are the ones easy to skip:
+#   1. the OLD object is deleted, or every replacement leaks bytes into a free
+#      tier forever;
+#   2. the row moves only after the new bytes are safely stored — the reverse
+#      order leaves a listing pointing at nothing, which is the original bug;
+#   3. a failed upload costs nothing, so a farmer on a bad rural connection can
+#      retry without burning the day's three.
+
+def _media_changes_used(db: Session, users_id: int, now: datetime) -> int:
+    """Replacements by this account in the last rolling 24 hours."""
+    return db.query(func.count(BazarMediaChange.id)).filter(
+        BazarMediaChange.users_id == users_id,
+        BazarMediaChange.created_at >= now - timedelta(days=1),
+    ).scalar() or 0
+
+
+def _drop_media(url: Optional[str]) -> None:
+    """Forget the bytes behind a media URL, wherever they happen to live.
+
+    The same three eras delete_post() handles — R2 objects, rows in the
+    bazar_media interim store, and files on a local disk from before either.
+    Best effort throughout: a storage hiccup must not cost the farmer the new
+    photo he just uploaded, and a leaked object costs a fraction of a cent.
+    """
+    if not url:
+        return
+    try:
+        if media_store.owns(url):
+            media_store.delete(url)
+        elif media_db.owns(url):
+            media_db.delete(url)
+        elif url.startswith("/uploads/"):
+            (BAZAR_UPLOAD_DIR / Path(url).name).unlink(missing_ok=True)
+    except Exception:
+        log.warning("[bazar] could not drop old media %s", url, exc_info=True)
+
+
+@router.post("/posts/{post_id}/media")
+async def replace_post_media(
+    post_id:      int,
+    media:        UploadFile = File(...),
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    post = db.query(BazarPost).filter(BazarPost.id == post_id).first()
+    if not post:
+        raise HTTPException(404, "Post नहीं मिला।")
+    if post.users_id != current_user["user_id"]:
+        raise HTTPException(403, "सिर्फ अपनी listing की photo बदल सकते हैं।")
+
+    now  = datetime.utcnow()
+    used = _media_changes_used(db, post.users_id, now)
+    if used >= MAX_MEDIA_CHANGES_PER_DAY:
+        # When the window opened, so the wait is a real number rather than
+        # "try tomorrow" — the window is rolling, so tomorrow is wrong.
+        oldest = db.query(func.min(BazarMediaChange.created_at)).filter(
+            BazarMediaChange.users_id == post.users_id,
+            BazarMediaChange.created_at >= now - timedelta(days=1),
+        ).scalar()
+        mins_left = 1
+        if oldest:
+            mins_left = int((oldest + timedelta(days=1) - now).total_seconds() // 60) + 1
+        hrs, mins = divmod(max(1, mins_left), 60)
+        wait = f"{hrs} घंटे {mins} मिनट" if hrs else f"{mins} मिनट"
+        raise HTTPException(
+            429,
+            f"एक दिन में {MAX_MEDIA_CHANGES_PER_DAY} बार ही photo बदल सकते हैं। "
+            f"{wait} बाद फिर कोशिश करें।",
+        )
+
+    # Stored first, and only then written to the row. The other order — clear
+    # the row, then upload — is how a listing ends up pointing at nothing when
+    # the upload fails halfway, which is the exact bug this whole subsystem was
+    # built to end. _save_media raises an HTTPException carrying the Hindi
+    # message the farmer should see, so it is left to propagate; nothing has
+    # changed yet at that point and the attempt costs him none of his three.
+    old_url = post.media_url
+    new_url, media_type = await _save_media(media)
+
+    post.media_url  = new_url
+    post.media_type = media_type
+    post.updated_at = now
+    db.add(BazarMediaChange(users_id=post.users_id, post_id=post.id, created_at=now))
+    db.commit()
+    db.refresh(post)
+
+    # After the commit: the new photo is the farmer's now, and a failure to
+    # delete the old one must not undo that.
+    if old_url and old_url != new_url:
+        await run_in_threadpool(_drop_media, old_url)
+
+    author = _authors_for([post], db).get(post.users_id, {})
+    return {
+        "success": True,
+        # The word has to match what he actually replaced. The form is reachable
+        # for both (its accept= lists mp4/webm/mov), and telling a farmer his
+        # photo changed when he just swapped a video reads as the wrong listing
+        # having been touched.
+        "message": "✓ Video बदल गई।" if media_type == "video" else "✓ Photo बदल गई।",
+        "data": {
+            "post": _post_to_dict(post, author, liked=False, is_mine=True),
+            "media_changes_left": max(0, MAX_MEDIA_CHANGES_PER_DAY - (used + 1)),
         },
     }
 

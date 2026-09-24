@@ -150,6 +150,44 @@ def unplaceable(articles_dir=None) -> list:
     return out
 
 
+# A strip baked into a page keeps the look it had on the day it was written —
+# its own inline <style> and its own icons. restyle() brings every baked strip
+# up to ecosystem.py's current CSS and section photos without touching which
+# links it carries, so a change to the strip's look reaches all 184 pages from
+# the same --all run that builds them.
+_STYLE_RE = re.compile(r"<style>\s*\.km-journey\{.*?</style>", re.S)
+_ICO_RE = re.compile(r'(data-km-step="([a-z]+)"[^>]*>)'
+                     r'<span class="km-journey-ico" aria-hidden="true">.*?</span>', re.S)
+
+
+def restyle_html(doc: str) -> str:
+    if MARK not in doc:
+        return doc
+    doc = _STYLE_RE.sub(lambda m: f"<style>{ecosystem.CSS}</style>", doc, count=1)
+
+    def ico(m):
+        sec = ecosystem.SECTIONS.get(m.group(2))
+        img = ecosystem._ico(sec.icon) if sec else ""
+        return f'{m.group(1)}<span class="km-journey-ico" aria-hidden="true">{img}</span>'
+    doc = _ICO_RE.sub(ico, doc)
+    return doc.replace('<div class="km-journey-h"><strong>🧭 ',
+                       '<div class="km-journey-h"><strong>')
+
+
+def restyle(articles_dir=None, write: bool = True) -> list:
+    """Pages whose baked strip was out of date (and, with write, now is not)."""
+    d = pathlib.Path(articles_dir or (ROOT / "frontend" / "articles"))
+    changed = []
+    for p in sorted(d.glob("*.html")):
+        doc = p.read_text(encoding="utf-8", errors="replace")
+        new = restyle_html(doc)
+        if new != doc:
+            changed.append(p.stem)
+            if write:
+                p.write_text(new, encoding="utf-8")
+    return changed
+
+
 if __name__ == "__main__":
     import argparse
 

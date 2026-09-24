@@ -93,10 +93,23 @@ RENDER_BANDWIDTH_GB    = _envnum("RENDER_BANDWIDTH_GB", 5)        # Free/Hobby: 
 RENDER_INSTANCE_HOURS  = _envnum("RENDER_INSTANCE_HOURS", 750)    # Free: 750 h/mo, all free services
 NEON_COMPUTE_HOURS     = _envnum("NEON_COMPUTE_HOURS", 100)       # Free: 100 CU-hours/project/mo
 NEON_TRANSFER_GB       = _envnum("NEON_TRANSFER_GB", 5)           # Free: 5 GB egress/mo
+# R2 free tier. Egress is deliberately absent: it is unmetered, and that is the
+# entire reason listing photos live there instead of on Render's 5 GB meter.
+R2_STORAGE_GB          = _envnum("R2_STORAGE_GB", 10)             # Free: 10 GB-month
+R2_CLASS_A_OPS         = _envnum("R2_CLASS_A_OPS", 1_000_000)     # Free: 1M writes/mo
+R2_CLASS_B_OPS         = _envnum("R2_CLASS_B_OPS", 10_000_000)    # Free: 10M reads/mo
 
 STATUS_PAGES = {
     "netlify": ("https://www.netlifystatus.com/api/v2/status.json", "https://www.netlifystatus.com"),
     "render":  ("https://status.render.com/api/v2/status.json",     "https://status.render.com"),
+    # Cloudflare is deliberately NOT here, though it publishes the same API.
+    # Its status page covers the entire global network, and it reports a "minor"
+    # incident somewhere on it most days of the week — a WAF degradation in one
+    # PoP is not a bucket that stopped answering. Feeding that into _roll_up
+    # would hold the R2 card at warn permanently and put a false alarm in the
+    # daily email, which is how a panel teaches its owner to ignore it. _r2()
+    # reads the page itself and prints it as a fact, where it informs without
+    # voting. Same judgement as Neon above, for the opposite reason.
     # Neon publishes no JSON status API (neonstatus.com/api/v2/* is a 404), and
     # it would be misleading here anyway: through the read-only episodes the
     # dashboard reported "All OK" because the *service* was fine and only the
@@ -548,6 +561,18 @@ def _render_origin_probe() -> tuple[list, str, str]:
                 f"{RENDER_ORIGIN} पर कोई service ही नहीं मिल रही (no-server) — "
                 "या तो service बंद/suspend है, या hostname बदल गया है। "
                 "Netlify से homepage चलता रहेगा, पर हर proxied route 404/503।")
+    if "hibernate" in routing:
+        # `hibernate-pending-wake` is Render's edge answering 503 while a free
+        # instance spins back up — the same normal sleep the timeout branch
+        # above already refuses to call an outage, just caught a moment later.
+        # Without this it falls through to the >=500 check and the card reads
+        # "Render बंद है" for a backend that is fine, which is both how a
+        # status page stops being read and, since the daily check mails on a
+        # `down` verdict, how the alert itself becomes noise.
+        return (facts, "warn",
+                "Render की free instance सो गई थी और अभी जाग रही है "
+                "(hibernate-pending-wake) — पहली request ~50s ले सकती है। "
+                "यह outage नहीं है।")
     if r.status_code >= 500:
         return (facts, "down", f"Render origin पर HTTP {r.status_code}")
     if r.status_code >= 400:
@@ -897,9 +922,280 @@ def _neon() -> dict:
     return _roll_up(p)
 
 
+# ── Cloudflare R2 ────────────────────────────────────────────
+# Where every farmer's listing photo lives since 18 Sep 2026. It was added to
+# this panel on 22 Sep for the reason the panel exists: R2 free is three
+# separate allowances, and the site had no way to see any of them. When storage
+# fills, uploads start failing; when Class A runs out, the same; and a photo
+# that will not upload is the one thing a farmer notices immediately.
+#
+# Two credentials, and they are NOT interchangeable — the pair of confusions
+# this card is built to survive:
+#
+#   • the S3 key pair (R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY) already set for
+#     uploads. It can list the bucket, so STORAGE is measurable with no new
+#     setup at all.
+#   • a Cloudflare account API token (CLOUDFLARE_API_TOKEN). Only this can read
+#     the GraphQL analytics, so the two OPERATION meters need it. Its absence
+#     is reported as a gap in this card, never as a broken provider — the
+#     storage meter, which is the one that silently stops uploads, works
+#     without it.
+#
+# On the token screen in the Cloudflare dashboard the value to copy for THIS
+# variable is the "Token value" — the opposite of the R2 setup, where the
+# Token value is the wrong one and the Access Key ID / Secret is right. That
+# reversal has cost this project an afternoon before.
+
+# Cloudflare bills R2 operations in two classes and the API does not label them;
+# it returns raw action types. Anything not listed here is counted separately
+# and shown, rather than being folded into a class it might not belong to —
+# a miscounted Class A op is a meter that reads comfortable while uploads die.
+_R2_CLASS_A = {
+    "ListBuckets", "PutBucket", "ListObjects", "PutObject", "CopyObject",
+    "CompleteMultipartUpload", "CreateMultipartUpload", "ListMultipartUploads",
+    "UploadPart", "UploadPartCopy", "ListParts", "PutBucketEncryption",
+    "PutBucketCors", "PutBucketLifecycleConfiguration", "PutBucketStorageClass",
+    "LifecycleStorageTierTransition",
+}
+_R2_CLASS_B = {
+    "HeadBucket", "HeadObject", "GetObject", "UsageSummary",
+    "GetBucketEncryption", "GetBucketLocation", "GetBucketCors",
+    "GetBucketLifecycleConfiguration",
+}
+# DeleteObject / DeleteBucket are free on both classes, so they are neither.
+
+_R2_OPS_QUERY = """
+query($account: String!, $bucket: String!, $start: Date!, $end: Date!) {
+  viewer {
+    accounts(filter: {accountTag: $account}) {
+      r2OperationsAdaptiveGroups(
+        limit: 500,
+        filter: {date_geq: $start, date_leq: $end, bucketName: $bucket}
+      ) { sum { requests } dimensions { actionType } }
+    }
+  }
+}
+"""
+
+
+def _graphql(token: str, query: str, variables: dict):
+    """(data, error) from Cloudflare's GraphQL analytics. Never raises.
+
+    Separate from _get because that one only speaks GET, and because GraphQL
+    answers HTTP 200 with an `errors` array — a status-code check alone would
+    read a permission failure as a successful empty result and paint a meter
+    at 0%.
+    """
+    try:
+        r = requests.post(
+            "https://api.cloudflare.com/client/v4/graphql",
+            headers={**UA, "Authorization": f"Bearer {token}",
+                     "Content-Type": "application/json"},
+            json={"query": query, "variables": variables},
+            timeout=HTTP_TIMEOUT,
+        )
+    except Exception as e:
+        return None, f"{type(e).__name__}: {str(e)[:120]}"
+    if r.status_code in (401, 403):
+        return None, f"HTTP {r.status_code} — the API token was refused"
+    if r.status_code >= 400:
+        return None, f"HTTP {r.status_code}: {r.text[:120]}"
+    try:
+        body = r.json()
+    except ValueError:
+        return None, "the response was not JSON"
+    if body.get("errors"):
+        msg = (body["errors"][0] or {}).get("message", "unknown GraphQL error")
+        return None, str(msg)[:160]
+    return body.get("data"), ""
+
+
+def _media_db_meter() -> dict | None:
+    """The Postgres fallback store, as a meter.
+
+    While R2 was deferred for want of a payment method, photos went into
+    `bazar_media` under a 60 MB cap — and that cap was invisible until the day
+    it would have started 503ing uploads. R2 is live now and the table is empty,
+    so this returns None and the card stays about R2. It is kept because the
+    fallback is still wired: if the five R2_* variables ever go missing, uploads
+    silently resume filling Neon's 0.5 GB ceiling, and that must show up here on
+    the same day rather than as a read-only database a fortnight later.
+    """
+    try:
+        from backend.services import media_db
+        used = media_db.total_bytes()
+    except Exception:
+        return None
+    if not used:
+        return None
+    return _meter(
+        "media_db", "Postgres fallback (अंतरिम store)", used,
+        media_db.MAX_TOTAL_BYTES, "bytes", None,
+        "R2 बंद होने पर फोटो सीधे Neon में जाती हैं। यह cap भर गया तो upload "
+        "रुक जाएगा — और उससे पहले ही Neon का 0.5 GB भर सकता है, जो पूरी site "
+        "को read-only कर देता है।")
+
+
+def _cloudflare_status_fact() -> list | None:
+    """Cloudflare's own status, as a line to read rather than a vote.
+
+    See the note in STATUS_PAGES: this deliberately does not go through
+    _platform_status, because a global network that is always slightly on fire
+    somewhere must not be able to colour this card.
+    """
+    data, err = _get("https://www.cloudflarestatus.com/api/v2/status.json")
+    if err or not isinstance(data, dict):
+        return None
+    st = data.get("status") or {}
+    desc = st.get("description") or "—"
+    mark = "✅" if st.get("indicator") == "none" else "⚠"
+    return ["Cloudflare network", f"{mark} {desc}"]
+
+
+def _r2() -> dict:
+    from backend.services import media_store
+
+    links = [["Cloudflare R2", "https://dash.cloudflare.com/?to=/:account/r2/overview"],
+             ["Cloudflare status", "https://www.cloudflarestatus.com"]]
+    fallback = _media_db_meter()
+
+    if not media_store.enabled():
+        card = _off("r2", "Cloudflare R2 — फोटो store", "📦",
+                    "R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / "
+                    "R2_BUCKET / R2_PUBLIC_BASE",
+                    "https://dash.cloudflare.com/?to=/:account/r2/overview",
+                    "R2 → Manage API tokens → Object Read & Write. Access Key "
+                    "ID और Secret Access Key copy करें (ऊपर दिखने वाला \"Token "
+                    "value\" नहीं — वह Cloudflare के अपने API के लिए है)। पाँचों "
+                    "Render → Environment में डालें; एक भी खाली रहा तो R2 बंद "
+                    "रहता है और फोटो Postgres में जाती हैं।", links)
+        if fallback:
+            card["meters"].append(fallback)
+            card["status"] = "warn"
+            card["detail"] = ("R2 बंद है — फोटो Neon Postgres में जा रही हैं "
+                              f"({fallback['used_txt']} / {fallback['included_txt']})")
+        return _roll_up(card)
+
+    p = {"key": "r2", "label": "Cloudflare R2 — फोटो store", "icon": "📦",
+         "status": "ok", "configured": True, "detail": "", "setup": {},
+         "platform": {}, "meters": [], "facts": [],
+         "links": links, "error": ""}
+    if fallback:
+        p["meters"].append(fallback)
+
+    # ── 1. Storage, counted with the credentials already set.
+    u = media_store.usage()
+    if u["ok"]:
+        # No period, so no projection: storage accumulates across months rather
+        # than resetting with one, and dividing today's total by the days so far
+        # this month would invent a burn rate out of bytes uploaded in August.
+        p["meters"].append(_meter(
+            "storage", "Storage", u["bytes"], R2_STORAGE_GB * GB, "bytes", None,
+            "भरते ही नई फोटो upload होना बंद। हर फोटो सर्वर पर ≤1600px WebP में "
+            "बदली जाती है (~200 KB), इसलिए 10 GB में ~50,000 फोटो आती हैं।"))
+        p["facts"].append(["Objects", f"{u['objects']:,}" + (" +" if u["truncated"] else "")])
+        if u["objects"]:
+            p["facts"].append(["औसत size", _bytes(u["bytes"] / u["objects"])])
+        if u["truncated"]:
+            p["facts"].append(["⚠ गिनती अधूरी",
+                               f"पहली {media_store.LIST_MAX_PAGES * 1000:,} objects तक ही गिना गया"])
+    else:
+        p["error"] = u["error"]
+        _worse(p, "unknown", f"R2 bucket पढ़ा नहीं जा सका — {u['error'][:100]}")
+
+    p["facts"].append(["Bucket", os.getenv("R2_BUCKET", "—").strip() or "—"])
+    p["facts"].append(["Public host", os.getenv("R2_PUBLIC_BASE", "—").strip() or "—"])
+    p["facts"].append(["Egress", "मुफ़्त, unmetered — Render के 5 GB meter पर नहीं चढ़ता"])
+    cf = _cloudflare_status_fact()
+    if cf:
+        p["facts"].append(cf)
+
+    # ── 2. Operations, which need the other credential.
+    token = os.getenv("CLOUDFLARE_API_TOKEN", "").strip()
+    account = os.getenv("R2_ACCOUNT_ID", "").strip()
+    bucket = os.getenv("R2_BUCKET", "").strip()
+    if not token:
+        p["setup"] = {
+            "env": "CLOUDFLARE_API_TOKEN",
+            "where": "https://dash.cloudflare.com/profile/api-tokens",
+            "how": "My Profile → API Tokens → Create Token → permissions "
+                   "Account · Account Analytics · Read और Account · Workers R2 "
+                   "Storage · Read. यहाँ \"Token value\" ही copy करना है (R2 के "
+                   "Access Key वाला नहीं)। Render → Environment में "
+                   "CLOUDFLARE_API_TOKEN के नाम से डालें। इसके बिना ऊपर वाला "
+                   "storage तो दिखता है, पर हर महीने की read/write गिनती नहीं।",
+        }
+        p["facts"].append(["Class A/B operations",
+                           "CLOUDFLARE_API_TOKEN के बिना नहीं दिख सकता"])
+    elif not (account and bucket):
+        p["facts"].append(["Class A/B operations",
+                           "R2_ACCOUNT_ID / R2_BUCKET के बिना नहीं पूछ सकते"])
+    else:
+        start, end = _month_window()
+        data, err = _graphql(token, _R2_OPS_QUERY, {
+            "account": account, "bucket": bucket,
+            "start": start.strftime("%Y-%m-%d"),
+            "end": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        })
+        groups = None
+        if isinstance(data, dict):
+            accounts = ((data.get("viewer") or {}).get("accounts")) or []
+            if accounts:
+                groups = accounts[0].get("r2OperationsAdaptiveGroups")
+        if groups is None:
+            p["facts"].append(["Class A/B operations",
+                               err or "Cloudflare ने इस bucket का कोई आंकड़ा नहीं दिया"])
+            if err:
+                p["error"] = p["error"] or err
+        else:
+            a = b = 0
+            unknown: dict[str, int] = {}
+            for g in groups:
+                action = ((g.get("dimensions") or {}).get("actionType")) or ""
+                n = int(((g.get("sum") or {}).get("requests")) or 0)
+                if action in _R2_CLASS_A:
+                    a += n
+                elif action in _R2_CLASS_B:
+                    b += n
+                elif n:
+                    unknown[action or "—"] = unknown.get(action or "—", 0) + n
+            p["meters"].append(_meter(
+                "class_a", "Class A ops (लिखना)", a, R2_CLASS_A_OPS, "count",
+                (start, end),
+                "हर upload एक Class A है। खत्म होते ही नई फोटो डालना बंद।"))
+            p["meters"].append(_meter(
+                "class_b", "Class B ops (पढ़ना)", b, R2_CLASS_B_OPS, "count",
+                (start, end),
+                "फोटो दिखना। Cloudflare edge पर cache होने से ज़्यादातर बार "
+                "R2 तक पहुँचता ही नहीं, इसलिए यह meter feed views से बहुत "
+                "धीमे चढ़ता है।"))
+            if unknown:
+                # Named rather than silently dropped: Cloudflare adds action
+                # types, and an unrecognised one is a meter reading low for a
+                # reason nobody would ever go looking for.
+                p["facts"].append(["वर्गीकृत नहीं", ", ".join(
+                    f"{k} ({v:,})" for k, v in sorted(unknown.items(),
+                                                      key=lambda kv: -kv[1])[:4])])
+            p["facts"].append(["अगला reset", _ist(end)])
+
+    if not p["detail"]:
+        worst = max((m for m in p["meters"] if m["pct"] is not None),
+                    key=lambda m: m["pct"], default=None)
+        p["detail"] = (f"{worst['label']} {worst['pct']}% "
+                       f"({worst['used_txt']} / {worst['included_txt']})"
+                       if worst else "आंकड़े मिल गए")
+    return _roll_up(p)
+
+
 # ── the runner ───────────────────────────────────────────────
 
-_PROBES = (("netlify", _netlify), ("render", _render), ("neon", _neon))
+# Netlify was retired on 16 Sep 2026 — Cloudflare DNS points straight at
+# Render and there is one origin. _netlify() is kept because the account
+# still exists and the probe is the only written record of how its usage
+# endpoints work, but it is no longer polled: a card that can only ever
+# say "set NETLIFY_AUTH_TOKEN" for a service we do not use is noise on a
+# page whose whole job is to be scanned quickly.
+_PROBES = (("render", _render), ("neon", _neon), ("r2", _r2))
 
 
 def _verdict(providers: list[dict]) -> dict:
@@ -1013,7 +1309,96 @@ def run(use_cache: bool = True) -> dict:
     return payload
 
 
+# ── the watch: this file's numbers, without anyone opening the page ──
+#
+# Shipped 21 Sep 2026 in 3c31404 and lost the same night: 7629f06 re-committed
+# an older copy of this file over it, which is why it is worth saying here that
+# it exists. That revert also silently took back the hibernate branch in
+# _render_origin_probe and put retired Netlify back into _PROBES. Restored
+# 22 Sep together with the R2 card, because a card nobody is mailed about is a
+# card nobody reads — which is the failure this section exists to fix.
+
+# A meter this close to running out inside its own billing period is worth
+# waking someone for. Below it, the page is enough.
+ALERT_DAYS_LEFT = float(os.getenv("INFRA_ALERT_DAYS", "10"))
+
+# Where the warning goes. Same ladder as db_health_service, so one env var
+# configures both and a half-set environment still reaches somebody.
+ALERT_EMAIL = (os.getenv("INFRA_ALERT_EMAIL")
+               or os.getenv("DB_ALERT_EMAIL")
+               or os.getenv("ALERT_EMAIL")
+               or os.getenv("RESEND_FROM_EMAIL")
+               or "").strip()
+
+_last_alert: str = ""       # so a standing problem mails once, not every day
+
+
+def _alert_key(v: dict, risks: list) -> str:
+    """What is wrong, coarsely — the alert re-sends only when this changes."""
+    return "|".join([v.get("status", "")] +
+                    sorted(f"{r['provider']}:{r['meter']}" for r in risks))
+
+
+def run_check(alert: bool = True) -> dict:
+    """Scheduled entry point. Runs the same probe the admin page runs, and
+    stays silent unless something is actually about to break.
+
+    The panel was built after the third quota outage, and then went unread —
+    which is the failure mode of every dashboard that has to be opened. The
+    numbers only protect anything if they come to you, so this is the part
+    that matters: a daily probe that says nothing on a normal day.
+    """
+    global _last_alert
+    payload = run(use_cache=False)
+    v = payload.get("verdict") or {}
+    risks = [r for r in (v.get("at_risk") or [])
+             if r.get("days_left") is not None and r["days_left"] <= ALERT_DAYS_LEFT]
+    down = v.get("status") == "down"
+
+    if not (down or risks):
+        if _last_alert:
+            logger.info("✅ infra: everything back inside its allowance")
+            _last_alert = ""
+        else:
+            logger.info(f"infra ok — {v.get('headline', '')}")
+        return payload
+
+    key = _alert_key(v, risks)
+    logger.warning(f"⚠️ infra: {v.get('headline', '')} — {v.get('sub', '')}")
+    if alert and key != _last_alert:
+        lines = [v.get("headline", ""), "", v.get("sub", ""), ""]
+        for r in risks:
+            lines.append(f"• {r['provider']} — {r['meter']}: "
+                         f"{r['days_left']:.0f} दिन बाकी ({r['pct']}%)")
+        lines += ["", "पूरा हिसाब: /admin → Infra & Credits"]
+        _mail("KrashiMitra: एक free-tier सीमा खत्म होने वाली है"
+              if not down else "KrashiMitra: एक सेवा बंद है",
+              "\n".join(lines))
+    _last_alert = key
+    return payload
+
+
+def _mail(subject: str, body: str) -> None:
+    if not ALERT_EMAIL:
+        logger.warning("infra alert not sent — set INFRA_ALERT_EMAIL (or ALERT_EMAIL)")
+        return
+    try:
+        from backend.utils.auth_utils import _send_with_resend
+        if _send_with_resend(ALERT_EMAIL, subject, body):
+            logger.info(f"📧 infra alert mailed to {ALERT_EMAIL}")
+        else:
+            logger.warning("infra alert email failed to send")
+    except Exception as e:
+        logger.warning(f"infra alert email failed: {e}")
+
+
 if __name__ == "__main__":
+    # `python -m backend.services.infra_service` — the same probe the
+    # daily job runs, without sending mail. Windows consoles are cp1252
+    # and the labels are Devanagari, so write bytes rather than let
+    # print() die on an encoding the numbers do not depend on.
     import json
+    import sys
     logging.basicConfig(level=logging.INFO)
-    print(json.dumps(run(use_cache=False), indent=2, ensure_ascii=False))
+    out = json.dumps(run_check(alert=False), indent=2, ensure_ascii=False)
+    sys.stdout.buffer.write(out.encode("utf-8", "replace") + b"\n")

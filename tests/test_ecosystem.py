@@ -364,3 +364,15 @@ def test_the_strip_is_empty_rather_than_half_built():
     offer" has to be the empty string, not a heading with no cards under it."""
     ctx = E.Ctx(section="bhav", lang="zz", canon=f"{SITE}/bhav")
     assert E.journey_html(ctx) == ""
+
+
+def test_every_section_photo_ships():
+    """The strip's section icons are real files under frontend/images/journey.
+    A missing one would answer 200 + HTML (see missing-static-files memory) and
+    render as a broken circle on every page, so check the disk, not a request."""
+    from pathlib import Path
+    from backend.services import ecosystem
+    front = Path(__file__).resolve().parents[1] / "frontend"
+    for sec in ecosystem.SECTIONS.values():
+        assert sec.icon.startswith("/images/journey/"), sec
+        assert (front / sec.icon.lstrip("/")).is_file(), f"missing {sec.icon}"

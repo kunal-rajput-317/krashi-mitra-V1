@@ -2,11 +2,13 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import shutil, secrets, json
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 router   = APIRouter(prefix="/admin")
@@ -21,10 +23,37 @@ UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 
-def require_admin(creds: HTTPBasicCredentials = Depends(security)):
+# Brute-force lockout. The panel holds every farmer's phone number and every
+# payment, so a password guesser must not get unlimited tries. Only FAILED
+# attempts count: the panel fires dozens of authenticated requests per page,
+# and those must never lock the owner out.
+_ADMIN_FAIL_LIMIT = 10
+_ADMIN_FAIL_WINDOW = 15 * 60          # seconds
+_admin_fails: dict = {}
+
+
+def _admin_locked(ip: str, now: float) -> bool:
+    fails = [t for t in _admin_fails.get(ip, []) if now - t < _ADMIN_FAIL_WINDOW]
+    if fails:
+        _admin_fails[ip] = fails
+    else:
+        _admin_fails.pop(ip, None)
+    return len(fails) >= _ADMIN_FAIL_LIMIT
+
+
+def require_admin(request: Request, creds: HTTPBasicCredentials = Depends(security)):
+    import time
+    from backend.utils.security import client_ip
+    ip, now = client_ip(request), time.time()
+    if _admin_locked(ip, now):
+        raise HTTPException(429, "बहुत ज़्यादा गलत पासवर्ड — 15 मिनट बाद कोशिश करें।",
+                            headers={"Retry-After": str(_ADMIN_FAIL_WINDOW)})
     ok_user = secrets.compare_digest(creds.username.encode(), ADMIN_USER.encode())
     ok_pass = secrets.compare_digest(creds.password.encode(), ADMIN_PASS.encode())
     if not (ok_user and ok_pass):
+        if len(_admin_fails) > 5000:          # bound the dict against spoofed IPs
+            _admin_fails.clear()
+        _admin_fails.setdefault(ip, []).append(now)
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials",
@@ -154,6 +183,16 @@ def infra(refresh: int = Query(0, ge=0, le=1), _: str = Depends(require_admin)):
     """
     from backend.services import infra_service
     return {"success": True, **infra_service.run(use_cache=not refresh)}
+
+
+@router.get("/bandwidth")
+def bandwidth(days: int = Query(7, ge=1, le=62), _: str = Depends(require_admin)):
+    """Where Render's outbound bandwidth goes: bytes this origin sent, by site
+    section and by requester (googlebot, gptbot, human…). Everything counted
+    here is something Cloudflare did not serve from cache — i.e. exactly what
+    Render meters against the 5 GB/month cap. See services/bandwidth_meter.py."""
+    from backend.services import bandwidth_meter
+    return {"success": True, **bandwidth_meter.report(days)}
 
 
 # ── Index gate (which /bhav pages Google is allowed to keep) ───
@@ -881,6 +920,323 @@ async def list_admin_alerts(
     return {"success": True, "total": len(out),
             "with_account": sum(1 for r in out if not r["pre_gate"]),
             "alerts": out}
+
+
+# ── 🔔 Alert system control ───────────────────────────────────
+# The subscriber table above answers "who signed up". These answer "is any of
+# it working", which is the question that went unasked for 57 days while
+# push_enabled() was missing and every run died silently.
+
+@router.get("/alerts/health")
+async def alerts_health(
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Delivery health for the 🔔 system, in one call.
+
+    `ever_notified` is the number that matters. Alerts and devices both climbed
+    into the seventies while it sat at zero, and nothing on the panel said so —
+    the subscriber list looked healthy because every row in it was real."""
+    from sqlalchemy import text as _sql
+    from backend.services.app_settings import get_all
+    from backend.services.push_service import (
+        MIN_MOVE_PCT, MIN_MOVE_RS, push_enabled)
+
+    def _one(sql):
+        try:
+            return db.execute(_sql(sql)).scalar()
+        except Exception:
+            return None
+
+    active   = int(_one("SELECT count(*) FROM mandi_alerts WHERE active") or 0)
+    total    = int(_one("SELECT count(*) FROM mandi_alerts") or 0)
+    devices  = int(_one("SELECT count(*) FROM push_subscriptions WHERE active") or 0)
+    dead     = int(_one("SELECT count(*) FROM push_subscriptions WHERE NOT active") or 0)
+    ever     = int(_one("SELECT count(*) FROM mandi_alerts "
+                        "WHERE last_notified_on IS NOT NULL") or 0)
+    today_n  = int(_one("SELECT count(*) FROM mandi_alerts "
+                        "WHERE last_notified_on = CURRENT_DATE") or 0)
+    last     = _one("SELECT max(last_notified_on) FROM mandi_alerts")
+    # Alerts whose owner has no reachable device — subscribed, undeliverable.
+    orphan   = int(_one("""
+        SELECT count(*) FROM mandi_alerts a
+         WHERE a.active
+           AND NOT EXISTS (
+                 SELECT 1 FROM push_subscriptions s
+                  WHERE s.active
+                    AND (CASE WHEN a.user_id IS NULL
+                              THEN s.id = a.subscription_id
+                              ELSE s.user_id = a.user_id END))""") or 0)
+
+    cfg = get_all()
+    return {
+        "success": True,
+        "vapid_configured": push_enabled(),
+        "settings": cfg,
+        "defaults": {"min_move_rs": MIN_MOVE_RS, "min_move_pct": MIN_MOVE_PCT},
+        "stats": {
+            "alerts_active":    active,
+            "alerts_total":     total,
+            "devices_active":   devices,
+            "devices_dead":     dead,
+            "ever_notified":    ever,
+            "notified_today":   today_n,
+            "never_notified":   active - ever if active > ever else 0,
+            "undeliverable":    orphan,
+            "last_delivery":    last.isoformat() if hasattr(last, "isoformat") else (last or None),
+        },
+    }
+
+
+class AlertSettingsIn(BaseModel):
+    sending_enabled: Optional[bool]  = None
+    bell_visible:    Optional[bool]  = None
+    min_move_rs:     Optional[float] = None
+    min_move_pct:    Optional[float] = None
+
+
+@router.post("/alerts/settings")
+async def alerts_settings(
+    body: AlertSettingsIn,
+    who:  str = Depends(require_admin),
+):
+    """Change how the bell behaves, without a deploy.
+
+    Only the fields actually sent are written, so the panel can toggle one
+    switch without having to echo back the rest of the form and risk clobbering
+    a value somebody else just changed."""
+    from backend.services.app_settings import set_many
+
+    mapping = {
+        "alerts.sending_enabled": body.sending_enabled,
+        "alerts.bell_visible":    body.bell_visible,
+        "alerts.min_move_rs":     body.min_move_rs,
+        "alerts.min_move_pct":    body.min_move_pct,
+    }
+    values = {k: v for k, v in mapping.items() if v is not None}
+    if not values:
+        raise HTTPException(400, "कुछ बदलने को नहीं मिला।")
+    return {"success": True, "settings": set_many(values, who=str(who))}
+
+
+@router.post("/alerts/run")
+async def alerts_run(_: str = Depends(require_admin)):
+    """Run the alert pass now, instead of waiting for the next fetch sweep.
+
+    This DELIVERS to real phones. It is the same function the scheduler calls,
+    including the once-a-day and minimum-move dedupes, so pressing it twice in
+    a row sends nothing the second time."""
+    from backend.services.push_service import run_mandi_alerts
+    return {"success": True, "result": run_mandi_alerts()}
+
+
+@router.post("/alerts/test")
+async def alerts_test(
+    user_id: Optional[int] = Query(None, description="Send to this account's devices; omit for the newest device"),
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """Send one obviously-labelled test notification.
+
+    Marked as a test in the body itself. A test push that looked like a real
+    bhav alert would be indistinguishable from the thing it is testing, and a
+    farmer acting on a made-up price is the one outcome this system must never
+    produce — so it carries no number at all."""
+    from backend.database.db import PushSubscription
+    from backend.services.push_service import push_enabled, send_push
+
+    if not push_enabled():
+        raise HTTPException(503, "VAPID कुंजी कॉन्फ़िगर नहीं — कुछ नहीं भेजा जा सकता।")
+
+    q = db.query(PushSubscription).filter(PushSubscription.active.is_(True))
+    if user_id is not None:
+        q = q.filter(PushSubscription.user_id == user_id)
+    devices = q.order_by(PushSubscription.id.desc()).limit(5).all()
+    if not devices:
+        raise HTTPException(404, "कोई चालू डिवाइस नहीं मिला।")
+
+    payload = {
+        "title": "KrashiMitra — टेस्ट सूचना",
+        "body":  "यह जाँच के लिए भेजी गई है। कोई भाव नहीं बदला।",
+        "url":   "https://krashimitra.in/bhav",
+        "tag":   "bhav-test",
+    }
+    ok = sum(1 for d in devices if send_push(db, d, payload))
+    db.commit()
+    return {"success": ok > 0, "sent": ok, "tried": len(devices),
+            "message": f"{ok}/{len(devices)} डिवाइस पर टेस्ट भेजा गया।"}
+
+
+# ── 🔔 Custom broadcast ───────────────────────────────────────
+
+class BroadcastIn(BaseModel):
+    title:     str
+    body:      str
+    url:       Optional[str] = None
+    audience:  str = "alerts"            # 'alerts' (has a 🔔) or 'all' (any device)
+    commodity: Optional[str] = None
+    state:     Optional[str] = None
+    district:  Optional[str] = None
+    dry:       bool = True               # preview by default — see the docstring
+    # The recipient count the operator was shown when they pressed preview. A
+    # send whose real audience differs is refused rather than delivered.
+    expect_recipients: Optional[int] = None
+
+
+# Notification text is truncated by the OS, not by us, and a cut-off sentence
+# reads as a broken app. These are the practical limits across Android Chrome.
+TITLE_MAX = 60
+BODY_MAX  = 180
+
+
+def _broadcast_devices(db, b: BroadcastIn):
+    """The distinct devices a broadcast would reach.
+
+    Deduplicated by endpoint: a farmer with three 🔔s that all match the filter
+    is one person and must receive one notification, not three."""
+    from backend.database.db import MandiAlert, PushSubscription
+
+    q = db.query(PushSubscription).filter(PushSubscription.active.is_(True))
+
+    if b.audience == "all":
+        return q.all()
+
+    # 'alerts' — only farmers who actually asked for bhav notifications, and
+    # optionally only those watching a particular crop or place. An alert
+    # reaches its account's devices when it has one, else the device that
+    # created it (the same rule push_service._devices_for uses).
+    a = db.query(MandiAlert).filter(MandiAlert.active.is_(True))
+    if b.commodity:
+        a = a.filter(MandiAlert.commodity == b.commodity.strip())
+    if b.state:
+        a = a.filter(MandiAlert.state == b.state.strip())
+    if b.district:
+        a = a.filter(MandiAlert.district == b.district.strip())
+    alerts = a.all()
+    if not alerts:
+        return []
+
+    uids = {x.user_id for x in alerts if x.user_id is not None}
+    sids = {x.subscription_id for x in alerts if x.user_id is None}
+
+    from sqlalchemy import or_
+    conds = []
+    if uids:
+        conds.append(PushSubscription.user_id.in_(uids))
+    if sids:
+        conds.append(PushSubscription.id.in_(sids))
+    if not conds:
+        return []
+    return q.filter(or_(*conds)).all()
+
+
+def _price_claim_warning(text: str) -> Optional[str]:
+    """Flag a hand-typed rupee figure. Advisory, never a block.
+
+    Every other number this site publishes comes from the feed and carries its
+    own date. A broadcast is the one place a price can be typed from memory and
+    land on 70 lock screens with our name on it, where it is indistinguishable
+    from a real bhav alert. The operator may well have a good reason — so this
+    warns and lets them proceed, rather than deciding for them."""
+    if re.search(r"[₹]\s*\d|\b\d{3,}\s*(रु|रुपये|/क्विं)", text or ""):
+        return ("इसमें एक भाव लिखा है जो हमारे डेटा से नहीं आया — "
+                "भेजने से पहले जाँच लें कि यह सही और आज का है।")
+    return None
+
+
+@router.post("/alerts/broadcast")
+async def alerts_broadcast(
+    body: BroadcastIn,
+    who:  str     = Depends(require_admin),
+    db:   Session = Depends(admin_db),
+):
+    """Send a hand-written notification to subscribers.
+
+    Two-step by design: `dry: true` (the default) resolves the audience and
+    returns the count and a sample WITHOUT sending, and the real call must echo
+    that count back as `expect_recipients`. A broadcast cannot be unsent, and
+    the gap between "I think this goes to Raisen" and "this goes to everyone"
+    is one unticked checkbox — so the count the operator saw has to match the
+    count the server is about to deliver to, or nothing goes out.
+
+    Deliberately NOT routed through run_mandi_alerts(): this must ignore quiet
+    hours, the once-a-day dedupe and the minimum-move rule, all of which exist
+    to stop *automated* price pushes being noisy. A person deciding to send a
+    specific message has already made that judgement."""
+    from backend.database.db import PushBroadcast
+    from backend.services.push_service import push_enabled, send_push
+
+    title = (body.title or "").strip()
+    text  = (body.body or "").strip()
+    if not title or not text:
+        raise HTTPException(400, "शीर्षक और संदेश दोनों चाहिए।")
+    if len(title) > TITLE_MAX:
+        raise HTTPException(400, f"शीर्षक {TITLE_MAX} अक्षर से छोटा रखें।")
+    if len(text) > BODY_MAX:
+        raise HTTPException(400, f"संदेश {BODY_MAX} अक्षर से छोटा रखें।")
+    if body.audience not in ("alerts", "all"):
+        raise HTTPException(400, "audience 'alerts' या 'all' होना चाहिए।")
+
+    devices = _broadcast_devices(db, body)
+    warning = _price_claim_warning(title + " " + text)
+
+    if body.dry:
+        # Who, concretely — a count alone does not tell an operator whether the
+        # filter did what they meant.
+        sample = [{"user_id": d.user_id,
+                   "endpoint": (d.endpoint or "")[:48] + "…"} for d in devices[:5]]
+        return {"success": True, "dry": True, "recipients": len(devices),
+                "sample": sample, "warning": warning,
+                "message": (f"{len(devices)} डिवाइस पर जाएगा।" if devices
+                            else "इस फ़िल्टर पर कोई डिवाइस नहीं मिला।")}
+
+    if not push_enabled():
+        raise HTTPException(503, "VAPID कुंजी कॉन्फ़िगर नहीं — कुछ नहीं भेजा जा सकता।")
+    if not devices:
+        raise HTTPException(404, "इस फ़िल्टर पर कोई डिवाइस नहीं मिला।")
+    if body.expect_recipients is None:
+        raise HTTPException(400, "पहले प्रीव्यू करें — expect_recipients चाहिए।")
+    if body.expect_recipients != len(devices):
+        raise HTTPException(409,
+            f"पहले {body.expect_recipients} डिवाइस दिखे थे, अब {len(devices)} हैं — "
+            "फिर से प्रीव्यू करके भेजें।")
+
+    payload = {"title": title, "body": text,
+               "url": (body.url or "").strip() or "https://krashimitra.in/bhav",
+               # Its own tag, so a broadcast never replaces a price alert
+               # sitting in the tray (they share one tag per crop otherwise).
+               "tag": "km-broadcast"}
+    ok = sum(1 for d in devices if send_push(db, d, payload))
+
+    db.add(PushBroadcast(title=title, body=text, url=payload["url"],
+                         audience=body.audience, commodity=body.commodity,
+                         state=body.state, district=body.district,
+                         devices=len(devices), sent=ok, sent_by=str(who)[:120]))
+    db.commit()
+    return {"success": ok > 0, "sent": ok, "tried": len(devices),
+            "warning": warning,
+            "message": f"{ok}/{len(devices)} डिवाइस पर भेजा गया।"}
+
+
+@router.get("/alerts/broadcasts")
+async def alerts_broadcast_history(
+    limit: int = Query(25, ge=1, le=100),
+    _:  str     = Depends(require_admin),
+    db: Session = Depends(admin_db),
+):
+    """What we have already told farmers. Answers "did I send this yesterday?"
+    before the operator sends it again."""
+    from backend.database.db import PushBroadcast
+    rows = (db.query(PushBroadcast)
+              .order_by(PushBroadcast.created_at.desc())
+              .limit(limit).all())
+    return {"success": True, "total": len(rows), "broadcasts": [{
+        "id": r.id, "title": r.title, "body": r.body, "url": r.url,
+        "audience": r.audience,
+        "target": ", ".join(x for x in [r.commodity, r.district, r.state] if x) or "everyone",
+        "devices": r.devices, "sent": r.sent, "sent_by": r.sent_by,
+        "created_at": r.created_at.isoformat() if r.created_at else "",
+    } for r in rows]}
 
 
 @router.put("/orders/{tracking_code}/quote")

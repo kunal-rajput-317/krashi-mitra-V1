@@ -55,6 +55,13 @@ def _run():
             mk.refresh()
         except Exception as e:
             logger.warning("media kit refresh raised, continuing: %s", e)
+        # With today's figures in hand: has traffic outgrown the sponsor
+        # prices? Emails the owner once per growth step (services/sponsors.py).
+        try:
+            from backend.services import sponsors
+            sponsors.price_review_check()
+        except Exception as e:
+            logger.warning("sponsor price review raised, continuing: %s", e)
 
 
 def _register_job():

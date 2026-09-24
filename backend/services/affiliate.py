@@ -56,9 +56,13 @@ BLOCK_MAX = 4     # cards per block — four fills one phone-width shelf
 # so /product and /bhav can never drift into saying different things about the
 # same commercial relationship — and so a page that carries an affiliate link
 # without this string is a test failure, not a judgement call.
+# The English sentence is Amazon's own required wording — the Associates
+# Operating Agreement asks for it verbatim, and a Hindi paraphrase alone does not
+# satisfy it (the account can be closed and unpaid commission withheld).
 AFFILIATE_NOTE = ("Amazon और Flipkart के लिंक एफ़िलिएट लिंक हैं — "
                   "उनसे खरीदने पर कृषि मित्र को कमीशन मिल सकता है। "
-                  "आपको कोई अतिरिक्त शुल्क नहीं लगता।")
+                  "आपको कोई अतिरिक्त शुल्क नहीं लगता। "
+                  "As an Amazon Associate, KrashiMitra earns from qualifying purchases.")
 
 
 def _catalogue() -> list[dict]:

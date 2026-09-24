@@ -1523,8 +1523,10 @@ img{max-width:100%}
 /* ── site header — same pre-topbar/topbar/main-header/blue-bar stack as
    mandi.html, so a page reached from Google reads as the same product as the
    app instead of a stripped-down doorway ── */
-.header-wrapper{position:fixed;top:0;left:0;right:0;z-index:200;
+.header-wrapper{position:fixed;top:0;left:0;right:0;z-index:2000;
 transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.topbar-spacer{height:137px;flex-shrink:0}
+@media(max-width:1024px){.topbar-spacer{height:88px}}
 .pre-topbar{background:var(--amber);color:#1a2e1e;display:flex;align-items:center;justify-content:center;
 gap:10px;padding:7px 16px;font-size:13px;font-weight:600;text-align:center}
 .pre-topbar-helpline{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;opacity:.9}
@@ -2826,14 +2828,24 @@ def _footer(note: str = "") -> str:
 # cache miss and Render paid for all 14k of them against a 5 GB/mo cap.
 # CDN-Cache-Control is the vendor-neutral spelling and both honour it.
 #
-# 30 min at the edge (prices move ~5x/day) plus a day of stale-while-revalidate
-# keeps Googlebot crawling 14k URLs off Render's cold-start latency — crawl
-# speed caps how fast the tree gets indexed. Browsers get 5 min so a farmer
-# refreshing still sees fresh numbers quickly.
+# 1 h at the edge (prices move ~5x/day, fetched 08/10/13/16/20 IST) plus a day
+# of stale-while-revalidate keeps Googlebot crawling 14k URLs off Render's
+# cold-start latency — crawl speed caps how fast the tree gets indexed.
+# Browsers get 5 min so a farmer refreshing still sees fresh numbers quickly.
+# Was 30 min until 25 Sep 2026: every edge refresh is a full page billed to
+# Render's 5 GB/month, which was on course to run out a third time.
 _CACHE_HEADERS = {
     "Cache-Control": "public, max-age=300",
     "CDN-Cache-Control":
-        "public, max-age=1800, stale-while-revalidate=86400",
+        "public, max-age=3600, stale-while-revalidate=86400",
+}
+# Pages _doc renders for other sections (/naksha, /ganna, /sawal, /product,
+# /pashupalan…) carry no mandi price that moves during the day, so the edge
+# may hold them 3 h — a third of the origin refreshes for the same traffic.
+_CACHE_HEADERS_SLOW = {
+    "Cache-Control": "public, max-age=300",
+    "CDN-Cache-Control":
+        "public, max-age=10800, stale-while-revalidate=86400",
 }
 
 
@@ -2985,12 +2997,13 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     # Reused callers (e.g. product.py, active=="shop") keep their visible one.
     crumbs_nav = (f'<nav class="crumbs">{crumbs}</nav>'
                   if (crumbs and active != "bhav") else "")
-    date_ld, headers = "", _CACHE_HEADERS
+    base_headers = _CACHE_HEADERS if active == "bhav" else _CACHE_HEADERS_SLOW
+    date_ld, headers = "", base_headers
     if updated:
         date_ld = _ld({"@context": "https://schema.org", "@type": "WebPage",
                         "@id": canon, "url": canon, "dateModified": updated})
         y, m, d = (int(x) for x in updated.split("-"))
-        headers = {**_CACHE_HEADERS,
+        headers = {**base_headers,
                    "Last-Modified": formatdate(
                        calendar.timegm(date(y, m, d).timetuple()), usegmt=True)}
     return HTMLResponse(f"""<!DOCTYPE html>
@@ -3519,7 +3532,7 @@ rec.start();
 }}
 function kmLoc(inputId,mapVar){{
 var btn=document.getElementById(inputId.replace(/-i$/, '-loc'));
-if(!navigator.geolocation){{alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');return;}}
+if(!navigator.geolocation){{setPinMode(true, 'लोकेशन उपलब्ध नहीं — नक्शे पर अपनी जगह टैप करें');return;}}
 if(btn){{btn.classList.remove('active');btn.classList.add('loading');}}
 
 function _applyLoc(lat,lon){{
@@ -3983,7 +3996,7 @@ function bhavStateVoice(){_bhavVoice('bhav-state-search','bhav-state-mic',bhavFi
 function bhavHubLocation(tab){
   var btn = document.getElementById(tab === 'state' ? 'bhav-state-loc' : 'bhav-tile-loc') || document.getElementById('bhav-state-loc');
   if(!navigator.geolocation){
-    alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');
+    setPinMode(true, 'लोकेशन उपलब्ध नहीं — नक्शे पर अपनी जगह टैप करें');
     return;
   }
   if(btn){ btn.classList.remove('active'); btn.classList.add('loading'); }
@@ -4118,7 +4131,7 @@ function bhavGridVoice(gid){
 function bhavGridLocation(gid){
   var btn = document.getElementById(gid + '-loc');
   if(!navigator.geolocation){
-    alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');
+    setPinMode(true, 'लोकेशन उपलब्ध नहीं — नक्शे पर अपनी जगह टैप करें');
     return;
   }
   if(btn){ btn.classList.remove('active'); btn.classList.add('loading'); }
@@ -4638,6 +4651,9 @@ def bhav_district_hub(state: str, district: str):
     hub_head = (
         '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'
         '<link rel="dns-prefetch" href="https://unpkg.com">'
+        '<link rel="preconnect" href="https://server.arcgisonline.com">'
+        '<link rel="preconnect" href="https://unpkg.com">'
+        '<link rel="preload" as="script" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">'
         f'{_LEAFLET_CSS}'
         if hub_map_html else ""
     )
@@ -5672,20 +5688,38 @@ _BHAV_MAP_CSS = """
 @media(max-width:640px){.bhav-map-wrap{height:330px}.bhav-map-head{padding:12px 16px}}
 .bhav-map-canvas{width:100%;height:100%;z-index:1;background:#0d1d13}
 .bhav-map-canvas .leaflet-container,.bhav-map-canvas .leaflet-tile-container{background:#0d1d13!important}
-.bhav-map-ctrls{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
-.bhav-map-ctrls-left,.bhav-map-ctrls-right{display:flex;align-items:center;gap:8px;pointer-events:auto;flex-wrap:wrap}
-@media(max-width:640px){
-  .bhav-map-ctrls{gap:6px}
-  .bhav-map-ctrls-left,.bhav-map-ctrls-right{gap:6px}
+.bhav-map-ctrls{position:absolute;top:14px;left:14px;right:14px;z-index:20;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;pointer-events:none}
+.bhav-map-ctrls-left,.bhav-map-ctrls-right{display:flex;align-items:flex-start;gap:8px;pointer-events:auto}
+.bhav-map-v-stack{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.bhav-map-v-row{display:flex;align-items:flex-start;gap:8px}
+.bhav-map-more-wrap{position:relative;display:flex;justify-content:flex-end}
+.bhav-map-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:212px;background:rgba(14,32,22,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(82,183,136,.35);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:40;display:flex;flex-direction:column;gap:2px;animation:bmSlideUp .18s ease-out}
+.bhav-map-menu[hidden]{display:none}
+.bhav-map-menu button{display:flex;align-items:center;gap:9px;width:100%;background:transparent;border:none;color:#d8f3dc;font-family:inherit;font-size:13px;font-weight:600;padding:9px 11px;border-radius:10px;cursor:pointer;line-height:1.25;white-space:nowrap}
+.bhav-map-menu button:hover{background:rgba(82,183,136,.18);color:#fff}
+.bhav-map-menu button .bm-icon{width:16px;height:16px;fill:#95d5b2}
+@media(max-width:480px){.bhav-map-menu{min-width:188px}.bhav-map-menu button{font-size:12px;padding:8px 10px}}
+.bhav-map-btn-group{display:inline-flex;align-items:center;background:rgba(238,240,242,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.6);border-radius:18px;overflow:hidden;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.22);gap:3px}
+.bhav-map-tab{background:transparent;border:none;color:#1e293b;padding:7px 16px;border-radius:14px;cursor:pointer;transition:all .18s ease;font-family:inherit;display:inline-flex;align-items:center;gap:8px;line-height:1.2;min-height:44px}
+.bhav-map-tab.active{background:#0e3d26;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.bm-tab-svg{width:22px;height:22px;flex-shrink:0;stroke:currentColor}
+.bhav-tab-txt{display:inline-block;text-align:left;font-size:12.5px;font-weight:700;line-height:1.15;max-width:72px;white-space:normal}
+@media(max-width:480px){
+  .bhav-map-ctrls{top:10px;left:10px;right:10px;gap:6px}
+  .bhav-map-tab{padding:5px 10px;gap:6px;min-height:38px}
+  .bm-tab-svg{width:18px;height:18px}
+  .bhav-tab-txt{font-size:11px;max-width:62px}
 }
-.bhav-map-btn-group{display:flex;background:rgba(18,38,28,.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:8px;overflow:hidden;padding:2px}
-.bhav-map-tab{background:transparent;border:none;color:#d8f3dc;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease;font-family:inherit;line-height:1.2;min-height:32px}
-.bhav-map-tab.active{background:var(--green-mid);color:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
-.bhav-map-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(18,38,28,.88);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s ease;font-family:inherit;line-height:1.2;min-height:32px}
-.bhav-map-btn:hover{background:rgba(26,60,46,.95);border-color:rgba(255,255,255,.3);color:#fff}
-.bhav-map-btn-route{background:rgba(22,101,52,.92);border-color:rgba(82,183,136,.45);color:#fff}
-.bhav-map-btn-route:hover{background:rgba(20,83,45,.98);border-color:rgba(82,183,136,.7);color:#fff}
+.bhav-map-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#0e3d26;backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(82,183,136,.35);border-radius:14px;padding:8px 14px;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;transition:all .18s ease;font-family:inherit;line-height:1.2;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:auto}
+.bhav-map-btn:hover{background:#145234;border-color:rgba(82,183,136,.6);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.bhav-map-btn-naksha{height:44px;box-sizing:border-box}
+@media(max-width:480px){.bhav-map-btn-naksha{padding:6px 10px;font-size:11.5px;height:38px;white-space:nowrap}}
+.bhav-map-btn-route{position:absolute;bottom:16px;left:14px;z-index:22;background:#0e3d26;border:1px solid rgba(82,183,136,.4);border-radius:14px;padding:10px 18px;font-size:13.5px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.45);height:44px;box-sizing:border-box}
+.bhav-map-btn-route:hover{background:#145234;transform:translateY(-1px)}
 .bhav-map-btn-route.loading{opacity:.85;pointer-events:none}
+@media(max-width:480px){.bhav-map-btn-route{bottom:36px;left:10px;padding:8px 14px;font-size:12px;height:40px}}
+.bhav-map-btn-loc{position:absolute;bottom:20px;right:68px;z-index:22;width:44px;height:44px;border-radius:14px;box-sizing:border-box}
+@media(max-width:480px){.bhav-map-btn-loc{bottom:116px;right:10px;width:40px;height:40px;border-radius:12px}}
 .bm-icon{width:14px;height:14px;display:inline-block;vertical-align:middle;fill:currentColor;flex-shrink:0}
 .bhav-map-skel{position:absolute;inset:0;background:radial-gradient(circle at center,#153224 0%,#0a1710 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#95d5b2;z-index:2;cursor:pointer;transition:opacity .3s ease}
 .bhav-map-skel.hidden{opacity:0;pointer-events:none}
@@ -5752,30 +5786,49 @@ _BHAV_MAP_CSS = """
 .answer-map-btn:hover .amb-arrow{transform:translateX(3px);stroke:#fff}
 @media(max-width:480px){.answer-map-btn{padding:6px 11px;font-size:12px;gap:5px;min-height:34px}.answer-map-btn .amb-badge{font-size:9px;padding:1px 4px}}
 @media(max-width:360px){.answer-map-btn .amb-badge,.answer-map-btn .amb-arrow{display:none}.answer-map-btn{padding:5px 9px;font-size:11.5px;gap:4px}}
-.bhav-map-btn-icon{width:32px;height:32px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;line-height:1;flex-shrink:0}
+.bhav-map-btn-icon{width:42px;height:42px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;background:#183324;border:1px solid rgba(82,183,136,.25);border-radius:12px;line-height:1;flex-shrink:0}
+.bhav-map-btn-icon:hover{background:#204230;border-color:rgba(82,183,136,.5)}
 .bhav-map-btn-icon.active{background:#2563eb;border-color:#60a5fa;color:#fff}
-.bhav-map-btn-icon.loading svg{animation:bmSpin 1s linear infinite}
+.bhav-map-btn-icon.loading svg{opacity:.5}
+.bhav-map-btn-icon.loading::after{content:'';position:absolute;inset:4px;border-radius:50%;border:2px solid rgba(255,255,255,.22);border-top-color:#8ef0b4;animation:bmSpin .8s linear infinite;pointer-events:none}
+.bhav-map-btn-icon .bm-icon{width:19px;height:19px}
+.bm-icon-stroke{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:480px){.bhav-map-btn-icon{width:38px;height:38px;border-radius:10px}}
 @keyframes bmSpin{100%{transform:rotate(360deg)}}
 .bhav-map-sec.is-fullscreen{position:fixed!important;inset:0!important;z-index:999999!important;width:100vw!important;height:100vh!important;margin:0!important;border-radius:0!important;border:none!important}
 .bhav-map-sec.is-fullscreen .bhav-map-head{padding:10px 16px;background:var(--white)}
 .bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 54px)!important}
 @media(max-width:640px){.bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 48px)!important}}
-.bhav-map-route-card{position:absolute;bottom:14px;left:12px;max-width:calc(100% - 64px);background:rgba(18,38,28,.93);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(82,183,136,.45);border-radius:12px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:25;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:bmSlideUp .25s ease-out}
+.bhav-map-route-card{position:absolute;bottom:26px;left:14px;max-width:calc(100% - 158px);box-sizing:border-box;background:rgba(14,61,38,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(82,183,136,.5);border-radius:14px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:35;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:bmSlideUp .25s ease-out}
 @keyframes bmSlideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.bhav-route-flow{pointer-events:none}
+.bhav-route-flow.is-done{animation:bhavRouteFlow .45s ease-out forwards}
+@keyframes bhavRouteFlow{from{opacity:.95}to{opacity:0}}
 .bhav-route-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .bhav-route-main svg{width:18px;height:18px;fill:#60a5fa;flex-shrink:0}
 .bhav-route-info{display:flex;flex-direction:column;min-width:0;gap:2px}
-.bhav-route-title{font-size:12px;color:#d8f3dc;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bhav-route-title{font-size:12px;line-height:1.3;color:#d8f3dc;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bhav-route-title b{color:#fff;font-weight:700}
-.bhav-route-meta{font-size:12px;color:#95d5b2;font-weight:500}
+.bhav-route-meta{font-size:12px;line-height:1.35;color:#95d5b2;font-weight:500}
 .bhav-route-meta b{color:#8ef0b4;font-size:13.5px;font-weight:800}
 .bhav-route-meta small{color:#cbd5e1;font-size:11px;font-weight:500;margin-left:4px}
 .bhav-route-nav-btn{display:inline-flex;align-items:center;gap:5px;background:#2563eb;color:#fff;font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:8px;text-decoration:none;white-space:nowrap;transition:background .15s;flex-shrink:0}
 .bhav-route-nav-btn:hover{background:#1d4ed8;color:#fff}
+.bhav-route-close-btn{background:rgba(255,255,255,.08);border:none;color:#a7f3d0;cursor:pointer;padding:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;transition:all .15s;flex-shrink:0}
+.bhav-route-close-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.bhav-map-canvas .leaflet-control-zoom{border:none!important;border-radius:14px!important;overflow:hidden!important;box-shadow:0 4px 16px rgba(0,0,0,.35)!important;margin:0 14px 20px 0!important}
+@media(max-width:480px){.bhav-map-canvas .leaflet-control-zoom{margin:0 10px 36px 0!important}}
+.bhav-map-canvas .leaflet-control-zoom a{background:#ffffff!important;color:#111827!important;width:44px!important;height:38px!important;line-height:38px!important;font-size:22px!important;font-weight:600!important;border:none!important;border-bottom:1px solid #e5e7eb!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:background .15s ease!important}
+@media(max-width:480px){.bhav-map-canvas .leaflet-control-zoom a{width:40px!important;height:34px!important;font-size:20px!important}}
+.bhav-map-canvas .leaflet-control-zoom a:last-child{border-bottom:none!important}
+.bhav-map-canvas .leaflet-control-zoom a:hover{background:#f3f4f6!important;color:#000!important}
+.bhav-map-canvas .leaflet-control-attribution{background:rgba(243,244,246,.9)!important;backdrop-filter:blur(6px)!important;border-radius:8px!important;padding:2px 8px!important;font-size:10px!important;color:#374151!important;margin:0 14px 8px 0!important;box-shadow:0 2px 8px rgba(0,0,0,.15)!important}
+.bhav-map-canvas .leaflet-control-attribution a{color:#1d4ed8!important;text-decoration:none!important}
+@media(max-width:480px){.bhav-map-canvas .leaflet-control-attribution{display:none!important}}
 @media(max-width:520px){
-  .bhav-map-route-card{bottom:10px;left:8px;max-width:calc(100% - 56px);padding:7px 10px;gap:8px}
+  .bhav-map-route-card{bottom:36px;left:10px;max-width:calc(100% - 76px);padding:8px 10px;gap:6px}
   .bhav-route-title{font-size:11px}
-  .bhav-route-meta{font-size:11px}
+  .bhav-route-meta{font-size:11px;line-height:1.35}
   .bhav-route-meta b{font-size:12.5px}
   .bhav-route-nav-btn{padding:5px 8px;font-size:10.5px}
 }
@@ -5790,9 +5843,9 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
   var jsId = "{js_id}";
   var markers = {markers_json};
   var center = [{center_lat}, {center_lon}];
-  var map = null, satLayer = null, labelLayer = null, osmLayer = null, markerObjs = [];
+  var map = null, lowSatLayer = null, satLayer = null, labelLayer = null, osmLayer = null, markerObjs = [];
   var userMarker = null;
-  var routeGlowLayer = null, routeLineLayer = null;
+  var routeGlowLayer = null, routeLineLayer = null, routeFlowLayer = null, routeAnimRaf = null;
   var initialized = false;
 
   function loadAsset(u, isCss) {{
@@ -5833,9 +5886,15 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     map = L.map(mapEl, {{zoomControl: false, zoomSnap: 0.25}}).setView(center, 11);
     L.control.zoom({{position: 'bottomright'}}).addTo(map);
 
+    // Tier 1: Instant Low-Poly/Low-Res Base (z=7, ~18KB, stretched across entire canvas in <150ms)
+    lowSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
+      maxNativeZoom: 7, maxZoom: 20, zIndex: 1, attribution: ''
+    }});
+
+    // Tier 2 & 3: Mid/High-Res Progressive Satellite Imagery (z=8-18)
     satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
-      attribution: 'Tiles © Esri World Imagery', maxNativeZoom: 18, maxZoom: 20,
-      keepBuffer: 4
+      attribution: 'Tiles © Esri World Imagery', minZoom: 8, maxNativeZoom: 18, maxZoom: 20,
+      zIndex: 2, updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 1
     }});
     satLayer.on('tileerror', function(e) {{
       if (e.tile && !e.tile._retried) {{
@@ -5844,16 +5903,37 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
       }}
     }});
     labelLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
-      attribution: '© Esri', maxNativeZoom: 18, maxZoom: 20,
-      keepBuffer: 4
+      attribution: '© Esri', minZoom: 8, maxNativeZoom: 18, maxZoom: 20,
+      zIndex: 3, updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 1
     }});
     osmLayer = L.tileLayer('https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
       attribution: '© OpenStreetMap contributors', maxNativeZoom: 19, maxZoom: 20,
-      keepBuffer: 4
+      updateWhenIdle: true, keepBuffer: 2
     }});
 
-    satLayer.addTo(map);
-    labelLayer.addTo(map);
+    // The LOD tiers have to be staged, not stacked. Added together, the four
+    // z7 tiles queue behind ~20 full-res ones over the browser's six
+    // connections, so the "instant" base arrives last and the canvas sits
+    // black — which is the whole delay the tiers were meant to remove.
+    lowSatLayer.addTo(map);
+    var hiResAdded = false, labelsAdded = false;
+    function stillSatellite() {{
+      return !(osmLayer && map && map.hasLayer(osmLayer));
+    }}
+    function addLabelTier() {{
+      if (labelsAdded || !map || !stillSatellite()) return;
+      labelsAdded = true;
+      labelLayer.addTo(map);
+    }}
+    function addHiResTier() {{
+      if (hiResAdded || !map || !stillSatellite()) return;
+      hiResAdded = true;
+      satLayer.addTo(map);
+      satLayer.once('load', addLabelTier);
+      setTimeout(addLabelTier, 2200);
+    }}
+    lowSatLayer.once('load', addHiResTier);
+    setTimeout(addHiResTier, 500);
 
     markerObjs = [];
     var bounds = L.latLngBounds([]);
@@ -5887,6 +5967,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
           '<div class="bhav-popup-range">न्यूनतम ' + m.min_price + ' — अधिकतम ' + m.max_price + '</div>' : '') +
         (m.date ? '<div class="bhav-popup-date">' +
           '<svg class="bm-icon" style="width:12px;height:12px" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg> रिपोर्ट: ' + m.date + '</div>' : '') +
+        (m.is_exact === false ? '<div class="bhav-popup-approx">⚠️ <b>मंडी की जगह अनुमानित</b><br>जगह अनुमानित है — गूगल मैप पर मंडी का नाम खोजें</div>' : '') +
         '<div id="' + mapId + '-dist-' + i + '" class="bhav-popup-dist" style="display:none"></div>' +
         '<div class="bhav-popup-actions">' +
         '<button type="button" id="' + mapId + '-pop-btn-' + i + '" onclick="' + jsId + '_showPathTo(' + i + ')" class="bhav-popup-btn bhav-popup-btn-nav">' +
@@ -6004,6 +6085,12 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
 
     map.on('zoomend', restackMarkers);
     map.on('moveend', restackMarkers);
+    map.on('click', function(e) {{
+      if (!pinMode) return;
+      placeUserMarker(e.latlng.lat, e.latlng.lng);
+      setPinMode(false);
+      updateUserPos(e.latlng.lat, e.latlng.lng);
+    }});
     window.addEventListener('resize', function() {{ if (map) {{ map.invalidateSize(); restackMarkers(); }} }});
     setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 80);
     setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 300);
@@ -6017,11 +6104,13 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     var btnOsm = document.getElementById(mapId + '-tab-osm');
     if (type === 'sat') {{
       if (osmLayer) map.removeLayer(osmLayer);
+      if (lowSatLayer && !map.hasLayer(lowSatLayer)) map.addLayer(lowSatLayer);
       if (satLayer && !map.hasLayer(satLayer)) map.addLayer(satLayer);
       if (labelLayer && !map.hasLayer(labelLayer)) map.addLayer(labelLayer);
       if (btnSat) btnSat.classList.add('active');
       if (btnOsm) btnOsm.classList.remove('active');
     }} else {{
+      if (lowSatLayer) map.removeLayer(lowSatLayer);
       if (satLayer) map.removeLayer(satLayer);
       if (labelLayer) map.removeLayer(labelLayer);
       if (osmLayer && !map.hasLayer(osmLayer)) map.addLayer(osmLayer);
@@ -6042,26 +6131,154 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
   }}
 
-  function renderRoute(coords, uLat, uLon, mLat, mLon) {{
+  function renderRoute(coords, uLat, uLon, mLat, mLon, approx) {{
     if (!map) return;
-    if (routeGlowLayer) map.removeLayer(routeGlowLayer);
-    if (routeLineLayer) map.removeLayer(routeLineLayer);
+    if (routeAnimRaf) {{ cancelAnimationFrame(routeAnimRaf); routeAnimRaf = null; }}
+    if (routeGlowLayer && map) map.removeLayer(routeGlowLayer);
+    if (routeLineLayer && map) map.removeLayer(routeLineLayer);
+    if (routeFlowLayer && map) map.removeLayer(routeFlowLayer);
 
+    // Deep blue background glow
     routeGlowLayer = L.polyline(coords, {{
-      color: '#1e3a8a', weight: 8, opacity: 0.55, lineCap: 'round', lineJoin: 'round'
+      color: '#1d4ed8', weight: 8, opacity: approx ? 0.3 : 0.45, lineCap: 'round', lineJoin: 'round'
     }}).addTo(map);
 
+    // Solid blue road path
     routeLineLayer = L.polyline(coords, {{
-      color: '#2563eb', weight: 4.5, opacity: 0.95, lineCap: 'round', lineJoin: 'round'
+      color: approx ? '#3b82f6' : '#2563eb', weight: 4.5, opacity: 0.95,
+      dashArray: approx ? '9 9' : null, lineCap: 'round', lineJoin: 'round'
     }}).addTo(map);
+
+    // One-time flow animation: a bright comet rides the head of the draw, from
+    // the user's point to the mandi, then fades out and is discarded.
+    routeFlowLayer = L.polyline(coords, {{
+      color: '#93c5fd', weight: 5.5, opacity: 0.95,
+      className: 'bhav-route-flow', lineCap: 'round', lineJoin: 'round'
+    }}).addTo(map);
+
+    function pathEl(layer) {{
+      if (!layer) return null;
+      return layer.getElement ? layer.getElement() : (layer._path || null);
+    }}
+    function eachEl(fn) {{
+      [pathEl(routeGlowLayer), pathEl(routeLineLayer), pathEl(routeFlowLayer)].forEach(function(el) {{
+        if (el) fn(el);
+      }});
+    }}
+
+    // Hidden until the fitBounds zoom has settled — a reveal that runs while
+    // Leaflet is still reprojecting the path reads as a stutter.
+    eachEl(function(el) {{ el.style.visibility = 'hidden'; }});
+
+    var reduceMotion = false;
+    try {{
+      reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }} catch (_) {{}}
+
+    function finishFlow() {{
+      routeAnimRaf = null;
+      var lEl = pathEl(routeLineLayer), gEl = pathEl(routeGlowLayer);
+      [lEl, gEl].forEach(function(el) {{
+        if (!el) return;
+        el.style.visibility = '';
+        el.style.strokeDasharray = (el === lEl && approx) ? '9 9' : 'none';
+        el.style.strokeDashoffset = '';
+      }});
+      var fEl = pathEl(routeFlowLayer);
+      if (fEl) {{
+        fEl.style.visibility = '';
+        if (fEl.classList) fEl.classList.add('is-done');
+        else fEl.style.opacity = '0';
+      }}
+      setTimeout(function() {{
+        if (routeFlowLayer && map) {{
+          map.removeLayer(routeFlowLayer);
+          routeFlowLayer = null;
+        }}
+      }}, 500);
+    }}
+
+    // Driven frame by frame off the live path length rather than by a CSS
+    // transition, so a reprojection mid-flight can never leave a stale dash
+    // pattern on screen.
+    function runFlow() {{
+      var lEl = pathEl(routeLineLayer), gEl = pathEl(routeGlowLayer), fEl = pathEl(routeFlowLayer);
+      var probe = fEl || lEl;
+      var len0 = 0;
+      try {{ len0 = probe && probe.getTotalLength ? probe.getTotalLength() : 0; }} catch (_) {{}}
+      if (reduceMotion || !len0) {{ finishFlow(); return; }}
+      eachEl(function(el) {{ el.style.visibility = ''; }});
+      var dur = Math.max(3000, Math.min(7000, len0 * 5.5));
+      var t0 = 0;
+      function frame(ts) {{
+        if (!t0) t0 = ts;
+        var p = Math.min(1, (ts - t0) / dur);
+        var e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+        var len = len0;
+        try {{ len = probe.getTotalLength() || len0; }} catch (_) {{}}
+        var head = e * len;
+        [lEl, gEl].forEach(function(el) {{
+          if (!el) return;
+          el.style.strokeDasharray = len + ' ' + len;
+          el.style.strokeDashoffset = String(len - head);
+        }});
+        if (fEl) {{
+          var tail = Math.max(34, len * 0.18);
+          fEl.style.strokeDasharray = tail + ' ' + (len + tail);
+          fEl.style.strokeDashoffset = String(tail - head);
+        }}
+        if (p < 1) routeAnimRaf = requestAnimationFrame(frame);
+        else finishFlow();
+      }}
+      routeAnimRaf = requestAnimationFrame(frame);
+    }}
+
+    var flowStarted = false;
+    function kickFlow() {{
+      if (flowStarted) return;
+      flowStarted = true;
+      map.off('moveend', kickFlow);
+      if (window.requestAnimationFrame) requestAnimationFrame(runFlow);
+      else setTimeout(runFlow, 30);
+    }}
+    map.on('moveend', kickFlow);
+    setTimeout(kickFlow, 3000);
 
     var routeBounds = L.latLngBounds(coords);
     routeBounds.extend([uLat, uLon]);
     routeBounds.extend([mLat, mLon]);
-    map.fitBounds(routeBounds, {{padding: [55, 55], maxZoom: 14}});
+    // fitBounds teleports when the jump is long; the flight shows the farmer
+    // the map travelling from where they are to the mandi.
+    var fitOpts = {{paddingTopLeft: [40, 75], paddingBottomRight: [45, 135], maxZoom: 14}};
+    if (reduceMotion || !map.flyToBounds) {{
+      map.fitBounds(routeBounds, fitOpts);
+    }} else {{
+      fitOpts.duration = 1.5;
+      fitOpts.easeLinearity = 0.22;
+      map.flyToBounds(routeBounds, fitOpts);
+    }}
   }}
 
-  var activeMandi = null, activeMandiIdx = null;
+  var activeMandi = null, activeMandiIdx = null, pickedExplicitly = false;
+  var pinMode = false;
+
+  function setPinMode(on, msg) {{
+    pinMode = !!on;
+    var canvas = document.getElementById(mapId + '-canvas');
+    if (canvas) canvas.style.cursor = pinMode ? 'crosshair' : '';
+    var hint = document.getElementById(mapId + '-pin-hint');
+    if (pinMode && !hint && canvas && canvas.parentNode) {{
+      hint = document.createElement('div');
+      hint.id = mapId + '-pin-hint';
+      hint.className = 'bhav-map-pin-hint';
+      canvas.parentNode.appendChild(hint);
+    }}
+    if (hint) {{
+      if (msg) hint.textContent = msg;
+      else if (!hint.textContent) hint.textContent = 'नक्शे पर अपनी जगह टैप करें';
+      hint.style.display = pinMode ? 'block' : 'none';
+    }}
+  }}
 
   function placeUserMarker(uLat, uLon) {{
     if (!map) return;
@@ -6080,14 +6297,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
       updateUserPos(p.lat, p.lng);
     }});
 
-    map.on('click', function(e) {{
-      if (!userMarker) {{
-        placeUserMarker(e.latlng.lat, e.latlng.lng);
-      }} else {{
-        userMarker.setLatLng(e.latlng);
-      }}
-      updateUserPos(e.latlng.lat, e.latlng.lng);
-    }});
+
 
     var locBtn = document.getElementById(mapId + '-btn-loc');
     if (locBtn) {{
@@ -6111,18 +6321,27 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
 
     var destLat = Number(targetMandi.lat);
     var destLon = Number(targetMandi.lon);
+
+    var isExact = targetMandi.is_exact !== false;
+    var navQ = targetMandi.nav_q || targetMandi.market || targetMandi.name || '';
+    var navDest = (isExact || !navQ)
+      ? destLat.toFixed(5) + ',' + destLon.toFixed(5)
+      : encodeURIComponent(navQ);
     var navUrl = 'https://www.google.com/maps/dir/?api=1&origin=' +
                  Number(uLat).toFixed(5) + ',' + Number(uLon).toFixed(5) +
-                 '&destination=' + destLat.toFixed(5) + ',' + destLon.toFixed(5) +
+                 '&destination=' + navDest +
                  '&travelmode=driving';
 
     if (routeMandiEl) routeMandiEl.textContent = targetMandi.market || targetMandi.name;
+    var routeLabelEl = document.getElementById(mapId + '-route-label');
+    if (routeLabelEl) routeLabelEl.textContent = pickedExplicitly ? 'चुनी गई मंडी' : 'नजदीकी मंडी';
     if (routeNavEl) {{
       routeNavEl.href = navUrl;
       routeNavEl.innerHTML = '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> गूगल मैप पर देखें';
       routeNavEl.title = 'Google Maps में रास्ता खोलें';
     }}
     if (routeCard) routeCard.style.display = 'flex';
+    if (routeBtn) routeBtn.style.display = 'none';
 
     if (activeMandiIdx !== null) {{
       var popBtn = document.getElementById(mapId + '-pop-btn-' + activeMandiIdx);
@@ -6132,9 +6351,15 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     }}
 
     var fallbackCoords = [[uLat, uLon], [destLat, destLon]];
+    // Geometry detail costs real bytes on a rural connection: a 493km route is
+    // 69KB at overview=full vs 1.5KB simplified. Past ~60km the map is zoomed
+    // out far enough that the extra points cannot be seen, so only short hauls
+    // ask for them.
+    var ovDetail = straightDist > 60 ? 'simplified' : 'full';
     var osrmUrl = 'https://router.project-osrm.org/route/v1/driving/' +
-                  uLon + ',' + uLat + ';' + destLon + ',' + destLat +
-                  '?overview=full&geometries=geojson';
+                  Number(uLon).toFixed(5) + ',' + Number(uLat).toFixed(5) + ';' +
+                  Number(destLon).toFixed(5) + ',' + Number(destLat).toFixed(5) +
+                  '?overview=' + ovDetail + '&geometries=geojson';
 
     fetch(osrmUrl)
       .then(function(res) {{ return res.json(); }})
@@ -6145,16 +6370,16 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
           }});
           var roadKm = (data.routes[0].distance / 1000).toFixed(1);
           var roadKmNum = parseFloat(roadKm);
-          // Calibrated realistic Indian road travel speed (local/state/highway):
           var speedKmH = roadKmNum < 30 ? 32 : (roadKmNum < 100 ? 44 : 54);
           var durationMin = Math.round((roadKmNum / speedKmH) * 60);
           if (routeDistEl) {{
             var timeTxt = durationMin >= 60 ?
               Math.floor(durationMin / 60) + ' घंटा ' + (durationMin % 60) + ' मिनट' :
               durationMin + ' मिनट';
-            routeDistEl.innerHTML = roadKm + ' किमी <small>· लगभग ' + timeTxt + ' (सड़क मार्ग)</small>';
+            var apxNote = (!isExact) ? ' <small style="color:#fde047">· जगह अनुमानित</small>' : '';
+            routeDistEl.innerHTML = roadKm + ' किमी <small>· लगभग ' + timeTxt + ' (सड़क मार्ग)' + apxNote + '</small>';
           }}
-          renderRoute(roadCoords, uLat, uLon, destLat, destLon);
+          renderRoute(roadCoords, uLat, uLon, destLat, destLon, false);
         }} else {{
           var estRoadKm = (straightDist * 1.30).toFixed(1);
           var estSpeedKmH = straightDist < 30 ? 32 : (straightDist < 100 ? 44 : 54);
@@ -6163,9 +6388,9 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
             Math.floor(estMin / 60) + ' घंटा ' + (estMin % 60) + ' मिनट' :
             estMin + ' मिनट';
           if (routeDistEl) {{
-            routeDistEl.innerHTML = estRoadKm + ' किमी <small>· लगभग ' + estTimeTxt + ' (सड़क मार्ग)</small>';
+            routeDistEl.innerHTML = estRoadKm + ' किमी <small>· लगभग ' + estTimeTxt + ' (अनुमानित)</small>';
           }}
-          renderRoute(fallbackCoords, uLat, uLon, destLat, destLon);
+          renderRoute(fallbackCoords, uLat, uLon, destLat, destLon, true);
         }}
       }})
       .catch(function() {{
@@ -6173,7 +6398,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
         if (routeDistEl) {{
           routeDistEl.textContent = estRoadKm + ' किमी (अनुमानित)';
         }}
-        renderRoute(fallbackCoords, uLat, uLon, destLat, destLon);
+        renderRoute(fallbackCoords, uLat, uLon, destLat, destLon, true);
       }});
   }}
 
@@ -6218,7 +6443,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
           routeBtn.innerHTML = '<svg class="bm-icon" style="animation:bmSpin 0.8s linear infinite" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg> खोज रहे हैं…';
         }} else {{
           routeBtn.classList.remove('loading');
-          routeBtn.innerHTML = '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> रास्ता देखें';
+          routeBtn.innerHTML = '<svg class="bm-icon bm-arrow-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 20l8-4 8 4z"/></svg> रास्ता देखें';
         }}
       }}
     }}
@@ -6250,7 +6475,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
       }} catch (_) {{}}
 
       if (!navigator.geolocation) {{
-        alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है। नक्शे पर कहीं भी टैप करके अपनी लोकेशन पिन रखें।');
+        setPinMode(true, 'लोकेशन उपलब्ध नहीं — नक्शे पर अपनी जगह टैप करें');
         return;
       }}
 
@@ -6284,13 +6509,15 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
           }}
         }}
         var d3 = haversineKm(uLat, uLon, activeMandi.lat, activeMandi.lon);
+        setLocBtnBusy(false);
         findAndDrawShortestPath(uLat, uLon, activeMandi, d3);
       }}, function() {{
         _setRouteBtnLoading(false);
         if (popBtn) {{
           popBtn.innerHTML = '<svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg> रास्ता देखें';
         }}
-        alert('रास्ता देखने के लिए कृपया लोकेशन की अनुमति दें, या नक्शे पर टैप करके अपनी जगह बताएं।');
+        setPinMode(true, 'लोकेशन नहीं मिली — नक्शे पर अपनी जगह टैप करें');
+        setLocBtnBusy(false);
       }}, {{ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }});
     }}
   }}
@@ -6308,7 +6535,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
       }}
       var distEl = document.getElementById(mapId + '-dist-' + i);
       if (distEl) {{
-        distEl.textContent = d.toFixed(1) + ' किमी दूर';
+        distEl.textContent = (m.is_exact === false ? 'लगभग ' : '') + d.toFixed(1) + ' किमी दूर';
         distEl.style.display = 'inline-block';
       }}
     }});
@@ -6320,15 +6547,21 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     }}
   }}
 
+  function setLocBtnBusy(on) {{
+    var b = document.getElementById(mapId + '-btn-loc');
+    if (!b) return;
+    if (on) b.classList.add('loading');
+    else b.classList.remove('loading');
+    b.title = on ? 'लोकेशन खोजी जा रही है…' : 'मेरी लोकेशन खोजें';
+  }}
+
   var getLocFn = function() {{
     if (!map) return;
     var locBtn = document.getElementById(mapId + '-btn-loc');
-    if (locBtn) {{
-      locBtn.classList.add('loading');
-      locBtn.title = 'लोकेशन खोजी जा रही है…';
-    }}
+    setLocBtnBusy(true);
 
     function _handlePos(uLat, uLon) {{
+      setLocBtnBusy(false);
       placeUserMarker(uLat, uLon);
       updateUserPos(uLat, uLon);
     }}
@@ -6342,11 +6575,8 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     }} catch (_) {{}}
 
     if (!navigator.geolocation) {{
-      alert('इस डिवाइस पर लोकेशन उपलब्ध नहीं है।');
-      if (locBtn) {{
-        locBtn.classList.remove('loading');
-        locBtn.title = 'मेरी लोकेशन खोजें';
-      }}
+      setPinMode(true, 'लोकेशन उपलब्ध नहीं — नक्शे पर अपनी जगह टैप करें');
+      setLocBtnBusy(false);
       return;
     }}
 
@@ -6363,10 +6593,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
       }} catch (_) {{}}
       _handlePos(uLat, uLon);
     }}, function(err) {{
-      if (locBtn) {{
-        locBtn.classList.remove('loading');
-        locBtn.title = 'मेरी लोकेशन खोजें';
-      }}
+      setLocBtnBusy(false);
     }}, {{ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }});
   }};
   window[jsId + '_getLoc'] = getLocFn;
@@ -6377,11 +6604,22 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     if (!sec) return;
     var isFs = sec.classList.toggle('is-fullscreen');
     var fsIcon = document.getElementById(mapId + '-fs-icon');
+    var fsBtn = document.getElementById(mapId + '-btn-fs');
     if (fsIcon) {{
       if (isFs) {{
-        fsIcon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+        // The glyph is stroke-drawn via .bm-icon-stroke; plain <line>s over
+        // the fill-only .bm-icon alone used to render an empty button.
+        fsIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+        if (fsBtn) {{
+          fsBtn.title = 'फुल स्क्रीन बंद करें (Esc)';
+          fsBtn.setAttribute('aria-label', 'फुल स्क्रीन बंद करें');
+        }}
       }} else {{
-        fsIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+        fsIcon.innerHTML = '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
+        if (fsBtn) {{
+          fsBtn.title = 'फुल स्क्रीन (Full Screen)';
+          fsBtn.setAttribute('aria-label', 'फुल स्क्रीन');
+        }}
       }}
     }}
     if (isFs) {{
@@ -6402,16 +6640,108 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
   window[jsId + '_toggleFs'] = toggleFsFn;
   window[mapId + '_toggleFs'] = toggleFsFn;
 
-  document.addEventListener('fullscreenchange', function() {{
+  var hideRouteFn = function() {{
+    var rc = document.getElementById(mapId + '-route-card');
+    if (rc) rc.style.display = 'none';
+    var rb = document.getElementById(mapId + '-btn-route');
+    if (rb) rb.style.display = 'inline-flex';
+    if (routeGlowLayer && map) map.removeLayer(routeGlowLayer);
+    if (routeLineLayer && map) map.removeLayer(routeLineLayer);
+    if (routeFlowLayer && map) map.removeLayer(routeFlowLayer);
+  }};
+  window[jsId + '_hideRoute'] = hideRouteFn;
+  window[mapId + '_hideRoute'] = hideRouteFn;
+
+  var resetViewFn = function() {{
+    if (!map) return;
+    if (markerObjs.length > 1) {{
+      var b = L.latLngBounds(markerObjs.map(function(m){{ return m.pos; }}));
+      map.fitBounds(b, {{padding: [50, 50], maxZoom: 13}});
+    }} else if (markerObjs.length === 1) {{
+      map.setView(markerObjs[0].pos, 12);
+    }} else {{
+      map.setView(center, 11);
+    }}
+  }};
+  window[jsId + '_resetView'] = resetViewFn;
+  window[mapId + '_resetView'] = resetViewFn;
+
+  function closeMapMenu() {{
+    var m = document.getElementById(mapId + '-menu');
+    if (m) m.hidden = true;
+    var b = document.getElementById(mapId + '-btn-more');
+    if (b) {{
+      b.classList.remove('active');
+      b.setAttribute('aria-expanded', 'false');
+    }}
+  }}
+
+  var toggleMenuFn = function(ev) {{
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    var m = document.getElementById(mapId + '-menu');
+    if (!m) return;
+    var willOpen = !!m.hidden;
+    m.hidden = !willOpen;
+    var b = document.getElementById(mapId + '-btn-more');
+    if (b) {{
+      if (willOpen) b.classList.add('active');
+      else b.classList.remove('active');
+      b.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    }}
+  }};
+  window[jsId + '_toggleMenu'] = toggleMenuFn;
+  window[mapId + '_toggleMenu'] = toggleMenuFn;
+
+  // Every item needs the map alive, and the map is lazy — so each one loads it
+  // first instead of quietly doing nothing on a cold section.
+  var menuActFn = function(what) {{
+    closeMapMenu();
+    if (typeof loadMapFn === 'function') loadMapFn();
+    if (what === 'reset') resetViewFn();
+    else if (what === 'hide') hideRouteFn();
+    else if (what === 'pin') setPinMode(true, 'नक्शे पर अपनी जगह टैप करें');
+  }};
+  window[jsId + '_menuAct'] = menuActFn;
+  window[mapId + '_menuAct'] = menuActFn;
+
+  document.addEventListener('click', function(ev) {{
+    var m = document.getElementById(mapId + '-menu');
+    if (!m || m.hidden) return;
+    if (m.contains(ev.target)) return;
+    var b = document.getElementById(mapId + '-btn-more');
+    if (b && b.contains(ev.target)) return;
+    closeMapMenu();
+  }});
+  document.addEventListener('keydown', function(ev) {{
+    if (ev.key === 'Escape' || ev.keyCode === 27) closeMapMenu();
+  }});
+
+  function handleFsExit() {{
     var sec = document.getElementById(mapId + '-sec');
     if (!sec) return;
-    if (!document.fullscreenElement && sec.classList.contains('is-fullscreen')) {{
+    var isFsActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if (!isFsActive && sec.classList.contains('is-fullscreen')) {{
       sec.classList.remove('is-fullscreen');
       var fsIcon = document.getElementById(mapId + '-fs-icon');
+      var fsBtn = document.getElementById(mapId + '-btn-fs');
       if (fsIcon) {{
-        fsIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+        fsIcon.innerHTML = '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
+      }}
+      if (fsBtn) {{
+        fsBtn.title = 'फुल स्क्रीन (Full Screen)';
+        fsBtn.setAttribute('aria-label', 'फुल स्क्रीन');
       }}
       if (map) map.invalidateSize();
+    }}
+  }}
+  document.addEventListener('fullscreenchange', handleFsExit);
+  document.addEventListener('webkitfullscreenchange', handleFsExit);
+  document.addEventListener('keydown', function(e) {{
+    if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {{
+      var sec = document.getElementById(mapId + '-sec');
+      if (sec && sec.classList.contains('is-fullscreen')) {{
+        toggleFsFn();
+      }}
     }}
   }});
 
@@ -6457,6 +6787,17 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
 </script>"""
 
 
+def _mandi_nav_query(market: str, district: str, state: str) -> str:
+    parts = [(market or "").strip(), (district or "").strip(), (state or "").strip()]
+    label = ", ".join(x for x in parts if x)
+    return f"{label} mandi" if label else ""
+
+
+def _markers_script_json(markers: list) -> str:
+    return (_json.dumps(markers, ensure_ascii=False)
+            .replace('<', '\\u003c').replace('>', '\\u003e'))
+
+
 def _mandi_satellite_map_html(state: str, district: str, prices: list,
                               commodity: str, crop_hi: str, s_slug: str,
                               d_slug: str, d_hi: str) -> str:
@@ -6500,6 +6841,7 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
             "lat": lat,
             "lon": lon,
             "is_exact": is_exact,
+            "nav_q": _mandi_nav_query(mkt, district, state),
             "price": f"₹{modal_val:,}" if modal_val else "—",
             "price_num": modal_val or 0,
             "min_price": f"₹{min_val:,}" if min_val else "—",
@@ -6516,7 +6858,7 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
     js_id = map_id.replace('-', '_')
     center_lat = round(sum(m["lat"] for m in markers) / len(markers), 5)
     center_lon = round(sum(m["lon"] for m in markers) / len(markers), 5)
-    markers_json = _json.dumps(markers, ensure_ascii=False)
+    markers_json = _markers_script_json(markers)
 
     mandi_cnt = len(markers)
     cnt_txt = f"{mandi_cnt} मंडी दर्ज" if mandi_cnt == 1 else f"{mandi_cnt} मंडियां दर्ज"
@@ -6539,32 +6881,61 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
     <div class="bhav-map-ctrls">
       <div class="bhav-map-ctrls-left">
         <div class="bhav-map-btn-group">
-          <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">सैटेलाइट (Satellite)</button>
-          <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">नक्शा (Roads)</button>
+          <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">
+            <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
+            <span class="bhav-tab-txt">सैटेलाइट<br>(Satellite)</span>
+          </button>
+          <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">
+            <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 5.55a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.56 2.27a2 2 0 0 1-1.79 0L9.9 18.45a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.79 0z"/><path d="M15 5.76v15"/><path d="M9 3.24v15"/></svg>
+            <span class="bhav-tab-txt">नक्शा<br>(Roads)</span>
+          </button>
         </div>
-        <button type="button" class="bhav-map-btn bhav-map-btn-route" id="{map_id}-btn-route" onclick="{js_id}_showPathTo()" title="मंडी का रास्ता देखें" aria-label="रास्ता देखें">
-          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
-          रास्ता देखें
-        </button>
       </div>
       <div class="bhav-map-ctrls-right">
-        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
-          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
-        </button>
-        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
-          <svg class="bm-icon" id="{map_id}-fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-        </button>
-        <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn">
-          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-          पूरा नक्शा देखें
-        </a>
+        <div class="bhav-map-v-stack">
+          <div class="bhav-map-v-row">
+            <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn bhav-map-btn-naksha">
+              <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+              पूरा नक्शा देखें
+            </a>
+            <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
+              <svg class="bm-icon bm-icon-stroke" id="{map_id}-fs-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+          <div class="bhav-map-more-wrap">
+            <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-more" onclick="{js_id}_toggleMenu(event)" title="और विकल्प" aria-label="और विकल्प" aria-haspopup="true" aria-expanded="false">
+              <svg class="bm-icon bm-icon-stroke" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </button>
+            <div class="bhav-map-menu" id="{map_id}-menu" role="menu" hidden>
+              <button type="button" role="menuitem" onclick="{js_id}_menuAct('reset')">
+                <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                सभी मंडी दिखाएँ
+              </button>
+              <button type="button" role="menuitem" onclick="{js_id}_menuAct('pin')">
+                <svg class="bm-icon" viewBox="0 0 24 24"><path d="M20.5 3 3.5 10.5l7 2.9 2.9 7L20.5 3z"/></svg>
+                नक्शे पर अपनी जगह चुनें
+              </button>
+              <button type="button" role="menuitem" onclick="{js_id}_menuAct('hide')">
+                <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                रास्ता हटाएँ
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    <button type="button" class="bhav-map-btn bhav-map-btn-route" id="{map_id}-btn-route" onclick="{js_id}_showPathTo()" title="मंडी का रास्ता देखें" aria-label="रास्ता देखें">
+      <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+      रास्ता देखें
+    </button>
+    <button type="button" class="bhav-map-btn bhav-map-btn-icon bhav-map-btn-loc" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
+      <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+    </button>
     <div id="{map_id}-route-card" class="bhav-map-route-card" style="display:none;">
       <div class="bhav-route-main">
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
         <div class="bhav-route-info">
-          <span class="bhav-route-title">नजदीकी मंडी: <b id="{map_id}-route-mandi">—</b></span>
+          <span class="bhav-route-title"><span id="{map_id}-route-label">नजदीकी मंडी</span>: <b id="{map_id}-route-mandi">—</b></span>
           <span class="bhav-route-meta">दूरी: <b id="{map_id}-route-dist">—</b></span>
         </div>
       </div>
@@ -6572,6 +6943,9 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
         गूगल मैप पर देखें
       </a>
+      <button type="button" class="bhav-route-close-btn" onclick="{js_id}_hideRoute()" title="रास्ता हटाएँ" aria-label="रास्ता हटाएँ">
+        <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
     </div>
     <div id="{map_id}-canvas" class="bhav-map-canvas"></div>
   </div>
@@ -6655,7 +7029,7 @@ def _district_hub_satellite_map_html(state: str, district: str,
     js_id = map_id.replace('-', '_')
     center_lat = round(sum(m["lat"] for m in markers) / len(markers), 5)
     center_lon = round(sum(m["lon"] for m in markers) / len(markers), 5)
-    markers_json = _json.dumps(markers, ensure_ascii=False)
+    markers_json = _markers_script_json(markers)
 
     mandi_cnt = len(markers)
     cnt_txt = f"{mandi_cnt} मंडी दर्ज" if mandi_cnt == 1 else f"{mandi_cnt} मंडियां दर्ज"
@@ -6678,32 +7052,61 @@ def _district_hub_satellite_map_html(state: str, district: str,
     <div class="bhav-map-ctrls">
       <div class="bhav-map-ctrls-left">
         <div class="bhav-map-btn-group">
-          <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">सैटेलाइट (Satellite)</button>
-          <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">नक्शा (Roads)</button>
+          <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">
+            <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
+            <span class="bhav-tab-txt">सैटेलाइट<br>(Satellite)</span>
+          </button>
+          <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">
+            <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 5.55a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.56 2.27a2 2 0 0 1-1.79 0L9.9 18.45a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.79 0z"/><path d="M15 5.76v15"/><path d="M9 3.24v15"/></svg>
+            <span class="bhav-tab-txt">नक्शा<br>(Roads)</span>
+          </button>
         </div>
-        <button type="button" class="bhav-map-btn bhav-map-btn-route" id="{map_id}-btn-route" onclick="{js_id}_showPathTo()" title="मंडी का रास्ता देखें" aria-label="रास्ता देखें">
-          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
-          रास्ता देखें
-        </button>
       </div>
       <div class="bhav-map-ctrls-right">
-        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
-          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
-        </button>
-        <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
-          <svg class="bm-icon" id="{map_id}-fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-        </button>
-        <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn">
-          <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-          पूरा नक्शा देखें
-        </a>
+        <div class="bhav-map-v-stack">
+          <div class="bhav-map-v-row">
+            <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn bhav-map-btn-naksha">
+              <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+              पूरा नक्शा देखें
+            </a>
+            <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
+              <svg class="bm-icon bm-icon-stroke" id="{map_id}-fs-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+          <div class="bhav-map-more-wrap">
+            <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-more" onclick="{js_id}_toggleMenu(event)" title="और विकल्प" aria-label="और विकल्प" aria-haspopup="true" aria-expanded="false">
+              <svg class="bm-icon bm-icon-stroke" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </button>
+            <div class="bhav-map-menu" id="{map_id}-menu" role="menu" hidden>
+              <button type="button" role="menuitem" onclick="{js_id}_menuAct('reset')">
+                <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                सभी मंडी दिखाएँ
+              </button>
+              <button type="button" role="menuitem" onclick="{js_id}_menuAct('pin')">
+                <svg class="bm-icon" viewBox="0 0 24 24"><path d="M20.5 3 3.5 10.5l7 2.9 2.9 7L20.5 3z"/></svg>
+                नक्शे पर अपनी जगह चुनें
+              </button>
+              <button type="button" role="menuitem" onclick="{js_id}_menuAct('hide')">
+                <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                रास्ता हटाएँ
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    <button type="button" class="bhav-map-btn bhav-map-btn-route" id="{map_id}-btn-route" onclick="{js_id}_showPathTo()" title="मंडी का रास्ता देखें" aria-label="रास्ता देखें">
+      <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+      रास्ता देखें
+    </button>
+    <button type="button" class="bhav-map-btn bhav-map-btn-icon bhav-map-btn-loc" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
+      <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+    </button>
     <div id="{map_id}-route-card" class="bhav-map-route-card" style="display:none;">
       <div class="bhav-route-main">
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
         <div class="bhav-route-info">
-          <span class="bhav-route-title">नजदीकी मंडी: <b id="{map_id}-route-mandi">—</b></span>
+          <span class="bhav-route-title"><span id="{map_id}-route-label">नजदीकी मंडी</span>: <b id="{map_id}-route-mandi">—</b></span>
           <span class="bhav-route-meta">दूरी: <b id="{map_id}-route-dist">—</b></span>
         </div>
       </div>
@@ -6711,6 +7114,9 @@ def _district_hub_satellite_map_html(state: str, district: str,
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
         गूगल मैप पर देखें
       </a>
+      <button type="button" class="bhav-route-close-btn" onclick="{js_id}_hideRoute()" title="रास्ता हटाएँ" aria-label="रास्ता हटाएँ">
+        <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
     </div>
     <div id="{map_id}-canvas" class="bhav-map-canvas"></div>
   </div>
@@ -7771,6 +8177,9 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     map_head = (
         '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'
         '<link rel="dns-prefetch" href="https://unpkg.com">'
+        '<link rel="preconnect" href="https://server.arcgisonline.com">'
+        '<link rel="preconnect" href="https://unpkg.com">'
+        '<link rel="preload" as="script" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">'
         f'{_LEAFLET_CSS}'
         if map_html else ""
     )

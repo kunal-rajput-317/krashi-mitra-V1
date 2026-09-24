@@ -175,7 +175,7 @@
     card.setAttribute("aria-label", "स्थान चालू करें");
     card.innerHTML =
       '<div class="km-loc-top">' +
-        '<div class="km-loc-ic">📍</div>' +
+        '<div class="km-loc-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#1a7f43" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2.5" fill="#1a7f43"/></svg></div>' +
         '<div>' +
           '<p class="km-loc-ttl">अपना स्थान चालू करें</p>' +
           '<p class="km-loc-sub">नज़दीकी मंडी भाव और मौसम आपके क्षेत्र के अनुसार दिखाने के लिए।</p>' +

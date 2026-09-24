@@ -118,8 +118,8 @@ def test_tier4_satellite_map_rendered(client, seeded_map_data):
     assert 'id="bhav-map-sec"' in html
     assert 'id="bhav-map-canvas"' in html
     assert "उपग्रह नक्शा (Satellite View)" in html
-    assert "सैटेलाइट (Satellite)" in html
-    assert "नक्शा (Roads)" in html
+    assert "सैटेलाइट<br>(Satellite)" in html
+    assert "नक्शा<br>(Roads)" in html
     assert "पूरा नक्शा देखें" in html
     assert "उच्चतम भाव" in html
 
@@ -166,8 +166,8 @@ def test_district_hub_satellite_map_rendered(client, seeded_map_data):
     assert 'id="bhav-hub-map-sec"' in html
     assert 'id="bhav-hub-map-canvas"' in html
     assert "जिले की मंडियां — उपग्रह नक्शा (Satellite View)" in html
-    assert "सैटेलाइट (Satellite)" in html
-    assert "नक्शा (Roads)" in html
+    assert "सैटेलाइट<br>(Satellite)" in html
+    assert "नक्शा<br>(Roads)" in html
     assert "पूरा नक्शा देखें" in html
 
     # Verify fullscreen, location icon-only button, and toolbar route button
@@ -423,3 +423,91 @@ def test_overlapping_markers_stacked_markup_and_script(client, seeded_map_data):
 
 
 
+
+
+# ── the route's destination ─────────────────────────────────────────────────
+# A pin is only where the mandi really is when its name matched a cached OSM
+# place. Otherwise it is the district centroid nudged 0.9-3 km so pins don't
+# stack — "Kithore" lands 16.7 km from the real Kithaur. These guard the rule
+# that an invented coordinate never becomes turn-by-turn navigation.
+
+def _map_html_for(markets):
+    """The tier-4 satellite map HTML for a list of (market, modal) pairs."""
+    from backend.routes.bhav import _mandi_satellite_map_html
+    prices = [{"market": m, "modal_price": str(v), "min_price": str(v - 50),
+               "max_price": str(v + 50), "date": "", "variety": "Common"}
+              for m, v in markets]
+    return _mandi_satellite_map_html(
+        "Uttar Pradesh", "Meerut", prices, "wheat", "गेहूं",
+        "uttar-pradesh", "meerut", "मेरठ")
+
+
+def test_inexact_pin_carries_a_name_for_google_to_geocode():
+    html = _map_html_for([("Test Market Alpha", 2400)])
+    assert '"is_exact": false' in html
+    # the nav fallback: a text destination, not our jittered coordinate
+    assert '"nav_q": "Test Market Alpha, Meerut, Uttar Pradesh mandi"' in html
+    assert "var isExact = targetMandi.is_exact !== false;" in html
+    assert "encodeURIComponent(navQ)" in html
+
+
+def test_inexact_pin_draws_no_road_route_and_says_it_is_approximate():
+    html = _map_html_for([("Test Market Alpha", 2400)])
+    # An inexact pin still gets a road route, with fallback coords if network fails
+    assert "var isExact = targetMandi.is_exact !== false;" in html
+    assert "renderRoute(fallbackCoords, uLat, uLon, destLat, destLon, true);" in html
+    # … the line is dashed and the distance is hedged, in the popup and the card
+    assert "dashArray: approx ? '9 9' : null" in html
+    assert "मंडी की जगह अनुमानित" in html
+    assert "जगह अनुमानित है — गूगल मैप पर मंडी का नाम खोजें" in html
+    assert "(m.is_exact === false ? 'लगभग ' : '')" in html
+
+
+def test_exact_pin_still_gets_the_real_road_route():
+    html = _map_html_for([("Mawana APMC", 2650)])
+    assert '"is_exact": true' in html
+    assert "router.project-osrm.org/route/v1/driving" in html
+
+
+def test_estimated_distance_is_never_labelled_a_road_distance():
+    html = _map_html_for([("Mawana APMC", 2650)])
+    # the OSRM-returned distance may say सड़क मार्ग; the fallbacks may not
+    assert "किमी <small>· लगभग ' + estTimeTxt + ' (अनुमानित)</small>" in html
+    assert "estRoadKm + ' किमी <small>· लगभग ' + estTimeTxt + ' (सड़क मार्ग)" not in html
+
+
+def test_markers_json_cannot_close_the_script_block():
+    from backend.routes.bhav import _markers_script_json
+    B = chr(92)
+    out = _markers_script_json([{"market": "A</script><b>x"}])
+    assert "</script>" not in out
+    assert "<" not in out and ">" not in out
+    assert (B + "u003c/script" + B + "u003e") in out
+
+
+# ── placing the farmer's own pin ────────────────────────────────────────────
+
+def test_map_click_is_bound_once_and_gated_by_pin_mode():
+    html = _map_html_for([("Mawana APMC", 2650)])
+    # one registration, in initMap — it used to be inside placeUserMarker(),
+    # which runs up to four times a visit and stacked duplicate handlers
+    assert html.count("map.on('click'") == 1
+    assert "if (!pinMode) return;" in html
+    click_at = html.index("map.on('click'")
+    place_at = html.index("function placeUserMarker(")
+    assert click_at < place_at
+
+
+def test_geolocation_refusal_offers_a_pin_mode_that_works():
+    html = _map_html_for([("Mawana APMC", 2650)])
+    # the old copy told the farmer to tap the map, but nothing listened
+    assert "alert(" not in html
+    assert "setPinMode(true, 'लोकेशन नहीं मिली — नक्शे पर अपनी जगह टैप करें')" in html
+    assert "setPinMode(true, 'लोकेशन उपलब्ध नहीं — नक्शे पर अपनी जगह टैप करें')" in html
+    assert "bhav-map-pin-hint" in html
+
+
+def test_route_card_label_matches_how_the_mandi_was_chosen():
+    html = _map_html_for([("Mawana APMC", 2650), ("Meerut APMC", 2600)])
+    assert 'id="bhav-map-route-label"' in html
+    assert "pickedExplicitly ? 'चुनी गई मंडी' : 'नजदीकी मंडी'" in html

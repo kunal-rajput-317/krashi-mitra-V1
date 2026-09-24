@@ -217,6 +217,13 @@ app.add_middleware(SecurityHeadersMiddleware)
 # runs, so every log line from CORS handling inward carries it.
 app.add_middleware(RequestContextMiddleware)
 
+# Outside even that, so it counts the final bytes of every response — gzip'd
+# bodies, redirects, errors — which is exactly what Render bills against the
+# 5 GB/month cap. See services/bandwidth_meter.py and /admin/bandwidth.
+from backend.services.bandwidth_meter import BandwidthMeterMiddleware
+
+app.add_middleware(BandwidthMeterMiddleware)
+
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
@@ -357,6 +364,17 @@ async def startup():
     except Exception as e:
         log.warning(f"⚠️ MSP config check skipped (non-fatal): {e}")
 
+
+@app.on_event("shutdown")
+async def _flush_bandwidth_meter():
+    # Render restarts the process on every deploy; without this the last
+    # hour's byte counts would be lost each time.
+    try:
+        from backend.services.bandwidth_meter import flush
+        await asyncio.to_thread(flush)
+    except Exception as e:
+        log.warning(f"⚠️ Bandwidth meter flush on shutdown failed: {e}")
+
 # @app.post("/ask")
 # async def ask(data: dict):
 #     # Your logic here
@@ -368,6 +386,8 @@ app.include_router(mandi_router)
 app.include_router(fertilizer_router)
 app.include_router(chatbot_router)
 app.include_router(auth_router)
+from backend.routes.account_delete import router as account_delete_router
+app.include_router(account_delete_router)  # /account/delete/* — खाता हटाएँ (password + OTP)
 app.include_router(profile_router)
 app.include_router(search_router)   # NEW
 app.include_router(cart_router)     # CART
@@ -457,6 +477,12 @@ try:
     app.include_router(admin_sponsor_route.router)
 except ImportError:
     log.info("routes/admin_sponsor.py absent — the sponsor panel is not served")
+
+from backend.routes import admin_reports as admin_reports_route
+app.include_router(admin_reports_route.router)  # /admin/bazar-reports — कृषि बाज़ार complaints queue
+
+from backend.routes import admin_ledger as admin_ledger_route
+app.include_router(admin_ledger_route.router)  # /admin/ledger/* — हिसाब: every payment, CSV for the CA
 
 from backend.routes import admin_articles as admin_articles_route
 app.include_router(admin_articles_route.router)  # /admin/articles/* — write and publish an article with no deploy
@@ -619,8 +645,7 @@ app.mount("/uploads", CachedStaticFiles(directory=BASE_DIR / "uploads"), name="u
 #   and the 917 KB Andhra Pradesh file is the single largest non-image asset).
 # JS/CSS:       1-day browser, 7-day edge (shell scripts like api-config.js
 #   are already network-first in the service worker; edge caching is safe).
-# HTML:         5-min browser, 1-hour edge + 1-day stale-while-revalidate
-#   (matches _CACHE_HEADERS for the SSR pages from bhav._doc()).
+# HTML:         5-min browser, 3-hour edge + 1-day stale-while-revalidate.
 #
 # CDN-Cache-Control is the vendor-neutral header Cloudflare honours — it
 # controls the edge TTL independently of the browser TTL in Cache-Control.
@@ -655,8 +680,10 @@ _STATIC_CACHE = {
     ".css":    ("public, max-age=86400",
                 "public, max-age=604800"),
     # static HTML (core pages like index.html, weather.html, etc.)
+    # 3 h at the edge (was 1 h until 25 Sep 2026): these files change only
+    # on a deploy, and their live numbers are fetched by JS, not baked in.
     ".html":   ("public, max-age=300",
-                "public, max-age=3600, stale-while-revalidate=86400"),
+                "public, max-age=10800, stale-while-revalidate=86400"),
 }
 
 

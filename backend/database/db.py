@@ -3,11 +3,12 @@
 # KrashiMitra — Database Configuration
 # ============================================================
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Date, Text, Boolean, Float, LargeBinary, text, UniqueConstraint, ForeignKey, Index, select
+from sqlalchemy import create_engine, Column, Integer, BigInteger, String, DateTime, Date, Text, Boolean, Float, LargeBinary, text, UniqueConstraint, ForeignKey, Index, select
 from sqlalchemy.orm import sessionmaker, declarative_base, deferred
 from sqlalchemy.pool import NullPool
 from datetime import datetime
 import os
+from pathlib import Path, PurePosixPath
 from dotenv import load_dotenv
 import logging
 
@@ -432,12 +433,8 @@ class UserProfile(Base):
     name                 = Column(String,   nullable=False)
     phone_number         = Column(String,   nullable=True)
     whatsapp_number      = Column(String,   nullable=True)
-    dob                  = Column(Date,     nullable=True)   # live column is DATE; input "YYYY-MM-DD"
-    gender               = Column(String,   nullable=True)
-    education            = Column(String,   nullable=True)
     occupation           = Column(String,   nullable=True)   # व्यवसाय — who the customer is (farmer/trader/dealer/…)
     farming_experience   = Column(String,   nullable=True)
-    family_size          = Column(Integer,  nullable=True)
     avatar_url           = Column(String,   nullable=True)
     # Last time `name` actually changed value, added 2026-09-14. The display
     # name is stamped onto every Krashi Bazar card the user has ever posted,
@@ -464,39 +461,18 @@ class UserProfile(Base):
     # Farm
     farm_size            = Column(String,   nullable=True)
     farm_size_unit       = Column(String,   default="acres")
-    land_ownership       = Column(String,   nullable=True)
-    soil_type            = Column(String,   nullable=True)
-    irrigation_type      = Column(String,   nullable=True)
-    khasra_number        = Column(String,   nullable=True)
 
     # Equipment (checkboxes)
-    eq_tractor           = Column(Boolean,  default=False)
-    eq_pump              = Column(Boolean,  default=False)
-    eq_thresher          = Column(Boolean,  default=False)
-    eq_sprayer           = Column(Boolean,  default=False)
-    eq_harvester         = Column(Boolean,  default=False)
-    eq_none              = Column(Boolean,  default=False)
 
     # Crops
     primary_crop         = Column(String,   nullable=True)  # NULL until the user actually picks a crop
     crops_grown          = Column(String,   nullable=True)
-    farming_season       = Column(String,   nullable=True)
     farming_type         = Column(String,   nullable=True)
-    yield_per_acre       = Column(String,   nullable=True)
-    crop_problems        = Column(Text,     nullable=True)
 
     # Schemes & Finance
-    pm_kisan_registered  = Column(Boolean,  default=False)
-    has_kcc              = Column(Boolean,  default=False)
-    aadhaar_linked       = Column(Boolean,  default=False)
-    fasal_bima           = Column(Boolean,  default=False)
-    bank_name            = Column(String,   nullable=True)
-    annual_income        = Column(String,   nullable=True)
 
     # Preferences
     language             = Column(String,   default="hindi")
-    advisory_type        = Column(String,   nullable=True)
-    special_needs        = Column(Text,     nullable=True)
 
     # Notifications
     notif_weather        = Column(Boolean,  default=False)
@@ -902,6 +878,67 @@ class MandiAlert(Base):
     )
 
 
+class AppSetting(Base):
+    """Operator-editable settings, so a switch can be thrown without a deploy.
+
+    Values are JSON text under a dotted key ("alerts.enabled"). A missing row
+    means "use the code's default" — never "off" — so a fresh database, a failed
+    read or a rolled-back migration can only ever leave the shipped behaviour in
+    place, not silently disable a feature nobody knows how to re-enable.
+
+    Postgres rather than a file on disk because Render wipes the disk on every
+    deploy, which would reset an operator's choice without telling anyone."""
+    __tablename__ = "app_settings"
+
+    key        = Column(String,   primary_key=True)
+    value      = Column(Text,     nullable=False)     # JSON
+    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_by = Column(String,   nullable=True)
+
+
+class BandwidthUsage(Base):
+    """Bytes this origin sent, per day × site section × requester.
+
+    Render suspends the workspace at 5 GB/month of outbound bandwidth and its
+    own graph is a single line for the whole service, so this is the only place
+    that can answer "which pages, and to whom". Written hourly by
+    services/bandwidth_meter.flush() — one UPSERT per key, never per request."""
+    __tablename__ = "bandwidth_usage"
+
+    day      = Column(Date,    primary_key=True)
+    grp      = Column(String,  primary_key=True)     # bhav, images/articles, js/css, 404…
+    agent    = Column(String,  primary_key=True)     # googlebot, gptbot, human…
+    requests = Column(Integer, nullable=False, default=0)
+    bytes    = Column(BigInteger, nullable=False, default=0)   # int4 tops out at 2 GB
+
+
+class PushBroadcast(Base):
+    """One hand-written notification sent to farmers, kept forever.
+
+    A broadcast cannot be recalled once it reaches a lock screen, so the only
+    protection against sending the same thing twice — or against nobody being
+    able to answer "what did we tell them, and when?" weeks later — is a
+    record written at send time. Stored even when delivery fails, because a
+    failed send to 70 devices is itself something to know about."""
+    __tablename__ = "push_broadcasts"
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    title      = Column(String,   nullable=False)
+    body       = Column(Text,     nullable=False)
+    url        = Column(String,   nullable=True)
+    # What was targeted, as sent — kept as text rather than joined to anything,
+    # so the record still reads correctly after a crop is renamed or an alert
+    # is deleted.
+    audience   = Column(String,   nullable=True)      # 'all' | 'alerts'
+    commodity  = Column(String,   nullable=True)
+    state      = Column(String,   nullable=True)
+    district   = Column(String,   nullable=True)
+    devices    = Column(Integer,  default=0)          # how many were tried
+    sent       = Column(Integer,  default=0)          # how many accepted
+    sent_by    = Column(String,   nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 # ── DATA SYNC LOG ────────────────────────────────────────────
 
 class SyncLog(Base):
@@ -989,6 +1026,36 @@ class BazarPost(Base):
     updated_at        = Column(DateTime, nullable=True)
     edit_count        = Column(Integer,  default=0)
     edit_window_start = Column(DateTime, nullable=True)
+
+
+class BazarMediaChange(Base):
+    """One row per photo replacement — the ledger behind the 3-a-day cap.
+
+    Added 2026-09-22 with `POST /bazar/posts/{id}/media`. The cap deliberately
+    counts per USER and not per post, unlike `BazarPost.edit_count` above: a
+    per-post counter lets one account spend thirty uploads a day across ten
+    listings, and an upload is the most expensive thing a farmer can do here —
+    it is a Class A write against R2's 1M/month and, when R2 is off, bytes into
+    the 60 MB Postgres fallback that shares Neon's 0.5 GB ceiling with all 22
+    tables.
+
+    A counter per user cannot live on a post row, and `user_profiles` is off
+    limits (it is the identity root), so it lives here instead: append-only,
+    three small columns, and rows are read back over a rolling 24h window the
+    same way `edit_window_start` works — a calendar day would let the limit be
+    doubled across midnight.
+
+    ON DELETE CASCADE on the post would let a farmer reset his own counter by
+    deleting the listing he just changed, so `post_id` is a plain integer with
+    no foreign key. The ledger outlives the post it describes, which is the
+    point of a ledger.
+    """
+    __tablename__ = "bazar_media_changes"
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    users_id   = Column(Integer,  nullable=False, index=True)   # users.id — see BazarPost
+    post_id    = Column(Integer,  nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
 
 class BazarLike(Base):
@@ -1423,6 +1490,92 @@ class Buyer(Base):
     # published to farmers under his own name. Separating them is what stops
     # that; the card now renders this column and `note` never leaves the panel.
     description = Column(String, nullable=True)
+
+
+class Payment(Base):
+    """Every rupee that came in (or went back out), one row per payment.
+
+    APPEND-ONLY, on purpose. The per-feature tables (buyers, dukan_shops,
+    rental_providers, seller_verifications, sponsors) each keep only their
+    LATEST payment in paid_at/paid_amount, so a renewal overwrote the one
+    before it and the history was gone. This table is the history — what a CA
+    files the ITR and GST return from. A mistake is voided (voided_at + reason),
+    never deleted or edited, so the record of what was keyed in survives.
+
+    A refund is a row with a NEGATIVE amount, not an edit of the original.
+    See services/ledger.py.
+    """
+    __tablename__ = "payments"
+
+    id          = Column(Integer,  primary_key=True, index=True)
+    received_at = Column(DateTime, nullable=False, index=True)   # when the money landed (UTC)
+    amount      = Column(Integer,  nullable=False)               # whole rupees; negative = refund
+    source      = Column(String,   nullable=False, index=True)   # ledger.SOURCES key
+    source_key  = Column(String,   nullable=True,  index=True)   # slug / ref of the row it paid for
+    payer       = Column(String,   nullable=True)                # who paid
+    contact     = Column(String,   nullable=True)                # phone / email, admin-only
+    ref         = Column(String,   nullable=True)                # UPI / UTR / bank reference
+    method      = Column(String,   nullable=True)                # upi / bank / other
+    note        = Column(Text,     nullable=True)
+    origin      = Column(String,   default="live", nullable=False)  # live / manual / backfill
+    voided_at   = Column(DateTime, nullable=True)
+    void_reason = Column(String,   nullable=True)
+    created_at  = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class BazarReport(Base):
+    """A reader's complaint about a कृषि बाज़ार post — the "रिपोर्ट करें" button.
+
+    Krashi Bazar publishes what users write, which makes the site an
+    intermediary under the IT Rules 2021: a complaint must be acknowledged
+    within 24 hours and acted on within 15 days (unlawful content faster).
+    This is the queue that makes that possible — the admin sees it under
+    🚩 बाज़ार शिकायतें and the first report on a post emails the owner.
+    One row per (post, reporter): reporting twice does not count twice.
+    """
+    __tablename__ = "bazar_reports"
+    __table_args__ = (UniqueConstraint("post_id", "users_id", name="bazar_report_uidx"),)
+
+    id         = Column(Integer,  primary_key=True, index=True)
+    post_id    = Column(Integer,  nullable=False, index=True)   # no FK: the report outlives a removed post
+    users_id   = Column(Integer,  nullable=False, index=True)   # reporter (users.id)
+    reason     = Column(String,   nullable=False)
+    note       = Column(Text,     nullable=True)
+    status     = Column(String,   default="open", nullable=False, index=True)  # open | removed | dismissed
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    handled_at = Column(DateTime, nullable=True)
+
+
+class AccountDeletion(Base):
+    """One row per account its owner deleted — the proof, and the 180-day hold.
+
+    A separate table ON PURPOSE: the deleted marker could have been a column on
+    `users`, but users/user_profiles are the identity root (see the
+    never-touch-users-tables rule) and a new table is the contained change. The
+    users row itself stays — anonymised — so every FK in 13 tables keeps
+    pointing at something and the gapless account numbers never renumber.
+
+    reg_* hold what the person registered with, for 180 days, because the IT
+    (Intermediary Guidelines) Rules 2021, r.3(1)(h), require an intermediary to
+    keep registration details that long after an account is cancelled. Admin-
+    only, and a daily sweep (services/account_delete.purge_expired) NULLs them
+    at purge_after. What stays forever is only the date, how it was confirmed,
+    the optional reason and the counts — proof the request was honoured.
+    """
+    __tablename__ = "account_deletions"
+
+    id          = Column(Integer,  primary_key=True, index=True)
+    users_id    = Column(Integer,  nullable=False, index=True)   # users.id (row kept, anonymised)
+    account_no  = Column(Integer,  nullable=True)                # users.user_id at deletion
+    deleted_at  = Column(DateTime, nullable=False, default=datetime.utcnow)
+    verified_by = Column(String,   nullable=False)               # "password+otp" / "otp"
+    reason      = Column(String,   nullable=True)
+    erased      = Column(Text,     nullable=True)                # JSON counts, no personal data
+    reg_name    = Column(String,   nullable=True)                # held 180 days, then NULL
+    reg_email   = Column(String,   nullable=True)
+    reg_phone   = Column(String,   nullable=True)
+    purge_after = Column(DateTime, nullable=False, index=True)
+    purged_at   = Column(DateTime, nullable=True)
 
 
 class Sponsor(Base):
@@ -2183,12 +2336,8 @@ def _ensure_postgres_columns():
             # Personal
             ("phone_number",         "VARCHAR"),
             ("whatsapp_number",      "VARCHAR"),
-            ("dob",                  "VARCHAR"),
-            ("gender",               "VARCHAR"),
-            ("education",            "VARCHAR"),
             ("occupation",           "VARCHAR"),
             ("farming_experience",   "VARCHAR"),
-            ("family_size",          "INTEGER"),
             ("avatar_url",           "VARCHAR"),
             # Added 2026-09-14 with the rename cooldown. NULL on every existing
             # row says "never renamed", which starts everyone with a free change
@@ -2209,35 +2358,14 @@ def _ensure_postgres_columns():
             # Farm
             ("farm_size",            "VARCHAR"),
             ("farm_size_unit",       "VARCHAR DEFAULT 'acres'"),
-            ("land_ownership",       "VARCHAR"),
-            ("soil_type",            "VARCHAR"),
-            ("irrigation_type",      "VARCHAR"),
-            ("khasra_number",        "VARCHAR"),
             # Equipment
-            ("eq_tractor",           "BOOLEAN DEFAULT FALSE"),
-            ("eq_pump",              "BOOLEAN DEFAULT FALSE"),
-            ("eq_thresher",          "BOOLEAN DEFAULT FALSE"),
-            ("eq_sprayer",           "BOOLEAN DEFAULT FALSE"),
-            ("eq_harvester",         "BOOLEAN DEFAULT FALSE"),
-            ("eq_none",              "BOOLEAN DEFAULT FALSE"),
             # Crops
             ("primary_crop",         "VARCHAR DEFAULT 'Sugarcane'"),
             ("crops_grown",          "VARCHAR"),
-            ("farming_season",       "VARCHAR"),
             ("farming_type",         "VARCHAR"),
-            ("yield_per_acre",       "VARCHAR"),
-            ("crop_problems",        "TEXT"),
             # Schemes
-            ("pm_kisan_registered",  "BOOLEAN DEFAULT FALSE"),
-            ("has_kcc",              "BOOLEAN DEFAULT FALSE"),
-            ("aadhaar_linked",       "BOOLEAN DEFAULT FALSE"),
-            ("fasal_bima",           "BOOLEAN DEFAULT FALSE"),
-            ("bank_name",            "VARCHAR"),
-            ("annual_income",        "VARCHAR"),
             # Preferences
             ("language",             "VARCHAR DEFAULT 'hindi'"),
-            ("advisory_type",        "VARCHAR"),
-            ("special_needs",        "TEXT"),
             # Notifications
             ("notif_weather",        "BOOLEAN DEFAULT FALSE"),
             ("notif_mandi",          "BOOLEAN DEFAULT FALSE"),
@@ -3443,16 +3571,171 @@ def _backfill_last_seen():
         log.warning(f"⚠️  mandi_last_seen backfill skipped: {e}")
 
 
+def _clear_dead_bazar_media():
+    """Null the media pointers that point at Render's wiped disk.
+
+    Before object storage existed, `_save_media()` wrote a listing photo to
+    `uploads/bazar/` and stored `/uploads/bazar/<uuid>.jpg` on the row. Render's
+    free tier wipes that directory on every redeploy, so the bytes were gone
+    within days while the row went on claiming a photo nobody can fetch. Three
+    listings from 3–10 Sep 2026 still carry such a pointer.
+
+    The feed already survives it — the card's `onerror` drops the media block
+    rather than rendering a black bar — but every render still spends a request
+    discovering the file is missing, and a row that says "this post has a photo"
+    when it has none is false data every future consumer has to learn to
+    distrust. `share.py`'s og:image is one of them.
+
+    Idempotent, and safe in development: a pointer is cleared only when the file
+    is genuinely absent from disk, so a developer's local uploads keep working
+    while the same code clears production on its next boot. Nothing can create a
+    dead pointer again — in production `_save_media()` has not written to that
+    disk since 14 Sep 2026.
+    """
+    try:
+        upload_dir = Path(__file__).resolve().parents[2] / "uploads" / "bazar"
+        with engine.begin() as conn:
+            rows = conn.execute(text(
+                "SELECT id, media_url, text FROM bazar_posts "
+                "WHERE media_url LIKE '/uploads/%'"
+            )).fetchall()
+            dead, textless = [], []
+            for pid, url, body in rows:
+                if (upload_dir / PurePosixPath(url).name).exists():
+                    continue                 # dev machine: the file is really there
+                dead.append(pid)
+                if not (body or "").strip():
+                    textless.append(pid)
+            if not dead:
+                return
+            conn.execute(
+                text("UPDATE bazar_posts SET media_url = NULL, media_type = NULL "
+                     "WHERE id = ANY(:ids)"),
+                {"ids": dead},
+            )
+        log.info(f"🧹 cleared {len(dead)} dead bazar media pointer(s): "
+                 f"{', '.join(str(i) for i in dead)}")
+        if textless:
+            # Said out loud rather than repaired. These listings were media-only,
+            # so clearing the pointer leaves a card carrying only its crop, price
+            # and place — which is already what the feed shows for them, the photo
+            # having been unfetchable for weeks. Deleting another person's listing
+            # is not a repair this function gets to make.
+            log.info(f"   …of which {len(textless)} had no text either "
+                     f"({', '.join(str(i) for i in textless)}); they now render "
+                     f"from crop, price and place alone.")
+    except Exception as e:
+        log.warning(f"⚠️  dead bazar media sweep skipped: {e}")
+
+
+# ── Retired user_profiles fields (2026-09-25) ────────────────────────────
+#
+# Collected by the profile form, used by nothing: date of birth, gender,
+# education, family size, bank name, income, khasra, Aadhaar-linked, PM-Kisan,
+# KCC, crop insurance, special needs (health), land type, and the unused farm
+# details. Data that is not stored cannot leak (DPDP Act: collect only what the
+# purpose needs). Removed on the owner's instruction, confirmed three times.
+#
+# TWO STEPS, because the live site reads the same Neon database as a local
+# `--reload` uvicorn, and the OLD code still maps these columns — drop them
+# while it runs and every logged-in page 500s:
+#   1. ERASE the values, every boot, anywhere. Harmless to old code, and
+#      idempotent: the WHERE matches only rows still holding something, so
+#      after the first run it rewrites nothing (no write churn on Neon).
+#   2. DROP the columns — only on Render, and only on a boot at least an hour
+#      after this code first booted there, so no instance of the old code can
+#      still be serving. Automatic: Render restarts on its own.
+RETIRED_PROFILE_FIELDS = (
+    "dob", "gender", "education", "family_size", "bank_name", "annual_income",
+    "khasra_number", "aadhaar_linked", "pm_kisan_registered", "has_kcc",
+    "fasal_bima", "special_needs", "land_ownership", "soil_type",
+    "irrigation_type", "yield_per_acre", "crop_problems", "farming_season",
+    "advisory_type", "eq_tractor", "eq_pump", "eq_thresher", "eq_sprayer",
+    "eq_harvester", "eq_none",
+)
+_RETIRE_DROP_AFTER_SECONDS = 3600
+
+
+def _retire_profile_fields():
+    if engine.dialect.name != "postgresql":
+        return
+    try:
+        with engine.begin() as conn:
+            present = {r[0] for r in conn.execute(text("""
+                SELECT column_name FROM information_schema.columns
+                 WHERE table_name = 'user_profiles'
+            """))}
+            cols = [c for c in RETIRED_PROFILE_FIELDS if c in present]
+            if not cols:
+                return
+            types = dict(conn.execute(text("""
+                SELECT column_name, data_type FROM information_schema.columns
+                 WHERE table_name = 'user_profiles'
+            """)).all())
+            # A FALSE tick box holds nothing; only TRUE or a value is personal.
+            held = " OR ".join(
+                f"{c} IS TRUE" if types.get(c) == "boolean" else f"{c} IS NOT NULL"
+                for c in cols)
+            n = conn.execute(text(
+                f"UPDATE user_profiles SET {', '.join(f'{c} = NULL' for c in cols)} "
+                f"WHERE {held}")).rowcount
+            if n:
+                log.info(f"🧹 retired profile fields erased on {n} profile(s)")
+
+            if not os.getenv("RENDER"):
+                return
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS schema_retirements (
+                    name TEXT PRIMARY KEY, first_seen TIMESTAMP NOT NULL)
+            """))
+            conn.execute(text("""
+                INSERT INTO schema_retirements (name, first_seen)
+                VALUES ('user_profiles_2026_09_25', now())
+                ON CONFLICT (name) DO NOTHING
+            """))
+            age = conn.execute(text("""
+                SELECT EXTRACT(EPOCH FROM now() - first_seen)
+                  FROM schema_retirements WHERE name = 'user_profiles_2026_09_25'
+            """)).scalar() or 0
+            if age < _RETIRE_DROP_AFTER_SECONDS:
+                return
+            conn.execute(text(
+                "ALTER TABLE user_profiles "
+                + ", ".join(f"DROP COLUMN IF EXISTS {c}" for c in cols)))
+            log.info(f"🗑️ retired profile columns dropped: {', '.join(cols)}")
+    except Exception as e:
+        log.warning(f"retiring profile fields skipped: {e}")
+
+
+def _backfill_payment_ledger():
+    """Copy each feature row's last recorded payment into `payments`, once.
+    Idempotent (see services/ledger.backfill) and never fatal to startup."""
+    try:
+        from backend.services import ledger
+        db = SessionLocal()
+        try:
+            n = ledger.backfill(db)
+            if n:
+                log.info(f"💰 payment ledger: {n} earlier payment(s) copied in")
+        finally:
+            db.close()
+    except Exception as e:
+        log.warning(f"payment ledger backfill skipped: {e}")
+
+
 def init_db():
     try:
         _ensure_table_renames()
         Base.metadata.create_all(bind=engine)
         _ensure_postgres_columns()
+        _retire_profile_fields()
         _ensure_conflict_arbiters()
         _ensure_users_column_order()
         _ensure_foreign_keys()
         _backfill_last_seen()
         _drop_dead_indexes()
+        _clear_dead_bazar_media()
+        _backfill_payment_ledger()
         log.info("✅ Database tables created successfully!")
     except Exception as e:
         log.warning(f"⚠️  Database error: {e}")

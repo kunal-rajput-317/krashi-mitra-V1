@@ -1025,6 +1025,19 @@ def brand_mark(px=78, on_dark=False, url=False):
     return css, html
 
 
+def _palette_png(path):
+    """Re-save a flat-colour screenshot as a 256-colour PNG, no dithering.
+
+    Chromium writes 24-bit PNGs; these maps have a few thousand colours (mostly
+    text anti-aliasing), and a palette copy is visually identical at about a
+    third of the bytes — 391 KB → 132 KB for UP. Every byte of the HD download
+    counts against Render's 5 GB/month bandwidth cap."""
+    from PIL import Image
+    im = Image.open(path).convert("RGB")
+    im.quantize(256, method=Image.MEDIANCUT, dither=Image.NONE).save(path, "PNG", optimize=True)
+    print("png (palette):", path, os.path.getsize(path), "bytes")
+
+
 def render(html_path, png_path, w, h):
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
@@ -1075,6 +1088,7 @@ def build_state(key):
     fp = scratch / f"{key}_map_full.html"
     fp.write_text(html, encoding="utf-8")
     render(fp, IMG_DIR / f"{prefix}-district-map.png", W, H)
+    _palette_png(IMG_DIR / f"{prefix}-district-map.png")
 
     # ── og card 1200x630 ──
     # Same lockup, dark palette — it absorbs the old plain-text krashimitra.in line.
@@ -1098,10 +1112,13 @@ def build_state(key):
     fo = scratch / f"{key}_map_og.html"
     fo.write_text(html_og, encoding="utf-8")
     render(fo, IMG_DIR / f"{prefix}-og.png", 1200, 630)
+    _palette_png(IMG_DIR / f"{prefix}-og.png")
 
     # ── light webp for in-page display ──
     from PIL import Image
-    im = Image.open(IMG_DIR / f"{prefix}-district-map.png")
+    # .convert: the PNG is palette-mode now, and resizing a "P" image is
+    # nearest-neighbour — the thumb would come out jagged.
+    im = Image.open(IMG_DIR / f"{prefix}-district-map.png").convert("RGB")
     im.save(IMG_DIR / f"{prefix}-district-map.webp", "WEBP", quality=82, method=6)
 
     # The only place the webp is ever rendered is a 64x64 banner thumb in

@@ -228,7 +228,6 @@ def _naksha_entries() -> list:
     out = [_entry(f"{SITE}/naksha", when, "weekly", 0.8, ("hi", "en"))]
     for key, s in states.items():
         img = f"{SITE}/images/{s['prefix']}-district-map.png"
-        # _url() already knows UP lives at /map.
         out.append(_entry(_url(key), when, "weekly", 0.7, ("hi", "en"), (img,)))
         # A 1–2 district UT's list page is noindex (see naksha.py) — a sitemap
         # entry for a page we ask Google not to index is a contradiction.
@@ -309,7 +308,7 @@ def _build() -> str:
     # The नक्शा cluster. These are server-rendered (routes/naksha.py) from
     # backend/data/naksha_states.json, so there are no files to glob — the
     # manifest is the list, and a state added to it appears here on its own.
-    # /map is in CORE above: it is UP's page under its original URL.
+    # /map is the noindex map tool, not part of the cluster — never listed.
     urls.extend(_naksha_entries())
 
     # Every article actually on disk — not a list anyone has to remember to update.

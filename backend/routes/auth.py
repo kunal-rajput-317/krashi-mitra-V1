@@ -48,7 +48,7 @@ from backend.utils.auth_utils import (
     get_current_user,
 )
 from backend.routes.alerts import display_name
-from backend.utils.security import rate_limit
+from backend.utils.security import check_daily_limit, rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +111,14 @@ _login_attempts = {}
 # its 10-minute window. Five tries makes that a 1-in-200,000 shot per code.
 MAX_OTP_ATTEMPTS = 5
 _otp_attempts = {}
+
+# Successful password changes allowed per account per IST day. /reset-password
+# is the only path that rewrites a password, and every hit of it costs an OTP
+# email; capping the changes themselves stops an account being churned through
+# passwords all day (by its owner or by someone holding the mailbox) and keeps
+# the login history readable. Keyed by email, not IP — the account is what is
+# being protected, and the counter must follow it across networks.
+MAX_PASSWORD_CHANGES_PER_DAY = 5
 
 # Both dicts are keyed by caller-supplied email, so bound them: an attacker
 # posting a million unique addresses would otherwise grow them until the Render
@@ -516,6 +524,20 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
         err = validate_password_strength(body.new_password)
         if err:
             return {"success": False, "message": err, "data": {}}
+
+        # Counted only once the change is otherwise certain to go through, so a
+        # wrong OTP or a weak password never eats one of the day's five.
+        if check_daily_limit(
+            f"pwchange:{_login_key(body.email)}", MAX_PASSWORD_CHANGES_PER_DAY
+        ) is not None:
+            return {
+                "success": False,
+                "message": (
+                    f"एक दिन में सिर्फ़ {MAX_PASSWORD_CHANGES_PER_DAY} बार password बदला जा सकता है। "
+                    "कृपया कल दोबारा कोशिश करें।"
+                ),
+                "data": {},
+            }
 
         user.hashed_password = hash_password(body.new_password)
         user.otp             = None

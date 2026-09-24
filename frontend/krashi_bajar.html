@@ -697,7 +697,8 @@
   .bz-card-text {
     font-size: 13px; line-height: 1.5; color: var(--text-dark);
     word-break: break-word;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
   }
   /* A clamp on its own just swallows the end of the sentence, and the last
@@ -706,7 +707,9 @@
      bzApplyClamps() measures each block after it paints and adds the toggle
      ONLY where the text really overflows: a two-line post never grows a stray
      "और देखें", which would have made the feed look untidier, not tidier. */
-  .bz-clampable.is-open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+  .bz-clampable.is-open {
+    display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: visible;
+  }
   .bz-clamp-more {
     display: block; margin-top: 2px; padding: 0;
     background: none; border: 0; font: inherit;
@@ -847,11 +850,34 @@
   .bz-type-pick button.active {
     background: var(--green-pale); color: var(--green-dark); border-color: var(--green-mid);
   }
-  /* Shown only while editing — media cannot be changed, see edit_post(). */
-  .bz-edit-note {
-    background: #fff8e1; border: 1px solid #ffe08a; border-radius: 10px;
-    padding: 9px 11px; font-size: 12px; color: #7a5c00; line-height: 1.5;
+  /* Shown only while editing — the current photo and the button that replaces
+     it (POST /bazar/posts/{id}/media). Sized for a thumb at 390px: the thumb is
+     a fixed 84px so the row cannot reflow while a new photo loads into it.
+     (.bz-edit-note, the amber "photo cannot be changed" banner this replaced,
+     is gone along with the limitation it announced.) */
+  .bz-edit-media-box { display: flex; gap: 12px; align-items: center; }
+  .bz-edit-media-thumb {
+    width: 84px; height: 84px; flex: 0 0 84px; border-radius: 12px;
+    border: 1.5px solid var(--border); background: var(--cream);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: var(--text-light);
   }
+  .bz-edit-media-thumb img, .bz-edit-media-thumb video {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .bz-edit-media-side { flex: 1; min-width: 0; }
+  .bz-edit-media-btn {
+    width: 100%; min-height: 40px; padding: 10px 14px; border-radius: 12px;
+    border: 1.5px solid var(--green-light); background: var(--green-pale);
+    color: var(--green-dark); font-family: inherit; font-size: 13.5px;
+    font-weight: 800; cursor: pointer; transition: background .15s, opacity .15s;
+  }
+  .bz-edit-media-btn:hover:not(:disabled) { background: var(--green-light); }
+  .bz-edit-media-btn:disabled { opacity: .55; cursor: default; }
+  .bz-edit-media-note {
+    margin-top: 6px; font-size: 11.5px; color: var(--text-light); line-height: 1.45;
+  }
+  .bz-edit-media-note.is-err { color: #b4232a; }
   .bz-act-btn.liked {
     color: var(--green-mid); background: var(--green-pale); border-color: var(--green-light);
   }
@@ -1239,7 +1265,8 @@
   /* Four lines in a comment, two on a card: a comment is already the thing
      you opened the sheet to read, so it is cut later than a card caption. */
   .bz-comment-text { word-break: break-word;
-    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+    display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4;
+    -webkit-box-orient: vertical;
     overflow: hidden; }
   .bz-comment-time { font-size: 10.5px; color: var(--text-light); font-weight: 600; margin-top: 3px; }
   .bz-comment-bubble.offer {
@@ -1974,10 +2001,14 @@
       <label class="bz-form-label" data-t="lbl_place">फसल कहाँ रखी है?</label>
       <div class="bz-loc-btns">
         <button type="button" class="bz-loc-btn" id="cmp-loc-gps" onclick="useDeviceLocation()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-            <circle cx="12" cy="12" r="8"/>
+            <circle cx="12" cy="12" r="7"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="19" y1="12" x2="22" y2="12"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
           </svg>
           <span data-t="btn_gps">मेरी लोकेशन</span>
         </button>
@@ -1999,8 +2030,26 @@
       <div class="bz-loc-note" id="cmp-loc-note"></div>
     </div>
 
-    <div class="bz-form-row" id="cmp-edit-note" style="display:none;">
-      <div class="bz-edit-note" data-t="edit_media_note">फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।</div>
+    <!-- Shown only while editing: the listing's current photo, with the one
+         action that used to be impossible. The picker below is hidden in edit
+         mode because a replacement is a separate request with its own daily
+         limit — putting it in the same Save would mean a farmer fixing a typo
+         silently spends one of his three photo changes. -->
+    <div class="bz-form-row" id="cmp-edit-media" style="display:none;">
+      <label class="bz-form-label" data-t="lbl_media">फोटो / वीडियो</label>
+      <div class="bz-edit-media-box">
+        <div class="bz-edit-media-thumb" id="cmp-edit-thumb"></div>
+        <div class="bz-edit-media-side">
+          <button type="button" class="bz-edit-media-btn" id="cmp-edit-media-btn"
+                  onclick="document.getElementById('cmp-edit-media-file').click()">
+            <span data-t="btn_change_photo">फोटो बदलें</span>
+          </button>
+          <div class="bz-edit-media-note" id="cmp-edit-media-note" data-t="change_photo_note">दिन में 3 बार बदल सकते हैं</div>
+        </div>
+      </div>
+      <input type="file" id="cmp-edit-media-file"
+             accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+             style="display:none;" onchange="onEditMediaPicked(this)">
     </div>
 
     <div class="bz-form-row" id="cmp-media-row">
@@ -2034,10 +2083,14 @@
     </svg>
     <button class="bz-map-gps" onclick="recenterMap()" id="bz-map-gps"
             aria-label="मेरी लोकेशन">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
            stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-        <circle cx="12" cy="12" r="8"/>
+        <circle cx="12" cy="12" r="7"/>
+        <line x1="12" y1="2" x2="12" y2="5"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="2" y1="12" x2="5" y2="12"/>
+        <line x1="19" y1="12" x2="22" y2="12"/>
+        <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
       </svg>
     </button>
   </div>
@@ -2153,7 +2206,14 @@ const TRANSLATIONS = {
     tab_all:'सभी पोस्ट', tab_mine:'मेरी पोस्ट',
     lbl_type:'आप क्या करना चाहते हैं?', type_sell:'बेचना है', type_buy:'खरीदना है',
     edit:'बदलें', edit_title:'अपनी listing बदलें', btn_save:'सेव करें ✓',
-    edit_media_note:'फोटो/वीडियो अभी नहीं बदल सकते — बदलना हो तो post delete करके नई डालें।',
+    // edit_media_note used to say the photo could not be changed at all. It is
+    // now the answer to a different question: an edit may empty the text only
+    // if the listing still has a photo to stand on.
+    edit_media_note:'विवरण खाली छोड़ना है तो listing पर photo होनी चाहिए।',
+    btn_change_photo:'फोटो बदलें', change_photo_note:'दिन में 3 बार बदल सकते हैं',
+    change_photo_done:'✓ फोटो बदल गई।', changes_left:'बार आज और',
+    change_photo_failed:'फोटो बदली नहीं जा सकी — दोबारा try करें',
+    media_uploading:'फोटो भेजी जा रही है…',
     edit_saved:'✓ Listing update हो गई।', edits_left:'आज बाकी edit',
     edit_nochange:'कुछ बदला नहीं।',
     search_ph:'फसल या मंडी खोजें...', loading:'लोड हो रहा है…', load_more:'और देखें ↓',
@@ -2197,6 +2257,9 @@ const TRANSLATIONS = {
     min_ago:'मिनट पहले', hr_ago:'घंटे पहले', day_ago:'दिन पहले', just_now:'अभी-अभी',
     per:'प्रति', qty_lbl:'मात्रा', posted_deleted:'Post delete हो गया।',
     mark_sold:'बिक गया चिह्नित करें', delete_post:'पोस्ट हटाएं',
+    report_head:'🚩 रिपोर्ट करें — कारण चुनें', report_done:'शिकायत दर्ज — हम 24 घंटे में देखेंगे',
+    report_reasons:{fraud:'धोखाधड़ी / ठगी', fake:'नकली या प्रतिबंधित सामान', wrong:'गलत या भ्रामक जानकारी',
+      abuse:'अपमानजनक / अश्लील', identity:'किसी और की फ़ोटो या पहचान', spam:'स्पैम', other:'अन्य'},
     delete_post_q:'यह पोस्ट हटाएं? वापस नहीं आएगी।', action_failed:'नहीं हो पाया — दोबारा try करें',
     recent_posts:'हाल की पोस्ट', member_since:'सदस्य बने',
     sample_badge:'नमूना',
@@ -2230,7 +2293,11 @@ const TRANSLATIONS = {
     tab_all:'All posts', tab_mine:'My posts',
     lbl_type:'What do you want to do?', type_sell:'I want to sell', type_buy:'I want to buy',
     edit:'Edit', edit_title:'Edit your listing', btn_save:'Save ✓',
-    edit_media_note:'Photo/video can’t be changed yet — delete the post and add a new one instead.',
+    edit_media_note:'To leave the description empty, the listing needs a photo.',
+    btn_change_photo:'Change photo', change_photo_note:'Up to 3 changes a day',
+    change_photo_done:'✓ Photo changed.', changes_left:'more today',
+    change_photo_failed:'Could not change the photo — please try again',
+    media_uploading:'Uploading the photo…',
     edit_saved:'✓ Listing updated.', edits_left:'edits left today',
     edit_nochange:'Nothing changed.',
     search_ph:'Search crop or mandi...', loading:'Loading…', load_more:'Show more ↓',
@@ -2274,6 +2341,9 @@ const TRANSLATIONS = {
     min_ago:'min ago', hr_ago:'hr ago', day_ago:'days ago', just_now:'just now',
     per:'per', qty_lbl:'Qty', posted_deleted:'Post deleted.',
     mark_sold:'Mark as sold', delete_post:'Delete post',
+    report_head:'🚩 Report — pick a reason', report_done:'Report received — we will review it within 24 hours',
+    report_reasons:{fraud:'Fraud / scam', fake:'Fake or banned goods', wrong:'Wrong or misleading',
+      abuse:'Abusive / obscene', identity:"Someone else's photo or identity", spam:'Spam', other:'Other'},
     delete_post_q:'Delete this post? It cannot be undone.', action_failed:'Could not do that — try again',
     recent_posts:'Recent posts', member_since:'Member since',
     sample_badge:'SAMPLE',
@@ -2307,7 +2377,11 @@ const TRANSLATIONS = {
     tab_all:'ಎಲ್ಲಾ ಪೋಸ್ಟ್‌ಗಳು', tab_mine:'ನನ್ನ ಪೋಸ್ಟ್‌ಗಳು',
     lbl_type:'ನೀವು ಏನು ಮಾಡಲು ಬಯಸುತ್ತೀರಿ?', type_sell:'ಮಾರಬೇಕು', type_buy:'ಖರೀದಿಸಬೇಕು',
     edit:'ಬದಲಿಸಿ', edit_title:'ನಿಮ್ಮ ಪಟ್ಟಿ ಬದಲಿಸಿ', btn_save:'ಉಳಿಸಿ ✓',
-    edit_media_note:'ಫೋಟೋ/ವಿಡಿಯೋ ಈಗ ಬದಲಿಸಲಾಗದು — ಪೋಸ್ಟ್ ಅಳಿಸಿ ಹೊಸದನ್ನು ಹಾಕಿ.',
+    edit_media_note:'ವಿವರಣೆ ಖಾಲಿ ಬಿಡಬೇಕಾದರೆ ಪಟ್ಟಿಯಲ್ಲಿ ಫೋಟೋ ಇರಬೇಕು.',
+    btn_change_photo:'ಫೋಟೋ ಬದಲಿಸಿ', change_photo_note:'ದಿನಕ್ಕೆ 3 ಬಾರಿ ಬದಲಿಸಬಹುದು',
+    change_photo_done:'✓ ಫೋಟೋ ಬದಲಾಯಿತು.', changes_left:'ಬಾರಿ ಇಂದು ಇನ್ನೂ',
+    change_photo_failed:'ಫೋಟೋ ಬದಲಿಸಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
+    media_uploading:'ಫೋಟೋ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ…',
     edit_saved:'✓ ಪಟ್ಟಿ ಅಪ್‌ಡೇಟ್ ಆಯಿತು.', edits_left:'ಇಂದು ಉಳಿದ ಎಡಿಟ್',
     edit_nochange:'ಏನೂ ಬದಲಾಗಿಲ್ಲ.',
     search_ph:'ಬೆಳೆ ಅಥವಾ ಮಂಡಿ ಹುಡುಕಿ...', loading:'ಲೋಡ್ ಆಗುತ್ತಿದೆ…', load_more:'ಇನ್ನಷ್ಟು ↓',
@@ -2351,6 +2425,9 @@ const TRANSLATIONS = {
     min_ago:'ನಿಮಿಷ ಹಿಂದೆ', hr_ago:'ಗಂಟೆ ಹಿಂದೆ', day_ago:'ದಿನ ಹಿಂದೆ', just_now:'ಈಗಷ್ಟೇ',
     per:'ಪ್ರತಿ', qty_lbl:'ಪ್ರಮಾಣ', posted_deleted:'ಪೋಸ್ಟ್ ಅಳಿಸಲಾಗಿದೆ.',
     mark_sold:'ಮಾರಾಟವಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ', delete_post:'ಪೋಸ್ಟ್ ಅಳಿಸಿ',
+    report_head:'🚩 ವರದಿ ಮಾಡಿ — ಕಾರಣ ಆಯ್ಕೆಮಾಡಿ', report_done:'ದೂರು ದಾಖಲಾಗಿದೆ — 24 ಗಂಟೆಗಳಲ್ಲಿ ಪರಿಶೀಲಿಸುತ್ತೇವೆ',
+    report_reasons:{fraud:'ವಂಚನೆ', fake:'ನಕಲಿ ಅಥವಾ ನಿಷೇಧಿತ ವಸ್ತು', wrong:'ತಪ್ಪು ಮಾಹಿತಿ',
+      abuse:'ಅವಮಾನಕರ / ಅಶ್ಲೀಲ', identity:'ಬೇರೆಯವರ ಫೋಟೋ ಅಥವಾ ಗುರುತು', spam:'ಸ್ಪ್ಯಾಮ್', other:'ಇತರೆ'},
     delete_post_q:'ಈ ಪೋಸ್ಟ್ ಅಳಿಸುವುದೇ? ಹಿಂತಿರುಗಿಸಲಾಗದು.', action_failed:'ಆಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
     recent_posts:'ಇತ್ತೀಚಿನ ಪೋಸ್ಟ್‌ಗಳು', member_since:'ಸದಸ್ಯರಾದದ್ದು',
     sample_badge:'ನಮೂನೆ',
@@ -3126,8 +3203,10 @@ function postCardHtml(p) {
         p.status === 'sold' ? `<span class="bz-sold-badge">${escapeHtml(tr.sold)}</span>` : ''}</div>`
     : '';
 
-  const mineMenu = p.is_mine ? `
-    <button class="bz-card-menu-btn" onclick="togglePostMenu(event, ${p.id})" title="⋯">⋯</button>` : '';
+  // Every card has the ⋯ menu: your own listing gets edit / sold / delete,
+  // anyone else's gets "रिपोर्ट करें" (IT Rules 2021 complaint mechanism).
+  const mineMenu = `
+    <button class="bz-card-menu-btn" onclick="togglePostMenu(event, ${p.id})" title="⋯">⋯</button>`;
 
   const offerBtn = (p.post_type === 'sell' && !p.is_mine && p.status !== 'sold')
     ? `<button class="bz-offer-btn" onclick="${nav(`openOffer(${p.id})`)}">${escapeHtml(tr.btn_send_offer)}</button>`
@@ -3210,16 +3289,19 @@ function togglePostMenu(ev, postId) {
   const btn = ev.currentTarget;
   if (!p || !btn) return;
 
-  const items = [
+  const reasons = tr.report_reasons || TRANSLATIONS.hi.report_reasons;
+  const items = p.is_mine ? [
     { label: tr.edit, act: `openEditPost(${postId})` },
     ...(p.status === 'sold' ? [] : [{ label: tr.mark_sold, act: `markPostSold(${postId})` }]),
     { label: tr.delete_post, act: `deletePost(${postId})`, danger: true },
-  ];
+  ] : Object.keys(reasons).map(k => ({ label: reasons[k], act: `reportPost(${postId}, '${k}')` }));
   const menu = document.createElement('div');
   menu.className = 'bz-post-menu';
-  menu.innerHTML = items.map(i =>
-    `<button class="${i.danger ? 'danger' : ''}" onclick="closePostMenu();${i.act}">${escapeHtml(i.label)}</button>`
-  ).join('');
+  menu.innerHTML = (p.is_mine ? '' :
+      `<div style="padding:8px 12px 4px;font-size:12px;font-weight:800;color:#b91c1c">${escapeHtml(tr.report_head || TRANSLATIONS.hi.report_head)}</div>`) +
+    items.map(i =>
+      `<button class="${i.danger ? 'danger' : ''}" onclick="closePostMenu();${i.act}">${escapeHtml(i.label)}</button>`
+    ).join('');
   btn.parentNode.style.position = btn.parentNode.style.position || 'relative';
   btn.insertAdjacentElement('afterend', menu);
   openMenuId = postId;
@@ -3251,6 +3333,22 @@ async function markPostSold(postId) {
   } catch {
     p.status = prev; renderFeed();
     toast(tr.action_failed);
+  }
+}
+
+async function reportPost(postId, reason) {
+  const tr = T();
+  if (!getToken()) { showPrompt('login'); return; }
+  try {
+    const j = await api(`/bazar/posts/${postId}/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+    toast(j.success ? (j.message || tr.report_done || TRANSLATIONS.hi.report_done)
+                    : (j.message || tr.action_failed));
+  } catch (e) {
+    if (e && e.message !== 'AUTH_REQUIRED') toast(tr.action_failed);
   }
 }
 
@@ -4347,7 +4445,16 @@ function resetComposer() {
   document.getElementById('cmp-title').textContent = tr.composer_title;
   document.getElementById('cmp-submit').textContent = tr.btn_post;
   document.getElementById('cmp-media-row').style.display = '';
-  document.getElementById('cmp-edit-note').style.display = 'none';
+  document.getElementById('cmp-edit-media').style.display = 'none';
+  document.getElementById('cmp-edit-media-file').value = '';
+  document.getElementById('cmp-edit-media-btn').disabled = false;
+  editMediaNote(tr.change_photo_note, false);
+}
+
+function editMediaNote(msg, isErr) {
+  const el = document.getElementById('cmp-edit-media-note');
+  el.textContent = msg || '';
+  el.classList.toggle('is-err', !!isErr);
 }
 
 async function openComposer() {
@@ -4411,8 +4518,37 @@ async function openEditPost(postId) {
   document.getElementById('cmp-title').textContent  = tr.edit_title;
   document.getElementById('cmp-submit').textContent = tr.btn_save;
   document.getElementById('cmp-media-row').style.display = 'none';
-  document.getElementById('cmp-edit-note').style.display = '';
+  document.getElementById('cmp-edit-media').style.display = '';
+  showEditThumb(p);
   document.getElementById('composer-overlay').classList.add('open');
+}
+
+/** Paint the listing's current photo into the edit form. */
+/** The empty state of that thumbnail. An outline glyph rather than an emoji:
+ *  the decorative stickers were stripped from this page on purpose and a test
+ *  keeps them off it. */
+const EDIT_THUMB_EMPTY =
+  `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+     <rect x="3" y="3" width="18" height="18" rx="3"/>
+     <circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+   </svg>`;
+
+function clearEditThumb(el) { el.innerHTML = EDIT_THUMB_EMPTY; }
+
+function showEditThumb(p) {
+  const box = document.getElementById('cmp-edit-thumb');
+  if (!p || !p.media_url) { box.innerHTML = EDIT_THUMB_EMPTY; return; }
+  if (p.media_type === 'video') {
+    box.innerHTML = `<video src="${escapeHtml(p.media_url)}" muted playsinline></video>`;
+  } else {
+    // A listing from before object storage can still point at a file Render
+    // wiped. A broken-image icon inside a form reads as "the site is broken"
+    // rather than "that photo is gone", and the button beside it works either
+    // way — a missing photo is the strongest reason to replace one.
+    box.innerHTML = `<img src="${escapeHtml(p.media_url)}" alt=""
+                          onerror="clearEditThumb(this.parentNode)">`;
+  }
 }
 
 function closeComposer() { document.getElementById('composer-overlay').classList.remove('open'); }
@@ -4879,47 +5015,63 @@ function prettyKB(n) {
                           : Math.round(n / 1024) + ' KB';
 }
 
+/** Size, duration and shrink — everything that happens to a picked file before
+ *  it is anybody's business where it is going.
+ *
+ *  Shared by the composer and by the edit form's "फोटो बदलें", which is the
+ *  point: the 12MB/40MB/90s limits are a second copy of the server's numbers
+ *  (a test pins them together), and a second copy of the CHECK would be a third
+ *  place for them to drift. Returns {ok, file, isVideo, error}; `error` is
+ *  already the Hindi sentence to show.
+ *
+ *  `onShrinkStart` is called if and only if a re-encode is about to happen, so
+ *  each caller can say "छोटी की जा रही है…" in its own shape.
+ */
+async function checkAndShrink(file, onShrinkStart) {
+  const isVideo = file.type.startsWith('video/');
+  const maxMb = isVideo ? MAX_VIDEO_MB : MAX_IMAGE_MB;
+  if (file.size > maxMb * 1024 * 1024) {
+    return { ok: false, isVideo,
+             error: `File बहुत बड़ी है — ${isVideo ? 'video' : 'photo'} max ${maxMb}MB` };
+  }
+  if (isVideo) {
+    const dur = await videoDuration(file);
+    if (dur == null) {
+      return { ok: false, isVideo, error: 'Video पढ़ी नहीं जा सकी — दूसरी file try करें' };
+    }
+    if (dur > MAX_VIDEO_SECS) {
+      const mins = Math.floor(dur / 60), secs = Math.round(dur % 60);
+      return { ok: false, isVideo,
+               error: `Video ${mins}:${String(secs).padStart(2,'0')} की है — अधिकतम ${MAX_VIDEO_SECS} सेकंड allowed` };
+    }
+  }
+  // The gates above still measure the ORIGINAL, so the 12MB limit keeps
+  // meaning what it says; the shrink is about what we send, not what he may
+  // choose. Videos are left alone — re-encoding one in a phone browser takes
+  // longer than uploading it.
+  if (isVideo) return { ok: true, file, isVideo, error: '' };
+  if (onShrinkStart) onShrinkStart();
+  return { ok: true, file: await shrinkImage(file), isVideo, error: '' };
+}
+
 async function onMediaPicked(input) {
   const file = input.files && input.files[0];
   const prev = document.getElementById('cmp-media-preview');
   prev.innerHTML = ''; prev.style.display = 'none'; pickedMedia = null;
   if (!file) return;
-  const isVideo = file.type.startsWith('video/');
 
-  // Size limits (also enforced server-side)
-  const maxMb = isVideo ? MAX_VIDEO_MB : MAX_IMAGE_MB;
-  if (file.size > maxMb * 1024 * 1024) {
-    toast(`File बहुत बड़ी है — ${isVideo ?'video' : 'photo'} max ${maxMb}MB`);
-    input.value = '';
-    return;
-  }
-
-  // Video duration limit — see MAX_VIDEO_SECS
-  if (isVideo) {
-    const dur = await videoDuration(file);
-    if (dur == null) {
-      toast('Video पढ़ी नहीं जा सकी — दूसरी file try करें');
-      input.value = '';
-      return;
-    }
-    if (dur > MAX_VIDEO_SECS) {
-      const mins = Math.floor(dur / 60), secs = Math.round(dur % 60);
-      toast(`Video ${mins}:${String(secs).padStart(2,'0')} की है — अधिकतम ${MAX_VIDEO_SECS} सेकंड allowed`);
-      input.value = '';
-      return;
-    }
-  }
-
-  // The gates above still measure the ORIGINAL, so the 12MB limit keeps
-  // meaning what it says; the shrink is about what we send, not what he may
-  // choose. Videos are left alone — re-encoding one in a phone browser takes
-  // longer than uploading it.
-  let sending = file;
-  if (!isVideo) {
+  const res = await checkAndShrink(file, () => {
     prev.innerHTML = `<div class="bz-media-working">${escapeHtml(T().media_shrinking)}</div>`;
     prev.style.display = 'block';
-    sending = await shrinkImage(file);
+  });
+  if (!res.ok) {
+    toast(res.error);
+    input.value = '';
+    prev.innerHTML = ''; prev.style.display = 'none';
+    return;
   }
+  const isVideo = res.isVideo;
+  const sending = res.file;
 
   pickedMedia = sending;
   const url = URL.createObjectURL(sending);
@@ -4937,6 +5089,104 @@ function clearMedia() {
   document.getElementById('cmp-media').value = '';
   const prev = document.getElementById('cmp-media-preview');
   prev.innerHTML = ''; prev.style.display = 'none';
+}
+
+/** Replace the photo on the listing being edited.
+ *
+ *  Sent the moment it is picked, not on Save, for two reasons. It is a separate
+ *  request with a separate daily limit, so folding it into Save would let a
+ *  farmer fixing a typo spend one of his three photo changes without being
+ *  asked. And an upload on a rural connection takes seconds the Save button
+ *  should not be holding: he sees the new photo land in the form and can go on
+ *  editing the price while it does.
+ *
+ *  The local preview is painted before the server answers — the file is already
+ *  in his hand, and making him watch a spinner over a photo he just chose is
+ *  the kind of wait this page has been removing everywhere else. If the upload
+ *  fails, the old photo is put back.
+ */
+async function onEditMediaPicked(input) {
+  const file = input.files && input.files[0];
+  input.value = '';                       // so picking the same file again fires
+  if (!file || !editingPostId) return;
+  const tr  = T();
+  const btn = document.getElementById('cmp-edit-media-btn');
+  const box = document.getElementById('cmp-edit-thumb');
+  const postId = editingPostId;
+  const before = box.innerHTML;
+
+  btn.disabled = true;
+  editMediaNote(tr.media_shrinking, false);
+  const res = await checkAndShrink(file, () => {});
+  if (!res.ok) {
+    btn.disabled = false;
+    editMediaNote(res.error, true);
+    toast(res.error);
+    return;
+  }
+
+  const localUrl = URL.createObjectURL(res.file);
+  box.innerHTML = res.isVideo
+    ? `<video src="${localUrl}" muted playsinline></video>`
+    : `<img src="${localUrl}" alt="">`;
+  editMediaNote(tr.media_uploading, false);
+
+  try {
+    const fd = new FormData();
+    // The file goes with its OWN name, exactly as submitPost() sends it. A
+    // hardcoded name here is not cosmetic: the server reads the extension to
+    // decide the stored Content-Type (VIDEO_CONTENT_TYPES in bazar.py), and R2
+    // serves back whatever it was stored with — so calling a .webm "clip.mp4"
+    // puts an unplayable video on the listing, silently. shrinkImage() already
+    // guarantees the name matches the bytes: it sets .webp or .jpg to match
+    // what the canvas actually encoded, and returns the original untouched
+    // when it decides not to re-encode at all.
+    fd.append('media', res.file);
+    const r = await fetch(`${API_BASE}/bazar/posts/${postId}/media`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: fd,
+    });
+    const j = await r.json();
+    if (r.ok && j.success) {
+      const p = j.data && j.data.post;
+      if (p) {
+        const i = feedPosts.findIndex(x => x.id === p.id);
+        // Same rule as saveEdit: a single-post serialise has no viewer context,
+        // so keep what the feed already knew about is_mine / liked_by_me.
+        if (i >= 0) feedPosts[i] = { ...feedPosts[i], ...p, is_mine: true,
+                                     liked_by_me: feedPosts[i].liked_by_me };
+        renderFeed();
+        // Only once the row really moved — until now the box has been showing a
+        // blob URL that dies with this page.
+        if (editingPostId === postId) showEditThumb(p);
+      }
+      // The server's line names photo or video to match what was replaced;
+      // `change_photo_done` is only the fallback for an older/odd response.
+      const done = j.message || tr.change_photo_done;
+      const left = j.data && j.data.media_changes_left;
+      editMediaNote(typeof left === 'number'
+        ? `${done} · ${left} ${tr.changes_left}`
+        : done, false);
+      toast(done);
+    } else if (r.status === 401) {
+      box.innerHTML = before;
+      showPrompt('login');
+    } else {
+      box.innerHTML = before;
+      // 429 is the daily photo-change cap; the server's Hindi message already
+      // says how many and how long, so it is shown as written.
+      const msg = j.detail || j.message || 'Photo बदली नहीं जा सकी';
+      editMediaNote(msg, true);
+      toast('' + msg);
+    }
+  } catch {
+    box.innerHTML = before;
+    editMediaNote(tr.change_photo_failed, true);
+    toast('Network error — दोबारा try करें');
+  }
+  URL.revokeObjectURL(localUrl);
+  btn.disabled = false;
 }
 
 /** Shared by both paths — the composer is one form whether it is writing a

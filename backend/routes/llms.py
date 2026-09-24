@@ -30,7 +30,7 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 # Reuse the sitemap's single source of truth for what exists.
-from backend.routes.sitemap import _ARTICLES, _FRONTEND, _SKIP, SITE
+from backend.routes.sitemap import _ARTICLES, _FRONTEND, _SKIP, SITE, _sponsor_live
 
 router = APIRouter()
 
@@ -150,14 +150,28 @@ def _build() -> str:
         "",
     ]
     lines += [f"- [{name}]({SITE}{path}): {desc}" for path, name, desc in _TOOLS]
+    # A brand asking an assistant "where can we advertise to farmers in India"
+    # should be pointed here. Gated exactly like the sitemap entry, so a clone
+    # without routes/sponsor.py never names a page it does not serve.
+    if _sponsor_live():
+        lines += [
+            "",
+            "## For advertisers",
+            "",
+            f"- [Advertise to Indian farmers]({SITE}/sponsor): sponsorship and "
+            "advertising for agri brands (seeds, fertilizer, crop protection, "
+            "machinery, irrigation, farm finance). Fixed 60-day rates with "
+            "category exclusivity; placements are labelled Sponsored and never "
+            "change prices or advice. Contact on WhatsApp or email from the page.",
+        ]
     lines += [
         "",
         "## राज्यों के नक्शे (district maps)",
         "",
         f"- [राज्यों के नक्शे]({SITE}/naksha): hub — every state's district map and "
         "district list in one place, all free HD downloads.",
-        f"- [कृषि मानचित्र]({SITE}/map): उत्तर प्रदेश's district map — the same page as "
-        "the state entries below, kept at this URL.",
+        f"- [कृषि मानचित्र]({SITE}/map): the minimal map tool — just the interactive "
+        "satellite map (search, मंडी, रास्ता), any state via ?state=.",
         *_naksha_lines(),
         "",
         f"- [Village page URL list]({SITE}/naksha/gaon-sitemap.xml): every "

@@ -36,15 +36,10 @@
   // Order matters: these are appended in sequence after whatever the page's
   // own footer already lists, so the site's own navigation stays first.
   //
-  // /sponsor is commented out, not deleted. The page is built but held back
-  // until its audience figures have been checked by hand, and its route is
-  // gitignored meanwhile — so linking it from ~150 static pages would point
-  // the whole site at a 404. The server-rendered footers gate the same link on
-  // whether the route actually imports; this file cannot ask that question
-  // from a browser, so it waits for a human instead. Uncomment when /sponsor
-  // ships.
+  // /sponsor shipped 2026-09-25 — the footer link on every static page is
+  // most of the page's internal linking, which is what gets it crawled.
   var LINKS = [
-    // { href: '/sponsor', text: 'विज्ञापन दें' },
+    { href: '/sponsor', text: 'विज्ञापन दें' },
     { href: '/donate',  text: 'सहयोग करें' }
   ];
 

@@ -444,22 +444,71 @@ def _chk_ai_chat(db, detailed):
 
 
 def _chk_alerts(db, detailed):
-    """Bhav alerts ride on Web Push; without VAPID keys the bell is a no-op."""
+    """Bhav alerts ride on Web Push; without VAPID keys the bell is a no-op.
+
+    This probe used to answer "can we send?" by looking only at whether the
+    VAPID keys existed, and reported "भेजने को तैयार" on that basis alone. It
+    said exactly that for 57 days while `run_mandi_alerts()` was dying on an
+    undefined name and not one of 74 subscribers had ever been notified — the
+    keys were configured the whole time, so the probe was green and wrong.
+
+    It now answers the only question that matters: has anything actually gone
+    out? A standing subscriber base with nothing ever delivered is the failure
+    mode this system has already had once, so it is called out as down rather
+    than summarised as healthy."""
     from backend.services.push_service import VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY
     configured = bool(VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY)
-    alerts = int(_scalar(db, "SELECT count(*) FROM mandi_alerts") or 0)
+
+    active  = int(_scalar(db, "SELECT count(*) FROM mandi_alerts WHERE active") or 0)
     devices = int(_scalar(db, "SELECT count(*) FROM push_subscriptions WHERE active") or 0)
+    ever    = int(_scalar(db, "SELECT count(*) FROM mandi_alerts "
+                              "WHERE last_notified_on IS NOT NULL") or 0)
+    last    = _scalar(db, "SELECT max(last_notified_on) FROM mandi_alerts")
+
+    try:
+        from backend.services.app_settings import get_all
+        sending_on = bool(get_all()["alerts.sending_enabled"])
+    except Exception:
+        sending_on = True
 
     facts = []
     if detailed:
-        facts = [["चालू अलर्ट", _num(alerts)], ["जुड़े डिवाइस", _num(devices)]]
+        facts = [["चालू अलर्ट",      _num(active)],
+                 ["जुड़े डिवाइस",     _num(devices)],
+                 ["कभी भेजा गया",    _num(ever)],
+                 ["आख़िरी डिलीवरी",  str(last) if last else "कभी नहीं"]]
+
     if not configured:
-        if alerts:
+        if active:
             return {"status": "warn",
-                    "detail": f"VAPID कुंजी नहीं — {alerts} लगे अलर्ट किसी को नहीं जाएँगे",
+                    "detail": f"VAPID कुंजी नहीं — {active} लगे अलर्ट किसी को नहीं जाएँगे",
                     "facts": facts}
         return {"status": "off", "detail": "वेब पुश कॉन्फ़िगर नहीं है", "facts": facts}
-    return {"status": "ok", "detail": "भाव अलर्ट भेजने को तैयार", "facts": facts}
+
+    if not sending_on:
+        return {"status": "warn",
+                "detail": f"एडमिन से भेजना बंद है — {active} अलर्ट इंतज़ार में",
+                "facts": facts}
+
+    # Subscribers, reachable devices, and nothing has ever been delivered.
+    # That is not "waiting for a price to move" — it is the pipe being broken.
+    if active and devices and not ever:
+        return {"status": "down",
+                "detail": f"{active} अलर्ट लगे हैं पर आज तक एक भी सूचना नहीं गई",
+                "facts": facts}
+
+    if active and not devices:
+        return {"status": "warn",
+                "detail": f"{active} अलर्ट हैं पर कोई चालू डिवाइस नहीं — कुछ नहीं पहुँचेगा",
+                "facts": facts}
+
+    if not active:
+        return {"status": "ok", "detail": "भाव अलर्ट चालू — अभी कोई ग्राहक नहीं",
+                "facts": facts}
+
+    return {"status": "ok",
+            "detail": f"{active} भाव अलर्ट चालू · आख़िरी सूचना {last or 'कभी नहीं'}",
+            "facts": facts}
 
 
 def _chk_bazar(db, detailed):

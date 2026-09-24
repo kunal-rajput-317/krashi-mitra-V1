@@ -44,7 +44,7 @@
 import logging
 import re
 
-from backend.services import msp, state_lang, wa_style
+from backend.services import msp, wa_lang, wa_style
 
 log = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ _YEAR_RE = re.compile(r"(19|20)\d{2}")
 def _s(lang: str, key: str, default: str) -> str:
     """One wording, in the post's language, Hindi underneath — the same
     per-string fallback contract services/wa_style and the /bhav pages keep."""
-    blk = state_lang.pack("wa", lang)
+    blk = wa_lang.pack("wa", lang)
     v = (blk or {}).get(key) if isinstance(blk, dict) else None
     return v if isinstance(v, str) and v.strip() else default
 
@@ -89,7 +89,7 @@ def facts(post: dict) -> list:
     is a fact good enough to verify against, and there is no third thing the
     model could have been told."""
     out = []
-    lang = post.get("lang") or state_lang.HINDI
+    lang = post.get("lang") or wa_lang.HINDI
     crops = post.get("crops") or []
 
     # ── MSP: the floor the government already promised, which a mandi price
@@ -211,7 +211,7 @@ _STOP = {
 # every "word" it compares is a shard. The grounding score built on that was
 # measuring nothing. U+0900–U+0D7F spans Devanagari through Malayalam, which
 # covers Hindi, Marathi, Tamil, Kannada, Telugu, Gujarati, Bengali and
-# Gurmukhi — every script services/state_lang can put a post in — and the two
+# Gurmukhi — every script services/wa_lang can put a post in — and the two
 # joiners keep conjuncts whole.
 _WORD_RE = re.compile(r"[\wऀ-ൿ‌‍]+", re.UNICODE)
 
@@ -383,9 +383,11 @@ def check(text: str, known: set) -> list:
 # ── asking the model ─────────────────────────────────────────
 
 _LANG_NAME = {"hi": "Hindi (Devanagari)", "mr": "Marathi (Devanagari)",
-              "ta": "Tamil script", "kn": "Kannada script",
-              "te": "Telugu script", "gu": "Gujarati script",
-              "bn": "Bengali script", "pa": "Gurmukhi script"}
+              "ta": "Tamil (Tamil script)", "kn": "Kannada (Kannada script)",
+              "te": "Telugu (Telugu script)", "gu": "Gujarati (Gujarati script)",
+              "bn": "Bengali (Bengali script)", "pa": "Punjabi (Gurmukhi script)",
+              "ml": "Malayalam (Malayalam script)", "or": "Odia (Odia script)",
+              "as": "Assamese (Assamese script)"}
 
 
 def _prompt(post: dict, fs: list) -> str:
@@ -395,7 +397,7 @@ def _prompt(post: dict, fs: list) -> str:
     internet, a search tool, or permission to add anything of its own, because
     a broadcast to a state's farmers is the wrong place to find out what a
     language model believes about mandi rates."""
-    lang = post.get("lang") or state_lang.HINDI
+    lang = post.get("lang") or wa_lang.HINDI
     script = _LANG_NAME.get(lang, "Hindi (Devanagari)")
     facts_txt = "\n".join(f"- {f['text']}" for f in fs) or "- (none)"
     return f"""You are helping write ONE extra line for a WhatsApp broadcast to farmers in {post.get('state', '')}, India. The message already lists today's mandi prices. Your line goes underneath them.

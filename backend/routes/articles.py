@@ -22,7 +22,7 @@ import re
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 log = logging.getLogger(__name__)
 
@@ -133,7 +133,13 @@ def _get_meta() -> dict:
 
 @router.get("/articles/meta")
 def articles_meta():
-    return _get_meta()
+    # The homepage fetches this on every view; with no cache header Cloudflare
+    # passed every one through to Render. 10 min at the edge is invisible to a
+    # date that only changes when an article is re-published.
+    return JSONResponse(_get_meta(), headers={
+        "Cache-Control": "public, max-age=300",
+        "CDN-Cache-Control": "public, max-age=600, stale-while-revalidate=3600",
+    })
 
 
 # ── the article page itself ────────────────────────────────────────────────
@@ -154,9 +160,12 @@ _ARTICLE_CACHE = {
     # stale-while-revalidate. Same reasoning as bhav.py's headers: a proxied
     # response is only cached when the origin opts in, and Googlebot crawling
     # through Render's cold starts is what caps how fast a page gets indexed.
+    # Edge TTL raised 30 min → 3 h on 25 Sep 2026: an article's text changes
+    # only when it is re-published, and every edge refresh is a full page
+    # billed against Render's 5 GB/month.
     "Cache-Control": "public, max-age=300",
     "CDN-Cache-Control":
-        "public, max-age=1800, stale-while-revalidate=86400",
+        "public, max-age=10800, stale-while-revalidate=86400",
 }
 
 

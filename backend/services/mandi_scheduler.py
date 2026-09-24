@@ -149,6 +149,47 @@ def _db_write_check():
         return None
 
 
+def _bandwidth_flush():
+    try:
+        from backend.services.bandwidth_meter import flush
+        return flush()
+    except Exception as e:
+        logger.error(f"Bandwidth flush failed (non-fatal): {e}")
+
+
+def _infra_check():
+    """Read the free-tier meters and mail only if one is about to run out.
+
+    The Infra & Credits page has had these numbers since 17 Aug 2026, but a
+    page has to be opened to help, and this one was not being opened. Every
+    outage this site has had was a quota outage, so the check runs whether or
+    not anyone is looking; on a normal day it logs one line and sends nothing.
+    """
+    try:
+        from backend.services.infra_service import run_check
+        return run_check()
+    except Exception as e:
+        logger.error(f"Infra check failed (non-fatal): {e}")
+        return None
+
+
+def _purge_deleted_accounts():
+    """IT Rules 2021 r.3(1)(h) make us hold a deleted account's registration
+    details for 180 days — and nothing beyond that justifies keeping them. This
+    is the "and then erase" half; see services/account_delete.purge_expired."""
+    try:
+        from backend.database.db import SessionLocal
+        from backend.services import account_delete
+        db = SessionLocal()
+        try:
+            return account_delete.purge_expired(db)
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Account-deletion purge failed (non-fatal): {e}")
+        return None
+
+
 def _expire_badges():
     """Take the blue tick off sellers whose verification window has run out.
 
@@ -235,6 +276,46 @@ def _register_job():
         trigger            = CronTrigger(hour="*/3", timezone=IST),
         id                 = "db_write_canary",
         name               = "Database write canary — every 3h",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
+        misfire_grace_time = None,
+    )
+
+    # Free-tier runway, once a day. Daily and not hourly because these are
+    # rate-limited billing APIs and the thing being watched moves over days;
+    # 09:10 IST so it lands after the 08:00 fetch has done the day's writing
+    # and the numbers reflect it.
+    scheduler.add_job(
+        func               = _infra_check,
+        trigger            = CronTrigger(hour=9, minute=10, timezone=IST),
+        id                 = "infra_runway_check",
+        name               = "Free-tier runway check — daily 09:10 IST",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
+        misfire_grace_time = None,
+    )
+
+    # Bandwidth meter → Postgres, hourly. See services/bandwidth_meter.py for
+    # why hourly and not per request (Neon's write-churn read-only episodes).
+    scheduler.add_job(
+        func               = _bandwidth_flush,
+        trigger            = IntervalTrigger(hours=1),
+        id                 = "bandwidth_meter_flush",
+        name               = "Bandwidth meter flush — hourly",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
+        misfire_grace_time = None,
+    )
+
+    # Deleted accounts: erase the registration details held for 180 days.
+    scheduler.add_job(
+        func               = _purge_deleted_accounts,
+        trigger            = CronTrigger(hour=4, minute=25, timezone=IST),
+        id                 = "account_deletion_purge",
+        name               = "Deleted-account 180-day hold purge — daily 04:25 IST",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,

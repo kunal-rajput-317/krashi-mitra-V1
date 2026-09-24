@@ -128,6 +128,9 @@ def list_sponsors(db: Session = Depends(admin_db), _: str = Depends(require_admi
         "rate_card": sponsors.RATE_CARD,
         "min_days":  sponsors.MIN_DAYS,
         "kit_enabled": sponsors.kit_enabled(),
+        # Non-null once search traffic has outgrown the rate card — the panel
+        # shows the suggested prices. Same check the daily email runs.
+        "price_review": sponsors.price_review(),
         "categories": sorted({(r.category or "").lower() for r in rows if r.category}),
     }
 
@@ -267,11 +270,17 @@ def record_payment(slug: str, payload: dict | None = None,
     if not r:
         raise HTTPException(404, "no such sponsor")
     payload = payload or {}
-    r.paid_at = datetime.utcnow()
     if payload.get("amount"):
         r.amount = payload["amount"]
+    if not r.amount:
+        raise HTTPException(400, "राशि (₹) लिखिए — बिना राशि के भुगतान दर्ज नहीं होगा")
+    r.paid_at = datetime.utcnow()
     if payload.get("until"):
         r.until = str(payload["until"]).strip()
+    from backend.services import ledger
+    ledger.record(db, "sponsor", int(r.amount), payer=r.name, contact=r.contact or "",
+                  ref=str(payload.get("ref") or ""), method="bank",
+                  source_key=r.slug, received_at=r.paid_at)
     db.commit()
     db.refresh(r)
     sponsors.invalidate()

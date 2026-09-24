@@ -179,13 +179,20 @@ def _hmac(key: bytes, msg: str) -> bytes:
     return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
 
 
-def _sign(method: str, key: str, body: bytes, headers: dict) -> Tuple[str, dict]:
+def _sign(method: str, key: str, body: bytes, headers: dict,
+          query: Optional[dict] = None) -> Tuple[str, dict]:
     """Return (url, headers) for a signed path-style S3 request.
 
     `headers` in is the set to sign alongside host / x-amz-date /
     x-amz-content-sha256, lowercase keys. Authorization is added last, after
     SignedHeaders has been computed from the others — signing the signature
     would be circular.
+
+    `query` is the request's parameters, used by the bucket-level operations
+    (ListObjectsV2). SigV4 signs them, so they are built here once and returned
+    glued onto the URL — a caller that appended its own `?…` afterwards would
+    send a request whose signature covers a different URL than the one it asked
+    for, and get a 403 that says nothing about why.
     """
     c   = _conf()
     ep  = _endpoint(c)
@@ -201,9 +208,20 @@ def _sign(method: str, key: str, body: bytes, headers: dict) -> Tuple[str, dict]
 
     signed_names = ";".join(sorted(h))
     canonical_headers = "".join(f"{k}:{h[k]}\n" for k in sorted(h))
-    canonical_uri = "/" + quote(f'{c["bucket"]}/{key.lstrip("/")}', safe="/~")
+    # An empty key addresses the bucket itself, and `/bucket/` is a different
+    # resource from `/bucket` to a signature even where both route the same.
+    obj = key.lstrip("/")
+    canonical_uri = "/" + quote(f'{c["bucket"]}/{obj}' if obj else c["bucket"],
+                                safe="/~")
+    # Sorted by name, each part percent-encoded — the canonical form SigV4
+    # specifies, which is not the same as whatever order a dict iterates in.
+    canonical_query = "&".join(
+        f"{quote(str(k), safe='~')}={quote(str(v), safe='~')}"
+        for k, v in sorted((query or {}).items())
+    )
     canonical_request = "\n".join([
-        method, canonical_uri, "", canonical_headers, signed_names, payload_sha,
+        method, canonical_uri, canonical_query,
+        canonical_headers, signed_names, payload_sha,
     ])
 
     scope = f"{datestamp}/{_REGION}/{_SERVICE}/aws4_request"
@@ -221,7 +239,7 @@ def _sign(method: str, key: str, body: bytes, headers: dict) -> Tuple[str, dict]
         f'{_ALGO} Credential={c["key"]}/{scope}, '
         f"SignedHeaders={signed_names}, Signature={signature}"
     )
-    return f"{ep}{canonical_uri}", h
+    return f"{ep}{canonical_uri}" + (f"?{canonical_query}" if canonical_query else ""), h
 
 
 # ── Operations ───────────────────────────────────────────────
@@ -257,3 +275,76 @@ def delete(url: str) -> bool:
     except Exception:
         log.warning("[media_store] delete failed for %s", url, exc_info=True)
         return False
+
+
+# ── How full is the bucket ───────────────────────────────────
+# R2's free tier is 10 GB of storage, and nothing on this site was watching it.
+# The number could be read from Cloudflare's GraphQL analytics, but that needs a
+# second credential (an account API token) which is not the same thing as the S3
+# key pair above — so this counts the bucket with the credentials that are
+# already set, and the panel has a real storage meter the day R2 is switched on
+# rather than the day somebody remembers to mint another token.
+#
+# This costs ONE Class A operation per page of 1000 keys, against a free
+# allowance of 1,000,000 a month, and infra_service memoises the whole panel for
+# five minutes. At ~200 KB a photo the 10 GB tier is ~50,000 objects, i.e. 50
+# pages — which is why LIST_MAX_PAGES exists: a bucket that outgrows the count
+# reports what it counted and says so, instead of spending a minute and a
+# thousand operations to be exact about a number that is already alarming.
+
+LIST_MAX_PAGES = 60
+
+
+def _strip_ns(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1]
+
+
+def usage(prefix: str = "") -> dict:
+    """Count the objects in the bucket.
+
+    Returns {ok, objects, bytes, truncated, error}. Never raises: this is called
+    by the admin infra panel, and a storage probe that can 500 is a probe that
+    takes down the page that exists to tell you what is broken.
+
+    `truncated` True means the walk stopped at LIST_MAX_PAGES and the figures
+    are a floor, not a total. The caller must say so rather than print them as
+    if they were the whole bucket.
+    """
+    out = {"ok": False, "objects": 0, "bytes": 0, "truncated": False, "error": ""}
+    if not enabled():
+        out["error"] = "R2 is not configured"
+        return out
+
+    import xml.etree.ElementTree as ET
+
+    token = None
+    try:
+        for _ in range(LIST_MAX_PAGES):
+            q = {"list-type": "2", "max-keys": "1000"}
+            if prefix:
+                q["prefix"] = prefix
+            if token:
+                q["continuation-token"] = token
+            url, headers = _sign("GET", "", b"", {}, q)
+            r = requests.get(url, headers=headers, timeout=20)
+            if r.status_code >= 300:
+                out["error"] = f"HTTP {r.status_code}: {r.text[:160]}"
+                return out
+            root = ET.fromstring(r.content)
+            for node in root:
+                if _strip_ns(node.tag) != "Contents":
+                    continue
+                out["objects"] += 1
+                for field in node:
+                    if _strip_ns(field.tag) == "Size":
+                        out["bytes"] += int(field.text or 0)
+            token = next((c.text for c in root
+                          if _strip_ns(c.tag) == "NextContinuationToken"), None)
+            if not token:
+                break
+        else:
+            out["truncated"] = True
+        out["ok"] = True
+    except Exception as e:
+        out["error"] = f"{type(e).__name__}: {str(e)[:160]}"
+    return out

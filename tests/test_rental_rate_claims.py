@@ -233,7 +233,14 @@ def test_every_body_image_is_a_rental_photo_we_actually_ship(client):
     import re
     html = client.get("/rental/tractor").text
     body = html.split('<div class="wrap">')[1].split("<footer")[0]
+    from pathlib import Path
+    front = Path(__file__).resolve().parents[1] / "frontend"
     for src in re.findall(r'<img[^>]+src="([^"]+)"', body):
+        # The "What to do next" strip's section photos (services/ecosystem.py)
+        # are the one other source — and must exist on disk for the same reason.
+        if src.startswith("/images/journey/"):
+            assert (front / src.lstrip("/")).is_file(), f"missing strip photo {src}"
+            continue
         assert src.startswith("/images/rental/"), f"unexpected image source {src}"
 
 

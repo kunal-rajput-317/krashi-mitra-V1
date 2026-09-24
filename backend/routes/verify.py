@@ -77,6 +77,33 @@ MEANS_HI = (
 )
 
 
+# The terms, in plain words, on the page that sells the membership. A paid
+# badge with vague terms is a consumer-law argument waiting to happen, so each
+# line states what the code ACTUALLY does — change the code, change the line:
+#   • term       — seller_verify.record_payment: 30 days × the plan's months,
+#                  from the day the money is confirmed; renewing early extends
+#   • no renewal — nothing here can pull money; UPI is push-only
+#   • expiry     — seller_verify.expire_due / the 04:20 sweep clear the flag
+#   • refunds    — revoke() owes the whole fee back (record_refund, ledger)
+#   • removal    — revoke() is the owner's kill switch for these reasons
+# There is NO expiry reminder built, so this page must not promise one.
+TERMS_HI = [
+    "<b>कितने दिन:</b> 1 महीने का प्लान 30 दिन, 3 महीने का प्लान 90 दिन चलता है — "
+    "उस दिन से, जिस दिन आपका पैसा हमारे खाते में पहुँचकर दर्ज होता है।",
+    "<b>अपने-आप पैसा नहीं कटेगा:</b> कोई auto-renewal नहीं है। अवधि पूरी होते ही टिक "
+    "अपने-आप हट जाता है। आगे चाहिए तो खुद दोबारा भुगतान करें — समय से पहले बढ़ाने पर "
+    "बचे हुए दिन जुड़ जाते हैं, कटते नहीं।",
+    "<b>पैसा वापस (रिफ़ंड):</b> पैसा पहुँचा लेकिन टिक चालू नहीं हुआ, या हमने टिक अवधि "
+    "के बीच में हटा दिया — दोनों में पूरा शुल्क 7 दिन के अंदर उसी UPI / खाते में वापस। "
+    "टिक चालू होने के बाद अपनी मर्ज़ी से छोड़ने पर शुल्क वापस नहीं होता।",
+    "<b>टिक कब हटाया जा सकता है:</b> किसी और के नाम या फ़ोटो से खाता चलाने, टिक दिखाकर "
+    "धोखा देने या झूठी पोस्ट डालने, या भुगतान वापस ले लेने (chargeback) पर।",
+    "<b>टिक क्या नहीं है:</b> पहचान की जाँच, या फसल, भाव या सौदे की गारंटी नहीं। "
+    "हर सौदा खरीदार और विक्रेता के बीच है — कृषि मित्र उसमें शामिल नहीं होता।",
+    "<b>सवाल या शिकायत:</b> +91 9870951001 (WhatsApp / कॉल) या krashimitra038@gmail.com",
+]
+
+
 # ── API ──────────────────────────────────────────────────────
 
 class ApplyRequest(BaseModel):
@@ -298,6 +325,9 @@ background:var(--cream);border:1px dashed var(--border);border-radius:8px;paddin
 .vf-state{text-align:center}
 .vf-err{color:#b91c1c;font-size:13px;font-weight:700;margin-top:10px}
 .vf-muted{font-size:12px;color:var(--text-soft);line-height:1.6;margin-top:14px}
+.vf-terms{margin:0;padding:0 0 0 18px}
+.vf-terms li{font-size:13px;line-height:1.65;color:var(--text-dark);margin-bottom:9px}
+.vf-terms li b{color:var(--text-dark)}
 .vf-wait{background:#f0f8ff;border:1px solid #cfe6fb;border-radius:10px;padding:13px 14px;
 font-size:13px;color:#1e4e79;line-height:1.6;font-weight:600}
 """
@@ -324,6 +354,11 @@ _BODY = """
 
   <div class="vf-card" id="vf-body">
     <p class="vf-p vf-state" id="vf-loading">एक पल…</p>
+  </div>
+
+  <div class="vf-card" id="vf-terms">
+    <h2 class="vf-h" style="font-size:17px;">नियम — साफ़-साफ़</h2>
+    <ul class="vf-terms">__TERMS__</ul>
   </div>
 </div>
 
@@ -363,21 +398,24 @@ _BODY = """
   }
 
   /* The picker. Drawn from the same table the server prices from, so the
-     struck figure on the card and the amount in the UPI link cannot drift. */
+     price on the card and the amount in the UPI link cannot drift. No struck
+     price: the only saving shown is the real one against the monthly plan. */
   function planCards() {
     return '<div class="vf-plans">' + PLANS.map(function(p) {
       return '<button type="button" class="vf-plan' + (p.code === picked ? ' on' : '') + '"' +
         ' data-plan="' + esc(p.code) + '" onclick="window.__vfPick(&quot;' + esc(p.code) + '&quot;)">' +
         '<span class="vf-plan-tick"></span>' +
-        (p.save_pct ? '<span class="vf-plan-save">' + p.save_pct + '% छूट</span>' : '') +
+        (p.save_pct ? '<span class="vf-plan-save">' + p.save_pct + '% बचत</span>' : '') +
         '<span class="vf-plan-term">' + esc(p.term_hi) + '</span>' +
-        '<span class="vf-plan-price">₹' + p.price +
-          (p.mrp ? '<s>₹' + p.mrp + '</s>' : '') + '</span>' +
+        '<span class="vf-plan-price">₹' + p.price + '</span>' +
         (p.months > 1 ? '<span class="vf-plan-pm">₹' + p.per_month + ' / महीना</span>'
                       : '<span class="vf-plan-pm">हर महीने</span>') +
         '</button>';
     }).join('') + '</div>' +
-    '<p class="vf-offer-line">शुरुआती छूट — काटी गई क़ीमत इस प्लान की सामान्य क़ीमत है।</p>';
+    PLANS.filter(function(p) { return p.save_vs; }).map(function(p) {
+      return '<p class="vf-offer-line">' + esc(p.term_hi) + ' एक साथ ₹' + p.price +
+        ' — अलग-अलग महीने लेने पर ₹' + p.save_vs + ' लगते।</p>';
+    }).join('');
   }
 
   window.__vfPick = function(code) {
@@ -474,8 +512,8 @@ _BODY = """
       '<p class="vf-p">आपके नाम के साथ नीला टिक दिख रहा है।' +
       (d.days_left != null ? (' यह <b>' + d.days_left + ' दिन</b> और चलेगा।') : '') + '</p>' +
       '<button class="vf-btn ghost" id="vf-extend">और समय के लिए बढ़ाएँ</button>' +
-      '<p class="vf-muted">खत्म होने से पहले हम आपको याद दिला देंगे। अभी बढ़ाने पर ' +
-      'बाकी दिन जुड़ जाते हैं, कटते नहीं।</p></div>';
+      '<p class="vf-muted">खत्म होने की तारीख़ यहीं दिखती है — समय रहते बढ़ा लें। अभी ' +
+      'बढ़ाने पर बाकी दिन जुड़ जाते हैं, कटते नहीं।</p></div>';
     document.getElementById('vf-extend').onclick = function() { signupForm(d); };
   }
 
@@ -488,7 +526,7 @@ _BODY = """
         '<p class="vf-h" style="font-size:18px;">आपका नीला टिक हटा दिया गया है</p>' +
         (d.reject_reason ? '<p class="vf-p">कारण: ' + esc(d.reject_reason) + '</p>' : '') +
         (d.paid ? ('<p class="vf-p">' + (d.refunded ? 'आपका शुल्क वापस भेज दिया गया है।'
-          : 'आपका बाकी शुल्क वापस भेजा जा रहा है।') + '</p>') : '') +
+          : 'आपका पूरा शुल्क 7 दिन के अंदर वापस भेजा जाएगा।') + '</p>') : '') +
         '<p class="vf-muted">कोई गलतफ़हमी लगे तो +91 9870951001 पर बात करें।</p></div>';
       return;
     }
@@ -520,6 +558,8 @@ def verify_page():
     body = (_BODY
             .replace("__PLANS__", json.dumps(seller_verify.plans(), ensure_ascii=False))
             .replace("__GETS__", gets)
+            # TERMS_HI is our own fixed markup (<b> only), never user input.
+            .replace("__TERMS__", "".join(f"<li>{t}</li>" for t in TERMS_HI))
             .replace("__MEANS__", escape(MEANS_HI))
             .replace("__TICK__", _TICK_SVG))
 

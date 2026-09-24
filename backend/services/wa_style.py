@@ -32,10 +32,12 @@
 #      actually types into Google.
 #   2. TONE — five voices. A tone may reword the heading, the source line and
 #      the call to action. It may never add a claim, a number or advice.
-#   3. LANGUAGE — Maharashtra's channel links to /bhav pages that say
-#      बाजार भाव and गहू; the post said मंडी भाव and गेहूं. Same figure, wrong
-#      dialect, and the post contradicted the page it was pointing at. See
-#      services/state_lang.
+#   3. LANGUAGE — krashimitra_kerala was broadcasting in Hindi, and so were
+#      nine other state channels whose followers do not read it. Maharashtra's
+#      was subtler and the same kind of mistake: the post said मंडी भाव and
+#      गेहूं while the page it linked to said बाजार भाव and गहू. Wrong script
+#      or wrong dialect, a follower who cannot read the message did not get
+#      the price. See services/wa_lang, which resolves both.
 #
 # ROTATION, NOT RANDOMNESS
 # ------------------------
@@ -59,7 +61,7 @@ import hashlib
 import math
 from datetime import date, timedelta
 
-from backend.services import state_lang
+from backend.services import wa_lang
 
 # Day 0 of every rotation. Fixed forever: moving it re-deals which state gets
 # which format on which morning, which is churn with no upside.
@@ -191,7 +193,7 @@ def _pack(lang: str) -> dict:
     reads, rather than blanking or raising. Keys are flat and namespaced
     (`seedha.title`, `label.up`) so a translator can add one wording at a time
     and watch it appear."""
-    blk = state_lang.pack("wa", lang)
+    blk = wa_lang.pack("wa", lang)
     return blk if isinstance(blk, dict) else {}
 
 
@@ -200,7 +202,7 @@ def _s(pack: dict, key: str, default: str) -> str:
     return v if isinstance(v, str) and v.strip() else default
 
 
-def move_text(pct, lang: str = state_lang.HINDI) -> str:
+def move_text(pct, lang: str = wa_lang.HINDI) -> str:
     """"▲ 2.8%", or the words for "no change".
 
     The one piece of wording wa_post has to bake into a line rather than leave
@@ -444,7 +446,7 @@ def compose(ctx: dict, lines: list, fmt_id: str, tone_id: str,
     Putting them here too would be a second answer to the same question."""
     f = _FMT.get(fmt_id) or FORMATS[0]
     t = _TONE.get(tone_id) or TONES[0]
-    pack = _pack(ctx.get("lang") or state_lang.HINDI)
+    pack = _pack(ctx.get("lang") or wa_lang.HINDI)
     tid = t["id"]
 
     title = _s(pack, f"{tid}.title", t["title"]).format(

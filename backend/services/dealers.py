@@ -355,6 +355,10 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
             r.status = "listed"
             r.active = True
         r.updated_at = now
+    # One payment, one ledger row — even when it renewed several districts.
+    from backend.services import ledger
+    ledger.record(db, "dealer", int(amount), payer=row.name, contact=row.phone or "",
+                  ref=ref, source_key=row.slug, received_at=now)
     db.commit()
     db.refresh(row)
     buyers_read.invalidate()

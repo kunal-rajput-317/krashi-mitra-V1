@@ -368,7 +368,7 @@ async def call_gemini(prompt: str, max_tokens: int = 1500) -> str:
     # Default must match config.get_setting's own fallback — they disagreed
     # ("gemini-2.5-flash" there, "gemini-1.5-flash" here), so which model
     # answered depended on whether the setting resolved. Keep them in sync.
-    model   = get_setting("gemini_model",   "gemini-2.5-flash")
+    model   = get_setting("gemini_model",   "gemini-3.6-flash")
     timeout = get_setting("gemini_timeout", 15.0)
 
     keys = gemini_keys()

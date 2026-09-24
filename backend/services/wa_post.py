@@ -73,7 +73,7 @@ import time
 from datetime import date, datetime
 
 from backend.database.db import SessionLocal, MandiPrice
-from backend.services import state_lang, wa_channels, wa_style
+from backend.services import wa_channels, wa_lang, wa_style
 
 SITE = "https://krashimitra.in"
 _TTL = 300.0                      # seconds; the fetch cron runs ~6×/day
@@ -150,11 +150,15 @@ def _market_name(state: str, market: str, lang: str) -> str:
     the great majority of them, and the ones it does not fall through unchanged
     exactly as the one-market source line has always printed them. Never
     raises, never invents: an unknown market prints as the feed spells it,
-    which is at worst what a follower saw yesterday."""
+    which is at worst what a follower saw yesterday.
+
+    The feed's own spelling is handed down as `raw` because a Malayalam post
+    has no use for कोच्चि: outside Devanagari, wa_lang prints the Latin name
+    rather than put a third language in the message."""
     from backend.routes import bhav
     if not market:
         return ""
-    return state_lang.district(bhav._hindi_district(state, market), lang)
+    return wa_lang.district(bhav._hindi_district(state, market), lang, raw=market)
 
 
 _cache: dict = {}
@@ -452,7 +456,7 @@ def _crop_lines(state_rows: dict, min_mandis: int = _MIN_MANDIS,
         line = {
             "commodity": commodity,
             "hi": hi,
-            "name": state_lang.crop(hi, lang),
+            "name": wa_lang.crop(hi, lang),
             "avg": avg, "pct": pct, "mandis": mandis,
             "rank": bhav._tile_rank(commodity),
             "dated": len(ages),
@@ -491,7 +495,7 @@ def _crop_lines(state_rows: dict, min_mandis: int = _MIN_MANDIS,
     return out
 
 
-def _move(pct, lang: str = state_lang.HINDI) -> str:
+def _move(pct, lang: str = wa_lang.HINDI) -> str:
     """How a day-on-day change reads. The direction is data and is decided
     here; the words for "no change" are language and live in wa_style, which is
     where every other wording in the post already lives."""
@@ -510,15 +514,19 @@ def _ctx(state: str, lang: str, mandis: int, market: str) -> dict:
     hi_state = bhav._hindi_state(state)
     slug = bhav._slugify(state)
     return {
-        "state":  hi_state,
+        # The heading's first word, and the loudest tell that a post is or is
+        # not written for the person reading it: കേരളം, not केरल. Falls back to
+        # the Hindi name for every state whose channel is Hindi anyway.
+        "state":  wa_lang.state_name(state, lang, hi_state),
+        "hi_state": hi_state,
         "slug":   slug,
         "lang":   lang,
         # Maharashtra's /bhav pages are headed बाजार भाव, not मंडी भाव. A post
         # that links to a page and disagrees with its first two words is two
         # answers to one question, and the follower has no way to tell which
         # of them is the site.
-        "bhav":   state_lang.word("bhav", lang, "मंडी भाव"),
-        "date":   state_lang.date_str(today.day, today.month, today.year, lang,
+        "bhav":   wa_lang.word("bhav", lang, "मंडी भाव"),
+        "date":   wa_lang.date_str(today.day, today.month, today.year, lang,
                                       bhav._hindi_date(today)),
         "mandis": mandis,
         "market": market,
@@ -579,7 +587,7 @@ def _build(state: str, state_rows: dict, chan: dict, today: date):
     dropped (note 1 in the file header): Delhi's Azadpur is a bigger mandi than
     most states have, and silence there was a rule misfiring, not a data gap."""
     markets = {m for agg in state_rows.values() for m in agg["mandis"] if m}
-    lang = state_lang.lang_for(state)
+    lang = wa_lang.lang_for(state)
 
     thin = False
     pool = _crop_lines(state_rows, lang=lang, state=state)
@@ -599,9 +607,17 @@ def _build(state: str, state_rows: dict, chan: dict, today: date):
     row = {
         "state":    state,
         "key":      key,
-        "hi_state": ctx["state"],
+        "hi_state": ctx["hi_state"],
         "slug":     ctx["slug"],
         "lang":     lang,
+        # What the post calls the state, and what to call that language on the
+        # panel. `hi_state` above stays Hindi because it is the OWNER's label —
+        # he scans 31 cards and searches them by name. These two are the
+        # READER's: the picture card is headed കേരളം like the message is, and
+        # the chip says മലയാളം so the owner can see at a glance which language
+        # he is about to paste.
+        "post_state": ctx["state"],
+        "lang_hi":  wa_lang.loaded().get(lang, "हिन्दी"),
         # The date string the post itself is headed with, already in the
         # state's own language. Carried on the row so the panel's picture card
         # can print it without formatting a second one in JS — a Marathi post

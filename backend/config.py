@@ -8,7 +8,7 @@
 import os
 
 _settings: dict = {
-    "gemini_model":           os.getenv("GEMINI_MODEL",        "gemini-2.5-flash"),
+    "gemini_model":           os.getenv("GEMINI_MODEL",        "gemini-3.6-flash"),
     "gemini_timeout":         float(os.getenv("GEMINI_TIMEOUT",  "15")),
     # Image generation for the WhatsApp channel card (services/wa_image).
     # Separate model and a much longer timeout: drawing a picture takes tens of

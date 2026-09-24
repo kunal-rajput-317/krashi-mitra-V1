@@ -143,6 +143,18 @@ services:
         sync: false
       - key: R2_ENDPOINT
         sync: false          # optional — overrides the S3 endpoint
+      # CLOUDFLARE_API_TOKEN is a DIFFERENT credential from the R2 keys above,
+      # and the confusion is easy to make: on Cloudflare's token screen the
+      # value for this one is the "Token value", while for R2 it is the Access
+      # Key ID / Secret shown underneath it. Only this token can read the
+      # GraphQL analytics, so without it /admin/infra shows R2's storage (which
+      # it counts with the S3 keys) but not the monthly Class A / Class B
+      # operation allowances. Photos upload fine either way — this buys the
+      # warning before the month's 1M writes run out, not the writes.
+      #   My Profile → API Tokens → Create Token, permissions:
+      #   Account · Account Analytics · Read  +  Account · Workers R2 Storage · Read
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false          # optional — R2 operation meters on /admin/infra
       # UPI listing-fee collection (services/upi.py). KM_UPI_ID is the
       # destination of real money, so it is never committed — an out-of-date or
       # mistyped VPA in git would silently route a dealer's ₹500 to a stranger.
@@ -164,18 +176,18 @@ services:
       #
       # Env rather than literals for the same reason as the listing fee — the
       # first real negotiation may not land on ₹199, and re-deploying to change
-      # a price is the manual seam this project bans. The struck figure is the
-      # plan's normal price and is dropped automatically if it is ever set at
-      # or below the real one, because a crossed-out price that is not higher
-      # is a mistake on a page about money.
+      # a price is the manual seam this project bans. There is deliberately no
+      # struck-price ("MRP") variable any more: a crossed-out price nobody ever
+      # paid is a false reference price under the CCPA dark-pattern guidelines.
+      # Search clicks/day the sponsor rate card was priced for — the baseline
+      # the daily price-review email measures growth against. Private: this
+      # repo is public and Search Console figures must not be. Unset = no review.
+      - key: KM_SPONSOR_BASE_CLICKS
+        sync: false
       - key: KM_VERIFY_M1_PRICE
         sync: false          # optional — 1-month price, default 199
-      - key: KM_VERIFY_M1_MRP
-        sync: false          # optional — 1-month struck price, default 399
       - key: KM_VERIFY_M3_PRICE
         sync: false          # optional — 3-month price, default 499
-      - key: KM_VERIFY_M3_MRP
-        sync: false          # optional — 3-month struck price, default 699
       # Legacy single-price variable. Still honoured — it only ever meant the
       # monthly rate, so it overrides KM_VERIFY_M1_PRICE's default and nothing
       # else. KM_VERIFY_MONTHS is retired: the term comes from the plan the

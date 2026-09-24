@@ -484,6 +484,9 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     row.status      = "listed"
     row.active      = True
     row.updated_at  = now
+    from backend.services import ledger
+    ledger.record(db, "rental", int(amount), payer=row.name, contact=row.phone or "",
+                  ref=ref, source_key=row.slug, received_at=now)
     db.commit()
     db.refresh(row)
     return row
