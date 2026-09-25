@@ -34,7 +34,7 @@ from sqlalchemy.orm import Session
 
 from backend.database.db import DukanCatalog, get_db
 from backend.routes.bhav import (
-    _ANALYTICS, _CSS as _BASE_CSS, _FONTS, _ICON, _crumb_ld, _doc, _faq,
+    _ANALYTICS, SHELL_CSS_LINK, _FONTS, _ICON, _crumb_ld, _doc, _faq,
     _fit, _footer, _header, _ld,
 )
 from backend.routes.product import CAT_LABELS, _EXTRA_CSS as _PRODUCT_CSS
@@ -114,7 +114,6 @@ border-radius:var(--radius-md);padding:16px 18px;box-shadow:var(--shadow-sm);mar
 """
 
 # One sheet for the hand-built 404 below, same trick product.py uses.
-_CSS = _BASE_CSS + _EXTRA_CSS
 
 
 # ── small helpers ───────────────────────────────────────────
@@ -259,7 +258,8 @@ def _not_found(message: str, sub: str) -> HTMLResponse:
 <meta name="robots" content="noindex">
 {_ICON}
 {_FONTS}
-<style>{_CSS}</style>
+{SHELL_CSS_LINK}
+<style>{_EXTRA_CSS}</style>
 </head>
 <body>
 {_header("shop")}

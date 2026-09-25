@@ -51,7 +51,7 @@ from sqlalchemy.orm import Session
 from backend.database.db import get_db
 
 from backend.routes.bhav import (
-    _ANALYTICS, _CSS as _BASE_CSS, _FONTS, _ICON, _crumb_ld, _doc, _faq,
+    _ANALYTICS, SHELL_CSS_LINK, _FONTS, _ICON, _crumb_ld, _doc, _faq,
     _fit, _footer, _header, _ld,
 )
 from backend.routes.product import _EXTRA_CSS as _PRODUCT_CSS
@@ -351,7 +351,6 @@ padding:12px 15px;font-size:12.5px;color:#6b5312;line-height:1.6;margin:20px 0 0
 """
 
 # One sheet for the hand-built 404 below, same trick product.py uses.
-_CSS = _BASE_CSS + _EXTRA_CSS
 
 
 # ── small helpers ───────────────────────────────────────────
@@ -712,7 +711,8 @@ def _not_found(message: str, sub: str) -> HTMLResponse:
 <meta name="robots" content="noindex">
 {_ICON}
 {_FONTS}
-<style>{_CSS}</style>
+{SHELL_CSS_LINK}
+<style>{_EXTRA_CSS}</style>
 </head>
 <body>
 {_header("")}

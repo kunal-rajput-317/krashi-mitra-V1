@@ -58,7 +58,7 @@ from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from backend.routes.bhav import (
-    _CSS as _BASE_CSS, _FONTS, _ICON, _ANALYTICS, _asset, _district_from_referer,
+    SHELL_CSS_LINK, _FONTS, _ICON, _ANALYTICS, _asset, _district_from_referer,
     _header, _footer, _doc, _faq, _crumb_ld, _fit, _ld,
 )
 from backend.services import affiliate, legal, lead_clicks, shop_catalog
@@ -247,9 +247,9 @@ def _product_chip(p: dict) -> str:
 # the catalog grid, the affiliate CTA colours and the product photo frame.
 #
 # Passed separately as `extra_css` to _doc() rather than folded into a local
-# `_CSS` — _doc() is defined in bhav.py and its `<style>{_CSS}</style>` closes
-# over bhav.py's OWN module-level _CSS, not this file's, so a same-named local
-# override here would silently never render.
+# `_CSS` — _doc() is defined in bhav.py and links bhav.py's OWN shared sheet
+# (SHELL_CSS_LINK), not anything in this file, so a same-named local override
+# here would silently never render.
 _EXTRA_CSS = """
 .desc{font-size:14px;color:var(--text-mid);margin:16px 0}
 
@@ -405,7 +405,6 @@ font-size:13.5px;font-weight:600;line-height:1.5;box-shadow:0 8px 26px rgba(0,0,
 
 # Only _not_found() below needs the combined sheet — it builds its own <head>
 # by hand instead of going through bhav.py's _doc().
-_CSS = _BASE_CSS + _EXTRA_CSS
 
 
 # ── the buy funnel ──────────────────────────────────────────
@@ -780,7 +779,8 @@ def _not_found() -> HTMLResponse:
 <meta name="robots" content="noindex">
 {_ICON}
 {_FONTS}
-<style>{_CSS}</style>
+{SHELL_CSS_LINK}
+<style>{_EXTRA_CSS}</style>
 </head>
 <body>
 {_header("shop")}

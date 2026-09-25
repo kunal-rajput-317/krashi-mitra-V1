@@ -163,11 +163,30 @@ def test_article_hero_generator_writes_960():
 
 # ── edge cache lifetimes ──────────────────────────────────────
 
-def test_bhav_price_pages_hour_other_doc_pages_three_hours():
+def test_bhav_price_pages_until_next_fetch_other_doc_pages_three_hours():
     from backend.routes import bhav
-    assert "max-age=3600," in bhav._CACHE_HEADERS["CDN-Cache-Control"]
     assert "max-age=10800," in bhav._CACHE_HEADERS_SLOW["CDN-Cache-Control"]
     # _doc() reads the DB for its footer, so check the switch in its source.
     import inspect
-    assert ('_CACHE_HEADERS if active == "bhav" else _CACHE_HEADERS_SLOW'
+    assert ('_bhav_cache_headers() if active == "bhav" else _CACHE_HEADERS_SLOW'
             in inspect.getsource(bhav._doc))
+
+
+@pytest.mark.parametrize("ist,want_s", [
+    ("07:00", 75 * 60),        # before the 08:00 fetch → 08:15
+    ("08:05", 10 * 60),        # fetch still running → expire once it settles
+    ("08:20", (1 * 60 + 55) * 60),   # 10:00 fetch → 10:15
+    ("10:16", (3 * 60 - 1) * 60),    # 13:00 → 13:15
+    ("16:20", (3 * 60 + 55) * 60),   # 20:00 → 20:15
+    ("20:16", (3 * 60 + 10) * 60),   # 23:11 fetch → 23:26
+    ("23:30", 6 * 3600),       # overnight: next is 08:15, capped at 6 h
+    ("23:24", 300),            # 2 min before 23:26 → floor of 5 min
+])
+def test_bhav_edge_ttl_expires_just_after_the_next_mandi_fetch(ist, want_s):
+    from datetime import datetime, timedelta
+    from backend.routes import bhav
+    h, m = map(int, ist.split(":"))
+    now_utc = datetime(2026, 9, 26, h, m) - timedelta(hours=5, minutes=30)
+    got = bhav._bhav_edge_ttl(now_utc)
+    assert got == want_s
+    assert f"max-age={got}," in bhav._bhav_cache_headers(now_utc)["CDN-Cache-Control"]

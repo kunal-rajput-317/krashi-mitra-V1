@@ -95,7 +95,8 @@ app = FastAPI(
 )
 
 # ── Response compression ─────────────────────────────────────────────
-# Added FIRST => innermost, so it sees a route's response as one whole body
+# Added first (only the ETag layer, which re-emits the body as one message,
+# sits inside it) => innermost, so it sees a route's response as one whole body
 # message and can set a real Content-Length. Sitting it outside either
 # BaseHTTPMiddleware below would mean compressing an already-streaming
 # response, which drops Content-Length and forces chunked transfer on every
@@ -116,6 +117,13 @@ app = FastAPI(
 # from Netlify anyway — not worth a content-type allowlist to dodge.
 from fastapi.middleware.gzip import GZipMiddleware
 
+# ETag + 304 for server-rendered pages, so the edge re-checking an unchanged
+# page costs ~0.3 KB instead of the whole page. Added BEFORE gzip, i.e. inside
+# it: the ETag is a hash of the uncompressed body. See
+# backend/utils/conditional_get.py.
+from backend.utils.conditional_get import ConditionalGetMiddleware
+
+app.add_middleware(ConditionalGetMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 
 # ── frontend/_redirects, on this origin ──────────────────────────────

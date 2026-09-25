@@ -333,7 +333,10 @@ def test_bhav_location_button_animation_css(client):
     """Verify that CSS defines bmSpin keyframes and active/loading state styles for location buttons."""
     resp = client.get("/bhav")
     assert resp.status_code == 200
-    html = resp.text
+    # The shared rules live in the linked stylesheet, not inline — read both.
+    import re
+    href = re.search(r'href="(/ssr-css/shell\.[0-9a-f]+\.css)"', resp.text).group(1)
+    html = resp.text + client.get(href).text
 
     assert "@keyframes bmSpin" in html
     assert "animation:bmSpin" in html

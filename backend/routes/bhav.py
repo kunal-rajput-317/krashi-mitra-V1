@@ -34,6 +34,7 @@
 # ============================================================
 
 import calendar
+import hashlib
 import json as _json
 import os
 import re
@@ -2445,6 +2446,38 @@ border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
 # article pages, which never load this stylesheet — see services/ecosystem.CSS.
 _CSS += ecosystem.CSS
 
+# ── The shared sheet, served as ONE cacheable file ───────────
+# Until 26 Sep 2026 every server-rendered page inlined all of the above in a
+# <style> tag: ~12.6 KB gzipped of identical bytes on every /bhav, /naksha,
+# /ganna, /product… response, ~40% of a typical page. Render bills each of
+# those bytes against the 5 GB/month cap, and the long-tail tree is almost all
+# edge MISSes, so Cloudflare was re-fetching the same stylesheet from origin
+# thousands of times a day inside different HTML.
+#
+# Now the page links it. The URL carries a hash of the content, so it can be
+# cached for a year (browser and edge) and a CSS change is a new URL — no
+# purge, no stale styling. The hash is fixed at import, so every instance
+# serves the same URL and a fresh instance after a deploy already knows it.
+# A request for an OLD hash (HTML cached at the edge from before a deploy)
+# still gets today's sheet, just not cached as immutable — a near-miss style
+# for a few minutes beats an unstyled page.
+#
+# Only this shared shell moves. A caller's `extra_css` stays inline: it differs
+# page to page, and a content-addressed registry for it would 404 on a fresh
+# instance until that page type had rendered once.
+_SHELL_CSS = _CSS + (sponsors.CSS if sponsors else "")
+_SHELL_CSS_VER = hashlib.sha256(_SHELL_CSS.encode("utf-8")).hexdigest()[:12]
+SHELL_CSS_LINK = f'<link rel="stylesheet" href="/ssr-css/shell.{_SHELL_CSS_VER}.css">'
+
+
+@router.get("/ssr-css/shell.{ver}.css", include_in_schema=False)
+def shell_css(ver: str):
+    cc = ("public, max-age=31536000, immutable" if ver == _SHELL_CSS_VER
+          else "public, max-age=600")
+    return Response(_SHELL_CSS, media_type="text/css; charset=utf-8",
+                    headers={"Cache-Control": cc, "CDN-Cache-Control": cc})
+
+
 _FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
           '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
           '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
@@ -2828,17 +2861,44 @@ def _footer(note: str = "") -> str:
 # cache miss and Render paid for all 14k of them against a 5 GB/mo cap.
 # CDN-Cache-Control is the vendor-neutral spelling and both honour it.
 #
-# 1 h at the edge (prices move ~5x/day, fetched 08/10/13/16/20 IST) plus a day
-# of stale-while-revalidate keeps Googlebot crawling 14k URLs off Render's
-# cold-start latency — crawl speed caps how fast the tree gets indexed.
-# Browsers get 5 min so a farmer refreshing still sees fresh numbers quickly.
-# Was 30 min until 25 Sep 2026: every edge refresh is a full page billed to
-# Render's 5 GB/month, which was on course to run out a third time.
-_CACHE_HEADERS = {
-    "Cache-Control": "public, max-age=300",
-    "CDN-Cache-Control":
-        "public, max-age=3600, stale-while-revalidate=86400",
-}
+# At the edge a /bhav page lives until just AFTER THE NEXT MANDI FETCH, capped
+# at 6 h, plus a day of stale-while-revalidate that keeps Googlebot crawling
+# 14k URLs off Render's cold-start latency. Browsers get 5 min so a farmer
+# refreshing still sees fresh numbers quickly.
+#
+# A price page can only change when a fetch lands (mandi_scheduler: 08/10/13/
+# 16/20 h + 23:11 IST), so a fixed TTL is wrong either way: 1 h re-sent every
+# page ~24 times a day to learn nothing new, and a flat 6 h would hold the
+# 10:00 prices until 16:00, past two fetches. Expiring at "next fetch + 15 min"
+# (runs take 1–8 min, sync_log, Sep 2026) never serves prices a fetch has
+# replaced, and cuts edge refreshes to ~6-7 a day. An off-schedule retry of a
+# failed fetch shows at the next slot instead — the same price the page
+# already showed, for at most one more slot.
+# History: 30 min until 25 Sep 2026, 1 h until 26 Sep — every edge refresh is
+# a full page billed to Render's 5 GB/month, which kept running out.
+_FETCH_SLOTS_IST = ((8, 0), (10, 0), (13, 0), (16, 0), (20, 0), (23, 11))
+_FETCH_SETTLE = timedelta(minutes=15)
+_EDGE_TTL_MIN, _EDGE_TTL_MAX = 300, 6 * 3600
+
+
+def _bhav_edge_ttl(now_utc: datetime | None = None) -> int:
+    now = (now_utc or datetime.utcnow()) + _IST_OFFSET
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    for day in (0, 1):
+        for h, m in _FETCH_SLOTS_IST:
+            expires = midnight + timedelta(days=day, hours=h, minutes=m) + _FETCH_SETTLE
+            if expires > now:
+                secs = int((expires - now).total_seconds())
+                return max(_EDGE_TTL_MIN, min(_EDGE_TTL_MAX, secs))
+    return _EDGE_TTL_MAX
+
+
+def _bhav_cache_headers(now_utc: datetime | None = None) -> dict:
+    return {
+        "Cache-Control": "public, max-age=300",
+        "CDN-Cache-Control":
+            f"public, max-age={_bhav_edge_ttl(now_utc)}, stale-while-revalidate=86400",
+    }
 # Pages _doc renders for other sections (/naksha, /ganna, /sawal, /product,
 # /pashupalan…) carry no mandi price that moves during the day, so the edge
 # may hold them 3 h — a third of the origin refreshes for the same traffic.
@@ -3006,7 +3066,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     # Reused callers (e.g. product.py, active=="shop") keep their visible one.
     crumbs_nav = (f'<nav class="crumbs">{crumbs}</nav>'
                   if (crumbs and active != "bhav") else "")
-    base_headers = _CACHE_HEADERS if active == "bhav" else _CACHE_HEADERS_SLOW
+    base_headers = _bhav_cache_headers() if active == "bhav" else _CACHE_HEADERS_SLOW
     date_ld, headers = "", base_headers
     if updated:
         date_ld = _ld({"@context": "https://schema.org", "@type": "WebPage",
@@ -3043,7 +3103,8 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 {head_extra}
 {ld}
 {date_ld}
-<style>{_CSS}{sponsors.CSS if sponsors else ""}{extra_css}</style>
+{SHELL_CSS_LINK}
+<style>{extra_css}</style>
 </head>
 <body{body_attrs}>
 {_header(active, quicknav)}
@@ -3156,7 +3217,7 @@ def _not_found(idx: dict | None = None, cs: str = "", ss: str = "") -> HTMLRespo
 <meta name="robots" content="noindex">
 {_ICON}
 {_FONTS}
-<style>{_CSS}</style>
+{SHELL_CSS_LINK}
 </head>
 <body>
 {_header("bhav")}
@@ -3265,8 +3326,8 @@ def _dist_name(idx: dict, ss: str, ds: str) -> str:
 # whatever Agmarknet sent, commas and blanks included, so _num decides what is
 # a number — the same gate every other price on the site passes through.
 #
-# One grouped read per place, TTL-cached under the 30-minute edge cache the
-# hubs already ship with (_CACHE_HEADERS), because Netlify serves ~all of this
+# One grouped read per place, TTL-cached under the edge cache the hubs
+# already ship with (_bhav_cache_headers), because the edge serves ~all of this
 # traffic from the edge and Render's free tier is the thing being protected.
 _place_rates: dict = {}
 _PLACE_RATES_TTL = 900
@@ -3850,7 +3911,7 @@ def find(q: str = ""):
 <meta name="robots" content="noindex, follow">
 {_ICON}
 {_FONTS}
-<style>{_CSS}</style>
+{SHELL_CSS_LINK}
 </head>
 <body>
 {_header("")}
