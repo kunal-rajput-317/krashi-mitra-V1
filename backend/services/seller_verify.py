@@ -72,9 +72,15 @@ log = logging.getLogger(__name__)
 #   approved  → membership running, given free by the owner (tick ON)
 #   rejected  → revoked, e.g. for impersonation        (tick OFF)
 #   expired   → the term ran out                       (tick OFF)
-APPLIED, PAID, APPROVED, REJECTED, EXPIRED = (
-    "applied", "paid", "approved", "rejected", "expired")
-STATUSES = {APPLIED, PAID, APPROVED, REJECTED, EXPIRED}
+#   declined  → the application was refused before any tick (tick was never ON)
+#
+# `declined` is new (2026-09-26) and is NOT `rejected`: a rejected row had a
+# tick taken away and may be owed a refund; a declined one never had a tick
+# and no confirmed money, so /verify tells him "आवेदन स्वीकार नहीं हुआ" and
+# lets him apply again instead of "आपका टिक हटा दिया गया".
+APPLIED, PAID, APPROVED, REJECTED, EXPIRED, DECLINED = (
+    "applied", "paid", "approved", "rejected", "expired", "declined")
+STATUSES = {APPLIED, PAID, APPROVED, REJECTED, EXPIRED, DECLINED}
 
 # The two that mean "the badge is on right now". Anything reading the row
 # instead of the flag must go through this, not compare to PAID by hand.
@@ -183,6 +189,10 @@ def months(code: str = "") -> int:
     return plan(code)["months"]
 
 
+class RefundPending(ValueError):
+    """His removed tick's fee has not been sent back yet — refund first."""
+
+
 def _new_ref() -> str:
     """Short, unambiguous, and safe in a UPI `tr` field and a URL.
 
@@ -223,9 +233,27 @@ def apply(db, user_id: int, data: dict) -> SellerVerification:
         row = SellerVerification(user_id=user_id, ref=_new_ref(), created_at=now)
         db.add(row)
 
+    # A removed tick whose fee has not gone back yet: re-applying would move
+    # the row off `rejected`, and refund_due() — the only thing that puts the
+    # owed refund in front of the owner — would silently go False. So the
+    # refund goes first; the /verify terms already promise it within 7 days.
+    if refund_due(row):
+        raise RefundPending(row.ref)
+
+    # After a removal or a decline the money of that round is settled (never
+    # paid, or paid and refunded), so the new application starts with none of
+    # it — otherwise the queue shows "₹ मिला" on a signup that has paid nothing.
+    if row.status in (REJECTED, DECLINED):
+        row.paid_at = None
+        row.paid_ref = None
+        row.refunded_at = None
+        row.payment_claimed_at = None
+        row.valid_until = None
+        row.approved_at = None
+
     # Re-applying after a rejection is allowed and starts clean; re-applying
     # while approved just refreshes the details on file.
-    if row.status in (REJECTED, EXPIRED, None, ""):
+    if row.status in (REJECTED, EXPIRED, DECLINED, None, ""):
         row.status = APPLIED
         row.reject_reason = None
         row.reviewed_at = None
@@ -259,8 +287,10 @@ def apply(db, user_id: int, data: dict) -> SellerVerification:
 
 # ── The owner's side — every one of these implies a human ────
 
-def record_payment(db, ref: str, amount: int, paid_ref: str = "",
-                   ) -> Optional[SellerVerification]:
+def record_payment(db, ref: str, amount: int, paid_ref: str = "", *,
+                   received_at=None, method: Optional[str] = None,
+                   payer: str = "", note: str = "",
+                   tds: int = 0) -> Optional[SellerVerification]:
     """Money arrived — so the tick goes on. Typed in by hand, and that is the design.
 
     A upi:// link hands off to the farmer's own app and reports nothing back,
@@ -276,13 +306,17 @@ def record_payment(db, ref: str, amount: int, paid_ref: str = "",
     row = by_ref(db, ref)
     if not row:
         return None
+    from backend.services import ledger
     now = datetime.utcnow()
-    row.paid_at = now
+    paid_on = received_at or now
+    # Exactly what arrived: never bumped up to ₹1, never replaced by the plan's
+    # list price. The ledger row goes first, so a refused one grants nothing.
+    ledger.record(db, "verify", int(amount), payer=payer or row.full_name or "",
+                  contact=row.phone or "", ref=paid_ref, method=method, note=note,
+                  source_key=row.ref, received_at=paid_on, tds=tds)
+    row.paid_at = paid_on
     row.paid_ref = (paid_ref or "").strip()[:64] or None
-    try:
-        row.fee_amount = max(1, int(amount))
-    except (TypeError, ValueError):
-        row.fee_amount = row.fee_amount or fee(row.plan)
+    row.fee_amount = int(amount)
     # A complimentary badge paying for itself stays `approved` — the owner gave
     # it, and that is worth still being able to see in the queue.
     if row.status != APPROVED:
@@ -297,10 +331,6 @@ def record_payment(db, ref: str, amount: int, paid_ref: str = "",
     user = db.query(User).filter(User.id == row.user_id).first()
     if user:
         user.seller_verified = True
-    from backend.services import ledger
-    ledger.record(db, "verify", row.fee_amount, payer=row.full_name or "",
-                  contact=row.phone or "", ref=row.paid_ref or "",
-                  source_key=row.ref, received_at=now)
     db.commit()
     db.refresh(row)
     return row
@@ -408,19 +438,135 @@ def revoke(db, ref: str, reason: str = "", by: str = "admin"
 reject = revoke
 
 
-def record_refund(db, ref: str) -> Optional[SellerVerification]:
+class NotDeclinable(ValueError):
+    """Only an application still waiting on money can be declined."""
+
+
+def decline(db, ref: str, reason: str, by: str = "admin"
+            ) -> Optional[SellerVerification]:
+    """Refuse an application that never got a tick. Not the kill switch.
+
+    Only an `applied` row qualifies — money not confirmed, tick never on. A
+    live membership goes through revoke(), which owes the refund; a declined
+    application owes nothing, because record_payment() moves a row off
+    `applied` the moment a human confirms money, so an `applied` row has no
+    confirmed payment for this application.
+
+    It never touches users.seller_verified: the flag is already off on an
+    `applied` row, and a fifth writer of that flag is exactly what
+    test_only_four_places_write_the_flag exists to stop.
+
+    His "मैंने भेज दिया" claim is cleared, so a fresh application starts
+    clean and does not jump the queue on a claim that was already looked at.
+    """
+    row = by_ref(db, ref)
+    if not row:
+        return None
+    if row.status != APPLIED:
+        raise NotDeclinable(row.status)
+    now = datetime.utcnow()
+    row.status = DECLINED
+    row.reject_reason = (reason or "").strip()[:200] or None
+    row.reviewed_at = now
+    row.reviewed_by = (by or "admin")[:60]
+    row.payment_claimed_at = None
+    row.updated_at = now
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+CONTACT_HI = "+91 9870951001 (WhatsApp) या krashimitra038@gmail.com"
+NOT_A_CHECK_HI = ("नीला टिक प्रीमियम सदस्यता का निशान है — यह पहचान की जाँच या "
+                  "फसल, भाव या सौदे की गारंटी नहीं है।")
+
+
+def notice(row: SellerVerification) -> tuple:
+    """(subject, body) of the email for a declined application or a removed
+    tick. Plain text, Hindi. None for any other status.
+
+    Every refund sentence restates a term /verify already prints (money
+    arrived but no tick, or a tick removed mid-term → the whole fee back
+    within 7 days); nothing here may invent a new one. Both end by saying he
+    can apply again, because he can — see apply().
+    """
+    name = (row.full_name or "").strip() or "किसान भाई"
+    why = f"कारण: {row.reject_reason}\n" if row.reject_reason else ""
+    again = "आप फिर से आवेदन कर सकते हैं — वही तरीका: https://krashimitra.in/verify\n\n"
+
+    if row.status == DECLINED:
+        subject = f"कृषि मित्र प्रीमियम — आपका आवेदन {row.ref}"
+        middle = (
+            f"कृषि मित्र प्रीमियम (नीला टिक) के लिए आपका आवेदन {row.ref} "
+            f"स्वीकार नहीं हुआ है।\n{why}\n"
+            "हमारे रिकॉर्ड में इस आवेदन का कोई भुगतान दर्ज नहीं है। अगर आपने शुल्क "
+            f"भेजा था और आपके खाते से कट गया है, तो UTR / स्क्रीनशॉट के साथ {CONTACT_HI} "
+            "पर बताइए — पैसा हमारे खाते में पहुँचा होगा तो पूरा शुल्क 7 दिन के अंदर "
+            "वापस भेजा जाएगा।\n\n" + again)
+    elif row.status == REJECTED:
+        subject = f"कृषि मित्र प्रीमियम — आपका नीला टिक हटाया गया ({row.ref})"
+        if refund_due(row):
+            money = (f"आपका पूरा शुल्क ₹{row.fee_amount} 7 दिन के अंदर उसी UPI / खाते "
+                     "में वापस भेजा जाएगा। रिफंड पहुँचने के बाद आप फिर से आवेदन कर "
+                     "सकते हैं — वही तरीका: https://krashimitra.in/verify\n\n")
+        else:
+            money = again
+        middle = (
+            f"आपके खाते ({row.ref}) से कृषि मित्र प्रीमियम का नीला टिक हटा दिया गया है।\n"
+            f"{why}\n{money}"
+            f"कोई गलतफ़हमी लगे तो {CONTACT_HI} पर बताइए।\n\n")
+    else:
+        return None
+    body = f"नमस्ते {name},\n\n{middle}{NOT_A_CHECK_HI}\n\n— कृषि मित्र"
+    return subject, body
+
+
+def notify(db, row: SellerVerification) -> bool:
+    """Email him that his application was declined or his tick removed.
+    True only if it was sent.
+
+    One message, to his own account address, about his own membership — a
+    service notice, not a campaign. Resend is already named in the privacy
+    policy for "सूचना वाले ईमेल". An anonymised account (@deleted.invalid) is
+    never written to. A failed send never undoes the action: the panel is
+    told, and offers WhatsApp instead. The same reason also shows in his
+    KrashiBook सूचनाएं, on /verify and on his profile, read from the row.
+    """
+    msg = notice(row)
+    if not msg:
+        return False
+    user = db.query(User).filter(User.id == row.user_id).first()
+    email = (user.email or "").strip() if user else ""
+    if not email or email.endswith("@deleted.invalid"):
+        return False
+    from backend.utils import auth_utils
+    try:
+        return bool(auth_utils._send_with_resend(email, *msg))
+    except Exception as e:                      # never let mail break the admin call
+        log.warning("[seller_verify] notice failed for %s: %s", row.ref, e)
+        return False
+
+
+def record_refund(db, ref: str, *, sent_at=None, method: Optional[str] = None,
+                  refund_ref: str = "", payer: str = "",
+                  note: str = "") -> Optional[SellerVerification]:
+    """The refund went out. `sent_at`/`method`/`refund_ref` are the outgoing
+    transfer's own date and bank reference, so it matches the statement."""
     row = by_ref(db, ref)
     if not row:
         return None
     if row.refunded_at:
         return row          # already refunded — a second click must not refund twice
-    row.refunded_at = datetime.utcnow()
-    row.updated_at = row.refunded_at
+    when = sent_at or datetime.utcnow()
     if row.paid_at and row.fee_amount:
         from backend.services import ledger
-        ledger.record(db, "verify", -int(row.fee_amount), payer=row.full_name or "",
-                      contact=row.phone or "", source_key=row.ref,
-                      received_at=row.refunded_at, note="refund")
+        ledger.record(db, "verify", -int(row.fee_amount),
+                      payer=payer or row.full_name or "",
+                      contact=row.phone or "", source_key=row.ref, ref=refund_ref,
+                      method=method, received_at=when,
+                      note=("refund" + (f" — {note}" if note else "")))
+    row.refunded_at = when
+    row.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(row)
     return row
@@ -535,6 +681,11 @@ def to_dict(row: Optional[SellerVerification], now: Optional[datetime] = None) -
         "id_kind":      row.id_kind,
         "reject_reason": row.reject_reason,
         "refunded":     bool(row.refunded_at),
+        # Removed tick, fee not back yet — he cannot re-apply until it is.
+        "refund_pending": refund_due(row),
+        # When the owner declined / removed it. KrashiBook keys "seen" on it,
+        # so a second removal lights the 📒 badge again.
+        "reviewed_at":  row.reviewed_at.isoformat() if row.reviewed_at else None,
         "valid_until":  row.valid_until.isoformat() if row.valid_until else None,
         "days_left":    days_left(row, now),
         "applied_at":   row.created_at.isoformat() if row.created_at else None,

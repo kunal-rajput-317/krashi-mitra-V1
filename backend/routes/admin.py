@@ -3,7 +3,6 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -2383,8 +2382,9 @@ async def dealer_collect(
             "and KM_UPI_NAME in the environment, then restart. Nothing is hardcoded "
             "on purpose: a wrong VPA sends a dealer's money to a stranger."
         )
+    from backend.services import pay_links
     pack = upi.collect(row.name or "", row.district or "",
-                       amount=amount or None, ref=slug)
+                       amount=amount or None, ref=pay_links.ref("listing", slug))
     pack["purpose"]  = (purpose or "").strip()[:200] or _DEFAULT_PURPOSE
     # The amount the owner just typed has to travel WITH the link. Without it
     # the dealer opened /pay and saw the flat KM_LISTING_FEE default instead —
@@ -2402,7 +2402,7 @@ async def dealer_collect(
 
 
 def _pay_page_url(slug: str, amount=None) -> str:
-    """Absolute URL of the public /pay page — it gets pasted into WhatsApp, so a
+    """Absolute URL of the dealer's /pay/listing/{slug} page — it gets pasted into WhatsApp, so a
     site-relative path would arrive as unclickable text.
 
     `amount` is carried explicitly rather than left for /pay to re-derive: the
@@ -2410,8 +2410,8 @@ def _pay_page_url(slug: str, amount=None) -> str:
     have to be the same number, and only the caller knows whether this is the
     standard fee, a renewal, or a rate that was negotiated on the phone. /pay
     re-clamps it, so a hand-edited URL still cannot produce a ₹0 QR."""
-    url = f"{SITE}/pay?d={quote(slug, safe='')}"
-    return f"{url}&amount={int(amount)}" if amount else url
+    from backend.services import pay_links
+    return pay_links.url("listing", slug, amount)
 
 
 def _collect_message(row, amount: int, pay_url: str, purpose: str = "") -> str:
@@ -2492,15 +2492,15 @@ async def record_dealer_payment(
     that sets `paid_at`, and it requires a human who saw the credit.
     """
     from backend.services import dealers, upi
-    amount = upi.clean_amount(payload.get("amount"), default=0)
-    if amount < upi.MIN_AMOUNT:
-        raise HTTPException(400, f"Enter the amount actually received (₹{upi.MIN_AMOUNT}–₹{upi.MAX_AMOUNT})")
+    from backend.routes.admin_ledger import entry_or_400
+    e = entry_or_400(db, payload, limit=upi.MAX_AMOUNT)
     try:
         months = max(1, min(12, int(payload.get("months") or 1)))
     except (TypeError, ValueError):
         months = 1
-    row = _dealer_write(dealers.record_payment, db, slug, amount,
-                        (payload.get("ref") or ""), months)
+    row = _dealer_write(dealers.record_payment, db, slug, e.amount, e.ref, months,
+                        received_at=e.received_at, method=e.method,
+                        payer=e.payer, note=e.note, tds=e.tds)
     if not row:
         raise HTTPException(404, "Unknown dealer")
     return {"success": True, "counts": dealers.counts(db), "funnel": dealers.funnel(db)}
@@ -2714,14 +2714,11 @@ def verification_collect(
     # Says what he is buying and what it is not, in the same words /verify uses.
     # It may never offer a check, a verification or a guarantee — the badge is a
     # membership, and a WhatsApp message is as public a claim as a web page.
-    chosen = seller_verify.plan(row.plan)
-    # Says what he is buying and what it is not, in the same words /verify uses.
-    # It may never offer a check, a verification or a guarantee — the badge is a
-    # membership, and a WhatsApp message is as public a claim as a web page.
     pack["whatsapp"] = (
         f"नमस्ते {name}, कृषि मित्र से।\n\n"
         f"कृषि मित्र प्रीमियम (नीला टिक) का शुल्क ₹{pack['amount']} है "
         f"— {chosen['term_hi']}।\n"
+        f"QR वाला पेमेंट पेज: {pack['pay_url']}\n"
         f"UPI: {pack['vpa']}\n"
         f"आपका नंबर: {row.ref}\n\n"
         f"पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n"
@@ -2748,12 +2745,14 @@ def record_verification_payment(
     credit, not when the farmer says you will.
     """
     from backend.services import seller_verify, upi
+    from backend.routes.admin_ledger import entry_or_400
 
-    amount = upi.clean_amount(payload.get("amount"), default=0)
-    if amount < upi.MIN_AMOUNT:
-        raise HTTPException(
-            400, f"Enter the amount actually received (₹{upi.MIN_AMOUNT}–₹{upi.MAX_AMOUNT})")
-    row = seller_verify.record_payment(db, ref, amount, payload.get("ref") or "")
+    if not seller_verify.by_ref(db, ref):
+        raise HTTPException(404, "Unknown application")
+    e = entry_or_400(db, payload, limit=upi.MAX_AMOUNT)
+    row = seller_verify.record_payment(db, ref, e.amount, e.ref,
+                                       received_at=e.received_at, method=e.method,
+                                       payer=e.payer, note=e.note, tds=e.tds)
     if not row:
         raise HTTPException(404, "Unknown application")
     return {"success": True, "data": {
@@ -2810,24 +2809,78 @@ def reject_verification(
     from backend.services import seller_verify
 
     payload = payload or {}
-    row = seller_verify.revoke(db, ref, reason=payload.get("reason") or "",
-                               by=payload.get("by") or "admin")
-    if not row:
+    reason = (payload.get("reason") or "").strip()
+    if not seller_verify.by_ref(db, ref):
         raise HTTPException(404, "Unknown application")
+    # He reads this — in the email, KrashiBook, /verify and his profile.
+    if not reason:
+        raise HTTPException(400, "कारण लिखें — सदस्य को यही दिखेगा")
+    row = seller_verify.revoke(db, ref, reason=reason, by=payload.get("by") or "admin")
+    emailed = seller_verify.notify(db, row)
     return {"success": True, "data": {"status": row.status,
-                                      "refund_due": seller_verify.refund_due(row)}}
+                                      "refund_due": seller_verify.refund_due(row),
+                                      "emailed": emailed}}
+
+
+@router.post("/verifications/{ref}/decline")
+def decline_verification(
+    ref:     str,
+    payload: dict = None,
+    _:  str      = Depends(require_admin),
+    db: Session  = Depends(admin_db),
+):
+    """Refuse an application that never got a tick, and tell him.
+
+    Not /reject: that removes a live tick and owes a refund. This is for an
+    `applied` row — a claimed payment that never reached the bank, a duplicate,
+    details that are plainly not his. The reason is required because he reads
+    it, on /verify, on his profile and in the email. The email is best-effort:
+    `emailed` says whether it went, so the panel can offer WhatsApp when not.
+    """
+    from backend.services import seller_verify
+
+    payload = payload or {}
+    reason = (payload.get("reason") or "").strip()
+    if not seller_verify.by_ref(db, ref):
+        raise HTTPException(404, "Unknown application")
+    if not reason:
+        raise HTTPException(400, "कारण लिखें — सदस्य को यही दिखेगा")
+    try:
+        row = seller_verify.decline(db, ref, reason, by=payload.get("by") or "admin")
+    except seller_verify.NotDeclinable as e:
+        raise HTTPException(
+            409, f"सिर्फ़ 'भुगतान बाकी' वाला आवेदन रद्द हो सकता है (अभी: {e}). "
+                 "चालू टिक के लिए '✕ टिक हटाएँ' दबाएँ।")
+    emailed = seller_verify.notify(db, row)
+    return {"success": True, "data": {"status": row.status, "emailed": emailed}}
 
 
 @router.post("/verifications/{ref}/refund")
 def record_verification_refund(
     ref: str,
+    payload: dict = None,
     _:  str     = Depends(require_admin),
     db: Session = Depends(admin_db),
 ):
-    """The refund actually went out. Hand-entered, same rule as paid_at."""
-    from backend.services import seller_verify
+    """The refund actually went out. Hand-entered, same rule as paid_at.
 
-    row = seller_verify.record_refund(db, ref)
+    The admin types the amount sent back, and it must be the whole fee (that is
+    the refund /verify promises); a different number is a typo or a different
+    refund, and either way it does not go in the ledger as this one.
+    """
+    from backend.services import seller_verify
+    from backend.routes.admin_ledger import entry_or_400
+
+    row = seller_verify.by_ref(db, ref)
     if not row:
         raise HTTPException(404, "Unknown application")
+    if not row.refunded_at:
+        e = entry_or_400(db, payload)
+        if e.tds:
+            raise HTTPException(400, "रिफंड में TDS नहीं होता — वह खाना खाली छोड़िए")
+        if row.paid_at and row.fee_amount and e.amount != int(row.fee_amount):
+            raise HTTPException(
+                400, f"रिफंड पूरी फ़ीस ₹{row.fee_amount} का होता है; आपने ₹{e.amount} लिखा")
+        row = seller_verify.record_refund(db, ref, sent_at=e.received_at, method=e.method,
+                                          refund_ref=e.ref, payer=e.payer, note=e.note)
     return {"success": True, "data": {"refunded_at": row.refunded_at.isoformat()}}

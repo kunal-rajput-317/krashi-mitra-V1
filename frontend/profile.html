@@ -635,10 +635,6 @@
     .stat-item:last-child {
       border-right: none;
     }
-    .stat-icon {
-      font-size: 15px;
-      margin-bottom: 2px;
-    }
     .stat-val {
       font-size: 13.5px;
       font-weight: 700;
@@ -724,13 +720,13 @@
       display: flex; gap: 8px; flex-wrap: wrap;
     }
     .quick-link {
-      flex: 1; min-width: 80px; display: flex; flex-direction: column; align-items: center; gap: 3px;
-      padding: 10px 8px; background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); text-decoration: none; font-size: 11px; font-weight: 700;
+      flex: 1; min-width: 80px; display: flex; align-items: center; justify-content: center;
+      padding: 12px 8px; background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); text-decoration: none; font-size: 13px; font-weight: 700;
+      text-align: center; min-height: 44px;
       color: var(--text-mid); transition: all 0.18s; box-shadow: var(--shadow);
     }
     .quick-link:hover { background: var(--green-pale); border-color: var(--green-light); color: var(--green-dark); }
-    .quick-link span:first-child { font-size: 20px; }
 
     /* ── Summary Strip ── */
     .summary-strip {
@@ -739,7 +735,6 @@
       display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;
     }
     .sum-item { display: flex; align-items: center; gap: 8px; }
-    .sum-icon-sm { width: 28px; height: 28px; border-radius: 7px; background: var(--green-pale); display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
     .sum-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-light); }
     .sum-val { font-size: 12px; font-weight: 700; color: var(--text-dark); word-break: break-word; }
     .crop-chips { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -1237,9 +1232,9 @@
       </div>
     </div>
     <div class="hero-stats">
-      <div class="stat-item"><div class="stat-icon">📍</div><div class="stat-val" id="stat-location">-</div><div class="stat-lbl">जिला</div></div>
-      <div class="stat-item"><div class="stat-icon">🌱</div><div class="stat-val" id="stat-crop">-</div><div class="stat-lbl">मुख्य फसल</div></div>
-      <div class="stat-item"><div class="stat-icon">🧭</div><div class="stat-val" id="stat-farm">-</div><div class="stat-lbl">खेत</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-location">-</div><div class="stat-lbl">जिला</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-crop">-</div><div class="stat-lbl">मुख्य फसल</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-farm">-</div><div class="stat-lbl">खेत</div></div>
     </div>
   </section>
 
@@ -1252,20 +1247,20 @@
 
   <!-- ── Quick Links Row ── -->
   <div class="quick-row">
-    <a class="quick-link" href="chat.html"><span>💬</span><span>AI सलाह</span></a>
-    <a class="quick-link" href="weather.html"><span>🌤️</span><span>मौसम</span></a>
-    <a class="quick-link" href="/bhav"><span>🏪</span><span>मंडी भाव</span></a>
-    <a class="quick-link" href="/product"><span>🛒</span><span>दुकान</span></a>
+    <a class="quick-link" href="chat.html">AI सलाह</a>
+    <a class="quick-link" href="weather.html">मौसम</a>
+    <a class="quick-link" href="/bhav">मंडी भाव</a>
+    <a class="quick-link" href="/product">दुकान</a>
   </div>
 
   <!-- ── Summary Strip ── -->
   <div class="summary-strip" id="summary-content">
-    <div class="sum-item"><div class="sum-icon-sm">📍</div><div><div class="sum-lbl">स्थान</div><div class="sum-val" id="summary-location">-</div></div></div>
-    <div class="sum-item"><div class="sum-icon-sm">🌱</div><div><div class="sum-lbl">मुख्य फसल</div><div class="sum-val" id="summary-crop">-</div></div></div>
-    <div class="sum-item"><div class="sum-icon-sm">🧭</div><div><div class="sum-lbl">खेत</div><div class="sum-val" id="summary-farm">-</div></div></div>
-    <div class="sum-item"><div class="sum-icon-sm">🗣️</div><div><div class="sum-lbl">भाषा</div><div class="sum-val" id="summary-language">Hindi</div></div></div>
-    <div class="sum-item"><div class="sum-icon-sm">📞</div><div><div class="sum-lbl">मोबाइल</div><div class="sum-val" id="summary-phone">-</div></div></div>
-    <div class="sum-item"><div class="sum-icon-sm">✉️</div><div><div class="sum-lbl">ईमेल <span title="ईमेल बदला नहीं जा सकता" style="opacity:0.6;">🔒</span></div><div class="sum-val" id="summary-email">-</div></div></div>
+    <div class="sum-item"><div><div class="sum-lbl">स्थान</div><div class="sum-val" id="summary-location">-</div></div></div>
+    <div class="sum-item"><div><div class="sum-lbl">मुख्य फसल</div><div class="sum-val" id="summary-crop">-</div></div></div>
+    <div class="sum-item"><div><div class="sum-lbl">खेत</div><div class="sum-val" id="summary-farm">-</div></div></div>
+    <div class="sum-item"><div><div class="sum-lbl">भाषा</div><div class="sum-val" id="summary-language">Hindi</div></div></div>
+    <div class="sum-item"><div><div class="sum-lbl">मोबाइल</div><div class="sum-val" id="summary-phone">-</div></div></div>
+    <div class="sum-item"><div><div class="sum-lbl"><span title="ईमेल बदला नहीं जा सकता">ईमेल</span></div><div class="sum-val" id="summary-email">-</div></div></div>
     <div style="display:flex;align-items:center;gap:6px;justify-self:end;">
       <span class="profile-status-badge" id="profile-status">Loading</span>
     </div>
@@ -2257,6 +2252,29 @@
             <span class="pf-tick-t">शुल्क भेजना बाकी है</span></div>
           <div class="pf-tick-s">₹${d.fee} भेजते ही आपका नीला टिक चालू हो जाएगा — ${escHtml(d.term_hi || "")}।</div>
           <a class="pf-tick-btn" href="/verify">शुल्क भेजें</a>
+          <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
+      } else if (d.status === "declined") {
+        // Refused before any tick. Say so, with the reason, and let him retry.
+        box.className = "pf-tick";
+        box.innerHTML = `
+          <div class="pf-tick-head">${TICK_MARK}
+            <span class="pf-tick-t">आपका आवेदन स्वीकार नहीं हुआ</span></div>
+          ${d.reject_reason ? `<div class="pf-tick-s">कारण: ${escHtml(d.reject_reason)}</div>` : ""}
+          <div class="pf-tick-wait">शुल्क कट गया हो तो UTR के साथ <b>+91 9870951001</b> पर बताइए।</div>
+          <a class="pf-tick-btn" href="/verify">फिर से आवेदन करें</a>
+          <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
+      } else if (d.status === "rejected") {
+        // Removed by the owner. The reason, the refund, and the way back.
+        const money = d.refund_pending
+          ? "आपका पूरा शुल्क 7 दिन के अंदर वापस भेजा जाएगा। रिफंड के बाद फिर से आवेदन कर सकते हैं।"
+          : (d.paid && d.refunded ? "आपका शुल्क वापस भेज दिया गया है।" : "");
+        box.className = "pf-tick";
+        box.innerHTML = `
+          <div class="pf-tick-head">${TICK_MARK}
+            <span class="pf-tick-t">आपका नीला टिक हटा दिया गया है</span></div>
+          ${d.reject_reason ? `<div class="pf-tick-s">कारण: ${escHtml(d.reject_reason)}</div>` : ""}
+          ${money ? `<div class="pf-tick-wait">${escHtml(money)}</div>` : ""}
+          ${d.refund_pending ? "" : `<a class="pf-tick-btn" href="/verify">फिर से आवेदन करें</a>`}
           <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
       } else {
         const gone = (d.status === "expired")

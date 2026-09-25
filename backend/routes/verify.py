@@ -29,6 +29,7 @@
 #   paid      → the tick is on, when it ends, how to renew
 #   approved  → same, given by the owner
 #   rejected  → the badge was removed, and the refund
+#   declined  → the application was refused before any tick → apply again
 #   expired   → the term ran out → the plans again
 #
 # noindex, always. It is a logged-in billing page; it has no business in a
@@ -46,7 +47,7 @@ from sqlalchemy.orm import Session
 
 from backend.database.db import User, UserProfile, acct, get_db
 from backend.routes.bhav import _doc
-from backend.services import seller_verify, upi
+from backend.services import pay_links, seller_verify, upi
 from backend.utils.auth_utils import get_current_user
 
 router = APIRouter()
@@ -177,7 +178,11 @@ def apply_for_badge(
     if len(digits) < 10:
         raise HTTPException(400, "सही मोबाइल नंबर डालें — इसी पर हम आपसे संपर्क करेंगे।")
 
-    row = seller_verify.apply(db, user_id, data)
+    try:
+        row = seller_verify.apply(db, user_id, data)
+    except seller_verify.RefundPending:
+        raise HTTPException(409, "आपका पिछला शुल्क वापस भेजा जा रहा है। रिफंड पहुँचने के "
+                                 "बाद फिर से आवेदन करें — सवाल हो तो +91 9870951001।")
     return {
         "success": True,
         "message": "हो गया। अब शुल्क भेजें — पैसा पहुँचते ही टिक चालू हो जाएगा।",
@@ -244,8 +249,11 @@ def _pay_pack(row) -> dict:
     amount = row.fee_amount or seller_verify.fee()
     # The note lands on his confirmation screen and in the owner's bank
     # statement; the ref is what makes a credit matchable weeks later.
-    note = f"KrashiMitra verify {row.ref}"
-    url = upi.link(amount, note=note, ref=row.ref)
+    # "premium", not "verify": this note is on his UPI app's confirmation
+    # screen, and the tick is a membership, not a check of anybody. The `tr`
+    # carries the source too, the same format every /pay/{source} page uses.
+    note = f"KrashiMitra premium {row.ref}"
+    url = upi.link(amount, note=note, ref=pay_links.ref("tick", row.ref))
     return {
         "configured": upi.configured(),
         "vpa":        upi.vpa(),
@@ -255,6 +263,8 @@ def _pay_pack(row) -> dict:
         "note":       note,
         "link":       url,
         "qr_svg":     upi.qr_svg(url),
+        # The same request as a page — for paying from someone else's phone.
+        "pay_url":    pay_links.url("tick", row.ref),
     }
 
 
@@ -480,6 +490,9 @@ _BODY = """
         '<div class="vf-vpa">' + esc(p.vpa) + '</div>' +
         '<button class="vf-btn ghost" id="vf-paid">मैंने पैसे भेज दिए</button>' +
         '<p class="vf-ref">आपका नंबर: <b>' + esc(p.ref) + '</b></p>' +
+        (p.pay_url ? '<p class="vf-muted" style="margin-bottom:6px;">किसी और के फ़ोन से पे करना है? ' +
+          'उन्हें यह लिंक भेजें — उसमें यही QR है: <a href="' + esc(p.pay_url) + '">' +
+          esc(p.pay_url.replace('https://', '')) + '</a></p>' : '') +
         '<p class="vf-muted">पैसा पहुँचते ही हम टिक चालू कर देंगे। UPI ऐप हमें अपने आप ' +
         'नहीं बताता कि पैसा आया है, इसलिए भेजने के बाद ऊपर वाला बटन दबा दें — ' +
         'आपका नंबर सबसे पहले जाँचा जाएगा।</p>' +
@@ -527,7 +540,26 @@ _BODY = """
         (d.reject_reason ? '<p class="vf-p">कारण: ' + esc(d.reject_reason) + '</p>' : '') +
         (d.paid ? ('<p class="vf-p">' + (d.refunded ? 'आपका शुल्क वापस भेज दिया गया है।'
           : 'आपका पूरा शुल्क 7 दिन के अंदर वापस भेजा जाएगा।') + '</p>') : '') +
+        // Same procedure again — except while his fee is still on its way
+        // back, when apply() refuses so the owed refund stays on the queue.
+        (d.refund_pending
+          ? '<p class="vf-muted">रिफंड पहुँचने के बाद आप फिर से आवेदन कर सकते हैं।</p>'
+          : '<button class="vf-btn" id="vf-again">फिर से आवेदन करें</button>') +
         '<p class="vf-muted">कोई गलतफ़हमी लगे तो +91 9870951001 पर बात करें।</p></div>';
+      var again = document.getElementById('vf-again');
+      if (again) again.onclick = function() { signupForm(d); };
+      return;
+    }
+    if (d.status === 'declined') {
+      // Refused before any tick — so not "हटा दिया", and he may try again.
+      box.innerHTML = '<div class="vf-state">' +
+        '<p class="vf-h" style="font-size:18px;">आपका आवेदन स्वीकार नहीं हुआ</p>' +
+        (d.reject_reason ? '<p class="vf-p">कारण: ' + esc(d.reject_reason) + '</p>' : '') +
+        '<p class="vf-p">हमारे रिकॉर्ड में इस आवेदन का कोई भुगतान दर्ज नहीं है। शुल्क आपके ' +
+        'खाते से कट गया हो तो UTR के साथ <b>+91 9870951001</b> पर बताइए — पैसा हमारे ' +
+        'खाते में पहुँचा होगा तो पूरा वापस भेजा जाएगा।</p>' +
+        '<button class="vf-btn" id="vf-again">फिर से आवेदन करें</button></div>';
+      document.getElementById('vf-again').onclick = function() { signupForm(d); };
       return;
     }
     if (d.status === 'expired') {

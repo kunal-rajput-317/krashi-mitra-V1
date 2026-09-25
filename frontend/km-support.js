@@ -40,7 +40,9 @@
   // most of the page's internal linking, which is what gets it crawled.
   var LINKS = [
     { href: '/sponsor', text: 'विज्ञापन दें' },
-    { href: '/donate',  text: 'सहयोग करें' }
+    // /pay replaced /donate on 2026-09-26: the site no longer takes gifts,
+    // and /pay lists every way to pay (नीला टिक, listings, ads) in one place.
+    { href: '/pay',     text: 'पेमेंट' }
   ];
 
   // Every footer link-row spelling in use across the site. The static pages
@@ -65,7 +67,7 @@
   function fill(row) {
     // The crop-links row in the server footer is also .km-footer-nav; it is
     // marked .km-footer-crops and is a list of भाव hubs, not site navigation.
-    // Appending "सहयोग करें" to it would read as another crop.
+    // Appending "पेमेंट" to it would read as another crop.
     if (row.classList.contains('km-footer-crops')) return;
     for (var i = 0; i < LINKS.length; i++) {
       if (alreadyHas(row, LINKS[i].href)) continue;

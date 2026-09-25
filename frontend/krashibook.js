@@ -287,15 +287,85 @@
         html += isQuoted(o) ? quoteCard(o, isNew) : statusCard(o, isNew);
       });
     }
+    html += '<div id="km-book-tick-alert"></div>';
     html += '<div id="km-book-dukan-alert"></div>';
     html += '<div id="km-book-crop-nudges"></div>';
     html += '<div id="km-book-weather-alert"></div>';
     html += '<button class="km-book-ghost-btn" data-href="' + shopUrl() + '">📋 सभी ऑर्डर देखें</button>';
     list.innerHTML = html;
     wireActions(list);
+    loadTickAlert();
     loadDukanAlert();
     loadCropNudges();
     loadWeatherAlert();
+  }
+
+  // नीला टिक: an application the owner declined, or a tick he removed — with
+  // his reason, which is the whole point of telling him. Read live from
+  // /verify/me, so there is no notification row to drift from the truth; the
+  // card stays while the state does, and the 📒 badge counts it once until
+  // he has opened the book (keyed on reviewed_at, so a second removal counts
+  // again). The way back is the same /verify form, unless a refund is still
+  // on its way — then apply() refuses, and the card says so instead.
+  var TICK_SEEN_KEY = "km_tick_notice_seen";
+  var TICK_CACHE_KEY = "km_tick_notice_cache";
+  function tickKey(d) { return d.status + "|" + (d.reviewed_at || ""); }
+  function tickNeedsNotice(d) { return !!d && (d.status === "declined" || d.status === "rejected"); }
+  function fetchTickState(cb, fresh) {
+    var token = getToken();
+    if (!token) { cb(null); return; }
+    // The badge runs on every page view; ask at most every 10 minutes.
+    if (!fresh) {
+      try {
+        var c = JSON.parse(sessionStorage.getItem(TICK_CACHE_KEY) || "null");
+        if (c && Date.now() - c.at < 600000) { cb(c.d); return; }
+      } catch (e) {}
+    }
+    fetch(apiBase() + "/verify/me", { headers: { "Authorization": "Bearer " + token } })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        var d = (res && res.success && res.data) || null;
+        try { sessionStorage.setItem(TICK_CACHE_KEY, JSON.stringify({ at: Date.now(), d: d })); } catch (e) {}
+        cb(d);
+      })
+      .catch(function () { cb(null); });
+  }
+  function fetchTickNowCount(cb) {
+    fetchTickState(function (d) {
+      if (!tickNeedsNotice(d)) { cb(0); return; }
+      var seen = "";
+      try { seen = localStorage.getItem(TICK_SEEN_KEY) || ""; } catch (e) {}
+      cb(seen === tickKey(d) ? 0 : 1);
+    });
+  }
+  function loadTickAlert() {
+    fetchTickState(function (d) {
+      var slot = document.getElementById("km-book-tick-alert");
+      if (!slot || !tickNeedsNotice(d)) return;
+      var declined = d.status === "declined";
+      var money = declined
+        ? "शुल्क आपके खाते से कट गया हो तो UTR के साथ +91 9870951001 पर बताइए।"
+        : (d.refund_pending ? "आपका पूरा शुल्क 7 दिन के अंदर वापस भेजा जाएगा। रिफंड के बाद फिर से आवेदन कर सकते हैं।"
+          : (d.paid && d.refunded ? "आपका शुल्क वापस भेज दिया गया है।" : ""));
+      var canApply = declined || !d.refund_pending;
+      slot.innerHTML =
+        '<div class="km-book-card warn">' +
+          '<div class="km-book-card-head">' +
+            '<span class="km-book-tracking">🔵 नीला टिक</span>' +
+            '<span class="km-book-chip warnchip">' + (declined ? "❌ आवेदन रद्द" : "⛔ टिक हटाया") + '</span>' +
+          '</div>' +
+          '<div class="km-book-product">' +
+            (declined ? "आपका आवेदन स्वीकार नहीं हुआ" : "आपका नीला टिक हटा दिया गया है") + '</div>' +
+          (d.reject_reason ? '<div class="km-book-line">📝 कारण: ' + clean(d.reject_reason) + '</div>' : "") +
+          (money ? '<div class="km-book-line">' + clean(money) + '</div>' : "") +
+          '<button class="km-book-ghost-btn" data-href="/verify" style="margin-top:8px">' +
+            (canApply ? "फिर से आवेदन करें" : "विवरण देखें") + '</button>' +
+        '</div>';
+      var emptyEl = document.getElementById("km-book-alerts-empty");
+      if (emptyEl) emptyEl.style.display = "none";
+      wireActions(slot);
+      try { localStorage.setItem(TICK_SEEN_KEY, tickKey(d)); } catch (e) {}
+    }, true);
   }
 
   // Dealer subscription state (/dukanlisting). Parse-on-request, like the crop
@@ -773,9 +843,11 @@
       var fresh = orders.filter(function (o) { return seen[o.tracking_code] !== lc(o); });
       fetchCropNowCount(function (nowCount) {
         fetchDukanNowCount(function (dukanCount) {
-          var total = fresh.length + nowCount + dukanCount;
-          if (total) { badge.textContent = total; badge.style.display = ""; }
-          else { badge.style.display = "none"; }
+          fetchTickNowCount(function (tickCount) {
+            var total = fresh.length + nowCount + dukanCount + tickCount;
+            if (total) { badge.textContent = total; badge.style.display = ""; }
+            else { badge.style.display = "none"; }
+          });
         });
       });
     });

@@ -28,7 +28,7 @@
 # function, and BOTH page shells call it:
 #
 #   • bhav.py `_doc()` — the shell behind /bhav, /product, /ganna, /rental,
-#     /naksha, /sawal, /pashupalan, /krashi_dukan, /donate, /pay, /credits.
+#     /naksha, /sawal, /pashupalan, /krashi_dukan, /pay, /credits.
 #     A future section that renders through _doc() is in the ecosystem the day
 #     it ships, with no line of its own. That is the whole design.
 #   • tools/article_builder.py — the 176 static article pages and every one

@@ -434,13 +434,11 @@ from backend.routes import dukanlisting as dukanlisting_route
 app.include_router(dukanlisting_route.router)   # अपनी दुकान लिस्ट करें — login-gated, paid dealer subscriptions (/dukanlisting)
 
 from backend.routes import pay as pay_route
-app.include_router(pay_route.router)     # /pay — UPI listing-fee page sent to a dealer over WhatsApp (noindex)
+app.include_router(pay_route.router)     # /pay hub + /pay/{source}/{key} payer pages (noindex); /donate → 410
 
 from backend.routes import verify as verify_route
 app.include_router(verify_route.router)  # /verify — blue-tick application + fee (noindex)
 
-from backend.routes import donate as donate_route
-app.include_router(donate_route.router)  # /donate — public UPI page for anyone who wants to support the site
 
 # /sponsor — the brand-facing media kit and rate card (English, on purpose).
 # Held back until its figures have been verified by hand, so the module is
@@ -491,6 +489,9 @@ app.include_router(admin_reports_route.router)  # /admin/bazar-reports — क�
 
 from backend.routes import admin_ledger as admin_ledger_route
 app.include_router(admin_ledger_route.router)  # /admin/ledger/* — हिसाब: every payment, CSV for the CA
+
+from backend.routes import admin_pay as admin_pay_route
+app.include_router(admin_pay_route.router)  # /admin/pay/link — a signed one-off /pay/link/{token} with its QR
 
 from backend.routes import admin_articles as admin_articles_route
 app.include_router(admin_articles_route.router)  # /admin/articles/* — write and publish an article with no deploy

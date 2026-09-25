@@ -78,7 +78,7 @@
   })();
 
   // ---- Shell bootstrap: km-support.js ---------------------------------
-  // The two links that ask for money — /sponsor and /donate — appended to
+  // The two links that ask for money — /sponsor and /pay — appended to
   // whatever footer the page happens to have. Both pages existed and worked;
   // neither was reachable from the homepage or any static page, which is the
   // whole reason this site has earned ₹0. Bootstrapped here for the same

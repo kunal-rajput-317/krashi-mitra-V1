@@ -292,7 +292,7 @@ def test_a_paying_listing_can_never_be_pushed_back_onto_the_offer(db_session, sh
     lose five of them — silently, on a click meant to be generous.
     """
     row, _ = shop
-    dukan.record_payment(db_session, row.slug, 500, "TEST-REF", months=6)
+    dukan.record_payment(db_session, row.slug, 500, "TESTREF0295", months=6)
     db_session.refresh(row)
     paid_until = row.paid_until
 
@@ -315,7 +315,7 @@ def test_paying_after_the_free_month_extends_it_rather_than_restarting(db_sessio
     db_session.refresh(row)
     free_until = row.paid_until
 
-    dukan.record_payment(db_session, row.slug, 500, "TEST-REF")   # its own 3-month term
+    dukan.record_payment(db_session, row.slug, 500, "TESTREF0318")   # its own 3-month term
     db_session.refresh(row)
 
     assert row.paid_at is not None, "the conversion did not record a payment"

@@ -276,9 +276,9 @@ class TestTheAdminAPICarriesTheTerm:
         assert r.status_code == 400
         assert "अवधि" in r.json()["detail"]
 
-    def test_a_payment_with_no_months_uses_the_shops_own_term(self, client, created):
+    def test_a_payment_with_no_months_uses_the_shops_own_term(self, client, created, paid):
         r = client.post(f"/admin/dukan/shops/{created}/payment", auth=self.AUTH,
-                        json={"amount": 1200, "ref": "TESTREF"})
+                        json=paid(1200, method="bank", ref="TESTREF1200"))
         assert r.status_code == 200, r.text
         row = r.json()["shop"]
 
@@ -289,9 +289,9 @@ class TestTheAdminAPICarriesTheTerm:
         assert row["expiring"] is False
 
     def test_a_payment_may_override_the_term_for_that_payment_only(
-            self, client, created):
+            self, client, created, paid):
         r = client.post(f"/admin/dukan/shops/{created}/payment", auth=self.AUTH,
-                        json={"amount": 200, "months": 1})
+                        json=paid(200, months=1))
         assert r.status_code == 200, r.text
         row = r.json()["shop"]
         assert row["days_left"] <= 31

@@ -78,10 +78,9 @@
   // actually collecting money, so a competing ad is not a lost click, it is a
   // lost payment. A third-party ad next to a UPI amount also reads as exactly
   // the kind of page a farmer has been told to distrust. The segment match is
-  // whole-segment, so /payment (if it ever exists) is unaffected. /donate is
-  // here for exactly the same reason, from the other side: it is the page
-  // asking a well-wisher for money, and an ad beside that ask both competes
-  // with it and cheapens it.
+  // whole-segment, so /payment (if it ever exists) is unaffected, and every
+  // /pay/{source}/{key} page under it is covered. (/donate was listed here
+  // until it was removed on 2026-09-26.)
   //
   // /dukanlisting is here for the same reason as the quote flow, and it is the
   // one entry whose cost is visible rather than theoretical. The page sells the
@@ -109,7 +108,7 @@
   // Auto ads would put a competitor's banner beside the pitch — the one thing
   // the page promises cannot happen. Not loading adsbygoogle.js is the only
   // switch that also stops Auto ads (see above).
-  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay|donate|dukanlisting|sponsor)(\.html)?(\/|$)/;
+  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay|dukanlisting|sponsor)(\.html)?(\/|$)/;
 
   // Blocks an ad must never be wedged into or placed directly before.
   var SKIP = '.answer,.hero,.crumbs,.km-ad,.ad-slot-wrap,.ad-slot-pair,.lead-gen,' +

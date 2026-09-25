@@ -307,8 +307,10 @@ async def collect(
             "environment, then restart. Nothing is hardcoded on purpose: a "
             "wrong VPA sends an owner's money to a stranger."
         )
-    pack = upi.collect(row.name or "", row.district or "",
-                       amount or None, purpose or "किराये की मशीन लिस्टिंग")
+    # pay_links, not upi.collect directly — see admin_dukan.collect.
+    from backend.services import pay_links
+    pack = pay_links.collect_pack("rent", row.slug, row.name or "", row.district or "",
+                                  amount or None, purpose or "किराये की मशीन लिस्टिंग")
     pack["plan"] = row.plan
     pack["commission_pct"] = row.commission_pct
     return {"success": True, "collect": pack}
@@ -324,18 +326,16 @@ async def record_payment(
     """Mark an owner paid. Hand-entered from the bank app, by design — there is
     no callback that could do it, so this is the only thing that sets paid_at."""
     from backend.services import upi
-    amount = upi.clean_amount(payload.get("amount"), default=0)
-    if amount < upi.MIN_AMOUNT:
-        raise HTTPException(
-            400,
-            f"Enter the amount actually received (₹{upi.MIN_AMOUNT}–₹{upi.MAX_AMOUNT})")
+    from backend.routes.admin_ledger import entry_or_400
+    e = entry_or_400(db, payload, limit=upi.MAX_AMOUNT)
     # None on purpose when nothing was sent: record_payment then extends by the
     # owner's own agreed term, which is what a plain renewal means. A number
     # here is a one-off override for this payment only.
     months = payload.get("months")
     months = rental.clean_months(months) if str(months or "").strip() else None
-    row = _write(rental.record_payment, db, slug, amount,
-                 (payload.get("ref") or ""), months)
+    row = _write(rental.record_payment, db, slug, e.amount, e.ref, months,
+                 received_at=e.received_at, method=e.method,
+                 payer=e.payer, note=e.note, tds=e.tds)
     if not row:
         raise HTTPException(404, "Unknown provider")
     return {"success": True, "provider": _provider_dict(db, row),

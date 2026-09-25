@@ -1526,7 +1526,7 @@ def _news_footer() -> str:
 <a href="{SITE}/krashi_news">कृषि समाचार</a>
 <a href="{SITE}/chat">AI सहायक</a>
 {f'<a href="{SITE}/sponsor">विज्ञापन दें</a>' if _sponsor_live() else ''}
-<a href="{SITE}/donate">सहयोग करें</a>
+<a href="{SITE}/pay">पेमेंट</a>
 </nav>
 <div class="km-footer-note">ताज़ा कृषि समाचार, मंडी विश्लेषण एवं सरकारी योजनाएं — कृषि मित्र © {datetime.now().year}</div>
 </div></footer>"""

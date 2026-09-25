@@ -2848,7 +2848,7 @@ def _footer(note: str = "") -> str:
 <a href="{SITE}/weather">मौसम</a>
 <a href="{SITE}/chat">AI सहायक</a>
 {f'<a href="{SITE}/sponsor">विज्ञापन दें</a>' if sponsors else ''}
-<a href="{SITE}/donate">सहयोग करें</a>
+<a href="{SITE}/pay">पेमेंट</a>
 </nav>
 {crops_nav}
 <div class="km-footer-note">{escape(note or _FOOTER_NOTE)}</div>

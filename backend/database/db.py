@@ -1515,7 +1515,10 @@ class Payment(Base):
 
     id          = Column(Integer,  primary_key=True, index=True)
     received_at = Column(DateTime, nullable=False, index=True)   # when the money landed (UTC)
-    amount      = Column(Integer,  nullable=False)               # whole rupees; negative = refund
+    amount      = Column(Integer,  nullable=False)               # whole rupees INTO THE BANK; negative = refund
+    # Income tax the payer deducted and paid to the government on our behalf
+    # (it shows in Form 26AS / AIS). Income = amount + tds; see ledger.gross().
+    tds         = Column(Integer,  nullable=False, default=0, server_default="0")
     source      = Column(String,   nullable=False, index=True)   # ledger.SOURCES key
     source_key  = Column(String,   nullable=True,  index=True)   # slug / ref of the row it paid for
     payer       = Column(String,   nullable=True)                # who paid
@@ -2568,6 +2571,12 @@ def _ensure_postgres_columns():
         "seller_verifications": [
             ("payment_claimed_at", "TIMESTAMP"),
             ("plan",               "VARCHAR"),
+        ],
+        # Added 2026-09-26: TDS a payer deducted. Existing rows get 0 because
+        # TDS was never asked for before; if one of them did have TDS, void it
+        # and enter it again with the TDS filled in.
+        "payments": [
+            ("tds", "INTEGER NOT NULL DEFAULT 0"),
         ],
     }
 

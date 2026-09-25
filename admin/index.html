@@ -3260,6 +3260,26 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         .km-confirm-acts { display: flex; gap: 9px; justify-content: center; margin-top: 18px; }
         .km-confirm-acts .by-btn { padding: 9px 18px; font-size: 13px; }
 
+        /* ── money in: the one payment form (kmPayEntry) ── */
+        .kpe-box { text-align: left; max-width: 460px; max-height: calc(100vh - 40px); overflow-y: auto; }
+        .kpe-box h3, .kpe-box .km-confirm-ic { text-align: center; }
+        .kpe-who { text-align: center; font-size: 13px; color: var(--text-dim); margin: 0 0 12px; }
+        .kpe-box label { display: block; font-size: 12px; font-weight: 700; color: var(--text-dim);
+          margin: 10px 0 4px; }
+        .kpe-box input, .kpe-box select { width: 100%; box-sizing: border-box; padding: 8px 10px;
+          font-size: 13px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+          background: var(--surface); color: var(--text); font-family: inherit; }
+        .kpe-box input.mono { font-family: var(--font-mono); letter-spacing: .03em; }
+        .kpe-hint { font-size: 11px; color: var(--text-dim); margin-top: 3px; line-height: 1.5; }
+        .kpe-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .kpe-seen { display: flex; gap: 8px; align-items: flex-start; margin-top: 14px;
+          font-size: 12.5px; line-height: 1.5; color: var(--text); }
+        .kpe-seen input { width: auto; margin-top: 3px; }
+        .kpe-err { margin-top: 12px; padding: 8px 10px; border-radius: var(--radius-sm);
+          background: rgba(248,81,73,.12); color: #f85149; font-size: 12.5px; line-height: 1.5; }
+        .kpe-err[hidden] { display: none; }
+        @media (max-width: 480px) { .kpe-row { grid-template-columns: 1fr; } }
+
         /* ── placement: which page, which slot ── */
         .by-btn.unplaced { border-color: #d29922; color: #d29922; }
         .by-btn.placed   { border-color: #3fb950; color: #3fb950; }
@@ -3418,8 +3438,6 @@ button.vf-money-tile:hover { border-color: var(--primary); }
           border: 1px solid var(--border); border-radius: var(--radius-sm);
         }
         .pm-rec-row input:focus { outline: none; border-color: var(--primary); }
-        #pm-amt-in { width: 78px; flex-shrink: 0; }
-        #pm-ref-in { flex: 1; }
         .pm-warn { font-size: 10.5px; color: var(--text-dim); line-height: 1.6; margin-top: 9px; }
         .pm-receipt {
           margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); text-align: left;
@@ -3885,7 +3903,9 @@ button.vf-money-tile:hover { border-color: var(--primary); }
             <h2>नीला टिक / प्रीमियम सदस्यता</h2>
             <p>टिक = भुगतान की हुई सदस्यता। कोई जाँच नहीं, कोई फ़ोन कॉल नहीं —
                बैंक में पैसा दिखे तो <b>₹ मिला</b> दबाएँ, टिक उसी वक्त चालू हो जाता है।
-               <b>✕ टिक हटाएँ</b> सिर्फ़ किसी और के नाम से बने खाते या धोखे के लिए है।</p>
+               <b>✕ टिक हटाएँ</b> सिर्फ़ किसी और के नाम से बने खाते या धोखे के लिए है।
+               <b>✕ आवेदन रद्द करें</b> उस आवेदन के लिए है जिसका टिक कभी चालू नहीं हुआ —
+               सदस्य को कारण के साथ ईमेल जाता है।</p>
           </div>
           <div class="page-actions">
             <button class="btn btn-secondary" onclick="loadVerifications()" id="vf-refresh-btn"><span class="vf-spin">↻</span> Refresh</button>
@@ -3901,6 +3921,7 @@ button.vf-money-tile:hover { border-color: var(--primary); }
             <button class="btn btn-secondary vf-filter" data-vf="paid" onclick="setVfFilter('paid',this)">चालू (भुगतान)</button>
             <button class="btn btn-secondary vf-filter" data-vf="approved" onclick="setVfFilter('approved',this)">चालू (मुफ़्त)</button>
             <button class="btn btn-secondary vf-filter" data-vf="rejected" onclick="setVfFilter('rejected',this)">हटाया</button>
+            <button class="btn btn-secondary vf-filter" data-vf="declined" onclick="setVfFilter('declined',this)">आवेदन रद्द</button>
             <button class="btn btn-secondary vf-filter" data-vf="expired" onclick="setVfFilter('expired',this)">खत्म</button>
           </div>
           <div id="vf-list" style="padding:4px 14px 14px;"></div>
@@ -4347,21 +4368,39 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         </div>
         <div class="sp-sum" id="lg-metrics"></div>
         <div id="lg-gst"></div>
+        <!-- 🔗 पेमेंट लिंक बनाएँ — a signed /pay/link/{token} page with its own QR,
+             for money that belongs to no listing/tick/sponsor row. Making a link
+             records nothing; see backend/routes/admin_pay.py. -->
+        <div class="sp-form" id="pl-box">
+          <h3 style="margin:0 0 12px; font-size:15px">🔗 पेमेंट लिंक बनाएँ (QR वाला पेज)</h3>
+          <div class="sp-row">
+            <div><label>राशि (₹) *</label><input id="pl-amount" inputmode="numeric" autocomplete="off" placeholder="उदा. 750"></div>
+            <div><label>किस चीज़ का पैसा *</label><input id="pl-purpose" maxlength="80" placeholder="उदा. 6 महीने की दुकान लिस्टिंग"></div>
+            <div><label>किसको भेजना है (पेज पर दिखेगा)</label><input id="pl-payer" maxlength="60" placeholder="उदा. राम खाद भंडार"></div>
+          </div>
+          <button class="sp-btn primary" onclick="plMake()">लिंक बनाएँ</button>
+          <p class="sp-hint">लिंक बनने से कुछ दर्ज नहीं होता। पैसा बैंक में दिखे तब नीचे "बाहर से आया पैसा जोड़ें" में दर्ज कीजिए — नोट में लिंक का नंबर (link-…) लिखिए।
+            दुकान, किराया, नीला टिक या प्रायोजक के लिए उनके अपने पन्ने का "पैसे मांगें" बटन इस्तेमाल कीजिए।</p>
+          <div id="pl-out" style="margin-top:12px"></div>
+        </div>
         <div class="sp-form">
           <h3 style="margin:0 0 12px; font-size:15px">बाहर से आया पैसा जोड़ें (AdSense, बैंक ट्रांसफ़र…)</h3>
           <div class="sp-row">
             <div><label>स्रोत *</label><select id="lg-f-source"></select></div>
-            <div><label>राशि (₹) *</label><input id="lg-f-amount" type="number" min="1" placeholder="उदा. 150000"></div>
+            <div><label>बैंक में आई राशि (₹) *</label><input id="lg-f-amount" inputmode="numeric" autocomplete="off" placeholder="उदा. 150000"></div>
             <div><label>तारीख़ (बैंक में जिस दिन आया) *</label><input id="lg-f-date" type="date"></div>
-            <div><label>तरीका</label><select id="lg-f-method"><option value="bank">बैंक ट्रांसफ़र</option><option value="upi">UPI</option><option value="other">अन्य</option></select></div>
+            <div><label>तरीका *</label><select id="lg-f-method"><option value="">— चुनिए —</option><option value="bank">बैंक ट्रांसफ़र</option><option value="upi">UPI</option><option value="other">अन्य</option></select></div>
           </div>
           <div class="sp-row">
-            <div><label>किसने दिया</label><input id="lg-f-payer" placeholder="उदा. Google Asia Pacific / Sonalika"></div>
+            <div><label>किसने दिया (बैंक में जो नाम दिखा) *</label><input id="lg-f-payer" placeholder="उदा. Google Asia Pacific / Sonalika"></div>
             <div><label>संपर्क</label><input id="lg-f-contact" placeholder="फ़ोन / ईमेल"></div>
-            <div><label>Reference (UPI / UTR)</label><input id="lg-f-ref" placeholder="बैंक स्टेटमेंट से"></div>
+            <div><label>UTR / Reference (UPI या बैंक में ज़रूरी)</label><input id="lg-f-ref" placeholder="बैंक स्टेटमेंट से"></div>
             <div><label>नोट</label><input id="lg-f-note" placeholder="उदा. AdSense — अगस्त की कमाई"></div>
+            <div><label>TDS कटा (₹) — अगर कटा</label><input id="lg-f-tds" inputmode="numeric" autocomplete="off" placeholder="नहीं कटा तो खाली"></div>
           </div>
           <button class="sp-btn primary" onclick="lgAdd()">दर्ज करें</button>
+          <p class="sp-hint">TDS: कंपनी (जैसे Amazon या कोई प्रायोजक) टैक्स काटकर बाकी भेजे, तो ऊपर बैंक में आई रकम और यहाँ कटा हुआ TDS लिखिए। कमाई दोनों का जोड़ गिनी जाती है, और TDS आपके Form 26AS / AIS में दिखता है। Form 16A की PDF Drive में रखिए।</p>
+          <p class="sp-hint">Amazon / Flipkart एफ़िलिएट: हर payout की एक entry, जिस दिन बैंक में आए — हर कमीशन अलग नहीं। Associates में payout "bank transfer" रखिए, gift card नहीं।</p>
           <p class="sp-hint">डीलर, दुकान, किराया या नीला टिक का पैसा यहाँ मत जोड़िए — उनके अपने पन्ने पर "भुगतान दर्ज" दबाइए, वरना listing नहीं बढ़ेगी और पैसा दो बार गिना जाएगा।</p>
         </div>
         <div class="card" style="padding:16px">
@@ -6726,17 +6765,6 @@ button.vf-money-tile:hover { border-color: var(--primary); }
             callback that can confirm this for you — recording it also lists him
             and starts his 30 days.
           </div>
-          <label class="pm-req-label">कितना मिला (₹) *</label>
-          <input type="number" id="pm-amt-in" min="1" placeholder="जो रकम बैंक में दिखी"
-                 style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:12px;
-                        border-radius:var(--radius-sm);border:1px solid var(--border);
-                        background:var(--surface);color:var(--text);font-family:inherit;">
-          <label class="pm-req-label">UPI transaction ID / UTR</label>
-          <input type="text" id="pm-ref-in" maxlength="80"
-                 placeholder="जैसे 412345678901 — बैंक/UPI ऐप में दिखता है"
-                 style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:12px;
-                        border-radius:var(--radius-sm);border:1px solid var(--border);
-                        background:var(--surface);color:var(--text);font-family:var(--font-mono);">
           <label class="pm-req-label">कितने महीने का</label>
           <select id="pm-months-in"
                   style="width:100%;box-sizing:border-box;padding:7px 9px;font-size:12px;
@@ -6749,10 +6777,11 @@ button.vf-money-tile:hover { border-color: var(--primary); }
             <option value="12">12 महीने</option>
           </select>
           <button class="by-btn ok" onclick="pmRecordPaid()" id="pm-rec-btn"
-                  style="width:100%;margin-top:9px;padding:8px;">✓ मिल गया — रिकॉर्ड करें</button>
+                  style="width:100%;margin-top:9px;padding:8px;">✓ पैसा आया — राशि, तारीख़, UTR दर्ज करें</button>
           <div class="pm-warn">
-            UTR वही नंबर है जो आपके बैंक स्टेटमेंट में इस credit के सामने लिखा है — बाद में
-            मिलान के लिए यही काम आता है। Renewal will extend from the current end date.
+            अगले फ़ॉर्म में वही राशि, तारीख़ और UTR लिखिए जो बैंक स्टेटमेंट में इस credit के
+            सामने है — हिसाब और टैक्स का मिलान इसी से होता है। Renewal will extend from the
+            current end date.
           </div>
         </div>
 
@@ -6797,6 +6826,57 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         <div class="km-confirm-acts">
           <button class="by-btn" id="kc-no" onclick="kmConfirmDone(false)">नहीं, रहने दें</button>
           <button class="by-btn warn" id="kc-yes" onclick="kmConfirmDone(true)">हां</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Money in (or a refund out) — the ONE form every panel records a
+         payment through (kmPayEntry). Nothing is pre-filled that a person has
+         not confirmed: the amount starts empty (the requested amount is only a
+         hint), the method has no default, and the server re-checks all of it
+         (services/ledger.py::clean_entry). -->
+    <div class="km-confirm" id="km-pay" hidden>
+      <div class="km-confirm-box kpe-box">
+        <div class="km-confirm-ic">🧾</div>
+        <h3 id="kpe-title">पैसा आया — दर्ज करें</h3>
+        <p class="kpe-who" id="kpe-who"></p>
+        <label for="kpe-amt">राशि (₹) — बैंक में जो दिखी, वही *</label>
+        <input id="kpe-amt" class="mono" inputmode="numeric" autocomplete="off" placeholder="जैसे 1500">
+        <div class="kpe-hint" id="kpe-amt-hint"></div>
+        <div id="kpe-tds-wrap">
+          <label for="kpe-tds">TDS कटा (₹) — सिर्फ़ अगर भेजने वाले ने काटा</label>
+          <input id="kpe-tds" class="mono" inputmode="numeric" autocomplete="off" placeholder="नहीं कटा तो खाली छोड़िए">
+          <div class="kpe-hint">कंपनियाँ कभी-कभी टैक्स (TDS) काटकर बाकी भेजती हैं। ऊपर बैंक में आई रकम, यहाँ कटा हुआ TDS —
+            कुल कमाई दोनों का जोड़ गिनी जाएगी। TDS certificate (Form 16A) की PDF Drive में रखिए।</div>
+        </div>
+        <div class="kpe-row">
+          <div>
+            <label for="kpe-date">किस तारीख़ को आया *</label>
+            <input id="kpe-date" type="date">
+          </div>
+          <div>
+            <label for="kpe-method">कैसे आया *</label>
+            <select id="kpe-method" onchange="kpeMethod()">
+              <option value="">— चुनिए —</option>
+              <option value="upi">UPI</option>
+              <option value="bank">बैंक ट्रांसफ़र (NEFT / IMPS / RTGS)</option>
+              <option value="other">अन्य (नकद / चेक)</option>
+            </select>
+          </div>
+        </div>
+        <label for="kpe-ref" id="kpe-ref-label">UTR / Reference</label>
+        <input id="kpe-ref" class="mono" autocomplete="off" maxlength="40">
+        <div class="kpe-hint" id="kpe-ref-hint">पहले ऊपर तरीका चुनिए।</div>
+        <label for="kpe-payer" id="kpe-payer-label">किसने भेजा — बैंक में जो नाम दिखा *</label>
+        <input id="kpe-payer" maxlength="160" autocomplete="off">
+        <label for="kpe-note">नोट <span id="kpe-note-req"></span></label>
+        <input id="kpe-note" maxlength="300" autocomplete="off">
+        <label class="kpe-seen"><input type="checkbox" id="kpe-seen">
+          <span id="kpe-seen-text">मैंने यह पैसा बैंक ऐप / स्टेटमेंट में अपनी आँखों से देख लिया है।</span></label>
+        <div class="kpe-err" id="kpe-err" hidden></div>
+        <div class="km-confirm-acts">
+          <button class="by-btn" onclick="kpeDone(null)">रद्द</button>
+          <button class="by-btn ok" id="kpe-save" onclick="kpeSave()">✓ दर्ज करें</button>
         </div>
       </div>
     </div>
@@ -12762,6 +12842,7 @@ function lgRender() {
     '<div class="sp-card"><b>' + lgRs(s.this_month) + '</b><span>इस महीने</span></div>' +
     '<div class="sp-card"><b>' + s.count + '</b><span>भुगतान</span></div>' +
     '<div class="sp-card"><b>' + lgRs(s.refunds) + '</b><span>वापस किया (refund)</span></div>' +
+    (s.tds ? '<div class="sp-card"><b>' + lgRs(s.tds) + '</b><span>TDS कटा (26AS में मिलाइए)</span></div>' : '') +
     (top.label ? '<div class="sp-card"><b>' + lgRs(top.amount) + '</b><span>सबसे ज़्यादा: ' + escapeHtml(top.label) + '</span></div>' : '');
 
   const pct = Math.min(100, Math.round(100 * Math.max(0, s.total) / s.gst_limit));
@@ -12788,7 +12869,9 @@ function lgRender() {
       const tag = p.origin === 'backfill' ? ' · पुराना' : (p.origin === 'manual' ? ' · हाथ से' : '');
       return '<tr class="' + (p.voided ? 'lg-void' : '') + '">' +
         '<td>' + p.date + '<br><span style="opacity:.6; font-size:11px">' + p.time + tag + '</span></td>' +
-        '<td class="' + (p.amount < 0 ? 'lg-neg' : '') + '"><b>' + lgRs(p.amount) + '</b></td>' +
+        '<td class="' + (p.amount < 0 ? 'lg-neg' : '') + '"><b>' + lgRs(p.gross) + '</b>' +
+          (p.tds ? '<br><span style="opacity:.6; font-size:11px">बैंक ' + lgRs(p.amount) + ' + TDS ' + lgRs(p.tds) + '</span>' : '') +
+          '</td>' +
         '<td>' + escapeHtml(p.source_label) + (p.source_key ? '<br><span style="opacity:.6; font-size:11px">' + escapeHtml(p.source_key) + '</span>' : '') + '</td>' +
         '<td>' + escapeHtml(p.payer || '—') + (p.contact ? '<br><span style="opacity:.6; font-size:11px">' + escapeHtml(p.contact) + '</span>' : '') + '</td>' +
         '<td style="font-family:var(--font-mono); font-size:12px">' + escapeHtml(p.ref || '—') + '</td>' +
@@ -12802,14 +12885,23 @@ function lgRender() {
 function lgV(id) { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; }
 
 async function lgAdd() {
-  const body = { source: lgV('lg-f-source'), amount: parseInt(lgV('lg-f-amount') || '0', 10),
+  // The amount goes as typed: parseInt('1,500') is 1, and the server refuses
+  // anything that is not plain digits rather than guess (ledger.clean_amount).
+  const body = { source: lgV('lg-f-source'), amount: lgV('lg-f-amount'), tds: lgV('lg-f-tds'),
                  date: lgV('lg-f-date'), method: lgV('lg-f-method'), payer: lgV('lg-f-payer'),
                  contact: lgV('lg-f-contact'), ref: lgV('lg-f-ref'), note: lgV('lg-f-note') };
-  if (!body.amount || body.amount < 1) { alert('राशि लिखिए।'); return; }
-  if (!confirm(lgRs(body.amount) + ' — ' + (LG.sources[body.source] || body.source) + ' — ' + body.date +
+  if (!/^[0-9]+$/.test(body.amount) || Number(body.amount) < 1) {
+    alert('राशि सिर्फ़ अंकों में लिखिए, जैसे 1500 — कॉमा, दशमलव या ₹ नहीं।'); return;
+  }
+  if (!body.method) { alert('तरीका चुनिए — UPI, बैंक ट्रांसफ़र या अन्य।'); return; }
+  if (body.tds && (!/^[0-9]+$/.test(body.tds) || Number(body.tds) >= Number(body.amount))) {
+    alert('TDS अंकों में, और बैंक में आई रकम से कम। नहीं कटा तो खाली छोड़िए।'); return;
+  }
+  if (!confirm(lgRs(Number(body.amount)) + (body.tds ? ' + TDS ' + lgRs(Number(body.tds)) : '') +
+               ' — ' + (LG.sources[body.source] || body.source) + ' — ' + body.date +
                '\nक्या यह पैसा सच में बैंक में आ चुका है?')) return;
   await lgSend(API + '/admin/ledger', body, function () {
-    ['lg-f-amount', 'lg-f-payer', 'lg-f-contact', 'lg-f-ref', 'lg-f-note'].forEach(function (i) {
+    ['lg-f-amount', 'lg-f-tds', 'lg-f-method', 'lg-f-payer', 'lg-f-contact', 'lg-f-ref', 'lg-f-note'].forEach(function (i) {
       document.getElementById(i).value = '';
     });
   });
@@ -12998,16 +13090,21 @@ async function spDelete(slug) {
 }
 
 async function spPaid(slug) {
-  const amt = prompt('कितना मिला (₹)? खाली छोड़ें तो पहले से दर्ज राशि रहेगी।');
-  if (amt === null) return;
   const until = prompt('किस तारीख़ तक चला (YYYY-MM-DD)? खाली = वही रहने दें।');
   if (until === null) return;
-  const ref = prompt('बैंक / UPI reference (UTR) — स्टेटमेंट से। हिसाब में यही दर्ज होगा।');
-  if (ref === null) return;
-  const body = { ref: ref.trim() };
-  if (amt.trim()) body.amount = parseInt(amt, 10) || null;
-  if (until.trim()) body.until = until.trim();
-  await spSend(API + '/admin/sponsor/' + slug + '/payment', 'POST', body);
+  const s = (SP_STATE.sponsors || []).find(function (x) { return x.slug === slug; }) || {};
+  const got = await kmPayEntry({
+    who: (s.name || slug) + ' · प्रायोजक',
+    payer: s.name || '',
+    expect: s.amount || '',
+    submit: function (body) {
+      if (until.trim()) body = Object.assign({ until: until.trim() }, body);
+      return kpePost(API + '/admin/sponsor/' + slug + '/payment', body);
+    },
+  });
+  if (!got) return;
+  showToast('₹' + got.amount + ' दर्ज');
+  spLoad();
 }
 
 async function spCollect(slug) {
@@ -13015,7 +13112,10 @@ async function spCollect(slug) {
     const r = await fetch(API + '/admin/sponsor/' + slug + '/collect', { headers: getAuthHeader() });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || 'failed');
-    prompt('UPI लिंक — भेजिए। पैसा आने के बाद ही "भुगतान दर्ज" दबाइए।\n\n' + d.note, d.link);
+    // The page link, not the raw upi:// one — a brand's contact opens this on
+    // a laptop or in WhatsApp, where upi:// is not clickable and has no QR.
+    prompt('पेमेंट पेज (QR के साथ) — भेजिए। पैसा आने के बाद ही "भुगतान दर्ज" दबाइए।\n\n' + d.note,
+           d.pay_url || d.link);
   } catch (e) { alert('नहीं बना: ' + (e.message || e)); }
 }
 
@@ -13035,6 +13135,56 @@ async function spKitLink() {
   } catch (e) {
     out.innerHTML = '<p class="sp-hint" style="color:#e5484d">' + escapeHtml(String(e.message || e)) + '</p>';
   }
+}
+
+/* 🔗 पेमेंट लिंक बनाएँ (हिसाब page). The server signs the link, so the amount
+   and the "for" text on the page are exactly what was typed here and cannot be
+   edited in the address bar. Making one records nothing. */
+async function plMake() {
+  const out = document.getElementById('pl-out');
+  const body = {
+    amount:  document.getElementById('pl-amount').value.trim(),
+    purpose: document.getElementById('pl-purpose').value.trim(),
+    payer:   document.getElementById('pl-payer').value.trim()
+  };
+  try {
+    const r = await fetch(API + '/admin/pay/link', {
+      method: 'POST',
+      headers: Object.assign({}, getAuthHeader(), { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(body)
+    });
+    const d = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(d.detail || r.statusText);
+    out.innerHTML =
+      '<div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start">' +
+        '<div style="background:#fff; padding:10px; border-radius:8px; line-height:0; width:170px">' +
+          (d.qr_svg || '') + '</div>' +
+        '<div style="flex:1; min-width:220px">' +
+          '<div style="font-size:22px; font-weight:800">₹' + escapeHtml(String(d.amount)) + '</div>' +
+          '<div class="sp-hint" style="margin:2px 0 8px">' + escapeHtml(d.purpose) +
+            (d.payer ? ' · ' + escapeHtml(d.payer) : '') + ' · नंबर <b>' + escapeHtml(d.ref) + '</b></div>' +
+          '<input class="sp-btn" style="width:100%; font-family:var(--font-mono); font-size:12px" readonly ' +
+            'value="' + escapeHtml(d.url) + '" onclick="this.select()">' +
+          '<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap">' +
+            '<button class="sp-btn" onclick="plCopy(\'url\')">लिंक कॉपी</button>' +
+            '<button class="sp-btn" onclick="plCopy(\'wa\')">WhatsApp संदेश कॉपी</button>' +
+            '<a class="sp-btn" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener">पेज खोलें ↗</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    window._plLast = d;
+  } catch (e) {
+    out.innerHTML = '<p class="sp-hint" style="color:#e5484d">' + escapeHtml(String(e.message || e)) + '</p>';
+  }
+}
+
+function plCopy(which) {
+  const d = window._plLast || {};
+  const text = which === 'wa' ? d.whatsapp : d.url;
+  if (!text) return;
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+    .then(function () { showToast('कॉपी हो गया'); })
+    .catch(function () { prompt('कॉपी कीजिए:', text); });
 }
 
 async function spSend(url, method, body, after) {
@@ -14013,7 +14163,131 @@ function kmConfirmDone(ok) {
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !document.getElementById('km-confirm').hidden) kmConfirmDone(false);
+  if (e.key === 'Escape' && !document.getElementById('km-pay').hidden) kpeDone(null);
 });
+
+// ── 🧾 kmPayEntry — every "पैसा आया" button records through this one form ──
+// The ledger is what the ITR and GST return are filed from, so the form asks
+// for exactly what the bank statement shows and pre-fills nothing a person has
+// not confirmed. The checks below only save a round trip: the server repeats
+// every one of them (services/ledger.py::clean_entry) and has the final word.
+//
+//   opts.title   heading;  opts.who  whose listing / membership this is
+//   opts.payer   pre-fill for the name (editable — the bank's name wins)
+//   opts.expect  the amount that was ASKED for; shown as a hint, never filled
+//   opts.refund  true when money goes OUT (a refund)
+//   opts.submit  async (body) => {...}; throw to keep the form open with the error
+let _kpeOpts = null, _kpeResolve = null;
+
+function kmPayEntry(opts) {
+  _kpeOpts = opts || {};
+  const $ = id => document.getElementById(id);
+  const refund = !!_kpeOpts.refund;
+  $('kpe-title').textContent = _kpeOpts.title || (refund ? 'रिफंड भेजा — दर्ज करें' : 'पैसा आया — दर्ज करें');
+  $('kpe-who').textContent = _kpeOpts.who || '';
+  $('kpe-amt').value = '';
+  $('kpe-tds').value = '';
+  $('kpe-tds-wrap').hidden = refund;   // money going back out carries no TDS
+  $('kpe-amt-hint').textContent = _kpeOpts.expect
+    ? (refund ? `पूरी फ़ीस ₹${_kpeOpts.expect} वापस होती है।`
+              : `माँगे गए थे ₹${_kpeOpts.expect} — पर वही लिखिए जो बैंक में सच में आया।`)
+    : '';
+  const today = new Date(Date.now() + 19800000).toISOString().slice(0, 10);
+  $('kpe-date').value = today;
+  $('kpe-date').max = today;
+  $('kpe-method').value = '';
+  $('kpe-ref').value = '';
+  $('kpe-payer').value = _kpeOpts.payer || '';
+  $('kpe-payer-label').textContent = refund ? 'किसे भेजा — उसका नाम *' : 'किसने भेजा — बैंक में जो नाम दिखा *';
+  $('kpe-note').value = '';
+  $('kpe-seen').checked = false;
+  $('kpe-seen-text').textContent = refund
+    ? 'पैसा मेरे खाते से जा चुका है — बैंक ऐप / स्टेटमेंट में देख लिया है।'
+    : 'मैंने यह पैसा बैंक ऐप / स्टेटमेंट में अपनी आँखों से देख लिया है।';
+  $('kpe-err').hidden = true;
+  $('kpe-save').disabled = false;
+  kpeMethod();
+  $('km-pay').hidden = false;
+  setTimeout(() => $('kpe-amt').focus(), 30);
+  return new Promise(res => { _kpeResolve = res; });
+}
+
+function kpeMethod() {
+  const m = document.getElementById('kpe-method').value;
+  const ref = document.getElementById('kpe-ref');
+  const [label, ph, hint] = {
+    upi:   ['UPI का UTR (12 अंक) *', 'जैसे 412345678901',
+            "UPI ऐप में 'UTR' या 'UPI Ref No.' — 12 अंक। PhonePe का T… वाला Transaction ID नहीं।"],
+    bank:  ['बैंक का UTR / Reference *', 'जैसे SBIN426912345678',
+            'बैंक स्टेटमेंट में इस credit के सामने लिखा नंबर (IMPS 12 अंक, NEFT 16, RTGS 22)।'],
+    other: ['चेक नं. / रसीद नं. (हो तो)', '', "नकद हो तो नीचे नोट में 'नकद' लिखिए।"],
+  }[m] || ['UTR / Reference', '', 'पहले ऊपर तरीका चुनिए।'];
+  document.getElementById('kpe-ref-label').textContent = label;
+  ref.placeholder = ph;
+  document.getElementById('kpe-ref-hint').textContent = hint;
+  document.getElementById('kpe-note-req').textContent = m === 'other' ? '*' : '(ज़रूरी नहीं)';
+}
+
+function kpeCheck(b) {
+  if (!/^[0-9]+$/.test(b.amount)) return 'राशि सिर्फ़ अंकों में लिखिए, जैसे 1500 — कॉमा, दशमलव या ₹ नहीं।';
+  if (Number(b.amount) < 1) return 'राशि ₹1 या उससे ज़्यादा होनी चाहिए।';
+  if (b.tds && !/^[0-9]+$/.test(b.tds)) return 'TDS सिर्फ़ अंकों में लिखिए; नहीं कटा तो खाली छोड़िए।';
+  if (b.tds && Number(b.tds) >= Number(b.amount))
+    return 'TDS बैंक में आई रकम से कम होता है — ऊपर बैंक वाली रकम, यहाँ सिर्फ़ कटा हुआ TDS।';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(b.date)) return 'तारीख़ चुनिए — जिस दिन पैसा बैंक में आया।';
+  if (b.date > document.getElementById('kpe-date').max) return 'आगे की तारीख़ नहीं चलेगी।';
+  if (!b.method) return 'पैसा कैसे आया — UPI, बैंक ट्रांसफ़र या अन्य — चुनिए।';
+  if (b.method === 'upi' && !/^\d{12}$/.test(b.ref)) return 'UPI का UTR ठीक 12 अंकों का होता है।';
+  if (b.method === 'bank' && !/^[A-Z0-9]{6,30}$/.test(b.ref)) return 'बैंक का UTR 6–30 अक्षर/अंक, बिना स्पेस या चिह्न के।';
+  if (b.method === 'other' && !b.ref && !b.note) return "नोट में लिखिए कि पैसा कैसे आया (नकद / चेक …)।";
+  if (b.payer.length < 2) return 'नाम लिखिए — जैसा बैंक में दिखा।';
+  if (_kpeOpts.refund && _kpeOpts.expect && Number(b.amount) !== Number(_kpeOpts.expect))
+    return `रिफंड पूरी फ़ीस ₹${_kpeOpts.expect} का होता है।`;
+  if (!document.getElementById('kpe-seen').checked)
+    return 'पहले बैंक में देखिए, फिर ✓ लगाइए — बिना देखे दर्ज नहीं होगा।';
+  return '';
+}
+
+async function kpeSave() {
+  const v = id => (document.getElementById(id).value || '').trim();
+  const body = {
+    amount: v('kpe-amt'), tds: v('kpe-tds'), date: v('kpe-date'), method: v('kpe-method'),
+    ref: v('kpe-ref').replace(/\s+/g, '').toUpperCase(),
+    payer: v('kpe-payer').replace(/\s+/g, ' '), note: v('kpe-note'),
+  };
+  const err = document.getElementById('kpe-err');
+  const bad = kpeCheck(body);
+  if (bad) { err.textContent = bad; err.hidden = false; return; }
+  const btn = document.getElementById('kpe-save');
+  btn.disabled = true;
+  try {
+    if (_kpeOpts.submit) await _kpeOpts.submit(body);
+    kpeDone(body);
+  } catch (e) {
+    // Stays open with the server's reason (a UTR already recorded, …), so
+    // nothing typed is lost and nothing half-saved is assumed.
+    err.textContent = String((e && e.message) || e);
+    err.hidden = false;
+    btn.disabled = false;
+  }
+}
+
+function kpeDone(body) {
+  document.getElementById('km-pay').hidden = true;
+  if (_kpeResolve) { _kpeResolve(body); _kpeResolve = null; }
+}
+
+// POST JSON to an admin route; throws the server's own message on refusal.
+async function kpePost(url, body) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: Object.assign({ 'Content-Type': 'application/json' }, getAuthHeader()),
+    body: JSON.stringify(body),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || d.success === false) throw new Error(d.detail || ('HTTP ' + r.status));
+  return d;
+}
 
 async function removePlacement(id) {
   const p = (window._byRows || [])
@@ -14348,8 +14622,6 @@ async function pmFetchCollect(amount, purpose) {
     document.getElementById('pm-vpa').textContent  = d.vpa;
     document.getElementById('pm-req-amt').value     = d.amount;
     document.getElementById('pm-req-purpose').value = d.purpose || '';
-    document.getElementById('pm-amt-in').value      = d.amount;
-    document.getElementById('pm-ref-in').value      = '';
 
     pmRenderState(d);
 
@@ -14472,37 +14744,26 @@ function pmCopy(which) {
 
 async function pmRecordPaid() {
   if (!_pmSlug) return;
-  const amt = parseInt(document.getElementById('pm-amt-in').value, 10);
-  const ref = document.getElementById('pm-ref-in').value.trim();
+  const slug = _pmSlug;
   const months = parseInt(document.getElementById('pm-months-in').value, 10) || 1;
-  if (!amt || amt < 1) { showToast('Enter the amount you actually received', 'error'); return; }
-  if (!confirm(`Have you SEEN ₹${amt} in your bank app?\n\n` +
-               'This is the only thing that marks him paid — nothing confirms it automatically. ' +
-               `It buys ${months} month${months > 1 ? 's' : ''}, extending from his current end date.`)) return;
-
-  const btn = document.getElementById('pm-rec-btn');
-  btn.disabled = true;
-  try {
-    const r = await fetch(`${API}/admin/buyers/${encodeURIComponent(_pmSlug)}/payment`, {
-      method: 'POST',
-      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: amt, ref, months })
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
-    bySetCounts(d.counts); byRenderFunnel(d.funnel);
-    loadBuyers();
-    // Left open rather than closed — refetching now pulls paid_at/paid_until
-    // back from the server, which reveals the receipt section below so it can
-    // be sent in the same motion as recording the payment.
-    await pmFetchCollect();
-    showToast(`₹${amt} recorded — he is live and paid`);
-  } catch (e) {
-    showToast(e.message, 'error');
-    printTerminalLog(`Payment: ${_pmSlug} — ${e.message}`, 'log-entry-err');
-  } finally {
-    btn.disabled = false;
-  }
+  const row = (window._byRows || []).find(b => b.slug === slug) || {};
+  const got = await kmPayEntry({
+    who: `${row.name || slug} · ${months} महीने — मौजूदा अवधि के आगे जुड़ेगा`,
+    payer: row.name || '',
+    expect: (_pmPack && _pmPack.amount) || '',
+    submit: async body => {
+      const d = await kpePost(`${API}/admin/buyers/${encodeURIComponent(slug)}/payment`,
+                              Object.assign({ months }, body));
+      bySetCounts(d.counts); byRenderFunnel(d.funnel);
+    },
+  });
+  if (!got) return;
+  loadBuyers();
+  // Left open rather than closed — refetching now pulls paid_at/paid_until
+  // back from the server, which reveals the receipt section below so it can
+  // be sent in the same motion as recording the payment.
+  await pmFetchCollect();
+  showToast(`₹${got.amount} recorded — he is live and paid`);
 }
 
 /* Resend any time a dealer has a recorded payment, not just right after
@@ -16064,6 +16325,10 @@ async function dkCollect(slug) {
       <p style="font-family:monospace;font-size:12px;word-break:break-all;color:#7dd3a0;">${
         escapeHtml(c.vpa || '')}</p>
       ${c.link ? `<p><a href="${escapeHtml(c.link)}" style="color:#7dd3a0;">UPI ऐप में खोलें</a></p>` : ''}
+      ${c.pay_url ? `<p style="font-size:12px;color:#999;margin:4px 0 2px;">भेजने वाला लिंक (QR वाला पेज):</p>
+        <input readonly value="${escapeHtml(c.pay_url)}" onclick="this.select()" style="width:100%;
+        background:#1b1b1b;color:#7dd3a0;border:1px solid #333;border-radius:6px;padding:8px;
+        font-family:monospace;font-size:12px;margin-bottom:10px;">` : ''}
       ${c.whatsapp_text ? `<textarea style="width:100%;height:150px;background:#1b1b1b;color:#ddd;
         border:1px solid #333;border-radius:6px;padding:10px;font-size:13px;">${
         escapeHtml(c.whatsapp_text)}<\/textarea>` : ''}
@@ -16090,8 +16355,6 @@ async function dkPayment(slug) {
   const shop = _dkShops.find(x => x.slug === slug) || {};
   const term = Number(shop.plan_months) || _dkDefaultMonths;
 
-  const amount = prompt('कितने रुपये सच में आए? (बैंक ऐप से देखकर)');
-  if (!amount) return;
   // Blank keeps the shop's agreed term, which is what a plain renewal means.
   // A number here is a one-off for THIS payment — half a season taken as part
   // payment, a free month thrown in to close a haggle — and does not change
@@ -16099,27 +16362,17 @@ async function dkPayment(slug) {
   const months = prompt(
     `कितने महीने की वैधता? (खाली = इस दुकान की तय अवधि, ${dkMonthLabel(term)})`, '');
   if (months === null) return;
-  const ref = prompt('UPI reference (optional)') || '';
-
   const span = months.trim() ? Number(months.trim()) : term;
-  const ok = await kmConfirm({
-    icon: '🧾',
-    title: 'पेमेंट दर्ज करें?',
-    text: `<b>${escapeHtml(shop.name || slug)}</b><br>
-           रकम: <b>₹${escapeHtml(amount)}</b> · वैधता: <b>${dkMonthLabel(span)}</b> आगे बढ़ेगी।<br><br>
-           दुकान उसी वक्त लाइव हो जाएगी और उसका सारा सामान किसानों को दिखने लगेगा।
-           ${shop.days_left > 0 ? '<br><br>बची हुई वैधता बर्बाद नहीं होती — नई अवधि उसके आगे जुड़ती है।' : ''}
-           <br><br><b>यह तभी दबाएं जब पैसा बैंक ऐप में सच में दिख चुका हो।</b>`,
-    yes: 'हां, दर्ज करें',
-  });
-  if (!ok) return;
 
-  try {
-    await dkApi(`/shops/${encodeURIComponent(slug)}/payment`,
-      { method: 'POST', body: JSON.stringify({ amount, ref, months: months.trim() }) });
-    showToast('पेमेंट दर्ज — दुकान लाइव है');
-    await loadDukan();
-  } catch (e) { showToast(e.message, 'error'); }
+  const got = await kmPayEntry({
+    who: `${shop.name || slug} · ${dkMonthLabel(span)} आगे बढ़ेगी — दुकान उसी वक्त लाइव होगी`,
+    payer: shop.name || '',
+    submit: body => dkApi(`/shops/${encodeURIComponent(slug)}/payment`,
+      { method: 'POST', body: JSON.stringify(Object.assign({ months: months.trim() }, body)) }),
+  });
+  if (!got) return;
+  showToast(`₹${got.amount} दर्ज — दुकान लाइव है`);
+  await loadDukan();
 }
 
 async function dkAddItem(slug) {
@@ -16673,6 +16926,10 @@ async function rnCollect(slug) {
       <p style="font-family:monospace;font-size:12px;word-break:break-all;color:#7dd3a0;">${
         escapeHtml(c.vpa || '')}</p>
       ${c.link ? `<p><a href="${escapeHtml(c.link)}" style="color:#7dd3a0;">UPI ऐप में खोलें</a></p>` : ''}
+      ${c.pay_url ? `<p style="font-size:12px;color:#999;margin:4px 0 2px;">भेजने वाला लिंक (QR वाला पेज):</p>
+        <input readonly value="${escapeHtml(c.pay_url)}" onclick="this.select()" style="width:100%;
+        background:#1b1b1b;color:#7dd3a0;border:1px solid #333;border-radius:6px;padding:8px;
+        font-family:monospace;font-size:12px;margin-bottom:10px;">` : ''}
       ${c.whatsapp_text ? `<textarea style="width:100%;height:150px;background:#1b1b1b;color:#ddd;
         border:1px solid #333;border-radius:6px;padding:10px;font-size:13px;">${
         escapeHtml(c.whatsapp_text)}<\/textarea>` : ''}
@@ -16683,16 +16940,18 @@ async function rnCollect(slug) {
 }
 
 async function rnPayment(slug) {
-  const amount = prompt('कितने रुपये आए? (बैंक ऐप में जो दिखा वही)');
-  if (!amount) return;
-  const ref = prompt('UPI reference / txn id (खाली छोड़ सकते हैं)') || '';
-  const months = prompt('कितने महीने के लिए? (खाली = तय अवधि)') || '';
-  try {
-    await rnApi(`/providers/${encodeURIComponent(slug)}/payment`,
-                { method: 'POST', body: JSON.stringify({ amount, ref, months }) });
-    showToast('भुगतान दर्ज — लिस्टिंग चालू');
-    loadRental();
-  } catch (e) { showToast(e.message, 'error'); }
+  const months = prompt('कितने महीने के लिए? (खाली = तय अवधि)');
+  if (months === null) return;
+  const p = _rnProviders.find(x => x.slug === slug) || {};
+  const got = await kmPayEntry({
+    who: `${p.name || slug} · लिस्टिंग उसी वक्त चालू होगी`,
+    payer: p.name || '',
+    submit: body => rnApi(`/providers/${encodeURIComponent(slug)}/payment`,
+      { method: 'POST', body: JSON.stringify(Object.assign({ months: months.trim() }, body)) }),
+  });
+  if (!got) return;
+  showToast(`₹${got.amount} दर्ज — लिस्टिंग चालू`);
+  loadRental();
 }
 
 async function rnAddListing(slug) {
@@ -18291,6 +18550,7 @@ const VF_LABEL = {
   paid:     ['चालू · भुगतान', '#2d6a4f', '#d8f3dc'],
   approved: ['चालू · मुफ़्त', '#1e4e79', '#e8f4fd'],
   rejected: ['हटाया', '#b91c1c', '#fee2e2'],
+  declined: ['आवेदन रद्द', '#9a3412', '#ffedd5'],
   expired:  ['खत्म', '#6b7280', '#f1f5f9'],
 };
 
@@ -18502,6 +18762,28 @@ function vfWaText(v) {
   const NOT = 'नीला टिक प्रीमियम सदस्यता का निशान है — यह पहचान की जाँच या ' +
               'फसल, भाव या सौदे की गारंटी नहीं है।';
 
+  if (v.status === 'declined') {
+    // The same notice the email carries, for when the email did not go.
+    return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
+      'कृषि मित्र प्रीमियम (नीला टिक) के लिए आपका आवेदन ' + v.ref +
+      ' स्वीकार नहीं हुआ है।\n' +
+      (v.reject_reason ? 'कारण: ' + v.reject_reason + '\n' : '') + '\n' +
+      'हमारे रिकॉर्ड में इस आवेदन का कोई भुगतान दर्ज नहीं है। शुल्क आपके खाते से ' +
+      'कट गया हो तो UTR / स्क्रीनशॉट यहीं भेज दें — पैसा हमारे खाते में पहुँचा ' +
+      'होगा तो पूरा 7 दिन के अंदर वापस भेजा जाएगा।\n\n' +
+      'फिर से आवेदन: https://krashimitra.in/verify';
+  }
+  if (v.status === 'rejected') {
+    // A removed tick: the reason, the refund if one is owed, the way back.
+    return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
+      'आपके खाते (' + v.ref + ') से कृषि मित्र प्रीमियम का नीला टिक हटा दिया गया है।\n' +
+      (v.reject_reason ? 'कारण: ' + v.reject_reason + '\n' : '') + '\n' +
+      (v.refund_due
+        ? 'आपका पूरा शुल्क ₹' + amt + ' 7 दिन के अंदर उसी UPI / खाते में वापस भेजा जाएगा। ' +
+          'रिफंड के बाद आप फिर से आवेदन कर सकते हैं।\n'
+        : 'आप फिर से आवेदन कर सकते हैं — वही तरीका: https://krashimitra.in/verify\n') +
+      '\n' + NOT;
+  }
   if (v.pay_status === 'claimed') {
     return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
       'आपने बताया कि ₹' + amt + ' भेज दिए हैं — हम बैंक में जाँच रहे हैं और ' +
@@ -18526,6 +18808,8 @@ function vfWaText(v) {
 }
 
 function vfWaLabel(v) {
+  if (v.status === 'declined') return '💬 रद्द होना बताएँ';
+  if (v.status === 'rejected') return '💬 हटाना बताएँ';
   if (v.pay_status === 'claimed') return '💬 बता दें';
   if (v.active) return v.expiring ? '💬 रिन्यू माँगें' : '💬 संदेश';
   return '💬 ₹ माँगें';
@@ -18535,17 +18819,25 @@ function vfWaLabel(v) {
    primary at all — there is nothing to do, and a row that needs no work should
    not look like a row that does. */
 function vfPlan(v) {
+  // An application has no tick to take away, so it is declined (and told),
+  // not "टिक हटाएँ" — that one is for a live membership and owes a refund.
   if (v.status === 'applied' && v.pay_status === 'claimed') {
     return { lead: ['₹ मिला → टिक चालू', 'payment', true],
              more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                     ['✓ मुफ़्त टिक', 'approve'],
-                    ['✕ टिक हटाएँ', 'reject']] };
+                    ['✕ आवेदन रद्द करें', 'decline']] };
   }
   if (v.status === 'applied') {
     return { lead: ['₹ मिला', 'payment', false],
              more: [['₹ QR / संदेश दिखाएँ', 'collect'],
                     ['✓ मुफ़्त टिक', 'approve'],
-                    ['✕ टिक हटाएँ', 'reject']] };
+                    ['✕ आवेदन रद्द करें', 'decline']] };
+  }
+  if (v.status === 'declined') {
+    // Money that turns up late still counts: ₹ मिला grants as usual.
+    return { lead: null,
+             more: [['₹ मिला → टिक चालू', 'payment'],
+                    ['✓ मुफ़्त टिक', 'approve']] };
   }
   if (v.status === 'rejected' && v.refund_due) {
     return { lead: ['↩ रिफंड भेज दिया', 'refund', true],
@@ -18580,7 +18872,8 @@ function vfActionSelect(v) {
   if (v.wa_phone) {
     out += '<a class="vf-wa" target="_blank" rel="noopener" href="' +
            WA_BASE + encodeURIComponent(v.wa_phone) + '?text=' +
-           encodeURIComponent(vfWaText(v)) + '">' +
+           encodeURIComponent(vfWaText(v)) + '" ' +
+           'onclick="return vfWaSure(\'' + ref + '\')">' +
            escapeHtml(vfWaLabel(v)) + '</a> ';
   }
 
@@ -18601,6 +18894,24 @@ function vfActionSelect(v) {
   return out;
 }
 
+/* Every button in the काम column asks twice. One tap on a phone lands on the
+   wrong row too easily, and every one of these either grants, takes away or
+   records money, or messages a real person. The second question restates who
+   and what, so it is read rather than tapped through. */
+function vfName(ref) {
+  const v = _vfRows.find(function (x) { return x.ref === ref; }) || {};
+  return (v.full_name || 'इस सदस्य') + ' (' + ref + ')';
+}
+
+function vfSure(first, second) {
+  return confirm(first) && confirm('पक्का? दोबारा पूछ रहे हैं —\n\n' + second);
+}
+
+function vfWaSure(ref) {
+  return vfSure('WhatsApp पर ' + vfName(ref) + ' को संदेश भेजें?',
+                'WhatsApp खुलेगा — भेजने से पहले संदेश एक बार पढ़ लें।');
+}
+
 function vfAction(ref, value, el) {
   if (el) el.selectedIndex = 0;   // never leave an action sitting where "और" goes
   if (!value) return;
@@ -18609,6 +18920,7 @@ function vfAction(ref, value, el) {
   if (value === 'approve') return vfApprove(ref);
   if (value === 'reject')  return vfReject(ref);
   if (value === 'refund')  return vfRefund(ref);
+  if (value === 'decline') return vfDecline(ref);
 }
 
 /* "18 सितं" — short, because it sits in a column. */
@@ -18663,6 +18975,8 @@ function vfSkeletonHtml(rows) {
 }
 
 async function vfCollect(ref) {
+  if (!vfSure('₹ QR / संदेश दिखाएँ — ' + vfName(ref) + '?',
+              'नई खिड़की में QR और संदेश खुलेगा।')) return;
   try {
     const r = await fetch(API + '/admin/verifications/' + encodeURIComponent(ref) + '/collect',
                           { headers: getAuthHeader() });
@@ -18692,38 +19006,97 @@ async function vfPayment(ref) {
   const v = _vfRows.find(function (x) { return x.ref === ref; }) || {};
   // This is now the grant, so the confirm asks the one question that matters:
   // a tick given on a payment that never arrived is a month given away free.
+  // The amount starts empty: the plan's price is only a hint, because what
+  // goes in the ledger is what the bank shows, not what was asked for.
   if (!confirm('बैंक ऐप में पैसा आया हुआ दिख रहा है?\n\n' +
-               '"ठीक है" दबाने पर ' + (v.full_name || 'इस सदस्य') + ' का नीला टिक ' +
+               'आगे बढ़ने पर ' + vfName(ref) + ' का भुगतान दर्ज होगा और नीला टिक ' +
                'उसी वक्त चालू हो जाएगा — ' + (v.plan_hi || '') + '।')) return;
-  const amt = prompt('कितना पैसा आया? (बैंक ऐप में जो दिखा, वही)',
-                     String(v.fee_amount || v.plan_price || ''));
-  if (!amt) return;
-  const utr = prompt('UTR / reference (ज़रूरी नहीं)') || '';
-  await vfPost(ref, 'payment', { amount: amt, ref: utr }, '₹ दर्ज — नीला टिक चालू हो गया');
+  const got = await kmPayEntry({
+    who: (v.full_name || 'इस सदस्य') + ' · दर्ज होते ही नीला टिक चालू — ' + (v.plan_hi || ''),
+    payer: v.full_name || '',
+    expect: v.fee_amount || v.plan_price || '',
+    submit: function (body) {
+      // The second ask comes after the form, so it confirms the figure typed.
+      if (!confirm('पक्का? दोबारा पूछ रहे हैं —\n\n' + vfName(ref) + ' से ₹' + body.amount +
+                   ' (' + body.date + (body.ref ? ', UTR ' + body.ref : '') + ') दर्ज होगा' +
+                   ' और नीला टिक अभी चालू हो जाएगा।')) {
+        throw new Error('रद्द किया — कुछ दर्ज नहीं हुआ।');
+      }
+      return kpePost(API + '/admin/verifications/' + encodeURIComponent(ref) + '/payment', body);
+    },
+  });
+  if (!got) return;
+  showToast('₹' + got.amount + ' दर्ज — नीला टिक चालू हो गया');
+  loadVerifications();
 }
 
 async function vfApprove(ref) {
   const v = _vfRows.find(function (x) { return x.ref === ref; }) || {};
   // Not an approval of anybody — a membership handed over for nothing. The
   // confirm says so, because the button next to it is the one that takes money.
-  if (!confirm('बिना पैसे के टिक दे रहे हैं?\n\n' +
-               (v.full_name || 'इस सदस्य') + ' को ' + (v.plan_hi || '') +
-               ' की मुफ़्त सदस्यता मिल जाएगी। पैसा आया है तो "₹ मिला" दबाएँ।')) return;
+  if (!vfSure('बिना पैसे के टिक दे रहे हैं?\n\n' +
+              (v.full_name || 'इस सदस्य') + ' को ' + (v.plan_hi || '') +
+              ' की मुफ़्त सदस्यता मिल जाएगी। पैसा आया है तो "₹ मिला" दबाएँ।',
+              vfName(ref) + ' को मुफ़्त नीला टिक — कोई पैसा दर्ज नहीं होगा।')) return;
   await vfPost(ref, 'approve', {}, '✓ मुफ़्त टिक चालू हो गया');
 }
 
 async function vfReject(ref) {
   // The kill switch. A paid badge is still not sellable to someone posing as
   // somebody else, and a term cut short owes the money back.
-  const reason = prompt('टिक क्यों हटा रहे हैं? (सदस्य को यही दिखेगा)');
-  if (reason === null) return;
-  await vfPost(ref, 'reject', { reason: reason },
-               'टिक हटा दिया — पैसा आया हो तो वापस भेजें');
+  if (!confirm(vfName(ref) + ' का नीला टिक हटाएँ?\n\n' +
+               'यह सिर्फ़ किसी और के नाम से बने खाते या धोखे के लिए है। सदस्य को कारण ' +
+               'के साथ ईमेल और KrashiBook में सूचना जाएगी; वह फिर से आवेदन कर सकता है।')) return;
+  const reason = vfPickReason('टिक क्यों हटा रहे हैं?', VF_REMOVE_REASONS);
+  if (!reason) return;
+  if (!confirm('पक्का? दोबारा पूछ रहे हैं —\n\n' + vfName(ref) + ' का टिक अभी हट जाएगा।\n' +
+               'कारण: ' + reason)) return;
+  const d = await vfPost(ref, 'reject', { reason: reason }, 'टिक हटा दिया');
+  if (!d) return;
+  showToast('टिक हटा दिया' +
+            (d.refund_due ? ' — पूरा शुल्क 7 दिन में वापस भेजें, फिर "↩ रिफंड भेज दिया" दबाएँ' : '') +
+            (d.emailed ? ' · सदस्य को ईमेल गया' : ' · ईमेल नहीं जा सका — "💬 हटाना बताएँ" से WhatsApp करें'));
+}
+
+/* The removal grounds are the ones /verify prints under "टिक कब हटाया जा
+   सकता है" — nothing outside that list may be a preset. */
+const VF_REMOVE_REASONS = [
+  'किसी और के नाम या फ़ोटो से खाता चलाना',
+  'टिक दिखाकर धोखा देना या झूठी पोस्ट डालना',
+  'भुगतान वापस ले लिया गया (chargeback)',
+];
+
+/* One reason picker for decline and removal: a number picks a preset, any
+   other text is the reason as typed. Blank is refused — he reads it. */
+function vfPickReason(title, list) {
+  const pick = prompt(title + ' (सदस्य को यही दिखेगा)\nनंबर लिखें, या अपना कारण लिखें:\n\n' +
+                      list.map(function (t, i) { return (i + 1) + '. ' + t; }).join('\n'), '1');
+  if (pick === null) return '';
+  const n = parseInt(pick, 10);
+  const reason = (String(n) === pick.trim() && list[n - 1]) || pick.trim();
+  if (!reason) showToast('कारण लिखना ज़रूरी है — कुछ नहीं बदला');
+  return reason;
 }
 
 async function vfRefund(ref) {
-  if (!confirm('पैसा सच में वापस भेज दिया?')) return;
-  await vfPost(ref, 'refund', {}, 'रिफंड दर्ज हो गया');
+  const v = _vfRows.find(function (x) { return x.ref === ref; }) || {};
+  const got = await kmPayEntry({
+    refund: true,
+    who: vfName(ref) + ' को वापसी',
+    payer: v.full_name || '',
+    expect: v.fee_amount || '',
+    submit: function (body) {
+      if (!confirm('पक्का? दोबारा पूछ रहे हैं —\n\n' + vfName(ref) + ' को ₹' + body.amount +
+                   ' का रिफंड (' + body.date + (body.ref ? ', UTR ' + body.ref : '') +
+                   ') "भेज दिया" दर्ज हो जाएगा।')) {
+        throw new Error('रद्द किया — कुछ दर्ज नहीं हुआ।');
+      }
+      return kpePost(API + '/admin/verifications/' + encodeURIComponent(ref) + '/refund', body);
+    },
+  });
+  if (!got) return;
+  showToast('रिफंड दर्ज हो गया');
+  loadVerifications();
 }
 
 async function vfPost(ref, action, payload, okMsg) {
@@ -18737,8 +19110,37 @@ async function vfPost(ref, action, payload, okMsg) {
     if (!r.ok || !j.success) throw new Error(j.detail || 'failed');
     showToast(okMsg);
     loadVerifications();
+    return j.data || {};
   } catch (e) {
     showToast('नहीं हो पाया — ' + String(e.message || e));
+    return null;
+  }
+}
+
+/* Refuse an application that never got a tick. The server emails him; the
+   reason is what he reads there, on /verify and on his profile — so it is
+   picked from plain Hindi, never left blank. When the email cannot go (no
+   address, Resend down) the row's 💬 button carries the same notice. */
+const VF_DECLINE_REASONS = [
+  'भुगतान हमारे खाते में नहीं पहुँचा',
+  'एक ही व्यक्ति के दो आवेदन',
+  'नाम या नंबर गलत / अधूरा है',
+  'किसी और के नाम से आवेदन',
+];
+
+async function vfDecline(ref) {
+  if (!confirm(vfName(ref) + ' का आवेदन रद्द करें?\n\n' +
+               'सदस्य को कारण के साथ ईमेल जाएगा और /verify पर भी दिखेगा। ' +
+               'वह चाहे तो फिर से आवेदन कर सकता है।')) return;
+  const reason = vfPickReason('आवेदन क्यों रद्द कर रहे हैं?', VF_DECLINE_REASONS);
+  if (!reason) return;
+  if (!confirm('पक्का? दोबारा पूछ रहे हैं —\n\n' + vfName(ref) + ' का आवेदन रद्द होगा।\n' +
+               'कारण: ' + reason)) return;
+  const d = await vfPost(ref, 'decline', { reason: reason }, 'आवेदन रद्द हो गया');
+  if (d && !d.emailed) {
+    showToast('आवेदन रद्द हो गया — पर ईमेल नहीं जा सका। "💬 रद्द होना बताएँ" से WhatsApp पर बताएँ।');
+  } else if (d) {
+    showToast('आवेदन रद्द हो गया — सदस्य को ईमेल भेज दिया');
   }
 }
 </script>

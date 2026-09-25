@@ -1,54 +1,63 @@
 # ============================================================
 # routes/pay.py
-# /pay — the page a dealer opens to pay his listing fee.
+# /pay and everything under it — the one place anybody pays कृषि मित्र.
+#
+#   /pay                    the hub: every way to pay, calm and short. No QR.
+#   /pay/{source}/{key}     one payer's page: name, amount, QR, UPI ID.
+#   /pay?d=<slug>           old dealer links already sent on WhatsApp → 301.
+#   /donate                 removed 2026-09-26 → 410 Gone.
+#
+# The URL shapes and the source table live in services/pay_links.py.
 #
 # The rail is a upi:// deep link and a QR of the same link (services/upi.py).
-# There is no gateway, no card form, and no field on this page that accepts
-# anything sensitive: the dealer taps through to his own UPI app and the money
+# There is no gateway, no card form, and no field on these pages that accepts
+# anything sensitive: the payer taps through to his own UPI app and the money
 # moves bank-to-bank. Nothing here touches money, so nothing here can leak it.
 #
-# WHAT THIS PAGE MUST NEVER CLAIM. A upi:// hand-off reports nothing back, so
-# this page cannot know whether payment happened and must never say it did.
-# It renders a request to pay. Settlement is seen in the owner's bank app and
-# typed into the admin panel by hand (dealers.record_payment) — a page that
-# printed "पेमेंट हो गया" off a tapped link would be inventing a receipt.
+# WHAT THESE PAGES MUST NEVER CLAIM. A upi:// hand-off reports nothing back, so
+# no page can know whether payment happened and none may say it did. Each one
+# renders a request to pay. Settlement is seen in the owner's bank app and
+# typed into the admin panel by hand — a page that printed "पेमेंट हो गया" off
+# a tapped link would be inventing a receipt.
 #
-# noindex, always. It is a private billing page for one named dealer, reached
-# from a WhatsApp message, and it has no business in a sitemap or a SERP.
+# ONE PAYER OR NO QR. The hub names nobody, so it shows no QR and no UPI ID.
+# Money that arrives with no payer attached cannot be matched to a row: nobody
+# can be marked paid for it and the payer has to be chased for a screenshot to
+# learn who they were. That is why the old generic /pay became a dead end
+# (2026-08-04) and why /donate went (2026-09-26). An unknown key renders the
+# same dead end, never a generic fee.
 #
-# ONE DEALER OR NOTHING. `?d=<slug>` is required: a bare /pay, or a slug that
-# resolves to nobody, renders a dead end rather than a generic fee and QR.
-#
-# It used to render that generic page, on the reasoning that a 404 in front of
-# someone ready to pay is worse than an unnamed page. That trade was wrong —
-# money arriving with no dealer attached cannot be matched to a listing, so
-# nobody can be marked paid for it and the payer has to be chased for a
-# screenshot just to establish who they were. The slug is also what becomes the
-# UPI `tr` reference, which is the only thread tying a bank credit back to a
-# row. A dealer always has his own link (admin.py::_pay_page_url), so the
-# generic page was never on anyone's real path to paying.
+# noindex, always. The hub is reached from the footer and has nothing to rank
+# for; a payer's page is a private billing link reached from WhatsApp.
 # ============================================================
+from datetime import datetime
 from html import escape
+from urllib.parse import quote
 
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
-from backend.database.db import Buyer, SessionLocal
+from backend.database.db import Buyer, SessionLocal, Sponsor
 from backend.routes.bhav import _doc
-from backend.services import upi
+from backend.services import pay_links, upi
 
 router = APIRouter()
 
+PHONE_TEL = "tel:+919870951001"
+PHONE_TXT = "+91 98709 51001"
+WA = "https://wa.me/919870951001"
+
 _PAY_CSS = """
-.pay-wrap{max-width:520px;margin:0 auto;padding:8px 0 40px}
+.pay-wrap{max-width:520px;margin:0 auto;padding:8px 0 44px}
 .pay-card{background:var(--white);border:1px solid var(--border);
 border-radius:var(--radius-sm);padding:26px 22px;text-align:center;
 box-shadow:var(--shadow-sm)}
 .pay-for{font-size:12.5px;color:var(--text-soft);margin:0 0 4px;letter-spacing:.02em}
+.pay-for + .pay-amt{margin-top:12px}
 .pay-name{font-size:20px;font-weight:700;color:var(--text-dark);margin:0 0 2px;line-height:1.4}
 .pay-place{font-size:13px;color:var(--text-soft);margin:0 0 18px}
 .pay-amt{font-size:40px;font-weight:800;color:var(--green-dark);margin:0;line-height:1.1}
-.pay-amt-sub{font-size:12.5px;color:var(--text-soft);margin:2px 0 20px}
+.pay-amt-sub{font-size:12.5px;color:var(--text-soft);margin:4px 0 20px}
 .pay-qr{display:inline-block;padding:14px;background:#fff;border:1px solid var(--border);
 border-radius:var(--radius-sm);line-height:0;margin-bottom:6px}
 .pay-qr svg{width:190px;height:190px;display:block}
@@ -66,47 +75,198 @@ word-break:break-all}
 border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--text-mid);
 flex-shrink:0}
 .pay-copy:hover{border-color:var(--green-mid);color:var(--green-dark)}
-.pay-after{margin-top:22px;padding:14px 16px;background:#fff8e6;border:1px solid #f0dfae;
-border-radius:var(--radius-sm);font-size:13px;color:var(--text-mid);line-height:1.8;text-align:left}
+.pay-ref{margin:14px 0 0;font-size:12.5px;color:var(--text-soft)}
+.pay-ref b{font-family:var(--font-mono,monospace);color:var(--text-dark);letter-spacing:.02em;
+word-break:break-all}
+.pay-after{margin-top:20px;padding:14px 16px;background:var(--cream,#faf8f2);
+border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;
+color:var(--text-mid);line-height:1.8;text-align:left}
 .pay-after b{color:var(--text-dark)}
-.pay-help{margin-top:18px;font-size:12.5px;color:var(--text-soft);line-height:1.8;text-align:center}
-.pay-help a{color:var(--green-dark);font-weight:600}
-.pay-off{padding:18px;background:#fff4f4;border:1px solid #f0c8c8;border-radius:var(--radius-sm);
-font-size:14px;color:#8a2b2b;line-height:1.8;text-align:left}
+.pay-after a,.pay-help a,.pay-off a{color:var(--green-dark);font-weight:600}
+.pay-help{margin:20px 4px 0;font-size:12.5px;color:var(--text-soft);line-height:1.8;text-align:center}
+.pay-off{padding:18px;background:var(--cream,#faf8f2);border:1px solid var(--border);
+border-radius:var(--radius-sm);font-size:14px;color:var(--text-mid);line-height:1.8;text-align:left}
+
+/* ── The hub ── calm: one column, lots of air, no colour but the prices ── */
+.pay-hero{padding:14px 4px 6px}
+.pay-hero h1{font-size:24px;font-weight:800;color:var(--text-dark);margin:0 0 8px;line-height:1.35}
+.pay-hero p{font-size:14.5px;color:var(--text-soft);line-height:1.7;margin:0}
+.pay-list{list-style:none;margin:18px 0 0;padding:0;border-top:1px solid var(--border)}
+.pay-list li{border-bottom:1px solid var(--border)}
+.pay-row{display:grid;grid-template-columns:1fr auto;gap:3px 14px;align-items:center;
+padding:17px 4px;text-decoration:none;color:inherit}
+.pay-row:hover .pay-row-t{color:var(--green-dark)}
+.pay-row-t{font-size:15.5px;font-weight:700;color:var(--text-dark);line-height:1.45}
+.pay-row-s{grid-column:1;font-size:13px;color:var(--text-soft);line-height:1.6}
+.pay-row-p{grid-column:1;font-size:13px;font-weight:700;color:var(--green-dark);line-height:1.6}
+.pay-row-go{grid-column:2;grid-row:1 / span 3;font-size:20px;color:var(--text-light,#9aa5a0)}
+.pay-got{margin:26px 0 0;padding:16px 18px;background:var(--green-pale);
+border-radius:var(--radius-sm);font-size:13.5px;color:var(--text-mid);line-height:1.75}
+.pay-got b{color:var(--text-dark)}
+
 @media(max-width:480px){.pay-card{padding:22px 16px}.pay-amt{font-size:34px}
-.pay-qr svg{width:160px;height:160px}}
+.pay-qr svg{width:170px;height:170px}.pay-hero h1{font-size:22px}}
 """
 
+_COPY_JS = """<script>
+function kmCopyVpa(btn){
+  var t = document.getElementById('pay-vpa-text');
+  if(!t) return;
+  var done = function(){ var o = btn.textContent; btn.textContent = '✓ कॉपी हो गया';
+    setTimeout(function(){ btn.textContent = o; }, 1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t.textContent).then(done).catch(function(){});
+  } else {
+    /* Older Android WebViews have no clipboard API — select the text so the
+       payer can long-press copy rather than retype a VPA by hand. */
+    var r = document.createRange(); r.selectNodeContents(t);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+}
+</script>"""
 
-def _dealer(slug: str):
-    """(name, district, own_price) for the named dealer, or ("", "", None).
+# Said on every payable page, in the same words. The last line matters on a
+# page that asks a farmer for money: nothing here is a government fee.
+_HELP = (
+    f'<p class="pay-help">कोई दिक्कत हो तो कॉल करें — <a href="{PHONE_TEL}">{PHONE_TXT}</a><br>'
+    'पैसा UPI से सीधे कृषि मित्र के बैंक खाते में जाता है। हम कभी कार्ड नंबर, OTP या UPI PIN '
+    'नहीं माँगते।<br>कृषि मित्र एक निजी वेबसाइट है, सरकारी नहीं। '
+    '<a href="/terms">शुल्क और रिफ़ंड के नियम</a></p>')
 
-    Fails soft — Neon being asleep must not turn a payment page into an error
-    page; it just loses the personalisation and falls back to the flat fee.
 
-    `own_price` is what a /dukanlisting account actually owes for its own
-    district count (services/dealers.py::quote — ₹199 + ₹50 each after), so a
-    dealer opening this page bare, with no ?amount= on the URL, is quoted his
-    real subscription rather than the KM_LISTING_FEE default that has nothing
-    to do with him. Plain values, not the ORM row: the session closes before
-    the template renders and a detached instance is a trap for the next edit.
-    """
-    slug = (slug or "").strip()[:80]
-    if not slug:
-        return "", "", None
+def _page(title: str, body: str, canon: str, status: int = 200) -> HTMLResponse:
+    resp = _doc(title[:68], "कृषि मित्र को भुगतान — UPI से, सीधे बैंक खाते में।",
+                canon, "", f'<div class="pay-wrap">{body}</div>', active="",
+                extra_css=_PAY_CSS, robots="noindex, nofollow", journey=False)
+    resp.status_code = status
+    return resp
+
+
+def _dead_end(message: str, canon: str) -> HTMLResponse:
+    return _page("पेमेंट — कृषि मित्र",
+                 f'<div class="pay-card"><div class="pay-off">{message}</div></div>{_HELP}',
+                 canon)
+
+
+def _incomplete(canon: str) -> HTMLResponse:
+    return _dead_end(
+        '<b>यह पेमेंट लिंक अधूरा है।</b><br>'
+        'कृपया वही लिंक खोलें जो कृषि मित्र टीम ने आपको WhatsApp पर भेजा था, '
+        f'या हमें कॉल करें — <a href="{PHONE_TEL}">{PHONE_TXT}</a><br>'
+        '<a href="/pay">पेमेंट के सभी तरीके देखें →</a>', canon)
+
+
+def _unconfigured(canon: str) -> HTMLResponse:
+    # Never a fabricated VPA to keep the page pretty — a wrong destination
+    # silently sends a payer's money to a stranger.
+    return _dead_end(
+        '<b>पेमेंट अभी चालू नहीं है।</b><br>'
+        f'कृपया कृषि मित्र टीम से संपर्क करें — <a href="{PHONE_TEL}">{PHONE_TXT}</a>',
+        canon)
+
+
+def _date(dt) -> str:
+    return dt.strftime("%d-%m-%Y") if dt else ""
+
+
+# ── The hub ──────────────────────────────────────────────────
+
+def _hub_rows() -> list[tuple[str, str, str, str]]:
+    """(href, title, one line, price) — prices from the same functions the
+    pages that sell them use, never typed here, so the hub cannot quote a
+    figure the next page contradicts."""
+    from backend.services import placements, seller_verify
+    tick = " · ".join(f"₹{p['price']} / {p['months']} महीने" if p["months"] > 1
+                      else f"₹{p['price']} / महीना" for p in seller_verify.plans())
+    wa_dukan = WA + "?text=" + quote("कृषि मित्र पर अपनी दुकान लिस्ट करनी है")
+    wa_rent = WA + "?text=" + quote("कृषि मित्र पर अपनी मशीन किराये के लिए लिस्ट करनी है")
+    return [
+        ("/verify", "नीला टिक — कृषि मित्र प्रीमियम",
+         "आपके नाम और फ़ोटो पर नीला टिक। यह सदस्यता है, पहचान की जाँच नहीं।", tick),
+        ("/dukanlisting", "मंडी भाव पेज पर लिस्टिंग",
+         "खाद-बीज डीलर और व्यापारी — अपने ज़िले के भाव पेज पर दिखें।",
+         f"₹{placements.PRICE_DISTRICT} प्रति ज़िला + ₹{placements.PRICE_CROP} प्रति फ़सल · "
+         f"{placements.SEASON_MONTHS} महीने"),
+        (wa_dukan, "कृषि दुकान लिस्टिंग",
+         "अपनी दुकान और सामान कृषि दुकान पर दिखाएँ।", "शुल्क बात करके तय"),
+        (wa_rent, "किराये की मशीन लिस्टिंग",
+         "ट्रैक्टर, थ्रेशर जैसी मशीनें किराये पर दें।", "शुल्क बात करके तय"),
+        ("/sponsor", "विज्ञापन · प्रायोजक",
+         "कंपनियों के लिए — साफ़ लिखा “प्रायोजक” वाला स्थान।", "रेट कार्ड देखें"),
+    ]
+
+
+def _hub() -> HTMLResponse:
+    rows = "".join(
+        f'<li><a class="pay-row" href="{escape(href, quote=True)}">'
+        f'<span class="pay-row-t">{escape(t)}</span>'
+        f'<span class="pay-row-s">{escape(s)}</span>'
+        f'<span class="pay-row-p">{escape(p)}</span>'
+        f'<span class="pay-row-go" aria-hidden="true">›</span></a></li>'
+        for href, t, s, p in _hub_rows())
+    body = f"""<div class="pay-hero">
+<h1>पेमेंट</h1>
+<p>मंडी भाव, मौसम और खेती की सलाह मुफ़्त हैं। शुल्क सिर्फ़ इन चीज़ों का है —</p>
+</div>
+<ul class="pay-list">{rows}</ul>
+<div class="pay-got">
+<b>पेमेंट लिंक मिला है?</b> वही लिंक खोलें जो हमने WhatsApp पर भेजा था — उसमें आपका
+नाम, राशि और QR होता है। लिंक खो गया हो तो <a href="{WA}">WhatsApp</a> करें, दोबारा भेज देंगे।
+</div>
+{_HELP}"""
+    return _page("पेमेंट — कृषि मित्र", body, f"{pay_links.SITE}/pay")
+
+
+@router.get("/pay", response_class=HTMLResponse)
+def pay_hub(d: str = "", amount: str = ""):
+    # Dealer links sent before 2026-09-26 were /pay?d=<slug>&amount=<n>. They
+    # are in people's WhatsApp chats, so they keep working — as a redirect to
+    # the one URL shape everything now uses.
+    if d.strip():
+        target = f"/pay/listing/{quote(d.strip()[:80], safe='')}"
+        amt = upi.clean_amount(amount, default=0) if amount else 0
+        return RedirectResponse(f"{target}?amount={amt}" if amt else target, status_code=301)
+    return _hub()
+
+
+@router.get("/donate", response_class=HTMLResponse)
+def donate_gone():
+    """Removed 2026-09-26: a gift from nobody in particular is money no row can
+    be matched to. 410, not 404, so Google drops the URL instead of retrying."""
+    body = ('<div class="pay-card"><div class="pay-off"><b>यह पेज हटा दिया गया है।</b><br>'
+            'कृषि मित्र अब दान नहीं लेता। '
+            '<a href="/pay">पेमेंट के सभी तरीके देखें →</a></div></div>')
+    return _page("पेज हटा दिया गया — कृषि मित्र", body, f"{pay_links.SITE}/donate", status=410)
+
+
+# ── One payer ────────────────────────────────────────────────
+
+def _lookup(source: str, key: str, amount: str) -> dict | None:
+    """Everything the page needs about one payer, as plain values (the session
+    closes before rendering). None = nobody by that key.
+
+    Fails soft: Neon asleep must not turn a payment page into an error page —
+    it reads as an incomplete link and the payer is pointed at the phone."""
+    if source == "link":
+        req = pay_links.read_link(key)
+        if not req:
+            return None
+        issued = ""
+        try:
+            issued = _date(datetime.strptime(req["issued"], "%Y-%m-%d"))
+        except ValueError:
+            pass
+        return {"name": req["payer"], "place": "", "amount": req["amount"],
+                "for": req["purpose"], "period": "",
+                "status": f"यह लिंक {issued} को बना।" if issued else "",
+                "ref": req["ref"], "note": f"KrashiMitra {req['purpose']}"}
+
     db = None
     try:
         db = SessionLocal()
-        row = db.query(Buyer).filter(Buyer.slug == slug).first()
-        if not row:
-            return "", "", None
-        price = None
-        if row.owner_user_id:
-            from backend.services import dealers
-            price = dealers.account_price(db, row.owner_user_id)
-        return (row.name or "").strip(), (row.district or "").strip(), price
+        return _LOOKUPS[source](db, key, amount)
     except Exception:
-        return "", "", None
+        return None
     finally:
         if db is not None:
             try:
@@ -115,65 +275,140 @@ def _dealer(slug: str):
                 pass
 
 
-@router.get("/pay", response_class=HTMLResponse)
-def pay_page(d: str = "", amount: str = ""):
-    canon = "https://krashimitra.in/pay"
-    name, district, own_price = _dealer(d)
+def _amount(raw: str, fallback) -> int:
+    """An explicit ?amount= wins — it is how a renewal or a negotiated rate is
+    sent, and the admin panel puts the figure it quoted onto the link itself.
+    Clamped either way, so a hand-edited URL cannot conjure a ₹0 QR."""
+    fallback = upi.clean_amount(fallback) if fallback else upi.DEFAULT_AMOUNT
+    return upi.clean_amount(raw, default=fallback) if raw else fallback
 
-    def _dead_end(message: str) -> HTMLResponse:
-        body = (f'<div class="pay-wrap"><div class="pay-card"><div class="pay-off">'
-                f'{message}</div></div></div>')
-        return _doc("पेमेंट — कृषि मित्र", "कृषि मित्र लिस्टिंग पेमेंट",
-                    canon, "", body, active="", extra_css=_PAY_CSS,
-                    robots="noindex, nofollow")
 
+def _running(until) -> str:
+    if until and until > datetime.utcnow():
+        return f"अभी {_date(until)} तक चालू है — यह पेमेंट उसके आगे की अवधि के लिए है।"
+    return ""
+
+
+def _listing(db, key, amount):
+    from backend.services import dealers, placements
+    row = db.query(Buyer).filter(Buyer.slug == key.strip()[:80]).first()
+    if not row or not (row.name or "").strip():
+        return None
+    # A /dukanlisting account owes its own district count (dealers.quote), not
+    # the flat KM_LISTING_FEE that has nothing to do with it.
+    own = dealers.account_price(db, row.owner_user_id) if row.owner_user_id else None
+    return {"name": row.name.strip(), "place": (row.district or "").strip(),
+            "amount": _amount(amount, own), "for": pay_links.SOURCES["listing"][0],
+            "period": (f"{placements.SEASON_MONTHS} महीने के लिए" if row.owner_user_id else ""),
+            "status": _running(row.paid_until), "ref": pay_links.ref("listing", row.slug)}
+
+
+def _dukan(db, key, amount):
+    from backend.services import krashi_dukan
+    row = krashi_dukan.shop_get(db, key)
+    if not row or not (row.name or "").strip():
+        return None
+    return {"name": row.name.strip(), "place": (row.district or "").strip(),
+            "amount": _amount(amount, None), "for": pay_links.SOURCES["dukan"][0],
+            "period": "", "status": _running(getattr(row, "paid_until", None)),
+            "ref": pay_links.ref("dukan", row.slug)}
+
+
+def _rent(db, key, amount):
+    from backend.services import rental
+    row = rental.provider_get(db, key)
+    if not row or not (row.name or "").strip():
+        return None
+    return {"name": row.name.strip(), "place": (row.district or "").strip(),
+            "amount": _amount(amount, None), "for": pay_links.SOURCES["rent"][0],
+            "period": "", "status": _running(getattr(row, "paid_until", None)),
+            "ref": pay_links.ref("rent", row.slug)}
+
+
+def _sponsor(db, key, amount):
+    row = db.query(Sponsor).filter(Sponsor.slug == key.strip()[:80]).first()
+    if not row or not (row.name or "").strip():
+        return None
+    # No agreed figure and none on the link → nothing to charge. A sponsor is
+    # never shown the dealer listing fee as a default.
+    amt = upi.clean_amount(amount or row.amount or 0, default=0)
+    if not amt:
+        return None
+    return {"name": row.name.strip(), "place": "", "amount": amt,
+            "for": pay_links.SOURCES["sponsor"][0], "period": "",
+            "status": "", "ref": pay_links.ref("sponsor", row.slug)}
+
+
+def _tick(db, key, amount):
+    """The member's name is NOT shown — the ref is enough to pay against, and
+    a private person's name has no business on a URL anyone can open."""
+    from backend.services import seller_verify
+    row = seller_verify.by_ref(db, key)
+    if not row:
+        return None
+    chosen = seller_verify.plan(row.plan)
+    out = {"name": "", "place": "", "amount": row.fee_amount or chosen["price"],
+           "for": pay_links.SOURCES["tick"][0], "period": chosen["term_hi"],
+           "status": "", "ref": pay_links.ref("tick", row.ref),
+           "note": f"KrashiMitra premium {row.ref}", "tick_ref": row.ref}
+    if seller_verify.is_active(row):
+        out["closed"] = (f"आपका नीला टिक {_date(row.valid_until)} तक चालू है। "
+                         "आगे बढ़ाने के लिए <a href=\"/verify\">नीला टिक पेज</a> खोलें।")
+    elif row.status != seller_verify.APPLIED:
+        out["closed"] = ("यह आवेदन अब खुला नहीं है। नया शुरू करने के लिए "
+                         "<a href=\"/verify\">नीला टिक पेज</a> खोलें।")
+    return out
+
+
+_LOOKUPS = {"listing": _listing, "dukan": _dukan, "rent": _rent,
+            "sponsor": _sponsor, "tick": _tick}
+
+
+@router.get("/pay/{source}/{key}", response_class=HTMLResponse)
+def pay_page(source: str, key: str, amount: str = ""):
+    canon = f"{pay_links.SITE}/pay/{source}"
+    if source not in pay_links.SOURCES:
+        return _incomplete(canon)
     if not upi.configured():
-        # Never a fabricated VPA to keep the page pretty — a wrong destination
-        # silently sends a dealer's money to a stranger.
-        return _dead_end(
-            '<b>पेमेंट अभी चालू नहीं है।</b><br>'
-            'कृपया कृषि मित्र टीम से संपर्क करें — '
-            '<a href="tel:+919870951001">+91 98709 51001</a>')
+        return _unconfigured(canon)
+    info = _lookup(source, key, amount)
+    if not info:
+        return _incomplete(canon)
+    if info.get("closed"):
+        return _dead_end(info["closed"], canon)
 
-    # No dealer, no payable page. This used to render a generic fee + QR for a
-    # bare /pay or a mistyped ?d=, on the reasoning that a 404 in front of
-    # someone ready to pay is worse. It is not: money that arrives with no
-    # dealer attached cannot be matched to a listing, so nobody can be marked
-    # paid for it and the payer has to be chased for a screenshot to work out
-    # who they even were. The dealer always reaches this page from his own
-    # WhatsApp link (/pay?d=<slug>, admin.py::_pay_page_url), which carries the
-    # slug into the UPI `tr` reference — that attribution is the whole point.
-    if not name:
-        return _dead_end(
-            '<b>यह पेमेंट लिंक अधूरा है।</b><br>'
-            'कृपया वही लिंक खोलें जो कृषि मित्र टीम ने आपको WhatsApp पर भेजा था, '
-            'या हमें कॉल करें — <a href="tel:+919870951001">+91 98709 51001</a>')
+    amt = info["amount"]
+    if "note" in info:
+        link = upi.link(amt, note=info["note"], ref=info["ref"])
+        pack = {"amount": upi.clean_amount(amt), "link": link, "vpa": upi.vpa(),
+                "qr_svg": upi.qr_svg(link)}
+    else:
+        pack = upi.collect(info["name"], info["place"], amount=amt, ref=info["ref"])
 
-    # An explicit ?amount= is how a renewal or a negotiated rate is sent, and it
-    # wins — the admin panel puts the figure it just quoted in the WhatsApp
-    # message onto the link itself, so the two can never disagree. Falling back
-    # to this dealer's own subscription price before the flat KM_LISTING_FEE:
-    # the default only makes sense for someone who has no account behind him.
-    # clean_amount clamps whichever wins, so a hand-edited URL cannot produce a
-    # ₹0 or a ₹9,00,000 QR.
-    amt = upi.clean_amount(amount, default=own_price) if amount else (
-        own_price or upi.DEFAULT_AMOUNT)
-    pack = upi.collect(name, district, amount=amt, ref=(d or "").strip()[:80])
+    name = (f'<h2 class="pay-name">{escape(info["name"])}</h2>' if info["name"] else "")
+    place = (f'<p class="pay-place">{escape(info["place"])}</p>'
+             if info["name"] or info["place"] else "")
+    sub = " · ".join(x for x in (info["period"], "कोई अतिरिक्त चार्ज नहीं") if x)
+    status = (f'<p class="pay-amt-sub">{escape(info["status"])}</p>' if info["status"] else "")
+    qr = (f'<div class="pay-qr">{pack["qr_svg"]}</div>'
+          '<p class="pay-scan">किसी भी UPI ऐप से QR स्कैन करें</p>' if pack["qr_svg"] else "")
+    shown_ref = info.get("tick_ref") or info["ref"]
 
-    # Always a named dealer past the guard above — the anonymous variant this
-    # used to carry is gone with the generic page.
-    heading = (f'<p class="pay-for">लिस्टिंग शुल्क</p>'
-               f'<h2 class="pay-name">{escape(name)}</h2>'
-               f'<p class="pay-place">{escape(district)}</p>')
+    if source == "tick":
+        after = ('<b>पेमेंट के बाद:</b> <a href="/verify">नीला टिक पेज</a> पर '
+                 '“मैंने पैसे भेज दिए” दबाएँ। पैसा पहुँचते ही टिक चालू हो जाएगा।<br>'
+                 'नीला टिक प्रीमियम सदस्यता का निशान है — यह पहचान की जाँच या फसल, भाव '
+                 'या सौदे की गारंटी नहीं है।')
+    else:
+        after = ('<b>पेमेंट के बाद:</b> स्क्रीनशॉट या UPI रेफरेंस नंबर WhatsApp पर भेज दीजिए — '
+                 f'<a href="{WA}">{PHONE_TXT}</a>।')
 
-    qr = f'<div class="pay-qr">{pack["qr_svg"]}</div><p class="pay-scan">किसी भी UPI ऐप से QR स्कैन करें</p>' \
-         if pack["qr_svg"] else ""
-
-    body = f"""<div class="pay-wrap">
-<div class="pay-card">
-{heading}
+    body = f"""<div class="pay-card">
+<p class="pay-for">{escape(info["for"])}</p>
+{name}{place}
 <p class="pay-amt">₹{pack["amount"]}</p>
-<p class="pay-amt-sub">प्रति माह · कोई अतिरिक्त चार्ज नहीं</p>
+<p class="pay-amt-sub">{escape(sub)}</p>
+{status}
 {qr}
 <a class="pay-btn" href="{escape(pack["link"], quote=True)}">UPI ऐप में पे करें</a>
 <p class="pay-or">या यह UPI ID कॉपी करके किसी भी ऐप में भेजें</p>
@@ -181,35 +416,10 @@ def pay_page(d: str = "", amount: str = ""):
   <span id="pay-vpa-text">{escape(pack["vpa"])}</span>
   <button class="pay-copy" type="button" onclick="kmCopyVpa(this)">कॉपी</button>
 </div>
-<div class="pay-after">
-  <b>पेमेंट के बाद:</b> स्क्रीनशॉट या UPI रेफरेंस नंबर WhatsApp पर भेज दीजिए —
-  <a href="https://wa.me/919870951001">+91 98709 51001</a>।
-  पुष्टि होते ही आपकी लिस्टिंग पर ✓ वेरिफाइड लग जाएगा।
+<p class="pay-ref">आपका नंबर: <b>{escape(shown_ref)}</b></p>
+<div class="pay-after">{after}</div>
 </div>
-<p class="pay-help">
-  कोई दिक्कत हो तो कॉल करें — <a href="tel:+919870951001">+91 98709 51001</a><br>
-  पैसा सीधे बैंक खाते में जाता है। कृषि मित्र आपका कार्ड या बैंक विवरण कभी नहीं माँगता।
-</p>
-</div>
-</div>
-<script>
-function kmCopyVpa(btn){{
-  var t = document.getElementById('pay-vpa-text');
-  if(!t) return;
-  var done = function(){{ var o = btn.textContent; btn.textContent = '✓ कॉपी हो गया';
-    setTimeout(function(){{ btn.textContent = o; }}, 1800); }};
-  if (navigator.clipboard && navigator.clipboard.writeText) {{
-    navigator.clipboard.writeText(t.textContent).then(done).catch(function(){{}});
-  }} else {{
-    /* Older Android WebViews have no clipboard API — select the text so the
-       dealer can long-press copy rather than retype a VPA by hand. */
-    var r = document.createRange(); r.selectNodeContents(t);
-    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-  }}
-}}
-</script>"""
-
-    title = f"₹{pack['amount']} पेमेंट — {name}" if name else "लिस्टिंग पेमेंट — कृषि मित्र"
-    return _doc(title[:68], "कृषि मित्र खरीदार डायरेक्टरी लिस्टिंग शुल्क का भुगतान।",
-                canon, "", body, active="", extra_css=_PAY_CSS,
-                robots="noindex, nofollow")
+{_HELP}
+{_COPY_JS}"""
+    who = info["name"] or info["for"]
+    return _page(f"₹{pack['amount']} पेमेंट — {who}", body, canon)

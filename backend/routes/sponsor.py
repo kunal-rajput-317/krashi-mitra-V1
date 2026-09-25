@@ -420,9 +420,8 @@ commit to anything.</p>
 <h2>Smaller than this?</h2>
 <p>If you are a local input dealer, seed shop or trader rather than a brand,
 the site sells single-district and single-crop listings from ₹199 —
-<a href="{SITE}/dukanlisting">list your shop here</a>. And if you are not
-buying anything but want the site to keep running, there is a
-<a href="{SITE}/donate">support page</a>.</p>
+<a href="{SITE}/dukanlisting">list your shop here</a>. Every way to pay
+the site is listed on one <a href="{SITE}/pay">payments page</a>.</p>
 </section>
 
 </div>"""

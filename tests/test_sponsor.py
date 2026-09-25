@@ -259,7 +259,10 @@ def test_the_server_footer_links_to_both_money_pages(client):
     weeks and was linked from two footers; /sponsor had nowhere at all."""
     t = client.get("/bhav").text
     assert "/sponsor" in t
-    assert "/donate" in t
+    # /donate was removed 2026-09-26; /pay, which lists every way to pay, took
+    # its place in the footer.
+    assert f'href="https://krashimitra.in/pay"' in t
+    assert "/donate" not in t
 
 
 def test_the_slot_is_empty_on_every_page_while_nobody_is_paying(client, registry):
@@ -414,7 +417,7 @@ def test_the_kit_is_never_in_the_sitemap(client):
 
 
 def test_no_page_on_the_site_links_to_the_kit(client):
-    for path in ("/sponsor", "/bhav", "/donate"):
+    for path in ("/sponsor", "/bhav", "/pay"):
         assert "/sponsor/kit" not in client.get(path).text, path
 
 
@@ -506,18 +509,18 @@ def test_going_live_needs_an_end_date_to_expire_on(client, clean_sponsors):
         assert sponsors.card_html("/bhav", TODAY) == ""
 
 
-def test_a_paid_sponsor_cannot_be_deleted(client, clean_sponsors):
+def test_a_paid_sponsor_cannot_be_deleted(client, clean_sponsors, paid):
     """Ending a campaign is active=false. The record is what answers 'what did
     we run for them, and when'."""
     assert _new(client).status_code == 200
     assert client.post("/admin/sponsor/acme-seeds/payment",
-                       json={"amount": 25000}, auth=AUTH).status_code == 200
+                       json=paid(25000), auth=AUTH).status_code == 200
     r = client.delete("/admin/sponsor/acme-seeds", auth=AUTH)
     assert r.status_code == 400
     assert "active=false" in r.json()["detail"]
 
 
-def test_payment_is_recorded_by_a_human_not_inferred(client, clean_sponsors):
+def test_payment_is_recorded_by_a_human_not_inferred(client, clean_sponsors, paid):
     """Nothing sets paid_at from a tapped upi:// link, because that hand-off
     reports nothing back."""
     assert _new(client).status_code == 200
@@ -525,8 +528,8 @@ def test_payment_is_recorded_by_a_human_not_inferred(client, clean_sponsors):
     assert listed[0]["paid_at"] is None
     # No amount, no payment: a ₹-less row would land in the हिसाब ledger as nothing.
     assert client.post("/admin/sponsor/acme-seeds/payment", json={},
-                       auth=AUTH).status_code in (200, 400)
-    client.post("/admin/sponsor/acme-seeds/payment", json={"amount": 75000}, auth=AUTH)
+                       auth=AUTH).status_code == 400
+    client.post("/admin/sponsor/acme-seeds/payment", json=paid(75000), auth=AUTH)
     listed = client.get("/admin/sponsor", auth=AUTH).json()["sponsors"]
     assert listed[0]["paid_at"] is not None
 

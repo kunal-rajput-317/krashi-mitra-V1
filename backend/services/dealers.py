@@ -312,7 +312,9 @@ def log_call(db, slug: str, result: str, note: str = "") -> Buyer | None:
 
 
 def record_payment(db, slug: str, amount: int, ref: str = "",
-                   months: int | None = None) -> Buyer | None:
+                   months: int | None = None, *, received_at=None,
+                   method: str | None = None, payer: str = "",
+                   note: str = "", tds: int = 0) -> Buyer | None:
     """Money actually arrived. Typed in by hand, and that is the design.
 
     A upi:// link hands off to the dealer's own app and reports nothing back
@@ -334,8 +336,15 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     row = db.query(Buyer).filter(Buyer.slug == slug).first()
     if not row:
         return None
-    from backend.services import placements
+    from backend.services import ledger, placements
     now = datetime.utcnow()
+    paid_on = received_at or now
+    # The ledger row first: if it is refused (a reference already recorded),
+    # nothing below has touched the listing. One payment, one ledger row, even
+    # when it renews several districts.
+    ledger.record(db, "dealer", int(amount), payer=payer or row.name,
+                  contact=row.phone or "", ref=ref, method=method, note=note, tds=tds,
+                  source_key=row.slug, received_at=paid_on)
     targets = for_owner(db, row.owner_user_id) if row.owner_user_id else [row]
     # A season by default, not a month — SEASON_MONTHS is the one place that
     # number lives. `months` is still honoured so the admin can key in a
@@ -347,7 +356,7 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     base = row.paid_until if (row.paid_until and row.paid_until > now) else now
     paid_until = base + timedelta(days=30 * span)
     for r in targets:
-        r.paid_at = now
+        r.paid_at = paid_on
         r.paid_amount = int(amount)
         r.payment_ref = (ref or "").strip()[:80] or None
         r.paid_until = paid_until
@@ -355,10 +364,6 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
             r.status = "listed"
             r.active = True
         r.updated_at = now
-    # One payment, one ledger row — even when it renewed several districts.
-    from backend.services import ledger
-    ledger.record(db, "dealer", int(amount), payer=row.name, contact=row.phone or "",
-                  ref=ref, source_key=row.slug, received_at=now)
     db.commit()
     db.refresh(row)
     buyers_read.invalidate()

@@ -132,12 +132,11 @@ CORE = [
 # listed here — they live in /pashupalan/sitemap.xml with their own real
 # lastmod. (The section was /farm/* until 2026-09-12; the old URLs 301 and are
 # deliberately absent from every sitemap, which must only list canonicals.)
-# /donate is not a hub, but it is server-rendered (routes/donate.py) so it has
-# no file in CORE to take a date from. "yearly" is the honest cadence: the
-# page changes only when the copy does.
+# /donate was listed here until 2026-09-26; it now answers 410 and /pay (its
+# replacement) is noindex, so neither belongs in a sitemap.
 HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
         ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly"),
-        ("/rental", 0.7, "monthly"), ("/donate", 0.3, "yearly"),
+        ("/rental", 0.7, "monthly"),
         ("/pashupalan", 0.7, "weekly"), ("/pashupalan/anda-rate", 0.9, "daily")]
 
 if _sponsor_live():

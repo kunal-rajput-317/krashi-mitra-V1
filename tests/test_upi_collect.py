@@ -140,10 +140,10 @@ class TestGeneratingALinkIsNotPayment:
         assert dealer.paid_at is None, "generating a QR marked the dealer as paid"
         assert dealers.funnel(clean)["paid"] == 0
 
-    def test_only_the_payment_endpoint_sets_paid_at(self, upi, dealer, client, clean):
+    def test_only_the_payment_endpoint_sets_paid_at(self, upi, dealer, client, clean, paid):
         client.get(f"/admin/buyers/{dealer.slug}/collect", auth=ADMIN)
         r = client.post(f"/admin/buyers/{dealer.slug}/payment",
-                        json={"amount": 500, "ref": "123456789012"}, auth=ADMIN)
+                        json=paid(500, method="upi", ref="123456789012"), auth=ADMIN)
         assert r.status_code == 200, r.text
 
         clean.refresh(dealer)
@@ -153,10 +153,10 @@ class TestGeneratingALinkIsNotPayment:
         assert dealer.active is True, "paying did not list him"
         assert dealer.status == "listed"
 
-    def test_payment_requires_a_real_amount(self, upi, dealer, client):
-        for bad in (0, -5, "abc"):
+    def test_payment_requires_a_real_amount(self, upi, dealer, client, paid):
+        for bad in (0, -5, "abc", "1,500", 499.5, "499.5", True):
             r = client.post(f"/admin/buyers/{dealer.slug}/payment",
-                            json={"amount": bad}, auth=ADMIN)
+                            json=paid(bad), auth=ADMIN)
             assert r.status_code == 400, f"{bad!r} was accepted as a payment"
 
     def test_renewal_extends_rather_than_resets(self, upi, dealer, clean):
@@ -250,7 +250,7 @@ class TestPayPage:
     """The public page. It may never claim payment happened."""
 
     def test_renders_for_a_known_dealer(self, upi, dealer, client):
-        r = client.get(f"/pay?d={dealer.slug}")
+        r = client.get(f"/pay/listing/{dealer.slug}")
         assert r.status_code == 200
         assert "Sharma Traders" in r.text
         assert "upi://pay?" in r.text
@@ -261,10 +261,10 @@ class TestPayPage:
         assert _PAY_QR in r.text
 
     def test_is_noindex(self, upi, dealer, client):
-        assert "noindex" in client.get(f"/pay?d={dealer.slug}").text
+        assert "noindex" in client.get(f"/pay/listing/{dealer.slug}").text
 
     def test_never_claims_payment_succeeded(self, upi, dealer, client):
-        body = client.get(f"/pay?d={dealer.slug}").text
+        body = client.get(f"/pay/listing/{dealer.slug}").text
         for claim in ("पेमेंट हो गया", "भुगतान सफल", "payment successful", "paid successfully"):
             assert claim not in body
 
@@ -272,7 +272,7 @@ class TestPayPage:
         """QR and the pay button are one path; the plain-text, copyable VPA is
         shown alongside them directly, not behind a reveal — user's explicit
         call 2026-08-03 after trying the hide-behind-a-tap version."""
-        body = client.get(f"/pay?d={dealer.slug}").text
+        body = client.get(f"/pay/listing/{dealer.slug}").text
         assert upi.vpa() in body
         assert 'id="pay-vpa-text"' in body
 
@@ -283,7 +283,7 @@ class TestPayPage:
         Money that arrives with no dealer attached cannot be matched to a
         listing — nobody can be marked paid for it, and the payer has to be
         chased for a screenshot just to establish who they were."""
-        r = client.get("/pay?d=does-not-exist")
+        r = client.get("/pay/listing/does-not-exist")
         assert r.status_code == 200          # still not a 404 in someone's face
         assert "upi://pay?" not in r.text, "an unattributable payment was offered"
         assert _PAY_QR not in r.text, "a scannable QR was offered with no dealer"
@@ -303,13 +303,13 @@ class TestPayPage:
         monkeypatch.setenv("KM_UPI_ID", "")
         from backend.services import upi as upi_mod
         importlib.reload(upi_mod)
-        r = client.get(f"/pay?d={dealer.slug}")
+        r = client.get(f"/pay/listing/{dealer.slug}")
         assert r.status_code == 200
         assert "upi://pay?" not in r.text
         assert "चालू नहीं" in r.text
 
     def test_amount_in_the_query_is_clamped(self, upi, dealer, client):
-        assert "am=500" in client.get(f"/pay?d={dealer.slug}&amount=9999999").text
+        assert "am=500" in client.get(f"/pay/listing/{dealer.slug}?amount=9999999").text
 
 
 class TestAuth:
@@ -455,8 +455,8 @@ class TestQuotedAmountReachesTheDealer:
     def test_a_hand_edited_url_is_still_clamped(self, upi, dealer, client):
         """The link is public and trivially editable; /pay re-clamps it so a
         ₹0 or ₹9,00,000 QR cannot be conjured from the address bar."""
-        assert self._page_amount(client, "/pay?d=%s&amount=0" % dealer.slug) == "500"
-        assert self._page_amount(client, "/pay?d=%s&amount=9999999" % dealer.slug) == "500"
+        assert self._page_amount(client, "/pay/listing/%s?amount=0" % dealer.slug) == "500"
+        assert self._page_amount(client, "/pay/listing/%s?amount=9999999" % dealer.slug) == "500"
 
 
 class TestSubscriptionPricingOnTheRail:
@@ -485,14 +485,14 @@ class TestSubscriptionPricingOnTheRail:
     def test_bare_pay_page_quotes_the_account_price(self, upi, account, client):
         """A dealer who opens his link with no ?amount= must not be shown the
         ₹500 default that has nothing to do with his subscription."""
-        assert self._page_amount(client, f"/pay?d={account[0].slug}") == str(dealers.quote(3))
+        assert self._page_amount(client, f"/pay/listing/{account[0].slug}") == str(dealers.quote(3))
 
     def test_an_explicit_amount_still_wins(self, upi, account, client):
         """A renewal or negotiated rate overrides the computed price."""
-        assert self._page_amount(client, f"/pay?d={account[0].slug}&amount=150") == "150"
+        assert self._page_amount(client, f"/pay/listing/{account[0].slug}?amount=150") == "150"
 
     def test_legacy_row_keeps_the_flat_fee(self, upi, dealer, client):
-        assert self._page_amount(client, f"/pay?d={dealer.slug}") == "500"
+        assert self._page_amount(client, f"/pay/listing/{dealer.slug}") == "500"
 
     def test_price_follows_the_district_count(self, upi, account, clean, client):
         dealers.delete(clean, account[0].slug)

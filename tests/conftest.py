@@ -81,3 +81,21 @@ def db_session(db_engine):
     finally:
         session.rollback()
         session.close()
+
+
+@pytest.fixture()
+def paid():
+    """A payment body as the admin panel now sends it: the amount, the IST date
+    it landed, how it came and whose name the bank showed. Every admin payment
+    route refuses anything less (services/ledger.py::clean_entry). Defaults to
+    method "other" with a note, so tests that do not care about the bank
+    reference never collide on one; pass method/ref to test those."""
+    from datetime import datetime, timedelta
+    today = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date().isoformat()
+
+    def make(amount, **kw):
+        body = {"amount": amount, "date": today, "method": "other",
+                "note": "test", "payer": "Test Payer"}
+        body.update(kw)
+        return body
+    return make

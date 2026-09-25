@@ -551,11 +551,11 @@ def test_a_claimed_payment_shows_as_claimed_and_sorts_to_the_top(client, db_sess
     assert d["awaiting_confirm"] >= 1
 
 
-def test_recording_the_payment_through_the_panel_grants_the_tick(client, db_session, applicant):
+def test_recording_the_payment_through_the_panel_grants_the_tick(client, db_session, applicant, paid):
     """This is the endpoint somebody will be clicking while money arrives."""
     row = _apply(db_session, applicant)
     r = client.post(f"/admin/verifications/{row.ref}/payment",
-                    json={"amount": 199, "ref": "UTR77"}, auth=AUTH)
+                    json=paid(199, method="upi", ref="100000000077"), auth=AUTH)
     assert r.status_code == 200, r.text
     body = r.json()["data"]
     assert body["status"] == seller_verify.PAID
@@ -586,12 +586,14 @@ def test_approve_is_the_comp_and_leaves_the_books_alone(client, db_session, appl
     assert row.paid_at is None
 
 
-def test_revoking_through_the_panel_clears_the_tick(client, db_session, applicant):
+def test_revoking_through_the_panel_clears_the_tick(client, db_session, applicant, paid):
     row = _apply(db_session, applicant)
-    client.post(f"/admin/verifications/{row.ref}/payment", json={"amount": 199}, auth=AUTH)
+    client.post(f"/admin/verifications/{row.ref}/payment", json=paid(199), auth=AUTH)
     r = client.post(f"/admin/verifications/{row.ref}/reject",
                     json={"reason": "किसी और के नाम से खाता"}, auth=AUTH)
-    assert r.json()["data"] == {"status": seller_verify.REJECTED, "refund_due": True}
+    d = r.json()["data"]
+    assert (d["status"], d["refund_due"]) == (seller_verify.REJECTED, True)
+    assert "emailed" in d
     assert not _verified(db_session, applicant)
 
 
@@ -599,7 +601,7 @@ def test_revoking_through_the_panel_clears_the_tick(client, db_session, applican
 # The screen sells a membership and used to say nothing about what it earned,
 # and nothing about who was waiting. Both are now in the payload.
 
-def test_the_queue_reports_the_money(client, db_session, applicant):
+def test_the_queue_reports_the_money(client, db_session, applicant, paid):
     row = _apply(db_session, applicant)
     d = client.get("/admin/verifications", auth=AUTH).json()["data"]
     m = d["money"]
@@ -610,7 +612,7 @@ def test_the_queue_reports_the_money(client, db_session, applicant):
     before = m["collected_month"]
 
     client.post(f"/admin/verifications/{row.ref}/payment",
-                json={"amount": 199}, auth=AUTH)
+                json=paid(199), auth=AUTH)
     m2 = client.get("/admin/verifications", auth=AUTH).json()["data"]["money"]
     assert m2["collected_month"] == before + 199
     assert m2["active"] >= 1
@@ -710,7 +712,8 @@ def test_the_collect_message_sells_a_membership_not_a_check(client, db_session, 
 
 def test_unknown_refs_404_rather_than_creating_anything(client):
     for path, method in [("payment", "post"), ("approve", "post"),
-                         ("reject", "post"), ("refund", "post"), ("collect", "get")]:
+                         ("reject", "post"), ("decline", "post"), ("refund", "post"),
+                         ("collect", "get")]:
         call = getattr(client, method)
         kw = {"json": {"amount": 199}} if method == "post" else {}
         r = call(f"/admin/verifications/KMVZZZZZZZ/{path}", auth=AUTH, **kw)
@@ -796,3 +799,209 @@ def test_the_queue_only_calls_helpers_that_exist():
     assert not bare, (
         f"{len(bare)} call(s) to a non-existent esc() — use escapeHtml(). "
         "This is the bug that made the नीला टिक queue render nothing.")
+
+
+# ── Declining an application (2026-09-26) ─────────────────────
+# Not the kill switch. An `applied` row never had a tick and has no confirmed
+# money, so refusing it owes nothing — but he has to be told, with the reason,
+# and he has to be able to try again.
+
+def test_declining_an_application_ticks_nothing_and_owes_nothing(db_session, applicant):
+    row = _apply(db_session, applicant)
+    seller_verify.claim_payment(db_session, applicant.id, "UTR-NOT-FOUND")
+
+    out = seller_verify.decline(db_session, row.ref, "भुगतान हमारे खाते में नहीं पहुँचा")
+    assert out.status == seller_verify.DECLINED
+    assert out.reject_reason == "भुगतान हमारे खाते में नहीं पहुँचा"
+    assert out.payment_claimed_at is None, "a looked-at claim must not jump the next queue"
+    assert not _verified(db_session, applicant)
+    assert not seller_verify.refund_due(out)
+
+
+def test_a_live_membership_cannot_be_declined(db_session, applicant):
+    """A live tick is removed by revoke(), which owes the refund. decline()
+    must refuse, or a paid member loses his term with no refund owed."""
+    row = _apply(db_session, applicant)
+    seller_verify.record_payment(db_session, row.ref, 199, "UTR1")
+    with pytest.raises(seller_verify.NotDeclinable):
+        seller_verify.decline(db_session, row.ref, "गलती")
+    assert _verified(db_session, applicant)
+
+
+def test_reapplying_after_a_decline_starts_clean(db_session, applicant):
+    row = _apply(db_session, applicant)
+    seller_verify.decline(db_session, row.ref, "दो आवेदन")
+    again = _apply(db_session, applicant)
+    assert again.status == seller_verify.APPLIED
+    assert again.reject_reason is None
+    assert again.ref == row.ref
+
+
+def test_the_decline_notice_never_calls_the_tick_a_check(db_session, applicant):
+    row = _apply(db_session, applicant)
+    row = seller_verify.decline(db_session, row.ref, "नाम या नंबर गलत / अधूरा है")
+    subject, body = seller_verify.notice(row)
+    assert row.ref in subject and row.ref in body
+    assert "नाम या नंबर गलत / अधूरा है" in body
+    assert "https://krashimitra.in/verify" in body
+    assert "गारंटी नहीं है" in body
+    for word in BANNED_CLAIMS:
+        assert word not in subject + body, f"the decline email promises a check: {word!r}"
+
+
+def test_declining_through_the_panel_emails_him(client, db_session, applicant, monkeypatch):
+    from backend.utils import auth_utils
+
+    sent = []
+    monkeypatch.setattr(auth_utils, "_send_with_resend",
+                        lambda to, subject, body: sent.append((to, subject, body)) or True)
+    row = _apply(db_session, applicant)
+
+    r = client.post(f"/admin/verifications/{row.ref}/decline", json={}, auth=AUTH)
+    assert r.status_code == 400, "a decline with no reason tells him nothing"
+    assert not sent
+
+    r = client.post(f"/admin/verifications/{row.ref}/decline",
+                    json={"reason": "एक ही व्यक्ति के दो आवेदन"}, auth=AUTH)
+    assert r.status_code == 200, r.text
+    assert r.json()["data"] == {"status": seller_verify.DECLINED, "emailed": True}
+    assert len(sent) == 1 and sent[0][0] == EMAIL
+
+    db_session.expire_all()
+    me = seller_verify.to_dict(seller_verify.by_ref(db_session, row.ref))
+    assert me["status"] == "declined" and me["reject_reason"] == "एक ही व्यक्ति के दो आवेदन"
+
+
+def test_a_failed_email_still_declines_and_says_so(client, db_session, applicant, monkeypatch):
+    from backend.utils import auth_utils
+
+    monkeypatch.setattr(auth_utils, "_send_with_resend", lambda *a: False)
+    row = _apply(db_session, applicant)
+    r = client.post(f"/admin/verifications/{row.ref}/decline",
+                    json={"reason": "दो आवेदन"}, auth=AUTH)
+    assert r.json()["data"] == {"status": seller_verify.DECLINED, "emailed": False}
+
+
+def test_the_panel_will_not_decline_a_live_tick(client, db_session, applicant, paid):
+    row = _apply(db_session, applicant)
+    client.post(f"/admin/verifications/{row.ref}/payment", json=paid(199), auth=AUTH)
+    r = client.post(f"/admin/verifications/{row.ref}/decline",
+                    json={"reason": "गलती"}, auth=AUTH)
+    assert r.status_code == 409
+    assert _verified(db_session, applicant)
+
+
+def test_the_member_is_told_on_his_own_pages(client):
+    page = client.get("/verify").text
+    assert "d.status === 'declined'" in page
+    assert "आपका आवेदन स्वीकार नहीं हुआ" in page
+
+    import io
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    profile = io.open(root / "frontend" / "profile.html", encoding="utf-8").read()
+    assert 'd.status === "declined"' in profile
+    admin = io.open(root / "admin" / "index.html", encoding="utf-8").read()
+    assert "'✕ आवेदन रद्द करें', 'decline'" in admin
+    assert "if (value === 'decline') return vfDecline(ref);" in admin
+
+
+# ── Removing a tick: the reason reaches him, and the way back stays open ──
+
+def _utr():
+    """The ledger refuses a reference it has seen — each test needs its own."""
+    import uuid
+    return "T" + uuid.uuid4().hex[:12].upper()
+
+def test_removing_a_tick_needs_a_reason_and_emails_it(client, db_session, applicant, monkeypatch):
+    from backend.utils import auth_utils
+
+    sent = []
+    monkeypatch.setattr(auth_utils, "_send_with_resend",
+                        lambda to, subject, body: sent.append((to, subject, body)) or True)
+    row = _apply(db_session, applicant)
+    seller_verify.approve(db_session, row.ref)
+
+    r = client.post(f"/admin/verifications/{row.ref}/reject", json={"reason": "  "}, auth=AUTH)
+    assert r.status_code == 400, "a removal with no reason tells him nothing"
+    assert _verified(db_session, applicant) and not sent
+
+    r = client.post(f"/admin/verifications/{row.ref}/reject",
+                    json={"reason": "किसी और के नाम या फ़ोटो से खाता चलाना"}, auth=AUTH)
+    assert r.status_code == 200, r.text
+    assert r.json()["data"]["emailed"] is True
+    to, subject, body = sent[0]
+    assert to == EMAIL
+    assert "किसी और के नाम या फ़ोटो से खाता चलाना" in body
+    assert "https://krashimitra.in/verify" in body, "the email must show the way back"
+    for word in BANNED_CLAIMS:
+        assert word not in subject + body
+
+
+def test_the_removal_notice_promises_the_refund_only_when_one_is_owed(db_session, applicant):
+    row = _apply(db_session, applicant)
+    seller_verify.record_payment(db_session, row.ref, 199, _utr())
+    row = seller_verify.revoke(db_session, row.ref, reason="chargeback")
+    _s, body = seller_verify.notice(row)
+    assert "₹199" in body and "7 दिन" in body
+
+    seller_verify.record_refund(db_session, row.ref, refund_ref=_utr())
+    db_session.refresh(row)
+    _s, body = seller_verify.notice(row)
+    assert "वापस भेजा जाएगा" not in body
+
+
+def test_reapplying_waits_while_the_refund_is_owed(db_session, applicant):
+    """Re-applying moves the row off `rejected`, which is the only thing that
+    shows the owner a refund is owed — so the refund goes first."""
+    row = _apply(db_session, applicant)
+    seller_verify.record_payment(db_session, row.ref, 199, _utr())
+    seller_verify.revoke(db_session, row.ref, reason="धोखा")
+    with pytest.raises(seller_verify.RefundPending):
+        _apply(db_session, applicant)
+    db_session.refresh(row)
+    assert seller_verify.refund_due(row), "the owed refund disappeared from the queue"
+
+    seller_verify.record_refund(db_session, row.ref, refund_ref=_utr())
+    again = _apply(db_session, applicant)
+    assert again.status == seller_verify.APPLIED
+    assert again.ref == row.ref
+
+
+def test_a_fresh_application_carries_no_money_from_the_last_round(db_session, applicant):
+    """Otherwise the queue shows "₹ मिला" on a signup that has paid nothing."""
+    row = _apply(db_session, applicant)
+    seller_verify.record_payment(db_session, row.ref, 199, _utr())
+    seller_verify.revoke(db_session, row.ref, reason="धोखा")
+    seller_verify.record_refund(db_session, row.ref, refund_ref=_utr())
+    again = _apply(db_session, applicant)
+    assert again.paid_at is None and again.refunded_at is None
+    assert again.valid_until is None and again.payment_claimed_at is None
+    assert not _verified(db_session, applicant)
+
+
+def test_reapplying_over_http_while_a_refund_is_owed_says_why(client, db_session, applicant):
+    from backend.utils.auth_utils import create_access_token
+
+    row = _apply(db_session, applicant)
+    seller_verify.record_payment(db_session, row.ref, 199, _utr())
+    seller_verify.revoke(db_session, row.ref, reason="धोखा")
+    h = {"Authorization": f"Bearer {create_access_token(applicant.id, applicant.email)}"}
+    r = client.post("/verify/apply", json={"full_name": "राम", "phone": "9870900111"},
+                    headers=h)
+    assert r.status_code == 409, r.text
+    assert "रिफंड" in r.json()["detail"]
+
+
+def test_the_member_sees_the_removal_reason_everywhere():
+    import io
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    kb = io.open(root / "frontend" / "krashibook.js", encoding="utf-8").read()
+    assert "/verify/me" in kb and "loadTickAlert()" in kb
+    assert "d.reject_reason" in kb, "the KrashiBook notice must carry his reason"
+    assert "fetchTickNowCount" in kb, "the 📒 badge must count the notice"
+    profile = io.open(root / "frontend" / "profile.html", encoding="utf-8").read()
+    assert 'd.status === "rejected"' in profile
+    sw = io.open(root / "frontend" / "sw.js", encoding="utf-8").read()
+    assert "krashibook)" in sw, "a cache-first krashibook.js would hide the notice"

@@ -456,7 +456,9 @@ def log_call(db, slug: str, result: str, note: str = ""):
 
 
 def record_payment(db, slug: str, amount: int, ref: str = "",
-                   months: int | None = None):
+                   months: int | None = None, *, received_at=None,
+                   method: str | None = None, payer: str = "", note: str = "",
+                   tds: int = 0):
     """Money actually arrived — typed in by hand, and that is the design.
 
     A upi:// link hands off to the owner's own app and reports nothing back, so
@@ -472,21 +474,24 @@ def record_payment(db, slug: str, amount: int, ref: str = "",
     row = provider_get(db, slug)
     if not row:
         return None
+    from backend.services import ledger
     now  = datetime.utcnow()
+    paid_on = received_at or now
+    # The ledger row first: if it is refused, the listing is left untouched.
+    ledger.record(db, "rental", int(amount), payer=payer or row.name,
+                  contact=row.phone or "", ref=ref, method=method, note=note, tds=tds,
+                  source_key=row.slug, received_at=paid_on)
     span = plan_months_of(row) if months is None else clean_months(months)
     # Paying early adds a season rather than discarding days already bought; a
     # lapsed owner's new season starts today rather than backdated into the gap.
     base = row.paid_until if (row.paid_until and row.paid_until > now) else now
-    row.paid_at     = now
+    row.paid_at     = paid_on
     row.paid_amount = int(amount)
     row.payment_ref = (ref or "").strip()[:80] or None
     row.paid_until  = base + timedelta(days=30 * span)
     row.status      = "listed"
     row.active      = True
     row.updated_at  = now
-    from backend.services import ledger
-    ledger.record(db, "rental", int(amount), payer=row.name, contact=row.phone or "",
-                  ref=ref, source_key=row.slug, received_at=now)
     db.commit()
     db.refresh(row)
     return row

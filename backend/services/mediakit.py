@@ -86,7 +86,7 @@ _DISK_TTL = 300.0        # re-read the file this often, so a refresh lands live
 
 def _section_of(url: str) -> str | None:
     """Which section a GSC page URL belongs to, or None to leave it out of the
-    breakdown. The homepage and one-off pages (/about, /donate, /login) are
+    breakdown. The homepage and one-off pages (/about, /pay, /login) are
     real traffic but not sellable inventory, so they count in the site total
     and not in the table."""
     try:

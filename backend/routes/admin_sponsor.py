@@ -252,10 +252,14 @@ def collect(slug: str, amount: int | None = None,
     if not upi.configured():
         raise HTTPException(400, "KM_UPI_ID is not set — no collect link can be made")
     amt = amount or r.amount or 0
+    from backend.services import pay_links
     link = upi.link(amt or None, note=f"KrashiMitra sponsorship — {r.name}",
-                    ref=f"sponsor-{r.slug}")
+                    ref=pay_links.ref("sponsor", r.slug))
     return {
         "success": True, "amount": amt, "link": link,
+        # What actually gets sent: a page with the QR. A brand's contact reads
+        # this on a laptop, where a bare upi:// link opens nothing.
+        "pay_url": pay_links.url("sponsor", r.slug, amt or None),
         "qr": upi.qr_svg(link), "vpa": upi.vpa(),
         # A upi:// hand-off tells us nothing, so the panel must not imply it did.
         "note": "पैसा आने के बाद ही 'payment record' दबाएं — UPI हमें कुछ नहीं बताता।",
@@ -270,17 +274,18 @@ def record_payment(slug: str, payload: dict | None = None,
     if not r:
         raise HTTPException(404, "no such sponsor")
     payload = payload or {}
-    if payload.get("amount"):
-        r.amount = payload["amount"]
-    if not r.amount:
-        raise HTTPException(400, "राशि (₹) लिखिए — बिना राशि के भुगतान दर्ज नहीं होगा")
-    r.paid_at = datetime.utcnow()
+    # The amount that landed, typed every time. The sponsor's agreed amount is
+    # what was promised, not what arrived, so it is never used in its place.
+    from backend.routes.admin_ledger import entry_or_400
+    from backend.services import ledger
+    e = entry_or_400(db, payload)
+    ledger.record(db, "sponsor", e.amount, payer=e.payer, contact=r.contact or "",
+                  ref=e.ref, method=e.method, note=e.note, tds=e.tds,
+                  source_key=r.slug, received_at=e.received_at)
+    r.amount = e.amount
+    r.paid_at = e.received_at
     if payload.get("until"):
         r.until = str(payload["until"]).strip()
-    from backend.services import ledger
-    ledger.record(db, "sponsor", int(r.amount), payer=r.name, contact=r.contact or "",
-                  ref=str(payload.get("ref") or ""), method="bank",
-                  source_key=r.slug, received_at=r.paid_at)
     db.commit()
     db.refresh(r)
     sponsors.invalidate()

@@ -8,8 +8,6 @@
 # feature sees — AdSense, a bank transfer, a donation — and exports the whole
 # financial year as a CSV for the CA.
 # ============================================================
-from datetime import datetime, timedelta
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.orm import Session
@@ -23,7 +21,19 @@ router = APIRouter(prefix="/admin/ledger", tags=["admin-ledger"])
 # What the manual form may file under. The feature sources are left out on
 # purpose: a dealer payment keyed in here would not renew his listing, and the
 # feature's own "record payment" button would then add it a second time.
-MANUAL_SOURCES = ("adsense", "sponsor", "donation", "leads", "other")
+MANUAL_SOURCES = ("adsense", "affiliate", "sponsor", "donation", "leads", "other")
+
+
+def entry_or_400(db, payload: dict | None, *, limit: int = ledger.MAX_ENTRY) -> ledger.Entry:
+    """ledger.clean_entry() for a route: a refusal is a 400 carrying the reason.
+
+    Every admin route that records money calls this BEFORE it touches anything,
+    and tests/test_payment_ledger.py fails the build for one that does not.
+    """
+    try:
+        return ledger.clean_entry(db, payload or {}, limit=limit)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 @router.get("")
@@ -47,27 +57,11 @@ def add_payment(payload: dict, db: Session = Depends(admin_db),
     source = str(p.get("source") or "")
     if source not in MANUAL_SOURCES:
         raise HTTPException(400, "यह स्रोत यहाँ से दर्ज नहीं होता — उसके अपने पन्ने पर 'भुगतान दर्ज' दबाइए")
-    try:
-        amount = int(p.get("amount") or 0)
-    except (TypeError, ValueError):
-        amount = 0
-    if amount <= 0:
-        raise HTTPException(400, "राशि ₹1 या उससे ज़्यादा होनी चाहिए")
-    when = None
-    if p.get("date"):
-        try:
-            # The date the money landed, as the bank shows it (IST) — noon, so
-            # the IST→UTC shift can never move it into the previous day.
-            d = datetime.strptime(str(p["date"])[:10], "%Y-%m-%d")
-            when = d + timedelta(hours=12) - timedelta(hours=5, minutes=30)
-        except ValueError:
-            raise HTTPException(400, "तारीख़ YYYY-MM-DD में दीजिए")
-        if when > datetime.utcnow() + timedelta(days=1):
-            raise HTTPException(400, "आगे की तारीख़ का भुगतान दर्ज नहीं हो सकता")
-    row = ledger.record(db, source, amount, payer=p.get("payer") or "",
-                        contact=p.get("contact") or "", ref=p.get("ref") or "",
-                        method=p.get("method") or "bank", note=p.get("note") or "",
-                        received_at=when, origin="manual")
+    e = entry_or_400(db, p)
+    row = ledger.record(db, source, e.amount, payer=e.payer,
+                        contact=p.get("contact") or "", ref=e.ref,
+                        method=e.method, note=e.note, tds=e.tds,
+                        received_at=e.received_at, origin="manual")
     db.commit()
     db.refresh(row)
     return {"success": True, "payment": ledger.out(row)}

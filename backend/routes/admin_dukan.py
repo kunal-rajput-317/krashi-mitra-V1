@@ -251,8 +251,12 @@ async def collect(
             "environment, then restart. Nothing is hardcoded on purpose: a "
             "wrong VPA sends a shopkeeper's money to a stranger."
         )
-    pack = upi.collect(row.name or "", row.district or "",
-                       amount or None, purpose or "कृषि दुकान लिस्टिंग")
+    # pay_links, not upi.collect directly: this used to pass the purpose into
+    # upi.collect's `ref` slot, so every shop's UPI reference came out empty
+    # and the popup had no page link or message to send.
+    from backend.services import pay_links
+    pack = pay_links.collect_pack("dukan", row.slug, row.name or "", row.district or "",
+                                  amount or None, purpose or "कृषि दुकान लिस्टिंग")
     pack["plan"] = row.plan
     pack["commission_pct"] = row.commission_pct
     return {"success": True, "collect": pack}
@@ -268,19 +272,17 @@ async def record_payment(
     """Mark a shop paid. Hand-entered from the bank app, by design — there is
     no callback that could do it, so this is the only thing that sets paid_at."""
     from backend.services import upi
-    amount = upi.clean_amount(payload.get("amount"), default=0)
-    if amount < upi.MIN_AMOUNT:
-        raise HTTPException(
-            400,
-            f"Enter the amount actually received (₹{upi.MIN_AMOUNT}–₹{upi.MAX_AMOUNT})")
+    from backend.routes.admin_ledger import entry_or_400
+    e = entry_or_400(db, payload, limit=upi.MAX_AMOUNT)
     # None on purpose when nothing was sent: record_payment then extends by the
     # shop's own agreed term, which is what a plain renewal means. A number here
     # is a deliberate one-off override for this payment only — it does not
     # change what the next renewal is worth.
     months = payload.get("months")
     months = dukan.clean_months(months) if str(months or "").strip() else None
-    row = _write(dukan.record_payment, db, slug, amount,
-                 (payload.get("ref") or ""), months)
+    row = _write(dukan.record_payment, db, slug, e.amount, e.ref, months,
+                 received_at=e.received_at, method=e.method,
+                 payer=e.payer, note=e.note, tds=e.tds)
     if not row:
         raise HTTPException(404, "Unknown shop")
     return {"success": True, "shop": _shop_dict(db, row), "counts": dukan.counts(db)}
