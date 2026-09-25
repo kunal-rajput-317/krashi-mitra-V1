@@ -118,8 +118,11 @@ def test_tier4_satellite_map_rendered(client, seeded_map_data):
     assert 'id="bhav-map-sec"' in html
     assert 'id="bhav-map-canvas"' in html
     assert "उपग्रह नक्शा (Satellite View)" in html
-    assert "सैटेलाइट<br>(Satellite)" in html
-    assert "नक्शा<br>(Roads)" in html
+    assert 'सैटेलाइट<span class="bhav-tab-en"><br>(Satellite)</span>' in html
+    assert 'नक्शा<span class="bhav-tab-en"><br>(Roads)</span>' in html
+    # Phones: the naksha label lives in the header, the in-map button is an icon
+    assert 'class="bhav-map-head-link"' in html
+    assert 'class="bm-naksha-txt"' in html
     assert "पूरा नक्शा देखें" in html
     assert "उच्चतम भाव" in html
 
@@ -166,8 +169,11 @@ def test_district_hub_satellite_map_rendered(client, seeded_map_data):
     assert 'id="bhav-hub-map-sec"' in html
     assert 'id="bhav-hub-map-canvas"' in html
     assert "जिले की मंडियां — उपग्रह नक्शा (Satellite View)" in html
-    assert "सैटेलाइट<br>(Satellite)" in html
-    assert "नक्शा<br>(Roads)" in html
+    assert 'सैटेलाइट<span class="bhav-tab-en"><br>(Satellite)</span>' in html
+    assert 'नक्शा<span class="bhav-tab-en"><br>(Roads)</span>' in html
+    # Phones: the naksha label lives in the header, the in-map button is an icon
+    assert 'class="bhav-map-head-link"' in html
+    assert 'class="bm-naksha-txt"' in html
     assert "पूरा नक्शा देखें" in html
 
     # Verify fullscreen, location icon-only button, and toolbar route button
@@ -514,3 +520,14 @@ def test_route_card_label_matches_how_the_mandi_was_chosen():
     html = _map_html_for([("Mawana APMC", 2650), ("Meerut APMC", 2600)])
     assert 'id="bhav-map-route-label"' in html
     assert "pickedExplicitly ? 'चुनी गई मंडी' : 'नजदीकी मंडी'" in html
+
+
+def test_map_controls_fit_phone_width():
+    """The right-hand control group was wider than the space beside the tabs,
+    so full-screen + layers were clipped off the map on every phone."""
+    from backend.routes import bhav
+    css = bhav._BHAV_MAP_CSS
+    phone = css[css.index(".bhav-map-head-link{display:none"):]
+    assert ".bm-naksha-txt{display:none}" in phone
+    assert ".bhav-map-v-row{flex-direction:column}" in phone
+    assert ".bhav-map-ctrls{flex-wrap:wrap}" in phone

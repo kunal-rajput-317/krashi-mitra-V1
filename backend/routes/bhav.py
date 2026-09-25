@@ -5787,7 +5787,21 @@ _BHAV_MAP_CSS = """
 .bhav-map-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#0e3d26;backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(82,183,136,.35);border-radius:14px;padding:8px 14px;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;transition:all .18s ease;font-family:inherit;line-height:1.2;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:auto}
 .bhav-map-btn:hover{background:#145234;border-color:rgba(82,183,136,.6);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 .bhav-map-btn-naksha{height:44px;box-sizing:border-box}
-@media(max-width:480px){.bhav-map-btn-naksha{padding:6px 10px;font-size:11.5px;height:38px;white-space:nowrap}}
+.bhav-map-head-link{display:none;font-size:12.5px;font-weight:700;color:var(--green-dark);text-decoration:none;white-space:nowrap}
+/* Phones: the tabs and a text button can't share one row (the right group was
+   pushed past the map edge, hiding full-screen + layers), so the right side
+   becomes one column of 38px icons and the naksha label moves to the header. */
+@media(max-width:480px){
+  .bhav-map-btn-naksha{width:38px;height:38px;padding:0;border-radius:10px}
+  .bm-naksha-txt{display:none}
+  .bhav-map-head-link{display:inline-flex}
+  .bhav-map-v-row{flex-direction:column}
+  .bhav-map-v-stack,.bhav-map-v-row{gap:6px}
+  .bhav-map-ctrls{flex-wrap:wrap}
+  .bhav-map-ctrls-right{margin-left:auto}
+}
+@media(max-width:340px){.bhav-tab-en{display:none}.bhav-map-tab{padding:5px 8px;gap:5px}}
+@media(max-width:280px){.bm-tab-svg{display:none}}
 .bhav-map-btn-route{position:absolute;bottom:16px;left:14px;z-index:22;background:#0e3d26;border:1px solid rgba(82,183,136,.4);border-radius:14px;padding:10px 18px;font-size:13.5px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.45);height:44px;box-sizing:border-box}
 .bhav-map-btn-route:hover{background:#145234;transform:translateY(-1px)}
 .bhav-map-btn-route.loading{opacity:.85;pointer-events:none}
@@ -6943,6 +6957,7 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
     <div class="bhav-map-head-left">
       <h2>{escape(d_hi)} मंडी उपग्रह नक्शा (Satellite View)</h2>
       <span class="bhav-map-pill">{cnt_txt}</span>
+      <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-head-link">पूरा नक्शा देखें &rarr;</a>
     </div>
     <div class="bhav-map-sub-note">उपग्रह चित्र पर मंडी यार्ड देखें और रास्ता निकालें</div>
   </div>
@@ -6957,20 +6972,20 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
         <div class="bhav-map-btn-group">
           <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">
             <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
-            <span class="bhav-tab-txt">सैटेलाइट<br>(Satellite)</span>
+            <span class="bhav-tab-txt">सैटेलाइट<span class="bhav-tab-en"><br>(Satellite)</span></span>
           </button>
           <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">
             <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 5.55a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.56 2.27a2 2 0 0 1-1.79 0L9.9 18.45a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.79 0z"/><path d="M15 5.76v15"/><path d="M9 3.24v15"/></svg>
-            <span class="bhav-tab-txt">नक्शा<br>(Roads)</span>
+            <span class="bhav-tab-txt">नक्शा<span class="bhav-tab-en"><br>(Roads)</span></span>
           </button>
         </div>
       </div>
       <div class="bhav-map-ctrls-right">
         <div class="bhav-map-v-stack">
           <div class="bhav-map-v-row">
-            <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn bhav-map-btn-naksha">
+            <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn bhav-map-btn-naksha" title="पूरा नक्शा देखें" aria-label="पूरा नक्शा देखें">
               <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-              पूरा नक्शा देखें
+              <span class="bm-naksha-txt">पूरा नक्शा देखें</span>
             </a>
             <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
               <svg class="bm-icon bm-icon-stroke" id="{map_id}-fs-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
@@ -7114,6 +7129,7 @@ def _district_hub_satellite_map_html(state: str, district: str,
     <div class="bhav-map-head-left">
       <h2>{escape(d_hi)} जिले की मंडियां — उपग्रह नक्शा (Satellite View)</h2>
       <span class="bhav-map-pill">{cnt_txt}</span>
+      <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-head-link">पूरा नक्शा देखें &rarr;</a>
     </div>
     <div class="bhav-map-sub-note">उपग्रह चित्र पर मंडी यार्ड देखें और रास्ता निकालें</div>
   </div>
@@ -7128,20 +7144,20 @@ def _district_hub_satellite_map_html(state: str, district: str,
         <div class="bhav-map-btn-group">
           <button type="button" class="bhav-map-tab active" id="{map_id}-tab-sat" onclick="{js_id}_setLayer('sat')">
             <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
-            <span class="bhav-tab-txt">सैटेलाइट<br>(Satellite)</span>
+            <span class="bhav-tab-txt">सैटेलाइट<span class="bhav-tab-en"><br>(Satellite)</span></span>
           </button>
           <button type="button" class="bhav-map-tab" id="{map_id}-tab-osm" onclick="{js_id}_setLayer('osm')">
             <svg class="bm-tab-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 5.55a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.56 2.27a2 2 0 0 1-1.79 0L9.9 18.45a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9L8.1 3.45a2 2 0 0 1 1.79 0z"/><path d="M15 5.76v15"/><path d="M9 3.24v15"/></svg>
-            <span class="bhav-tab-txt">नक्शा<br>(Roads)</span>
+            <span class="bhav-tab-txt">नक्शा<span class="bhav-tab-en"><br>(Roads)</span></span>
           </button>
         </div>
       </div>
       <div class="bhav-map-ctrls-right">
         <div class="bhav-map-v-stack">
           <div class="bhav-map-v-row">
-            <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn bhav-map-btn-naksha">
+            <a href="{naksha_link}" target="_blank" rel="noopener" class="bhav-map-btn bhav-map-btn-naksha" title="पूरा नक्शा देखें" aria-label="पूरा नक्शा देखें">
               <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-              पूरा नक्शा देखें
+              <span class="bm-naksha-txt">पूरा नक्शा देखें</span>
             </a>
             <button type="button" class="bhav-map-btn bhav-map-btn-icon" id="{map_id}-btn-fs" onclick="{js_id}_toggleFs()" title="फुल स्क्रीन (Full Screen)" aria-label="फुल स्क्रीन">
               <svg class="bm-icon bm-icon-stroke" id="{map_id}-fs-icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>

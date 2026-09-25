@@ -103,7 +103,13 @@
   // meant the one state page every page's utility bar links to — Uttar Pradesh,
   // which also carries the cluster's search history — was the single state of
   // 36 that could not earn, while /naksha/bihar and the rest did.
-  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay|donate|dukanlisting)(\.html)?(\/|$)/;
+  //
+  // /sponsor (and every /sponsor/kit/... link) is off for a reason of its own:
+  // it is the page a brand reads before paying for an EXCLUSIVE placement, and
+  // Auto ads would put a competitor's banner beside the pitch — the one thing
+  // the page promises cannot happen. Not loading adsbygoogle.js is the only
+  // switch that also stops Auto ads (see above).
+  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay|donate|dukanlisting|sponsor)(\.html)?(\/|$)/;
 
   // Blocks an ad must never be wedged into or placed directly before.
   var SKIP = '.answer,.hero,.crumbs,.km-ad,.ad-slot-wrap,.ad-slot-pair,.lead-gen,' +
