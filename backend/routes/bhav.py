@@ -2935,6 +2935,14 @@ def _sponsor_strip(canon: str) -> str:
     return sponsors.card_html(path.split("?", 1)[0])
 
 
+# What an indexable page says when the caller passes no `robots`. Without an
+# explicit max-image-preview:large Google limits the page to a thumbnail in
+# Search and keeps it out of Discover's large-card feed entirely, and snippet
+# length is left to its default. Stating it costs nothing and changes no
+# indexing decision — a caller that needs noindex still passes it.
+_INDEX_ROBOTS = "index, follow, max-snippet:-1, max-image-preview:large"
+
+
 def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
          ld: str = "", og_img: str = "", active: str = "bhav",
          extra_css: str = "", robots: str = "", head_extra: str = "",
@@ -2949,8 +2957,9 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
     _CSS here is this module's own, so a caller's local override of a same-named
     variable is invisible to this closure; extra_css is the only way in.
     `robots` is for pages that must not be indexed *in some states* — the buyer
-    directory with no listings yet. Empty (the default) emits no tag at all, so
-    every existing caller keeps the current indexable behaviour.
+    directory with no listings yet. Empty (the default) emits _INDEX_ROBOTS, so
+    every existing caller stays indexable and also opts in to large image
+    previews.
     `head_extra` is raw <head> markup for a caller that needs more than CSS —
     naksha.py's map pages pull in the Leaflet stylesheet, which cannot ride in
     extra_css because @import is only valid at the top of a sheet.
@@ -3015,15 +3024,19 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
 <link rel="canonical" href="{canon}">
-{f'<meta name="robots" content="{escape(robots)}">' if robots else ''}
+<meta name="robots" content="{escape(robots or _INDEX_ROBOTS)}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
 <meta property="og:title" content="{escape(title)}">
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:image" content="{escape(og)}">
+<meta property="og:image:alt" content="{escape(title)}">
 <meta property="og:url" content="{canon}">
 <meta property="og:locale" content="{state_lang.og_locale(lang)}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{escape(title)}">
+<meta name="twitter:description" content="{escape(desc)}">
+<meta name="twitter:image" content="{escape(og)}">
 {_ICON}
 {_PWA}
 {_FONTS}

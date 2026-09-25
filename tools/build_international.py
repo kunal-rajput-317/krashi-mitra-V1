@@ -1403,15 +1403,14 @@ def render(c) -> str:
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
 <link rel="canonical" href="{c.url}">
-<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
 <meta property="og:title" content="{escape(title)}">
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:url" content="{c.url}">
-<meta property="og:locale" content="{lang}">
-<meta property="og:image" content="{SITE}/images/og-banner.webp">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:locale" content="{og_locale(lang, c.code)}">
+{social_tags(title, desc)}
 <link rel="icon" href="/assets/favicon.ico">
 <link rel="manifest" href="/manifest.json">
 <link rel="stylesheet" href="/km-shell.css">
@@ -1562,6 +1561,29 @@ def hub_strings(lang: str) -> dict:
     return s
 
 
+# Shared social-card tags. og:locale is language_TERRITORY ("ar_AE"), not a
+# bare language code — Facebook/WhatsApp ignore a bare "ar". The country code
+# doubles as the territory except for the UK, whose ISO code is GB.
+OG_IMAGE = f"{SITE}/images/og-banner.webp"
+
+
+def og_locale(lang: str, code: str) -> str:
+    return f"{lang}_{'GB' if code == 'uk' else code.upper()}"
+
+
+def social_tags(title: str, desc: str) -> str:
+    t, d = escape(title), escape(desc)
+    return f"""<meta property="og:image" content="{OG_IMAGE}">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="556">
+<meta property="og:image:alt" content="{t}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{t}">
+<meta name="twitter:description" content="{d}">
+<meta name="twitter:image" content="{OG_IMAGE}">
+<meta name="theme-color" content="#1a4d2e">"""
+
+
 def render_hub() -> str:
     lang = HUB_LANGS[0]
     title = "KrashiMitra International — India's mandi prices from anywhere"
@@ -1592,13 +1614,14 @@ def render_hub() -> str:
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
 <link rel="canonical" href="{url}">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
 <meta property="og:title" content="{escape(title)}">
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{SITE}/images/og-banner.webp">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:locale" content="en_IN">
+{social_tags(title, desc)}
 <link rel="icon" href="/assets/favicon.ico">
 <link rel="manifest" href="/manifest.json">
 <link rel="stylesheet" href="/km-shell.css">

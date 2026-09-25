@@ -288,6 +288,23 @@ def _og_image(a: dict) -> str:
     return a.get("og_image") or FALLBACK_OG
 
 
+def _og_dims(og_image: str) -> tuple[int, int]:
+    """The og:image's real pixel size, read from disk.
+
+    This used to be hard-coded 1200x630 while the heroes are actually 960x540
+    or 1200x675, so every article told WhatsApp and Facebook the wrong shape.
+    Those clients lay out the preview card from the declared size before the
+    image arrives, and a mismatch shows up as a cropped or letterboxed card on
+    the share path this site lives on. 1200x630 stays only as the fallback for
+    an image that is not on disk (validate() fails that page anyway)."""
+    try:
+        from PIL import Image
+        with Image.open(FRONTEND / og_image.replace(f"{SITE}/", "")) as im:
+            return im.size
+    except Exception:
+        return 1200, 630
+
+
 # ── page rendering ─────────────────────────────────────────────────────────
 
 def render(a: dict) -> str:
@@ -479,6 +496,8 @@ def render(a: dict) -> str:
         have=_have,
     ))
 
+    og_w, og_h = _og_dims(og_image)
+
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -503,16 +522,21 @@ def render(a: dict) -> str:
   <meta property="og:type" content="article" />
   <meta property="og:url" content="{url}" />
   <meta property="og:image" content="{og_image}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image:width" content="{og_w}" />
+  <meta property="og:image:height" content="{og_h}" />
+  <meta property="og:image:alt" content="{a['og_title']}" />
   <meta property="og:locale" content="{lang}_IN" />
   <meta property="og:site_name" content="KrashiMitra" />
+  <meta property="article:published_time" content="{a['date']}" />
+  <meta property="article:modified_time" content="{a.get('date_modified', a['date'])}" />
+  <meta property="article:section" content="{htmllib.escape(a['section'])}" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{a['og_title']}" />
   <meta name="twitter:description" content="{a['og_desc']}" />
   <meta name="twitter:image" content="{og_image}" />
+  <meta name="twitter:image:alt" content="{a['og_title']}" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -847,6 +871,12 @@ def validate(path: Path) -> list[str]:
         # went unnoticed on 44 articles at once, so it fails the build now.
         check(og.group(1) != FALLBACK_OG,
               "og:image is the generic site banner — set hero_image")
+        if (FRONTEND / rel).is_file():
+            w = re.search(r'<meta property="og:image:width" content="(\d+)"', doc)
+            h = re.search(r'<meta property="og:image:height" content="(\d+)"', doc)
+            real = _og_dims(og.group(1))
+            check(w and h and (int(w.group(1)), int(h.group(1))) == real,
+                  f"og:image:width/height do not match the file ({real[0]}x{real[1]})")
     check('class="featured-image"' in doc, "no hero <figure> on the page")
     for m in re.findall(r'(?:src|href)="\.\./([^"?#]+)"', doc):
         check((FRONTEND / m).is_file(), f"missing relative asset ../{m}")

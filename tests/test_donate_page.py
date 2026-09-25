@@ -152,7 +152,7 @@ class TestTheHonestyClaimsSurvive:
 class TestItIsAnOrdinaryPageOfTheSite:
     def test_indexable_and_canonical(self, html):
         assert 'rel="canonical" href="https://krashimitra.in/donate"' in html
-        assert 'name="robots"' not in html   # /pay is noindex; this one is not
+        assert "noindex" not in html   # /pay is noindex; this one is not
 
     def test_sitemap_lists_it(self):
         from backend.routes import sitemap

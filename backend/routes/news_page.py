@@ -1534,7 +1534,8 @@ def _news_footer() -> str:
 
 def _news_doc(title: str, desc: str, body: str, ld: str = "",
               canon: str = "", og: str = "", og_type: str = "website",
-              crumbs: str = "", published: str = "", modified: str = "") -> HTMLResponse:
+              crumbs: str = "", published: str = "", modified: str = "",
+              robots: str = "index, follow, max-snippet:-1, max-image-preview:large") -> HTMLResponse:
     """The shared news shell. Defaults render the hub exactly as before;
     a story page passes its own canonical, image and article timestamps."""
     canon = canon or f"{SITE}/krashi_news"
@@ -1548,14 +1549,19 @@ def _news_doc(title: str, desc: str, body: str, ld: str = "",
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
 <link rel="canonical" href="{canon}">
+<meta name="robots" content="{escape(robots)}">
 <meta property="og:type" content="{og_type}">
 <meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
 <meta property="og:title" content="{escape(title)}">
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:image" content="{escape(og)}">
+<meta property="og:image:alt" content="{escape(title)}">
 <meta property="og:url" content="{canon}">
 <meta property="og:locale" content="hi_IN">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{escape(title)}">
+<meta name="twitter:description" content="{escape(desc)}">
+<meta name="twitter:image" content="{escape(og)}">
 {f'<meta property="article:published_time" content="{escape(published)}">' if published else ''}{f'<meta property="article:modified_time" content="{escape(modified)}">' if modified else ''}
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a3c2e">
@@ -1859,7 +1865,7 @@ def _news_not_found(slug: str) -> HTMLResponse:
 </main>"""
     res = _news_doc("यह खबर अब उपलब्ध नहीं है",
                     "यह कृषि समाचार अब उपलब्ध नहीं है। ताज़ा मंडी भाव और कृषि खबरें कृषि मित्र पर पढ़ें।",
-                    body, canon=SITE + "/krashi_news")
+                    body, canon=SITE + "/krashi_news", robots="noindex, follow")
     res.status_code = 404
     return res
 
