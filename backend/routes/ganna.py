@@ -455,8 +455,12 @@ def ganna_hub():
 
     # ── CTR-optimised title/meta (§2.6) ──
     title = _fit(
-        f"गन्ना भाव, सट्टा और पर्ची कैलेंडर {show_season} — FRP {_rs(show.get('rate', 0))} | कृषि मित्र",
-        f"गन्ना भाव {show_season} — FRP {_rs(show.get('rate', 0))} और राज्यवार SAP रेट | कृषि मित्र",
+        # No "| कृषि मित्र" suffix: Google prints the site name beside the
+        # title anyway (tests/test_serp_budgets.py). The Latin tail is for the
+        # romanised "ganna rate" / "sugarcane price" queries.
+        f"गन्ना भाव {show_season}, सट्टा व पर्ची कैलेंडर — FRP {_rs(show.get('rate', 0))} | Ganna Rate",
+        f"गन्ना भाव {show_season} — FRP {_rs(show.get('rate', 0))}, राज्यवार SAP | Sugarcane Price",
+        f"गन्ना भाव, सट्टा और पर्ची कैलेंडर {show_season} — FRP {_rs(show.get('rate', 0))}",
         f"गन्ना का भाव {show_season} — FRP {_rs(show.get('rate', 0))} व SAP रेट",
         f"गन्ना का भाव {show_season} — FRP और राज्यवार रेट")
     desc = _fit(
