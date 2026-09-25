@@ -251,12 +251,15 @@ def _tiers_block() -> str:
         unit = tier.get("unit", f"60-day campaign · {sponsors.MIN_DAYS}-day minimum")
         price_num = str(tier["price"])
         price_extra = escape(tier.get("price_extra", ""))
+        # Built outside the f-string: a backslash inside an f-string expression
+        # is a SyntaxError before Python 3.12, and render.yaml pins 3.11.
+        extra_html = f'<span class="sp-price-extra">{price_extra}</span>' if price_extra else ""
         out.append(
             f'<div class="sp-tier{on}">'
             f'{badge}'
             f'<h3>{escape(tier["name"])}</h3>'
             f'<p class="sp-price" data-price="{price_num}">₹{_n(tier["price"])}'
-            f'{f"<span class=\"sp-price-extra\">{price_extra}</span>" if price_extra else ""}</p>'
+            f'{extra_html}</p>'
             f'<p class="sp-per">{escape(unit)}</p>'
             f'<ul>{gets}</ul></div>')
     return f'<div class="sp-tiers">{"".join(out)}</div>'
