@@ -1486,6 +1486,106 @@
     .btn-solid-danger[disabled] { opacity: .5; cursor: default; }
   </style>
 
+  <!-- ── आपका डेटा — DPDP Act 2023 rights, self-serve (added 25 Sep 2026) ──
+       Download = GET /profile/export. Location = DELETE /profile/location,
+       which clears only the device fix, never the address typed above.
+       The "we never ask for" line doubles as a fraud warning: anyone
+       asking a farmer for Aadhaar / OTP / UPI PIN "for KrashiMitra" is not us. -->
+  <style>
+    .data-card { margin-top: 18px; }
+    .data-body { padding: 14px 18px 16px; font-size: 13px; line-height: 1.65; color: var(--text); }
+    .data-never { background: var(--danger-bg); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+    .data-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-top: 1px solid var(--border); }
+    .data-row .btn { min-height: 42px; font-size: 13px; }
+    .data-links { padding-top: 10px; border-top: 1px solid var(--border); font-size: 12.5px; }
+    .data-links a { color: var(--green-dark, #1b5e3b); font-weight: 700; }
+    .data-msg { font-size: 12.5px; font-weight: 700; min-height: 16px; color: var(--green-dark, #1b5e3b); }
+  </style>
+
+  <div class="form-card data-card" id="data-card" hidden>
+    <div class="form-card-head">
+      <div class="form-card-icon">🔐</div>
+      <div><div class="form-card-title">आपका डेटा और आपके अधिकार</div>
+        <div class="form-card-sub">देखें, डाउनलोड करें, हटाएँ — आप तय करते हैं</div></div>
+    </div>
+    <div class="data-body">
+      <div class="data-never">🚫 कृषि मित्र आपसे <b>आधार नंबर, बैंक खाता, ATM कार्ड, UPI PIN या बैंक का OTP कभी नहीं</b> माँगता।
+        कोई हमारे नाम से माँगे तो वह धोखा है — न दें, और हमें बताएँ।</div>
+
+      <div class="data-row">
+        <div>📍 डिवाइस लोकेशन: <b id="data-geo">—</b></div>
+        <button type="button" class="btn btn-danger" id="data-geo-btn" hidden onclick="kmGeoClear()">लोकेशन हटाएँ</button>
+      </div>
+      <div class="data-row">
+        <div>📄 हमारे पास आपका जो डेटा है, उसकी पूरी कॉपी</div>
+        <button type="button" class="btn btn-primary" id="data-dl-btn" onclick="kmDataDownload()">⬇️ मेरा डेटा डाउनलोड करें</button>
+      </div>
+      <div class="data-msg" id="data-msg"></div>
+
+      <div class="data-links">
+        हम आपका डेटा किसी को बेचते नहीं। पूरी जानकारी:
+        <a href="privacy-policy.html">गोपनीयता नीति</a> · <a href="terms.html">नियम व शर्तें</a><br>
+        शिकायत / सुधार: <a href="mailto:krashimitra038@gmail.com">krashimitra038@gmail.com</a> ·
+        <a href="https://wa.me/919870951001">WhatsApp +91 98709 51001</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const API = window.KRASHIMITRA_API_BASE;
+    const tok = () => localStorage.getItem("krishi_token");
+    const $ = (id) => document.getElementById(id);
+    const say = (t) => { $("data-msg").textContent = t || ""; };
+    const auth = () => ({ Authorization: "Bearer " + tok() });
+
+    function showGeo(p) {
+      const has = p && p.geo_lat != null && p.geo_lon != null;
+      $("data-geo").textContent = has ? (p.geo_location || "सहेजी गई है") : "सहेजी नहीं है";
+      $("data-geo-btn").hidden = !has;
+    }
+
+    async function init() {
+      if (!tok() || !API) return;
+      const r = await fetch(API + "/profile", { headers: auth() }).catch(() => null);
+      if (!r || !r.ok) return;
+      const j = await r.json().catch(() => null);
+      if (!j) return;
+      $("data-card").hidden = false;
+      showGeo(j.data);
+    }
+
+    window.kmGeoClear = async function () {
+      if (!confirm("आपकी सहेजी गई डिवाइस लोकेशन हटा दें? (ऊपर भरा पता नहीं हटेगा)")) return;
+      const r = await fetch(API + "/profile/location", { method: "DELETE", headers: auth() }).catch(() => null);
+      const j = r ? await r.json().catch(() => null) : null;
+      if (!j || !j.success) return say("लोकेशन नहीं हटी — थोड़ी देर बाद कोशिश करें।");
+      // Stop location.js from quietly re-sending it; KrashiLocation.ask() can re-grant later.
+      try { localStorage.setItem("km_geo", JSON.stringify({ status: "dismissed", ts: Date.now() })); } catch (e) {}
+      showGeo(null);
+      say("✓ " + j.message);
+    };
+
+    window.kmDataDownload = async function () {
+      const b = $("data-dl-btn"); b.disabled = true; say("डेटा तैयार हो रहा है…");
+      try {
+        const r = await fetch(API + "/profile/export", { headers: auth() });
+        if (!r.ok) throw new Error(r.status);
+        const url = URL.createObjectURL(await r.blob());
+        const a = document.createElement("a");
+        a.href = url; a.download = "krashimitra-mera-data.json";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        say("✓ फ़ाइल डाउनलोड हो गई।");
+      } catch (e) { say("डाउनलोड नहीं हुआ — थोड़ी देर बाद कोशिश करें।"); }
+      b.disabled = false;
+    };
+
+    init();
+  })();
+  </script>
+
   <div class="form-card del-card" id="del-card" hidden>
     <div class="form-card-head">
       <div class="form-card-icon">⚠️</div>

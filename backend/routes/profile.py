@@ -585,3 +585,107 @@ def delete_avatar(
         "message": "Profile picture हटा दी गई।",
         "data": {"avatar_url": None},
     }
+
+
+# ── DELETE /profile/location — withdraw location consent ─────
+# The privacy policy promises the farmer can switch location off "कभी भी".
+# Before 25 Sep 2026 there was no way to: location.js asked once, POSTed the
+# fix, and the coordinates stayed on user_profiles until the whole account was
+# deleted. This clears the device fix (NOT the address he typed himself —
+# state/district/village are a separate, visible, editable form). The page
+# also marks km_geo "dismissed" on the device so silentRefresh() stops.
+
+@router.delete("/location")
+def clear_location(
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    user_id = current_user["user_id"]
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(user_id)).first()
+    if profile:
+        profile.geo_lat = profile.geo_lon = None
+        profile.geo_location = None
+        profile.geo_updated_at = None
+        profile.updated_at = datetime.utcnow()
+        db.commit()
+    return {"success": True, "message": "आपकी डिवाइस लोकेशन हटा दी गई।", "data": {}}
+
+
+# ── GET /profile/export — "मेरा डेटा" (right to access, DPDP Act s.11) ──
+# Everything this account's id keys, as one JSON file the farmer can save.
+# Mirrors services/account_delete.erase(): if erase() wipes a table for this
+# user, the farmer can see that table here first. Secrets never leave:
+# password hash, OTP, Google id, push-endpoint keys, and admin-only fields. Payments are keyed by
+# phone/ref, not by account, so they are pointed at, not guessed at.
+
+_EXPORT_NEVER = {"hashed_password", "otp", "otp_expiry", "google_id",
+                 "endpoint", "p256dh", "auth", "session_id",
+                 # admin-side fields: the dealer's name is never shown to the
+                 # farmer (it is how we are not bypassed), nor who reviewed him
+                 "dealer_name", "reviewed_by"}
+_EXPORT_CAP = 5000
+
+
+def _export_row(row) -> dict:
+    out = {}
+    for col in row.__table__.columns:
+        if col.name in _EXPORT_NEVER:
+            continue
+        v = getattr(row, col.name)
+        if isinstance(v, datetime):
+            v = v.isoformat()
+        elif v is not None and not isinstance(v, (str, int, float, bool)):
+            v = str(v)
+        out[col.name] = v
+    return out
+
+
+@router.get("/export")
+def export_my_data(
+    current_user: dict    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    from fastapi.responses import JSONResponse
+    from backend.database.db import (BazarComment, BazarReport, ChatHistory,
+                                     CropAppeal, MandiAlert, Order,
+                                     PushSubscription, SellerVerification,
+                                     UserCrop)
+
+    uid = current_user["user_id"]
+    user = db.query(User).filter(User.id == uid).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User नहीं मिला।")
+    profile = db.query(UserProfile).filter(UserProfile.user_id == acct(uid)).first()
+
+    def rows(model, col):
+        q = db.query(model).filter(getattr(model, col) == uid)
+        return [_export_row(r) for r in q.limit(_EXPORT_CAP).all()]
+
+    data = {
+        "about": ("KrashiMitra (krashimitra.in) के पास आपके खाते से जुड़ा सारा डेटा। "
+                  "गलत हो तो प्रोफ़ाइल में सुधारें या krashimitra038@gmail.com पर लिखें।"),
+        "exported_at": datetime.utcnow().isoformat() + "Z",
+        "account": _export_row(user),
+        "profile": _export_row(profile) if profile else None,
+        "crop_calendar": rows(UserCrop, "user_id"),
+        "mandi_alerts": rows(MandiAlert, "user_id"),
+        "notification_devices": len(rows(PushSubscription, "user_id")),
+        "ai_chats": rows(ChatHistory, "user_id"),
+        "bazar_posts": rows(BazarPost, "users_id"),
+        "bazar_comments": rows(BazarComment, "users_id"),
+        "bazar_reports_filed": rows(BazarReport, "users_id"),
+        "following": db.query(BazarFollow).filter(BazarFollow.follower_id == uid).count(),
+        "followers": db.query(BazarFollow).filter(BazarFollow.following_id == uid).count(),
+        "orders": rows(Order, "user_id"),
+        "crop_appeals": rows(CropAppeal, "user_id"),
+        "premium_blue_tick": rows(SellerVerification, "user_id"),
+        "payments": ("भुगतान का रिकॉर्ड नाम / मोबाइल / reference से रखा जाता है, खाते से नहीं। "
+                     "उसकी कॉपी के लिए krashimitra038@gmail.com पर लिखें।"),
+        "shared_with": ("जिन सेवाओं से डेटा गुज़रता है उनकी सूची: "
+                        "https://krashimitra.in/privacy-policy.html (भाग 6)"),
+    }
+    return JSONResponse(
+        data,
+        headers={"Content-Disposition": 'attachment; filename="krashimitra-mera-data.json"',
+                 "Cache-Control": "no-store"},
+    )

@@ -625,7 +625,7 @@
   { type:"disease", crop:"आम", crop_key:"aam", name:"आम में खर्रा / चूर्णिल आसिता (Powdery Mildew)", name_en:"mango powdery mildew kharra bauar",
     keywords:["आम खर्रा","powdery mildew","बौर","सफेद पाउडर","मंजरी सूखना"],
     symptoms:"बौर (मंजरी) व नई पत्तियों पर सफेद पाउडर जम जाता है, बौर सूखकर झड़ जाता है, फल नहीं बनते।",
-    treatment:"बौर निकलते समय घुलनशील सल्फर (2 ग्राम/लीटर); बाद में Hexaconazole/Dinocap छिड़काव।",
+    treatment:"बौर निकलते समय घुलनशील सल्फर (2 ग्राम/लीटर); बाद में Hexaconazole छिड़काव।",
     prevention:"समय पर तीन छिड़काव (बौर पूर्व, बौर, मटर आकार फल), बाग की सफाई।" },
   { type:"disease", crop:"आम", crop_key:"aam", name:"आम का भुनगा / मिज (Mango Hopper)", name_en:"mango hopper bhunga keet",
     keywords:["आम भुनगा","mango hopper","फुदका","बौर रस चूसना","चिपचिपा"],

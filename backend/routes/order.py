@@ -200,11 +200,10 @@ def get_order_history(
     return {"success": True, "orders": orders}
 
 
-# ── PUT /order/status — Admin updates order status ───────────
+# ── Order statuses (used by the admin panel) ─────────────────
 
 VALID_STATUSES = ["Pending", "Booked", "Quoted", "Purchased",
                   "Dispatched", "Delivered", "Cancelled", "Unavailable", "Out of Stock"]
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "krashimitra_admin_2026")
 
 # "Out of Order" was the wrong phrase — in English that describes a broken
 # machine, not a product the dealer has run out of. Renamed to "Out of Stock".
@@ -221,122 +220,11 @@ def canonical_status(status: str) -> str:
     return LEGACY_STATUS_ALIAS.get(s.lower(), s)
 
 
-class StatusUpdateRequest(BaseModel):
-    tracking_code: str
-    status:        str       # Pending / Booked / Quoted / Purchased / Delivered
-    admin_key:     str       # must match ADMIN_SECRET
-
-
-@router.put("/status")
-def update_order_status(
-    body: StatusUpdateRequest,
-    db:   Session = Depends(get_db),
-):
-    # Verify admin key
-    if body.admin_key != ADMIN_SECRET:
-        return {"success": False, "message": "❌ Invalid admin key"}
-
-    next_status = canonical_status(body.status)
-    if next_status not in VALID_STATUSES:
-        return {"success": False, "message": f"❌ Invalid status. Use: {', '.join(VALID_STATUSES)}"}
-
-    order = db.query(Order).filter(Order.tracking_code == body.tracking_code).first()
-    if not order:
-        return {"success": False, "message": f"❌ Order {body.tracking_code} not found"}
-
-    old_status = order.status
-    order.status = next_status
-    db.commit()
-
-    return {
-        "success":       True,
-        "tracking_code": order.tracking_code,
-        "old_status":    old_status,
-        "new_status":    order.status,
-        "message":       f"✅ {order.tracking_code}: {old_status} → {order.status}",
-    }
-
-
-# ── PUT /order/quote — Admin sends a quote for a pre-book ─────
-
-class QuoteUpdateRequest(BaseModel):
-    tracking_code: str
-    admin_key:     str
-    quote_total:   float                 # full price incl. delivery + our commission
-    delivery_info: str                   # dealer + delivery details shown to the farmer
-    dealer_name:   Optional[str] = None
-    quote_note:    Optional[str] = None
-
-
-@router.put("/quote")
-def send_order_quote(
-    body: QuoteUpdateRequest,
-    db:   Session = Depends(get_db),
-):
-    """Owner attaches a quote to a pre-book after sourcing a local dealer.
-    Sets status='Quoted' — the farmer then sees it via the 🔔 notification bell."""
-    if body.admin_key != ADMIN_SECRET:
-        return {"success": False, "message": "❌ Invalid admin key"}
-
-    order = db.query(Order).filter(Order.tracking_code == body.tracking_code).first()
-    if not order:
-        return {"success": False, "message": f"❌ Order {body.tracking_code} not found"}
-
-    order.quote_total   = body.quote_total
-    order.delivery_info = body.delivery_info
-    order.dealer_name   = body.dealer_name
-    order.quote_note    = body.quote_note
-    order.status        = "Quoted"
-    order.quoted_at     = datetime.utcnow()
-    db.commit()
-
-    return {
-        "success":       True,
-        "tracking_code": order.tracking_code,
-        "status":        order.status,
-        "quote_total":   order.quote_total,
-        "message":       f"✅ Quote sent for {order.tracking_code}: ₹{order.quote_total}",
-    }
-
-
-# ── GET /order/all — Admin views all orders ──────────────────
-
-@router.get("/all")
-def get_all_orders(
-    admin_key: str     = Query(...),
-    limit:     int     = Query(100, le=500),
-    db:        Session = Depends(get_db),
-):
-    if admin_key != ADMIN_SECRET:
-        return {"success": False, "message": "❌ Invalid admin key"}
-
-    rows = db.query(Order).order_by(Order.created_at.desc()).limit(limit).all()
-
-    orders = []
-    for o in rows:
-        orders.append({
-            "id":            o.id,
-            "tracking_code": o.tracking_code,
-            "user_id":       o.user_id,
-            "user_email":    o.user_email,
-            "user_name":     o.user_name,
-            "is_guest":      o.is_guest,
-            "session_id":    o.session_id,
-            "product_name":  o.product_name,
-            "quantity":      o.quantity,
-            "unit_price":    o.unit_price,
-            "total":         o.total,
-            "phone":         o.phone,
-            "source":        o.source,
-            "status":        o.status,
-            "created_at":    o.created_at.isoformat() if o.created_at else "",
-            "customer_name": o.customer_name,
-            "pincode":       o.pincode,
-            "quote_total":   o.quote_total,
-            "delivery_info": o.delivery_info,
-            "dealer_name":   o.dealer_name,
-            "quote_note":    o.quote_note,
-            "quoted_at":     o.quoted_at.isoformat() if o.quoted_at else None,
-        })
-
-    return {"success": True, "total": len(orders), "orders": orders}
+# ── Order admin lives in routes/admin.py ─────────────────────
+# PUT /order/status, PUT /order/quote and GET /order/all used to live here,
+# guarded by an admin_key compared with != against a default that sat in
+# this public repo, with no lockout — GET /order/all even took the key in
+# the URL and returned every order's name, email and phone. Nothing called
+# them: the panel uses /admin/orders/{code}/status and /quote behind
+# require_admin (Basic auth + brute-force lockout). Removed 25 Sep 2026;
+# never re-add an admin route outside require_admin.
