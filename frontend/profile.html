@@ -378,7 +378,8 @@
       overflow: hidden;
       position: relative;
       box-shadow: var(--shadow);
-      padding: 24px 24px 20px;
+      padding: 34px 32px 26px;
+      border-radius: 24px;
     }
     .hero-bg-pattern { position: absolute; inset: 0; opacity: 0.03; background-image: radial-gradient(circle, var(--green-dark) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; }
 
@@ -417,26 +418,39 @@
     .profile-hero.is-loading .progress-circle-text,
     .profile-hero.is-loading .ig-hero-stats .ig-stat-item strong { visibility: hidden; }
     .profile-hero.is-loading .profile-avatar { cursor: default; pointer-events: none; }
-    .ig-hero-inner {
-      position: relative; z-index: 1; display: flex; align-items: center; gap: 24px;
+    /* Desktop: the photo spans two rows, the name sits over the stats and
+       the gold pill closes the row. Phones regroup it (max-width: 640px). */
+    .hero-top {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-areas: "av info ." "av stats pill";
+      align-items: center;
+      column-gap: 36px;
+      row-gap: 26px;
     }
+    .hero-top > .ig-avatar-container { grid-area: av; }
+    .hero-top > .ig-hero-info { grid-area: info; text-align: center; }
+    .hero-top > .hero-mid-row { display: contents; }
+    .hero-mid-row > .hero-stats-cols { grid-area: stats; justify-self: center; }
+    .hero-mid-row > .hero-exp-pill { grid-area: pill; }
     .ig-avatar-container {
       position: relative;
-      width: 82px;
-      height: 82px;
+      width: 196px;
+      height: 196px;
       flex-shrink: 0;
     }
     .profile-avatar {
       width: 100% !important;
       height: 100% !important;
       border-radius: 50%;
-      border: 2.5px solid var(--border) !important;
+      border: 8px solid #fff !important;
       background: var(--green-pale) !important;
       display: flex !important;
       align-items: center;
       justify-content: center;
-      font-size: 34px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+      font-size: 72px;
+      box-shadow: 0 0 0 1px #e8eeea, 0 10px 28px rgba(16,40,28,0.09) !important;
       position: relative;
       overflow: hidden;
       cursor: pointer;
@@ -532,7 +546,7 @@
     /* Always-visible pencil badge — shown when the user has NO photo yet,
        so it's obvious the avatar is settable (hover isn't discoverable on phones) */
     .avatar-set-badge {
-      position: absolute; right: -3px; bottom: -3px; width: 26px; height: 26px;
+      position: absolute; right: 10px; bottom: 10px; width: 36px; height: 36px;
       background: var(--green-mid); color: #fff; border-radius: 50%;
       display: flex; align-items: center; justify-content: center; font-size: 13px;
       border: 2px solid #fff; cursor: pointer; z-index: 2;
@@ -542,9 +556,9 @@
     .avatar-set-badge:hover { background: var(--green-dark); transform: scale(1.08); }
     /* Remove-photo button — shown when a photo IS set */
     .avatar-remove-btn {
-      position: absolute; right: -3px; top: -3px; width: 22px; height: 22px;
-      background: #fff; color: #b91c1c; border: 1.5px solid #fecaca; border-radius: 50%;
-      font-size: 11px; line-height: 1; cursor: pointer; z-index: 2;
+      position: absolute; right: 6px; top: 6px; width: 42px; height: 42px;
+      background: #fff5f5; color: #e5484d; border: 2px solid #fecdd3; border-radius: 50%;
+      font-size: 20px; line-height: 1; cursor: pointer; z-index: 2;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-family: inherit;
       transition: background 0.15s, transform 0.15s;
@@ -557,110 +571,196 @@
       min-width: 0;
     }
     .ig-hero-eyebrow {
-      font-size: 9.5px;
+      display: none;
+      font-size: 10px;
       font-weight: 800;
-      color: var(--green-dark);
+      color: #2d6a4f;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      margin-bottom: 2px;
     }
     .ig-hero-name-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .hero-name {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text-dark);
+      font-size: 34px;
+      font-weight: 800;
+      color: #0f2a3d;
       margin: 0;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
     }
-    .ig-hero-stats {
-      display: flex;
-      gap: 14px;
+    .hero-role-subtitle {
+      font-size: 17px;
+      font-weight: 600;
+      color: #2d7a4f;
       margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-mid);
+      letter-spacing: 0.1px;
     }
-    .ig-stat-item strong {
-      color: var(--text-dark);
-      font-weight: 700;
-    }
-    .ig-stat-item.clickable {
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      font: inherit;
-      color: inherit;
-      padding: 2px 4px;
-      border-radius: 6px;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .ig-stat-item.clickable:hover { background: var(--green-pale, #e8f5e9); }
-    .ig-stat-item.clickable:active { transform: scale(0.96); }
-    .hero-sub {
-      font-size: 11.5px;
-      color: var(--text-light);
-      margin-top: 4px;
-      margin-bottom: 6px;
-      line-height: 1.4;
-    }
-    .hero-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-    .hero-tag {
-      background: var(--green-pale);
-      color: var(--green-dark);
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 10.5px;
-      font-weight: 700;
-      border: 1px solid rgba(45,106,79,0.06);
+    .hero-role-subtitle.is-premium {
+      color: #0284c7;
     }
     
-    /* Stats grid below header */
-    .hero-stats {
-      background: #fbfcfb;
-      border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      margin-top: 20px;
-      margin-left: -24px;
-      margin-right: -24px;
-      margin-bottom: -20px;
+    /* ── Middle Row: 3 Stat Columns + Golden Experience Pill ── */
+    .hero-mid-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
-    .stat-item {
-      padding: 12px 14px;
+    .hero-stats-cols {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero-stat-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font: inherit;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .hero-stat-col:hover {
+      background: #f0f7f2;
+    }
+    .hero-stat-col:active {
+      transform: scale(0.96);
+    }
+    .stat-col-num {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f2a3d;
+      line-height: 1.2;
+    }
+    .stat-col-lbl {
+      font-size: 16px;
+      font-weight: 500;
+      color: #4b5563;
+      margin-top: 2px;
+    }
+    .hero-stat-sep {
+      width: 1px;
+      height: 48px;
+      background: #e5e7eb;
+    }
+    .hero-exp-pill {
+      background: #c3933c;
+      color: #ffffff;
+      border-radius: 999px;
+      padding: 12px 28px;
       text-align: center;
-      border-right: 1px solid var(--border);
+      cursor: pointer;
+      line-height: 1.25;
+      box-shadow: 0 6px 16px rgba(195, 147, 60, 0.32);
+      transition: transform 0.15s, background 0.15s;
+      flex-shrink: 0;
     }
-    .stat-item:last-child {
-      border-right: none;
+    .hero-exp-pill:hover {
+      background: #b08230;
+      transform: translateY(-1px);
     }
-    .stat-val {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: var(--green-dark);
+    .exp-pill-val {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
     }
-    .stat-lbl {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      color: var(--text-light);
-      text-transform: uppercase;
+    .exp-pill-lbl {
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+    
+    /* ── Card Hairline Divider ── */
+    .hero-card-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 26px 0 20px;
+      width: 100%;
+    }
+    
+    /* ── Bottom 3-Column Section ── */
+    .hero-bottom-grid {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      text-align: center;
+      padding: 4px 0 2px;
+    }
+    .hero-bottom-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      background: transparent;
+      border: none;
+    }
+    .bottom-col-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+    .bottom-col-lbl {
+      font-size: 16px;
+      font-weight: 500;
+      color: #4b5563;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .bottom-col-val {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f2a3d;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .hero-bottom-sep {
+      width: 1px;
+      height: 76px;
+      background: #e5e7eb;
+      flex-shrink: 0;
+    }
+
+    .hero-stat-col,
+    .hero-exp-pill,
+    .profile-progress-circle-wrap {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     /* Circular Progress Indicator at top right of Profile Hero */
     .profile-progress-circle-wrap {
       position: absolute;
-      top: 16px;
-      right: 16px;
+      top: 22px;
+      right: 22px;
       z-index: 10;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 54px;
-      height: 54px;
+      width: 78px;
+      height: 78px;
       cursor: pointer;
       border-radius: 50%;
+      background: #ffffff;
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .profile-progress-circle-wrap:hover {
@@ -671,48 +771,182 @@
       transform: scale(0.95);
     }
     .progress-ring {
+      width: 100%; height: 100%;
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
     }
     .progress-ring__background {
-      stroke: #eef2ef;
+      stroke: #d1a153;
+      opacity: 0.35;
     }
     .progress-ring__circle {
-      stroke-dasharray: 132;
-      stroke-dashoffset: 132;
+      stroke: #2d6a4f;
+      stroke-dasharray: 138;
+      stroke-dashoffset: 138;
       transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       stroke-linecap: round;
     }
     .progress-circle-text {
       position: absolute;
-      font-size: 10.5px;
+      font-size: 18px;
       font-weight: 800;
-      color: var(--green-dark);
+      color: #111827;
     }
 
-    /* The ring is absolutely positioned over the hero's top-right and nothing
-       reserved its column, so the eyebrow, the name and the प्रीमियम tick that
-       follows the name all slid underneath it — at 320px even a short name
-       like "kunal rajput" did. So the two rows that reach that high keep the
-       ring's column clear at EVERY width: a long enough name collided on a
-       desktop too, and a rule that only fires under 640px would leave that
-       standing. Keep this in step with the ring's width + `right` offset. */
+    /* The name row keeps the ring's column clear at every width (ring 78 + right 22 - hero pad 32).
+       Both sides, so the centred name stays centred over the stats. */
     .ig-hero-eyebrow,
-    .ig-hero-name-row { padding-right: 54px; }
+    .ig-hero-name-row { padding-left: 68px; padding-right: 68px; }
 
-    /* On a phone the ring itself comes down too — it is a glanceable hint, not
-       the point of the page, and the name it was crowding is. The svg carries
-       a viewBox, without which sizing it here would CROP the circle rather
-       than scale it. */
+    /* Narrow desktop / tablet: three columns no longer fit, so the stats and
+       the pill share one wrapping row beside a smaller photo. */
+    @media (min-width: 641px) and (max-width: 960px) {
+      .hero-top {
+        grid-template-columns: auto 1fr;
+        grid-template-areas: "av info" "av mid";
+        column-gap: 24px;
+        row-gap: 18px;
+      }
+      .ig-hero-eyebrow,
+      .ig-hero-name-row { padding-left: 0; padding-right: 68px; }
+      .hero-top > .hero-mid-row {
+        display: flex; grid-area: mid;
+        justify-content: center; flex-wrap: wrap; gap: 14px;
+      }
+      .hero-mid-row > .hero-stats-cols,
+      .hero-mid-row > .hero-exp-pill { grid-area: auto; }
+      .ig-avatar-container { width: 150px; height: 150px; }
+      .hero-stat-col { padding: 4px 12px; }
+    }
+
     @media (max-width: 640px) {
+      .profile-hero {
+        padding: 16px 14px 14px;
+        border-radius: 16px;
+      }
+      .hero-top {
+        grid-template-columns: auto 1fr;
+        grid-template-areas: "av info" "mid mid";
+        column-gap: 14px;
+        row-gap: 16px;
+      }
+      .hero-top > .ig-hero-info { text-align: left; }
+      .ig-hero-name-row { justify-content: flex-start; }
+      .hero-top > .hero-mid-row { display: flex; grid-area: mid; }
+      .hero-mid-row > .hero-stats-cols,
+      .hero-mid-row > .hero-exp-pill { grid-area: auto; }
+      .ig-avatar-container {
+        width: 92px;
+        height: 92px;
+      }
+      .profile-avatar { border-width: 4px !important; font-size: 38px; }
+      .avatar-remove-btn { right: 0; top: 0; width: 28px; height: 28px; font-size: 13px; }
+      .avatar-set-badge { right: 0; bottom: 0; width: 28px; height: 28px; font-size: 12px; }
+      .hero-name {
+        font-size: 22px;
+      }
+      .hero-role-subtitle {
+        font-size: 12.5px;
+        margin-top: 3px;
+      }
       .profile-progress-circle-wrap {
         top: 12px; right: 12px;
-        width: 40px; height: 40px;
+        width: 44px; height: 44px;
       }
-      .progress-ring { width: 40px; height: 40px; }
-      .progress-circle-text { font-size: 9px; }
+      .progress-ring { width: 44px; height: 44px; }
+      .progress-circle-text { font-size: 11px; }
       .ig-hero-eyebrow,
-      .ig-hero-name-row { padding-right: 40px; }
+      .ig-hero-name-row { padding-left: 0; padding-right: 44px; }
+
+      .hero-mid-row {
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .hero-stats-cols {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .hero-stat-col {
+        padding: 2px 4px;
+        min-width: 36px;
+      }
+      .stat-col-num {
+        font-size: 18px;
+      }
+      .stat-col-lbl {
+        font-size: 11.5px;
+      }
+      .hero-stat-sep {
+        height: 26px;
+      }
+      .hero-exp-pill {
+        padding: 6px 14px;
+      }
+      .exp-pill-val {
+        font-size: 12.5px;
+      }
+      .exp-pill-lbl {
+        font-size: 9.5px;
+      }
+
+      .hero-card-divider {
+        margin: 14px 0 12px;
+      }
+
+      .hero-bottom-grid {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch;
+        justify-content: space-between;
+        padding: 2px 0 0;
+        width: 100%;
+      }
+      .hero-bottom-col {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 2px 4px;
+      }
+      .bottom-col-icon {
+        width: 28px;
+        height: 28px;
+        margin-bottom: 4px;
+      }
+      .bottom-col-icon svg {
+        width: 22px;
+        height: 22px;
+      }
+      .bottom-col-lbl {
+        font-size: 11.5px;
+        margin-bottom: 2px;
+        max-width: 100%;
+      }
+      .bottom-col-val {
+        font-size: 14px;
+        max-width: 100%;
+      }
+      .hero-bottom-sep {
+        height: 44px;
+      }
+    }
+
+    @media (max-width: 339px) {
+      .hero-mid-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .hero-stats-cols {
+        width: 100%;
+        justify-content: space-around;
+      }
+      .bottom-col-lbl {
+        font-size: 10px;
+      }
+      .bottom-col-val {
+        font-size: 12px;
+      }
     }
 
     /* ── Quick Links Row ── */
@@ -864,11 +1098,9 @@
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .main-content { width: 100%; padding: 12px 12px 28px; gap: 12px; }
-      .hero-inner { flex-direction: column; text-align: center; gap: 12px; padding: 18px 16px; }
-      .profile-avatar { width: 64px; height: 64px; font-size: 32px; }
       .hero-tags { justify-content: center; }
       .hero-completion { display: none; }
-      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+      .hero-stats.hero-bottom-grid { display: flex !important; flex-direction: row !important; }
 
       .summary-strip { grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px; }
       .form-grid { grid-template-columns: 1fr; padding: 14px; }
@@ -1199,7 +1431,7 @@
     <div class="hero-bg-pattern"></div>
     
     <!-- Circular progress indicator in the top right corner -->
-    <div class="profile-progress-circle-wrap" id="completion-wrap" title="प्रोफाइल पूर्णता">
+    <div class="profile-progress-circle-wrap" id="completion-wrap" title="प्रोफाइल पूर्णता — विवरण पूरा करें" onclick="switchTab('edit')">
       <svg class="progress-ring" width="54" height="54" viewBox="0 0 54 54">
         <circle class="progress-ring__background" stroke="#eef2ef" stroke-width="4" fill="transparent" r="22" cx="27" cy="27" />
         <circle class="progress-ring__circle" id="progress-circle" stroke="var(--green-mid)" stroke-width="4" fill="transparent" r="22" cx="27" cy="27" style="stroke-dasharray: 138; stroke-dashoffset: 138;" />
@@ -1207,7 +1439,7 @@
       <div class="progress-circle-text" id="progress-circle-text">0%</div>
     </div>
 
-    <div class="ig-hero-inner">
+    <div class="hero-top">
       <div class="ig-avatar-container">
         <div class="profile-avatar" id="profile-avatar" onclick="triggerAvatarUpload()" title="अवतार बदलें">
           👤
@@ -1218,23 +1450,87 @@
         <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="uploadAvatarFile(this)">
       </div>
       <div class="ig-hero-info">
-        <div class="ig-hero-eyebrow">👨‍🌾 Farmer Profile</div>
+        <div class="ig-hero-eyebrow">Farmer Profile</div>
         <div class="ig-hero-name-row">
           <h1 class="hero-name" id="hero-name">किसान प्रोफाइल</h1>
           <span class="hero-name-tick" id="hero-name-tick" title="कृषि मित्र प्रीमियम सदस्य"></span>
         </div>
-        <div class="ig-hero-stats">
-          <button type="button" class="ig-stat-item clickable" onclick="openMyBazar('posts')" title="मेरी पोस्ट देखें"><strong id="hero-posts">0</strong> posts</button>
-          <button type="button" class="ig-stat-item clickable" onclick="openMyBazar('followers')" title="फॉलोअर देखें"><strong id="hero-followers">0</strong> followers</button>
-          <button type="button" class="ig-stat-item clickable" onclick="openMyBazar('following')" title="फॉलोइंग देखें"><strong id="hero-following">0</strong> following</button>
-        </div>
-        <div class="hero-tags" id="hero-tags"></div>
+        <div class="hero-role-subtitle" id="hero-role-subtitle">किसान सदस्य · Member</div>
       </div>
+
+    <!-- Middle Row: Stats Columns + Golden Experience Pill -->
+    <div class="hero-mid-row">
+      <div class="ig-hero-stats hero-stats-cols">
+        <button type="button" class="ig-stat-item hero-stat-col clickable" onclick="openMyBazar('posts')" title="मेरी पोस्ट देखें">
+          <strong class="stat-col-num" id="hero-posts">0</strong>
+          <span class="stat-col-lbl">Post</span>
+        </button>
+        <div class="hero-stat-sep"></div>
+        <button type="button" class="ig-stat-item hero-stat-col clickable" onclick="openMyBazar('followers')" title="फॉलोअर देखें">
+          <strong class="stat-col-num" id="hero-followers">0</strong>
+          <span class="stat-col-lbl">Follower</span>
+        </button>
+        <div class="hero-stat-sep"></div>
+        <button type="button" class="ig-stat-item hero-stat-col clickable" onclick="openMyBazar('following')" title="फॉलोइंग देखें">
+          <strong class="stat-col-num" id="hero-following">0</strong>
+          <span class="stat-col-lbl">Following</span>
+        </button>
+      </div>
+
+      <div class="hero-exp-pill" id="hero-exp-pill" onclick="switchTab('edit')" title="अनुभव विवरण बदलें">
+        <div class="exp-pill-val" id="exp-pill-val">0-2 Yrs</div>
+        <div class="exp-pill-lbl" id="exp-pill-lbl">Experience</div>
+      </div>
+      <div class="hero-tags" id="hero-tags" style="display:none;"></div>
     </div>
-    <div class="hero-stats">
-      <div class="stat-item"><div class="stat-val" id="stat-location">-</div><div class="stat-lbl">जिला</div></div>
-      <div class="stat-item"><div class="stat-val" id="stat-crop">-</div><div class="stat-lbl">मुख्य फसल</div></div>
-      <div class="stat-item"><div class="stat-val" id="stat-farm">-</div><div class="stat-lbl">खेत</div></div>
+    </div>
+
+    <!-- Hairline Divider -->
+    <div class="hero-card-divider"></div>
+
+    <!-- Bottom 3 Columns: 1. District, 2. Primary Crop, 3. Land Size -->
+    <div class="hero-stats hero-bottom-grid">
+      <div class="stat-item hero-bottom-col">
+        <div class="bottom-col-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#2d6a4f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>
+        <div class="stat-lbl bottom-col-lbl">1. District</div>
+        <div class="stat-val bottom-col-val" id="stat-location">-</div>
+      </div>
+
+      <div class="hero-bottom-sep"></div>
+
+      <div class="stat-item hero-bottom-col">
+        <div class="bottom-col-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#2d6a4f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22V8"></path>
+            <path d="M5 12H2a10 10 0 0 1 10-10v0a10 10 0 0 1 10 10h-3"></path>
+            <path d="M7 16c2.5 0 5-1.5 5-4"></path>
+            <path d="M17 16c-2.5 0-5-1.5-5-4"></path>
+          </svg>
+        </div>
+        <div class="stat-lbl bottom-col-lbl">2. Primary Crop</div>
+        <div class="stat-val bottom-col-val" id="stat-crop">-</div>
+      </div>
+
+      <div class="hero-bottom-sep"></div>
+
+      <div class="stat-item hero-bottom-col">
+        <div class="bottom-col-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#2d6a4f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="7" cy="17" r="4"></circle>
+            <circle cx="18.5" cy="17" r="2.5"></circle>
+            <path d="M10.5 17h5.5"></path>
+            <path d="M7 13V6h6l3 5h2.5"></path>
+            <path d="M11 6V3"></path>
+          </svg>
+        </div>
+        <div class="stat-lbl bottom-col-lbl">3. Land Size</div>
+        <div class="stat-val bottom-col-val" id="stat-farm">-</div>
+      </div>
     </div>
   </section>
 
@@ -1979,16 +2275,43 @@
       document.getElementById("hero-followers").textContent = p.followers_count !== undefined ? p.followers_count : ((lastProfile && lastProfile.followers_count !== undefined) ? lastProfile.followers_count : 0);
       document.getElementById("hero-following").textContent = p.following_count !== undefined ? p.following_count : ((lastProfile && lastProfile.following_count !== undefined) ? lastProfile.following_count : 0);
 
-      // Hero tags
+      // Role subtitle & experience pill
+      const isPrem = !!(lastProfile && lastProfile.is_premium);
+      const subEl = document.getElementById("hero-role-subtitle");
+      if (subEl) {
+        subEl.textContent = isPrem ? "Premium Member" : "किसान सदस्य · Member";
+        subEl.classList.toggle("is-premium", isPrem);
+      }
+
+      const expValEl = document.getElementById("exp-pill-val");
+      if (expValEl) {
+        const rawExp = p.farming_experience || "0-2 Yrs";
+        expValEl.textContent = /(yr|वर्ष|year)/i.test(rawExp) ? rawExp : `${rawExp} Yrs`;
+      }
+
       const tags = [];
-      if (p.farming_type) tags.push({ "conventional":"पारंपरिक", "organic":"जैविक", "natural":"प्राकृतिक", "integrated":"एकीकृत" }[p.farming_type] || p.farming_type);
-      if (p.farming_experience) tags.push(p.farming_experience + " अनुभव");
-      document.getElementById("hero-tags").innerHTML = tags.map(t => `<span class="hero-tag">${escHtml(t)}</span>`).join("");
+      if (p.farming_experience) tags.push(`${p.farming_experience} अनुभव`);
+      if (p.farming_type) {
+        const typeMap = { "conventional":"पारंपरिक खेती", "organic":"जैविक खेती", "natural":"प्राकृतिक खेती", "integrated":"एकीकृत खेती" };
+        tags.push(typeMap[p.farming_type] || p.farming_type);
+      }
+      const tagsEl = document.getElementById("hero-tags");
+      if (tagsEl) tagsEl.innerHTML = tags.map(t => `<span class="hero-tag">${escHtml(t)}</span>`).join("");
 
       // Stats bar
       document.getElementById("stat-location").textContent = dash(p.district);
       document.getElementById("stat-crop").textContent = dash(primaryCrop);
-      const farmStr = p.farm_size ? `${p.farm_size} ${p.farm_size_unit || "acres"}` : "-";
+      
+      // Clean Farm size: prevent "100 acre acres" duplicate units
+      let farmStr = "-";
+      if (p.farm_size) {
+        const rawSize = String(p.farm_size).trim();
+        if (/(acres?|एकड़|bigha|बीघा|hectares?|हेक्टेयर|गुंठा|guntha)/i.test(rawSize)) {
+          farmStr = rawSize;
+        } else {
+          farmStr = `${rawSize} ${p.farm_size_unit || "acres"}`;
+        }
+      }
       document.getElementById("stat-farm").textContent = farmStr;
 
       // Sidebar summary
@@ -2194,9 +2517,14 @@
       const hero = document.getElementById("profile-hero");
       const wrap = document.querySelector(".ig-avatar-container");
       const mark = document.getElementById("hero-name-tick");
+      const subEl = document.getElementById("hero-role-subtitle");
       if (hero) hero.classList.toggle("is-premium", !!on);
       if (wrap) wrap.classList.toggle("is-verified", !!on);
       if (mark) mark.innerHTML = on ? TICK_MARK : "";
+      if (subEl) {
+        subEl.textContent = on ? "Premium Member" : "किसान सदस्य · Member";
+        subEl.classList.toggle("is-premium", !!on);
+      }
     }
 
     function planCardsHtml(plans) {
