@@ -39,7 +39,7 @@ import json
 import logging
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from sqlalchemy import text
@@ -247,7 +247,11 @@ def _chk_scheduler(db, detailed):
             continue
         running += 1
         jobs = sched.get_jobs()
+        # Jobs carry their trigger's own zone — the interval jobs run in the
+        # host's (UTC on Render) — so convert before labelling it IST.
         nxt = min((j.next_run_time for j in jobs if j.next_run_time), default=None)
+        if nxt:
+            nxt = nxt.astimezone(timezone(IST))
         facts.append([label, f"{len(jobs)} काम · अगला {nxt:%d %b, %I:%M %p} IST"
                              if nxt else f"{len(jobs)} काम · कोई समय तय नहीं"])
 

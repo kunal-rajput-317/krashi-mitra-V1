@@ -106,6 +106,19 @@ RATE_LIMIT_STATUS = 429          # data.gov throttles rapid bursts of requests
 MAX_RETRIES       = 5            # attempts per page
 STATE_DELAY       = 0.4          # polite pause (s) between per-state requests
 
+# When data.gov.in's API gateway itself is down (26 Sep 2026: every request,
+# even limit=5, answered 504 after 60s), the retries above cost ~5.5 min per
+# state — ~4h for the live pass and ~12h more for the archive fallback. That
+# one run blocked every cron behind max_instances=1, each deploy killed it
+# before record_sync, and the admin panel kept showing the last success as
+# the "last attempt" for 31 hours. So: this many states in a row failing with
+# nothing fetched means the API is down — stop and say so.
+DOWN_AFTER_STATES = 3
+
+
+class DataGovDown(RuntimeError):
+    """data.gov.in's API is not answering — abort the run, don't grind on."""
+
 # IMPORTANT: data.gov.in's WAF returns HTTP 502 for the default
 # "python-requests/x.y" User-Agent. A browser-like UA is required or
 # every request fails. (curl / browsers work; python-requests does not.)
@@ -284,9 +297,14 @@ def _fetch_all_records() -> tuple[list, set]:
     all_records, seen = [], set()
     failed_states = set()
     states_hit = 0
+    dead_run = 0              # consecutive states that failed with nothing fetched
     for state in STATES:
         recs, complete = _fetch_state(state)
         time.sleep(STATE_DELAY)   # pace requests to avoid data.gov 429 throttling
+        dead_run = dead_run + 1 if (not complete and not recs) else 0
+        if dead_run >= DOWN_AFTER_STATES:
+            raise DataGovDown(f"{dead_run} states in a row failed after "
+                              f"{MAX_RETRIES} retries each (last: {state})")
         if not complete:
             failed_states.add(state)
         if not recs:
@@ -337,6 +355,7 @@ def _fetch_archive_day(day: date) -> list:
     """
     stamp = day.strftime("%d/%m/%Y")
     records, seen = [], set()
+    dead_run = 0              # consecutive states whose first page hard-failed
     for state in STATES:
         offset = 0
         for _page in range(MAX_PAGES):
@@ -350,6 +369,11 @@ def _fetch_archive_day(day: date) -> list:
             }
             recs = _get_page(params, f"[archive {stamp} {state}] offset={offset}",
                              endpoint=ARCHIVE_ENDPOINT)
+            if offset == 0:
+                dead_run = dead_run + 1 if recs is None else 0
+                if dead_run >= DOWN_AFTER_STATES:
+                    raise DataGovDown(f"archive: {dead_run} states in a row "
+                                      f"failed (last: {state})")
             if not recs:      # hard error or no (more) rows — move to next state
                 break
             for raw in recs:
@@ -666,7 +690,16 @@ def fetch_and_store() -> dict:
 
     started_at = datetime.utcnow()
     init_db()
-    records, failed_states = _fetch_all_records()
+    try:
+        records, failed_states = _fetch_all_records()
+    except DataGovDown as e:
+        # The archive sits behind the same gateway, so the fallback would only
+        # burn another ~12h. Log it now; the next cron / watchdog retries.
+        logger.error(f"🚫 data.gov.in API is down — {e}. Keeping snapshot.")
+        record_sync("mandi", "failed", 0,
+                    f"data.gov.in down — {e}; kept existing snapshot, "
+                    f"next scheduled run retries", started_at)
+        return {"fetched": 0, "api_down": True}
 
     # SPARSE-FEED FALLBACK — data.gov wipes the live resource overnight and
     # refills it as mandis report, so an early run sees only a handful of rows
