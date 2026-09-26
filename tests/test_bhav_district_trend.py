@@ -209,7 +209,10 @@ def test_rendered_panel_quotes_one_number(page):
     assert "₹2,615</div>" in page or "₹2,615<small>" in page
     assert "▲ +0.7% कल से" in page
     assert "5-दिन औसत ₹2,616" in page          # the district's own 5 daily points
-    assert "गेहूं का 5-दिन रुझान" in page
+    # One trend card now (रोज़ का भाव / साल भर का); the day count moved from
+    # the heading into the caption under the daily line.
+    assert "गेहूं भाव का रुझान" in page
+    assert "पिछले 5 दिन ·" in page
     assert "4 दिन पहले" in page
 
 
@@ -219,7 +222,7 @@ def test_rendered_chart_line_ends_on_the_headline(page):
     average must be gone."""
     import re
 
-    chart = page[page.index("गेहूं का 5-दिन रुझान"):]
+    chart = page[page.index("गेहूं भाव का रुझान"):]
     chart = chart[:chart.index("</svg>")]
     labels = [int(v.replace(",", ""))
               for v in re.findall(r'text-anchor="end">₹([\d,]+)</text>', chart)]

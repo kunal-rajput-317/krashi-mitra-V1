@@ -2641,7 +2641,7 @@ def list_verifications(
             "valid_until": r.valid_until.isoformat() if r.valid_until else None,
             "days_left":  seller_verify.days_left(r),
             "applied_at": r.created_at.isoformat() if r.created_at else None,
-            "pay_url":    f"https://krashimitra.in/verify",
+            "pay_url":    f"https://krashimitra.in/bluetick",
         })
 
     counts = {}
@@ -2724,7 +2724,7 @@ def verification_collect(
         f"पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n"
         f"नीला टिक प्रीमियम सदस्यता का निशान है — यह पहचान की जाँच या फसल, भाव "
         f"या सौदे की गारंटी नहीं है।\n"
-        f"https://krashimitra.in/verify"
+        f"https://krashimitra.in/bluetick"
     )
     return {"success": True, "data": pack}
 

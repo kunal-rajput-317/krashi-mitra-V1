@@ -44,6 +44,8 @@ from urllib.parse import quote
 from article_advisory import (ADVISORY_MARK, advisory_html, needs_advisory,
                               sweep as advisory_sweep)
 from article_cards import sweep as card_date_sweep
+from article_scheme_notice import (SCHEME_MARK, is_scheme_article, page_is_scheme,
+                                   scheme_notice_html, sweep as scheme_sweep)
 from article_journey import (restyle as journey_restyle,
                              sweep as journey_sweep,
                              unplaceable as journey_stuck)
@@ -465,6 +467,11 @@ def render(a: dict) -> str:
     advisory = (advisory_html(lang)
                 if a.get("advisory") or needs_advisory(authored) else "")
 
+    # A scheme (सरकारी योजना) page says it is a PRIVATE website, at the top of
+    # the article, before any scheme detail — LEGAL_RULES §1/§3. Decided by
+    # the article's section; see tools/article_scheme_notice.py.
+    private_notice = scheme_notice_html(lang) if is_scheme_article(a) else ""
+
     # ── the "आगे क्या करें" strip — backend/services/ecosystem.py ──────────
     #
     # It REPLACES the old three-link CTA lifted from the shell source, which
@@ -627,6 +634,7 @@ def render(a: dict) -> str:
     {facts}
   </div>
 
+{private_notice}
 {a['body']}
 {advisory}{dukan_promo}
   <!-- ── AD SLOT : before FAQ ── -->
@@ -917,6 +925,9 @@ def validate(path: Path) -> list[str]:
     if needs_advisory(_visible(own)):
         check(ADVISORY_MARK in doc,
               "names a chemical or a dose but carries no spray/dose advisory")
+    # A scheme page must say we are a private website (LEGAL_RULES §1/§3).
+    if page_is_scheme(doc):
+        check(SCHEME_MARK in doc, "scheme page without the private-website notice")
     return bad
 
 
@@ -986,6 +997,13 @@ def main() -> int:
     # generated ones. --all sweeps them too, rather than leaving a "remember to
     # also run the other tool" step that will be forgotten exactly once.
     if args.all:
+        # Legacy scheme pages (no content module) get the private-website notice.
+        noticed = scheme_sweep(ARTICLES, write=not args.check)
+        if noticed:
+            verb = "missing private-website notice on" if args.check else "notice added to"
+            print()
+            print(f"legacy scheme pages — {verb} {len(noticed)}: {', '.join(noticed)}")
+            failed = failed or args.check
         hit = advisory_sweep(ARTICLES, write=not args.check)
         if hit:
             verb = "missing advisory on" if args.check else "advisory added to"

@@ -388,50 +388,50 @@ RATE_CARD = [
     {
         "id": "title",
         "name": "Harvest Season Presenting Partner",
-        "price": 150000,
-        "price_extra": "– ₹3,00,000",
+        "price": 190000,
+        "price_extra": "– ₹3,75,000",
         "badge": "Title Sponsor · 1 Brand Only",
         "unit": "60-day harvest window · priced by scope",
         "highlight": True,
         "gets": [
-            "Co-branded header banner across all 15,000 pages: 'KrashiMitra Mandi Bhav powered by [Brand]'.",
-            "100% category exclusivity across the entire site — zero competitor ads or mentions.",
-            "Co-branding badge on WhatsApp price cards across all 31 agricultural states.",
+            "Banner on every page, clearly labelled 'प्रायोजक · Sponsored' and never on the mandi prices.",
+            "100% category exclusivity across the entire site — zero competitor ads. Articles, prices and advice never change.",
+            "A 'प्रायोजक · Sponsored' line under the daily WhatsApp price posts in all 31 agricultural states.",
         ],
     },
     {
         "id": "category",
         "name": "Category Exclusive Partner",
-        "price": 75000,
-        "price_extra": "– ₹1,50,000",
+        "price": 95000,
+        "price_extra": "– ₹1,90,000",
         "badge": "Category Lock · 4 Brands Max",
         "unit": "60-day campaign · priced by category",
         "highlight": False,
         "gets": [
-            "100% category exclusivity (Tractors, Seeds, Crop Protection, or Solar Pumps) — zero competitors.",
+            "100% category exclusivity (Tractors, Seeds, Crop Protection, or Solar Pumps) — zero competitor ads.",
             "Prominent labelled sponsor card on top of price data tables for relevant crops.",
-            "Sponsorship mention in WhatsApp broadcasts in your top 5 priority states.",
-            "One custom Hindi advisory article featuring your product.",
+            "A 'प्रायोजक · Sponsored' line under the WhatsApp channel posts in your top 5 priority states.",
+            "One Hindi guide in your category, labelled Sponsored; the advice itself stays independent.",
         ],
     },
     {
         "id": "state",
         "name": "State Champion Regional Partner",
-        "price": 25000,
-        "price_extra": "– ₹60,000",
+        "price": 30000,
+        "price_extra": "– ₹75,000",
         "badge": "Geo-Targeted · Per State",
         "unit": "60-day campaign · per state",
         "highlight": False,
         "gets": [
             "Direct 'Find Authorized Dealer' button routing farmers directly to your local distribution network.",
-            "Co-branded WhatsApp price broadcast card in your state's channel.",
+            "A 'प्रायोजक · Sponsored' line under the daily WhatsApp price post in your state's channel.",
         ],
     },
     {
         "id": "guide",
         "name": "Sponsored Hindi Guide",
-        "price": 15000,
-        "price_extra": "– ₹30,000",
+        "price": 20000,
+        "price_extra": "– ₹40,000",
         "badge": "Labelled · Stays Published",
         "unit": "per guide · written and hosted by us",
         "highlight": False,
@@ -444,7 +444,7 @@ RATE_CARD = [
     {
         "id": "custom",
         "name": "Custom Sponsorship",
-        "price": 100000,
+        "price": 125000,
         "price_extra": "+",
         "badge": "Built Around Your Brand",
         "unit": "Price and services agreed with you directly",
@@ -475,10 +475,10 @@ RATE_CARD = [
 # Unset, the review stays silent rather than guessing. tests/test_sponsor.py
 # fails if RATE_CARD and PRICED_FOR["card"] disagree.
 PRICED_FOR = {
-    "date": "2026-09-25",
+    "date": "2026-09-26",
     "clicks_per_day": int(os.getenv("KM_SPONSOR_BASE_CLICKS") or 0),
-    "card": {"title": 150000, "category": 75000, "state": 25000,
-             "guide": 15000, "custom": 100000},
+    "card": {"title": 190000, "category": 95000, "state": 30000,
+             "guide": 20000, "custom": 125000},
 }
 REVIEW_STEPS = (1.5, 2, 3, 4, 5, 7, 10)
 _REVIEW_STATE = Path(__file__).resolve().parents[2] / "cache" / "price_review.json"

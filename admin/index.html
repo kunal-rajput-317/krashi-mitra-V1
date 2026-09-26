@@ -535,6 +535,14 @@ button.vf-money-tile:hover { border-color: var(--primary); }
   border-radius: 7px; padding: 6px 10px; border: 0; white-space: nowrap;
 }
 .vf-wa:hover { background: #1ebe5b; }
+/* The chip you are on must be unmistakable: solid green with white text and
+   a ✓, not a shade darker than its neighbours. */
+.vf-filter.active,
+.vf-filter.active:hover {
+  background: #1a3c2e; border-color: #1a3c2e; color: #fff;
+  box-shadow: 0 1px 4px rgba(26,60,46,0.35);
+}
+.vf-filter.active::before { content: '✓ '; font-weight: 800; }
 .vf-allclear { padding: 26px 14px; color: var(--muted); font-size: 13.5px; }
 .vf-allclear b { color: var(--text); }
 
@@ -18771,7 +18779,7 @@ function vfWaText(v) {
       'हमारे रिकॉर्ड में इस आवेदन का कोई भुगतान दर्ज नहीं है। शुल्क आपके खाते से ' +
       'कट गया हो तो UTR / स्क्रीनशॉट यहीं भेज दें — पैसा हमारे खाते में पहुँचा ' +
       'होगा तो पूरा 7 दिन के अंदर वापस भेजा जाएगा।\n\n' +
-      'फिर से आवेदन: https://krashimitra.in/verify';
+      'फिर से आवेदन: https://krashimitra.in/bluetick';
   }
   if (v.status === 'rejected') {
     // A removed tick: the reason, the refund if one is owed, the way back.
@@ -18781,7 +18789,7 @@ function vfWaText(v) {
       (v.refund_due
         ? 'आपका पूरा शुल्क ₹' + amt + ' 7 दिन के अंदर उसी UPI / खाते में वापस भेजा जाएगा। ' +
           'रिफंड के बाद आप फिर से आवेदन कर सकते हैं।\n'
-        : 'आप फिर से आवेदन कर सकते हैं — वही तरीका: https://krashimitra.in/verify\n') +
+        : 'आप फिर से आवेदन कर सकते हैं — वही तरीका: https://krashimitra.in/bluetick\n') +
       '\n' + NOT;
   }
   if (v.pay_status === 'claimed') {
@@ -18804,7 +18812,7 @@ function vfWaText(v) {
     (vpa ? 'UPI: ' + vpa + '\n' : '') +
     'आपका नंबर: ' + v.ref + '\n\n' +
     'पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n' + NOT + '\n' +
-    'https://krashimitra.in/verify';
+    'https://krashimitra.in/bluetick';
 }
 
 function vfWaLabel(v) {
@@ -19047,7 +19055,7 @@ async function vfReject(ref) {
   if (!confirm(vfName(ref) + ' का नीला टिक हटाएँ?\n\n' +
                'यह सिर्फ़ किसी और के नाम से बने खाते या धोखे के लिए है। सदस्य को कारण ' +
                'के साथ ईमेल और KrashiBook में सूचना जाएगी; वह फिर से आवेदन कर सकता है।')) return;
-  const reason = vfPickReason('टिक क्यों हटा रहे हैं?', VF_REMOVE_REASONS);
+  const reason = await vfPickReason('टिक क्यों हटा रहे हैं?', VF_REMOVE_REASONS);
   if (!reason) return;
   if (!confirm('पक्का? दोबारा पूछ रहे हैं —\n\n' + vfName(ref) + ' का टिक अभी हट जाएगा।\n' +
                'कारण: ' + reason)) return;
@@ -19066,16 +19074,72 @@ const VF_REMOVE_REASONS = [
   'भुगतान वापस ले लिया गया (chargeback)',
 ];
 
-/* One reason picker for decline and removal: a number picks a preset, any
-   other text is the reason as typed. Blank is refused — he reads it. */
+/* One reason picker for decline and removal: the presets as radio options,
+   plus "✍️ अपना संदेश लिखें", which opens a text box for the owner's own
+   words. Whatever is chosen is exactly what the member reads — in the email,
+   KrashiBook, /bluetick and his profile. Resolves '' on cancel or blank.
+   200 characters, because that is what reject_reason stores. */
+const VF_REASON_MAX = 200;
+
 function vfPickReason(title, list) {
-  const pick = prompt(title + ' (सदस्य को यही दिखेगा)\nनंबर लिखें, या अपना कारण लिखें:\n\n' +
-                      list.map(function (t, i) { return (i + 1) + '. ' + t; }).join('\n'), '1');
-  if (pick === null) return '';
-  const n = parseInt(pick, 10);
-  const reason = (String(n) === pick.trim() && list[n - 1]) || pick.trim();
-  if (!reason) showToast('कारण लिखना ज़रूरी है — कुछ नहीं बदला');
-  return reason;
+  return new Promise(function (resolve) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;' +
+                       'display:flex;align-items:center;justify-content:center;padding:16px;';
+    const opts = list.map(function (t, i) {
+      return '<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;' +
+             'border:1px solid #d6e4dc;border-radius:8px;margin-bottom:6px;cursor:pointer;">' +
+             '<input type="radio" name="vf-rsn" value="' + i + '"' + (i === 0 ? ' checked' : '') + '>' +
+             '<span>' + escapeHtml(t) + '</span></label>';
+    }).join('');
+    ov.innerHTML =
+      '<div style="background:#fff;color:#1f2937;border-radius:12px;max-width:440px;width:100%;' +
+           'padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;">' +
+        '<div style="font-weight:800;font-size:16px;margin-bottom:4px;">' + escapeHtml(title) + '</div>' +
+        '<div style="color:#6b7280;font-size:12px;margin-bottom:12px;">सदस्य को यही संदेश दिखेगा — ईमेल, KrashiBook और उसकी प्रोफ़ाइल पर।</div>' +
+        opts +
+        '<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;' +
+               'border:1px solid #d6e4dc;border-radius:8px;cursor:pointer;">' +
+          '<input type="radio" name="vf-rsn" value="custom"><span><b>✍️ अपना संदेश लिखें</b></span></label>' +
+        '<div id="vf-rsn-box" style="display:none;margin-top:8px;">' +
+          '<textarea id="vf-rsn-text" maxlength="' + VF_REASON_MAX + '" rows="4" ' +
+            'style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #9ca3af;' +
+            'border-radius:8px;font:inherit;resize:vertical;" ' +
+            'placeholder="जैसे: आपकी पोस्ट में किसी और दुकान की फ़ोटो थी — अपनी फ़ोटो के साथ फिर से आवेदन करें।"></textarea>' +
+          '<div id="vf-rsn-count" style="text-align:right;font-size:11px;color:#6b7280;">0 / ' + VF_REASON_MAX + '</div>' +
+        '</div>' +
+        '<div id="vf-rsn-err" style="display:none;color:#b91c1c;font-size:12px;margin-top:6px;">संदेश लिखना ज़रूरी है।</div>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">' +
+          '<button type="button" class="btn btn-secondary" id="vf-rsn-cancel">रद्द</button>' +
+          '<button type="button" class="btn btn-primary" id="vf-rsn-ok">आगे बढ़ें</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+
+    const box = ov.querySelector('#vf-rsn-box');
+    const txt = ov.querySelector('#vf-rsn-text');
+    const cnt = ov.querySelector('#vf-rsn-count');
+    const err = ov.querySelector('#vf-rsn-err');
+    function picked() { const r = ov.querySelector('input[name="vf-rsn"]:checked'); return r ? r.value : ''; }
+    ov.querySelectorAll('input[name="vf-rsn"]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        box.style.display = picked() === 'custom' ? '' : 'none';
+        err.style.display = 'none';
+        if (picked() === 'custom') txt.focus();
+      });
+    });
+    txt.addEventListener('input', function () { cnt.textContent = txt.value.length + ' / ' + VF_REASON_MAX; });
+
+    function done(val) { ov.remove(); resolve(val); }
+    ov.querySelector('#vf-rsn-cancel').onclick = function () { done(''); };
+    ov.addEventListener('click', function (e) { if (e.target === ov) done(''); });
+    ov.querySelector('#vf-rsn-ok').onclick = function () {
+      const p = picked();
+      const val = p === 'custom' ? txt.value.trim().slice(0, VF_REASON_MAX) : (list[+p] || '');
+      if (!val) { err.style.display = ''; return; }
+      done(val);
+    };
+  });
 }
 
 async function vfRefund(ref) {
@@ -19132,7 +19196,7 @@ async function vfDecline(ref) {
   if (!confirm(vfName(ref) + ' का आवेदन रद्द करें?\n\n' +
                'सदस्य को कारण के साथ ईमेल जाएगा और /verify पर भी दिखेगा। ' +
                'वह चाहे तो फिर से आवेदन कर सकता है।')) return;
-  const reason = vfPickReason('आवेदन क्यों रद्द कर रहे हैं?', VF_DECLINE_REASONS);
+  const reason = await vfPickReason('आवेदन क्यों रद्द कर रहे हैं?', VF_DECLINE_REASONS);
   if (!reason) return;
   if (!confirm('पक्का? दोबारा पूछ रहे हैं —\n\n' + vfName(ref) + ' का आवेदन रद्द होगा।\n' +
                'कारण: ' + reason)) return;

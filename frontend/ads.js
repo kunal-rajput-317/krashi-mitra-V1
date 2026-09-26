@@ -108,7 +108,14 @@
   // Auto ads would put a competitor's banner beside the pitch — the one thing
   // the page promises cannot happen. Not loading adsbygoogle.js is the only
   // switch that also stops Auto ads (see above).
-  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay|dukanlisting|sponsor)(\.html)?(\/|$)/;
+  //
+  // /terms and /privacy-policy (owner's rule, 2026-09-26): a legal page is
+  // where a reader decides whether to trust the site, and an ad beside the
+  // grievance officer or the data-rights text reads as the site selling that
+  // trust. Their static HTML no longer loads adsbygoogle.js either, which is
+  // what actually stops Auto ads there; this line keeps ads.js from adding
+  // it back. tests/test_no_ads_on_policy_pages.py holds both halves.
+  var OFF = /^\/(shop|login|profile|chat|cart|checkout|order|admin|404|khoj|krashi_bajar|meri_fasal|pay|dukanlisting|sponsor|terms|privacy-policy)(\.html)?(\/|$)/;
 
   // Blocks an ad must never be wedged into or placed directly before.
   var SKIP = '.answer,.hero,.crumbs,.km-ad,.ad-slot-wrap,.ad-slot-pair,.lead-gen,' +
@@ -146,6 +153,10 @@
   // The AdSense loader goes in only once we know the page will actually show an
   // ad, so an ad-free page never pays for the script.
   function loader() {
+    // Second lock, next to the one thing that can switch on Auto ads: even a
+    // future caller that forgets init()'s OFF check cannot load AdSense on a
+    // no-ads page (/terms, /privacy-policy, /pay …).
+    if (OFF.test(location.pathname)) return;
     if (document.querySelector('script[src*="adsbygoogle.js"]')) return;
     var s = document.createElement('script');
     s.async = true;

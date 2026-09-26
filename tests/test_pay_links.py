@@ -100,7 +100,7 @@ def tick_row(db_session):
 class TestHub:
     def test_lists_every_way_to_pay(self, upi, client):
         t = client.get("/pay").text
-        for href in ("/verify", "/dukanlisting", "/sponsor"):
+        for href in ("/bluetick", "/dukanlisting", "/sponsor"):
             assert f'href="{href}"' in t, href
         assert "नीला टिक" in t and "कृषि दुकान" in t and "किराये की मशीन" in t
 
@@ -252,3 +252,18 @@ class TestDonateRemoved:
         assert "/donate" not in client.get("/bhav").text
         js = (repo_root / "frontend" / "km-support.js").read_text(encoding="utf-8")
         assert "href: '/pay'" in js and "href: '/donate'" not in js
+
+
+# ── /verify → /bluetick (2026-09-26) ────────────────────────
+
+def test_the_tick_page_lives_at_bluetick(client):
+    r = client.get("/bluetick")
+    assert r.status_code == 200 and "नीला टिक" in r.text
+    assert 'href="https://krashimitra.in/bluetick"' in r.text or "krashimitra.in/bluetick" in r.text
+
+
+def test_old_verify_links_redirect(client):
+    r = client.get("/verify", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/bluetick"
+    # The JSON API the page calls is not moved.
+    assert client.get("/verify/plans").status_code == 200

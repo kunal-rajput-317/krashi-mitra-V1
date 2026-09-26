@@ -200,7 +200,39 @@ def fetch_one(filename: str, force: bool) -> dict | None:
     return {**info, "original": filename, "slug": slug}
 
 
+THUMB_DIR = OUT_DIR / "thumbs"
+THUMB_PX = 96   # 3x the 32px icon it fills (/bhav district price list)
+
+
+def make_thumbs(force: bool = False) -> int:
+    """A ~2-3 KB square icon for every crop photo, in images/crops/thumbs/.
+
+    The district price list (/bhav/rajya/<state>/<district>) shows each crop's
+    photo at 34px; the photos themselves average 50 KB, so a scrolled list of
+    ~25 crops pulled ~1 MB to paint icons. Same file name as the photo, so
+    share.py can find it; runs after every fetch, so a new photo gets its
+    thumb without anyone remembering to make one. Returns thumbs written.
+    """
+    from PIL import Image
+    THUMB_DIR.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for src in sorted(OUT_DIR.glob("*.webp")):
+        dst = THUMB_DIR / src.name
+        if dst.exists() and not force and dst.stat().st_mtime >= src.stat().st_mtime:
+            continue
+        im = Image.open(src).convert("RGB")
+        side = min(im.size)                       # centre square crop, then shrink
+        left, top = (im.width - side) // 2, (im.height - side) // 2
+        im = im.crop((left, top, left + side, top + side)).resize((THUMB_PX, THUMB_PX), Image.LANCZOS)
+        im.save(dst, "WEBP", quality=72, method=6)
+        n += 1
+    return n
+
+
 def main() -> int:
+    if sys.argv[1:2] == ["--thumbs"]:
+        print("thumbs written:", make_thumbs(force="--force" in sys.argv))
+        return 0
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--verify", action="store_true",
@@ -238,6 +270,7 @@ def main() -> int:
 
     if got:
         _save_credits(credits)
+    make_thumbs()
     total = sum(x.stat().st_size for x in OUT_DIR.glob("*.webp")) / 1024 if OUT_DIR.exists() else 0
     print(f"\nfetched {got}; {len(list(OUT_DIR.glob('*.webp')))} files, {total/1024:.1f} MB total")
     print(f"credits → {CREDITS.relative_to(ROOT)}")

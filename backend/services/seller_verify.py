@@ -492,7 +492,7 @@ def notice(row: SellerVerification) -> tuple:
     """
     name = (row.full_name or "").strip() or "किसान भाई"
     why = f"कारण: {row.reject_reason}\n" if row.reject_reason else ""
-    again = "आप फिर से आवेदन कर सकते हैं — वही तरीका: https://krashimitra.in/verify\n\n"
+    again = "आप फिर से आवेदन कर सकते हैं — वही तरीका: https://krashimitra.in/bluetick\n\n"
 
     if row.status == DECLINED:
         subject = f"कृषि मित्र प्रीमियम — आपका आवेदन {row.ref}"
@@ -508,7 +508,7 @@ def notice(row: SellerVerification) -> tuple:
         if refund_due(row):
             money = (f"आपका पूरा शुल्क ₹{row.fee_amount} 7 दिन के अंदर उसी UPI / खाते "
                      "में वापस भेजा जाएगा। रिफंड पहुँचने के बाद आप फिर से आवेदन कर "
-                     "सकते हैं — वही तरीका: https://krashimitra.in/verify\n\n")
+                     "सकते हैं — वही तरीका: https://krashimitra.in/bluetick\n\n")
         else:
             money = again
         middle = (

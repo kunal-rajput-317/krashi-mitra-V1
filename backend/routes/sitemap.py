@@ -227,13 +227,18 @@ def _naksha_entries() -> list:
     out = [_entry(f"{SITE}/naksha", when, "weekly", 0.8, ("hi", "en"))]
     for key, s in states.items():
         img = f"{SITE}/images/{s['prefix']}-district-map.png"
-        out.append(_entry(_url(key), when, "weekly", 0.7, ("hi", "en"), (img,)))
+        # The download card on the state AND district pages shows this preview
+        # as a real <img> — it is the picture Google Images can rank for
+        # "<state> map", so it is declared wherever it appears.
+        prev = f"{SITE}/images/{s['prefix']}-district-map-800.webp"
+        out.append(_entry(_url(key), when, "weekly", 0.7, ("hi", "en"), (img, prev)))
         # A 1–2 district UT's list page is noindex (see naksha.py) — a sitemap
         # entry for a page we ask Google not to index is a contradiction.
         if s["n"] >= 3:
             out.append(_entry(_jile_url(key), when, "weekly", 0.6, ("hi", "en")))
         for d in s["districts"]:
-            out.append(_entry(_d_url(key, slugify(d["en"])), when, "monthly", 0.6))
+            out.append(_entry(_d_url(key, slugify(d["en"])), when, "monthly", 0.6,
+                              images=(prev,)))
     return out
 
 

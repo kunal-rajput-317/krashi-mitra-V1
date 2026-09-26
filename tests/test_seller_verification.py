@@ -843,7 +843,7 @@ def test_the_decline_notice_never_calls_the_tick_a_check(db_session, applicant):
     subject, body = seller_verify.notice(row)
     assert row.ref in subject and row.ref in body
     assert "नाम या नंबर गलत / अधूरा है" in body
-    assert "https://krashimitra.in/verify" in body
+    assert "https://krashimitra.in/bluetick" in body
     assert "गारंटी नहीं है" in body
     for word in BANNED_CLAIMS:
         assert word not in subject + body, f"the decline email promises a check: {word!r}"
@@ -933,7 +933,7 @@ def test_removing_a_tick_needs_a_reason_and_emails_it(client, db_session, applic
     to, subject, body = sent[0]
     assert to == EMAIL
     assert "किसी और के नाम या फ़ोटो से खाता चलाना" in body
-    assert "https://krashimitra.in/verify" in body, "the email must show the way back"
+    assert "https://krashimitra.in/bluetick" in body, "the email must show the way back"
     for word in BANNED_CLAIMS:
         assert word not in subject + body
 

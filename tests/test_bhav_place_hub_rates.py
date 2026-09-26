@@ -88,8 +88,11 @@ class TestTheNumberIsOnThePage:
     def test_district_hub_prints_its_own_average(self, client):
         """Not the state's — Raipur's two markets, not all three."""
         html = client.get(f"/bhav/rajya/{SS}/raipur").text
-        assert f"₹{WHEAT_RAIPUR_AVG:,}" in html
-        assert f"₹{WHEAT_STATE_AVG:,}" not in html
+        # The headline figure of the wheat row. (₹2,600 can still appear in
+        # the row's min–max range — it is the Raipur Mandi's own rate — so
+        # the check is on the big number, not on the digits anywhere.)
+        assert f"₹{WHEAT_RAIPUR_AVG:,}<small>" in html
+        assert f"₹{WHEAT_STATE_AVG:,}<small>" not in html
 
     def test_the_unit_is_stated(self, client):
         """A bare ₹2,600 next to "12 जिले" is a number without a unit."""
@@ -125,7 +128,7 @@ class TestNothingBreaksWithoutAPrice:
         and its link — the never-404 rule. It shows the label, not a ₹0."""
         html = client.get(f"/bhav/rajya/{SS}/durg").text
         assert f'href="/bhav/onion/{SS}/durg"' in html
-        assert "भाव देखें →" in html
+        assert "इनका आज का भाव नहीं आया" in html
 
     @pytest.mark.parametrize("bad", ["₹0", "₹-", "₹None", "₹1,1"])
     def test_no_placeholder_ever_reaches_a_card(self, client, bad):

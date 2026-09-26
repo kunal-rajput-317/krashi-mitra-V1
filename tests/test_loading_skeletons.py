@@ -190,10 +190,12 @@ def test_a_lazy_panel_names_its_shape():
 
 @pytest.mark.parametrize("panel,shape", [
     ("bhav-crop-tail",   "tiles"),   # a grid of crop tiles
-    ("bhav-lazy-t2",     "rows"),    # a list of places
+    ("bhav-lazy-t2",     "card"),    # the सबसे ऊंचा / सबसे कम pair
     ("bhav-lazy-t3",     "rows"),
-    ("bhav-lazy-t4",     "rows"),    # the district comparison
-    ("bhav-lazy-season", "card"),    # the seasonality panel
+    ("bhav-lazy-t4",     "rows"),    # the nearby-mandi comparison
+    # The seasonality panel no longer has a skeleton of its own: it is the
+    # "साल भर का" view inside the trend card, whose switch only appears once
+    # that view has data (see bhav._trend_card) — nothing waits on screen.
 ])
 def test_every_bhav_panel_picked_one(panel, shape):
     py = read("backend/routes/bhav.py")

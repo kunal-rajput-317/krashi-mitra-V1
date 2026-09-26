@@ -2235,7 +2235,7 @@
           <div class="pf-tick-head">${TICK_MARK}
             <span class="pf-tick-t">नीला टिक चालू है</span></div>
           <div class="pf-tick-s">${left} अभी बढ़ाने पर बाकी दिन जुड़ जाते हैं, कटते नहीं।</div>
-          <a class="pf-tick-btn" href="/verify">सदस्यता बढ़ाएँ</a>
+          <a class="pf-tick-btn" href="/bluetick">सदस्यता बढ़ाएँ</a>
           <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
       } else if (d.status === "applied" && d.payment_claimed) {
         // He has told us he paid. Do not offer to sell it to him again.
@@ -2251,7 +2251,7 @@
           <div class="pf-tick-head">${TICK_MARK}
             <span class="pf-tick-t">शुल्क भेजना बाकी है</span></div>
           <div class="pf-tick-s">₹${d.fee} भेजते ही आपका नीला टिक चालू हो जाएगा — ${escHtml(d.term_hi || "")}।</div>
-          <a class="pf-tick-btn" href="/verify">शुल्क भेजें</a>
+          <a class="pf-tick-btn" href="/bluetick">शुल्क भेजें</a>
           <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
       } else if (d.status === "declined") {
         // Refused before any tick. Say so, with the reason, and let him retry.
@@ -2261,7 +2261,7 @@
             <span class="pf-tick-t">आपका आवेदन स्वीकार नहीं हुआ</span></div>
           ${d.reject_reason ? `<div class="pf-tick-s">कारण: ${escHtml(d.reject_reason)}</div>` : ""}
           <div class="pf-tick-wait">शुल्क कट गया हो तो UTR के साथ <b>+91 9870951001</b> पर बताइए।</div>
-          <a class="pf-tick-btn" href="/verify">फिर से आवेदन करें</a>
+          <a class="pf-tick-btn" href="/bluetick">फिर से आवेदन करें</a>
           <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
       } else if (d.status === "rejected") {
         // Removed by the owner. The reason, the refund, and the way back.
@@ -2274,7 +2274,7 @@
             <span class="pf-tick-t">आपका नीला टिक हटा दिया गया है</span></div>
           ${d.reject_reason ? `<div class="pf-tick-s">कारण: ${escHtml(d.reject_reason)}</div>` : ""}
           ${money ? `<div class="pf-tick-wait">${escHtml(money)}</div>` : ""}
-          ${d.refund_pending ? "" : `<a class="pf-tick-btn" href="/verify">फिर से आवेदन करें</a>`}
+          ${d.refund_pending ? "" : `<a class="pf-tick-btn" href="/bluetick">फिर से आवेदन करें</a>`}
           <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
       } else {
         const gone = (d.status === "expired")
@@ -2286,7 +2286,7 @@
             <span class="pf-tick-t">कृषि मित्र प्रीमियम</span></div>
           <div class="pf-tick-s">${escHtml(gone)}</div>
           ${plans.length ? `<div class="pf-tick-plans">${planCardsHtml(plans)}</div>` : ""}
-          <a class="pf-tick-btn" href="/verify">नीला टिक लें</a>
+          <a class="pf-tick-btn" href="/bluetick">नीला टिक लें</a>
           <div class="pf-tick-fine">${escHtml(TICK_FINE)}</div>`;
       }
       box.style.display = "";

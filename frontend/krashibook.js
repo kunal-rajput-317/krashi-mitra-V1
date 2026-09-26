@@ -358,7 +358,7 @@
             (declined ? "आपका आवेदन स्वीकार नहीं हुआ" : "आपका नीला टिक हटा दिया गया है") + '</div>' +
           (d.reject_reason ? '<div class="km-book-line">📝 कारण: ' + clean(d.reject_reason) + '</div>' : "") +
           (money ? '<div class="km-book-line">' + clean(money) + '</div>' : "") +
-          '<button class="km-book-ghost-btn" data-href="/verify" style="margin-top:8px">' +
+          '<button class="km-book-ghost-btn" data-href="/bluetick" style="margin-top:8px">' +
             (canApply ? "फिर से आवेदन करें" : "विवरण देखें") + '</button>' +
         '</div>';
       var emptyEl = document.getElementById("km-book-alerts-empty");

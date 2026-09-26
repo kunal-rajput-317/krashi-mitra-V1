@@ -89,7 +89,7 @@
       "h1": {
         "crop_district": "{place} — {crop} बाजार भाव आजचे",
         "crop_state": "{state} — {crop} बाजार भाव आजचे",
-        "district_all": "{district} बाजार भाव आजचे — पीक निवडा",
+        "district_all": "{district} बाजार भाव आजचे",
         "state_all": "{state} बाजार भाव आजचे — पीक निवडा",
         "kharidar": "{district} — {crop} कोण खरेदी करेल?"
       },

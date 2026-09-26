@@ -439,6 +439,20 @@ def _crop_image(commodity: str, width: int = 330) -> str:
     return _FALLBACK_IMAGE
 
 
+def _crop_thumb(commodity: str) -> str:
+    """The ~3 KB 96px icon of the crop's photo (tools/fetch_crop_images.py
+    make_thumbs), for places that draw the photo at icon size — the /bhav
+    district price list. "" when there is no thumb, so the caller shows its
+    own placeholder instead of a 50 KB photo squeezed into 34px."""
+    full = _crop_image(commodity)
+    if not full.startswith(f"{SITE}/images/crops/"):
+        return ""
+    name = full.rsplit("/", 1)[1]
+    if (_CROP_DIR / "thumbs" / name).is_file():
+        return f"{SITE}/images/crops/thumbs/{name}"
+    return ""
+
+
 # Hindi crop names used by Krashi Bazar chips → English keyword for _crop_image()
 _HI_CROP_EN = {
     "गेहूं": "wheat", "धान": "paddy", "सोयाबीन": "soybean", "प्याज": "onion",

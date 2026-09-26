@@ -1,0 +1,63 @@
+{
+  "_comment": "How many districts each state has TODAY, where that differs from the map. The नक्शा pages draw districts from Census of India boundaries (naksha_states.json, field n), and several states have created districts since, so the map's count is not the answer to 'X में कितने जिले हैं'. A state appears here ONLY when its current count and the names of the districts added since the map were checked against at least two sources. A state not listed keeps the map's count unchanged. A state in 'unsure' has sources that disagree: its pages print no count in the title and tell the reader to check the state government's site. Checked 26 Sep 2026 against https://en.wikipedia.org/wiki/List_of_districts_in_India (as of 9 Dec 2025) plus the per-state sources below. When a state creates or merges a district, update its row here in the same week, because the count sits in page titles.",
+  "checked": "2026-09-26",
+  "states": {
+    "rajasthan": {"count": 41, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Rajasthan",
+      "new": [
+        {"hi": "बालोतरा", "en": "Balotra", "year": 2023},
+        {"hi": "ब्यावर", "en": "Beawar", "year": 2023},
+        {"hi": "डीग", "en": "Deeg", "year": 2023},
+        {"hi": "डीडवाना-कुचामन", "en": "Didwana-Kuchaman", "year": 2023},
+        {"hi": "खैरथल-तिजारा", "en": "Khairthal-Tijara", "year": 2023},
+        {"hi": "कोटपूतली-बहरोड़", "en": "Kotputli-Behror", "year": 2023},
+        {"hi": "फलोदी", "en": "Phalodi", "year": 2023},
+        {"hi": "सलूम्बर", "en": "Salumbar", "year": 2023}]},
+    "madhya-pradesh": {"count": 55, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Madhya_Pradesh",
+      "new": [
+        {"hi": "मऊगंज", "en": "Mauganj", "year": 2023},
+        {"hi": "पांढुर्ना", "en": "Pandhurna", "year": 2023},
+        {"hi": "मैहर", "en": "Maihar", "year": 2023}]},
+    "chhattisgarh": {"count": 33, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Chhattisgarh",
+      "new": [
+        {"hi": "गौरेला-पेंड्रा-मरवाही", "en": "Gaurela-Pendra-Marwahi", "year": 2020},
+        {"hi": "मोहला-मानपुर-अंबागढ़ चौकी", "en": "Mohla-Manpur-Ambagarh Chowki", "year": 2022},
+        {"hi": "सारंगढ़-बिलाईगढ़", "en": "Sarangarh-Bilaigarh", "year": 2022},
+        {"hi": "खैरागढ़-छुईखदान-गंडई", "en": "Khairagarh-Chhuikhadan-Gandai", "year": 2022},
+        {"hi": "मनेंद्रगढ़-चिरमिरी-भरतपुर", "en": "Manendragarh-Chirmiri-Bharatpur", "year": 2022},
+        {"hi": "सक्ती", "en": "Sakti", "year": 2022}]},
+    "punjab": {"count": 23, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Punjab,_India",
+      "new": [{"hi": "मलेरकोटला", "en": "Malerkotla", "year": 2021}]},
+    "karnataka": {"count": 31, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Karnataka",
+      "new": [{"hi": "विजयनगर", "en": "Vijayanagara", "year": 2021}]},
+    "tamil-nadu": {"count": 38, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Tamil_Nadu",
+      "new": [{"hi": "मयिलादुथुराई", "en": "Mayiladuthurai", "year": 2020}]},
+    "maharashtra": {"count": 36, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Maharashtra",
+      "new": [{"hi": "मुंबई उपनगर", "en": "Mumbai Suburban", "year": 1990}]},
+    "sikkim": {"count": 6, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Sikkim",
+      "new": [
+        {"hi": "पाक्योंग", "en": "Pakyong", "year": 2021},
+        {"hi": "सोरेंग", "en": "Soreng", "year": 2021}]},
+    "meghalaya": {"count": 12, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Meghalaya",
+      "new": [{"hi": "ईस्टर्न वेस्ट खासी हिल्स", "en": "Eastern West Khasi Hills", "year": 2021}]},
+    "nagaland": {"count": 17, "source": "https://en.wikipedia.org/wiki/List_of_districts_of_Nagaland",
+      "new": [
+        {"hi": "नोकलाक", "en": "Noklak", "year": 2017},
+        {"hi": "चुमौकेदिमा", "en": "Chümoukedima", "year": 2021},
+        {"hi": "निउलैंड", "en": "Niuland", "year": 2021},
+        {"hi": "त्सेमिन्यु", "en": "Tseminyü", "year": 2021},
+        {"hi": "शामातोर", "en": "Shamator", "year": 2021},
+        {"hi": "मेलुरी", "en": "Meluri", "year": 2022}]},
+    "haryana": {"count": 23, "source": "https://igod.gov.in/sg/HR/E042/organizations",
+      "new": [{"hi": "हांसी", "en": "Hansi", "year": 2025}]},
+    "goa": {"count": 3, "source": "https://en.wikipedia.org/wiki/Kushavati_district",
+      "new": [{"hi": "कुशावती", "en": "Kushavati", "year": 2025}]},
+    "ladakh": {"count": 7, "source": "https://ladakh.gov.in/historic-milestone-for-ladakh-five-new-districts-notified-in-ladakh-taking-total-districts-to-seven/",
+      "new": [
+        {"hi": "शाम", "en": "Sham", "year": 2026},
+        {"hi": "नुब्रा", "en": "Nubra", "year": 2026},
+        {"hi": "चांगथांग", "en": "Changthang", "year": 2026},
+        {"hi": "जांस्कर", "en": "Zanskar", "year": 2026},
+        {"hi": "द्रास", "en": "Drass", "year": 2026}]}
+  },
+  "unsure": ["west-bengal", "arunachal-pradesh", "assam", "andhra-pradesh", "mizoram", "jammu-and-kashmir", "delhi"]
+}

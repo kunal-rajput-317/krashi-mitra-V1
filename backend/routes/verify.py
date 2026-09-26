@@ -41,7 +41,7 @@ from html import escape
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -52,7 +52,7 @@ from backend.utils.auth_utils import get_current_user
 
 router = APIRouter()
 
-CANON = "https://krashimitra.in/verify"
+CANON = "https://krashimitra.in/bluetick"
 
 # What the membership actually gets him. Every line is a thing this codebase
 # does the moment users.seller_verified flips — the tick in bazar.py's feed
@@ -398,7 +398,7 @@ _BODY = """
 
   function loginWall() {
     box.innerHTML = '<p class="vf-p vf-state">नीला टिक लेने के लिए पहले लॉगिन करें।</p>' +
-      '<a class="vf-btn" href="/login.html?next=/verify">लॉगिन करें</a>';
+      '<a class="vf-btn" href="/login.html?next=/bluetick">लॉगिन करें</a>';
   }
   if (!tok) { loginWall(); return; }
 
@@ -584,7 +584,15 @@ _BODY = """
 </script>"""
 
 
-@router.get("/verify", response_class=HTMLResponse)
+@router.get("/verify", include_in_schema=False)
+def verify_moved():
+    """The page moved to /bluetick on 2026-09-26 — "verify" named a check the
+    tick never was. Links in old WhatsApp messages, emails and KrashiBook
+    alerts keep working. The /verify/* JSON API is unchanged."""
+    return RedirectResponse("/bluetick", status_code=301)
+
+
+@router.get("/bluetick", response_class=HTMLResponse)
 def verify_page():
     gets = "".join(f"<li>{escape(g)}</li>" for g in GETS_HI)
     body = (_BODY

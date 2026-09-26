@@ -45,7 +45,7 @@ import json
 import math
 import re
 import time
-from datetime import datetime
+from datetime import date, datetime
 from html import escape
 from pathlib import Path
 from urllib.parse import quote
@@ -62,6 +62,7 @@ from backend.services.village_service import slugify
 router = APIRouter()
 
 _DATA = Path(__file__).resolve().parents[1] / "data" / "naksha_states.json"
+_FRONTEND = Path(__file__).resolve().parents[2] / "frontend"
 
 _MONTHS_HI = ["जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून",
               "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"]
@@ -141,6 +142,64 @@ def _updated() -> str:
     return _cache["date"]
 
 
+# ── how many districts a state has TODAY ────────────────────────────────────
+# The maps are drawn on Census of India boundaries, so s["n"] is the number of
+# districts ON THE MAP. Several states have created districts since, and a
+# "राजस्थान में कितने जिले हैं" page that answers 33 when the state has had 41
+# since Dec 2024 is a wrong answer in the title — the searcher knows it is
+# wrong and does not click. backend/data/district_counts.json holds only
+# counts checked against two sources; see its _comment.
+_COUNTS = Path(__file__).resolve().parents[1] / "data" / "district_counts.json"
+_counts_cache: dict = {}
+
+
+def _district_count(key: str, s: dict) -> tuple:
+    """(count, extra, unsure) for one state.
+
+    count  — the number to answer "कितने जिले हैं" with: the checked current
+             count, else the map's own count.
+    extra  — districts that exist today but are not drawn separately on the
+             map, each {hi, en, year}.
+    unsure — sources disagree for this state: print no count as a fact.
+    """
+    try:
+        m = _COUNTS.stat().st_mtime
+        if _counts_cache.get("mtime") != m:
+            _counts_cache["mtime"] = m
+            _counts_cache["data"] = json.loads(_COUNTS.read_text(encoding="utf-8"))
+        data = _counts_cache["data"]
+    except (OSError, ValueError):
+        data = {}
+    row = (data.get("states") or {}).get(key)
+    if row and row.get("count"):
+        return int(row["count"]), list(row.get("new") or []), False
+    return s["n"], [], key in (data.get("unsure") or [])
+
+
+def _now_n(key: str, s: dict) -> int:
+    """The count a state card or picker shows: today's checked count, else the
+    map's. (Where sources disagree that is the map's own, as it always was.)"""
+    return _district_count(key, s)[0]
+
+
+def _extra_html(hi: str, extra: list) -> str:
+    """The districts a state has today that its map does not draw on their
+    own — named, dated, and said plainly, so the list and the count agree."""
+    if not extra:
+        return ""
+    def row(d: dict) -> str:
+        yr = int(d.get("year") or 0)
+        made = f" · {yr} में बना" if yr >= 2012 else ""
+        return (f'<div class="nk-drow"><span class="nk-num">+</span>'
+                f'<span class="nk-dname"><b>{escape(d["hi"])}</b>'
+                f'<span class="nk-en">{escape(d["en"])}{made}</span></span></div>')
+    items = "".join(row(d) for d in extra)
+    return (f'<div class="nk-extra"><h3>ये जिले नक्शे में अलग नहीं दिखते</h3>'
+            f'<p class="nk-lede">नक्शा Census of India की जिला-सीमाओं पर बना है। ये जिले उसके '
+            f'बाद बने या अलग हुए, इसलिए नक्शे में अपने मूल जिले के भीतर दिखते हैं:</p>'
+            f'<div class="nk-dgrid">{items}</div></div>')
+
+
 def _hindi_date(iso: str) -> str:
     y, m, d = iso.split("-")
     return f"{int(d)} {_MONTHS_HI[int(m) - 1]} {y}"
@@ -210,6 +269,28 @@ def _abs_img(s: dict, kind: str) -> str:
     return f"{SITE}/images/{s['prefix']}-{kind}"
 
 
+def _dl_card(s: dict, title: str, sub: str, alt: str) -> str:
+    """The HD-map download card: preview picture, one line, PNG + PDF.
+
+    The PDF button appears only where make_state_maps.py has written the file
+    (an A4 page with the same branded map), so a state added before its PDF
+    exists never shows a link that 404s."""
+    png = _img(s, "district-map.png")
+    fname = f"{s['prefix']}-{s['n']}-jile"
+    has_pdf = (_FRONTEND / "images" / f"{s['prefix']}-district-map.pdf").is_file()
+    pdf_btn = (f'<a class="nk-dl-banner-btn alt" href="{_img(s, "district-map.pdf")}" '
+               f'download="{fname}.pdf">📄 PDF</a>' if has_pdf else "")
+    return (f'<div class="nk-dl-banner">'
+            f'<a class="nk-dl-prev" data-km-map-picker href="{png}" download="{fname}.png" '
+            f'aria-label="{escape(title)}">'
+            f'<img src="{_img(s, "district-map-800.webp")}" width="{s["w"]}" height="{s["h"]}" '
+            f'loading="lazy" decoding="async" alt="{escape(alt)}"></a>'
+            f'<div class="nk-dl-banner-info"><h3>{escape(title)}</h3><p>{escape(sub)}</p></div>'
+            f'<div class="nk-dl-btns">'
+            f'<a class="nk-dl-banner-btn" data-km-map-picker href="{png}" download="{fname}.png">'
+            f'⬇️ PNG</a>{pdf_btn}</div></div>')
+
+
 def _jile(n: int) -> str:
     """"1 जिला" / "22 जिले" — दिल्ली and चंडीगढ़ are single-district UTs, and
     "1 जिले" on their card is the kind of thing that reads as machine output."""
@@ -223,6 +304,11 @@ def _jile(n: int) -> str:
 
 _NK_CSS = """
 /* ── नक्शा cluster: Modern Mobile-First AgTech Styling ───────── */
+/* districts that exist today but are not drawn on the Census-boundary map */
+.nk-extra{margin-top:18px;padding-top:14px;border-top:1px dashed #d6e2da}
+.nk-extra h3{font-size:15px;margin:0 0 4px;color:#14532d}
+.nk-extra .nk-lede{margin-bottom:10px}
+.nk-extra .nk-num{background:#fff7e0;color:#8a5a00}
 :root {
   --nk-font: 'DM Sans', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
   --nk-bg-gradient: linear-gradient(135deg, #071f16 0%, #0d2f23 45%, #154534 100%);
@@ -1550,6 +1636,7 @@ _NK_CSS = """
 .nk-farmer-card.weather .nk-farmer-card-ic { background: #dbeafe; color: #1d4ed8; }
 .nk-farmer-card.bhav .nk-farmer-card-ic { background: #dcfce7; color: #15803d; }
 .nk-farmer-card.gaon .nk-farmer-card-ic { background: #fce7f3; color: #be185d; }
+.nk-farmer-card.yojana .nk-farmer-card-ic { background: #ede9fe; color: #6d28d9; }
 .nk-farmer-card-body {
   flex: 1;
   min-width: 0;
@@ -1636,6 +1723,21 @@ _NK_CSS = """
   transition: transform 0.2s ease;
 }
 .nk-dl-banner-btn:hover { transform: scale(1.04); }
+/* The map itself, shown as a real picture in the download card: this <img> is
+   what Google Images indexes for "mp map" / "राजस्थान का नक्शा" — a 64px thumb
+   was all it had before, while the HD file sat behind a link. Kept to a card-
+   sized crop so the page still has ONE big map (the interactive one). */
+.nk-dl-prev { display:block; flex-shrink:0; width:120px; height:96px; border-radius:12px;
+  overflow:hidden; background:#fff; border:1px solid rgba(255,255,255,0.25); }
+.nk-dl-prev img { display:block; width:100%; height:100%; object-fit:cover; }
+.nk-dl-btns { display:flex; flex-direction:column; gap:8px; }
+.nk-dl-banner-btn.alt { background:transparent; color:#fff; box-shadow:none;
+  border:1.5px solid rgba(255,255,255,0.45); justify-content:center; }
+@media (max-width: 640px) {
+  .nk-dl-prev { width:100%; height:150px; }
+  .nk-dl-btns { display:grid; grid-template-columns:1fr 1fr; width:100%; }
+  .nk-dl-btns .nk-dl-banner-btn { justify-content:center; padding:11px 10px; }
+}
 
 /* ── 4-Column Fact Metrics Bar ── */
 .nk-facts-bar {
@@ -1839,7 +1941,7 @@ def _state_cards(keys: list, states: dict, jile: bool = False) -> str:
     return "".join(
         f'<a class="nk-scard" href="{_jile_url(k) if jile else _url(k)}">'
         f'<span class="nk-sn"><b>{escape(states[k]["hi"])}</b>'
-        f'<small>{_jile(states[k]["n"])}</small></span>'
+        f'<small>{_jile(_now_n(k, states[k]))}</small></span>'
         f'<span class="nk-go">›</span></a>' for k in keys)
 
 
@@ -1862,7 +1964,7 @@ def _state_select_dropdown(current_key: str, states: dict, is_jile: bool = False
     for k, s in states.items():
         url = _jile_url(k) if is_jile else _url(k)
         sel = ' selected' if k == current_key else ''
-        opts.append(f'<option value="{url}"{sel}>{escape(s["hi"])} ({_jile(s["n"])})</option>')
+        opts.append(f'<option value="{url}"{sel}>{escape(s["hi"])} ({_jile(_now_n(k, s))})</option>')
     return (f'<select class="nk-state-select" onchange="if(this.value) window.location.href=this.value;" aria-label="राज्य चुनें">'
             f'{"".join(opts)}</select>')
 
@@ -3886,7 +3988,7 @@ def naksha_hub():
             f'<a class="nk-pick-card" href="{_url(k)}" data-state="{k}" '
             f'data-hi="{escape(s["hi"])}">'
             f'<span class="nk-pick-name">{escape(s["hi"])}</span>'
-            f'<span class="nk-pick-count">{_jile(s["n"])}</span>'
+            f'<span class="nk-pick-count">{_jile(_now_n(k, s))}</span>'
             f'<span class="nk-pick-arrow">›</span>'
             f'</a>'
         )
@@ -4476,34 +4578,47 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
     # and "madhya pradesh map" are both real demand and only one of them is
     # served by either spelling alone.
     ab = _ABBR.get(key)
+    # The title answers "how many districts" with today's checked count where
+    # there is one (a searcher who knows Rajasthan has 41 skips a result saying
+    # 33). Everything that describes the IMAGE keeps `n`, the map's own count.
+    count, extra, unsure = _district_count(key, s)
+    tn = count
     abbr_variants = [
-        f"{hi} का नक्शा – {n} जिलों का HD मानचित्र | {s['en']} ({ab}) Map",
-        f"{hi} का नक्शा – {n} जिलों का मानचित्र | {s['en']} ({ab}) Map",
-        f"{hi} का नक्शा – {n} जिले | {s['en']} ({ab}) Map, HD डाउनलोड",
-        f"{hi} का नक्शा – {n} जिले | {s['en']} ({ab}) Map",
-        f"{hi} का नक्शा | {s['en']} ({ab}) Map – {n} जिले",
+        f"{hi} का नक्शा – {tn} जिले | {s['en']} ({ab}) Map, HD डाउनलोड",
+        f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र | {s['en']} ({ab}) Map",
+        f"{hi} का नक्शा – {tn} जिलों का मानचित्र | {s['en']} ({ab}) Map",
+        f"{hi} का नक्शा – {tn} जिले | {s['en']} ({ab}) Map, HD डाउनलोड",
+        f"{hi} का नक्शा – {tn} जिले | {s['en']} ({ab}) Map",
+        f"{hi} का नक्शा | {s['en']} ({ab}) Map – {tn} जिले",
     ] if ab else []
     title = _fit(
         *abbr_variants,
-        f"{hi} का नक्शा – {n} जिलों का HD मानचित्र | {s['en']} Map",
-        f"{hi} का नक्शा – {n} जिलों का मानचित्र | {s['en']} Map",
-        f"{hi} का नक्शा – {n} जिले | {s['en']} Map",
-        f"{hi} का नक्शा – {n} जिलों का HD मानचित्र | मुफ्त डाउनलोड",
-        f"{hi} का नक्शा – {n} जिलों का HD मानचित्र (मुफ्त)",
-        f"{hi} का नक्शा – {n} जिलों का HD मानचित्र")
+        f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र | {s['en']} Map",
+        f"{hi} का नक्शा – {tn} जिलों का मानचित्र | {s['en']} Map",
+        f"{hi} का नक्शा – {tn} जिले | {s['en']} Map",
+        f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र | मुफ्त डाउनलोड",
+        f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र (मुफ्त)",
+        f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र")
     desc = _fit(
-        f"{hi} का नक्शा हिंदी में — {span}, सभी {n} जिले एक ही मानचित्र में। "
+        f"{hi} का नक्शा हिंदी में — {span}, {'सभी जिले' if unsure else f'कुल {count} जिले'} एक ही मानचित्र में। "
         f"HD नक्शा मुफ्त डाउनलोड करें और ज़ूम करके अपना जिला देखें।",
-        f"{hi} का नक्शा हिंदी में — सभी {n} जिले एक ही मानचित्र में। "
+        f"{hi} का नक्शा हिंदी में — {'सभी जिले' if unsure else f'कुल {count} जिले'} एक ही मानचित्र में। "
         f"HD नक्शा मुफ्त डाउनलोड करें और ज़ूम करके अपना जिला देखें।",
         limit=162)
-    alt = f"{hi} का नक्शा — {hi} के {n} जिलों का हिंदी जिलेवार मानचित्र ({span})"
+    alt = (f"{hi} का नक्शा ({s['en']}{f' / {ab}' if ab else ''} Map) — "
+           f"{n} जिलों के नाम हिंदी में, जिलेवार मानचित्र")
 
     chips = _sibling_chips(key, s, "")
 
     faq_html, faq_ld = _faq([
         (f"{hi} में कितने जिले हैं?",
-         f"Census of India की जिला-सीमाओं के अनुसार {hi} में {n} जिले हैं — {span}।"),
+         (f"नक्शे पर Census of India की सीमाओं के हिसाब से {hi} के {n} जिले हैं — {span}। "
+          f"नए जिले बनने से संख्या बदल चुकी हो सकती है; ताज़ा संख्या राज्य सरकार की "
+          f"वेबसाइट पर देखें।") if unsure else
+         (f"{date.today().year} में {hi} में कुल {count} जिले हैं। नक्शे पर {n} जिले Census of "
+          f"India की सीमाओं से दिखाए गए हैं; {', '.join(d['hi'] for d in extra)} बाद में बने "
+          f"या अलग हुए हैं और नक्शे में अपने मूल जिले के भीतर दिखते हैं।") if extra else
+         f"{hi} में {count} जिले हैं — {span}।"),
         (f"{hi} का नक्शा मुफ्त में कैसे डाउनलोड करें?",
          f"इसी पेज पर “HD नक्शा डाउनलोड करें” बटन दबाएं — {n} जिलों वाला नक्शा (PNG) "
          f"बिना किसी शुल्क और बिना रजिस्ट्रेशन के डाउनलोड हो जाता है। इसे प्रोजेक्ट, "
@@ -4519,9 +4634,28 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
     note = f'<div class="nk-note">नोट: {escape(s["note"])}</div>' if s["note"] else ""
     map_container = _map_app_container(key, s, hi)
 
+
     bhulekh_info = _BHULEKH.get(key, ("https://upbhulekh.gov.in/", "भूलेख पोर्टल"))
     bhulekh_url = bhulekh_info[0]
     bhulekh_label = bhulekh_info[1]
+
+    # Same honesty rule as the district page: weather only where /weather has
+    # it (UP), prices at the state's own hub, schemes at the page that carries
+    # the private-website notice.
+    _sc = [_nk_card("bhav", _state_bhav_link(key), "💰", f"{hi} मंडी भाव",
+                    "आज के फसल भाव, जिलेवार")]
+    if key == "uttar-pradesh":
+        _sc.append(_nk_card("weather", "/weather", "🌤️", "मौसम पूर्वानुमान",
+                            "उत्तर प्रदेश के सभी जिलों का आज का मौसम"))
+    else:
+        _sc.append(_nk_card("yojana", "/sarkari_yojana", "📜", "सरकारी किसान योजनाएं",
+                            "पात्रता, दस्तावेज़ व आधिकारिक लिंक"))
+    _sc.append(_nk_card("bhulekh", bhulekh_url, "📄", bhulekh_label,
+                        "खसरा-खतौनी व भू-अभिलेख नकल निकालें ↗", ext=True))
+    _sc.append(_nk_card("gaon", _jile_url(key), "🌾",
+                        f"{hi} के जिले" if unsure else f"{hi} के सभी {count} जिले",
+                        "जिलों की सूची व गांव डायरेक्टरी"))
+    state_cards = "".join(_sc)
 
     body = f"""<div class="nk-level-bar">
   <a href="/naksha">🇮🇳 भारत (India)</a>
@@ -4532,71 +4666,28 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
 </div>
 
 <h1 class="nk-title">{escape(hi)} का नक्शा</h1>
-<p class="nk-title-sub">{_jile(n)} · {escape(span)} · हिंदी में जिलेवार मानचित्र व सैटेलाइट व्यू</p>
+<p class="nk-title-sub">{_jile(n) + " (नक्शे पर)" if unsure else _jile(count)} · {escape(span)} · हिंदी में जिलेवार मानचित्र व सैटेलाइट व्यू</p>
 
 <div class="nk-tabs-bar">
   <a class="nk-tab-item active" href="{_url(key)}#nk-map-wrap">🗺️ इंटरैक्टिव नक्शा</a>
-  <a class="nk-tab-item" href="{_jile_url(key)}">📋 जिलों की सूची ({n})</a>
+  <a class="nk-tab-item" href="{_jile_url(key)}">📋 जिलों की सूची{"" if unsure else f" ({count})"}</a>
 </div>
 
 {map_container}
 
 <!-- 4 Farmer Quick Action Cards -->
-<div class="nk-farmer-grid">
-  <a class="nk-farmer-card bhulekh" href="{bhulekh_url}" target="_blank" rel="noopener">
-    <div class="nk-farmer-card-ic">📄</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">{escape(bhulekh_label)}</div>
-      <div class="nk-farmer-card-sub">खसरा-खतौनी व भू-अभिलेख नकल निकालें ↗</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-
-  <a class="nk-farmer-card weather" href="/weather">
-    <div class="nk-farmer-card-ic">🌤️</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">{escape(hi)} मौसम व बारिश</div>
-      <div class="nk-farmer-card-sub">7 दिनों का लाइव मौसम पूर्वानुमान</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-
-  <a class="nk-farmer-card bhav" href="/bhav">
-    <div class="nk-farmer-card-ic">💰</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">आज का मंडी भाव</div>
-      <div class="nk-farmer-card-sub">प्रमुख फसलों के दैनिक ताजा मंडी रेट</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-
-  <a class="nk-farmer-card gaon" href="{_jile_url(key)}">
-    <div class="nk-farmer-card-ic">🌾</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">{escape(hi)} के सभी {n} जिले</div>
-      <div class="nk-farmer-card-sub">जिलों की सूची व गांव डायरेक्टरी</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-</div>
+<div class="nk-farmer-grid">{state_cards}</div>
 
 <!-- Compact HD Map Download Banner -->
-<div class="nk-dl-banner">
-  <img src="{_img(s, 'district-map-thumb.webp')}" class="nk-dl-banner-thumb" width="64" height="64" loading="lazy" alt="{escape(alt)}">
-  <div class="nk-dl-banner-info">
-    <h3>⬇️ {escape(hi)} का HD प्रिंट नक्शा डाउनलोड करें</h3>
-    <p>सभी {n} जिले हिंदी में · हाई-क्वालिटी PNG प्रिंट नक्शा ({s['w']}×{s['h']} px) · बिल्कुल मुफ्त</p>
-  </div>
-  <a class="nk-dl-banner-btn" data-km-map-picker href="{_img(s, 'district-map.png')}" download="{s['prefix']}-{s['n']}-jile.png">
-    ⬇️ मुफ्त डाउनलोड
-  </a>
-</div>
+{_dl_card(s, f"⬇️ {hi} का HD नक्शा — मुफ्त डाउनलोड",
+          "सभी जिलों के नाम हिंदी में · प्रिंट के लिए PNG या A4 PDF",
+          alt)}
 
 <!-- 4 Fact Metric Boxes -->
 <div class="nk-facts-bar">
   <div class="nk-fact-box">
-    <small>कुल जिले</small>
-    <b>{n} जिले</b>
+    <small>{"नक्शे पर जिले" if unsure else "कुल जिले"}</small>
+    <b>{_jile(n) if unsure else _jile(count)}</b>
   </div>
   <div class="nk-fact-box">
     <small>सबसे बड़ा जिला</small>
@@ -4683,26 +4774,49 @@ def _jile_page(key: str) -> HTMLResponse:
     # romanised half of the same query has something to bold.
     ab = _ABBR.get(key)
     en = s["en"]
-    title = _fit(
-        f"{hi} में कितने जिले हैं? {n} जिलों की पूरी सूची | {en} Districts",
-        f"{hi} में कितने जिले हैं? {n} जिलों की सूची | {en} Districts",
-        f"{hi} में कितने जिले हैं? {n} जिलों की पूरी सूची",
-        f"{hi} में कितने जिले हैं? पूरी सूची | {en} District List",
-        f"{hi} के {n} जिले – पूरी सूची | {en} Districts",
-        f"{hi} के जिले – सभी {n} जिलों की सूची",
-        f"{hi} के {n} जिले – पूरी सूची")
+    # `n` stays the MAP's count (it is what the drawn list and the image hold);
+    # `count` is the answer to the question this page ranks for. Where the two
+    # differ, the page says why — see _district_count and _extra_html.
+    count, extra, unsure = _district_count(key, s)
+    yr = date.today().year
+    if unsure:
+        # Sources disagree on this state's current count: no number goes in the
+        # title as a fact. The list below is still the map's, and says so.
+        title = _fit(
+            f"{hi} में कितने जिले हैं? जिलों की पूरी सूची | {en} District List",
+            f"{hi} में कितने जिले हैं? पूरी सूची | {en} District List",
+            f"{hi} के जिले – पूरी सूची | {en} Districts")
+    else:
+        title = _fit(
+            f"{hi} में कितने जिले हैं {yr}? {count} जिलों की सूची | {en} Districts",
+            f"{hi} में कितने जिले हैं? {count} जिलों की पूरी सूची | {en} Districts",
+            f"{hi} में कितने जिले हैं? {count} जिलों की सूची | {en} Districts",
+            f"{hi} में कितने जिले हैं? {count} जिलों की पूरी सूची",
+            f"{hi} के {count} जिले – पूरी सूची | {en} Districts",
+            f"{hi} के जिले – सभी {count} जिलों की सूची",
+            f"{hi} के {count} जिले – पूरी सूची")
     # The description opens with the bare number, so the answer survives even
     # when Google rewrites the title into its own question format.
-    desc = _fit(
-        f"{hi} में कुल {n} जिले हैं ({en} has {n} districts) — पूरी सूची हिंदी और "
-        f"अंग्रेज़ी दोनों नामों के साथ, {span}। साथ में HD नक्शा, मुफ्त डाउनलोड।",
-        f"{hi} में कुल {n} जिले हैं ({en} has {n} districts) — पूरी सूची हिंदी और "
-        f"अंग्रेज़ी दोनों नामों के साथ। साथ में HD नक्शा, मुफ्त डाउनलोड।",
-        f"{hi} में कुल {n} जिले हैं — पूरी सूची हिंदी और अंग्रेज़ी दोनों नामों के "
-        f"साथ, {span}। साथ में {hi} का HD नक्शा — मुफ्त डाउनलोड।",
-        f"{hi} में कुल {n} जिले हैं — पूरी सूची हिंदी और अंग्रेज़ी दोनों नामों के साथ। "
-        f"साथ में HD नक्शा — मुफ्त डाउनलोड।",
-        limit=162)
+    _new_names = ", ".join(d["hi"] for d in extra[:3])
+    if unsure:
+        desc = _fit(
+            f"{hi} के जिलों की सूची हिंदी और अंग्रेज़ी नामों के साथ, {span} — नक्शे पर "
+            f"{n} जिले (Census सीमाएं)। नए जिले बने हों तो राज्य सरकार की साइट देखें।",
+            f"{hi} के जिलों की सूची हिंदी और अंग्रेज़ी नामों के साथ — नक्शे पर {n} जिले "
+            f"(Census सीमाएं)। साथ में HD नक्शा, मुफ्त डाउनलोड।",
+            limit=162)
+    else:
+        desc = _fit(
+            *([f"{hi} में कुल {count} जिले हैं ({en} has {count} districts) — "
+               f"{_new_names} समेत सभी जिलों की सूची हिंदी और अंग्रेज़ी में। साथ में HD नक्शा।"]
+              if extra else []),
+            f"{hi} में कुल {count} जिले हैं ({en} has {count} districts) — पूरी सूची हिंदी और "
+            f"अंग्रेज़ी दोनों नामों के साथ, {span}। साथ में HD नक्शा, मुफ्त डाउनलोड।",
+            f"{hi} में कुल {count} जिले हैं ({en} has {count} districts) — पूरी सूची हिंदी और "
+            f"अंग्रेज़ी दोनों नामों के साथ। साथ में HD नक्शा, मुफ्त डाउनलोड।",
+            f"{hi} में कुल {count} जिले हैं — पूरी सूची हिंदी और अंग्रेज़ी दोनों नामों के साथ। "
+            f"साथ में HD नक्शा — मुफ्त डाउनलोड।",
+            limit=162)
 
     rows = "".join(
         f'<div class="nk-drow">'
@@ -4717,10 +4831,20 @@ def _jile_page(key: str) -> HTMLResponse:
         f'</div>'
         for i, d in enumerate(s["districts"], start=1))
 
+    if unsure:
+        _count_ans = (f"नक्शे पर Census of India की जिला-सीमाओं के हिसाब से {hi} के {n} जिले "
+                      f"दिखाए गए हैं। नए जिले बनने से यह संख्या बदल चुकी हो सकती है — ताज़ा "
+                      f"संख्या {hi} सरकार की आधिकारिक वेबसाइट पर देखें।")
+    elif extra:
+        _count_ans = (f"{yr} में {hi} में कुल {count} जिले हैं। इनमें से {n} नक्शे पर Census of "
+                      f"India की सीमाओं से दिखाए गए हैं; "
+                      f"{', '.join(d['hi'] for d in extra)} नक्शे में अलग नहीं दिखते — वे अपने "
+                      f"मूल जिले के भीतर हैं। सभी {count} नाम ऊपर सूची में हैं।")
+    else:
+        _count_ans = (f"{hi} में {count} जिले हैं। ऊपर दी गई सूची में सभी {count} नाम हिंदी "
+                      f"और अंग्रेज़ी दोनों में हैं।")
     faq_html, faq_ld = _faq([
-        (f"{hi} में कितने जिले हैं?",
-         f"Census of India की जिला-सीमाओं के अनुसार {hi} में {n} जिले हैं। ऊपर दी गई "
-         f"सूची में सभी {n} नाम हिंदी और अंग्रेज़ी दोनों में हैं।"),
+        (f"{hi} में कितने जिले हैं?", _count_ans),
         (f"{hi} का सबसे बड़ा जिला कौन सा है?",
          f"क्षेत्रफल के हिसाब से {s['big']} सबसे बड़ा जिला है और {s['small']} सबसे छोटा। "
          f"यह तुलना Census of India की जिला-सीमाओं से निकाली गई है।"),
@@ -4739,21 +4863,21 @@ def _jile_page(key: str) -> HTMLResponse:
   <span class="nk-lvl-sep">➔</span>
   <a href="{_url(key)}">🏛️ {escape(hi)}</a>
   <span class="nk-lvl-sep">➔</span>
-  <span style="color:var(--nk-emerald-dark)">📋 जिलों की सूची ({n})</span>
+  <span style="color:var(--nk-emerald-dark)">📋 जिलों की सूची{"" if unsure else f" ({count})"}</span>
 </div>
 
-<h1 class="nk-title">{escape(hi)} के जिले</h1>
-<p class="nk-title-sub">सभी {_jile(n)} — हिंदी और अंग्रेज़ी नामों के साथ · {escape(span)}</p>
+<h1 class="nk-title">{escape(hi)} में कितने जिले हैं?</h1>
+<p class="nk-title-sub">{"नक्शे पर " + _jile(n) + " (Census सीमाएं)" if unsure else f"{yr} में कुल {_jile(count)}"} — हिंदी और अंग्रेज़ी नामों के साथ · {escape(span)}</p>
 
 <div class="nk-tabs-bar">
   <a class="nk-tab-item" href="{_url(key)}#nk-map-wrap">🗺️ इंटरैक्टिव नक्शा</a>
-  <a class="nk-tab-item active" href="{_jile_url(key)}">📋 जिलों की सूची ({n})</a>
+  <a class="nk-tab-item active" href="{_jile_url(key)}">📋 जिलों की सूची{"" if unsure else f" ({count})"}</a>
 </div>
 
 <div class="nk-stats-row">
   <div class="nk-stat-card">
-    <div class="nk-st-lbl">📊 कुल जिले</div>
-    <div class="nk-st-val">{n} जिले</div>
+    <div class="nk-st-lbl">📊 {"नक्शे पर जिले" if unsure else "कुल जिले"}</div>
+    <div class="nk-st-val">{_jile(n) if unsure else _jile(count)}</div>
   </div>
   <div class="nk-stat-card">
     <div class="nk-st-lbl">📐 सबसे बड़ा जिला</div>
@@ -4766,12 +4890,13 @@ def _jile_page(key: str) -> HTMLResponse:
 </div>
 
 <section class="nk-sec">
-  <h2>{escape(hi)} के सभी {n} जिलों की निर्देशिका</h2>
+  <h2>{escape(hi)} के {"जिलों" if unsure else f"सभी {count} जिलों"} की सूची</h2>
   <p class="nk-lede">हिंदी या अंग्रेज़ी में जिला खोजें — नक्शा देखने के लिए जिले के नाम पर क्लिक करें:</p>
   <input class="nk-search" id="nk-dsearch" type="search" autocomplete="off"
    placeholder="जिला खोजें — जैसे मेरठ, Meerut…" aria-label="जिला खोजें" style="margin-bottom:16px;">
   <p class="nk-empty" id="nk-dnone" style="display:none">कोई जिला नहीं मिला।</p>
   <div class="nk-dgrid">{rows}</div>
+  {_extra_html(hi, extra)}
   <div class="nk-cta" style="margin-top:18px">
     <a class="nk-btn plain" href="{_url(key)}">🗺️ {escape(hi)} का पूरा नक्शा देखें</a>
     <a class="nk-btn plain" href="/naksha">🧭 सभी राज्यों के नक्शे</a>
@@ -4821,14 +4946,14 @@ def _jile_page(key: str) -> HTMLResponse:
     }
     list_ld = {
         "@context": "https://schema.org", "@type": "ItemList",
-        "@id": f"{canon}#districts", "name": f"{hi} के {n} जिले",
-        "numberOfItems": n,
+        "@id": f"{canon}#districts", "name": f"{hi} के {count} जिले",
+        "numberOfItems": n + len(extra),
         "itemListOrder": "https://schema.org/ItemListOrderAscending",
         "itemListElement": [
             {"@type": "ListItem", "position": i,
              "item": {"@type": "AdministrativeArea", "name": d["hi"],
                       "alternateName": d["en"]}}
-            for i, d in enumerate(s["districts"], start=1)],
+            for i, d in enumerate(list(s["districts"]) + extra, start=1)],
     }
     robots = "noindex, follow" if n < 3 else ""
 
@@ -4848,6 +4973,56 @@ def _sibling_chips(key: str, s: dict, skip: str) -> str:
         for d in s["districts"] if slugify(d["en"]) != skip)
 
 
+# Scheme links go to /sarkari_yojana, which carries the "KrashiMitra एक निजी
+# वेबसाइट है" notice LEGAL_RULES §1/§3 require on scheme pages. The per-state
+# scheme articles (mahadbt, tarbandi, MP kisan kalyan) do not carry it yet, so
+# ~780 district pages must not start sending traffic to them until they do.
+
+
+def _nk_card(cls: str, href: str, ic: str, title: str, sub: str, ext: bool = False) -> str:
+    """One quick-link card on the state and district map pages."""
+    tgt = ' target="_blank" rel="noopener"' if ext else ""
+    return (f'<a class="nk-farmer-card {cls}" href="{href}"{tgt}>'
+            f'<div class="nk-farmer-card-ic">{ic}</div>'
+            f'<div class="nk-farmer-card-body">'
+            f'<div class="nk-farmer-card-title">{escape(title)}</div>'
+            f'<div class="nk-farmer-card-sub">{escape(sub)}</div></div>'
+            f'<div class="nk-farmer-card-arrow">➔</div></a>')
+
+
+def _state_bhav_link(key: str) -> str:
+    """The state's own price hub when the mandi feed has it, else /bhav."""
+    try:
+        from backend.routes import bhav as _bhav
+        if _bhav._dists_in_state(_bhav._get_index(), key):
+            return f"/bhav/rajya/{key}"
+    except Exception:
+        pass
+    return "/bhav"
+
+
+def _district_bhav_link(key: str, dslug: str) -> tuple:
+    """(href, sub-line) for "<district> मंडी भाव".
+
+    The card used to point at /bhav, the all-India hub — two picks away from
+    the district it was named after. Now: the district's own price board when
+    the mandi feed knows this district under the same name, else the state's,
+    else the hub. Names can differ between Census (the map) and Agmarknet
+    (the prices) — Hoshangabad/Narmadapuram — and a guessed link must never
+    404, so only a slug the price index actually holds is linked.
+    """
+    try:
+        from backend.routes import bhav as _bhav
+        idx = _bhav._get_index()
+        if dslug in _bhav._dists_in_state(idx, key):
+            return f"/bhav/rajya/{key}/{dslug}", "इस जिले की मंडियों में आज के सभी फसल भाव"
+        if _bhav._dists_in_state(idx, key):
+            return f"/bhav/rajya/{key}", "राज्य की मंडियों में आज के फसल भाव"
+    except Exception:
+        pass
+    return "/bhav", "देशभर की मंडियों में आज के फसल भाव"
+
+
 def _district_page(key: str, dslug: str) -> HTMLResponse:
     states = _states()
     s = states[key]
@@ -4855,6 +5030,9 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
     hi, en, shi = d["hi"], d["en"], s["hi"]
     canon = _abs(_d_url(key, dslug))
     n = s["n"]
+    count, _extra, unsure = _district_count(key, s)
+    # "<state> के 55 जिलों में से एक" — the state's count today, not the map's.
+    of_n = f"{shi} का एक जिला" if unsure else f"{shi} के {count} जिलों में से एक"
 
     village_service.request(key, dslug, {"geojson": s["geojson"], "en": en, "hi": hi})
     villages = village_service.load(key, dslug) or []
@@ -4879,12 +5057,12 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
     # mid-sentence — on 768 sitemap URLs carrying 216k impressions at 0.63%.
     # Same rule as the title: pick a whole shorter sentence, never a slice.
     desc = _fit(
-        f"{hi} जिले का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
+        f"{hi} जिले का नक्शा ({en} district map) — {of_n}। "
         f"सैटेलाइट व्यू में अपना गांव और तहसील देखें, और {shi} का पूरा HD नक्शा "
         f"मुफ्त डाउनलोड करें।",
-        f"{hi} जिले का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
+        f"{hi} जिले का नक्शा ({en} district map) — {of_n}। "
         f"सैटेलाइट व्यू में गांव व तहसील देखें, HD नक्शा मुफ्त डाउनलोड करें।",
-        f"{hi} का नक्शा ({en} district map) — {shi} के {n} जिलों में से एक। "
+        f"{hi} का नक्शा ({en} district map) — {of_n}। "
         f"सैटेलाइट व्यू में गांव व तहसील देखें, HD नक्शा मुफ्त डाउनलोड।",
         f"{hi} जिले का नक्शा ({en} district map), {shi}। सैटेलाइट व्यू में गांव व "
         f"तहसील देखें, HD नक्शा मुफ्त डाउनलोड करें।",
@@ -4903,7 +5081,8 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
 
     faq_html, faq_ld = _faq([
         (f"{hi} जिला किस राज्य में है?",
-         f"{hi} ({en}) {shi} का एक जिला है। {shi} में कुल {n} जिले हैं, और इस पेज पर "
+         f"{hi} ({en}) {shi} का एक जिला है। "
+         + ("" if unsure else f"{shi} में कुल {count} जिले हैं, और ") + f"इस पेज पर "
          f"{hi} की सीमा पूरे राज्य के नक्शे में हाइलाइट करके दिखाई गई है।"),
         (f"{hi} जिले का सैटेलाइट नक्शा कैसे देखें?",
          f"ऊपर का नक्शा डिफ़ॉल्ट रूप से सैटेलाइट व्यू में ही खुलता है — असली खेत, "
@@ -4928,12 +5107,32 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
         key, s, shi, is_district=True, dslug=dslug, dist_hi=hi, dist_en=en
     )
 
+    # Four cards, 2×2 on a phone. Weather is only offered where /weather has
+    # it (Uttar Pradesh's districts) and says so; elsewhere that slot goes to
+    # the state's schemes rather than promising a forecast we do not have.
+    _card = _nk_card
+
+    bhav_href, bhav_sub = _district_bhav_link(key, dslug)
+    scheme_href, scheme_name = "/sarkari_yojana", "सरकारी किसान योजनाएं"
+    cards = [_card("bhav", bhav_href, "💰", f"{hi} मंडी भाव", bhav_sub)]
+    if key == "uttar-pradesh":
+        cards.append(_card("weather", "/weather", "🌤️", "मौसम पूर्वानुमान",
+                           "उत्तर प्रदेश के सभी जिलों का आज का मौसम"))
+    cards.append(_card("yojana", scheme_href, "📜", scheme_name,
+                       "पात्रता, दस्तावेज़ व आधिकारिक लिंक"))
+    cards.append(_card("bhulekh", bhulekh_url, "📄", f"{hi} भूलेख (खसरा-खतौनी)",
+                       "आधिकारिक भू-अभिलेख पोर्टल ↗", ext=True))
+    if key != "uttar-pradesh":
+        cards.append(_card("gaon", _gaon_url(key, dslug), "🌾", f"{hi} के गांव व कस्बे",
+                           f"सैटेलाइट नक्शा व {len(villages) if villages else 'सभी'} गांव खोजें"))
+    link_cards = "".join(cards)
+
     body = f"""<div class="nk-level-bar">
   <a href="/naksha">🇮🇳 भारत (India)</a>
   <span class="nk-lvl-sep">➔</span>
   <a href="{_url(key)}">🏛️ {escape(shi)}</a>
   <span class="nk-lvl-sep">➔</span>
-  <a href="{_jile_url(key)}">📋 जिले ({n})</a>
+  <a href="{_jile_url(key)}">📋 जिले{"" if unsure else f" ({count})"}</a>
   <span class="nk-lvl-sep">➔</span>
   <span style="color:var(--nk-emerald-dark)">📍 {escape(hi)}</span>
 </div>
@@ -4949,56 +5148,13 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
 
 {map_container}
 
-<!-- 4 District Farmer Quick Action Cards -->
-<div class="nk-farmer-grid">
-  <a class="nk-farmer-card bhulekh" href="{bhulekh_url}" target="_blank" rel="noopener">
-    <div class="nk-farmer-card-ic">📄</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">{escape(hi)} भूलेख (खसरा-खतौनी)</div>
-      <div class="nk-farmer-card-sub">आधिकारिक भू-अभिलेख व जमीन नकल ↗</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-
-  <a class="nk-farmer-card weather" href="/weather">
-    <div class="nk-farmer-card-ic">🌤️</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">{escape(hi)} मौसम पूर्वानुमान</div>
-      <div class="nk-farmer-card-sub">आज का तापमान, हवा व बारिश अलर्ट</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-
-  <a class="nk-farmer-card bhav" href="/bhav">
-    <div class="nk-farmer-card-ic">💰</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">{escape(hi)} मंडी भाव</div>
-      <div class="nk-farmer-card-sub">निकटतम मंडियों में आज के फसल दाम</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-
-  <a class="nk-farmer-card gaon" href="{_gaon_url(key, dslug)}">
-    <div class="nk-farmer-card-ic">🌾</div>
-    <div class="nk-farmer-card-body">
-      <div class="nk-farmer-card-title">{escape(hi)} के गांव व कस्बे</div>
-      <div class="nk-farmer-card-sub">सैटेलाइट नक्शा व {len(villages) if villages else 'सभी'} गांव खोजें</div>
-    </div>
-    <div class="nk-farmer-card-arrow">➔</div>
-  </a>
-</div>
+<!-- District quick links: this district's prices first, then the rest -->
+<div class="nk-farmer-grid">{link_cards}</div>
 
 <!-- Compact HD Map Download Banner -->
-<div class="nk-dl-banner">
-  <img src="{_img(s, 'district-map-thumb.webp')}" class="nk-dl-banner-thumb" width="64" height="64" loading="lazy" alt="{escape(f'{shi} का नक्शा — {hi} समेत सभी {n} जिलों का हिंदी जिलेवार मानचित्र')}">
-  <div class="nk-dl-banner-info">
-    <h3>⬇️ {escape(shi)} का HD प्रिंट नक्शा</h3>
-    <p>{escape(hi)} समेत सभी {n} जिले हिंदी में · मुफ्त HD PNG डाउनलोड</p>
-  </div>
-  <a class="nk-dl-banner-btn" data-km-map-picker href="{_img(s, 'district-map.png')}" download="{s['prefix']}-{s['n']}-jile.png">
-    ⬇️ मुफ्त डाउनलोड
-  </a>
-</div>
+{_dl_card(s, f"⬇️ {shi} का HD नक्शा",
+          f"{hi} समेत सभी जिलों के नाम हिंदी में · PNG या A4 PDF, मुफ्त",
+          f"{shi} का नक्शा ({s['en']} Map) — {hi} समेत {n} जिलों का हिंदी जिलेवार मानचित्र")}
 
 <!-- 4 Fact Metric Boxes -->
 <div class="nk-facts-bar">
@@ -5460,7 +5616,7 @@ def _map_landing_page() -> HTMLResponse:
             f'<a class="nk-pick-card" href="{_url(k)}" data-state="{k}" '
             f'data-hi="{escape(s["hi"])}">'
             f'<span class="nk-pick-name">{escape(s["hi"])}</span>'
-            f'<span class="nk-pick-count">{_jile(s["n"])}</span>'
+            f'<span class="nk-pick-count">{_jile(_now_n(k, s))}</span>'
             f'<span class="nk-pick-arrow">›</span>'
             f'</a>'
         )

@@ -62,7 +62,7 @@ wrong. Never weaken, skip or delete a legal test to make a build pass.
   change mandi prices, advice or ranking order.
 - Affiliate links carry the disclosure in `backend/services/affiliate.py`.
 - Every rupee we receive is recorded in the payments ledger. No auto-debit.
-  Refund terms are the ones printed on /terms and /verify, and nothing else.
+  Refund terms are the ones printed on /terms and /bluetick (the नीला टिक page, formerly /verify), and nothing else.
 - The blue tick (नीला टिक) is a **paid premium membership**. It is never called
   identity verification, "verified seller" or a guarantee. A test enforces this.
 - Scheme (yojana) pages name the scheme and link the official page. They never

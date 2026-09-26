@@ -68,7 +68,7 @@ try:
 except ImportError:
     sponsors = None
 from backend.routes import bazar
-from backend.routes.share import (_crop_image, _HI_CROP_EN, _TILES,
+from backend.routes.share import (_crop_image, _crop_thumb, _HI_CROP_EN, _TILES,
                                   _STAPLE_TILES_N)
 
 import logging
@@ -831,6 +831,29 @@ def _rows_for(commodity: str, state: str = "", district: str = "") -> list:
     return (data or {}).get("prices") or []
 
 
+# ── one crop's rows for ALL of India, cached briefly ──────────
+# The crop hub (tier2-extras) and every district page's nearby-mandi panel
+# (tier4-extras) read the whole country's rows for a crop — ~3,000 for onion.
+# Uncached, each district page view pulled that from Neon again for a
+# snapshot that changes a few times a day. Ten minutes, and at most
+# _NATION_MAX crops held, because this box has 512 MB.
+_NATION_TTL = 600
+_NATION_MAX = 16
+_nation_rows: dict = {}
+
+
+def _rows_nationwide(commodity: str) -> list:
+    now = time.time()
+    hit = _nation_rows.get(commodity)
+    if hit and now - hit[0] < _NATION_TTL:
+        return hit[1]
+    rows = _rows_for(commodity)
+    if len(_nation_rows) >= _NATION_MAX:          # evict the oldest entry
+        _nation_rows.pop(min(_nation_rows, key=lambda k: _nation_rows[k][0]), None)
+    _nation_rows[commodity] = (now, rows)
+    return rows
+
+
 def _hist_to_dict(h) -> dict:
     """Render a history OR last-seen row. Both carry the same columns; neither
     carries a delta/spark, so the page simply skips the arrow and sparkline,
@@ -900,8 +923,11 @@ def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
 # ── the district trend line ──────────────────────────────────
 # How far back the chart looks, in CALENDAR days. Deliberately days and not
 # data points — see _district_series. Capped below mandi_price_history's
-# ~15-day retention so the window is always fully covered by real rows.
-CHART_DAYS = 10
+# 15-day retention (MANDI_HISTORY_DAYS) so the window is always fully covered
+# by real rows. A 30- or 90-day daily line would need that retention raised,
+# and history costs ~6 MB/day against the free Neon cap — the longer view is
+# the monthly "साल भर का" tab instead, which reads mandi_price_monthly.
+CHART_DAYS = 14
 
 
 def _mkt_ident(commodity, market, variety, grade) -> tuple:
@@ -1993,6 +2019,77 @@ padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
 .season-facts li{flex-direction:column;gap:2px}
 .sl-v{white-space:normal}
 }
+
+/* ── one trend card, two views: रोज़ का भाव / साल भर का ──
+   The daily line and the multi-year calendar used to be two separate cards,
+   stacked, each titled "रुझान". One card with a two-way switch reads as one
+   thing on a phone; the switch appears only when BOTH views have data. */
+.trend[hidden],.trend [hidden]{display:none!important}
+.trend-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--cream);
+border:1px solid var(--border);border-radius:12px;padding:4px;margin:6px 0 12px}
+.trend-tabs button{font:inherit;font-size:13.5px;font-weight:700;color:var(--text-mid);
+background:transparent;border:0;border-radius:9px;min-height:42px;cursor:pointer}
+.trend-tabs button[aria-selected="true"]{background:var(--green-dark);color:#fff;
+box-shadow:var(--shadow-sm)}
+.trend-cap{font-size:11.5px;color:var(--text-soft);margin-top:8px;line-height:1.55}
+
+/* ── आसपास की मंडियां (tier 4) — a plain list, one row per mandi ── */
+.nb-list{list-style:none;margin:8px 0 0;padding:0}
+.nb-list li{border-bottom:1px solid var(--border)}
+.nb-list li:last-child{border-bottom:0}
+.nb-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+padding:11px 2px;text-decoration:none;color:inherit;min-height:52px}
+.nb-l{display:flex;flex-direction:column;min-width:0}
+.nb-name{font-size:14.5px;font-weight:700;color:var(--green-dark);overflow:hidden;
+text-overflow:ellipsis;white-space:nowrap}
+.nb-meta{font-size:11.5px;color:var(--text-soft);margin-top:2px}
+.nb-r{display:flex;flex-direction:column;align-items:flex-end;flex:0 0 auto}
+.nb-price{font-size:15px;font-weight:800;color:var(--text-dark);white-space:nowrap}
+.nb-diff{font-size:11.5px;font-weight:700;white-space:nowrap;margin-top:2px}
+.nb-diff.up{color:#1b7a3d}
+.nb-diff.dn{color:#c0392b}
+.nb-diff.eq{color:var(--text-soft)}
+
+/* ── जिले के सभी भाव (district hub) — every crop's rate, one row each ── */
+.db-list{list-style:none;margin:10px 0 0;padding:0;background:var(--white);
+border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+overflow:hidden}
+.db-list li{border-bottom:1px solid var(--border)}
+.db-list li:last-child{border-bottom:0}
+.db-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+padding:11px 14px;text-decoration:none;color:inherit;min-height:54px}
+.db-row:hover,.db-row:active{background:var(--cream)}
+.db-l{display:flex;align-items:center;gap:10px;min-width:0}
+.db-l img,.db-ico{width:34px;height:34px;border-radius:8px;object-fit:cover;flex:0 0 auto;
+background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:18px}
+.db-txt{display:flex;flex-direction:column;min-width:0}
+.db-crop{font-size:15px;font-weight:700;color:var(--text-dark);overflow:hidden;
+text-overflow:ellipsis;white-space:nowrap}
+.db-meta{font-size:11.5px;color:var(--text-soft);margin-top:1px;overflow:hidden;
+text-overflow:ellipsis;white-space:nowrap}
+.db-r{display:flex;flex-direction:column;align-items:flex-end;flex:0 0 auto}
+.db-price{font-size:16px;font-weight:800;color:var(--green-dark);white-space:nowrap}
+.db-price small{font-size:10.5px;font-weight:600;color:var(--text-soft)}
+.db-range{font-size:11px;color:var(--text-soft);white-space:nowrap;margin-top:1px}
+.db-more{margin-top:18px}
+.db-more h3{font-size:14px;color:var(--text-mid);margin:0 0 8px}
+.db-more p{font-size:12px;color:var(--text-soft);margin:0 0 10px}
+
+/* ── crop hub: आज सबसे ऊंचा / सबसे कम भाव, side by side ── */
+.hl-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.hl-card{display:flex;flex-direction:column;gap:3px;background:var(--white);
+border:1px solid var(--border);border-top:4px solid #1b7a3d;border-radius:var(--radius-md);
+padding:12px 13px;text-decoration:none;color:inherit;box-shadow:var(--shadow-sm);min-width:0}
+.hl-card.lo{border-top-color:#c0392b}
+.hl-k{font-size:11.5px;font-weight:700;color:#1b7a3d}
+.hl-card.lo .hl-k{color:#c0392b}
+.hl-v{font-size:19px;font-weight:800;color:var(--text-dark);white-space:nowrap}
+.hl-v small{font-size:11px;font-weight:600;color:var(--text-soft)}
+.hl-m{font-size:13px;font-weight:700;color:var(--green-dark);overflow:hidden;
+text-overflow:ellipsis;white-space:nowrap}
+.hl-p{font-size:11.5px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;
+white-space:nowrap}
+.hl-note{font-size:11.5px;color:var(--text-soft);margin-top:8px;line-height:1.5}
 
 /* ── mandi-wise cards ── */
 .mkts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
@@ -3767,6 +3864,60 @@ def _chart(vals: list[float]) -> str:
 </svg>"""
 
 
+_TREND_JS = """<script>
+(function(){
+  var c=document.getElementById('km-trend');if(!c)return;
+  var tabs=c.querySelector('.trend-tabs'),pd=c.querySelector('[data-p="d"]'),
+      py=c.querySelector('[data-p="y"]');
+  function show(t){
+    tabs.querySelectorAll('button').forEach(function(b){
+      b.setAttribute('aria-selected',b.getAttribute('data-t')===t?'true':'false');});
+    if(pd)pd.hidden=(t!=='d');
+    py.hidden=(t!=='y');
+  }
+  tabs.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-t]');if(b)show(b.getAttribute('data-t'));});
+  document.addEventListener('DOMContentLoaded',function(){
+    fetch(__URL__).then(function(r){return r.json();}).then(function(d){
+      if(!(d&&d.ok&&d.html))return;
+      py.innerHTML=d.html;
+      if(pd){tabs.hidden=false;}else{py.hidden=false;c.hidden=false;}
+    }).catch(function(){});
+  });
+})();
+</script>"""
+
+
+def _trend_card(crop_hi: str, place_hi: str, chart_svg: str, n_days: int,
+                season_url: str) -> str:
+    """ONE trend card for the tier-4 page, with a two-way switch:
+
+      रोज़ का भाव  — the daily district line (_chart), drawn server-side;
+      साल भर का   — the multi-year monthly calendar + "पिछले साल इसी महीने",
+                    fetched lazily from /bhav/api/season/…?embed=1.
+
+    These used to be two stacked cards that both called themselves "रुझान",
+    which on a phone read as the same thing twice. The switch only appears
+    once BOTH views have something to show — a switch with one working side is
+    a control that does nothing. With no daily line the card stays hidden
+    until the yearly view arrives, and stays hidden if that is empty too.
+    """
+    daily = (f'<div class="trend-pane" data-p="d" role="tabpanel">{chart_svg}'
+             f'<p class="trend-cap">पिछले {n_days} दिन · हर दिन {escape(place_hi)} की '
+             f'मंडियों का औसत भाव</p></div>'
+             if chart_svg else "")
+    hidden = "" if chart_svg else " hidden"
+    return (f'<section class="card-w trend" id="km-trend"{hidden}>'
+            f'<div class="card-w-h"><h2>📈 {escape(crop_hi)} भाव का रुझान</h2>'
+            f'<em>{escape(place_hi)} · ₹/क्विंटल</em></div>'
+            f'<div class="trend-tabs" role="tablist" aria-label="भाव का रुझान" hidden>'
+            f'<button type="button" role="tab" aria-selected="true" data-t="d">रोज़ का भाव</button>'
+            f'<button type="button" role="tab" aria-selected="false" data-t="y">साल भर का</button>'
+            f'</div>{daily}'
+            f'<div class="trend-pane" data-p="y" role="tabpanel" hidden></div>'
+            f'</section>' + _TREND_JS.replace("__URL__", _json.dumps(season_url)))
+
+
 def _sparkline(points: list[str]) -> str:
     """Inline SVG sparkline from the row's 7-day modal history."""
     vals = [v for v in (_num(p) for p in points) if v is not None]
@@ -4590,6 +4741,76 @@ def bhav_state_hub(state: str):
 # usually wheat). It is also the page "<जिला> मंडी भाव" is actually searched
 # for, which no crop-scoped URL could ever answer.
 # ════════════════════════════════════════════════════════════
+
+_board_cache: dict = {}
+
+
+def _district_board(state_name: str, dist_name: str) -> dict:
+    """{crop slug → {avg, lo, hi, mandis, iso}} for every crop in this
+    district's snapshot — the numbers a "<district> mandi bhav" searcher came
+    for, all at once.
+
+    avg is computed exactly as the crop page computes its headline (_stats:
+    mean of modal), so a row here and the page it links to print the same
+    big number. lo/hi follow _stats too (lowest min, highest max) except that
+    an end more than 4x off the average is dropped as a feed error — see
+    _sane below. `iso` is the newest arrival date behind the row, for dating
+    a quiet crop.
+    """
+    key = (state_name.lower(), dist_name.lower())
+    hit = _board_cache.get(key)
+    if hit and time.time() - hit[0] < _PLACE_RATES_TTL:
+        return hit[1]
+    db = SessionLocal()
+    try:
+        rows = (db.query(MandiPrice.commodity, MandiPrice.market, MandiPrice.min_price,
+                         MandiPrice.max_price, MandiPrice.modal_price,
+                         MandiPrice.arrival_date)
+                  .filter(MandiPrice.state.ilike(state_name),
+                          MandiPrice.district.ilike(dist_name))
+                  .all())
+    finally:
+        db.close()
+
+    agg: dict = {}
+    for commodity, market, lo, hi, modal, arr in rows:
+        m = _num(modal)
+        if not (commodity and m and _is_crop(commodity)):
+            continue
+        slot = agg.setdefault(_slugify(commodity),
+                              {"modals": [], "mins": [], "maxs": [], "mandis": set(), "iso": ""})
+        slot["modals"].append(m)
+        if _num(lo):
+            slot["mins"].append(_num(lo))
+        if _num(hi):
+            slot["maxs"].append(_num(hi))
+        if market and market.strip() not in ("", "-"):
+            slot["mandis"].add(market.strip())
+        slot["iso"] = max(slot["iso"], _row_date_iso(arr or ""))
+
+    def _sane(vals: list, avg: float) -> list:
+        # A min of ₹14 against a ₹1,686 average (Khargone maize, 25 Sep 2026)
+        # is a unit slip in the feed, not a price. A row this compact has no
+        # room to explain that, so such ends are left out of the range.
+        return [x for x in vals if avg / 4 <= x <= avg * 4]
+
+    out = {}
+    for cs, v in agg.items():
+        if not v["modals"]:
+            continue
+        avg = sum(v["modals"]) / len(v["modals"])
+        mins, maxs = _sane(v["mins"], avg), _sane(v["maxs"], avg)
+        out[cs] = {"avg": round(avg),
+                   "lo": round(min(mins)) if mins else None,
+                   "hi": round(max(maxs)) if maxs else None,
+                   "mandis": sorted(v["mandis"]),
+                   "iso": v["iso"]}
+    if len(_board_cache) > 400:        # small dicts; a crude cap is enough
+        _board_cache.clear()
+    _board_cache[key] = (time.time(), out)
+    return out
+
+
 @router.get("/bhav/rajya/{state}/{district}", response_class=HTMLResponse)
 def bhav_district_hub(state: str, district: str):
     idx = _get_index()
@@ -4613,33 +4834,67 @@ def bhav_district_hub(state: str, district: str):
     fresh = _fresh_iso_place(idx, ss, ds)
     as_of_hi = _as_of_hi(fresh)
 
-    # Today's district average per crop — same reason as the state hub above.
-    rates = _rates_in(idx, ss, ds)
+    # ── the price board: EVERY crop's rate today, one row each ──
+    # This page is what "<district> mandi bhav" lands on, and it ranked on
+    # page one for those searches while taking almost no clicks. It used to answer with
+    # a grid of crop PHOTOS and one number each, below a satellite map — the
+    # rates were a scroll and a tap away. Now the rates are the page: crop,
+    # today's average, min–max, and how many mandis, as a list a phone can
+    # read top to bottom. Figures match the crop page each row links to.
+    board = _district_board(sn, dn)
+    board_iso = max((v["iso"] for v in board.values()), default="")
+    try:
+        stamp_before = (date.fromisoformat(board_iso) - timedelta(days=1)).isoformat()
+    except (TypeError, ValueError):
+        stamp_before = ""
 
     ordered = sorted(crops_here.items(),
                      key=lambda kv: (_tile_rank(kv[1]), _hindi_name(kv[1])))
-    cards = []
+    rows_html, quiet = [], []
+    all_mandis: set = set()
     for c, cn in ordered:
+        b = board.get(c)
         hi = _hindi_name(cn)
-        has_photo = _has_photo(cn)
-        photo = (f'<img src="{escape(_crop_image(cn, 500))}" alt="{escape(hi)}" '
-                 f'loading="lazy" width="240" height="120">' if has_photo else "")
-        en = f'<span class="crop-card-en">{escape(cn)}</span>' if hi != cn else ""
-        r = rates.get(c)
-        rate = _rupee(r["avg"]) if r else "भाव देखें →"
-        cards.append(f"""<a class="crop-card" href="/bhav/{c}/{ss}/{ds}" data-name="{escape(f'{hi} {cn}'.lower())}">
-<div class="crop-card-photo{'' if has_photo else ' noimg'}">{photo}
-<h2 class="crop-card-name">{escape(hi)}{en}</h2></div>
-<div class="crop-card-body">
-<span class="lbl">{escape(dn_hi)}</span><span class="rate">{rate}</span>
-</div></a>""")
+        if not b:
+            quiet.append(_crop_chip(f"/bhav/{c}/{ss}/{ds}", hi, cn))
+            continue
+        all_mandis.update(b["mandis"])
+        # The 3 KB icon, never the 50 KB photo: this list can hold 25+ crops.
+        _t = _crop_thumb(cn)
+        thumb = (f'<img src="{escape(_t)}" alt="" loading="lazy" width="34" height="34">'
+                 if _t else '<span class="db-ico" aria-hidden="true">🌾</span>')
+        n_m = len(b["mandis"]) or 1
+        meta = [cn] if hi != cn else []
+        meta.append(f"{n_m} मंडी" if n_m == 1 else f"{n_m} मंडियां")
+        if b["iso"] and stamp_before and b["iso"] < stamp_before:
+            _d = date.fromisoformat(b["iso"])
+            meta.append(f"📅 {_d.day} {_HI_MONTHS[_d.month - 1]} का")
+        rng = (f'<span class="db-range">₹{b["lo"]:,} – ₹{b["hi"]:,}</span>'
+               if b["lo"] and b["hi"] and b["lo"] != b["hi"] else "")
+        rows_html.append(
+            f'<li data-name="{escape(f"{hi} {cn}".lower())}">'
+            f'<a class="db-row" href="/bhav/{c}/{ss}/{ds}">'
+            f'<span class="db-l">{thumb}<span class="db-txt">'
+            f'<span class="db-crop">{escape(hi)}</span>'
+            f'<span class="db-meta">{escape(" · ".join(meta))}</span></span></span>'
+            f'<span class="db-r"><span class="db-price">₹{b["avg"]:,}<small>/क्विं.</small></span>'
+            f'{rng}</span></a></li>')
+    n_priced = len(rows_html)
 
+    # The FAQ quotes real rates — the three biggest crops on the board — so the
+    # answer to "<district> mandi bhav" is readable straight from the result.
+    _top_rates = [(_hindi_name(cn), board[c]["avg"]) for c, cn in ordered if c in board][:3]
     faqs = [
+        *([(f"आज {dn_hi} मंडी का भाव क्या है?",
+            f"{as_of_hi} की सरकारी रिपोर्ट के अनुसार {dn_hi} ({hi_state}) की मंडियों में "
+            + ", ".join(f"{h} ₹{v:,}" for h, v in _top_rates)
+            + " प्रति क्विंटल (औसत मॉडल भाव) रहा। बाकी सभी फसलों के भाव ऊपर सूची में हैं।")]
+          if _top_rates else []),
         (f"{dn_hi} मंडी में आज किन फसलों का भाव है?",
          f"{as_of_hi} को {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों के भाव सरकारी "
-         f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। नीचे अपनी फसल चुनकर आज का पूरा भाव देखें।"),
+         f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। ऊपर सूची में हर फसल का आज का भाव है।"),
         (f"{dn_hi} मंडी का आज का भाव कैसे देखें?",
-         f"नीचे अपनी फसल चुनें — {dn_hi} की मंडियों का आज का न्यूनतम, अधिकतम और मॉडल भाव "
+         f"ऊपर सूची में अपनी फसल पर टैप करें — {dn_hi} की मंडियों का आज का न्यूनतम, अधिकतम और मॉडल भाव "
          f"प्रति क्विंटल दिख जाएगा, साथ में पिछले दिनों का रुझान भी।"),
     ]
     faq_html, faq_ld = _faq(faqs)
@@ -4669,7 +4924,7 @@ def bhav_district_hub(state: str, district: str):
 
     answer_lead = (f'<p class="lead-out">{as_of_hi} को {escape(dn_hi)} ({escape(hi_state)}) की मंडियों में '
                    f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
-                   f'दर्ज हुआ। नीचे अपनी फसल चुनकर उस फसल का पूरा भाव देखें।</p>')
+                   f'दर्ज हुआ। ऊपर सूची में किसी फसल पर टैप करके मंडीवार पूरा भाव देखें।</p>')
 
     # State-language pass — services/state_lang.py. This page carries no crop
     # name, so it is the cheapest of the five: place, count and date only.
@@ -4693,7 +4948,7 @@ def bhav_district_hub(state: str, district: str):
     if _ldc:
         desc = _fit(*_ldc, limit=162)
     head_h1 = escape(state_lang.h1("district_all", lang, _lv,
-                                   f"{dn_hi} मंडी भाव आज — फसल चुनें"))
+                                   f"{dn_hi} मंडी भाव आज"))
     _lf = state_lang.faqs("district_all", lang, _lv)
     if _lf:
         faq_html, faq_ld = _faq(_lf)
@@ -4701,21 +4956,31 @@ def bhav_district_hub(state: str, district: str):
             ("कृषि मित्र", f"{SITE}/"),
             (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
             (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn_hi, canon)]))
-    head_sub = (f"📅 {as_of_hi} · {escape(hi_state)} · {len(crops_here)} फसलें · "
-                f"औसत भाव ₹/क्विंटल · स्रोत: data.gov.in (Agmarknet)"
-                f"{_age_badge(fresh)}")
+    n_mandis = len(all_mandis)
+    head_sub = (f"📅 {as_of_hi} · {escape(hi_state)} · {n_priced} फसलें"
+                + (f" · {n_mandis} {'मंडी' if n_mandis == 1 else 'मंडियां'}" if n_mandis else "")
+                + f"{_age_badge(fresh)}")
     hub_map_html = _district_hub_satellite_map_html(state=sn, district=dn,
                                                     s_slug=ss, d_slug=ds, d_hi=dn_hi)
+    board_html = (f'<ul class="db-list" id="tier-grid">{"".join(rows_html)}</ul>'
+                  f'<p class="note">₹ प्रति क्विंटल · बड़ा अंक = मंडियों का औसत मॉडल भाव, '
+                  f'नीचे न्यूनतम – अधिकतम · फसल पर टैप करें, मंडीवार पूरा भाव खुलेगा। '
+                  f'स्रोत: data.gov.in (Agmarknet)</p>'
+                  if rows_html else "")
+    quiet_html = (f'<div class="db-more"><h3>इनका आज का भाव नहीं आया</h3>'
+                  f'<p>टैप करें — आखिरी दर्ज भाव तारीख के साथ दिखेगा।</p>'
+                  f'<div class="chips">{"".join(quiet)}</div></div>'
+                  if quiet else "")
     body = f"""{_tier_head(head_h1, head_sub)}
+{_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)') if len(rows_html) > 8 else ""}
+{board_html}
+{quiet_html}
+{answer_lead}
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav/rajya/{ss}">← {escape(hi_state)} के सभी जिले</a>
 </div>
 {_hub_selector("", ss, ds, idx, known_state=True, known_dist=True, show_crop=False)}
 {hub_map_html}
-<h2>{escape(dn_hi)} में फसल चुनें</h2>
-{_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)')}
-<div class="crop-grid" id="tier-grid">{"".join(cards)}</div>
-{answer_lead}
 {_dukan_pitch(dn_hi)}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
@@ -5742,7 +6007,7 @@ def _lazy_script(pairs: list) -> str:
     DOMContentLoaded and swaps in the returned HTML. Fires all fetches in
     parallel so they appear as fast as the DB can answer."""
     fetches = "".join(
-        f"fetch('{url}').then(r=>r.json()).then(d=>{{if(d.ok){{var e=document.getElementById('{did}');if(e)e.outerHTML=d.html;}}}}).catch(()=>{{}});"
+        f"fetch('{url}').then(r=>r.json()).then(d=>{{if(d.ok){{var e=document.getElementById('{did}');if(e)e.outerHTML=d.html;document.dispatchEvent(new Event('km:lazy'));}}}}).catch(()=>{{}});"
         for url, did in pairs
     )
     return f'<script>document.addEventListener("DOMContentLoaded",function(){{{fetches}}});</script>'
@@ -7295,6 +7560,83 @@ def _api_places():
                  "CDN-Cache-Control": "public, max-age=86400"})
 
 
+# ── crop hub: today's highest and lowest mandi, nationwide ──
+HL_FRESH_DAYS = 2   # "आज" means the latest report day and the day before it
+HL_OUTLIER = 3.0    # a mandi at 3x the national median (or a third of it) is a
+                    # unit error in the feed (₹40,000 "wheat"), not a price
+
+
+def _high_low_mandis(rows: list) -> tuple | None:
+    """(highest, lowest) mandi for one crop across India, each a dict of
+    market/district/state/price/iso — or None when fewer than two mandis
+    reported.
+
+    Per MANDI, not per row: a mandi reporting three varieties is one place a
+    farmer could sell, priced at the median of what it reported. Only the
+    latest report days count, so "आज सबसे ऊंचा" is not a quiet mandi's
+    fortnight-old rate carried forward. Mandis further than HL_OUTLIER from the
+    national median are dropped before either end is picked — the single
+    highest ROW in the feed is very often a data-entry error, and printing it
+    as "the best price in India" would send a farmer after a number that does
+    not exist.
+    """
+    dated = [(r, _row_date_iso(r.get("date") or "")) for r in rows if _num(r.get("modal_price"))]
+    newest = max((iso for _r, iso in dated), default="")
+    if not newest:
+        return None
+    cutoff = (date.fromisoformat(newest) - timedelta(days=HL_FRESH_DAYS - 1)).isoformat()
+    per: dict[tuple, dict] = {}
+    for r, iso in dated:
+        if iso < cutoff:
+            continue
+        k = (r.get("state") or "", r.get("district") or "", (r.get("market") or "").strip())
+        if not all(k) or k[2] == "-":
+            continue
+        slot = per.setdefault(k, {"m": [], "iso": ""})
+        slot["m"].append(_num(r["modal_price"]))
+        slot["iso"] = max(slot["iso"], iso)
+    if len(per) < 2:
+        return None
+    priced = [{"state": k[0], "district": k[1], "market": k[2],
+               "price": round(statistics.median(v["m"])), "iso": v["iso"]}
+              for k, v in per.items()]
+    mid = statistics.median(p["price"] for p in priced)
+    sane = [p for p in priced if mid / HL_OUTLIER <= p["price"] <= mid * HL_OUTLIER]
+    if len(sane) < 2:
+        return None
+    hi_ = max(sane, key=lambda p: p["price"])
+    lo_ = min(sane, key=lambda p: p["price"])
+    if hi_["price"] == lo_["price"]:
+        return None
+    return hi_, lo_
+
+
+def _high_low_html(idx: dict, cs: str, crop_hi: str, hl: tuple) -> str:
+    """Two cards side by side — सबसे ऊंचा and सबसे कम — each naming the mandi,
+    its district and state, and linking to that district's page."""
+    def card(p: dict, low: bool) -> str:
+        ss_, ds_ = _slugify(p["state"]), _slugify(p["district"])
+        place = f'{_hindi_district(p["state"], p["district"])}, {_hindi_state(p["state"])}'
+        inner = (f'<span class="hl-k">{"▼ सबसे कम भाव" if low else "▲ सबसे ऊंचा भाव"}</span>'
+                 f'<span class="hl-v">₹{p["price"]:,}<small>/क्विं.</small></span>'
+                 f'<span class="hl-m">{escape(p["market"])}</span>'
+                 f'<span class="hl-p">{escape(place)}</span>')
+        cls = "hl-card lo" if low else "hl-card"
+        if ds_ in idx.get("dists", {}).get(cs, {}).get(ss_, {}):
+            return f'<a class="{cls}" href="/bhav/{cs}/{ss_}/{ds_}">{inner}</a>'
+        return f'<div class="{cls}">{inner}</div>'
+
+    hi_, lo_ = hl
+    d = date.fromisoformat(max(hi_["iso"], lo_["iso"]))
+    return (f'<section class="better flat">'
+            f'<h2>📊 आज देश में {escape(crop_hi)} का भाव</h2>'
+            f'<p class="better-sub">📅 {d.day} {_HI_MONTHS[d.month - 1]} की सरकारी रिपोर्ट · '
+            f'हर मंडी का मॉडल भाव</p>'
+            f'<div class="hl-pair">{card(hi_, False)}{card(lo_, True)}</div>'
+            f'<p class="hl-note">किस्म और क्वालिटी अलग होने से मंडियों के भाव में फर्क होता है। '
+            f'अपने जिले का भाव देखने के लिए नीचे राज्य चुनें।</p></section>')
+
+
 @router.get("/bhav/api/tier2-extras/{c_slug}")
 def _api_tier2_extras(c_slug: str):
     """Lazy: best mandi nationwide + stats + answer_lead for tier 2."""
@@ -7308,29 +7650,29 @@ def _api_tier2_extras(c_slug: str):
     today_hi = _hindi_date(date.today())
     state_map = idx["states"].get(cs, {})
 
-    rows = _rows_for(commodity)
+    rows = _rows_nationwide(commodity)
     st = _stats(rows)
 
-    # Best mandi nationwide
-    best = max((r for r in rows if _num(r.get("modal_price"))),
-               key=lambda r: _num(r["modal_price"]), default=None)
-    best_html = ""
-    if best:
-        b_state = best.get("state", "")
-        b_dist = best.get("district", "")
-        best_html = (f'<section class="better" id="km-near-panel" data-crop="{cs}">'
-            f'<h2>🏆 आज देश में सबसे ज्यादा {escape(hi)} भाव</h2>'
-            f'<p class="better-sub">आज के मॉडल भाव के आधार पर</p>'
-            f'<ul><li><a class="better-mandi-card" href="/bhav/{cs}/{_slugify(b_state)}/{_slugify(b_dist)}">'
-            f'<div class="bmc-details"><span class="bmc-market">{escape(best.get("market","-"))}</span>'
-            f'<span class="bmc-meta">{escape(b_dist)}, {escape(_hindi_state(b_state))}</span></div>'
-            f'<span class="bmc-action">भाव देखें →</span></a></li></ul></section>')
+    hl = _high_low_mandis(rows)
+    best = hl[0] if hl else None
+    best_html = _high_low_html(idx, cs, hi, hl) if hl else ""
+    # The lead below sits directly under the high/low cards, which are dated
+    # by the report — so it must be too, or one block names two different days.
+    newest = max((_row_date_iso(r.get("date") or "") for r in rows), default="")
+    if newest:
+        today_hi = _hindi_date(date.fromisoformat(newest))
+    # The nearest-mandi slot ships EMPTY and hidden: bhav-nearest.js fills and
+    # reveals it only for a farmer whose device shared a location. It used to
+    # hold the 🏆 highest mandi as a fallback, which the सबसे ऊंचा / सबसे कम
+    # pair above now shows to everyone — the same mandi twice on one screen.
+    best_html += f'<section class="better" id="km-near-panel" data-crop="{cs}" hidden></section>'
 
     # Answer lead
     lead_avg = f" — देशभर का औसत मॉडल भाव ₹{st['avg']:,} प्रति क्विंटल" if st["avg"] else ""
-    lead_best = (f" आज सबसे ऊंचा भाव {escape(best.get('market', '-'))} "
-                 f"({escape(best.get('district', '-'))}, {escape(_hindi_state(best.get('state', '')))}) "
-                 f"मंडी में दर्ज हुआ।" if best else "")
+    lead_best = (f" आज सबसे ऊंचा भाव {escape(best['market'])} "
+                 f"({escape(_hindi_district(best['state'], best['district']))}, "
+                 f"{escape(_hindi_state(best['state']))}) मंडी में ₹{best['price']:,} दर्ज हुआ।"
+                 if best else "")
     answer_lead = (f'<p class="lead-out">{today_hi} को {escape(hi)} ({escape(commodity)}) का भाव देश के '
                    f'{len(state_map)} राज्यों की {_mandis_gen(st["n"])} से भारत सरकार के Agmarknet '
                    f'(data.gov.in) पोर्टल पर दर्ज हुआ{lead_avg}।{lead_best}</p>')
@@ -7397,6 +7739,135 @@ def _api_tier3_extras(c_slug: str, s_slug: str):
                                  "CDN-Cache-Control": "public, max-age=600"})
 
 
+# ── आसपास की 5 मंडियां ─────────────────────────────────────
+NEARBY_N = 5            # rows in the panel
+NEARBY_MAX_KM = 150     # beyond this a mandi is not "nearby" for a tractor-trolley
+NEARBY_PER_DISTRICT = 2 # so five rows are not all one neighbouring district
+NEARBY_STALE_DAYS = 10  # a mandi silent this long is not a comparison, it is history
+
+
+def _km_label(km: float) -> str:
+    """Distances are district-centre to district-centre, so a precise-looking
+    "37 किमी" would claim more than we know. Round to 5 and say लगभग."""
+    return f"लगभग {max(5, int(round(km / 5.0)) * 5)} किमी"
+
+
+def _nearby_mandis_html(idx: dict, cs: str, commodity: str, state: str,
+                        district: str, crop_hi: str) -> str:
+    """The tier-4 comparison panel: today's rate at the NEAREST mandis for
+    this crop, with how far each is and how much more or less it pays.
+
+    It replaces "other districts of the same state, sorted by price", which
+    happily ranked a mandi 400 km away first and ignored one 20 km away across
+    a state border. Distance is measured between district centroids
+    (backend/data/district_coords.json — mandis carry no coordinates of their
+    own), so every figure is labelled लगभग and the note says so.
+
+    Returns "" when fewer than two mandis can be placed, and the caller falls
+    back to the state-wide comparison.
+    """
+    origin = district_geo.coord_for(state, district)
+    if not origin:
+        return ""
+    rows = _rows_nationwide(commodity)
+    if not rows:
+        return ""
+
+    here_rows = [r for r in rows
+                 if (r.get("state") or "").lower() == state.lower()
+                 and (r.get("district") or "").lower() == district.lower()]
+    here = _stats(here_rows)["avg"] if here_rows else None
+    if not here:
+        return ""
+    # A nearby row is dated only when it is older than THIS page's own price by
+    # two days or more — the comparison the farmer is making is "their rate vs
+    # mine", so that is the date that matters, and stamping every row that
+    # trails the single freshest mandi in India turned the list into dates.
+    here_iso = max((_row_date_iso(r.get("date") or "") for r in here_rows), default="")
+    try:
+        stamp_before = (date.fromisoformat(here_iso) - timedelta(days=1)).isoformat()
+    except (TypeError, ValueError):
+        stamp_before = ""
+
+    newest = max((_row_date_iso(r.get("date") or "") for r in rows), default="")
+    try:
+        cutoff = (date.fromisoformat(newest) - timedelta(days=NEARBY_STALE_DAYS)).isoformat()
+    except (TypeError, ValueError):
+        cutoff = ""
+
+    mandis: dict[tuple, dict] = {}
+    for r in rows:
+        st_, dn_ = r.get("state") or "", r.get("district") or ""
+        mk = (r.get("market") or "").strip()
+        m = _num(r.get("modal_price"))
+        if not (mk and mk != "-" and m and st_ and dn_):
+            continue
+        if st_.lower() == state.lower() and dn_.lower() == district.lower():
+            continue                     # this district's own mandis are listed below
+        iso = _row_date_iso(r.get("date") or "")
+        if cutoff and iso and iso < cutoff:
+            continue
+        slot = mandis.setdefault((st_, dn_, mk), {"modals": [], "iso": ""})
+        slot["modals"].append(m)
+        slot["iso"] = max(slot["iso"], iso or "")
+
+    placed = []
+    for (st_, dn_, mk), v in mandis.items():
+        c = district_geo.coord_for(st_, dn_)
+        if not c:
+            continue
+        km = district_geo.haversine_km(origin[0], origin[1], c[0], c[1])
+        if km > NEARBY_MAX_KM:
+            continue
+        price = round(statistics.median(v["modals"]))
+        placed.append((km, -price, st_, dn_, mk, price, v["iso"]))
+    placed.sort()
+
+    picked, per_d = [], {}
+    for item in placed:
+        k = (item[2], item[3])
+        if per_d.get(k, 0) >= NEARBY_PER_DISTRICT:
+            continue
+        per_d[k] = per_d.get(k, 0) + 1
+        picked.append(item)
+        if len(picked) == NEARBY_N:
+            break
+    if len(picked) < 2:
+        return ""
+
+    d_hi = _hindi_district(state, district)
+    li = []
+    for km, _neg, st_, dn_, mk, price, iso in picked:
+        diff = price - here
+        if abs(diff) < max(10, here * 0.005):
+            diff_html = '<span class="nb-diff eq">लगभग बराबर</span>'
+        elif diff > 0:
+            diff_html = f'<span class="nb-diff up">▲ ₹{diff:,} ज़्यादा</span>'
+        else:
+            diff_html = f'<span class="nb-diff dn">▼ ₹{-diff:,} कम</span>'
+        place = _hindi_district(st_, dn_)
+        if st_.lower() != state.lower():
+            place = f"{place}, {_hindi_state(st_)}"
+        stamp = ""
+        if iso and stamp_before and iso < stamp_before:
+            _d = date.fromisoformat(iso)
+            stamp = f" · 📅 {_d.day} {_HI_MONTHS[_d.month - 1]} का"
+        ss_, ds_ = _slugify(st_), _slugify(dn_)
+        inner = (f'<span class="nb-l"><span class="nb-name">{escape(mk)}</span>'
+                 f'<span class="nb-meta">{escape(place)} · {_km_label(km)}{escape(stamp)}</span></span>'
+                 f'<span class="nb-r"><span class="nb-price">₹{price:,}</span>{diff_html}</span>')
+        if ds_ in idx.get("dists", {}).get(cs, {}).get(ss_, {}):
+            li.append(f'<li><a class="nb-row" href="/bhav/{cs}/{ss_}/{ds_}">{inner}</a></li>')
+        else:
+            li.append(f'<li><div class="nb-row">{inner}</div></li>')
+
+    return (f'<section class="better flat">'
+            f'<h2>📍 आसपास की मंडियों में {escape(crop_hi)} का भाव</h2>'
+            f'<p class="better-sub">{escape(d_hi)} का औसत ₹{here:,}/क्विंटल — उससे तुलना। '
+            f'दूरी लगभग है (जिला-केंद्र से)। भेजने से पहले भाड़ा ज़रूर जोड़ें।</p>'
+            f'<ul class="nb-list">{"".join(li)}</ul></section>')
+
+
 @router.get("/bhav/api/tier4-extras/{c_slug}/{s_slug}/{d_slug}")
 def _api_tier4_extras(c_slug: str, s_slug: str, d_slug: str):
     """Lazy: comparison panel for tier 4 (the #1 cause of 504s)."""
@@ -7409,6 +7880,16 @@ def _api_tier4_extras(c_slug: str, s_slug: str, d_slug: str):
         return JSONResponse({"ok": False})
 
     hi, hi_state = _hindi_name(commodity), _hindi_state(state)
+
+    # First choice: the 5 nearest mandis, across state lines — the ones a
+    # farmer could actually drive to. Only when fewer than two can be placed
+    # on the map (no district centroid) does the old state-wide comparison
+    # below take over.
+    near_html = _nearby_mandis_html(idx, cs, commodity, state, district, hi)
+    if near_html:
+        return JSONResponse({"ok": True, "html": near_html},
+                            headers={"Cache-Control": "public, max-age=300",
+                                     "CDN-Cache-Control": "public, max-age=600"})
 
     rows = _rows_for(commodity, state=state)
     st = _stats(rows)
@@ -7511,12 +7992,16 @@ def _season_chart(by_month: dict, now_m: int, best_m: int, worst_m: int) -> str:
 
 
 @router.get("/bhav/api/season/{c_slug}/{s_slug}/{d_slug}")
-def _api_season(c_slug: str, s_slug: str, d_slug: str):
+def _api_season(c_slug: str, s_slug: str, d_slug: str, embed: int = 0):
     """Lazy: the multi-year seasonality panel for tier 4.
 
     Reads ONLY our own mandi_price_monthly summary — never data.gov. On a
     miss it queues the slice for the background drain and renders nothing,
     so a page view can never wait on (or spend quota at) an external API.
+
+    embed=1 returns just the inside of the "साल भर का" view of the trend card
+    (see _trend_card): no card, no heading of its own. Without it, the old
+    standalone card — still what HTML cached before the trend card asks for.
     """
     from backend.services.mandi_season_service import get_summary, enqueue
 
@@ -7583,6 +8068,17 @@ def _api_season(c_slug: str, s_slug: str, d_slug: str):
 
     if not (ly_html or peak_html):
         return JSONResponse({"ok": True, "html": ""})
+
+    if embed:
+        html = (f'{chart}'
+                f'<p class="trend-cap">हर महीने का आम भाव · पिछले {years} साल का '
+                f'सरकारी रिकॉर्ड (Agmarknet)</p>'
+                f'<ul class="season-facts">{ly_html}{peak_html}{trough_html}</ul>'
+                f'<p class="season-note">यह पुराना रिकॉर्ड है — आगे के भाव का अनुमान नहीं। '
+                f'हर साल मौसम, आवक और मांग से भाव बदलता है।</p>')
+        return JSONResponse({"ok": True, "html": html},
+                            headers={"Cache-Control": "public, max-age=3600",
+                                     "CDN-Cache-Control": "public, max-age=21600"})
 
     html = (f'<section class="card-w season">'
             f'<div class="card-w-h"><h2>📅 {escape(district)} में {escape(hi)} — '
@@ -7658,14 +8154,16 @@ def bhav_crop(c_slug: str):
         f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
         limit=162)
 
-    head_h1 = f"आज का {escape(hi)} भाव — राज्य चुनें"
+    head_h1 = f"आज का {escape(hi)} भाव"
     head_sub = (f"📅 {as_of_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
                 f"{_age_badge(fresh_iso)}")
+    # The answer leads: today's highest and lowest mandi in India (lazy, from
+    # tier2-extras), THEN the tools for narrowing it down to one's own place.
     body = f"""{_tier_head(head_h1, head_sub)}
+{_lazy_div('bhav-lazy-t2', 'card')}
 {_hub_selector(cs, seed_ss, "", idx, known_crop=True)}
 {_msp_html(commodity)}
 {_dukan_pitch()}
-{_lazy_div('bhav-lazy-t2', 'rows')}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
 {_tier_search('tier-grid', 'राज्य खोजें... (उत्तर प्रदेश, बिहार)')}
 <div class="place-grid" id="tier-grid">{"".join(cards)}</div>
@@ -7936,21 +8434,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     # Now the price panel renders instantly; the comparison appears shortly after.
     better_html = _lazy_div('bhav-lazy-t4', 'rows')
 
-    # ── multi-year seasonality (पिछले साल इसी समय / कब बेचें) ──
-    # Also lazy, and for a second reason beyond speed: on the first ever view
-    # of a district+crop the summary does not exist yet, so the endpoint
-    # queues it for the background drain and returns nothing. The page must
-    # never wait on that.
-    season_html = _lazy_div('bhav-lazy-season', 'card')
-
-    # ── the trend chart, drawn from the district series built above ──
+    # ── the trend card: रोज़ का भाव (daily line) + साल भर का (seasonality) ──
     # sell-or-wait read, from the same history the chart draws (no forecast made)
     signal_html = _sell_signal(series, st["avg"], avg_pct)
-    chart_svg = _chart(series)
-    chart_html = (f"""<section class="card-w">
-<div class="card-w-h"><h2>{escape(hi)} का {len(series)}-दिन रुझान</h2><em>{escape(d_hi)} · ₹/क्विंटल</em></div>
-{chart_svg}
-</section>""" if chart_svg else "")
+    trend_html = _trend_card(hi, d_hi, _chart(series), len(series),
+                             f"/bhav/api/season/{cs}/{ss}/{ds}?embed=1")
 
     price_txt = (f"औसतन ₹{st['avg']:,} प्रति क्विंटल (₹{st['lo']:,} से ₹{st['hi']:,} तक)"
                  if st["avg"] and st["lo"] and st["hi"] else "नीचे मंडीवार भाव देखें")
@@ -8241,9 +8729,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
 {better_html}
 
-{chart_html}
-
-{season_html}
+{trend_html}
 
 {answer_lead}
 
@@ -8271,8 +8757,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_kheti_saman_html(cs, hi)}
 {_lead_gen_html()}
 {_related_links(cs, ss, ds, commodity, district)}
-{_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4'),
-               ('/bhav/api/season/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-season')])}"""
+{_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4')])}"""
 
     map_head = (
         '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'

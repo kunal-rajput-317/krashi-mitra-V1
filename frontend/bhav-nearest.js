@@ -46,6 +46,9 @@
         if (d && d.ok && d.html) {
           panel.innerHTML = d.html;
           panel.setAttribute("data-km-nearest", "1");
+          // The crop hub ships this slot empty and hidden (its highest/lowest
+          // pair already covers the no-location case), so reveal it here.
+          panel.hidden = false;
         } else {
           done = false;   // let a later km:location retry
         }
@@ -60,4 +63,8 @@
   }
   // Farmer grants location mid-visit → upgrade the panel live.
   document.addEventListener("km:location", run);
+  // The panel itself arrives in a LAZY fragment, after DOMContentLoaded has
+  // already found nothing to swap — bhav.py's lazy loader fires this event
+  // each time a fragment lands, so the swap gets its second chance.
+  document.addEventListener("km:lazy", run);
 })();

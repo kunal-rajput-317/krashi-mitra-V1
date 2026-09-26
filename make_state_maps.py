@@ -3,6 +3,10 @@
 #   frontend/images/<prefix>-district-map.png       (full labeled map, page + download)
 #   frontend/images/<prefix>-district-map.webp      (light display copy)
 #   frontend/images/<prefix>-og.png                 (1200x630 social/og card)
+#   frontend/images/<prefix>-district-map-800.webp  (download-card preview)
+#   frontend/images/<prefix>-district-map.pdf       (A4 print copy)
+#
+#   python make_state_maps.py --extras        # just the last two, all states
 # Boundaries: udit-001/india-maps-data (Census of India). Needs playwright+chromium.
 # Re-run only if district boundaries change or the map design is redone.
 #
@@ -1130,10 +1134,48 @@ def build_state(key):
     _thumb.save(IMG_DIR / f"{prefix}-district-map-thumb.webp", "WEBP",
                 quality=82, method=6)
     print("webp:", os.path.getsize(IMG_DIR / f"{prefix}-district-map.webp"), "bytes")
+    write_extras(prefix)
     print(f"-> {key}: {n} districts, full map {W}x{H}\n")
 
 
+def write_extras(prefix):
+    """Two files made FROM the finished PNG, so they need no browser and can be
+    rebuilt for every state in seconds (`python make_state_maps.py --extras`):
+
+      <prefix>-district-map-800.webp — the preview picture in the नक्शा
+          download card (naksha.py::_dl_card). It is the <img> Google Images
+          indexes for "mp map"; 800px keeps it sharp there while costing a
+          fraction of the 1440px copy on every page view.
+      <prefix>-district-map.pdf — the same branded map centred on one A4 page
+          (portrait or landscape, whichever fits the state's shape), for the
+          students who search "naksha pdf" and print it.
+    """
+    from PIL import Image
+    im = Image.open(IMG_DIR / f"{prefix}-district-map.png").convert("RGB")
+
+    prev = im.copy()
+    prev.thumbnail((800, 800), Image.LANCZOS)
+    prev.save(IMG_DIR / f"{prefix}-district-map-800.webp", "WEBP", quality=80, method=6)
+
+    dpi = 150
+    a4 = (1240, 1754)                                  # A4 at 150 dpi, portrait
+    page_wh = a4 if im.height >= im.width else (a4[1], a4[0])
+    margin = 70
+    scale = min((page_wh[0] - 2 * margin) / im.width, (page_wh[1] - 2 * margin) / im.height)
+    fitted = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+    page = Image.new("RGB", page_wh, "white")
+    page.paste(fitted, ((page_wh[0] - fitted.width) // 2, (page_wh[1] - fitted.height) // 2))
+    page.save(IMG_DIR / f"{prefix}-district-map.pdf", "PDF", resolution=dpi)
+    print("extras:", prefix, os.path.getsize(IMG_DIR / f"{prefix}-district-map-800.webp"),
+          "B webp,", os.path.getsize(IMG_DIR / f"{prefix}-district-map.pdf"), "B pdf")
+
+
 def main():
+    if sys.argv[1:2] == ["--extras"]:
+        # Rebuild only the PNG-derived files (preview webp + A4 PDF) — no browser.
+        for k in (sys.argv[2:] or list(STATES)):
+            write_extras(STATES[k]["prefix"])
+        return
     keys = sys.argv[1:] or list(STATES)
     for k in keys:
         if k not in STATES:
