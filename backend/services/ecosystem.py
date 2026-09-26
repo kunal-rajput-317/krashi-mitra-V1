@@ -325,6 +325,7 @@ _PREFIX = (
     ("/sarkari_yojana", "yojana"), ("/meri_fasal", "fasal"),
     ("/crop-calendar", "fasal"), ("/product", "shop"),
     ("/rental", "rental"), ("/naksha", "naksha"), ("/map", "naksha"),
+    ("/bigha-calculator", "naksha"),
     ("/weather", "weather"), ("/ganna", "ganna"), ("/sawal", "sawal"),
     ("/bhav", "bhav"), ("/khoj", "khoj"), ("/chat", "chat"),
 )

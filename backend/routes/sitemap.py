@@ -137,6 +137,7 @@ CORE = [
 HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
         ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly"),
         ("/rental", 0.7, "monthly"),
+        ("/bigha-calculator", 0.7, "yearly"),
         ("/pashupalan", 0.7, "weekly"), ("/pashupalan/anda-rate", 0.9, "daily")]
 
 if _sponsor_live():

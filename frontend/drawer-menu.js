@@ -158,6 +158,7 @@
     '🌤️': { hi: 'मौसम',          en: 'Weather',     kn: 'ಹವಾಮಾನ' },
     '🌱':  { hi: 'मेरी फसल',      en: 'My Crop',     kn: 'ನನ್ನ ಬೆಳೆ' },
     '📐':  { hi: 'खेत नापें',      en: 'Field Measure', kn: 'ಹೊಲ ಅಳತೆ' },
+    '🧮':  { hi: 'बीघा कैलकुलेटर', en: 'Land Unit Converter', kn: 'ಭೂಮಿ ಅಳತೆ ಪರಿವರ್ತಕ' },
     '🏪':  { hi: 'मंडी भाव',      en: 'Mandi Rates', kn: 'ಮಂಡಿ ದರ' },
     // '📈' सभी भाव सूची is retired — see DROP below. No label/icon needed: a
     // dropped link never reaches claim() or applyMenuLang().
@@ -183,6 +184,7 @@
     '🌤️': '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="' + LEAF + '"/><g stroke="' + LEAF + '" stroke-width="1.6" stroke-linecap="round"><path d="M9 2.5v1.4M9 12.1v1.4M2.9 8h1.4M13.7 8h1.4M4.7 3.7l1 1M12.3 11.3l1 1M13.3 3.7l-1 1M5.7 11.3l-1 1"/></g><path d="M9.2 19a3.4 3.4 0 0 1 .2-6.8 4.4 4.4 0 0 1 8.4 1.3A2.9 2.9 0 0 1 17.4 19H9.2Z" fill="currentColor"/></svg>',
     '🌱': '<svg viewBox="0 0 24 24"><path d="M12 20.5V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12.3 13.5c0-3 2.4-5.2 5.7-5.2 0 3-2.4 5.2-5.7 5.2Z" fill="' + LEAF + '"/><path d="M11.7 12c0-2.9-2.3-4.8-5.2-4.8 0 2.9 2.3 4.8 5.2 4.8Z" fill="currentColor"/><path d="M9 20.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     '📐': '<svg viewBox="0 0 24 24"><path d="M4 19.5V5a1 1 0 0 1 1.7-.7l14.8 14.8a1 1 0 0 1-.7 1.7H5a1 1 0 0 1-1-.8Z" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 16.5l7-7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="1.5 2"/><path d="M4 8.5h2.5M4 12h4M4 15.5h2.5M12 19.5v-2.5M15.5 19.5v-4M8.5 19.5v-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    '🧮': '<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="' + LEAF + '" stroke="currentColor" stroke-width="1.6"/><rect x="8" y="6" width="8" height="3.2" rx="0.6" fill="currentColor"/><g fill="currentColor"><circle cx="9" cy="12.8" r="1.1"/><circle cx="12" cy="12.8" r="1.1"/><circle cx="15" cy="12.8" r="1.1"/><circle cx="9" cy="16.6" r="1.1"/><circle cx="12" cy="16.6" r="1.1"/><circle cx="15" cy="16.6" r="1.1"/></g></svg>',
     '🏪': '<svg viewBox="0 0 24 24"><path d="M4 9h16l-1.1-4.2A1 1 0 0 0 17.94 4H6.06a1 1 0 0 0-.96.8L4 9Z" fill="' + LEAF + '"/><path d="M5.2 9v9.5A1.5 1.5 0 0 0 6.7 20h10.6a1.5 1.5 0 0 0 1.5-1.5V9" fill="currentColor"/><rect x="9" y="13" width="6" height="7" rx="0.6" fill="' + LEAF + '"/></svg>',
     '🚜': '<svg viewBox="0 0 24 24"><path d="M5 7.5h4.2a1 1 0 0 1 .95.68L11.6 12H5a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1Z" fill="' + LEAF + '"/><path d="M12.4 12l-1-3h4.3a1 1 0 0 1 .94.66L17.7 12Z" fill="currentColor"/><path d="M3 13.2h16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="17" r="3.9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.2" cy="18" r="2.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
     '🛒': '<svg viewBox="0 0 24 24"><path d="M3 4h1.9l2.2 10.4a1.6 1.6 0 0 0 1.57 1.26h7.66a1.6 1.6 0 0 0 1.56-1.22L20.6 7.4a.6.6 0 0 0-.58-.74H6.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.6" fill="currentColor"/><circle cx="16.5" cy="19" r="1.6" fill="currentColor"/></svg>',
@@ -280,7 +282,7 @@
   var HOME = ['🏠'];
   var FOOTER = ['💬', '👤'];
   var GROUPS = [
-    { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '📐', '🗺️', '🗺'] }, // मौसम · मेरी फसल · खेत नापें · कृषि मानचित्र
+    { key: 'tools',    ico: 'tools',    set: ['🌤️', '🌤', '🌱', '📐', '🧮', '🗺️', '🗺'] }, // मौसम · मेरी फसल · खेत नापें · बीघा कैलकुलेटर · कृषि मानचित्र
     { key: 'industry', ico: 'industry', set: ['🏪', '🥚', '🚜', '🛒', '⚙️', '🤝'] },
     { key: 'news',     ico: 'news',     set: ['📢', '📰', '🏛️', '🏛'] },
     { key: 'other',    ico: 'other',    set: ['🔍', '🧺', '🌐'] } // कृषि खोज · कृषि बाज़ार · ग्लोबल कृषि
@@ -309,6 +311,7 @@
     { k: '🌤️', href: '/weather.html',        at: /^\/weather(\.html)?$/ },
     { k: '🌱',  href: '/meri_fasal.html',     at: /^\/meri_fasal(\.html)?$/ },
     { k: '📐',  href: '/naksha',              at: /^\/naksha(\/|$)/ },
+    { k: '🧮',  href: '/bigha-calculator',    at: /^\/bigha-calculator/ },
     { k: '🗺️', href: '/map.html',            at: /^\/(map)(\.html)?(\/|$)/ },
     { k: '🏪',  href: '/bhav',                at: /^\/bhav(\/(?!net-price)|$)/ },
     { k: '🚜',  href: '/bhav/net-price',      at: /^\/bhav\/net-price/ },

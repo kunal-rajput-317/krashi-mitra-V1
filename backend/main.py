@@ -511,6 +511,9 @@ app.include_router(articles_route.router)  # /articles/meta + the article pages 
 from backend.routes import naksha as naksha_route
 app.include_router(naksha_route.router)  # /naksha, /naksha/{state}[/jile] + /map — state district maps
 
+from backend.routes import zameen as zameen_route
+app.include_router(zameen_route.router)  # /bigha-calculator — ज़मीन इकाई कैलकुलेटर (बीघा ↔ एकड़, per state)
+
 from backend.routes import sawal as sawal_route
 app.include_router(sawal_route.router)  # /sawal — real Kisan Call Centre Q&A, per crop
 

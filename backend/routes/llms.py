@@ -71,6 +71,13 @@ _TOOLS = [
      "than the nearby one once भाड़ा is paid. Mandi prices are Government of "
      "India (Agmarknet / data.gov.in) data; the freight figure is our estimate, "
      "not a transporter quote."),
+    ("/bigha-calculator", "ज़मीन इकाई कैलकुलेटर (bigha to acre, per state)",
+     "Converts land units — बीघा, बिस्वा, कट्ठा, कठा, गुंठा, कनाल, मरला, डिसमिल, "
+     "acre, hectare, sq ft — with the state chosen first, because a बीघा differs "
+     "by state (UP pakka bigha 27,225 sq ft; West Bengal and Assam 14,400 sq ft). "
+     "Acre/hectare/sq ft factors are exact; state बीघा figures are commonly used "
+     "values, labelled अनुमानित, and can vary by district — confirm with the "
+     "लेखपाल / पटवारी / tehsil for a registry."),
 ]
 
 
