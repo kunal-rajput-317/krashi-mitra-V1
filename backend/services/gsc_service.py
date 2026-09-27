@@ -8,10 +8,10 @@
 # sitemap <lastmod>, on-page dateModified (see bhav.py's `_fresh_iso` /
 # `_doc(updated=...)`), and Search Console itself. This module is the third
 # one: it asks Google, via the URL Inspection API, when it last actually
-# crawled a sample of /bhav pages, and requests a recrawl (Indexing API) for
-# whichever have drifted well behind the real data date. That's what closes
-# the loop on the bug this was built for — a Google snippet dated "13 Jul"
-# still showing on 2 Aug for a page whose live data was already correct.
+# crawled a sample of /bhav pages, and records how far behind Google's copy
+# is. It only MEASURES. The bug it was built for — a Google snippet dated
+# "13 Jul" still showing on 2 Aug — is fixed by Google crawling more often,
+# and Google crawls more often when pages answer fast, not when asked.
 #
 # Auth: service-account OAuth2 JWT-bearer flow (RFC 7523), read from
 # GOOGLE_SEARCH_CONSOLE_CREDENTIALS_B64 (base64 of the downloaded key JSON).
@@ -21,19 +21,18 @@
 # fine, so `requests` alone gets us the rest of the way.
 #
 # The service account must be added as a user on the krashimitra.in Search
-# Console property (Owner, so the Indexing API scope also works) — see
-# docs/MEMORY note bhav-page-freshness-signals for the full setup story.
+# Console property — see docs/MEMORY note bhav-page-freshness-signals for
+# the full setup story.
 #
-# Quotas (Google's stated defaults): URL Inspection ~2,000/day, 600/min per
-# site; Indexing API ~200 publish calls/day per project. BATCH_SIZE stays
-# well under the first; only pages actually found stale ever consume the
-# second, which self-limits it in practice.
+# Quota (Google's stated default): URL Inspection ~2,000/day, 600/min per
+# site. BATCH_SIZE stays well under it.
 #
-# The Indexing API is documented by Google as being for JobPosting/
-# BroadcastEvent pages specifically. It is still called here for ordinary
-# /bhav pages because in practice Google generally still processes the
-# request — but this is NOT a documented guarantee, so every call here is
-# best-effort, logged, and never allowed to look like a different failure.
+# NO INDEXING API. Until 28 Sep 2026 this sweep also sent stale /bhav pages
+# to the Indexing API. Google limits that API to JobPosting and
+# BroadcastEvent pages and says every submission goes through spam
+# detection. It also did nothing: on 27 Sep the site's top /bhav pages had
+# last been crawled 5-10 days earlier despite a month of submissions. Do not
+# add it back.
 # ============================================================
 
 import base64
@@ -56,16 +55,13 @@ SITE_URL = os.getenv("GSC_SITE_URL", "https://krashimitra.in/")
 
 TOKEN_URL    = "https://oauth2.googleapis.com/token"
 INSPECT_URL  = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect"
-INDEXING_URL = "https://indexing.googleapis.com/v3/urlNotifications:publish"
 ANALYTICS_URL = ("https://searchconsole.googleapis.com/webmasters/v3/sites/"
                  "{site}/searchAnalytics/query")
 
 SCOPE_WEBMASTERS = "https://www.googleapis.com/auth/webmasters"
-SCOPE_INDEXING   = "https://www.googleapis.com/auth/indexing"
 
-# A few days of recrawl lag is normal (see MANDI_WARN-style thresholds in
-# health_service.py); only ask Google to look again once the gap is wide
-# enough that it's clearly not just "hasn't gotten to it yet today".
+# A page whose Google copy is this many days older than its real data is
+# counted as stale in the sweep's report.
 STALE_AFTER_DAYS = 5
 BATCH_SIZE = 150
 
@@ -140,32 +136,6 @@ def inspect_url(url: str) -> dict | None:
     except requests.RequestException as e:
         logger.warning(f"URL Inspection failed for {url}: {e}")
         return None
-
-
-def request_indexing(url: str) -> int:
-    """Best-effort Indexing API ping. Returns the HTTP status code (200 =
-    accepted), or 0 when the call could not be made at all.
-
-    The code is returned rather than a bool because *which* non-200 it is
-    changes what to do about it, and the sweep's sync_log line is the only
-    place that survives long enough to be read: 403 means Google is enforcing
-    its documented JobPosting/BroadcastEvent-only scope and this lever is
-    simply not available for /bhav pages; 429 means quota, which is
-    self-correcting; 401 means the credential broke. Reporting a bare
-    "0 recrawl sent" made all three look identical."""
-    token = _access_token(SCOPE_INDEXING)
-    if not token:
-        return 0
-    try:
-        res = requests.post(
-            INDEXING_URL, headers={"Authorization": f"Bearer {token}"},
-            json={"url": url, "type": "URL_UPDATED"}, timeout=20)
-        if res.status_code != 200:
-            logger.info(f"Indexing API {res.status_code} for {url}: {res.text[:200]}")
-        return res.status_code
-    except requests.RequestException as e:
-        logger.warning(f"Indexing API call failed for {url}: {e}")
-        return 0
 
 
 def search_analytics(start: str, end: str, dimensions: list[str] | None = None,
@@ -248,11 +218,18 @@ def _bhav_targets() -> list[tuple[str, str]]:
 
 
 def run_stale_check(batch_size: int = BATCH_SIZE) -> dict:
-    """Sample `batch_size` /bhav URLs, compare Google's last crawl against
-    the real data date, and request re-indexing for whatever is
-    STALE_AFTER_DAYS or more behind. Logged to sync_log (source=
-    'gsc_recrawl') so health_service can report on it without ever calling
-    Google itself — same pattern as the mandi feed check."""
+    """Sample `batch_size` /bhav URLs and measure how old Google's copy of
+    each one is. Two numbers come out of it:
+
+    - crawl age: days since Google last fetched the page. This is the one
+      that moves when pages get faster, so it is the headline.
+    - stale: pages whose Google copy is STALE_AFTER_DAYS or more older than
+      the page's real data date.
+
+    Logged to sync_log (source='gsc_recrawl') so health_service can report
+    on it without ever calling Google itself, same as the mandi feed check.
+    Read-only: nothing here asks Google to do anything (see the header on
+    why the Indexing API is gone)."""
     from backend.services.sync_log_service import record_sync
 
     started = datetime.utcnow()
@@ -262,9 +239,10 @@ def run_stale_check(batch_size: int = BATCH_SIZE) -> dict:
 
     targets = _bhav_targets()
     sample = random.sample(targets, min(batch_size, len(targets)))
+    today = date.today()
 
-    checked = stale = requested = errors = 0
-    idx_codes: dict[int, int] = {}
+    checked = stale = errors = 0
+    ages: list[int] = []
     for url, expected in sample:
         status = inspect_url(url)
         if status is None:
@@ -272,35 +250,33 @@ def run_stale_check(batch_size: int = BATCH_SIZE) -> dict:
             continue
         checked += 1
         last_crawl = (status.get("lastCrawlTime") or "")[:10]  # YYYY-MM-DD
-        if not last_crawl or last_crawl >= expected:
-            continue
         try:
-            behind = (date.fromisoformat(expected) - date.fromisoformat(last_crawl)).days
+            crawled = date.fromisoformat(last_crawl)
         except ValueError:
-            continue
-        if behind < STALE_AFTER_DAYS:
-            continue
-        stale += 1
-        code = request_indexing(url)
-        idx_codes[code] = idx_codes.get(code, 0) + 1
-        if code == 200:
-            requested += 1
+            continue                    # never crawled: no age to report
+        ages.append((today - crawled).days)
+        try:
+            if (date.fromisoformat(expected) - crawled).days >= STALE_AFTER_DAYS:
+                stale += 1
+        except ValueError:
+            pass
 
-    # Spell out the rejection codes. "0 recrawl भेजे" on its own reads like
-    # "nothing was stale", which is the opposite of what it means.
-    rejected = ", ".join(f"{c}×{n}" for c, n in sorted(idx_codes.items())
-                         if c != 200)
-    detail = (f"{checked} जांचे, {stale} बासी (>{STALE_AFTER_DAYS} दिन), "
-              f"{requested} recrawl भेजे" + (f" (अस्वीकृत {rejected})" if rejected else "")
-              + f", {errors} त्रुटि")
+    ages.sort()
+    median = ages[len(ages) // 2] if ages else None
+    within2 = sum(1 for a in ages if a <= 2)
+    detail = (f"{checked} जांचे · Google की कॉपी: आधी {median} दिन से पुरानी, "
+              f"{within2} पेज 2 दिन के अंदर crawl · {stale} बासी (>{STALE_AFTER_DAYS} दिन)"
+              if ages else f"{checked} जांचे · crawl तारीख़ नहीं मिली")
+    detail += f" · {errors} त्रुटि"
     # "failed" only when NOTHING was inspected successfully (auth broken, API
     # down) — same rule sync_log_service.mandi_freshness uses for its own
     # feed: a run that delivered *some* rows is success/partial, never failed.
     run_status = "failed" if checked == 0 else ("success" if errors == 0 else "partial")
     record_sync("gsc_recrawl", run_status,
                 rows=checked, detail=detail, started_at=started)
-    logger.info(f"GSC stale check: {detail}")
-    return {"checked": checked, "stale": stale, "requested": requested, "errors": errors}
+    logger.info(f"GSC crawl-age check: {detail}")
+    return {"checked": checked, "stale": stale, "errors": errors,
+            "median_crawl_age_days": median, "crawled_within_2_days": within2}
 
 
 if __name__ == "__main__":

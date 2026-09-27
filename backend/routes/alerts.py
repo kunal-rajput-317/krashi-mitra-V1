@@ -73,6 +73,10 @@ class MandiAlertOff(BaseModel):
     district:  Optional[str] = None
 
 
+class MandiAlertStop(BaseModel):
+    t: str
+
+
 def _norm(v: Optional[str]) -> Optional[str]:
     v = (v or "").strip()
     return v or None
@@ -264,6 +268,25 @@ def mandi_alert_on(
     return {"success": True,
             "message": f"{where} के {commodity} भाव की सूचना चालू। 🔔",
             "data": {"subscribed": True}}
+
+
+# ── POST /alerts/mandi/stop — "🔕 बंद करें" on the notification ─
+
+@router.post("/mandi/stop")
+def mandi_alert_stop(body: MandiAlertStop, db: Session = Depends(get_db)):
+    """The notification's own stop button (sw.js). No login: the service
+    worker cannot see one. The signed token (services/alert_stop.py) names
+    the alerts that one push reported on, and only those are switched off."""
+    from backend.services import alert_stop
+    ids = alert_stop.ids_from(body.t)
+    if not ids:
+        raise HTTPException(status_code=400, detail="यह लिंक सही नहीं है।")
+    (db.query(MandiAlert)
+       .filter(MandiAlert.id.in_(ids))
+       .update({"active": False, "updated_at": datetime.utcnow()},
+               synchronize_session=False))
+    db.commit()
+    return {"success": True, "message": "सूचना बंद कर दी गई।", "data": {"stopped": len(ids)}}
 
 
 # ── POST /alerts/mandi/off — turn the bell OFF ───────────────

@@ -7867,7 +7867,7 @@ async function loadDbWriteHealth() {
     const r = await fetch(`${API}/admin/db-write-health`, { headers: getAuthHeader() });
     if (r.status === 401) { logout(); return; }
     const d = await r.json().catch(() => ({}));
-    if (!r.ok || !d.success) throw new Error('bad');
+    if (!r.ok || !d.success) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
 
     if (d.writable) {
       statusEl.textContent = 'Writable';
@@ -7879,9 +7879,10 @@ async function loadDbWriteHealth() {
       detEl && (detEl.textContent = d.reason || 'Writes are being refused — check the Neon plan limit');
     }
   } catch (e) {
-    statusEl.textContent = 'Writable';
-    statusEl.className   = 'stat-value ok';
-    detEl && (detEl.textContent = '14.2 MB used of 512 MB · 2.8% (Active)');
+    // Never show a made-up "Writable" here — an unknown state must look unknown.
+    statusEl.textContent = 'Unknown';
+    statusEl.className   = 'stat-value warn';
+    detEl && (detEl.textContent = `Could not check: ${e.message || 'request failed'}`);
   }
 }
 
@@ -7892,7 +7893,7 @@ async function loadSyncLog() {
     const r = await fetch(`${API}/admin/sync-log?limit=40`, { headers: getAuthHeader() });
     if (r.status === 401) { logout(); return; }
     const d = await r.json().catch(() => ({}));
-    if (!r.ok || !d.success) throw new Error('bad');
+    if (!r.ok || !d.success) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
 
     const sum = d.summary || {};
     _syncSummaryCard('sync-mandi-age', 'sync-mandi-detail', sum.mandi, 'data.gov.in feed');
@@ -7911,15 +7912,18 @@ async function loadSyncLog() {
     }
     return d;
   } catch (e) {
-    _syncSummaryCard('sync-mandi-age', 'sync-mandi-detail', { age: '12m ago', status: 'success', detail: '750 Mandi prices synced' }, 'data.gov.in feed');
-    _syncSummaryCard('sync-weather-age', 'sync-weather-detail', { age: '4m ago', status: 'success', detail: '75 districts forecast active' }, 'OpenWeather');
+    // Never show made-up "Success" rows here — a failed load must look failed.
+    const why = `Could not load sync log: ${e.message || 'request failed'}`;
+    for (const id of ['sync-mandi-age', 'sync-weather-age']) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = 'Unknown'; el.className = 'stat-value warn'; }
+    }
+    for (const id of ['sync-mandi-detail', 'sync-weather-detail']) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = why;
+    }
     if (tb) {
-      tb.innerHTML = `
-        <tr><td>🌾 Mandi Feed Sync</td><td><span class="status-pill online">Success</span></td><td class="text-mono">750</td><td class="text-muted" style="font-size:12px;">750 Mandi commodity prices updated</td><td class="text-mono" style="font-size:11px;">240ms</td><td class="text-mono" style="font-size:11px;">12m ago</td></tr>
-        <tr><td>⛅ Weather Forecast Sync</td><td><span class="status-pill online">Success</span></td><td class="text-mono">75</td><td class="text-muted" style="font-size:12px;">75 District weather forecasts updated</td><td class="text-mono" style="font-size:11px;">180ms</td><td class="text-mono" style="font-size:11px;">4m ago</td></tr>
-        <tr><td>📦 RAG Vector Re-Index</td><td><span class="status-pill online">Success</span></td><td class="text-mono">1,420</td><td class="text-muted" style="font-size:12px;">ChromaDB embeddings updated</td><td class="text-mono" style="font-size:11px;">1.2s</td><td class="text-mono" style="font-size:11px;">1h ago</td></tr>
-        <tr><td>🏪 Dealer Network Heartbeat</td><td><span class="status-pill online">Success</span></td><td class="text-mono">42</td><td class="text-muted" style="font-size:12px;">Krashi Kendra Dealers online</td><td class="text-mono" style="font-size:11px;">95ms</td><td class="text-mono" style="font-size:11px;">2h ago</td></tr>
-      `;
+      tb.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center;padding:16px;">⚠ ${escapeHtml(why)}</td></tr>`;
     }
     return null;
   }

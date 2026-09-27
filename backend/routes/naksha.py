@@ -4591,14 +4591,22 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
         f"{hi} का नक्शा – {tn} जिले | {s['en']} ({ab}) Map",
         f"{hi} का नक्शा | {s['en']} ({ab}) Map – {tn} जिले",
     ] if ab else []
-    title = _fit(
-        *abbr_variants,
+    variants = abbr_variants + [
         f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र | {s['en']} Map",
         f"{hi} का नक्शा – {tn} जिलों का मानचित्र | {s['en']} Map",
         f"{hi} का नक्शा – {tn} जिले | {s['en']} Map",
         f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र | मुफ्त डाउनलोड",
         f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र (मुफ्त)",
-        f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र")
+        f"{hi} का नक्शा – {tn} जिलों का HD मानचित्र"]
+    # "{tn} जिलों का मानचित्र" describes the IMAGE, so it may use today's count
+    # only when the map draws all of them. Rajasthan on 28 Sep 2026: the title
+    # promised "41 जिलों का HD मानचित्र" over a map of 33. Where districts are
+    # missing from the drawing, the title states the count as a fact about the
+    # state ("41 जिले") and never as a fact about the map.
+    if extra:
+        variants = [v for v in variants if "जिलों का" not in v] or [
+            f"{hi} का नक्शा – {tn} जिले"]
+    title = _fit(*variants)
     desc = _fit(
         f"{hi} का नक्शा हिंदी में — {span}, {'सभी जिले' if unsure else f'कुल {count} जिले'} एक ही मानचित्र में। "
         f"HD नक्शा मुफ्त डाउनलोड करें और ज़ूम करके अपना जिला देखें।",

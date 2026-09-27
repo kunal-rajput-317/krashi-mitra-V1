@@ -89,6 +89,17 @@ def _fetch_and_notify():
     from backend.services.mandi_fetch_service import fetch_and_store
 
     summary = fetch_and_store()
+
+    # /bhav pages read prices from an in-memory copy (services/mandi_memory.py)
+    # instead of Postgres. New rows are in, so reload it now, while the DB is
+    # awake anyway. Must never fail the fetch.
+    try:
+        if summary.get("fetched"):
+            from backend.services import mandi_memory
+            mandi_memory.reload_now()
+    except Exception as e:
+        logger.error(f"mandi memory reload failed (non-fatal): {e}")
+
     try:
         if summary.get("fetched"):
             from backend.utils.indexnow import ping_bhav
@@ -123,16 +134,6 @@ def _fetch_and_notify():
         drain_queue()
     except Exception as e:
         logger.error(f"season summary drain failed (non-fatal): {e}")
-
-    # 🌾 Harvest a couple of crops' किसान कॉल सेंटर Q&A for /sawal. Rides here
-    # for the same reason as the seasonality drain: the DB is already awake.
-    # The crop list is fixed and small, so this finishes within a day or two
-    # and then does nothing but a single cheap status query per run.
-    try:
-        from backend.services.kcc_service import drain_queue as kcc_drain
-        kcc_drain()
-    except Exception as e:
-        logger.error(f"KCC Q&A drain failed (non-fatal): {e}")
 
     return summary
 

@@ -1,6 +1,6 @@
 # Neon account migration — runbook
 
-Moves KrashiMitra's user data between Neon projects. Three scripts, ~10 minutes,
+Moves KrashiMitra's database between Neon projects. Three scripts, ~10 minutes,
 no downtime: the live site keeps serving from the old DB until the final step.
 
 Needs only Python + `psycopg2` (both already in `requirements.txt`).
@@ -55,24 +55,35 @@ changes what farmers hit. If the load fails, the site never noticed.
 
 ## What moves, and what doesn't
 
-**Carried (22 tables)** — `users`, `user_profiles`, `chat_history`,
-`crop_calendar`, `push_subscriptions`, `mandi_alerts`, `bazar_posts`,
-`bazar_likes`, `bazar_comments`, `bazar_follows`, `orders`, `carts`,
-`crop_appeals`, `admin_tasks`, `buyers`, `dealer_products`,
-`dealer_placements`, `lead_clicks`, `mandi_price_monthly`,
-`mandi_season_slices`, `kcc_qa`, `kcc_crop_builds`.
+**Carried: every table**, except the three in `SKIP` (`weather_cache`,
+`weather_history`, `sync_log`), which refill within the hour or only describe
+the old database. Load order comes from the source's own foreign keys.
 
-**Left behind on purpose** — `weather_cache`, `weather_history`,
-`mandi_prices`, `mandi_last_seen`, `mandi_price_history`, `sync_log`.
-The schedulers refill these within a day, and they are the bulk of the
-storage. Leaving them is how the new account starts near-empty instead of
-inheriting a near-full 0.5 GB branch. Measured Aug 2026: source DB 169 MB,
-payload **~1 MB gzipped / 40k rows**.
+It used to be a hand-kept list of 22 tables that also skipped the mandi
+snapshot and history. The 27 Sep 2026 move proved both wrong: the list had
+gone stale, so `shop_products`, `seller_verifications` (paid नीला टिक members),
+`news_likes`, `bazar_comment_likes` and `app_settings` were silently left
+behind. data.gov.in was down all night, so the "skipped, refills within a day"
+price tables stayed empty and every /bhav page showed no prices.
 
-⚠️ `mandi_price_monthly` + `mandi_season_slices` **must** be carried despite
-looking derived. They accumulate slowly off the data.gov archive via a lazy
-queue, not a scheduled feed; dropping them guts /bhav's
-"पिछले N साल का रुझान" panel for weeks.
+⚠️ `mandi_price_monthly` + `mandi_season_slices` look derived but are not.
+They accumulate slowly off the data.gov archive, so losing them guts /bhav's
+"पिछले N साल का रुझान" panel for weeks. They are carried like everything else.
+
+### Repairing a move that already happened
+
+If the new database is already live and something is missing, do **not**
+run a full load: it truncates, and the site has written new rows since.
+Use `--only`, which fills only tables that are **empty** on the target:
+
+```powershell
+python tools/neon/neon_dump.py 'OLD-conn' --only=shop_products,mandi_prices
+python tools/neon/neon_load.py 'NEW-conn' --only=shop_products,mandi_prices --dry-run
+python tools/neon/neon_load.py 'NEW-conn' --only=shop_products,mandi_prices --yes
+```
+
+It never truncates, keeps FKs and triggers on, only moves sequences forward,
+and refuses `users` / `user_profiles`.
 
 ---
 

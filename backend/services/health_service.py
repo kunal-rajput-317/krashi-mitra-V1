@@ -300,6 +300,15 @@ def _chk_mandi_snapshot(db, detailed):
     n, newest, districts, crops, states = (r[0] or 0), r[1], (r[2] or 0), (r[3] or 0), (r[4] or 0)
     facts = [["आख़िरी अपडेट", f"{_ist(newest)} · {_ago(newest)}"],
              ["दायरा", f"{states} राज्य · {districts} ज़िले · {crops} फ़सलें"]]
+    # /bhav pages read an in-memory copy of this table (services/mandi_memory).
+    # Shown so a slow /bhav can be told apart from "the copy never loaded".
+    from backend.services import mandi_memory
+    mem = mandi_memory.status()
+    if mem.get("loaded"):
+        facts.append(["मेमोरी कॉपी", f"{_num(mem['rows'])} भाव · "
+                      f"{mem['age_sec'] // 60} मिनट पुरानी"])
+    elif mem.get("enabled"):
+        facts.append(["मेमोरी कॉपी", "अभी लोड नहीं — पेज डेटाबेस से पढ़ रहे हैं"])
     if n == 0:
         return {"status": "down", "detail": "स्नैपशॉट खाली है — भाव पेज पर दिखाने को कुछ नहीं",
                 "facts": facts}
@@ -402,22 +411,6 @@ def _chk_seasonality(db, detailed):
     if err > done:
         return {"status": "warn", "detail": f"{err} स्लाइस फेल हो रहे हैं ({done} बने)", "facts": facts}
     return {"status": "ok", "detail": f"{_num(n)} महीने-सारांश · {done} स्लाइस तैयार", "facts": facts}
-
-
-def _chk_kcc(db, detailed):
-    """/sawal — real Kisan Call Centre Q&A, harvested crop by crop."""
-    n = int(_scalar(db, "SELECT count(*) FROM kcc_qa") or 0)
-    st = _status_counts(db, "kcc_crop_builds")
-    done, err, queued = st.get("done", 0), st.get("error", 0), st.get("queued", 0)
-    facts = [["फ़सलें", f"{done} तैयार · {queued} कतार में · {err} फेल"],
-             ["सवाल-जवाब", _num(n)]]
-    if not st:
-        return {"status": "off", "detail": "अभी हार्वेस्ट शुरू नहीं हुआ", "facts": facts}
-    if n == 0 and err:
-        return {"status": "down", "detail": f"{err} फ़सलें फेल, एक भी सवाल-जवाब नहीं", "facts": facts}
-    if err > done:
-        return {"status": "warn", "detail": f"{err} फ़सलों का हार्वेस्ट फेल हो रहा है", "facts": facts}
-    return {"status": "ok", "detail": f"{_num(n)} सवाल-जवाब · {done} फ़सलें तैयार", "facts": facts}
 
 
 def _chk_ai_chat(db, detailed):
@@ -893,7 +886,6 @@ _GROUPS = [
         ("mandi_history",  "भाव इतिहास",      "📈", _chk_mandi_history,  False),
         ("weather",        "मौसम",            "🌦️", _chk_weather,        False),
         ("seasonality",    "मौसमी रुझान",     "📅", _chk_seasonality,    False),
-        ("kcc",            "किसान कॉल सेंटर", "☎️", _chk_kcc,            False),
         ("gsc",            "Google री-इंडेक्स", "📡", _chk_gsc,          False),
     ]),
     ("features", "सुविधाएँ", "किसान जो पेज रोज़ खोलते हैं", [

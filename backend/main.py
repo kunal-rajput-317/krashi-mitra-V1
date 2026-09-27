@@ -515,7 +515,7 @@ from backend.routes import zameen as zameen_route
 app.include_router(zameen_route.router)  # /bigha-calculator — ज़मीन इकाई कैलकुलेटर (बीघा ↔ एकड़, per state)
 
 from backend.routes import sawal as sawal_route
-app.include_router(sawal_route.router)  # /sawal — real Kisan Call Centre Q&A, per crop
+app.include_router(sawal_route.router)  # /sawal — removed 2026-09-28; every URL answers 410
 
 from backend.routes import ganna as ganna_route
 app.include_router(ganna_route.router)  # /ganna — cane SAP/FRP per state + /ganna/sitemap.xml

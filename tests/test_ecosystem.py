@@ -34,9 +34,8 @@ CARD = re.compile(r'<a class="km-journey-card" href="([^"]+)"[^>]*'
 def steps_on(client, path):
     """(href, section) for every card in the strip on a live page.
 
-    A section with no rows in the throwaway SQLite DB serves its not-found page
-    (/sawal does when no crop has enough Kisan Call Centre answers). That is a
-    data condition, not a broken strip, so it skips rather than fails — the
+    A section with no rows in the throwaway SQLite DB serves its not-found page.
+    That is a data condition, not a broken strip, so it skips rather than fails — the
     graph-level tests below still cover those sections with no DB at all.
     """
     r = client.get(path)
@@ -53,7 +52,7 @@ def steps_on(client, path):
 # added later belongs here; test_every_ssr_section_offers_a_way_out catches it
 # even if nobody adds it, but naming it makes the failure readable.
 SSR_PAGES = ["/bhav", "/pashupalan", "/pashupalan/anda-rate", "/ganna",
-             "/rental", "/rental/tractor", "/sawal", "/naksha", "/product/"]
+             "/rental", "/rental/tractor", "/naksha", "/product/"]
 
 
 @pytest.mark.parametrize("path", SSR_PAGES)
@@ -87,9 +86,9 @@ def test_a_section_is_never_advertised_unless_its_hub_resolves(client):
     that does not answer 200 must not appear in anybody's strip.
 
     Stated this way rather than as "every hub must be 200" on purpose. Some
-    sections are data-dependent — /sawal returns the not-found page when no
-    crop has enough Kisan Call Centre answers to publish, which is exactly the
-    state of the throwaway SQLite DB these tests run against. The rule that
+    sections are data-dependent and return the not-found page when they have
+    nothing to publish, which is exactly the state of the throwaway SQLite DB
+    these tests run against. The rule that
     actually matters is not that every section has data, it is that a section
     WITHOUT data stops being advertised.
     """
@@ -138,9 +137,9 @@ def test_a_page_never_repeats_a_link_it_already_shows(client):
     either restates a link the reader can see instead of opening a section he
     has no route to."""
     ctx = E.Ctx(section="bhav", crop="wheat", crop_hi="गेहूं",
-                canon=f"{SITE}/bhav/wheat", have=frozenset({"articles", "sawal"}))
+                canon=f"{SITE}/bhav/wheat", have=frozenset({"articles", "rental"}))
     got = {s.section for s in E.next_steps(ctx, n=8)}
-    assert not (got & {"articles", "sawal", "bhav"}), got
+    assert not (got & {"articles", "rental", "bhav"}), got
 
 
 # ── the honesty rules ───────────────────────────────────────

@@ -353,6 +353,16 @@ IMAGES = {
     # CC BY-SA 4.0, 5120×2880). The caption says it shows green manure, not
     # usar land.
     "usar-bhumi-sudhar-jipsam": "Green Manuring by Manav Vikas Sansthan.jpg",
+
+    # ── सितंबर 2026, धान खरीद — चार राज्य ──────────────────────────────────
+    # Same rule as up-dhan-kharid-panjikaran: no freely licensed photograph of
+    # a mandi or purchase centre in these states that is not built around a
+    # named politician, so each guide shows a paddy field from ITS OWN state
+    # and the caption says it is the crop, not a centre.
+    "haryana-dhan-kharid": "Road through paddy fields in rural Haryana, India.jpg",
+    "punjab-dhan-kharid": "Paddy fields in Batala, Gurdaspur, Punjab.jpg",
+    "chhattisgarh-dhan-kharidi": "Paddy Field in Raigarh.jpeg",
+    "bihar-dhan-adhiprapti": "Rice fields near Darbhanga, Bihar 2.jpg",
 }
 
 # In-body illustrations on the hand-written articles.

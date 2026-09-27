@@ -12,6 +12,7 @@ Read-only against the source. Safe to re-run; overwrites its own output.
 
     python tools/neon/neon_dump.py             # source = .env DATABASE_URL
     python tools/neon/neon_dump.py '<conn>'    # or an explicit source
+    python tools/neon/neon_dump.py '<conn>' --only=mandi_prices,shop_products
 """
 from __future__ import annotations
 
@@ -29,48 +30,48 @@ REPO = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent / "dump"
 
 # ── Scope ────────────────────────────────────────────────────────────────
-# Ordered parents-first; the load side replays this order so foreign keys
-# resolve. backend/database/db.py declares ~16 FKs with ondelete CASCADE /
-# SET NULL, so order is NOT free (an older note claiming otherwise was wrong).
-CARRY = [
-    "users",                 # parent of nearly everything below
-    "user_profiles",
-    "chat_history",
-    "crop_calendar",
-    "push_subscriptions",    # parent of a mandi_alerts FK
-    "mandi_alerts",
-    "bazar_posts",           # parent of likes/comments
-    "bazar_likes",
-    "bazar_comments",
-    "bazar_follows",
-    "orders",
-    "carts",
-    "crop_appeals",
-    "admin_tasks",
-    # dukan / revenue — none of this regenerates
-    "buyers",
-    "dealer_products",
-    "dealer_placements",
-    "lead_clicks",
-    # Seasonality rollups. MUST be carried: accumulated slowly off the
-    # data.gov archive by a lazy queue, NOT a scheduled feed. They are ~98%
-    # of the payload, and dropping them guts /bhav's "पिछले N साल का रुझान"
-    # panel for weeks. An older note filed these under "skip" — that was wrong.
-    "mandi_price_monthly",
-    "mandi_season_slices",
-    # large one-off import, not a scheduled feed
-    "kcc_qa",
-    "kcc_crop_builds",
+# EVERY public table is carried, except the few in SKIP. It used to be the
+# other way round — a hand-kept CARRY list — and that list went stale: the
+# 27 Sep 2026 move silently left shop_products, seller_verifications (paid
+# नीला टिक members), news likes/comments and bazar_comment_likes behind,
+# because those tables were added after the list was written. A new table is
+# now carried unless someone decides otherwise.
+#
+# Load order is worked out from the source's own foreign keys (parents first),
+# so it can't go stale either.
+#
+# SKIP holds only data that is safe to lose AND refills itself. The mandi
+# snapshot and history are NOT skipped any more: they refill only when
+# data.gov.in is up, and on 27 Sep it was down all night, so /bhav showed no
+# prices at all after the move.
+SKIP = [
+    "weather_cache", "weather_history",   # weather job refills within the hour
+    "sync_log",                           # a log of the OLD database's runs
 ]
 
-# Left behind on purpose: schedulers refill these within a day, and they are
-# the bulk of the storage. Skipping them is how the new account starts small
-# instead of inheriting a near-full 0.5GB branch.
-SKIP = [
-    "weather_cache", "weather_history",
-    "mandi_prices", "mandi_last_seen", "mandi_price_history",
-    "sync_log",
-]
+
+def load_order(cur, tables: set[str]) -> list[str]:
+    """`tables` sorted so every FK parent comes before its children."""
+    cur.execute("""
+        SELECT c.conrelid::regclass::text, c.confrelid::regclass::text
+        FROM pg_constraint c
+        WHERE c.contype = 'f' AND c.connamespace = 'public'::regnamespace
+    """)
+    parents: dict[str, set[str]] = {t: set() for t in tables}
+    for child, parent in cur.fetchall():
+        child, parent = child.strip('"'), parent.strip('"')
+        if child in tables and parent in tables and child != parent:
+            parents[child].add(parent)
+    order: list[str] = []
+    done: set[str] = set()
+    while len(order) < len(tables):
+        ready = sorted(t for t in tables if t not in done and parents[t] <= done)
+        if not ready:          # an FK cycle — append the rest; replica mode copes
+            ready = sorted(t for t in tables if t not in done)
+        for t in ready:
+            order.append(t)
+            done.add(t)
+    return order
 
 
 def normalise(url: str) -> str:
@@ -87,8 +88,8 @@ def normalise(url: str) -> str:
 
 
 def source_url(argv: list[str]) -> str:
-    if len(argv) > 1:
-        return normalise(argv[1])
+    if argv:
+        return normalise(argv[0])
     env = REPO / ".env"
     if env.exists():
         for line in env.read_text(encoding="utf-8").splitlines():
@@ -100,14 +101,17 @@ def source_url(argv: list[str]) -> str:
 
 
 def main() -> int:
-    url = source_url(sys.argv)
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    only = {t.strip() for a in sys.argv[1:] if a.startswith("--only=")
+            for t in a.split("=", 1)[1].split(",") if t.strip()}
+    url = source_url(args)
     OUT.mkdir(parents=True, exist_ok=True)
 
     safe = url.split("@")[-1].split("?")[0]
     print(f"source: ...@{safe}")
     print(f"output: {OUT}\n")
 
-    conn = psycopg2.connect(url, connect_timeout=30)
+    conn = psycopg2.connect(url, connect_timeout=90)
     conn.set_session(readonly=True, autocommit=True)
     cur = conn.cursor()
 
@@ -118,6 +122,8 @@ def main() -> int:
 
     cur.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'")
     present = {r[0] for r in cur.fetchall()}
+    wanted = (only or present) - set(SKIP)
+    carry = load_order(cur, wanted & present)
 
     manifest: dict[str, object] = {
         "dumped_at": datetime.now(timezone.utc).isoformat(),
@@ -127,16 +133,12 @@ def main() -> int:
         "order": [],
         "tables": {},
         "skipped_by_design": SKIP,
-        "missing": [],
+        "only": sorted(only),
+        "missing": sorted(wanted - present),
     }
 
     total = 0
-    for table in CARRY:
-        if table not in present:
-            print(f"  !  {table:<22} not in source — skipped")
-            manifest["missing"].append(table)
-            continue
-
+    for table in carry:
         cur.execute(f'SELECT count(*) FROM "{table}"')
         rows = cur.fetchone()[0]
 

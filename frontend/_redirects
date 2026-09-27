@@ -207,10 +207,12 @@
 /articles/bhains-palan-up.html   /articles/bhains-palan-up   301!
 /articles/bhandaran-ghun-keet.html   /articles/bhandaran-ghun-keet   301!
 /articles/bhindi-pila-mozek.html   /articles/bhindi-pila-mozek   301!
+/articles/bihar-dhan-adhiprapti.html   /articles/bihar-dhan-adhiprapti   301!
 /articles/chana-fali-chhedak-illi.html   /articles/chana-fali-chhedak-illi   301!
 /articles/chana-ki-kheti.html   /articles/chana-ki-kheti   301!
 /articles/chana-unnat-kheti.html   /articles/chana-unnat-kheti   301!
 /articles/chandan-ki-kheti.html   /articles/chandan-ki-kheti   301!
+/articles/chhattisgarh-dhan-kharidi.html   /articles/chhattisgarh-dhan-kharidi   301!
 /articles/chilli-guide-karnataka.html   /articles/chilli-guide-karnataka   301!
 /articles/chini-utpadan.html   /articles/chini-utpadan   301!
 /articles/coconut-guide-karnataka.html   /articles/coconut-guide-karnataka   301!
@@ -250,6 +252,7 @@
 /articles/grapes-maharastra.html   /articles/grapes-maharastra   301!
 /articles/haldi-kheti-erode-tamil-nadu.html   /articles/haldi-kheti-erode-tamil-nadu   301!
 /articles/hara-chara-napier-berseem.html   /articles/hara-chara-napier-berseem   301!
+/articles/haryana-dhan-kharid.html   /articles/haryana-dhan-kharid   301!
 /articles/jaivik-khad.html   /articles/jaivik-khad   301!
 /articles/jalbharav-baadh-fasal-bachav.html   /articles/jalbharav-baadh-fasal-bachav   301!
 /articles/jau-ki-kheti.html   /articles/jau-ki-kheti   301!
@@ -326,6 +329,7 @@
 /articles/poplar-ki-kheti.html   /articles/poplar-ki-kheti   301!
 /articles/potato_guide_up.html   /articles/potato_guide_up   301!
 /articles/prakritik-kheti-jeevamrit.html   /articles/prakritik-kheti-jeevamrit   301!
+/articles/punjab-dhan-kharid.html   /articles/punjab-dhan-kharid   301!
 /articles/pyaj-kharif-kheti-bhandaran.html   /articles/pyaj-kharif-kheti-bhandaran   301!
 /articles/pyaj-nashik-se-vashi-bhav.html   /articles/pyaj-nashik-se-vashi-bhav   301!
 /articles/rabi-jowar-shalu-lagvad.html   /articles/rabi-jowar-shalu-lagvad   301!
@@ -468,10 +472,6 @@
 # Proxy site search to the backend (routes/bhav.py /find — the search form on
 # product hub pages posts here; it was missing and 404ing in prod)
 /find   https://krashimitra.in/find   200
-
-# Proxy the Kisan Call Centre Q&A pages to the backend (routes/sawal.py)
-/sawal      https://krashimitra.in/sawal         200
-/sawal/*    https://krashimitra.in/sawal/:splat  200
 
 # The गन्ना cluster is server-rendered too (backend/routes/ganna.py): the hub,
 # the state SAP/FRP pages and the per-district mill directory. It shipped

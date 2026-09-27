@@ -750,8 +750,13 @@ class KccQA(Base):
     """Curated question/answer pairs from the Government of India's Kisan Call
     Centre transcripts (data.gov resource cef25fe2-…, ~48M rows).
 
-    ONLY vetted rows land here — see backend/services/kcc_service.py. The
-    source is genuinely messy: ~50% of it is throwaway weather chatter, the
+    UNUSED since 2026-09-28: /sawal, the only reader, was removed and its
+    harvest (services/kcc_service.py) deleted — the stored answers still
+    carried doses and banned pesticides (routes/sawal.py says which). The
+    model stays only so the existing table matches the migrations; nothing
+    reads or writes it. The history below is why it existed.
+
+    The source is genuinely messy: ~50% of it is throwaway weather chatter, the
     questions are staff-typed English/Hinglish shorthand, and about 2% of
     answers give advice for a DIFFERENT crop than the one the row is filed
     under (paddy answers under wheat, etc.). Since these answers carry

@@ -11,6 +11,17 @@ instructions if it is missing.
 
     python tools/neon/neon_load.py '<target-conn>' --dry-run
     python tools/neon/neon_load.py '<target-conn>' --yes
+
+FILL mode — repair a target that is already live:
+
+    python tools/neon/neon_load.py '<target-conn>' --only=shop_products,mandi_prices --dry-run
+    python tools/neon/neon_load.py '<target-conn>' --only=shop_products,mandi_prices --yes
+
+With --only it never truncates. It copies a table only if that table is EMPTY
+on the target, keeps foreign keys and triggers switched on, and only moves a
+sequence forward. A table the live site has already written to is left
+alone, so a repair can never overwrite a farmer's new data. users and
+user_profiles are refused here: they go through a full load or not at all.
 """
 from __future__ import annotations
 
@@ -48,6 +59,10 @@ def main() -> int:
         sys.exit("refusing to run: pass --dry-run to inspect, or --yes to load.")
 
     dry = "--dry-run" in flags
+    only = {t.strip() for f in flags if f.startswith("--only=")
+            for t in f.split("=", 1)[1].split(",") if t.strip()}
+    if only & {"users", "user_profiles"}:
+        sys.exit("--only refuses users/user_profiles — see LEGAL_RULES.md §4.")
     url = normalise(args[0])
 
     mpath = OUT / "manifest.json"
@@ -56,12 +71,18 @@ def main() -> int:
     manifest = json.loads(mpath.read_text(encoding="utf-8"))
     order: list[str] = manifest["order"]
     tables: dict = manifest["tables"]
+    if only:
+        unknown = only - set(order)
+        if unknown:
+            sys.exit(f"not in this dump: {', '.join(sorted(unknown))} — "
+                     f"re-run neon_dump.py with the same --only")
+        order = [t for t in order if t in only]
 
     print(f"target: ...@{url.split('@')[-1].split('?')[0]}")
     print(f"dump:   {manifest['dumped_at']} from {manifest['source_host']}")
     print(f"{len(order)} tables, {sum(t['rows'] for t in tables.values()):,} rows\n")
 
-    conn = psycopg2.connect(url, connect_timeout=30)
+    conn = psycopg2.connect(url, connect_timeout=90)
     conn.autocommit = False
     cur = conn.cursor()
 
@@ -98,6 +119,9 @@ def main() -> int:
 
     cur.execute("SELECT count(*) FROM users")
     print(f"\ntarget currently holds {cur.fetchone()[0]} users")
+
+    if only:
+        return fill(conn, cur, plan, tables, manifest, dry)
 
     if dry:
         conn.rollback()
@@ -193,6 +217,68 @@ def main() -> int:
     cur.close()
     conn.close()
     return 0
+
+
+def fill(conn, cur, plan, tables, manifest, dry) -> int:
+    """--only: copy into EMPTY target tables only. No truncate, FKs and
+    triggers stay on, sequences only move forward. All-or-nothing."""
+    todo = []
+    print()
+    for t, usable in plan:
+        cur.execute(f'SELECT count(*) FROM "{t}"')
+        have = cur.fetchone()[0]
+        if have:
+            print(f"  skip {t:<22} target already has {have:,} rows — left alone")
+        else:
+            todo.append((t, usable))
+            print(f"  fill {t:<22} {tables[t]['rows']:>8,} rows")
+    if dry or not todo:
+        conn.rollback()
+        print("\n--dry-run: nothing written." if dry else "\nnothing to fill.")
+        return 0
+
+    try:
+        for t, usable in todo:
+            data = gzip.decompress((OUT / f"{t}.csv.gz").read_bytes())
+            src_cols = tables[t]["columns"]
+            if usable != src_cols:
+                keep = [src_cols.index(c) for c in usable]
+                buf = io.StringIO()
+                w = csv.writer(buf, lineterminator="\n")
+                for row in csv.reader(io.StringIO(data.decode("utf-8"))):
+                    w.writerow([row[i] for i in keep])
+                data = buf.getvalue().encode("utf-8")
+            collist = ", ".join(f'"{c}"' for c in usable)
+            cur.copy_expert(f'COPY "{t}" ({collist}) FROM STDIN WITH (FORMAT csv)',
+                            io.BytesIO(data))
+            # Never move a sequence backwards: the live site may have used ids.
+            seq = None
+            if "id" in usable:          # app_settings et al. key on a name
+                cur.execute("SELECT pg_get_serial_sequence(%s, 'id')", (f'"{t}"',))
+                seq = (cur.fetchone() or [None])[0]
+            info = manifest.get("sequences", {}).get((seq or "").split(".")[-1].strip('"'))
+            if seq and info and "last_value" in info:
+                cur.execute(f'SELECT GREATEST(%s, (SELECT max(id) FROM "{t}"), '
+                            f"(SELECT last_value FROM {seq}))", (info["last_value"],))
+                cur.execute("SELECT setval(%s, %s, true)", (seq, cur.fetchone()[0]))
+            print(f"  ok {t:<22} {tables[t]['rows']:>8,} rows")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        print("\nROLLED BACK — target unchanged.")
+        raise
+
+    bad = []
+    for t, _ in todo:
+        cur.execute(f'SELECT count(*) FROM "{t}"')
+        got = cur.fetchone()[0]
+        if got != tables[t]["rows"]:
+            bad.append((t, tables[t]["rows"], got))
+    for t, want, got in bad:
+        print(f"    MISMATCH {t}: expected {want:,}, found {got:,}")
+    if not bad:
+        print(f"\nverified: {len(todo)} tables filled, counts match the dump")
+    return 1 if bad else 0
 
 
 if __name__ == "__main__":

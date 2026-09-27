@@ -118,8 +118,8 @@ CORE = [
     ("international/lk.html",      "/lk",             0.5, "weekly", (), ()),
 ]
 
-# Hubs only. The full lists live in /bhav/sitemap.xml, /product/sitemap.xml,
-# /sawal/sitemap.xml and /ganna/sitemap.xml.
+# Hubs only. The full lists live in /bhav/sitemap.xml, /product/sitemap.xml
+# and /ganna/sitemap.xml. /sawal was removed on 2026-09-28 and answers 410.
 # /ganna is "yearly" on purpose: cane price is announced once a season, so
 # claiming anything faster is the same false-freshness signal /bhav's own
 # sitemap comment warns about.
@@ -135,7 +135,7 @@ CORE = [
 # /donate was listed here until 2026-09-26; it now answers 410 and /pay (its
 # replacement) is noindex, so neither belongs in a sitemap.
 HUBS = [("/bhav", 0.9, "daily"), ("/product/", 0.8, "weekly"),
-        ("/sawal", 0.7, "monthly"), ("/ganna", 0.8, "yearly"),
+        ("/ganna", 0.8, "yearly"),
         ("/rental", 0.7, "monthly"),
         ("/bigha-calculator", 0.7, "yearly"),
         ("/pashupalan", 0.7, "weekly"), ("/pashupalan/anda-rate", 0.9, "daily")]

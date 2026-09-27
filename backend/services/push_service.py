@@ -268,6 +268,18 @@ def _iso_ok(s: str) -> bool:
 
 
 def _payload_for_group(items, today):
+    """See _payload_body. Adds the signed one-tap stop token (services/
+    alert_stop.py) naming exactly the alerts this push reports on, so the
+    notification's "🔕 बंद करें" can switch them off without a login."""
+    from backend.services import alert_stop
+    payload = _payload_body(items, today)
+    stop = alert_stop.token([getattr(t[0], "id", None) for t in items])
+    if stop:
+        payload["stop"] = stop
+    return payload
+
+
+def _payload_body(items, today):
     """One push payload for everything due for a single recipient this run.
 
     items: [(alert, avg, change, data_iso), ...]. A farmer with several 🔔s can have

@@ -246,7 +246,7 @@ class TestRouteHubs:
     """One page per remaining server-rendered family."""
 
     @pytest.mark.parametrize("url", [
-        "/naksha", "/product/", "/ganna", "/rental", "/sawal",
+        "/naksha", "/product/", "/ganna", "/rental",
         "/pashupalan/poultry",
     ])
     def test_hub_fits_and_carries_no_brand_suffix(self, client, url):

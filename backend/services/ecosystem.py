@@ -6,7 +6,7 @@
 # district page links to /bhav. An article links to articles and to /bhav. The
 # ~14,000 server-rendered pages that carry ~85% of the search traffic offered a
 # reader exactly one onward move inside the thing he was already looking at,
-# and the only route to /pashupalan, /rental, /ganna, /sawal or /naksha was the
+# and the only route to /pashupalan, /rental, /ganna or /naksha was the
 # hamburger drawer — a menu nobody opens. Measured on 21 Aug 2026: ~200 new
 # visitors a day against 10-20 returning. A farmer who arrives on one page,
 # reads the one number he came for and leaves has met one page, not a product.
@@ -28,7 +28,7 @@
 # function, and BOTH page shells call it:
 #
 #   • bhav.py `_doc()` — the shell behind /bhav, /product, /ganna, /rental,
-#     /naksha, /sawal, /pashupalan, /krashi_dukan, /pay, /credits.
+#     /naksha, /pashupalan, /krashi_dukan, /pay, /credits.
 #     A future section that renders through _doc() is in the ecosystem the day
 #     it ships, with no line of its own. That is the whole design.
 #   • tools/article_builder.py — the 176 static article pages and every one
@@ -101,7 +101,6 @@ class Section:
 SECTIONS: dict[str, Section] = {s.id: s for s in (
     Section("bhav",       "/bhav",           _img("bhav")),
     Section("articles",   "/articles/",      _img("articles")),
-    Section("sawal",      "/sawal",          _img("sawal")),
     Section("pashupalan", "/pashupalan",     _img("pashupalan")),
     Section("ganna",      "/ganna",          _img("ganna")),
     Section("rental",     "/rental",         _img("rental")),
@@ -121,8 +120,8 @@ SECTIONS: dict[str, Section] = {s.id: s for s in (
 # ── crop families ──────────────────────────────────────────────────────────
 #
 # Agmarknet spells one crop several ways ("Wheat", "Wheat Atta", "Paddy(Dhan)
-# (Common)"), and each section keys its own content differently: /sawal uses
-# `gehu`, the crop calendar uses `wheat`, articles link the /bhav slug. The
+# (Common)"), and each section keys its own content differently: the crop
+# calendar uses `wheat`, articles link the /bhav slug. The
 # family is the join. Matching is on hyphen-delimited tokens, not raw
 # substrings, because "lentil" contains "til" and "custard-apple" contains
 # "apple" — and first match wins, so the specific rows sit above the general.
@@ -167,17 +166,6 @@ _FAMILIES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
 )
 
 _FAMILY_HI = {f: hi for f, hi, _ in _FAMILIES}
-
-# family → /sawal crop key (services/kcc_service.CROPS). Only the families the
-# Kisan Call Centre feed actually files answers under.
-_SAWAL_KEY = {
-    "gehu": "gehu", "dhan": "dhan", "ganna": "ganna", "sarson": "sarson",
-    "aloo": "aloo", "chana": "chana", "makka": "makka", "kapas": "kapas",
-    "soyabean": "soyabean", "arhar": "arhar", "moong": "moong", "urad": "urad",
-    "bajra": "bajra", "jowar": "jowar", "mungfali": "mungfali", "til": "til",
-    "tamatar": "tamatar", "pyaj": "pyaj", "mirch": "mirch",
-    "baingan": "baingan", "bhindi": "bhindi", "aam": "aam",
-}
 
 # family → backend/data/crop_stages.json key (मेरी फसल crop calendar).
 _CALENDAR_KEY = {
@@ -303,7 +291,7 @@ class Ctx:
     # bought by mills at an administered rate, so asserting a /bhav/sugarcane
     # URL from the path would be a guessed address for a number that does not
     # move daily. The family gets to be known without the price page being
-    # claimed — /sawal/ganna and the cane articles still resolve.
+    # claimed — the cane articles still resolve.
     fam_hint: str = ""
 
     @property
@@ -326,7 +314,7 @@ _PREFIX = (
     ("/crop-calendar", "fasal"), ("/product", "shop"),
     ("/rental", "rental"), ("/naksha", "naksha"), ("/map", "naksha"),
     ("/bigha-calculator", "naksha"),
-    ("/weather", "weather"), ("/ganna", "ganna"), ("/sawal", "sawal"),
+    ("/weather", "weather"), ("/ganna", "ganna"),
     ("/bhav", "bhav"), ("/khoj", "khoj"), ("/chat", "chat"),
 )
 
@@ -340,7 +328,6 @@ _SECTION_TOPICS = {
     "ganna":      ("ganna",),
     "yojana":     ("yojana",),
     "weather":    ("mausam",),
-    "sawal":      ("kheti",),
     "bhav":       ("mandi",),
 }
 
@@ -445,10 +432,6 @@ _COPY: dict = {
         "article.w":      "पूरी जानकारी — आसान हिंदी में",
         "articles_hub.t": "कृषि लेख और गाइड",
         "articles_hub.w": "खेती, खाद, कीट-रोग और योजनाओं की पूरी जानकारी",
-        "sawal.t":        "{crop} पर किसानों के सवाल-जवाब",
-        "sawal.w":        "किसान कॉल सेंटर (भारत सरकार) के असली जवाब",
-        "sawal_hub.t":    "किसानों के असली सवाल",
-        "sawal_hub.w":    "किसान कॉल सेंटर के जवाब — फसल के हिसाब से",
         "pashu.t":        "अंडे का आज का रेट",
         "pashu.w":        "NECC रेट रोज़ — खेती के साथ दूसरी आमदनी",
         "pashu_hub.t":    "पशुपालन — दूध, मुर्गी, बकरी",
@@ -631,8 +614,8 @@ _cache: dict = {}
 # Lookups that have failed since import. On a page render this is noise — the
 # strip is one step shorter and the page is fine. In a BUILD it matters: the
 # article strip is baked into a file, so running the builder with no reachable
-# database would silently rewrite 122 articles without their /sawal links and
-# commit the result. tools/article_builder.py reads this and says so.
+# database would silently rewrite every article without its data-backed links
+# and commit the result. tools/article_builder.py reads this and says so.
 _FAILED: set = set()
 
 
@@ -659,15 +642,6 @@ def _cached(key: str, fn):
     _FAILED.discard(key)
     _cache[key] = (now, val)
     return val
-
-
-def _sawal_crops() -> frozenset:
-    """The /sawal crop keys that have enough answers to have a page. Anything
-    else would be a link to the not-found page."""
-    def load():
-        from backend.services.kcc_service import crops_with_qa
-        return frozenset(k for k, _hi, _n in crops_with_qa())
-    return _cached("sawal", load) or frozenset()
 
 
 def _naksha_has(state: str, district: str) -> bool:
@@ -862,24 +836,6 @@ def _p_articles(ctx, loc):
     # the farmer would have searched, and no generated label beats that.
     return [Step("articles", f"{SITE}/articles/{art.slug}", art.title,
                  _t("article.w", ctx.lang, loc), SECTIONS["articles"].icon, 86)]
-
-
-@provider("sawal")
-def _p_sawal(ctx, loc):
-    # The /sawal hub 404s when no crop has enough Kisan Call Centre answers to
-    # publish — routes/sawal.py returns the not-found page rather than an empty
-    # grid. So an empty section must not be advertised AT ALL: offering its hub
-    # would put a dead link on every page of the site the day that table is
-    # emptied. Same rule as the deep links, one level up.
-    published = _sawal_crops()
-    if not published:
-        return []
-    hub = _step(ctx, "sawal", f"{SITE}/sawal", "sawal_hub", 40, loc)
-    key = _SAWAL_KEY.get(ctx.fam, "")
-    if key and key in published:
-        return [_step(ctx, "sawal", f"{SITE}/sawal/{key}", "sawal", 78, loc,
-                      crop=ctx.crop_name) or hub]
-    return [hub]
 
 
 @provider("pashupalan")

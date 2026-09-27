@@ -207,8 +207,11 @@ self.addEventListener('fetch', (event) => {
 
 // ══════════════════════════════════════════════════════════
 // WEB PUSH — mandi bhav alerts (🔔 toggle on /bhav pages)
-// The server sends {title, body, url, tag}; we render it and, on click,
+// The server sends {title, body, url, tag, stop}; we render it and, on click,
 // focus an already-open tab for that URL instead of opening a duplicate.
+// `stop` is a signed token (services/alert_stop.py): when present, the
+// notification gets a "🔕 बंद करें" button that switches off exactly the
+// alerts this push reported on — LEGAL_RULES §7, a way to stop every alert.
 // ══════════════════════════════════════════════════════════
 self.addEventListener('push', (event) => {
   let d = {};
@@ -222,14 +225,31 @@ self.addEventListener('push', (event) => {
       badge:    d.badge || '/assets/logo-192.png',
       tag:      d.tag   || 'mandi-bhav',
       renotify: true,
-      data:     { url: d.url || '/' }
+      actions:  d.stop ? [{ action: 'stop', title: '🔕 बंद करें' }] : [],
+      data:     { url: d.url || '/', stop: d.stop || '' }
     })
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/';
+  const data = event.notification.data || {};
+  if (event.action === 'stop' && data.stop) {
+    event.waitUntil(
+      fetch('/alerts/mandi/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ t: data.stop })
+      }).then((r) => self.registration.showNotification(
+        r.ok ? 'भाव अलर्ट बंद' : 'अलर्ट बंद नहीं हो सका',
+        { body: r.ok ? 'इस भाव की सूचना अब नहीं आएगी। दोबारा चालू करने के लिए भाव पेज पर 🔔 दबाएँ।'
+                     : 'भाव पेज पर 🔔 दबाकर बंद करें।',
+          icon: '/assets/logo-192.png', tag: 'km-alert-stop' }))
+        .catch(() => {})
+    );
+    return;
+  }
+  const url = data.url || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
       for (const w of wins) {

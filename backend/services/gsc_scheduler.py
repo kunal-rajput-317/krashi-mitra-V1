@@ -20,7 +20,7 @@ scheduler = AsyncIOScheduler(timezone=IST)
 def _mediakit():
     """services/mediakit.py, or None while /sponsor is held back (gitignored).
     Its absence must be a no-op, never a boot failure — this job's main purpose
-    is the recrawl sweep and the page-stats snapshot."""
+    is the crawl-age sweep and the page-stats snapshot."""
     try:
         from backend.services import mediakit
         return mediakit
@@ -37,8 +37,8 @@ def _run():
     run_stale_check()
     # Same credentials, same daily window, one more call: the per-page
     # impression snapshot the /dukanlisting crop picker quotes. Deliberately
-    # after the recrawl sweep and in its own try — a Search Analytics failure
-    # must not cost us the recrawl requests, which are the job's main purpose.
+    # after the crawl-age sweep and in its own try — a Search Analytics failure
+    # must not cost us the sweep's reading, which is the job's main purpose.
     try:
         page_stats.refresh()
     except Exception as e:
@@ -47,7 +47,7 @@ def _run():
     # own try for the same reason, plus one of its own: this is the only job
     # on the box that keeps the media kit honest, and services/mediakit.py
     # withholds every number once the snapshot passes MAX_AGE_DAYS. So a run
-    # that dies here must not be able to take the recrawl sweep with it — the
+    # that dies here must not be able to take the crawl-age sweep with it — the
     # failure mode is a /sponsor page with no numbers, never a stale claim.
     mk = _mediakit()
     if mk:

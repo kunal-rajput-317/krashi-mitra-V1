@@ -41,6 +41,7 @@ import re
 import statistics
 import time
 from datetime import date, datetime, timedelta
+from difflib import SequenceMatcher
 from email.utils import formatdate
 from functools import lru_cache
 from html import escape
@@ -54,9 +55,10 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
                                  MandiLastSeen, MandiPriceHistory, User, UserProfile,
                                  acct)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
+from backend.utils import desc_test
 from backend.services import (
     affiliate, buyers, crop_types, district_geo, ecosystem, freight,
-    index_gate, lead_clicks, leads, legal, msp, placements,
+    index_gate, lead_clicks, leads, legal, mandi_memory, msp, placements,
     rental as rental_svc, state_lang, wa_channels as _wa_channels,
 )
 # services/sponsors.py is gitignored while /sponsor is held back pending a
@@ -473,6 +475,80 @@ def _fit(*variants: str, limit: int = 68) -> str:
     return min(variants, key=len)
 
 
+# ── mandi names in the <title> ───────────────────────────────
+# Farmers search a mandi by its own name ("tundla mandi mein sarson ka bhav",
+# "khair mandi dhan ka rate"), and many mandis are not named after their
+# district: Tundla is in Firozabad, Khair in Aligarh. Search Console for the
+# four weeks to 23 Sep 2026 showed such searches already reaching our pages,
+# some at position 1-3, and taking almost no clicks, because the title named
+# the district and never the mandi the farmer typed. This is a trial: False
+# brings back the old titles exactly, with no other change.
+MANDI_IN_TITLE = True
+
+# SMY/PMY are Agmarknet's sub and principal market yards; VFPCK is Kerala's
+# vegetable and fruit council, whose markets carry its name as a suffix.
+_MKT_WORDS = re.compile(
+    r"(?i)\b(?:apmc|krishi upaj mandi|upaj mandi|grain market|sub market yard|"
+    r"market yard|sub yard|main yard|yard|mandi|market|smy|pmy|vfpck)\b")
+
+
+def _title_mandis(rows, district: str, limit: int = 2) -> list[str]:
+    """The page's own mandis worth naming in its <title>, busiest first.
+
+    `rows` are the rows the page prints (anything with a "market"). A mandi
+    named after its district adds nothing and is left out whatever the
+    spelling: _dist_key joins "Pilibhit APMC" to the district "Pillibhit",
+    and the closeness check catches what it does not ("Kannauj" / "Kannuj").
+    On a day of the feed, one place's two spellings scored 0.74 and up and
+    two different places 0.67 and below (Baraut in Baghpat), hence 0.72.
+    Busiest = the most rows here (varieties on a crop page, crops on the
+    district board); ties go alphabetically, so row order never changes the
+    title. Agmarknet spells mandis in Latin letters only, and no Hindi
+    spelling is invented for them, so they go beside the Latin district name.
+    """
+    if not MANDI_IN_TITLE:
+        return []
+    dk = _dist_key(district)
+    count: dict[str, int] = {}
+    shown: dict[str, str] = {}
+    for r in rows:
+        name = re.sub(r"\(.*?\)|\[.*?\]", " ", (r.get("market") or ""))
+        name = " ".join(_MKT_WORDS.sub(" ", name).split()).strip(" -.,")
+        k = _dist_key(name)
+        if (len(k) < 3 or not dk or dk in k or k in dk
+                or SequenceMatcher(None, k, dk).ratio() >= 0.72):
+            continue
+        if name.isupper() or name.islower():
+            name = name.title()
+        count[k] = count.get(k, 0) + 1
+        shown.setdefault(k, name)
+    best = sorted(count, key=lambda k: (-count[k], shown[k]))
+    return [shown[k] for k in best[:limit]]
+
+
+def _with_mandis(variants, district: str, names: list[str]) -> list[str]:
+    """Title variants for _fit, each preceded by copies that add `names` after
+    the Latin district name: "… Mustard Price Firozabad" → "… Firozabad, Tundla".
+
+    Each copy sits just before the variant it came from and is longer than
+    it, so _fit takes a copy only where it would have taken that variant
+    anyway: the title gains a mandi name or stays exactly as it was, and never
+    loses a word to make room. A variant with no Latin district name in it
+    (a title wholly in Hindi) gets no copy.
+    """
+    if not (names and district):
+        return list(variants)
+    pat = re.compile(rf"(?<![A-Za-z]){re.escape(district)}(?![A-Za-z])")
+    out = []
+    for v in variants:
+        hit = pat.search(v)
+        if hit:
+            for k in range(len(names), 0, -1):
+                out.append(f"{v[:hit.end()]}, {', '.join(names[:k])}{v[hit.end():]}")
+        out.append(v)
+    return out
+
+
 def _slugify(text: str) -> str:
     """'Sri Ganganagar' → 'sri-ganganagar'; 'Bengal Gram(Gram)' → 'bengal-gram-gram'."""
     s = re.sub(r"[^a-z0-9]+", "-", (text or "").lower())
@@ -655,6 +731,19 @@ def _age_badge(fresh_iso: str) -> str:
     return f'<span class="stale-pill">⏳ {note}</span>' if note else ""
 
 
+def _is_current(fresh_iso: str) -> bool:
+    """May a meta description call this price ताजा, or promise रोज़ अपडेट?
+
+    Only while _age_note stays quiet (the price is at most _AGE_QUIET_DAYS
+    old). From 25 to 28 Sep 2026 data.gov.in was down, and every /bhav
+    snippet kept saying "ताजा भाव … रोज़ सुबह अपडेट" next to a 3-day-old
+    date. The date was honest; the two words beside it were not. Titles keep
+    "भाव आज": it names what the page is for, and Google holds a title for
+    days, so switching it with the feed would only churn."""
+    n = _age_days(fresh_iso)
+    return n is not None and n <= _AGE_QUIET_DAYS
+
+
 # Agmarknet's commodity list carries a few non-crop items (livestock, fuel).
 # They keep their own pages if someone lands on one, but they are never
 # surfaced as "crops" in the hub, the sitemap, or the related-crop chips.
@@ -810,7 +899,15 @@ def _rows_for(commodity: str, state: str = "", district: str = "") -> list:
     NOT match a `lower(col)` expression index against an ILIKE predicate — even a
     plain literal with no wildcards — only against a literal `lower(col) = ...`
     clause. Written as .ilike(), this was a full table scan on every request no
-    matter how the index was defined."""
+    matter how the index was defined.
+
+    Served from services/mandi_memory when its copy is loaded (production),
+    which answers the same filter without a database round trip. An empty
+    list from there is final: with the snapshot non-empty, the fallback
+    below returns [] for a miss as well."""
+    mem = mandi_memory.rows_for(commodity, state, district)
+    if mem is not None:
+        return mem
     db = SessionLocal()
     try:
         q = db.query(MandiPrice)
@@ -890,13 +987,20 @@ def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
     farmer) off a 404. This used to read mandi_price_history and so only held
     for the retention window; last_seen has no window."""
     names = sorted(idx.get("raws", {}).get(cs) or {idx["crops"][cs]})
+    mem = mandi_memory.rows_by_commodities(names)
+    if mem is not None:
+        snap = [r for r in mem
+                if _slugify(r["state"]) == ss and _slugify(r["district"]) == ds]
+        if snap:
+            return snap
     db = SessionLocal()
     try:
-        snap = db.query(MandiPrice).filter(MandiPrice.commodity.in_(names)).all()
-        snap = [r for r in snap
-                if _slugify(r.state) == ss and _slugify(r.district) == ds]
-        if snap:
-            return [_row_to_dict(r) for r in snap]
+        if mem is None:
+            snap = db.query(MandiPrice).filter(MandiPrice.commodity.in_(names)).all()
+            snap = [r for r in snap
+                    if _slugify(r.state) == ss and _slugify(r.district) == ds]
+            if snap:
+                return [_row_to_dict(r) for r in snap]
 
         seen = (db.query(MandiLastSeen)
                   .filter(MandiLastSeen.commodity.in_(names),
@@ -918,6 +1022,92 @@ def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
         return [_hist_to_dict(h) for h in dated if h.arrival_dt == newest]
     finally:
         db.close()
+
+
+def _mem_place_rows(state_name: str, dist_name: str, fields: tuple) -> list | None:
+    """One place's snapshot rows from services/mandi_memory, as tuples of the
+    named fields — the shape the column queries in _rates_in, _district_board
+    and _mandis_in_district return. The memory copy stores a missing value as
+    "-" (it holds _row_to_dict's output); those callers were written against
+    NULL, so "-" goes back to None here. None = not loaded, ask Postgres."""
+    mem = mandi_memory.rows_for("", state_name, dist_name)
+    if mem is None:
+        return None
+    return [tuple(None if r[f] == "-" else r[f] for f in fields) for r in mem]
+
+
+# ── the WhatsApp price card ──────────────────────────────────
+# Drawn in the phone's own <canvas>, never on the server: the browser shapes
+# Devanagari correctly and server-side image libraries break its conjuncts
+# (the same reason services/wa_image.py leaves the numbers to a canvas). The
+# numbers come from the page's share config (`card`), which bhav_page fills
+# from the figures it prints. Any failure returns null and the share falls
+# back to the plain link, so the button can never stop working.
+_SHARE_CARD_JS = r"""
+async function kmPriceCard(c){
+  try{
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    var W=1080,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    var x=cv.getContext('2d');if(!x)return null;
+    var g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1b5e20');g.addColorStop(1,'#2e7d32');
+    x.fillStyle=g;x.fillRect(0,0,W,H);
+    var F='"Noto Sans Devanagari","DM Sans",sans-serif';
+    function t(s,y,sz,w,col,al){x.font=(w||600)+' '+sz+'px '+F;x.fillStyle=col||'#fff';
+      x.textAlign=al||'center';x.fillText(s,al==='left'?80:W/2,y,W-160);}
+    t('कृषि मित्र · KrashiMitra',110,40,700,'#c8e6c9');
+    t(c.crop+' का भाव',250,84,700);
+    t(c.place,340,48,600,'#e8f5e9');
+    x.fillStyle='rgba(255,255,255,.12)';x.fillRect(80,400,W-160,300);
+    t(c.avg,560,150,700,'#fff');
+    t('प्रति क्विंटल (औसत)',640,40,600,'#e8f5e9');
+    if(c.lo&&c.hi)t('न्यूनतम '+c.lo+'  ·  अधिकतम '+c.hi,780,44,600,'#fff');
+    if(c.kilo)t(c.kilo,845,38,600,'#c8e6c9');
+    t('📅 '+c.date+' · '+c.n+' की सरकारी रिपोर्ट',910,34,500,'#e8f5e9');
+    if(c.age)t('⏳ '+c.age,960,34,700,'#ffe082');
+    t('krashimitra.in  ·  स्रोत: data.gov.in (Agmarknet)',1030,30,500,'#c8e6c9');
+    var b=await new Promise(function(r){cv.toBlob(r,'image/png');});
+    return b?new File([b],'krashimitra-bhav.png',{type:'image/png'}):null;
+  }catch(e){return null;}
+}
+"""
+
+
+# ── kitchen staples: the per-kilo line ───────────────────────
+# "chini ka rate", "pyaj ka bhav", "चीनी का रेट आज": a large share of the
+# people searching these crops are households and shopkeepers, not farmers,
+# and they think in ₹ per kilo. The page answered in ₹ per quintal only, and
+# /bhav/sugar/rajasthan/jaipur took 0 clicks from 215 impressions for
+# "chini ka rate" at position 2.7 (week to 24 Sep 2026). The kilo figure is
+# the same mandi number divided by 100, labelled थोक and लगभग, and says
+# plainly that the shop price differs: we report the mandi, not the shop.
+_KITCHEN_STAPLES = frozenset({
+    "sugar", "onion", "potato", "tomato", "garlic", "ginger-green",
+    "green-chilli", "lemon", "rice", "bengal-gram-dal-chana-dal",
+    "black-gram-dal-urd-dal", "green-gram-dal-moong-dal", "masur-dal",
+    "red-gram-split-arhar-dal-tur-dal",
+})
+
+
+def _per_kilo(avg) -> str:
+    """₹/quintal → '₹55.50' per kilo."""
+    return f"₹{avg / 100:,.2f}"
+
+
+def _kilo_line(cs: str, avg) -> str:
+    if cs not in _KITCHEN_STAPLES or not avg:
+        return ""
+    return (f'<p class="answer-kilo" style="margin:6px 0 0;font-size:.92rem;opacity:.92">'
+            f'🛒 थोक भाव लगभग <b>{_per_kilo(avg)} प्रति किलो</b> · '
+            f'दुकान का खुदरा दाम इससे अलग होता है</p>')
+
+
+def _kilo_faqs(cs: str, hi: str, d_hi: str, as_of_hi: str, avg) -> list[tuple[str, str]]:
+    if cs not in _KITCHEN_STAPLES or not avg:
+        return []
+    return [(f"{d_hi} में 1 किलो {hi} का थोक भाव कितना है?",
+             f"{as_of_hi} को {d_hi} की मंडियों में {hi} का औसत थोक भाव ₹{avg:,} प्रति क्विंटल "
+             f"था, यानी लगभग {_per_kilo(avg)} प्रति किलो। दुकान पर खुदरा दाम इससे अलग होता है, "
+             f"क्योंकि उसमें ढुलाई, पैकिंग और दुकानदार का खर्च जुड़ता है।")]
 
 
 # ── the district trend line ──────────────────────────────────
@@ -1003,22 +1193,25 @@ def _district_series(prices: list, end_iso: str, today_avg) -> list[int]:
     district = prices[0].get("district") or ""
     names    = sorted({p.get("commodity") for p in prices if p.get("commodity")})
 
-    db = SessionLocal()
-    try:
-        rows = (db.query(MandiPriceHistory.commodity, MandiPriceHistory.market,
-                         MandiPriceHistory.variety, MandiPriceHistory.grade,
-                         MandiPriceHistory.arrival_dt, MandiPriceHistory.modal_price)
-                  .filter(MandiPriceHistory.commodity.in_(names),
-                          MandiPriceHistory.state == state,
-                          MandiPriceHistory.district == district,
-                          MandiPriceHistory.arrival_dt >= end - timedelta(days=CHART_DAYS - 1),
-                          MandiPriceHistory.arrival_dt <= end)
-                  .all())
-    except Exception as exc:
-        logger.warning("district trend query failed (%s, %s): %s", district, state, exc)
-        return []
-    finally:
-        db.close()
+    rows = mandi_memory.history(names, state, district,
+                                end - timedelta(days=CHART_DAYS - 1), end)
+    if rows is None:                    # memory copy not loaded: ask Postgres
+        db = SessionLocal()
+        try:
+            rows = (db.query(MandiPriceHistory.commodity, MandiPriceHistory.market,
+                             MandiPriceHistory.variety, MandiPriceHistory.grade,
+                             MandiPriceHistory.arrival_dt, MandiPriceHistory.modal_price)
+                      .filter(MandiPriceHistory.commodity.in_(names),
+                              MandiPriceHistory.state == state,
+                              MandiPriceHistory.district == district,
+                              MandiPriceHistory.arrival_dt >= end - timedelta(days=CHART_DAYS - 1),
+                              MandiPriceHistory.arrival_dt <= end)
+                      .all())
+        except Exception as exc:
+            logger.warning("district trend query failed (%s, %s): %s", district, state, exc)
+            return []
+        finally:
+            db.close()
 
     seen: dict[tuple, dict] = {}
     for com, mkt, var, grd, dt, modal in rows:
@@ -3447,15 +3640,17 @@ def _rates_in(idx: dict, ss: str, ds: str = "") -> dict:
     if not sn or (ds and not dn):
         return {}
 
-    db = SessionLocal()
-    try:
-        q = (db.query(MandiPrice.commodity, MandiPrice.market, MandiPrice.modal_price)
-               .filter(MandiPrice.state.ilike(sn)))
-        if dn:
-            q = q.filter(MandiPrice.district.ilike(dn))
-        rows = q.all()
-    finally:
-        db.close()
+    rows = _mem_place_rows(sn, dn, ("commodity", "market", "modal_price"))
+    if rows is None:
+        db = SessionLocal()
+        try:
+            q = (db.query(MandiPrice.commodity, MandiPrice.market, MandiPrice.modal_price)
+                   .filter(MandiPrice.state.ilike(sn)))
+            if dn:
+                q = q.filter(MandiPrice.district.ilike(dn))
+            rows = q.all()
+        finally:
+            db.close()
 
     agg: dict = {}
     for commodity, market, modal in rows:
@@ -4539,14 +4734,26 @@ def bhav_hub():
         f"आज का मंडी भाव {date.today().year} — सभी फसलों के रेट | Mandi Bhav Today",
         f"आज का मंडी भाव {date.today().year} | Mandi Bhav Today — सभी फसलों के रेट",
         f"आज का मंडी भाव {date.today().year} — सभी फसलों के ताजा रेट")
-    desc = _fit(
-        f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का आज का "
-        f"मंडी भाव (mandi bhav today)। फसल, राज्य और जिला चुनें — रोज़ अपडेट।",
-        f"{today_hi}: गेहूं, धान, प्याज, आलू समेत {len(crops)} फसलों का आज का मंडी भाव "
-        f"(mandi bhav today)। फसल, राज्य व जिला चुनें — रोज़ अपडेट।",
-        f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
-        f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।",
-        limit=162)
+    # Dated by the clock only while the feed is current; when it is not
+    # (data.gov.in down), by the newest price we actually hold, and without
+    # the "आज का … रोज़ अपडेट" claims — see _is_current.
+    _newest = max((_fresh_iso_crop(idx, cs) for cs in crops), default="")
+    if _is_current(_newest):
+        desc = _fit(
+            f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का आज का "
+            f"मंडी भाव (mandi bhav today)। फसल, राज्य और जिला चुनें — रोज़ अपडेट।",
+            f"{today_hi}: गेहूं, धान, प्याज, आलू समेत {len(crops)} फसलों का आज का मंडी भाव "
+            f"(mandi bhav today)। फसल, राज्य व जिला चुनें — रोज़ अपडेट।",
+            f"{today_hi}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का ताजा मंडी भाव। "
+            f"फसल चुनें, फिर राज्य और जिला — आज का रेट देखें। रोज़ अपडेट (data.gov.in)।",
+            limit=162)
+    else:
+        desc = _fit(
+            f"{_as_of_hi(_newest)}: गेहूं, धान, गन्ना, प्याज, आलू समेत {len(crops)} फसलों का "
+            f"मंडी भाव (mandi bhav)। फसल, राज्य और जिला चुनें। स्रोत: data.gov.in",
+            f"{_as_of_hi(_newest)}: गेहूं, धान, प्याज, आलू समेत {len(crops)} फसलों का मंडी भाव। "
+            f"फसल, राज्य व जिला चुनें।",
+            limit=162)
 
     body = f"""<h1 class="mandi-page-heading">कृषि मंडी भाव</h1>
 <div class="bhav-tabs" role="tablist">
@@ -4661,7 +4868,8 @@ def bhav_state_hub(state: str):
 
     faqs = [
         (f"{hi_state} में आज कौन-कौन सी फसलों का भाव मिलता है?",
-         f"{as_of_hi} को {hi_state} की मंडियों में {len(crops_here)} फसलों के ताजा भाव सरकारी "
+         f"{as_of_hi} को {hi_state} की मंडियों में {len(crops_here)} फसलों के "
+         f"{'ताजा ' if _is_current(fresh) else ''}भाव सरकारी "
          f"रिपोर्ट (data.gov.in / Agmarknet) में दर्ज हैं। नीचे अपनी फसल चुनकर जिलेवार भाव देखें।"),
         (f"{hi_state} में अपनी फसल का भाव कैसे देखें?",
          f"नीचे अपनी फसल चुनें — फिर {hi_state} के सभी जिलों की मंडियों का न्यूनतम, अधिकतम और "
@@ -4675,8 +4883,10 @@ def bhav_state_hub(state: str):
         ("कृषि मित्र", f"{SITE}/"), ("मंडी भाव", f"{SITE}/bhav"), (hi_state, canon)]))
 
     title = f"{hi_state} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}"
-    desc = (f"{as_of_hi}: {hi_state} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
-            f"गेहूं, धान, प्याज समेत। फसल चुनकर अपने जिले का रेट देखें। रोज़ अपडेट (data.gov.in)।")
+    _cur = _is_current(fresh)          # "ताजा"/"रोज़ अपडेट" only while current
+    desc = (f"{as_of_hi}: {hi_state} की मंडियों में {len(crops_here)} फसलों का "
+            f"{'ताजा ' if _cur else ''}मंडी भाव — गेहूं, धान, प्याज समेत। फसल चुनकर अपने जिले का "
+            f"रेट देखें।{' रोज़ अपडेट (data.gov.in)।' if _cur else ' (data.gov.in)'}")
 
     answer_lead = (f'<p class="lead-out">{as_of_hi} को {escape(hi_state)} के {n_dist} जिलों की मंडियों में '
                    f'{len(crops_here)} फसलों का भाव भारत सरकार के Agmarknet (data.gov.in) पोर्टल पर '
@@ -4762,16 +4972,20 @@ def _district_board(state_name: str, dist_name: str) -> dict:
     hit = _board_cache.get(key)
     if hit and time.time() - hit[0] < _PLACE_RATES_TTL:
         return hit[1]
-    db = SessionLocal()
-    try:
-        rows = (db.query(MandiPrice.commodity, MandiPrice.market, MandiPrice.min_price,
-                         MandiPrice.max_price, MandiPrice.modal_price,
-                         MandiPrice.arrival_date)
-                  .filter(MandiPrice.state.ilike(state_name),
-                          MandiPrice.district.ilike(dist_name))
-                  .all())
-    finally:
-        db.close()
+    rows = _mem_place_rows(state_name, dist_name,
+                           ("commodity", "market", "min_price", "max_price",
+                            "modal_price", "date"))
+    if rows is None:
+        db = SessionLocal()
+        try:
+            rows = (db.query(MandiPrice.commodity, MandiPrice.market, MandiPrice.min_price,
+                             MandiPrice.max_price, MandiPrice.modal_price,
+                             MandiPrice.arrival_date)
+                      .filter(MandiPrice.state.ilike(state_name),
+                              MandiPrice.district.ilike(dist_name))
+                      .all())
+        finally:
+            db.close()
 
     agg: dict = {}
     for commodity, market, lo, hi, modal, arr in rows:
@@ -4906,21 +5120,29 @@ def bhav_district_hub(state: str, district: str):
     # ── CTR-optimised title (§2.2): district name + top crops ──
     # The farmer searching "मेरठ मंडी भाव" sees his actual crops in the result.
     _top_crops = ", ".join(_hindi_name(cn) for _, cn in ordered[:4])
-    title = _fit(*(([f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav {date.today().year}",
-                     f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav"] if dn_hi != dn else []) + [
+    # The district's other mandis, busiest = the most crops on this board.
+    d_mandis = _title_mandis([{"market": m} for b in board.values() for m in b["mandis"]], dn)
+    title = _fit(*_with_mandis(
+                (([f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav {date.today().year}",
+                   f"{dn_hi} मंडी भाव आज — {dn} Mandi Bhav"] if dn_hi != dn else []) + [
                  f"{dn_hi} मंडी भाव आज — {_top_crops} का नेट रेट",
                  f"{dn_hi} मंडी भाव आज — सभी फसलों के ताजा रेट {date.today().year}",
                  f"{dn_hi} मंडी भाव आज — सभी फसलों के ताजा रेट",
                  f"{dn_hi} मंडी भाव आज — {hi_state}",
-                 f"{dn_hi} मंडी भाव आज"]))
+                 f"{dn_hi} मंडी भाव आज"]), dn, d_mandis))
     # ── CTR-optimised meta (§2.2): trend + net-bhav CTA ──
+    # "ताजा" and "रोज़ अपडेट" only while the price is current — _is_current.
+    _cur = _is_current(fresh)
+    _taza = "ताजा " if _cur else ""
+    _roz = " रोज़ अपडेट (data.gov.in)।" if _cur else " (data.gov.in)"
+    _aaj = "आज का " if _cur else ""
     desc = _fit(
         f"{as_of_hi} अपडेट: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों "
-        f"का ताजा भाव + पिछले दिनों का रुझान। भाड़ा घटाकर नेट भाव देखें और सबसे ज़्यादा कमाई वाली मंडी चुनें।",
-        f"{as_of_hi}: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का ताजा भाव — "
-        f"अपनी फसल चुनकर आज का न्यूनतम, अधिकतम और मॉडल रेट देखें। रोज़ अपडेट (data.gov.in)।",
-        f"{as_of_hi}: {dn_hi} की मंडियों में {len(crops_here)} फसलों का ताजा मंडी भाव — "
-        f"फसल चुनकर आज का रेट देखें। रोज़ अपडेट (data.gov.in)।",
+        f"का {_taza}भाव + पिछले दिनों का रुझान। भाड़ा घटाकर नेट भाव देखें और सबसे ज़्यादा कमाई वाली मंडी चुनें।",
+        f"{as_of_hi}: {dn_hi} ({hi_state}) की मंडियों में {len(crops_here)} फसलों का {_taza}भाव — "
+        f"अपनी फसल चुनकर {_aaj}न्यूनतम, अधिकतम और मॉडल रेट देखें।{_roz}",
+        f"{as_of_hi}: {dn_hi} की मंडियों में {len(crops_here)} फसलों का {_taza}मंडी भाव — "
+        f"फसल चुनकर {_aaj}रेट देखें।{_roz}",
         limit=162)
 
     answer_lead = (f'<p class="lead-out">{as_of_hi} को {escape(dn_hi)} ({escape(hi_state)}) की मंडियों में '
@@ -4944,7 +5166,7 @@ def bhav_district_hub(state: str, district: str):
            "year": date.today().year, "date": as_of_loc}
     _lt = state_lang.variants("titles", "district_all", lang, _lv)
     if _lt:
-        title = _fit(*_lt)
+        title = _fit(*_with_mandis(_lt, dn, d_mandis))
     _ldc = state_lang.variants("descs", "district_all", lang, _lv)
     if _ldc:
         desc = _fit(*_ldc, limit=162)
@@ -4972,7 +5194,9 @@ def bhav_district_hub(state: str, district: str):
                   f'<p>टैप करें — आखिरी दर्ज भाव तारीख के साथ दिखेगा।</p>'
                   f'<div class="chips">{"".join(quiet)}</div></div>'
                   if quiet else "")
+    # Picker first, under the heading — the same place as every other /bhav page.
     body = f"""{_tier_head(head_h1, head_sub)}
+{_hub_selector("", ss, ds, idx, known_state=True, known_dist=True, show_crop=False)}
 {_tier_search('tier-grid', 'फसल खोजें... (गेहूं, प्याज, आलू)') if len(rows_html) > 8 else ""}
 {board_html}
 {quiet_html}
@@ -4980,7 +5204,6 @@ def bhav_district_hub(state: str, district: str):
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav/rajya/{ss}">← {escape(hi_state)} के सभी जिले</a>
 </div>
-{_hub_selector("", ss, ds, idx, known_state=True, known_dist=True, show_crop=False)}
 {hub_map_html}
 {_dukan_pitch(dn_hi)}
 <h2>अक्सर पूछे जाने वाले सवाल</h2>
@@ -7310,14 +7533,16 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
 
 
 def _mandis_in_district(state_name: str, dist_name: str) -> list[dict]:
-    db = SessionLocal()
-    try:
-        rows = (db.query(MandiPrice.market, MandiPrice.commodity, MandiPrice.modal_price)
-                .filter(MandiPrice.state.ilike(state_name))
-                .filter(MandiPrice.district.ilike(dist_name))
-                .all())
-    finally:
-        db.close()
+    rows = _mem_place_rows(state_name, dist_name, ("market", "commodity", "modal_price"))
+    if rows is None:
+        db = SessionLocal()
+        try:
+            rows = (db.query(MandiPrice.market, MandiPrice.commodity, MandiPrice.modal_price)
+                    .filter(MandiPrice.state.ilike(state_name))
+                    .filter(MandiPrice.district.ilike(dist_name))
+                    .all())
+        finally:
+            db.close()
 
     by_mkt: dict = {}
     for mkt, com, modal in rows:
@@ -8148,21 +8373,24 @@ def bhav_crop(c_slug: str):
         f"{t_hi} का भाव आज — {t_en} Price Today सभी राज्य",
         f"{t_hi} का भाव आज — {t_en} Price Today",
         f"{t_hi} का भाव आज — सभी राज्य")
+    _taza = "ताजा " if _is_current(fresh_iso) else ""
     desc = _fit(
-        f"{as_of_hi}: {t_hi} ({t_en}) का ताजा मंडी भाव — "
+        f"{as_of_hi}: {t_hi} ({t_en}) का {_taza}मंडी भाव — "
         f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
-        f"{as_of_hi}: {t_hi} का ताजा मंडी भाव — "
+        f"{as_of_hi}: {t_hi} का {_taza}मंडी भाव — "
         f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
         limit=162)
 
     head_h1 = f"आज का {escape(hi)} भाव"
     head_sub = (f"📅 {as_of_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
                 f"{_age_badge(fresh_iso)}")
-    # The answer leads: today's highest and lowest mandi in India (lazy, from
-    # tier2-extras), THEN the tools for narrowing it down to one's own place.
+    # The फसल / राज्य / मंडी picker sits directly under the heading, as on every
+    # other /bhav page. The lazy block (nearest mandi, सबसे ऊंचा / सबसे कम,
+    # the national lead) used to come first and pushed the picker below the
+    # fold, so a farmer had to scroll past it just to pick a district.
     body = f"""{_tier_head(head_h1, head_sub)}
-{_lazy_div('bhav-lazy-t2', 'card')}
 {_hub_selector(cs, seed_ss, "", idx, known_crop=True)}
+{_lazy_div('bhav-lazy-t2', 'card')}
 {_msp_html(commodity)}
 {_dukan_pitch()}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
@@ -8252,8 +8480,10 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
         f"{hi_state} में {t_hi} का भाव आज — {t_en} Price {state}",
         f"{hi_state} में {t_hi} का भाव आज — {t_en} Price",
         f"{hi_state} में {t_hi} का भाव आज")
-    desc = (f"{as_of_hi}: {hi_state} की मंडियों में {hi} का ताजा भाव — "
-            f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां। रोज़ अपडेट।")
+    _cur = _is_current(fresh_iso)     # "ताजा"/"रोज़ अपडेट" only while current
+    desc = (f"{as_of_hi}: {hi_state} की मंडियों में {hi} का {'ताजा ' if _cur else ''}भाव — "
+            f"{len(dist_map)} जिलों के रेट और सबसे ज्यादा भाव देने वाली मंडियां।"
+            f"{' रोज़ अपडेट।' if _cur else ''}")
 
 
     # State-language pass — see the same block on the district page below and
@@ -8495,7 +8725,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     if st["lo"] and st["hi"]:
         _lfq["lo"], _lfq["hi"] = f"{st['lo']:,}", f"{st['hi']:,}"
     _lf = state_lang.faqs("crop_district", lang, _lfq)
-    faqs = (_lf or faqs) + msp_faqs
+    faqs = (_lf or faqs) + msp_faqs + _kilo_faqs(cs, hi, d_hi, as_of_hi, st["avg"])
 
     faq_html, faq_ld = _faq(faqs)
     ld = _ld(faq_ld, _crumb_ld([
@@ -8541,7 +8771,10 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     #
     # (This revert first landed in 3c31404 and was undone by accident in
     # 7629f06 the same morning; restored here.)
-    title = _fit(*(
+    #
+    # The district's other mandis join where there is room — _with_mandis.
+    t_mandis = _title_mandis(prices, district)
+    title = _fit(*_with_mandis((
         # No real Hindi name for this commodity: t_hi IS t_en, so a bilingual
         # template would print one long string twice.
         (([f"{t_hi} का भाव आज {place} मंडी में — {en_d} Mandi"] if en_d else []) + [
@@ -8559,7 +8792,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
          f"{t_hi} का भाव आज {place} — {t_en} Price",
          f"{place} में {t_hi} भाव — {t_en}",
          f"{place} में {t_hi} का भाव आज",
-         f"{t_hi} का भाव — {district}"])))
+         f"{t_hi} का भाव — {district}"])), district, t_mandis))
 
     # Same `lang` resolved above the FAQs. `t_hi` rather than `hi` here: the
     # title falls back to the English name for the ~13 commodity groups with no
@@ -8573,9 +8806,12 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
            "n": st["n"]}
     _lt = state_lang.variants("titles", "crop_district", lang, _lv)
     if _lt:
-        title = _fit(*_lt)
+        title = _fit(*_with_mandis(_lt, district, t_mandis))
 
-    _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
+    # The description test (utils/desc_test.py): group B leaves the average
+    # out of the snippet, and nothing else changes.
+    _desc_b = desc_test.variant(cs, ss, ds) == "B"
+    _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] and not _desc_b else ""
     # About a third of titles are too long to hold both spellings of the
     # district, and the one dropped is the Latin one — which is the half of
     # this page's searchers that ALREADY converts (0.97% against 0.36%). So
@@ -8586,22 +8822,25 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     d_state = (f"{d_hi} ({hi_state})" if d_both == d_hi
                else f"{d_hi} ({district}, {hi_state})")
     # ── CTR-optimised meta description ──
-    # Number + benefit + freshness signal + soft CTA. The MSP mention and
-    # "रोज़ सुबह अपडेट" are the hooks the old description was missing.
+    # Number + benefit + freshness signal + soft CTA. "ताजा" and "रोज़ (सुबह)
+    # अपडेट" only while the price is current (_is_current); the date leads
+    # either way.
+    _cur  = _is_current(fresh_iso)
+    _taza = "ताजा " if _cur else ""
     desc  = _fit(
-        f"{as_of_hi} अपडेट: {d_state} में {hi} का ताजा भाव — {_avg}"
-        f"{_mandis_gen(st['n'])} के रेट, MSP तुलना और नेट भाव। रोज़ सुबह अपडेट।",
-        f"{as_of_hi}: {d_state} में {hi} का ताजा भाव — {_avg}"
-        f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और भाव का रुझान। रोज़ अपडेट।",
-        f"{as_of_hi}: {d_both} में {hi} का ताजा भाव — {_avg}"
+        f"{as_of_hi} अपडेट: {d_state} में {hi} का {_taza}भाव — {_avg}"
+        f"{_mandis_gen(st['n'])} के रेट, MSP तुलना और नेट भाव।{' रोज़ सुबह अपडेट।' if _cur else ''}",
+        f"{as_of_hi}: {d_state} में {hi} का {_taza}भाव — {_avg}"
+        f"{_mandis_gen(st['n'])} के रेट, कल से तुलना और भाव का रुझान।{' रोज़ अपडेट।' if _cur else ''}",
+        f"{as_of_hi}: {d_both} में {hi} का {_taza}भाव — {_avg}"
         f"{_mandis_gen(st['n'])} के रेट और भाव का रुझान।",
-        f"{as_of_hi}: {d_hi} में {hi} का ताजा भाव — {_avg}"
+        f"{as_of_hi}: {d_hi} में {hi} का {_taza}भाव — {_avg}"
         f"{_mandis_gen(st['n'])} के रेट और भाव का रुझान।",
         limit=162)
 
     # Same override as the title, and it has to move with it: a Marathi title
     # over a Hindi snippet is a mismatched pair in one SERP result.
-    _lv["avg"] = f"सरासरी ₹{st['avg']:,}/क्विंटल. " if st["avg"] else ""
+    _lv["avg"] = f"सरासरी ₹{st['avg']:,}/क्विंटल. " if st["avg"] and not _desc_b else ""
     _ld_ = state_lang.variants("descs", "crop_district", lang, _lv)
     if _ld_:
         desc = _fit(*_ld_, limit=162)
@@ -8620,8 +8859,21 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                      + (f" — 💰 ₹{st['avg']:,}/क्विंटल" if st["avg"] else "")
                      + ((f" (📈 +{avg_pct:g}%)" if avg_pct > 0 else f" (📉 {avg_pct:g}%)")
                         if avg_pct else "")
-                     + "\n👉 ताजा भाव देखें 👇")
-    share_cfg = _json.dumps({"caption": share_caption, "url": share_url}, ensure_ascii=False)
+                     + ("\n👉 ताजा भाव देखें 👇" if _is_current(fresh_iso)
+                        else "\n👉 भाव देखें 👇"))
+    # The price card drawn on the phone when the farmer taps WhatsApp पर भेजें
+    # (_SHARE_CARD_JS). Every number on it is one this page already prints,
+    # with the same date and the same age note, so the picture can never say
+    # something the page does not.
+    share_card = ({"crop": hi, "place": f"{d_hi}, {hi_state}", "date": as_of_hi,
+                   "avg": f"₹{st['avg']:,}", "lo": f"₹{st['lo']:,}" if st["lo"] else "",
+                   "hi": f"₹{st['hi']:,}" if st["hi"] else "",
+                   "n": _mandis_gen(st["n"]), "age": _age_note(fresh_iso),
+                   "kilo": (f"थोक लगभग {_per_kilo(st['avg'])} प्रति किलो"
+                            if cs in _KITCHEN_STAPLES else "")}
+                  if st["avg"] else None)
+    share_cfg = _json.dumps({"caption": share_caption, "url": share_url,
+                             "card": share_card}, ensure_ascii=False)
     _WA_GLYPH = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
                  '<path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38'
                  'c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01'
@@ -8688,6 +8940,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
 {delta_html}
 </div>
+{_kilo_line(cs, st["avg"])}
 <div class="answer-range">
 <div><span>न्यूनतम</span><b>{f"₹{st['lo']:,}" if st['lo'] else '—'}</b></div>
 <div><span>अधिकतम</span><b>{f"₹{st['hi']:,}" if st['hi'] else '—'}</b></div>
@@ -8707,10 +8960,16 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 <script>
 (function(){{
   var CFG={share_cfg};
+  {_SHARE_CARD_JS}
   window.shareBhav=async function(){{
     if(navigator.share){{
-      try{{await navigator.share({{text:CFG.caption,url:CFG.url}});return;}}
-      catch(err){{if(err&&err.name==='AbortError')return;}}
+      try{{
+        var f=CFG.card&&await kmPriceCard(CFG.card);
+        if(f&&navigator.canShare&&navigator.canShare({{files:[f]}})){{
+          await navigator.share({{files:[f],text:CFG.caption+'\\n'+CFG.url}});return;
+        }}
+        await navigator.share({{text:CFG.caption,url:CFG.url}});return;
+      }}catch(err){{if(err&&err.name==='AbortError')return;}}
     }}
     window.open('https://wa.me/?text='+encodeURIComponent(CFG.caption+'\\n'+CFG.url),'_blank');
   }};
