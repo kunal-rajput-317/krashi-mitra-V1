@@ -24,7 +24,7 @@ SITE = "https://krashimitra.in"
 # The rhythm that works, in order (drop what does not apply, keep the order):
 #   भूमिका → यह क्या है → पहचान → जीवन चक्र / यह कैसे काम करता है →
 #   नुकसान (comparison table) → निगरानी / पात्रता → रोकथाम (free measures) →
-#   जैविक-देसी उपाय → रासायनिक / प्रक्रिया (dose or document table) →
+#   जैविक-देसी उपाय → रासायनिक / प्रक्रिया (product + timing, or document table) →
 #   ये गलतियाँ न करें → कैलेंडर तालिका → निष्कर्ष
 #
 # Every section is:
@@ -126,24 +126,28 @@ BODY = r"""
 
   <hr class="section-divider" />
 
-  <!-- DOSES / DOCUMENTS — always with the caveat box -->
+  <!-- PRODUCTS / DOCUMENTS — always with the caveat box.
+       NEVER a dose (LEGAL_RULES §2): name the product (technical name) and
+       WHEN it fits; the amount lives on the label, the Soil Health Card or
+       with the KVK / vet. The builder refuses a page that prints one. -->
   <section class="article-section">
     <div class="section-heading">
       <span class="s-icon">🧪</span>
-      <h2>TODO — दवा और सही मात्रा</h2>
+      <h2>TODO — कौन सी दवा और कब</h2>
     </div>
     <table class="article-table">
       <thead>
-        <tr><th>दवा (तकनीकी नाम)</th><th>मात्रा / लीटर पानी</th><th>कब उपयुक्त</th></tr>
+        <tr><th>दवा (तकनीकी नाम)</th><th>कब उपयुक्त</th></tr>
       </thead>
       <tbody>
-        <tr><td>TODO</td><td>TODO</td><td>TODO</td></tr>
+        <tr><td>TODO</td><td>TODO</td></tr>
       </tbody>
     </table>
+    <p><strong>मात्रा और छिड़काव का तरीका दवा के पैक पर छपे लेबल से लें, या अपने KVK / कृषि विभाग से पूछें।</strong></p>
     <div class="tip-box warning">
       <span class="tip-icon">⚠️</span>
       <div class="tip-content">
-        TODO — required whenever the article gives doses, rates or money:
+        TODO — required whenever the article names a chemical, a rate or money:
         check the CIB&amp;RC label / confirm with the local KVK, बैंक शाखा or
         कृषि विभाग, because state-level advice differs.
       </div>

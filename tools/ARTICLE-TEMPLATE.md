@@ -126,7 +126,7 @@ paragraph with a Hindi sentence pasted on top.
 ```
 भूमिका → यह क्या है → पहचान → जीवन चक्र / यह कैसे काम करता है →
 नुकसान (तुलना तालिका) → निगरानी / पात्रता → बिना पैसे की रोकथाम →
-जैविक-देसी उपाय → रासायनिक / प्रक्रिया (डोज़ या दस्तावेज़ तालिका) →
+जैविक-देसी उपाय → रासायनिक / प्रक्रिया (दवा + समय, या दस्तावेज़ तालिका) →
 ये गलतियाँ न करें → कैलेंडर तालिका → निष्कर्ष → FAQ
 ```
 
@@ -136,7 +136,7 @@ Rules that make the difference:
   section, always. Sand-and-lime in the whorl before ₹800 of insecticide.
 - **Every list item leads with a bold label.** `<li><strong>गहरी जुताई:</strong> …`
 - **Two tables minimum** — one comparison (`स्वस्थ` vs `ग्रस्त`, using
-  `td.healthy` / `td.diseased`) and one calendar or dose table. Tables are what
+  `td.healthy` / `td.diseased`) and one calendar or product-and-timing table. Tables are what
   get pulled into AI answers and featured snippets.
 - **A "ये गलतियाँ न करें" section.** It is consistently the most useful part.
 - 2,000+ words of visible text. The builder rejects anything under 1,200.
@@ -152,7 +152,7 @@ Rules that make the difference:
 both generated from it, so they cannot drift.
 
 - Phrase the question **exactly as a farmer types it**.
-- **First sentence of the answer must contain the answer**, with the number.
+- **First sentence of the answer must contain the answer**, with the number (never a dose — see "Accuracy and honesty" below).
   That sentence is what a snippet or an AI overview will quote.
 - Inline `<strong>` only. No block tags inside an answer.
 
@@ -165,9 +165,18 @@ results for mismatched FAQPage markup and can issue a manual action for it.
 
 ## Accuracy and honesty
 
-- **Every dose, rate, price and deadline must be sourced.** Search first, write
+- **Never print a pesticide, fertiliser, manure or veterinary dose** (LEGAL_RULES
+  §2) — not per litre, per acre, per pump, per kg of seed, per tree or per
+  animal, not even "as recommended by ICAR". Name the product and the timing;
+  send the farmer to the product label, the Soil Health Card, the KVK /
+  कृषि विभाग or a registered vet for the amount, using the sentences in
+  `backend/services/legal.py` (`DOSE_PESTICIDE`, `DOSE_FERTILISER`, `DOSE_VET`).
+  The builder and `tests/test_no_authored_doses.py` both refuse a page that
+  prints one. A seed rate or a yield is not a dose — write it without a
+  per-unit number: "एक एकड़ में 40 किलो बीज", not "40 किलो/एकड़".
+- **Every rate, price and deadline must be sourced.** Search first, write
   second. Prefer ICAR / KVK / PIB / RBI over content farms.
-- **Any section with doses, money or deadlines gets a `tip-box warning`** telling
+- **Any section that names a chemical, money or deadlines gets a `tip-box warning`** telling
   the reader to confirm with their KVK, कृषि विभाग or bank branch, because
   state-level advice differs.
 - **Do not flatten a nuance to make a headline cleaner.** KCC is not a flat 4%
@@ -274,8 +283,9 @@ to preview).
 ## Ship checklist
 
 - [ ] `python tools/article_builder.py tools/articles/<name>.py` → all checks pass
-- [ ] Every dose / rate / date traced to a real source
-- [ ] Caveat box present wherever the article gives doses, money or deadlines
+- [ ] No dose anywhere — the product and timing only, the amount from the label / Soil Health Card / KVK / vet
+- [ ] Every rate / date traced to a real source
+- [ ] Caveat box present wherever the article names a chemical, money or deadlines
 - [ ] `cat_query` is a real filter chip: `khad keet mausam ganna sabji fruit anaaj jankari karnataka`
 - [ ] Every `bhav_links` slug returns 200
 - [ ] Page eyeballed at 390px

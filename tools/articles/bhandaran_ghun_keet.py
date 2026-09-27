@@ -306,7 +306,7 @@ ARTICLE = {
 
     "related": [
         (f"{SITE}/articles/khet-me-chuha-niyantran", "#b91c1c", "🐀", "फसल · कीट",
-         "खेत में चूहे कैसे मारें — विष चारा की सही विधि और मात्रा"),
+         "खेत में चूहे कैसे मारें — विष चारा की सही विधि"),
         (f"{SITE}/articles/makka-ethanol-maang", "#d97706", "🌽", "मक्का · बाज़ार",
          "मक्के का भाव और एथेनॉल — नया खरीदार कहाँ से आया"),
         (f"{SITE}/articles/gehun-unnat-kheti", "#b45309", "🌾", "गेहूं · फसल गाइड",
@@ -314,7 +314,7 @@ ARTICLE = {
         (f"{SITE}/articles/enam-online-fasal-bechna", "#0284c7", "🛒", "e-NAM · बिक्री",
          "e-NAM पर फसल ऑनलाइन कैसे बेचें — पूरी प्रक्रिया"),
         (f"{SITE}/articles/beej-upchar-vidhi", "#7c3aed", "🌱", "बीज · उपचार",
-         "बीज उपचार कैसे करें — सही क्रम, मात्रा और तरीका"),
+         "बीज उपचार कैसे करें — सही क्रम और तरीका"),
         (f"{SITE}/articles/fpo-kisan-utpadak-sangathan", "#0284c7", "🤝", "योजना · FPO",
          "FPO क्या है — कैसे बनाएँ और ₹15 लाख इक्विटी ग्रांट"),
         (f"{SITE}/bhav/wheat", "#b45309", "💰", "मंडी · आज के भाव",

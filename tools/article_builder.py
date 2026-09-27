@@ -41,8 +41,8 @@ import sys
 from pathlib import Path
 from urllib.parse import quote
 
-from article_advisory import (ADVISORY_MARK, advisory_html, needs_advisory,
-                              sweep as advisory_sweep)
+from article_advisory import (ADVISORY_MARK, advisory_html, find_doses,
+                              needs_advisory, sweep as advisory_sweep)
 from article_cards import sweep as card_date_sweep
 from article_scheme_notice import (SCHEME_MARK, is_scheme_article, page_is_scheme,
                                    scheme_notice_html, sweep as scheme_sweep)
@@ -925,6 +925,14 @@ def validate(path: Path) -> list[str]:
     if needs_advisory(_visible(own)):
         check(ADVISORY_MARK in doc,
               "names a chemical or a dose but carries no spray/dose advisory")
+    # We never author a pesticide, fertiliser or veterinary dose (LEGAL_RULES
+    # §2) — not even with the advisory under it. The page names the product and
+    # the timing; the amount lives on the label, the Soil Health Card or with
+    # the KVK / vet. A seed rate is not a dose, but say it without a per-unit
+    # number ("एक एकड़ में 40 किलो बीज") so the detector can stay strict.
+    doses = find_doses(_visible(own))
+    check(not doses, f"prints a dose ({doses[0] if doses else ''}) — LEGAL_RULES §2: "
+                     "send the farmer to the label / Soil Health Card / KVK instead")
     # A scheme page must say we are a private website (LEGAL_RULES §1/§3).
     if page_is_scheme(doc):
         check(SCHEME_MARK in doc, "scheme page without the private-website notice")

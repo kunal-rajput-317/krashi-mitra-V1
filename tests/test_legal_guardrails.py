@@ -33,7 +33,10 @@ ROOT = Path(__file__).resolve().parents[1]
 # Sources: Supreme Court order on endosulfan (2011); the older banned list of
 # the Central Insecticides Board & Registration Committee; the Insecticides
 # (Prohibition) Order of 8 Aug 2018 (12 banned at once, 6 more from 31 Dec
-# 2020); and the 2023 order banning dicofol, dinocap and methomyl.
+# 2020); the 2023 order banning dicofol, dinocap and methomyl; and the
+# agriculture ministry's order on streptomycin + tetracycline, whose use on
+# crops is completely banned from 1 Jan 2024 (antimicrobial resistance).
+# Tetracycline alone is left out: it is still a legal veterinary medicine.
 BANNED = [
     "endosulfan", "aldrin", "chlordane", "heptachlor", "endrin", "toxaphene",
     "pentachlorophenol", "parathion", "nitrofen", "dibromochloropropane",
@@ -46,12 +49,15 @@ BANNED = [
     "trichlorfon",
     # 2023 order
     "dicofol", "dinocap", "methomyl",
+    # banned on crops from 1 Jan 2024
+    "streptomycin", "streptocycline",
 ]
 BANNED_HI = [
     "एंडोसल्फान", "पैराथियान", "लिंडेन", "बेनोमिल", "कार्बारिल", "कार्बेरिल",
     "डायजिनॉन", "एलाक्लोर", "डाइक्लोरवास", "डीडीवीपी", "फोरेट", "फॉस्फामिडॉन",
     "ट्राइजोफॉस", "ट्रायजोफॉस", "ट्राइफ्लूरालिन", "डाइकोफॉल", "डाईकोफॉल",
     "मेथोमिल",
+    "स्ट्रेप्टोमाइसिन", "स्ट्रेप्टोमायसिन", "स्ट्रेप्टोसाइक्लिन", "ಸ್ಟ್ರೆಪ್ಟೋಸೈಕ್ಲಿನ್",
 ]
 _BANNED_RE = re.compile(
     r"(?<![a-z])(" + "|".join(re.escape(b) for b in BANNED) + r")(?![a-z])"

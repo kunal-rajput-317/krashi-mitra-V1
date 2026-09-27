@@ -25,6 +25,7 @@ import httpx
 
 from backend.config import get_setting
 from backend.services.chatbot_service import call_ai
+from backend.services.legal import redact_doses
 
 logger = logging.getLogger("krishi.news_auto_service")
 
@@ -946,6 +947,17 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
             "catLabel": CATEGORY_LABELS.get(cat, "🌾 कृषि न्यूज़"),
             "readTime": "3 मिनट"
         }
+
+    # Rule 5 above asks the model for no dose; the no-model path copies the
+    # source text as written. Either way nothing is published with one
+    # (LEGAL_RULES §2) — a government advisory's spray rate stays on the
+    # government's page, which the story already links.
+    for _k in ("title", "excerpt", "full_story"):
+        if isinstance(parsed.get(_k), str):
+            parsed[_k] = redact_doses(parsed[_k], lang_code if lang_code in ("hi", "en", "kn") else "hi")
+    if isinstance(parsed.get("bullets"), list):
+        parsed["bullets"] = [redact_doses(b, lang_code if lang_code in ("hi", "en", "kn") else "hi")
+                             if isinstance(b, str) else b for b in parsed["bullets"]]
 
     final_title = parsed.get("title", raw_title).strip()
     is_dup, reason = is_duplicate_story(final_title, url=source_url, content=parsed.get("excerpt", ""))

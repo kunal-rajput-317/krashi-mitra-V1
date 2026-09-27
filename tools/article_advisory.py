@@ -86,23 +86,16 @@ CHEMICALS = (
 )
 _CHEM_RE = re.compile("|".join(re.escape(c) for c in CHEMICALS), re.I)
 
-# A quantity next to a rate unit: "2 ग्राम प्रति लीटर", "400-500 मिली/एकड़",
-# "20 ಕೆಜಿ ಪ್ರತಿ ಎಕರೆ", "2 கிராம் ஒரு லிட்டர்". This catches the pages that
-# print a dose without ever naming the molecule — the fertiliser and
-# seed-treatment guides are full of those.
-_AMOUNT = (r"(?:ग्राम|ग्रा\.?|मिलीलीटर|मिली|मि\.?ली\.?|किलोग्राम|किलो|किग्रा|"
-           r"केजी|लीटर|एमएल|मिलीग्राम|क्विंटल|बोरी|"
-           r"ಗ್ರಾಂ|ಮಿಲಿ|ಕೆಜಿ|ಕಿಲೋ|ಲೀಟರ್|"
-           r"கிராம்|மில்லி|கிலோ|லிட்டர்|"
-           r"ml|gm|kg|g|l)")
-_PER = r"(?:/|प्रति|ಪ್ರತಿ|ஒரு|per)"
-_BASE = (r"(?:लीटर|पानी|एकड़|हेक्टेयर|बीघा|पंप|टंकी|किलो|बीज|बोरी|पेड़|पौधा|"
-         r"ಲೀಟರ್|ಎಕರೆ|ಹೆಕ್ಟೇರ್|ನೀರು|ಬೀಜ|"
-         r"லிட்டர்|ஏக்கர்|ஹெக்டேர்|தண்ணீர்|விதை|"
-         r"litre|liter|acre|ha|hectare)")
-DOSE_RE = re.compile(
-    r"\d+(?:[.,]\d+)?\s*(?:(?:-|–|से|to)\s*\d+(?:[.,]\d+)?\s*)?"
-    + _AMOUNT + r"\s*" + _PER + r"\s*" + _BASE, re.I)
+# The dose detector lives in backend/services/legal.py so the AI chat, this
+# builder and tests/test_no_authored_doses.py share one definition. Re-exported
+# under the old names for article_chem_audit.py and build_seed_qa.py.
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+_ROOT = str(Path(__file__).resolve().parents[1])
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from backend.services.legal import DOSE_RE, find_doses  # noqa: E402,F401
 
 
 def find_chemicals(text: str) -> list[str]:
@@ -115,11 +108,6 @@ def find_chemicals(text: str) -> list[str]:
             seen.add(k)
             out.append(m.group(0))
     return out
-
-
-def find_doses(text: str) -> list[str]:
-    """Every quantity-per-unit expression in `text`."""
-    return [re.sub(r"\s+", " ", m.group(0)) for m in DOSE_RE.finditer(text or "")]
 
 
 def needs_advisory(text: str) -> bool:

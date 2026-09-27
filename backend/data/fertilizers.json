@@ -9,7 +9,7 @@
     "image": "images/fertilizers/Urea.webp",
     "nitrogen": "46%",
     "when_to_apply": "At sowing and 30 days after sowing",
-    "dosage": "120 kg per hectare",
+    "dosage": "As per your Soil Health Card — or ask your KVK / agriculture department",
     "precaution": "Do not apply before heavy rain. Avoid contact with seeds."
   },
   "dap": {
@@ -22,7 +22,7 @@
     "image": "images/fertilizers/DAP.webp",
     "nitrogen": "18%",
     "when_to_apply": "At sowing time, mixed with soil",
-    "dosage": "60 kg per hectare",
+    "dosage": "As per your Soil Health Card — or ask your KVK / agriculture department",
     "precaution": "Store in dry place. Do not mix with urea directly."
   },
   "mop": {
@@ -35,7 +35,7 @@
     "image": "images/fertilizers/MOP.webp",
     "nitrogen": "0%",
     "when_to_apply": "At land preparation stage",
-    "dosage": "40 kg per hectare",
+    "dosage": "As per your Soil Health Card — or ask your KVK / agriculture department",
     "precaution": "Avoid use in saline soils. Keep away from moisture."
   },
   "ssp": {
@@ -48,7 +48,7 @@
     "image": "images/fertilizers/SSP.webp",
     "nitrogen": "0%",
     "when_to_apply": "Before sowing, mixed with soil",
-    "dosage": "150 kg per hectare",
+    "dosage": "As per your Soil Health Card — or ask your KVK / agriculture department",
     "precaution": "Do not store near acidic materials. Keep dry."
   },
   "zinc_sulphate": {
@@ -61,7 +61,7 @@
     "image": "images/fertilizers/zinc_sulphate.jpg",
     "nitrogen": "0%",
     "when_to_apply": "At sowing or as foliar spray",
-    "dosage": "25 kg per hectare",
+    "dosage": "As per your Soil Health Card — or ask your KVK / agriculture department",
     "precaution": "Do not mix with phosphatic fertilizers directly."
   },
   "npk_12_32_16": {
@@ -74,7 +74,7 @@
     "image": "images/fertilizers/NPK.webp",
     "nitrogen": "12%",
     "when_to_apply": "At sowing time as basal dose",
-    "dosage": "100 kg per hectare",
+    "dosage": "As per your Soil Health Card — or ask your KVK / agriculture department",
     "precaution": "Store in cool dry place. Use within expiry date."
   }
 }

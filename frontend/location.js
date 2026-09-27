@@ -19,10 +19,12 @@
 // the server-rendered /bhav/* + /product/* pages (bhav.py _header).
 //
 // Storage:
-//   • Always → localStorage "km_geo" {status,lat,lon,location,ts}
-//     status = granted | dismissed | denied
+//   • Always → localStorage "km_geo" {status,via,lat,lon,location,ts}
+//     status = granted | dismissed | denied; via = "card" when the farmer
+//     said yes on this card (other pages' GPS buttons write no via)
 //   • Logged-in users → also POST /profile/location so it persists on
-//     their users row (guests stay local-only).
+//     their users row (guests stay local-only) — ONLY after a tap on
+//     "चालू करें", never because the browser happens to allow location.
 //
 // Public API (for pages that want to react):
 //   window.KrashiLocation.get()   → the stored record (or null)
@@ -73,8 +75,13 @@
   }
 
   // ── persist + broadcast ─────────────────────────────────────
+  // via:"card" records that the farmer said yes on OUR card. Other pages
+  // (/bhav, /naksha GPS buttons) also write km_geo with status "granted" when
+  // he taps them for one lookup — that is device-only and is NOT consent to
+  // keep his location on his profile. Only a via:"card" record may ever be
+  // refreshed and sent to /profile/location (privacy policy §2.4).
   function persist(lat, lon, loc) {
-    writeStore({ status: "granted", lat: lat, lon: lon, location: loc, ts: Date.now() });
+    writeStore({ status: "granted", via: "card", lat: lat, lon: lon, location: loc, ts: Date.now() });
     try {
       document.dispatchEvent(new CustomEvent("km:location",
         { detail: { lat: lat, lon: lon, location: loc } }));
@@ -112,7 +119,8 @@
     );
   }
 
-  // Already-allowed device: refresh coords quietly, no card.
+  // Refresh a spot the farmer granted on our card, quietly, no card. Only
+  // boot() calls this, and only for a via:"card" record.
   function silentRefresh() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -238,18 +246,23 @@
 
     var s = readStore();
     if (s && s.status) {
-      // Decision already made. Only touch it to refresh a stale grant.
-      if (s.status === "granted" && (Date.now() - (s.ts || 0) > GEO_TTL)) silentRefresh();
+      // Decision already made. Refresh a stale grant only if it was given on
+      // our card — a record written by a page's own GPS button is left alone.
+      if (s.status === "granted" && s.via === "card" &&
+          (Date.now() - (s.ts || 0) > GEO_TTL)) silentRefresh();
       return;
     }
 
     // No decision yet. Peek at the permission state so we don't pop a
-    // pointless card when the browser already knows the answer.
+    // pointless card when the browser already knows the answer. A browser
+    // that already allows location (granted for a Krashi Bazar post, say) still
+    // gets the card: that permission was for one feature, not for keeping his
+    // location on his profile. Tapping "चालू करें" then resolves with no
+    // second browser popup.
     if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: "geolocation" }).then(function (p) {
-        if (p.state === "granted")      silentRefresh();
-        else if (p.state === "denied")  writeStore({ status: "denied", ts: Date.now() });
-        else                            whenWelcome(later);           // 'prompt'
+        if (p.state === "denied")       writeStore({ status: "denied", ts: Date.now() });
+        else                            whenWelcome(later);   // 'prompt' or 'granted'
       }).catch(function () { whenWelcome(later); });
     } else {
       whenWelcome(later);

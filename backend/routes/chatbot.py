@@ -15,6 +15,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from backend.config import get_setting
+from backend.services.legal import redact_doses
 from backend.database.db import ChatHistory, User, get_db
 from backend.utils.auth_utils import get_current_user
 from backend.utils.security import daily_limit, rate_limit
@@ -76,6 +77,16 @@ WEATHER_KEYWORDS = [
     "garmi", "garam", "thand", "thandi", "sardi", "tapman", "taapman",
     "baadh", "baad", "dhoop", "toofan", "aandhi", "barsaat",
 ]
+
+def _dose_lang(language: Optional[str]) -> str:
+    """The chat's language names → redact_doses' codes."""
+    lang = (language or "").lower()
+    if lang in ("hindi", "hi"):
+        return "hi"
+    if lang in ("kannada", "kn"):
+        return "kn"
+    return "en"
+
 
 def is_weather_question(q: str) -> bool:
     return any(w in q.lower() for w in WEATHER_KEYWORDS)
@@ -160,10 +171,13 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
             cached = search_cache(body.q)
             if cached:
                 log.info(f"[Cache] HIT score={cached['score']} q={body.q[:50]}")
-                _save_to_db(db, body, body.q, cached["answer"])
+                # A saved answer is served verbatim, so it passes the same
+                # dose net as a fresh one (LEGAL_RULES §2).
+                answer = redact_doses(cached["answer"], _dose_lang(body.language))
+                _save_to_db(db, body, body.q, answer)
                 return {
                     "question": body.q,
-                    "answer":   cached["answer"],
+                    "answer":   answer,
                     "source":   "cache",
                     "cached":   True,
                     "rag_chunks": 0,
@@ -217,6 +231,9 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
     if get_setting("ai_enabled", True):
         prompt = build_prompt(body.q, body.district, body.language, full_context, history_text)
         answer, source = await call_ai(prompt)   # ← await async call
+        # The prompt forbids doses; this catches the one a model slips in anyway,
+        # before it is saved to history or to the cache (LEGAL_RULES §2).
+        answer = redact_doses(answer, _dose_lang(body.language))
     else:
         answer, source = (
             "क्षमा करें, अभी AI सेवा उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
@@ -242,7 +259,7 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
         "cached":          False,
         "api_usage_saved": False,
         "rag_chunks":      rag_chunks,
-        "rag_context":     rag_context[:300] if rag_context else "",
+        "rag_context":     redact_doses(rag_context[:300], _dose_lang(body.language)) if rag_context else "",
         "suggestion":      suggest_feature(body.q, body.language) if source in ("claude", "gemini", "ollama", "cache") else None,
     }
 
