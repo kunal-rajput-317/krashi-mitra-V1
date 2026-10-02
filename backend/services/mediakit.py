@@ -66,7 +66,7 @@ MAX_AGE_DAYS = 21
 # prefixes above the ones they sit under.
 SECTIONS: list[tuple[str, str]] = [
     ("/bhav",           "Mandi prices — crop × state × district"),
-    ("/articles",       "Farming guides — dosage, disease, season"),
+    ("/articles",       "Farming guides — crops, disease, season"),
     ("/naksha",         "Village & district maps"),
     ("/pashupalan",     "Livestock & poultry, incl. daily egg rate"),
     ("/sarkari_yojana", "Government schemes"),

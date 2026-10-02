@@ -179,6 +179,64 @@ def zero_pages(pairs: list[tuple]) -> list[tuple]:
     return out
 
 
+def for_scope(states: list[str], crops: list[str]) -> dict | None:
+    """/bhav search traffic inside one sponsor prospect's market, for the
+    private kit: every crop×state(×district) page whose state is in `states`
+    and whose crop is in `crops` (an empty list means "any").
+
+    None when there is no snapshot. An in-scope page missing from the snapshot
+    is zero, as in for_page(), so a market Google showed to nobody comes back
+    as zero rather than as a blank — the honest answer before a brand pays.
+    """
+    snap = _load() or {}
+    rows = snap.get("pages")
+    if not rows:
+        return None
+    states, crops = set(states or []), set(crops or [])
+    # /bhav/<crop>/<x> is a state page OR a legacy district URL that 301s, so a
+    # 2-part key only counts when <x> is a state some 3-part key also uses.
+    # "rajya" is /bhav/rajya/<state>/<district>, the all-crop pages, which
+    # belong to a state-only proposal and to none that names crops.
+    real_states = {k.split("/")[1] for k in rows if k.count("/") == 2}
+    groups: dict[tuple[str, str], dict] = {}
+    for key, v in rows.items():
+        seg = key.split("/")
+        if len(seg) < 2 or seg[1] not in real_states:
+            continue                       # a crop hub or a legacy redirect
+        crop, state = seg[0], seg[1]
+        if (states and state not in states) or (crops and crop not in crops):
+            continue
+        g = groups.setdefault((crop, state), {"i": 0, "c": 0, "pages": 0, "districts": []})
+        g["i"] += v.get("i", 0)
+        g["c"] += v.get("c", 0)
+        g["pages"] += 1
+        if len(seg) == 3 and v.get("i", 0) > 0:
+            g["districts"].append((seg[2], v.get("i", 0)))
+    out = []
+    for (crop, state), g in groups.items():
+        g["districts"].sort(key=lambda d: -d[1])
+        out.append({"crop": crop, "state": state, "impressions": g["i"],
+                    "clicks": g["c"], "pages": g["pages"],
+                    "top_districts": [d for d, _ in g["districts"][:3]]})
+    out.sort(key=lambda r: -r["impressions"])
+    seen_st = {r["state"] for r in out}
+    seen_cr = {r["crop"] for r in out}
+    return {
+        "rows": out,
+        "impressions": sum(r["impressions"] for r in out),
+        "clicks": sum(r["clicks"] for r in out),
+        "pages": sum(r["pages"] for r in out),
+        # Asked for but never seen in any snapshot row — almost always a typo
+        # in the admin box, so the panel says so before the link goes out.
+        "unknown_states": sorted(states - seen_st),
+        "unknown_crops": sorted(crops - seen_cr),
+        "fetched_on": snap.get("fetched_on"),
+        "start": snap.get("start"),
+        "end": snap.get("end"),
+        "window_days": snap.get("window_days", WINDOW_DAYS),
+    }
+
+
 # ── writing ─────────────────────────────────────────────────────────────────
 
 def refresh() -> dict:

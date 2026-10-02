@@ -214,13 +214,14 @@ def test_locate_button_shows_a_busy_ring(client, seeded_meerut_mandi):
 def test_naksha_locate_btn_clears_zoom_stack(client):
     """The locate button stacks above Leaflet's zoom, not on top of the + key.
 
-    Leaflet's bottom-right zoom control ends 91px above the wrap's bottom once
-    the attribution strip is counted, so the old bottom:80px put the button
-    straight over the + button.
+    With the attribution strip and the distance scale under it, Leaflet's
+    bottom-right zoom stack's top (the + button) is 119px above the wrap's
+    bottom, measured in Edge at 390px and 1280px. bottom:100-102px put the
+    button 16px over the + button.
     """
     html = client.get("/naksha/uttar-pradesh").text
-    assert "bottom: 102px;" in html and "right: 10px;" in html
-    assert ".nk-my-loc-btn { bottom: 100px; right: 10px;" in html
+    assert "bottom: 128px;" in html and "right: 10px;" in html
+    assert ".nk-my-loc-btn { bottom: 128px; right: 10px;" in html
 
 
 def test_bhav_map_control_layout(client, seeded_meerut_mandi):
@@ -322,3 +323,17 @@ def test_mandi_3tier_lod_and_cluster_badges(client):
     assert "onMandiMapMove" in html
 
 
+
+
+def test_bhav_route_card_close_keeps_path_and_toggle_hides_it(client, seeded_meerut_mandi):
+    """The card's X closes the card only; "मार्ग छिपाएँ" is what hides the path."""
+    html = client.get("/bhav/wheat/uttar-pradesh/meerut").text
+
+    hide = html.split("var hideRouteFn = function()")[1].split("};")[0]
+    assert "removeLayer" not in hide
+
+    assert 'id="bhav-map-btn-pathtog"' in html
+    assert "_togglePath()" in html
+    assert "मार्ग छिपाएँ" in html and "मार्ग दिखाएँ" in html
+    # Drawn path reveals the toggle
+    assert "setPathShown(true);" in html

@@ -39,6 +39,11 @@ _settings: dict = {
     # watching, which is the half that matters when the reason for switching
     # off is a bill.
     "news_ai_enabled":        os.getenv("NEWS_AI_ENABLED",     "true").lower() == "true",
+    # The कृषि न्यूज़ auto-pilot (5 PM discovery + Day 5 auto-publish). Paused by
+    # the owner on 2 Oct 2026: AI rewrites of headlines are the "scaled
+    # content" Google's spam policy targets, and that judgement is site-wide.
+    # The hub and the published stories stay up. Set to "true" to restart.
+    "news_autopilot_enabled": os.getenv("NEWS_AUTOPILOT_ENABLED", "false").lower() == "true",
     # Claude (Anthropic) — OFF by default. Admin toggles it on only while
     # seeding the semantic cache with premium answers, then off again
     # (paid API — not meant for regular user traffic).

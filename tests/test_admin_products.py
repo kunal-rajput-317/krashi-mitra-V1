@@ -24,12 +24,13 @@ may not make; this file is about where the data comes from.
 """
 
 import io
+import os
 
 import pytest
 
 from backend.services import shop_catalog
 
-AUTH = ("testadmin", "test-admin-pass")
+AUTH = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 
 SAMPLE = {
     "name_en": "Test Sprayer Nozzle Set",
@@ -366,3 +367,60 @@ def test_an_uploaded_photo_replaces_the_committed_one(client, clean):
 
 def test_a_missing_photo_is_a_404_not_a_500(client):
     assert client.get("/product/img/99999999.webp").status_code == 404
+
+
+# ── paste an Amazon link → a pre-filled form ────────────────
+# The parser reads the pasted text only. If any of these ever needs network
+# access to pass, the feature has started scraping amazon.in (LEGAL_RULES §1).
+
+@pytest.mark.parametrize("url", [
+    "https://www.amazon.in/Kisan-Kraft-KK-KPS-16-Sprayer/dp/B0ABCDE123/ref=sr_1_3?crid=X&tag=other-21",
+    "amazon.in/Kisan-Kraft-KK-KPS-16-Sprayer/dp/B0ABCDE123",
+    "https://m.amazon.in/Kisan-Kraft-KK-KPS-16-Sprayer/gp/product/B0ABCDE123?psc=1",
+])
+def test_an_amazon_link_becomes_a_clean_tagged_link_and_a_name(url):
+    from backend.services import amazon_link
+    got = amazon_link.parse(url)
+    assert got["problem"] is None
+    assert got["asin"] == "B0ABCDE123"
+    assert got["affil_amazon"] == "https://www.amazon.in/dp/B0ABCDE123?tag=krashimitra-21"
+    assert got["name_en"] == "Kisan Kraft KK KPS 16 Sprayer"
+    assert got["slug"] == "kisan-kraft-kk-kps-16-sprayer"
+    assert "price" not in got  # Amazon's price is never derived
+
+
+@pytest.mark.parametrize("url, word", [
+    ("https://amzn.to/3xYzAbC", "short link"),
+    ("https://www.amazon.in/s?k=sprayer&tag=krashimitra-21", "search link"),
+    ("https://www.amazon.com/Sprayer/dp/B0ABCDE123", "amazon.in"),
+    ("", "Paste"),
+])
+def test_a_link_that_names_no_product_says_why(url, word):
+    from backend.services import amazon_link
+    assert word in (amazon_link.parse(url)["problem"] or "")
+
+
+def test_from_link_guesses_the_category_and_writes_nothing(client, clean):
+    from backend.database.db import ShopProduct
+    before = clean.query(ShopProduct).count()
+    r = client.post("/admin/catalogue/from-link", auth=AUTH, json={
+        "url": "https://www.amazon.in/Battery-Knapsack-Sprayer-16-Litre/dp/B0ZZZZZ999"})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["success"] and d["duplicate"] is None
+    assert d["guess"]["cat"] == "sprayers"
+    assert clean.query(ShopProduct).count() == before
+
+
+def test_from_link_flags_an_asin_already_in_the_catalogue(client, clean):
+    _create(client, affil_amazon="https://www.amazon.in/dp/B0DUPDUP01?tag=krashimitra-21")
+    shop_catalog.invalidate()
+    r = client.post("/admin/catalogue/from-link", auth=AUTH, json={
+        "url": "https://www.amazon.in/Some-Other-Title/dp/B0DUPDUP01/ref=x"})
+    assert r.json()["duplicate"]["slug"] == SAMPLE_SLUG
+
+
+def test_from_link_needs_the_admin_password(client):
+    r = client.post("/admin/catalogue/from-link", json={"url": "https://www.amazon.in/x/dp/B0ABCDE123"})
+    assert r.status_code == 401
+

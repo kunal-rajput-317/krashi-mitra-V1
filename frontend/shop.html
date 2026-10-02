@@ -3807,8 +3807,8 @@
     // ── Crop Protection ──
     { id: 51, cat: 'protection', emoji: '🌿', badge: 'bestseller', badgeClass: '', img: 'https://krashimitra.in/images/Pesticides/neem-oil.webp',
       name_hi: 'नीम तेल कॉन्सेंट्रेट', name_en: 'Neem Oil Concentrate', name_kn: 'ಬೇವಿನ ಎಣ್ಣೆ ಕಾನ್ಸೆಂಟ್ರೇಟ್',
-      desc_hi: 'बायो-कीटनाशक — ऑर्गेनिक pest control bestseller।',
-      desc_en: 'Bio-pesticide — organic pest control bestseller.',
+      desc_hi: 'बायो-कीटनाशक — ऑर्गेनिक pest control।',
+      desc_en: 'Bio-pesticide — organic pest control.',
       desc_kn: 'ಜೈವಿಕ ಕೀಟನಾಶಕ — ಸಾವಯವ ಕೀಟ ನಿಯಂತ್ರಣ.',
       price: 400, mrp: 800, unit_hi: '500ml', unit_en: '500ml', unit_kn: '500ml', rating: '⭐ 4.6',
       affil_amazon: 'https://www.amazon.in/s?k=Neem+Oil+Concentrate+Bio+Pesticide&tag=krashimitra-21',
@@ -4315,7 +4315,6 @@
         // Badge indicator in type pill when badge exists
         const badgePrefix = p.badgeClass === 'organic' ? '🌿 '
           : p.badgeClass === 'new-badge' ? '🆕 '
-          : p.badge === 'bestseller' ? '🔥 '
           : '';
 
         // Image: real img URL if available, else emoji fallback

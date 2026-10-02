@@ -124,14 +124,25 @@ def _fetch_and_notify():
     except Exception as e:
         logger.error(f"mandi push alerts failed (non-fatal): {e}")
 
+    # 🔔 "SAP घोषित होते ही बताएं" (/ganna). Rides this daily job for the same
+    # reason: DB already awake, same quiet hours and kill switch.
+    try:
+        from backend.services.ganna_alerts import run_ganna_alerts
+        run_ganna_alerts()
+    except Exception as e:
+        logger.error(f"ganna SAP alerts failed (non-fatal): {e}")
+
     # 📅 Build a few of the seasonality summaries that /bhav pages asked for.
     # Deliberately ridden along here rather than given its own timer: this
     # job already has the DB awake, and an independent schedule would add
     # exactly the round-the-clock Neon traffic the staleness watchdog was
     # widened to 3h to avoid. Best-effort and bounded (DRAIN_BATCH slices).
+    # Skipped when the fetch just found data.gov.in down: the archive sits
+    # behind the same gateway.
     try:
-        from backend.services.mandi_season_service import drain_queue
-        drain_queue()
+        if not summary.get("api_down"):
+            from backend.services.mandi_season_service import drain_queue
+            drain_queue()
     except Exception as e:
         logger.error(f"season summary drain failed (non-fatal): {e}")
 

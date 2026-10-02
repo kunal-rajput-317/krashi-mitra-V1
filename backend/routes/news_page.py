@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -115,11 +115,12 @@ img{max-width:100%}
 .km-footer-note{font-size:12px;color:#64748b;margin-top:8px}
 """
 
-def _calc_seed_likes(news_id: str) -> int:
-    h = 0
-    for ch in str(news_id):
-        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
-    return 12 + (h % 34)
+# Like counts are REAL likes only. They used to start from an invented
+# per-story "seed" (12-45 here, 260-580 in the API) so the section looked
+# busy. An invented count is fake social proof, a dark pattern under the
+# Consumer Protection Act (LEGAL_RULES §1). The SSR count starts at 0 and the
+# page's batch call fills in the real number from news_likes.
+# Guarded by tests/test_news_no_fake_likes.py.
 
 _FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 _NEWS_DATA_FILE = _FRONTEND_DIR / "krashi_news_data.js"
@@ -330,6 +331,40 @@ def _safe_image(story: dict) -> str:
         return DEFAULT_CATEGORY_IMAGES.get(story.get("category") or "", _FALLBACK_IMAGE)
     except Exception:
         return _FALLBACK_IMAGE
+
+
+def _large_image(img: str) -> str:
+    """The full-size version of a story's cover, when we have one.
+
+    Story covers are picked from the article library as the 480x270 card
+    (`<slug>-card.webp`). That is right for a feed card and wrong for the
+    story page itself. Google Discover only shows a large preview for an
+    image at least 1200px wide, and a 480px hero is blurry on any phone. The
+    article's own hero sits next to the card as `<slug>.webp` (960 or 1200
+    wide), so the page, og:image and schema use that when it is on disk."""
+    if img.startswith("/images/articles/") and img.endswith("-card.webp"):
+        full = img[:-len("-card.webp")] + ".webp"
+        if (_FRONTEND_DIR / full.lstrip("/")).is_file():
+            return full
+    return img
+
+
+def _iso_tz(value: str) -> str:
+    """An ISO timestamp with its timezone stated.
+
+    The funnel stores datetime.utcnow().isoformat(), which has no offset.
+    Google reads a bare time as the crawler's own zone, so a story could look
+    hours older or newer than it is, and a news sitemap or Discover can
+    reject it as out of window. Every stored time is UTC, so say so."""
+    if not value:
+        return ""
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.replace(microsecond=0).isoformat()
 
 
 def _client_stories(stories: List[dict]) -> List[dict]:
@@ -1703,8 +1738,9 @@ def krashi_news_story(slug: str, request: Request):
     read_time = story.get("readTime") or "3 मिनट"
     published_at = str(story.get("published_at") or story.get("created_at") or "")
 
-    img = _safe_image(story)
+    img = _large_image(_safe_image(story))
     og_img = SITE + img
+    published_iso = _iso_tz(published_at)
 
     canon = SITE + "/krashi_news/" + canonical_slug
     seo_title = _fit(title, _TITLE_MAX)
@@ -1744,7 +1780,7 @@ def krashi_news_story(slug: str, request: Request):
         rel_html = ('<section class="story-rel"><h2 class="story-h2">और पढ़ें</h2>'
                     '<div class="story-rel-grid">' + cards + '</div></section>')
 
-    likes = int(story.get("seed_likes") or _calc_seed_likes(story.get("id") or ""))
+    likes = 0
     comments = int(story.get("comment_count") or 0)
 
     disp_date = ""
@@ -1762,8 +1798,8 @@ def krashi_news_story(slug: str, request: Request):
         "headline": _fit(title, 110),
         "description": seo_desc,
         "image": [og_img],
-        "datePublished": published_at or None,
-        "dateModified": published_at or None,
+        "datePublished": published_iso or None,
+        "dateModified": published_iso or None,
         "inLanguage": "hi-IN",
         "isAccessibleForFree": True,
         "mainEntityOfPage": {"@type": "WebPage", "@id": canon},
@@ -1834,7 +1870,7 @@ def krashi_news_story(slug: str, request: Request):
 """
     return _news_doc(seo_title, seo_desc, body, ld, canon=canon, og=og_img,
                      og_type="article", crumbs=crumbs,
-                     published=published_at, modified=published_at)
+                     published=published_iso, modified=published_iso)
 
 
 def _news_not_found(slug: str) -> HTMLResponse:
@@ -1970,11 +2006,11 @@ def krashi_news_hub(request: Request):
     for s in all_stories:
         sid = s.get("id")
         if sid:
-            db_likes[sid] = _calc_seed_likes(sid)
+            db_likes[sid] = 0
             db_comments[sid] = int(s.get("comment_count") or 0)
 
     lead_id = lead_story.get("id", "news-lead")
-    lead_likes = db_likes.get(lead_id, _calc_seed_likes(lead_id))
+    lead_likes = db_likes.get(lead_id, 0)
     lead_comments = db_comments.get(lead_id, 0)
     lead_img = _safe_image(lead_story)
 
@@ -1987,7 +2023,7 @@ def krashi_news_hub(request: Request):
     recent_slides_html = ""
     for idx, s in enumerate(top3_stories):
         sid = s.get("id", f"news-{idx}")
-        s_likes = db_likes.get(sid, _calc_seed_likes(sid))
+        s_likes = db_likes.get(sid, 0)
         s_comm = db_comments.get(sid, 0)
         s_img = _safe_image(s)
         s_title = escape(s.get("title") or "")
@@ -2035,7 +2071,7 @@ def krashi_news_hub(request: Request):
     if top3_stories:
         s0 = top3_stories[0]
         sid0 = s0.get("id", "news-0")
-        s0_likes = db_likes.get(sid0, _calc_seed_likes(sid0))
+        s0_likes = db_likes.get(sid0, 0)
         s0_comm = db_comments.get(sid0, 0)
         s0_img = _safe_image(s0)
         s0_title = escape(s0.get("title") or "")
@@ -2099,7 +2135,7 @@ def krashi_news_hub(request: Request):
     grid_cards_html = ""
     for s in grid_stories:
         s_id = s.get("id", "")
-        s_likes = db_likes.get(s_id, _calc_seed_likes(s_id))
+        s_likes = db_likes.get(s_id, 0)
         s_comm = db_comments.get(s_id, 0)
         grid_cards_html += _generate_article_card_html(s, s_likes, s_comm)
 

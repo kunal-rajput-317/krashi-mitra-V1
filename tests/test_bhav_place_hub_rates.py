@@ -168,9 +168,12 @@ class TestTheDateBelongsToTheNumbers:
         assert desc.startswith("4 अगस्त 2026")
         assert _hindi_today() not in html
 
-    def test_old_prices_say_how_old(self, client):
-        """_age_badge — the amber pill tiers 2-3 already carry."""
-        assert "दिन पुराना भाव" in client.get(f"/bhav/rajya/{SS}").text
+    def test_old_prices_are_dated_not_badged(self, client):
+        """The data date is the disclosure; the "N दिन पुराना भाव" pill that
+        repeated it was removed on 2 Oct 2026."""
+        html = client.get(f"/bhav/rajya/{SS}").text
+        assert "4 अगस्त 2026" in html
+        assert "दिन पुराना भाव" not in html
 
 
 def _hindi_today() -> str:

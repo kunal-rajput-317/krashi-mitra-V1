@@ -16,6 +16,7 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
+from backend.config import get_setting
 from backend.services.news_auto_service import (
     run_discovery_and_stage,
     check_and_run_day5_fallback,
@@ -64,6 +65,11 @@ async def start_scheduler():
     """Starts the news auto-pilot scheduler and performs startup checks."""
     if scheduler.running:
         logger.info("ℹ️ News Auto-Pilot scheduler is already running.")
+        return
+    if not get_setting("news_autopilot_enabled", False):
+        # Paused: no new stories are fetched, written or auto-published.
+        # The hub and existing story pages are unaffected.
+        logger.info("⏸️ News Auto-Pilot is paused (NEWS_AUTOPILOT_ENABLED is not true).")
         return
 
     # 1. Daily discovery at 5:00 PM IST (Days 1-3, 2-3 posts per day)

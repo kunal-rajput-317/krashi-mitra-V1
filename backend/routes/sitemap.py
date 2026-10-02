@@ -348,6 +348,61 @@ def sitemap():
                     headers={"Cache-Control": "public, max-age=3600"})
 
 
+# ── Google News sitemap ──────────────────────────────────────
+# A separate file because Google News reads a different format and wants only
+# stories published in the last two days; anything older it ignores. The
+# story pages themselves stay in /sitemap.xml above for ordinary search.
+# An empty <urlset> is valid and is what Google sees on a day with no news.
+_NEWS_WINDOW_HOURS = 48
+_NEWS_PUBLICATION = "KrashiMitra"
+
+
+def build_news_sitemap(now: datetime = None) -> str:
+    from datetime import timedelta, timezone
+    now = now or datetime.now(timezone.utc)
+    rows = []
+    try:
+        from backend.routes.news_page import _all_stories, _iso_tz, _story_url
+        stories = _all_stories()
+    except Exception:
+        stories = []
+    for s in stories:
+        try:
+            url = _story_url(s)
+            if not url.startswith("/krashi_news/"):
+                continue
+            when = _iso_tz(str(s.get("published_at") or ""))
+            if not when:
+                continue
+            if now - datetime.fromisoformat(when) > timedelta(hours=_NEWS_WINDOW_HOURS):
+                continue
+            rows.append(
+                "  <url>\n"
+                f"    <loc>{escape(SITE + url)}</loc>\n"
+                "    <news:news>\n"
+                "      <news:publication>\n"
+                f"        <news:name>{_NEWS_PUBLICATION}</news:name>\n"
+                "        <news:language>hi</news:language>\n"
+                "      </news:publication>\n"
+                f"      <news:publication_date>{when}</news:publication_date>\n"
+                f"      <news:title>{escape((s.get('title') or '').strip())}</news:title>\n"
+                "    </news:news>\n"
+                "  </url>")
+        except Exception:
+            continue
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+            '        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n'
+            + "\n".join(rows) + ("\n" if rows else "") + "</urlset>")
+
+
+@router.get("/news-sitemap.xml")
+def news_sitemap():
+    return Response(build_news_sitemap(), media_type="application/xml",
+                    headers={"Cache-Control": "public, max-age=900",
+                             "CDN-Cache-Control": "public, max-age=900"})
+
+
 def build_gaon_sitemap() -> str:
     """Serialized village sitemap. The *route* lives in naksha.py, which is
     included before this module — /naksha/{state} would otherwise match

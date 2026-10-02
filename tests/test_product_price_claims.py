@@ -149,6 +149,8 @@ BANNED = [
     ("% छूट",             "a discount against an MRP nobody verified"),
     ("% off",             "the same discount, in the card's English"),
     ("⭐",                 "a star rating nobody ever gave"),
+    ("बेस्टसेलर",           "a sales rank we hold no sales figures for"),
+    ("🔥",                 "the bestseller pill's icon"),
     ("मुफ्त डिलीवरी",       "a delivery service this site does not run"),
     ("Cash on Delivery",  "a payment method we do not collect"),
     ("में खरीदें",          "an offer to sell"),

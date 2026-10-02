@@ -58,12 +58,6 @@ class TestAgeNote:
         "0 दिन पुराना" would be a claim we cannot support."""
         for missing in ("", None, "not-a-date"):
             assert bhav._age_note(missing) == ""
-            assert bhav._age_badge(missing) == ""
-
-    def test_badge_wraps_the_note_only_when_there_is_one(self):
-        assert bhav._age_badge(_iso(0)) == ""
-        assert "18 दिन पुराना भाव" in bhav._age_badge(_iso(18))
-        assert 'class="stale-pill"' in bhav._age_badge(_iso(18))
 
 
 # ── the freshness rollups ────────────────────────────────────
@@ -113,15 +107,14 @@ class TestTierPagesAreDatedByData:
         assert f"📅 {today_hi}" not in html, (
             "18-day-old Kerala prices must not be presented under today's date")
 
-    def test_state_page_shows_the_age_pill_when_stale(self, db_engine):
+    def test_state_page_dates_without_an_age_pill(self, db_engine):
+        """The 📅 date already says how old the price is; a second
+        "N दिन पुराना भाव" pill beside it was removed on 2 Oct 2026."""
         html = bhav._state_page(IDX, "wheat", "Wheat", "kerala").body.decode()
-        assert "18 दिन पुराना भाव" in html
+        assert "दिन पुराना भाव" not in html
 
     def test_state_page_stays_quiet_when_current(self, db_engine):
         html = bhav._state_page(IDX, "wheat", "Wheat", "uttar-pradesh").body.decode()
-        # The CSS rule for .stale-pill ships on every page — only the
-        # rendered span means the badge actually fired.
-        assert '<span class="stale-pill">' not in html
         assert bhav._hindi_date(date.today()) in html
 
     def test_neither_tier_reintroduces_today_hi(self):

@@ -259,7 +259,10 @@ ARTICLE = {
     "breadcrumb_leaf": "महाडीबीटी शेतकरी योजना",
 
     "title": "महाडीबीटी शेतकरी योजना — एक अर्ज, सारे अनुदान (2026)",
-    "description": "2025-26 से लॉटरी हटी, अब पहले आओ पहले पाओ — इसलिए विंडो खुलते ही अर्ज कीजिए। पंजीकरण, कागज़ात, ट्रैक्टर-ठिबक-कांदा चाळ अनुदान और पूर्व-संमति का नियम।",
+    # Marathi, not Hindi: the page's searchers type Marathi ("महाडीबीटी पोर्टल
+    # शेतकरी योजना अर्ज") and a snippet in another language converts ~2.7x
+    # worse. Title/body stay as they are — this page is the site's top earner.
+    "description": "2025-26 पासून लॉटरी बंद — निवड अर्जाच्या तारखेनुसार, म्हणून अधिकृत पोर्टलवर लवकर अर्ज करा. नोंदणी, कागदपत्रे, ट्रॅक्टर-ठिबक-कांदा चाळ अनुदान, पूर्वसंमती नियम.",
     "keywords": "महाडीबीटी शेतकरी योजना, mahadbt farmer, महाडीबीटी अर्ज, mahadbt lottery, महाडीबीटी अनुदान, mahadbt.maharashtra.gov.in, ट्रैक्टर अनुदान महाराष्ट्र, ठिबक सिंचन अनुदान, आपले सरकार DBT, mahadbt shetkari yojana 2026",
 
     "og_title": "महाडीबीटी शेतकरी योजना — एक अर्ज में सारे कृषि अनुदान | KrashiMitra.in",

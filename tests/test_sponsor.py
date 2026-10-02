@@ -27,6 +27,7 @@ it after saying yes.
 """
 import json
 from datetime import date, timedelta
+import os
 
 import pytest
 
@@ -427,7 +428,7 @@ def test_no_page_on_the_site_links_to_the_kit(client):
 # disk, so a write to data/sponsors.json would silently revert. These pin the
 # table half and the one rule the panel exists to enforce.
 
-AUTH = ("testadmin", "test-admin-pass")
+AUTH = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 
 
 @pytest.fixture
@@ -603,3 +604,92 @@ def test_review_mails_once_per_step(tmp_path, monkeypatch, base_clicks):
     sponsors.price_review_check()
     sponsors.price_review_check()
     assert len(sent) == 1 and "raise sponsor prices" in sent[0]
+
+
+# ── Proposal links: the kit scoped to one prospect's states and crops ───────
+
+@pytest.fixture
+def market(monkeypatch):
+    """A page_stats snapshot the test controls. Figures are invented test
+    values, never the site's real ones — this repo is public."""
+    from backend.services import page_stats
+
+    def use(fetched_on=None, pages=None):
+        payload = {
+            "fetched_on": fetched_on or date.today().isoformat(),
+            "window_days": 28, "start": "2026-08-19", "end": "2026-09-15",
+            "pages": pages if pages is not None else {
+                "wheat/uttar-pradesh":           {"i": 100, "c": 3},
+                "wheat/uttar-pradesh/agra":      {"i": 900, "c": 9},
+                "wheat/uttar-pradesh/etah":      {"i": 50,  "c": 1},
+                "wheat/bihar/patna":             {"i": 70,  "c": 2},
+                "onion/uttar-pradesh/agra":      {"i": 400, "c": 4},
+                "rajya/uttar-pradesh/agra":      {"i": 300, "c": 5},
+                "wheat/kanpur":                  {"i": 999, "c": 99},   # legacy 301
+            }}
+        monkeypatch.setattr(page_stats, "_load", lambda: payload)
+        return payload
+    return use
+
+
+def test_an_unscoped_token_is_unchanged_so_old_links_keep_working(kit):
+    kit()
+    token = sponsors.kit_token("acme")
+    assert "~" not in token
+    assert sponsors.kit_verify(token) == "acme"
+    assert sponsors.kit_scope(token) == {"who": "acme", "states": [], "crops": []}
+
+
+def test_the_scope_is_signed_and_cannot_be_widened(client, kit, snapshot, market):
+    """A brand sent its own market must not be able to edit the link into a
+    rival's market and read those figures."""
+    kit()
+    snapshot(TODAY.isoformat())
+    market()
+    token = sponsors.kit_token("acme", ["uttar-pradesh"], ["wheat"])
+    body, sig = token.rsplit(".", 1)
+    forged = body.replace("uttar-pradesh", "bihar") + "." + sig
+    assert client.get(f"/sponsor/kit/{forged}").status_code == 404
+
+
+def test_scope_counts_only_the_prospects_pages(market):
+    """Legacy /bhav/<crop>/<district> URLs 301 and are not a state; the
+    all-crop rajya pages belong only to a proposal that names no crops."""
+    from backend.services import page_stats
+    market()
+    m = page_stats.for_scope(["uttar-pradesh"], ["wheat"])
+    assert m["impressions"] == 1050 and m["pages"] == 3
+    assert m["rows"][0]["top_districts"] == ["agra", "etah"]
+    assert not any(r["state"] == "kanpur" for r in m["rows"])
+    every = page_stats.for_scope(["uttar-pradesh"], [])
+    assert {r["crop"] for r in every["rows"]} == {"wheat", "onion", "rajya"}
+    typo = page_stats.for_scope(["uttar-pradesh"], ["wheatt"])
+    assert typo["unknown_crops"] == ["wheatt"] and typo["impressions"] == 0
+
+
+def test_scoped_kit_shows_the_market_and_unscoped_does_not(client, kit, snapshot, market):
+    snapshot(TODAY.isoformat())
+    market()
+    kit()
+    scoped = client.get("/sponsor/kit/" + sponsors.kit_token("acme", "uttar-pradesh", "wheat"))
+    assert scoped.status_code == 200
+    assert "Your market" in scoped.text and "1,050" in scoped.text
+    assert "not a forecast" in scoped.text
+    assert "Your market" not in client.get(kit("acme")).text
+
+
+def test_a_market_with_no_traffic_says_so(client, kit, snapshot, market):
+    """Zero is shown as zero before a brand pays for it, never blanked."""
+    snapshot(TODAY.isoformat())
+    market(pages={"onion/bihar/patna": {"i": 5, "c": 0}})
+    kit()
+    r = client.get("/sponsor/kit/" + sponsors.kit_token("acme", "uttar-pradesh", "wheat"))
+    assert "did not show any of our pages" in r.text
+
+
+def test_a_stale_market_snapshot_is_withheld(client, kit, snapshot, market):
+    snapshot(TODAY.isoformat())
+    market(fetched_on=(date.today() - timedelta(days=mediakit.MAX_AGE_DAYS + 1)).isoformat())
+    kit()
+    r = client.get("/sponsor/kit/" + sponsors.kit_token("acme", "uttar-pradesh", "wheat"))
+    assert r.status_code == 200 and "Your market" not in r.text

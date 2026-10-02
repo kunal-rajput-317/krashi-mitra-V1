@@ -26,6 +26,7 @@ So what is pinned here is:
     the WhatsApp preview read the flag and never see the row.
 """
 
+import os
 import re
 from datetime import datetime, timedelta
 
@@ -514,7 +515,7 @@ def test_the_profile_page_shows_the_membership():
 
 # ── The admin queue ──────────────────────────────────────────
 
-AUTH = ("testadmin", "test-admin-pass")
+AUTH = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 
 
 def test_the_queue_needs_admin_credentials(client):

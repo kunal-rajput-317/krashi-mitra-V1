@@ -56,6 +56,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from backend.routes.bhav import (
     SITE, _asset, _crumb_ld, _doc, _faq, _fit, _ld,
 )
+from backend.routes import zameen
 from backend.services import village_service
 from backend.services.village_service import slugify
 
@@ -357,31 +358,6 @@ _NK_CSS = """
   padding: 0 12px;
 }
 
-.nk-level-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: rgba(19, 66, 50, 0.05);
-  border: 1px solid var(--nk-border-glass);
-  border-radius: var(--nk-radius-sm);
-  margin: 8px 0 12px;
-  font-size: 13px;
-  font-weight: 700;
-  overflow-x: auto;
-  white-space: nowrap;
-  box-sizing: border-box;
-  max-width: 100%;
-}
-.nk-level-bar a {
-  color: var(--nk-emerald-dark);
-  text-decoration: none;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-.nk-level-bar a:hover { background: rgba(82, 183, 136, 0.15); }
-.nk-lvl-sep { color: var(--nk-text-soft); opacity: 0.5; font-size: 11px; }
-
 /* Tabs Bar */
 .nk-tabs-bar {
   display: flex;
@@ -497,7 +473,7 @@ _NK_CSS = """
   box-shadow: 0 10px 30px rgba(82, 183, 136, 0.35);
 }
 .nk-search-ic {
-  font-size: 15px;
+  display: flex;
   color: var(--nk-emerald-mid);
   opacity: 0.85;
   flex-shrink: 0;
@@ -1120,8 +1096,11 @@ _NK_CSS = """
   border-color: #0e3d26;
 }
 .nk-route-btn.loading { pointer-events: none; opacity: 0.85; }
-.nk-route-arrow { width: 14px; height: 14px; fill: #2563eb; flex-shrink: 0; }
-.nk-route-btn:hover .nk-route-arrow, .nk-route-btn.active .nk-route-arrow { fill: #8ef0b4; }
+.nk-route-arrow { width: 15px; height: 15px; fill: none; stroke: #2563eb; stroke-width: 2; stroke-linejoin: round; flex-shrink: 0; }
+.nk-route-btn:hover .nk-route-arrow, .nk-route-btn.active .nk-route-arrow { stroke: #8ef0b4; }
+/* Thin line icons in the chip row, drawn like the bottom bar's, not emoji. */
+.nk-chip-ic { width: 15px; height: 15px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round; }
 .nk-route-btn.loading .nk-route-arrow { animation: nkSpin 0.9s linear infinite; }
 .nk-route-flow { pointer-events: none; }
 .nk-route-flow.is-done { animation: nkRouteFade 0.45s ease-out forwards; }
@@ -1306,7 +1285,7 @@ _NK_CSS = """
 .nk-route-nav:hover { background: #1d4ed8; color: #fff; }
 .nk-route-close { background: rgba(255, 255, 255, 0.1); border: none; color: #a7f3d0; cursor: pointer; padding: 6px; border-radius: 8px; display: inline-flex; flex-shrink: 0; }
 .nk-route-close:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
-/* The drawer is a full-width bottom sheet, so the card steps aside for it. */
+/* The drawer sits in the same bottom-left spot, so the card steps aside for it. */
 .nk-bottom-drawer.active ~ .nk-route-card { display: none; }
 @media (max-width: 560px) {
   .nk-route-card { left: 10px; bottom: 24px; max-width: calc(100% - 64px); padding: 8px 10px; gap: 8px; }
@@ -1316,10 +1295,11 @@ _NK_CSS = """
 /* ── My Location Button (bottom-right standalone, icon-only) ── */
 .nk-my-loc-btn {
   position: absolute;
-  /* Sits in the same column as Leaflet's zoom stack, clearing it. That stack
-     ends 91px above the wrap's bottom (attribution strip + its own margin),
-     so anything under ~100px here lands on top of the + button. */
-  bottom: 102px;
+  /* Sits in the same column as Leaflet's zoom stack, clearing it. Under the
+     stack are the attribution strip and the distance scale, so its top (the
+     + button) is 119px above the wrap's bottom; anything under ~125px here
+     lands on top of the + button. */
+  bottom: 128px;
   right: 10px;
   z-index: 1001;
   width: 42px;
@@ -1352,12 +1332,8 @@ _NK_CSS = """
   flex-shrink: 0;
   transition: transform 0.9s linear;
 }
-/* Hide My Location & bottom drawer when Measurement HUD is open */
-.nk-app-map-wrap.is-measuring .nk-my-loc-btn,
-.nk-measure-hud.active ~ .nk-my-loc-btn,
-.nk-my-loc-btn.hidden {
-  display: none !important;
-}
+/* The location button is never hidden, measuring included: a farmer
+   measuring a field is the one most likely to need "where am I". */
 .nk-my-loc-btn.loading {
   pointer-events: none;
   background: #1d4ed8;
@@ -1388,7 +1364,7 @@ _NK_CSS = """
   .nk-fs-icon { width: 16px; height: 16px; }
   .nk-fab-menu { right: 10px; top: 50px; }
   .nk-fab-main { width: 35px; height: 35px; border-radius: 8px; }
-  .nk-my-loc-btn { bottom: 100px; right: 10px; width: 38px; height: 38px; }
+  .nk-my-loc-btn { bottom: 128px; right: 10px; width: 38px; height: 38px; }
   .nk-loc-svg { width: 19px; height: 19px; }
 }
 
@@ -1412,6 +1388,38 @@ _NK_CSS = """
   animation: nkSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .nk-measure-hud.active { display: block; }
+/* Field-measure handles: the icon box is the touch target, the dot inside
+   is what shows. Corners drag to move; a mid-edge dot drags out a new corner. */
+.nk-mv, .nk-mm { background: none; border: none; cursor: grab; touch-action: none; }
+.nk-mv:active, .nk-mm:active { cursor: grabbing; }
+.nk-mv i, .nk-mm i { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  border-radius: 50%; background: #fff; box-sizing: border-box; }
+.nk-mv i { width: 15px; height: 15px; border: 3px solid #f5b731; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.nk-mm i { width: 9px; height: 9px; border: 1.5px solid #f5b731; opacity: .9; }
+.nk-mv.leaflet-drag-target i { box-shadow: 0 0 0 7px rgba(245,183,49,.35); }
+/* "Tap here" hint while measuring: a tapping hand until the first corner,
+   then just the line of text until the field closes. Never blocks a tap. */
+.nk-tap-hint { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 900;
+  pointer-events: none; display: none; flex-direction: column; align-items: center; gap: 10px; }
+.nk-tap-hint.show { display: flex; }
+.nk-tap-hand { position: relative; width: 56px; height: 56px; }
+.nk-tap-hint.no-hand .nk-tap-hand { display: none; }
+/* After the first corner the text moves up out of the way of the field. */
+.nk-tap-hint.no-hand { top: 140px; transform: translateX(-50%); }
+.nk-tap-ring { position: absolute; left: 24px; top: 13px; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+  border: 3px solid #f5b731; border-radius: 50%; opacity: 0; animation: nkTapRing 1.6s ease-out infinite; }
+.nk-tap-finger { position: absolute; left: 6px; top: 8px; width: 40px; height: 40px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.55)); animation: nkTapFinger 1.6s ease-in-out infinite; }
+.nk-tap-finger svg { display: block; width: 100%; height: 100%; }
+.nk-tap-text { background: rgba(7,31,22,.9); color: #fff; font-size: 13px; font-weight: 800; padding: 7px 14px;
+  border-radius: 999px; border: 1px solid rgba(245,183,49,.6); white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+@keyframes nkTapFinger { 0%, 100% { transform: translate(6px, 10px); } 35% { transform: translate(0, 0) scale(.92); } 55% { transform: translate(0, 0); } }
+@keyframes nkTapRing { 0%, 30% { opacity: 0; transform: scale(.4); } 40% { opacity: 1; } 100% { opacity: 0; transform: scale(2.4); } }
+@media (prefers-reduced-motion: reduce) { .nk-tap-finger, .nk-tap-ring { animation: none; } .nk-tap-ring { opacity: 1; } }
+/* Distance scale, bottom right, a dark ruler like a satellite map's. */
+.nk-app-map-wrap .leaflet-control-scale { margin-bottom: 8px; }
+.nk-app-map-wrap .leaflet-control-scale-line { background: rgba(0,0,0,.55); color: #fff; border: 2px solid #fff;
+  border-top: none; font: 700 11px/1.4 system-ui, sans-serif; padding: 1px 6px 0; text-align: right; text-shadow: none; }
 @keyframes nkSlideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1476,6 +1484,26 @@ _NK_CSS = """
   color: #ffffff;
   margin-top: 1px;
 }
+.nk-mhud-bigha-pill { position: relative; padding-right: 26px; }
+.nk-mhud-more {
+  position: absolute; top: -3px; right: 0;
+  width: 26px; height: 26px; border: none; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12); color: #ffffff;
+  font-size: 16px; font-weight: 900; line-height: 1; cursor: pointer;
+}
+.nk-mhud-more:hover, .nk-mhud-more[aria-expanded="true"] { background: var(--nk-gold); color: #071f16; }
+.nk-mhud-bigha-src { display: block; font-size: 10.5px; color: rgba(255, 255, 255, 0.6); margin-top: 1px; }
+.nk-mhud-bigha-set {
+  background: rgba(255, 255, 255, 0.08); border-radius: 10px;
+  padding: 8px; margin-bottom: 8px; font-size: 12px; color: rgba(255, 255, 255, 0.85);
+}
+.nk-mhud-bigha-set[hidden] { display: none; }
+.nk-mbs-custom { display: block; margin-bottom: 6px; }
+.nk-mbs-custom input {
+  width: 70px; padding: 4px 6px; border-radius: 6px; border: none;
+  font-size: 13px; font-weight: 700; font-family: inherit;
+}
+.nk-mbs-note { margin: 0; font-size: 10.5px; color: rgba(255, 255, 255, 0.6); }
 .nk-mhud-actions {
   display: flex;
   gap: 6px;
@@ -1496,38 +1524,48 @@ _NK_CSS = """
 .nk-mhud-btn.clear:hover { background: rgba(239, 68, 68, 0.38); }
 .nk-mhud-btn.print { background: linear-gradient(135deg, #f5b731 0%, #e9a825 100%); color: #071f16; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 8px rgba(245, 183, 49, 0.3); }
 .nk-mhud-btn.print:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245, 183, 49, 0.45); }
+.nk-mhud-btn.done { background: #22a06b; color: #fff; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+.nk-mhud-btn.done:hover { background: #1b8a5b; }
+.nk-mhud-btn.done:disabled { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.4); cursor: not-allowed; }
+/* Wide screens: the measuring panel sits bottom left, off the field. */
+@media (min-width: 561px) {
+  .nk-app-map-wrap.is-fullscreen .nk-measure-hud {
+    left: 16px !important;
+    right: auto !important;
+    transform: none !important;
+    width: 420px !important;
+    animation: nkSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+}
 
-/* ── Modern Bottom Sheet (Slide-Up Drawer) ── */
+/* ── District card: a rectangle at the map's bottom-left. The right edge
+   stays clear for the zoom stack, GPS button and scale (bottom-right). ── */
 .nk-bottom-drawer {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 16px;
+  left: 12px;
+  width: min(340px, calc(100% - 78px));
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 2px solid var(--nk-gold);
-  border-radius: 22px 22px 0 0;
-  padding: 12px 18px 18px;
+  border: 2px solid var(--nk-gold);
+  border-radius: 14px;
+  padding: 10px 12px 12px;
   z-index: 1000;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
-  transform: translateY(105%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transform: translateY(calc(100% + 24px));
+  visibility: hidden;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 .nk-bottom-drawer.active {
   transform: translateY(0);
+  visibility: visible;
 }
-.nk-drawer-handle {
-  width: 42px;
-  height: 4px;
-  background: #cbd5e1;
-  border-radius: 999px;
-  margin: 0 auto 4px;
-  cursor: pointer;
-}
+.nk-drawer-handle { display: none; }
 .nk-drawer-header {
   display: flex;
   align-items: center;
@@ -1567,29 +1605,27 @@ _NK_CSS = """
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
-@media (min-width: 560px) {
-  .nk-drawer-grid { grid-template-columns: repeat(4, 1fr); }
-}
 .nk-drawer-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 12px;
-  border-radius: 11px;
-  font-size: 12.5px;
+  padding: 8px 8px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-decoration: none;
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
   transition: all 0.2s ease;
-  white-space: nowrap;
+  text-align: center;
+  line-height: 1.25;
 }
 .nk-drawer-btn:hover { transform: translateY(-2px); }
 .nk-drawer-btn.bhav { background: #eef8f2; color: #166534; border: 1px solid #bbf7d0; }
 .nk-drawer-btn.weather { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
 .nk-drawer-btn.bhulekh { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
 .nk-drawer-btn.gaon { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
-.nk-drawer-btn.dl { background: linear-gradient(135deg, #f5b731 0%, #e9a825 100%); color: #071f16; border: 1px solid #f7d282; }
+.nk-drawer-btn.dl { background: linear-gradient(135deg, #f5b731 0%, #e9a825 100%); color: #071f16; border: 1px solid #f7d282; grid-column: 1 / -1; }
 
 /* ── Farmer Quick Feature Cards Grid ── */
 .nk-farmer-grid {
@@ -1923,7 +1959,9 @@ _NK_CSS = """
     max-width: none !important;
     padding: 10px 12px !important;
   }
-  .nk-bottom-drawer { padding: 10px 14px 14px; }
+  .nk-bottom-drawer { left: 10px; bottom: 24px; width: calc(100% - 72px); padding: 8px 10px 10px; }
+  /* On a phone the card reaches under the distance scale; drop the scale while it is open. */
+  .nk-app-map-wrap:has(.nk-bottom-drawer.active) .leaflet-control-scale { display: none; }
   .nk-drawer-title-box h3 { font-size: 15.5px; }
 }
 """
@@ -1953,20 +1991,21 @@ def _others(key: str, states: dict) -> str:
     return _state_cards((near + fill)[:11], states)
 
 
-def _dl_button(s: dict, label: str, cls: str = "primary") -> str:
-    return (f'<a class="nk-btn {cls}" data-km-map-picker '
-            f'href="{_img(s, "district-map.png")}" '
-            f'download="{s["prefix"]}-{s["n"]}-jile.png">⬇️ {label}</a>')
+# naksha state → its बीघा in zameen.STATES (/bigha-calculator), so the field
+# measure and the calculator never disagree. States without a बीघा of their
+# own start on यूपी पक्का; the farmer can change it from the ⋮ button.
+_BIGHA_STATE = {
+    "uttar-pradesh": "up", "bihar": "bihar", "west-bengal": "west-bengal",
+    "assam": "assam", "rajasthan": "rajasthan-pakka", "gujarat": "gujarat",
+    "himachal-pradesh": "himachal",
+}
 
 
-def _state_select_dropdown(current_key: str, states: dict, is_jile: bool = False) -> str:
-    opts = ['<option value="">🗺️ दूसरा राज्य चुनें...</option>']
-    for k, s in states.items():
-        url = _jile_url(k) if is_jile else _url(k)
-        sel = ' selected' if k == current_key else ''
-        opts.append(f'<option value="{url}"{sel}>{escape(s["hi"])} ({_jile(_now_n(k, s))})</option>')
-    return (f'<select class="nk-state-select" onchange="if(this.value) window.location.href=this.value;" aria-label="राज्य चुनें">'
-            f'{"".join(opts)}</select>')
+def _bigha_default(state_key: str) -> dict:
+    """{n, t}: बीघा in 1 एकड़ for this state, and the state's short name."""
+    z = zameen.STATES[_BIGHA_STATE.get(state_key, zameen.DEFAULT_STATE)]
+    b = next(u for u in z["local"] if u[0] == "bigha")
+    return {"n": round(zameen.ACRE / (b[3] * zameen.SQFT), 4), "t": z["short"]}
 
 
 def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug: str = "") -> str:
@@ -1980,6 +2019,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
         bhulekh_info = _BHULEKH.get(state_key, ("https://bhulekh.gov.in/", "भूलेख पोर्टल"))
         bhulekh_url_js = json.dumps(bhulekh_info[0])
         bhulekh_title_js = json.dumps(bhulekh_info[1], ensure_ascii=False)
+        bigha_default_js = json.dumps(_bigha_default(state_key), ensure_ascii=False)
 
         out.append('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>')
         out.append(f"""<script>
@@ -2017,6 +2057,9 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
     zoomControl: false // Custom controls replace standard Leaflet controls
   }}).setView([{s['lat']}, {s['lon']}], 6.5);
 
+  // Distance scale first so it sits at the very bottom, under the zoom
+  // buttons (Leaflet stacks later bottom controls above earlier ones).
+  L.control.scale({{ position: 'bottomright', metric: true, imperial: false, maxWidth: 110 }}).addTo(map);
   // Custom Zoom Control placed bottom-right
   L.control.zoom({{ position: 'bottomright' }}).addTo(map);
 
@@ -2284,7 +2327,35 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
     if(fsIconExpand)   fsIconExpand.style.display   = isFull ? 'none'  : 'block';
     if(fsIconCollapse) fsIconCollapse.style.display = isFull ? 'block' : 'none';
     setTimeout(function(){{ map.invalidateSize(); }}, 250);
+    liftBottomRight();
   }}
+
+  // Fullscreen measuring puts the HUD along the bottom; lift the zoom buttons
+  // and the distance scale above it so the scale stays readable while measuring.
+  function liftBottomRight() {{
+    var corner = map.getContainer().querySelector('.leaflet-bottom.leaflet-right');
+    var hud = document.getElementById('nk-measure-hud');
+    var gps = document.getElementById('nk-fab-gps');
+    if(!corner) return;
+    corner.style.bottom = '';
+    if(gps) gps.style.bottom = '';
+    var lift = mapWrap && hud && mapWrap.classList.contains('is-fullscreen') && hud.classList.contains('active');
+    // Only when the panel actually reaches under the corner (phones); on wide
+    // screens it sits bottom left and the controls can stay down. The
+    // location button rides on top of the zoom stack, so it moves with it.
+    if(lift && hud.getBoundingClientRect().right > corner.getBoundingClientRect().left) {{
+      var up = hud.offsetHeight + 32;
+      corner.style.bottom = up + 'px';
+      if(gps) gps.style.bottom = (up + 128) + 'px';
+    }}
+  }}
+
+  // The panel grows and shrinks (bigha picker, wrapping text), so re-lift on resize.
+  (function(){{
+    var hud = document.getElementById('nk-measure-hud');
+    if(hud && window.ResizeObserver) new ResizeObserver(liftBottomRight).observe(hud);
+    window.addEventListener('resize', liftBottomRight);
+  }})();
 
   if(fabFullscreen && mapWrap) {{
     fabFullscreen.addEventListener('click', function(){{
@@ -2430,11 +2501,68 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
   var btnClear = document.getElementById('nk-mhud-clear');
   var btnPrint = document.getElementById('nk-mhud-print');
   var btnHudClose = document.getElementById('nk-mhud-close');
+  var btnDone = document.getElementById('nk-mhud-done');
 
   var isMeasuring = false;
+  var measureDone = false;   // set by "✓ हो गया": the field is closed, taps stop adding corners
   var measurePoints = [];
-  var measureMarkers = [];
+  var measureMarkers = [];   // corner handles, one per measurePoints entry
+  var measureMids = [];      // mid-edge handles, shown once the field is closed
+  var measureHistory = [];   // snapshots of points + done, so undo also undoes a drag or a "done"
   var measurePolygon = null;
+  var vertexIcon = L.divIcon({{ className: 'nk-mv', html: '<i></i>', iconSize: [30, 30], iconAnchor: [15, 15] }});
+  var midIcon = L.divIcon({{ className: 'nk-mm', html: '<i></i>', iconSize: [24, 24], iconAnchor: [12, 12] }});
+
+  function midOf(a, b) {{ return L.latLng((a.lat + b.lat) / 2, (a.lng + b.lng) / 2); }}
+  function saveMeasureHistory() {{
+    measureHistory.push({{ pts: measurePoints.slice(), done: measureDone }});
+    if(measureHistory.length > 50) measureHistory.shift();
+  }}
+
+  // While a handle is dragged, only the shape and the mid dots move; the
+  // handles themselves are rebuilt on drag end so the drag is never cut off.
+  function refreshMeasureShape() {{
+    if(measurePolygon) measurePolygon.setLatLngs(measurePoints);
+    var len = measurePoints.length;
+    measureMids.forEach(function(m, i){{
+      if(i < len) m.setLatLng(midOf(measurePoints[i], measurePoints[(i + 1) % len]));
+    }});
+    updateMeasureHud();
+  }}
+
+  function renderMeasureHandles() {{
+    measureMarkers.forEach(function(m){{ map.removeLayer(m); }});
+    measureMids.forEach(function(m){{ map.removeLayer(m); }});
+    measureMarkers = [];
+    measureMids = [];
+    var len = measurePoints.length;
+    measurePoints.forEach(function(p, i){{
+      var mk = L.marker(p, {{ icon: vertexIcon, draggable: true, zIndexOffset: 1000, keyboard: false }}).addTo(map);
+      mk.on('dragstart', saveMeasureHistory);
+      mk.on('drag', function(ev){{ measurePoints[i] = ev.target.getLatLng(); refreshMeasureShape(); }});
+      mk.on('dragend', renderMeasureHandles);
+      measureMarkers.push(mk);
+    }});
+    if(len < 3 || !measureDone) return;
+    measurePoints.forEach(function(p, i){{
+      var mid = L.marker(midOf(p, measurePoints[(i + 1) % len]), {{ icon: midIcon, draggable: true, keyboard: false }}).addTo(map);
+      var at = -1;
+      mid.on('dragstart', function(ev){{
+        saveMeasureHistory();
+        at = i + 1;
+        measurePoints.splice(at, 0, ev.target.getLatLng());
+        // The other mid dots no longer sit on their edges; drop them until
+        // dragend. The dragged dot is now a corner, so it is removed with those.
+        measureMids.forEach(function(m){{ if(m !== ev.target) map.removeLayer(m); }});
+        measureMids = [];
+        measureMarkers.push(ev.target);
+        refreshMeasureShape();
+      }});
+      mid.on('drag', function(ev){{ if(at >= 0) {{ measurePoints[at] = ev.target.getLatLng(); refreshMeasureShape(); }} }});
+      mid.on('dragend', renderMeasureHandles);
+      measureMids.push(mid);
+    }});
+  }}
 
   function calcPolygonArea(latlngs) {{
     if(latlngs.length < 3) return 0;
@@ -2451,12 +2579,77 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
     return total; // in sq meters
   }}
 
+  var tapHint = null;
+  function syncTapHint() {{
+    if(!tapHint && mapWrap) {{
+      tapHint = document.createElement('div');
+      tapHint.className = 'nk-tap-hint';
+      tapHint.setAttribute('aria-hidden', 'true');
+      tapHint.innerHTML = '<div class="nk-tap-hand"><span class="nk-tap-ring"></span><span class="nk-tap-finger"><svg viewBox="0 0 24 24" fill="#fff" stroke="#071f16" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">' +
+        '<path d="M9 15.5V4.5a1.5 1.5 0 0 1 3 0v5a1.5 1.5 0 0 1 3 0V11a1.5 1.5 0 0 1 3 0v1a1.5 1.5 0 0 1 3 0v4c0 3.3-2.7 6-6 6h-1.5c-2 0-3.3-.9-4.4-2.3l-4.5-4.3a1.4 1.4 0 0 1 2.1-1.9z"/>' +
+        '<path d="M12 9.5v3.5M15 11v3M18 12v2.5" fill="none"/></svg></span></div>' +
+        '<div class="nk-tap-text"></div>';
+      mapWrap.appendChild(tapHint);
+    }}
+    if(!tapHint) return;
+    var n = measurePoints.length;
+    tapHint.classList.toggle('show', isMeasuring && !measureDone);
+    tapHint.classList.toggle('no-hand', n > 0);
+    tapHint.querySelector('.nk-tap-text').textContent = n === 0
+      ? 'खेत के पहले कोने पर टैप करें'
+      : n < 3 ? 'अगले कोने पर टैप करें (' + n + '/3)'
+      : 'और कोने जोड़ें, या ✓ हो गया दबाएं';
+    if(btnDone) {{
+      btnDone.disabled = n < 3 || measureDone;
+      btnDone.textContent = measureDone ? '✓ पूरा हुआ' : '✓ हो गया';
+    }}
+  }}
+
+  // ── बीघा: 1 एकड़ = n बीघा. Starts on the state's figure from
+  // /bigha-calculator; the ⋮ button lets the farmer type their own, which is
+  // remembered per state in this browser only.
+  var bighaDefault = {bigha_default_js};
+  var bighaPerAcre = bighaDefault.n, bighaName = bighaDefault.t;
+  var bighaStoreKey = 'km_bigha_' + stateKey;
+  var bighaSrc = document.getElementById('nk-mhud-bigha-src');
+  var bighaMore = document.getElementById('nk-mhud-bigha-more');
+  var bighaSet = document.getElementById('nk-mhud-bigha-set');
+  var bighaInput = document.getElementById('nk-mbs-n');
+
+  function fmtBigha(n) {{ return String(Math.round(n * 100) / 100); }}
+  function setBigha(n, name, save) {{
+    bighaPerAcre = n; bighaName = name;
+    if(bighaSrc) bighaSrc.textContent = '1 एकड़ = ' + fmtBigha(n) + (name ? ' · ' + name : '');
+    if(bighaInput && document.activeElement !== bighaInput) bighaInput.value = fmtBigha(n);
+    if(save) {{ try {{ localStorage.setItem(bighaStoreKey, String(n)); }} catch(e) {{}} }}
+    if(typeof updateMeasureHud === 'function') updateMeasureHud();
+  }}
+  (function initBigha() {{
+    var saved = 0;
+    try {{ saved = parseFloat(localStorage.getItem(bighaStoreKey)) || 0; }} catch(e) {{}}
+    if(saved > 0 && Math.abs(saved - bighaDefault.n) > 0.001) setBigha(saved, 'आपका बीघा', false);
+    else setBigha(bighaDefault.n, bighaDefault.t, false);
+  }})();
+  if(bighaMore && bighaSet) bighaMore.addEventListener('click', function(e) {{
+    e.stopPropagation();
+    var open = bighaSet.hidden;
+    bighaSet.hidden = !open;
+    bighaMore.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open && bighaInput) bighaInput.focus();
+  }});
+  if(bighaInput) bighaInput.addEventListener('input', function() {{
+    var n = parseFloat(this.value);
+    if(!(n >= 0.1 && n <= 20)) return;
+    if(Math.abs(n - bighaDefault.n) < 0.001) setBigha(bighaDefault.n, bighaDefault.t, true);
+    else setBigha(n, 'आपका बीघा', true);
+  }});
+
   function updateMeasureHud() {{
+    syncTapHint();
     var sqm = calcPolygonArea(measurePoints);
     var acres = sqm / 4046.8564224;
     var hectares = sqm / 10000;
-    // Official Standard Revenue Conversion: 1 Acre = 1.6 Pakka Bigha (2,529.3 m² / 20 Biswa)
-    var bigha = acres * 1.6;
+    var bigha = acres * bighaPerAcre;
 
     if(hudSqm) hudSqm.textContent = Math.round(sqm).toLocaleString('en-IN') + ' m²';
     if(hudAcre) hudAcre.textContent = (acres < 0.01 ? acres.toFixed(4) : acres.toFixed(2)) + ' एकड़';
@@ -2466,22 +2659,33 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
 
   function renderMeasurePolygon() {{
     if(measurePolygon) map.removeLayer(measurePolygon);
-    if(measurePoints.length >= 2) {{
+    // An open dashed line while corners are being added; the field closes
+    // (last corner back to the first) only once "✓ हो गया" is pressed.
+    if(measureDone && measurePoints.length >= 3) {{
       measurePolygon = L.polygon(measurePoints, {{
         color: '#f5b731',
         weight: 2.5,
         fillColor: '#ffd269',
-        fillOpacity: 0.35,
+        fillOpacity: 0.35
+      }}).addTo(map);
+    }} else if(measurePoints.length >= 2) {{
+      measurePolygon = L.polyline(measurePoints, {{
+        color: '#f5b731',
+        weight: 2.5,
         dashArray: '5, 8'
       }}).addTo(map);
+    }} else {{
+      measurePolygon = null;
     }}
+    renderMeasureHandles();
     updateMeasureHud();
   }}
 
   function clearMeasure() {{
     measurePoints = [];
-    measureMarkers.forEach(function(m){{ map.removeLayer(m); }});
-    measureMarkers = [];
+    measureHistory = [];
+    measureDone = false;
+    renderMeasureHandles();
     if(measurePolygon) map.removeLayer(measurePolygon);
     measurePolygon = null;
     updateMeasureHud();
@@ -2491,9 +2695,9 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
     if(fabMenu) fabMenu.classList.remove('open');
     isMeasuring = !isMeasuring;
     if(mapWrap) mapWrap.classList.toggle('is-measuring', isMeasuring);
-    if(fabGps) fabGps.style.display = isMeasuring ? 'none' : 'flex';
     if(fabMeasure) fabMeasure.classList.toggle('active', isMeasuring);
     if(measureHud) measureHud.classList.toggle('active', isMeasuring);
+    syncTapHint();
     if(isMeasuring) {{
       // 1. Automatically open map in fullscreen for optimal measuring canvas
       setFullscreen(true);
@@ -2510,9 +2714,10 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
       }}
     }} else {{
       clearMeasure();
+      liftBottomRight();
+      syncTapHint();
       // Restore boundary overlay visibility when exiting measurement mode
       setOverlayVisibility(true);
-      if(fabGps) fabGps.style.display = 'flex';
     }}
   }}
 
@@ -2525,7 +2730,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
     var sqm = calcPolygonArea(measurePoints);
     var acres = sqm / 4046.8564224;
     var hectares = sqm / 10000;
-    var bigha = acres * 1.6;
+    var bigha = acres * bighaPerAcre;
 
     var perimeterMeters = 0;
     var len = measurePoints.length;
@@ -2683,7 +2888,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
       '<div class="rpt-sec-title">१. खेत का क्षेत्रफल विवरण (Field Measurement Summary)</div>' +
       '<div class="rpt-grid">' +
       '<div class="rpt-card"><small>एकड़ (Acre)</small><b>' + (acres < 0.01 ? acres.toFixed(4) : acres.toFixed(2)) + ' एकड़</b></div>' +
-      '<div class="rpt-card"><small>बीघा (Bigha)</small><b>' + (bigha < 0.01 ? bigha.toFixed(4) : bigha.toFixed(2)) + ' बीघा</b></div>' +
+      '<div class="rpt-card"><small>बीघा (1 एकड़ = ' + fmtBigha(bighaPerAcre) + (bighaName ? ', ' + bighaName : '') + ', अनुमानित)</small><b>' + (bigha < 0.01 ? bigha.toFixed(4) : bigha.toFixed(2)) + ' बीघा</b></div>' +
       '<div class="rpt-card"><small>हेक्टेयर (Hectare)</small><b>' + (hectares < 0.01 ? hectares.toFixed(4) : hectares.toFixed(3)) + ' हे.</b></div>' +
       '<div class="rpt-card"><small>वर्ग मीटर (Area m²)</small><b>' + Math.round(sqm).toLocaleString("en-IN") + ' m²</b></div>' +
       '</div>' +
@@ -2733,10 +2938,10 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
   if(fabMeasure) fabMeasure.addEventListener('click', toggleMeasure);
   if(btnUndo) {{
     btnUndo.addEventListener('click', function(){{
-      if(measurePoints.length > 0) {{
-        measurePoints.pop();
-        var lastMarker = measureMarkers.pop();
-        if(lastMarker) map.removeLayer(lastMarker);
+      if(measureHistory.length > 0) {{
+        var prev = measureHistory.pop();
+        measurePoints = prev.pts;
+        measureDone = prev.done;
         renderMeasurePolygon();
       }}
     }});
@@ -2744,19 +2949,17 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
   if(btnClear) btnClear.addEventListener('click', clearMeasure);
   if(btnPrint) btnPrint.addEventListener('click', printSketchReport);
   if(btnHudClose) btnHudClose.addEventListener('click', toggleMeasure);
+  if(btnDone) btnDone.addEventListener('click', function(){{
+    if(measurePoints.length < 3 || measureDone) return;
+    saveMeasureHistory();
+    measureDone = true;
+    renderMeasurePolygon();
+  }});
 
   map.on('click', function(e){{
-    if(!isMeasuring) return;
-    var latlng = e.latlng;
-    measurePoints.push(latlng);
-    var marker = L.circleMarker(latlng, {{
-      radius: 6,
-      fillColor: '#f5b731',
-      color: '#071f16',
-      weight: 2,
-      fillOpacity: 1
-    }}).addTo(map);
-    measureMarkers.push(marker);
+    if(!isMeasuring || measureDone) return;
+    saveMeasureHistory();
+    measurePoints.push(e.latlng);
     renderMeasurePolygon();
   }});
 
@@ -2854,7 +3057,7 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
     }});
 
     if(matches.length === 0) {{
-      suggList.innerHTML = '<div class="nk-sugg-item" style="color:var(--nk-text-soft)"><i>🔍 गांव/तहसील के लिए खोजें दबाएं...</i></div>';
+      suggList.innerHTML = '<div class="nk-sugg-item" style="color:var(--nk-text-soft)"><i>गांव/तहसील के लिए खोजें दबाएं...</i></div>';
       suggList.classList.add('active');
       return;
     }}
@@ -3774,6 +3977,20 @@ def _tail_scripts(s: dict = None, initial: str = "", state_key: str = "", dslug:
 
   if(mandiBtn) mandiBtn.addEventListener('click', toggleMandis);
   if(mandiFabBtn) mandiFabBtn.addEventListener('click', toggleMandis);
+
+  // ?tool= from the /naksha hub's feature pills: open that tool on arrival.
+  var nkTool = new URLSearchParams(window.location.search).get('tool');
+  if(nkTool === 'sat') {{
+    if(currentLayerType !== 'sat' && fabLayer) fabLayer.click();
+  }} else if(nkTool === 'measure') {{
+    if(!isMeasuring) toggleMeasure();
+  }} else if(nkTool === 'gaon') {{
+    var nkSearch = document.getElementById('nk-search-input');
+    if(nkSearch) {{ nkSearch.scrollIntoView({{ block: 'center' }}); nkSearch.focus(); }}
+  }} else if(nkTool === 'dl') {{
+    var nkDl = document.querySelector('.nk-dl-banner');
+    if(nkDl) nkDl.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+  }}
   }}
 
   if(document.readyState === 'loading') {{
@@ -4034,22 +4251,24 @@ def naksha_hub():
 <style>
 /* ── Naksha Hub Hero & Pickers ── */
 .nk-land-hero {
-  background: linear-gradient(135deg, var(--nk-emerald-dark) 0%, #0d3d2a 100%);
-  padding: 30px 20px 24px;
+  /* Plain centred heading on the page background — no dark green panel. */
+  padding: 14px 12px 4px;
   text-align: center;
-  margin-bottom: 0;
+  max-width: 760px;
+  margin: 0 auto;
 }
 .nk-land-hero h1 {
-  font-size: 24px;
-  font-weight: 900;
-  color: #ffffff;
-  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a3c2e;
+  margin: 0 0 2px;
   line-height: 1.3;
 }
 .nk-land-hero p {
-  font-size: 13.5px;
-  color: rgba(255,255,255,0.85);
-  margin: 0 0 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--nk-text-soft);
+  margin: 0 0 14px;
 }
 .nk-land-search-wrap {
   display: flex;
@@ -4057,9 +4276,11 @@ def naksha_hub():
   max-width: 480px;
   margin: 0 auto 12px;
   background: #ffffff;
+  border: 1.5px solid #dde8e1;
+  box-shadow: 0 2px 10px rgba(7,31,22,0.06);
   border-radius: 999px;
   padding: 6px 8px 6px 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.28);
+
   align-items: center;
 }
 .nk-land-search-wrap input {
@@ -4093,20 +4314,47 @@ def naksha_hub():
 .nk-land-gps-btn.loading .nk-land-gps-ic { display: inline-block; animation: nkSpin 0.9s linear infinite; }
 .nk-land-gps-status {
   display: none;
-  background: rgba(255,255,255,0.14);
+  background: #eef6f1;
   border-radius: 10px;
   padding: 8px 14px;
   font-size: 12.5px;
-  color: #ffffff;
+  color: #1a3c2e;
   margin: 0 auto;
   max-width: 360px;
   text-align: center;
 }
 .nk-land-gps-status.active { display: block; }
+/* Clear of the sticky site header when a pill scrolls to it. */
+#nk-land-tool-status { margin-top: 10px; scroll-margin-top: 130px; }
+.nk-land-pills { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.nk-land-pill {
+  background: #ffffff;
+  border: 1.5px solid #dde8e1;
+  color: #1a3c2e;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.nk-land-pill:hover { filter: brightness(0.96); }
+/* One colour per tool, so the four read apart at a glance. */
+.nk-land-pill[data-tool="sat"]     { background: #e8f1fd; border-color: #bcd6f5; color: #1d4f91; }
+.nk-land-pill[data-tool="measure"] { background: #fff4e0; border-color: #f5d49a; color: #8a5300; }
+.nk-land-pill[data-tool="gaon"]    { background: #e7f6ec; border-color: #b5e0c3; color: #17643a; }
+.nk-land-pill[data-tool="dl"]      { background: #f3ecfb; border-color: #d8c6f0; color: #5b2d91; }
+/* Selected = the same colour, filled solid with a tick. A gold "active" read as
+   just another pill next to the amber खेत नाप one, so two looked selected. */
+.nk-land-pill.active { color: #ffffff; box-shadow: 0 2px 8px rgba(7,31,22,0.18); }
+.nk-land-pill.active::before { content: "✓ "; }
+.nk-land-pill[data-tool="sat"].active     { background: #1d4f91; border-color: #1d4f91; }
+.nk-land-pill[data-tool="measure"].active { background: #b86e00; border-color: #b86e00; }
+.nk-land-pill[data-tool="gaon"].active    { background: #17643a; border-color: #17643a; }
+.nk-land-pill[data-tool="dl"].active      { background: #5b2d91; border-color: #5b2d91; }
 .nk-land-popular {
-  background: #f5f9f6;
+  /* No tinted band: the cards sit on the page background, like the hero. */
   padding: 18px 16px 14px;
-  border-bottom: 1px solid var(--nk-border);
 }
 .nk-land-popular-title {
   font-size: 12px;
@@ -4128,7 +4376,7 @@ def naksha_hub():
   padding: 10px 12px;
   border-radius: 12px;
   background: #ffffff;
-  border: 1.5px solid var(--nk-border);
+  border: 1.5px solid #dde8e1;
   text-decoration: none;
   color: var(--nk-text-dark);
   transition: all 0.18s ease;
@@ -4176,8 +4424,8 @@ def naksha_hub():
 
 <!-- Hero Search Section -->
 <div class="nk-land-hero">
-  <h1>🗺️ भारत के राज्यों के डिजिटल नक्शे</h1>
-  <p>{n_states} राज्य व केंद्र शासित प्रदेश · {total_d} जिले — सैटेलाइट व्यू, खेत नाप, गांव खोज व HD नक्शा डाउनलोड</p>
+  <h1>नक्शा</h1>
+  <p>राज्य चुनें — जिले, गांव और खेत सैटेलाइट व्यू में देखें</p>
 
   <div class="nk-land-search-wrap">
     <input type="text" id="nk-land-search" placeholder="राज्य या जिला खोजें... जैसे: उत्तर प्रदेश, बिहार, राजस्थान"
@@ -4188,26 +4436,21 @@ def naksha_hub():
       <span class="nk-land-gps-txt">मेरा राज्य</span>
     </button>
   </div>
-  <div class="nk-land-gps-status" id="nk-land-gps-status">📡 आपकी लोकेशन खोजी जा रही है...</div>
+  <div class="nk-land-gps-status" id="nk-land-gps-status">आपकी लोकेशन खोजी जा रही है...</div>
 
-  <!-- Quick Features Pill Bar -->
-  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:14px;">
-    <span style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">🛰️ सैटेलाइट व्यू</span>
-    <span style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">📐 खेत नाप (Area)</span>
-    <span style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">🏡 गांव व खसरा खोज</span>
-    <span style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">📥 HD नक्शा डाउनलोड</span>
+  <!-- A pill picks the tool; the state card the farmer then taps opens with it (?tool=). -->
+  <div class="nk-land-pills" id="nk-land-pills">
+    <button type="button" class="nk-land-pill" data-tool="sat" data-label="सैटेलाइट व्यू">सैटेलाइट व्यू</button>
+    <button type="button" class="nk-land-pill" data-tool="measure" data-label="खेत नाप">खेत नाप (Area)</button>
+    <button type="button" class="nk-land-pill" data-tool="gaon" data-label="गांव खोज">गांव खोज</button>
+    <button type="button" class="nk-land-pill" data-tool="dl" data-label="HD नक्शा डाउनलोड">HD नक्शा डाउनलोड</button>
   </div>
-</div>
-
-<!-- Quick Download & State Switch Controls -->
-<div class="nk-controls" style="margin: 16px auto; max-width: 760px; padding: 0 16px;">
-  {_dl_button(states['uttar-pradesh'], "HD नक्शा डाउनलोड करें")}
-  {_state_select_dropdown('uttar-pradesh', states, is_jile=False)}
+  <div class="nk-land-gps-status" id="nk-land-tool-status"></div>
 </div>
 
 <!-- Popular States Quick Pick -->
 <div class="nk-land-popular" id="nk-land-popular">
-  <div class="nk-land-popular-title">⭐ प्रमुख कृषि राज्य (Top Farming States)</div>
+  <div class="nk-land-popular-title">प्रमुख कृषि राज्य (Top Farming States)</div>
   <div class="nk-pick-grid">{popular_html}</div>
 </div>
 
@@ -4276,8 +4519,30 @@ def naksha_hub():
 
   var stateMap = {{}};
   allCards.forEach(function(c) {{
-    stateMap[(c.dataset.hi || '')] = c.href;
-    stateMap[(c.dataset.state || '')] = c.href;
+    c.dataset.base = c.getAttribute('href');
+    stateMap[(c.dataset.hi || '')] = c.dataset.base;
+    stateMap[(c.dataset.state || '')] = c.dataset.base;
+  }});
+
+  // Feature pills: pick a tool, then the state card (or GPS) opens with it.
+  var tool = '';
+  var toolStatus = document.getElementById('nk-land-tool-status');
+  function withTool(u) {{ return tool ? u + (u.indexOf('?') > -1 ? '&' : '?') + 'tool=' + tool : u; }}
+  document.querySelectorAll('.nk-land-pill').forEach(function(p) {{
+    p.addEventListener('click', function() {{
+      tool = (tool === p.dataset.tool) ? '' : p.dataset.tool;
+      document.querySelectorAll('.nk-land-pill').forEach(function(o) {{
+        o.classList.toggle('active', o.dataset.tool === tool);
+      }});
+      allCards.forEach(function(c) {{ c.setAttribute('href', withTool(c.dataset.base)); }});
+      if(toolStatus) {{
+        toolStatus.textContent = tool ? 'अपना राज्य चुनें — ' + p.dataset.label + ' के साथ नक्शा खुलेगा' : '';
+        toolStatus.classList.toggle('active', !!tool);
+      }}
+      // Scroll to the hint, not past it: the states sit right under it, and
+      // landing on the list hid the only line saying what to tap next.
+      if(tool && toolStatus) toolStatus.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+    }});
   }});
 
   if(gpsBtn) {{
@@ -4300,7 +4565,7 @@ def naksha_hub():
             var url = stateMap[state];
             if(url) {{
               if(gpsStatus) gpsStatus.textContent = '📍 ' + (d.principalSubdivision || 'आपका राज्य') + ' मिला — नक्शा खुल रहा है...';
-              setTimeout(function() {{ window.location.href = url; }}, 800);
+              setTimeout(function() {{ window.location.href = withTool(url); }}, 800);
             }} else {{
               if(gpsStatus) gpsStatus.textContent = '📍 ' + (d.principalSubdivision || '') + ' — नीचे से चुनें';
               if(searchInput && d.principalSubdivision) {{
@@ -4367,7 +4632,7 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
   <!-- Floating Unified Search Bar -->
   <div class="nk-float-search">
     <div class="nk-search-pill-box">
-      <span class="nk-search-ic">🔍</span>
+      <span class="nk-search-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>
       <input type="text" id="nk-search-input" class="nk-search-input" placeholder="{escape(search_placeholder)}" autocomplete="off" aria-label="जिला या गांव खोजें">
       <button type="button" id="nk-search-clear-btn" class="nk-search-clear-btn" aria-label="साफ करें">✕</button>
       <button type="button" id="nk-search-loc-btn" class="nk-search-loc-btn" title="आपकी लोकेशन (GPS)" aria-label="आपकी लोकेशन (GPS)">
@@ -4378,12 +4643,16 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
     </div>
     <div class="nk-search-actions">
       <button type="button" id="nk-mandi-toggle-btn" class="nk-mandi-toggle-btn" title="मंडी देखें व भाव जानें" aria-label="मंडी देखें">
-        <span class="nk-mandi-btn-icon">🌾</span>
+        <svg class="nk-chip-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22V7"/><path d="M12 7c-1.6-1.5-1.6-3.5 0-5 1.6 1.5 1.6 3.5 0 5z"/><path d="M12 11.5c-2.5 0-4-1.5-4.5-3.5 2.5 0 4 1.5 4.5 3.5zM12 11.5c2.5 0 4-1.5 4.5-3.5-2.5 0-4 1.5-4.5 3.5z"/><path d="M12 16.5c-2.5 0-4-1.5-4.5-3.5 2.5 0 4 1.5 4.5 3.5zM12 16.5c2.5 0 4-1.5 4.5-3.5-2.5 0-4 1.5-4.5 3.5z"/></svg>
         <span class="nk-mandi-btn-text">मंडी देखें</span>
         <span class="nk-mandi-btn-badge" id="nk-mandi-btn-count" style="display:none">0</span>
       </button>
+      <button type="button" id="nk-fab-measure" class="nk-mandi-toggle-btn" title="खेत नापें — क्षेत्रफल (Area)" aria-label="खेत नापें (क्षेत्रफल)">
+        <svg class="nk-chip-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v18h18z"/><path d="M8 12.5V17h4.5z"/><path d="M4 7h2.5M4 11h2.5M4 15h2.5"/></svg>
+        <span class="nk-mandi-btn-text">खेत नापें</span>
+      </button>
       <button type="button" id="nk-route-btn" class="nk-route-btn" title="कहाँ से कहाँ तक — रास्ता देखें" aria-label="रास्ता देखें">
-        <svg class="nk-route-arrow" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        <svg class="nk-route-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 5 20.5l7-3.5 7 3.5z"/></svg>
         <span id="nk-route-btn-text">रास्ता देखें</span>
       </button>
     </div>
@@ -4423,10 +4692,6 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
         <span class="nk-fab-opt-ic">🌾</span>
         <span class="nk-fab-opt-label" id="nk-fab-mandi-text">मंडी देखें</span>
       </button>
-      <button type="button" id="nk-fab-measure" class="nk-fab-opt" aria-label="खेत नापो (क्षेत्रफल)">
-        <span class="nk-fab-opt-ic">📐</span>
-        <span class="nk-fab-opt-label">खेत नापो (Area)</span>
-      </button>
       <button type="button" id="nk-fab-overlay" class="nk-fab-opt" aria-label="राज्य/जिला सीमा ऑन/ऑफ" title="राज्य सीमा (Border) दिखाएं/छिपाएं">
         <span class="nk-fab-opt-ic" id="nk-fab-overlay-ic">👁️</span>
         <span class="nk-fab-opt-label" id="nk-fab-overlay-text">सीमा छिपाएं</span>
@@ -4448,12 +4713,21 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
       <span class="nk-mhud-title">📐 खेत नापने का यंत्र (Area Calculator)</span>
       <button type="button" id="nk-mhud-close" class="nk-mhud-close-btn" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:15px;padding:0 4px;line-height:1;" title="बंद करें">✕</button>
     </div>
-    <div class="nk-mhud-tip">मानचित्र पर खेत के कोनों को छूकर सीमा बनाएं:</div>
+    <div class="nk-mhud-tip">खेत के सभी कोनों पर टैप करें, फिर ✓ हो गया दबाएं · बिंदु खींचकर ठीक करें</div>
     <div class="nk-mhud-results">
       <div class="nk-mhud-pill">एकड़: <b id="nk-mhud-acre">0 एकड़</b></div>
-      <div class="nk-mhud-pill">बीघा: <b id="nk-mhud-bigha">0 बीघा</b></div>
+      <div class="nk-mhud-pill nk-mhud-bigha-pill">बीघा:
+        <button type="button" id="nk-mhud-bigha-more" class="nk-mhud-more" aria-label="1 एकड़ में कितने बीघा — बदलें" aria-expanded="false" aria-controls="nk-mhud-bigha-set" title="1 एकड़ में कितने बीघा — बदलें">⋮</button>
+        <b id="nk-mhud-bigha">0 बीघा</b>
+        <small id="nk-mhud-bigha-src" class="nk-mhud-bigha-src"></small>
+      </div>
       <div class="nk-mhud-pill">हेक्टेयर: <b id="nk-mhud-hectare">0 हे.</b></div>
       <div class="nk-mhud-pill">वर्ग मीटर: <b id="nk-mhud-sqm">0 m²</b></div>
+    </div>
+    <div class="nk-mhud-bigha-set" id="nk-mhud-bigha-set" hidden>
+      <label class="nk-mbs-custom">1 एकड़ =
+        <input type="number" id="nk-mbs-n" min="0.1" max="20" step="0.01" inputmode="decimal" aria-label="1 एकड़ में कितने बीघा"> बीघा</label>
+      <p class="nk-mbs-note">बीघा हर इलाके में अलग होता है (अनुमानित)। अपने इलाके का आंकड़ा भरें।</p>
     </div>
     <div class="nk-mhud-actions">
       <button type="button" id="nk-mhud-undo" class="nk-mhud-btn undo" title="पिछला बिंदु हटाएं (Undo)" aria-label="Undo">
@@ -4461,6 +4735,7 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
         <span>अनडू</span>
       </button>
       <button type="button" id="nk-mhud-clear" class="nk-mhud-btn clear" title="सभी बिंदु साफ़ करें">✕ साफ़ करें</button>
+      <button type="button" id="nk-mhud-done" class="nk-mhud-btn done" title="कम से कम 3 कोने लगाकर खेत की सीमा पूरी करें" disabled>✓ हो गया</button>
       <button type="button" id="nk-mhud-print" class="nk-mhud-btn print" title="खेत का नक्शा व नाप प्रिंट करें (Print Sketch)">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         <span>प्रिंट करें</span>
@@ -4530,13 +4805,13 @@ def _map_app_container(key: str, s: dict, hi: str, is_district: bool = False, ds
     </div>
     <div class="nk-rp-chip-row">
       <span class="nk-rp-lbl">शुरुआत:</span>
-      <button type="button" class="nk-rp-chip" data-from="gps">📍 मेरी लोकेशन</button>
-      <button type="button" class="nk-rp-chip" data-pick="from">🗺️ नक्शे पर</button>
+      <button type="button" class="nk-rp-chip" data-from="gps">मेरी लोकेशन</button>
+      <button type="button" class="nk-rp-chip" data-pick="from">नक्शे पर</button>
     </div>
     <div class="nk-rp-chip-row">
       <span class="nk-rp-lbl">मंज़िल:</span>
-      <button type="button" class="nk-rp-chip" data-to="mandi">🌾 नजदीकी मंडी</button>
-      <button type="button" class="nk-rp-chip" data-pick="to">🗺️ नक्शे पर</button>
+      <button type="button" class="nk-rp-chip" data-to="mandi">नजदीकी मंडी</button>
+      <button type="button" class="nk-rp-chip" data-pick="to">नक्शे पर</button>
     </div>
     <button type="button" class="nk-rp-go" id="nk-rp-go">रास्ता दिखाएँ</button>
     <div class="nk-rp-note" id="nk-rp-note"></div>
@@ -4665,15 +4940,7 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
                         "जिलों की सूची व गांव डायरेक्टरी"))
     state_cards = "".join(_sc)
 
-    body = f"""<div class="nk-level-bar">
-  <a href="/naksha">🇮🇳 भारत (India)</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_url(key)}">🏛️ {escape(hi)}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <span style="color:var(--nk-emerald-dark)">📍 जिला / 🏢 तहसील / 🌾 गांव सैटेलाइट</span>
-</div>
-
-<h1 class="nk-title">{escape(hi)} का नक्शा</h1>
+    body = f"""<h1 class="nk-title">{escape(hi)} का नक्शा</h1>
 <p class="nk-title-sub">{_jile(n) + " (नक्शे पर)" if unsure else _jile(count)} · {escape(span)} · हिंदी में जिलेवार मानचित्र व सैटेलाइट व्यू</p>
 
 <div class="nk-tabs-bar">
@@ -4866,15 +5133,7 @@ def _jile_page(key: str) -> HTMLResponse:
 
     note = f'<div class="nk-note">नोट: {escape(s["note"])}</div>' if s["note"] else ""
 
-    body = f"""<div class="nk-level-bar">
-  <a href="/naksha">🇮🇳 भारत (India)</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_url(key)}">🏛️ {escape(hi)}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <span style="color:var(--nk-emerald-dark)">📋 जिलों की सूची{"" if unsure else f" ({count})"}</span>
-</div>
-
-<h1 class="nk-title">{escape(hi)} में कितने जिले हैं?</h1>
+    body = f"""<h1 class="nk-title">{escape(hi)} में कितने जिले हैं?</h1>
 <p class="nk-title-sub">{"नक्शे पर " + _jile(n) + " (Census सीमाएं)" if unsure else f"{yr} में कुल {_jile(count)}"} — हिंदी और अंग्रेज़ी नामों के साथ · {escape(span)}</p>
 
 <div class="nk-tabs-bar">
@@ -5095,7 +5354,7 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
         (f"{hi} जिले का सैटेलाइट नक्शा कैसे देखें?",
          f"ऊपर का नक्शा डिफ़ॉल्ट रूप से सैटेलाइट व्यू में ही खुलता है — असली खेत, "
          f"सड़कें और बस्तियां दिखती हैं। ज़ूम करके अपना खेत तक पहचाना जा सकता है, और "
-         f"GPS व 🔍 बटन से गांव या खेत तक सीधे पहुंचा जा सकता है।"),
+         f"लोकेशन व खोजें बटन से गांव या खेत तक सीधे पहुंचा जा सकता है।"),
         (f"{hi} जिले में कौन-कौन से गांव हैं?",
          (f"{hi} के {len(villages)} गांव व कस्बे इस समय दर्ज हैं — पूरी सूची “{hi} के "
           f"गांव” पेज पर है, हर गांव के अपने नक्शे के साथ।") if villages else
@@ -5135,17 +5394,7 @@ def _district_page(key: str, dslug: str) -> HTMLResponse:
                            f"सैटेलाइट नक्शा व {len(villages) if villages else 'सभी'} गांव खोजें"))
     link_cards = "".join(cards)
 
-    body = f"""<div class="nk-level-bar">
-  <a href="/naksha">🇮🇳 भारत (India)</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_url(key)}">🏛️ {escape(shi)}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_jile_url(key)}">📋 जिले{"" if unsure else f" ({count})"}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <span style="color:var(--nk-emerald-dark)">📍 {escape(hi)}</span>
-</div>
-
-<h1 class="nk-title">{escape(hi)} का नक्शा</h1>
+    body = f"""<h1 class="nk-title">{escape(hi)} का नक्शा</h1>
 <p class="nk-title-sub">{escape(en)} district, {escape(shi)} · सैटेलाइट व्यू · गांव व तहसील खोज</p>
 
 <div class="nk-tabs-bar">
@@ -5299,17 +5548,7 @@ def _gaon_page(key: str, dslug: str) -> HTMLResponse:
          f"सीमा के भीतर पड़ता हो।"),
     ])
 
-    body = f"""<div class="nk-level-bar">
-  <a href="/naksha">🇮🇳 भारत (India)</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_url(key)}">🏛️ {escape(shi)}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_d_url(key, dslug)}">📍 {escape(hi)}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <span style="color:var(--nk-emerald-dark)">🌾 गांव</span>
-</div>
-
-<h1 class="nk-title">{escape(hi)} के गांव</h1>
+    body = f"""<h1 class="nk-title">{escape(hi)} के गांव</h1>
 <p class="nk-title-sub">{escape(shi)} · {f'{n_v} गांव व कस्बे' if n_v else 'गांव व तहसील खोज'} · हर गांव का अपना सैटेलाइट नक्शा</p>
 
 <div class="nk-tabs-bar">
@@ -5508,19 +5747,7 @@ def _village_page(key: str, dslug: str, v: dict, villages: list) -> HTMLResponse
          f"भू-नक्शा के लिए {shi} के राजस्व विभाग का आधिकारिक पोर्टल देखें।"),
     ])
 
-    body = f"""<div class="nk-level-bar">
-  <a href="/naksha">🇮🇳 भारत</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_url(key)}">🏛️ {escape(shi)}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_d_url(key, dslug)}">📍 {escape(dhi)}</a>
-  <span class="nk-lvl-sep">➔</span>
-  <a href="{_gaon_url(key, dslug)}">🌾 गांव</a>
-  <span class="nk-lvl-sep">➔</span>
-  <span style="color:var(--nk-emerald-dark)">{escape(name_hi)}</span>
-</div>
-
-<h1 class="nk-title">{escape(name_hi)} का नक्शा</h1>
+    body = f"""<h1 class="nk-title">{escape(name_hi)} का नक्शा</h1>
 <p class="nk-title-sub">{escape(name_en + " · ") if v["hi"] else ""}{escape(kind)} · {escape(dhi)} जिला, {escape(shi)} · सैटेलाइट व्यू</p>
 
 <div class="nk-tabs-bar">
@@ -5649,22 +5876,24 @@ def _map_landing_page() -> HTMLResponse:
 <style>
 /* ── Map Landing Hub ── */
 .nk-land-hero {
-  background: linear-gradient(135deg, var(--nk-emerald-dark) 0%, #0d3d2a 100%);
-  padding: 28px 20px 22px;
+  /* Plain centred heading on the page background — no dark green panel. */
+  padding: 14px 12px 4px;
   text-align: center;
-  margin-bottom: 0;
+  max-width: 760px;
+  margin: 0 auto;
 }
 .nk-land-hero h1 {
-  font-size: 24px;
-  font-weight: 900;
-  color: #ffffff;
-  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a3c2e;
+  margin: 0 0 2px;
   line-height: 1.3;
 }
 .nk-land-hero p {
-  font-size: 13.5px;
-  color: rgba(255,255,255,0.78);
-  margin: 0 0 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--nk-text-soft);
+  margin: 0 0 14px;
 }
 /* Search box */
 .nk-land-search-wrap {
@@ -5673,9 +5902,11 @@ def _map_landing_page() -> HTMLResponse:
   max-width: 480px;
   margin: 0 auto 14px;
   background: #ffffff;
+  border: 1.5px solid #dde8e1;
+  box-shadow: 0 2px 10px rgba(7,31,22,0.06);
   border-radius: 999px;
   padding: 6px 8px 6px 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.28);
+
   align-items: center;
 }
 .nk-land-search-wrap input {
@@ -5710,11 +5941,11 @@ def _map_landing_page() -> HTMLResponse:
 /* GPS status bar */
 .nk-land-gps-status {
   display: none;
-  background: rgba(255,255,255,0.14);
+  background: #eef6f1;
   border-radius: 10px;
   padding: 8px 14px;
   font-size: 12.5px;
-  color: #ffffff;
+  color: #1a3c2e;
   margin: 0 auto;
   max-width: 360px;
   text-align: center;
@@ -5722,9 +5953,8 @@ def _map_landing_page() -> HTMLResponse:
 .nk-land-gps-status.active { display: block; }
 /* Popular quick picks */
 .nk-land-popular {
-  background: #f5f9f6;
+  /* No tinted band: the cards sit on the page background, like the hero. */
   padding: 18px 16px 14px;
-  border-bottom: 1px solid var(--nk-border);
 }
 .nk-land-popular-title {
   font-size: 12px;
@@ -5747,7 +5977,7 @@ def _map_landing_page() -> HTMLResponse:
   padding: 10px 12px;
   border-radius: 12px;
   background: #ffffff;
-  border: 1.5px solid var(--nk-border);
+  border: 1.5px solid #dde8e1;
   text-decoration: none;
   color: var(--nk-text-dark);
   transition: all 0.18s ease;
@@ -5797,7 +6027,7 @@ def _map_landing_page() -> HTMLResponse:
 
 <!-- Hero Search Section -->
 <div class="nk-land-hero">
-  <h1>🗺️ भारत का नक्शा</h1>
+  <h1>भारत का नक्शा</h1>
   <p>अपना राज्य चुनें — जिले, गांव और खेत सैटेलाइट व्यू में देखें</p>
 
   <div class="nk-land-search-wrap">
@@ -5809,12 +6039,12 @@ def _map_landing_page() -> HTMLResponse:
       <span class="nk-land-gps-txt">मेरा राज्य</span>
     </button>
   </div>
-  <div class="nk-land-gps-status" id="nk-land-gps-status">📡 आपकी लोकेशन खोजी जा रही है...</div>
+  <div class="nk-land-gps-status" id="nk-land-gps-status">आपकी लोकेशन खोजी जा रही है...</div>
 </div>
 
 <!-- Popular States Quick Pick -->
 <div class="nk-land-popular" id="nk-land-popular">
-  <div class="nk-land-popular-title">⭐ प्रमुख कृषि राज्य</div>
+  <div class="nk-land-popular-title">प्रमुख कृषि राज्य</div>
   <div class="nk-pick-grid">{popular_html}</div>
 </div>
 

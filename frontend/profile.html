@@ -1110,6 +1110,45 @@
       .save-bar-actions { width: 100%; }
       .save-bar-actions .btn { flex: 1; }
     }
+
+    /* Followers / Following list — opens right here. It used to send the farmer
+       to krashi_bajar.html?user=me&list=…, so a tap on a number loaded a whole
+       other page (and its feed) just to show a list. Same look as Bazar's. */
+    .pfl-overlay { display: none; position: fixed; inset: 0; z-index: 5000;
+      background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 16px; }
+    .pfl-overlay.open { display: flex; }
+    .pfl-modal { background: #fff; border-radius: 20px; width: 100%; max-width: 420px;
+      max-height: 82vh; display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.3); animation: pfl-pop 0.18s ease-out; }
+    @keyframes pfl-pop { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .pfl-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 12px; border-bottom: 1px solid var(--border); }
+    .pfl-back { border: none; background: transparent; font-size: 26px; line-height: 1;
+      color: var(--text-dark); cursor: pointer; padding: 0 6px 0 0; margin-top: -2px; }
+    .pfl-title { font-size: 16px; font-weight: 800; color: var(--green-dark); }
+    .pfl-count { font-size: 12.5px; font-weight: 700; color: var(--text-light); }
+    .pfl-search-wrap { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .pfl-search { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px;
+      padding: 9px 12px; font-size: 13.5px; background: var(--cream); color: var(--text-dark); outline: none; font-family: inherit; }
+    .pfl-search:focus { border-color: var(--green-light); background: #fff; }
+    .pfl-list { overflow-y: auto; padding: 6px 8px 12px; flex: 1; }
+    .pfl-row { display: flex; align-items: center; gap: 11px; padding: 8px; border-radius: 12px;
+      cursor: pointer; transition: background 0.12s; text-decoration: none; }
+    .pfl-row:hover { background: var(--cream); }
+    .pfl-avatar { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 16px; }
+    .pfl-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pfl-avatar.is-verified { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0284c7; }
+    .pfl-meta { flex: 1; min-width: 0; }
+    .pfl-name { font-size: 13.5px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center;
+      gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pfl-name svg { flex-shrink: 0; }
+    .pfl-sub { font-size: 11.5px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .pfl-btn { flex-shrink: 0; border: none; border-radius: 9px; padding: 7px 15px; font-size: 12.5px;
+      font-weight: 700; cursor: pointer; font-family: inherit; }
+    .pfl-btn.primary { background: var(--green-mid); color: #fff; }
+    .pfl-btn.following { background: var(--cream); color: var(--text-dark); border: 1px solid var(--border); }
+    .pfl-btn:disabled { opacity: 0.6; }
+    .pfl-empty { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 13.5px; font-weight: 600; }
   </style>
 <style id="km-drawer-css">
   /* Canonical sidebar drawer - identical across all pages */
@@ -2756,11 +2795,128 @@
     //  'posts'      → profile card (posts grid)
     //  'followers'  → followers list   |   'following' → following list
     function openMyBazar(which) {
-      const q = (which === 'followers' || which === 'following')
-        ? `?user=me&list=${which}`
-        : "?user=me";
-      window.location.href = "krashi_bajar.html" + q;
+      if (which === 'followers' || which === 'following') return openFollowList(which);
+      window.location.href = "krashi_bajar.html?user=me";
     }
+
+    // ── Followers / Following list, in place ──
+    // The account id comes from the token's `sub`; the server still decides
+    // everything from the Authorization header.
+    function myUserId() {
+      try {
+        const part = (getToken() || "").split(".")[1];
+        const sub = part && JSON.parse(atob(part.replace(/-/g, "+").replace(/_/g, "/"))).sub;
+        return /^\d+$/.test(String(sub)) ? String(sub) : null;
+      } catch { return null; }
+    }
+    const PFL_COLORS = ["#2d6a4f", "#b5651d", "#1d4f91", "#7b2d8b", "#b42318", "#0f766e", "#a16207"];
+    const PFL_TICK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="#1d9bf0" aria-label="नीला टिक"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/></svg>';
+    let pflData = [];
+    let pflKind = "";
+
+    function pflColor(name) {
+      let h = 0; const s = String(name || "?");
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return PFL_COLORS[h % PFL_COLORS.length];
+    }
+    function pflMedia(url) { return url && url.startsWith("/") ? API_BASE + url : url; }
+
+    async function openFollowList(kind) {
+      const uid = myUserId();
+      if (!uid) { window.location.href = `krashi_bajar.html?user=me&list=${kind}`; return; }
+      pflKind = kind;
+      pflData = [];
+      document.getElementById("pfl-title").textContent = kind === "following" ? "फॉलोइंग" : "फॉलोअर";
+      document.getElementById("pfl-count").textContent = "";
+      document.getElementById("pfl-search").value = "";
+      document.getElementById("pfl-list").innerHTML = '<div class="pfl-empty">लोड हो रहा है…</div>';
+      document.getElementById("pfl-overlay").classList.add("open");
+      try {
+        const res = await fetch(`${API_BASE}/bazar/users/${uid}/${kind}`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        const j = await res.json().catch(() => ({}));
+        if (pflKind !== kind) return;          // closed or switched meanwhile
+        if (!j.success) throw new Error();
+        pflData = (j.data && j.data.users) || [];
+        document.getElementById("pfl-count").textContent = pflData.length ? String(pflData.length) : "";
+        renderFollowList(pflData);
+      } catch {
+        if (pflKind === kind)
+          document.getElementById("pfl-list").innerHTML = '<div class="pfl-empty">सूची लोड नहीं हो पाई। दोबारा कोशिश करें।</div>';
+      }
+    }
+
+    function renderFollowList(list) {
+      const box = document.getElementById("pfl-list");
+      if (!list.length) {
+        box.innerHTML = `<div class="pfl-empty">${pflKind === "following" ? "आप अभी किसी को फॉलो नहीं करते।" : "अभी कोई फॉलोअर नहीं।"}</div>`;
+        return;
+      }
+      box.innerHTML = list.map(u => {
+        const ring = u.verified ? " is-verified" : "";
+        const av = u.avatar_url
+          ? `<div class="pfl-avatar${ring}"><img src="${escHtml(pflMedia(u.avatar_url))}" alt="" loading="lazy"></div>`
+          : `<div class="pfl-avatar${ring}" style="background:${pflColor(u.name)}">${escHtml((String(u.name || "?").trim()[0] || "?").toUpperCase())}</div>`;
+        const btn = u.is_me ? "" :
+          `<button type="button" class="pfl-btn ${u.is_following ? "following" : "primary"}" id="pfl-btn-${Number(u.user_id)}"
+                   onclick="event.preventDefault(); event.stopPropagation(); toggleFollowFromList(${Number(u.user_id)})">${u.is_following ? "फॉलो कर रहे हैं" : "फॉलो करें"}</button>`;
+        // A row opens that farmer's Bazar profile — a different person's page,
+        // so going to Bazar is the right move here.
+        return `<a class="pfl-row" href="krashi_bajar.html?user=${Number(u.user_id)}">
+          ${av}
+          <div class="pfl-meta">
+            <div class="pfl-name">${escHtml(u.name || "")} ${u.verified ? PFL_TICK : ""}</div>
+            ${u.location ? `<div class="pfl-sub">${escHtml(u.location)}</div>` : ""}
+          </div>
+          ${btn}
+        </a>`;
+      }).join("");
+    }
+
+    function filterFollowList() {
+      const q = (document.getElementById("pfl-search").value || "").trim().toLowerCase();
+      renderFollowList(!q ? pflData : pflData.filter(u =>
+        (u.name || "").toLowerCase().includes(q) || (u.location || "").toLowerCase().includes(q)));
+    }
+
+    function closeFollowList() {
+      document.getElementById("pfl-overlay").classList.remove("open");
+      pflKind = "";
+      pflData = [];
+    }
+
+    async function toggleFollowFromList(userId) {
+      const u = pflData.find(x => Number(x.user_id) === userId);
+      const btn = document.getElementById(`pfl-btn-${userId}`);
+      if (!u || !btn || btn.disabled) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/bazar/users/${userId}/follow`, {
+          method: "POST", headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!j.success) { showMessage(j.message || j.detail || "अभी फॉलो नहीं हो पाया।", "err"); return; }
+        const was = u.is_following;
+        u.is_following = !!j.data.following;
+        btn.className = `pfl-btn ${u.is_following ? "following" : "primary"}`;
+        btn.textContent = u.is_following ? "फॉलो कर रहे हैं" : "फॉलो करें";
+        // My own फॉलोइंग number on this page moves with it.
+        const el = document.getElementById("hero-following");
+        if (el && was !== u.is_following) {
+          const n = parseInt(el.textContent, 10) || 0;
+          el.textContent = Math.max(0, n + (u.is_following ? 1 : -1));
+        }
+      } catch {
+        showMessage("Server से connect नहीं हो पाया।", "err");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && document.getElementById("pfl-overlay")?.classList.contains("open")) closeFollowList();
+    });
 
     // The only logout button on the site. It has to clear everything the
     // account left behind — not just the token — so the next person to sign in
@@ -2886,5 +3042,19 @@
   <script src="drawer-menu.js"></script>
   <script src="bottomnav.js" defer></script>
   <script src="tel-input.js" defer></script>
+<!-- Followers / Following list (filled by openFollowList) -->
+<div class="pfl-overlay" id="pfl-overlay" onclick="if(event.target===this)closeFollowList()">
+  <div class="pfl-modal" role="dialog" aria-modal="true" aria-labelledby="pfl-title">
+    <div class="pfl-head">
+      <button type="button" class="pfl-back" onclick="closeFollowList()" aria-label="वापस">‹</button>
+      <span class="pfl-title" id="pfl-title">फॉलोअर</span>
+      <span class="pfl-count" id="pfl-count"></span>
+    </div>
+    <div class="pfl-search-wrap">
+      <input class="pfl-search" id="pfl-search" type="text" oninput="filterFollowList()" placeholder="खोजें…" autocomplete="off">
+    </div>
+    <div class="pfl-list" id="pfl-list"></div>
+  </div>
+</div>
 </body>
 </html>

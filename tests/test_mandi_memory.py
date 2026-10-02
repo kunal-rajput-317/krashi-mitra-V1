@@ -247,3 +247,85 @@ def test_merge_ages_out_what_the_fetch_ages_out(rows, db_session, monkeypatch):
     db_session.commit()
     mandi_memory.load_changes()
     assert not any(r["market"] == "Quiet APMC" for r in mandi_memory.rows_for("", STATE, DISTRICT))
+
+
+# ── the stale-district rescue (mandi_last_seen) ──────────────
+# A district whose crop is no longer in the snapshot shows the last prices we
+# ever saw for it. About half the /bhav URLs are such districts, so this read
+# comes from the memory copy too, and must say exactly what the database says.
+
+QUIET = "Memorystalepur"
+
+
+@pytest.fixture()
+def quiet(db_session):
+    from backend.database.db import MandiLastSeen
+
+    def _wipe():
+        (db_session.query(MandiLastSeen).filter(MandiLastSeen.district == QUIET)
+           .delete(synchronize_session=False))
+        db_session.commit()
+
+    _wipe()
+    for n, (market, crop, day, modal) in enumerate([
+            ("Old APMC",   "Wheat", 20, 2400),     # the newest day: shown
+            ("Other APMC", "Wheat", 20, 2380),
+            ("Older APMC", "Wheat", 12, 2300),     # an older day: not shown
+            ("Old APMC",   "Onion", 20, 1300),     # another crop: not shown
+            (None,         "Wheat", None, 2350)]): # no date, no market
+        db_session.add(MandiLastSeen(
+            group_key=f"quiet-{n}", state=STATE, district=QUIET, market=market,
+            commodity=crop, variety="Local", grade="FAQ",
+            min_price=str(modal - 50), max_price=str(modal + 50), modal_price=str(modal),
+            arrival_date=f"{day}/07/2026" if day else None,
+            arrival_dt=date(2026, 7, day) if day else None,
+            updated_at=datetime.utcnow()))
+    db_session.commit()
+    yield
+    _wipe()
+
+
+def _rescue():
+    idx = {"raws": {"wheat": {"Wheat"}}, "crops": {"wheat": "Wheat"},
+           "states": {"wheat": {"uttar-pradesh": STATE.lower()}},
+           "dists": {"wheat": {"uttar-pradesh": {"memorystalepur": QUIET.upper()}}}}
+    return bhav._rows_for_district(idx, "wheat", "uttar-pradesh", "memorystalepur")
+
+
+def test_stale_district_rescue_matches_the_database(both, quiet):
+    from_db, from_mem = both(_rescue)
+    assert sorted(r["market"] for r in from_db) == ["Old APMC", "Other APMC"]
+    assert _key(from_mem) == _key(from_db)
+
+
+def test_stale_district_rescue_reads_no_database(both, quiet, monkeypatch):
+    both(lambda: None)                       # leaves the copy loaded
+    monkeypatch.setattr(mandi_memory, "enabled", lambda: True)
+    def boom():
+        raise AssertionError("the rescue opened a database session")
+    monkeypatch.setattr(bhav, "SessionLocal", boom)
+    assert len(_rescue()) == 2
+
+
+def test_last_seen_merge_equals_a_full_reload(rows, quiet, db_session, monkeypatch):
+    from datetime import timedelta
+    from backend.database.db import MandiLastSeen
+
+    monkeypatch.setattr(mandi_memory, "enabled", lambda: True)
+    assert mandi_memory.load()
+    later = datetime.utcnow() + timedelta(minutes=5)
+    # The fetch's upsert: a newer day for one line-item, plus a new one.
+    row = db_session.query(MandiLastSeen).filter_by(group_key="quiet-0").one()
+    row.modal_price, row.arrival_dt, row.arrival_date, row.updated_at = (
+        "2450", date(2026, 7, 22), "22/07/2026", later)
+    db_session.add(MandiLastSeen(
+        group_key="quiet-new", state=STATE, district=QUIET, market="New APMC",
+        commodity="Wheat", variety="Local", grade="FAQ", modal_price="2460",
+        arrival_date="22/07/2026", arrival_dt=date(2026, 7, 22), updated_at=later))
+    db_session.commit()
+
+    mandi_memory.load_changes()
+    merged = _key(r for *_, r in mandi_memory.last_seen(["Wheat"], STATE, QUIET))
+    assert sorted(r["market"] for r in _rescue()) == ["New APMC", "Old APMC"]
+    mandi_memory.load()
+    assert _key(r for *_, r in mandi_memory.last_seen(["Wheat"], STATE, QUIET)) == merged

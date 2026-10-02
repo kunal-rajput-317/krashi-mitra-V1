@@ -22,13 +22,14 @@ first three got here.
 """
 
 import base64
+import os
 
 import pytest
 
 from backend.routes import festival
 
-AUTH     = ("testadmin", "test-admin-pass")
-BAD_PASS = ("testadmin", "not-the-password")
+AUTH     = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
+BAD_PASS = (os.environ["ADMIN_USER"], "not-the-password")
 
 # A real 1x1 PNG — the byte sniffer has to see a genuine image header.
 PNG = base64.b64decode(

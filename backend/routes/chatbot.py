@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from backend.config import get_setting
 from backend.services.legal import redact_doses
-from backend.database.db import ChatHistory, User, get_db
+from backend.database.db import ChatHistory, get_db
 from backend.utils.auth_utils import get_current_user
 from backend.utils.security import daily_limit, rate_limit
 from backend.services.chatbot_service import (
@@ -60,11 +60,12 @@ router = APIRouter()
 
 
 class Question(BaseModel):
+    # No user_id: an id taken from the body is an id anyone can type. A
+    # stray "user_id" key from an old client is ignored, not trusted.
     q:        str
     crop:     str = "wheat_up"
     language: str = "hindi"
     district: str = "Uttar Pradesh"
-    user_id:  Optional[int] = None
 
 
 # ── Weather redirect keywords ─────────────────────────────────
@@ -213,19 +214,14 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
     else:
         full_context = crop_context
 
-    # ── Step 4: Conversation history ──────────────────────────
+    # ── Step 4: no conversation history, by design ───────────
+    # The model sees the question, the district the page sends, and our own
+    # crop/knowledge files — never a database row. This step used to load the
+    # last 6 chat_history rows of whatever user_id the request BODY named,
+    # unauthenticated: anyone could post user_id=5 and have user 5's messages
+    # put into a prompt and echoed back (DPDP Act; LEGAL_RULES §4). chat.html
+    # never sent a user_id, so no farmer loses anything by its removal.
     history_text = ""
-    if body.user_id:
-        try:
-            history_rows = db.query(ChatHistory).filter(
-                ChatHistory.user_id == body.user_id
-            ).order_by(ChatHistory.created_at.desc()).limit(6).all()
-            history_rows.reverse()
-            history_text = "\n".join([
-                f"{row.role.upper()}: {row.message}" for row in history_rows
-            ])
-        except Exception as e:
-            log.info(f"[History] Failed: {e}")
 
     # ── Step 5: Build prompt + call AI (awaited) ──────────────
     if get_setting("ai_enabled", True):
@@ -266,13 +262,10 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
 
 def _save_to_db(db: Session, body: Question, question: str, answer: str):
     """Save user message + assistant reply to DB."""
-    # user_id arrives in the request body, unauthenticated, so it can name an
-    # account that never existed or has since been deleted. chat_history.user_id
-    # is a real foreign key now, so a stale id would abort the whole insert —
-    # keep the conversation, drop only the dangling link.
-    uid = body.user_id
-    if uid is not None and not db.query(User.id).filter(User.id == uid).first():
-        uid = None
+    # Saved unlinked: the request carries no verified identity, and writing
+    # under an id from the body would let anyone plant messages in another
+    # farmer's history.
+    uid = None
     try:
         db.add(ChatHistory(
             user_id=uid, crop=body.crop, district=body.district,

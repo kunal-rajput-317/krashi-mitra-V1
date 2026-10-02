@@ -24,6 +24,7 @@ allowed to diverge, and a test per section is how it would drift.
 """
 
 from datetime import datetime, timedelta
+import os
 
 import pytest
 
@@ -338,7 +339,7 @@ class TestTheAdminAPI:
     that must stay identical.
     """
 
-    AUTH = ("testadmin", "test-admin-pass")
+    AUTH = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 
     @pytest.fixture()
     def shop_slug(self, client):

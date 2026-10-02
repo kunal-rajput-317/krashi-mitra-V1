@@ -34,10 +34,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install \
-            fastapi 'uvicorn[standard]' sqlalchemy alembic httpx \
+            fastapi 'uvicorn[standard]' 'sqlalchemy>=2.0,<2.1' alembic httpx \
             'bcrypt>=4,<6' 'python-jose[cryptography]' python-multipart \
             email-validator apscheduler pytz pydantic python-dotenv \
-            requests numpy Pillow pytest pytest-asyncio
+            requests numpy Pillow segno pytest pytest-asyncio
 
       - name: Run tests
         env:

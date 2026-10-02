@@ -14,6 +14,14 @@
 # This module keeps both tables in memory and answers the /bhav page helpers
 # from there.
 #
+# 30 Sep 2026: mandi_last_seen joined them. About half the /bhav URLs are
+# districts that no longer report (their crop is not in today's snapshot),
+# and each of those pages still opened a Neon connection for the "last price
+# we ever saw" rescue: 2.4-3 s at the edge against ~1 s for a fresh page.
+# The table is ~31k rows, one per mandi line-item, never deleted and only
+# upserted by the fetch (stamping updated_at), so after a fetch only the rows
+# with a newer updated_at are read.
+#
 # Network transfer is metered too. Neon's free plan allows 5 GB of egress a
 # month and suspends the compute past it. A full copy of both tables is
 # ~21 MB of data (27 Sep 2026: 29,898 snapshot rows, 201,260 history rows),
@@ -69,7 +77,7 @@ _KEYS = ("market", "district", "state", "commodity", "variety", "grade",
 class _Snapshot:
     __slots__ = ("rows", "gks", "fetched", "by_c", "by_s", "by_sd", "hist",
                  "max_fetched", "max_hist_id", "loaded_at", "full_at",
-                 "last_kind", "last_rows")
+                 "last_kind", "last_rows", "seen", "seen_by_sd", "max_seen")
 
     def __init__(self):
         self.rows: list[tuple] = []
@@ -82,6 +90,11 @@ class _Snapshot:
         self.hist: dict[tuple, tuple] = {}
         self.max_fetched: datetime | None = None
         self.max_hist_id = 0
+        # mandi_last_seen: group_key → (state, district, arrival_dt, row
+        # tuple), and (lower(state), lower(district)) → those entries.
+        self.seen: dict[str, tuple] = {}
+        self.seen_by_sd: dict[tuple, list[tuple]] = {}
+        self.max_seen: datetime | None = None    # newest updated_at read
         self.loaded_at = 0.0
         self.full_at = 0.0
         self.last_kind = ""
@@ -114,6 +127,38 @@ def _row_tuple(r, it=sys.intern) -> tuple:
         (tuple(it(p) for p in r.spark.split(",") if p) if r.spark else ()),
         it(r.arrival_date or "-"),
     )
+
+
+def _seen_entry(r, it=sys.intern) -> tuple:
+    """A mandi_last_seen row as (state, district, arrival_dt, row tuple). The
+    tuple is bhav._hist_to_dict(r) in _KEYS order: no delta, no spark."""
+    s = lambda v: it(str(v))
+    return (r.state, r.district, r.arrival_dt, (
+        it(r.market or "-"), it(r.district or "-"), it(r.state or "-"),
+        it(r.commodity or "-"), it(r.variety or "-"), it(r.grade or "-"),
+        s(r.min_price or "-"), s(r.max_price or "-"), s(r.modal_price or "-"),
+        None, None, (), it(r.arrival_date or "-"),
+    ))
+
+
+def _read_seen(db, new: "_Snapshot", since: datetime | None) -> None:
+    """Read mandi_last_seen rows into new.seen (all of them, or only those
+    updated after `since`) and advance new.max_seen."""
+    from backend.database.db import MandiLastSeen
+    q = db.query(MandiLastSeen)
+    if since is not None:
+        q = q.filter(MandiLastSeen.updated_at > since)
+    for r in q.order_by(MandiLastSeen.id).yield_per(STREAM_BATCH):
+        new.seen[r.group_key] = _seen_entry(r)
+        u = r.updated_at
+        if u and (new.max_seen is None or u > new.max_seen):
+            new.max_seen = u
+
+
+def _index_seen(new: "_Snapshot") -> None:
+    for e in new.seen.values():
+        key = ((e[0] or "").lower(), (e[1] or "").lower())
+        new.seen_by_sd.setdefault(key, []).append(e)
 
 
 def _gk(r) -> str:
@@ -231,6 +276,7 @@ def load() -> bool:
                 new.max_fetched = f
         groups, new.max_hist_id = _load_history_full(db)
         new.hist = _freeze(groups)
+        _read_seen(db, new, None)
     except Exception:
         logger.exception("mandi memory full load failed; keeping the previous copy")
         return False
@@ -241,6 +287,7 @@ def load() -> bool:
         logger.warning("mandi memory load found an empty snapshot; not swapping it in")
         return False
     _index(new)
+    _index_seen(new)
     new.loaded_at = new.full_at = time.time()
     new.last_kind, new.last_rows = "full", len(new.rows)
     _snap = new
@@ -274,13 +321,17 @@ def load_changes() -> bool:
                 MandiPriceHistory.id)
         added_hist = (db.query(*cols)
                         .filter(MandiPriceHistory.id > old.max_hist_id).all())
+        # Last-seen is upsert-only: start from the old entries (shared, never
+        # mutated) and overwrite the ones this fetch touched.
+        new = _Snapshot()
+        new.seen, new.max_seen = dict(old.seen), old.max_seen
+        _read_seen(db, new, old.max_seen)
     except Exception:
         logger.exception("mandi memory incremental load failed; keeping the previous copy")
         return False
     finally:
         db.close()
 
-    new = _Snapshot()
     new.max_fetched, new.max_hist_id = old.max_fetched, old.max_hist_id
 
     # Snapshot: the fetch deletes every row whose identity re-appeared and
@@ -302,6 +353,7 @@ def load_changes() -> bool:
             continue
         new.rows.append(_row_tuple(r)); new.gks.append(_gk(r)); new.fetched.append(f)
     _index(new)
+    _index_seen(new)
 
     # History: insert-only (ON CONFLICT DO NOTHING) plus the retention trim.
     # Untouched districts share the old arrays; a touched or trimmed one is
@@ -427,6 +479,21 @@ def rows_by_commodities(names) -> list[dict] | None:
     return out
 
 
+def last_seen(names, state: str, district: str, limit: int = 500) -> list[tuple] | None:
+    """The mandi_last_seen query in bhav._rows_for_district: commodity exactly
+    one of `names`, state and district equal ignoring case, newest arrival
+    first (NULL dates first, as Postgres sorts DESC), at most `limit`. Each
+    item is (state, district, arrival_dt, row dict). None = not loaded."""
+    s = _current()
+    if s is None:
+        return None
+    names = set(names)
+    hits = [e for e in s.seen_by_sd.get((state.lower(), district.lower()), [])
+            if e[3][3] in names]
+    hits.sort(key=lambda e: (e[2] is not None, -(e[2].toordinal() if e[2] else 0)))
+    return [(e[0], e[1], e[2], _as_dict(e[3])) for e in hits[:limit]]
+
+
 def history(names, state: str, district: str, start: date, end: date) -> list[tuple] | None:
     """(commodity, market, variety, grade, arrival_dt, modal) for one
     district between start and end inclusive — the rows _district_series
@@ -456,5 +523,6 @@ def status() -> dict:
     if s is None:
         return {"loaded": False, "enabled": enabled()}
     return {"loaded": True, "rows": len(s.rows), "history_districts": len(s.hist),
+            "last_seen_rows": len(s.seen),
             "age_sec": round(time.time() - s.loaded_at),
             "last_load": s.last_kind, "last_load_rows": s.last_rows}

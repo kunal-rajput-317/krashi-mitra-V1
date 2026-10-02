@@ -2725,6 +2725,19 @@ async function fetchMe() {
   } catch { return null; }
 }
 
+// The signed-in user's id, read from the JWT's `sub` without a server call.
+// Only used to open the right overlay sooner — every request still sends the
+// token and the server decides. null when there is no readable token.
+function tokenUserId() {
+  try {
+    const part = (getToken() || '').split('.')[1];
+    if (!part) return null;
+    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
+    const sub = JSON.parse(json).sub;
+    return /^\d+$/.test(String(sub)) ? String(sub) : null;
+  } catch { return null; }
+}
+
 function showPrompt(kind) {  // 'login' | 'profile' | 'phone'
   const tr = T();
   const emoji = document.getElementById('prompt-emoji');
@@ -5408,6 +5421,23 @@ async function saveEdit(btn, f) {
     loadFeed(true);
   }
   fetchTickPlans();
+  // deep link ?user=ID (or ?user=me) → open that profile overlay.
+  // Optional &list=followers|following → also open that list on top.
+  // Opened BEFORE /bazar/me answers: profile.html's फॉलोअर/फॉलोइंग/पोस्ट
+  // buttons land here, and waiting on that round trip (seconds on a sleeping
+  // Neon) showed the whole feed first and popped the list in afterwards.
+  // ?user=me reads the id from the token's `sub` — no network needed.
+  const deepParams = new URLSearchParams(location.search);
+  const uparam = deepParams.get('user');
+  let deepOpened = false;
+  function openDeepLink(target) {
+    if (!target || deepOpened) return;
+    deepOpened = true;
+    openProfile(target);
+    const list = deepParams.get('list');
+    if (list === 'followers' || list === 'following') openFollowList(target, list);
+  }
+  if (uparam) openDeepLink(uparam === 'me' ? tokenUserId() : uparam);
   fetchMe().then(me => {
     if (me) {
       const btn = document.getElementById('header-avatar-btn');
@@ -5418,18 +5448,8 @@ async function saveEdit(btn, f) {
         else btn.innerHTML = `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`;
       }
     }
-    // deep link ?user=ID (or ?user=me) → open that profile overlay.
-    // Optional &list=followers|following → also open that list on top.
-    const params = new URLSearchParams(location.search);
-    const uparam = params.get('user');
-    if (uparam) {
-      const target = uparam === 'me' ? (me && me.user_id) : uparam;
-      if (target) {
-        openProfile(target);
-        const list = params.get('list');
-        if (list === 'followers' || list === 'following') openFollowList(target, list);
-      }
-    }
+    // Fallback for a token the page could not read an id from.
+    if (uparam === 'me') openDeepLink(me && me.user_id);
   });
   // deep link ?post=ID → scroll after first load (best effort)
   const pid = new URLSearchParams(location.search).get('post');

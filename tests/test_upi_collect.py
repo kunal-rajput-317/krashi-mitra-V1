@@ -18,12 +18,13 @@ configured"; a fallback would silently route a dealer's money to a stranger.
 """
 
 import importlib
+import os
 
 import pytest
 
 from backend.services import dealers
 
-ADMIN = ("testadmin", "test-admin-pass")
+ADMIN = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 
 
 @pytest.fixture()

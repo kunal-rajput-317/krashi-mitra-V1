@@ -293,17 +293,36 @@ def record_payment(slug: str, payload: dict | None = None,
 
 
 @router.get("/kit-link/{prospect}")
-def kit_link(prospect: str, _: str = Depends(require_admin)):
+def kit_link(prospect: str, states: str = "", crops: str = "",
+             _: str = Depends(require_admin)):
     """The private media-kit link for one prospect — the ONLY place this site's
-    Search Console figures appear. /sponsor itself publishes none of them."""
+    Search Console figures appear. /sponsor itself publishes none of them.
+
+    `states` / `crops` (comma-separated /bhav slugs, e.g. "uttar-pradesh" and
+    "paddy-common") turn it into a proposal: the kit adds a "Your market"
+    section for exactly those pages. The preview comes back with the link so
+    the owner sees the figures, and any slug that matched nothing, before
+    sending."""
     if not sponsors.kit_enabled():
         raise HTTPException(
             400, "KM_SPONSOR_KIT_SECRET is not set, so no kit link can be issued "
                  "and /sponsor/kit/* 404s for everyone. Set it in the Render "
                  "dashboard (and .env locally) to any long random string.")
-    token = sponsors.kit_token(prospect)
+    token = sponsors.kit_token(prospect, states, crops)
     if not token:
         raise HTTPException(400, "give the prospect a name with letters or digits in it")
     from backend.routes.bhav import SITE
+    from backend.services import page_stats
+    scope = sponsors.kit_scope(token)
+    market = None
+    if scope["states"] or scope["crops"]:
+        m = page_stats.for_scope(scope["states"], scope["crops"])
+        if m is not None:
+            market = {k: m[k] for k in ("impressions", "clicks", "pages",
+                                        "unknown_states", "unknown_crops",
+                                        "start", "end")}
+            market["rows"] = m["rows"][:10]
+            market["age_days"] = page_stats.snapshot_age_days()
     return {"success": True, "prospect": prospect,
-            "url": f"{SITE}/sponsor/kit/{token}"}
+            "states": scope["states"], "crops": scope["crops"],
+            "market": market, "url": f"{SITE}/sponsor/kit/{token}"}

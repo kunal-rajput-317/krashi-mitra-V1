@@ -228,10 +228,11 @@ def _photo(p: dict, w: int, h: int, cls: str = "") -> str:
 
 def _badge_pill(p: dict, cls: str = "prod-badge") -> str:
     bc = p.get("badgeClass") or ""
+    # No "बेस्टसेलर" pill: we hold no sales figures, so the claim would be
+    # invented, which is fake social proof (LEGAL_RULES §1). The catalogue's
+    # badge="bestseller" values are ignored on purpose.
     if bc in _BADGE:
         e, label = _BADGE[bc]
-    elif p.get("badge") == "bestseller":
-        e, label = "🔥", "बेस्टसेलर"
     else:
         return ""
     return f'<span class="{cls}">{e} {label}</span>'

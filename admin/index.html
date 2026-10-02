@@ -4329,9 +4329,11 @@ button.vf-money-tile:hover { border-color: var(--primary); }
 
         <div class="card" style="padding:16px">
           <h3 style="margin:0 0 8px; font-size:15px">गोपनीय मीडिया-किट लिंक बनाएँ (Prospect Media Kit)</h3>
-          <p class="sp-hint">ब्रांड या एजेंसी के प्रतिनिधि का नाम लिखकर सुरक्षित समयबद्ध लिंक बनाएँ:</p>
+          <p class="sp-hint">ब्रांड या एजेंसी का नाम लिखिए। राज्य/फ़सल भी लिखेंगे तो लिंक proposal बन जाता है — किट में उनके बाज़ार के /bhav आँकड़े अलग से दिखेंगे। (/bhav URL वाली spelling, comma से अलग)</p>
           <div class="sp-kit">
             <input id="sp-prospect" placeholder="उदा. mahindra-marketing">
+            <input id="sp-kit-states" placeholder="राज्य: uttar-pradesh, bihar (खाली = सब)">
+            <input id="sp-kit-crops" placeholder="फ़सल: wheat, paddy-common (खाली = सब)">
             <button class="sp-btn primary" onclick="spKitLink()">लिंक बनाएँ</button>
           </div>
           <div id="sp-kitout" style="margin-top:10px"></div>
@@ -5648,6 +5650,7 @@ button.vf-money-tile:hover { border-color: var(--primary); }
           border:1px solid var(--border); background:var(--surface); color:var(--text);
         }
         .pc-bar input { min-width:200px; }
+        .pc-link-bar input { flex:1; }
         .pc-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:10px; margin-bottom:14px; }
         .pc-stat { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:11px 13px; }
         .pc-stat b { display:block; font-size:22px; font-family:var(--font-mono); line-height:1; }
@@ -5776,6 +5779,15 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         </div>
 
         <div class="pc-stats" id="pc-stats"></div>
+
+        <!-- Paste an Amazon link → the add form opens filled in. Reads the link
+             text only; it never opens amazon.in (LEGAL_RULES §1). -->
+        <div class="pc-bar pc-link-bar">
+          <input type="url" id="pc-link" placeholder="🔗 Amazon link paste करें — फ़ॉर्म अपने आप भर जाएगा"
+                 onpaste="setTimeout(fromAmazonLink, 0)" onkeydown="if(event.key==='Enter')fromAmazonLink()">
+          <button class="btn btn-primary" onclick="fromAmazonLink()">भरें</button>
+        </div>
+        <div class="pc-hint" id="pc-link-msg" style="margin:-6px 0 12px;"></div>
 
         <div class="pc-bar">
           <input type="search" id="pc-q" placeholder="Search name or slug…" oninput="renderCatalogue()">
@@ -6474,7 +6486,7 @@ button.vf-money-tile:hover { border-color: var(--primary); }
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
                   <span class="status-pill info" id="nf-prev-cat">🌾 कृषि न्यूज़</span>
                   <span class="status-pill" id="nf-prev-lang" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">🇮🇳 हिंदी</span>
-                  <span class="nf-badge-seed" id="nf-prev-likes">❤️ 420 लाइक्स सीड</span>
+                  
                 </div>
                 <h4 style="font-size:15px; font-weight:700; color:var(--text);" id="nf-prev-title">शीर्षक</h4>
                 <p style="font-size:13px; color:var(--text-dim); margin-top:4px;" id="nf-prev-excerpt">सारांश</p>
@@ -7330,7 +7342,7 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         <input type="text" id="nf-edit-title" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:13.5px; font-weight:600;">
       </div>
 
-      <!-- Category & Seed Likes Grid -->
+      <!-- Category -->
       <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:12px; margin-bottom:14px;">
         <div>
           <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">श्रेणी (Category) *:</label>
@@ -7343,10 +7355,6 @@ button.vf-money-tile:hover { border-color: var(--primary); }
             <option value="pashu">🐄 पशुपालन व डेयरी</option>
             <option value="tech">🚜 आधुनिक तकनीक</option>
           </select>
-        </div>
-        <div>
-          <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:5px;">सीड लाइक्स (Seed Likes):</label>
-          <input type="number" id="nf-edit-likes" min="0" style="width:100%; box-sizing:border-box; padding:9px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:12.5px;">
         </div>
       </div>
 
@@ -10398,6 +10406,59 @@ function newProduct() {
   document.getElementById('pc-modal').hidden = false;
 }
 
+// Paste an Amazon link → the new-product form opens with the clean tagged
+// link, the English name (and so the URL) and a category guess filled in. The
+// server reads only the link text — no Amazon page is fetched, so there is no
+// price or photo to copy, and the owner still types the Hindi name and the
+// local shop's price. Nothing is saved until Save, exactly as before.
+async function fromAmazonLink() {
+  const box = document.getElementById('pc-link');
+  const msg = document.getElementById('pc-link-msg');
+  const url = (box.value || '').trim();
+  if (!url) return;
+  msg.style.color = 'var(--muted)'; msg.textContent = 'पढ़ रहे हैं…';
+  try {
+    const r = await fetch(`${API}/admin/catalogue/from-link`, {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+    if (!d.success) { msg.style.color = 'var(--danger)'; msg.textContent = d.problem; return; }
+    if (d.duplicate) {
+      msg.style.color = 'var(--danger)';
+      msg.innerHTML = `यह प्रोडक्ट पहले से है: <b>${escapeHtml(d.duplicate.name_hi || d.duplicate.slug)}</b> ` +
+        `<a href="#" onclick="openProduct('${escapeHtml(d.duplicate.slug)}');return false;">खोलें →</a>`;
+      return;
+    }
+    // The category list rides along so the picker is never empty, even when
+    // the catalogue list behind the form has not loaded.
+    const catSel = document.getElementById('pc-f-cat');
+    if (!catSel.options.length && d.cats) {
+      catSel.innerHTML = Object.entries(d.cats)
+        .map(([k, v]) => `<option value="${escapeHtml(k)}">${escapeHtml(v)}</option>`).join('');
+    }
+    newProduct();
+    pcSet('pc-az', d.affil_amazon);
+    pcSet('pc-name-en', d.name_en);
+    const g = d.guess || {};
+    catSel.value = (g.cat && catSel.querySelector(`option[value="${g.cat}"]`)) ? g.cat : 'misc';
+    if (g.emoji) { pcSet('pc-emoji', g.emoji); document.getElementById('pc-photo-prev').textContent = g.emoji; }
+    pcPreviewSlug();
+    const notes = [`ASIN ${escapeHtml(d.asin)} — link cleaned, your tag added.`];
+    if (d.note) notes.push(escapeHtml(d.note));
+    if (g.like) notes.push(`Category guessed from <code>${escapeHtml(g.like)}</code> — check it.`);
+    if (d.slug_taken) notes.push('<b style="color:var(--danger)">A product with this URL already exists — change the English name, or saving overrides it.</b>');
+    notes.push('अब भरें: <b>Hindi name</b> और <b>दुकान का अनुमानित price</b> (Amazon का price नहीं), फिर Preview या Save.');
+    document.getElementById('pc-sub').innerHTML = notes.join('<br>');
+    box.value = ''; msg.textContent = '';
+    document.getElementById('pc-name-hi').focus();
+  } catch (e) {
+    msg.style.color = 'var(--danger)'; msg.textContent = e.message;
+  }
+}
+
 async function openProduct(slug) {
   try {
     const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(slug)}`, { headers: getAuthHeader() });
@@ -13136,13 +13197,32 @@ async function spKitLink() {
   const out = document.getElementById('sp-kitout');
   if (!who) { alert('prospect का नाम लिखिए — वही लिंक के अंदर signed होता है।'); return; }
   try {
-    const r = await fetch(API + '/admin/sponsor/kit-link/' + encodeURIComponent(who),
+    const qs = new URLSearchParams({ states: spVal('sp-kit-states'), crops: spVal('sp-kit-crops') });
+    const r = await fetch(API + '/admin/sponsor/kit-link/' + encodeURIComponent(who) + '?' + qs,
                           { headers: getAuthHeader() });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || 'failed');
+    let mk = '';
+    const m = d.market;
+    if (d.states.length || d.crops.length) {
+      if (!m) {
+        mk = '<p class="sp-hint" style="color:#e5484d">page_stats snapshot नहीं है — किट में "Your market" हिस्सा नहीं दिखेगा।</p>';
+      } else {
+        const bad = m.unknown_states.concat(m.unknown_crops);
+        mk = (bad.length ? '<p class="sp-hint" style="color:#e5484d">इनका कोई पेज नहीं मिला (spelling?): <b>' +
+                escapeHtml(bad.join(', ')) + '</b></p>' : '') +
+             (m.age_days > 21 ? '<p class="sp-hint" style="color:#e5484d">आँकड़े ' + m.age_days +
+                ' दिन पुराने हैं — किट में बाज़ार वाला हिस्सा छिपा रहेगा।</p>' : '') +
+             '<p class="sp-hint">इस बाज़ार में ' + m.start + ' – ' + m.end + ': <b>' +
+             Number(m.impressions).toLocaleString('en-IN') + '</b> impressions · <b>' +
+             Number(m.clicks).toLocaleString('en-IN') + '</b> visits · ' + m.pages + ' पेज<br>' +
+             m.rows.filter(x => x.impressions > 0).map(x => escapeHtml(x.crop + ' · ' + x.state) + ': ' +
+               Number(x.impressions).toLocaleString('en-IN')).join('<br>') + '</p>';
+      }
+    }
     out.innerHTML =
       '<input class="sp-btn" style="width:100%; font-family:var(--font-mono); font-size:12px" ' +
-      'readonly value="' + escapeHtml(d.url) + '" onclick="this.select()">' +
+      'readonly value="' + escapeHtml(d.url) + '" onclick="this.select()">' + mk +
       '<p class="sp-hint">सिर्फ़ <b>' + escapeHtml(who) + '</b> को भेजिए। secret बदलते ही सारे पुराने लिंक रद्द।</p>';
   } catch (e) {
     out.innerHTML = '<p class="sp-hint" style="color:#e5484d">' + escapeHtml(String(e.message || e)) + '</p>';
@@ -17273,7 +17353,6 @@ function renderStagedPosts(posts) {
           <div class="nf-post-header">
             <div style="display:flex; align-items:center; gap:8px;">
               <span class="status-pill info">${escapeHtml(p.catLabel || '🌾 कृषि')}</span>
-              <span class="nf-badge-seed">❤️ ${p.seed_likes || 350} लाइक्स सीड</span>
               <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono);">💬 0 कमेंट्स (आरंभिक)</span>
             </div>
             <span style="font-size:11.5px; color:var(--muted);">${p.time || 'ताज़ा'}</span>
@@ -17320,7 +17399,6 @@ function renderPublishedFeed(posts) {
             <th>तस्वीर</th>
             <th>शीर्षक</th>
             <th>श्रेणी</th>
-            <th>लाइक्स (सीड)</th>
             <th>प्रकाशन विधि</th>
             <th>तारीख़</th>
             <th>कार्य (Actions)</th>
@@ -17337,7 +17415,6 @@ function renderPublishedFeed(posts) {
               </td>
               <td><b>${escapeHtml(p.title)}</b></td>
               <td><span class="status-pill info">${escapeHtml(p.catLabel || p.category)}</span></td>
-              <td><span class="nf-badge-seed">❤️ ${p.seed_likes || 350}</span></td>
               <td><span class="status-pill online">${p.published_by === 'auto_pilot_day5_fallback' ? '⚡ Day 5 Auto' : '✅ Admin Push'}</span></td>
               <td class="text-mono" style="font-size:11px;">${p.published_at ? new Date(p.published_at).toLocaleDateString('hi-IN') : 'आज'}</td>
               <td>
@@ -17384,7 +17461,6 @@ function openPushConfirmModal(opts) {
         <div style="flex:1; min-width:0;">
           <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
             <span class="status-pill info">${escapeHtml(post.catLabel || '🌾 कृषि')}</span>
-            <span class="nf-badge-seed">❤️ ${post.seed_likes || 350} लाइक्स</span>
           </div>
           <h4 style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3; margin:0 0 4px;">${escapeHtml(post.title || '')}</h4>
           <p style="font-size:12px; color:var(--text-dim); margin:0 0 6px; line-height:1.4;">${escapeHtml(post.excerpt || '')}</p>
@@ -17670,7 +17746,6 @@ async function curateFromExternalUrl() {
     document.getElementById('nf-prev-title').textContent = d.article.title || '';
     document.getElementById('nf-prev-excerpt').textContent = d.article.excerpt || '';
     document.getElementById('nf-prev-cat').textContent = d.article.catLabel || '🌾 कृषि';
-    document.getElementById('nf-prev-likes').textContent = `❤️ ${d.article.seed_likes || 360} लाइक्स सीड`;
     
     const langBadge = document.getElementById('nf-prev-lang');
     if (langBadge) {
@@ -17979,7 +18054,6 @@ function openEditPostModal(id, source = 'staged') {
   const modal = document.getElementById('nf-edit-post-modal');
   const titleInput = document.getElementById('nf-edit-title');
   const catSelect = document.getElementById('nf-edit-category');
-  const likesInput = document.getElementById('nf-edit-likes');
   const excerptInput = document.getElementById('nf-edit-excerpt');
   const storyInput = document.getElementById('nf-edit-story');
   const b0 = document.getElementById('nf-edit-bullet-0');
@@ -17997,7 +18071,6 @@ function openEditPostModal(id, source = 'staged') {
 
   if (titleInput) titleInput.value = post.title || '';
   if (catSelect) catSelect.value = post.category || 'mandi';
-  if (likesInput) likesInput.value = post.seed_likes !== undefined ? post.seed_likes : 350;
   if (excerptInput) excerptInput.value = post.excerpt || '';
   if (storyInput) storyInput.value = post.full_story || post.content || '';
 
@@ -18030,7 +18103,6 @@ async function submitPostEditModal() {
 
   const title = (document.getElementById('nf-edit-title')?.value || '').trim();
   const category = document.getElementById('nf-edit-category')?.value || 'mandi';
-  const likes = parseInt(document.getElementById('nf-edit-likes')?.value, 10) || 350;
   const excerpt = (document.getElementById('nf-edit-excerpt')?.value || '').trim();
   const full_story = (document.getElementById('nf-edit-story')?.value || '').trim();
   const b0 = (document.getElementById('nf-edit-bullet-0')?.value || '').trim();
@@ -18052,7 +18124,6 @@ async function submitPostEditModal() {
   const updates = {
     title,
     category,
-    seed_likes: likes,
     excerpt,
     full_story,
     bullets,

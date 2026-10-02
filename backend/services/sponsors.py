@@ -33,6 +33,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import time
 from datetime import date
 from html import escape
@@ -355,19 +356,48 @@ def kit_enabled() -> bool:
     return bool(_secret())
 
 
-def kit_token(slug: str) -> str:
+# A proposal link also carries the prospect's states and crops, so the kit can
+# show what /bhav did for exactly their market. The scope is INSIDE the signed
+# body — "acme~uttar-pradesh+bihar~wheat+paddy-common" — so a brand cannot
+# widen its own link to read another market's figures. Slugs keep their
+# hyphens (they are /bhav URL spellings, which page_stats keys on), which is
+# why they are not passed through _norm.
+_SCOPE_SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{0,60}$")
+
+
+def _scope_list(v) -> list[str]:
+    if isinstance(v, str):
+        v = v.split(",")
+    out = []
+    for x in v or []:
+        x = str(x).strip().lower().replace(" ", "-")
+        if _SCOPE_SLUG.match(x) and x not in out:
+            out.append(x)
+    return out
+
+
+def _sig(body: str) -> str:
+    return hmac.new(_secret().encode(), body.encode(), hashlib.sha256).hexdigest()[:_SIG_LEN]
+
+
+def kit_token(slug: str, states=(), crops=()) -> str:
     """The token for one prospect. `slug` is our own label for them — a company
     name, lowercased — and it travels in the clear so an incoming request tells
-    us who we gave it to."""
-    slug = _norm(slug).replace(" ", "-")
+    us who we gave it to. `states`/`crops` (optional) scope the kit to their
+    market; without them the token is byte-identical to the older site-wide
+    links, so every link already sent keeps working."""
+    slug = _norm(slug).replace(" ", "-").replace("~", "").replace(".", "")
     if not slug or not kit_enabled():
         return ""
-    sig = hmac.new(_secret().encode(), slug.encode(), hashlib.sha256).hexdigest()
-    return f"{slug}.{sig[:_SIG_LEN]}"
+    body = slug
+    st, cr = _scope_list(states), _scope_list(crops)
+    if st or cr:
+        body += f"~{'+'.join(st)}~{'+'.join(cr)}"
+    return f"{body}.{_sig(body)}"
 
 
-def kit_verify(token: str) -> str | None:
-    """The prospect slug if this token is one we issued, else None.
+def _kit_body(token: str) -> str | None:
+    """The signed body of a token we issued, else None.
 
     compare_digest, not ==, because a plain comparison leaks how much of a
     guessed signature was right through its timing, which is the whole attack
@@ -375,11 +405,28 @@ def kit_verify(token: str) -> str | None:
     """
     if not kit_enabled() or not token or "." not in token:
         return None
-    slug, _, sig = token.rpartition(".")
-    expect = kit_token(slug)
-    if not expect:
+    body, _, sig = token.rpartition(".")
+    if not body:
         return None
-    return slug if hmac.compare_digest(expect, f"{slug}.{sig}") else None
+    return body if hmac.compare_digest(_sig(body), sig) else None
+
+
+def kit_verify(token: str) -> str | None:
+    """The prospect slug if this token is one we issued, else None."""
+    body = _kit_body(token)
+    return body.split("~", 1)[0] if body else None
+
+
+def kit_scope(token: str) -> dict | None:
+    """{who, states, crops} for a token we issued, else None. Empty lists mean
+    a site-wide kit with no market section."""
+    body = _kit_body(token)
+    if not body:
+        return None
+    who, _, rest = body.partition("~")
+    st, _, cr = rest.partition("~")
+    return {"who": who, "states": _scope_list(st.split("+")),
+            "crops": _scope_list(cr.split("+"))}
 
 
 MIN_DAYS = 60
@@ -569,7 +616,7 @@ NEVER_FOR_SALE = [
     "delay or hide one.",
     "Ranking and search results. Not on /bhav, not on /khoj, not in the "
     "shop directory — ordering is by distance and relevance, never by who paid.",
-    "Advice in an article. If a guide recommends a dose or a variety, that is "
+    "Advice in an article. If a guide recommends a variety or a practice, that is "
     "what we believe, and a sponsor cannot edit it.",
     "A dofollow link. Every sponsor link is rel=\"nofollow sponsored\", which "
     "is what Google requires and what protects both of us.",

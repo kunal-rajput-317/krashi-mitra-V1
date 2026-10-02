@@ -23,6 +23,7 @@ is a licence condition of every CC BY image on the site.
 """
 
 import json
+import os
 import re
 import shutil
 
@@ -348,7 +349,7 @@ class TestRoutes:
 
 # ── the panel's own API ────────────────────────────────────────────────────
 
-AUTH = ("testadmin", "test-admin-pass")
+AUTH = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 
 
 class TestAdminApi:

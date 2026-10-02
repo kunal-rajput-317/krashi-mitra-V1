@@ -3,6 +3,7 @@
 # कृषि मित्र — the गन्ना cluster, server-rendered like /bhav and /naksha
 #
 #   GET /ganna                    hub — केंद्र का FRP + हर गन्ना राज्य का रेट
+#   GET /ganna/bhugtan            the 14-day payment rule, interest, how to check
 #   GET /ganna/{state}            one state's cane price (SAP, or FRP + recovery)
 #   GET /ganna/{state}/{district} that district's sugar mills, by capacity
 #   GET /ganna/sitemap.xml        the cluster's own sitemap
@@ -82,7 +83,13 @@ _cache: dict = {"mtime": None, "data": None}
 # to confirm at a mandi is being sent to a market that never trades his crop.
 _FOOTER_NOTE = ("गन्ने का दाम मंडी में नहीं, सरकार के आदेश से तय होता है — केंद्र का FRP "
                 "या राज्य का SAP, हर पेराई सीजन में एक बार। ताज़ा रेट और भुगतान की स्थिति "
-                "अपनी चीनी मिल या जिला गन्ना अधिकारी से पुष्ट कर लें।")
+                "अपनी चीनी मिल या जिला गन्ना अधिकारी से पुष्ट कर लें। कृषि मित्र एक निजी "
+                "वेबसाइट है — किसी सरकारी विभाग या चीनी मिल की वेबसाइट नहीं।")
+
+# LEGAL_RULES §1: never look like the government. These pages print the
+# government's own rates and cite the Sugarcane (Control) Order, which is exactly
+# when a farmer could mistake us for the cane department — so every /ganna page
+# says so in its footer, and the payment page says it again at the top.
 
 # The shell's .header-wrapper is position:fixed and NOTHING in _CSS offsets the
 # content under it. /bhav gets away with that because its 200px hero absorbs the
@@ -186,6 +193,32 @@ a.chip{text-decoration:none}
 
 /* Two columns of bars/FAQ would be nicer than one very long column once there
    is room for it — mobile is the real layout, desktop is the variant. */
+/* ── payment calculator ── */
+.gn-calc-row{display:flex;gap:8px;margin:0 0 10px}
+.gn-calc-row label{flex:1;display:flex;flex-direction:column;gap:5px;
+  font-size:11.5px;font-weight:700;color:var(--text-soft)}
+.gn-calc input,.gn-calc select,.gn-int input,.gn-bell select{font:inherit;font-size:16px;padding:10px 11px;
+  border:1px solid var(--border);border-radius:9px;background:#fff;color:var(--text-dark);
+  width:100%;box-sizing:border-box;min-height:44px}
+.gn-calc-out{background:var(--green-pale);border-radius:10px;padding:12px 14px;margin-top:4px}
+.gn-calc-out b{display:block;font-family:var(--font-serif);font-size:24px;font-weight:800;
+  color:var(--green-dark);letter-spacing:-.5px}
+.gn-calc-out span{display:block;font-size:11.5px;color:var(--text-mid);line-height:1.5;margin-top:3px}
+
+/* ── SAP announcement alert ── */
+.gn-bell{display:flex;flex-direction:column;gap:10px}
+.gn-bell button{font:inherit;font-size:15px;font-weight:800;min-height:46px;border:0;
+  border-radius:10px;background:var(--green-dark);color:#fff;cursor:pointer;padding:0 16px}
+.gn-bell button.on{background:var(--green-pale);color:var(--green-dark);
+  border:1px solid var(--green-mid)}
+.gn-bell button[disabled]{opacity:.6}
+.gn-bell small{font-size:11.5px;color:var(--text-soft);line-height:1.5}
+
+/* ── payment page ── */
+.gn-steps{margin:0;padding:0 0 0 20px;font-size:13.5px;color:var(--text-mid);line-height:1.7}
+.gn-steps li{margin:0 0 8px}
+.gn-steps b{color:var(--text-dark)}
+
 @media(min-width:721px){
   .gn-stats{max-width:640px}
   .gn-panel{max-width:720px}
@@ -252,6 +285,167 @@ def _eff_frp(recovery: float, frp: dict) -> int:
 def _rs(n) -> str:
     """₹390 — no decimal tail on a whole rupee, which is how a rate is spoken."""
     return f"₹{n:,.0f}" if float(n) == int(float(n)) else f"₹{n:,.2f}"
+
+
+def current_season(today: date | None = None) -> tuple[str, dict]:
+    """The season these pages quote, and its FRP block.
+
+    Between seasons that is the one whose FRP is already out but whose crushing
+    has not begun — what a farmer is searching for in September. Shared with
+    services/ganna_alerts.py, so "has this state announced yet?" means the same
+    thing to the page that shows the bell and to the job that rings it."""
+    data = _load()
+    season = _season_for(today or date.today())
+    nxt = data.get("next_season", "")
+    frp_next = data.get("frp", {}).get(nxt, {})
+    return (nxt, frp_next) if frp_next else (season, _frp(season))
+
+
+def sap_awaited(st: dict, season: str) -> bool:
+    """A state that declares a SAP but has not declared it for `season` yet —
+    the only states where "tell me when it is announced" is a real promise."""
+    return st.get("kind") == "sap" and (not st.get("rates") or st.get("season") != season)
+
+
+def _calc_html(title: str, sub: str, *, options: list[tuple[str, float]] | None = None,
+               frp: dict | None = None, recovery: float | None = None) -> str:
+    """A quintals × rate calculator — the question under every "ganne ka rate"
+    search is "so how much will I get?", and the page can answer it.
+
+    Two modes. `options` lists the state's own declared rates (अगेती/सामान्य).
+    Otherwise it is the FRP formula, with the recovery as an input — the same
+    arithmetic as _eff_frp(), mirrored in the script below so the number a
+    farmer types in and the number the page prints can never disagree.
+
+    The result is labelled अनुमानित every time (LEGAL_RULES §3): the real
+    payment depends on the mill's weighment, its recovery and deductions such as
+    harvesting-transport, none of which we can know. It never promises a date."""
+    if options:
+        # "अगेती — ₹400", not "अगेती प्रजाति — ₹400": the long form is cut off
+        # in a half-width select at 390px, and it is the number that got cut.
+        sel = "".join(f'<option value="{r:g}">{escape(k.replace(" प्रजाति", ""))} — {_rs(r)}</option>'
+                      for k, r in options)
+        pick = (f'<label>किस्म / रेट<select data-k="rate">{sel}</select></label>')
+        attrs = 'data-mode="rate"'
+    else:
+        f = frp or {}
+        rec = recovery if recovery else f.get("recovery", 10.25)
+        pick = (f'<label>मिल की रिकवरी (%)<input data-k="rec" type="number" inputmode="decimal" '
+                f'step="0.01" min="5" max="15" value="{rec:g}"></label>')
+        attrs = (f'data-mode="frp" data-base="{f.get("rate", 0):g}" '
+                 f'data-baserec="{f.get("recovery", 10.25):g}" data-step="{f.get("step", 3.56):g}" '
+                 f'data-floorrec="{f.get("floor_recovery", 9.5):g}" '
+                 f'data-floor="{f.get("floor_rate", f.get("rate", 0)):g}"')
+    return f"""
+<div class="gn-panel gn-calc" {attrs}>
+<h2 class="gn-panel-h">{escape(title)}</h2>
+<p class="gn-panel-s">{escape(sub)}</p>
+<div class="gn-calc-row">
+{pick}
+<label>गन्ना (क्विंटल)<input data-k="qtl" type="number" inputmode="decimal" min="0" step="1" value="100"></label>
+</div>
+<div class="gn-calc-out" aria-live="polite"><b data-k="total">—</b>
+<span data-k="line"></span>
+<span>अनुमानित — असल भुगतान मिल की तौल, रिकवरी और कटाई-ढुलाई जैसी कटौतियों पर तय होता है।
+अपनी भुगतान पर्ची से मिलान कर लें।</span></div>
+</div>"""
+
+
+_CALC_JS = """<script>
+(function(){
+function inr(n){return '₹'+Math.round(n).toLocaleString('en-IN');}
+document.querySelectorAll('.gn-calc').forEach(function(c){
+ function q(k){return c.querySelector('[data-k="'+k+'"]');}
+ function num(el){var v=parseFloat(el&&el.value);return isFinite(v)?v:0;}
+ function run(){
+  var rate,qtl=num(q('qtl'));
+  if(c.dataset.mode==='rate'){rate=num(q('rate'));}
+  else{var r=num(q('rec')),d=c.dataset;
+   /* the same rule as _eff_frp() in routes/ganna.py */
+   rate=r<+d.floorrec?+d.floor:(+d.base)+((r-(+d.baserec))/0.1)*(+d.step);
+   rate=Math.round(rate);}
+  if(!qtl||!rate){q('total').textContent='—';q('line').textContent='';return;}
+  q('total').textContent=inr(qtl*rate);
+  q('line').textContent=qtl.toLocaleString('en-IN')+' क्विंटल × '+inr(rate)+' प्रति क्विंटल';
+ }
+ c.addEventListener('input',run);c.addEventListener('change',run);run();
+});
+})();
+</script>"""
+
+
+def _bell_html(states: list[dict], season: str) -> str:
+    """"SAP घोषित होते ही बताएं" — one opt-in push, rung by
+    services/ganna_alerts.py when the state's new rate lands in ganna_sap.json.
+
+    It rides the 🔔 mandi alert rail (routes/alerts.py) with a reserved
+    commodity key, so it inherits the same consent flow, the same one-tap
+    🔕 stop button on the notification (LEGAL_RULES §7) and the same
+    account-deletion cascade — no new table and no new kind of personal data.
+
+    Only offered for states that are genuinely still waiting; once the rate is
+    out the bell would be a promise of news that has already happened."""
+    if not states:
+        return ""
+    from backend.services.ganna_alerts import COMMODITY
+    if len(states) == 1:
+        pick = (f'<input type="hidden" data-k="st" value="{escape(states[0]["slug"])}">')
+        who = states[0]["hi"]
+    else:
+        opts = "".join(f'<option value="{escape(s["slug"])}">{escape(s["hi"])}</option>'
+                       for s in states)
+        pick = f'<select data-k="st" aria-label="राज्य चुनें">{opts}</select>'
+        who = "आपके राज्य"
+    return f"""
+<div class="gn-panel gn-bell" data-c="{escape(COMMODITY)}">
+<h2 class="gn-panel-h">🔔 {escape(who)} का {escape(season)} SAP घोषित होते ही सूचना</h2>
+<p class="gn-panel-s">नया रेट सरकार की घोषणा के बाद इस पेज पर आते ही आपके फ़ोन पर एक सूचना।
+कोई लॉगिन नहीं, कोई फ़ोन नंबर नहीं — सूचना में ही 🔕 बंद करने का बटन रहेगा।</p>
+{pick}
+<button type="button" data-k="btn">सूचना चालू करें</button>
+<small data-k="msg"></small>
+</div>
+<script>
+(function(){{
+var box=document.currentScript.previousElementSibling;
+if(!box||!box.classList.contains('gn-bell'))return;
+var C=box.dataset.c,sel=box.querySelector('[data-k="st"]'),btn=box.querySelector('[data-k="btn"]'),
+ msg=box.querySelector('[data-k="msg"]'),KEY='',busy=false;
+var OK=('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+function tok(){{try{{var t=localStorage.getItem('krishi_token');return(t&&t!=='null'&&t!=='undefined')?t:null;}}catch(e){{return null;}}}}
+function hdr(j){{var h=j?{{'Content-Type':'application/json'}}:{{}},t=tok();if(t)h['Authorization']='Bearer '+t;return h;}}
+function b64(s){{var p='='.repeat((4-s.length%4)%4),x=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')),
+ a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}}
+function paint(on){{btn.classList.toggle('on',!!on);btn.textContent=on?'✓ सूचना चालू है — बंद करें':'सूचना चालू करें';}}
+function sub(){{return navigator.serviceWorker.getRegistration().then(function(r){{return r&&r.pushManager?r.pushManager.getSubscription():null;}});}}
+function qs(ep){{return '?endpoint='+encodeURIComponent(ep||'')+'&commodity='+encodeURIComponent(C)+'&state='+encodeURIComponent(sel.value);}}
+function hydrate(){{if(!OK)return;sub().then(function(s){{if(!s&&!tok()){{paint(false);return;}}
+ return fetch('/alerts/mandi/status'+qs(s&&s.endpoint),{{headers:hdr(false)}}).then(function(r){{return r.json();}})
+ .then(function(d){{paint(d&&d.data&&d.data.subscribed);}});}}).catch(function(){{}});}}
+function key(){{if(KEY)return Promise.resolve(KEY);return fetch('/alerts/vapid-key').then(function(r){{return r.json();}})
+ .then(function(j){{KEY=(j&&j.data&&j.data.enabled)?j.data.key:'';return KEY;}});}}
+function on(){{return key().then(function(k){{if(!k)throw new Error('सूचना सेवा अभी उपलब्ध नहीं — थोड़ी देर बाद कोशिश करें।');
+ return Notification.requestPermission();}}).then(function(p){{
+ if(p!=='granted')throw new Error('सूचना की अनुमति नहीं मिली — ब्राउज़र सेटिंग में चालू करें।');
+ return navigator.serviceWorker.register('/sw.js');}}).then(function(){{return navigator.serviceWorker.ready;}})
+ .then(function(reg){{return reg.pushManager.getSubscription().then(function(s){{
+  return s||reg.pushManager.subscribe({{userVisibleOnly:true,applicationServerKey:b64(KEY)}});}});}})
+ .then(function(s){{var j=s.toJSON();return fetch('/alerts/mandi',{{method:'POST',headers:hdr(true),
+  body:JSON.stringify({{subscription:{{endpoint:j.endpoint,keys:j.keys}},commodity:C,state:sel.value,user_agent:navigator.userAgent}})}});}})
+ .then(function(r){{if(!r.ok)throw new Error('सूचना चालू नहीं हो सकी।');paint(true);
+  msg.textContent='चालू हो गई। घोषणा होते ही सूचना आएगी।';}});}}
+function off(){{return sub().then(function(s){{return fetch('/alerts/mandi/off',{{method:'POST',headers:hdr(true),
+ body:JSON.stringify({{endpoint:(s&&s.endpoint)||'',commodity:C,state:sel.value}})}});}})
+ .then(function(){{paint(false);msg.textContent='सूचना बंद कर दी गई।';}});}}
+btn.onclick=function(){{if(busy)return;
+ if(!OK){{msg.textContent='इस ब्राउज़र में सूचना की सुविधा नहीं है — Chrome में यह पेज खोलें।';return;}}
+ busy=true;btn.disabled=true;msg.textContent='';
+ (btn.classList.contains('on')?off():on()).catch(function(e){{msg.textContent=e.message||'सूचना चालू नहीं हो सकी।';}})
+ .then(function(){{busy=false;btn.disabled=false;}});}};
+if(sel.tagName==='SELECT')sel.addEventListener('change',function(){{paint(false);msg.textContent='';hydrate();}});
+hydrate();
+}})();
+</script>"""
 
 
 def _headline(st: dict, frp: dict) -> str:
@@ -353,6 +547,25 @@ def _mill_rows(state_slug: str, ms: list[dict]) -> str:
     return f'<div class="gn-bars">{"".join(out)}</div>'
 
 
+# The cluster's onward links. The payment page first: it answers the question
+# that follows every rate lookup ("और पैसा कब तक आएगा?"). The articles are
+# the ones that already rank for the सट्टा/पर्ची and disease queries this hub's
+# visitors also search — linked by their clean URLs, which are the canonical ones.
+_MORE = (
+    ("/ganna/bhugtan", "💰 भुगतान कितने दिन में — 14 दिन का नियम"),
+    ("/articles/ganna-satta-parchi-up", "📋 सट्टा, घोषणा पत्र और पर्ची कैलेंडर (UP)"),
+    ("/articles/sharadkalin-ganna-buvai", "🌱 शरदकालीन गन्ना बुवाई"),
+    ("/articles/ganna-rog", "🔬 लाल सड़न और दूसरे रोग"),
+)
+
+
+def _more_links(skip: str = "") -> str:
+    chips = "".join(f'<a class="chip" href="{SITE}{u}">{escape(t)}</a>'
+                    for u, t in _MORE if u != skip)
+    return (f'<h2 class="shop-section-title">गन्ना किसान के काम की जानकारी</h2>'
+            f'<div class="chips">{chips}</div>')
+
+
 def _district_links(state_slug: str) -> str:
     by_d = mills.by_district(state_slug)
     if not by_d:
@@ -370,7 +583,10 @@ def _district_links(state_slug: str) -> str:
 @router.get("/ganna/sitemap.xml")
 def ganna_sitemap():
     frp = _frp(_season_for(date.today()))
-    rows = [(f"{SITE}/ganna", frp.get("announced", ""))]
+    rows = [(f"{SITE}/ganna", frp.get("announced", "")),
+            # The payment rule is a 1966 order, not a dated report: no lastmod
+            # rather than an invented one.
+            (f"{SITE}/ganna/bhugtan", "")]
     for st in _states():
         # Only indexable states are submitted. A noindex page in the sitemap
         # just spends crawl budget on a URL we have already told Google to
@@ -411,16 +627,10 @@ def ganna_sitemap():
 @router.get("/ganna", response_class=HTMLResponse)
 @router.get("/ganna/", response_class=HTMLResponse)
 def ganna_hub():
-    data = _load()
-    today = date.today()
-    season = _season_for(today)
-    nxt = data.get("next_season", "")
-    frp_now, frp_next = _frp(season), data.get("frp", {}).get(nxt, {})
     # Between seasons the interesting number is the one already announced for
     # the season that has not opened yet — that is what a farmer is searching
     # in August. Fall back to the running season's FRP before it is declared.
-    show = frp_next or frp_now
-    show_season = nxt if frp_next else season
+    show_season, show = current_season()
 
     # Three groups, not two. Lumping "declares a SAP, we have no figure" in
     # with "has no SAP at all" put बिहार and तमिलनाडु under a heading that said
@@ -454,21 +664,40 @@ def ganna_hub():
     ])
 
     # ── CTR-optimised title/meta (§2.6) ──
+    # The hub ranks 4-8 for "ganne ka rate 2026", "ganna ka ret 2026", "up me
+    # ganne ka rate 2026 27" — romanised Hindi, the majority of its impressions
+    # — and a Devanagari-only title took ~0 clicks from them (GSC, 28 days to
+    # 21 Sep). A title in the searcher's own script converts ~2.7x better at
+    # the same position, so the Latin phrase leads and the Hindi follows.
+    # No "| कृषि मित्र" suffix: Google prints the site name beside the title
+    # anyway (tests/test_serp_budgets.py). And no SAP figure in the title: the
+    # SAP on file belongs to the season BEFORE show_season until the state
+    # announces, and "2026-27 … UP ₹400" would be a false claim about money.
+    frp_rs = _rs(show.get("rate", 0))
     title = _fit(
-        # No "| कृषि मित्र" suffix: Google prints the site name beside the
-        # title anyway (tests/test_serp_budgets.py). The Latin tail is for the
-        # romanised "ganna rate" / "sugarcane price" queries.
-        f"गन्ना भाव {show_season}, सट्टा व पर्ची कैलेंडर — FRP {_rs(show.get('rate', 0))} | Ganna Rate",
-        f"गन्ना भाव {show_season} — FRP {_rs(show.get('rate', 0))}, राज्यवार SAP | Sugarcane Price",
-        f"गन्ना भाव, सट्टा और पर्ची कैलेंडर {show_season} — FRP {_rs(show.get('rate', 0))}",
-        f"गन्ना का भाव {show_season} — FRP {_rs(show.get('rate', 0))} व SAP रेट",
+        f"Ganne Ka Rate {show_season} — गन्ना भाव: FRP {frp_rs}, राज्यवार SAP",
+        f"Ganne Ka Rate {show_season} — गन्ना भाव, FRP {frp_rs}",
+        f"गन्ना का भाव {show_season} — FRP {frp_rs} व SAP रेट",
         f"गन्ना का भाव {show_season} — FRP और राज्यवार रेट")
     desc = _fit(
-        f"UP में गन्ने का भाव {show_season}, गन्ना सट्टा और पर्ची कैलेंडर, मिल-एरिया — "
-        f"केंद्र का FRP {_rs(show.get('rate', 0))}, राज्यवार SAP और कब कटेगा आपका गन्ना। पूरा अपडेट।",
-        f"गन्ना का सरकारी रेट {show_season}: केंद्र का FRP {_rs(show.get('rate', 0))} प्रति "
-        f"क्विंटल। यूपी, पंजाब, हरियाणा समेत हर राज्य का SAP रेट एक जगह।",
+        f"Ganne ka rate {show_season}: केंद्र का FRP {frp_rs}/क्विंटल, UP-पंजाब-हरियाणा का SAP, "
+        f"रिकवरी से बदलता रेट और पेमेंट कैलकुलेटर। नया SAP घोषित होते ही सूचना पाएं।",
+        f"गन्ने का सरकारी रेट {show_season}: केंद्र का FRP {frp_rs} प्रति क्विंटल। यूपी, "
+        f"पंजाब, हरियाणा समेत हर राज्य का SAP और पेमेंट कैलकुलेटर।",
         limit=162)
+
+    calc = _calc_html(
+        "मेरा पेमेंट कितना बनेगा?",
+        "अपनी मिल की रिकवरी और गन्ने का वज़न डालिए — केंद्र के FRP नियम से हिसाब। "
+        "SAP वाले राज्य का हिसाब उस राज्य के पेज पर है।",
+        frp=show)
+    bell = _bell_html([s for s in _states() if sap_awaited(s, show_season)], show_season)
+    # The bars are the last DECLARED SAPs. Under a hero that says 2026-27 they
+    # would read as this season's rates unless the page says whose they are.
+    old = sorted({s.get("season", "") for s in sap_states
+                  if s.get("season") and s.get("season") != show_season})
+    stale_note = (f" SAP के आंकड़े {', '.join(old)} सीजन की आखिरी सरकारी घोषणा के हैं — "
+                  f"{show_season} का SAP घोषित होते ही बदलेंगे।" if old else "")
 
     faq_html, faq_ld = _faq_ui([
         ("FRP और SAP में क्या फर्क है?",
@@ -521,9 +750,13 @@ def ganna_hub():
 <div class="gn-panel">
 <h2 class="gn-panel-h">किस राज्य में कितना ज़्यादा</h2>
 <p class="gn-panel-s">पट्टी की लंबाई = राज्य का SAP केंद्र के FRP से कितना ऊपर है।
-बड़ा अंक पूरा रेट है। राज्य पर टैप करके पूरी जानकारी देखिए।</p>
+बड़ा अंक पूरा रेट है। राज्य पर टैप करके पूरी जानकारी देखिए।{stale_note}</p>
 {_rate_bars(sap_states, show)}
 </div>
+
+{calc}
+
+{bell}
 
 {awaited_block}
 
@@ -538,12 +771,166 @@ def ganna_hub():
 सरकार का तय किया हुआ मिलता है — इसीलिए यह रेट रोज़ नहीं, सीजन में एक बार बदलता है।</span></span>
 </div>
 
+{_more_links()}
+
 <h2 class="shop-section-title">अक्सर पूछे जाने वाले सवाल</h2>
 {faq_html}
+{_CALC_JS}
 """
     return _doc(title, desc, f"{SITE}/ganna", crumbs, body, ld=ld,
                 active="ganna", extra_css=_EXTRA_CSS, footer_note=_FOOTER_NOTE,
                 updated=show.get("announced", ""))
+
+
+# ── payment rules (/ganna/bhugtan) ──────────────────────────────────────────
+# Every rate lookup is followed by the same question — "और पैसा कब तक आएगा?" —
+# and in cane it is the question that matters most: the price is fixed by law,
+# the WAIT is where farmers lose money. The answer is also fixed by law, in the
+# Sugarcane (Control) Order, 1966, so this page can state it without guessing.
+#
+# What it deliberately does NOT do (LEGAL_RULES §1, §3): name any mill as owing
+# money, promise when a payment will arrive, or look like the cane department.
+# How-to-check steps LINK to the official portals; nothing is fetched from them.
+# Declared above /ganna/{slug}, whose wildcard would otherwise answer it.
+_ORDER = "गन्ना (नियंत्रण) आदेश, 1966"
+_PAY_DAYS = 14          # clause 3(3): payment within 14 days of delivery
+_INTEREST_PCT = 15      # clause 3(3A): 15% a year on the amount, for the delay beyond 14 days
+
+_INTEREST_JS = """<script>
+(function(){
+var c=document.querySelector('.gn-int');if(!c)return;
+function q(k){return c.querySelector('[data-k="'+k+'"]');}
+function num(el){var v=parseFloat(el&&el.value);return isFinite(v)?v:0;}
+function run(){var amt=num(q('amt')),days=num(q('days')),late=Math.max(0,days-(+c.dataset.free)),
+ i=amt*(+c.dataset.pct)/100*late/365;
+ if(!amt||!days){q('total').textContent='—';q('line').textContent='';return;}
+ q('total').textContent='₹'+Math.round(i).toLocaleString('en-IN');
+ q('line').textContent=late?('₹'+Math.round(amt).toLocaleString('en-IN')+' पर '+late+' दिन की देरी × '
+  +c.dataset.pct+'% सालाना'):('अभी '+c.dataset.free+' दिन पूरे नहीं हुए — ब्याज नहीं बनता');}
+c.addEventListener('input',run);run();
+})();
+</script>"""
+
+
+@router.get("/ganna/bhugtan", response_class=HTMLResponse)
+def ganna_bhugtan():
+    show_season, show = current_season()
+
+    title = _fit(
+        f"Ganna Payment Kitne Din Mein? गन्ना भुगतान {_PAY_DAYS} दिन का नियम व ब्याज",
+        f"गन्ना भुगतान कितने दिन में? {_PAY_DAYS} दिन का नियम और देरी पर ब्याज",
+        f"गन्ना भुगतान का नियम — {_PAY_DAYS} दिन और देरी पर ब्याज")
+    desc = _fit(
+        f"Ganna payment: मिल को गन्ना मिलने के {_PAY_DAYS} दिन में भुगतान करना होता है, देरी पर "
+        f"{_INTEREST_PCT}% सालाना ब्याज। ब्याज कैलकुलेटर, भुगतान जांच और शिकायत।",
+        f"गन्ने का भुगतान {_PAY_DAYS} दिन में — देरी पर {_INTEREST_PCT}% सालाना ब्याज। "
+        f"भुगतान कैसे जांचें और शिकायत कहां करें।",
+        limit=162)
+
+    faq_html, faq_ld = _faq_ui([
+        (f"गन्ने का भुगतान कितने दिन में मिलना चाहिए?",
+         f"{_ORDER} के अनुसार चीनी मिल को गन्ना मिलने (डिलीवरी) की तारीख से {_PAY_DAYS} दिन के "
+         f"भीतर FRP या राज्य का SAP चुकाना होता है। यह केंद्र का नियम है और हर राज्य की मिल पर "
+         f"लागू होता है।"),
+        ("भुगतान में देरी हो तो क्या ब्याज मिलता है?",
+         f"हां। आदेश के अनुसार {_PAY_DAYS} दिन के बाद जितने दिन देरी हो, उतने दिन की बकाया रकम पर "
+         f"{_INTEREST_PCT}% सालाना ब्याज देय बनता है। असल में ब्याज मिलेगा या नहीं, यह राज्य "
+         f"सरकार और गन्ना विभाग की कार्रवाई पर निर्भर करता है — कई बार सरकारें मिलों को ब्याज "
+         f"में छूट भी दे देती हैं।"),
+        (f"{_PAY_DAYS} दिन किस तारीख से गिने जाते हैं?",
+         "जिस दिन आपका गन्ना मिल गेट या क्रय केंद्र पर तौला गया, उस दिन से। इसलिए तौल पर्ची "
+         "संभालकर रखें — देरी की गिनती का सबूत वही है।"),
+        ("भुगतान में कटौती क्यों हो सकती है?",
+         "जहां कटाई और ढुलाई मिल करवाती है (जैसे महाराष्ट्र और कर्नाटक में आम है), वहां उसका "
+         "खर्च FRP से काटा जाता है। कुछ जगह समिति या दूसरी कटौतियां भी होती हैं। अपनी भुगतान "
+         "पर्ची पर हर कटौती का हिसाब मांगिए।"),
+        ("भुगतान न मिले तो शिकायत कहां करें?",
+         "पहले मिल के गन्ना विभाग (केन ऑफिस) में, फिर अपने जिला गन्ना अधिकारी के कार्यालय में, "
+         "और वहां सुनवाई न हो तो राज्य के गन्ना आयुक्त कार्यालय में। शिकायत के साथ सट्टा/बांड, "
+         "तौल पर्ची और बैंक खाते की एंट्री की कॉपी लगाइए।"),
+    ])
+
+    crumbs = (f'<a href="{SITE}/">होम</a> › <a href="{SITE}/ganna">गन्ना मूल्य</a> › '
+              f'<span>भुगतान का नियम</span>')
+    ld = _ld(_crumb_ld([("होम", f"{SITE}/"), ("गन्ना मूल्य", f"{SITE}/ganna"),
+                        ("भुगतान का नियम", f"{SITE}/ganna/bhugtan")]), faq_ld)
+
+    body = f"""
+<section class="answer">
+<div class="answer-in">
+<h1>गन्ने का भुगतान कितने दिन में?</h1>
+<div class="answer-sub">{escape(_ORDER)} · पूरे देश में लागू</div>
+<div class="answer-price">
+<span class="answer-rupee">{_PAY_DAYS} दिन</span>
+<span class="answer-delta">गन्ना मिलने की तारीख से</span>
+</div>
+<p class="answer-lead">मिल को गन्ना देने के {_PAY_DAYS} दिन के भीतर FRP या SAP का पूरा भुगतान
+करना होता है। उसके बाद देरी के हर दिन की बकाया रकम पर {_INTEREST_PCT}% सालाना ब्याज देय
+बनता है।</p>
+<div class="gn-pills">
+<span class="gn-pill">भुगतान की सीमा <b>{_PAY_DAYS} दिन</b></span>
+<span class="gn-pill">देरी पर ब्याज <b>{_INTEREST_PCT}% सालाना</b></span>
+<span class="gn-pill">{escape(show_season)} का FRP <b>{_rs(show.get('rate', 0))}</b></span>
+</div>
+</div>
+</section>
+
+<div class="gn-flag">
+<span class="gn-flag-ic">ℹ️</span>
+<span><span class="gn-flag-t">कृषि मित्र एक निजी वेबसाइट है</span>
+<span class="gn-flag-d">हम किसी सरकारी विभाग या चीनी मिल से जुड़े नहीं हैं। यह पेज कानून का सरल
+सार है, कानूनी सलाह नहीं — अंतिम शब्द आदेश का आधिकारिक पाठ और आपके राज्य का गन्ना विभाग है।
+किसी मिल ने कितना भुगतान किया, यह हम नहीं बताते।</span></span>
+</div>
+
+<div class="gn-panel gn-int" data-free="{_PAY_DAYS}" data-pct="{_INTEREST_PCT}">
+<h2 class="gn-panel-h">देरी पर ब्याज कितना बनता है?</h2>
+<p class="gn-panel-s">बकाया रकम और गन्ना तौल को कितने दिन हुए, डालिए। पहले {_PAY_DAYS} दिन पर
+ब्याज नहीं बनता।</p>
+<div class="gn-calc-row">
+<label>बकाया रकम (₹)<input data-k="amt" type="number" inputmode="decimal" min="0" step="100" value="50000"></label>
+<label>तौल को कितने दिन हुए<input data-k="days" type="number" inputmode="numeric" min="0" step="1" value="60"></label>
+</div>
+<div class="gn-calc-out" aria-live="polite"><b data-k="total">—</b>
+<span data-k="line"></span>
+<span>अनुमानित — आदेश के {_INTEREST_PCT}% सालाना नियम से सीधा हिसाब। असल में ब्याज मिलेगा या
+नहीं, यह सरकार और गन्ना विभाग की कार्रवाई पर निर्भर है।</span></div>
+</div>
+
+<div class="gn-panel">
+<h2 class="gn-panel-h">अपना भुगतान कैसे जांचें</h2>
+<ol class="gn-steps">
+<li><b>उत्तर प्रदेश:</b> गन्ना विभाग के पोर्टल
+<a href="https://caneup.in/" rel="noopener" target="_blank">caneup.in</a> या
+e-Ganna ऐप पर अपना किसान कोड डालकर पर्ची, तौल और भुगतान देखिए। टोल-फ्री नंबर
+<b>1800-121-3203</b>।</li>
+<li><b>महाराष्ट्र:</b> राज्य का साखर आयुक्तालय हर पखवाड़े मिल-वार FRP भुगतान की रिपोर्ट
+<a href="https://mahasugar.in/frp-en.php" rel="noopener" target="_blank">अपनी वेबसाइट</a>
+पर प्रकाशित करता है। अपनी मिल का नाम वहां देखिए।</li>
+<li><b>बाकी राज्य:</b> अपनी मिल के केन ऑफिस या जिला गन्ना अधिकारी के कार्यालय से पूछिए।</li>
+<li><b>हर जगह:</b> तौल की तारीख और रकम अपने बैंक खाते की एंट्री से मिलाइए। {_PAY_DAYS} दिन
+गिनने के लिए तौल पर्ची ही सबूत है।</li>
+</ol>
+</div>
+
+<div class="gn-panel">
+<h2 class="gn-panel-h">ये कागज़ संभालकर रखें</h2>
+<ol class="gn-steps">
+<li><b>सट्टा / बांड</b> — किस मिल को कितना गन्ना देना है।</li>
+<li><b>सप्लाई पर्ची</b> — किस दिन गन्ना लाना है।</li>
+<li><b>तौल पर्ची</b> — कितना गन्ना किस तारीख को तौला गया। {_PAY_DAYS} दिन यहीं से गिने जाते हैं।</li>
+<li><b>बैंक पासबुक / SMS</b> — भुगतान कब और कितना आया।</li>
+</ol>
+</div>
+
+{_more_links(skip="/ganna/bhugtan")}
+
+<h2 class="shop-section-title">अक्सर पूछे जाने वाले सवाल</h2>
+{faq_html}
+{_INTEREST_JS}
+"""
+    return _doc(title, desc, f"{SITE}/ganna/bhugtan", crumbs, body, ld=ld,
+                active="ganna", extra_css=_EXTRA_CSS, footer_note=_FOOTER_NOTE)
 
 
 # ── state ───────────────────────────────────────────────────────────────────
@@ -555,13 +942,8 @@ def ganna_state(slug: str):
         # farmer to the hub, where every state we do have is one tap away.
         return RedirectResponse(f"{SITE}/ganna", status_code=302)
 
-    data = _load()
-    today = date.today()
-    season = _season_for(today)
-    nxt = data.get("next_season", "")
-    frp_next = data.get("frp", {}).get(nxt, {})
-    show = frp_next or _frp(season)
-    show_season = nxt if frp_next else season
+    season = _season_for(date.today())
+    show_season, show = current_season()
 
     hi, en = st["hi"], st["en"]
     is_sap = st.get("kind") == "sap" and bool(st.get("rates"))
@@ -636,6 +1018,22 @@ def ganna_state(slug: str):
             f'है; घोषणा होते ही यह पेज अपडेट होगा।</span></span></div>')
 
     note_html = (f'<p class="gn-note">{escape(st["note"])}</p>' if st.get("note") else "")
+
+    # Calculator in the state's own terms: its declared SAP rates where it has
+    # them (and says which season they belong to), else the FRP formula
+    # pre-filled with the state's average recovery.
+    if is_sap:
+        calc = _calc_html(
+            "मेरा पेमेंट कितना बनेगा?",
+            f"{hi} के {st_season} सीजन के SAP से — किस्म चुनिए और गन्ने का वज़न डालिए।",
+            options=[(r["hi"], r["rate"]) for r in st["rates"]])
+    else:
+        calc = _calc_html(
+            "मेरा पेमेंट कितना बनेगा?",
+            "अपनी मिल की रिकवरी और गन्ने का वज़न डालिए — केंद्र के FRP नियम से हिसाब।"
+            + (f" रिकवरी का खाना {hi} की औसत से भरा है।" if st.get("recovery") else ""),
+            frp=show, recovery=st.get("recovery"))
+    bell = _bell_html([st], show_season) if sap_awaited(st, show_season) else ""
 
     others = "".join(
         f'<a class="chip" href="{SITE}/ganna/{o["slug"]}">{escape(o["hi"])}</a>'
@@ -776,8 +1174,11 @@ def ganna_state(slug: str):
 
 {stats}
 {gap_note}
+{bell}
 {detail}
 {note_html}
+
+{calc}
 
 <div class="gn-panel">
 <h2 class="gn-panel-h">देश में कहां खड़ा है</h2>
@@ -799,6 +1200,9 @@ def ganna_state(slug: str):
 <span class="gn-flag-d">इसीलिए यह रेट <a href="{SITE}/bhav">मंडी भाव</a> में नहीं मिलेगा।
 अपने ज़िले की बाकी फसलों का आज का रेट देखने के लिए भाव पेज खोलिए।</span></span>
 </div>
+
+{_more_links()}
+{_CALC_JS}
 """
     # A state with no verified number of its own is served noindex: its only
     # content would be the national FRP repeated back, and 7 such pages is

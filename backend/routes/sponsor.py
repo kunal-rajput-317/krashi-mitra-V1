@@ -171,7 +171,7 @@ def _numbers_block() -> str:
         'are decisions with money attached, taken in the days before he '
         'spends.</p>'
         '<p><b>Which surfaces carry it.</b> Mandi prices across every '
-        'state and district; village and district maps; Hindi guides on dosage, '
+        'state and district; village and district maps; Hindi guides on crops, '
         'disease and season; livestock and the egg rate; government '
         'schemes; and a farmer-to-farmer marketplace.</p>'
         '</div>'
@@ -236,6 +236,56 @@ def _measured_block(st: dict) -> str:
             f'<h2>Where the traffic is</h2>{table}'
             f'<p class="sp-asof">Same window. Sections not listed (homepage, '
             f'/about, login) carry real traffic but are not sold.</p>')
+
+
+def _slug_name(s: str) -> str:
+    return "All crops (state pages)" if s == "rajya" else s.replace("-", " ").title()
+
+
+def _market_block(scope: dict) -> str:
+    """/bhav figures for the prospect's own states and crops — the part of a
+    proposal that answers "how many of MY farmers". Token-gated like
+    _measured_block, and silent the same way: no snapshot, or one older than
+    the media kit's own limit, prints no market section at all."""
+    from backend.services import page_stats
+    if not (scope["states"] or scope["crops"]):
+        return ""
+    age = page_stats.snapshot_age_days()
+    m = page_stats.for_scope(scope["states"], scope["crops"])
+    if m is None or age is None or age > mediakit.MAX_AGE_DAYS:
+        return ""
+    asked = []
+    if scope["states"]:
+        asked.append("States: " + ", ".join(_slug_name(s) for s in scope["states"]))
+    if scope["crops"]:
+        asked.append("Crops: " + ", ".join(_slug_name(c) for c in scope["crops"]))
+    head = (f'<h2>Your market</h2><p>{escape(" · ".join(asked))}. Mandi-price '
+            f'pages on krashimitra.in/bhav for exactly these, measured in Google '
+            f'Search Console.</p>')
+    if not m["rows"] or m["impressions"] == 0:
+        return (head + '<p class="sp-nonum">Google did not show any of our pages '
+                'for this market in the last window. We would rather tell you '
+                'that now than sell you a slot on it.</p>')
+    cards = "".join(
+        f'<div class="sp-stat"><b>{escape(v)}</b><span>{escape(lab)}</span></div>'
+        for v, lab in ((_n(m["impressions"]), f'search impressions in {m["window_days"]} days'),
+                       (_n(m["clicks"]), "visits from search"),
+                       (_n(m["pages"]), "price pages")))
+    rows = "".join(
+        f'<tr><td><b>{escape(_slug_name(r["crop"]))}</b> · {escape(_slug_name(r["state"]))}'
+        + (f'<br><span style="font-size:12.5px;color:var(--text-soft)">Top districts: '
+           f'{escape(", ".join(_slug_name(d) for d in r["top_districts"]))}</span>'
+           if r["top_districts"] else "")
+        + f'</td><td class="n">{_n(r["impressions"])}</td>'
+          f'<td class="n">{_n(r["clicks"])}</td></tr>'
+        for r in m["rows"][:25] if r["impressions"] > 0)
+    return (head + f'<div class="sp-grid">{cards}</div>'
+            f'<table class="sp-table" style="margin-top:16px"><thead><tr><th>Crop · state</th>'
+            f'<th class="n">Impressions</th><th class="n">Visits</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table>'
+            f'<p class="sp-asof">Google Search Console, {escape(str(m["start"]))} to '
+            f'{escape(str(m["end"]))}, pulled automatically on {escape(str(m["fetched_on"]))}.'
+            f' Past search traffic, not a forecast of what a campaign will deliver.</p>')
 
 
 def sponsors_sections():
@@ -449,9 +499,10 @@ def sponsor_kit(token: str):
     With KM_SPONSOR_KIT_SECRET unset, sponsors.kit_verify() refuses every
     token and this route is closed to everyone. That is the intended default.
     """
-    who = sponsors.kit_verify(token)
-    if not who:
+    scope = sponsors.kit_scope(token)
+    if not scope:
         raise HTTPException(status_code=404)
+    who = scope["who"]
 
     st = mediakit.stats()
     if not st:
@@ -468,7 +519,10 @@ def sponsor_kit(token: str):
                 f'<p>Prepared for <b>{escape(who)}</b>. Please treat these '
                 f'figures as confidential — they are not published anywhere on '
                 f'the site, and this link was generated for you alone.</p>'
-                f'</section><section class="sp-block">{_measured_block(st)}'
+                f'</section>'
+                + (f'<section class="sp-block">{mk}</section>'
+                   if (mk := _market_block(scope)) else "")
+                + f'<section class="sp-block">{_measured_block(st)}'
                 f'</section>'
                 f'<section class="sp-block"><h2>What you can sponsor</h2>'
                 f'{_tiers_block()}</section></div>')

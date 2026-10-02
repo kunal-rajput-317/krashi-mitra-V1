@@ -209,6 +209,9 @@ IMAGES = {
     # not out of the drop shadows and glows, so they are not usable as heroes.
     "kisan-credit-card": "INR.JPG",
     "pm-fasal-bima-yojana-2026": "Verse champ de blé01.jpg",
+    "rabi-msp-2027-28": "Village Wheat Mandi Himachal Mar19 D72 10092.jpg",
+    "pm-kisan-maandhan-pension": "Agricultural land of northern india.jpg",
+    "rabi-pyaj-nursery-ropai": "Onion seedlings.jpg",
     "pmksy-drip-sinchai-subsidy": "Driprication.jpg",
 
     # ── यूरिया cluster (Aug 2026) ─────────────────────────────────────────

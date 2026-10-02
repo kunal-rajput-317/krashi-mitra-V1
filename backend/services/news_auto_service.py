@@ -631,32 +631,93 @@ let that reach the image):
     }
 
 
-def _load_data() -> dict:
+# ── Where the funnel lives ───────────────────────────────────
+# news_funnel.json in the repo is only the SEED. Render's disk is wiped on
+# every deploy, so a file was the whole store until 2 Oct 2026, and every post
+# staged or published on the live site was lost at the next deploy, along with
+# the cycle state. Worse, the copy in git carried a cycle that had already
+# passed day 3 with nothing staged, so each deploy brought back a funnel that
+# could never run again (see run_discovery_and_stage).
+#
+# So the live copy is one app_settings row (key _DB_KEY, never shown in the
+# settings panel because app_settings.DEFAULTS does not list it). It is read
+# once per process and held in memory. Every news page and the sitemap read
+# the funnel, and a Neon round trip per render would be paid around the clock.
+# Writes happen a few times a day (staging, publishing), never per request.
+# Every DB failure falls back to the file, so a sleeping database can slow the
+# news down but never take a page with it.
+_DB_KEY = "news.funnel_state"
+_mem: Dict[str, object] = {"data": None}
+
+
+def _fresh() -> dict:
+    return {"current_cycle": 1, "cycle_start_date": datetime.utcnow().isoformat(),
+            "staged_posts": [], "published_posts": []}
+
+
+def _read_file() -> Optional[dict]:
     if not DATA_FILE.exists():
-        initial = {
-            "current_cycle": 1,
-            "cycle_start_date": datetime.utcnow().isoformat(),
-            "staged_posts": [],
-            "published_posts": [],
-        }
-        DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
-        DATA_FILE.write_text(json.dumps(initial, ensure_ascii=False, indent=2), encoding="utf-8")
-        return initial
+        return None
     try:
         return json.loads(DATA_FILE.read_text(encoding="utf-8"))
     except Exception as e:
         logger.warning(f"⚠️ Error reading news_funnel.json: {e}")
-        return {"current_cycle": 1, "cycle_start_date": datetime.utcnow().isoformat(), "staged_posts": [], "published_posts": []}
+        return None
+
+
+def _read_db() -> Optional[dict]:
+    try:
+        from backend.database.db import AppSetting, SessionLocal
+        db = SessionLocal()
+        try:
+            row = db.query(AppSetting).filter(AppSetting.key == _DB_KEY).first()
+            return json.loads(row.value) if row else None
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"⚠️ news funnel DB read failed, using the file: {e}")
+        return None
+
+
+def _write_db(data: dict) -> bool:
+    try:
+        from backend.database.db import AppSetting, SessionLocal
+        db = SessionLocal()
+        try:
+            value = json.dumps(data, ensure_ascii=False)
+            row = db.query(AppSetting).filter(AppSetting.key == _DB_KEY).first()
+            if row:
+                row.value = value
+                row.updated_at = datetime.utcnow()
+            else:
+                db.add(AppSetting(key=_DB_KEY, value=value, updated_by="news_auto_service"))
+            db.commit()
+            return True
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"❌ news funnel DB write failed (file copy kept): {e}")
+        return False
+
+
+def _load_data() -> dict:
+    """The funnel, as a copy the caller may change and hand to _save_data."""
+    if _mem["data"] is None:
+        _mem["data"] = _read_db() or _read_file() or _fresh()
+    return json.loads(json.dumps(_mem["data"]))
 
 
 def _save_data(data: dict) -> bool:
+    _mem["data"] = json.loads(json.dumps(data))
     try:
         DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
         DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        return True
     except Exception as e:
         logger.error(f"❌ Error saving news_funnel.json: {e}")
-        return False
+    return _write_db(data)
 
 
 def get_current_cycle_info() -> dict:
@@ -981,8 +1042,6 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
         avoid=avoid_covers,
     )
 
-    # Organic Likes Seed: 260 to 580 likes!
-    seed_likes = random.randint(260, 580)
 
     
     full_story = parsed.get("full_story", "").strip()
@@ -1011,7 +1070,6 @@ OUTPUT IN STRICT VALID JSON FORMAT ONLY (no markdown fences, no extra text):
         # Kept so review_flags() can tell an invented figure from a reported
         # one. Truncated: it is a comparison corpus, not an archive.
         "source_raw": f"{raw_title} {raw_content}"[:2500],
-        "seed_likes": seed_likes,
         "comment_count": 0,  # Strictly 0 initially as instructed!
         "status": "staged",
         "created_at": datetime.utcnow().isoformat(),
@@ -1051,21 +1109,11 @@ async def fetch_external_agri_stories() -> List[dict]:
                 logger.warning(f"Feed error from {url}: {e}")
                 continue
 
-    # Fallback curated seasonal topics if internet is unreachable
-    if not stories:
-        stories = [
-            {
-                "title": "रबी फसलों में सिंचाई व यूरिया प्रबंधन: कृषि वैज्ञानिकों ने जारी की नई एडवाइज़री",
-                "content": "गेहूं और सरसों की फसलों में इस समय सही नमी और संतुलित नाइट्रोजन का प्रयोग उपज को 20% तक बढ़ा सकता है। वैज्ञानिकों ने नैनो यूरिया छिड़काव की सलाह दी है।",
-                "url": ""
-            },
-            {
-                "title": "पीएम कुसुम योजना 2026: खेतों में सोलर पंप लगाने के लिए 60% अनुदान का नया चरण शुरू",
-                "content": "किसानों को बिजली कटौती से मुक्ति दिलाने के लिए सौर ऊर्जा से चलने वाले कृषि पंपों के लिए ऑनलाइन पोर्टल पर आवेदन प्रक्रिया पुनः खोली गई है।",
-                "url": ""
-            }
-        ]
-
+    # When the feeds cannot be reached, stage nothing. There used to be two
+    # hard-coded "stories" here (a "60% अनुदान" scheme phase, a "20% तक"
+    # yield claim) with no source behind either. A news item must come from a
+    # real source, and a scheme page must never promise an amount
+    # (LEGAL_RULES §3).
     return stories
 
 
@@ -1081,8 +1129,20 @@ async def run_discovery_and_stage(target_count: int = 3, check_cycle: bool = Fal
         start_dt = _parse_iso_dt(data.get("cycle_start_date"))
         cycle_day = max(1, (datetime.utcnow() - start_dt).days + 1)
         if cycle_day > 3:
-            logger.info(f"ℹ️ Current cycle is on Day {cycle_day} (Review/Fallback phase). Skipping daily 5 PM discovery.")
-            return []
+            # Posts held for review wait for a human and do not hold up the
+            # funnel. Only an unreviewed batch that the Day 5 watchdog will
+            # publish (and which then starts the next cycle) is a reason to wait.
+            waiting = [p for p in data.get("staged_posts", []) if not p.get("held_for_review")]
+            if waiting:
+                logger.info(f"ℹ️ Current cycle is on Day {cycle_day} (Review/Fallback phase). Skipping daily 5 PM discovery.")
+                return []
+            # Nothing is left to publish, so nothing would ever start the next
+            # cycle. Start it here. Without this the funnel stopped for good
+            # after 5 Sep 2026: no post was staged, the watchdog had nothing to
+            # publish, and this check skipped every day after.
+            data["current_cycle"] = data.get("current_cycle", 1) + 1
+            data["cycle_start_date"] = datetime.utcnow().isoformat()
+            logger.info(f"🔄 Cycle was on Day {cycle_day} with nothing left to publish. Starting cycle {data['current_cycle']}.")
 
     staged = data.get("staged_posts", [])
     raw_stories = await fetch_external_agri_stories()
@@ -1319,16 +1379,11 @@ def edit_staged_post(post_id: str, updates: dict) -> Optional[dict]:
 
     allowed_keys = [
         "title", "excerpt", "full_story", "bullets", "category",
-        "image", "seed_likes", "time", "readTime"
+        "image", "time", "readTime"
     ]
     for k in allowed_keys:
         if k in updates and updates[k] is not None:
-            if k == "seed_likes":
-                try:
-                    target[k] = int(updates[k])
-                except (ValueError, TypeError):
-                    pass
-            elif k == "bullets" and isinstance(updates[k], list):
+            if k == "bullets" and isinstance(updates[k], list):
                 target[k] = [str(b).strip() for b in updates[k] if str(b).strip()]
             else:
                 target[k] = updates[k]

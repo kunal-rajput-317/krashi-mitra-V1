@@ -45,7 +45,7 @@ from backend.database.db import (
     SessionLocal, MandiPriceMonthly, MandiSeasonSlice,
 )
 from backend.services.mandi_fetch_service import (
-    _get_page, _norm, _parse_dt, API_KEY,
+    DataGovDown, _get_page, _norm, _parse_dt, API_KEY,
     ARCHIVE_ENDPOINT, ARCHIVE_STATE_FIELD, PAGE_LIMIT, STATE_DELAY,
 )
 
@@ -108,6 +108,10 @@ def _fetch_slice_rows(state: str, district: str, commodity: str) -> list:
         }
         recs = _get_page(params, f"[season {commodity}/{district}] offset={offset}",
                          endpoint=ARCHIVE_ENDPOINT)
+        if recs is None:
+            # The page failed after every retry. Saying "empty" here would mark
+            # the slice as having no data and it would never be built again.
+            raise DataGovDown(f"archive page failed for {commodity}/{district}")
         if not recs:
             break
 
@@ -283,6 +287,11 @@ def drain_queue(limit: int = DRAIN_BATCH) -> dict:
         try:
             if build_slice(st, di, co).get("ok"):
                 built += 1
+        except DataGovDown as e:
+            # The API is down: stop, and leave the slices queued (no attempt
+            # counted) so they are built once it is back.
+            logger.warning(f"📅 season drain stopped, data.gov.in not answering: {e}")
+            break
         except Exception as e:                    # never let one slice stop the drain
             logger.error(f"season drain error on {co}/{di}: {e}")
         time.sleep(STATE_DELAY)
@@ -351,6 +360,87 @@ def get_summary(state: str, district: str, commodity: str) -> dict | None:
         "years":      len({r[1] for r in rows if r[1]}),
         "months":     len(rows),
     }
+
+
+# ── National seasonal pattern for one crop (/bhav/{crop}) ────
+#
+# Rupees cannot be averaged across districts — Kanpur's wheat and Indore's
+# are different grades in different markets, and whichever districts happen
+# to have a built slice would drag a ₹ average around. So each district is
+# measured against ITSELF: its month median ÷ its own yearly average. The
+# national figure for a month is the median of those ratios across districts.
+# What survives is the shape of the year ("January is usually 8% above the
+# year's average"), which is the question a farmer is asking.
+
+CROP_MIN_MONTHS    = 10   # a district must cover most of the year to join
+CROP_MIN_DISTRICTS = 5    # fewer than this and the "national" shape is anecdote
+CROP_CACHE_SECS    = 24 * 3600
+
+_crop_cache: dict = {}
+
+
+def _crop_pattern(rows: list) -> dict | None:
+    """[(slice_key, month, median_modal)] → the national pattern, or None."""
+    per_slice: dict[str, dict[int, list]] = {}
+    for key, m, med in rows:
+        if key and m and med:
+            per_slice.setdefault(key, {}).setdefault(int(m), []).append(float(med))
+
+    ratios: dict[int, list] = {}
+    used = 0
+    for months in per_slice.values():
+        if len(months) < CROP_MIN_MONTHS:
+            continue
+        by_m = {m: statistics.median(v) for m, v in months.items()}
+        mean = statistics.mean(by_m.values())
+        if mean <= 0:
+            continue
+        used += 1
+        for m, v in by_m.items():
+            ratios.setdefault(m, []).append(v / mean)
+
+    if used < CROP_MIN_DISTRICTS:
+        return None
+    # A month only counts when most contributing districts cover it — a month
+    # resting on two districts would print a confident % from almost nothing.
+    need = max(CROP_MIN_DISTRICTS, used // 2)
+    index = {m: round(statistics.median(v) * 100)
+             for m, v in ratios.items() if len(v) >= need}
+    if len(index) < CROP_MIN_MONTHS:
+        return None
+    best  = max(index.items(), key=lambda kv: kv[1])
+    worst = min(index.items(), key=lambda kv: kv[1])
+    return {"index": index, "best": best, "worst": worst, "districts": used}
+
+
+def get_crop_pattern(commodity: str) -> dict | None:
+    """The national seasonal pattern for one commodity, or None when too few
+    districts have history. Cached in-process for a day — old months never
+    change, so one query per crop per day is plenty. Pure DB, never data.gov.
+
+    Returns index {month: 100 = the year's average}, best/worst (month, index),
+    districts (how many districts the shape rests on).
+    """
+    if not commodity:
+        return None
+    hit = _crop_cache.get(commodity)
+    if hit and time.time() - hit[0] < CROP_CACHE_SECS:
+        return hit[1]
+
+    db = SessionLocal()
+    try:
+        rows = db.execute(
+            text("""SELECT slice_key, month, median_modal
+                      FROM mandi_price_monthly
+                     WHERE commodity = :c"""),
+            {"c": commodity},
+        ).fetchall()
+    finally:
+        db.close()
+
+    pattern = _crop_pattern(rows)
+    _crop_cache[commodity] = (time.time(), pattern)
+    return pattern
 
 
 if __name__ == "__main__":

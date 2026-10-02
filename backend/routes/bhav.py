@@ -725,12 +725,6 @@ def _age_note(fresh_iso: str) -> str:
     return "" if n is None or n <= _AGE_QUIET_DAYS else f"{n} दिन पुराना भाव"
 
 
-def _age_badge(fresh_iso: str) -> str:
-    """_age_note as the amber pill the tier pages print beside their date."""
-    note = _age_note(fresh_iso)
-    return f'<span class="stale-pill">⏳ {note}</span>' if note else ""
-
-
 def _is_current(fresh_iso: str) -> bool:
     """May a meta description call this price ताजा, or promise रोज़ अपडेट?
 
@@ -993,35 +987,44 @@ def _rows_for_district(idx: dict, cs: str, ss: str, ds: str) -> list:
                 if _slugify(r["state"]) == ss and _slugify(r["district"]) == ds]
         if snap:
             return snap
-    db = SessionLocal()
-    try:
-        if mem is None:
-            snap = db.query(MandiPrice).filter(MandiPrice.commodity.in_(names)).all()
-            snap = [r for r in snap
-                    if _slugify(r.state) == ss and _slugify(r.district) == ds]
-            if snap:
-                return [_row_to_dict(r) for r in snap]
+    state_name, dist_name = idx["states"][cs][ss], idx["dists"][cs][ss][ds]
+    # About half the /bhav URLs land here (a district that stopped reporting),
+    # so the rescue reads the memory copy too; see services/mandi_memory.
+    seen = (mandi_memory.last_seen(names, state_name, dist_name)
+            if mem is not None else None)
+    if seen is None:
+        db = SessionLocal()
+        try:
+            if mem is None:
+                snap = db.query(MandiPrice).filter(MandiPrice.commodity.in_(names)).all()
+                snap = [r for r in snap
+                        if _slugify(r.state) == ss and _slugify(r.district) == ds]
+                if snap:
+                    return [_row_to_dict(r) for r in snap]
 
-        seen = (db.query(MandiLastSeen)
-                  .filter(MandiLastSeen.commodity.in_(names),
-                          MandiLastSeen.state.ilike(idx["states"][cs][ss]),
-                          MandiLastSeen.district.ilike(idx["dists"][cs][ss][ds]))
-                  .order_by(MandiLastSeen.arrival_dt.desc())
-                  .limit(500)
-                  .all())
-        seen = [h for h in seen
-                if _slugify(h.state) == ss and _slugify(h.district) == ds]
-        if not seen:
-            return []
-        # Serve one day's worth — the newest this district ever reported — so
-        # the page shows a coherent set of mandis rather than a mix of dates.
-        dated = [h for h in seen if h.arrival_dt]
-        if not dated:
-            return [_hist_to_dict(h) for h in seen]
-        newest = max(h.arrival_dt for h in dated)
-        return [_hist_to_dict(h) for h in dated if h.arrival_dt == newest]
-    finally:
-        db.close()
+            seen = [(h.state, h.district, h.arrival_dt, _hist_to_dict(h)) for h in
+                    (db.query(MandiLastSeen)
+                       .filter(MandiLastSeen.commodity.in_(names),
+                               MandiLastSeen.state.ilike(state_name),
+                               MandiLastSeen.district.ilike(dist_name))
+                       .order_by(MandiLastSeen.arrival_dt.desc())
+                       .limit(500)
+                       .all())]
+        finally:
+            db.close()
+
+    # (state, district, arrival_dt, row) per item, from either source.
+    seen = [h for h in seen
+            if _slugify(h[0]) == ss and _slugify(h[1]) == ds]
+    if not seen:
+        return []
+    # Serve one day's worth — the newest this district ever reported — so
+    # the page shows a coherent set of mandis rather than a mix of dates.
+    dated = [h for h in seen if h[2]]
+    if not dated:
+        return [h[3] for h in seen]
+    newest = max(h[2] for h in dated)
+    return [h[3] for h in dated if h[2] == newest]
 
 
 def _mem_place_rows(state_name: str, dist_name: str, fields: tuple) -> list | None:
@@ -1941,7 +1944,6 @@ mask-image:linear-gradient(90deg,transparent,#000 65%)}
 .answer-sub{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:5px;font-weight:500}
 /* The stale pill again, this time on the dark green price panel — the light
    amber fill from the tier-2/3 rule is invisible there. */
-.answer-sub .stale-pill{background:rgba(255,196,84,.18);border-color:rgba(255,196,84,.45);color:#ffd489}
 /* Date stamp on a mandi card whose price is older than the newest on the page.
    A district's cards routinely span several days (Nashik onion: 49 rows over
    4 days) and used to be rendered identically, so a carried-forward rate was
@@ -2360,13 +2362,6 @@ padding:14px 16px;margin:8px 0;box-shadow:var(--shadow-sm)}
 .mandi-page-heading{text-align:center;font-family:var(--font-body);font-size:22px;
 font-weight:800;color:#1a56db;padding:10px 16px 4px}
 .mandi-page-sub{text-align:center;font-size:12.5px;color:var(--text-soft);font-weight:500;margin:0 auto 14px}
-/* "N दिन पुराना भाव" — see _age_note. Amber, not red: a carried-forward price
-   is the honest best answer we have, not an error. Sits inline with the 📅 date
-   on tiers 2/3 and inside the dark price panel on tier 4, so it is declared
-   once here and restyled for the dark panel next to .answer-sub. */
-.stale-pill{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
-  background:#fdf0d5;color:#8a5a00;border:1px solid #f0d9a8;font-size:11.5px;font-weight:700;
-  white-space:nowrap;vertical-align:middle}
 @media(max-width:640px){.mandi-page-heading{font-size:18px;padding:8px 12px 4px}}
 
 /* ── फसल / राज्य tab switcher + commodity grid — ported 1:1 from mandi.html
@@ -4921,8 +4916,7 @@ def bhav_state_hub(state: str):
             (hi_state, canon)]))
 
     head_sub = (f"📅 {as_of_hi} · {len(crops_here)} फसलें · {n_dist} जिले · "
-                f"औसत भाव ₹/क्विंटल · स्रोत: data.gov.in (Agmarknet)"
-                f"{_age_badge(fresh)}")
+                f"औसत भाव ₹/क्विंटल · स्रोत: data.gov.in (Agmarknet)")
     body = f"""{_tier_head(head_h1, head_sub)}
 <div class="cta-row">
 <a class="btn btn-app" href="{SITE}/bhav">← सभी राज्य</a>
@@ -5181,8 +5175,7 @@ def bhav_district_hub(state: str, district: str):
             (hi_state, f"{SITE}/bhav/rajya/{ss}"), (dn_hi, canon)]))
     n_mandis = len(all_mandis)
     head_sub = (f"📅 {as_of_hi} · {escape(hi_state)} · {n_priced} फसलें"
-                + (f" · {n_mandis} {'मंडी' if n_mandis == 1 else 'मंडियां'}" if n_mandis else "")
-                + f"{_age_badge(fresh)}")
+                + (f" · {n_mandis} {'मंडी' if n_mandis == 1 else 'मंडियां'}" if n_mandis else ""))
     hub_map_html = _district_hub_satellite_map_html(state=sn, district=dn,
                                                     s_slug=ss, d_slug=ds, d_hi=dn_hi)
     board_html = (f'<ul class="db-list" id="tier-grid">{"".join(rows_html)}</ul>'
@@ -6372,10 +6365,10 @@ _BHAV_MAP_CSS = """
 .bm-icon-stroke{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:480px){.bhav-map-btn-icon{width:38px;height:38px;border-radius:10px}}
 @keyframes bmSpin{100%{transform:rotate(360deg)}}
-.bhav-map-sec.is-fullscreen{position:fixed!important;inset:0!important;z-index:999999!important;width:100vw!important;height:100vh!important;margin:0!important;border-radius:0!important;border:none!important}
+.bhav-map-sec.is-fullscreen{position:fixed!important;inset:0!important;z-index:999999!important;width:100vw!important;height:100vh!important;height:100dvh!important;margin:0!important;border-radius:0!important;border:none!important}
 .bhav-map-sec.is-fullscreen .bhav-map-head{padding:10px 16px;background:var(--white)}
-.bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 54px)!important}
-@media(max-width:640px){.bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 48px)!important}}
+.bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 54px)!important;height:calc(100dvh - 54px)!important}
+@media(max-width:640px){.bhav-map-sec.is-fullscreen .bhav-map-wrap{height:calc(100vh - 48px)!important;height:calc(100dvh - 48px)!important}}
 .bhav-map-route-card{position:absolute;bottom:26px;left:14px;max-width:calc(100% - 158px);box-sizing:border-box;background:rgba(14,61,38,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(82,183,136,.5);border-radius:14px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:35;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:bmSlideUp .25s ease-out}
 @keyframes bmSlideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 .bhav-route-flow{pointer-events:none}
@@ -6393,6 +6386,10 @@ _BHAV_MAP_CSS = """
 .bhav-route-nav-btn:hover{background:#1d4ed8;color:#fff}
 .bhav-route-close-btn{background:rgba(255,255,255,.08);border:none;color:#a7f3d0;cursor:pointer;padding:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;transition:all .15s;flex-shrink:0}
 .bhav-route-close-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.bhav-map-btn-pathtog{position:absolute;left:14px;bottom:86px;z-index:36;padding:7px 12px;font-size:12px;border-radius:12px}
+.bhav-map-btn-pathtog[hidden]{display:none}
+.bhav-map-btn-pathtog.is-off{background:#1e3a8a;border-color:rgba(147,197,253,.55)}
+@media(max-width:480px){.bhav-map-btn-pathtog{left:10px;padding:6px 10px;font-size:11.5px}}
 .bhav-map-canvas .leaflet-control-zoom{border:none!important;border-radius:14px!important;overflow:hidden!important;box-shadow:0 4px 16px rgba(0,0,0,.35)!important;margin:0 14px 20px 0!important}
 @media(max-width:480px){.bhav-map-canvas .leaflet-control-zoom{margin:0 10px 36px 0!important}}
 .bhav-map-canvas .leaflet-control-zoom a{background:#ffffff!important;color:#111827!important;width:44px!important;height:38px!important;line-height:38px!important;font-size:22px!important;font-weight:600!important;border:none!important;border-bottom:1px solid #e5e7eb!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:background .15s ease!important}
@@ -6668,7 +6665,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
       setPinMode(false);
       updateUserPos(e.latlng.lat, e.latlng.lng);
     }});
-    window.addEventListener('resize', function() {{ if (map) {{ map.invalidateSize(); restackMarkers(); }} }});
+    window.addEventListener('resize', function() {{ if (map) {{ map.invalidateSize(); restackMarkers(); }} placePathToggle(); }});
     setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 80);
     setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 300);
     setTimeout(function(){{ map && map.invalidateSize(); restackMarkers(); }}, 800);
@@ -6708,6 +6705,41 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
   }}
 
+  // Sits just above whichever bottom-left control is showing: the route card,
+  // or the "रास्ता देखें" button once the card is closed.
+  function placePathToggle() {{
+    var tg = document.getElementById(mapId + '-btn-pathtog');
+    if (!tg || tg.hidden) return;
+    var rc = document.getElementById(mapId + '-route-card');
+    var rb = document.getElementById(mapId + '-btn-route');
+    var anchor = (rc && rc.style.display !== 'none') ? rc : rb;
+    var box = tg.offsetParent;
+    if (!anchor || !box || !anchor.offsetHeight) return;
+    tg.style.bottom = (box.clientHeight - anchor.offsetTop + 8) + 'px';
+  }}
+
+  function setPathShown(show) {{
+    if (!map) return;
+    if (show) {{
+      if (routeGlowLayer && !map.hasLayer(routeGlowLayer)) routeGlowLayer.addTo(map);
+      if (routeLineLayer && !map.hasLayer(routeLineLayer)) routeLineLayer.addTo(map);
+    }} else {{
+      if (routeAnimRaf) {{ cancelAnimationFrame(routeAnimRaf); routeAnimRaf = null; }}
+      if (routeFlowLayer) {{ map.removeLayer(routeFlowLayer); routeFlowLayer = null; }}
+      if (routeGlowLayer) map.removeLayer(routeGlowLayer);
+      if (routeLineLayer) map.removeLayer(routeLineLayer);
+    }}
+    var tg = document.getElementById(mapId + '-btn-pathtog');
+    if (!tg) return;
+    var txt = document.getElementById(mapId + '-pathtog-txt');
+    if (txt) txt.textContent = show ? 'मार्ग छिपाएँ' : 'मार्ग दिखाएँ';
+    tg.title = show ? 'नक्शे पर मार्ग छिपाएँ' : 'नक्शे पर मार्ग फिर दिखाएँ';
+    tg.setAttribute('aria-pressed', show ? 'false' : 'true');
+    tg.classList.toggle('is-off', !show);
+    tg.hidden = false;
+    placePathToggle();
+  }}
+
   function renderRoute(coords, uLat, uLon, mLat, mLon, approx) {{
     if (!map) return;
     if (routeAnimRaf) {{ cancelAnimationFrame(routeAnimRaf); routeAnimRaf = null; }}
@@ -6732,6 +6764,7 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
       color: '#93c5fd', weight: 5.5, opacity: 0.95,
       className: 'bhav-route-flow', lineCap: 'round', lineJoin: 'round'
     }}).addTo(map);
+    setPathShown(true);
 
     function pathEl(layer) {{
       if (!layer) return null;
@@ -7199,35 +7232,32 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
         }}
       }}
     }}
-    if (isFs) {{
-      if (sec.requestFullscreen) {{
-        sec.requestFullscreen().catch(function(){{}});
-      }} else if (sec.webkitRequestFullscreen) {{
-        sec.webkitRequestFullscreen();
-      }}
-    }} else {{
-      if (document.fullscreenElement && document.exitFullscreen) {{
-        document.exitFullscreen().catch(function(){{}});
-      }} else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {{
-        document.webkitExitFullscreen();
-      }}
-    }}
-    setTimeout(function() {{ if (map) map.invalidateSize(); }}, 180);
+    // Fills the web page only, like /map: the browser's own Fullscreen API
+    // hid the tabs and address bar and put up a "press Esc" banner.
+    document.documentElement.style.overflow = isFs ? 'hidden' : '';
+    setTimeout(function() {{ if (map) map.invalidateSize(); placePathToggle(); }}, 180);
   }};
   window[jsId + '_toggleFs'] = toggleFsFn;
   window[mapId + '_toggleFs'] = toggleFsFn;
 
+  // The card's X closes only the card. The drawn path stays on the map; the
+  // "मार्ग छिपाएँ" toggle is the one control that hides or shows it.
   var hideRouteFn = function() {{
     var rc = document.getElementById(mapId + '-route-card');
     if (rc) rc.style.display = 'none';
     var rb = document.getElementById(mapId + '-btn-route');
     if (rb) rb.style.display = 'inline-flex';
-    if (routeGlowLayer && map) map.removeLayer(routeGlowLayer);
-    if (routeLineLayer && map) map.removeLayer(routeLineLayer);
-    if (routeFlowLayer && map) map.removeLayer(routeFlowLayer);
+    placePathToggle();
   }};
   window[jsId + '_hideRoute'] = hideRouteFn;
   window[mapId + '_hideRoute'] = hideRouteFn;
+
+  var togglePathFn = function() {{
+    if (!map || !routeLineLayer) return;
+    setPathShown(!map.hasLayer(routeLineLayer));
+  }};
+  window[jsId + '_togglePath'] = togglePathFn;
+  window[mapId + '_togglePath'] = togglePathFn;
 
   var resetViewFn = function() {{
     if (!map) return;
@@ -7293,26 +7323,6 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
     if (ev.key === 'Escape' || ev.keyCode === 27) closeMapMenu();
   }});
 
-  function handleFsExit() {{
-    var sec = document.getElementById(mapId + '-sec');
-    if (!sec) return;
-    var isFsActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    if (!isFsActive && sec.classList.contains('is-fullscreen')) {{
-      sec.classList.remove('is-fullscreen');
-      var fsIcon = document.getElementById(mapId + '-fs-icon');
-      var fsBtn = document.getElementById(mapId + '-btn-fs');
-      if (fsIcon) {{
-        fsIcon.innerHTML = '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
-      }}
-      if (fsBtn) {{
-        fsBtn.title = 'फुल स्क्रीन (Full Screen)';
-        fsBtn.setAttribute('aria-label', 'फुल स्क्रीन');
-      }}
-      if (map) map.invalidateSize();
-    }}
-  }}
-  document.addEventListener('fullscreenchange', handleFsExit);
-  document.addEventListener('webkitfullscreenchange', handleFsExit);
   document.addEventListener('keydown', function(e) {{
     if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {{
       var sec = document.getElementById(mapId + '-sec');
@@ -7509,6 +7519,10 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
     <button type="button" class="bhav-map-btn bhav-map-btn-icon bhav-map-btn-loc" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
       <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
     </button>
+    <button type="button" class="bhav-map-btn bhav-map-btn-pathtog" id="{map_id}-btn-pathtog" onclick="{js_id}_togglePath()" title="नक्शे पर मार्ग छिपाएँ" aria-pressed="false" hidden>
+      <svg class="bm-icon bm-icon-stroke" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span id="{map_id}-pathtog-txt">मार्ग छिपाएँ</span>
+    </button>
     <div id="{map_id}-route-card" class="bhav-map-route-card" style="display:none;">
       <div class="bhav-route-main">
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
@@ -7521,7 +7535,7 @@ def _mandi_satellite_map_html(state: str, district: str, prices: list,
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
         गूगल मैप पर देखें
       </a>
-      <button type="button" class="bhav-route-close-btn" onclick="{js_id}_hideRoute()" title="रास्ता हटाएँ" aria-label="रास्ता हटाएँ">
+      <button type="button" class="bhav-route-close-btn" onclick="{js_id}_hideRoute()" title="कार्ड बंद करें (मार्ग नक्शे पर रहेगा)" aria-label="कार्ड बंद करें">
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
       </button>
     </div>
@@ -7683,6 +7697,10 @@ def _district_hub_satellite_map_html(state: str, district: str,
     <button type="button" class="bhav-map-btn bhav-map-btn-icon bhav-map-btn-loc" id="{map_id}-btn-loc" onclick="{js_id}_getLoc()" title="मेरी लोकेशन खोजें" aria-label="मेरी लोकेशन">
       <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
     </button>
+    <button type="button" class="bhav-map-btn bhav-map-btn-pathtog" id="{map_id}-btn-pathtog" onclick="{js_id}_togglePath()" title="नक्शे पर मार्ग छिपाएँ" aria-pressed="false" hidden>
+      <svg class="bm-icon bm-icon-stroke" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span id="{map_id}-pathtog-txt">मार्ग छिपाएँ</span>
+    </button>
     <div id="{map_id}-route-card" class="bhav-map-route-card" style="display:none;">
       <div class="bhav-route-main">
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
@@ -7695,7 +7713,7 @@ def _district_hub_satellite_map_html(state: str, district: str,
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
         गूगल मैप पर देखें
       </a>
-      <button type="button" class="bhav-route-close-btn" onclick="{js_id}_hideRoute()" title="रास्ता हटाएँ" aria-label="रास्ता हटाएँ">
+      <button type="button" class="bhav-route-close-btn" onclick="{js_id}_hideRoute()" title="कार्ड बंद करें (मार्ग नक्शे पर रहेगा)" aria-label="कार्ड बंद करें">
         <svg class="bm-icon" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
       </button>
     </div>
@@ -7903,7 +7921,7 @@ def _api_tier2_extras(c_slug: str):
                    f'{len(state_map)} राज्यों की {_mandis_gen(st["n"])} से भारत सरकार के Agmarknet '
                    f'(data.gov.in) पोर्टल पर दर्ज हुआ{lead_avg}।{lead_best}</p>')
 
-    html = best_html + answer_lead
+    html = best_html + answer_lead + _crop_season_html(commodity, hi)
     return JSONResponse({"ok": True, "html": html},
                         headers={"Cache-Control": "public, max-age=300",
                                  "CDN-Cache-Control": "public, max-age=600"})
@@ -8161,13 +8179,15 @@ def _api_tier4_extras(c_slug: str, s_slug: str, d_slug: str):
 
 # ── seasonality (पिछले साल इसी समय / कब बेचें) ────────────────
 
-def _season_chart(by_month: dict, now_m: int, best_m: int, worst_m: int) -> str:
+def _season_chart(by_month: dict, now_m: int, best_m: int, worst_m: int,
+                  fmt=lambda v: f"₹{v:,}", label: str = "महीने के हिसाब से भाव का रुझान") -> str:
     """12-bar calendar of the multi-year median, current month highlighted.
 
     A line chart would imply a continuous series; this is twelve independent
     medians, so bars are the honest form. Values are labelled only on the
     peak, the trough and the current month — labelling all twelve turns the
-    chart into a wall of numbers on a 390px screen.
+    chart into a wall of numbers on a 390px screen. `fmt` renders those
+    labels: ₹ for one district, a ± % for the crop hub's national pattern.
     """
     if len(by_month) < 6:
         return ""
@@ -8205,16 +8225,79 @@ def _season_chart(by_month: dict, now_m: int, best_m: int, worst_m: int) -> str:
         if m in (now_m, best_m, worst_m):
             bars.append(f'<text x="{cx:.1f}" y="{by - 5:.1f}" font-size="10.5" '
                         f'fill="{col}" text-anchor="middle" font-weight="600">'
-                        f'₹{v:,}</text>')
+                        f'{escape(fmt(v))}</text>')
         bars.append(f'<text x="{cx:.1f}" y="{h - 12:.1f}" font-size="10" '
                     f'fill="{"#2c3e35" if m == now_m else "#7c8983"}" '
                     f'text-anchor="middle">{escape(_HI_MON_SHORT[m - 1])}</text>')
 
     return (f'<svg class="chart season-chart" viewBox="0 0 {w} {h}" role="img" '
-            f'aria-label="महीने के हिसाब से भाव का रुझान">'
+            f'aria-label="{escape(label)}">'
             f'<line x1="{pad_l}" y1="{pad_t + plot_h:.1f}" x2="{w - pad_r}" '
             f'y2="{pad_t + plot_h:.1f}" stroke="#e5e9e6" stroke-width="1"/>'
             f'{"".join(bars)}</svg>')
+
+
+def _pct_vs_avg(v: int) -> str:
+    """Index (100 = the year's average) → "+34%" / "−30%" / "±0%"."""
+    d = v - 100
+    return f"+{d}%" if d > 0 else (f"−{-d}%" if d < 0 else "±0%")
+
+
+def _crop_season_html(commodity: str, hi: str) -> str:
+    """The crop hub's "साल भर में भाव" card: the national seasonal shape of
+    this crop, from mandi_season_service.get_crop_pattern. Every figure is a %
+    against the year's own average, never a ₹ — see that function for why.
+
+    "" when too few districts have history, or on any DB trouble: the rest of
+    the lazy block must still arrive.
+    """
+    try:
+        from backend.services.mandi_season_service import get_crop_pattern, SEASON_YEARS
+        p = get_crop_pattern(commodity)
+    except Exception:
+        return ""
+    if not p:
+        return ""
+
+    idx_m, (best_m, best_v), (worst_m, worst_v) = p["index"], p["best"], p["worst"]
+    now_m = date.today().month
+    chart = _season_chart(idx_m, now_m, best_m, worst_m, fmt=_pct_vs_avg,
+                          label=f"{hi} का भाव साल भर में — महीनेवार, साल के औसत से तुलना")
+    if not chart:
+        return ""
+
+    def _vs(v: int) -> str:
+        d = v - 100
+        if abs(d) < 2:
+            return "साल के औसत के आसपास"
+        return f"साल के औसत से {abs(d)}% {'ऊपर' if d > 0 else 'नीचे'}"
+
+    facts = []
+    if best_m != worst_m and best_v - worst_v >= 4:
+        facts.append(f'<li><span class="sl-k">आमतौर पर सबसे ऊंचा</span>'
+                     f'<span class="sl-v up">{_HI_MONTHS[best_m - 1]} — {_vs(best_v)}</span></li>')
+        facts.append(f'<li><span class="sl-k">आमतौर पर सबसे कम</span>'
+                     f'<span class="sl-v dn">{_HI_MONTHS[worst_m - 1]} — {_vs(worst_v)}</span></li>')
+    else:
+        # MSP-anchored crops (wheat is ~96-105) have no real season to report.
+        facts.append(f'<li><span class="sl-k">साल भर</span>'
+                     f'<span class="sl-v">भाव लगभग एक जैसा रहता है</span></li>')
+    if now_m in idx_m:
+        facts.append(f'<li><span class="sl-k">इस महीने ({_HI_MONTHS[now_m - 1]}) आमतौर पर</span>'
+                     f'<span class="sl-v">{_vs(idx_m[now_m])}</span></li>')
+
+    return (f'<section class="card-w season">'
+            f'<div class="card-w-h"><h2>📅 {escape(hi)} का भाव साल भर में</h2>'
+            f'<em>देशभर · महीनेवार</em></div>'
+            f'{chart}'
+            f'<p class="trend-cap">{p["districts"]} जिलों का पिछले {SEASON_YEARS} साल तक का सरकारी '
+            f'रिकॉर्ड (Agmarknet) · हर जिले को उसके अपने सालाना औसत से मापा गया, '
+            f'इसलिए यह ₹ नहीं, % में है</p>'
+            f'<ul class="season-facts">{"".join(facts)}</ul>'
+            f'<p class="season-note">यह पुराना रिकॉर्ड है — आगे के भाव का अनुमान या बेचने-खरीदने '
+            f'की सलाह नहीं। हर साल मौसम, आवक और मांग से भाव बदलता है, और आपकी मंडी का '
+            f'रुझान अलग हो सकता है।</p>'
+            f'</section>')
 
 
 @router.get("/bhav/api/season/{c_slug}/{s_slug}/{d_slug}")
@@ -8381,9 +8464,10 @@ def bhav_crop(c_slug: str):
         f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
         limit=162)
 
-    head_h1 = f"आज का {escape(hi)} भाव"
-    head_sub = (f"📅 {as_of_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
-                f"{_age_badge(fresh_iso)}")
+    # "आज का" only while the price is current — under a week-old date it would
+    # call that price today's. See _is_current.
+    head_h1 = f"{'आज का ' if _is_current(fresh_iso) else ''}{escape(hi)} भाव"
+    head_sub = f"📅 {as_of_hi} · {len(state_map)} राज्य · स्रोत: data.gov.in (Agmarknet)"
     # The फसल / राज्य / मंडी picker sits directly under the heading, as on every
     # other /bhav page. The lazy block (nearest mandi, सबसे ऊंचा / सबसे कम,
     # the national lead) used to come first and pushed the picker below the
@@ -8516,8 +8600,7 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
             ("कृषि मित्र", f"{SITE}/"),
             (state_lang.word("bhav", lang, "मंडी भाव"), f"{SITE}/bhav"),
             (hi_loc, f"{SITE}/bhav/{cs}"), (hi_state, canon)]))
-    head_sub = (f"📅 {as_of_hi} · {len(dist_map)} जिले · स्रोत: data.gov.in (Agmarknet)"
-                f"{_age_badge(fresh_iso)}")
+    head_sub = f"📅 {as_of_hi} · {len(dist_map)} जिले · स्रोत: data.gov.in (Agmarknet)"
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, ss, "", idx, known_crop=True, known_state=True)}
 {_msp_html(commodity)}
@@ -8935,7 +9018,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_alert_bell(commodity, state, district)}
 <div class="answer-in">
 <h1>{escape(page_h1)}</h1>
-<p class="answer-sub">📅 {as_of_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट{_age_badge(fresh_iso)}</p>
+<p class="answer-sub">📅 {as_of_hi} · {escape(hi_state)} · {_mandis_gen(st['n'])} की सरकारी रिपोर्ट</p>
 <div class="answer-price">
 <div class="answer-rupee">{lead}<small>/क्विंटल</small></div>
 {delta_html}

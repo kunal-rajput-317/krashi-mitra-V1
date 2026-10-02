@@ -371,8 +371,12 @@ def run_mandi_alerts() -> dict:
     sent = skipped = failed = 0
     db = SessionLocal()
     try:
+        # Cane SAP alerts share this table but have no mandi price to move;
+        # services/ganna_alerts.py is their sender.
+        from backend.services.ganna_alerts import COMMODITY as GANNA_SAP
         alerts = (db.query(MandiAlert)
-                    .filter(MandiAlert.active.is_(True))
+                    .filter(MandiAlert.active.is_(True),
+                            MandiAlert.commodity != GANNA_SAP)
                     .all())
 
         # Pass 1 — find what's due, grouped by recipient (account, or device

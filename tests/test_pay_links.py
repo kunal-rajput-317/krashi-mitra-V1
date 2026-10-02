@@ -15,12 +15,13 @@ What this pins:
 
 import importlib
 from datetime import datetime
+import os
 
 import pytest
 
 from backend.services import dealers
 
-ADMIN = ("testadmin", "test-admin-pass")
+ADMIN = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 _PAY_QR = 'class="pay-qr"'
 TICK_EMAIL = "paylinks-tick@example.com"
 BANNED_CLAIMS = ["सत्यापित", "verified by", "पहचान जाँच ली", "पहचान जाँची"]

@@ -17,6 +17,7 @@ run on, never through `is_live` alone.
 """
 
 from datetime import datetime, timedelta
+import os
 
 import pytest
 
@@ -228,7 +229,7 @@ class TestTheAdminAPICarriesTheTerm:
     reads and the API stopped sending renders as `undefined` in a Hindi
     sentence about money, so the contract is asserted rather than assumed."""
 
-    AUTH = ("testadmin", "test-admin-pass")
+    AUTH = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])
 
     @pytest.fixture()
     def created(self, client):

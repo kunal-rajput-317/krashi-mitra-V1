@@ -125,8 +125,10 @@ def test_meter_is_the_outermost_middleware():
 
 
 def test_admin_bandwidth_route_exists():
+    # Ask the app, not app.routes: from FastAPI 0.142 included routers are
+    # lazy `_IncludedRouter` entries with no `.path`. 401 = mounted and guarded.
     from backend.main import app
-    assert any(getattr(r, "path", "") == "/admin/bandwidth" for r in app.routes)
+    assert TestClient(app).get("/admin/bandwidth").status_code == 401
 
 
 def test_hourly_flush_is_scheduled():

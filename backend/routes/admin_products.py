@@ -133,6 +133,43 @@ async def list_products(
             "edited": edited, "hidden": sorted(shop_catalog.hidden_slugs(db))}
 
 
+@router.post("/from-link")
+async def from_link(
+    payload: dict,
+    _: str = Depends(require_admin),
+):
+    """Paste an Amazon link → what the add-product form should open with.
+
+    Reads only the pasted text (services/amazon_link.py) — it never requests
+    amazon.in, so nothing is scraped and no price or photo is copied. Writes
+    nothing either: the owner checks the form and saves or previews as usual.
+
+    `duplicate` names the catalogue product already carrying this ASIN, so the
+    same Amazon item is not added twice under two slugs.
+    """
+    from backend.routes.product import CAT_LABELS, _get_products
+    from backend.services import amazon_link
+
+    got = amazon_link.parse(payload.get("url", ""))
+    if got["problem"]:
+        return {"success": False, "problem": got["problem"]}
+
+    catalogue = _get_products()
+    dup = next((p for p in catalogue
+                if amazon_link.asin_of(p.get("affil_amazon", "")) == got["asin"]), None)
+    if dup:
+        return {"success": True, **got, "cats": CAT_LABELS, "guess": {},
+                "duplicate": {"slug": dup["slug"], "name_hi": dup.get("name_hi", "")},
+                "slug_taken": False}
+
+    taken = any(p["slug"] == got["slug"] for p in catalogue)
+    return {
+        "success": True, **got, "cats": CAT_LABELS,
+        "guess": amazon_link.guess_category(got["name_en"], catalogue),
+        "duplicate": None, "slug_taken": taken,
+    }
+
+
 @router.get("/{slug}")
 async def get_product(
     slug: str,

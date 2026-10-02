@@ -288,11 +288,8 @@ async def generate_news_image_route(payload: GenerateImageRequest, _: str = Depe
 
 # ── Social Community: Real DB Likes & Comments ─────────────────
 
-def _calc_seed_likes(news_id: str) -> int:
-    h = 0
-    for ch in news_id:
-        h = ((h << 5) - h) + ord(ch)
-    return 260 + (abs(h) % 321)  # 260 to 580 likes
+# Every count returned here is a real row count. There is no "seed": an
+# invented like count is fake social proof (LEGAL_RULES §1).
 
 
 # ⚠️  /social/batch MUST be defined BEFORE /{news_id}/social,
@@ -310,11 +307,10 @@ async def get_batch_news_social(ids: str = "", db: Session = Depends(get_db)):
     news_id_list = [i.strip() for i in ids.split(",") if i.strip()]
     res = {}
     for nid in news_id_list:
-        base_seed = _calc_seed_likes(nid)
         db_likes = db.query(NewsLike).filter(NewsLike.news_id == nid).count()
         comm_count = db.query(NewsComment).filter(NewsComment.news_id == nid, NewsComment.is_approved == True).count()
         res[nid] = {
-            "likes": base_seed + db_likes,
+            "likes": db_likes,
             "comments": comm_count,
         }
     return res
@@ -326,10 +322,8 @@ async def get_news_social(news_id: str, db: Session = Depends(get_db)):
     Returns real comments and tallied likes for a news post.
     Comments start strictly at 0!
     """
-    # 1. Tally Likes (Seeded organic base 260-580 + real DB likes)
-    base_seed = _calc_seed_likes(news_id)
-    db_likes = db.query(NewsLike).filter(NewsLike.news_id == news_id).count()
-    total_likes = base_seed + db_likes
+    # 1. Tally likes: real rows only
+    total_likes = db.query(NewsLike).filter(NewsLike.news_id == news_id).count()
 
     # 2. Fetch real comments (Starts at 0)
     comments = (
@@ -397,8 +391,7 @@ async def add_news_like(
                 db.rollback()
                 logger.warning(f"Unlike commit warning: {e}")
 
-    base_seed = _calc_seed_likes(news_id)
-    total_likes = base_seed + db.query(NewsLike).filter(NewsLike.news_id == news_id).count()
+    total_likes = db.query(NewsLike).filter(NewsLike.news_id == news_id).count()
 
     return {"success": True, "total_likes": total_likes, "is_liked": is_liked}
 

@@ -3439,20 +3439,14 @@
     var activeCommentNewsId = null;
     var activeShareData = { id: '', title: '', link: '' };
 
-    function getSeedLikes(id) {
-      var hash = 0;
-      for (var i = 0; i < id.length; i++) hash = ((hash << 5) - hash) + id.charCodeAt(i);
-      // Organic Seed: Strictly 260 to 580 likes so the website feels active!
-      return 260 + (Math.abs(hash) % 321);
-    }
-
     // ── Likes State ──
     function getNewsLikes(id) {
       var userLikes = JSON.parse(localStorage.getItem('km_news_likes') || '{}');
-      var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts') || '{}');
+      var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts_v2') || '{}');
       if (likeCounts[id] !== undefined) return likeCounts[id];
-      var base = getSeedLikes(id);
-      return userLikes[id] ? base + 1 : base;
+      // Real likes only, no invented "seed" (LEGAL_RULES §1, fake social proof).
+      // Until the server count arrives, show only this reader's own like.
+      return userLikes[id] ? 1 : 0;
     }
 
     function getApiBase() {
@@ -3505,7 +3499,7 @@
       }
 
       var userLikes = JSON.parse(localStorage.getItem('km_news_likes') || '{}');
-      var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts') || '{}');
+      var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts_v2') || '{}');
       var currentCount = getNewsLikes(id);
 
       var isLiked = !userLikes[id];
@@ -3522,7 +3516,7 @@
 
       likeCounts[id] = currentCount;
       localStorage.setItem('km_news_likes', JSON.stringify(userLikes));
-      localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
+      localStorage.setItem('km_news_like_counts_v2', JSON.stringify(likeCounts));
 
       // Sync with backend PostgreSQL database with JWT auth
       var token = localStorage.getItem('krishi_token');
@@ -3549,7 +3543,7 @@
         }).then(function(res) {
           if (res && res.success && res.total_likes) {
             likeCounts[id] = res.total_likes;
-            localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
+            localStorage.setItem('km_news_like_counts_v2', JSON.stringify(likeCounts));
             if (btn) {
               var cEl = btn.querySelector('.like-count');
               if (cEl) cEl.textContent = res.total_likes;
@@ -4444,13 +4438,13 @@
         .then(function(r) { return r.json(); })
         .then(function(d) {
           if (!d) return;
-          var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts') || '{}');
+          var likeCounts = JSON.parse(localStorage.getItem('km_news_like_counts_v2') || '{}');
           Object.keys(d).forEach(function(nid) {
             var s = d[nid];
             if (!s || typeof s !== 'object') return;
             likeCounts[nid] = s.likes || s.total_likes || 0;
           });
-          localStorage.setItem('km_news_like_counts', JSON.stringify(likeCounts));
+          localStorage.setItem('km_news_like_counts_v2', JSON.stringify(likeCounts));
           renderNewsList();
 
           // Update recent top stories if stats present

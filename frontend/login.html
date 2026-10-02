@@ -1002,6 +1002,20 @@
     }
   }
 
+  // Neon sleeps when idle (NullPool, see backend/database/db.py), and the first
+  // request after a quiet spell waits for it to wake: up to 15 s connect plus
+  // the query. 12 s cancelled logins that were about to succeed, so every auth
+  // call that touches the database waits longer than the server's own limit.
+  const AUTH_TIMEOUT_MS = 30000;
+
+  // A timeout is a slow server, not a missing one — say so, so the farmer
+  // retries instead of assuming their internet is broken.
+  function netErrMsg(err) {
+    return err && err.name === "AbortError"
+      ? "⚠️ Server धीमा चल रहा है, कुछ सेकंड बाद दोबारा try करें।"
+      : "⚠️ Server से connect नहीं हो पाया।";
+  }
+
   let pendingEmail = "";
   let pendingResetEmail = "";
   let loginCooldownTimer = null;
@@ -1341,7 +1355,7 @@
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email, password })
-      }, 12000);
+      }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
 
       if (data.success && data.data && data.data.token) {
@@ -1387,7 +1401,7 @@
         }
       }
     } catch (err) {
-      authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
+      authErr("login-error", netErrMsg(err));
     } finally {
       const popup = document.getElementById("loading-popup");
       if (popup) popup.classList.remove("show");
@@ -1435,7 +1449,7 @@
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ name, email, password, confirm_password: confirmPassword })
-      }, 12000);
+      }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
 
       if (data.success) {
@@ -1449,7 +1463,7 @@
         authErr("signup-error", data.message || data.detail || "Signup failed। दोबारा try करें।");
       }
     } catch (err) {
-      authErr("signup-error", "⚠️ Server से connect नहीं हो पाया।");
+      authErr("signup-error", netErrMsg(err));
     } finally {
       const popup = document.getElementById("loading-popup");
       if (popup) popup.classList.remove("show");
@@ -1475,7 +1489,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
-      }, 12000);
+      }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
       if (data.success) {
         pendingResetEmail = email;
@@ -1489,7 +1503,7 @@
         authErr("forgot-error", data.message || data.detail || "Reset OTP नहीं भेजा जा सका।");
       }
     } catch (err) {
-      authErr("forgot-error", "⚠️ Server से connect नहीं हो पाया।");
+      authErr("forgot-error", netErrMsg(err));
     } finally {
       const popup = document.getElementById("loading-popup");
       if (popup) popup.classList.remove("show");
@@ -1529,7 +1543,7 @@
           new_password: newPassword,
           confirm_password: confirmPassword
         })
-      }, 12000);
+      }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
       if (data.success) {
         pendingResetEmail = "";
@@ -1542,7 +1556,7 @@
         authErr("reset-error", data.message || data.detail || "Password reset failed।");
       }
     } catch (err) {
-      authErr("reset-error", "⚠️ Server से connect नहीं हो पाया।");
+      authErr("reset-error", netErrMsg(err));
     } finally {
       const popup = document.getElementById("loading-popup");
       if (popup) popup.classList.remove("show");
@@ -1580,7 +1594,7 @@
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: pendingEmail, otp })
-      }, 12000);
+      }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
 
       if (data.success) {
@@ -1594,7 +1608,7 @@
         authErr("otp-error", data.message || data.detail || "OTP गलत है। दोबारा try करें।");
       }
     } catch (err) {
-      authErr("otp-error", "⚠️ Server से connect नहीं हो पाया।");
+      authErr("otp-error", netErrMsg(err));
     } finally {
       const popup = document.getElementById("loading-popup");
       if (popup) popup.classList.remove("show");
@@ -1610,7 +1624,7 @@
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: pendingEmail })
-      }, 12000);
+      }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
       if (data.success) {
         authOk("otp-success", "✅ नया OTP भेज दिया गया।");
@@ -1621,7 +1635,7 @@
         authErr("otp-error", data.message || data.detail || "OTP दोबारा नहीं भेजा जा सका।");
       }
     } catch (err) {
-      authErr("otp-error", "⚠️ Server से connect नहीं हो पाया।");
+      authErr("otp-error", netErrMsg(err));
     }
   }
 
@@ -1643,7 +1657,7 @@
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ id_token: idToken }),
-      }, 12000);
+      }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
       if (data.success && data.data?.token) {
         setToken(data.data.token);
@@ -1654,7 +1668,7 @@
         authErr("login-error", data.message || data.detail || "Google login failed। दोबारा try करें।");
       }
     } catch (err) {
-      authErr("login-error", "⚠️ Server से connect नहीं हो पाया।");
+      authErr("login-error", netErrMsg(err));
     } finally {
       const popup = document.getElementById("loading-popup");
       if (popup) popup.classList.remove("show");

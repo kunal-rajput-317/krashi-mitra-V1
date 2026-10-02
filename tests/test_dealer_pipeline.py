@@ -29,12 +29,13 @@ like success right up until the dyno sleeps.
 
 import json
 from datetime import datetime, timedelta
+import os
 
 import pytest
 
 from backend.services import buyers, dealers, placements
 
-ADMIN = ("testadmin", "test-admin-pass")     # set in conftest before backend import
+ADMIN = (os.environ["ADMIN_USER"], os.environ["ADMIN_PASS"])     # set in conftest before backend import
 
 
 def _dealer_panel(body: str) -> str:

@@ -37,7 +37,9 @@ def isolated_funnel(tmp_path):
     through the duplicate check. Found the hard way: a probe run left five
     staged posts and a generated cover image in the working tree.
     """
-    with patch.object(news, "DATA_FILE", tmp_path / "news_funnel.json"):
+    # The live copy is an app_settings row held in memory (see _DB_KEY), so
+    # each test also gets an empty cache and its own row.
+    with patch.object(news, "DATA_FILE", tmp_path / "news_funnel.json"),          patch.object(news, "_mem", {"data": None}),          patch.object(news, "_DB_KEY", f"test.news_funnel.{tmp_path.name}"):
         yield
 
 

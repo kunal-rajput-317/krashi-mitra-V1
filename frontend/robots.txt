@@ -59,6 +59,7 @@ Disallow: /go/
 
 # Sitemap location
 Sitemap: https://krashimitra.in/sitemap.xml
+Sitemap: https://krashimitra.in/news-sitemap.xml
 Sitemap: https://krashimitra.in/bhav/sitemap.xml
 Sitemap: https://krashimitra.in/product/sitemap.xml
 Sitemap: https://krashimitra.in/ganna/sitemap.xml
