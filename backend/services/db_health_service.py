@@ -23,6 +23,7 @@
 # ============================================================
 import logging
 import os
+import re
 
 from sqlalchemy import text
 
@@ -75,11 +76,15 @@ def check() -> dict:
                 # BRANCH storage (live data + retained change history), so the
                 # logical size above is a floor, not the real usage. Treat the
                 # percentage as optimistic.
+                # The unit matters: the account moved on 27 Sep 2026 reports
+                # '1GB', which digits-only parsing read as 1 MB (17793% used).
                 raw = str(conn.execute(text("SHOW neon.max_cluster_size")).scalar() or "")
-                mb = int("".join(ch for ch in raw if ch.isdigit()) or 0)
+                m = re.fullmatch(r"\s*(\d+)\s*(MB|GB|TB)?\s*", raw)
+                mb = (int(m.group(1)) * {"MB": 1, "GB": 1024, "TB": 1024 ** 2}[m.group(2) or "MB"]
+                      if m else 0)
                 if mb:
                     out["limit_bytes"] = mb * 1024 * 1024
-                    out["limit_pretty"] = f"{mb} MB"
+                    out["limit_pretty"] = _pretty(out["limit_bytes"])
                     if out["size_bytes"]:
                         out["pct_used"] = round(out["size_bytes"] * 100 / out["limit_bytes"])
             except Exception:

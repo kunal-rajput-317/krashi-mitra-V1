@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
@@ -864,6 +865,17 @@ def _neon() -> dict:
     hdr = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
     base = "https://console.neon.tech/api/v2"
     pid = os.getenv("NEON_PROJECT_ID", "").strip()
+
+    if not pid:
+        # A key scoped to one project (Neon's default since the 27 Sep 2026
+        # move) cannot list projects: the call 404s, naming the project it is
+        # scoped to. Use that, so the key alone is enough, no NEON_PROJECT_ID.
+        try:
+            r = requests.get(f"{base}/projects", headers={**UA, **hdr}, timeout=HTTP_TIMEOUT)
+            m = re.search(r'subject_project_id:\\?"([\w-]+)', r.text) if r.status_code == 404 else None
+            pid = m.group(1) if m else ""
+        except Exception:
+            pass
 
     if pid:
         data, err = _get(f"{base}/projects/{pid}", headers=hdr)
