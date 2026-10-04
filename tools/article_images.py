@@ -366,6 +366,13 @@ IMAGES = {
     "punjab-dhan-kharid": "Paddy fields in Batala, Gurdaspur, Punjab.jpg",
     "chhattisgarh-dhan-kharidi": "Paddy Field in Raigarh.jpeg",
     "bihar-dhan-adhiprapti": "Rice fields near Darbhanga, Bihar 2.jpg",
+
+    # ── दस भाषाएँ, अक्टूबर 2026 — one state's own crop per language ──────
+    # The rest of the batch reuses photos already on disk.
+    "makhana-ki-kheti-bihar": "Euryale ferox kz06.jpg",
+    "gud-kolhu-karobar-up": "Making Jaggery (Gur) in Punjab.jpg",
+    "jeeru-kheti-gujarat": "Field of cumin Photo By Raju Odedra Mo 07698787895 - panoramio.jpg",
+    "divela-kheti-gujarat": "A castor field.jpg",
 }
 
 # In-body illustrations on the hand-written articles.
