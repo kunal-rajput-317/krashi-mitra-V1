@@ -8,7 +8,7 @@
 #
 # Usage:
 #   python seed_cache.py --url https://your-app.onrender.com -p ADMIN_PASSWORD
-#   python seed_cache.py --url http://localhost:8000 -p krashi2025 --verify
+#   python seed_cache.py --url http://localhost:8000 -p "$ADMIN_PASS" --verify
 #
 # NOTE: Render's disk is ephemeral — seeded entries live until the
 # next deploy/restart. Just re-run this script after a deploy.

@@ -16,7 +16,9 @@ security = HTTPBasic()
 SITE = "https://krashimitra.in"
 
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "krashi2025")
+# No fallback: this repo is public, so any default would be a published
+# password (LEGAL_RULES §4). Unset means nobody can log in — see require_admin.
+ADMIN_PASS = os.getenv("ADMIN_PASS", "").strip()
 
 UPLOAD_DIR = Path(__file__).parent.parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -47,6 +49,9 @@ def require_admin(request: Request, creds: HTTPBasicCredentials = Depends(securi
     if _admin_locked(ip, now):
         raise HTTPException(429, "बहुत ज़्यादा गलत पासवर्ड — 15 मिनट बाद कोशिश करें।",
                             headers={"Retry-After": str(_ADMIN_FAIL_WINDOW)})
+    if not ADMIN_PASS:
+        # Without this an empty password would match the empty setting.
+        raise HTTPException(503, "ADMIN_PASS is not set on the server — admin is closed.")
     ok_user = secrets.compare_digest(creds.username.encode(), ADMIN_USER.encode())
     ok_pass = secrets.compare_digest(creds.password.encode(), ADMIN_PASS.encode())
     if not (ok_user and ok_pass):

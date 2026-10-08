@@ -443,6 +443,24 @@ def _title_names(commodity: str) -> tuple[str, str, bool]:
     return (en, en, True) if hi == commodity else (hi, en, False)
 
 
+# The Hindi crop name in Latin letters, for crops whose searchers type it that
+# way. Sugar is the one the data singles out: "chini ka bhav / chini ka rate"
+# and their spellings took 3,600 impressions at position 6.8 for 7 clicks
+# (0.19%) in the 14 days to 3 Oct 2026, while romanised searches for other
+# crops at the same positions clicked at 0.5-1.5%. The title said "चीनी" and
+# "Sugar", so the word the searcher typed, "chini", was nowhere in it, which
+# is the script mismatch measured on 6 Sep (see test_bhav_local_names.py).
+# Add a crop here only on the same kind of evidence.
+_ROMAN_NAME = {"Sugar": "Chini"}
+
+
+def _roman_bhav(commodity: str) -> str:
+    """'Chini Ka Bhav, ' for a crop in _ROMAN_NAME, else '' (a title prefix
+    for the English clause: "— Chini Ka Bhav, Sugar Price Jaipur")."""
+    r = _ROMAN_NAME.get(_en_short(commodity))
+    return f"{r} Ka Bhav, " if r else ""
+
+
 def _ambiguous_district(idx: dict, c_slug: str, d_slug: str) -> bool:
     """True when this district name also exists in another state for this crop.
 
@@ -8452,7 +8470,9 @@ def bhav_crop(c_slug: str):
                if state_map else "")
 
     t_hi, t_en, _same = _title_names(commodity)
+    _rb = _roman_bhav(commodity)
     title = _fit(
+        *([f"{t_hi} का भाव आज — {_rb}{t_en} Price Today"] if _rb else []),
         f"{t_hi} का भाव आज — {t_en} Price Today सभी राज्य",
         f"{t_hi} का भाव आज — {t_en} Price Today",
         f"{t_hi} का भाव आज — सभी राज्य")
@@ -8560,7 +8580,10 @@ def _state_page(idx: dict, cs: str, commodity: str, ss: str) -> HTMLResponse:
         (hi, f"{SITE}/bhav/{cs}"), (hi_state, canon)]))
 
     t_hi, t_en, _same = _title_names(commodity)
+    _rb = _roman_bhav(commodity)
     title = _fit(
+        *([f"{hi_state} में {t_hi} का भाव आज — {_rb}{t_en} Price {state}",
+           f"{hi_state} में {t_hi} का भाव आज — {_rb}{t_en} Price"] if _rb else []),
         f"{hi_state} में {t_hi} का भाव आज — {t_en} Price {state}",
         f"{hi_state} में {t_hi} का भाव आज — {t_en} Price",
         f"{hi_state} में {t_hi} का भाव आज")
@@ -8857,6 +8880,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     #
     # The district's other mandis join where there is room — _with_mandis.
     t_mandis = _title_mandis(prices, district)
+    _rb = _roman_bhav(commodity)
     title = _fit(*_with_mandis((
         # No real Hindi name for this commodity: t_hi IS t_en, so a bilingual
         # template would print one long string twice.
@@ -8869,6 +8893,10 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
         # The English name owns the "<crop> price today" query space, so it is
         # the last thing to go, not the first: every variant that still fits
         # keeps it, and only the final fallbacks give it up.
+        ([f"{t_hi} का भाव आज {place} मंडी में — {_rb}{t_en} Price {en_d}",
+          f"{t_hi} का भाव आज {place} — {_rb}{t_en} Price {en_d}"]
+         if _rb and en_d else []) +
+        ([f"{t_hi} का भाव आज {place} मंडी में — {_rb}{t_en} Price"] if _rb else []) +
         ([f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price {en_d}"] if en_d else []) + [
          f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price Today",
          f"{t_hi} का भाव आज {place} मंडी में — {t_en} Price",

@@ -367,6 +367,13 @@ IMAGES = {
     "chhattisgarh-dhan-kharidi": "Paddy Field in Raigarh.jpeg",
     "bihar-dhan-adhiprapti": "Rice fields near Darbhanga, Bihar 2.jpg",
 
+    # ── अक्टूबर 2026, धान — MSP और बासमती किस्में ─────────────────────────
+    # The MSP page shows the grain the rate is paid for, not a mandi (same
+    # politician problem as above). The basmati page shows an actual basmati
+    # harvest in Kalanur, Gurdaspur — the GI belt the article is about.
+    "dhan-msp-sarkari-rate-2026-27": "Paddy grains.jpg",
+    "basmati-dhan-kisme-1509-1692-1718": "Kalanur - basmati rice 3.jpg",
+
     # ── दस भाषाएँ, अक्टूबर 2026 — one state's own crop per language ──────
     # The rest of the batch reuses photos already on disk.
     "makhana-ki-kheti-bihar": "Euryale ferox kz06.jpg",

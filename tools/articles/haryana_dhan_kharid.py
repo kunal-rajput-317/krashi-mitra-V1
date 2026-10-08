@@ -93,7 +93,7 @@ BODY = r"""
     <div class="tip-box warning">
       <span class="tip-icon">⚠️</span>
       <div class="tip-content">
-        <strong>बासमती धान समर्थन मूल्य पर नहीं खरीदा जाता</strong> — वह खुली बोली पर बिकता है, और अक्सर MSP से ऊँचे भाव पर। बेचने से पहले <a href="https://krashimitra.in/bhav/paddy-basmati">बासमती का आज का मंडी भाव</a> और <a href="https://krashimitra.in/bhav/paddy-common">सामान्य धान का भाव</a> दोनों देख लीजिए।
+        <strong>बासमती धान समर्थन मूल्य पर नहीं खरीदा जाता</strong> — वह खुली बोली पर बिकता है, और अक्सर MSP से ऊँचे भाव पर। बेचने से पहले <a href="https://krashimitra.in/bhav/paddy-basmati">बासमती का आज का मंडी भाव</a> और <a href="https://krashimitra.in/bhav/paddy-common">सामान्य धान का भाव</a> दोनों देख लीजिए। 1509, 1692, 1718 और 1121 का फ़र्क <a href="https://krashimitra.in/articles/basmati-dhan-kisme-1509-1692-1718">बासमती किस्मों के लेख</a> में है।
       </div>
     </div>
   </section>

@@ -22,3 +22,13 @@ def test_ten_wrong_passwords_lock_the_ip_out(client):
     assert client.get("/admin/ledger", headers=good).status_code == 429
     admin._admin_fails.clear()
     assert client.get("/admin/ledger", headers=good).status_code == 200
+
+
+def test_unset_admin_pass_closes_admin_instead_of_accepting_empty(client, monkeypatch):
+    """No hard-coded fallback (LEGAL_RULES §4), and an unset ADMIN_PASS must
+    never turn into "the empty password logs in"."""
+    admin._admin_fails.clear()
+    monkeypatch.setattr(admin, "ADMIN_PASS", "")
+    assert client.get("/admin/ledger", headers=_hdr("")).status_code == 503
+    assert client.get("/admin/ledger", headers=_hdr("krashi2025")).status_code == 503
+    admin._admin_fails.clear()

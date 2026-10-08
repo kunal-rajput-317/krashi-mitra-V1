@@ -60,6 +60,8 @@ def _is_admin(request: Request) -> bool:
     except Exception:
         return False
     from backend.routes.admin import ADMIN_USER, ADMIN_PASS
+    if not ADMIN_PASS:            # unset must never mean "empty password works"
+        return False
     return (secrets.compare_digest(user.encode(), ADMIN_USER.encode())
             and secrets.compare_digest(pw.encode(), ADMIN_PASS.encode()))
 

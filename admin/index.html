@@ -7690,38 +7690,12 @@ function logout() {
       }
     } catch(e) {}
   }
-  
-  // Try default config
-  const defaultToken = 'Basic ' + btoa('admin:krashi2025');
-  try {
-    const r = await fetch(`${API}/admin/status`, { headers: { Authorization: defaultToken } });
-    serverOnline = true;
-    if (r.ok) {
-      const data = await r.json();
-      AUTH_TOKEN = defaultToken;
-      sessionStorage.setItem('km_admin_auth_new', defaultToken);
-      initDashboard(data);
-      loadOverview();
-      printTerminalLog('System: Connected to backend using default credentials (admin/krashi2025).');
-      return;
-    }
-  } catch(e) {}
 
-  // Try empty password
-  const emptyPassToken = 'Basic ' + btoa('admin:');
-  try {
-    const r = await fetch(`${API}/admin/status`, { headers: { Authorization: emptyPassToken } });
-    serverOnline = true;
-    if (r.ok) {
-      const data = await r.json();
-      AUTH_TOKEN = emptyPassToken;
-      sessionStorage.setItem('km_admin_auth_new', emptyPassToken);
-      initDashboard(data);
-      loadOverview();
-      printTerminalLog('System: Connected to backend using admin [no password].');
-      return;
-    }
-  } catch(e) {}
+  /* No saved session: just show the login form. This used to try
+     admin:krashi2025 and then an empty password on every page load. There is
+     no default password any more, so both tries only ever failed, and each
+     failure counted toward the 10-try brute-force lockout. */
+  if (!saved) { logout(); return; }
 
   /* Either way the overlay comes back. This branch used to be "Mock Control
      Mode": on an unreachable backend it left the panel open with AUTH_TOKEN

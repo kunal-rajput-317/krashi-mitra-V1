@@ -578,6 +578,16 @@ def _upsert_last_seen(db, rows: list, now: datetime) -> int:
     """
     touched = 0
     _ls = MandiLastSeen.__table__.c
+    # One row per group_key: a multi-date batch (CSV import) would otherwise
+    # put the same key twice in one INSERT, and ON CONFLICT DO UPDATE refuses
+    # to touch a row twice in a statement (CardinalityViolation).
+    best: dict = {}
+    for x in rows:
+        k, cur = x.get("group_key"), best.get(x.get("group_key"))
+        if cur is None or (x.get("arrival_dt") and
+                           (cur.get("arrival_dt") is None or x["arrival_dt"] > cur["arrival_dt"])):
+            best[k] = x
+    rows = list(best.values())
     for i in range(0, len(rows), CHUNK):
         chunk = [{k: v for k, v in x.items() if k != "row_key"}
                  for x in rows[i:i + CHUNK] if x.get("group_key")]
@@ -684,14 +694,24 @@ def check_api_key() -> bool:
     return False
 
 
-def fetch_and_store() -> dict:
-    """Main entry point. Returns a small summary dict for logging/tests."""
+def fetch_and_store(records: list | None = None, source: str | None = None) -> dict:
+    """Main entry point. Returns a small summary dict for logging/tests.
+
+    `records` (live-feed-shaped dicts) skips the API entirely — used by
+    mandi_csv_import when api.data.gov.in is down but the same dataset can
+    still be downloaded as CSV from www.data.gov.in. `source` names it in the
+    sync log so a hand import never looks like a clean live fetch.
+    """
     from backend.services.sync_log_service import record_sync
 
     started_at = datetime.utcnow()
     init_db()
+    imported = records is not None
     try:
-        records, failed_states = _fetch_all_records()
+        if imported:
+            records, failed_states = list(records), set()
+        else:
+            records, failed_states = _fetch_all_records()
     except DataGovDown as e:
         # The archive sits behind the same gateway, so the fallback would only
         # burn another ~12h. Log it now; the next cron / watchdog retries.
@@ -712,7 +732,7 @@ def fetch_and_store() -> dict:
     # price when today's is already known, and the snapshot can never end up
     # with two rows for the same market.
     archive_day, archive_added, live_count = None, 0, len(records)
-    if len(records) < MIN_ROWS:
+    if len(records) < MIN_ROWS and not imported:
         logger.warning(f"⚠️ Live feed sparse ({live_count} rows < MANDI_MIN_ROWS="
                        f"{MIN_ROWS}) — falling back to the archive resource.")
         arch, archive_day = fetch_archive_fallback()
@@ -851,9 +871,21 @@ def fetch_and_store() -> dict:
             if d_cur is None or (d_new is not None and d_new > d_cur):
                 newest[k] = x
 
+        # A batch can span many dates (archive top-up, or a CSV covering a
+        # whole outage). The "previous price" for the delta is then the
+        # mandi's own earlier date in this batch; history before the batch
+        # is only the fallback.
+        older: dict = {}
+        for x in rows:
+            k, d = x["group_key"], x.get("arrival_dt")
+            top = newest[k].get("arrival_dt")
+            if d and top and d < top and (k not in older or d > older[k]["arrival_dt"]):
+                older[k] = x
+
         snapshot = []
         for x in newest.values():
-            prev = prev_map.get(x["group_key"])
+            prev = (older[x["group_key"]]["modal_price"] if x["group_key"] in older
+                    else prev_map.get(x["group_key"]))
             snapshot.append({
                 "state":            x["state"],
                 "commodity":        x["commodity"],
@@ -873,10 +905,14 @@ def fetch_and_store() -> dict:
         db.bulk_insert_mappings(MandiPrice, snapshot)
 
         # Age out rows never refreshed recently (market stopped reporting for
-        # a week+) so last-known prices don't linger forever.
-        db.query(MandiPrice).filter(
-            MandiPrice.fetched_at < now - timedelta(days=SNAPSHOT_KEEP_DAYS)
-        ).delete(synchronize_session=False)
+        # a week+) so last-known prices don't linger forever. Not on a CSV
+        # import: a download may cover only some states, and after an outage
+        # every row it leaves out is "a week old" — the age-out would gut
+        # /bhav for markets that are simply missing from the file.
+        if not imported:
+            db.query(MandiPrice).filter(
+                MandiPrice.fetched_at < now - timedelta(days=SNAPSHOT_KEEP_DAYS)
+            ).delete(synchronize_session=False)
         db.commit()
 
         logger.info(
@@ -889,9 +925,11 @@ def fetch_and_store() -> dict:
         # complete and correct, but it is carrying yesterday's prices for the
         # markets that had not reported yet, and that should be visible in the
         # admin sync log rather than looking like a clean live fetch.
-        status = "partial" if (failed_states or archive_added) else "success"
+        status = "partial" if (failed_states or archive_added or imported) else "success"
         detail = (f"{len(rows)} rows merged into snapshot "
                   f"({len(stale_ids)} updated), +{history_added} history")
+        if imported:
+            detail = f"{source or 'CSV import'} — " + detail
         if archive_added:
             detail += (f" — live feed sparse ({live_count} rows), "
                        f"+{archive_added} from archive "
