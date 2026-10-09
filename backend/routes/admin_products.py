@@ -87,6 +87,28 @@ def _row_dict(r, baseline: set) -> dict:
     }
 
 
+def _amazon_clicks(db, days: int = 90) -> dict:
+    """slug → Amazon taps through /go/p/amazon/<slug> in the last `days`.
+
+    A count, never a page of rows: lead_clicks grows with every tap. A failed
+    read shows zeros rather than taking the whole catalogue panel down."""
+    from datetime import datetime, timedelta
+
+    from sqlalchemy import func
+
+    from backend.database.db import LeadClick
+    try:
+        rows = (db.query(LeadClick.target_id, func.count(LeadClick.id))
+                  .filter(LeadClick.kind == "product",
+                          LeadClick.target_id.like("amazon:%"),
+                          LeadClick.created_at >= datetime.utcnow() - timedelta(days=days))
+                  .group_by(LeadClick.target_id).all())
+    except Exception:
+        db.rollback()
+        return {}
+    return {t.split(":", 1)[1]: n for t, n in rows}
+
+
 @router.get("")
 async def list_products(
     _:  str     = Depends(require_admin),
@@ -128,6 +150,22 @@ async def list_products(
         "state": ("added" if p["slug"] in edited and p["slug"] not in baseline
                   else "edited" if p["slug"] in edited else "committed"),
     } for p in _get_products()]
+
+    # Fix-first list: which links open a search page, how often farmers tapped
+    # each one, and which products share one link (a copy-paste in this panel
+    # sends a farmer to another product's page, and nothing else catches it).
+    from backend.services import amazon_link
+    clicks = _amazon_clicks(db)
+    by_key: dict = {}
+    for r in live:
+        r["link_kind"] = amazon_link.link_kind(r["affil_amazon"])
+        r["clicks_90d"] = clicks.get(r["slug"], 0)
+        key = amazon_link.same_link_key(r["affil_amazon"])
+        if key:
+            by_key.setdefault(key, []).append(r["slug"])
+    for r in live:
+        key = amazon_link.same_link_key(r["affil_amazon"])
+        r["same_link_as"] = [s for s in by_key.get(key, []) if s != r["slug"]] if key else []
 
     return {"success": True, "cats": CAT_LABELS, "catalogue": live,
             "edited": edited, "hidden": sorted(shop_catalog.hidden_slugs(db))}

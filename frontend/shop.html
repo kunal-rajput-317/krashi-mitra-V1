@@ -4210,6 +4210,15 @@
       .replace(/^-+|-+$/g, '');
   }
 
+  // Buy buttons go through the server's tracked hop, never straight at the
+  // URL in PRODUCTS. The hop reads the catalogue merged with the admin
+  // panel's edits, so a link fixed there (a clean /dp/<ASIN>?tag= link) is
+  // the one the farmer lands on — the baseline here holds old search and
+  // amzn.to links that open the wrong page and earn nothing.
+  function buyUrl(p, net) {
+    return '/go/p/' + net + '/' + getProductSlug(p);
+  }
+
   function renderProducts() {
     const grid     = document.getElementById('shop-grid');
     const fertGrid = document.getElementById('fert-grid');
@@ -4760,7 +4769,7 @@
       amazonBtn.classList.add('order-choice-unavail');
       amazonBtn.onclick = (e) => { e.preventDefault(); closeOrderModal(); openNotAvailModal(productId); };
     } else {
-      amazonBtn.href = p.affil_amazon || '#';
+      amazonBtn.href = buyUrl(p, 'amazon');
       amazonBtn.classList.remove('order-choice-unavail');
       amazonBtn.onclick = null;
     }
@@ -4771,7 +4780,7 @@
       flipkartBtn.classList.add('order-choice-unavail');
       flipkartBtn.onclick = (e) => { e.preventDefault(); closeOrderModal(); openNotAvailModal(productId); };
     } else {
-      flipkartBtn.href = p.affil_flipkart || '#';
+      flipkartBtn.href = buyUrl(p, 'flipkart');
       flipkartBtn.classList.remove('order-choice-unavail');
       flipkartBtn.onclick = null;
     }
@@ -5064,7 +5073,7 @@ ${tkLine}
         amazonBtn.onclick = (ev) => { ev.preventDefault(); closeFertModal(); openNotAvailModal(productId); };
         amazonBtn.style.cursor = 'pointer';
       } else {
-        amazonBtn.href = p.affil_amazon || '#';
+        amazonBtn.href = buyUrl(p, 'amazon');
         amazonBtn.onclick = null;
       }
     }
@@ -5074,7 +5083,7 @@ ${tkLine}
         flipkartBtn.onclick = (ev) => { ev.preventDefault(); closeFertModal(); openNotAvailModal(productId); };
         flipkartBtn.style.cursor = 'pointer';
       } else {
-        flipkartBtn.href = p.affil_flipkart || '#';
+        flipkartBtn.href = buyUrl(p, 'flipkart');
         flipkartBtn.onclick = null;
       }
     }

@@ -50,6 +50,47 @@ def clean_url(asin: str) -> str:
     return f"https://www.amazon.in/dp/{asin}?tag={TAG}"
 
 
+def link_kind(url: str) -> str:
+    """How well a catalogue link earns, for the panel's fix-first list.
+
+    "product" opens the item itself; "short" (amzn.to, link.amazon) resolves to
+    one; "search" opens a results page, where far fewer farmers buy; "none" is
+    no link at all. Read off the text only — nothing is requested."""
+    url = (url or "").strip()
+    if not url or url.startswith("not_available_"):
+        return "none"
+    u = urlparse(url if re.match(r"https?://", url, re.I) else "https://" + url)
+    host = (u.hostname or "").lower()
+    if asin_of(url):
+        return "product"
+    if host in _SHORT_HOSTS or host == "link.amazon":
+        return "short"
+    if host in _HOSTS and u.path.rstrip("/") == "/s":
+        return "search"
+    return "other"
+
+
+def same_link_key(url: str) -> str:
+    """Two products whose links share this key open the same Amazon page.
+
+    The ASIN when the link carries one, so a /dp/ link and a long titled link
+    to the same item match; otherwise the link minus its tag and its www./m.
+    host prefix. Short-link paths stay case-sensitive — link.amazon/B07qLh and
+    link.amazon/B07QLH are different items. Must match sameLinkKey() in the
+    admin panel, which runs the same check before a save."""
+    url = (url or "").strip()
+    if not url or url.startswith("not_available_"):
+        return ""
+    asin = asin_of(url)
+    if asin:
+        return "asin:" + asin
+    u = urlparse(url if re.match(r"https?://", url, re.I) else "https://" + url)
+    host = re.sub(r"^(www\.|m\.)", "", (u.hostname or "").lower())
+    query = "&".join(sorted(kv for kv in u.query.split("&")
+                            if kv and not kv.lower().startswith("tag=")))
+    return f"{host}{u.path.rstrip('/')}" + (f"?{query}" if query else "")
+
+
 def _name_from_path(path: str) -> str:
     """'/Kisan-Kraft-KK-KPS-16-Sprayer/dp/B0…' → 'Kisan Kraft KK KPS 16 Sprayer'."""
     head = _ASIN_RE.split(path)[0]

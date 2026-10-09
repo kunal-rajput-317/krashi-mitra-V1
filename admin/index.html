@@ -5724,6 +5724,8 @@ button.vf-money-tile:hover { border-color: var(--primary); }
         .pc-h-link { font-family:var(--font-mono); font-size:10px; color:var(--text-dim);
                      margin-top:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .pc-h-link.none { color:#e08600; }
+        .pc-h-warn { font-size:11px; color:#e08600; font-weight:600; line-height:1.35; margin-top:4px; }
+        .pc-h-taps { font-size:10.5px; color:var(--text-dim); margin-top:3px; font-family:var(--font-mono); }
         /* An armed card is unmistakable — you should never wonder which one you
            are editing. */
         .pc-card.editing { border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
@@ -5798,6 +5800,8 @@ button.vf-money-tile:hover { border-color: var(--primary); }
             <option value="edited">Edited</option>
             <option value="committed">Committed only</option>
             <option value="noaz">No Amazon link</option>
+            <option value="fixfirst">🔍 Fix first: search-page links, most tapped</option>
+            <option value="dup">⚠ Same Amazon link on two products</option>
             <option value="hidden">Switched off</option>
           </select>
           <select id="pc-sort" onchange="renderCatalogue()">
@@ -10140,8 +10144,10 @@ function renderCatalogue() {
   const shown = rows.filter(r => {
     if (cat && r.cat !== cat) return false;
     if (state === 'noaz' && r.has_amazon) return false;
+    if (state === 'fixfirst' && r.link_kind !== 'search') return false;
+    if (state === 'dup' && !(r.same_link_as || []).length) return false;
     if (state === 'hidden' && r.state !== 'off') return false;
-    if (state && state !== 'noaz' && state !== 'hidden' && r.state !== state) return false;
+    if (state && !['noaz', 'fixfirst', 'dup', 'hidden'].includes(state) && r.state !== state) return false;
     if (q && !((r.name_hi || '') + (r.name_en || '') + r.slug).toLowerCase().includes(q)) return false;
     return true;
   });
@@ -10153,12 +10159,19 @@ function renderCatalogue() {
     ['edited', live.filter(r => r.state === 'edited').length],
     ['switched off', hidden.size],
     ['no Amazon link', live.filter(r => !r.has_amazon).length],
+    ['search-page link', live.filter(r => r.link_kind === 'search').length],
+    ['same link twice', live.filter(r => (r.same_link_as || []).length).length],
   ];
   document.getElementById('pc-stats').innerHTML = stats.map(([l, n]) =>
     `<div class="pc-stat"><b>${n}</b><span>${l}</span></div>`).join('');
 
-  const sort = document.getElementById('pc-sort').value;
+  let sort = document.getElementById('pc-sort').value;
   const cats = _cat.cats || {};
+  // The fix-first list is only useful in tap order, whatever the sort says.
+  if (state === 'fixfirst') {
+    sort = 'clicks';
+    shown.sort((a, b) => (b.clicks_90d || 0) - (a.clicks_90d || 0));
+  }
   if (sort === 'name')      shown.sort((a, b) => (a.name_hi || '').localeCompare(b.name_hi || '', 'hi'));
   if (sort === 'price-hi')  shown.sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
   if (sort === 'price-lo')  shown.sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
@@ -10222,6 +10235,20 @@ function pcCard(r) {
               value="${az}" placeholder="Amazon affiliate link…"></div>`
     : `<div class="pc-h-link${az ? '' : ' none'}">${az ? '🔗 ' + az : '⚠ no Amazon link'}</div>`;
 
+  // Why this card earns less than it could — the two faults the shop cannot
+  // show the owner, because the farmer just lands on the wrong page and leaves.
+  const dupes = r.same_link_as || [];
+  const warn = [
+    dupes.length
+      ? `⚠ Same Amazon link as ${dupes.map(s => `<b>${escapeHtml(s)}</b>`).join(', ')} — one of them opens the wrong product`
+      : '',
+    r.link_kind === 'search'
+      ? '🔍 Opens an Amazon search page, not this product — paste the product page link'
+      : '',
+  ].filter(Boolean).map(t => `<div class="pc-h-warn">${t}</div>`).join('');
+  const taps = r.state === 'off' ? '' :
+    `<div class="pc-h-taps">👆 ${r.clicks_90d || 0} Amazon taps · 90 days</div>`;
+
   const actions = editing
     ? `<div class="pc-ctl-row">
          <button class="pc-mini save" onclick="saveCard('${slug}')">Save</button>
@@ -10248,6 +10275,7 @@ function pcCard(r) {
       <div class="pc-h-slug">${slug}</div>
       <div class="pc-h-price">${price}</div>
       ${link}
+      ${warn}${taps}
       <div class="pc-h-actions">${actions}</div>
     </div>
   </div>`;
@@ -10272,9 +10300,40 @@ function pcCardValues(slug) {
   };
 }
 
+// Mirrors same_link_key() in services/amazon_link.py: the ASIN when the link
+// has one, else the link minus its tag. Same key = same Amazon page.
+function sameLinkKey(url) {
+  url = (url || '').trim();
+  if (!url || url.startsWith('not_available_')) return '';
+  let u;
+  try { u = new URL(/^https?:\/\//i.test(url) ? url : 'https://' + url); } catch (e) { return ''; }
+  const m = u.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d|exec\/obidos\/asin|o\/asin)\/([A-Z0-9]{10})(?=[\/?#]|$)/i);
+  if (m) return 'asin:' + m[1].toUpperCase();
+  const host = u.hostname.toLowerCase().replace(/^(www\.|m\.)/, '');
+  const q = u.search.replace(/^\?/, '').split('&')
+    .filter(kv => kv && !kv.toLowerCase().startsWith('tag=')).sort().join('&');
+  return host + u.pathname.replace(/\/+$/, '') + (q ? '?' + q : '');
+}
+
+// Asks before saving a link another product already carries — the copy-paste
+// that sent Carbo Star Pro's buyers to a spray pump. Returns false to cancel.
+function confirmLinkUnique(slug, url) {
+  const key = sameLinkKey(url);
+  if (!key || !_cat) return true;
+  const other = (_cat.catalogue || []).find(r => r.slug !== slug && sameLinkKey(r.affil_amazon) === key);
+  if (!other) return true;
+  return confirm(`यह Amazon link पहले से "${other.name_hi || other.name_en || other.slug}" (${other.slug}) पर लगा है।
+
+`
+    + `दोनों प्रोडक्ट एक ही Amazon पेज खोलेंगे — एक गलत होगा।
+
+फिर भी save करें?`);
+}
+
 async function saveCard(slug, body) {
   body = body || pcCardValues(slug);
   if (!body) return;
+  if (body.affil_amazon && !confirmLinkUnique(slug, body.affil_amazon)) return;
   try {
     const r = await fetch(`${API}/admin/catalogue/${encodeURIComponent(slug)}`, {
       method: 'PATCH',
@@ -10516,6 +10575,7 @@ function pcPayload() {
 
 async function saveProduct() {
   const body = pcPayload();
+  if (body.affil_amazon && !confirmLinkUnique(_catEditing, body.affil_amazon)) return;
   const url = _catEditing
     ? `${API}/admin/catalogue/${encodeURIComponent(_catEditing)}`
     : `${API}/admin/catalogue`;

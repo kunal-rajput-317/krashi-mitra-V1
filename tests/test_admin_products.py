@@ -424,3 +424,44 @@ def test_from_link_needs_the_admin_password(client):
     r = client.post("/admin/catalogue/from-link", json={"url": "https://www.amazon.in/x/dp/B0ABCDE123"})
     assert r.status_code == 401
 
+
+
+# ── Fix-first list and the same-link warning ─────────────────
+
+@pytest.mark.parametrize("url, kind", [
+    ("https://www.amazon.in/dp/B0ABCDE123?tag=krashimitra-21", "product"),
+    ("https://amzn.to/43wKBxh", "short"),
+    ("https://link.amazon/B07qLhHEB", "short"),
+    ("https://www.amazon.in/s?k=DAP+fertilizer&tag=krashimitra-21", "search"),
+    ("not_available_Urea.webp", "none"),
+    ("", "none"),
+])
+def test_each_link_is_told_apart_by_how_well_it_earns(url, kind):
+    from backend.services import amazon_link
+    assert amazon_link.link_kind(url) == kind
+
+
+def test_two_links_to_one_amazon_page_share_a_key():
+    from backend.services.amazon_link import same_link_key as key
+    # Same item, different spelling of the link.
+    assert key("https://www.amazon.in/dp/B0ABCDE123?tag=krashimitra-21") == \
+           key("https://amazon.in/Some-Title/dp/B0ABCDE123/ref=sr_1_3?crid=X")
+    assert key("https://link.amazon/B07qLhHEB") == key("https://link.amazon/B07qLhHEB/")
+    # Short-link paths are case-sensitive: these are two different items.
+    assert key("https://link.amazon/B07qLhHEB") != key("https://link.amazon/B07QLHHEB")
+    assert key("not_available_x.webp") == ""
+
+
+def test_the_list_flags_two_products_sharing_one_link(client, clean):
+    link = "https://link.amazon/B0TESTDUP1"
+    _create(client, affil_amazon=link)
+    # The copy-paste being guarded against: a committed product given the
+    # link another product already carries. (The clean fixture purges both.)
+    r = client.patch("/admin/catalogue/wheat-seeds-hd-2967", json={"affil_amazon": link}, auth=AUTH)
+    assert r.status_code == 200
+    shop_catalog.invalidate()
+    rows = {r["slug"]: r for r in client.get("/admin/catalogue", auth=AUTH).json()["catalogue"]}
+    assert rows[SAMPLE_SLUG]["same_link_as"] == ["wheat-seeds-hd-2967"]
+    assert rows["wheat-seeds-hd-2967"]["same_link_as"] == [SAMPLE_SLUG]
+    assert rows[SAMPLE_SLUG]["link_kind"] == "short"
+    assert rows[SAMPLE_SLUG]["clicks_90d"] == 0
