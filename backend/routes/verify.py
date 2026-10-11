@@ -310,6 +310,9 @@ border:2px solid var(--border);background:#fff}
 .vf-plan.on .vf-plan-tick{border-color:#0284c7;background:#0284c7;
 box-shadow:inset 0 0 0 2px #fff}
 .vf-offer-line{font-size:11.5px;font-weight:700;color:#0284c7;margin:-8px 0 14px}
+.vf-deal{background:#fff7e6;border:1.5px solid #f59e0b;border-radius:12px;padding:10px 12px;
+margin:0 0 12px;font-size:13px;line-height:1.6;color:#7c2d12}
+.vf-deal s{color:#9a8c7a}
 
 .vf-field{margin-bottom:12px}
 .vf-field label{display:block;font-size:12.5px;font-weight:700;color:var(--text-dark);margin-bottom:5px}
@@ -357,6 +360,7 @@ _BODY = """
   <div class="vf-card" id="vf-intro">
     <span class="vf-tick">__TICK__ नीला टिक</span>
     <h1 class="vf-h">कृषि बाज़ार में नीला टिक लगवाएँ</h1>
+    __OFFER__
     <p class="vf-p">__MEANS__</p>
     <p class="vf-p" style="margin-bottom:8px;"><b>क्या मिलेगा:</b></p>
     <ul class="vf-checks">__GETS__</ul>
@@ -408,8 +412,9 @@ _BODY = """
   }
 
   /* The picker. Drawn from the same table the server prices from, so the
-     price on the card and the amount in the UPI link cannot drift. No struck
-     price: the only saving shown is the real one against the monthly plan. */
+     price on the card and the amount in the UPI link cannot drift. A struck
+     price appears only while a dated offer runs, and it is the plan's real
+     regular price (seller_verify.OFFER). */
   function planCards() {
     return '<div class="vf-plans">' + PLANS.map(function(p) {
       return '<button type="button" class="vf-plan' + (p.code === picked ? ' on' : '') + '"' +
@@ -417,7 +422,7 @@ _BODY = """
         '<span class="vf-plan-tick"></span>' +
         (p.save_pct ? '<span class="vf-plan-save">' + p.save_pct + '% बचत</span>' : '') +
         '<span class="vf-plan-term">' + esc(p.term_hi) + '</span>' +
-        '<span class="vf-plan-price">₹' + p.price + '</span>' +
+        '<span class="vf-plan-price">₹' + p.price + (p.mrp ? '<s>₹' + p.mrp + '</s>' : '') + '</span>' +
         (p.months > 1 ? '<span class="vf-plan-pm">₹' + p.per_month + ' / महीना</span>'
                       : '<span class="vf-plan-pm">हर महीने</span>') +
         '</button>';
@@ -595,7 +600,19 @@ def verify_moved():
 @router.get("/bluetick", response_class=HTMLResponse)
 def verify_page():
     gets = "".join(f"<li>{escape(g)}</li>" for g in GETS_HI)
+    # Printed server-side so a visitor who is not logged in — the one the
+    # site-wide strip sends here — sees the offer before the login wall.
+    deal = seller_verify.offer_banner()
+    offer_html = ""
+    if deal:
+        prices = " · ".join(
+            f"{p['months']} {'महीना' if p['months'] == 1 else 'महीने'} <s>₹{p['mrp']}</s> <b>₹{p['price']}</b>"
+            for p in deal["plans"])
+        offer_html = (f'<p class="vf-deal">🪔 <b>{escape(deal["name_hi"])}</b> — '
+                      f'{prices} · <b>{escape(deal["ends_hi"])}</b>, उसके बाद '
+                      f'सामान्य क़ीमत।</p>')
     body = (_BODY
+            .replace("__OFFER__", offer_html)
             .replace("__PLANS__", json.dumps(seller_verify.plans(), ensure_ascii=False))
             .replace("__GETS__", gets)
             # TERMS_HI is our own fixed markup (<b> only), never user input.

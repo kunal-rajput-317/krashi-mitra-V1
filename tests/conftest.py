@@ -99,3 +99,14 @@ def paid():
         body.update(kw)
         return body
     return make
+
+
+@pytest.fixture(autouse=True)
+def _outside_any_offer(monkeypatch):
+    """Price tests pin the regular ₹199/₹499. A dated offer
+    (seller_verify.OFFER) would make them fail for exactly the days it runs,
+    so every test sees a day after it. Offer tests pass their own `now`."""
+    from datetime import datetime
+
+    from backend.services import seller_verify
+    monkeypatch.setattr(seller_verify, "_now_ist", lambda: datetime(2030, 1, 1))

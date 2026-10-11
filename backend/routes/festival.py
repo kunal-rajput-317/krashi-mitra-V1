@@ -168,10 +168,20 @@ def get_festival_config():
     """Returns the current festival popup configuration and active status."""
     config = _load_config()
     is_live = _is_active_now(config)
+    # The नीला टिक offer strip rides on this request because api-config.js
+    # already makes it on every page — a second fetch per page view would be
+    # paid for in Render bandwidth. Its own dates, independent of is_live.
+    try:
+        from backend.services import seller_verify
+        offer = seller_verify.offer_banner()
+    except Exception as e:
+        logger.warning(f"offer banner skipped: {e}")
+        offer = None
     return {
         "success": True,
         "is_live": is_live,
         "config": _public_config(config),
+        "offer": offer,
     }
 
 

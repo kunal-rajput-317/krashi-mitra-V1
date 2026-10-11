@@ -28,6 +28,7 @@ So what is pinned here is:
 
 import os
 import re
+from pathlib import Path
 from datetime import datetime, timedelta
 
 import pytest
@@ -1006,3 +1007,95 @@ def test_the_member_sees_the_removal_reason_everywhere():
     assert 'd.status === "rejected"' in profile
     sw = io.open(root / "frontend" / "sw.js", encoding="utf-8").read()
     assert "krashibook)" in sw, "a cache-first krashibook.js would hide the notice"
+
+
+# ── A dated offer (दशहरा ऑफ़र, 2026-10-11) ─────────────────────
+#
+# The only struck price allowed is the real regular price, and only inside the
+# offer's dates. Every check below passes its own clock.
+
+def _in_offer():
+    o = seller_verify.OFFER
+    return o["starts"] + (o["ends"] - o["starts"]) / 2
+
+
+def _after_offer():
+    from datetime import timedelta
+    return seller_verify.OFFER["ends"] + timedelta(seconds=1)
+
+
+def test_the_offer_cuts_the_price_and_strikes_only_the_real_one():
+    plans = {p["code"]: p for p in seller_verify.plans(_in_offer())}
+    regular = {p["code"]: p for p in seller_verify.plans(_after_offer())}
+    for code, cut in seller_verify.OFFER["prices"].items():
+        assert plans[code]["price"] == cut
+        # The struck figure is exactly what the plan costs the day after.
+        assert plans[code]["mrp"] == regular[code]["price"]
+        assert plans[code]["price"] < plans[code]["mrp"]
+        assert plans[code]["per_month"] == round(cut / plans[code]["months"])
+
+
+def test_the_offer_ends_on_its_own():
+    """No flag to remember: one second after the end, prices are back and
+    nothing is struck — or the struck ₹199 becomes a false reference price."""
+    for p in seller_verify.plans(_after_offer()):
+        assert p["mrp"] is None and p["offer_hi"] is None
+    assert seller_verify.offer(_after_offer()) is None
+    assert seller_verify.offer_banner(_after_offer()) is None
+    before = seller_verify.OFFER["starts"].replace(year=2020)
+    assert seller_verify.offer_banner(before) is None
+
+
+def test_the_offer_keeps_the_longer_plan_the_better_deal():
+    plans = {p["code"]: p for p in seller_verify.plans(_in_offer())}
+    assert plans["m3"]["per_month"] < plans["m1"]["per_month"]
+    # The saving is against the offer's own monthly price, not the regular one.
+    assert plans["m3"]["save_vs"] == plans["m1"]["price"] * 3
+
+
+def test_an_offer_never_raises_a_price(monkeypatch):
+    """If the env already set a plan below the offer, the env wins and
+    nothing is struck."""
+    monkeypatch.setenv("KM_VERIFY_M1_PRICE", "99")
+    m1 = {p["code"]: p for p in seller_verify.plans(_in_offer())}["m1"]
+    assert m1["price"] == 99 and m1["mrp"] is None
+
+
+def test_the_banner_quotes_what_the_upi_link_charges():
+    banner = seller_verify.offer_banner(_in_offer())
+    plans = {p["months"]: p for p in seller_verify.plans(_in_offer())}
+    assert banner and banner["ends_hi"]
+    for b in banner["plans"]:
+        assert b["price"] == plans[b["months"]]["price"]
+        assert b["mrp"] == plans[b["months"]]["mrp"]
+
+
+def test_signing_up_during_the_offer_is_charged_the_offer_price(db_session, applicant, monkeypatch):
+    monkeypatch.setattr(seller_verify, "_now_ist", _in_offer)
+    row = _apply(db_session, applicant, plan="m3")
+    assert row.fee_amount == seller_verify.OFFER["prices"]["m3"]
+
+
+def test_the_strip_has_no_countdown_or_fake_urgency():
+    """The end date is the only urgency. A ticking timer or a 'few left' line
+    is a dark pattern under the Consumer Protection Act."""
+    src = (Path(__file__).resolve().parents[1] / "frontend" / "api-config.js").read_text(encoding="utf-8")
+    start = src.index("── नीला टिक offer strip")
+    strip = _visible(src[start:src.index("async function init()", start)])
+    code = "\n".join(l for l in strip.splitlines() if not l.strip().startswith("//"))
+    for bad in ("setInterval", "जल्दी करें", "सीमित", "बचे हैं", "घंटे बाकी", "countdown"):
+        assert bad not in code, f"offer strip carries {bad!r}"
+
+
+def test_the_bluetick_page_shows_the_offer_to_a_visitor_not_logged_in(client, monkeypatch):
+    monkeypatch.setattr(seller_verify, "_now_ist", _in_offer)
+    body = client.get("/bluetick").text
+    assert seller_verify.OFFER["name_hi"] in body
+    assert "₹149" in body and "<s>₹199</s>" in body
+
+
+def test_the_festival_config_carries_the_offer_only_while_it_runs(client, monkeypatch):
+    assert client.get("/api/festival/config").json()["offer"] is None
+    monkeypatch.setattr(seller_verify, "_now_ist", _in_offer)
+    offer = client.get("/api/festival/config").json()["offer"]
+    assert offer and offer["plans"]

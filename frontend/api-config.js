@@ -599,6 +599,70 @@ document.addEventListener("DOMContentLoaded", function () {
   window.acceptFestivalBlessings = acceptBlessings;
   window.previewFestivalPopup = previewModal;
 
+  // ── नीला टिक offer strip ──────────────────────────────────
+  // A slim card above the bottom nav while seller_verify.OFFER runs. Prices
+  // and the end date come from the server (the same plans() the UPI link
+  // charges), so the strip disappears by itself when the offer ends. No
+  // countdown, no "जल्दी करें" — the date is the whole of the urgency, and an
+  // invented one is a dark pattern. Hidden on policy pages, on /bluetick
+  // itself, for a member who already has the tick, and for a day after ✕.
+  var OFFER_ID = 'km-offer-strip';
+  function showOfferStrip(offer) {
+    if (!offer || !offer.plans || !offer.plans.length) return;
+    if (document.getElementById(OFFER_ID)) return;
+    var path = location.pathname;
+    if (/^\/(bluetick|verify|terms|privacy-policy|login)/.test(path)) return;
+    var key = 'km_offer_dismiss_' + (offer.ends || '');
+    try {
+      if (localStorage.getItem('km_seller_verified') === '1') return;
+      var t = parseInt(localStorage.getItem(key) || '0', 10);
+      if (Date.now() - t < 24 * 3600 * 1000) return;
+    } catch (e) {}
+
+    if (!document.getElementById(OFFER_ID + '-css')) {
+      var s = document.createElement('style');
+      s.id = OFFER_ID + '-css';
+      s.textContent =
+        '#' + OFFER_ID + '{position:fixed;left:12px;right:12px;bottom:12px;z-index:3400;max-width:560px;margin:0 auto;' +
+        'background:#fff7e6;border:2px solid #f59e0b;border-radius:18px;padding:14px 16px 16px;' +
+        'box-shadow:0 10px 30px rgba(0,0,0,.25);font-family:inherit;color:#7c2d12;line-height:1.35;box-sizing:border-box}' +
+        'body.km-has-bn #' + OFFER_ID + '{bottom:calc(72px + env(safe-area-inset-bottom))}' +
+        '#' + OFFER_ID + ' a{color:inherit;text-decoration:none}' +
+        '#' + OFFER_ID + ' .kos-h{display:block;font-size:19px;font-weight:900;color:#9a3412;padding-right:40px;margin-bottom:10px}' +
+        '#' + OFFER_ID + ' .kos-plans{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}' +
+        '#' + OFFER_ID + ' .kos-plan{background:#fff;border:1.5px solid #fcd34d;border-radius:12px;padding:9px 12px}' +
+        '#' + OFFER_ID + ' .kos-term{display:block;font-size:13.5px;font-weight:700;color:#7c2d12}' +
+        '#' + OFFER_ID + ' .kos-price{font-size:26px;font-weight:900;color:#166534}' +
+        '#' + OFFER_ID + ' s{font-size:15px;font-weight:600;color:#9a8c7a;margin-left:6px}' +
+        '#' + OFFER_ID + ' .kos-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}' +
+        '#' + OFFER_ID + ' .kos-date{font-size:15px;font-weight:800}' +
+        '#' + OFFER_ID + ' .kos-go{flex:none;background:#0284c7;color:#fff;border-radius:12px;padding:12px 20px;font-weight:900;font-size:16px;white-space:nowrap;box-shadow:0 4px 12px rgba(2,132,199,.35)}' +
+        '#' + OFFER_ID + ' button{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(0,0,0,.07);color:#7c2d12;font-size:17px;cursor:pointer}';
+      document.head.appendChild(s);
+    }
+
+    var plans = offer.plans.map(function (p) {
+      return '<a class="kos-plan" href="/bluetick"><span class="kos-term">' +
+        (p.months === 1 ? '1 महीना' : p.months + ' महीने') + '</span>' +
+        '<span class="kos-price">₹' + p.price + '</span><s>₹' + p.mrp + '</s></a>';
+    }).join('');
+    var bar = document.createElement('div');
+    bar.id = OFFER_ID;
+    bar.setAttribute('role', 'region');
+    bar.setAttribute('aria-label', offer.name_hi || 'ऑफ़र');
+    bar.innerHTML =
+      '<a class="kos-h" href="/bluetick">🪔 ' + escapeHtml(offer.name_hi) + ' · नीला टिक</a>' +
+      '<div class="kos-plans">' + plans + '</div>' +
+      '<div class="kos-foot"><span class="kos-date">' + escapeHtml(offer.ends_hi) + '</span>' +
+      '<a class="kos-go" href="/bluetick">ऑफ़र देखें →</a></div>' +
+      '<button type="button" aria-label="बंद करें">✕</button>';
+    bar.querySelector('button').onclick = function () {
+      try { localStorage.setItem(key, String(Date.now())); } catch (e) {}
+      if (bar.parentNode) bar.parentNode.removeChild(bar);
+    };
+    document.body.appendChild(bar);
+  }
+
   async function init() {
     // If browsing in admin panel, do not auto-popup
     if (window.location.pathname.indexOf('/admin') !== -1) {
@@ -609,6 +673,8 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       var res = await fetch(apiBase + '/api/festival/config');
       var data = await res.json();
+      // Independent of the greeting: the offer has its own dates.
+      try { showOfferStrip(data.offer); } catch (e) {}
       if (!data.success || !data.is_live || !data.config) {
         var exM = document.getElementById(MODAL_ID);
         if (exM) exM.remove();

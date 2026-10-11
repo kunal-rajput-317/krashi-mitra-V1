@@ -42,7 +42,8 @@
 # a false reference price. Removed, and the env variables that could bring it
 # back are gone with it. The only saving shown is a real one: three months
 # for ₹499 against ₹597 for three single months — save_pct is computed from
-# the monthly plan, never typed.
+# the monthly plan, never typed. The one exception is a dated offer (OFFER
+# below), which strikes the real regular price and ends on its own.
 #
 # CONFIG. Each price is env-overridable per plan — KM_VERIFY_M1_PRICE,
 # KM_VERIFY_M3_PRICE — because the first
@@ -115,6 +116,44 @@ DEFAULT_PLAN = "m1"
 PLAN_TERM_HI = {1: "1 महीने के लिए", 3: "3 महीने के लिए"}
 
 
+# ── A time-boxed offer ───────────────────────────────────────
+#
+# The owner's call, 2026-10-11: दशहरा ऑफ़र, ₹199 → ₹149 and ₹499 → ₹299 until
+# the end of 25 Oct 2026 (IST). This is the one case where a card may show a
+# struck price, because the struck figure is the regular price people paid
+# before the offer and pay again after it — a real reference price, unlike the
+# invented "MRP" removed on 2026-09-25.
+#
+# That only stays true if the offer really ends. So the end is a date in code,
+# not a flag somebody has to remember: on 26 Oct plans() is back to ₹199/₹499
+# by itself, and the banner, the cards and the UPI links follow. Extending it
+# again and again would make ₹149 the real price and ₹199 a false reference —
+# set a new window for the next festival instead. None = no offer running.
+IST = timedelta(hours=5, minutes=30)
+OFFER = {
+    "name_hi": "दशहरा ऑफ़र",
+    "starts":  datetime(2026, 10, 11),             # IST, from midnight
+    "ends":    datetime(2026, 10, 25, 23, 59, 59),  # IST, the whole day counts
+    "ends_hi": "25 अक्टूबर तक",
+    "prices":  {"m1": 149, "m3": 299},
+}
+
+
+def _now_ist() -> datetime:
+    return datetime.utcnow() + IST
+
+
+def offer(now: Optional[datetime] = None) -> Optional[dict]:
+    """The offer running right now (IST), or None. Public fields only."""
+    if not OFFER:
+        return None
+    now = now or _now_ist()
+    if not (OFFER["starts"] <= now <= OFFER["ends"]):
+        return None
+    return {"name_hi": OFFER["name_hi"], "ends_hi": OFFER["ends_hi"],
+            "ends": OFFER["ends"].date().isoformat()}
+
+
 def _rupees(env: str, fallback: int) -> int:
     try:
         return max(1, int(os.getenv(env, "") or fallback))
@@ -122,22 +161,30 @@ def _rupees(env: str, fallback: int) -> int:
         return fallback
 
 
-def plans() -> list:
+def plans(now: Optional[datetime] = None) -> list:
     """The cards /verify draws, priced from env. Never an f-string of literals.
 
-    `price` is what he pays. `mrp` is always None — kept only so an older
-    cached page that still reads it draws no struck price. `per_month` is
+    `price` is what he pays. `mrp` is None except while an offer runs, when it
+    is the plan's regular price — the one he paid yesterday and will pay after
+    the offer, never a typed figure. `per_month` is
     computed rather than stored so the two can never disagree — a card that
     said ₹499 / 3 महीने next to a hand-typed "₹150/महीना" would be wrong the
     first time a price moved.
     """
+    live = offer(now)
     out = []
     monthly = None
     for code, mon, price in PLAN_DEFS:
         # KM_VERIFY_FEE is the legacy single-price variable; it only ever meant
         # the monthly rate, so it applies to m1 and nothing else.
         legacy = _rupees("KM_VERIFY_FEE", price) if code == "m1" else price
-        rupee = _rupees(f"KM_VERIFY_{code.upper()}_PRICE", legacy)
+        regular = _rupees(f"KM_VERIFY_{code.upper()}_PRICE", legacy)
+        rupee = regular
+        # An offer only ever lowers a price. If the env already set it lower,
+        # the env wins and nothing is struck.
+        cut = OFFER["prices"].get(code) if live else None
+        if cut and cut < regular:
+            rupee = cut
         if mon == 1:
             monthly = rupee
         # The real saving against paying month by month — never a typed figure.
@@ -147,13 +194,28 @@ def plans() -> list:
             "code":      code,
             "months":    mon,
             "price":     rupee,
-            "mrp":       None,
+            "mrp":       regular if rupee < regular else None,
+            "offer_hi":  live["name_hi"] if rupee < regular else None,
             "per_month": round(rupee / mon),
             "term_hi":   PLAN_TERM_HI.get(mon, f"{mon} महीने के लिए"),
             "save_pct":  round((1 - rupee / full) * 100) if real else None,
             "save_vs":   full if real else None,
         })
     return out
+
+
+def offer_banner(now: Optional[datetime] = None) -> Optional[dict]:
+    """What the site-wide strip prints, or None when no offer is running.
+    Built from plans() so the strip can never quote a price the UPI link
+    does not charge."""
+    live = offer(now)
+    if not live:
+        return None
+    cut = [p for p in plans(now) if p["mrp"]]
+    if not cut:
+        return None
+    return dict(live, plans=[{"months": p["months"], "price": p["price"],
+                              "mrp": p["mrp"]} for p in cut])
 
 
 def plan(code: str = "") -> dict:
@@ -175,7 +237,7 @@ def plan(code: str = "") -> dict:
 
 
 def plan_codes() -> list:
-    return [c for c, _m, _p, _q in PLAN_DEFS]
+    return [c for c, _m, _p in PLAN_DEFS]
 
 
 def fee(code: str = "") -> int:
