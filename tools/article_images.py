@@ -380,6 +380,14 @@ IMAGES = {
     "gud-kolhu-karobar-up": "Making Jaggery (Gur) in Punjab.jpg",
     "jeeru-kheti-gujarat": "Field of cumin Photo By Raju Odedra Mo 07698787895 - panoramio.jpg",
     "divela-kheti-gujarat": "A castor field.jpg",
+
+    # ── अक्टूबर 2026 — रबी बुवाई, गाजर, कंडुआ ─────────────────────────────
+    # The sowing calendar shows field preparation (Chinawal, Maharashtra), not
+    # one crop, because the page covers nine. The कंडुआ hero is the actual
+    # disease, photographed by an Indian contributor.
+    "rabi-buvai-ka-sahi-samay": "Field ploughing by tractor.jpg",
+    "gajar-ki-kheti": "India - Koyambedu Market - Carrots 03 (3986950000).jpg",
+    "dhan-kandua-rog": "False smut of rice.jpg",
 }
 
 # In-body illustrations on the hand-written articles.
