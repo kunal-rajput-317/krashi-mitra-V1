@@ -87,6 +87,10 @@ services:
         sync: false
       - key: DATA_GOV_API_KEY
         sync: false
+      - key: DATA_GOV_RELAY_URL       # AWS Mumbai relay, tools/datagov_relay
+        sync: false
+      - key: DATA_GOV_RELAY_SECRET
+        sync: false
       - key: SMTP_EMAIL
         sync: false          # optional
       - key: SMTP_PASSWORD

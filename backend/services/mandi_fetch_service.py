@@ -45,6 +45,34 @@ logger = logging.getLogger("krishi.mandi_fetch")
 # pasted into the host env with surrounding quotes or a trailing newline/space.
 API_KEY = os.getenv("DATA_GOV_API_KEY", "").strip().strip('"').strip("'").strip()
 
+# India relay. Since the 25 Sep 2026 outage api.data.gov.in refuses servers
+# outside India: Render Singapore and GitHub's US runners time out or get
+# "No route to host", while the same requests work from India. Render has no
+# India region, so every data.gov.in request can go through a tiny relay in
+# AWS Mumbai (tools/datagov_relay/lambda_function.py). It forwards
+# /resource/... to api.data.gov.in and refuses anything without the secret
+# header. Both unset = direct, as before. No fallback value for the secret:
+# the repo is public.
+DATA_GOV_HOST       = "https://api.data.gov.in"
+RELAY_URL           = os.getenv("DATA_GOV_RELAY_URL", "").strip().rstrip("/")
+RELAY_SECRET        = os.getenv("DATA_GOV_RELAY_SECRET", "").strip()
+RELAY_SECRET_HEADER = "X-Relay-Secret"
+if RELAY_URL and not RELAY_SECRET:
+    logger.error("DATA_GOV_RELAY_URL is set but DATA_GOV_RELAY_SECRET is not; "
+                 "ignoring the relay and calling data.gov.in directly.")
+    RELAY_URL = ""
+
+
+def _datagov_get(url: str, params: dict, timeout: int):
+    """requests.get for an api.data.gov.in URL, through the India relay when
+    one is configured."""
+    if RELAY_URL and url.startswith(DATA_GOV_HOST):
+        return requests.get(RELAY_URL + url[len(DATA_GOV_HOST):], params=params,
+                            headers={**HEADERS, RELAY_SECRET_HEADER: RELAY_SECRET},
+                            timeout=timeout)
+    return requests.get(url, params=params, headers=HEADERS, timeout=timeout)
+
+
 # Variety-wise Daily Market Prices Data of Commodity (Agmarknet)
 RESOURCE_ID = "9ef84268-d588-465a-a308-a864a43d0070"
 ENDPOINT    = f"https://api.data.gov.in/resource/{RESOURCE_ID}"
@@ -216,7 +244,7 @@ def _get_page(params: dict, label: str, endpoint: str = ENDPOINT) -> list | None
     global _last_error
     for attempt in range(MAX_RETRIES):
         try:
-            res = requests.get(endpoint, params=params, headers=HEADERS, timeout=TIMEOUT)
+            res = _datagov_get(endpoint, params, TIMEOUT)
         except requests.RequestException as e:
             _last_error = f"request error: {type(e).__name__}: {str(e)[:120]}"
             wait = 2 ** attempt
@@ -689,10 +717,9 @@ def check_api_key() -> bool:
         logger.error("🔑 DATA_GOV_API_KEY is not set — mandi fetch will be skipped.")
         return False
     try:
-        res = requests.get(
+        res = _datagov_get(
             ENDPOINT,
-            params={"api-key": API_KEY, "format": "json", "limit": 1},
-            headers=HEADERS, timeout=30,
+            {"api-key": API_KEY, "format": "json", "limit": 1}, 30,
         )
     except requests.RequestException as e:
         logger.error(f"🔑 DATA_GOV_API_KEY check — request error: {e}")

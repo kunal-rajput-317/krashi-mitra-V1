@@ -518,14 +518,6 @@ def history(names, state: str, district: str, start: date, end: date) -> list[tu
     return out
 
 
-def max_fetched() -> datetime | None:
-    """Newest fetched_at in the loaded copy, or None when nothing is loaded.
-    The scheduler compares it with the database to notice rows that a fetch
-    outside this process wrote (see mandi_scheduler._pick_up_outside_fetch)."""
-    s = _snap
-    return s.max_fetched if s is not None else None
-
-
 def status() -> dict:
     s = _snap
     if s is None:
