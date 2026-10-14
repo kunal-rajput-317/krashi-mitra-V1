@@ -89,7 +89,13 @@ def _fetch_and_notify():
     from backend.services.mandi_fetch_service import fetch_and_store
 
     summary = fetch_and_store()
+    _after_store(summary)
+    return summary
 
+
+def _after_store(summary: dict, drain: bool = True):
+    """Everything that follows a fetch, whoever ran it: Render's own job above,
+    or the GitHub Actions fetch that _pick_up_outside_fetch notices."""
     # /bhav pages read prices from an in-memory copy (services/mandi_memory.py)
     # instead of Postgres. New rows are in, so reload it now, while the DB is
     # awake anyway. Must never fail the fetch.
@@ -140,13 +146,52 @@ def _fetch_and_notify():
     # Skipped when the fetch just found data.gov.in down: the archive sits
     # behind the same gateway.
     try:
-        if not summary.get("api_down"):
+        if drain and not summary.get("api_down"):
             from backend.services.mandi_season_service import drain_queue
             drain_queue()
     except Exception as e:
         logger.error(f"season summary drain failed (non-fatal): {e}")
 
-    return summary
+
+def _pick_up_outside_fetch():
+    """Serve prices that a fetch outside this process stored.
+
+    Since the data.gov.in outage (25 Sep 2026) api.data.gov.in refuses
+    connections from Render ("[Errno 113] No route to host", "[Errno 111]
+    Connection refused", seen 14 Oct on a fresh Render account too) while the
+    same requests work from India and from abroad. So
+    .github/workflows/mandi-fetch.yml runs the same fetch_and_store a few
+    minutes after each run here. Its rows land in Postgres, but /bhav serves
+    the in-memory copy, which only reloads after a fetch in THIS process (or
+    once a day). This check closes that gap: when the database holds newer
+    rows than the copy, merge them and run the usual follow-ups (alerts,
+    IndexNow). The GitHub job already drained the season queue.
+
+    It runs only shortly after each fetch time, never on a short interval:
+    see the watchdog comment in _register_job on keeping Neon asleep.
+    """
+    try:
+        from sqlalchemy import func
+        from backend.database.db import SessionLocal, MandiPrice
+        from backend.services import mandi_memory
+
+        loaded = mandi_memory.max_fetched()
+        if loaded is None:              # nothing loaded: the next request loads it all
+            return False
+        db = SessionLocal()
+        try:
+            newest = db.query(func.max(MandiPrice.fetched_at)).scalar()
+        finally:
+            db.close()
+        if newest is None or newest <= loaded:
+            return False
+        logger.info(f"📥 Prices fetched outside this process ({newest:%d %b %H:%M} UTC) "
+                    f"— loading them")
+        _after_store({"fetched": 1, "outside": True}, drain=False)
+        return True
+    except Exception as e:
+        logger.error(f"outside-fetch pickup failed (non-fatal): {e}")
+        return False
 
 
 def _db_write_check():
@@ -258,6 +303,22 @@ def _register_job():
         max_instances      = 1,
         coalesce           = True,
         misfire_grace_time = None,   # run whenever noticed, however late (laptop/instance slept)
+    )
+
+    # Pick up a fetch that ran outside this process (the GitHub Actions job
+    # runs at :05 past each fetch hour, 23:16 for the late sweep). Checked at
+    # +25 and +50 min, when the database is awake for the fetch anyway.
+    scheduler.add_job(
+        func               = _pick_up_outside_fetch,
+        trigger            = OrTrigger([
+            CronTrigger(hour="8,10,13,16,20", minute="25,50", timezone=IST),
+            CronTrigger(hour=23,              minute="35,55", timezone=IST),
+        ]),
+        id                 = "mandi_outside_pickup",
+        name               = "Load prices fetched outside Render — after each fetch time",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
     )
 
     # Watchdog: the 06:30 cron is routinely missed when the host is asleep at

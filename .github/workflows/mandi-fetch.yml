@@ -1,0 +1,49 @@
+name: mandi-fetch
+
+# Fetches mandi prices from data.gov.in into the database, from GitHub's
+# machines instead of Render's. Since the data.gov.in outage (25 Sep 2026)
+# the API refuses connections from Render ("No route to host" / "Connection
+# refused") but answers from India and from abroad. Render still tries at its
+# own times; this runs 5 minutes later, and Render loads whatever either of
+# them stored (mandi_scheduler._pick_up_outside_fetch).
+#
+# Needs two repo secrets (Settings -> Secrets and variables -> Actions):
+#   DATABASE_URL      same value as on Render
+#   DATA_GOV_API_KEY  same value as on Render
+# Only mandi price tables are written. No user data is read.
+
+on:
+  schedule:
+    # IST = UTC + 5:30. Render runs 08/10/13/16/20:00 and 23:11 IST.
+    - cron: "35 2,4,7,10,14 * * *"   # 08:05 10:05 13:05 16:05 20:05 IST
+    - cron: "46 17 * * *"            # 23:16 IST
+  workflow_dispatch:
+
+concurrency:
+  group: mandi-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # matches PYTHON_VERSION in render.yaml
+          cache: pip
+
+      - name: Install fetch dependencies
+        # Only what the fetch imports; requirements.txt pulls the AI stack.
+        run: |
+          python -m pip install --upgrade pip
+          pip install 'sqlalchemy>=2.0,<2.1' psycopg2-binary requests \
+            python-dotenv pytz
+
+      - name: Fetch mandi prices
+        env:
+          DATABASE_URL:     ${{ secrets.DATABASE_URL }}
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+        run: python tools/mandi_fetch_once.py
