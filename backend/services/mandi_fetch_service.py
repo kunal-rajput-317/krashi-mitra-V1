@@ -119,6 +119,12 @@ DOWN_AFTER_STATES = 3
 class DataGovDown(RuntimeError):
     """data.gov.in's API is not answering — abort the run, don't grind on."""
 
+# What the last failed request actually got back ("HTTP 503", "request error:
+# ConnectTimeout …"). Goes into the DataGovDown message so the admin sync card
+# says WHY. On 14 Oct 2026 the API answered from India and from abroad while
+# every Render run failed, and the card could not say which error Render saw.
+_last_error = ""
+
 # IMPORTANT: data.gov.in's WAF returns HTTP 502 for the default
 # "python-requests/x.y" User-Agent. A browser-like UA is required or
 # every request fails. (curl / browsers work; python-requests does not.)
@@ -207,15 +213,20 @@ def _get_page(params: dict, label: str, endpoint: str = ENDPOINT) -> list | None
     (so the caller can distinguish "empty" from "error").
     `endpoint` lets the same retry/backoff path serve the archive resource.
     """
+    global _last_error
     for attempt in range(MAX_RETRIES):
         try:
             res = requests.get(endpoint, params=params, headers=HEADERS, timeout=TIMEOUT)
         except requests.RequestException as e:
+            _last_error = f"request error: {type(e).__name__}: {str(e)[:120]}"
             wait = 2 ** attempt
             logger.warning(f"{label} attempt {attempt + 1}/{MAX_RETRIES} "
                            f"request error: {e} — retrying in {wait}s")
             time.sleep(wait)
             continue
+
+        if res.status_code != 200:
+            _last_error = f"HTTP {res.status_code}: {res.text.strip()[:80]}"
 
         if res.status_code == RATE_LIMIT_STATUS:
             # Rate limited — back off harder, honoring Retry-After when present.
@@ -304,7 +315,8 @@ def _fetch_all_records() -> tuple[list, set]:
         dead_run = dead_run + 1 if (not complete and not recs) else 0
         if dead_run >= DOWN_AFTER_STATES:
             raise DataGovDown(f"{dead_run} states in a row failed after "
-                              f"{MAX_RETRIES} retries each (last: {state})")
+                              f"{MAX_RETRIES} retries each (last: {state}; "
+                              f"{_last_error or 'no error recorded'})")
         if not complete:
             failed_states.add(state)
         if not recs:
@@ -373,7 +385,8 @@ def _fetch_archive_day(day: date) -> list:
                 dead_run = dead_run + 1 if recs is None else 0
                 if dead_run >= DOWN_AFTER_STATES:
                     raise DataGovDown(f"archive: {dead_run} states in a row "
-                                      f"failed (last: {state})")
+                                      f"failed (last: {state}; "
+                                      f"{_last_error or 'no error recorded'})")
             if not recs:      # hard error or no (more) rows — move to next state
                 break
             for raw in recs:
