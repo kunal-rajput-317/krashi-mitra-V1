@@ -2569,7 +2569,7 @@ def list_verifications(
     from sqlalchemy import and_, func, or_
 
     from backend.database.db import SellerVerification, User, UserProfile
-    from backend.services import seller_verify, upi
+    from backend.services import pay_links, seller_verify, upi
 
     seller_verify.expire_due(db)
 
@@ -2646,7 +2646,12 @@ def list_verifications(
             "valid_until": r.valid_until.isoformat() if r.valid_until else None,
             "days_left":  seller_verify.days_left(r),
             "applied_at": r.created_at.isoformat() if r.created_at else None,
-            "pay_url":    f"https://krashimitra.in/bluetick",
+            # The QR page needs no login, so the farmer can pay straight from
+            # the WhatsApp message. It only opens for an unpaid application
+            # (pay.py _tick); renewals and re-applications go through /bluetick.
+            "pay_url":    (pay_links.url("tick", r.ref)
+                           if r.status == seller_verify.APPLIED
+                           else "https://krashimitra.in/bluetick"),
         })
 
     counts = {}
@@ -2716,6 +2721,14 @@ def verification_collect(
     pack = _pay_pack(row)
     name = (row.full_name or "").strip()
     chosen = seller_verify.plan(row.plan)
+    # /pay/tick/{ref} opens only for an unpaid application (pay.py _tick); for
+    # a live, lapsed or removed tick it is a dead end. Those pay through a new
+    # application on /bluetick, so the message says how to get there.
+    if row.status == seller_verify.APPLIED:
+        how = f"QR वाला पेमेंट पेज (यहीं से पे करें): {pack['pay_url']}\n"
+    else:
+        how = ("पेमेंट के लिए https://krashimitra.in/bluetick खोलें, अपने कृषि मित्र "
+               "खाते से लॉगिन करें और प्लान चुनें — वहीं QR मिलेगा।\n")
     # Says what he is buying and what it is not, in the same words /verify uses.
     # It may never offer a check, a verification or a guarantee — the badge is a
     # membership, and a WhatsApp message is as public a claim as a web page.
@@ -2723,7 +2736,7 @@ def verification_collect(
         f"नमस्ते {name}, कृषि मित्र से।\n\n"
         f"कृषि मित्र प्रीमियम (नीला टिक) का शुल्क ₹{pack['amount']} है "
         f"— {chosen['term_hi']}।\n"
-        f"QR वाला पेमेंट पेज: {pack['pay_url']}\n"
+        f"{how}"
         f"UPI: {pack['vpa']}\n"
         f"आपका नंबर: {row.ref}\n\n"
         f"पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n"

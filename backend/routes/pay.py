@@ -353,10 +353,13 @@ def _tick(db, key, amount):
            "note": f"KrashiMitra premium {row.ref}", "tick_ref": row.ref}
     if seller_verify.is_active(row):
         out["closed"] = (f"आपका नीला टिक {_date(row.valid_until)} तक चालू है। "
-                         "आगे बढ़ाने के लिए <a href=\"/verify\">नीला टिक पेज</a> खोलें।")
+                         "आगे बढ़ाने के लिए <a href=\"/bluetick\">नीला टिक पेज</a> खोलें, "
+                         "अपने खाते से लॉगिन करें और “और समय के लिए बढ़ाएँ” दबाएँ — "
+                         "वहीं QR मिलेगा।")
     elif row.status != seller_verify.APPLIED:
         out["closed"] = ("यह आवेदन अब खुला नहीं है। नया शुरू करने के लिए "
-                         "<a href=\"/verify\">नीला टिक पेज</a> खोलें।")
+                         "<a href=\"/bluetick\">नीला टिक पेज</a> खोलें, अपने खाते से "
+                         "लॉगिन करें और प्लान चुनें — वहीं QR मिलेगा।")
     return out
 
 

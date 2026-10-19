@@ -13138,7 +13138,7 @@ function spRenderTable() {
       '<td><div class="sp-act">' +
         '<button class="sp-btn" onclick="spToggle(\'' + s.id + '\', ' + (s.active ? 'false' : 'true') + ')">' +
           (s.active ? 'बंद करें' : 'LIVE करें') + '</button>' +
-        '<button class="sp-btn" onclick="spCollect(\'' + s.id + '\')">₹ माँगें</button>' +
+        '<button class="sp-btn" onclick="spCollect(\'' + s.id + '\')">₹ भुगतान लें</button>' +
         '<button class="sp-btn" onclick="spPaid(\'' + s.id + '\')">भुगतान दर्ज</button>' +
         (s.paid_at ? '' : '<button class="sp-btn danger" onclick="spDelete(\'' + s.id + '\')">हटाएँ</button>') +
       '</div></td></tr>';
@@ -16819,7 +16819,7 @@ function rnProviderBody(p) {
       // one answer, and the answer is no — see free_month.may_grant.
       p.may_free_month ? `
       <button class="btn btn-secondary dk-mini" onclick="rnFreeMonth('${p.slug}')">🎁 ${rnFreeLabel()} मुफ़्त चालू करें</button>` : ''}
-      <button class="btn btn-secondary dk-mini" onclick="rnCollect('${p.slug}')">💳 पैसे माँगें</button>
+      <button class="btn btn-secondary dk-mini" onclick="rnCollect('${p.slug}')">💳 भुगतान लें</button>
       <button class="btn btn-secondary dk-mini" onclick="rnPayment('${p.slug}')">✓ पैसा आया</button>
       <button class="btn btn-secondary dk-mini" onclick="rnSetFlag('${p.slug}','active',${!p.active})">
         ${p.active ? '🚫 छिपाएं' : '✅ दिखाएं'}</button>
@@ -18906,21 +18906,32 @@ function vfWaText(v) {
       'पैसा दिखते ही आपका नीला टिक चालू कर देंगे।\n' +
       'आपका नंबर: ' + v.ref;
   }
+  // Every message that asks for money must say WHERE to pay. A bare /bluetick
+  // link left farmers asking "how do I pay?" — the page shows the QR only after
+  // login, and the message never said so.
+  const LOGIN_PAY = 'पेमेंट के लिए https://krashimitra.in/bluetick खोलें, अपने कृषि मित्र ' +
+                    'खाते से लॉगिन करें और प्लान चुनें — वहीं QR मिलेगा।\n';
   if (v.active) {
     const left = (v.days_left != null) ? (v.days_left + ' दिन') : 'कुछ दिन';
     return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
       'आपका नीला टिक ' + left + ' में खत्म हो रहा है। आगे जारी रखने के लिए ' +
       '₹' + amt + ' भेज दें — ' + term + '।\n' +
+      LOGIN_PAY +
       (vpa ? 'UPI: ' + vpa + '\n' : '') +
       'आपका नंबर: ' + v.ref + '\n\n' + NOT;
   }
   // applied / expired / rejected — all of them need the same thing: money.
+  // An unpaid application gets the QR page — it opens without login, so he
+  // can pay straight from this message. /pay/tick is a dead end for any other
+  // status (pay.py _tick), so those are sent to log in on /bluetick.
+  const payPage = (v.status === 'applied' && v.pay_url &&
+                   v.pay_url.indexOf('/pay/tick/') !== -1) ? v.pay_url : '';
   return 'नमस्ते ' + name + ', कृषि मित्र से।\n\n' +
     'कृषि मित्र प्रीमियम (नीला टिक) का शुल्क ₹' + amt + ' है — ' + term + '।\n' +
+    (payPage ? 'QR वाला पेमेंट पेज (यहीं से पे करें): ' + payPage + '\n' : LOGIN_PAY) +
     (vpa ? 'UPI: ' + vpa + '\n' : '') +
     'आपका नंबर: ' + v.ref + '\n\n' +
-    'पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n' + NOT + '\n' +
-    'https://krashimitra.in/bluetick';
+    'पैसा पहुँचते ही हम आपका नीला टिक चालू कर देंगे।\n' + NOT;
 }
 
 function vfWaLabel(v) {
@@ -18928,7 +18939,7 @@ function vfWaLabel(v) {
   if (v.status === 'rejected') return '💬 हटाना बताएँ';
   if (v.pay_status === 'claimed') return '💬 बता दें';
   if (v.active) return v.expiring ? '💬 रिन्यू माँगें' : '💬 संदेश';
-  return '💬 ₹ माँगें';
+  return '💬 ₹ भुगतान लें';
 }
 
 /* The lead button, decided by the row. A live, healthy membership gets no
