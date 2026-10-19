@@ -1,4 +1,4 @@
-# data.gov.in relay (AWS Lambda, Mumbai)
+# data.gov.in relay (Mumbai: AWS Lambda or Google Cloud Run)
 
 api.data.gov.in refuses servers outside India. Render has no India region, so
 the mandi fetcher sends its data.gov.in requests through this function in AWS
@@ -38,6 +38,40 @@ curl -s -o /dev/null -w "%{http_code}\n" -H "X-Relay-Secret: YOUR_SECRET" \
 ```
 
 `200` = working. `403` = wrong secret. `502` = data.gov.in refused Mumbai too.
+
+## Or: Google Cloud Run, Mumbai (instead of AWS)
+
+The same relay code. `main.py` only adapts Cloud Run's request to
+`lambda_function.lambda_handler`. The free tier covers 2 million requests a
+month. Internet egress from Mumbai is billed beyond a small free amount, but
+a few MB per mandi fetch should come to a few rupees a month at most. Set a
+budget alert anyway.
+
+1. **console.cloud.google.com** → new project `krashimitra-relay` → link a
+   billing account (a card is needed, like AWS).
+   **Billing → Budgets & alerts →** budget ₹100 with an email alert.
+2. **Cloud Run → Write a function**
+   - Service name `datagov-relay`, region **asia-south1 (Mumbai)**,
+     runtime **Python 3.12**.
+   - Authentication: **Allow public access** (the secret header is the lock).
+   - Billing: request-based. Scaling: min instances **0**, max **2**.
+   - Containers → Settings: memory **256 MiB**, request timeout **120** s.
+   - Containers → Variables: `RELAY_SECRET` = the same secret Render already
+     has as `DATA_GOV_RELAY_SECRET`.
+   - **Create.**
+3. **Source tab → Edit source:** set the function entry point to `relay`.
+   Replace `main.py` and `requirements.txt` with this folder's copies, add a
+   file `lambda_function.py` with this folder's copy, then
+   **Save and redeploy**.
+4. Copy the service URL (`https://datagov-relay-….asia-south1.run.app`) and
+   run the curl test above with it. `502` = data.gov.in refuses Google
+   Mumbai too, so keep the PC relay.
+5. **Render → Environment:** `DATA_GOV_RELAY_URL` = that URL. The secret
+   stays the same. **Save, rebuild and deploy**, then run a manual mandi fetch
+   from /admin.
+
+To go back to the PC relay, set `DATA_GOV_RELAY_URL` to
+`https://relay.krashimitra.in` again.
 
 ## Turning it off
 

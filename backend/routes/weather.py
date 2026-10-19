@@ -32,7 +32,8 @@
 import logging
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, Query, Header, HTTPException
+from fastapi import APIRouter, Depends, Query
+from backend.routes.admin import require_admin
 from backend.database.db import SessionLocal, WeatherCache, WeatherHistory, UP_DISTRICT_CITY_MAP
 from backend.services.weather_service import refresh_all_districts, get_farming_tip
 
@@ -357,21 +358,12 @@ async def get_weather_history(district: str = Query(default="Lucknow")):
 # ── POST /api/weather/refresh ────────────────────────────────
 
 @router.post("/api/weather/refresh")
-async def manual_refresh(x_admin_key: str = Header(default=None)):
+async def manual_refresh(_: str = Depends(require_admin)):
     """
-    Admin-only manual trigger for full cache refresh.
-    Protected by X-Admin-Key header.
+    Admin-only manual trigger for full cache refresh, behind require_admin
+    (admin password + brute-force lockout) like every other admin route.
     Use sparingly — consumes 75 OWM API calls per trigger.
-
-    Header:
-      X-Admin-Key: <value of ADMIN_SECRET_KEY in .env>
     """
-    import os
-    admin_key = os.getenv("ADMIN_SECRET_KEY", "")
-
-    if not admin_key or x_admin_key != admin_key:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-
     logger.info("🔧 Manual weather refresh triggered by admin")
 
     # Run in background so route returns immediately

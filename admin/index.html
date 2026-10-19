@@ -6595,13 +6595,14 @@ button.vf-money-tile:hover { border-color: var(--primary); }
                 <span class="panel-title">🖼️ उत्सव फोटो / इमेज नियंत्रण (Image Control)</span>
               </div>
               <div class="panel-body">
-                <!-- Live Preview in 4:3 -->
-                <div style="width:100%; height:230px; background:#071410; border:2px solid rgba(245,158,11,0.5); border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:14px; box-shadow:0 8px 25px rgba(0,0,0,0.4);">
-                  <img id="fest-img-preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Festival Preview" style="width:100%; height:100%; object-fit:cover;background:#f1f5f9">
+                <!-- Live Preview: the whole picture, any shape (the popup contains it too) -->
+                <div style="width:100%; height:230px; background:#071410; border:2px solid rgba(245,158,11,0.5); border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:6px; box-shadow:0 8px 25px rgba(0,0,0,0.4);">
+                  <img id="fest-img-preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Festival Preview" style="width:100%; height:100%; object-fit:contain;background:#071410">
                   <div id="fest-img-loading" style="display:none; position:absolute; inset:0; background:rgba(7,20,16,0.85); backdrop-filter:blur(3px); color:#fef08a; font-size:13px; font-weight:700; align-items:center; justify-content:center; gap:8px;">
                     <span class="km-spinner"></span> AI उत्सव फोटो तैयार हो रही है…
                   </div>
                 </div>
+                <div style="font-size:11.5px; color:var(--text-muted, #64748b); margin-bottom:14px;">कोई भी साइज़ चलेगा — पूरी फोटो दिखेगी, कटेगी नहीं। सबसे अच्छी: चौड़ी 16:9 या 4:3 (जैसे 1200×675)।</div>
 
                 <!-- Image URL Input -->
                 <div style="margin-bottom:12px;">
@@ -11059,15 +11060,13 @@ async function loadWeatherStats() {
 async function triggerWeatherRefresh() {
   const btn = document.getElementById('weather-sync-btn');
   const log = document.getElementById('weather-log') || document.getElementById('mandi-log');
-  const weatherAdminKey = window._WEATHER_ADMIN_KEY || '';
 
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
   if (log) log.innerHTML = `<span class="log-entry-warn">Starting manual refresh of all 75 UP districts weather cache...</span>\n`;
   printTerminalLog('Executing: POST /api/weather/refresh ...');
 
   try {
-    const headers = { 'Content-Type': 'application/json' };
-    if (weatherAdminKey) headers['X-Admin-Key'] = weatherAdminKey;
+    const headers = Object.assign({}, getAuthHeader(), { 'Content-Type': 'application/json' });
 
     const r = await fetch(`${API}/api/weather/refresh`, { method: 'POST', headers });
     const d = await r.json();
@@ -11077,9 +11076,9 @@ async function triggerWeatherRefresh() {
       showToast('Weather cache refresh triggered (75 districts queued).');
       printTerminalLog('Success: ' + (d.message || 'Weather refresh queued.'));
       setTimeout(() => loadWeatherStats(), 3000);
-    } else if (r.status === 403) {
-      if (log) log.innerHTML += `<span class="log-entry-warn">⚠️ ADMIN_SECRET_KEY not configured in .env — refresh skipped.</span>\n`;
-      showToast('Set ADMIN_SECRET_KEY in .env to enable manual refresh.', 'error');
+    } else if (r.status === 401 || r.status === 429) {
+      if (log) log.innerHTML += `<span class="log-entry-warn">⚠️ Admin login rejected — log in again.</span>\n`;
+      showToast('Admin login rejected — log in again.', 'error');
     } else {
       if (log) log.innerHTML += `<span class="log-entry-err">❌ Refresh failed: ${(d && d.message) || r.status}</span>\n`;
     }

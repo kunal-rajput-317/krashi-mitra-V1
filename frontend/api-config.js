@@ -399,7 +399,12 @@ document.addEventListener("DOMContentLoaded", function () {
       '.km-fest-top-pill { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(16, 185, 129, 0.2)); border: 1px solid rgba(245, 158, 11, 0.5); padding: 4px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #fef08a; letter-spacing: 0.5px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.2); }',
       
       '.km-fest-img-frame { position: relative; width: 100%; border-radius: 16px; overflow: hidden; border: 2px solid rgba(245, 158, 11, 0.65); box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 20px rgba(245, 158, 11, 0.3); margin-bottom: 14px; background: #0b1512; }',
-      '.km-fest-img { width: 100%; height: auto; max-height: 230px; object-fit: cover; display: block; }',
+      // Any shape of upload shows whole. `cover` under a 230px cap cut the
+      // top off a wide banner (the "शुभ दशहरा" lettering on Dussehra), so the
+      // picture is contained instead, and whatever room is left over is filled
+      // by a blurred copy of the same file (same URL, one download).
+      '.km-fest-img-bg { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover; filter: blur(18px) brightness(0.55); z-index: 0; }',
+      '.km-fest-img { position: relative; z-index: 1; width: 100%; height: auto; max-height: min(46vh, 340px); object-fit: contain; display: block; }',
       
       '.km-fest-title { font-size: 18.5px; font-weight: 900; line-height: 1.35; margin: 0 0 6px; background: linear-gradient(135deg, #fffbeb 0%, #fef08a 35%, #f59e0b 70%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 2px 12px rgba(245, 158, 11, 0.3); }',
       
@@ -485,6 +490,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // A missing picture is honest; the wrong deity is not.
     var imgHtml = imgUrl
       ? '<div class="km-fest-img-frame"><img src="' + escapeHtml(imgUrl) +
+        '" alt="" aria-hidden="true" class="km-fest-img-bg"><img src="' + escapeHtml(imgUrl) +
         '" alt="' + escapeHtml(cfg.festival_name || 'त्योहार') +
         '" class="km-fest-img" onerror="this.parentNode.style.display=\'none\'"></div>'
       : '';

@@ -166,6 +166,45 @@ def test_no_form_asks_for_aadhaar_or_bank_details():
     )
 
 
+# ── No database password in the public repo ──────────────────────────────────
+# 17 Oct 2026: an outside scanner found a working Neon password in
+# backend/database/db.py (commit 414c220, 16 May), hard-coded as a fallback.
+# The history keeps it forever, so only deleting that database closed it.
+# Placeholders like USER:PASSWORD or u:p@ss are short and stay allowed.
+_DB_URL_WITH_PASSWORD = re.compile(
+    r"(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?)(?:\+\w+)?://"
+    r"[^:/@\s\"']+:([^@\s\"'<>{}$*]{10,})@"
+)
+
+
+def _tracked_text_files():
+    import subprocess
+    try:
+        out = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True,
+                             text=True, check=True).stdout.splitlines()
+    except (OSError, subprocess.CalledProcessError):
+        out = [str(p.relative_to(ROOT)) for p in ROOT.rglob("*")
+               if p.is_file() and not {".git", "node_modules", "__pycache__"} & set(p.parts)]
+    for rel in out:
+        path = ROOT / rel
+        if path.name.startswith(".env") or not path.is_file():
+            continue
+        try:
+            yield rel, path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+
+
+def test_no_database_password_is_committed():
+    offenders = [rel for rel, text in _tracked_text_files()
+                 if _DB_URL_WITH_PASSWORD.search(text)]
+    assert not offenders, (
+        "A database URL with a real password is in the public repo. Keys live "
+        "only in .env and Render's settings (LEGAL_RULES §4):\n  "
+        + "\n  ".join(offenders)
+    )
+
+
 # ── Every AI tool is pointed at the rules ────────────────────────────────────
 def test_ai_instruction_files_load_the_legal_rules():
     assert (ROOT / "LEGAL_RULES.md").is_file(), "LEGAL_RULES.md was deleted"

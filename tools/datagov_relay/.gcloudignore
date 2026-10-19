@@ -1,0 +1,5 @@
+# Upload only what the relay needs.
+*
+!main.py
+!lambda_function.py
+!requirements.txt
