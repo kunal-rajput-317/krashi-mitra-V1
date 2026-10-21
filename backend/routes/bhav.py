@@ -499,9 +499,13 @@ def _fit(*variants: str, limit: int = 68) -> str:
 # district: Tundla is in Firozabad, Khair in Aligarh. Search Console for the
 # four weeks to 23 Sep 2026 showed such searches already reaching our pages,
 # some at position 1-3, and taking almost no clicks, because the title named
-# the district and never the mandi the farmer typed. This is a trial: False
+# the district and never the mandi the farmer typed. This was a trial: False
 # brings back the old titles exactly, with no other change.
-MANDI_IN_TITLE = True
+# Switched off 21 Oct 2026: three weeks after it went live, pages whose title
+# had gained a mandi name lost clearly more CTR than comparable pages whose
+# title had not, at the same positions, and the mandi-named searches it was
+# meant to win added about one click a day.
+MANDI_IN_TITLE = False
 
 # SMY/PMY are Agmarknet's sub and principal market yards; VFPCK is Kerala's
 # vegetable and fruit council, whose markets carry its name as a suffix.
@@ -3387,7 +3391,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{escape(title)}</title>
 <meta name="description" content="{escape(desc)}">
-<link rel="canonical" href="{canon}">
+<link rel="canonical" href="{escape(canon, quote=True)}">
 <meta name="robots" content="{escape(robots or _INDEX_ROBOTS)}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="कृषि मित्र (KrashiMitra)">
@@ -3395,7 +3399,7 @@ def _doc(title: str, desc: str, canon: str, crumbs: str, body: str,
 <meta property="og:description" content="{escape(desc)}">
 <meta property="og:image" content="{escape(og)}">
 <meta property="og:image:alt" content="{escape(title)}">
-<meta property="og:url" content="{canon}">
+<meta property="og:url" content="{escape(canon, quote=True)}">
 <meta property="og:locale" content="{state_lang.og_locale(lang)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{escape(title)}">
@@ -3443,9 +3447,21 @@ def _crumb_ld(trail: list[tuple[str, str]]) -> dict:
                 for i, (n, u) in enumerate(trail)]}
 
 
+def ld_json(block) -> str:
+    """JSON that is safe inside a <script> element.
+
+    json.dumps leaves "<" alone, so a value carrying "</script>" ended the
+    element early and whatever followed ran as HTML — and these blocks carry
+    names users type (a buyer's profile name on /kharidar, a dealer's shop
+    name). The \\u escapes are the same characters to every JSON parser,
+    Google's included."""
+    return (_json.dumps(block, ensure_ascii=False)
+            .replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
+
+
 def _ld(*blocks) -> str:
     return "\n".join(
-        f'<script type="application/ld+json">{_json.dumps(b, ensure_ascii=False)}</script>'
+        f'<script type="application/ld+json">{ld_json(b)}</script>'
         for b in blocks)
 
 

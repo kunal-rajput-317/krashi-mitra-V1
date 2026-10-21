@@ -224,6 +224,10 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "खाद और पोषण",
+
+    "state": "central",
+
+    "scheme": True,
     "cat_label": "खाद और पोषण",
     "cat_query": "khad",
     "breadcrumb_leaf": "मिट्टी की जाँच",

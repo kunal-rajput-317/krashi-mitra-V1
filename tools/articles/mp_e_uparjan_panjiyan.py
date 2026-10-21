@@ -276,11 +276,15 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "सरकारी योजना",
+
+    "state": "mp",
     "cat_label": "सरकारी योजना",
     "cat_query": "jankari",
     "breadcrumb_leaf": "MP ई-उपार्जन पंजीयन",
 
-    "title": "MP ई-उपार्जन पंजीयन — समर्थन मूल्य पर फसल कैसे बेचें (2026)",
+    # Romanised on purpose: "mp e uparjan" / "mpeuparjan" are ~85% of this
+    # page's impressions and the Devanagari title earned 0.4% CTR at pos 7.
+    "title": "MP e Uparjan (mpeuparjan) पंजीयन 2026 — MSP पर फसल कैसे बेचें",
     "description": "mpeuparjan.nic.in पर पंजीयन सरकारी केंद्रों पर मुफ्त, निजी पर अधिकतम ₹50। दस्तावेज़, स्लॉट बुकिंग, बटाईदार का नियम और भुगतान — पूरी प्रक्रिया हिंदी में।",
     "keywords": "mp e uparjan, एमपी ई उपार्जन पंजीयन, mpeuparjan.nic.in, ई उपार्जन स्लॉट बुकिंग, समर्थन मूल्य पंजीयन मध्य प्रदेश, mp uparjan kisan panjiyan, गेहूं पंजीयन एमपी, धान उपार्जन मध्य प्रदेश, MSP par fasal bechna, e uparjan slot booking",
 

@@ -277,6 +277,10 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "कृषि जानकारी",
+
+    "state": "mh",
+
+    "scheme": True,
     "cat_label": "कृषि जानकारी",
     "cat_query": "maharashtra",
     "breadcrumb_leaf": "ई-पीक पाहणी नोंदणी",

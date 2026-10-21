@@ -368,6 +368,8 @@ ARTICLE = {
     "lang": "kn",
 
     "section": "ಸರ್ಕಾರಿ ಯೋಜನೆ",
+
+    "state": "ka",
     "cat_label": "ಕರ್ನಾಟಕ",
     "cat_query": "karnataka",
     "breadcrumb_leaf": "ಫ್ರೂಟ್ಸ್ ಐಡಿ",

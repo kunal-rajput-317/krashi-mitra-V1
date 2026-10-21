@@ -29,7 +29,6 @@
 # ============================================================
 
 import base64
-import secrets
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -49,24 +48,31 @@ def _wants_html(request: Request) -> bool:
     return "text/html" in request.headers.get("accept", "").lower()
 
 
-def _is_admin(request: Request) -> bool:
-    """Same credentials as /admin, checked by hand so the route can stay open
-    to anonymous callers and only challenge when full detail is asked for."""
+def _admin_check(request: Request) -> str:
+    """Same credentials as /admin, read by hand so the route can stay open to
+    anonymous callers and only challenge when full detail is asked for.
+
+    Goes through admin.check_admin_login — the same lockout as require_admin.
+    This used to compare the password itself with no lockout, which made
+    /health?full=1 an unlimited guessing endpoint for the admin password.
+    Returns "ok" | "bad" | "locked" | "closed"; no header at all is "bad"
+    without counting as a failed attempt."""
     header = request.headers.get("authorization", "")
     if not header.lower().startswith("basic "):
-        return False
+        return "bad"
     try:
         user, _, pw = base64.b64decode(header[6:].strip()).decode("utf-8").partition(":")
     except Exception:
-        return False
-    from backend.routes.admin import ADMIN_USER, ADMIN_PASS
-    if not ADMIN_PASS:            # unset must never mean "empty password works"
-        return False
-    return (secrets.compare_digest(user.encode(), ADMIN_USER.encode())
-            and secrets.compare_digest(pw.encode(), ADMIN_PASS.encode()))
+        return "bad"
+    from backend.routes.admin import check_admin_login
+    from backend.utils.security import client_ip
+    return check_admin_login(client_ip(request), user, pw)
 
 
-def _challenge() -> Response:
+def _challenge(result: str = "bad") -> Response:
+    if result == "locked":
+        return Response(status_code=429, content="too many wrong passwords — try in 15 minutes",
+                        headers={"Retry-After": "900"})
     return Response(status_code=401, content="admin login required",
                     headers={"WWW-Authenticate": 'Basic realm="KrashiMitra admin"'})
 
@@ -79,8 +85,10 @@ async def health(request: Request, full: int = 0):
         # Unchanged contract for keep-alive + monitor. No database, no imports,
         # no work — this is the liveness ping, nothing more.
         return JSONResponse({"status": "ok"}, headers=_NOINDEX)
-    if full and not _is_admin(request):
-        return _challenge()
+    if full:
+        result = _admin_check(request)
+        if result != "ok":
+            return _challenge(result)
     return HTMLResponse(_page(full=bool(full)), headers=_NOINDEX)
 
 
@@ -89,8 +97,10 @@ async def health_checks(request: Request, full: int = 0):
     """Feature-by-feature JSON. `full=1` needs the admin password and adds the
     private cards plus the numbers withheld from the public view."""
     detailed = bool(full)
-    if detailed and not _is_admin(request):
-        return _challenge()
+    if detailed:
+        result = _admin_check(request)
+        if result != "ok":
+            return _challenge(result)
     return JSONResponse(health_service.run_checks(detailed=detailed), headers=_NOINDEX)
 
 

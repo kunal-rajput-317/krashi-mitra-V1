@@ -336,6 +336,7 @@ ARTICLE = {
     "read_time": 8,
     "word_count": 2500,
     "section": "सरकारी योजना",
+    "state": "central",
     "cat_label": "सरकारी योजना",
     "cat_query": "jankari",
     "breadcrumb_leaf": "किसान क्रेडिट कार्ड (KCC)",

@@ -184,6 +184,9 @@ results for mismatched FAQPage markup and can issue a manual action for it.
   says so.
 - Scheme articles get a closing disclaimer: rules change, KrashiMitra is not an
   agent and does not arrange loans.
+- Scheme articles set `"state"` (a key of `tools/yojana_hub.STATES`). The
+  builder then lists the guide on /sarkari_yojana by itself; never hand-edit
+  the hub's `yojana-hub:` regions.
 - Never inflate the site's own numbers.
 
 ---

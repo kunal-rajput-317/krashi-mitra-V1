@@ -34,13 +34,14 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from backend.database.db import (
     MandiAlert, PushSubscription, User, UserProfile, get_db, acct,
 )
 from backend.utils.auth_utils import resolve_token_user_id
+from backend.utils.security import rate_limit
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -53,9 +54,38 @@ class PushKeys(BaseModel):
     auth:   str
 
 
+# The browsers' own push services. The sender POSTs to whatever endpoint the
+# subscription names, every time a price moves, so an endpoint taken on trust
+# turned the alert job into a tool for making this server call any URL —
+# an internal address, or someone else's site, daily. A real subscription
+# always points at one of these.
+_PUSH_HOSTS = ("fcm.googleapis.com", "android.googleapis.com",
+               "updates.push.services.mozilla.com", "web.push.apple.com")
+_PUSH_HOST_SUFFIXES = (".notify.windows.com", ".push.apple.com",
+                       ".push.services.mozilla.com")
+
+
+def is_push_endpoint(url: str) -> bool:
+    from urllib.parse import urlsplit
+    try:
+        parts = urlsplit((url or "").strip())
+    except ValueError:
+        return False
+    host = (parts.hostname or "").lower()
+    return (parts.scheme == "https" and not parts.port
+            and (host in _PUSH_HOSTS or host.endswith(_PUSH_HOST_SUFFIXES)))
+
+
 class PushSub(BaseModel):
     endpoint: str
     keys:     PushKeys
+
+    @field_validator("endpoint")
+    @classmethod
+    def _real_push_service(cls, v):
+        if not is_push_endpoint(v):
+            raise ValueError("not a browser push service endpoint")
+        return v.strip()
 
 
 class MandiAlertOn(BaseModel):
@@ -174,7 +204,12 @@ def mandi_status(
 
 # ── POST /alerts/mandi — turn the bell ON ────────────────────
 
-@router.post("/mandi")
+# Anonymous on purpose (see the docstring), so this is the only thing between
+# a loop and an unbounded pile of rows on metered Neon.
+_LIMIT_ALERT_ON = rate_limit("alert_on", 30, 15 * 60)
+
+
+@router.post("/mandi", dependencies=[Depends(_LIMIT_ALERT_ON)])
 def mandi_alert_on(
     body:          MandiAlertOn,
     db:            Session       = Depends(get_db),

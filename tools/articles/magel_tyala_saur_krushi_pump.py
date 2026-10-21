@@ -275,6 +275,8 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "सरकारी योजना",
+
+    "state": "mh",
     "cat_label": "सरकारी योजना",
     "cat_query": "maharashtra",
     "breadcrumb_leaf": "मागेल त्याला सौर कृषी पंप",

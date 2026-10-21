@@ -17,6 +17,7 @@ from typing import Optional
 
 from backend.database.db import get_db, Base
 from backend.utils.auth_utils import get_current_user
+from backend.utils.security import rate_limit
 
 router = APIRouter(prefix="/cart", tags=["cart"])
 
@@ -108,7 +109,7 @@ def get_cart(
 # ── POST /cart/update ─────────────────────────────────────────
 # Works for both guest and logged-in users
 
-@router.post("/update")
+@router.post("/update", dependencies=[Depends(rate_limit("cart_update", 120, 60))])
 def update_cart(
     body:         CartUpdateRequest,
     db:           Session = Depends(get_db),

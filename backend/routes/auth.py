@@ -63,7 +63,13 @@ _LIMIT_SEND   = rate_limit("otp_send",   5,  15 * 60)   # 5 emails / 15 min / IP
 _LIMIT_VERIFY = rate_limit("otp_verify", 20, 15 * 60)   # 20 tries / 15 min / IP
 _LIMIT_LOGIN  = rate_limit("login",      20, 15 * 60)   # 20 logins / 15 min / IP
 
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+# The OAuth client id is public — every page ships it in api-config.js — so a
+# default here is not a secret fallback. It has to have one: with the variable
+# unset (it is in neither render.yaml nor .env) the audience check below was
+# skipped, and an id_token Google minted for ANY other website was accepted as
+# a login here. Matched against `aud` on every login, never optional.
+GOOGLE_CLIENT_ID = (os.getenv("GOOGLE_CLIENT_ID", "").strip()
+                    or "235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com")
 
 # Auth handlers used to return `detail=f"Login failed: {e}"`, putting the raw
 # exception — SQLAlchemy errors naming tables/columns, driver messages, file
@@ -568,7 +574,7 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
         info = resp.json()
 
         # Ensure token was issued for our application
-        if GOOGLE_CLIENT_ID and info.get("aud") != GOOGLE_CLIENT_ID:
+        if info.get("aud") != GOOGLE_CLIENT_ID:
             return {"success": False, "message": "Google token mismatch। सही account से try करें।", "data": {}}
 
         email     = (info.get("email") or "").strip().lower()
@@ -576,7 +582,11 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
 
         if not email:
             return {"success": False, "message": "Google account से email नहीं मिली।", "data": {}}
-        if not info.get("email_verified"):
+        # tokeninfo sends every value as a STRING, so an unverified address
+        # arrives as "false" — which is truthy. `not info.get(...)` let it
+        # through, and the email lookup below then logged it into whichever
+        # account already owned that address.
+        if str(info.get("email_verified", "")).lower() != "true":
             return {"success": False, "message": "Google email verified नहीं है।", "data": {}}
 
         name = info.get("name") or email.split("@")[0]

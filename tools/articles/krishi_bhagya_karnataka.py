@@ -238,6 +238,8 @@ ARTICLE = {
     "lang": "kn",
 
     "section": "ಸರ್ಕಾರಿ ಯೋಜನೆ",
+
+    "state": "ka",
     "cat_label": "ಕರ್ನಾಟಕ",
     "cat_query": "karnataka",
     "breadcrumb_leaf": "ಕೃಷಿ ಭಾಗ್ಯ ಯೋಜನೆ",

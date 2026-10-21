@@ -11,8 +11,8 @@
 # SO THIS PAGE MAY NOT SAY "सत्यापित". Not in a headline, not in a benefit
 # list, not in the phrase "सत्यापित विक्रेता बनें" it used to be titled. Every
 # benefit printed below is something the site actually does when the flag goes
-# on — a tick beside his name, a blue ring on his photo, the tick in the
-# WhatsApp preview — and nothing about how buyers will behave, what price he
+# on — a tick beside his name, a blue ring on his photo, the badge on his
+# profile — and nothing about how buyers will behave, what price he
 # will get, or who he is. A test sweeps the rendered page for the banned words.
 #
 # Nor may it say "पेमेंट हो गया": a upi:// hand-off reports nothing back
@@ -56,8 +56,8 @@ CANON = "https://krashimitra.in/bluetick"
 
 # What the membership actually gets him. Every line is a thing this codebase
 # does the moment users.seller_verified flips — the tick in bazar.py's feed
-# payload, the ocean-blue ring krashi_bajar.html draws on his avatar, the ✅
-# share.py puts in the WhatsApp preview, and the badge on his own profile.
+# payload, the ocean-blue ring krashi_bajar.html draws on his avatar, and the
+# badge on his own profile.
 #
 # What is NOT on this list, and may never be: more buyers, a faster sale, a
 # better price, or anything about who he is. Those are either unprovable or a
@@ -65,7 +65,6 @@ CANON = "https://krashimitra.in/bluetick"
 GETS_HI = [
     "आपके नाम के साथ नीला टिक — हर पोस्ट पर",
     "प्रोफ़ाइल फ़ोटो पर नीला घेरा, जो भीड़ में दिखता है",
-    "कृषि मित्र के WhatsApp चैनल पर आपके नाम के साथ टिक",
     "आपकी प्रोफ़ाइल पर प्रीमियम सदस्य का निशान",
 ]
 

@@ -1299,8 +1299,14 @@
     const next   = params.get("next") || "";
     // Same-origin paths only. "//evil.com" and "https://evil.com" are both
     // valid values of a redirect param and both leave our site — a login page
-    // that forwards anywhere on request is a phishing tool.
-    if (!next.startsWith("/") || next.startsWith("//")) return "profile.html";
+    // that forwards anywhere on request is a phishing tool. A prefix check is
+    // not enough: browsers read "/\evil.com" as "//evil.com" and strip tabs and
+    // newlines ("/%09/evil.com"), so resolve it the way the browser will and
+    // compare the origin it actually lands on.
+    if (!next.startsWith("/") || /[\\\u0000-\u001f]/.test(next)) return "profile.html";
+    let resolved;
+    try { resolved = new URL(next, location.origin); } catch (e) { return "profile.html"; }
+    if (resolved.origin !== location.origin) return "profile.html";
     const todo = params.get("do") || "";
     if (!todo) return next;
     return next + (next.includes("?") ? "&" : "?") + "do=" + encodeURIComponent(todo);

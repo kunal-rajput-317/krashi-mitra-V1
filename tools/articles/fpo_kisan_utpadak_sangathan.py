@@ -245,6 +245,8 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "सरकारी योजना",
+
+    "state": "central",
     "cat_label": "जानकारी",
     "cat_query": "jankari",
     "breadcrumb_leaf": "FPO — किसान उत्पादक संगठन",

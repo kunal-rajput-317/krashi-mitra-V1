@@ -225,6 +225,14 @@ app.add_middleware(SecurityHeadersMiddleware)
 # runs, so every log line from CORS handling inward carries it.
 app.add_middleware(RequestContextMiddleware)
 
+# Origin lock + per-IP flood guard. Outside the request-id/logging layer so a
+# flood of refused requests costs no log line each, but inside the bandwidth
+# meter so an attack still shows up on /admin/bandwidth. See
+# backend/utils/edge_guard.py.
+from backend.utils.edge_guard import EdgeGuardMiddleware
+
+app.add_middleware(EdgeGuardMiddleware)
+
 # Outside even that, so it counts the final bytes of every response — gzip'd
 # bodies, redirects, errors — which is exactly what Render bills against the
 # 5 GB/month cap. See services/bandwidth_meter.py and /admin/bandwidth.

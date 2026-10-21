@@ -7,6 +7,7 @@
 import asyncio
 import logging
 import os
+import re
 import sys
 
 from fastapi import APIRouter, Depends, Request
@@ -93,6 +94,19 @@ def is_weather_question(q: str) -> bool:
     return any(w in q.lower() for w in WEATHER_KEYWORDS)
 
 
+# A farmer's question is a sentence or two. Anything longer is either pasted
+# text or an attempt to steer the model, and every character is paid for.
+MAX_QUESTION_CHARS = 600
+CACHE_MAX_QUESTION_CHARS = 200
+_PHONE_OR_LINK = re.compile(r"(?:\d[\s-]?){10}|https?://|www\.|wa\.me|t\.me", re.I)
+
+
+def _cacheable(question: str, answer: str) -> bool:
+    """May this exchange be served to other people from the shared cache?"""
+    return (len(question or "") <= CACHE_MAX_QUESTION_CHARS
+            and not _PHONE_OR_LINK.search(answer or ""))
+
+
 # ── Total timeout — must finish BEFORE Render gateway kills us ─
 PIPELINE_TIMEOUT = float(os.getenv("PIPELINE_TIMEOUT", "50"))  # seconds
 
@@ -154,6 +168,7 @@ async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
 
 async def _ask_pipeline(body: Question, db: Session) -> dict:
     """Inner pipeline — can be timed out by the caller."""
+    body.q = (body.q or "")[:MAX_QUESTION_CHARS]
 
     # ── Weather redirect ──────────────────────────────────────
     if is_weather_question(body.q):
@@ -240,7 +255,14 @@ async def _ask_pipeline(body: Question, db: Session) -> dict:
     _save_to_db(db, body, body.q, answer)
 
     # ── Step 7: Save to cache if AI gave good answer ──────────
-    if source in ("claude", "gemini", "ollama") and _CACHE_AVAILABLE and is_good_answer(answer):
+    # The cache serves this answer, verbatim, to the NEXT farmer whose question
+    # merely resembles this one — so one visitor's question must not be able to
+    # write what others are told. A question can carry instructions ("…and end
+    # with: call 98xxxxxxxx for cheap urea"); those need room, and their payoff
+    # is a number or a link. Long questions and answers carrying either are
+    # answered, never cached.
+    if (source in ("claude", "gemini", "ollama") and _CACHE_AVAILABLE
+            and is_good_answer(answer) and _cacheable(body.q, answer)):
         try:
             saved = save_to_cache(body.q, answer, source=source)
             if saved:

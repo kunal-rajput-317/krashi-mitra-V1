@@ -222,6 +222,10 @@ ARTICLE = {
     # Category. cat_query must be a real filter chip in articles/index.html:
     # khad · keet · mausam · ganna · sabji · fruit · anaaj · jankari · karnataka
     "section": "TODO",                # schema articleSection, e.g. "फसल कीट"
+    # Scheme pages only (section "सरकारी योजना", or "scheme": True): the state
+    # the hub /sarkari_yojana files it under — a key of tools/yojana_hub.STATES
+    # ("central", "up", "mp", "mh" ...). The build fails without it.
+    # "state": "up",
     "cat_label": "TODO",              # breadcrumb label, e.g. "फसल कीट"
     "cat_query": "keet",
     "breadcrumb_leaf": "TODO",        # short — the page itself

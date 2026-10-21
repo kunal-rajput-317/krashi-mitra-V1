@@ -387,6 +387,8 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "सरकारी योजना",
+
+    "state": "hr",
     "cat_label": "सरकारी योजना",
     "cat_query": "jankari",
     "breadcrumb_leaf": "हरियाणा धान खरीद",

@@ -73,13 +73,28 @@ _hits_lock = threading.Lock()
 _MAX_TRACKED_KEYS = 20_000
 
 
-def client_ip(request: Request) -> str:
-    """Real client IP. Render terminates TLS and forwards via X-Forwarded-For,
-    so the left-most entry is the caller; fall back to the socket peer."""
-    fwd = request.headers.get("x-forwarded-for", "")
+def ip_from_headers(headers, peer: str = "") -> str:
+    """Real client IP from request headers.
+
+    CF-Connecting-IP first: Cloudflare sets it to the address that actually
+    connected and overwrites any value the caller sent, so it cannot be faked
+    for traffic that came through Cloudflare. X-Forwarded-For is only the
+    fallback (local runs, direct-to-Render requests): its left-most entry is
+    whatever the caller wrote, so trusting it first let anyone dodge every
+    per-IP limit by sending a new fake address with each request.
+    """
+    cf = (headers.get("cf-connecting-ip") or "").strip()
+    if cf:
+        return cf
+    fwd = headers.get("x-forwarded-for") or ""
     if fwd:
         return fwd.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    return peer or "unknown"
+
+
+def client_ip(request: Request) -> str:
+    """Real client IP for a request. See ip_from_headers."""
+    return ip_from_headers(request.headers, request.client.host if request.client else "")
 
 
 def _prune(now: float) -> None:

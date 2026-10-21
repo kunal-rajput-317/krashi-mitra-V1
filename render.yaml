@@ -112,6 +112,19 @@ services:
       - key: CORS_ORIGINS
         sync: false          # optional
 
+      # ── Origin lock + flood guard (backend/utils/edge_guard.py) ──
+      # ORIGIN_SHIELD_SECRET: when set, Render serves only requests carrying
+      # the header X-Origin-Shield with this value, which a Cloudflare
+      # Transform Rule adds. Add the Transform Rule FIRST, then this var, or
+      # every visitor gets a 403. Generate it with:
+      #   python -c "import secrets; print(secrets.token_urlsafe(32))"
+      - key: ORIGIN_SHIELD_SECRET
+        sync: false          # optional — unset = lock off
+      # FLOOD_GUARD_PER_MIN: requests per client IP per minute (default 300).
+      # 0 turns the flood guard off.
+      - key: FLOOD_GUARD_PER_MIN
+        sync: false          # optional
+
       # ── Listing media (Cloudflare R2) ───────────────────────
       # Where a farmer's crop photo lives. Render's disk is ephemeral, so
       # before this every bazar photo was a 404 by the next redeploy — all

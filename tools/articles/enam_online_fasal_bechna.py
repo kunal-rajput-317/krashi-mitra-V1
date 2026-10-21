@@ -205,6 +205,10 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "मंडी और बिक्री",
+
+    "state": "central",
+
+    "scheme": True,
     "cat_label": "मंडी और बिक्री",
     "cat_query": "jankari",
     "breadcrumb_leaf": "e-NAM पर फसल बेचना",

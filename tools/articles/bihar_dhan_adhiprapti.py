@@ -333,6 +333,8 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "सरकारी योजना",
+
+    "state": "br",
     "cat_label": "सरकारी योजना",
     "cat_query": "jankari",
     "breadcrumb_leaf": "बिहार धान अधिप्राप्ति",

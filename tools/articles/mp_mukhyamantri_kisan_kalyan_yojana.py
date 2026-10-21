@@ -248,6 +248,8 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "सरकारी योजना",
+
+    "state": "mp",
     "cat_label": "सरकारी योजना",
     "cat_query": "jankari",
     "breadcrumb_leaf": "मुख्यमंत्री किसान कल्याण योजना",

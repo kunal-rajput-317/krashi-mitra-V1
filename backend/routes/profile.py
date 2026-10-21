@@ -531,13 +531,21 @@ async def upload_avatar(
     # DB still held a /uploads/avatar/... path pointing at a now-missing file.
     # A ~256px WebP is only a few KB, so the data URI lives comfortably in the
     # (unbounded) TEXT column and survives restarts.
+    # A 5 MB cap on the FILE is no cap on the pixels: a flat-colour PNG of a few
+    # KB can declare 13000×13000, and decoding that needs over 500 MB — the whole
+    # instance. Image.open only reads the header, so check before anything decodes.
+    from backend.services.media_store import MAX_PIXELS
     try:
         img = Image.open(io.BytesIO(raw))
+        if img.size[0] * img.size[1] > MAX_PIXELS:
+            raise HTTPException(400, "यह photo बहुत बड़ी है। दूसरी photo try करें।")
         img = ImageOps.exif_transpose(img)          # honour phone rotation
         img = img.convert("RGB")
         img = ImageOps.fit(img, (256, 256), Image.LANCZOS)  # center-crop to a square
         buf = io.BytesIO()
         img.save(buf, format="WEBP", quality=80, method=6)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("[profile] avatar processing failed: %s", e)
         raise HTTPException(400, "यह image process नहीं हो पाई। दूसरी photo try करें।")

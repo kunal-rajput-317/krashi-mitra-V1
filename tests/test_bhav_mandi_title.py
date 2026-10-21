@@ -7,6 +7,9 @@ some at position 1-3, with almost no clicks: the title named the district
 and never the mandi. The fix adds the district's other mandis to the title
 where there is room, as a trial behind bhav.MANDI_IN_TITLE.
 
+The trial was switched off on 21 Oct 2026 (changed titles lost CTR). These
+tests switch it on for themselves, so the code stays correct if it returns.
+
 What must hold, whatever the trial's result:
   • a title only ever GAINS a mandi name; it never loses a word to make room,
     and never grows past the 68-character SERP budget it already met;
@@ -20,6 +23,11 @@ from datetime import date, datetime
 import pytest
 
 from backend.routes import bhav
+
+
+@pytest.fixture(autouse=True)
+def _trial_on(monkeypatch):
+    monkeypatch.setattr(bhav, "MANDI_IN_TITLE", True)
 
 
 def _rows(*markets):

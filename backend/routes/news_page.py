@@ -20,6 +20,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from backend.services.news_auto_service import get_published_posts
 
 
+def _script_json(obj) -> str:
+    """JSON for a <script type="application/ld+json"> block. json.dumps leaves
+    "<" alone, so a headline carrying "</script>" would end the element and
+    run whatever came after it — the same fix as bhav.ld_json."""
+    return (json.dumps(obj, ensure_ascii=False)
+            .replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
+
+
 # /sponsor is held back until its figures are verified by hand, and
 # backend/routes/sponsor.py is gitignored until then. Ask the import system
 # rather than hard-coding the answer: the day the file is un-ignored the footer
@@ -1792,7 +1800,7 @@ def krashi_news_story(slug: str, request: Request):
 
     # Organization, never a fabricated human byline — the story is machine
     # written and the schema must not claim otherwise.
-    ld = json.dumps({
+    ld = _script_json({
         "@context": "https://schema.org",
         "@type": "NewsArticle",
         "headline": _fit(title, 110),
@@ -1808,15 +1816,15 @@ def krashi_news_story(slug: str, request: Request):
         "publisher": {"@type": "Organization", "name": "कृषि मित्र (KrashiMitra)", "url": SITE,
                       "logo": {"@type": "ImageObject",
                                "url": SITE + "/assets/krashimitra_logo.png"}},
-    }, ensure_ascii=False)
+    })
 
-    crumb_ld = json.dumps({
+    crumb_ld = _script_json({
         "@context": "https://schema.org", "@type": "BreadcrumbList",
         "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "कृषि मित्र", "item": SITE},
             {"@type": "ListItem", "position": 2, "name": "कृषि न्यूज़", "item": SITE + "/krashi_news"},
             {"@type": "ListItem", "position": 3, "name": _fit(title, 80), "item": canon},
-        ]}, ensure_ascii=False)
+        ]})
 
     crumbs = ('<nav class="crumbs"><a href="' + SITE + '/">कृषि मित्र</a> › '
               '<a href="' + SITE + '/krashi_news">कृषि न्यूज़</a> › '

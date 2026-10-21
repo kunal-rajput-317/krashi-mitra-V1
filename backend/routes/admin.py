@@ -42,22 +42,39 @@ def _admin_locked(ip: str, now: float) -> bool:
     return len(fails) >= _ADMIN_FAIL_LIMIT
 
 
-def require_admin(request: Request, creds: HTTPBasicCredentials = Depends(security)):
+def check_admin_login(ip: str, username: str, password: str) -> str:
+    """"ok" | "bad" | "locked" | "closed" for one attempt at the admin password.
+
+    The ONE place the password is compared, so the lockout cannot be skipped:
+    /health?full=1 used to compare it by hand with no lockout at all, which
+    made it an unlimited password-guessing endpoint next to the guarded one.
+    Every other caller that needs the admin password must come through here."""
     import time
-    from backend.utils.security import client_ip
-    ip, now = client_ip(request), time.time()
+    now = time.time()
     if _admin_locked(ip, now):
-        raise HTTPException(429, "बहुत ज़्यादा गलत पासवर्ड — 15 मिनट बाद कोशिश करें।",
-                            headers={"Retry-After": str(_ADMIN_FAIL_WINDOW)})
+        return "locked"
     if not ADMIN_PASS:
         # Without this an empty password would match the empty setting.
+        return "closed"
+    ok_user = secrets.compare_digest((username or "").encode(), ADMIN_USER.encode())
+    ok_pass = secrets.compare_digest((password or "").encode(), ADMIN_PASS.encode())
+    if ok_user and ok_pass:
+        return "ok"
+    if len(_admin_fails) > 5000:          # bound the dict against spoofed IPs
+        _admin_fails.clear()
+    _admin_fails.setdefault(ip, []).append(now)
+    return "bad"
+
+
+def require_admin(request: Request, creds: HTTPBasicCredentials = Depends(security)):
+    from backend.utils.security import client_ip
+    result = check_admin_login(client_ip(request), creds.username, creds.password)
+    if result == "locked":
+        raise HTTPException(429, "बहुत ज़्यादा गलत पासवर्ड — 15 मिनट बाद कोशिश करें।",
+                            headers={"Retry-After": str(_ADMIN_FAIL_WINDOW)})
+    if result == "closed":
         raise HTTPException(503, "ADMIN_PASS is not set on the server — admin is closed.")
-    ok_user = secrets.compare_digest(creds.username.encode(), ADMIN_USER.encode())
-    ok_pass = secrets.compare_digest(creds.password.encode(), ADMIN_PASS.encode())
-    if not (ok_user and ok_pass):
-        if len(_admin_fails) > 5000:          # bound the dict against spoofed IPs
-            _admin_fails.clear()
-        _admin_fails.setdefault(ip, []).append(now)
+    if result != "ok":
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials",
@@ -561,10 +578,15 @@ async def upload_pdf(
     file: UploadFile = File(...),
     _: str = Depends(require_admin),
 ):
-    if not file.filename.endswith(".pdf"):
+    # Only the last path component, and only safe characters: the browser
+    # sends whatever name it likes, and "../../frontend/x.pdf" joined onto
+    # UPLOAD_DIR wrote outside it.
+    name = re.sub(r"[^\w.\-]", "_", Path(file.filename or "").name)
+    if not name.lower().endswith(".pdf") or name.startswith("."):
         raise HTTPException(400, "Only PDF files are allowed")
+    file.filename = name
 
-    dest = UPLOAD_DIR / file.filename
+    dest = UPLOAD_DIR / name
     with open(dest, "wb") as f:
         shutil.copyfileobj(file.file, f)
 

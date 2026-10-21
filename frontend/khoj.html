@@ -1572,8 +1572,8 @@
       c.innerHTML = `<div class="search-no-results">
         <div style="font-size:38px;margin-bottom:10px;">🔍</div>
         <div style="font-weight:700;color:var(--text-mid);margin-bottom:8px;font-size:15px;">कोई result नहीं मिला</div>
-        <div style="font-size:12px;margin-bottom:18px;">"<strong>${query}</strong>" के लिए जानकारी नहीं मिली।<br>AI से सीधे पूछ सकते हैं।</div>
-        <button class="search-ask-chat-btn" onclick="askInChat(\`${query}\`)">
+        <div style="font-size:12px;margin-bottom:18px;">"<strong>${escHtml(query)}</strong>" के लिए जानकारी नहीं मिली।<br>AI से सीधे पूछ सकते हैं।</div>
+        <button class="search-ask-chat-btn" data-q="${escHtml(query)}" onclick="askInChat(this.dataset.q)">
           💬 &nbsp;चैट में पूछें
         </button>
       </div>`; return;
@@ -1598,7 +1598,7 @@
       ? '<span style="color:#c0392b;font-size:10px;margin-left:4px;">⚠️ पुराना</span>' : "";
     pillWrap.innerHTML = `<div class="search-weather-pill">
       ${condIcon}
-      <span>📍 ${ctx.district}</span>
+      <span>📍 ${escHtml(ctx.district)}</span>
       <span class="wpill-sep">|</span>
       <span>🌡️ ${ctx.temperature ? Math.round(ctx.temperature) + "°C" : "—"}</span>
       <span class="wpill-sep">|</span>
@@ -1640,7 +1640,6 @@
     if (r.dosage)     rows += buildRow("⚖️", "मात्रा",      r.dosage);
     if (r.season)     rows += buildRow("📅", "मौसम / समय",  r.season);
     if (r.description && !r.symptoms) rows += buildRow("ℹ️", "जानकारी", r.description);
-    const safe = (r.name || r.title || "").replace(/'/g, "\'");
     return `<div class="search-result-card" style="animation:kfadeUp .25s ease ${i*.07}s both">
   <div class="src-header">
     <span class="src-crop-icon">${icon}</span>
@@ -1651,7 +1650,7 @@
   <div class="src-body">${rows}</div>
   <div class="src-score-bar"><div class="src-score-fill" style="width:${scorePct}%"></div></div>
   ${r.weather_alert ? `<div class="src-weather-row ${r.weather_alert_severity || 'info'}">${r.weather_alert}</div>` : ""}
-  <div class="src-chat-cta" onclick="askInChat('${safe}')">
+  <div class="src-chat-cta" data-q="${escHtml(r.name || r.title || "")}" onclick="askInChat(this.dataset.q)">
     💬 Chat में और पूछें <span class="cta-arrow">›</span>
   </div>
 </div>`;
@@ -1662,6 +1661,15 @@
     return `<div class="src-row"><span class="src-row-icon">${icon}</span>
   <div class="src-row-content"><div class="src-row-label">${label}</div>
   <div class="src-row-value">${value}</div></div></div>`;
+  }
+
+  // The search box is filled from ?q=, so anything in it — typed or put in a
+  // link — is escaped before it reaches innerHTML; unescaped, a crafted link
+  // ran script on krashimitra.in with the visitor's login token in reach.
+  function escHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
   function askInChat(topic) {

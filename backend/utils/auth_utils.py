@@ -103,7 +103,15 @@ def validate_password_strength(password: str) -> Optional[str]:
 
 # ── JWT ──────────────────────────────────────────────────────
 
-JWT_SECRET       = os.getenv("JWT_SECRET", "change_this_secret_in_production")
+# No fallback string: this repo is public, so any default would be a published
+# signing key that forges a token for every account (LEGAL_RULES §4). Production
+# refuses to boot without the variable (security.assert_secrets_configured);
+# a local run without one signs with a random key that dies with the process,
+# so tokens just stop working on restart instead of being forgeable.
+JWT_SECRET = (os.getenv("JWT_SECRET") or "").strip()
+if not JWT_SECRET:
+    JWT_SECRET = secrets.token_urlsafe(48)
+    log.warning("JWT_SECRET is not set — using a random key for this process only.")
 JWT_ALGORITHM    = "HS256"
 JWT_EXPIRY_HOURS = 24
 

@@ -49,6 +49,7 @@ from article_scheme_notice import (SCHEME_MARK, is_scheme_article, page_is_schem
 from article_journey import (restyle as journey_restyle,
                              sweep as journey_sweep,
                              unplaceable as journey_stuck)
+import yojana_hub
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -1056,6 +1057,9 @@ def build_one(content_path: Path, write: bool = True) -> tuple[Path, list[str]]:
         print(f"  page      {out.relative_to(ROOT)}  "
               f"({len(html_text.splitlines())} lines)")
         print(f"  index     card {card}")
+        # A scheme guide is listed on /sarkari_yojana — tools/yojana_hub.py.
+        if is_scheme_article(a) and yojana_hub.sync():
+            print(f"  hub       {yojana_hub.HUB.relative_to(ROOT)} updated")
         for l in added:
             print(f"  redirect  + {l}")
     return out, validate(out) if out.is_file() else ["not built"]
@@ -1146,6 +1150,19 @@ def main() -> int:
             print(f"\nno place for the strip on {len(stuck)} page(s):")
             for s in stuck:
                 print(f"  {s}")
+
+    # The /sarkari_yojana hub lists every scheme guide (tools/yojana_hub.py).
+    # Its sync also fails the build for a scheme article with no "state".
+    if args.all:
+        try:
+            stale = yojana_hub.sync(write=not args.check)
+        except ValueError as e:
+            print(f"\n✗ yojana hub: {e}")
+            failed = True
+        else:
+            if stale:
+                print(f"\nyojana hub — {'out of date' if args.check else 'rewritten'}")
+                failed = failed or args.check
 
     # The strip is BAKED INTO A FILE here, unlike on a server page where a
     # failed lookup costs one step of one render. A build with no reachable

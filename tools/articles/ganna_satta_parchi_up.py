@@ -526,15 +526,20 @@ ARTICLE = {
     "lang": "hi",
 
     "section": "गन्ना",
+
+    "state": "up",
+
+    "scheme": True,
     "cat_label": "गन्ना",
     "cat_query": "ganna",
     "breadcrumb_leaf": "सट्टा और पर्ची",
 
-    "title": "गन्ना सट्टा और पर्ची कैलेंडर 2026-27 — UP में कैसे देखें",
+    # The live title since the be9d775 CTR round, which edited only the HTML.
+    "title": "गन्ना सट्टा 2026-27: पर्ची कैलेंडर ऑनलाइन कैसे देखें, कटाई की तारीख़",
     "description": "गन्ना सट्टा सर्वे और घोषणा पत्र से बनता है। 2026-27 में लघु किसान की पर्चियाँ 09 से बढ़कर 10, ट्रेंच विधि वालों की पक्ष 8 तक। eGANNA पर खुद देखें।",
     "keywords": "गन्ना सट्टा, गन्ना पर्ची कैलेंडर, ई गन्ना ऐप, eGanna app, caneup.in, enquiry.caneup.in, गन्ना सर्वेक्षण, गन्ना घोषणा पत्र, ganna satta kya hai, ganna parchi calendar, गन्ना कैलेंडरिंग नीति, sugarcane supply ticket UP, गन्ना समिति सदस्यता",
 
-    "og_title": "गन्ना सट्टा और पर्ची कैलेंडर 2026-27 — पूरी जानकारी | KrashiMitra.in",
+    "og_title": "गन्ना सट्टा 2026-27: पर्ची कैलेंडर ऑनलाइन कैसे देखें, कटाई की तारीख़",
     "og_desc": "सर्वे, घोषणा पत्र, सट्टा और पर्ची — चार अलग सीढ़ियाँ, और हर एक पर क्या करना है।",
 
     "hero_image": ("images/articles/ganna-satta-parchi-up.webp",
