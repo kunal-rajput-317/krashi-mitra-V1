@@ -487,7 +487,7 @@ async def trigger_fetch(source: str, _: str = Depends(require_admin)):
     Manually kick off a mandi or weather data fetch from the admin panel.
 
     Note the data.gov mandi feed is wiped overnight and refills through the
-    day (scheduled runs: 08/10/13/16/20h IST) — a manual fetch can only get
+    day (scheduled runs: mandi_scheduler.FETCH_SLOTS_IST) — a manual fetch can only get
     what mandis have reported so far. That's always safe: results are MERGED
     into the snapshot per market, and near-empty results are discarded by
     the sparse-feed guard.

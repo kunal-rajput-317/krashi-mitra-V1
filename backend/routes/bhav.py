@@ -1588,11 +1588,17 @@ def _next_update() -> str:
     lands turns a finished answer into an appointment, and points at the two
     ways to keep it without having to remember us.
 
-    The hours are the real cron in services/mandi_scheduler.py (IST 8, 10, 13,
-    16, 20 and 23:11). If that schedule changes, change this sentence with it —
-    a promised update that does not arrive is worse than no promise."""
-    return ('<p class="next-up">🕗 <b>कल का भाव</b> कल सुबह 8 बजे से — '
-            'दिन भर अपडेट होता रहता है। भाव बदलते ही पता चले, '
+    The hours are the real cron in services/mandi_scheduler.py: 23:00 IST
+    nightly, or 8, 10, 13, 16, 20 and 23:11 when MANDI_FETCH_ALL_DAY is on.
+    If that schedule changes, change this sentence with it — a promised
+    update that does not arrive is worse than no promise."""
+    from backend.services.mandi_scheduler import ALL_DAY
+    if ALL_DAY:
+        return ('<p class="next-up">🕗 <b>कल का भाव</b> कल सुबह 8 बजे से — '
+                'दिन भर अपडेट होता रहता है। भाव बदलते ही पता चले, '
+                'इसके लिए ऊपर 🔔 दबाएं या नीचे WhatsApp चुनें।</p>')
+    return ('<p class="next-up">🕗 <b>नया भाव</b> रोज़ रात 11 बजे के बाद — '
+            'दिन भर की मंडियों का। भाव बदलते ही पता चले, '
             'इसके लिए ऊपर 🔔 दबाएं या नीचे WhatsApp चुनें।</p>')
 
 
@@ -3174,17 +3180,17 @@ def _footer(note: str = "") -> str:
 # 14k URLs off Render's cold-start latency. Browsers get 5 min so a farmer
 # refreshing still sees fresh numbers quickly.
 #
-# A price page can only change when a fetch lands (mandi_scheduler: 08/10/13/
-# 16/20 h + 23:11 IST), so a fixed TTL is wrong either way: 1 h re-sent every
-# page ~24 times a day to learn nothing new, and a flat 6 h would hold the
-# 10:00 prices until 16:00, past two fetches. Expiring at "next fetch + 15 min"
-# (runs take 1–8 min, sync_log, Sep 2026) never serves prices a fetch has
-# replaced, and cuts edge refreshes to ~6-7 a day. An off-schedule retry of a
-# failed fetch shows at the next slot instead — the same price the page
-# already showed, for at most one more slot.
+# A price page can only change when a fetch lands (mandi_scheduler.
+# FETCH_SLOTS_IST: 23:00 IST nightly, or 08/10/13/16/20 h + 23:11 with
+# MANDI_FETCH_ALL_DAY on), so a fixed TTL is wrong either way: 1 h re-sent
+# every page ~24 times a day to learn nothing new, and with six slots a flat
+# 6 h would hold the 10:00 prices until 16:00, past two fetches. Expiring at
+# "next fetch + 15 min" (runs take 1–8 min, sync_log, Sep 2026) never serves
+# prices a fetch has replaced. An off-schedule fetch (watchdog, manual run)
+# shows at the next slot or the 6 h cap, whichever comes first.
 # History: 30 min until 25 Sep 2026, 1 h until 26 Sep — every edge refresh is
 # a full page billed to Render's 5 GB/month, which kept running out.
-_FETCH_SLOTS_IST = ((8, 0), (10, 0), (13, 0), (16, 0), (20, 0), (23, 11))
+from backend.services.mandi_scheduler import FETCH_SLOTS_IST as _FETCH_SLOTS_IST
 _FETCH_SETTLE = timedelta(minutes=15)
 _EDGE_TTL_MIN, _EDGE_TTL_MAX = 300, 6 * 3600
 

@@ -59,10 +59,13 @@ CACHE_TTL_SEC = 60
 _cache: dict[bool, tuple[float, dict]] = {}
 
 # ── Thresholds ───────────────────────────────────────────────
-# Mandi: six fetches a day (08/10/13/16/20 + 23:11 IST). One missed daytime
-# window is worth a warning; 30h without fresh rows is the same line the
-# monitor workflow already pages on, so the two never disagree.
-MANDI_WARN_HOURS   = 14
+# Mandi: one fetch a night (23:00 IST), so fresh rows are up to 24h old on a
+# normal day and past 26h the run was missed. With MANDI_FETCH_ALL_DAY on it
+# is six a day (08/10/13/16/20 + 23:11), and one missed daytime window (14h)
+# is worth a warning. 30h without fresh rows is the same line the monitor
+# workflow already pages on, so the two never disagree.
+from backend.services.mandi_scheduler import ALL_DAY as _MANDI_ALL_DAY
+MANDI_WARN_HOURS   = 14 if _MANDI_ALL_DAY else 26
 MANDI_DOWN_HOURS   = 30
 # The snapshot itself ages more slowly than the feed — it is merged, not
 # rebuilt, so yesterday's prices stay up while today's are still arriving.

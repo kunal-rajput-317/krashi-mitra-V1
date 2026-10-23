@@ -6,6 +6,7 @@
 # ============================================================
 
 import logging
+import os
 import pytz
 from datetime import datetime
 
@@ -13,7 +14,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron      import CronTrigger
 from apscheduler.triggers.interval  import IntervalTrigger
 from apscheduler.triggers.combining import OrTrigger
-from apscheduler.events             import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
+from apscheduler.events            import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
 logger = logging.getLogger("krishi.mandi_scheduler")
 
@@ -33,7 +34,26 @@ scheduler.add_listener(_on_job_executed, EVENT_JOB_EXECUTED)
 scheduler.add_listener(_on_job_error,    EVENT_JOB_ERROR)
 
 
-STALE_AFTER_HOURS = 20  # < 24 so a daily-ish refresh window is never missed
+# ── When the fetch runs ──────────────────────────────────────
+# data.gov.in refuses servers outside India (Oct 2026), so every fetch from
+# Render goes through the India relay (DATA_GOV_RELAY_URL), and since 23 Oct
+# 2026 it runs ONCE a night, at 23:00 IST, when the day's feed is complete.
+#
+# ROLLBACK: when data.gov.in accepts Render again, set MANDI_FETCH_ALL_DAY=true
+# in Render's settings (then "Save, rebuild and deploy"). That restores the old
+# six runs a day, and the /bhav "next update" line, edge-cache timing and
+# /health thresholds all follow it. No code change needed either way.
+ALL_DAY = os.getenv("MANDI_FETCH_ALL_DAY", "false").lower() == "true"
+
+_ALL_DAY_SLOTS = ((8, 0), (10, 0), (13, 0), (16, 0), (20, 0), (23, 11))
+_NIGHTLY_SLOTS = ((23, 0),)
+FETCH_SLOTS_IST = _ALL_DAY_SLOTS if ALL_DAY else _NIGHTLY_SLOTS
+SLOTS_LABEL = " / ".join(f"{h:02d}:{m:02d}" for h, m in FETCH_SLOTS_IST)
+
+# All day: < 24 so a daily-ish refresh window is never missed. Nightly: > 24,
+# or the watchdog would fire extra fetches every evening before the real run;
+# at 26h it only steps in when the 23:00 run was actually missed.
+STALE_AFTER_HOURS = 20 if ALL_DAY else 26
 
 
 def _snapshot_stale_reason():
@@ -229,7 +249,11 @@ def _register_job():
     """
     Register the mandi refresh job. data.gov wipes the daily feed overnight
     and refills it as mandis report through the day (2 rows at 06:30 IST,
-    ~half by ~09:30, ~10k by 11:30, full ~18k by evening). Six runs/day:
+    ~half by ~09:30, ~10k by 11:30, full ~18k by evening). The hours are
+    FETCH_SLOTS_IST (see ALL_DAY above):
+      nightly (default) — 23:00 IST only: the day's feed is complete and the
+                  overnight wipe hasn't happened yet
+      all day (MANDI_FETCH_ALL_DAY=true) — the original six runs:
       08:00 IST — today's early reporters start flowing in
       10:00 IST — late-morning top-up
       13:00 IST — feed mostly full
@@ -237,8 +261,8 @@ def _register_job():
       20:00 IST — evening sweep — most mandis have reported by now
       23:11 IST — final end-of-day sweep before the overnight wipe, so pre-dawn
                   users always see yesterday's complete final prices
-    (23:11 fires at :11, so it can't share the :00 cron above — the two
-    schedules are OR-combined into this one job.)
+    (Slots on different minutes can't share one cron, so each slot is its own
+    CronTrigger, OR-combined into this one job.)
     All runs are idempotent AND safe at any feed level: the snapshot is
     MERGED per market identity (never wholesale-deleted), history dedupes by
     row_key, and the sparse guard rejects near-empty results.
@@ -249,11 +273,10 @@ def _register_job():
     scheduler.add_job(
         func               = _fetch_and_notify,
         trigger            = OrTrigger([
-            CronTrigger(hour="8,10,13,16,20", minute=0,  timezone=IST),
-            CronTrigger(hour=23,              minute=11, timezone=IST),
+            CronTrigger(hour=h, minute=m, timezone=IST) for h, m in FETCH_SLOTS_IST
         ]),
         id                 = "mandi_price_refresh",
-        name               = "Nationwide Mandi Prices — Daily 08/10/13/16/20h + 23:11 IST",
+        name               = f"Nationwide Mandi Prices — Daily {SLOTS_LABEL} IST",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,
@@ -268,8 +291,8 @@ def _register_job():
     # round-the-clock database traffic: at 30 min it kept Neon's compute awake
     # 24/7 (~730 compute-hours/month against a ~192h free allowance), which
     # quota-blocked the database late every month and took the whole site down
-    # with it. At 3h the DB idles between the six scheduled fetches instead.
-    # Detection stays well inside STALE_AFTER_HOURS (20h), so a genuinely stale
+    # with it. At 3h the DB idles between scheduled fetches instead.
+    # Detection stays close to STALE_AFTER_HOURS, so a genuinely stale
     # snapshot is still caught long before a user could notice it.
     scheduler.add_job(
         func               = _refresh_if_stale,
@@ -296,8 +319,7 @@ def _register_job():
 
     # Free-tier runway, once a day. Daily and not hourly because these are
     # rate-limited billing APIs and the thing being watched moves over days;
-    # 09:10 IST so it lands after the 08:00 fetch has done the day's writing
-    # and the numbers reflect it.
+    # 09:10 IST, clear of every fetch slot.
     scheduler.add_job(
         func               = _infra_check,
         trigger            = CronTrigger(hour=9, minute=10, timezone=IST),
@@ -346,7 +368,7 @@ def _register_job():
         misfire_grace_time = None,
     )
 
-    logger.info("📅 Mandi jobs registered | daily @ 08/10/13/16/20h + 23:11 IST + 3-hourly staleness watchdog + 3-hourly DB write canary + daily badge expiry")
+    logger.info(f"📅 Mandi jobs registered | daily @ {SLOTS_LABEL} IST + 3-hourly staleness watchdog + 3-hourly DB write canary + daily badge expiry")
 
 
 async def start_scheduler():
@@ -366,7 +388,7 @@ async def start_scheduler():
     check_api_key()
 
     if not _refresh_if_stale():
-        logger.info("Mandi snapshot fresh — next scheduled fetch at 08/10/13/16/20h IST")
+        logger.info(f"Mandi snapshot fresh — next scheduled fetch at {SLOTS_LABEL} IST")
 
 
 async def stop_scheduler():

@@ -184,11 +184,47 @@ def test_bhav_price_pages_until_next_fetch_other_doc_pages_three_hours():
     ("23:30", 6 * 3600),       # overnight: next is 08:15, capped at 6 h
     ("23:24", 300),            # 2 min before 23:26 → floor of 5 min
 ])
-def test_bhav_edge_ttl_expires_just_after_the_next_mandi_fetch(ist, want_s):
+def test_bhav_edge_ttl_expires_just_after_the_next_mandi_fetch(ist, want_s, monkeypatch):
     from datetime import datetime, timedelta
     from backend.routes import bhav
+    from backend.services import mandi_scheduler
+    # The six-a-day schedule that MANDI_FETCH_ALL_DAY=true restores.
+    monkeypatch.setattr(bhav, "_FETCH_SLOTS_IST", mandi_scheduler._ALL_DAY_SLOTS)
     h, m = map(int, ist.split(":"))
     now_utc = datetime(2026, 9, 26, h, m) - timedelta(hours=5, minutes=30)
     got = bhav._bhav_edge_ttl(now_utc)
     assert got == want_s
     assert f"max-age={got}," in bhav._bhav_cache_headers(now_utc)["CDN-Cache-Control"]
+
+
+@pytest.mark.parametrize("ist,want_s", [
+    ("07:00", 6 * 3600),       # next fetch 23:00 → 23:15, capped at 6 h
+    ("20:00", (3 * 60 + 15) * 60),   # 23:00 fetch → 23:15
+    ("23:05", 10 * 60),        # fetch still running → expire once it settles
+    ("23:13", 300),            # 2 min before 23:15 → floor of 5 min
+    ("23:30", 6 * 3600),       # overnight: next is tomorrow 23:15, capped at 6 h
+])
+def test_bhav_edge_ttl_nightly_fetch(ist, want_s, monkeypatch):
+    from datetime import datetime, timedelta
+    from backend.routes import bhav
+    from backend.services import mandi_scheduler
+    monkeypatch.setattr(bhav, "_FETCH_SLOTS_IST", mandi_scheduler._NIGHTLY_SLOTS)
+    h, m = map(int, ist.split(":"))
+    now_utc = datetime(2026, 10, 23, h, m) - timedelta(hours=5, minutes=30)
+    assert bhav._bhav_edge_ttl(now_utc) == want_s
+
+
+def test_mandi_fetch_defaults_to_nightly_and_all_day_is_one_switch():
+    # A fresh interpreter per setting: reloading mandi_scheduler in-process
+    # would replace the scheduler singleton other modules hold.
+    import os, subprocess, sys
+    code = ("from backend.services import mandi_scheduler as s;"
+            "print(s.FETCH_SLOTS_IST, s.STALE_AFTER_HOURS)")
+    def run(**env):
+        e = {k: v for k, v in os.environ.items() if k != "MANDI_FETCH_ALL_DAY"}
+        e.update(env)
+        return subprocess.run([sys.executable, "-c", code], env=e, check=True,
+                              capture_output=True, text=True).stdout.strip()
+    assert run() == "((23, 0),) 26"
+    assert run(MANDI_FETCH_ALL_DAY="true") == (
+        "((8, 0), (10, 0), (13, 0), (16, 0), (20, 0), (23, 11)) 20")
