@@ -202,17 +202,17 @@ _CHROME = {
     "hi": {"tag": "🎁 पहला {m} बिल्कुल मुफ़्त", "tick": "✓ सत्यापित",
            "call_btn": "📞 फ़ोन करें", "cap": "↑ आपकी लिस्टिंग ऐसी दिखेगी",
            "cap_b": "पहला {m} ₹0",
-           "reach": "व्हाट्सऐप पर मैसेज करें या कॉल करें —",
+           "reach": "व्हाट्सऐप पर मैसेज करें —",
            "wa_tail": "पहला {m} मुफ़्त वाला ऑफ़र चाहिए।"},
     "ta": {"tag": "🎁 முதல் {m} முற்றிலும் இலவசம்", "tick": "✓ சரிபார்க்கப்பட்டது",
            "call_btn": "📞 அழையுங்கள்", "cap": "↑ உங்கள் பட்டியல் இப்படித் தெரியும்",
            "cap_b": "முதல் {m} ₹0",
-           "reach": "WhatsApp-இல் செய்தி அனுப்புங்கள் அல்லது அழையுங்கள் —",
+           "reach": "WhatsApp-இல் செய்தி அனுப்புங்கள் —",
            "wa_tail": "முதல் {m} இலவசச் சலுகை வேண்டும்."},
     "kn": {"tag": "🎁 ಮೊದಲ {m} ಸಂಪೂರ್ಣ ಉಚಿತ", "tick": "✓ ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
            "call_btn": "📞 ಫೋನ್ ಮಾಡಿ", "cap": "↑ ನಿಮ್ಮ ಪಟ್ಟಿ ಹೀಗೆ ಕಾಣುತ್ತದೆ",
            "cap_b": "ಮೊದಲ {m} ₹0",
-           "reach": "WhatsApp ನಲ್ಲಿ ಸಂದೇಶ ಕಳುಹಿಸಿ ಅಥವಾ ಕರೆ ಮಾಡಿ —",
+           "reach": "WhatsApp ನಲ್ಲಿ ಸಂದೇಶ ಕಳುಹಿಸಿ —",
            "wa_tail": "ಮೊದಲ {m} ಉಚಿತ ಕೊಡುಗೆ ಬೇಕು."},
 }
 
@@ -510,7 +510,7 @@ def _body(kind: str, what: str, lang: str) -> str:
 <ul class="km-offer-terms">{terms}</ul>
 <a class="km-offer-go" target="_blank" rel="noopener" href="{wa_url(kind, what, lang)}">{escape(p['cta'])} →</a>
 <span class="km-offer-call">{escape(ch['reach'])}
-<a href="tel:+{HELPLINE}">{HELPLINE_HI}</a></span>
+<a href="https://wa.me/{HELPLINE}" target="_blank" rel="noopener">{HELPLINE_HI}</a></span>
 </div>
 </div>"""
 

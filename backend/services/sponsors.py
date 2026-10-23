@@ -499,7 +499,7 @@ RATE_CARD = [
         "gets": [
             "A package shaped around your brand, season and target states.",
             "Price and services are confirmed on WhatsApp, a call or email.",
-            "WhatsApp / Call: +91 98709 51001",
+            "WhatsApp: +91 98709 51001",
             "Email: krashimitra038@gmail.com",
         ],
     },

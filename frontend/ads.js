@@ -597,7 +597,27 @@
       clear: safe.length, breaks: breaks.length, pool: pool.length, floor: floor
     };
 
-    spread(pool, anchors, n).forEach(function (g) {
+    // The first unit takes the EARLIEST legal position, and only the rest are
+    // spread. spread() alone is even, and even is wrong for the first one: a
+    // farmer reads the price on screen one and leaves, so a unit two screens
+    // down is a page view AdSense counts and nobody sees - that is what drags
+    // page RPM. Measured 23 Oct at 390px, /bhav/guar/rajasthan (the biggest
+    // page in Search) moved its first unit from 1,659px to 1,513px.
+    // Every rule still applies: the lead comes from the same pool (fold, CTA,
+    // tap clearance) and keeps MIN_GAP from every anchor.
+    var lead = null;
+    pool.slice().sort(function (a, b) { return a.y - b.y; }).some(function (g) {
+      for (var j = 0; j < anchors.length; j++) {
+        if (Math.abs(g.y - anchors[j]) < MIN_GAP) return false;
+      }
+      lead = g;
+      return true;
+    });
+    if (lead) { lead.used = 1; anchors.push(lead.y); }
+    var chosen = spread(pool, anchors, n - (lead ? 1 : 0));
+    if (lead) chosen.push(lead);
+
+    chosen.forEach(function (g) {
       var box = build({});
       if (g.before) g.parent.insertBefore(box, g.before); else g.parent.appendChild(box);
       units.push(box.querySelector('ins'));

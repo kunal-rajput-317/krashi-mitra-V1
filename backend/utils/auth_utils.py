@@ -9,6 +9,8 @@
 # ============================================================
 
 import calendar
+import hashlib
+import hmac
 import os
 import re
 import secrets
@@ -115,8 +117,23 @@ if not JWT_SECRET:
 JWT_ALGORITHM    = "HS256"
 JWT_EXPIRY_HOURS = 24
 
-def create_access_token(user_id: int, email: str) -> str:
-    """Create a signed JWT. Payload: sub (user_id), email, iat, exp.
+def password_stamp(hashed_password: Optional[str]) -> str:
+    """A short fingerprint of the account's CURRENT password hash.
+
+    Carried in every login token as `pwd`. A password reset writes a new hash,
+    so every token issued before it stops matching — that is the whole of
+    "log out everywhere on reset", with nothing new stored. HMAC under the JWT
+    key rather than a bare digest: the payload is readable by anyone holding
+    the token, and it should say nothing at all about the hash."""
+    return hmac.new(JWT_SECRET.encode(), (hashed_password or "").encode(),
+                    hashlib.sha256).hexdigest()[:16]
+
+
+def create_access_token(user_id: int, email: str,
+                        hashed_password: Optional[str] = None) -> str:
+    """Create a signed JWT. Payload: sub (user_id), email, iat, exp, and pwd
+    (password_stamp) when the caller passes the account's hash — both login
+    routes do, and only those tokens die on a password reset.
 
     `iat` is not decoration: `sub` is a users.id, and ids get recycled. Wipe the
     table (or roll the sequence back) and the next signup takes id 1 — a token
@@ -133,6 +150,8 @@ def create_access_token(user_id: int, email: str) -> str:
         "iat":   calendar.timegm(now.utctimetuple()),
         "exp":   now + timedelta(hours=JWT_EXPIRY_HOURS),
     }
+    if hashed_password is not None:
+        payload["pwd"] = password_stamp(hashed_password)
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def decode_access_token(token: str) -> Optional[dict]:
@@ -169,6 +188,7 @@ def resolve_token_user(db, token: str) -> Optional["User"]:
       • the account still exists
       • the account is still verified  (un-verified by admin → token stops working)
       • it was issued AFTER that account was created (not a recycled id)
+      • its password stamp still matches  (a reset ends older sessions)
     """
     payload = decode_access_token(token)
     if not payload:
@@ -194,6 +214,14 @@ def resolve_token_user(db, token: str) -> Optional["User"]:
         user.created_at - timedelta(seconds=TOKEN_AGE_SKEW_SECONDS)
     ):
         return None                       # issued before this account existed
+    # A token without `pwd` is one minted before stamps existed (24h at most,
+    # gone a day after deploy) or by a test; only the login routes mint real
+    # ones, and they always stamp.
+    stamp = payload.get("pwd")
+    if stamp is not None and not hmac.compare_digest(
+        str(stamp), password_stamp(user.hashed_password)
+    ):
+        return None                       # password changed since this login
     return user
 
 

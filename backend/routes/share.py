@@ -453,6 +453,20 @@ def _crop_thumb(commodity: str) -> str:
     return ""
 
 
+def _crop_tile(commodity: str) -> str:
+    """The ~9 KB 210x162 cut of the crop's photo (tools/fetch_crop_images.py
+    make_tiles) for the /bhav crop grid's 70x54 box. Falls back to the full
+    photo — never to nothing — so a crop without a tile still shows its
+    picture, just heavier."""
+    full = _crop_image(commodity)
+    if not full.startswith(f"{SITE}/images/crops/"):
+        return full
+    name = full.rsplit("/", 1)[1]
+    if (_CROP_DIR / "tiles" / name).is_file():
+        return f"{SITE}/images/crops/tiles/{name}"
+    return full
+
+
 # Hindi crop names used by Krashi Bazar chips → English keyword for _crop_image()
 _HI_CROP_EN = {
     "गेहूं": "wheat", "धान": "paddy", "सोयाबीन": "soybean", "प्याज": "onion",

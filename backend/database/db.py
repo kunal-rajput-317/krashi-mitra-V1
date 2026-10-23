@@ -22,6 +22,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set!")
 
+# An AI coding tool never gets a live connection — see utils/ai_db_guard.py.
+from backend.utils.ai_db_guard import refuse_live_db_for_ai  # noqa: E402
+refuse_live_db_for_ai(DATABASE_URL)
+
 # Fix postgres:// → postgresql:// (Neon/Heroku style)
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -464,9 +468,7 @@ class UserProfile(Base):
     geo_location         = Column(String,   nullable=True)   # readable "जिला, राज्य"
     geo_updated_at       = Column(DateTime, nullable=True)   # last time the device shared it
 
-    # Farm
-    farm_size            = Column(String,   nullable=True)
-    farm_size_unit       = Column(String,   default="acres")
+    # Farm — farm_size/farm_size_unit retired 2026-10-24 (_RETIREMENTS below)
 
     # Equipment (checkboxes)
 
@@ -2369,9 +2371,7 @@ def _ensure_postgres_columns():
             ("geo_lon",              "FLOAT"),
             ("geo_location",         "VARCHAR"),
             ("geo_updated_at",       "TIMESTAMP"),
-            # Farm
-            ("farm_size",            "VARCHAR"),
-            ("farm_size_unit",       "VARCHAR DEFAULT 'acres'"),
+            # Farm — farm_size/farm_size_unit retired 2026-10-24, see _RETIREMENTS
             # Equipment
             # Crops
             ("primary_crop",         "VARCHAR DEFAULT 'Sugarcane'"),
@@ -3503,6 +3503,40 @@ class NewsLike(Base):
     )
 
 
+# ── No Aadhaar numbers in user-typed text (LEGAL_RULES §4a) ──
+# Every column a person types freely into. Masked on the way IN, at the ORM,
+# so no route can forget it — see services/pii_guard.py for what "Aadhaar-
+# like" means and why phone numbers survive. A new free-text column that a
+# user fills belongs in this list.
+from sqlalchemy import event                              # noqa: E402
+from backend.services.pii_guard import mask_aadhaar       # noqa: E402
+
+_FREE_TEXT = {
+    ChatHistory:        ("message",),
+    BazarPost:          ("text",),
+    BazarComment:       ("text",),
+    SellerVerification: ("note",),
+    CropAppeal:         ("description",),
+    BazarReport:        ("note",),
+    AccountDeletion:    ("reason",),
+    NewsComment:        ("comment_text",),
+    Buyer:              ("description",),
+}
+
+
+def _mask_free_text(mapper, connection, target):
+    for col in _FREE_TEXT[mapper.class_]:
+        value = getattr(target, col, None)
+        masked = mask_aadhaar(value)
+        if masked is not value:
+            setattr(target, col, masked)
+
+
+for _model in _FREE_TEXT:
+    event.listen(_model, "before_insert", _mask_free_text)
+    event.listen(_model, "before_update", _mask_free_text)
+
+
 _DEAD_INDEXES = [
     "ix_mandi_price_history_row_key",
     "mandi_history_group_dt_idx",
@@ -3673,6 +3707,17 @@ RETIRED_PROFILE_FIELDS = (
     "advisory_type", "eq_tractor", "eq_pump", "eq_thresher", "eq_sprayer",
     "eq_harvester", "eq_none",
 )
+# 2026-10-24: farm size — shown on the profile card, used by no feature.
+# Owner's instruction, confirmed three times.
+RETIRED_PROFILE_FIELDS_2026_10_24 = ("farm_size", "farm_size_unit")
+
+# Each batch keeps its OWN one-hour clock in schema_retirements. A new batch
+# must get a new name: under an old one the hour has long passed, and the
+# columns would drop on the first boot while the old code is still serving.
+_RETIREMENTS = (
+    ("user_profiles_2026_09_25", RETIRED_PROFILE_FIELDS),
+    ("user_profiles_2026_10_24", RETIRED_PROFILE_FIELDS_2026_10_24),
+)
 _RETIRE_DROP_AFTER_SECONDS = 3600
 
 
@@ -3681,48 +3726,45 @@ def _retire_profile_fields():
         return
     try:
         with engine.begin() as conn:
-            present = {r[0] for r in conn.execute(text("""
-                SELECT column_name FROM information_schema.columns
-                 WHERE table_name = 'user_profiles'
-            """))}
-            cols = [c for c in RETIRED_PROFILE_FIELDS if c in present]
-            if not cols:
-                return
             types = dict(conn.execute(text("""
                 SELECT column_name, data_type FROM information_schema.columns
                  WHERE table_name = 'user_profiles'
             """)).all())
-            # A FALSE tick box holds nothing; only TRUE or a value is personal.
-            held = " OR ".join(
-                f"{c} IS TRUE" if types.get(c) == "boolean" else f"{c} IS NOT NULL"
-                for c in cols)
-            n = conn.execute(text(
-                f"UPDATE user_profiles SET {', '.join(f'{c} = NULL' for c in cols)} "
-                f"WHERE {held}")).rowcount
-            if n:
-                log.info(f"🧹 retired profile fields erased on {n} profile(s)")
+            for name, fields in _RETIREMENTS:
+                cols = [c for c in fields if c in types]
+                if not cols:
+                    continue
+                # A FALSE tick box holds nothing; only TRUE or a value is personal.
+                held = " OR ".join(
+                    f"{c} IS TRUE" if types.get(c) == "boolean" else f"{c} IS NOT NULL"
+                    for c in cols)
+                n = conn.execute(text(
+                    f"UPDATE user_profiles SET {', '.join(f'{c} = NULL' for c in cols)} "
+                    f"WHERE {held}")).rowcount
+                if n:
+                    log.info(f"🧹 retired profile fields ({name}) erased on {n} profile(s)")
 
-            if not os.getenv("RENDER"):
-                return
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS schema_retirements (
-                    name TEXT PRIMARY KEY, first_seen TIMESTAMP NOT NULL)
-            """))
-            conn.execute(text("""
-                INSERT INTO schema_retirements (name, first_seen)
-                VALUES ('user_profiles_2026_09_25', now())
-                ON CONFLICT (name) DO NOTHING
-            """))
-            age = conn.execute(text("""
-                SELECT EXTRACT(EPOCH FROM now() - first_seen)
-                  FROM schema_retirements WHERE name = 'user_profiles_2026_09_25'
-            """)).scalar() or 0
-            if age < _RETIRE_DROP_AFTER_SECONDS:
-                return
-            conn.execute(text(
-                "ALTER TABLE user_profiles "
-                + ", ".join(f"DROP COLUMN IF EXISTS {c}" for c in cols)))
-            log.info(f"🗑️ retired profile columns dropped: {', '.join(cols)}")
+                if not os.getenv("RENDER"):
+                    continue
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS schema_retirements (
+                        name TEXT PRIMARY KEY, first_seen TIMESTAMP NOT NULL)
+                """))
+                conn.execute(text("""
+                    INSERT INTO schema_retirements (name, first_seen)
+                    VALUES (:name, now())
+                    ON CONFLICT (name) DO NOTHING
+                """), {"name": name})
+                age = conn.execute(text("""
+                    SELECT EXTRACT(EPOCH FROM now() - first_seen)
+                      FROM schema_retirements WHERE name = :name
+                """), {"name": name}).scalar() or 0
+                if age < _RETIRE_DROP_AFTER_SECONDS:
+                    continue
+                conn.execute(text(
+                    "ALTER TABLE user_profiles "
+                    + ", ".join(f"DROP COLUMN IF EXISTS {c}" for c in cols)))
+                log.info(f"🗑️ retired profile columns dropped: {', '.join(cols)}")
     except Exception as e:
         log.warning(f"retiring profile fields skipped: {e}")
 

@@ -344,7 +344,7 @@
       if (!slot || !tickNeedsNotice(d)) return;
       var declined = d.status === "declined";
       var money = declined
-        ? "शुल्क आपके खाते से कट गया हो तो UTR के साथ +91 9870951001 पर बताइए।"
+        ? "शुल्क आपके खाते से कट गया हो तो UTR के साथ WhatsApp +91 9870951001 पर बताइए।"
         : (d.refund_pending ? "आपका पूरा शुल्क 7 दिन के अंदर वापस भेजा जाएगा। रिफंड के बाद फिर से आवेदन कर सकते हैं।"
           : (d.paid && d.refunded ? "आपका शुल्क वापस भेज दिया गया है।" : ""));
       var canApply = declined || !d.refund_pending;

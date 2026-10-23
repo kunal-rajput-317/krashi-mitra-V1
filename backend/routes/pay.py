@@ -43,7 +43,6 @@ from backend.services import pay_links, upi
 
 router = APIRouter()
 
-PHONE_TEL = "tel:+919870951001"
 PHONE_TXT = "+91 98709 51001"
 WA = "https://wa.me/919870951001"
 
@@ -128,7 +127,7 @@ function kmCopyVpa(btn){
 # Said on every payable page, in the same words. The last line matters on a
 # page that asks a farmer for money: nothing here is a government fee.
 _HELP = (
-    f'<p class="pay-help">कोई दिक्कत हो तो कॉल करें — <a href="{PHONE_TEL}">{PHONE_TXT}</a><br>'
+    f'<p class="pay-help">कोई दिक्कत हो तो WhatsApp करें — <a href="{WA}">{PHONE_TXT}</a><br>'
     'पैसा UPI से सीधे कृषि मित्र के बैंक खाते में जाता है। हम कभी कार्ड नंबर, OTP या UPI PIN '
     'नहीं माँगते।<br>कृषि मित्र एक निजी वेबसाइट है, सरकारी नहीं। '
     '<a href="/terms">शुल्क और रिफ़ंड के नियम</a></p>')
@@ -152,7 +151,7 @@ def _incomplete(canon: str) -> HTMLResponse:
     return _dead_end(
         '<b>यह पेमेंट लिंक अधूरा है।</b><br>'
         'कृपया वही लिंक खोलें जो कृषि मित्र टीम ने आपको WhatsApp पर भेजा था, '
-        f'या हमें कॉल करें — <a href="{PHONE_TEL}">{PHONE_TXT}</a><br>'
+        f'या हमें WhatsApp करें — <a href="{WA}">{PHONE_TXT}</a><br>'
         '<a href="/pay">पेमेंट के सभी तरीके देखें →</a>', canon)
 
 
@@ -161,7 +160,7 @@ def _unconfigured(canon: str) -> HTMLResponse:
     # silently sends a payer's money to a stranger.
     return _dead_end(
         '<b>पेमेंट अभी चालू नहीं है।</b><br>'
-        f'कृपया कृषि मित्र टीम से संपर्क करें — <a href="{PHONE_TEL}">{PHONE_TXT}</a>',
+        f'कृपया कृषि मित्र टीम को WhatsApp करें — <a href="{WA}">{PHONE_TXT}</a>',
         canon)
 
 

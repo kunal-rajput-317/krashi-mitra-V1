@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi" xml:lang="hi">
 <head>
-  <!-- Analytics: GA4 + Clarity -->
+  <!-- Analytics: GA4 -->
   <script src="analytics.js"></script>
 
 
@@ -23,6 +23,9 @@
   </script>
   <script src="api-config.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- The hero photo is the largest paint, but it is a CSS background the
+       browser only finds after parsing ~60 KB of inline CSS. Ask for it now. -->
+  <link rel="preload" as="image" href="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1000&q=60&auto=format&fit=crop" fetchpriority="high">
 
   <title>आज का मंडी भाव — 29 राज्यों की मंडियों के ताज़ा रेट व मौसम</title>
   <link rel="icon" href="https://krashimitra.in/assets/krashimitra_logo.png" type="image/png">
@@ -110,7 +113,6 @@
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+91-9870951001",
       "contactType": "customer support",
       "availableLanguage": ["Hindi", "English"]
     }
@@ -457,7 +459,7 @@
     .hero-bg-photo {
       position: absolute;
       inset: 0;
-      background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=80');
+      background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1000&q=60&auto=format&fit=crop');
       background-size: cover;
       background-position: center 55%;
       pointer-events: none;
@@ -520,7 +522,7 @@
       font-family: var(--font-body);
     }
     .hero-text > .hero-greeting {
-      animation: fadeUp 0.5s ease both, floatBadge 3s ease-in-out infinite 0.5s;
+      animation: fadeUp 0.5s ease both, floatBadge 3s ease-in-out 3 0.5s;
     }
     .hero-greeting:hover {
       background: rgba(255, 255, 255, 0.18);
@@ -1183,18 +1185,31 @@
       white-space: nowrap;
     }
     .mandi-fresh-dot {
+      position: relative;
       width: 7px;
       height: 7px;
       border-radius: 50%;
       background: #6ee7a8;
+    }
+    /* The ring is a pseudo-element grown with transform + opacity, which the
+       compositor runs on its own. It used to animate box-shadow, which only the
+       main thread can paint — 60 repaints a second, forever, for a 7px dot:
+       on a slow phone the homepage sat at ~50% CPU doing nothing else. */
+    .mandi-fresh-dot::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(110,231,168,0.6);
       animation: mandiPulse 2s infinite;
     }
     /* Data older than two days: amber dot, no pulse — never dress stale as live */
-    .mandi-fresh-pill.stale .mandi-fresh-dot { background: var(--amber); animation: none; }
+    .mandi-fresh-pill.stale .mandi-fresh-dot { background: var(--amber); }
+    .mandi-fresh-pill.stale .mandi-fresh-dot::after { animation: none; display: none; }
     @keyframes mandiPulse {
-      0%   { box-shadow: 0 0 0 0 rgba(110,231,168,0.6); }
-      70%  { box-shadow: 0 0 0 6px rgba(110,231,168,0); }
-      100% { box-shadow: 0 0 0 0 rgba(110,231,168,0); }
+      0%   { transform: scale(1);   opacity: 1; }
+      70%  { transform: scale(2.7); opacity: 0; }
+      100% { transform: scale(1);   opacity: 0; }
     }
 
     /* Crop cards — same anatomy as the shop's product cards:
@@ -2134,8 +2149,8 @@
       <a href="krashi_bajar.html" class="top-utility-link">खरीदें/बेचें</a>
     </div>
     <div class="top-utility-right">
-      <a href="https://wa.me/919870951001" target="_blank" rel="noopener" class="top-utility-helpline" title="कृषिमित्र हेल्पलाइन — व्हाट्सऐप पर मैसेज करें">
-        <span class="pre-topbar-phone-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg></span> कृषिमित्र हेल्पलाइन: +91 9870951001
+      <a href="https://wa.me/919870951001" target="_blank" rel="noopener" class="top-utility-helpline" title="कृषिमित्र WhatsApp — मैसेज करें">
+        <span class="pre-topbar-phone-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg></span> कृषिमित्र WhatsApp: +91 9870951001
       </a>
       <span class="top-utility-divider">|</span>
       <a href="chat.html" class="top-utility-link">संपर्क</a>
@@ -2277,7 +2292,7 @@
   <div class="quick-grid">
     <a class="quick-card" href="khoj.html" style="--card-color:#b5563f; --card-bg-light:#f7e9e5">
       <span class="qc-icon-wrapper">
-        <img src="images/services/search.webp" alt="कृषि खोज" class="service-img" loading="lazy">
+        <img src="images/services/sm/search.webp" alt="कृषि खोज" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">कृषि खोज</span>
@@ -2286,7 +2301,7 @@
     </a>
     <a class="quick-card" href="weather.html" style="--card-color:#3f6291; --card-bg-light:#eaf0f7">
       <span class="qc-icon-wrapper">
-        <img src="images/services/weather.webp" alt="मौसम की जानकारी" class="service-img" loading="lazy">
+        <img src="images/services/sm/weather.webp" alt="मौसम की जानकारी" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">मौसम की जानकारी</span>
@@ -2295,7 +2310,7 @@
     </a>
     <a class="quick-card" href="/bhav" style="--card-color:#b5850f; --card-bg-light:#fef3c7">
       <span class="qc-icon-wrapper">
-        <img src="images/services/mandi.webp" alt="मंडी भाव" class="service-img" loading="lazy">
+        <img src="images/services/sm/mandi.webp" alt="मंडी भाव" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">मंडी भाव</span>
@@ -2304,7 +2319,7 @@
     </a>
     <a class="quick-card" href="meri_fasal.html" style="--card-color:#2d6a4f; --card-bg-light:#d8f3dc">
       <span class="qc-icon-wrapper">
-        <img src="images/services/crop.webp" alt="फसल प्रबंधन" class="service-img" loading="lazy">
+        <img src="images/services/sm/crop.webp" alt="फसल प्रबंधन" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">फसल प्रबंधन</span>
@@ -2313,7 +2328,7 @@
     </a>
     <a class="quick-card" href="krashi_bajar.html" style="--card-color:#9c4f6b; --card-bg-light:#f6e8ee">
       <span class="qc-icon-wrapper">
-        <img src="images/services/market.webp" alt="कृषि बाज़ार" class="service-img" loading="lazy">
+        <img src="images/services/sm/market.webp" alt="कृषि बाज़ार" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">कृषि बाज़ार</span>
@@ -2322,7 +2337,7 @@
     </a>
     <a class="quick-card" href="/product" style="--card-color:#2f7d6f; --card-bg-light:#e3f2ee">
       <span class="qc-icon-wrapper">
-        <img src="images/services/shop.webp" alt="किसान की दुकान" class="service-img" loading="lazy">
+        <img src="images/services/sm/shop.webp" alt="किसान की दुकान" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">किसान की दुकान</span>
@@ -2331,7 +2346,7 @@
     </a>
     <a class="quick-card" href="sarkari_yojana.html" style="--card-color:#8a5a2e; --card-bg-light:#f3e6d8">
       <span class="qc-icon-wrapper">
-        <img src="images/services/schemes.webp" alt="सरकारी योजनाएं" class="service-img" loading="lazy">
+        <img src="images/services/sm/schemes.webp" alt="सरकारी योजनाएं" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">सरकारी योजनाएं</span>
@@ -2343,7 +2358,7 @@
          still has the site-wide "कृषि मानचित्र" link in the utility bar. -->
     <a class="quick-card" href="/naksha" style="--card-color:#4a4f8a; --card-bg-light:#eaeaf5">
       <span class="qc-icon-wrapper">
-        <img src="images/services/map.webp" alt="राज्यों के नक्शे" class="service-img" loading="lazy">
+        <img src="images/services/sm/map.webp" alt="राज्यों के नक्शे" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">राज्यों के नक्शे</span>
@@ -2352,7 +2367,7 @@
     </a>
     <a class="quick-card" href="articles/" style="--card-color:#7d7a2e; --card-bg-light:#f2f1d8">
       <span class="qc-icon-wrapper">
-        <img src="images/services/articles.webp" alt="कृषि लेख" class="service-img" loading="lazy">
+        <img src="images/services/sm/articles.webp" alt="कृषि लेख" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">कृषि लेख</span>
@@ -2361,7 +2376,7 @@
     </a>
     <a class="quick-card" href="chat.html" style="--card-color:#6d5a82; --card-bg-light:#f0ecf4">
       <span class="qc-icon-wrapper">
-        <img src="images/services/expert.webp" alt="विशेषज्ञ सलाह" class="service-img" loading="lazy">
+        <img src="images/services/sm/expert.webp" alt="विशेषज्ञ सलाह" class="service-img" loading="lazy">
       </span>
       <div class="qc-text-wrapper">
         <span class="qc-label">विशेषज्ञ सलाह</span>
@@ -2386,7 +2401,7 @@
         <span class="showcase-fallback">💰</span>
         <span class="showcase-badge">मंडी</span>
         <img class="showcase-img" loading="lazy" decoding="async"
-             src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=75"
+             src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=720&h=340&q=60&auto=format&fit=crop"
              alt="मंडी में बिकने के लिए रखी ताज़ा फसलें और सब्ज़ियाँ"
              onerror="this.remove()">
       </div>
@@ -2402,7 +2417,7 @@
         <span class="showcase-fallback">🧺</span>
         <span class="showcase-badge">बाज़ार</span>
         <img class="showcase-img" loading="lazy" decoding="async"
-             src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=75"
+             src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=720&h=340&q=60&auto=format&fit=crop"
              alt="खेत में ट्रैक्टर और बैलों के साथ काम करते किसान"
              onerror="this.remove()">
       </div>
@@ -2418,7 +2433,7 @@
         <span class="showcase-fallback">🌱</span>
         <span class="showcase-badge">मेरी फसल</span>
         <img class="showcase-img" loading="lazy" decoding="async"
-             src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=75"
+             src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=720&h=340&q=60&auto=format&fit=crop"
              alt="खेत में उगती हरी फसल की कतारें"
              onerror="this.remove()">
       </div>
@@ -2639,7 +2654,7 @@
         <span class="yojana-fallback">🏛️</span>
         <span class="yojana-badge">आय सहायता</span>
         <img class="yojana-img" loading="lazy" decoding="async"
-             src="https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=800&q=75" alt="PM-KISAN"
+             src="https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=720&h=340&q=60&auto=format&fit=crop" alt="PM-KISAN"
              onerror="this.remove()">
       </div>
       <div class="yojana-body">
@@ -2654,7 +2669,7 @@
         <span class="yojana-fallback">🛡️</span>
         <span class="yojana-badge">फसल बीमा</span>
         <img class="yojana-img" loading="lazy" decoding="async"
-             src="https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=75" alt="PMFBY"
+             src="https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=720&h=340&q=60&auto=format&fit=crop" alt="PMFBY"
              onerror="this.remove()">
       </div>
       <div class="yojana-body">
@@ -2669,7 +2684,7 @@
         <span class="yojana-fallback">💳</span>
         <span class="yojana-badge">क्रेडिट</span>
         <img class="yojana-img" loading="lazy" decoding="async"
-             src="https://images.unsplash.com/photo-1589758438368-0ad531db3366?w=800&q=75" alt="KCC"
+             src="https://images.unsplash.com/photo-1589758438368-0ad531db3366?w=720&h=340&q=60&auto=format&fit=crop" alt="KCC"
              onerror="this.remove()">
       </div>
       <div class="yojana-body">
@@ -3112,13 +3127,12 @@
      SCRIPTS
 ══════════════════════════ -->
 <script>
-  /* ── Load config from profile.json and live user profile ── */
+  /* ── Load the live user profile (logged-in farmers only) ── */
   let WEATHER_DISTRICT = 'Meerut';
 
   async function loadProfile() {
     let name = '';
     let avatarUrl = '';
-    let district = '';
 
     const token = localStorage.getItem("krishi_token");
     if (token) {
@@ -3137,16 +3151,11 @@
       }
     }
 
-    // Try fallback to local profile.json
-    try {
-      const res = await fetch('profile.json');
-      const profile = await res.json();
-      if (!name && profile.name) name = profile.name;
-      if (!avatarUrl && profile.photo) avatarUrl = profile.photo;
-      if (profile.district) district = profile.district;
-    } catch {
-      // profile.json missing
-    }
+    // No fallback profile. There used to be one — frontend/profile.json, the
+    // developer's own name and district — so every logged-out visitor was
+    // greeted "राम-राम, Kunal rajput जी!" and had Bijnor forced on the weather
+    // and mandi cards, logged-in farmers included. A stranger gets the generic
+    // greeting and the cards' defaults.
 
     // Update greeting widget
     const greetingText = document.getElementById('hero-greeting-text');
@@ -3167,12 +3176,9 @@
       }
     }
 
-    // Update weather district and fetch weather + this district's live mandi prices
-    if (district) {
-      WEATHER_DISTRICT = district;
-    }
-    fetchWeather();
-    fetchMandi(district);
+    // Weather is fetched once further down (fetchWeather() after its helpers);
+    // calling it here as well sent every visitor's request twice.
+    fetchMandi();
   }
 
   function escapeHtml(s) {
@@ -3184,7 +3190,11 @@
       .replace(/'/g, '&#39;');
   }
 
-  loadProfile();
+  // After the whole script has run: loadProfile reaches fetchMandi, whose
+  // state (mandiLastFetch, the skeleton helpers) is declared further down.
+  // With no await before that call — logged out — running it here threw
+  // "Cannot access before initialization".
+  document.addEventListener('DOMContentLoaded', loadProfile);
 
   /* ── Show desktop nav on wider screens ── */
   function checkDesktopNav() {
@@ -3281,7 +3291,7 @@
   async function fetchWeather() {
     weatherSkeleton();
     try {
-      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/weather?district=${WEATHER_DISTRICT}`);
+      const res  = await fetch(`${window.KRASHIMITRA_API_BASE}/api/weather?district=${encodeURIComponent(WEATHER_DISTRICT)}`);
       const json = await res.json();
       if (!json.success) { weatherFail(); return; }
       const d = json.data;

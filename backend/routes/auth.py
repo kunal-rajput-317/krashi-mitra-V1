@@ -303,8 +303,12 @@ class LoginRequest(BaseModel):
     password: str
 
 class VerifyOtpRequest(BaseModel):
-    email: EmailStr
-    otp:   str
+    email:    EmailStr
+    otp:      str
+    # The password typed on the signup form, sent again with the OTP so the
+    # account is verified only with the password its inbox owner chose.
+    # Optional so an old page gets a "refresh" message instead of a 422.
+    password: Optional[str] = None
 
 class ResendOtpRequest(BaseModel):
     email: EmailStr
@@ -328,7 +332,6 @@ class ProfileUpdateRequest(BaseModel):
     state:              Optional[str] = None
     village:            Optional[str] = None
     district:           Optional[str] = None
-    farm_size:          Optional[str] = None
     crops_grown:        Optional[str] = None
     preferred_language: Optional[str] = None
 
@@ -354,7 +357,13 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
         if existing:
             if existing.is_verified:
                 return {"success": False, "message": "यह email पहले से registered है।", "data": {}}
-            # Resend OTP for unverified accounts
+            # Unverified means nobody has proved they own this inbox yet — the
+            # row may be someone else's squat on the address. Keeping its
+            # password let them sign up first with a victim's email and log in
+            # once the victim verified. The newest signup's password and name
+            # win; the OTP that proves the inbox is issued with them.
+            existing.hashed_password = hash_password(body.password)
+            existing.name            = body.name
             otp                 = generate_otp()
             existing.otp        = otp
             existing.otp_expiry = otp_expiry_time()
@@ -425,7 +434,8 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
             return {"success": False, "message": "Email या password गलत है। Forgot password use कर सकते हैं।", "data": data}
 
         _clear_failed_login(body.email)
-        token = create_access_token(user_id=user.id, email=user.email)
+        token = create_access_token(user_id=user.id, email=user.email,
+                                    hashed_password=user.hashed_password)
         return {"success": True, "message": "Login successful", "data": {"token": token}}
 
     except Exception as e:
@@ -448,6 +458,21 @@ def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
             if _otp_attempts_exceeded(body.email):
                 return _burn_otp(db, user, body.email)
             return {"success": False, "message": "OTP गलत है। दोबारा check करें।", "data": {}}
+
+        # The OTP proves the inbox; this proves the password on the row is the
+        # one the inbox owner typed. Without it a squatter could sign up again
+        # inside the owner's OTP window, swap their own password in, and have
+        # the owner's OTP verify the account with it.
+        if not body.password:
+            return {"success": False,
+                    "message": "पेज पुराना है। कृपया पेज refresh करके दोबारा signup करें।",
+                    "data": {}}
+        if not ((user.hashed_password or "").startswith("$2")
+                and verify_password(body.password, user.hashed_password)):
+            return {"success": False,
+                    "message": "इसी email से किसी और ने भी signup किया है। "
+                               "सुरक्षा के लिए दोबारा signup करें और नया OTP डालें।",
+                    "data": {}}
 
         user.is_verified = True
         user.otp         = None
@@ -619,6 +644,10 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
                 user.google_id = google_id
             if not user.is_verified:
                 user.is_verified = True
+                # Google has just proved the inbox; the password on this row
+                # was never proved by anyone and may be a squatter's. Drop it —
+                # the owner can set one later through "Password भूल गए?".
+                user.hashed_password = "GOOGLE_OAUTH"
             # `or ""` guards legacy rows whose hashed_password is NULL — the old
             # Neon migration added the column as a nullable VARCHAR, so pre-existing
             # accounts can have None here, and None.startswith() would 500.
@@ -628,7 +657,8 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
             db.commit()
 
         _clear_failed_login(email)
-        token = create_access_token(user_id=user.id, email=user.email)
+        token = create_access_token(user_id=user.id, email=user.email,
+                                    hashed_password=user.hashed_password)
         return {"success": True, "message": "Google login successful", "data": {"token": token}}
 
     except httpx.TimeoutException:

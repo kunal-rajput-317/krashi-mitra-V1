@@ -55,7 +55,6 @@ from backend.database.db import (SessionLocal, BazarPost, CropAppeal, MandiPrice
                                  MandiLastSeen, MandiPriceHistory, User, UserProfile,
                                  acct)
 from backend.services.mandi_service import get_mandi_prices, _row_to_dict
-from backend.utils import desc_test
 from backend.services import (
     affiliate, buyers, crop_types, district_geo, ecosystem, freight,
     index_gate, lead_clicks, leads, legal, mandi_memory, msp, placements,
@@ -70,7 +69,7 @@ try:
 except ImportError:
     sponsors = None
 from backend.routes import bazar
-from backend.routes.share import (_crop_image, _crop_thumb, _HI_CROP_EN, _TILES,
+from backend.routes.share import (_crop_image, _crop_thumb, _crop_tile, _HI_CROP_EN, _TILES,
                                   _STAPLE_TILES_N)
 
 import logging
@@ -2953,7 +2952,7 @@ _INSTALL_JS = """<script>
 })();
 </script>"""
 
-# GA4 + Clarity. The server-rendered clusters (/bhav, /product, /naksha) are
+# GA4. The server-rendered clusters (/bhav, /product, /naksha) are
 # proxied under krashimitra.in, so the root-relative path resolves there; the
 # backend also mounts frontend/ at "/", so it works on the origin domain too.
 _ANALYTICS = '<script src="/analytics.js"></script>'
@@ -3050,7 +3049,7 @@ def _header(active: str = "", quicknav: str | None = None) -> str:
 <a href="{SITE}/sarkari_yojana" class="top-utility-link">सरकारी योजना</a>
 </div>
 <div class="top-utility-right">
-<a href="https://wa.me/919870951001" target="_blank" rel="noopener" class="top-utility-helpline" title="कृषिमित्र हेल्पलाइन — व्हाट्सऐप पर मैसेज करें"><span class="pre-topbar-phone-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg></span> कृषिमित्र हेल्पलाइन: +91 9870951001</a>
+<a href="https://wa.me/919870951001" target="_blank" rel="noopener" class="top-utility-helpline" title="कृषिमित्र WhatsApp — मैसेज करें"><span class="pre-topbar-phone-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.25-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.37c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg></span> कृषिमित्र WhatsApp: +91 9870951001</a>
 <span class="top-utility-divider">|</span>
 <a href="{SITE}/chat" class="top-utility-link">संपर्क</a>
 </div>
@@ -4734,7 +4733,7 @@ def bhav_hub():
     tiles = []
     for cs, cn, _n_states in featured:
         hi = _hindi_name(cn)
-        img = (f'<img class="ctile-img" src="{escape(_crop_image(cn, 200))}" '
+        img = (f'<img class="ctile-img" src="{escape(_crop_tile(cn))}" '
                f'alt="{escape(hi)}" loading="lazy" width="70" height="54">'
                if _has_photo(cn) else '<span class="ctile-emoji">🌾</span>')
         dname = escape(f"{hi} {cn}".lower())
@@ -5244,15 +5243,7 @@ def bhav_district_hub(state: str, district: str):
 {_TIER_SEARCH_JS}"""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/rajya/{ss}">{escape(hi_state)}</a> › {escape(dn_hi)}')
-    hub_head = (
-        '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'
-        '<link rel="dns-prefetch" href="https://unpkg.com">'
-        '<link rel="preconnect" href="https://server.arcgisonline.com">'
-        '<link rel="preconnect" href="https://unpkg.com">'
-        '<link rel="preload" as="script" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">'
-        f'{_LEAFLET_CSS}'
-        if hub_map_html else ""
-    )
+    hub_head = _MAP_HEAD if hub_map_html else ""
     return _doc(title, desc, canon, crumbs, body, ld, extra_css=_DKP_CSS + _BHAV_MAP_CSS,
                 head_extra=hub_head, lang=lang, updated=fresh)
 
@@ -6243,6 +6234,11 @@ def _lazy_skel(shape: str = "text") -> str:
 _LAZY_SKEL = _lazy_skel("text")   # kept for callers that want the plain shape
 _LAZY_CSS = """
 .lazy-skel{padding:18px 16px}
+/* The crop hub's lazy block (सबसे ऊंचा / सबसे कम + lead + season card) sits
+   above the MSP box. Its 183px skeleton became ~930px of content on a phone,
+   shoving everything below down the screen after first paint (CLS 0.23 on
+   /bhav/wheat). Reserve what is coming; no-season crops are ~430px. */
+@media(max-width:640px){.lz-t2{min-height:925px}.lz-t2.no-season{min-height:430px}}
 .lz-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 18px}
 @media(max-width:900px){.lz-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .lz-tile{display:flex;align-items:center;gap:12px;padding:8px 0}
@@ -6254,9 +6250,11 @@ _LAZY_CSS = """
 """
 
 
-def _lazy_div(div_id: str, shape: str = "text") -> str:
-    """Placeholder div with skeleton that JS will fill from the lazy API."""
-    return f'<div id="{div_id}">{_lazy_skel(shape)}</div>'
+def _lazy_div(div_id: str, shape: str = "text", cls: str = "") -> str:
+    """Placeholder div with skeleton that JS will fill from the lazy API.
+    `cls` reserves the height of what will replace it (see .lz-t2)."""
+    c = f' class="{cls}"' if cls else ""
+    return f'<div id="{div_id}"{c}>{_lazy_skel(shape)}</div>'
 
 
 def _lazy_script(pairs: list) -> str:
@@ -6270,7 +6268,19 @@ def _lazy_script(pairs: list) -> str:
     return f'<script>document.addEventListener("DOMContentLoaded",function(){{{fetches}}});</script>'
 
 
-_LEAFLET_CSS = '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">'
+# Head tags for a page that carries the satellite map. Connections only — NOT
+# leaflet.css or a leaflet.js preload. The map sits mid-page and
+# _bhav_map_script loads both itself (ensureLeaflet) when the map nears the
+# viewport, and warms them once the page has loaded. In <head>, the stylesheet
+# blocked the first paint of every district page on a third-party origin, and
+# the preload competed with the page's own files for a phone's bandwidth —
+# for a map most visitors never scroll to.
+_MAP_HEAD = (
+    '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'
+    '<link rel="dns-prefetch" href="https://unpkg.com">'
+    '<link rel="preconnect" href="https://server.arcgisonline.com">'
+    '<link rel="preconnect" href="https://unpkg.com">'
+)
 
 _BHAV_MAP_CSS = """
 .bhav-map-sec{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin:26px 0;box-shadow:var(--shadow-sm);position:relative;isolation:isolate;z-index:10}
@@ -7410,6 +7420,15 @@ def _bhav_map_script(map_id: str, markers_json: str, center_lat: float, center_l
   }} else {{
     setupObserver();
   }}
+
+  // Warm Leaflet once the page itself has finished loading, so the map is
+  // still instant when a farmer scrolls to it — without the files ever
+  // standing in front of the prices (see _MAP_HEAD).
+  function warmLeaflet() {{
+    setTimeout(function() {{ ensureLeaflet().catch(function() {{}}); }}, 1200);
+  }}
+  if (document.readyState === 'complete') warmLeaflet();
+  else window.addEventListener('load', warmLeaflet, {{once: true}});
 }})();
 </script>"""
 
@@ -8514,9 +8533,14 @@ def bhav_crop(c_slug: str):
     # other /bhav page. The lazy block (nearest mandi, सबसे ऊंचा / सबसे कम,
     # the national lead) used to come first and pushed the picker below the
     # fold, so a farmer had to scroll past it just to pick a district.
+    # Size the lazy block's placeholder for what will replace it. The season
+    # card is the tall part; whether this crop has one is known once the
+    # extras API has run in this process, and assumed until then.
+    from backend.services.mandi_season_service import crop_pattern_known
+    t2_cls = "lz-t2" + (" no-season" if crop_pattern_known(commodity) is False else "")
     body = f"""{_tier_head(head_h1, head_sub)}
 {_hub_selector(cs, seed_ss, "", idx, known_crop=True)}
-{_lazy_div('bhav-lazy-t2', 'card')}
+{_lazy_div('bhav-lazy-t2', 'card', t2_cls)}
 {_msp_html(commodity)}
 {_dukan_pitch()}
 <h2>राज्य के अनुसार {escape(hi)} का भाव</h2>
@@ -8941,10 +8965,11 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
     if _lt:
         title = _fit(*_with_mandis(_lt, district, t_mandis))
 
-    # The description test (utils/desc_test.py): group B leaves the average
-    # out of the snippet, and nothing else changes.
-    _desc_b = desc_test.variant(cs, ss, ds) == "B"
-    _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] and not _desc_b else ""
+    # The average stays in the snippet. From 28 Sep to 19 Oct 2026 half the
+    # district pages left it out to see whether it cost the click; it did
+    # not (positions 4-6: 1.05% with it, 0.87% without; 7-10 level), so the
+    # test ended with the price for every page.
+    _avg = f"औसत ₹{st['avg']:,}/क्विंटल। " if st["avg"] else ""
     # About a third of titles are too long to hold both spellings of the
     # district, and the one dropped is the Latin one — which is the half of
     # this page's searchers that ALREADY converts (0.97% against 0.36%). So
@@ -8973,7 +8998,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 
     # Same override as the title, and it has to move with it: a Marathi title
     # over a Hindi snippet is a mismatched pair in one SERP result.
-    _lv["avg"] = f"सरासरी ₹{st['avg']:,}/क्विंटल. " if st["avg"] and not _desc_b else ""
+    _lv["avg"] = f"सरासरी ₹{st['avg']:,}/क्विंटल. " if st["avg"] else ""
     _ld_ = state_lang.variants("descs", "crop_district", lang, _lv)
     if _ld_:
         desc = _fit(*_ld_, limit=162)
@@ -9152,15 +9177,7 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_related_links(cs, ss, ds, commodity, district)}
 {_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4')])}"""
 
-    map_head = (
-        '<link rel="dns-prefetch" href="https://server.arcgisonline.com">'
-        '<link rel="dns-prefetch" href="https://unpkg.com">'
-        '<link rel="preconnect" href="https://server.arcgisonline.com">'
-        '<link rel="preconnect" href="https://unpkg.com">'
-        '<link rel="preload" as="script" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">'
-        f'{_LEAFLET_CSS}'
-        if map_html else ""
-    )
+    map_head = _MAP_HEAD if map_html else ""
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(d_hi)}')

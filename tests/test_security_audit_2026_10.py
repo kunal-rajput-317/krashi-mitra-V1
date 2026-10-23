@@ -67,6 +67,138 @@ def test_google_login_for_our_app_still_works(client, monkeypatch):
     assert r["success"] is True and r["data"]["token"]
 
 
+
+# ── Account pre-hijack ───────────────────────────────────────
+# Signing up only stores an unverified row; the inbox owner proves it later
+# with the OTP. A squatter who signed up first with a victim's email used to
+# keep their password on that row through the victim's signup, OTP and Google
+# login — and then logged straight into the victim's account.
+
+@pytest.fixture()
+def signup(app, monkeypatch):
+    sent = {}
+    monkeypatch.setitem(app.dependency_overrides, auth._LIMIT_SEND, lambda: None)
+    monkeypatch.setattr(auth, "send_otp_email",
+                        lambda to, otp, purpose="verification": sent.__setitem__(to, otp) or True)
+    return sent
+
+
+def _signup(client, email, name, password):
+    return client.post("/signup", json={"name": name, "email": email,
+                                        "password": password}).json()
+
+
+def _login(client, email, password):
+    return client.post("/login", json={"email": email, "password": password}).json()
+
+
+def test_squatters_password_does_not_survive_the_owners_signup(client, signup):
+    email = "audit-squat-otp@example.com"
+    assert _signup(client, email, "Squatter", "squatPass99")["success"]
+    assert _signup(client, email, "Owner", "ownerPass99")["success"]
+    r = client.post("/verify-otp", json={"email": email, "otp": signup[email],
+                                         "password": "ownerPass99"}).json()
+    assert r["success"] is True
+
+    assert _login(client, email, "squatPass99")["success"] is False
+    assert _login(client, email, "ownerPass99")["success"] is True
+
+
+def test_squatter_signing_up_inside_the_owners_otp_window_gets_nothing(client, signup):
+    """The squatter re-signs up after the owner, swapping their password in and
+    re-sending the OTP. The owner types the newest OTP with their own password:
+    refused, and the account stays unverified, so the squatter's password never
+    logs in. The owner simply signs up again."""
+    email = "audit-squat-race@example.com"
+    _signup(client, email, "Owner", "ownerPass99")
+    _signup(client, email, "Squatter", "squatPass99")
+    r = client.post("/verify-otp", json={"email": email, "otp": signup[email],
+                                         "password": "ownerPass99"}).json()
+    assert r["success"] is False
+    assert _login(client, email, "squatPass99")["success"] is False
+
+    _signup(client, email, "Owner", "ownerPass99")
+    assert client.post("/verify-otp", json={"email": email, "otp": signup[email],
+                                            "password": "ownerPass99"}).json()["success"]
+    assert _login(client, email, "ownerPass99")["success"] is True
+    assert _login(client, email, "squatPass99")["success"] is False
+
+
+def test_verify_otp_without_the_password_is_refused(client, signup):
+    """An old login page that sends no password must not verify the account."""
+    email = "audit-squat-oldpage@example.com"
+    _signup(client, email, "Owner", "ownerPass99")
+    r = client.post("/verify-otp", json={"email": email, "otp": signup[email]}).json()
+    assert r["success"] is False and "refresh" in r["message"]
+
+
+def test_login_page_sends_the_signup_password_with_the_otp(repo_root):
+    html = (repo_root / "frontend/login.html").read_text(encoding="utf-8")
+    assert 'password: document.getElementById("signup-password").value' in html
+
+
+def test_owners_signup_replaces_the_squatters_name(client, db_session, signup):
+    from backend.database.db import User
+    email = "audit-squat-name@example.com"
+    _signup(client, email, "Squatter", "squatPass99")
+    _signup(client, email, "Owner", "ownerPass99")
+    assert db_session.query(User).filter(User.email == email).one().name == "Owner"
+
+
+def test_squatters_password_does_not_survive_the_owners_google_login(client, signup, monkeypatch):
+    email = "audit-squat-google@example.com"
+    assert _signup(client, email, "Squatter", "squatPass99")["success"]
+    _google(monkeypatch, aud=auth.GOOGLE_CLIENT_ID, email=email,
+            email_verified="true", sub="g-squat", name="Owner")
+    assert client.post("/auth/google", json={"id_token": "x"}).json()["success"] is True
+
+    assert _login(client, email, "squatPass99")["success"] is False
+
+
+# ── A password reset ends every older session ────────────────
+# Tokens last 24h and were never revoked, so a stolen one kept working after
+# the owner reset the password — the very moment they were trying to lock the
+# thief out.
+
+def _me(client, token):
+    return client.get("/profile", headers={"Authorization": f"Bearer {token}"}).status_code
+
+
+def _reset(client, signup, email, new_password):
+    assert client.post("/forgot-password", json={"email": email}).json()["success"]
+    return client.post("/reset-password", json={
+        "email": email, "otp": signup[email], "new_password": new_password}).json()
+
+
+def test_password_reset_logs_out_tokens_issued_before_it(client, signup, monkeypatch):
+    monkeypatch.setattr(auth, "check_daily_limit", lambda *a, **k: None)
+    email = "audit-revoke@example.com"
+    _signup(client, email, "Owner", "ownerPass99")
+    client.post("/verify-otp", json={"email": email, "otp": signup[email],
+                                     "password": "ownerPass99"})
+    stolen = _login(client, email, "ownerPass99")["data"]["token"]
+    assert _me(client, stolen) == 200
+
+    assert _reset(client, signup, email, "freshPass77")["success"] is True
+    assert _me(client, stolen) == 401
+    fresh = _login(client, email, "freshPass77")["data"]["token"]
+    assert _me(client, fresh) == 200
+
+
+def test_google_tokens_carry_the_password_stamp(client, monkeypatch):
+    from jose import jwt
+    _google(monkeypatch, aud=auth.GOOGLE_CLIENT_ID, email="audit-stamp@example.com",
+            email_verified="true", sub="g-stamp", name="Stamp")
+    token = client.post("/auth/google", json={"id_token": "x"}).json()["data"]["token"]
+    assert "pwd" in jwt.get_unverified_claims(token)
+
+
+def test_news_comments_refuse_a_token_that_no_longer_resolves(client):
+    from backend.utils.auth_utils import create_access_token
+    ghost = create_access_token(user_id=987654, email="ghost@example.com")
+    r = client.post("/api/news/x/like", headers={"Authorization": f"Bearer {ghost}"})
+    assert r.status_code == 401
+
 # ── XSS ──────────────────────────────────────────────────────
 
 def test_pay_page_escapes_the_path_in_its_canonical_link(client):

@@ -70,7 +70,7 @@ def _make_user(db, email=EMAIL, provider="email"):
     db.commit()
     db.add(UserProfile(id=n, user_id=n, name="Ram Kisan", phone_number="9876543210",
                        village="Rampur", district="Hardoi", state="Uttar Pradesh",
-                       geo_lat=27.4, geo_lon=80.1, farm_size="2"))
+                       geo_lat=27.4, geo_lon=80.1, farming_type="जैविक"))
     db.commit()
     return u
 
@@ -140,7 +140,7 @@ def test_delete_keeps_the_rows_but_erases_the_person(client, db_session, sent):
     assert user.name == account_delete.DELETED_NAME and user.village is None
     prof = db_session.query(UserProfile).filter(UserProfile.user_id == acct_no).first()
     assert prof is not None and prof.phone_number is None and prof.geo_lat is None
-    assert prof.farm_size is None and prof.village is None
+    assert prof.farming_type is None and prof.village is None
 
     # Old token is dead.
     assert client.get("/account/delete/info", headers=hdr).status_code == 401

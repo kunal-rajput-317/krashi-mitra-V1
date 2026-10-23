@@ -291,9 +291,11 @@ def test_progressive_3tier_lod_map_loading(client, seeded_meerut_mandi):
     assert "setTimeout(addHiResTier, 500);" in html_bhav
     assert "satLayer.once('load', addLabelTier);" in html_bhav
 
-    # Leaflet is fetched with the page, and both hosts are connected early
-    assert '<link rel="preload" as="script" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">' in html_bhav
+    # Both hosts are connected early, but Leaflet itself is warmed only after
+    # the page has loaded — a <head> preload competed with the prices.
+    assert '<link rel="preload" as="script" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">' not in html_bhav
     assert '<link rel="preconnect" href="https://server.arcgisonline.com">' in html_bhav
+    assert "window.addEventListener('load', warmLeaflet, {once: true});" in html_bhav
 
     # 2. Naksha map contains lowSatLayer and dynamic boundary zoom LOD
     resp_naksha = client.get("/naksha/uttar-pradesh/meerut")

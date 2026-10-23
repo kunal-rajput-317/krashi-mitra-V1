@@ -23,8 +23,10 @@
 //     status = granted | dismissed | denied; via = "card" when the farmer
 //     said yes on this card (other pages' GPS buttons write no via)
 //   • Logged-in users → also POST /profile/location so it persists on
-//     their users row (guests stay local-only) — ONLY after a tap on
+//     their profile (guests stay local-only) — ONLY after a tap on
 //     "चालू करें", never because the browser happens to allow location.
+//     That copy is rounded to 2 decimals (~1 km): the exact spot stays on
+//     the phone, where the map features read it (owner, 24 Oct 2026).
 //
 // Public API (for pages that want to react):
 //   window.KrashiLocation.get()   → the stored record (or null)
@@ -74,6 +76,9 @@
       .catch(function () { return ""; });
   }
 
+  // 0.01° is ~1.1 km — district-level personalisation, never a farmhouse.
+  function roundKm(v) { return Math.round(v * 100) / 100; }
+
   // ── persist + broadcast ─────────────────────────────────────
   // via:"card" records that the farmer said yes on OUR card. Other pages
   // (/bhav, /naksha GPS buttons) also write km_geo with status "granted" when
@@ -91,7 +96,7 @@
       fetch(apiBase() + "/profile/location", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + t },
-        body: JSON.stringify({ lat: lat, lon: lon, location: loc || null })
+        body: JSON.stringify({ lat: roundKm(lat), lon: roundKm(lon), location: loc || null })
       }).catch(function () {});
     }
   }

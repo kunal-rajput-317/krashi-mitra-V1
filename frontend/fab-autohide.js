@@ -63,7 +63,22 @@
       if (!scheduled) { scheduled = true; window.requestAnimationFrame(update); }
     }
 
-    new MutationObserver(schedule).observe(document.body, {
+    // AdSense rewrites the style of its own boxes many times a second while an
+    // ad loads, and each of those used to cost a full popupOpen() — a style
+    // recalc and a layout of the page (276 ms of forced reflow on an article in
+    // Lighthouse). Nothing inside an ad, or inside the buttons themselves, can
+    // be a popup, so changes there are skipped.
+    var IGNORE = 'ins.adsbygoogle,.google-auto-placed,[id^="aswift"],.km-ad,' +
+                 '.google-anno-skip,.ai-chat-fab,.map-fab';
+    function ignorable(m) {
+      var t = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      return !!(t && t.closest && t.closest(IGNORE));
+    }
+    new MutationObserver(function (records) {
+      for (var i = 0; i < records.length; i++) {
+        if (!ignorable(records[i])) { schedule(); return; }
+      }
+    }).observe(document.body, {
       subtree: true,
       attributes: true,
       attributeFilter: ["class", "style"],
@@ -71,5 +86,27 @@
     });
     window.addEventListener("resize", schedule);
     update();
+
+    // The "AI से पूछें" label beside the chat button fades in for a few seconds
+    // every 35 s. It used to be an infinite CSS animation, which keeps the
+    // browser producing frames forever — on a low-end phone that alone held
+    // the main thread busy most of the time the page sat open. A timer and a
+    // class do the same thing with work only during the fades.
+    var tips = document.querySelectorAll(".ai-fab-tip");
+    if (tips.length) {
+      var tipStyle = document.createElement("style");
+      tipStyle.textContent =
+        ".ai-fab-tip{animation:none!important;transition:opacity .6s ease-in-out}" +
+        ".ai-fab-tip.km-tip-on{opacity:1}";
+      document.head.appendChild(tipStyle);
+      var setTips = function (on) {
+        for (var j = 0; j < tips.length; j++) tips[j].classList.toggle("km-tip-on", on);
+      };
+      var showTip = function () {
+        setTips(true);
+        setTimeout(function () { setTips(false); }, 5000);
+      };
+      setTimeout(function () { showTip(); setInterval(showTip, 35000); }, 3000);
+    }
   });
 })();

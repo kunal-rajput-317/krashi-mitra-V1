@@ -1869,6 +1869,9 @@ _NK_CSS = """
 
 /* District Directory List Rows */
 .nk-dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 10px; width: 100%; }
+/* 44px is the clearance ads.js measures at the split (its floor is 30) */
+.nk-dgrid-a { margin-bottom: 44px; }
+.nk-dsplit { font-size: 14px; font-weight: 800; color: var(--nk-emerald-dark); margin: 0 0 12px; }
 .nk-drow {
   display: flex;
   align-items: center;
@@ -5033,6 +5036,24 @@ def _state_page(key: str, canon: str) -> HTMLResponse:
 
 # ── one state's districts ───────────────────────────────────────────────────
 
+# A long list is one block of tap targets 10px apart, and frontend/ads.js
+# rightly refuses to put an ad within 30px of one. So the whole list was a
+# no-ad zone: measured 23 Oct at 390px, /naksha/bihar/jile (38 rows, 2,756px)
+# put its first unit at 4,080px — five screens down, long after a reader who
+# came for "kitne jile" has left. One sub-heading after row _SPLIT_AT gives the
+# list a single break with 44px of clearance, which the ad rules can use and
+# a thumb cannot miss into. Short lists are left whole.
+_SPLIT_AT, _SPLIT_MIN = 10, 20
+
+
+def _drow_grid(rows: list[str], rest: str) -> str:
+    if len(rows) < _SPLIT_MIN:
+        return f'<div class="nk-dgrid">{"".join(rows)}</div>'
+    return (f'<div class="nk-dgrid nk-dgrid-a">{"".join(rows[:_SPLIT_AT])}</div>'
+            f'<h3 class="nk-dsplit">{rest.format(n=len(rows) - _SPLIT_AT)}</h3>'
+            f'<div class="nk-dgrid">{"".join(rows[_SPLIT_AT:])}</div>')
+
+
 def _jile_page(key: str) -> HTMLResponse:
     states = _states()
     s = states[key]
@@ -5093,7 +5114,7 @@ def _jile_page(key: str) -> HTMLResponse:
             f"साथ में HD नक्शा — मुफ्त डाउनलोड।",
             limit=162)
 
-    rows = "".join(
+    rows = _drow_grid([
         f'<div class="nk-drow">'
         f'<span class="nk-num">{i}</span>'
         f'<a class="nk-dname" href="{_d_url(key, slugify(d["en"]))}" '
@@ -5104,7 +5125,8 @@ def _jile_page(key: str) -> HTMLResponse:
         f'<a class="nk-dact-btn" href="{_gaon_url(key, slugify(d["en"]))}" '
         f'title="{escape(d["hi"])} के गांव">🌾 गांव</a></span>'
         f'</div>'
-        for i, d in enumerate(s["districts"], start=1))
+        for i, d in enumerate(s["districts"], start=1)],
+        f"{escape(hi)} के बाकी {{n}} जिले")
 
     if unsure:
         _count_ans = (f"नक्शे पर Census of India की जिला-सीमाओं के हिसाब से {hi} के {n} जिले "
@@ -5162,7 +5184,7 @@ def _jile_page(key: str) -> HTMLResponse:
   <input class="nk-search" id="nk-dsearch" type="search" autocomplete="off"
    placeholder="जिला खोजें — जैसे मेरठ, Meerut…" aria-label="जिला खोजें" style="margin-bottom:16px;">
   <p class="nk-empty" id="nk-dnone" style="display:none">कोई जिला नहीं मिला।</p>
-  <div class="nk-dgrid">{rows}</div>
+  {rows}
   {_extra_html(hi, extra)}
   <div class="nk-cta" style="margin-top:18px">
     <a class="nk-btn plain" href="{_url(key)}">🗺️ {escape(hi)} का पूरा नक्शा देखें</a>
@@ -5188,7 +5210,8 @@ def _jile_page(key: str) -> HTMLResponse:
 (function(){{
   var q=document.getElementById('nk-dsearch'),none=document.getElementById('nk-dnone');
   if(!q)return;
-  var rows=[].slice.call(document.querySelectorAll('.nk-drow'));
+  var rows=[].slice.call(document.querySelectorAll('.nk-drow')),
+      split=document.querySelector('.nk-dsplit');
   q.addEventListener('input',function(){{
     var v=q.value.trim().toLowerCase(),hits=0;
     rows.forEach(function(r){{
@@ -5196,6 +5219,7 @@ def _jile_page(key: str) -> HTMLResponse:
              (r.getAttribute('href')||'').toLowerCase().indexOf(v)>-1;
       r.style.display=on?'':'none';if(on)hits++;
     }});
+    if(split)split.style.display=v?'none':'';
     if(none)none.style.display=hits?'none':'';
   }});
 }})();
@@ -5521,7 +5545,8 @@ def _gaon_page(key: str, dslug: str) -> HTMLResponse:
                 + (f'<span class="nk-en">{escape(sub)}</span>' if sub else "")
                 + '</a></div>')
 
-    rows = "".join(_row(i, v) for i, v in enumerate(villages, start=1))
+    rows = _drow_grid([_row(i, v) for i, v in enumerate(villages, start=1)],
+                      f"{escape(hi)} के बाकी {{n}} गांव व कस्बे")
 
     pending = "" if n_v else f"""<div class="nk-note">
 {escape(hi)} के गांवों की सूची अभी तैयार हो रही है — OpenStreetMap से जिले की सीमा के
@@ -5566,7 +5591,7 @@ def _gaon_page(key: str, dslug: str) -> HTMLResponse:
    placeholder="गांव खोजें — जैसे {escape(villages[0]['name']) if villages else 'मवाना, Mawana'}…"
    aria-label="गांव खोजें" style="margin-bottom:16px;">
   <p class="nk-empty" id="nk-vlist-none" style="display:none">इस सूची में यह गांव नहीं मिला — नीचे नक्शे पर खोजें।</p>
-  <div class="nk-dgrid">{rows}</div>
+  {rows}
   <div class="nk-cta" style="margin-top:18px">
     <a class="nk-btn plain" href="{_d_url(key, dslug)}">🗺️ {escape(hi)} का पूरा नक्शा</a>
     <a class="nk-btn plain" href="{_jile_url(key)}">📋 {escape(shi)} के सभी जिले</a>
@@ -5586,13 +5611,15 @@ def _gaon_page(key: str, dslug: str) -> HTMLResponse:
 (function(){{
   var q=document.getElementById('nk-vlist-search'),none=document.getElementById('nk-vlist-none');
   if(!q)return;
-  var rows=[].slice.call(document.querySelectorAll('.nk-drow'));
+  var rows=[].slice.call(document.querySelectorAll('.nk-drow')),
+      split=document.querySelector('.nk-dsplit');
   q.addEventListener('input',function(){{
     var v=q.value.trim().toLowerCase(),hits=0;
     rows.forEach(function(r){{
       var on=!v||r.textContent.toLowerCase().indexOf(v)>-1;
       r.style.display=on?'':'none';if(on)hits++;
     }});
+    if(split)split.style.display=v?'none':'';
     if(none)none.style.display=hits?'none':'';
   }});
 }})();

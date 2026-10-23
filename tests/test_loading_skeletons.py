@@ -199,7 +199,8 @@ def test_a_lazy_panel_names_its_shape():
 ])
 def test_every_bhav_panel_picked_one(panel, shape):
     py = read("backend/routes/bhav.py")
-    assert re.search(r"_lazy_div\(\s*'%s'\s*,\s*'%s'\s*\)" % (panel, shape), py), \
+    # A third argument (a class reserving the panel's height) may follow.
+    assert re.search(r"_lazy_div\(\s*'%s'\s*,\s*'%s'\s*[,)]" % (panel, shape), py), \
         f"{panel} still waits behind the generic shape"
 
 

@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from backend.database.db import NewsComment, NewsLike, get_db
 from backend.routes.admin import require_admin
-from backend.utils.auth_utils import decode_access_token, resolve_token_user
+from backend.utils.auth_utils import resolve_token_user
 from backend.services.news_auto_service import (
     add_direct_post,
     curate_from_url,
@@ -57,7 +57,6 @@ def get_news_auth_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 1. Full DB user lookup
     try:
         user = resolve_token_user(db, token)
         if user:
@@ -66,14 +65,8 @@ def get_news_auth_user(
     except Exception as e:
         logger.warning(f"resolve_token_user warning: {e}")
 
-    # 2. JWT token decode fallback (valid cryptographically, even if verification flag was pending)
-    payload = decode_access_token(token)
-    if payload:
-        uid = payload.get("sub") or payload.get("user_id") or payload.get("email") or "user"
-        email = payload.get("email") or f"{uid}@krashimitra.in"
-        name = payload.get("name") or str(uid)
-        return {"user_id": uid, "name": name, "email": email}
-
+    # No decode-only fallback: a signature alone would accept the token of a
+    # deleted account, or one a password reset has already ended.
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="आपका लॉगिन सत्र (Token) समाप्त हो गया है। कृपया दोबारा लॉगिन करें।",

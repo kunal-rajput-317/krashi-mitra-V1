@@ -143,6 +143,11 @@ def test_legal_pages_keep_required_statements():
     assert "सरकारी वेबसाइट नहीं" in yojana, "/sarkari_yojana must say it is not a government website"
     assert "18 वर्ष" in terms and "18 वर्ष" in privacy, "both pages must set the account age at 18"
     assert "13 वर्ष" not in privacy, "a child is under 18 under the DPDP Act, not under 13"
+    login = _read("frontend/login.html")
+    for page, name in [(terms, "terms"), (privacy, "privacy-policy"), (login, "login")]:
+        assert "अभिभावक की अनुमति" not in page, (
+            f"/{name}: accounts are 18+ only — a self-declared parent's permission is "
+            "not the verifiable consent the DPDP Act needs for a child")
     for page, name in [(terms, "terms"), (privacy, "privacy-policy")]:
         assert "krashimitra038@gmail.com" in page, f"/{name} must print the contact email"
 

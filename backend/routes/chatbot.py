@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from backend.config import get_setting
 from backend.services.legal import redact_doses
+from backend.services.pii_guard import mask_aadhaar
 from backend.database.db import ChatHistory, get_db
 from backend.utils.auth_utils import get_current_user
 from backend.utils.security import daily_limit, rate_limit
@@ -168,7 +169,9 @@ async def ask(body: Question, db: Session = Depends(get_db)):   # ← async
 
 async def _ask_pipeline(body: Question, db: Session) -> dict:
     """Inner pipeline — can be timed out by the caller."""
-    body.q = (body.q or "")[:MAX_QUESTION_CHARS]
+    # Masked before anything else sees it — the AI, the cache and chat_history
+    # all get the masked question (LEGAL_RULES §4a, services/pii_guard.py).
+    body.q = mask_aadhaar((body.q or "")[:MAX_QUESTION_CHARS])
 
     # ── Weather redirect ──────────────────────────────────────
     if is_weather_question(body.q):

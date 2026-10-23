@@ -374,13 +374,15 @@ def test_map_toolbar_rasta_dekhe_button(client, seeded_map_data):
 def test_map_layout_and_stacking_context_css(client, seeded_map_data):
     """Verify that map section forms an isolated stacking context (isolation: isolate; z-index: 10)
     so map controls (z-index: 20) never bleed over the fixed header wrapper (z-index: 200) on scroll,
-    Leaflet CSS is preloaded in head_extra, and tile container has dark background."""
+    Leaflet CSS is loaded by the map script (never render-blocking in <head>),
+    and tile container has dark background."""
     resp = client.get("/bhav/wheat/uttar-pradesh/meerut")
     assert resp.status_code == 200
     html = resp.text
 
-    # Preloaded Leaflet CSS in head
-    assert '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">' in html
+    # Leaflet CSS comes from the map script, not a render-blocking <head> tag
+    assert '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">' not in html
+    assert "loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', true)" in html
 
     # Stacking context isolation
     assert "isolation:isolate" in html

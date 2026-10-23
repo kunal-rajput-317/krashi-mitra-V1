@@ -577,7 +577,7 @@ def receipt_html(p: Payment) -> str:
         f"<title>{e(receipt_no(p))}</title><style>{_RECEIPT_CSS}</style></head>"
         f'<body><div class="r">{void}<h1>{e(title)}</h1>'
         f'<p class="iss"><b>{e(issuer)}</b> · KrashiMitra (krashimitra.in)<br>'
-        "+91 9870951001 · krashimitra038@gmail.com</p>"
+        "WhatsApp +91 9870951001 · krashimitra038@gmail.com</p>"
         f'<div class="amt{" neg" if refund else ""}">{sign}₹{_inr(gross(p))}</div>'
         f'<p class="w">Rupees {e(rupees_in_words(gross(p)))} Only</p>'
         f"<table>{body}</table>"

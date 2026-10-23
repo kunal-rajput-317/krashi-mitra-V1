@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <!-- Analytics: GA4 + Clarity -->
+  <!-- Analytics: GA4 -->
   <script src="analytics.js"></script>
 
 
@@ -559,7 +559,8 @@
       background: var(--border);
     }
     /* Signup consent — DPDP Act notice + consent, IT Rules r.3(1)(a) terms,
-       and the under-18 line (a child's data needs a parent's consent). */
+       and the 18+ line. Adults only: a child's data needs VERIFIABLE parental
+       consent under DPDP, which a checkbox is not — so there is no parent route. */
     .auth-consent { display:flex; gap:9px; align-items:flex-start; font-size:12.5px; line-height:1.55;
                     margin:4px 0 14px; color:#3f4b45; text-align:left; }
     .auth-consent input { width:18px; height:18px; margin-top:2px; flex-shrink:0; accent-color:#2d6a4f; }
@@ -718,7 +719,7 @@
       <!-- Google Sign-In -->
       <div class="google-section" id="google-section-login">
         <div class="google-btn-wrap" id="google-btn-login"></div>
-        <p class="auth-legal">Google से जारी रखकर आप पुष्टि करते हैं कि आपकी उम्र 18+ है (या अभिभावक की अनुमति है) और आप
+        <p class="auth-legal">Google से जारी रखकर आप पुष्टि करते हैं कि आपकी उम्र 18 वर्ष या उससे अधिक है और आप
           <a href="terms.html" target="_blank" rel="noopener">नियम व शर्तें</a> और
           <a href="privacy-policy.html" target="_blank" rel="noopener">गोपनीयता नीति</a> से सहमत हैं।</p>
         <div class="auth-divider"><span>या email से login करें</span></div>
@@ -767,7 +768,7 @@
       <!-- Google Sign-In -->
       <div class="google-section" id="google-section-signup">
         <div class="google-btn-wrap" id="google-btn-signup"></div>
-        <p class="auth-legal">Google से जारी रखकर आप पुष्टि करते हैं कि आपकी उम्र 18+ है (या अभिभावक की अनुमति है) और आप
+        <p class="auth-legal">Google से जारी रखकर आप पुष्टि करते हैं कि आपकी उम्र 18 वर्ष या उससे अधिक है और आप
           <a href="terms.html" target="_blank" rel="noopener">नियम व शर्तें</a> और
           <a href="privacy-policy.html" target="_blank" rel="noopener">गोपनीयता नीति</a> से सहमत हैं।</p>
         <div class="auth-divider"><span>या email से signup करें</span></div>
@@ -797,7 +798,7 @@
 
       <label class="auth-consent">
         <input type="checkbox" id="signup-consent">
-        <span>मेरी उम्र 18 वर्ष या उससे अधिक है (या मेरे माता-पिता / अभिभावक की अनुमति है),
+        <span>मेरी उम्र 18 वर्ष या उससे अधिक है,
           और मैं <a href="terms.html" target="_blank" rel="noopener">नियम व शर्तें</a> और
           <a href="privacy-policy.html" target="_blank" rel="noopener">गोपनीयता नीति</a> से सहमत हूँ।</span>
       </label>
@@ -1599,7 +1600,10 @@
       const res  = await fetchWithTimeout(`${getAPI()}/verify-otp`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email: pendingEmail, otp })
+        // The signup password goes back with the OTP: the server verifies the
+        // account only if it matches the password stored for this email.
+        body:    JSON.stringify({ email: pendingEmail, otp,
+                                  password: document.getElementById("signup-password").value })
       }, AUTH_TIMEOUT_MS);
       const data = await res.json().catch(() => ({}));
 

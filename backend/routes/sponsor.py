@@ -361,7 +361,6 @@ def _org_ld() -> dict:
             "logo": f"{SITE}/assets/logo-512.png",
             "contactPoint": [{"@type": "ContactPoint",
                               "contactType": "sales",
-                              "telephone": PHONE_E164,
                               "email": EMAIL,
                               "areaServed": "IN",
                               "availableLanguage": ["en", "hi"]}]}

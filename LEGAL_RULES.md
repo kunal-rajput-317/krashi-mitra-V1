@@ -77,7 +77,9 @@ wrong. Never weaken, skip or delete a legal test to make a build pass.
   **in the same change**.
 - Never sell or share personal data. Never send it to an AI service, analytics
   tool or ad network beyond what the privacy policy already names.
-- Accounts are for people aged 18+, or with a parent's or guardian's permission.
+- Accounts are for people aged 18+ only. A child's data needs *verifiable*
+  parental consent under the DPDP Act, which a checkbox is not, so there is no
+  "parent's permission" route (owner's decision, 24 Oct 2026).
 - Account deletion anonymises, it does not hard-delete. Never write to the
   `users` or `user_profiles` tables without the owner confirming three times.
 - Every admin route goes through `require_admin` in `backend/routes/admin.py`
@@ -106,7 +108,10 @@ wrong. Never weaken, skip or delete a legal test to make a build pass.
 
 Kept only for a limited time: email OTPs until used or expired; a deleted
 account's registration details for 180 days (IT Rules), then purged
-automatically; payment records for 8 years (tax law). Everything else lives
+automatically; payment records for 8 years (tax law); AI chats for 90 days;
+an order's name, email, phone and pincode for 2 years, then blanked
+(`services/retention.py`). Aadhaar-like numbers typed into free text are
+masked before saving (`services/pii_guard.py`). Everything else lives
 only while the account does, and "खाता हटाएँ" erases it. A new table that
 holds personal data must be added to `services/account_delete.erase()` and to
 `GET /profile/export` in the same change.

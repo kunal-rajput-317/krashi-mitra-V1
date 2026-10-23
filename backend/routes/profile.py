@@ -55,10 +55,6 @@ class ProfileCreateRequest(BaseModel):
     pin_code:             Optional[str]  = None
     nearest_mandi:        Optional[str]  = None
 
-    # Farm
-    farm_size:            Optional[str]  = None
-    farm_size_unit:       Optional[str]  = "acres"
-
     # Equipment
 
     # Crops
@@ -94,9 +90,6 @@ class ProfileUpdateRequest(BaseModel):
     village:              Optional[str]  = None
     pin_code:             Optional[str]  = None
     nearest_mandi:        Optional[str]  = None
-
-    farm_size:            Optional[str]  = None
-    farm_size_unit:       Optional[str]  = None
 
 
     primary_crop:         Optional[str]  = None
@@ -161,9 +154,6 @@ def _profile_to_dict(p: UserProfile) -> dict:
         "geo_lon":              p.geo_lon,
         "geo_location":         p.geo_location,
         "geo_updated_at":       p.geo_updated_at,
-        # Farm
-        "farm_size":            p.farm_size,
-        "farm_size_unit":       p.farm_size_unit,
         # Equipment
         # Crops
         "primary_crop":         p.primary_crop,
@@ -254,9 +244,6 @@ def create_profile(
         village             = body.village,
         pin_code            = body.pin_code,
         nearest_mandi       = body.nearest_mandi,
-        # Farm
-        farm_size           = body.farm_size,
-        farm_size_unit      = body.farm_size_unit or "acres",
         # Equipment
         # Crops
         primary_crop        = _derive_primary_crop(body.primary_crop, body.crops_grown),
@@ -342,8 +329,6 @@ def update_profile(
         "village":            "village",
         "pin_code":           "pin_code",
         "nearest_mandi":      "nearest_mandi",
-        "farm_size":          "farm_size",
-        "farm_size_unit":     "farm_size_unit",
         "primary_crop":       "primary_crop",
         "crops_grown":        "crops_grown",
         "farming_type":       "farming_type",

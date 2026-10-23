@@ -1,13 +1,13 @@
-"""/bhav meta descriptions: no freshness claim beside an old price, and the
-description test's group B never quotes a figure.
+"""/bhav meta descriptions: no freshness claim beside an old price, and every
+district description quotes the average.
 
 From 25 to 28 Sep 2026 data.gov.in was down, and every /bhav snippet went on
 saying "ताजा भाव … रोज़ सुबह अपडेट" next to a date three days old. The date
 was honest; "ताजा" and "रोज़ सुबह अपडेट" were not (bhav._is_current).
 
-The description test (utils/desc_test.py) splits district pages in two by a
-fixed hash of the URL. Group B's description leaves out "औसत ₹X/क्विंटल" and
-must stay otherwise the same, or the test measures two things at once.
+From 28 Sep to 19 Oct 2026 half the district pages left "औसत ₹X/क्विंटल" out
+of the description to see whether the price cost the click. It did not, so
+the test ended and every district page quotes it again.
 """
 
 import re
@@ -16,7 +16,6 @@ from datetime import date, datetime, timedelta
 import pytest
 
 from backend.routes import bhav
-from backend.utils import desc_test
 
 STATE = "Uttar Pradesh"
 
@@ -40,27 +39,6 @@ class TestIsCurrent:
     def test_no_date_is_never_current(self):
         for missing in ("", None, "not-a-date"):
             assert not bhav._is_current(missing)
-
-
-class TestVariant:
-    def test_is_stable(self):
-        assert desc_test.variant("wheat", "uttar-pradesh", "agra") == \
-               desc_test.variant("wheat", "uttar-pradesh", "agra")
-
-    def test_splits_roughly_in_half(self):
-        groups = [desc_test.variant("wheat", "uttar-pradesh", f"d{i}") for i in range(2000)]
-        share_b = groups.count("B") / len(groups)
-        assert 0.45 < share_b < 0.55
-
-
-def _district_named(group: str, prefix: str) -> str:
-    """A made-up district whose /bhav/wheat/uttar-pradesh/<slug> URL falls in
-    `group`, so both halves of the test can be rendered on purpose."""
-    for i in range(200):
-        name = f"{prefix}pur{i}"
-        if desc_test.variant("wheat", "uttar-pradesh", name.lower()) == group:
-            return name
-    raise AssertionError("no district name found for the group")
 
 
 @pytest.fixture()
@@ -98,24 +76,20 @@ def render(db_session, client):
 
 class TestDistrictDescription:
     def test_current_price_may_say_taza(self, render):
-        desc = _meta_desc(render(_district_named("A", "Tazanagar"), 0))
+        desc = _meta_desc(render("Tazanagar", 0))
         assert "ताजा भाव" in desc
 
     def test_old_price_makes_no_freshness_claim(self, render):
-        desc = _meta_desc(render(_district_named("A", "Purananagar"), 3))
+        desc = _meta_desc(render("Purananagar", 3))
         assert "ताजा" not in desc
         assert "रोज़" not in desc
         assert bhav._hindi_date(date.today() - timedelta(days=3)) in desc, \
             "the description still leads with the price's own date"
 
-    def test_group_a_quotes_the_average(self, render):
-        desc = _meta_desc(render(_district_named("A", "Ankganj"), 0))
-        assert "औसत ₹2,550/क्विंटल" in desc
-
-    def test_group_b_quotes_no_figure(self, render):
-        desc = _meta_desc(render(_district_named("B", "Binankganj"), 0))
-        assert "₹" not in desc
-        assert "ताजा भाव" in desc, "group B changes the figure and nothing else"
+    def test_every_district_quotes_the_average(self, render):
+        for name in ("Ankganj", "Binankganj"):
+            desc = _meta_desc(render(name, 0))
+            assert "औसत ₹2,550/क्विंटल" in desc, name
 
 
 class TestShareCard:
@@ -130,7 +104,7 @@ class TestShareCard:
         return json.loads(raw)
 
     def test_card_carries_the_page_numbers(self, render):
-        html = render(_district_named("A", "Cardpur"), 0)
+        html = render("Cardpur", 0)
         card = self._cfg(html)["card"]
         assert card["avg"] == "₹2,550" and "₹2,550" in html
         assert card["lo"] == "₹2,500" and card["hi"] == "₹2,600"
@@ -138,5 +112,5 @@ class TestShareCard:
         assert "kmPriceCard" in html
 
     def test_old_price_card_says_how_old(self, render):
-        card = self._cfg(render(_district_named("A", "Oldcardpur"), 4))["card"]
+        card = self._cfg(render("Oldcardpur", 4))["card"]
         assert card["age"] == "4 दिन पुराना भाव"

@@ -158,6 +158,16 @@ def fix(path: Path, dry: bool) -> list[str]:
             text = text.replace(fig.group(0), fixed)
             notes.append("hero figure → normalised image")
 
+    # 3b. The hero is the page's largest paint. Sixteen hand-written pages
+    #     still asked for it loading="lazy", so the browser held it back until
+    #     layout said it was on screen — after the CSS, fonts and scripts. Same
+    #     attributes as FIGURE and the builder use.
+    fig = re.search(r'<figure class="featured-image">.*?</figure>', text, re.S)
+    if fig and 'loading="lazy"' in fig.group(0):
+        fixed = fig.group(0).replace('loading="lazy"', 'loading="eager" fetchpriority="high"', 1)
+        text = text.replace(fig.group(0), fixed)
+        notes.append("hero → eager, high priority")
+
     # 4. A page with no figure at all gets one, inside .article-wrapper where
     #    every other hand-written article already puts it.
     if 'class="featured-image"' not in text:

@@ -91,6 +91,10 @@ BODY = r"""
         जो फसल ज़्यादा ठंड सह सकती है और देर से फूलती है, वह बाद में बोई जाती है।
       </div>
     </div>
+    <p>
+      सब्ज़ियों में भी यही मौसम है — <a href="/articles/gajar-ki-kheti">गाजर की खेती</a> अक्टूबर में और
+      <a href="/articles/methi-ki-kheti">मेथी की खेती</a> अक्टूबर-नवंबर में।
+    </p>
   </section>
 
   <hr class="section-divider" />

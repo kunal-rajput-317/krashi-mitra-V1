@@ -34,6 +34,9 @@ from pathlib import Path
 
 import psycopg2
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from backend.utils.ai_db_guard import refuse_live_db_for_ai  # noqa: E402
+
 OUT = Path(__file__).resolve().parent / "dump"
 
 
@@ -82,6 +85,7 @@ def main() -> int:
     print(f"dump:   {manifest['dumped_at']} from {manifest['source_host']}")
     print(f"{len(order)} tables, {sum(t['rows'] for t in tables.values()):,} rows\n")
 
+    refuse_live_db_for_ai(url)
     conn = psycopg2.connect(url, connect_timeout=90)
     conn.autocommit = False
     cur = conn.cursor()

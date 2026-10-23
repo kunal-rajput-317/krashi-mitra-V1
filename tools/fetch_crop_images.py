@@ -203,6 +203,37 @@ def fetch_one(filename: str, force: bool) -> dict | None:
 THUMB_DIR = OUT_DIR / "thumbs"
 THUMB_PX = 96   # 3x the 32px icon it fills (/bhav district price list)
 
+# The crop grid on /bhav draws each photo in a 70x54 box (.ctile-imgwrap). The
+# 800x450 originals average ~35 KB, so the 54-tile grid pulled ~1.8 MB to paint
+# thumbnails. 210x162 is 3x that box, the same shape, ~5 KB.
+TILE_DIR = OUT_DIR / "tiles"
+TILE_W, TILE_H = 210, 162
+
+
+def make_tiles(force: bool = False) -> int:
+    """A 210x162 cut of every crop photo, in images/crops/tiles/, for the /bhav
+    crop grid. Same file name as the photo, so share.py can find it. Centre
+    crop to the tile's own shape, then shrink. Returns tiles written."""
+    from PIL import Image
+    TILE_DIR.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for src in sorted(OUT_DIR.glob("*.webp")):
+        dst = TILE_DIR / src.name
+        if dst.exists() and not force and dst.stat().st_mtime >= src.stat().st_mtime:
+            continue
+        im = Image.open(src).convert("RGB")
+        ratio = TILE_W / TILE_H
+        if im.width / im.height > ratio:          # too wide: trim the sides
+            w = round(im.height * ratio)
+            box = ((im.width - w) // 2, 0, (im.width - w) // 2 + w, im.height)
+        else:                                      # too tall: trim top and bottom
+            h = round(im.width / ratio)
+            box = (0, (im.height - h) // 2, im.width, (im.height - h) // 2 + h)
+        im = im.crop(box).resize((TILE_W, TILE_H), Image.LANCZOS)
+        im.save(dst, "WEBP", quality=72, method=6)
+        n += 1
+    return n
+
 
 def make_thumbs(force: bool = False) -> int:
     """A ~2-3 KB square icon for every crop photo, in images/crops/thumbs/.
@@ -232,6 +263,7 @@ def make_thumbs(force: bool = False) -> int:
 def main() -> int:
     if sys.argv[1:2] == ["--thumbs"]:
         print("thumbs written:", make_thumbs(force="--force" in sys.argv))
+        print("tiles written:", make_tiles(force="--force" in sys.argv))
         return 0
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
@@ -271,6 +303,7 @@ def main() -> int:
     if got:
         _save_credits(credits)
     make_thumbs()
+    make_tiles()
     total = sum(x.stat().st_size for x in OUT_DIR.glob("*.webp")) / 1024 if OUT_DIR.exists() else 0
     print(f"\nfetched {got}; {len(list(OUT_DIR.glob('*.webp')))} files, {total/1024:.1f} MB total")
     print(f"credits → {CREDITS.relative_to(ROOT)}")

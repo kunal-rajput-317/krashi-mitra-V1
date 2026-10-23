@@ -388,6 +388,14 @@ IMAGES = {
     "rabi-buvai-ka-sahi-samay": "Field ploughing by tractor.jpg",
     "gajar-ki-kheti": "India - Koyambedu Market - Carrots 03 (3986950000).jpg",
     "dhan-kandua-rog": "False smut of rice.jpg",
+
+    # ── अक्टूबर 2026 — SOP खाद, मेथी ──────────────────────────────────────
+    # No free photograph of SOP itself exists on Commons (only crystal-lattice
+    # renders), so the SOP hero is the crop SOP is classically kept for —
+    # tobacco drying in Nellore, AP — and the caption says so. The repo's own
+    # MOP.webp was not reused: it is a branded MOP bag, the wrong product.
+    "sop-khad-kya-hai": "Tobacco drying in the tobacco field in Nellore district, Andhra Pradesh PIC 0039.jpg",
+    "methi-ki-kheti": "Fenugreek leafs.JPG",
 }
 
 # In-body illustrations on the hand-written articles.

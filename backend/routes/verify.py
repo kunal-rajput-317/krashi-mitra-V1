@@ -100,7 +100,7 @@ TERMS_HI = [
     "धोखा देने या झूठी पोस्ट डालने, या भुगतान वापस ले लेने (chargeback) पर।",
     "<b>टिक क्या नहीं है:</b> पहचान की जाँच, या फसल, भाव या सौदे की गारंटी नहीं। "
     "हर सौदा खरीदार और विक्रेता के बीच है — कृषि मित्र उसमें शामिल नहीं होता।",
-    "<b>सवाल या शिकायत:</b> +91 9870951001 (WhatsApp / कॉल) या krashimitra038@gmail.com",
+    "<b>सवाल या शिकायत:</b> WhatsApp +91 9870951001 या krashimitra038@gmail.com",
 ]
 
 
@@ -181,7 +181,7 @@ def apply_for_badge(
         row = seller_verify.apply(db, user_id, data)
     except seller_verify.RefundPending:
         raise HTTPException(409, "आपका पिछला शुल्क वापस भेजा जा रहा है। रिफंड पहुँचने के "
-                                 "बाद फिर से आवेदन करें — सवाल हो तो +91 9870951001।")
+                                 "बाद फिर से आवेदन करें — सवाल हो तो WhatsApp +91 9870951001।")
     return {
         "success": True,
         "message": "हो गया। अब शुल्क भेजें — पैसा पहुँचते ही टिक चालू हो जाएगा।",
@@ -481,7 +481,7 @@ _BODY = """
     api('/verify/pay/' + encodeURIComponent(d.ref)).then(function(j) {
       var p = (j && j.data) || {};
       if (!p.configured) {
-        box.innerHTML = '<p class="vf-p vf-state">पेमेंट अभी चालू नहीं है। कृपया कृषि मित्र टीम से संपर्क करें — +91 9870951001</p>';
+        box.innerHTML = '<p class="vf-p vf-state">पेमेंट अभी चालू नहीं है। कृपया कृषि मित्र टीम को WhatsApp करें — +91 9870951001</p>';
         return;
       }
       box.innerHTML =
@@ -518,7 +518,7 @@ _BODY = """
       '<p class="vf-h" style="font-size:18px;">हम आपका भुगतान जाँच रहे हैं</p>' +
       '<div class="vf-wait">आपने बताया कि आपने ₹' + (d.fee || '') + ' भेज दिए हैं। ' +
       'हम बैंक में देखकर टिक चालू कर देंगे। ज़्यादा देर लगे तो ' +
-      '<b>+91 9870951001</b> पर बताइए।</div>' +
+      'WhatsApp <b>+91 9870951001</b> पर बताइए।</div>' +
       '<p class="vf-ref">आपका नंबर: <b>' + esc(d.ref) + '</b></p></div>';
   }
 
@@ -549,7 +549,7 @@ _BODY = """
         (d.refund_pending
           ? '<p class="vf-muted">रिफंड पहुँचने के बाद आप फिर से आवेदन कर सकते हैं।</p>'
           : '<button class="vf-btn" id="vf-again">फिर से आवेदन करें</button>') +
-        '<p class="vf-muted">कोई गलतफ़हमी लगे तो +91 9870951001 पर बात करें।</p></div>';
+        '<p class="vf-muted">कोई गलतफ़हमी लगे तो WhatsApp +91 9870951001 पर मैसेज करें।</p></div>';
       var again = document.getElementById('vf-again');
       if (again) again.onclick = function() { signupForm(d); };
       return;
@@ -560,7 +560,7 @@ _BODY = """
         '<p class="vf-h" style="font-size:18px;">आपका आवेदन स्वीकार नहीं हुआ</p>' +
         (d.reject_reason ? '<p class="vf-p">कारण: ' + esc(d.reject_reason) + '</p>' : '') +
         '<p class="vf-p">हमारे रिकॉर्ड में इस आवेदन का कोई भुगतान दर्ज नहीं है। शुल्क आपके ' +
-        'खाते से कट गया हो तो UTR के साथ <b>+91 9870951001</b> पर बताइए — पैसा हमारे ' +
+        'खाते से कट गया हो तो UTR के साथ WhatsApp <b>+91 9870951001</b> पर बताइए — पैसा हमारे ' +
         'खाते में पहुँचा होगा तो पूरा वापस भेजा जाएगा।</p>' +
         '<button class="vf-btn" id="vf-again">फिर से आवेदन करें</button></div>';
       document.getElementById('vf-again').onclick = function() { signupForm(d); };

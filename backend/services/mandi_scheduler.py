@@ -222,6 +222,22 @@ def _purge_deleted_accounts():
         return None
 
 
+def _retention_sweep():
+    """Delete AI chats past 90 days and blank old orders' contact details;
+    see services/retention.py."""
+    try:
+        from backend.database.db import SessionLocal
+        from backend.services import retention
+        db = SessionLocal()
+        try:
+            return retention.sweep(db)
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Retention sweep failed (non-fatal): {e}")
+        return None
+
+
 def _expire_badges():
     """Take the blue tick off sellers whose verification window has run out.
 
@@ -350,6 +366,18 @@ def _register_job():
         trigger            = CronTrigger(hour=4, minute=25, timezone=IST),
         id                 = "account_deletion_purge",
         name               = "Deleted-account 180-day hold purge — daily 04:25 IST",
+        replace_existing   = True,
+        max_instances      = 1,
+        coalesce           = True,
+        misfire_grace_time = None,
+    )
+
+    # Old chats and old orders' contact details. See _retention_sweep.
+    scheduler.add_job(
+        func               = _retention_sweep,
+        trigger            = CronTrigger(hour=4, minute=30, timezone=IST),
+        id                 = "personal_data_retention",
+        name               = "Chat 90-day / order-contact 2-year sweep — daily 04:30 IST",
         replace_existing   = True,
         max_instances      = 1,
         coalesce           = True,

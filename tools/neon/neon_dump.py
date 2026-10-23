@@ -27,6 +27,8 @@ from pathlib import Path
 import psycopg2
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO))
+from backend.utils.ai_db_guard import refuse_live_db_for_ai  # noqa: E402
 OUT = Path(__file__).resolve().parent / "dump"
 
 # ── Scope ────────────────────────────────────────────────────────────────
@@ -111,6 +113,7 @@ def main() -> int:
     print(f"source: ...@{safe}")
     print(f"output: {OUT}\n")
 
+    refuse_live_db_for_ai(url)
     conn = psycopg2.connect(url, connect_timeout=90)
     conn.set_session(readonly=True, autocommit=True)
     cur = conn.cursor()

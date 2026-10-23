@@ -413,6 +413,16 @@ def _crop_pattern(rows: list) -> dict | None:
     return {"index": index, "best": best, "worst": worst, "districts": used}
 
 
+def crop_pattern_known(commodity: str) -> bool | None:
+    """Whether get_crop_pattern would return a pattern, answered from the
+    in-process cache only — never a query. None when not cached yet. Lets a
+    page size the placeholder for the lazily-loaded season card."""
+    hit = _crop_cache.get(commodity)
+    if hit and time.time() - hit[0] < CROP_CACHE_SECS:
+        return hit[1] is not None
+    return None
+
+
 def get_crop_pattern(commodity: str) -> dict | None:
     """The national seasonal pattern for one commodity, or None when too few
     districts have history. Cached in-process for a day — old months never
