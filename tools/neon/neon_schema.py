@@ -87,6 +87,15 @@ def main() -> int:
     init_db()
     print("init_db() done — triggers and column migrations in place")
 
+    # _retire_profile_fields() creates this only when RENDER is set, so a run
+    # from this PC never does — and neon_load.py then refuses the dump, which
+    # carries it. Same DDL as db.py; the rows (each batch's clock) come over.
+    with engine.begin() as conn:
+        conn.exec_driver_sql("""
+            CREATE TABLE IF NOT EXISTS schema_retirements (
+                name TEXT PRIMARY KEY, first_seen TIMESTAMP NOT NULL)
+        """)
+
     with engine.connect() as conn:
         n = conn.exec_driver_sql(
             "SELECT count(*) FROM pg_tables WHERE schemaname='public'").scalar()

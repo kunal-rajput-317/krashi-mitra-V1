@@ -16,7 +16,7 @@ import pytest
 from backend.utils import ai_db_guard
 from backend.utils.ai_db_guard import LiveDatabaseBlocked, refuse_live_db_for_ai
 
-LIVE = "postgresql://km_user:s3cret-pass@ep-example-123.ap-southeast-1.aws.neon.tech/neondb"
+LIVE = "postgresql://km_user:s3cret-pw@ep-example-123.ap-southeast-1.aws.neon.tech/neondb"
 
 
 @pytest.fixture()
@@ -35,7 +35,7 @@ def as_human(monkeypatch):
 def test_ai_is_refused_the_live_database(as_ai):
     with pytest.raises(LiveDatabaseBlocked) as e:
         refuse_live_db_for_ai(LIVE)
-    assert "s3cret-pass" not in str(e.value) and "neon.tech" not in str(e.value)
+    assert "s3cret-pw" not in str(e.value) and "neon.tech" not in str(e.value)
 
 
 @pytest.mark.parametrize("url", ["sqlite:///tmp/test.db",
