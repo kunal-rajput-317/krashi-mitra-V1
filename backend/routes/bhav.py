@@ -1296,6 +1296,30 @@ def _stats(prices: list) -> dict:
     }
 
 
+def _national_band(commodity: str, min_mandis: int = 10) -> tuple[int, int] | None:
+    """(low, high) of the middle 80% of mandis' modal prices for a crop, from
+    the in-memory snapshot only — the /bhav/{crop} tier is a no-DB fast path,
+    so with the snapshot not loaded this returns None and the page goes
+    without a figure rather than adding a query. One modal per mandi (its
+    median, where it reports several varieties), and the 10th-90th percentile
+    rather than min-max, so a row reported in the wrong unit cannot set the
+    range. Fewer than `min_mandis` mandis → None: too few to call "most"."""
+    rows = mandi_memory.rows_for(commodity)
+    if not rows:
+        return None
+    per_mandi: dict = {}
+    for r in rows:
+        v = _num(r.get("modal_price"))
+        if v and r.get("market"):
+            per_mandi.setdefault((r.get("state"), r.get("district"), r["market"]), []).append(v)
+    vals = sorted(sorted(vs)[len(vs) // 2] for vs in per_mandi.values())
+    if len(vals) < min_mandis:
+        return None
+    n = len(vals)
+    lo, hi = int(round(vals[n // 10], -1)), int(round(vals[-(-n * 9 // 10) - 1], -1))
+    return (lo, hi) if 0 < lo < hi else None
+
+
 def _sell_signal(series: list, today_avg, avg_pct) -> str:
     """A compact 'sell today or wait?' strip that sits INSIDE the green price
     panel, right by the rate.
@@ -8518,7 +8542,20 @@ def bhav_crop(c_slug: str):
         f"{t_hi} का भाव आज — {t_en} Price Today",
         f"{t_hi} का भाव आज — सभी राज्य")
     _taza = "ताजा " if _is_current(fresh_iso) else ""
+    # The price goes in the snippet here too, as it does on district pages
+    # (the 28 Sep–19 Oct 2026 test: it never cost the click). Crop hubs ran
+    # at ~0.2-0.4% CTR at positions 4-7 with no number in the snippet (GSC,
+    # 25 Oct–7 Nov 2026: "kapas ka bhav" pos 4.5, 0.16%), while the results
+    # around them show one. The band only, never an average across states
+    # that sell at different prices.
+    _band = _national_band(commodity)
+    _band_s = (f"ज़्यादातर मंडियों में ₹{_band[0]:,}–₹{_band[1]:,}/क्विंटल। "
+               if _band else "")
     desc = _fit(
+        *([f"{as_of_hi}: {t_hi} का {_taza}मंडी भाव — {_band_s}"
+           f"{len(state_map)} राज्यों के रेट — अपना जिला चुनें।",
+           f"{as_of_hi}: {t_hi} का {_taza}मंडी भाव — {_band_s}"
+           f"{len(state_map)} राज्यों के रेट।"] if _band_s else []),
         f"{as_of_hi}: {t_hi} ({t_en}) का {_taza}मंडी भाव — "
         f"{len(state_map)} राज्यों की मंडियों के रेट। राज्य चुनकर अपने जिले का भाव देखें।",
         f"{as_of_hi}: {t_hi} का {_taza}मंडी भाव — "

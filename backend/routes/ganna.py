@@ -174,6 +174,7 @@ a.chip{text-decoration:none}
 .gn-flag{display:flex;gap:11px;align-items:flex-start;background:#fffaf0;
   border:1px solid #f0dcb4;border-left:4px solid var(--amber);
   border-radius:var(--radius-sm);padding:12px 14px;margin:14px 0}
+a.gn-flag{text-decoration:none;color:inherit}
 .gn-flag-ic{font-size:18px;line-height:1.2;flex:0 0 auto}
 .gn-flag-t{font-size:13.5px;font-weight:700;color:var(--text-dark);display:block}
 .gn-flag-d{font-size:12px;color:var(--text-mid);line-height:1.55;margin-top:3px;
@@ -674,17 +675,48 @@ def ganna_hub():
     # SAP on file belongs to the season BEFORE show_season until the state
     # announces, and "2026-27 … UP ₹400" would be a false claim about money.
     frp_rs = _rs(show.get("rate", 0))
-    title = _fit(
-        f"Ganne Ka Rate {show_season} — गन्ना भाव: FRP {frp_rs}, राज्यवार SAP",
-        f"Ganne Ka Rate {show_season} — गन्ना भाव, FRP {frp_rs}",
-        f"गन्ना का भाव {show_season} — FRP {frp_rs} व SAP रेट",
-        f"गन्ना का भाव {show_season} — FRP और राज्यवार रेट")
+    # UP is who is searching: "up me ganne ka rate 2026 27" and "up ganna rate
+    # 2027" are the hub's two biggest queries (GSC, 25 Oct–7 Nov 2026), and
+    # Google sends them here rather than to /ganna/uttar-pradesh. So the SERP
+    # copy answers UP's actual position — declared or still awaited — read from
+    # ganna_sap.json, so it flips by itself when the new SAP is filed there.
+    # The title still carries no SAP figure (see the comment above); the
+    # description may, because it names the season the figure belongs to.
+    up = next((s for s in _states() if s.get("slug") == "uttar-pradesh"), None)
+    up_waiting = bool(up) and sap_awaited(up, show_season)
+    up_rates = ", ".join(f'{r["hi"].split()[0]} {_rs(r["rate"])}'
+                         for r in (up or {}).get("rates", []))
+    up_line = (f"UP का {show_season} का SAP अभी घोषित नहीं — पिछला "
+               f"({up.get('season', '')}) {up_rates}/क्विंटल"
+               if up_waiting and up_rates else
+               f"UP का {show_season} SAP {up_rates}/क्विंटल" if up and up_rates else "")
+    if up_waiting:
+        title = _fit(
+            f"Ganne Ka Rate {show_season} UP — नए SAP का इंतज़ार, FRP {frp_rs}",
+            f"Ganne Ka Rate {show_season} — UP SAP का इंतज़ार, FRP {frp_rs}",
+            f"Ganne Ka Rate {show_season} — गन्ना भाव, FRP {frp_rs}")
+    else:
+        title = _fit(
+            f"Ganne Ka Rate {show_season} UP — नया SAP, FRP {frp_rs}, राज्यवार",
+            f"Ganne Ka Rate {show_season} — गन्ना भाव: FRP {frp_rs}, राज्यवार SAP",
+            f"Ganne Ka Rate {show_season} — गन्ना भाव, FRP {frp_rs}")
     desc = _fit(
+        f"Ganne ka rate {show_season}: {up_line}। केंद्र का FRP {frp_rs}। घोषणा होते ही "
+        f"सूचना पाएं।",
+        f"Ganne ka rate {show_season}: {up_line}। केंद्र का FRP {frp_rs}।",
+        f"{up_line}। केंद्र का FRP {frp_rs}।",
         f"Ganne ka rate {show_season}: केंद्र का FRP {frp_rs}/क्विंटल, UP-पंजाब-हरियाणा का SAP, "
         f"रिकवरी से बदलता रेट और पेमेंट कैलकुलेटर। नया SAP घोषित होते ही सूचना पाएं।",
-        f"गन्ने का सरकारी रेट {show_season}: केंद्र का FRP {frp_rs} प्रति क्विंटल। यूपी, "
-        f"पंजाब, हरियाणा समेत हर राज्य का SAP और पेमेंट कैलकुलेटर।",
+        limit=162) if up_line else _fit(
+        f"Ganne ka rate {show_season}: केंद्र का FRP {frp_rs}/क्विंटल, UP-पंजाब-हरियाणा का SAP, "
+        f"रिकवरी से बदलता रेट और पेमेंट कैलकुलेटर। नया SAP घोषित होते ही सूचना पाएं।",
         limit=162)
+    up_flag = (f"""
+<a class="gn-flag" href="{SITE}/ganna/uttar-pradesh">
+<span class="gn-flag-ic">📍</span>
+<span><span class="gn-flag-t">{escape(up_line)}</span>
+<span class="gn-flag-d">{"नया रेट राज्य सरकार की घोषणा के बाद ही यहां जुड़ेगा — तब तक मिल के लिए केंद्र का FRP " + frp_rs + " न्यूनतम दाम है। " if up_waiting else ""}उत्तर प्रदेश का पूरा पेज →</span></span>
+</a>""" if up_line else "")
 
     calc = _calc_html(
         "मेरा पेमेंट कितना बनेगा?",
@@ -715,6 +747,14 @@ def ganna_hub():
          "रिकवरी का मतलब है — 100 किलो गन्ने से मिल कितनी चीनी निकाल पाई। 11% रिकवरी यानी "
          "100 किलो गन्ने से 11 किलो चीनी। FRP इसी से जुड़ा है, इसलिए ऊंची रिकवरी वाली मिल "
          "में वही गन्ना ज़्यादा दाम पाता है। रिकवरी मिल के हिसाब से अलग-अलग होती है।"),
+        *([(f"UP में {show_season} का गन्ना रेट कितना है?",
+            (f"उत्तर प्रदेश ने {show_season} सीजन का SAP अभी घोषित नहीं किया है। पिछले "
+             f"({up.get('season', '')}) सीजन का SAP {up_rates} प्रति क्विंटल था। नया रेट "
+             f"राज्य कैबिनेट की घोषणा से तय होगा — उससे पहले कोई भी आंकड़ा अनुमान है। "
+             f"केंद्र का FRP {frp_rs} प्रति क्विंटल न्यूनतम दाम है।")
+            if up_waiting else
+            (f"उत्तर प्रदेश ने {show_season} सीजन का SAP {up_rates} प्रति क्विंटल घोषित "
+             f"किया है।"))] if up_line else []),
         ("क्या मेरे राज्य का SAP घोषित हो चुका है?",
          f"राज्य आमतौर पर पेराई सीजन शुरू होने के आसपास — अक्टूबर से नवंबर के बीच — SAP "
          f"घोषित करते हैं। इस पेज पर हर राज्य का वही रेट दिया है जो सरकारी घोषणा में आया "
@@ -744,6 +784,7 @@ def ganna_hub():
 </div>
 </div>
 </section>
+{up_flag}
 
 {stats}
 
