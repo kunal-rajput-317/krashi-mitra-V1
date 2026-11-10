@@ -209,10 +209,16 @@ class TestShippedConfig:
         monkeypatch.setattr(index_gate, "_cache", None)
         monkeypatch.setattr(index_gate, "_mtime", -1.0)
 
-    def test_ships_disabled(self):
-        """It must reach production switched off. Turning it on is a decision
-        taken after reading /admin/index-gate, not a side effect of deploying."""
-        assert index_gate.is_enabled() is False
+    def test_ships_enabled(self):
+        """Switched ON on 2026-11-10, after reading the split the way
+        /admin/index-gate does: every dated URL in /bhav/sitemap.xml that day was
+        at most six days old and the undated ones keep their place by design
+        (see verdict), so enabling it changed no page that day. It bites only as
+        a district stops reporting and its page ages past max_age_days. Flipping
+        it back is a one-line edit to data/index_gate.json, no deploy, and this
+        test then changes with it: the point is that the shipped state is a
+        decision someone has written down, not a default."""
+        assert index_gate.is_enabled() is True
 
     def test_ships_with_a_sane_threshold_and_follow(self):
         assert index_gate.max_age_days() == 30

@@ -19,6 +19,7 @@
 
 import json
 import math
+from datetime import date
 from pathlib import Path
 
 from make_state_maps import STATES, outer_rings, shoelace
@@ -144,7 +145,11 @@ def main():
     records = {k: record(k, c) for k, c in STATES.items()}
     MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     MANIFEST.write_text(
-        json.dumps({"states": records}, ensure_ascii=False, indent=1),
+        # "updated" is what /naksha pages and their sitemap <lastmod> date
+        # themselves by (routes/naksha.py::_states) — the file mtime is deploy
+        # time on Render, not the day the maps changed.
+        json.dumps({"updated": date.today().isoformat(), "states": records},
+                   ensure_ascii=False, indent=1),
         encoding="utf-8")
     total = sum(r["n"] for r in records.values())
     print(f"manifest: {MANIFEST} — {len(records)} states/UTs, {total} districts")

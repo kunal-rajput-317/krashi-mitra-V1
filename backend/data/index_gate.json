@@ -7,7 +7,7 @@
 
   "_sequence": "STEP 1 of 3, and the sitemap is deliberately NOT touched yet. Google only obeys a noindex if it comes back and reads the page; pulling these URLs from the sitemap at the same time removes the main reason for it to revisit, and the noindex would sit unread for months. Keep them in the sitemap until they actually drop out of the index (weeks), THEN remove them.",
 
-  "enabled": false,
+  "enabled": true,
   "_enabled_note": "Starts OFF on purpose. While false the verdict is still computed and reported at /admin/index-gate, so the blast radius is visible before anything changes for Google. Flip to true when the pass/fail split looks right.",
 
   "max_age_days": 30,

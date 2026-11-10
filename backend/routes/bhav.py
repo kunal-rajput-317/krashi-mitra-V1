@@ -2814,12 +2814,16 @@ def shell_css(ver: str):
                     headers={"Cache-Control": cc, "CDN-Cache-Control": cc})
 
 
-_FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
-          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
-          'family=DM+Sans:wght@400;500;700'
-          '&family=Noto+Serif+Devanagari:wght@600;700'
-          '&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">')
+# Self-hosted (frontend/fonts.css + /fonts/*.woff2, OFL). Until 10 Nov 2026 this
+# was a fonts.googleapis.com stylesheet plus two preconnects: a cross-origin
+# DNS+TLS+CSS round trip that render-blocked every page (Lighthouse mobile
+# measured it at 850 ms on a district page, LCP 7.0 s) and pulled ~320 KB of
+# fonts because the serif face loaded on every page too. One same-origin
+# stylesheet now, and the body face preloaded: it is the Hindi text every
+# /bhav page paints first, so it must not wait for the CSS to be parsed.
+_FONTS = ('<link rel="preload" as="font" type="font/woff2" crossorigin '
+          'href="/fonts/noto-sans-devanagari-var.woff2">'
+          f'<link rel="stylesheet" href="{_asset("fonts.css")}">')
 
 # The loading skeletons (.km-sk) live in frontend/km-skeleton.css so the server
 # pages and the static pages share ONE definition of the shimmer instead of the
@@ -9079,8 +9083,10 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
                  '1.06.94 1.95 1.24 2.23 1.38.28.14.44.12.6-.07.16-.19.69-.8.87-1.08.18-.28.36-.23.6-.14'
                  '.25.09 1.57.74 1.84.88.28.14.46.2.53.32.07.11.07.66-.18 1.36z"/></svg>')
 
+    # This photo is the LCP element on a phone (Lighthouse, 10 Nov 2026: 7.0 s),
+    # so it is asked for from <head> (photo_head, below) and marked high.
     answer_photo = (f'<img class="answer-photo" src="{escape(_crop_image(commodity, 960))}" '
-                    f'alt="" aria-hidden="true" width="420" height="200">'
+                    f'alt="" aria-hidden="true" width="420" height="200" fetchpriority="high">'
                     if _has_photo(commodity) else "")
     lead = f"₹{st['avg']:,}" if st["avg"] else "—"
 
@@ -9215,11 +9221,14 @@ def bhav_page(c_slug: str, s_slug: str, d_slug: str):
 {_lazy_script([('/bhav/api/tier4-extras/{cs}/{ss}/{ds}'.format(cs=cs, ss=ss, ds=ds), 'bhav-lazy-t4')])}"""
 
     map_head = _MAP_HEAD if map_html else ""
+    photo_head = (f'<link rel="preload" as="image" fetchpriority="high" '
+                  f'href="{escape(_crop_image(commodity, 960))}">'
+                  if answer_photo else "")
     crumbs = (f'<a href="{SITE}/">कृषि मित्र</a> › <a href="{SITE}/bhav">मंडी भाव</a> › '
               f'<a href="{SITE}/bhav/{cs}">{escape(hi)}</a> › '
               f'<a href="{SITE}/bhav/{cs}/{ss}">{escape(hi_state)}</a> › {escape(d_hi)}')
     return _doc(title, desc, canon, crumbs, body, ld, _crop_image(commodity, 960),
-                head_extra=map_head,
+                head_extra=photo_head + map_head,
                 # _BP_CSS + _PRODUCT_CSS are new here: the district page now
                 # carries the paid dealer panel too (the metered product), which
                 # it never used to.

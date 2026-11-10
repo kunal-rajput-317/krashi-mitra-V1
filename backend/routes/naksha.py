@@ -130,8 +130,16 @@ def _states() -> dict:
     mtime = _DATA.stat().st_mtime
     if _cache.get("mtime") != mtime:
         _cache["mtime"] = mtime
-        _cache["states"] = json.loads(_DATA.read_text(encoding="utf-8"))["states"]
-        _cache["date"] = datetime.fromtimestamp(mtime).date().isoformat()
+        data = json.loads(_DATA.read_text(encoding="utf-8"))
+        _cache["states"] = data["states"]
+        # The manifest's own "updated" date, written by make_naksha_data.py when
+        # the maps were last regenerated. The file's mtime was used until 10 Nov
+        # 2026, but Render clones the repo fresh on every deploy, so every deploy
+        # re-dated all ~800 /naksha pages (and their sitemap <lastmod>) to deploy
+        # day — the false-freshness signal routes/sitemap.py warns about.
+        # mtime stays as the fallback for a manifest without the key.
+        _cache["date"] = (str(data.get("updated") or "")[:10]
+                          or datetime.fromtimestamp(mtime).date().isoformat())
         # Derived from the manifest, so it has to die with it — a stale slug
         # index would keep serving districts a rebuild has renamed or dropped.
         _cache["didx"] = {}

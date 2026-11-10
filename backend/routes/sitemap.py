@@ -73,7 +73,7 @@ _HREFLANG = {"hi": "hi", "en": "en-IN", "kn": "kn"}
 # the page has a real language switcher, so each variant gets its own ?lang= URL.
 CORE = [
     ("index.html",          "/",                1.0, "daily",  ("hi",),
-     ("/assets/hero-section-photo.webp",)),
+     ("/images/articles/sharbati-gehun-mp.webp",)),
     ("meri_fasal.html",     "/meri_fasal",      0.9, "weekly", ("hi",), ()),
     ("krashi_news.html",    "/krashi_news",     0.9, "daily",  ("hi",),
      ("/images/og-banner.jpg",)),

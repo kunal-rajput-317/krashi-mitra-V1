@@ -64,19 +64,12 @@ EXEMPT_FILES = {
     ROOT / "backend" / "routes" / "credits.py",       # links to commons.wikimedia.org
 }
 
-# KNOWN, DATED, AND STILL BROKEN — not an approval.
-# frontend/index.html hotlinks seven images.unsplash.com photographs: the hero
-# background (line ~462), three crop cards and three scheme cards. Found
-# 2026-09-10 while rewriting /international, which had 43 of the same and no
-# longer has any. The homepage is the busiest page on the site and its hero is
-# the first paint, so replacing those seven is a deliberate change with a
-# visual decision in it, not a drive-by edit — it needs its own round.
-# Removing this line without self-hosting the seven files just hides them
-# again. Fix: fetch once, licence-check, self-host under /images, credit on
-# /articles/credits, then delete this entry.
-KNOWN_BROKEN = {
-    ROOT / "frontend" / "index.html",
-}
+# Nothing is known-broken. frontend/index.html hotlinked seven
+# images.unsplash.com photographs (hero background, three crop cards, three
+# scheme cards) from 2026-09-10 until 2026-11-10, when they were replaced with
+# photographs the site already serves and credits from /images/articles. Add a
+# file here only with a date and a reason, and remove it when fixed.
+KNOWN_BROKEN: set = set()
 EXEMPT_NAMES = {"CREDITS.json"}                        # provenance records
 
 # Image-serving hosts we have actually been caught hotlinking.

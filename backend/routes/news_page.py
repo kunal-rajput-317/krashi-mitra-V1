@@ -43,11 +43,9 @@ router = APIRouter(tags=["Krashi News SSR"])
 
 SITE = "https://krashimitra.in"
 _ANALYTICS = '<script src="/analytics.js"></script>'
-_FONTS = (
-    '<link rel="preconnect" href="https://fonts.googleapis.com">'
-    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-    '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Noto+Serif+Devanagari:wght@600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">'
-)
+# Self-hosted since 10 Nov 2026 (frontend/fonts.css); see routes/bhav.py::_FONTS.
+# Sora is no longer loaded: the stack falls through to DM Sans.
+_FONTS = '<link rel="stylesheet" href="/fonts.css">'
 _ICON = f'<link rel="icon" href="{SITE}/assets/krashimitra_logo.png" type="image/png">'
 
 _BASE_RESET_CSS = """
