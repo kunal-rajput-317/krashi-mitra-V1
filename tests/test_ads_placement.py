@@ -138,3 +138,47 @@ def test_units_keep_clear_of_tap_targets():
     )
     # The clearance filter must actually gate placement, not just exist.
     assert "clearOfTaps(g.y)" in src, "clearance is computed but never applied"
+
+
+def _loader_body(src):
+    body = src[src.index("function loader()"):]
+    return body[:body.index("\n  }\n")]
+
+
+def test_only_ads_js_loads_adsense():
+    """AdSense limited the account for invalid traffic on 4 Sept and 30 Oct 2026.
+
+    ads.js keeps bots and automated browsers away from AdSense, but only on
+    pages where ads.js is what loads it. Until 17 Nov 2026 six pages (index,
+    about, weather, sarkari_yojana, krashi_news, the articles index) loaded
+    adsbygoogle.js in their own <head>, so every crawler that landed on the
+    homepage got Auto ads and the checks never ran. Their inline push({})
+    calls are fine: without the script they only queue.
+    """
+    tag = re.compile(r"<script[^>]*src=[\"'][^\"']*adsbygoogle\.js", re.I)
+    sources = list(html_files())
+    for d in ("backend", "tools"):
+        sources += sorted((REPO / d).rglob("*.py"))
+    bad = [str(p.relative_to(REPO)) for p in sources
+           if tag.search(p.read_text(encoding="utf-8", errors="replace"))]
+    assert not bad, (
+        "These load adsbygoogle.js themselves, past ads.js's bot and human "
+        "checks. Remove the tag; ads.js loads it:\n  " + "\n  ".join(bad)
+    )
+
+
+def test_adsense_waits_for_a_person():
+    """No ad request until a scroll, tap or key press, and never for a bot."""
+    src = ADS_JS.read_text(encoding="utf-8")
+    body = _loader_body(src)
+    assert "automated()" in body, "loader() no longer refuses automated browsers"
+    assert "whenHuman(inject)" in body, "loader() no longer waits for a person"
+    assert "whenHuman(lazy)" in src, (
+        "units are requested before anyone interacts; watch() would then "
+        "collapse boxes the script fills later, while hidden"
+    )
+    for ev in ("scroll", "touchstart", "keydown"):
+        assert f"'{ev}'" in src
+    # The one place the script is created must sit behind those checks.
+    assert src.count("adsbygoogle.js?client=") == 1
+    assert "function inject()" in src

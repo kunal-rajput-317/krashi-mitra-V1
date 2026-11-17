@@ -150,13 +150,50 @@
     (document.head || document.documentElement).appendChild(s);
   }
 
+  // Ads wait for a person. AdSense has limited this account for "invalid
+  // traffic" twice (4 Sept and 30 Oct 2026), and the named-crawler list in
+  // automated() only catches bots that say what they are. A bot with a phone
+  // user agent runs the page's JavaScript and leaves; it never scrolls, taps or
+  // presses a key. So nothing reaches Google until one of those happens: no
+  // adsbygoogle.js, so no Auto ads and no ad request. A farmer who reads a page
+  // scrolls it, and ads.js never places a unit inside the first screen, so a
+  // visitor who never scrolls was never going to see one.
+  var human = false, waiting = [];
+  var HUMAN_EVENTS = ['scroll', 'wheel', 'touchstart', 'pointerdown', 'keydown'];
+  function onHuman() {
+    if (human) return;
+    human = true;
+    HUMAN_EVENTS.forEach(function (e) { window.removeEventListener(e, onHuman, true); });
+    waiting.splice(0).forEach(function (fn) { try { fn(); } catch (e) {} });
+  }
+  HUMAN_EVENTS.forEach(function (e) {
+    window.addEventListener(e, onHuman, { passive: true, capture: true });
+  });
+  function whenHuman(fn) {
+    if (human) fn(); else waiting.push(fn);
+  }
+
   // The AdSense loader goes in only once we know the page will actually show an
   // ad, so an ad-free page never pays for the script.
+  //
+  // This is the ONLY place adsbygoogle.js enters any page. index, about,
+  // weather, sarkari_yojana, krashi_news and the articles index used to load it
+  // in their own <head>, so on those six pages every crawler got Auto ads and
+  // the bot checks below never ran (found 17 Nov 2026, during the second
+  // limitation). tests/test_ads_placement.py fails if a page loads it again.
+  var loaderQueued = false;
   function loader() {
     // Second lock, next to the one thing that can switch on Auto ads: even a
     // future caller that forgets init()'s OFF check cannot load AdSense on a
     // no-ads page (/terms, /privacy-policy, /pay …).
     if (OFF.test(location.pathname)) return;
+    // Same for automation: no ad request from a browser that says it is a bot.
+    if (automated()) return;
+    if (loaderQueued) return;
+    loaderQueued = true;
+    whenHuman(inject);
+  }
+  function inject() {
     if (document.querySelector('script[src*="adsbygoogle.js"]')) return;
     var s = document.createElement('script');
     s.async = true;
@@ -652,6 +689,10 @@
     // the same slot twice.
     var authored = [].slice.call(
       document.querySelectorAll('ins.adsbygoogle[data-km-ad="page"]'));
+    // Their inline push({}) calls only queue. The script that serves them is
+    // ours to load now, past the bot checks above, so it must be loaded even
+    // when the page earns no extra unit and init() returns early below.
+    if (authored.length) loader();
 
     var root = contentRoot();
     if (!root) return;
@@ -677,7 +718,11 @@
       return (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
     });
     loader();   // warm the script now that we know this page will show an ad
-    lazy();
+    // Units are placed now (their reserved height must not shift the page
+    // later) but only requested once a person is here. Pushing earlier would
+    // start watch()'s give-up timer against a script that has not loaded, and
+    // collapse a box the ad would then fill while hidden.
+    whenHuman(lazy);
   }
 
   // Placement measures real geometry, so it waits for layout — fonts and images
