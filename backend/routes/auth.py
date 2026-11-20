@@ -14,6 +14,7 @@
 #   POST /forgot-password
 #   POST /reset-password
 #   POST /auth/google
+#   GET  /auth/status    (are signups open? closed unless SIGNUP_OPEN=true)
 #
 # Profile endpoints (GET/POST/PUT /profile) live in routes/profile.py.
 # The unauthenticated legacy CRUD (POST /user, GET|PUT /user/{id}, GET /users)
@@ -25,7 +26,7 @@ import os
 import secrets
 import httpx
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -70,6 +71,27 @@ _LIMIT_LOGIN  = rate_limit("login",      20, 15 * 60)   # 20 logins / 15 min / I
 # a login here. Matched against `aud` on every login, never optional.
 GOOGLE_CLIENT_ID = (os.getenv("GOOGLE_CLIENT_ID", "").strip()
                     or "235912622385-faavoh67rvg0m126bj5af8ot3n2k0shd.apps.googleusercontent.com")
+
+
+# ── New accounts are closed ──────────────────────────────────
+# Owner's decision, 19 Nov 2026. Every account is personal data the DPDP Act
+# makes us guard, and what people come for (mandi prices, maps, articles)
+# needs no account. Existing accounts still log in: their owners keep what
+# they paid for, and can still export or delete their data from /profile,
+# which the privacy policy promises.
+#
+# Closed is the default, so an unset variable can never quietly reopen it.
+# SIGNUP_OPEN=true in Render's settings reopens signups without a code change.
+def signup_open() -> bool:
+    return os.getenv("SIGNUP_OPEN", "").strip().lower() in ("1", "true", "yes")
+
+
+def _signup_closed() -> dict:
+    return {
+        "success": False,
+        "message": "नए खाते अभी बंद हैं। मंडी भाव, नक्शे और लेख बिना खाते के पूरे खुले हैं।",
+        "data": {"signup_closed": True},
+    }
 
 # Auth handlers used to return `detail=f"Login failed: {e}"`, putting the raw
 # exception — SQLAlchemy errors naming tables/columns, driver messages, file
@@ -342,8 +364,17 @@ class ProfileUpdateRequest(BaseModel):
 
 # ── AUTH ENDPOINTS ───────────────────────────────────────────
 
+@router.get("/auth/status")
+def auth_status(response: Response):
+    """What the login page needs before it draws: can a new account be made?"""
+    response.headers["Cache-Control"] = "no-store"
+    return {"success": True, "message": "", "data": {"signup_open": signup_open()}}
+
+
 @router.post("/signup", dependencies=[Depends(_LIMIT_SEND)])
 def signup(body: SignupRequest, db: Session = Depends(get_db)):
+    if not signup_open():
+        return _signup_closed()
     try:
         if body.confirm_password is not None and body.password != body.confirm_password:
             return {"success": False, "message": "Password और Confirm Password match नहीं कर रहे।", "data": {}}
@@ -444,6 +475,10 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 
 @router.post("/verify-otp", dependencies=[Depends(_LIMIT_VERIFY)])
 def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
+    # Verifying is what turns a signup row into a usable account, so a signup
+    # started just before the lock must not finish after it.
+    if not signup_open():
+        return _signup_closed()
     try:
         user = _find_user_by_email(db, body.email)
         if not user:
@@ -488,6 +523,8 @@ def verify_otp(body: VerifyOtpRequest, db: Session = Depends(get_db)):
 
 @router.post("/resend-otp", dependencies=[Depends(_LIMIT_SEND)])
 def resend_otp(body: ResendOtpRequest, db: Session = Depends(get_db)):
+    if not signup_open():
+        return _signup_closed()
     try:
         user = _find_user_by_email(db, body.email)
         if not user:
@@ -622,6 +659,12 @@ def google_login(body: GoogleAuthRequest, db: Session = Depends(get_db)):
             user = db.query(User).filter(User.google_id == google_id).first()
         if not user:
             user = _find_user_by_email(db, email)
+
+        # Signups closed: Google may still sign in an account that already
+        # exists, but must not make a new one, or finish verifying a
+        # half-made one, which comes to the same thing.
+        if not signup_open() and (user is None or not user.is_verified):
+            return _signup_closed()
 
         if not user:
             user = User(

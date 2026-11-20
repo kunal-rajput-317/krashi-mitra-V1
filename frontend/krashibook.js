@@ -433,7 +433,7 @@
           '</div>' +
           '<div class="km-book-product">🔑 लॉगिन करें — फसल के काम की याद पाएं</div>' +
           '<div class="km-book-line">अपनी फसल और बुवाई तारीख जोड़ें, फिर लॉगिन करें — सिंचाई, खाद और यूरिया टॉप-ड्रेसिंग की याद ठीक समय पर यहाँ मिलेगी।</div>' +
-          '<button class="km-book-ghost-btn" data-href="' + loginUrl() + '" style="margin-top:8px">लॉगिन / साइनअप करें</button>' +
+          '<button class="km-book-ghost-btn" data-href="' + loginUrl() + '" style="margin-top:8px">लॉगिन करें</button>' +
         '</div>';
       wireActions(slot);
       return;
@@ -678,7 +678,7 @@
         html += '<div class="km-book-card warn">' +
           '<div class="km-book-product">🔑 लॉगिन करें — निजी सुझाव पाएं</div>' +
           '<div class="km-book-line">प्रोफ़ाइल में अपनी फसल और जिला भरें, तो यहाँ आपके लिए मंडी भाव और मौसम के सुझाव दिखेंगे।</div>' +
-          '<button class="km-book-ghost-btn" data-href="' + loginUrl() + '" style="margin-top:8px">लॉगिन / साइनअप करें</button>' +
+          '<button class="km-book-ghost-btn" data-href="' + loginUrl() + '" style="margin-top:8px">लॉगिन करें</button>' +
         '</div>';
       } else if (!crops.length || !(profile && profile.district)) {
         html += '<div class="km-book-card warn">' +

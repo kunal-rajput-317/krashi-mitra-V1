@@ -744,8 +744,14 @@
         Password याद नहीं है? <a onclick="startForgotFromLogin()">Forgot password</a>
       </div>
 
-      <div class="auth-switch" style="margin-top:14px;">
+      <!-- New accounts are closed unless /auth/status says otherwise. The page
+           starts closed so the signup link never flashes up and vanishes; the
+           server refuses /signup either way. -->
+      <div class="auth-switch" id="signup-link" style="margin-top:14px;display:none;">
         नया account बनाएं? <a onclick="showStep('signup')">Signup करें</a>
+      </div>
+      <div class="auth-switch" id="signup-closed-note" style="margin-top:14px;">
+        नए खाते अभी बंद हैं। मंडी भाव, नक्शे और लेख बिना खाते के पूरे खुले हैं।
       </div>
 
       </div><!-- /#login-form-body -->
@@ -1718,7 +1724,19 @@
   // ══════════════════════════════════════
   // ALREADY LOGGED IN?
   // ══════════════════════════════════════
+  function applySignupStatus() {
+    fetchWithTimeout(`${getAPI()}/auth/status`, {}, 8000)
+      .then(r => r.json())
+      .then(d => {
+        if (!(d && d.data && d.data.signup_open)) return;
+        document.getElementById("signup-link").style.display = "";
+        document.getElementById("signup-closed-note").style.display = "none";
+      })
+      .catch(() => {});   // stays closed; the server would refuse anyway
+  }
+
   window.addEventListener("load", () => {
+    applySignupStatus();
     if (getToken()) {
       // Sent here mid-task by a login gate (?next=/bhav/... &do=alert) and the
       // session is already live → finish the job, don't ask a question.

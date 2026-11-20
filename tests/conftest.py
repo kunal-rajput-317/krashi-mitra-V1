@@ -30,6 +30,10 @@ os.environ.setdefault("RAG_ENABLED", "false")
 os.environ.setdefault("AI_RESPONSE_ENABLED", "false")
 # Never let a test be mistaken for a production boot.
 os.environ.pop("RENDER", None)
+# Signups are closed on the live site (routes/auth.signup_open). The suite runs
+# them open so the signup hardening keeps its tests for the day they reopen;
+# tests/test_signup_lock.py removes this to test the closed default.
+os.environ["SIGNUP_OPEN"] = "true"
 
 
 @pytest.fixture(scope="session")
